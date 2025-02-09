@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Mondrian Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Mondrian Generator</h1>
+  <div id="controls">
+    <div class="field">
+      <label for="widthInput">Canvas Width:</label>
+      <input type="number" id="widthInput">
+    </div>
+    <div class="field">
+      <label for="heightInput">Canvas Height:</label>
+      <input type="number" id="heightInput">
+    </div>
+    <div class="field">
+      <label for="linesInput">Number of Lines:</label>
+      <input type="number" id="linesInput" value="50" min="4">
+    </div>
+    <div class="field radio-group">
+      <span>Animation Orientation:</span>
+      <label>
+        <input type="radio" name="animationMode" value="opposite">
+        Opposite <span class="small-grey">(vertical lines slide horizontally, horizontal slide vertically)</span>
+      </label>
+      <label>
+        <input type="radio" name="animationMode" value="matching" checked>
+        Matching <span class="small-grey">(vertical lines slide vertically, horizontal lines slide horizontally)</span>
+      </label>
+    </div>
+    <div class="field">
+      <label>Choose Colors:</label>
+      <div id="colorGrid">
+      </div>
+    </div>
+    <div class="field" id="buttonContainer">
+      <button id="generateButton">Generate</button>
+      <button id="downloadButton" style="display:none;">Download</button>
+    </div>
+  </div>
+
+  <canvas id="paintingCanvas"></canvas>
+
+  <script src="script.js"></script>
+</body>
+</html>
