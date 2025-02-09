@@ -39,6 +39,7 @@ input[type="color"] {
   padding: 0;
   cursor: pointer;
 }
+
 @media (min-width: 768px) {
   #controls {
     max-width: 90vw;
@@ -74,7 +75,7 @@ button {
 }
 #colorGrid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   gap: 10px;
   margin-top: 5px;
 }
@@ -130,4 +131,54 @@ button {
   color: #aaa;
   font-size: x-small;
   margin-left: 2px;
+}
+
+@media only screen and (min-resolution: 2dppx) and (max-width: 1024px) {
+  body {
+    margin: 40px;
+    font-size: 2em;
+  }
+  h1 {
+    margin-bottom: 40px;
+  }
+  #controls {
+    padding: 20px;
+    border-width: 2px;
+  }
+  input,
+  select,
+  button {
+    padding: 10px 16px;
+    border-width: 2px;
+  }
+  .color-picker-element {
+    width: 120px;
+    height: 120px;
+    border-width: 2px;
+  }
+  .color-picker-element .remove-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1em;
+    line-height: 32px;
+  }
+  #addColorButton {
+    width: 120px;
+    height: 120px;
+    font-size: 48px;
+    border-width: 2px;
+  }
+  #buttonContainer {
+    gap: 20px;
+  }
+
+  .small-grey {
+    color: #aaa;
+    font-size: 0.5em;
+    margin-left: 1em;
+  }
+
+  #colorGrid {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }

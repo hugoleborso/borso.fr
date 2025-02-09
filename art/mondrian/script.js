@@ -49,8 +49,10 @@ function setDefaultCanvasSize() {
     colorGrid.appendChild(createColorPicker('#ff0000'));
     colorGrid.appendChild(createColorPicker('#0000ff'));
     colorGrid.appendChild(createColorPicker('#ffff00'));
-    colorGrid.appendChild(createColorPicker('#ffffff'));
     colorGrid.appendChild(createColorPicker('#000000'));
+    colorGrid.appendChild(createColorPicker('#ffffff'));
+    colorGrid.appendChild(createColorPicker('#ffffff'));
+    colorGrid.appendChild(createColorPicker('#ffffff'));
     colorGrid.appendChild(createAddColorButton());
   }
   initializeColorGrid();
