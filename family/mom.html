@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Je t'aime maman</title>
+    <style>
+        body {
+            background-color: pink;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            text-align: center;
+            animation: bg-color-change 5s infinite;
+        }
+        
+        h1 {
+            font-size: 3em;
+            color: red;
+            text-shadow: 2px 2px 5px yellow;
+            animation: text-glow 1s infinite alternate;
+        }
+
+        img {
+            width: 300px;
+            height: auto;
+            border-radius: 50%;
+            border: 5px solid red;
+            box-shadow: 0px 0px 20px yellow;
+            animation: image-bounce 2s infinite;
+        }
+
+        .instruction {
+            font-size: 1.5em;
+            color: purple;
+            margin-top: 20px;
+        }
+
+        a {
+            color: blue;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        @keyframes bg-color-change {
+            0% { background-color: pink; }
+            25% { background-color: lightblue; }
+            50% { background-color: lightgreen; }
+            75% { background-color: lightyellow; }
+            100% { background-color: pink; }
+        }
+
+        @keyframes text-glow {
+            0% { text-shadow: 2px 2px 10px yellow; }
+            100% { text-shadow: 2px 2px 20px orange; }
+        }
+
+        @keyframes image-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Je t'aime maman</h1>
+    <img src="mom.png" alt="Mom">
+    
+    <!-- New instructions below the floating image -->
+    <div class="instruction">
+        Je t'ai mis la vidéo ici, clique sur le <a href="http://borso.fr/coucou-mom/video.mp4">lien</a>, puis sur les 3 petits points et sélectionne "télécharger".
+    </div>
+</body>
+</html>

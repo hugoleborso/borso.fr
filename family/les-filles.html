@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonne journée bande de crottons</title>
+    <style>
+        body {
+            background-color: lightpink;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3em;
+            color: brown;
+            text-shadow: 2px 2px 5px yellow;
+            animation: text-glow 1s infinite alternate;
+            margin-top: 50px;
+        }
+
+        .main-image {
+            width: 300px;
+            height: auto;
+            margin: 20px;
+            border-radius: 50%;
+            border: 5px solid brown;
+            box-shadow: 0px 0px 20px yellow;
+        }
+
+        .poop {
+            position: absolute;
+            top: -50px; /* Start from just above the top of the page */
+            width: 30px; /* Fixed size */
+            height: 30px; /* Fixed size */
+            animation: fall 5s infinite linear;
+            opacity: 0.8;
+        }
+
+        .hidden-message {
+            font-size: 1.5em;
+            color: lightgray;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            opacity: 0.5;
+            font-style: italic;
+        }
+
+        @keyframes text-glow {
+            0% { text-shadow: 2px 2px 10px yellow; }
+            100% { text-shadow: 2px 2px 20px orange; }
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100px); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* Defining animation and duration for falling poop */
+        .poop:nth-child(1) { left: 5%; animation-duration: 6s; }
+        .poop:nth-child(2) { left: 15%; animation-duration: 5.5s; }
+        .poop:nth-child(3) { left: 25%; animation-duration: 6.5s; }
+        .poop:nth-child(4) { left: 35%; animation-duration: 7s; }
+        .poop:nth-child(5) { left: 45%; animation-duration: 5.5s; }
+        .poop:nth-child(6) { left: 55%; animation-duration: 6s; }
+        .poop:nth-child(7) { left: 65%; animation-duration: 7s; }
+        .poop:nth-child(8) { left: 75%; animation-duration: 6.5s; }
+        .poop:nth-child(9) { left: 85%; animation-duration: 5s; }
+        .poop:nth-child(10) { left: 95%; animation-duration: 6s; }
+    </style>
+</head>
+<body>
+    <h1>Bonne journée bande de crottons</h1>
+
+    <img class="main-image" src="les-filles.png" alt="Les filles">
+
+    <!-- Falling poop PNGs -->
+    <div class="poop">
+        <img src="poop.png" alt="Poop" style="width: 30px; height: 30px;"> <!-- Fixed size -->
+    </div>
+    <div class="poop">
+        <img src="poop.png" alt="Poop" style="width: 30px; height: 30px;"> <!-- Fixed size -->
+    </div>
+    <div class="poop">
+        <img src="poop.png" alt="Poop" style="width: 30px; height: 30px;"> <!-- Fixed size -->
+    </div>
+    
+    <!-- Hidden message at the bottom -->
+    <div class="hidden-message" style="z-index: 1000;">Votre frère qui vous aime</div>
+
+    <script>
+        // Script to generate more falling poop PNGs evenly spaced
+        for (let i = 0; i < 30; i++) {
+            let poop = document.createElement('div');
+            poop.classList.add('poop');
+            poop.style.left = Math.random() * 100 + '%';  // Random horizontal position
+            poop.style.top = Math.random() * -100 + 'px'; // Start from just above the viewport
+            poop.style.animationDuration = Math.random() * 3 + 4 + 's'; // Randomize fall speed
+            poop.innerHTML = '<img src="poop.png" alt="Poop" style="width: 30px; height: 30px;">'; // Fixed size
+            document.body.appendChild(poop);
+        }
+    </script>
+</body>
+</html>
