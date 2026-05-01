@@ -11,7 +11,7 @@ export interface PreviewableAppProps {
   readonly app: string;
   readonly stage: Stage;
   readonly prNumber?: number;
-  /** Apex/subdomain (e.g. "pragma.borso.fr"). Required for prod. */
+  /** Apex/subdomain (e.g. "borsouvertures.borso.fr"). Required for prod. */
   readonly domainName?: string;
   /** Static frontend assets. */
   readonly frontend: { readonly distPath: string };

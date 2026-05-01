@@ -15,27 +15,27 @@ describe('HOST_ROUTING_FUNCTION_CODE', () => {
 
     const out = handler({
       request: {
-        headers: { host: { value: 'pragma-pr-7.preview.borso.fr' } },
+        headers: { host: { value: 'test-app-pr-7.preview.borso.fr' } },
         uri: '/about',
       },
     }) as { uri?: string; statusCode?: number };
-    expect(out.uri).toBe('/pragma/pr-7/about');
+    expect(out.uri).toBe('/test-app/pr-7/about');
 
     const root = handler({
       request: {
-        headers: { host: { value: 'pragma-pr-7.preview.borso.fr' } },
+        headers: { host: { value: 'test-app-pr-7.preview.borso.fr' } },
         uri: '/',
       },
     }) as { uri?: string };
-    expect(root.uri).toBe('/pragma/pr-7/index.html');
+    expect(root.uri).toBe('/test-app/pr-7/index.html');
 
     const integ = handler({
       request: {
-        headers: { host: { value: 'bp-integ-pragma-pr-7.preview.borso.fr' } },
+        headers: { host: { value: 'bp-integ-test-app-pr-7.preview.borso.fr' } },
         uri: '/api',
       },
     }) as { uri?: string };
-    expect(integ.uri).toBe('/bp-integ/pragma/pr-7/api');
+    expect(integ.uri).toBe('/bp-integ/test-app/pr-7/api');
 
     const noHost = handler({ request: { headers: {}, uri: '/' } }) as { statusCode?: number };
     expect(noHost.statusCode).toBe(400);

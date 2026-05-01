@@ -14,7 +14,7 @@ function synth(overrides: Partial<LambdaApiProps> = {}): Template {
     env: { account: '123456789012', region: 'eu-west-3' },
   });
   const props: LambdaApiProps = {
-    app: 'pragma',
+    app: 'test-app',
     stage: 'prod',
     entry: ENTRY,
     ...overrides,
@@ -27,7 +27,7 @@ describe('LambdaApi', () => {
   it('creates one HTTP API named per the convention', () => {
     const tpl = synth();
     tpl.hasResourceProperties('AWS::ApiGatewayV2::Api', {
-      Name: 'pragma-prod-api',
+      Name: 'test-app-prod-api',
       ProtocolType: 'HTTP',
     });
     tpl.resourceCountIs('AWS::ApiGatewayV2::Api', 1);
@@ -37,12 +37,12 @@ describe('LambdaApi', () => {
     const tpl = synth();
     tpl.resourceCountIs('AWS::Lambda::Function', 1);
     tpl.hasResourceProperties('AWS::Lambda::Function', {
-      FunctionName: 'pragma-prod-api',
+      FunctionName: 'test-app-prod-api',
       Runtime: 'nodejs22.x',
       Architectures: ['arm64'],
       ReservedConcurrentExecutions: 10,
       Environment: {
-        Variables: Match.objectLike({ STAGE: 'prod', APP: 'pragma' }),
+        Variables: Match.objectLike({ STAGE: 'prod', APP: 'test-app' }),
       },
     });
   });

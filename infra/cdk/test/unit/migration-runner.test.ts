@@ -60,7 +60,7 @@ const baseProps = {
   ServiceToken: 'arn:fake',
   clusterEndpoint: 'cluster.dsql.eu-west-3.on.aws',
   region: 'eu-west-3',
-  schemaName: 'pragma',
+  schemaName: 'test_app',
   migrations: [
     { name: '0001_init.sql', sql: 'CREATE TABLE a (id INT);' },
     { name: '0002_more.sql', sql: 'CREATE TABLE b (id INT);' },
@@ -84,12 +84,12 @@ describe('migration-runner handler', () => {
       RequestType: 'Create',
       ResourceProperties: baseProps,
     });
-    expect(result.PhysicalResourceId).toBe('dsql-schema:pragma');
-    expect(result.Data?.SchemaName).toBe('pragma');
+    expect(result.PhysicalResourceId).toBe('dsql-schema:test_app');
+    expect(result.Data?.SchemaName).toBe('test_app');
 
     const queries = state.unsafeCalls.map((c) => c.query).join('\n');
-    expect(queries).toMatch(/CREATE SCHEMA IF NOT EXISTS "pragma"/);
-    expect(queries).toMatch(/CREATE TABLE IF NOT EXISTS "pragma"\._migrations/);
+    expect(queries).toMatch(/CREATE SCHEMA IF NOT EXISTS "test_app"/);
+    expect(queries).toMatch(/CREATE TABLE IF NOT EXISTS "test_app"\._migrations/);
     expect(queries).toMatch(/CREATE TABLE a/);
     expect(queries).toMatch(/CREATE TABLE b/);
     expect(state.appliedMigrations.has('0001_init.sql')).toBe(true);
@@ -125,11 +125,11 @@ describe('migration-runner handler', () => {
   it('Delete: drops the schema CASCADE and does not apply migrations', async () => {
     await handler({
       RequestType: 'Delete',
-      PhysicalResourceId: 'dsql-schema:pragma',
+      PhysicalResourceId: 'dsql-schema:test_app',
       ResourceProperties: baseProps,
     });
     const queries = state.unsafeCalls.map((c) => c.query);
-    expect(queries.some((q) => /DROP SCHEMA IF EXISTS "pragma" CASCADE/.test(q))).toBe(true);
+    expect(queries.some((q) => /DROP SCHEMA IF EXISTS "test_app" CASCADE/.test(q))).toBe(true);
     expect(queries.some((q) => /CREATE SCHEMA/.test(q))).toBe(false);
     expect(state.ended).toBe(1);
   });

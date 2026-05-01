@@ -16,7 +16,7 @@ function synth(props: { stage: 'prod' | 'preview' | 'integ'; prNumber?: number }
     env: { account: '123456789012', region: 'eu-west-3' },
   });
   new DsqlSchema(stack, 'Db', {
-    app: 'pragma',
+    app: 'test-app',
     stage: props.stage,
     ...(props.prNumber !== undefined ? { prNumber: props.prNumber } : {}),
     migrationsPath: MIGRATIONS,
@@ -53,7 +53,7 @@ describe('DsqlSchema', () => {
       (r) => r.Type === 'AWS::CloudFormation::CustomResource',
     );
     expect(cr).toBeDefined();
-    expect(cr?.Properties?.schemaName).toBe('pragma_pr_3');
+    expect(cr?.Properties?.schemaName).toBe('test_app_pr_3');
     const migrations = cr?.Properties?.migrations as Array<{ name: string }>;
     expect(migrations).toHaveLength(1);
     expect(migrations[0]?.name).toBe('0001_init.sql');
@@ -63,7 +63,7 @@ describe('DsqlSchema', () => {
     const tpl = synth({ stage: 'integ', prNumber: 4 });
     const outputs = tpl.toJSON().Outputs ?? {};
     const values = Object.values(outputs).map((o) => (o as { Value: string }).Value);
-    expect(values).toContain('integ_pr_4_pragma');
+    expect(values).toContain('integ_pr_4_test_app');
   });
 
   it('throws when migrationsPath does not exist', () => {
@@ -74,7 +74,7 @@ describe('DsqlSchema', () => {
     expect(
       () =>
         new DsqlSchema(stack, 'Db', {
-          app: 'pragma',
+          app: 'test-app',
           stage: 'prod',
           migrationsPath: '/nonexistent-path-borso-test',
         }),
@@ -87,11 +87,11 @@ describe('DsqlSchema', () => {
       env: { account: '123456789012', region: 'eu-west-3' },
     });
     const schema = new DsqlSchema(stack, 'Db', {
-      app: 'pragma',
+      app: 'test-app',
       stage: 'prod',
       migrationsPath: MIGRATIONS,
     });
-    expect(schema.schemaName).toBe('pragma');
+    expect(schema.schemaName).toBe('test_app');
     // grantConnect is exercised by lambda-api integration; we just make sure
     // the public surface is reachable.
     expect(typeof schema.grantConnect).toBe('function');
@@ -121,7 +121,7 @@ describe('DsqlSchema (migrations directory edge cases)', () => {
       env: { account: '123456789012', region: 'eu-west-3' },
     });
     new DsqlSchema(stack, 'Db', {
-      app: 'pragma',
+      app: 'test-app',
       stage: 'prod',
       migrationsPath: tmp,
     });

@@ -26,12 +26,12 @@ function tagsOnFirstBucket(stack: Stack): Record<string, string> {
 describe('applyStandardTags', () => {
   it('applies the base tag set', () => {
     const stack = new Stack(new App(), 'S');
-    applyStandardTags(stack, { app: 'pragma', stage: 'prod' });
+    applyStandardTags(stack, { app: 'test-app', stage: 'prod' });
     new Bucket(stack, 'B');
     const tags = tagsOnFirstBucket(stack);
     expect(tags).toMatchObject({
       Project: 'borso',
-      App: 'pragma',
+      App: 'test-app',
       Stage: 'prod',
       ManagedBy: 'cdk',
     });
@@ -41,14 +41,14 @@ describe('applyStandardTags', () => {
 
   it('adds PrNumber when supplied', () => {
     const stack = new Stack(new App(), 'S');
-    applyStandardTags(stack, { app: 'pragma', stage: 'preview', prNumber: 7 });
+    applyStandardTags(stack, { app: 'test-app', stage: 'preview', prNumber: 7 });
     new Bucket(stack, 'B');
     expect(tagsOnFirstBucket(stack)).toMatchObject({ PrNumber: '7' });
   });
 
   it('marks integ-stage scopes with IntegTest=true', () => {
     const stack = new Stack(new App(), 'S');
-    applyStandardTags(stack, { app: 'pragma', stage: 'integ', prNumber: 9 });
+    applyStandardTags(stack, { app: 'test-app', stage: 'integ', prNumber: 9 });
     new Bucket(stack, 'B');
     expect(tagsOnFirstBucket(stack)).toMatchObject({
       IntegTest: 'true',

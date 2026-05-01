@@ -48,7 +48,7 @@ describe('StaticSite (prod)', () => {
 describe('StaticSite (preview)', () => {
   const tpl = synth((stack) => {
     new StaticSite(stack, 'Site', {
-      app: 'pragma',
+      app: 'test-app',
       stage: 'preview',
       prNumber: 42,
       assetsPath: '.',
@@ -63,7 +63,7 @@ describe('StaticSite (preview)', () => {
   it('emits a Url output pointing at the preview hostname', () => {
     const outputs = tpl.toJSON().Outputs ?? {};
     const values = Object.values(outputs).map((o) => (o as { Value: string }).Value);
-    expect(values).toContain('https://pragma-pr-42.preview.borso.fr');
+    expect(values).toContain('https://test-app-pr-42.preview.borso.fr');
   });
 });
 
@@ -88,7 +88,7 @@ describe('StaticSite (validation)', () => {
   it('rejects prod without domainName', () => {
     expect(() =>
       synth((stack) => {
-        new StaticSite(stack, 'Site', { app: 'pragma', stage: 'prod', assetsPath: '.' });
+        new StaticSite(stack, 'Site', { app: 'test-app', stage: 'prod', assetsPath: '.' });
       }),
     ).toThrow();
   });

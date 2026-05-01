@@ -52,7 +52,7 @@ export interface StaticSiteProps {
   /** Deployment stage. */
   readonly stage: Stage;
   /**
-   * Apex/subdomain for prod (e.g. "borso.fr" or "pragma.borso.fr").
+   * Apex/subdomain for prod (e.g. "borso.fr" or "borsouvertures.borso.fr").
    * Required for stage="prod"; ignored for preview/integ.
    */
   readonly domainName?: string;

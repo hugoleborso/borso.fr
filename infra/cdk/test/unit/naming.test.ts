@@ -11,7 +11,7 @@ import {
 } from '../../src/internal/naming.js';
 
 describe('validateAppSlug', () => {
-  it.each(['borso-fr', 'pragma', 'app1', 'a-b-c'])('accepts %s', (slug) => {
+  it.each(['borso-fr', 'test-app', 'app1', 'a-b-c'])('accepts %s', (slug) => {
     expect(() => validateAppSlug(slug)).not.toThrow();
   });
 
@@ -40,18 +40,18 @@ describe('stackName', () => {
   });
 
   it('builds preview stack names', () => {
-    expect(stackName({ app: 'pragma', stage: 'preview', prNumber: 7 })).toBe('pragma-pr-7');
+    expect(stackName({ app: 'test-app', stage: 'preview', prNumber: 7 })).toBe('test-app-pr-7');
   });
 
   it('builds integ stack names', () => {
-    expect(stackName({ app: 'pragma', stage: 'integ', prNumber: 42 })).toBe(
-      'bp-integ-pr-42-pragma',
+    expect(stackName({ app: 'test-app', stage: 'integ', prNumber: 42 })).toBe(
+      'bp-integ-pr-42-test-app',
     );
   });
 
   it('requires prNumber for non-prod stages', () => {
-    expect(() => stackName({ app: 'pragma', stage: 'preview' })).toThrow();
-    expect(() => stackName({ app: 'pragma', stage: 'integ' })).toThrow();
+    expect(() => stackName({ app: 'test-app', stage: 'preview' })).toThrow();
+    expect(() => stackName({ app: 'test-app', stage: 'integ' })).toThrow();
   });
 });
 
@@ -63,28 +63,28 @@ describe('bucketName', () => {
   });
 
   it('uses pr suffix for preview', () => {
-    expect(bucketName({ app: 'pragma', stage: 'preview', prNumber: 3 }, 'eu-west-3', '123')).toBe(
-      'pragma-pr-3-eu-west-3-123',
+    expect(bucketName({ app: 'test-app', stage: 'preview', prNumber: 3 }, 'eu-west-3', '123')).toBe(
+      'test-app-pr-3-eu-west-3-123',
     );
   });
 
   it('prepends bp-integ- for integ stage', () => {
-    expect(bucketName({ app: 'pragma', stage: 'integ', prNumber: 3 }, 'eu-west-3', '123')).toBe(
-      'bp-integ-pragma-pr-3-eu-west-3-123',
+    expect(bucketName({ app: 'test-app', stage: 'integ', prNumber: 3 }, 'eu-west-3', '123')).toBe(
+      'bp-integ-test-app-pr-3-eu-west-3-123',
     );
   });
 });
 
 describe('lambdaFunctionName', () => {
   it('builds names per convention', () => {
-    expect(lambdaFunctionName({ app: 'pragma', stage: 'prod' }, 'health')).toBe(
-      'pragma-prod-health',
+    expect(lambdaFunctionName({ app: 'test-app', stage: 'prod' }, 'health')).toBe(
+      'test-app-prod-health',
     );
   });
 
   it('uses pr suffix for preview', () => {
-    expect(lambdaFunctionName({ app: 'pragma', stage: 'preview', prNumber: 4 }, 'health')).toBe(
-      'pragma-pr-4-health',
+    expect(lambdaFunctionName({ app: 'test-app', stage: 'preview', prNumber: 4 }, 'health')).toBe(
+      'test-app-pr-4-health',
     );
   });
 });
@@ -95,55 +95,55 @@ describe('dsqlSchemaName', () => {
   });
 
   it('appends pr suffix for preview', () => {
-    expect(dsqlSchemaName({ app: 'pragma', stage: 'preview', prNumber: 9 })).toBe('pragma_pr_9');
+    expect(dsqlSchemaName({ app: 'test-app', stage: 'preview', prNumber: 9 })).toBe('test_app_pr_9');
   });
 
   it('prefixes integ schemas', () => {
-    expect(dsqlSchemaName({ app: 'pragma', stage: 'integ', prNumber: 9 })).toBe(
-      'integ_pr_9_pragma',
+    expect(dsqlSchemaName({ app: 'test-app', stage: 'integ', prNumber: 9 })).toBe(
+      'integ_pr_9_test_app',
     );
   });
 
   it('throws when preview/integ omits prNumber', () => {
-    expect(() => dsqlSchemaName({ app: 'pragma', stage: 'preview' })).toThrow();
-    expect(() => dsqlSchemaName({ app: 'pragma', stage: 'integ' })).toThrow();
+    expect(() => dsqlSchemaName({ app: 'test-app', stage: 'preview' })).toThrow();
+    expect(() => dsqlSchemaName({ app: 'test-app', stage: 'integ' })).toThrow();
   });
 });
 
 describe('previewHostname / previewS3Prefix', () => {
   it('hostname for preview', () => {
-    expect(previewHostname({ app: 'pragma', stage: 'preview', prNumber: 5 })).toBe(
-      'pragma-pr-5.preview.borso.fr',
+    expect(previewHostname({ app: 'test-app', stage: 'preview', prNumber: 5 })).toBe(
+      'test-app-pr-5.preview.borso.fr',
     );
   });
 
   it('hostname for integ', () => {
-    expect(previewHostname({ app: 'pragma', stage: 'integ', prNumber: 5 })).toBe(
-      'bp-integ-pragma-pr-5.preview.borso.fr',
+    expect(previewHostname({ app: 'test-app', stage: 'integ', prNumber: 5 })).toBe(
+      'bp-integ-test-app-pr-5.preview.borso.fr',
     );
   });
 
   it('throws for prod stage', () => {
-    expect(() => previewHostname({ app: 'pragma', stage: 'prod' })).toThrow();
+    expect(() => previewHostname({ app: 'test-app', stage: 'prod' })).toThrow();
   });
 
   it('s3 prefix mirrors hostname', () => {
-    expect(previewS3Prefix({ app: 'pragma', stage: 'preview', prNumber: 5 })).toBe('pragma/pr-5');
-    expect(previewS3Prefix({ app: 'pragma', stage: 'integ', prNumber: 5 })).toBe(
-      'bp-integ/pragma/pr-5',
+    expect(previewS3Prefix({ app: 'test-app', stage: 'preview', prNumber: 5 })).toBe('test-app/pr-5');
+    expect(previewS3Prefix({ app: 'test-app', stage: 'integ', prNumber: 5 })).toBe(
+      'bp-integ/test-app/pr-5',
     );
   });
 
   it('previewS3Prefix throws for prod stage', () => {
-    expect(() => previewS3Prefix({ app: 'pragma', stage: 'prod' })).toThrow();
+    expect(() => previewS3Prefix({ app: 'test-app', stage: 'prod' })).toThrow();
   });
 
   it('rejects non-integer or non-positive prNumber', () => {
-    expect(() => stackName({ app: 'pragma', stage: 'preview', prNumber: 0 })).toThrow();
-    expect(() => stackName({ app: 'pragma', stage: 'preview', prNumber: 1.5 })).toThrow();
+    expect(() => stackName({ app: 'test-app', stage: 'preview', prNumber: 0 })).toThrow();
+    expect(() => stackName({ app: 'test-app', stage: 'preview', prNumber: 1.5 })).toThrow();
   });
 
   it('rejects bad handler names in lambdaFunctionName', () => {
-    expect(() => lambdaFunctionName({ app: 'pragma', stage: 'prod' }, 'Bad_Handler')).toThrow();
+    expect(() => lambdaFunctionName({ app: 'test-app', stage: 'prod' }, 'Bad_Handler')).toThrow();
   });
 });

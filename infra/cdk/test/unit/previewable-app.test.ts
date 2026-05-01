@@ -15,9 +15,9 @@ function synth(): Template {
     env: { account: '123456789012', region: 'eu-west-3' },
   });
   new PreviewableApp(stack, 'App', {
-    app: 'pragma',
+    app: 'test-app',
     stage: 'prod',
-    domainName: 'pragma.borso.fr',
+    domainName: 'borsouvertures.borso.fr',
     frontend: { distPath: '.' },
     api: { entry: ENTRY, environment: { FOO: 'bar' } },
     database: { migrationsPath: MIGRATIONS },
@@ -55,7 +55,7 @@ describe('PreviewableApp (preview, no api/db)', () => {
       env: { account: '123456789012', region: 'eu-west-3' },
     });
     const previewable = new PreviewableApp(stack, 'App', {
-      app: 'pragma',
+      app: 'test-app',
       stage: 'preview',
       prNumber: 5,
       frontend: { distPath: '.' },
