@@ -1,0 +1,8 @@
+{
+  "app": "tsx bin/shared.ts",
+  "watch": { "exclude": ["**/*.ts"] },
+  "context": {
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/core:newStyleStackSynthesis": true
+  }
+}

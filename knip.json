@@ -12,9 +12,12 @@
         "test/**/*.test.ts",
         "test/unit/fixtures/handler.ts"
       ],
-      "ignoreDependencies": [
-        "esbuild"
-      ]
+      "ignoreDependencies": ["esbuild"]
+    },
+    "infra/shared": {
+      "entry": ["bin/shared.ts", "test/unit/**/*.test.ts"],
+      "project": ["bin/**/*.ts", "lib/**/*.ts", "test/**/*.ts"],
+      "ignoreDependencies": ["tsx"]
     }
   }
 }
