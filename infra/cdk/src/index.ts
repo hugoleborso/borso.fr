@@ -18,3 +18,12 @@ export { PreviewableApp } from './constructs/previewable-app.js';
 export type { PreviewableAppProps } from './constructs/previewable-app.js';
 
 export type { Stage } from './internal/naming.js';
+
+// Lower-level helpers needed by infra/shared/ (sibling workspace).
+export {
+  GITHUB_OIDC_ISSUER,
+  githubActionsPrincipal,
+  githubSubClaim,
+} from './internal/oidc.js';
+export type { GithubSubject, SubjectKind } from './internal/oidc.js';
+export { HOST_ROUTING_FUNCTION_CODE } from './internal/cf-host-routing-function.js';

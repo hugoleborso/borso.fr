@@ -21,8 +21,8 @@ type DeployStage = Exclude<Stage, 'dev'>;
 const APP_SLUG_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 const APP_SLUG_MAX_LENGTH = 32;
 
-export const PREVIEW_PARENT_DOMAIN = 'preview.borso.fr';
-export const INTEG_STACK_PREFIX = 'bp-integ';
+const PREVIEW_PARENT_DOMAIN = 'preview.borso.fr';
+const INTEG_STACK_PREFIX = 'bp-integ';
 
 export function validateAppSlug(slug: string): void {
   if (!APP_SLUG_PATTERN.test(slug)) {
@@ -45,7 +45,7 @@ export function assertDeployStage(stage: Stage): asserts stage is DeployStage {
   }
 }
 
-export interface NameContext {
+interface NameContext {
   readonly app: string;
   readonly stage: Stage;
   readonly prNumber?: number;

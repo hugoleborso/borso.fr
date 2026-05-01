@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "ignore": ["apps/**/site/**"]
+    },
+    "infra/cdk": {
+      "entry": [
+        "src/index.ts",
+        "src/internal/migration-runner/index.ts",
+        "src/internal/cf-host-routing-function.code.js",
+        "test/**/*.test.ts",
+        "test/unit/fixtures/handler.ts"
+      ],
+      "ignoreDependencies": [
+        "esbuild"
+      ]
+    }
+  }
+}
