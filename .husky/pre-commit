@@ -1,0 +1,9 @@
+set -e
+
+# Run @borso/infra's full test suite (including 100% coverage thresholds)
+# whenever a commit touches infra/cdk/.
+changed_infra=$(git diff --cached --name-only --diff-filter=ACMR | grep '^infra/cdk/' || true)
+if [ -n "$changed_infra" ]; then
+  echo "[pre-commit] infra/cdk/ changed — running @borso/infra test:coverage"
+  pnpm --filter @borso/infra test:coverage
+fi
