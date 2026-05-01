@@ -1,0 +1,19 @@
+{
+  "name": "borso-monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "lint": "biome lint"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.0",
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "husky": "^9.1.0"
+  }
+}

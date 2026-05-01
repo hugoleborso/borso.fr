@@ -1,0 +1,14 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "nursery": {
+        "noUnnecessaryConditions": "error",
+        "noExcessiveLinesPerFile": "error"
+      }
+    }
+  },
+  "formatter": { "enabled": false }
+}
