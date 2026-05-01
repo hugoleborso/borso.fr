@@ -197,17 +197,25 @@ describe('SharedStack', () => {
       }
     });
 
-    it('creates no budgets when neither prop nor env var is set', () => {
+    it('throws when neither prop nor env var is set (budget email is mandatory)', () => {
       const original = process.env.BORSO_BUDGET_EMAIL;
       delete process.env.BORSO_BUDGET_EMAIL;
       try {
-        const tpl = synth();
-        tpl.resourceCountIs('AWS::Budgets::Budget', 0);
+        expect(() => synth()).toThrow(/budget email is mandatory/);
       } finally {
         if (original !== undefined) {
           process.env.BORSO_BUDGET_EMAIL = original;
         }
       }
+    });
+  });
+
+  describe('no role gets AdministratorAccess', () => {
+    const tpl = synth({ budgetEmail: 'hugo@example.com' });
+
+    it('synthesized template never references the AdministratorAccess managed policy ARN', () => {
+      const json = JSON.stringify(tpl.toJSON());
+      expect(json).not.toContain(':policy/AdministratorAccess');
     });
   });
 });
@@ -224,7 +232,7 @@ describe('SharedStack — ensure prior env vars do not leak', () => {
     }
   });
 
-  it('does not create budgets in a clean env', () => {
-    synth().resourceCountIs('AWS::Budgets::Budget', 0);
+  it('synth in a clean env throws (budget email mandatory)', () => {
+    expect(() => synth()).toThrow(/budget email is mandatory/);
   });
 });

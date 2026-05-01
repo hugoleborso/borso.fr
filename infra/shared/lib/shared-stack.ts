@@ -133,12 +133,42 @@ export class SharedStack extends Stack {
 
     // === Deploy roles ===
     //
-    // ProdDeployRole         trusts repo:hugoleborso/borso.fr:environment:prod
-    //                        AdministratorAccess (gated by `prod` env approval)
-    // PreviewDeployRole      trusts repo:hugoleborso/borso.fr:pull_request
-    //                        PowerUserAccess + IAM scoped to *-pr-* + cdk-* + DSQL
-    // SharedInfraDeployRole  trusts repo:hugoleborso/borso.fr:environment:prod-shared
-    //                        AdministratorAccess (gated by `prod-shared` approval)
+    // No role gets AdministratorAccess. PowerUserAccess + narrow IAM/DSQL/budgets/
+    // OIDC additions cover what CDK actually does for each scope.
+    //
+    // ProdDeployRole         trusts repo:…:environment:prod
+    //                        PowerUserAccess + iam:* on *-prod-* + cdk-* + DSQL connect
+    // PreviewDeployRole      trusts repo:…:pull_request
+    //                        PowerUserAccess + iam:* on *-pr-* + cdk-* + DSQL connect
+    // SharedInfraDeployRole  trusts repo:…:environment:prod-shared
+    //                        PowerUserAccess + iam:* on the deploy roles + cdk-* +
+    //                        borso-shared-* + OIDC provider lifecycle + DSQL cluster
+    //                        lifecycle + budgets:*
+
+    const cdkRoleIamActions = [
+      'iam:CreateRole',
+      'iam:DeleteRole',
+      'iam:GetRole',
+      'iam:GetRolePolicy',
+      'iam:UpdateRole',
+      'iam:UpdateRoleDescription',
+      'iam:UpdateAssumeRolePolicy',
+      'iam:AttachRolePolicy',
+      'iam:DetachRolePolicy',
+      'iam:ListAttachedRolePolicies',
+      'iam:PutRolePolicy',
+      'iam:DeleteRolePolicy',
+      'iam:ListRolePolicies',
+      'iam:TagRole',
+      'iam:UntagRole',
+      'iam:ListRoleTags',
+      'iam:PassRole',
+    ];
+    const dsqlConnect = new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: ['dsql:DbConnect', 'dsql:DbConnectAdmin'],
+      resources: [dsqlClusterArn],
+    });
 
     const prodDeployRole = new Role(this, 'ProdDeployRole', {
       roleName: 'ProdDeployRole',
@@ -149,7 +179,18 @@ export class SharedStack extends Stack {
       maxSessionDuration: Duration.hours(1),
       description: 'Used by deploy.yml to deploy prod app stacks. Gated by GitHub prod environment.',
     });
-    prodDeployRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
+    prodDeployRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess'));
+    prodDeployRole.addToPolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: cdkRoleIamActions,
+        resources: [
+          `arn:aws:iam::${this.account}:role/*-prod-*`,
+          `arn:aws:iam::${this.account}:role/cdk-*`,
+        ],
+      }),
+    );
+    prodDeployRole.addToPolicy(dsqlConnect);
 
     const previewDeployRole = new Role(this, 'PreviewDeployRole', {
       roleName: 'PreviewDeployRole',
@@ -164,31 +205,14 @@ export class SharedStack extends Stack {
     previewDeployRole.addToPolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        actions: [
-          'iam:PassRole',
-          'iam:CreateRole',
-          'iam:DeleteRole',
-          'iam:AttachRolePolicy',
-          'iam:DetachRolePolicy',
-          'iam:PutRolePolicy',
-          'iam:DeleteRolePolicy',
-          'iam:GetRole',
-          'iam:TagRole',
-          'iam:UntagRole',
-        ],
+        actions: cdkRoleIamActions,
         resources: [
           `arn:aws:iam::${this.account}:role/*-pr-*`,
           `arn:aws:iam::${this.account}:role/cdk-*`,
         ],
       }),
     );
-    previewDeployRole.addToPolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: ['dsql:DbConnect', 'dsql:DbConnectAdmin'],
-        resources: [dsqlClusterArn],
-      }),
-    );
+    previewDeployRole.addToPolicy(dsqlConnect);
 
     const sharedDeployRole = new Role(this, 'SharedInfraDeployRole', {
       roleName: 'SharedInfraDeployRole',
@@ -199,35 +223,103 @@ export class SharedStack extends Stack {
       maxSessionDuration: Duration.hours(1),
       description: 'Self-deploy role for this stack. Gated by GitHub prod-shared environment.',
     });
-    sharedDeployRole.addManagedPolicy(
-      ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'),
+    sharedDeployRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess'));
+    // IAM role/policy lifecycle on the resources this stack owns:
+    //   - the three named deploy roles themselves
+    //   - CDK-managed roles created within this stack (borso-shared-*)
+    //   - CDK bootstrap roles (cdk-*)
+    //   - any managed policies created by the stack
+    sharedDeployRole.addToPolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          ...cdkRoleIamActions,
+          'iam:CreatePolicy',
+          'iam:DeletePolicy',
+          'iam:GetPolicy',
+          'iam:GetPolicyVersion',
+          'iam:CreatePolicyVersion',
+          'iam:DeletePolicyVersion',
+          'iam:ListPolicyVersions',
+          'iam:TagPolicy',
+          'iam:UntagPolicy',
+        ],
+        resources: [
+          `arn:aws:iam::${this.account}:role/ProdDeployRole`,
+          `arn:aws:iam::${this.account}:role/PreviewDeployRole`,
+          `arn:aws:iam::${this.account}:role/SharedInfraDeployRole`,
+          `arn:aws:iam::${this.account}:role/borso-shared-*`,
+          `arn:aws:iam::${this.account}:role/cdk-*`,
+          `arn:aws:iam::${this.account}:policy/*`,
+        ],
+      }),
+    );
+    // OIDC provider for GitHub Actions (one per account).
+    sharedDeployRole.addToPolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          'iam:CreateOpenIDConnectProvider',
+          'iam:DeleteOpenIDConnectProvider',
+          'iam:GetOpenIDConnectProvider',
+          'iam:UpdateOpenIDConnectProviderThumbprint',
+          'iam:AddClientIDToOpenIDConnectProvider',
+          'iam:RemoveClientIDFromOpenIDConnectProvider',
+          'iam:TagOpenIDConnectProvider',
+          'iam:UntagOpenIDConnectProvider',
+          'iam:ListOpenIDConnectProviderTags',
+        ],
+        resources: [
+          `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`,
+        ],
+      }),
+    );
+    // DSQL cluster lifecycle (full because the shared stack owns the cluster).
+    sharedDeployRole.addToPolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: ['dsql:*'],
+        resources: ['*'],
+      }),
+    );
+    // Budgets does not support resource-level scoping.
+    sharedDeployRole.addToPolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: ['budgets:*'],
+        resources: ['*'],
+      }),
     );
 
-    // === Budgets ===
+    // === Budgets (mandatory) ===
 
     const budgetEmail = props.budgetEmail ?? process.env.BORSO_BUDGET_EMAIL;
-    if (budgetEmail) {
-      for (const amount of [5, 20, 50]) {
-        new CfnBudget(this, `Budget${amount}`, {
-          budget: {
-            budgetName: `borso-monthly-${amount}eur`,
-            budgetType: 'COST',
-            timeUnit: 'MONTHLY',
-            budgetLimit: { amount, unit: 'EUR' },
-          },
-          notificationsWithSubscribers: [
-            {
-              notification: {
-                notificationType: 'ACTUAL',
-                comparisonOperator: 'GREATER_THAN',
-                threshold: 80,
-                thresholdType: 'PERCENTAGE',
-              },
-              subscribers: [{ subscriptionType: 'EMAIL', address: budgetEmail }],
+    if (!budgetEmail) {
+      throw new Error(
+        'SharedStack: budget email is mandatory. Set BORSO_BUDGET_EMAIL env var or pass props.budgetEmail. ' +
+          'Three monthly cost alarms (€5/€20/€50) will fire to this address at 80% of each threshold.',
+      );
+    }
+    for (const amount of [5, 20, 50]) {
+      new CfnBudget(this, `Budget${amount}`, {
+        budget: {
+          budgetName: `borso-monthly-${amount}eur`,
+          budgetType: 'COST',
+          timeUnit: 'MONTHLY',
+          budgetLimit: { amount, unit: 'EUR' },
+        },
+        notificationsWithSubscribers: [
+          {
+            notification: {
+              notificationType: 'ACTUAL',
+              comparisonOperator: 'GREATER_THAN',
+              threshold: 80,
+              thresholdType: 'PERCENTAGE',
             },
-          ],
-        });
-      }
+            subscribers: [{ subscriptionType: 'EMAIL', address: budgetEmail }],
+          },
+        ],
+      });
     }
 
     // === SSM parameters (consumed by constructs at synth time) ===
