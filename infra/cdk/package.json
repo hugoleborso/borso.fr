@@ -13,7 +13,7 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && cp src/internal/cf-host-routing-function.code.js dist/internal/cf-host-routing-function.code.js",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint",
     "test": "vitest run",

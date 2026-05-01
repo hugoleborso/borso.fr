@@ -4,5 +4,17 @@
   "extends": ["../../biome.jsonc"],
   "files": {
     "includes": ["src/**", "test/**"]
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/internal/cf-host-routing-function.code.js"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off"
+          }
+        }
+      }
+    }
+  ]
 }
