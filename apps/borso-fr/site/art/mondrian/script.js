@@ -1,8 +1,8 @@
 function setDefaultCanvasSize() {
-  let defaultSize = Math.floor(Math.min(window.innerWidth * 0.8, window.innerHeight * 0.8));
+  const defaultSize = Math.floor(Math.min(window.innerWidth * 0.8, window.innerHeight * 0.8));
   document.getElementById('widthInput').value = defaultSize;
   document.getElementById('heightInput').value = defaultSize;
-  let canvas = document.getElementById('paintingCanvas');
+  const canvas = document.getElementById('paintingCanvas');
   canvas.width = defaultSize;
   canvas.height = defaultSize;
 }
@@ -22,7 +22,7 @@ function createColorPicker(defaultValue) {
   const removeBtn = document.createElement('button');
   removeBtn.className = 'remove-btn';
   removeBtn.textContent = '×';
-  removeBtn.addEventListener('click', function (e) {
+  removeBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     container.remove();
   });
@@ -37,7 +37,7 @@ function createAddColorButton() {
   button.id = 'addColorButton';
   button.type = 'button';
   button.textContent = '+';
-  button.addEventListener('click', function () {
+  button.addEventListener('click', () => {
     const newPicker = createColorPicker('#ffffff');
     colorGrid.insertBefore(newPicker, button);
   });
@@ -70,9 +70,9 @@ const lineWidth = Math.max(2, Math.min(canvas.width, canvas.height) * 0.005);
 const minBlockSize = Math.max(20, Math.min(canvas.width, canvas.height) * 0.05);
 
 function hexToRGB(colorStr) {
-  let r = parseInt(colorStr.slice(1, 3), 16);
-  let g = parseInt(colorStr.slice(3, 5), 16);
-  let b = parseInt(colorStr.slice(5, 7), 16);
+  const r = parseInt(colorStr.slice(1, 3), 16);
+  const g = parseInt(colorStr.slice(3, 5), 16);
+  const b = parseInt(colorStr.slice(5, 7), 16);
   return { r, g, b };
 }
 
@@ -94,20 +94,20 @@ function randomBetween(min, max) {
 // The parameter totalSplits is the number of internal splits (total lines minus 4 border lines).
 // The parameter animationMode is either "opposite" or "matching".
 function generateSubdivisionSplits(totalSplits, animationMode) {
-  let rects = [{ x: 0, y: 0, width: canvas.width, height: canvas.height }];
-  let splittingLines = [];
+  const rects = [{ x: 0, y: 0, width: canvas.width, height: canvas.height }];
+  const splittingLines = [];
 
   for (let i = 0; i < totalSplits; i++) {
     // Choose only those rectangles that are large enough to split.
-    let splittable = rects.filter(
+    const splittable = rects.filter(
       (rect) => rect.width >= 2 * minBlockSize || rect.height >= 2 * minBlockSize,
     );
     if (splittable.length === 0) break;
 
     // Pick one rectangle at random.
-    let rectIndex = Math.floor(Math.random() * splittable.length);
-    let rect = splittable[rectIndex];
-    let globalIndex = rects.indexOf(rect);
+    const rectIndex = Math.floor(Math.random() * splittable.length);
+    const rect = splittable[rectIndex];
+    const globalIndex = rects.indexOf(rect);
 
     const canSplitVertically = rect.width >= 2 * minBlockSize;
     const canSplitHorizontally = rect.height >= 2 * minBlockSize;
@@ -121,10 +121,10 @@ function generateSubdivisionSplits(totalSplits, animationMode) {
     }
 
     if (splitDirection === 'vertical') {
-      let splitX = Math.floor(
+      const splitX = Math.floor(
         randomBetween(rect.x + minBlockSize, rect.x + rect.width - minBlockSize),
       );
-      let lineObj = {
+      const lineObj = {
         type: 'vertical',
         finalPos: splitX,
         y1: rect.y,
@@ -136,13 +136,13 @@ function generateSubdivisionSplits(totalSplits, animationMode) {
         lineObj.currentPos = lineObj.startPos;
       } else {
         // Matching mode: vertical line slides in vertically.
-        let lineLength = lineObj.y2 - lineObj.y1;
+        const lineLength = lineObj.y2 - lineObj.y1;
         lineObj.startOffset = Math.random() < 0.5 ? -lineLength - 20 : lineLength + 20;
         lineObj.currentOffset = lineObj.startOffset;
       }
       // Split the rectangle into left and right parts.
-      let leftRect = { x: rect.x, y: rect.y, width: splitX - rect.x, height: rect.height };
-      let rightRect = {
+      const leftRect = { x: rect.x, y: rect.y, width: splitX - rect.x, height: rect.height };
+      const rightRect = {
         x: splitX,
         y: rect.y,
         width: rect.x + rect.width - splitX,
@@ -151,10 +151,10 @@ function generateSubdivisionSplits(totalSplits, animationMode) {
       rects.splice(globalIndex, 1, leftRect, rightRect);
       splittingLines.push(lineObj);
     } else if (splitDirection === 'horizontal') {
-      let splitY = Math.floor(
+      const splitY = Math.floor(
         randomBetween(rect.y + minBlockSize, rect.y + rect.height - minBlockSize),
       );
-      let lineObj = {
+      const lineObj = {
         type: 'horizontal',
         finalPos: splitY,
         x1: rect.x,
@@ -166,13 +166,13 @@ function generateSubdivisionSplits(totalSplits, animationMode) {
         lineObj.currentPos = lineObj.startPos;
       } else {
         // Matching mode: horizontal line slides in horizontally.
-        let lineLength = lineObj.x2 - lineObj.x1;
+        const lineLength = lineObj.x2 - lineObj.x1;
         lineObj.startOffset = Math.random() < 0.5 ? -lineLength - 20 : lineLength + 20;
         lineObj.currentOffset = lineObj.startOffset;
       }
       // Split the rectangle into top and bottom parts.
-      let topRect = { x: rect.x, y: rect.y, width: rect.width, height: splitY - rect.y };
-      let bottomRect = {
+      const topRect = { x: rect.x, y: rect.y, width: rect.width, height: splitY - rect.y };
+      const bottomRect = {
         x: rect.x,
         y: splitY,
         width: rect.width,
@@ -190,9 +190,9 @@ function generatePainting() {
   // Hide the download button during generation.
   document.getElementById('downloadButton').style.display = 'none';
 
-  const widthVal = parseInt(document.getElementById('widthInput').value);
-  const heightVal = parseInt(document.getElementById('heightInput').value);
-  let linesVal = parseInt(document.getElementById('linesInput').value);
+  const widthVal = parseInt(document.getElementById('widthInput').value, 10);
+  const heightVal = parseInt(document.getElementById('heightInput').value, 10);
+  const linesVal = parseInt(document.getElementById('linesInput').value, 10);
   canvas.width = widthVal;
   canvas.height = heightVal;
 
@@ -210,16 +210,16 @@ function generatePainting() {
     colorStrings = ['#ff0000', '#0000ff', '#ffff00', '#000000', '#ffffff'];
   }
 
-  let splits = Math.max(0, linesVal);
+  const splits = Math.max(0, linesVal);
   const subdivResult = generateSubdivisionSplits(splits, animationMode);
   blocks = subdivResult.blocks;
-  let splittingLines = subdivResult.splittingLines;
+  const splittingLines = subdivResult.splittingLines;
 
-  let borderLines = [];
-  let leftBorder = { type: 'vertical', finalPos: 0, y1: 0, y2: canvas.height };
-  let rightBorder = { type: 'vertical', finalPos: canvas.width, y1: 0, y2: canvas.height };
-  let topBorder = { type: 'horizontal', finalPos: 0, x1: 0, x2: canvas.width };
-  let bottomBorder = { type: 'horizontal', finalPos: canvas.height, x1: 0, x2: canvas.width };
+  const borderLines = [];
+  const leftBorder = { type: 'vertical', finalPos: 0, y1: 0, y2: canvas.height };
+  const rightBorder = { type: 'vertical', finalPos: canvas.width, y1: 0, y2: canvas.height };
+  const topBorder = { type: 'horizontal', finalPos: 0, x1: 0, x2: canvas.width };
+  const bottomBorder = { type: 'horizontal', finalPos: canvas.height, x1: 0, x2: canvas.width };
 
   if (animationMode === 'opposite') {
     leftBorder.startPos = -lineWidth;
@@ -231,12 +231,12 @@ function generatePainting() {
     bottomBorder.startPos = canvas.height + lineWidth;
     bottomBorder.currentPos = bottomBorder.startPos;
   } else {
-    let verticalLength = canvas.height;
+    const verticalLength = canvas.height;
     leftBorder.startOffset = Math.random() < 0.5 ? -verticalLength - 20 : verticalLength + 20;
     leftBorder.currentOffset = leftBorder.startOffset;
     rightBorder.startOffset = Math.random() < 0.5 ? -verticalLength - 20 : verticalLength + 20;
     rightBorder.currentOffset = rightBorder.startOffset;
-    let horizontalLength = canvas.width;
+    const horizontalLength = canvas.width;
     topBorder.startOffset = Math.random() < 0.5 ? -horizontalLength - 20 : horizontalLength + 20;
     topBorder.currentOffset = topBorder.startOffset;
     bottomBorder.startOffset = Math.random() < 0.5 ? -horizontalLength - 20 : horizontalLength + 20;

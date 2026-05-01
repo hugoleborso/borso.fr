@@ -1,7 +1,7 @@
 const navIcon = document.getElementById('nav-icon');
 const navMenu = document.getElementById('nav-menu');
 
-navIcon.addEventListener('click', function () {
+navIcon.addEventListener('click', () => {
   navIcon.classList.toggle('open');
   navMenu.classList.toggle('open');
 });
