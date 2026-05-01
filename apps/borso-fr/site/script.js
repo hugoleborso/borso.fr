@@ -1,7 +1,7 @@
 const navIcon = document.getElementById('nav-icon');
 const navMenu = document.getElementById('nav-menu');
 
-navIcon.addEventListener('click', function() {
+navIcon.addEventListener('click', function () {
   navIcon.classList.toggle('open');
   navMenu.classList.toggle('open');
 });
@@ -14,15 +14,7 @@ const POINTS_COUNT = 6;
 
 let points = [];
 
-const colors = [
-  '#ff0057',
-  '#1c92d2',
-  '#ff7f50',
-  '#6a0dad',
-  '#fffd82',
-  '#03fcba',
-  '#f441a5',
-];
+const colors = ['#ff0057', '#1c92d2', '#ff7f50', '#6a0dad', '#fffd82', '#03fcba', '#f441a5'];
 
 function random(min, max) {
   return Math.random() * (max - min) + min;
@@ -36,7 +28,7 @@ function initPoints() {
       y: random(0, h),
       vx: random(0, 1) > 0.5 ? random(0.3, 0.7) : random(-0.7, -0.3),
       vy: random(0, 1) > 0.5 ? random(0.3, 0.7) : random(-0.7, -0.3),
-      color: colors[Math.floor(Math.random() * colors.length)]
+      color: colors[Math.floor(Math.random() * colors.length)],
     });
   }
 }
@@ -69,12 +61,12 @@ function animate() {
       0,
       p.x,
       p.y,
-      Math.min(w, h) * 0.6 // radius
+      Math.min(w, h) * 0.6, // radius
     );
     gradient.addColorStop(0, p.color);
     gradient.addColorStop(1, 'transparent');
     ctx.fillStyle = gradient;
-    ctx.fillRect(p.x - (w * 0.6), p.y - (h * 0.6), w * 1.2, h * 1.2);
+    ctx.fillRect(p.x - w * 0.6, p.y - h * 0.6, w * 1.2, h * 1.2);
 
     // Move the points
     p.x += p.vx;
