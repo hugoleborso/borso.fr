@@ -48,9 +48,20 @@ function handler(event) {
   var app = prMatch[1];
   var pr = prMatch[2];
 
+  // Rewrite directory-style requests to /<dir>/index.html so nested folders
+  // (e.g. /art/mondrian -> /art/mondrian/index.html) work the same as the
+  // root does. Heuristic: if the last path segment after the rightmost '/'
+  // contains no '.', treat as directory; otherwise pass through (preserves
+  // /style.css, /img/photo.jpg, etc).
   var uri = request.uri;
   if (uri === '' || uri.charAt(uri.length - 1) === '/') {
     uri = uri + 'index.html';
+  } else {
+    var lastSlash = uri.lastIndexOf('/');
+    var lastDot = uri.lastIndexOf('.');
+    if (lastDot < lastSlash) {
+      uri = uri + '/index.html';
+    }
   }
 
   request.uri = '/' + prefix + app + '/pr-' + pr + uri;

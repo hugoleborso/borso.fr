@@ -32,7 +32,7 @@ describe('HOST_ROUTING_FUNCTION_CODE', () => {
           uri: '/about',
         },
       }),
-    ).toMatchObject({ uri: '/test-app/pr-7/about' });
+    ).toMatchObject({ uri: '/test-app/pr-7/about/index.html' });
   });
 
   it('appends index.html when the URI ends in `/`', () => {
@@ -54,7 +54,7 @@ describe('HOST_ROUTING_FUNCTION_CODE', () => {
           uri: '/api',
         },
       }),
-    ).toMatchObject({ uri: '/bp-integ/test-app/pr-7/api' });
+    ).toMatchObject({ uri: '/bp-integ/test-app/pr-7/api/index.html' });
   });
 
   it('returns 400 when the request has no Host header', () => {
@@ -77,5 +77,38 @@ describe('HOST_ROUTING_FUNCTION_CODE', () => {
         request: { headers: { host: { value: 'no-pr-suffix.preview.borso.fr' } }, uri: '/' },
       }),
     ).toMatchObject({ statusCode: 404 });
+  });
+
+  it('appends /index.html on nested directory paths without trailing slash', () => {
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'test-app-pr-7.preview.borso.fr' } },
+          uri: '/art/mondrian',
+        },
+      }),
+    ).toMatchObject({ uri: '/test-app/pr-7/art/mondrian/index.html' });
+  });
+
+  it('leaves file paths with extensions untouched', () => {
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'test-app-pr-7.preview.borso.fr' } },
+          uri: '/art/mondrian/script.js',
+        },
+      }),
+    ).toMatchObject({ uri: '/test-app/pr-7/art/mondrian/script.js' });
+  });
+
+  it('treats /.well-known/foo as a directory (no file extension after last slash)', () => {
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'test-app-pr-7.preview.borso.fr' } },
+          uri: '/.well-known/foo',
+        },
+      }),
+    ).toMatchObject({ uri: '/test-app/pr-7/.well-known/foo/index.html' });
   });
 });

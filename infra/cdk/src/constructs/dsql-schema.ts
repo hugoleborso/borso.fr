@@ -131,8 +131,14 @@ export class DsqlSchema extends Construct {
       bundling: {
         target: 'node22',
         format: OutputFormat.ESM,
-        externalModules: ['@aws-sdk/*'],
-        nodeModules: ['postgres', '@aws-sdk/dsql-signer'],
+        // Keep ONLY the Lambda-runtime-provided clients external. We do NOT
+        // include @aws-sdk/dsql-signer here — the runtime doesn't ship it,
+        // so esbuild bundles it inline from the workspace's node_modules
+        // (same with `postgres`). Avoiding `nodeModules` here means CDK
+        // does not run a transient `pnpm install` on every synth, which
+        // shaved ~70 % off the unit-test wall-clock and cleared a vitest
+        // worker-RPC timeout that the cold-cache install was triggering.
+        externalModules: ['@aws-sdk/client-*'],
       },
     });
     this.runnerFn.addToRolePolicy(
