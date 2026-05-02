@@ -1,8 +1,12 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
-    ".": {
-      "ignore": ["apps/**/site/**"]
+    ".": {},
+    "apps/borso-fr": {
+      "entry": ["bin/app.ts"],
+      "project": ["bin/**/*.ts"],
+      "ignoreDependencies": ["tsx"],
+      "ignoreBinaries": ["python3"]
     },
     "infra/cdk": {
       "entry": [

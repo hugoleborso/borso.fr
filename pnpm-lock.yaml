@@ -24,6 +24,31 @@ importers:
         specifier: 6.10.0
         version: 6.10.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
 
+  apps/borso-fr:
+    dependencies:
+      '@borso/infra':
+        specifier: workspace:*
+        version: link:../../infra/cdk
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.19.17
+      aws-cdk:
+        specifier: ^2.180.0
+        version: 2.1120.0
+      aws-cdk-lib:
+        specifier: ^2.180.0
+        version: 2.252.0(constructs@10.6.0)
+      constructs:
+        specifier: ^10.4.2
+        version: 10.6.0
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   infra/cdk:
     dependencies:
       '@aws-sdk/dsql-signer':

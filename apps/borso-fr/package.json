@@ -1,0 +1,27 @@
+{
+  "name": "@borso-app/borso-fr",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server --directory site 5173",
+    "build": "rm -rf dist && cp -R site dist",
+    "lint": "biome lint",
+    "typecheck": "tsc --noEmit",
+    "synth": "pnpm build && cdk synth --all",
+    "diff": "pnpm build && cdk diff --all",
+    "deploy": "pnpm build && cdk deploy --all --require-approval never",
+    "destroy": "cdk destroy --all --force"
+  },
+  "dependencies": {
+    "@borso/infra": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "aws-cdk": "^2.180.0",
+    "aws-cdk-lib": "^2.180.0",
+    "constructs": "^10.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
