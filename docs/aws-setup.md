@@ -192,6 +192,62 @@ Once the workflows from Phase 4 are merged:
 5. Close the PR; the `teardown` job should destroy `borso-fr-pr-N`.
 6. Verify in the AWS console: no leftover stack, no leftover S3 prefix.
 
+## 12. (Optional) Grant Claude Code on the web read access to AWS
+
+Skip this if you only run Claude Code locally — Pattern A in [`local-dev.md`](./local-dev.md#pattern-a--local-claude-code-session-terminal) covers that case via `aws sso login --profile borso-claude`.
+
+For remote (claude.ai/code) sessions, `aws sso login` doesn't work because there's no browser. The simplest path is a dedicated IAM user with long-lived access keys, scoped strictly read-only. Trade-off: long-lived keys are visible to anyone with edit access on the Claude Code project environment; Anthropic does not yet offer encrypted-at-rest secrets storage. The IAM scope is what bounds the blast radius if a key leaks.
+
+### 12.1 Create the IAM user
+
+```bash
+aws --profile borso-admin iam create-user --user-name claude-readonly
+
+aws --profile borso-admin iam attach-user-policy \
+  --user-name claude-readonly \
+  --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
+
+# Reuse the deny inline policy from step 2 (the ClaudeDev permission set).
+aws --profile borso-admin iam put-user-policy \
+  --user-name claude-readonly \
+  --policy-name ClaudeDevDeny \
+  --policy-document file:///path/to/deny.json
+```
+
+The `deny.json` content is the same JSON from step 2 — keep it identical so the read-only guarantee stays in sync between the SSO permission set and this user.
+
+### 12.2 Issue an access key
+
+```bash
+aws --profile borso-admin iam create-access-key --user-name claude-readonly
+```
+
+Copy the `AccessKeyId` and `SecretAccessKey` from the response. Store them somewhere you can retrieve later (1Password, etc.) in case you need to re-paste them after a rotation.
+
+### 12.3 Configure the Claude Code on the web environment
+
+In claude.ai/code, navigate to the project's environment configuration UI and set these variables:
+
+| Var | Value |
+| --- | --- |
+| `AWS_ACCESS_KEY_ID` | from step 12.2 |
+| `AWS_SECRET_ACCESS_KEY` | from step 12.2 |
+| `AWS_REGION` | `eu-west-3` |
+| `AWS_ACCOUNT_ID` | from step 6's `$CDK_DEFAULT_ACCOUNT` |
+
+These get exported into every cloud session for the project. The repo's `scripts/install-repo-deps.sh` (run by the SessionStart hook) detects `AWS_ACCESS_KEY_ID` and conditionally installs the AWS CLI v2 — local sessions without these vars set don't pay that install cost.
+
+### 12.4 Rotation + revocation
+
+- **Rotate every 90 days.** Issue a new key, update env vars in claude.ai/code, deactivate the old key, then delete it after a few days of cooldown.
+- **If a key leaks**: `aws iam delete-access-key --user-name claude-readonly --access-key-id …` immediately, then update env vars.
+- **If the IAM user gets compromised somehow**: `aws iam delete-user --user-name claude-readonly` and start over. The blast radius is whatever `ReadOnlyAccess` minus the deny policy allows — destructive ops are blocked even if a key leaks.
+
+### 12.5 Why not a stronger setup
+
+- **Bootstrap key + Secrets Manager / Vault**: worth it once compliance matters, multiple people have edit access on the Claude project, or the read scope grows beyond truly read-only. Single-developer scope doesn't earn the complexity yet.
+- **STS-issued short-lived creds via a hosted endpoint**: would need to host a tiny Lambda that issues 1 h sessions; a 90-day rotation cadence on a static key is a simpler trade for now.
+
 ## Reference: SSM parameters published by the shared stack
 
 | Parameter | Value | Read by |

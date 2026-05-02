@@ -96,17 +96,14 @@ Cons: requires `aws sso login` before each Claude session that needs AWS — eas
 
 ### Pattern B — Claude Code on the web
 
-SSO doesn't work in remote sessions because `aws sso login` opens a browser. Two workarounds:
+SSO doesn't work in remote sessions (no browser). Use a dedicated IAM user with long-lived access keys, configured in claude.ai/code's environment configuration UI — full setup steps live in [`aws-setup.md` §12](./aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws). Summary:
 
-1. **Skip AWS-aware work from web sessions.** Reach for AWS only from local sessions where pattern A applies. Cleanest.
-2. **Dedicated IAM user with long-lived access keys** (only if you really want AWS access from web sessions):
-   - Create an IAM user `borso-claude-readonly` with the same permissions as the `ClaudeDev` permission set (`ReadOnlyAccess` + the deny inline policy).
-   - Issue an access key + secret access key.
-   - Store them in `.claude/settings.json` `env` (which lives in this repo) — **do not commit them.** Add `.claude/settings.local.json` to `.gitignore` and put the keys there.
-   - Rotate quarterly.
-   - Revoke immediately if the laptop is lost.
+- Dedicated IAM user `claude-readonly` with `ReadOnlyAccess` + the same deny inline policy as the `ClaudeDev` permission set.
+- Long-lived access key, stored in claude.ai/code's per-project environment config (out of git, but visible to anyone with project-edit access — Anthropic does not yet offer encrypted-at-rest secrets).
+- `scripts/install-repo-deps.sh` detects `AWS_ACCESS_KEY_ID` and installs AWS CLI v2 conditionally — local sessions without these vars don't pay that install cost.
+- Rotate the key every 90 days; revoke immediately on suspected leak.
 
-   Trade-offs: long-lived keys can leak; the deny policy limits blast radius but doesn't eliminate it. Not recommended unless web sessions are the primary workflow.
+Long-lived keys can still leak; the deny policy limits blast radius but doesn't eliminate it. Move to a bootstrap-key + Secrets Manager pattern if compliance ever matters.
 
 ### What "read state" looks like in practice
 

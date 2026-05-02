@@ -8,6 +8,8 @@
 # Installs:
 #   - rtk (token-saving CLI proxy used by .claude/hooks/rtk-rewrite.sh)
 #   - pnpm workspace dependencies
+#   - AWS CLI v2 (only when AWS_ACCESS_KEY_ID is set in the env, e.g. on
+#     claude.ai/code remote sessions configured per docs/aws-setup.md §12)
 #
 # Pre-requisites the script does NOT install:
 #   - jq (rtk runtime dep) — apt-get install jq / brew install jq
@@ -44,5 +46,23 @@ if ! command -v pnpm >/dev/null 2>&1; then
 fi
 log "running pnpm install"
 pnpm install --frozen-lockfile
+
+# 4. AWS CLI v2 — only if the session has AWS creds configured (cloud sessions).
+# Local sessions without AWS_ACCESS_KEY_ID set don't pay this install cost.
+if [ -n "${AWS_ACCESS_KEY_ID:-}" ] && ! command -v aws >/dev/null 2>&1; then
+  log "AWS_ACCESS_KEY_ID is set but aws CLI is missing; installing AWS CLI v2"
+  arch=$(uname -m)
+  case "$arch" in
+    x86_64) awscli_url="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" ;;
+    aarch64) awscli_url="https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" ;;
+    *) fail "Unsupported architecture for AWS CLI v2 auto-install: $arch" ;;
+  esac
+  tmp=$(mktemp -d)
+  curl -fsSL "$awscli_url" -o "$tmp/awscliv2.zip"
+  unzip -q "$tmp/awscliv2.zip" -d "$tmp"
+  "$tmp/aws/install" --bin-dir "$HOME/.local/bin" --install-dir "$HOME/.local/aws-cli" --update
+  rm -rf "$tmp"
+  log "aws: $(aws --version)"
+fi
 
 log "done"
