@@ -51,6 +51,19 @@ if [ -z "$CMD" ]; then
   exit 0
 fi
 
+# --- Local skip list (extend as upstream rtk bugs are discovered) ---
+#
+# rtk 0.38.0 rewrites every `biome <subcmd>` to `rtk lint <subcmd>`, which is
+# broken: there is no `rtk lint` subcommand, so the rewritten command crashes
+# at exec time. Pass biome commands through untouched until rtk-ai/rtk fixes
+# the rewriter. Padding $CMD with spaces lets us match `biome` as a token at
+# any position (start, middle, end of the original command).
+case " $CMD " in
+  *" biome "*)
+    exit 0
+    ;;
+esac
+
 # Delegate all rewrite + permission logic to the Rust binary.
 REWRITTEN=$(rtk rewrite "$CMD" 2>/dev/null)
 EXIT_CODE=$?
