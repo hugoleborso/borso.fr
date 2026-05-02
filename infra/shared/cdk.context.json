@@ -1,0 +1,10 @@
+{
+  "hosted-zone:account=756586757578:domainName=borso.fr:region=us-east-1": {
+    "Id": "/hostedzone/Z01522742V0MX7BURAOTW",
+    "Name": "borso.fr."
+  },
+  "hosted-zone:account=756586757578:domainName=borso.fr:region=eu-west-3": {
+    "Id": "/hostedzone/Z01522742V0MX7BURAOTW",
+    "Name": "borso.fr."
+  }
+}
