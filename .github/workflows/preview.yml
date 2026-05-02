@@ -1,0 +1,129 @@
+# Per-PR preview deploys. Trusts repo:hugoleborso/borso.fr:pull_request
+# via PreviewDeployRole (provisioned by infra/shared).
+#
+# Flow:
+#   detect → which apps changed in this PR (or all, if infra/cdk changed)
+#   deploy → matrix per affected app, cdk deploy <app>-pr-<n>, sticky
+#            comment the preview URL on the PR
+#   teardown → on PR close, iterate every app and cdk destroy. Failures
+#              are swallowed (the stack might never have existed).
+#
+# concurrency: never cancel in-flight deploys mid-CFN-transaction or
+# you orphan stack state. Each PR has its own concurrency group.
+
+name: preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.compute.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: .github/path-filters.yml
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: compute
+        env:
+          CHANGES: ${{ steps.filter.outputs.changes }}
+        run: |
+          # All app slugs from the workspace (dynamic — no hard-coded list).
+          all_apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
+            | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
+
+          # If infra/cdk changed, redeploy every app's preview — constructs
+          # are the contract.
+          if jq -e 'index("infra")' <<<"$CHANGES" >/dev/null; then
+            echo "apps=$all_apps" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Otherwise intersect changes with known apps.
+          apps=$(jq -c --argjson all "$all_apps" \
+            'map(select(. as $c | $all | index($c)))' <<<"$CHANGES")
+          echo "apps=$apps" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: detect
+    if: needs.detect.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: ${{ fromJson(needs.detect.outputs.apps) }}
+      fail-fast: false
+    env:
+      STAGE: preview
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - run: pnpm --filter "@borso-app/${{ matrix.app }}" deploy
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: preview-${{ matrix.app }}
+          message: |
+            **${{ matrix.app }}** preview: https://${{ matrix.app }}-pr-${{ github.event.pull_request.number }}.preview.borso.fr
+
+  teardown:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    env:
+      STAGE: preview
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Destroy every app's per-PR stack (ignore missing)
+        run: |
+          all_apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
+            | jq -r '.[].name' | sed 's|^@borso-app/||')
+          for app in $all_apps; do
+            echo "[teardown] destroying $app-pr-$PR_NUMBER..."
+            pnpm --filter "@borso-app/$app" destroy \
+              || echo "(stack does not exist or already destroyed)"
+          done

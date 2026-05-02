@@ -1,0 +1,19 @@
+# Used by the preview + deploy workflows to detect which apps need a
+# (re)deploy on a given PR / push. Each filter key maps to a path glob.
+#
+# Two kinds of keys:
+#   - One per app: `<slug>: 'apps/<slug>/**'`. When a PR touches paths
+#     matching this filter, only that app gets deployed.
+#   - The special `infra` key, matching `infra/cdk/**`. When constructs
+#     change, every app's preview / prod gets redeployed because the
+#     constructs are the contract.
+#
+# `infra/shared/**` is intentionally NOT a filter — its deploy flow is
+# manual/local-only (see docs/flows.md). It does not redeploy app stacks.
+#
+# Adding a new app: append `<slug>: 'apps/<slug>/**'` here, plus the slug
+# in commitlint.config.js scope-enum. The workflows pick it up automatically
+# via `pnpm ls --filter './apps/*' --json`.
+
+borso-fr: 'apps/borso-fr/**'
+infra: 'infra/cdk/**'

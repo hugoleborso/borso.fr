@@ -1,0 +1,55 @@
+# Continuous integration: typecheck, lint, dead-code, coverage, build
+# on every PR and every push to main.
+#
+# Coverage is enforced for the infra packages (100% statements/branches/
+# functions/lines, gated by vitest config). Apps don't have coverage
+# scripts yet; add them per-app as test suites grow.
+#
+# The commitlint job runs only on PRs (it diffs against the base branch).
+
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r typecheck
+      - run: pnpm -r lint
+      - run: pnpm --filter @borso/infra test:coverage
+      - run: pnpm --filter @borso/shared-infra test:coverage
+      - run: pnpm -r build
+      - run: pnpm exec knip
+
+  commitlint:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec commitlint --from origin/${{ github.base_ref }} --to HEAD --verbose

@@ -1,7 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
-    ".": {},
+    ".": {
+      "ignoreBinaries": ["typecheck", "build"]
+    },
     "apps/borso-fr": {
       "entry": ["bin/app.ts"],
       "project": ["bin/**/*.ts"],

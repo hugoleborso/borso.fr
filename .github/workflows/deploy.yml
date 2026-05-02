@@ -1,0 +1,84 @@
+# Production deploys. Trusts repo:hugoleborso/borso.fr:environment:prod
+# via ProdDeployRole. The `prod` GitHub environment requires Hugo's
+# manual approval before the deploy job actually runs.
+#
+# Triggers on every push to main. paths-filter detects which apps
+# changed in the latest commit; if infra/cdk changed, every app
+# redeploys (constructs are the contract).
+#
+# max-parallel: 1 — avoid simultaneous CFN updates touching shared
+# zone records.
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency: deploy-prod
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.compute.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: .github/path-filters.yml
+          base: HEAD~1
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: compute
+        env:
+          CHANGES: ${{ steps.filter.outputs.changes }}
+        run: |
+          all_apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
+            | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
+          if jq -e 'index("infra")' <<<"$CHANGES" >/dev/null; then
+            echo "apps=$all_apps" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          apps=$(jq -c --argjson all "$all_apps" \
+            'map(select(. as $c | $all | index($c)))' <<<"$CHANGES")
+          echo "apps=$apps" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: detect
+    if: needs.detect.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    environment: prod # gated by manual approval
+    strategy:
+      matrix:
+        app: ${{ fromJson(needs.detect.outputs.apps) }}
+      max-parallel: 1
+    env:
+      STAGE: prod
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PROD_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - run: pnpm --filter "@borso-app/${{ matrix.app }}" deploy

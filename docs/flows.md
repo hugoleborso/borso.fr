@@ -99,6 +99,6 @@ Three CFN-defined budgets, all at 80% of their monthly threshold:
 ## Safety nets
 
 - **Preview teardown** runs on PR close, but if it fails silently, the **previews bucket lifecycle rule** still expires uploaded objects after 60 days.
-- **`cleanup-orphans.yml`** (Phase 4, nightly) lists CFN stacks matching `*-pr-*` whose corresponding PR is closed and older than 24 h, then destroys them. Belt-and-braces against teardown failures.
+- **`cleanup-orphans.yml`** runs on PR close (right after `preview.yml`'s teardown), nightly via cron, and on-demand. It lists every `<app>-pr-<n>` stack in a terminal state, queries GitHub for the matching PR, and destroys stacks whose PR is `CLOSED` or `MERGED`. The state check is the safety — there's no age threshold, so a teardown failure is caught the same minute the PR closes.
 - **DSQL deletion protection** on the cluster prevents accidental deletes via console/CLI.
 - **`RemovalPolicy.RETAIN`** on the previews bucket and prod app buckets — `cdk destroy` won't take the data with it.
