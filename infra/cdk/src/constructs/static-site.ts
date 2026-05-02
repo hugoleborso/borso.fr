@@ -1,5 +1,5 @@
 import * as path from 'node:path';
-import { CfnOutput, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import {
   AllowedMethods,
@@ -94,9 +94,8 @@ export class StaticSite extends Construct {
     if (!props.domainName) {
       throw new Error('StaticSite: domainName is required for stage="prod".');
     }
-    const stack = Stack.of(this);
     const bucket = new Bucket(this, 'Bucket', {
-      bucketName: bucketName(props, stack.region, stack.account),
+      bucketName: bucketName(props),
       encryption: BucketEncryption.S3_MANAGED,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,

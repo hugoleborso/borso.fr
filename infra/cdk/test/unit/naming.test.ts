@@ -56,21 +56,17 @@ describe('stackName', () => {
 });
 
 describe('bucketName', () => {
-  it('includes account + region for global uniqueness', () => {
-    expect(bucketName({ app: 'borso-fr', stage: 'prod' }, 'eu-west-3', '123')).toBe(
-      'borso-fr-prod-eu-west-3-123',
-    );
+  it('builds prod bucket names', () => {
+    expect(bucketName({ app: 'borso-fr', stage: 'prod' })).toBe('borso-fr-prod');
   });
 
   it('uses pr suffix for preview', () => {
-    expect(bucketName({ app: 'test-app', stage: 'preview', prNumber: 3 }, 'eu-west-3', '123')).toBe(
-      'test-app-pr-3-eu-west-3-123',
-    );
+    expect(bucketName({ app: 'test-app', stage: 'preview', prNumber: 3 })).toBe('test-app-pr-3');
   });
 
   it('prepends bp-integ- for integ stage', () => {
-    expect(bucketName({ app: 'test-app', stage: 'integ', prNumber: 3 }, 'eu-west-3', '123')).toBe(
-      'bp-integ-test-app-pr-3-eu-west-3-123',
+    expect(bucketName({ app: 'test-app', stage: 'integ', prNumber: 3 })).toBe(
+      'bp-integ-test-app-pr-3',
     );
   });
 });

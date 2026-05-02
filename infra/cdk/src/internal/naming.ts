@@ -82,15 +82,18 @@ export function stackName(ctx: NameContext): string {
 }
 
 /**
- * Globally-unique S3 bucket name. Must include account + region because S3 is
- * global. Caller is responsible for producing the account/region values.
+ * S3 bucket name for the per-app prod / preview / integ bucket. Single
+ * AWS account, single region, so no account/region suffix — once the name
+ * is taken in this account it stays ours (RemovalPolicy.RETAIN). If the
+ * literal `<app>-<stage>` ever did collide on first deploy, rename and
+ * redeploy is the one-time fix.
  */
-export function bucketName(ctx: NameContext, region: string, account: string): string {
+export function bucketName(ctx: NameContext): string {
   validateAppSlug(ctx.app);
   assertDeployStage(ctx.stage);
   const stagePart = ctx.stage === 'prod' ? 'prod' : previewSuffix(ctx.prNumber);
   const integPrefix = ctx.stage === 'integ' ? `${INTEG_STACK_PREFIX}-` : '';
-  return `${integPrefix}${ctx.app}-${stagePart}-${region}-${account}`;
+  return `${integPrefix}${ctx.app}-${stagePart}`;
 }
 
 export function lambdaFunctionName(ctx: NameContext, handler: string): string {

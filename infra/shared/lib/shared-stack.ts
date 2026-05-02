@@ -64,7 +64,7 @@ export class SharedStack extends Stack {
     });
 
     const previewsBucket = new Bucket(this, 'PreviewsBucket', {
-      bucketName: `borso-previews-${this.account}-${this.region}`,
+      bucketName: 'borso-previews',
       encryption: BucketEncryption.S3_MANAGED,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,

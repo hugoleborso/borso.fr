@@ -100,7 +100,7 @@ describe('SharedStack', () => {
 
     it('creates the previews bucket with public access blocked + 60-day expiry', () => {
       tpl.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: Match.stringLikeRegexp('borso-previews-'),
+        BucketName: 'borso-previews',
         PublicAccessBlockConfiguration: Match.objectLike({
           BlockPublicAcls: true,
         }),
