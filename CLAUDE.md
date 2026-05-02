@@ -2,6 +2,8 @@
 
 One developer. pnpm workspaces. Node 22. AWS eu-west-3 (+ us-east-1 for ACM).
 
+For any "how does X actually work" question, [`docs/`](./docs/) is the source of truth — `architecture.md`, `flows.md`, `aws-setup.md`, `local-dev.md`, `adding-an-app.md`.
+
 ## Layout
 
 - `apps/<slug>/` — one folder per app. Standalone-openable: `cd apps/<x> && pnpm dev` works on a fresh checkout. **No cross-app imports.**
