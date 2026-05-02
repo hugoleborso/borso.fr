@@ -90,7 +90,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-      - run: pnpm --filter "@borso-app/${{ matrix.app }}" deploy
+      - run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
       - uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: preview-${{ matrix.app }}
@@ -124,6 +124,6 @@ jobs:
             | jq -r '.[].name' | sed 's|^@borso-app/||')
           for app in $all_apps; do
             echo "[teardown] destroying $app-pr-$PR_NUMBER..."
-            pnpm --filter "@borso-app/$app" destroy \
+            pnpm --filter "@borso-app/$app" run destroy \
               || echo "(stack does not exist or already destroyed)"
           done

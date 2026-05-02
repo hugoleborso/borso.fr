@@ -85,7 +85,7 @@ jobs:
               CLOSED|MERGED)
                 echo "[orphan] destroying $stack (PR #$pr is $state)"
                 STAGE=preview PR_NUMBER="$pr" \
-                  pnpm --filter "@borso-app/$app" destroy \
+                  pnpm --filter "@borso-app/$app" run destroy \
                   || echo "(destroy failed; investigate manually)"
                 ;;
               OPEN|DRAFT)
