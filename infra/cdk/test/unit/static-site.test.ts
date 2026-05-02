@@ -2,7 +2,7 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { StaticSite } from '../../src/constructs/static-site.js';
-import { outputValues } from './_helpers/template.js';
+import { outputValues } from './helpers/template.js';
 
 function synth(setup: (stack: Stack) => void): Template {
   const app = new App();

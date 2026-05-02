@@ -1,6 +1,6 @@
 /**
  * Test-only helpers for working with synthesized CFN templates.
- * Mirrors infra/cdk/test/unit/_helpers/template.ts; intentionally
+ * Mirrors infra/cdk/test/unit/helpers/template.ts; intentionally
  * duplicated rather than shared because the workspaces are deliberately
  * isolated.
  */

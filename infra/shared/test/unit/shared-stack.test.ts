@@ -4,7 +4,7 @@ import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { HOSTED_ZONE_NAME } from '../../lib/certs-stack.js';
 import { SharedStack } from '../../lib/shared-stack.js';
-import { isObject, resourcesOfType } from './_helpers/template.js';
+import { isObject, resourcesOfType } from './helpers/template.js';
 
 function synth(opts?: { budgetEmail?: string }): Template {
   const app = new App();

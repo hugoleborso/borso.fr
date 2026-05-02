@@ -4,7 +4,7 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { PreviewableApp } from '../../src/constructs/previewable-app.js';
-import { resourcesOfType } from './_helpers/template.js';
+import { resourcesOfType } from './helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ENTRY = path.join(HERE, 'fixtures', 'handler.ts');

@@ -3,7 +3,7 @@ import { Template } from 'aws-cdk-lib/assertions';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { describe, expect, it } from 'vitest';
 import { applyStandardTags } from '../../src/internal/tags.js';
-import { isObject, resourcesOfType } from './_helpers/template.js';
+import { isObject, resourcesOfType } from './helpers/template.js';
 
 interface Tag {
   readonly Key: string;

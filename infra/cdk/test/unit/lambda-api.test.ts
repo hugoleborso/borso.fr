@@ -4,7 +4,7 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { LambdaApi, type LambdaApiProps } from '../../src/constructs/lambda-api.js';
-import { outputValues } from './_helpers/template.js';
+import { outputValues } from './helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ENTRY = path.join(HERE, 'fixtures', 'handler.ts');

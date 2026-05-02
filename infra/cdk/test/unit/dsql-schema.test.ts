@@ -6,7 +6,7 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DsqlSchema } from '../../src/constructs/dsql-schema.js';
-import { isObject, outputValues, resourcesOfType } from './_helpers/template.js';
+import { isObject, outputValues, resourcesOfType } from './helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS = path.join(HERE, 'fixtures', 'migrations');
