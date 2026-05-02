@@ -1,4 +1,4 @@
-import { HOST_ROUTING_FUNCTION_CODE, githubActionsPrincipal } from '@borso/infra';
+import { HOST_ROUTING_FUNCTION_CODE } from '@borso/infra';
 import { CfnResource, Duration, Fn, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
 import { CfnBudget } from 'aws-cdk-lib/aws-budgets';
 import type { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
@@ -13,27 +13,20 @@ import {
   ViewerProtocolPolicy,
 } from 'aws-cdk-lib/aws-cloudfront';
 import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
-import {
-  Effect,
-  ManagedPolicy,
-  OpenIdConnectProvider,
-  PolicyStatement,
-  Role,
-} from 'aws-cdk-lib/aws-iam';
+import { OpenIdConnectProvider } from 'aws-cdk-lib/aws-iam';
 import { HostedZone } from 'aws-cdk-lib/aws-route53';
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 import { HOSTED_ZONE_NAME } from './certs-stack.js';
+import { createDeployRoles } from './deploy-roles.js';
 
-/** Single source of truth: the consumer repo every deploy role trusts. */
-const CONSUMER_REPO = 'hugoleborso/borso.fr';
 const PREVIEWS_DOMAIN = `*.preview.${HOSTED_ZONE_NAME}`;
 
 interface SharedStackProps extends StackProps {
   readonly borsoFrCert: ICertificate;
   readonly previewCert: ICertificate;
-  /** Email for budget alerts; defaults to the BORSO_BUDGET_EMAIL env var. */
+  /** Email for budget alerts; defaults to BORSO_BUDGET_EMAIL env var. Mandatory. */
   readonly budgetEmail?: string;
 }
 
@@ -47,11 +40,9 @@ interface SharedStackProps extends StackProps {
  *   - GitHub OIDC provider (one per account)
  *   - DSQL cluster (one per account, multi-tenant via schemas)
  *   - Previews S3 bucket + CloudFront distribution + host-routing Function
- *   - Three deploy roles (prod / preview / shared-infra) — IAM trust pinned
- *     to repo:hugoleborso/borso.fr at the relevant subject claim
- *   - Cost budgets (€5/€20/€50, opt-in via budgetEmail/BORSO_BUDGET_EMAIL)
- *   - SSM parameters under /borso/shared/ that constructs read at synth
- *     time
+ *   - Three deploy roles (prod / preview / shared-infra) — see deploy-roles.ts
+ *   - Cost budgets (€5/€20/€50, mandatory; throws if BORSO_BUDGET_EMAIL absent)
+ *   - SSM parameters under /borso/shared/ that constructs read at synth time
  *
  * Dropped vs upstream borso-platform:
  *   - IntegTestRole: there is no integ workflow in the monorepo; preview
@@ -76,13 +67,7 @@ export class SharedStack extends Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
       removalPolicy: RemovalPolicy.RETAIN,
-      lifecycleRules: [
-        {
-          id: 'expire-previews',
-          prefix: '',
-          expiration: Duration.days(60),
-        },
-      ],
+      lifecycleRules: [{ id: 'expire-previews', prefix: '', expiration: Duration.days(60) }],
     });
 
     const routingFn = new CfFunction(this, 'HostRouter', {
@@ -97,10 +82,7 @@ export class SharedStack extends Stack {
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         compress: true,
         functionAssociations: [
-          {
-            function: routingFn,
-            eventType: FunctionEventType.VIEWER_REQUEST,
-          },
+          { function: routingFn, eventType: FunctionEventType.VIEWER_REQUEST },
         ],
       },
       domainNames: [PREVIEWS_DOMAIN],
@@ -131,165 +113,11 @@ export class SharedStack extends Stack {
       { ClusterId: dsqlClusterId },
     );
 
-    // === Deploy roles ===
-    //
-    // No role gets AdministratorAccess. PowerUserAccess + narrow IAM/DSQL/budgets/
-    // OIDC additions cover what CDK actually does for each scope.
-    //
-    // ProdDeployRole         trusts repo:…:environment:prod
-    //                        PowerUserAccess + iam:* on *-prod-* + cdk-* + DSQL connect
-    // PreviewDeployRole      trusts repo:…:pull_request
-    //                        PowerUserAccess + iam:* on *-pr-* + cdk-* + DSQL connect
-    // SharedInfraDeployRole  trusts repo:…:environment:prod-shared
-    //                        PowerUserAccess + iam:* on the deploy roles + cdk-* +
-    //                        borso-shared-* + OIDC provider lifecycle + DSQL cluster
-    //                        lifecycle + budgets:*
-
-    const cdkRoleIamActions = [
-      'iam:CreateRole',
-      'iam:DeleteRole',
-      'iam:GetRole',
-      'iam:GetRolePolicy',
-      'iam:UpdateRole',
-      'iam:UpdateRoleDescription',
-      'iam:UpdateAssumeRolePolicy',
-      'iam:AttachRolePolicy',
-      'iam:DetachRolePolicy',
-      'iam:ListAttachedRolePolicies',
-      'iam:PutRolePolicy',
-      'iam:DeleteRolePolicy',
-      'iam:ListRolePolicies',
-      'iam:TagRole',
-      'iam:UntagRole',
-      'iam:ListRoleTags',
-      'iam:PassRole',
-    ];
-    const dsqlConnect = new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: ['dsql:DbConnect', 'dsql:DbConnectAdmin'],
-      resources: [dsqlClusterArn],
+    const deployRoles = createDeployRoles(this, {
+      oidcProviderArn: oidcProvider.openIdConnectProviderArn,
+      account: this.account,
+      dsqlClusterArn,
     });
-
-    const prodDeployRole = new Role(this, 'ProdDeployRole', {
-      roleName: 'ProdDeployRole',
-      assumedBy: githubActionsPrincipal(oidcProvider.openIdConnectProviderArn, {
-        repo: CONSUMER_REPO,
-        subject: { kind: 'environment', environment: 'prod' },
-      }),
-      maxSessionDuration: Duration.hours(1),
-      description: 'Used by deploy.yml to deploy prod app stacks. Gated by GitHub prod environment.',
-    });
-    prodDeployRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess'));
-    prodDeployRole.addToPolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: cdkRoleIamActions,
-        resources: [
-          `arn:aws:iam::${this.account}:role/*-prod-*`,
-          `arn:aws:iam::${this.account}:role/cdk-*`,
-        ],
-      }),
-    );
-    prodDeployRole.addToPolicy(dsqlConnect);
-
-    const previewDeployRole = new Role(this, 'PreviewDeployRole', {
-      roleName: 'PreviewDeployRole',
-      assumedBy: githubActionsPrincipal(oidcProvider.openIdConnectProviderArn, {
-        repo: CONSUMER_REPO,
-        subject: { kind: 'pull_request' },
-      }),
-      maxSessionDuration: Duration.hours(2),
-      description: 'Used by preview.yml to deploy/destroy <app>-pr-<n> stacks.',
-    });
-    previewDeployRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess'));
-    previewDeployRole.addToPolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: cdkRoleIamActions,
-        resources: [
-          `arn:aws:iam::${this.account}:role/*-pr-*`,
-          `arn:aws:iam::${this.account}:role/cdk-*`,
-        ],
-      }),
-    );
-    previewDeployRole.addToPolicy(dsqlConnect);
-
-    const sharedDeployRole = new Role(this, 'SharedInfraDeployRole', {
-      roleName: 'SharedInfraDeployRole',
-      assumedBy: githubActionsPrincipal(oidcProvider.openIdConnectProviderArn, {
-        repo: CONSUMER_REPO,
-        subject: { kind: 'environment', environment: 'prod-shared' },
-      }),
-      maxSessionDuration: Duration.hours(1),
-      description: 'Self-deploy role for this stack. Gated by GitHub prod-shared environment.',
-    });
-    sharedDeployRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess'));
-    // IAM role/policy lifecycle on the resources this stack owns:
-    //   - the three named deploy roles themselves
-    //   - CDK-managed roles created within this stack (borso-shared-*)
-    //   - CDK bootstrap roles (cdk-*)
-    //   - any managed policies created by the stack
-    sharedDeployRole.addToPolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: [
-          ...cdkRoleIamActions,
-          'iam:CreatePolicy',
-          'iam:DeletePolicy',
-          'iam:GetPolicy',
-          'iam:GetPolicyVersion',
-          'iam:CreatePolicyVersion',
-          'iam:DeletePolicyVersion',
-          'iam:ListPolicyVersions',
-          'iam:TagPolicy',
-          'iam:UntagPolicy',
-        ],
-        resources: [
-          `arn:aws:iam::${this.account}:role/ProdDeployRole`,
-          `arn:aws:iam::${this.account}:role/PreviewDeployRole`,
-          `arn:aws:iam::${this.account}:role/SharedInfraDeployRole`,
-          `arn:aws:iam::${this.account}:role/borso-shared-*`,
-          `arn:aws:iam::${this.account}:role/cdk-*`,
-          `arn:aws:iam::${this.account}:policy/*`,
-        ],
-      }),
-    );
-    // OIDC provider for GitHub Actions (one per account).
-    sharedDeployRole.addToPolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: [
-          'iam:CreateOpenIDConnectProvider',
-          'iam:DeleteOpenIDConnectProvider',
-          'iam:GetOpenIDConnectProvider',
-          'iam:UpdateOpenIDConnectProviderThumbprint',
-          'iam:AddClientIDToOpenIDConnectProvider',
-          'iam:RemoveClientIDFromOpenIDConnectProvider',
-          'iam:TagOpenIDConnectProvider',
-          'iam:UntagOpenIDConnectProvider',
-          'iam:ListOpenIDConnectProviderTags',
-        ],
-        resources: [
-          `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`,
-        ],
-      }),
-    );
-    // DSQL cluster lifecycle (full because the shared stack owns the cluster).
-    sharedDeployRole.addToPolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: ['dsql:*'],
-        resources: ['*'],
-      }),
-    );
-    // Budgets does not support resource-level scoping.
-    sharedDeployRole.addToPolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: ['budgets:*'],
-        resources: ['*'],
-      }),
-    );
 
     // === Budgets (mandatory) ===
 
@@ -362,15 +190,15 @@ export class SharedStack extends Stack {
     });
     new StringParameter(this, 'ProdDeployRoleArnParam', {
       parameterName: '/borso/shared/prod-deploy-role-arn',
-      stringValue: prodDeployRole.roleArn,
+      stringValue: deployRoles.prod.roleArn,
     });
     new StringParameter(this, 'PreviewDeployRoleArnParam', {
       parameterName: '/borso/shared/preview-deploy-role-arn',
-      stringValue: previewDeployRole.roleArn,
+      stringValue: deployRoles.preview.roleArn,
     });
     new StringParameter(this, 'SharedDeployRoleArnParam', {
       parameterName: '/borso/shared/shared-deploy-role-arn',
-      stringValue: sharedDeployRole.roleArn,
+      stringValue: deployRoles.shared.roleArn,
     });
   }
 }
