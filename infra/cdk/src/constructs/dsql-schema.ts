@@ -5,7 +5,7 @@ import { CfnOutput, CustomResource, Duration, Stack } from 'aws-cdk-lib';
 import { Effect, type IGrantable, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import {
@@ -118,13 +118,16 @@ export class DsqlSchema extends Construct {
     this.clusterArn = props.cluster.clusterArn;
     this.clusterEndpoint = props.cluster.clusterEndpoint;
 
+    const runnerLogGroup = new LogGroup(this, 'MigrationRunnerLogs', {
+      retention: RetentionDays.ONE_WEEK,
+    });
     this.runnerFn = new NodejsFunction(this, 'MigrationRunner', {
       entry: resolveRunnerEntry(),
       runtime: Runtime.NODEJS_22_X,
       architecture: Architecture.ARM_64,
       timeout: Duration.minutes(5),
       memorySize: 512,
-      logRetention: RetentionDays.ONE_WEEK,
+      logGroup: runnerLogGroup,
       bundling: {
         target: 'node22',
         format: OutputFormat.ESM,
@@ -140,9 +143,12 @@ export class DsqlSchema extends Construct {
       }),
     );
 
+    const providerLogGroup = new LogGroup(this, 'ProviderLogs', {
+      retention: RetentionDays.ONE_WEEK,
+    });
     const provider = new Provider(this, 'Provider', {
       onEventHandler: this.runnerFn,
-      logRetention: RetentionDays.ONE_WEEK,
+      logGroup: providerLogGroup,
     });
 
     const migrations = readMigrations(props.migrationsPath);
