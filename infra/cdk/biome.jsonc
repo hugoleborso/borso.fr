@@ -5,5 +5,22 @@
   "plugins": ["../../biome-plugins/no-type-assertion-except-unknown.grit"],
   "files": {
     "includes": ["src/**", "test/**"]
-  }
+  },
+  "overrides": [
+    {
+      // The CF Function source ships verbatim to the CloudFront edge runtime,
+      // which is stricter than the docs imply. We deliberately use ES5-only
+      // syntax (var, string concat, no optional chaining) to dodge the
+      // FunctionExecutionError class of failures, so the modern-syntax style
+      // rules don't apply here.
+      "includes": ["src/internal/cf-host-routing-function.code.js"],
+      "linter": {
+        "rules": {
+          "complexity": { "useOptionalChain": "off" },
+          "correctness": { "noInnerDeclarations": "off" },
+          "style": { "useTemplate": "off" }
+        }
+      }
+    }
+  ]
 }
