@@ -128,6 +128,17 @@ describe('SharedStack', () => {
         }),
       });
     });
+
+    it('creates wildcard A + AAAA Route 53 records for *.preview.borso.fr', () => {
+      tpl.hasResourceProperties('AWS::Route53::RecordSet', {
+        Name: '*.preview.borso.fr.',
+        Type: 'A',
+      });
+      tpl.hasResourceProperties('AWS::Route53::RecordSet', {
+        Name: '*.preview.borso.fr.',
+        Type: 'AAAA',
+      });
+    });
   });
 
   describe('DSQL', () => {

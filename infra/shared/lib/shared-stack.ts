@@ -14,7 +14,8 @@ import {
 } from 'aws-cdk-lib/aws-cloudfront';
 import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { OpenIdConnectProvider } from 'aws-cdk-lib/aws-iam';
-import { HostedZone } from 'aws-cdk-lib/aws-route53';
+import { ARecord, AaaaRecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
@@ -90,6 +91,21 @@ export class SharedStack extends Stack {
       certificate: props.previewCert,
       httpVersion: HttpVersion.HTTP2_AND_3,
       priceClass: PriceClass.PRICE_CLASS_100,
+    });
+
+    // Wildcard DNS into the previews distribution. Without this, every
+    // <app>-pr-<n>.preview.borso.fr resolves to NXDOMAIN even though the
+    // distribution and cert are provisioned.
+    const previewsAliasTarget = RecordTarget.fromAlias(new CloudFrontTarget(previewsDistribution));
+    new ARecord(this, 'PreviewsAliasA', {
+      zone,
+      recordName: '*.preview',
+      target: previewsAliasTarget,
+    });
+    new AaaaRecord(this, 'PreviewsAliasAAAA', {
+      zone,
+      recordName: '*.preview',
+      target: previewsAliasTarget,
     });
 
     const deployRoles = createDeployRoles(this, {
