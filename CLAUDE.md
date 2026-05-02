@@ -19,11 +19,15 @@ For any "how does X actually work" question, [`docs/`](./docs/) is the source of
 
 ## Hooks (think before bypassing with `--no-verify`)
 
-- **SessionStart** → `scripts/install-repo-deps.sh` (rtk + pnpm deps).
+- **SessionStart** → `scripts/install-repo-deps.sh` (rtk + pnpm deps; AWS CLI v2 installed conditionally when `AWS_ACCESS_KEY_ID` is set).
 - **PreToolUse(Bash)** → rtk rewrites commands for token savings.
-- **pre-commit** → if `infra/cdk/**` changed, runs `@borso/infra test:coverage`.
+- **pre-commit** → if `infra/cdk/**` or `infra/shared/**` changed, runs the matching `test:coverage`.
 - **pre-push** → runs `pnpm exec knip` repo-wide. Push-time, not commit-time, so multi-commit stories aren't blocked mid-refactor.
 - **commit-msg** → commitlint.
+
+## AWS access from a session
+
+If `AWS_ACCESS_KEY_ID` is in the env, the SessionStart hook installs AWS CLI v2 and you can run `aws …` directly. The keys come from claude.ai/code's per-project environment configuration; setup is in [`docs/aws-setup.md`](./docs/aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws). The IAM user behind those keys is read-only with explicit denies on every mutation verb — you can `aws s3 ls`, `aws cloudformation list-stacks`, `aws ce get-cost-and-usage` etc., but can't mutate anything.
 
 ## Don'ts
 
