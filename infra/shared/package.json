@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "synth": "cdk synth --all",
-    "diff": "cdk diff --all",
-    "deploy": "cdk deploy --all --require-approval never",
+    "synth": "pnpm --filter @borso/infra run build && cdk synth --all",
+    "diff": "pnpm --filter @borso/infra run build && cdk diff --all",
+    "deploy": "pnpm --filter @borso/infra run build && cdk deploy --all --require-approval never",
     "destroy": "cdk destroy --all --force",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint",

@@ -8,9 +8,9 @@
     "build": "rm -rf dist && cp -R site dist",
     "lint": "biome lint",
     "typecheck": "tsc --noEmit",
-    "synth": "pnpm build && cdk synth --all",
-    "diff": "pnpm build && cdk diff --all",
-    "deploy": "pnpm build && cdk deploy --all --require-approval never",
+    "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
+    "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
+    "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk deploy --all --require-approval never",
     "destroy": "cdk destroy --all --force"
   },
   "dependencies": {
