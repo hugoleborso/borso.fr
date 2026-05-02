@@ -13,6 +13,7 @@ For any "how does X actually work" question, [`docs/`](./docs/) is the source of
 ## Conventions
 
 - **pnpm always** — no `npm` / `yarn`. Lockfile is committed.
+- **Always use `pnpm run <script>` for `deploy` / `destroy` (and any name pnpm reserves).** `pnpm --filter <pkg> deploy` invokes pnpm's built-in `deploy` command (which copies a workspace package into a deployable bundle), not the package's `scripts.deploy`. Same hazard with `destroy`. The four CI workflows already use `run`; the local equivalent is e.g. `pnpm --filter @borso/shared-infra run deploy`.
 - **Conventional commits**, scope-enum: `borso-fr`, `borsouvertures`, `infra`, `ci`, `docs`, `deps`. Husky enforces.
 - **Biome** rules live in the root `biome.jsonc` and reach every workspace. Per-app configs extend root and set `"root": false`.
 - **Stage** type is `'dev' | 'preview' | 'integ' | 'prod'`. `'dev'` is an app-code marker; constructs reject it via `assertDeployStage`.
