@@ -32,6 +32,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
       - run: pnpm -r typecheck
       - run: pnpm -r lint
       - run: pnpm --filter @borso/infra test:coverage
