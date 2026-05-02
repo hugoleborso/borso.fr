@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { CfnOutput, CustomResource, Duration, Stack } from 'aws-cdk-lib';
 import { Effect, type IGrantable, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Provider } from 'aws-cdk-lib/custom-resources';
@@ -20,15 +20,28 @@ import { SHARED_SSM } from './static-site.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
-/* v8 ignore start -- both candidates always exist in dev/dist; pure path-resolution helper */
-/** Resolves the migration-runner entry whether running from src or dist. */
+/**
+ * Resolves the migration-runner entry path that's handed to NodejsFunction
+ * for esbuild bundling at synth time.
+ *
+ * Two candidates because this code runs in two contexts:
+ *   - When this package is consumed by an app (apps/<x>/bin/app.ts) it runs
+ *     from `dist/`, where the runner is the compiled `index.js`.
+ *   - When this package's own vitest suite runs against the TypeScript
+ *     sources, this code runs from `src/`, where the runner is `index.ts`
+ *     (esbuild compiles the TS at synth time).
+ *
+ * Same path resolution either way; the file extension just differs by
+ * context.
+ */
+/* v8 ignore start -- both candidates exist in their respective contexts */
 function resolveRunnerEntry(): string {
   const candidates = [
     path.join(HERE, '..', 'internal', 'migration-runner', 'index.js'),
     path.join(HERE, '..', 'internal', 'migration-runner', 'index.ts'),
   ];
-  for (const c of candidates) {
-    if (fs.existsSync(c)) return c;
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
   }
   throw new Error(
     `Could not find migration-runner entry. Looked at:\n  ${candidates.join('\n  ')}`,
@@ -109,7 +122,7 @@ export class DsqlSchema extends Construct {
       logRetention: RetentionDays.ONE_WEEK,
       bundling: {
         target: 'node22',
-        format: 'esm' as never,
+        format: OutputFormat.ESM,
         externalModules: ['@aws-sdk/*'],
         nodeModules: ['postgres', '@aws-sdk/dsql-signer'],
       },
@@ -135,8 +148,7 @@ export class DsqlSchema extends Construct {
         region: stack.region,
         schemaName: this.schemaName,
         migrations,
-        // include a hash so updates re-fire the resource when files change
-        migrationsHash: hashMigrations(migrations),
+        migrationsDigest: digestMigrations(migrations),
       },
     });
 
@@ -159,12 +171,24 @@ export class DsqlSchema extends Construct {
   }
 }
 
-function hashMigrations(migrations: readonly MigrationFile[]): string {
-  const concat = migrations.map((m) => `${m.name}::${m.sql}`).join('\n---\n');
-  // tiny non-crypto hash — only needs to change when input changes
-  let h = 0;
-  for (let i = 0; i < concat.length; i++) {
-    h = (h * 31 + concat.charCodeAt(i)) | 0;
+/**
+ * Stable digest of the migration files' contents, used as a CloudFormation
+ * resource property so an `Update` event re-fires the migration runner
+ * whenever any file changes. Not a cryptographic hash — content stability
+ * is the only requirement.
+ */
+function digestMigrations(migrations: readonly MigrationFile[]): string {
+  const HASH_MULTIPLIER = 31;
+  const FILE_SEPARATOR = '\n---\n';
+  const NAME_CONTENT_SEPARATOR = '::';
+
+  const serialized = migrations
+    .map((file) => `${file.name}${NAME_CONTENT_SEPARATOR}${file.sql}`)
+    .join(FILE_SEPARATOR);
+
+  let accumulator = 0;
+  for (const character of serialized) {
+    accumulator = (accumulator * HASH_MULTIPLIER + character.charCodeAt(0)) | 0;
   }
-  return h.toString(16);
+  return accumulator.toString(16);
 }

@@ -16,45 +16,25 @@
  * is always populated.
  */
 
+import {
+  StaticSite,
+  requireAwsAccount,
+  requireDeployStage,
+  requirePrNumber,
+} from '@borso/infra';
 import { App, Stack } from 'aws-cdk-lib';
-import { StaticSite } from '@borso/infra';
 
 const APP_SLUG = 'borso-fr';
 const PROD_DOMAIN = 'borso.fr';
 const REGION = 'eu-west-3';
+const ASSETS_PATH = './dist';
 
-function requireEnv(name: string): string {
-  const v = process.env[name];
-  if (!v) {
-    throw new Error(`${name} is required but not set.`);
-  }
-  return v;
+const account = requireAwsAccount();
+const stage = requireDeployStage();
+if (stage === 'integ') {
+  throw new Error("borso-fr: stage 'integ' is reserved and not deployable from this app.");
 }
-
-function parseStage(): 'prod' | 'preview' {
-  const raw = process.env.STAGE ?? 'prod';
-  if (raw !== 'prod' && raw !== 'preview') {
-    throw new Error(`STAGE must be 'prod' or 'preview', got '${raw}'.`);
-  }
-  return raw;
-}
-
-function parsePrNumber(): number {
-  const raw = requireEnv('PR_NUMBER');
-  const n = Number(raw);
-  if (!Number.isInteger(n) || n <= 0) {
-    throw new Error(`PR_NUMBER must be a positive integer, got '${raw}'.`);
-  }
-  return n;
-}
-
-const account = process.env.CDK_DEFAULT_ACCOUNT ?? process.env.AWS_ACCOUNT_ID;
-if (!account) {
-  throw new Error('Set CDK_DEFAULT_ACCOUNT or AWS_ACCOUNT_ID before deploying.');
-}
-
-const stage = parseStage();
-const prNumber = stage === 'preview' ? parsePrNumber() : undefined;
+const prNumber = stage === 'preview' ? requirePrNumber() : undefined;
 const stackName = stage === 'prod' ? `${APP_SLUG}-prod` : `${APP_SLUG}-pr-${prNumber}`;
 
 const app = new App();
@@ -65,5 +45,5 @@ new StaticSite(stack, 'Site', {
   stage,
   ...(prNumber !== undefined ? { prNumber } : {}),
   ...(stage === 'prod' ? { domainName: PROD_DOMAIN } : {}),
-  assetsPath: './dist',
+  assetsPath: ASSETS_PATH,
 });

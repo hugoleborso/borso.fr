@@ -3,21 +3,26 @@ import { Template } from 'aws-cdk-lib/assertions';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { describe, expect, it } from 'vitest';
 import { applyStandardTags } from '../../src/internal/tags.js';
+import { isObject, resourcesOfType } from './_helpers/template.js';
 
 interface Tag {
   readonly Key: string;
   readonly Value: string;
 }
 
+function isTagArray(value: unknown): value is readonly Tag[] {
+  return (
+    Array.isArray(value) &&
+    value.every((entry) => isObject(entry) && typeof entry.Key === 'string' && typeof entry.Value === 'string')
+  );
+}
+
 function tagsOnFirstBucket(stack: Stack): Record<string, string> {
-  const tpl = Template.fromStack(stack).toJSON();
-  const resources = tpl.Resources as Record<
-    string,
-    { Type: string; Properties?: { Tags?: Tag[] } }
-  >;
-  for (const r of Object.values(resources)) {
-    if (r.Type === 'AWS::S3::Bucket' && r.Properties?.Tags) {
-      return Object.fromEntries(r.Properties.Tags.map((t) => [t.Key, t.Value]));
+  const buckets = resourcesOfType(Template.fromStack(stack), 'AWS::S3::Bucket');
+  for (const bucket of buckets) {
+    const tags = bucket.Properties?.Tags;
+    if (isTagArray(tags)) {
+      return Object.fromEntries(tags.map((tag) => [tag.Key, tag.Value]));
     }
   }
   return {};

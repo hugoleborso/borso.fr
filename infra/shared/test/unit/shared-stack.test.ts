@@ -4,6 +4,7 @@ import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { HOSTED_ZONE_NAME } from '../../lib/certs-stack.js';
 import { SharedStack } from '../../lib/shared-stack.js';
+import { isObject, resourcesOfType } from './_helpers/template.js';
 
 function synth(opts?: { budgetEmail?: string }): Template {
   const app = new App();
@@ -80,15 +81,15 @@ describe('SharedStack', () => {
     });
 
     it('PreviewDeployRole has dsql connect permissions', () => {
-      const policies = tpl.findResources('AWS::IAM::Policy');
-      const allStatements = Object.values(policies).flatMap(
-        (p) =>
-          (p.Properties as { PolicyDocument?: { Statement?: Array<{ Action?: unknown }> } })
-            .PolicyDocument?.Statement ?? [],
-      );
-      const hasDsql = allStatements.some((s) => {
-        const action = Array.isArray(s.Action) ? s.Action : [s.Action];
-        return action.includes('dsql:DbConnect') || action.includes('dsql:DbConnectAdmin');
+      const policies = resourcesOfType(tpl, 'AWS::IAM::Policy');
+      const hasDsql = policies.some((policy) => {
+        const policyDoc = policy.Properties?.PolicyDocument;
+        if (!isObject(policyDoc) || !Array.isArray(policyDoc.Statement)) return false;
+        return policyDoc.Statement.some((statement) => {
+          if (!isObject(statement)) return false;
+          const action = Array.isArray(statement.Action) ? statement.Action : [statement.Action];
+          return action.includes('dsql:DbConnect') || action.includes('dsql:DbConnectAdmin');
+        });
       });
       expect(hasDsql).toBe(true);
     });
@@ -113,10 +114,11 @@ describe('SharedStack', () => {
 
     it('creates exactly one CloudFront Function bound to viewer-request', () => {
       tpl.resourceCountIs('AWS::CloudFront::Function', 1);
-      const dist = Object.values(tpl.findResources('AWS::CloudFront::Distribution'))[0] as {
-        Properties: { DistributionConfig: { DefaultCacheBehavior: { FunctionAssociations?: unknown[] } } };
-      };
-      expect(dist.Properties.DistributionConfig.DefaultCacheBehavior.FunctionAssociations).toBeDefined();
+      const [dist] = resourcesOfType(tpl, 'AWS::CloudFront::Distribution');
+      const config = dist?.Properties?.DistributionConfig;
+      const defaultBehavior = isObject(config) ? config.DefaultCacheBehavior : undefined;
+      const associations = isObject(defaultBehavior) ? defaultBehavior.FunctionAssociations : undefined;
+      expect(associations).toBeDefined();
     });
 
     it('aliases the distribution to *.preview.borso.fr', () => {
@@ -160,10 +162,7 @@ describe('SharedStack', () => {
     });
 
     it('does NOT publish /borso/shared/integ-role-arn (dropped)', () => {
-      const params = tpl.findResources('AWS::SSM::Parameter');
-      const names = Object.values(params).map(
-        (p) => (p.Properties as { Name: string }).Name,
-      );
+      const names = resourcesOfType(tpl, 'AWS::SSM::Parameter').map((param) => param.Properties?.Name);
       expect(names).not.toContain('/borso/shared/integ-role-arn');
     });
   });

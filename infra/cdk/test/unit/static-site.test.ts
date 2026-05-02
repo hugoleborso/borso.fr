@@ -2,6 +2,7 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { StaticSite } from '../../src/constructs/static-site.js';
+import { outputValues } from './_helpers/template.js';
 
 function synth(setup: (stack: Stack) => void): Template {
   const app = new App();
@@ -61,9 +62,7 @@ describe('StaticSite (preview)', () => {
   });
 
   it('emits a Url output pointing at the preview hostname', () => {
-    const outputs = tpl.toJSON().Outputs ?? {};
-    const values = Object.values(outputs).map((o) => (o as { Value: string }).Value);
-    expect(values).toContain('https://test-app-pr-42.preview.borso.fr');
+    expect(outputValues(tpl)).toContain('https://test-app-pr-42.preview.borso.fr');
   });
 });
 
@@ -78,9 +77,7 @@ describe('StaticSite (integ stage)', () => {
   });
 
   it('uploads to the shared previews bucket at the integ-prefixed key', () => {
-    const outputs = tpl.toJSON().Outputs ?? {};
-    const values = Object.values(outputs).map((o) => (o as { Value: string }).Value);
-    expect(values).toContain('https://bp-integ-integ-app-pr-7.preview.borso.fr');
+    expect(outputValues(tpl)).toContain('https://bp-integ-integ-app-pr-7.preview.borso.fr');
   });
 });
 

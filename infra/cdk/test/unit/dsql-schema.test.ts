@@ -6,6 +6,7 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DsqlSchema } from '../../src/constructs/dsql-schema.js';
+import { isObject, outputValues, resourcesOfType } from './_helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS = path.join(HERE, 'fixtures', 'migrations');
@@ -27,43 +28,32 @@ function synth(props: { stage: 'prod' | 'preview' | 'integ'; prNumber?: number }
 describe('DsqlSchema', () => {
   it('creates a NodejsFunction migration runner with dsql:DbConnectAdmin', () => {
     const tpl = synth({ stage: 'prod' });
-    const policies = Object.values(
-      tpl.toJSON().Resources as Record<
-        string,
-        { Type: string; Properties?: { PolicyDocument?: { Statement?: unknown[] } } }
-      >,
-    ).filter((r) => r.Type === 'AWS::IAM::Policy');
-    const allStatements = policies.flatMap(
-      (p) => p.Properties?.PolicyDocument?.Statement ?? [],
-    ) as Array<{ Action?: unknown; Effect?: string }>;
-    const hasDbConnectAdmin = allStatements.some((s) => {
-      const action = Array.isArray(s.Action) ? s.Action : [s.Action];
-      return action.includes('dsql:DbConnectAdmin') && s.Effect === 'Allow';
+    const policies = resourcesOfType(tpl, 'AWS::IAM::Policy');
+    const hasDbConnectAdmin = policies.some((policy) => {
+      const policyDoc = policy.Properties?.PolicyDocument;
+      if (!isObject(policyDoc) || !Array.isArray(policyDoc.Statement)) return false;
+      return policyDoc.Statement.some((statement) => {
+        if (!isObject(statement) || statement.Effect !== 'Allow') return false;
+        const action = Array.isArray(statement.Action) ? statement.Action : [statement.Action];
+        return action.includes('dsql:DbConnectAdmin');
+      });
     });
     expect(hasDbConnectAdmin).toBe(true);
   });
 
   it('creates a custom resource for the schema with the migrations payload', () => {
     const tpl = synth({ stage: 'preview', prNumber: 3 });
-    const resources = tpl.toJSON().Resources as Record<
-      string,
-      { Type: string; Properties?: Record<string, unknown> }
-    >;
-    const cr = Object.values(resources).find(
-      (r) => r.Type === 'AWS::CloudFormation::CustomResource',
-    );
-    expect(cr).toBeDefined();
-    expect(cr?.Properties?.schemaName).toBe('test_app_pr_3');
-    const migrations = cr?.Properties?.migrations as Array<{ name: string }>;
-    expect(migrations).toHaveLength(1);
-    expect(migrations[0]?.name).toBe('0001_init.sql');
+    const [customResource] = resourcesOfType(tpl, 'AWS::CloudFormation::CustomResource');
+    expect(customResource).toBeDefined();
+    expect(customResource?.Properties?.schemaName).toBe('test_app_pr_3');
+    expect(customResource?.Properties?.migrations).toEqual([
+      expect.objectContaining({ name: '0001_init.sql' }),
+    ]);
   });
 
   it('emits a SchemaName output', () => {
     const tpl = synth({ stage: 'integ', prNumber: 4 });
-    const outputs = tpl.toJSON().Outputs ?? {};
-    const values = Object.values(outputs).map((o) => (o as { Value: string }).Value);
-    expect(values).toContain('integ_pr_4_test_app');
+    expect(outputValues(tpl)).toContain('integ_pr_4_test_app');
   });
 
   it('throws when migrationsPath does not exist', () => {
@@ -126,14 +116,10 @@ describe('DsqlSchema (migrations directory edge cases)', () => {
       migrationsPath: tmp,
     });
     const tpl = Template.fromStack(stack);
-    const resources = tpl.toJSON().Resources as Record<
-      string,
-      { Type: string; Properties?: Record<string, unknown> }
-    >;
-    const cr = Object.values(resources).find(
-      (r) => r.Type === 'AWS::CloudFormation::CustomResource',
-    );
-    const migrations = cr?.Properties?.migrations as Array<{ name: string }>;
-    expect(migrations.map((m) => m.name)).toEqual(['0001_init.sql', '0002_more.sql']);
+    const [customResource] = resourcesOfType(tpl, 'AWS::CloudFormation::CustomResource');
+    expect(customResource?.Properties?.migrations).toEqual([
+      expect.objectContaining({ name: '0001_init.sql' }),
+      expect.objectContaining({ name: '0002_more.sql' }),
+    ]);
   });
 });

@@ -4,6 +4,7 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { PreviewableApp } from '../../src/constructs/previewable-app.js';
+import { resourcesOfType } from './_helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ENTRY = path.join(HERE, 'fixtures', 'handler.ts');
@@ -31,11 +32,7 @@ describe('PreviewableApp (full)', () => {
   it('creates the static distribution + Lambda + DSQL custom resource', () => {
     tpl.resourceCountIs('AWS::CloudFront::Distribution', 1);
     // 1 API handler + 1 migration runner + provider + ?bucket-deployment
-    expect(
-      Object.values(tpl.toJSON().Resources as Record<string, { Type: string }>).filter(
-        (r) => r.Type === 'AWS::Lambda::Function',
-      ).length,
-    ).toBeGreaterThanOrEqual(2);
+    expect(resourcesOfType(tpl, 'AWS::Lambda::Function').length).toBeGreaterThanOrEqual(2);
     tpl.resourceCountIs('AWS::CloudFormation::CustomResource', 1);
   });
 
@@ -63,10 +60,6 @@ describe('PreviewableApp (preview, no api/db)', () => {
     expect(previewable.api).toBeUndefined();
     expect(previewable.database).toBeUndefined();
     const tpl = Template.fromStack(stack);
-    expect(
-      Object.values(tpl.toJSON().Resources as Record<string, { Type: string }>).filter(
-        (r) => r.Type === 'AWS::ApiGatewayV2::Api',
-      ).length,
-    ).toBe(0);
+    expect(resourcesOfType(tpl, 'AWS::ApiGatewayV2::Api').length).toBe(0);
   });
 });

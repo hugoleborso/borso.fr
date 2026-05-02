@@ -12,6 +12,7 @@
 // const/let, template literals, arrow functions. infra/shared sets
 // the runtime accordingly.
 
+// biome-ignore lint/correctness/noUnusedVariables: CloudFront Functions runtime requires the entry point be named exactly `handler`. This file is read as a string at synth time, not imported.
 function handler(event) {
   const request = event.request;
   const host = request.headers.host?.value;

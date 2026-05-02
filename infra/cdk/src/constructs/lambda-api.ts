@@ -8,7 +8,7 @@ import {
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { Alarm, ComparisonOperator, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch';
 import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import {
@@ -98,7 +98,7 @@ export class LambdaApi extends Construct {
         minify: true,
         sourceMap: true,
         target: 'node22',
-        format: 'esm' as never,
+        format: OutputFormat.ESM,
         mainFields: ['module', 'main'],
       },
     });

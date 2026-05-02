@@ -10,38 +10,53 @@ const state: {
   taggedCalls: string[];
   ended: number;
   appliedMigrations: Set<string>;
+  /** Test hook: if set, the next `.unsafe()` call rejects with this error. */
+  rejectNextUnsafe: Error | null;
 } = {
   unsafeCalls: [],
   taggedCalls: [],
   ended: 0,
   appliedMigrations: new Set(),
+  rejectNextUnsafe: null,
 };
 
-function makeSql() {
-  const sql = ((strings: TemplateStringsArray) => {
+/**
+ * Minimal subset of the postgres.js `Sql<{}>` shape that the migration
+ * runner actually touches at runtime. Declared here so the mock type can
+ * be inferred via Object.assign — no `as Sql<...>` casts at the test
+ * boundary, no need to satisfy the full library interface.
+ */
+type SqlMock = ((strings: TemplateStringsArray, ...values: readonly unknown[]) => Promise<unknown[]>) & {
+  unsafe(query: string, params?: readonly unknown[]): Promise<unknown[]>;
+  end(opts: { readonly timeout: number }): Promise<void>;
+};
+
+function makeSql(): SqlMock {
+  const callable = (strings: TemplateStringsArray, ..._values: readonly unknown[]) => {
     state.taggedCalls.push(strings.join('?'));
     return Promise.resolve([]);
-  }) as unknown as {
-    (strings: TemplateStringsArray, ...values: readonly unknown[]): Promise<unknown[]>;
-    unsafe<T>(query: string, params?: readonly unknown[]): Promise<T>;
-    end(opts: { timeout: number }): Promise<void>;
   };
-  sql.unsafe = <T>(query: string, params?: readonly unknown[]): Promise<T> => {
-    state.unsafeCalls.push({ query, ...(params ? { params } : {}) });
-    if (/SELECT name FROM/i.test(query)) {
-      const rows = [...state.appliedMigrations].map((name) => ({ name }));
-      return Promise.resolve(rows as unknown as T);
-    }
-    if (/INSERT INTO/.test(query) && params?.[0]) {
-      state.appliedMigrations.add(String(params[0]));
-    }
-    return Promise.resolve([] as unknown as T);
-  };
-  sql.end = ({ timeout: _t }: { timeout: number }) => {
-    state.ended++;
-    return Promise.resolve();
-  };
-  return sql;
+  return Object.assign(callable, {
+    unsafe(query: string, params?: readonly unknown[]) {
+      if (state.rejectNextUnsafe !== null) {
+        const error = state.rejectNextUnsafe;
+        state.rejectNextUnsafe = null;
+        return Promise.reject(error);
+      }
+      state.unsafeCalls.push({ query, ...(params ? { params } : {}) });
+      if (/SELECT name FROM/i.test(query)) {
+        return Promise.resolve([...state.appliedMigrations].map((name) => ({ name })));
+      }
+      if (/INSERT INTO/.test(query) && params?.[0] !== undefined) {
+        state.appliedMigrations.add(String(params[0]));
+      }
+      return Promise.resolve([]);
+    },
+    end(_opts: { readonly timeout: number }) {
+      state.ended++;
+      return Promise.resolve();
+    },
+  });
 }
 
 vi.mock('postgres', () => ({
@@ -72,6 +87,7 @@ beforeEach(() => {
   state.taggedCalls = [];
   state.ended = 0;
   state.appliedMigrations = new Set();
+  state.rejectNextUnsafe = null;
 });
 
 afterEach(() => {
@@ -135,15 +151,10 @@ describe('migration-runner handler', () => {
   });
 
   it('releases the advisory lock even on inner failure', async () => {
-    // make the first unsafe (CREATE SCHEMA) reject
-    const real = makeSql();
-    const failing = ((..._args: unknown[]) =>
-      Promise.resolve([])) as unknown as ReturnType<typeof makeSql>;
-    failing.unsafe = () => Promise.reject(new Error('boom'));
-    failing.end = real.end;
-
-    const postgresMod = await import('postgres');
-    (postgresMod.default as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(failing);
+    // Arm the shared mock to reject the very next `.unsafe()` call.
+    // `.end()` still bumps `state.ended` so the test confirms the
+    // `finally` block ran.
+    state.rejectNextUnsafe = new Error('boom');
 
     await expect(
       handler({ RequestType: 'Create', ResourceProperties: baseProps }),

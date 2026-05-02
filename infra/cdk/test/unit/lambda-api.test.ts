@@ -4,6 +4,7 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { LambdaApi, type LambdaApiProps } from '../../src/constructs/lambda-api.js';
+import { outputValues } from './_helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ENTRY = path.join(HERE, 'fixtures', 'handler.ts');
@@ -61,9 +62,7 @@ describe('LambdaApi', () => {
 
   it('honours customDomain in the output URL', () => {
     const tpl = synth({ customDomain: 'api.borso.fr' });
-    const outputs = tpl.toJSON().Outputs ?? {};
-    const values = Object.values(outputs).map((o) => (o as { Value: string }).Value);
-    expect(values).toContain('https://api.borso.fr');
+    expect(outputValues(tpl)).toContain('https://api.borso.fr');
   });
 
   it('rejects bad app slug', () => {

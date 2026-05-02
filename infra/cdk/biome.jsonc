@@ -2,19 +2,8 @@
   "$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
   "root": false,
   "extends": ["../../biome.jsonc"],
+  "plugins": ["../../biome-plugins/no-type-assertion-except-unknown.grit"],
   "files": {
     "includes": ["src/**", "test/**"]
-  },
-  "overrides": [
-    {
-      "includes": ["src/internal/cf-host-routing-function.code.js"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noUnusedVariables": "off"
-          }
-        }
-      }
-    }
-  ]
+  }
 }

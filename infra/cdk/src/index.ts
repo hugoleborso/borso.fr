@@ -19,6 +19,14 @@ export type { PreviewableAppProps } from './constructs/previewable-app.js';
 
 export type { Stage } from './internal/naming.js';
 
+// Env-validation helpers for app CDK entrypoints (`apps/<x>/bin/app.ts`).
+export {
+  requireAwsAccount,
+  requireDeployStage,
+  requireEnv,
+  requirePrNumber,
+} from './internal/env.js';
+
 // Lower-level helpers needed by infra/shared/ (sibling workspace).
 export {
   GITHUB_OIDC_ISSUER,
