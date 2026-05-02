@@ -91,11 +91,19 @@ jobs:
           role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
       - run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
+      - id: meta
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: echo "short_sha=${HEAD_SHA::7}" >> "$GITHUB_OUTPUT"
       - uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: preview-${{ matrix.app }}
           message: |
-            **${{ matrix.app }}** preview: https://${{ matrix.app }}-pr-${{ github.event.pull_request.number }}.preview.borso.fr
+            ### Preview deployed — `${{ matrix.app }}`
+
+            <https://${{ matrix.app }}-pr-${{ github.event.pull_request.number }}.preview.borso.fr>
+
+            <sub>Updated from <code>${{ steps.meta.outputs.short_sha }}</code> · <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">build log</a></sub>
 
   teardown:
     if: github.event.action == 'closed'
