@@ -1,0 +1,53 @@
+# Manual deploy of @borso/shared-infra. Trusts
+# repo:hugoleborso/borso.fr:environment:prod-shared via
+# SharedInfraDeployRole. The `prod-shared` GitHub environment requires
+# Hugo's manual approval before the deploy job actually runs.
+#
+# workflow_dispatch only — shared infra rarely changes and we don't
+# want a stray push to main rewriting OIDC providers, deploy roles,
+# or the previews CDN. Trigger from the Actions tab → "Shared infra
+# deploy" → "Run workflow".
+
+name: shared-deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'CDK action'
+        type: choice
+        options: [deploy, diff, synth]
+        default: deploy
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency: shared-deploy
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  shared:
+    runs-on: ubuntu-latest
+    environment: prod-shared
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+      BORSO_BUDGET_EMAIL: ${{ vars.BORSO_BUDGET_EMAIL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.SHARED_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: cdk ${{ inputs.action }}
+        run: pnpm --filter @borso/shared-infra run ${{ inputs.action }}
