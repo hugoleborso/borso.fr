@@ -39,6 +39,7 @@ const SHARED_SSM = {
   certPreviewArn: '/borso/shared/cert-preview-borso-fr-arn',
   previewsBucketName: '/borso/shared/previews-bucket-name',
   previewsDistributionId: '/borso/shared/previews-distribution-id',
+  previewsDistributionDomain: '/borso/shared/previews-distribution-domain',
 } as const;
 
 /**
@@ -158,11 +159,35 @@ export class StaticSite extends Construct {
       SHARED_SSM.previewsBucketName,
     );
     const sharedBucket = Bucket.fromBucketName(this, 'SharedPreviewsBucket', sharedBucketName);
+    // Look up the shared previews distribution so BucketDeployment can issue
+    // a CloudFront invalidation for this PR's prefix on every redeploy.
+    // Without this, CloudFront keeps serving the previously-cached HTML
+    // until TTL (default ~24h), which is invisible-magic painful when
+    // iterating on a preview.
+    const previewsDistribution = Distribution.fromDistributionAttributes(
+      this,
+      'SharedPreviewsDistribution',
+      {
+        distributionId: StringParameter.valueForStringParameter(
+          this,
+          SHARED_SSM.previewsDistributionId,
+        ),
+        domainName: StringParameter.valueForStringParameter(
+          this,
+          SHARED_SSM.previewsDistributionDomain,
+        ),
+      },
+    );
+    const keyPrefix = previewS3Prefix(props);
     new BucketDeployment(this, 'Deploy', {
       sources: [Source.asset(path.resolve(props.assetsPath))],
       destinationBucket: sharedBucket,
-      destinationKeyPrefix: previewS3Prefix(props),
+      destinationKeyPrefix: keyPrefix,
       prune: false,
+      distribution: previewsDistribution,
+      // Scope the invalidation to this PR's hostname-routed prefix, so
+      // co-tenant previews don't pay for unrelated cache busting.
+      distributionPaths: [`/${keyPrefix}/*`],
     });
     return `https://${previewHostname(props)}`;
   }

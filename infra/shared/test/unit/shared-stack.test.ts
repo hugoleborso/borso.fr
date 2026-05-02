@@ -165,6 +165,7 @@ describe('SharedStack', () => {
       '/borso/shared/cert-preview-borso-fr-arn',
       '/borso/shared/previews-bucket-name',
       '/borso/shared/previews-distribution-id',
+      '/borso/shared/previews-distribution-domain',
       '/borso/shared/prod-deploy-role-arn',
       '/borso/shared/preview-deploy-role-arn',
       '/borso/shared/shared-deploy-role-arn',

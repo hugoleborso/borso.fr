@@ -260,7 +260,8 @@ These get exported into every cloud session for the project. The repo's `scripts
 | `/borso/shared/cert-borso-fr-arn` | wildcard cert (us-east-1) | `StaticSite` (prod distribution) |
 | `/borso/shared/cert-preview-borso-fr-arn` | preview wildcard cert | `infra/shared` (the previews CDN itself) |
 | `/borso/shared/previews-bucket-name` | shared previews bucket | `StaticSite` (preview/integ uploads) |
-| `/borso/shared/previews-distribution-id` | shared previews CDN id | reserved for future cache invalidation hooks |
+| `/borso/shared/previews-distribution-id` | shared previews CDN id | `StaticSite` (issues invalidation on every preview redeploy) |
+| `/borso/shared/previews-distribution-domain` | shared previews CDN domain (`d…cloudfront.net`) | `StaticSite` (paired with the id above to construct an `IDistribution`) |
 | `/borso/shared/prod-deploy-role-arn` | `ProdDeployRole` | step 9 (GitHub Variable) |
 | `/borso/shared/preview-deploy-role-arn` | `PreviewDeployRole` | step 9 |
 | `/borso/shared/shared-deploy-role-arn` | `SharedInfraDeployRole` | step 9 (reserved) |

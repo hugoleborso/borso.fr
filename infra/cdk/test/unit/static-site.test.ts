@@ -64,6 +64,15 @@ describe('StaticSite (preview)', () => {
   it('emits a Url output pointing at the preview hostname', () => {
     expect(outputValues(tpl)).toContain('https://test-app-pr-42.preview.borso.fr');
   });
+
+  it('issues a CloudFront invalidation scoped to this PR prefix on every redeploy', () => {
+    // BucketDeployment surfaces invalidation by setting DistributionId +
+    // DistributionPaths on the Custom::CDKBucketDeployment resource.
+    const json = JSON.stringify(tpl.toJSON());
+    expect(json).toContain('"DistributionPaths":["/test-app/pr-42/*"]');
+    expect(json).toContain('/borso/shared/previews-distribution-id');
+    expect(json).toContain('/borso/shared/previews-distribution-domain');
+  });
 });
 
 describe('StaticSite (integ stage)', () => {

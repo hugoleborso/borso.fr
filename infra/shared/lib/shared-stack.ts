@@ -177,6 +177,10 @@ export class SharedStack extends Stack {
       parameterName: '/borso/shared/previews-distribution-id',
       stringValue: previewsDistribution.distributionId,
     });
+    new StringParameter(this, 'PreviewsDistributionDomainParam', {
+      parameterName: '/borso/shared/previews-distribution-domain',
+      stringValue: previewsDistribution.distributionDomainName,
+    });
     new StringParameter(this, 'ProdDeployRoleArnParam', {
       parameterName: '/borso/shared/prod-deploy-role-arn',
       stringValue: deployRoles.prod.roleArn,
