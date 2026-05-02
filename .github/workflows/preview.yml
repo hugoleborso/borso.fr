@@ -26,6 +26,11 @@ concurrency:
   group: preview-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
+# Run JS-based actions on Node 24 — Node 20 will be removed from runners
+# in Sep 2026. Drop this once every action below ships a Node-24 release.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   detect:
     if: github.event.action != 'closed'
