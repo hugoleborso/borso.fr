@@ -138,9 +138,9 @@ pnpm --filter @borso/shared-infra deploy
 Two stacks land:
 
 - `borso-shared-certs` (us-east-1) — wildcard ACM certs for `borso.fr` + `*.preview.borso.fr`. DNS validation runs against the existing hosted zone.
-- `borso-shared` (eu-west-3) — OIDC provider, DSQL cluster, previews bucket+CDN, three deploy roles, three budgets, all `/borso/shared/*` SSM parameters.
+- `borso-shared` (eu-west-3) — OIDC provider, previews bucket+CDN, three deploy roles, three budgets, all `/borso/shared/*` SSM parameters.
 
-This step typically takes 10–15 minutes the first time, mostly cert validation and DSQL cluster provisioning.
+This step typically takes 5–10 minutes the first time, mostly cert validation. Per-app DSQL clusters are not created here — each app's prod stack stands up its own cluster the first time it deploys to prod, publishing `/borso/<app>/dsql-cluster-{arn,endpoint}` for preview/integ stacks of the same app to look up.
 
 ## 8. Read deploy role ARNs from SSM
 
@@ -248,7 +248,9 @@ These get exported into every cloud session for the project. The repo's `scripts
 - **Bootstrap key + Secrets Manager / Vault**: worth it once compliance matters, multiple people have edit access on the Claude project, or the read scope grows beyond truly read-only. Single-developer scope doesn't earn the complexity yet.
 - **STS-issued short-lived creds via a hosted endpoint**: would need to host a tiny Lambda that issues 1 h sessions; a 90-day rotation cadence on a static key is a simpler trade for now.
 
-## Reference: SSM parameters published by the shared stack
+## Reference: SSM parameters
+
+### Published by the shared stack (`/borso/shared/*`)
 
 | Parameter | Value | Read by |
 | --- | --- | --- |
@@ -259,8 +261,15 @@ These get exported into every cloud session for the project. The repo's `scripts
 | `/borso/shared/cert-preview-borso-fr-arn` | preview wildcard cert | `infra/shared` (the previews CDN itself) |
 | `/borso/shared/previews-bucket-name` | shared previews bucket | `StaticSite` (preview/integ uploads) |
 | `/borso/shared/previews-distribution-id` | shared previews CDN id | reserved for future cache invalidation hooks |
-| `/borso/shared/dsql-cluster-arn` | DSQL cluster ARN | `DsqlSchema` + Lambda IAM grants |
-| `/borso/shared/dsql-cluster-endpoint` | DSQL cluster endpoint | `DsqlSchema` + `LambdaApi` env |
 | `/borso/shared/prod-deploy-role-arn` | `ProdDeployRole` | step 9 (GitHub Variable) |
 | `/borso/shared/preview-deploy-role-arn` | `PreviewDeployRole` | step 9 |
 | `/borso/shared/shared-deploy-role-arn` | `SharedInfraDeployRole` | step 9 (reserved) |
+
+### Published by each app's prod stack (`/borso/<app>/*`)
+
+Created on first prod deploy of an app. Preview/integ stacks of the same app read these to share the cluster.
+
+| Parameter | Value | Read by |
+| --- | --- | --- |
+| `/borso/<app>/dsql-cluster-arn` | per-app DSQL cluster ARN | `DsqlSchema` + Lambda IAM grants in preview/integ stacks |
+| `/borso/<app>/dsql-cluster-endpoint` | per-app DSQL cluster endpoint | `DsqlSchema` migration runner + `LambdaApi` env in preview/integ stacks |

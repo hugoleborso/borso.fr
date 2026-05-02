@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { App, Stack } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { DsqlCluster } from '../../src/constructs/dsql-cluster.js';
 import { DsqlSchema } from '../../src/constructs/dsql-schema.js';
 import { isObject, outputValues, resourcesOfType } from './helpers/template.js';
 
@@ -16,11 +17,16 @@ function synth(props: { stage: 'prod' | 'preview' | 'integ'; prNumber?: number }
   const stack = new Stack(app, 'TestStack', {
     env: { account: '123456789012', region: 'eu-west-3' },
   });
+  // Stand up a real cluster in the same stack so the schema has something
+  // to reference. In production, prod stacks use this same pattern; preview
+  // stacks use `lookupDsqlCluster(scope, app)` from SSM instead.
+  const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
   new DsqlSchema(stack, 'Db', {
     app: 'test-app',
     stage: props.stage,
     ...(props.prNumber !== undefined ? { prNumber: props.prNumber } : {}),
     migrationsPath: MIGRATIONS,
+    cluster,
   });
   return Template.fromStack(stack);
 }
@@ -45,7 +51,7 @@ describe('DsqlSchema', () => {
     const tpl = synth({ stage: 'preview', prNumber: 3 });
     const [customResource] = resourcesOfType(tpl, 'AWS::CloudFormation::CustomResource');
     expect(customResource).toBeDefined();
-    expect(customResource?.Properties?.schemaName).toBe('test_app_pr_3');
+    expect(customResource?.Properties?.schemaName).toBe('pr_3');
     expect(customResource?.Properties?.migrations).toEqual([
       expect.objectContaining({ name: '0001_init.sql' }),
     ]);
@@ -53,7 +59,7 @@ describe('DsqlSchema', () => {
 
   it('emits a SchemaName output', () => {
     const tpl = synth({ stage: 'integ', prNumber: 4 });
-    expect(outputValues(tpl)).toContain('integ_pr_4_test_app');
+    expect(outputValues(tpl)).toContain('integ_4');
   });
 
   it('throws when migrationsPath does not exist', () => {
@@ -61,12 +67,14 @@ describe('DsqlSchema', () => {
     const stack = new Stack(app, 'S', {
       env: { account: '123456789012', region: 'eu-west-3' },
     });
+    const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
     expect(
       () =>
         new DsqlSchema(stack, 'Db', {
           app: 'test-app',
           stage: 'prod',
           migrationsPath: '/nonexistent-path-borso-test',
+          cluster,
         }),
     ).toThrow(/migrationsPath does not exist/);
   });
@@ -76,12 +84,14 @@ describe('DsqlSchema', () => {
     const stack = new Stack(app, 'S', {
       env: { account: '123456789012', region: 'eu-west-3' },
     });
+    const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
     const schema = new DsqlSchema(stack, 'Db', {
       app: 'test-app',
       stage: 'prod',
       migrationsPath: MIGRATIONS,
+      cluster,
     });
-    expect(schema.schemaName).toBe('test_app');
+    expect(schema.schemaName).toBe('prod');
     // grantConnect is exercised by lambda-api integration; we just make sure
     // the public surface is reachable.
     expect(typeof schema.grantConnect).toBe('function');
@@ -110,10 +120,12 @@ describe('DsqlSchema (migrations directory edge cases)', () => {
     const stack = new Stack(app, 'S', {
       env: { account: '123456789012', region: 'eu-west-3' },
     });
+    const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
     new DsqlSchema(stack, 'Db', {
       app: 'test-app',
       stage: 'prod',
       migrationsPath: tmp,
+      cluster,
     });
     const tpl = Template.fromStack(stack);
     const [customResource] = resourcesOfType(tpl, 'AWS::CloudFormation::CustomResource');

@@ -7,8 +7,8 @@ For any "how does X actually work" question, [`docs/`](./docs/) is the source of
 ## Layout
 
 - `apps/<slug>/` — one folder per app. Standalone-openable: `cd apps/<x> && pnpm dev` works on a fresh checkout. **No cross-app imports.**
-- `infra/cdk/` — `@borso/infra`, the CDK constructs (StaticSite, LambdaApi, DsqlSchema, PreviewableApp). **100% test coverage gated.**
-- `infra/shared/` — `@borso/shared-infra`, account-level singletons (certs, OIDC, DSQL cluster, previews CDN, deploy roles).
+- `infra/cdk/` — `@borso/infra`, the CDK constructs (StaticSite, LambdaApi, DsqlCluster, DsqlSchema, PreviewableApp). **100% test coverage gated.**
+- `infra/shared/` — `@borso/shared-infra`, account-level singletons (certs, OIDC, previews CDN, deploy roles). DSQL clusters are per-app, owned by each app's prod stack.
 
 ## Conventions
 

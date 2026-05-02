@@ -133,10 +133,14 @@ describe('SharedStack', () => {
   describe('DSQL', () => {
     const tpl = synth({ budgetEmail: 'hugo@example.com' });
 
-    it('creates a DSQL cluster with deletion protection', () => {
-      tpl.hasResourceProperties('AWS::DSQL::Cluster', {
-        DeletionProtectionEnabled: true,
-      });
+    it('does NOT own a DSQL cluster (clusters are now per-app, owned by prod app stacks)', () => {
+      tpl.resourceCountIs('AWS::DSQL::Cluster', 0);
+    });
+
+    it('does NOT publish /borso/shared/dsql-cluster-* (clusters are now per-app)', () => {
+      const names = resourcesOfType(tpl, 'AWS::SSM::Parameter').map((param) => param.Properties?.Name);
+      expect(names).not.toContain('/borso/shared/dsql-cluster-arn');
+      expect(names).not.toContain('/borso/shared/dsql-cluster-endpoint');
     });
   });
 
@@ -150,8 +154,6 @@ describe('SharedStack', () => {
       '/borso/shared/cert-preview-borso-fr-arn',
       '/borso/shared/previews-bucket-name',
       '/borso/shared/previews-distribution-id',
-      '/borso/shared/dsql-cluster-arn',
-      '/borso/shared/dsql-cluster-endpoint',
       '/borso/shared/prod-deploy-role-arn',
       '/borso/shared/preview-deploy-role-arn',
       '/borso/shared/shared-deploy-role-arn',

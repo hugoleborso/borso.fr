@@ -90,18 +90,16 @@ describe('lambdaFunctionName', () => {
 });
 
 describe('dsqlSchemaName', () => {
-  it('underscores app slugs', () => {
-    expect(dsqlSchemaName({ app: 'borso-fr', stage: 'prod' })).toBe('borso_fr');
+  it('returns "prod" for the prod stage (cluster is per-app, no app prefix)', () => {
+    expect(dsqlSchemaName({ app: 'borso-fr', stage: 'prod' })).toBe('prod');
   });
 
-  it('appends pr suffix for preview', () => {
-    expect(dsqlSchemaName({ app: 'test-app', stage: 'preview', prNumber: 9 })).toBe('test_app_pr_9');
+  it('returns pr_<n> for preview', () => {
+    expect(dsqlSchemaName({ app: 'test-app', stage: 'preview', prNumber: 9 })).toBe('pr_9');
   });
 
-  it('prefixes integ schemas', () => {
-    expect(dsqlSchemaName({ app: 'test-app', stage: 'integ', prNumber: 9 })).toBe(
-      'integ_pr_9_test_app',
-    );
+  it('returns integ_<n> for integ', () => {
+    expect(dsqlSchemaName({ app: 'test-app', stage: 'integ', prNumber: 9 })).toBe('integ_9');
   });
 
   it('throws when preview/integ omits prNumber', () => {

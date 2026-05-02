@@ -6,7 +6,6 @@ import { Effect, type IGrantable, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
-import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import {
@@ -16,7 +15,7 @@ import {
   validateAppSlug,
 } from '../internal/naming.js';
 import { applyStandardTags } from '../internal/tags.js';
-import { SHARED_SSM } from './static-site.js';
+import type { IDsqlCluster } from './dsql-cluster.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -59,6 +58,13 @@ export interface DsqlSchemaProps {
    * `^\d+_.*\.sql$` are read in lexical order and applied idempotently.
    */
   readonly migrationsPath: string;
+  /**
+   * The cluster the schema lives in. For prod stacks, pass the
+   * {@link DsqlCluster} the same stack creates. For preview/integ
+   * stacks, pass `lookupDsqlCluster(scope, app)` — the cluster is
+   * owned by the app's prod stack and shared across stages.
+   */
+  readonly cluster: IDsqlCluster;
 }
 
 interface MigrationFile {
@@ -87,8 +93,10 @@ function readMigrations(dir: string): readonly MigrationFile[] {
  * Manages an Aurora DSQL schema's lifecycle: create on stack create, apply
  * migrations idempotently on update, DROP CASCADE on delete.
  *
- * The DSQL cluster itself is a singleton owned by `infra/shared/`. This
- * construct looks up its endpoint + ARN via SSM.
+ * Takes a {@link IDsqlCluster} reference. For prod stacks, pass the
+ * `DsqlCluster` the same stack creates. For preview/integ stacks, pass
+ * `lookupDsqlCluster(scope, app)` — the cluster is owned by the app's
+ * prod stack and shared across stages.
  *
  * @beta
  */
@@ -107,11 +115,8 @@ export class DsqlSchema extends Construct {
 
     const stack = Stack.of(this);
     this.schemaName = dsqlSchemaName(props);
-    this.clusterArn = StringParameter.valueForStringParameter(this, SHARED_SSM.dsqlClusterArn);
-    this.clusterEndpoint = StringParameter.valueForStringParameter(
-      this,
-      SHARED_SSM.dsqlClusterEndpoint,
-    );
+    this.clusterArn = props.cluster.clusterArn;
+    this.clusterEndpoint = props.cluster.clusterEndpoint;
 
     this.runnerFn = new NodejsFunction(this, 'MigrationRunner', {
       entry: resolveRunnerEntry(),
@@ -156,9 +161,9 @@ export class DsqlSchema extends Construct {
   }
 
   /**
-   * Grant `dsql:DbConnect` on the cluster. The grantee Lambda must connect
-   * with the schema as its `search_path`; the construct does not narrow IAM
-   * to a specific schema (DSQL doesn't support that today).
+   * Grant `dsql:DbConnect` on the cluster to a Lambda. The grantee must
+   * connect with the schema as its `search_path`; the construct does not
+   * narrow IAM to a specific schema (DSQL doesn't support that today).
    */
   public grantConnect(grantable: IGrantable): void {
     grantable.grantPrincipal.addToPrincipalPolicy(

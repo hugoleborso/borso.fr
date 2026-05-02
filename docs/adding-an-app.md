@@ -10,7 +10,7 @@ The slug is what shows up in:
 - the package name (`@borso-app/<slug>`)
 - preview URLs (`https://<slug>-pr-<n>.preview.borso.fr`)
 - the prod URL (subdomain of `borso.fr`, or apex)
-- DSQL schema names (`<slug>` becomes `<slug-with-underscores>` for prod schema)
+- per-app DSQL cluster SSM path (`/borso/<slug>/dsql-cluster-{arn,endpoint}`)
 - IAM resource patterns (`*-prod-*` and `*-pr-*`)
 - the commitlint scope-enum
 
@@ -54,6 +54,8 @@ Before merging the PR that adds the app:
 
 ## When the app needs a database
 
-Add `database: { migrationsPath: './db/migrations' }` to a `PreviewableApp` construct, and put forward-only `<NNNN>_<name>.sql` files under `apps/<slug>/db/migrations/`. The `DsqlSchema` construct creates a per-stage schema, applies migrations idempotently, and `DROP CASCADE`s on stack delete (preview only — prod stacks are never destroyed in normal ops).
+Add `database: { migrationsPath: './db/migrations' }` to a `PreviewableApp` construct, and put forward-only `<NNNN>_<name>.sql` files under `apps/<slug>/db/migrations/`. The first prod deploy of the app stands up a dedicated DSQL cluster (deletion-protected) and publishes its ARN+endpoint to `/borso/<slug>/dsql-cluster-{arn,endpoint}`. Preview/integ stacks of the same app look those up and create their own schema (`pr_<n>`, `integ_<n>`) inside that cluster; `DROP CASCADE` on stack delete reclaims it. Prod's schema is `prod` and is never destroyed in normal ops.
+
+**First-deploy ordering.** Because preview stacks `lookup` the cluster, an app's first deploy must be to prod (the cluster owner). Trying to open a preview for an app that has never been deployed to prod will fail at synth with an SSM-not-found error.
 
 Local dev for DB-backed apps is unspecified for now (no app uses a DB yet). When the first one lands, we'll decide between a per-app `docker-compose.yml` and a shared one at the repo root — see the discussion in commit `b812957`.

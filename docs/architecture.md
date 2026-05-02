@@ -18,7 +18,6 @@ One AWS account. Two regions:
 ┌────────────────── AWS account (eu-west-3 + us-east-1) ────────────┐
 │  Shared singletons (infra/shared)                                 │
 │    - GitHub OIDC provider                                         │
-│    - DSQL cluster (multi-tenant via schemas)                      │
 │    - Previews S3 + CloudFront + host-routing Function             │
 │    - ACM wildcards (us-east-1)                                    │
 │    - 3 deploy roles (prod / preview / shared)                     │
@@ -26,7 +25,9 @@ One AWS account. Two regions:
 │                                                                   │
 │  Per-app stacks (one CFN stack per (app, stage))                  │
 │    - <app>-prod         dedicated bucket + CDN + R53 alias        │
+│                         + DSQL cluster (owned here, per-app)      │
 │    - <app>-pr-<n>       writes to shared previews bucket          │
+│                         + DSQL schema in the prod cluster (SSM)   │
 └───────────────────────────────────────────────────────────────────┘
 ```
 
@@ -36,19 +37,22 @@ One AWS account. Two regions:
 | --- | --- | --- |
 | `StaticSite` | Prod: dedicated S3 bucket + CloudFront + Route 53 alias. Preview/integ: uploads to the shared previews bucket at a key prefix; URL is host-routed to the prefix. | Apex-style apps. |
 | `LambdaApi` | One Lambda + one HTTP API. CORS preflight, error alarm, single-handler routing. | API-style apps. |
-| `DsqlSchema` | Postgres schema in the shared DSQL cluster. Forward-only migrations, advisory-locked, DROP CASCADE on stack delete. | Apps with persistence. |
-| `PreviewableApp` | Composes the three above. | Full-stack apps. |
+| `DsqlCluster` | Aurora DSQL cluster, deletion-protected by default. Publishes ARN + endpoint to `/borso/<app>/dsql-cluster-{arn,endpoint}` so other stages can find it. | One per app, owned by the prod stack. |
+| `DsqlSchema` | Postgres schema in the app's DSQL cluster (resolved via SSM in preview/integ). Forward-only migrations, advisory-locked, DROP CASCADE on stack delete. | Apps with persistence. |
+| `PreviewableApp` | Composes the four above. | Full-stack apps. |
 
 ## Stages
 
 `Stage = 'dev' | 'preview' | 'integ' | 'prod'`. The `'dev'` marker is for app code only (chooses local-Postgres connection paths); the constructs and naming helpers reject it via `assertDeployStage`.
 
-| Stage | Where | Stack name | DB schema |
+Each app gets its own DSQL cluster (created by the prod stack). All stages of an app share that cluster, isolated as separate Postgres schemas:
+
+| Stage | Where | Stack name | DSQL schema (within the app's cluster) |
 | --- | --- | --- | --- |
 | `dev` | local | n/a — never deployed | local Postgres in Docker (when an app needs it) |
-| `preview` | AWS, per PR | `<app>-pr-<n>` | `<app>_pr_<n>` (DSQL) |
-| `integ` | reserved (not used in this monorepo) | `bp-integ-pr-<n>-<app>` | `integ_pr_<n>_<app>` |
-| `prod` | AWS | `<app>-prod` | `<app>` |
+| `preview` | AWS, per PR | `<app>-pr-<n>` | `pr_<n>` |
+| `integ` | reserved (not used in this monorepo) | `bp-integ-pr-<n>-<app>` | `integ_<n>` |
+| `prod` | AWS | `<app>-prod` | `prod` |
 
 ## Cost targets
 

@@ -14,6 +14,9 @@ export type { LambdaApiProps } from './constructs/lambda-api.js';
 export { DsqlSchema } from './constructs/dsql-schema.js';
 export type { DsqlSchemaProps } from './constructs/dsql-schema.js';
 
+export { DsqlCluster, lookupDsqlCluster } from './constructs/dsql-cluster.js';
+export type { DsqlClusterProps, IDsqlCluster } from './constructs/dsql-cluster.js';
+
 export { PreviewableApp } from './constructs/previewable-app.js';
 export type { PreviewableAppProps } from './constructs/previewable-app.js';
 

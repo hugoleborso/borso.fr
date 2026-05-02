@@ -20,7 +20,7 @@ PR opened                                                               PR close
                           (host-routed to s3://shared-previews/<app>/pr-<n>)
 ```
 
-**Trust pattern.** `PreviewDeployRole` trusts `repo:hugoleborso/borso.fr:pull_request` — no environment, no manual approval. Permissions are PowerUserAccess + IAM scoped to `*-pr-*` and `cdk-*` role ARNs + DSQL connect.
+**Trust pattern.** `PreviewDeployRole` trusts `repo:hugoleborso/borso.fr:pull_request` — no environment, no manual approval. Permissions are PowerUserAccess + IAM scoped to `*-pr-*` and `cdk-*` role ARNs + DSQL cluster lifecycle (resource `*` because cluster IDs aren't predictable). Preview stacks themselves only do an SSM lookup of the prod-owned per-app cluster, so an app must have been deployed to prod at least once before its previews can use a database.
 
 **Concurrency.** `concurrency.group: preview-${PR_NUMBER}`, `cancel-in-progress: false`. Never cancel a preview job mid-deploy; cancellation orphans CFN state.
 
@@ -43,7 +43,7 @@ push to main                                       merge fails / rolled back
 
 **Trust pattern.** `ProdDeployRole` trusts `repo:hugoleborso/borso.fr:environment:prod`. The GitHub `prod` environment requires Hugo as a reviewer — workflow blocks until manual approval.
 
-**Permissions.** PowerUserAccess + IAM scoped to `*-prod-*` and `cdk-*` + DSQL connect. No AdministratorAccess; the approval gate is the security layer for power, not the role.
+**Permissions.** PowerUserAccess + IAM scoped to `*-prod-*` and `cdk-*` + DSQL cluster lifecycle (Create/Delete/Update/Tag/DbConnect/DbConnectAdmin on `*`). No AdministratorAccess; the approval gate is the security layer for power, not the role.
 
 ## Shared-infra deploy flow
 
@@ -87,11 +87,11 @@ Three CFN-defined budgets, all at 80% of their monthly threshold:
 | Resource | Created when | Destroyed when | Notes |
 | --- | --- | --- | --- |
 | CertsStack (ACM wildcards) | First `pnpm shared:deploy` | Manually, never in normal ops | DNS-validated; safe to leave. |
-| SharedStack | First `pnpm shared:deploy` | Manually, never in normal ops | OIDC, DSQL, previews bucket+CDN, deploy roles. |
-| DSQL cluster | First `pnpm shared:deploy` | Never (deletion-protected at AWS level) | Multi-tenant via schemas. |
+| SharedStack | First `pnpm shared:deploy` | Manually, never in normal ops | OIDC, previews bucket+CDN, deploy roles. |
 | Previews bucket | First `pnpm shared:deploy` | Never; `RemovalPolicy.RETAIN` | 60-day lifecycle rule on objects expires orphaned PR uploads. |
-| `<app>-prod` stack | First merge to `main` after the app exists | Manually (`cdk destroy`) | The bucket inside has `RemovalPolicy.RETAIN` — its content survives stack delete. |
-| `<app>-pr-<n>` stack | PR opened | PR closed | Re-created on each `synchronize` event if changed. |
+| `<app>-prod` stack | First merge to `main` after the app exists | Manually (`cdk destroy`) | The bucket inside has `RemovalPolicy.RETAIN` — its content survives stack delete. Owns the app's DSQL cluster. |
+| DSQL cluster (per-app) | First prod deploy of the app | Never (deletion-protected at AWS level) | One per app. Shared by every stage of that app via SSM lookup. |
+| `<app>-pr-<n>` stack | PR opened | PR closed | Re-created on each `synchronize` event if changed. Looks up the app's cluster via SSM. |
 | DSQL schema (preview) | `<app>-pr-<n>` stack create | `<app>-pr-<n>` stack delete | `DROP SCHEMA … CASCADE` in the migration runner. |
 | DSQL schema (prod) | First prod deploy | Manually | Migrations are forward-only. |
 | Lambda CloudWatch logs | First Lambda invocation | After 7 days (configured retention) | Per-app and per-stage. |

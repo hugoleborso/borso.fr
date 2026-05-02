@@ -31,7 +31,7 @@ import { applyStandardTags } from '../internal/tags.js';
  * SSM parameter paths owned by infra/shared/. Constructs read these at synth
  * time. Keep in sync with infra/shared/lib/*.ts.
  */
-export const SHARED_SSM = {
+const SHARED_SSM = {
   oidcProviderArn: '/borso/shared/oidc-provider-arn',
   hostedZoneId: '/borso/shared/hosted-zone-id',
   hostedZoneName: '/borso/shared/hosted-zone-name',
@@ -39,8 +39,6 @@ export const SHARED_SSM = {
   certPreviewArn: '/borso/shared/cert-preview-borso-fr-arn',
   previewsBucketName: '/borso/shared/previews-bucket-name',
   previewsDistributionId: '/borso/shared/previews-distribution-id',
-  dsqlClusterArn: '/borso/shared/dsql-cluster-arn',
-  dsqlClusterEndpoint: '/borso/shared/dsql-cluster-endpoint',
 } as const;
 
 /**

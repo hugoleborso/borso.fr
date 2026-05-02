@@ -2,6 +2,7 @@ import { CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { type Stage, assertDeployStage, validateAppSlug } from '../internal/naming.js';
 import { applyStandardTags } from '../internal/tags.js';
+import { DsqlCluster, type IDsqlCluster, lookupDsqlCluster } from './dsql-cluster.js';
 import { DsqlSchema } from './dsql-schema.js';
 import { LambdaApi } from './lambda-api.js';
 import { StaticSite } from './static-site.js';
@@ -23,13 +24,19 @@ export interface PreviewableAppProps {
     readonly timeoutSeconds?: number;
     readonly environment?: Readonly<Record<string, string>>;
   };
-  /** Optional DSQL schema. If `api` is set, the API is granted connect. */
+  /**
+   * Optional DSQL schema. The first time an app deploys to prod, the
+   * cluster is created and the prod schema initialized. Preview/integ
+   * stacks of the same app share that cluster (looked up via SSM) and
+   * get their own schema.
+   */
   readonly database?: { readonly migrationsPath: string };
 }
 
 /**
  * High-level construct composing `StaticSite` + optional `LambdaApi` +
- * optional `DsqlSchema`.
+ * optional `DsqlSchema` (with its per-app `DsqlCluster` owned by the
+ * prod stack).
  *
  * The /api/* routing on the shared previews distribution is **not** wired
  * in v0.1.x — preview frontends hit the API at its own HTTP API URL. This
@@ -41,6 +48,7 @@ export class PreviewableApp extends Construct {
   public readonly site: StaticSite;
   public readonly api: LambdaApi | undefined;
   public readonly database: DsqlSchema | undefined;
+  public readonly cluster: IDsqlCluster | undefined;
 
   constructor(scope: Construct, id: string, props: PreviewableAppProps) {
     super(scope, id);
@@ -49,11 +57,16 @@ export class PreviewableApp extends Construct {
     applyStandardTags(this, props);
 
     if (props.database) {
+      this.cluster =
+        props.stage === 'prod'
+          ? new DsqlCluster(this, 'Cluster', { app: props.app, stage: props.stage })
+          : lookupDsqlCluster(this, props.app);
       this.database = new DsqlSchema(this, 'Db', {
         app: props.app,
         stage: props.stage,
         prNumber: props.prNumber,
         migrationsPath: props.database.migrationsPath,
+        cluster: this.cluster,
       });
     }
 

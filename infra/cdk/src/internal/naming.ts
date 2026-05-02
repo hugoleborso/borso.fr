@@ -102,30 +102,47 @@ export function lambdaFunctionName(ctx: NameContext, handler: string): string {
 }
 
 /**
+ * SSM parameter paths for the per-app DSQL cluster. The cluster lives in
+ * the prod stack and is looked up from preview/integ stacks via these
+ * paths.
+ */
+export function dsqlClusterSsmPaths(app: string): {
+  readonly arn: string;
+  readonly endpoint: string;
+} {
+  validateAppSlug(app);
+  return {
+    arn: `/borso/${app}/dsql-cluster-arn`,
+    endpoint: `/borso/${app}/dsql-cluster-endpoint`,
+  };
+}
+
+/**
  * DSQL schema names — Postgres identifiers, so underscores not hyphens.
+ * The cluster is per-app (see `DsqlCluster`), so schema names don't carry
+ * the app prefix.
  *
- *   prod    -> "<app>"            (e.g. "borso_fr")
- *   preview -> "<app>_pr_<n>"
- *   integ   -> "integ_pr_<n>_<app>"
+ *   prod    -> "prod"
+ *   preview -> "pr_<n>"
+ *   integ   -> "integ_<n>"
  */
 export function dsqlSchemaName(ctx: NameContext): string {
   validateAppSlug(ctx.app);
   assertDeployStage(ctx.stage);
-  const underscored = ctx.app.replace(/-/g, '_');
   switch (ctx.stage) {
     case 'prod':
-      return underscored;
+      return 'prod';
     case 'preview': {
       if (ctx.prNumber === undefined) {
         throw new Error('preview stage requires prNumber.');
       }
-      return `${underscored}_pr_${ctx.prNumber}`;
+      return `pr_${ctx.prNumber}`;
     }
     case 'integ': {
       if (ctx.prNumber === undefined) {
         throw new Error('integ stage requires prNumber.');
       }
-      return `integ_pr_${ctx.prNumber}_${underscored}`;
+      return `integ_${ctx.prNumber}`;
     }
   }
 }

@@ -1,5 +1,5 @@
 import { HOST_ROUTING_FUNCTION_CODE } from '@borso/infra';
-import { CfnResource, Duration, Fn, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
 import { CfnBudget } from 'aws-cdk-lib/aws-budgets';
 import type { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import {
@@ -38,14 +38,15 @@ interface SharedStackProps extends StackProps {
  *
  * Owns:
  *   - GitHub OIDC provider (one per account)
- *   - DSQL cluster (one per account, multi-tenant via schemas)
  *   - Previews S3 bucket + CloudFront distribution + host-routing Function
  *   - Three deploy roles (prod / preview / shared-infra) — see deploy-roles.ts
  *   - Cost budgets (€5/€20/€50, mandatory; throws if BORSO_BUDGET_EMAIL absent)
  *   - SSM parameters under /borso/shared/ that constructs read at synth time
  *
- * Dropped vs upstream borso-platform:
- *   - IntegTestRole: there is no integ workflow in the monorepo; preview
+ * Does NOT own (anymore):
+ *   - DSQL cluster — moved to per-app `DsqlCluster` (lives with the app's
+ *     prod stack, shared across stages of the same app via SSM lookup).
+ *   - IntegTestRole — there is no integ workflow in the monorepo; preview
  *     deploys cover what integ used to cover.
  */
 export class SharedStack extends Stack {
@@ -91,32 +92,9 @@ export class SharedStack extends Stack {
       priceClass: PriceClass.PRICE_CLASS_100,
     });
 
-    const dsqlCluster = new CfnResource(this, 'DsqlCluster', {
-      type: 'AWS::DSQL::Cluster',
-      properties: {
-        DeletionProtectionEnabled: true,
-        Tags: [
-          { Key: 'Project', Value: 'borso' },
-          { Key: 'ManagedBy', Value: 'cdk' },
-        ],
-      },
-    });
-    const dsqlClusterId = dsqlCluster.ref;
-    const dsqlClusterArn = Fn.sub(
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: CFN intrinsic, not JS template
-      'arn:aws:dsql:${AWS::Region}:${AWS::AccountId}:cluster/${ClusterId}',
-      { ClusterId: dsqlClusterId },
-    );
-    const dsqlEndpoint = Fn.sub(
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: CFN intrinsic, not JS template
-      '${ClusterId}.dsql.${AWS::Region}.on.aws',
-      { ClusterId: dsqlClusterId },
-    );
-
     const deployRoles = createDeployRoles(this, {
       oidcProviderArn: oidcProvider.openIdConnectProviderArn,
       account: this.account,
-      dsqlClusterArn,
     });
 
     // === Budgets (mandatory) ===
@@ -179,14 +157,6 @@ export class SharedStack extends Stack {
     new StringParameter(this, 'PreviewsDistributionIdParam', {
       parameterName: '/borso/shared/previews-distribution-id',
       stringValue: previewsDistribution.distributionId,
-    });
-    new StringParameter(this, 'DsqlArnParam', {
-      parameterName: '/borso/shared/dsql-cluster-arn',
-      stringValue: dsqlClusterArn,
-    });
-    new StringParameter(this, 'DsqlEndpointParam', {
-      parameterName: '/borso/shared/dsql-cluster-endpoint',
-      stringValue: dsqlEndpoint,
     });
     new StringParameter(this, 'ProdDeployRoleArnParam', {
       parameterName: '/borso/shared/prod-deploy-role-arn',

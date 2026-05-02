@@ -32,6 +32,26 @@ const cdkRoleIamActions = [
   'iam:PassRole',
 ];
 
+/**
+ * DSQL actions an app deploy needs: cluster lifecycle (prod stack creates
+ * one per app, preview/integ stacks share it via SSM lookup) plus connect.
+ * The cluster ARN isn't predictable at policy-creation time (DSQL assigns
+ * IDs), so resources are `*`. Tag-based scoping could narrow this later
+ * via `aws:ResourceTag/Project: borso` if it becomes worth doing.
+ */
+const dsqlAppActions = [
+  'dsql:CreateCluster',
+  'dsql:DeleteCluster',
+  'dsql:GetCluster',
+  'dsql:UpdateCluster',
+  'dsql:ListClusters',
+  'dsql:TagResource',
+  'dsql:UntagResource',
+  'dsql:ListTagsForResource',
+  'dsql:DbConnect',
+  'dsql:DbConnectAdmin',
+];
+
 interface DeployRoles {
   readonly prod: Role;
   readonly preview: Role;
@@ -41,7 +61,6 @@ interface DeployRoles {
 interface DeployRolesProps {
   readonly oidcProviderArn: string;
   readonly account: string;
-  readonly dsqlClusterArn: string;
 }
 
 /**
@@ -51,12 +70,12 @@ interface DeployRolesProps {
  * CDK actually does at each scope.
  */
 export function createDeployRoles(scope: Construct, props: DeployRolesProps): DeployRoles {
-  const { oidcProviderArn, account, dsqlClusterArn } = props;
+  const { oidcProviderArn, account } = props;
 
-  const dsqlConnect = new PolicyStatement({
+  const dsqlAppPolicy = new PolicyStatement({
     effect: Effect.ALLOW,
-    actions: ['dsql:DbConnect', 'dsql:DbConnectAdmin'],
-    resources: [dsqlClusterArn],
+    actions: dsqlAppActions,
+    resources: ['*'],
   });
 
   // --- ProdDeployRole — trusts repo:…:environment:prod ---
@@ -81,7 +100,7 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
       ],
     }),
   );
-  prod.addToPolicy(dsqlConnect);
+  prod.addToPolicy(dsqlAppPolicy);
 
   // --- PreviewDeployRole — trusts repo:…:pull_request ---
 
@@ -105,7 +124,7 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
       ],
     }),
   );
-  preview.addToPolicy(dsqlConnect);
+  preview.addToPolicy(dsqlAppPolicy);
 
   // --- SharedInfraDeployRole — trusts repo:…:environment:prod-shared ---
 
@@ -165,14 +184,6 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
         'iam:ListOpenIDConnectProviderTags',
       ],
       resources: [`arn:aws:iam::${account}:oidc-provider/token.actions.githubusercontent.com`],
-    }),
-  );
-  // DSQL cluster lifecycle (full because the shared stack owns the cluster).
-  shared.addToPolicy(
-    new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: ['dsql:*'],
-      resources: ['*'],
     }),
   );
   // Budgets does not support resource-level scoping.
