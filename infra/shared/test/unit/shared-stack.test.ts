@@ -170,14 +170,14 @@ describe('SharedStack', () => {
   });
 
   describe('budgets', () => {
-    it('creates 5/20/50 EUR budgets when budgetEmail is provided via prop', () => {
+    it('creates 5/20/50 USD budgets when budgetEmail is provided via prop', () => {
       const tpl = synth({ budgetEmail: 'hugo@example.com' });
       tpl.resourceCountIs('AWS::Budgets::Budget', 3);
       for (const amount of [5, 20, 50]) {
         tpl.hasResourceProperties('AWS::Budgets::Budget', {
           Budget: Match.objectLike({
-            BudgetName: `borso-monthly-${amount}eur`,
-            BudgetLimit: { Amount: amount, Unit: 'EUR' },
+            BudgetName: `borso-monthly-${amount}usd`,
+            BudgetLimit: { Amount: amount, Unit: 'USD' },
           }),
         });
       }

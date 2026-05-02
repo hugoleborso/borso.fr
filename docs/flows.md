@@ -74,13 +74,15 @@ Three CFN-defined budgets, all at 80% of their monthly threshold:
 
 | Budget | Triggers email at | What it usually means |
 | --- | --- | --- |
-| €5 / month | €4 spent | Higher than usual idle. Open Cost Explorer, group by service. |
-| €20 / month | €16 spent | Something is genuinely costing money. Check S3 bytes, CloudFront requests, DSQL DPUs. |
-| €50 / month | €40 spent | An app deploy went wrong (e.g. forgot reserved concurrency). Investigate immediately. |
+| $5 / month | $4 spent | Higher than usual idle. Open Cost Explorer, group by service. |
+| $20 / month | $16 spent | Something is genuinely costing money. Check S3 bytes, CloudFront requests, DSQL DPUs. |
+| $50 / month | $40 spent | An app deploy went wrong (e.g. forgot reserved concurrency). Investigate immediately. |
 
 **Subscriber.** Just `BORSO_BUDGET_EMAIL`. No SNS fan-out — one mailbox, easy to act on.
 
-**Why three tiers.** The first email gives you days of warning before the bill becomes painful; the third gives you minutes. Each is a separate AWS Budget so you don't lose the early-warning signal once spend crosses €40.
+**Why three tiers.** The first email gives you days of warning before the bill becomes painful; the third gives you minutes. Each is a separate AWS Budget so you don't lose the early-warning signal once spend crosses $40.
+
+**Why USD and not EUR.** AWS Budgets only accepts `USD` as the budget unit — `EUR` is rejected at deploy time. Billing currency display in the console is independent (set via Account → Default currency → EUR if you want invoices priced in euros).
 
 ## Resource lifecycles
 

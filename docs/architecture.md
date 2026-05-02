@@ -21,7 +21,7 @@ One AWS account. Two regions:
 │    - Previews S3 + CloudFront + host-routing Function             │
 │    - ACM wildcards (us-east-1)                                    │
 │    - 3 deploy roles (prod / preview / shared)                     │
-│    - Cost budgets (€5/€20/€50)                                    │
+│    - Cost budgets ($5/$20/$50)                                    │
 │                                                                   │
 │  Per-app stacks (one CFN stack per (app, stage))                  │
 │    - <app>-prod         dedicated bucket + CDN + R53 alias        │
@@ -64,7 +64,7 @@ Idle bill: **€0.50–€2 / month**, dominated by the Route 53 hosted zone (�
 - **Lambda capped** at `reservedConcurrentExecutions: 10`, ARM64, 512 MB, 7-day log retention.
 - **Previews bucket** has a 60-day expiration lifecycle rule as a safety net for orphaned PR uploads.
 
-Cost alarms fire at €5 / €20 / €50 monthly thresholds (80% of each). Configured as mandatory in the shared stack — synth fails if `BORSO_BUDGET_EMAIL` isn't set.
+Cost alarms fire at $5 / $20 / $50 monthly thresholds (80% of each); USD because AWS Budgets only accepts USD as the budget unit. Configured as mandatory in the shared stack — synth fails if `BORSO_BUDGET_EMAIL` isn't set.
 
 ## Where this differs from a typical AWS setup
 

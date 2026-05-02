@@ -16,7 +16,7 @@ In the AWS console, signed in as the root user:
 - [ ] **Cost Anomaly Detection** → create a monitor on "AWS services" → email subscription.
 - [ ] **Free-Tier alerts** → Billing → Billing preferences → check the box.
 
-The shared stack itself creates the €5/€20/€50 budgets in step 7 — don't create them by hand here.
+The shared stack itself creates the $5/$20/$50 budgets in step 7 — don't create them by hand here. (AWS Budgets only supports USD; the EUR default-currency setting above only affects how invoices are displayed in the console.)
 
 ## 2. IAM Identity Center
 

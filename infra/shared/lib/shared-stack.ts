@@ -103,16 +103,19 @@ export class SharedStack extends Stack {
     if (!budgetEmail) {
       throw new Error(
         'SharedStack: budget email is mandatory. Set BORSO_BUDGET_EMAIL env var or pass props.budgetEmail. ' +
-          'Three monthly cost alarms (€5/€20/€50) will fire to this address at 80% of each threshold.',
+          'Three monthly cost alarms ($5/$20/$50) will fire to this address at 80% of each threshold.',
       );
     }
+    // AWS Budgets only accepts USD as the currency unit. The amounts below
+    // are dollar thresholds — close enough to euro at the tiny absolute scale
+    // we operate at, and AWS rejects any other Unit value at deploy time.
     for (const amount of [5, 20, 50]) {
       new CfnBudget(this, `Budget${amount}`, {
         budget: {
-          budgetName: `borso-monthly-${amount}eur`,
+          budgetName: `borso-monthly-${amount}usd`,
           budgetType: 'COST',
           timeUnit: 'MONTHLY',
-          budgetLimit: { amount, unit: 'EUR' },
+          budgetLimit: { amount, unit: 'USD' },
         },
         notificationsWithSubscribers: [
           {
