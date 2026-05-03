@@ -2,11 +2,12 @@
 
 One file per recurring trap. Each entry follows a **Dantotsu** root-cause structure:
 
-- **Symptom** — what we observed.
-- **Root-cause chain** — successive *whys* down to the underlying cause.
-- **Fix** — what was committed and/or what the operator must do (config, AWS console, registrar, etc.).
+- **Symptom** — what we observed (from the user's perspective when there is one).
+- **Root-cause chain** — successive *whys* down to the developer's misconception.
+- **Detection failure causes** — which layer should have caught it and why didn't (optional but encouraged).
+- **Countermeasure + Eradication** — what was committed, what's left, what the operator must do (config, console, registrar).
 
-If a PR uncovers a new trap, drop a new file here. Even if the fix is "the operator changes a console setting", capture it — the value is in the chain, not just the conclusion.
+If a PR uncovers a new trap, run the [`/dantotsu`](../../.claude/skills/dantotsu/SKILL.md) Claude Code skill — it walks the seven steps and produces a file in this folder. Even if the fix turns out to be "the operator changes a console setting", capture it; the value is in the causal chain, not just the conclusion.
 
 ## Index
 
@@ -39,25 +40,38 @@ If a PR uncovers a new trap, drop a new file here. Even if the fix is "the opera
 
 ## Adding a new entry
 
-1. Pick a slug `kebab-case`.
-2. Use the template:
-   ```md
-   # <Title>
+The `/dantotsu` Claude Code skill ([`.claude/skills/dantotsu/SKILL.md`](../../.claude/skills/dantotsu/SKILL.md)) walks through the seven steps and produces a complete entry. Run it whenever a PR uncovers a non-trivial defect.
 
-   ## Symptom
-   <observable failure mode, with the exact error if useful>
+If you're writing one by hand, use this template:
 
-   ## Root-cause chain
-   1. **Why?** <step-1 question>
-      <answer>
-   2. **Why?** <step-2 question>
-      <answer>
-   …
-   **Root cause:** <one sentence>
+```md
+# <Title — sparks curiosity, hints at the lesson, NOT the user-story name>
 
-   ## Fix
-   - **Code:** commit `<sha>` — <what changed>
-   - **Config / operator action:** <what the human has to do, if anything>
-   ```
-3. Link from the index above under the right heading.
-4. If the lesson also belongs in CLAUDE.md as a one-line rule (rare), add it; otherwise the knowledge entry alone is enough.
+## Symptom
+<from the user's perspective, with screenshot/error if available>
+
+## Root-cause chain
+1. **Why?** <step-1 question>
+   <answer>
+2. **Why?** <step-2 question>
+   <answer>
+…
+**Root cause:** <one-sentence misconception, in "thought X, actually Y" form>
+
+## Detection failure causes
+- **<layer>:** <why this layer didn't catch it>
+- …
+
+## Countermeasure
+- **Code:** <commit sha / pseudo-diff + why this addresses the root cause specifically>
+- **Operator action:** <if anything is required outside the codebase>
+
+## Eradication
+- <sibling latent defects swept (with paths/commits)>
+- <tooling change applied>
+- <knowledge sharing planned or done>
+```
+
+Then add a one-line entry to the index above under the right heading.
+
+The 15 entries committed alongside this README are "Dantotsu-lite" — they predate the skill and have Symptom / Root-cause chain / Fix only. Future entries follow the full template above. If you're updating an old entry while debugging something related, take the chance to flesh out its Detection failure causes and Eradication sections.

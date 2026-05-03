@@ -52,9 +52,9 @@ Full setup including key rotation: [`docs/aws-setup.md#12`](./docs/aws-setup.md#
 
 ## Knowledge base
 
-Hard-won lessons from past PRs live in [`docs/knowledge/`](./docs/knowledge/), one file per topic. Each entry is a Dantotsu-style root-cause analysis (Symptom → causal chain → Fix). Skim the index before starting any non-trivial CDK / CloudFront / S3 / GitHub Actions work — the cost of reading a 30-line entry is far lower than the cost of re-discovering the trap.
+Hard-won lessons from past PRs live in [`docs/knowledge/`](./docs/knowledge/), one file per topic. Each entry is a **Dantotsu** root-cause analysis (Symptom → causal chain → root cause → detection failure causes → countermeasure → eradication). Skim the index before starting any non-trivial CDK / CloudFront / S3 / GitHub Actions work — the cost of reading a 30-line entry is far lower than the cost of re-discovering the trap.
 
-Add a new file there whenever a PR uncovers something a future session would benefit from knowing. See the **Self-improvement loop** rule below.
+When a PR uncovers a new trap, run the [`/dantotsu`](.claude/skills/dantotsu/SKILL.md) skill — it walks through the seven Dantotsu steps and produces a knowledge-base entry. See the **Self-improvement loop** rule below for when to invoke it.
 
 ## Self-improvement loop
 
