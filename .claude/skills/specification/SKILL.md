@@ -26,7 +26,7 @@ The two perspectives that get skipped most often, and that this skill must enfor
 - `> ⚠️ Missing tech discussion` — product side covered, tech perspective not yet challenged.
 - `> ⚠️ Missing product discussion` — tech side covered, product/value perspective not yet challenged.
 
-Use the same blockquote pattern (`> ⚠️ Missing <perspective> discussion`) for designer / client / developer perspectives when relevant. The flag stays in the file until the missing pass happens. A flagged spec is not ready for implementation; call this out when the user tries to move on.
+The flag stays in the file until the missing pass happens. A flagged spec is not ready for implementation; call this out when the user tries to move on.
 
 ## When to invoke
 
@@ -50,7 +50,6 @@ Section names match the canonical template kept locally at [`template.md`](./tem
 <!-- If a perspective has not yet been challenged, leave one of these blockquotes at the top:
 > ⚠️ Missing tech discussion
 > ⚠️ Missing product discussion
-> ⚠️ Missing designer discussion
 Remove the line once that perspective has been covered. -->
 
 ## Why

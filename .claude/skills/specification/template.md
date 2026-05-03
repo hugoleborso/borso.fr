@@ -11,9 +11,6 @@ The block-quoted prompt under each heading is guidance for the author; delete it
 <!-- If a perspective has not yet been challenged, leave one of these blockquotes at the top:
 > ⚠️ Missing tech discussion
 > ⚠️ Missing product discussion
-> ⚠️ Missing designer discussion
-> ⚠️ Missing client discussion
-> ⚠️ Missing developer discussion
 Remove the line once that perspective has been covered. -->
 
 ## Why
