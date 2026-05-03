@@ -7,7 +7,26 @@ description: Draft a feature specification that surfaces misalignments, confront
 
 The specification is **not a description of what to build**. It is a working document used to surface misalignments, confront PM/tech perspectives, and reveal inconsistencies *before* implementation. Treating it as a hand-off document is the failure mode this skill exists to prevent.
 
-In this repo there is one developer wearing both hats. That does not eliminate the value — it shifts it. The spec becomes the place where the "PM brain" and the "tech-lead brain" actually disagree on paper instead of silently hand-waving past each other in code.
+The canonical standard this skill enforces lives at [`standard.md`](./standard.md) (in this skill's folder). When the standard and this SKILL.md disagree, the standard wins — open `standard.md` and re-read it before drafting. Edit `standard.md` when the underlying standard evolves; edit this file when the *enforcement* of it evolves.
+
+## How this phase works
+
+A spec is **a conversation, not a writing task**. Drive it with the `AskUserQuestion` tool — one focused question at a time, with concrete options where helpful. Do not silently fill in assumptions; if you are tempted to guess, ask instead. The whole point of this phase is to surface misalignments through dialogue, and that only happens if the user is actually answering questions.
+
+Suggested cadence: ask, capture the answer in the draft, ask the next question, capture, repeat. Batch only when the questions are genuinely independent.
+
+## Tech and product perspectives — both, in the same conversation
+
+The spec must confront the **product** perspective (why, value, use cases, results, monitoring) **and** the **tech** perspective (data sources, components, implementation sequence, risks). The standard's #1 named failure is partitioning these into separate phases.
+
+In this repo a single human often wears both hats. That is fine — explicitly switch hats with the user ("putting on the tech-lead hat now…") so each angle gets its own pass. Do not skip an angle just because the same person provides both.
+
+If you finish the conversation having only meaningfully covered one side, **flag the spec at the top** with one of:
+
+- `> ⚠️ Missing tech discussion` — product side covered, tech perspective not yet challenged.
+- `> ⚠️ Missing product discussion` — tech side covered, product/value perspective not yet challenged.
+
+The flag stays in the file until the missing pass happens. A flagged spec is not ready for implementation; call this out when the user tries to move on.
 
 ## When to invoke
 
@@ -25,6 +44,11 @@ Every spec must have these top-level sections, in this order. Empty sections are
 
 ```markdown
 # <Feature title — phrased as the user-visible outcome>
+
+<!-- If only one perspective has been covered so far, leave one of these blockquotes at the top:
+> ⚠️ Missing tech discussion
+> ⚠️ Missing product discussion
+Remove the line once both perspectives have been challenged. -->
 
 ## Why
 - Business / customer / user value, in one paragraph.
@@ -79,7 +103,7 @@ After the draft is written, **do step 12 explicitly**: re-read the spec with the
 
 These are the common mistakes the standard names. Push back on them in real time when you see them.
 
-- **"PM does discovery, tech-lead does the tech part."** The spec is the place where both perspectives confront each other. Do not partition it.
+- **"PM does discovery, tech-lead does the tech part."** The spec is the place where both perspectives confront each other. Do not partition it. If you can only get one side in this conversation, flag the spec with `> ⚠️ Missing tech discussion` or `> ⚠️ Missing product discussion` and refuse to call it ready.
 - **"I'm writing this because the team asked for it."** Bureaucratic specs hide reasoning. If the *why* of a section is not in the section, delete the section or fix it.
 - **"My vision only."** Ask the user what they have *not* considered. Pull from `docs/` and existing app blueprints before inventing.
 - **"Forgot to link the ADR / Figma / blueprint / BPMN."** Three months from now, missing links force archaeology. Always link.
