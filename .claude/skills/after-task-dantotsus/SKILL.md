@@ -1,13 +1,18 @@
 ---
 name: after-task-dantotsus
-description: Use after a PR has merged or closed to sweep through what happened during the task and produce one Dantotsu per interesting subject under `docs/knowledge/`. Implements CLAUDE.md's Self-improvement loop rule end-to-end. Triggered by the user saying any of "/after-task-dantotsus", "post-merge dantotsus", "kaizen pass on PR #N", "let's capture the lessons from that PR", or after the assistant receives a PR-merged webhook event in a session that was watching the PR. The skill identifies candidate subjects from the PR's commit history and conversation, classifies each (defect / vendor surprise / design pivot / operator confusion), and either invokes the `/dantotsu` skill per subject or writes the entries directly using the same template.
+description: Use after a PR has merged or closed to sweep what happened during the task and produce one Dantotsu per interesting subject under `docs/knowledge/`, then open a follow-up PR labelled `kaizen`. Implements CLAUDE.md's Self-improvement loop rule end-to-end. Triggered by the user saying any of "/after-task-dantotsus", "post-merge dantotsus", "kaizen pass on PR #N", "let's capture the lessons from that PR", or by a PR-merged webhook event in a session that was watching the PR. Classifies each candidate (defect / vendor surprise / design pivot / operator confusion / no-op), writes one entry per surviving subject using the template at `docs/knowledge/_template.md`, and applies the `kaizen` label to the resulting PR so loop iterations are filterable from the PR list.
 ---
 
-# After-task Dantotsu sweep
+# After-task Dantotsu sweep → `kaizen` PR
 
 The closing move of every PR. CLAUDE.md's **Self-improvement loop**
-rule says: when a PR merges or closes, capture the lessons. This
-skill is the procedure.
+rule says: when a PR merges or closes, capture the lessons and open
+a follow-up PR labelled `kaizen`. This skill is the procedure.
+
+> **Output of this skill is always a PR labelled `kaizen`.** The label
+> is the loop's visible signature in the repo — filter
+> `is:pr label:kaizen` to see every iteration of the
+> self-improvement loop over time.
 
 ## When to invoke
 
@@ -101,26 +106,35 @@ Cross-link aggressively. If the new entry's chain ends in
 `cloudfront-function-throttle-persistence` entry. The knowledge
 base compounds in value when entries reference each other.
 
-### 5. Open the follow-up PR
+### 5. Open the follow-up PR with the `kaizen` label
 
 Branch name: `claude/lessons-from-pr-<N>` (replace N with the swept
 PR's number).
 
-Commit one-or-more commits scoped `docs:` (commitlint scope-enum).
+Commit one or more commits scoped `docs:` (commitlint scope-enum).
 PR title: `docs: lessons from PR #<N>`. PR body lists each entry
 with a one-line summary so the reviewer can skim.
 
-**Tag the PR with `kaizen`** so the loop is visible at a glance in
-the issue/PR list. Use:
+**Apply the `kaizen` label.** This is non-optional — the label is
+the visible signature of the self-improvement loop in the repo, and
+it's how Hugo (and any future contributor) confirms at a glance
+that the loop is being kept alive after each PR.
 
 ```
-mcp__github__update_pull_request — labels: ["kaizen"]
+# After mcp__github__create_pull_request returns:
+mcp__github__issue_write
+  method: update
+  issue_number: <new-pr-number>
+  labels: ["kaizen"]
 ```
 
-(If the label doesn't exist yet on the repo, fall back to creating
-it via `gh label create kaizen --color a2eeef --description
-"Captures lessons from a previously-merged PR (Self-improvement loop)"`
-and re-applying.)
+GitHub auto-creates the `kaizen` label the first time it's applied;
+no separate label-creation call is needed. Re-applying is idempotent.
+
+If you can't apply labels for some reason (permissions, API hiccup,
+no MCP tool exposed in this session), STOP and surface the failure
+to Hugo — don't merge a kaizen-PR without the label, because then
+it disappears from the loop's audit trail.
 
 ### 6. Even if there are zero lessons
 
@@ -142,7 +156,10 @@ operator-confusion came up worth capturing. The loop's
 - [ ] `docs/knowledge/README.md` index updated.
 - [ ] Cross-links to existing entries added where the chains
       overlap.
-- [ ] Branch pushed, PR opened, `kaizen` label applied.
+- [ ] Branch pushed, PR opened.
+- [ ] **`kaizen` label applied to the PR** (verify via
+      `mcp__github__pull_request_read method: get` — `labels` array
+      should include `"kaizen"`). This is the loop's audit trail.
 - [ ] PR body lists every entry with a one-line summary.
 
 ## Reframes
