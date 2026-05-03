@@ -1,4 +1,4 @@
-import { CfnResource, Fn, Stack } from 'aws-cdk-lib';
+import { Annotations, CfnResource, Fn, Stack } from 'aws-cdk-lib';
 import { type IGrantable, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
@@ -108,11 +108,30 @@ export class DsqlCluster extends Construct implements IDsqlCluster {
  * Look up the per-app cluster from SSM. Used by preview/integ stacks that
  * share the prod-owned cluster.
  *
+ * Emits a synth-time INFO annotation explaining the "first deploy must be
+ * prod" constraint. CFN's actual deploy-time error
+ * (`SSM Parameter Store value not found`) is opaque to a fresh contributor,
+ * so the annotation surfaces the resolution path during `cdk synth` /
+ * `cdk diff` — before the operator hits the failure. This is the rung-4
+ * detection-improvement eradication of the "first deploy" footgun; see
+ * `docs/dantotsus/dsql-first-deploy-must-be-prod.md`. A higher rung
+ * (synth-time hard fail) would require either changing the lookup to a
+ * synchronous AWS-CLI call or refactoring the architecture so the cluster
+ * isn't owned by the prod stack — both heavier than warranted.
+ *
  * @beta
  */
 export function lookupDsqlCluster(scope: Construct, app: string): IDsqlCluster {
   validateAppSlug(app);
   const paths = dsqlClusterSsmPaths(app);
+  Annotations.of(scope).addInfo(
+    [
+      `lookupDsqlCluster reads ${paths.arn} (and .endpoint) from SSM at deploy time.`,
+      "These params are published by the prod stack's DsqlCluster construct.",
+      `For a brand-new app, deploy prod FIRST: STAGE=prod pnpm --filter @borso-app/${app} run deploy.`,
+      'See docs/dantotsus/dsql-first-deploy-must-be-prod.md for the full chain.',
+    ].join(' '),
+  );
   const clusterArn = StringParameter.valueForStringParameter(scope, paths.arn);
   const clusterEndpoint = StringParameter.valueForStringParameter(scope, paths.endpoint);
   return {

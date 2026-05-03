@@ -50,11 +50,16 @@ When `AWS_ACCESS_KEY_ID` is present, the SessionStart hook installs AWS CLI v2 c
 
 Full setup including key rotation: [`docs/aws-setup.md#12`](./docs/aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
 
-## Knowledge base
+## Dantotsus and knowledge
 
-Hard-won lessons from past PRs live in [`docs/knowledge/`](./docs/knowledge/), one file per topic. Each entry is a **Dantotsu** root-cause analysis (Symptom → causal chain → root cause → detection failure causes → countermeasure → eradication). Skim the index before starting any non-trivial CDK / CloudFront / S3 / GitHub Actions work — the cost of reading a 30-line entry is far lower than the cost of re-discovering the trap.
+Two complementary folders, one purpose: keep the team's mental model ahead of the codebase's failure modes.
 
-When a PR uncovers a new trap, run the [`/dantotsu`](.claude/skills/dantotsu/SKILL.md) skill — it walks through the seven Dantotsu steps and produces a knowledge-base entry. See the **Self-improvement loop** rule below for when to invoke it.
+- [`docs/dantotsus/`](./docs/dantotsus/) — root-cause analyses with shipped eradications. Each entry follows the [Dantotsu standard](./.claude/skills/dantotsu/standard.md): Symptom → Root-cause chain → Detection failure causes → Countermeasure → **Eradication** (code-level, non-optional, linked by commit hash + diff). Eradication ladder, top is best: structural impossibility → DevX check → vendor patch → detection → knowledge (floor).
+- [`docs/knowledge/`](./docs/knowledge/) — broad reference docs. Vendor quirks, CLI contracts, conventions, debugging recipes, anything the team needs to know that doesn't trace to a code-level fix.
+
+Skim the indexes before starting non-trivial CDK / CloudFront / S3 / GitHub Actions work — the cost of reading a 30-line entry is far lower than the cost of re-discovering the trap.
+
+When a PR uncovers a new trap, run the [`/dantotsu`](.claude/skills/dantotsu/SKILL.md) skill — it walks the seven Dantotsu steps and produces an entry under `docs/dantotsus/` with the eradication shipped in code. The Self-improvement loop rule below pulls this together.
 
 ## Self-improvement loop
 
