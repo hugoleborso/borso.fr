@@ -82,6 +82,18 @@ The skill's textual return to the user is one of:
 - `Verdict: PARTIAL (N unverifiable) — see <report_path>`
 - `Verdict: FAIL (N failing) — see <report_path>`
 
+## PR disclosure
+
+When the verdict is **PARTIAL** or **FAIL**, the operator opening the PR must surface the affected rows in the PR description under a `## Validation gaps` (PARTIAL) or `## Validation failures` (FAIL) heading. Each row gets:
+
+- Row number + the assertion text, verbatim from the report.
+- The one-line reason from the report's Notes (tool-gap / spec-deferred / actual defect).
+- A link to the report path under `docs/features/<app>/<slug>/validation/`.
+
+A reviewer reads the PR description without opening the report; the gap has to be visible up-front. A PARTIAL or FAIL validation that ships without this disclosure is a Dantotsu candidate against this skill — the gate exists so tool gaps and tooling-side limitations don't slip through silently into main.
+
+A PASS verdict only needs a link to the report — no per-row disclosure.
+
 ## Failure modes to avoid
 
 - **Optimism leak.** The skill must not pre-summarise the implementation for the agent ("the feature is mostly working, just check…"). Pass the spec path and the URL; nothing else. The whole point is unbiased eyes.

@@ -68,6 +68,10 @@ The skill's textual return is one of:
 - `Verdict: PARTIAL (N unverifiable) — see <report_path>`
 - `Verdict: FAIL (N failing) — see <report_path>`
 
+## PR disclosure
+
+Same rule as `/visual-validation`: when the verdict is **PARTIAL** or **FAIL**, the operator must surface the affected rows in the PR description under `## Validation gaps` / `## Validation failures`, with the row text, the one-line reason from Notes, and a link to the report path. Reviewers must see the gap without opening the report.
+
 ## Failure modes to avoid
 
 - **Optimism leak.** The skill must not pre-summarise the implementation for the agent. Pass the four paths; nothing else.
