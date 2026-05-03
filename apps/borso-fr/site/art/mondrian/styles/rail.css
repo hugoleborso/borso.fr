@@ -1,0 +1,123 @@
+.rail {
+  padding: clamp(28px, 4vw, 44px) clamp(24px, 2.4vw, 38px) 56px;
+  border-right: 1px solid var(--rule);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 35%),
+    var(--paper);
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.rail::-webkit-scrollbar {
+  width: 6px;
+}
+.rail::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 3px;
+}
+
+.brandmark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  opacity: 0.7;
+}
+.brandmark .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--ink);
+  display: inline-block;
+}
+
+h1.title {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(38px, 4.2vw, 56px);
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  margin: 18px 0 6px;
+  color: var(--ink);
+  width: 100%;
+}
+h1.title .gen-tag {
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  display: block;
+  margin-top: 14px;
+  opacity: 0.6;
+}
+
+.subtitle {
+  font-family: var(--serif-soft);
+  font-style: italic;
+  width: 100%;
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  opacity: 0.8;
+  margin: 0 0 28px;
+  max-width: 32ch;
+}
+
+.rule {
+  height: 1px;
+  background: var(--rule);
+  margin: 24px 0;
+}
+.rule.strong {
+  background: var(--rule-strong);
+}
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  opacity: 0.65;
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.credit {
+  margin-top: 36px;
+  font-family: var(--serif-soft);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  opacity: 0.55;
+  width: 100%;
+  max-width: 36ch;
+}
+.credit b {
+  font-style: normal;
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+  opacity: 0.8;
+}

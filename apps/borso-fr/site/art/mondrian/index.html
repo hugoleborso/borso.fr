@@ -1,50 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Mondrian Generator</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/art/mondrian/style.css">
-</head>
-<body>
-  <h1>Mondrian Generator</h1>
-  <div id="controls">
-    <div class="field">
-      <label for="widthInput">Canvas Width:</label>
-      <input type="number" id="widthInput">
-    </div>
-    <div class="field">
-      <label for="heightInput">Canvas Height:</label>
-      <input type="number" id="heightInput">
-    </div>
-    <div class="field">
-      <label for="linesInput">Number of Lines:</label>
-      <input type="number" id="linesInput" value="50" min="0">
-    </div>
-    <div class="field radio-group">
-      <span>Animation Orientation:</span>
-      <label>
-        <input type="radio" name="animationMode" value="opposite">
-        Opposite <span class="small-grey">(vertical lines slide horizontally, horizontal slide vertically)</span>
-      </label>
-      <label>
-        <input type="radio" name="animationMode" value="matching" checked>
-        Matching <span class="small-grey">(vertical lines slide vertically, horizontal lines slide horizontally)</span>
-      </label>
-    </div>
-    <div class="field">
-      <label>Choose Colors:</label>
-      <div id="colorGrid">
-      </div>
-    </div>
-    <div class="field" id="buttonContainer">
-      <button type="button" id="generateButton">Generate</button>
-      <button type="button" id="downloadButton" style="display:none;">Download</button>
-    </div>
-  </div>
-
-  <canvas id="paintingCanvas"></canvas>
-
-  <script type="module" src="/art/mondrian/script.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Atelier — A Mondrian Generator</title>
+    <meta
+      name="description"
+      content="Borso's Atelier — a generator for Mondrian-style compositions in the manner of De Stijl."
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
 </html>

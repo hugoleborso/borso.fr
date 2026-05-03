@@ -39,13 +39,32 @@ If unsure, ask one question: "Is this feature already scoped, or do you want to 
 
 ## Deliverable
 
-Produce a single markdown file at `docs/specs/<feature-slug>.md`. One file per feature, kebab-case slug derived from the feature's user-visible outcome (not the technical mechanism). The spec is **short by design** — if it grows past ~2 pages of prose, the team can no longer iterate on it. Cut, don't append.
+Produce a single markdown file at `docs/features/<app>/<feature-slug>/spec/spec.md`. One file per feature, kebab-case slug derived from the feature's user-visible outcome (not the technical mechanism). The folder layout is:
+
+```
+docs/features/<app>/<slug>/
+    spec/
+        spec.md                              # this file
+        <other-supporting-docs>              # mockups, BPMN exports, ADRs scoped to this feature, transcripts
+    plan/
+        plan.md                              # produced later by /technical-conception
+    validation/
+        visual-validation-<timestamp>.md     # produced by /visual-validation
+        visual-validation-<timestamp>/       # screenshots referenced by the report (committed)
+        technical-validation-<timestamp>.md  # produced by /technical-validation
+```
+
+`<app>` is the workspace slug under `apps/` (e.g. `borso-fr`, `borsouvertures`). Use `<app> = infra` for features that only touch `infra/cdk/` or `infra/shared/`.
+
+Drop screenshots, exported Figma frames, BPMN XML, design-tool transcripts, and other supporting material **next to `spec.md` inside `spec/`** rather than inlining megabytes into the spec body. Validation evidence (visual-validation screenshots) lives under `validation/` and is committed alongside its report.
+
+The spec itself is **short by design** — if it grows past ~2 pages of prose, the team can no longer iterate on it. Cut, don't append.
 
 ## Required sections
 
 Every spec must have these top-level sections, in this order. Empty sections are a smell — either fill them or justify the gap inline.
 
-Section names match the canonical template kept locally at [`template.md`](./template.md), so that local specs and external Theodo Academy specs read the same. Copy that file into `docs/specs/<slug>.md` to start a new spec.
+Section names match the canonical template kept locally at [`template.md`](./template.md), so that local specs and external Theodo Academy specs read the same. Copy that file into `docs/features/<app>/<slug>/spec/spec.md` to start a new spec.
 
 ```markdown
 # <Feature title — phrased as the user-visible outcome>
@@ -79,8 +98,8 @@ Remove the line once that perspective has been covered. -->
 ## Changes
 - **Types / domain model** (DDD): entities, value objects, relationships, shared vocabulary.
 - **Database changes**: migrations, new columns, indexes.
-- **Files to change**: backend + frontend, each path called out, marked NEW / UPDATE.
-- **Test strategy**: what gives you confidence the feature works without defects.
+- **Files to change**: backend + frontend, each path called out, marked NEW / UPDATE. Pure helpers go in `*.utils.ts` (see CLAUDE.md "Clean code") so the test runner can enforce 100% coverage on them.
+- **Test strategy**: the autonomous validation pipeline that gives confidence the feature ships without defects. Manual sweeps are forbidden — the spec is approved when `/visual-validation` and `/technical-validation` can both pass against it without a human clicking through anything. See the template's *Test strategy* section for the shape.
 
 ## Production strategy
 - **Analytics**: named events, p50/p75/p90 thresholds where relevant, success criteria.
@@ -121,10 +140,16 @@ These are the common mistakes the standard names. Push back on them in real time
 - **"Forgot to link the ADR / Figma / blueprint / BPMN."** Three months from now, missing links force archaeology. Always link.
 - **"The spec is too long."** Iteration becomes impossible. Cut. Two pages of prose is the soft ceiling.
 - **"Adoption is someone else's problem."** Without analytics + alerting, the spec is incomplete. Step 13 is not optional.
+- **"I'll click around to check it."** Manual sweeps are forbidden as the test strategy. The spec is approved when a future Claude session running `/visual-validation` and `/technical-validation` can clear it autonomously, with no human-in-the-loop verification. If the *Test strategy* section says "manual" for anything other than a post-deploy smoke check, push back and split the assertion into a unit test (`*.utils.ts`) or a visual-validation row.
+- **"Frontend-only apps don't need tests."** False. Pure helpers go in `*.utils.ts` and ship at 100% coverage regardless of whether the app has a backend, regardless of whether the app has a Sentry connection, regardless of how small the app is. Utilities are tested precisely because they are the cheapest things to cover. See CLAUDE.md "Clean code".
 
 ## Repo-specific notes
 
-- Specs live at `docs/specs/<slug>.md`. Create the folder if it does not exist.
-- Slugs map to apps when relevant: prefix with the app slug (`borso-fr-`, `borsouvertures-`, `infra-`) so commitlint scopes line up trivially.
+- Specs live at `docs/features/<app>/<slug>/spec/spec.md`. Create `spec/`, `plan/`, and `validation/` as siblings under each feature folder.
+- The `<app>` segment is the workspace slug (`borso-fr`, `borsouvertures`, `infra`). The commitlint scope is `<app>` directly — no further prefix on the slug.
 - Architectural decisions that survive past the spec belong in their own ADR under `docs/adr/` — reference them from the spec's *Questions / Options / Decisions* section, do not duplicate.
 - For infra changes (`infra/cdk/**`, `infra/shared/**`), the *Changes* section must call out the test-coverage impact — those packages are coverage-gated.
+
+## What comes next
+
+Once every perspective has been confronted and no `> ⚠️ Missing …` flag remains, the spec is **ready for `/technical-conception`**. That skill reads this `spec.md` and produces the engineering `plan.md` next to it (under `plan/plan.md`). Do not start implementation directly from a spec — the plan is the artefact a future Dantotsu traces defects back to, and skipping it removes the trail.

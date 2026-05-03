@@ -1,0 +1,285 @@
+# Atelier — a gallery-style Mondrian generator on borso.fr
+
+> Client / audience: degenerate as a *business* stakeholder (personal site), but visitor-facing concerns confronted in Q17–Q18 (RGPD/Google Fonts, EU privacy posture).
+> Designer: visual design confronted *outside this session* via Claude Design and exported as the bundle at `mondrian-generator/`. Design-adjacent concerns the prototype didn't settle (motion / dark-mode / a11y) confronted in-session, Q19–Q21.
+> Product: confronted in-session via Q5–Q14.
+> Tech-lead / developer: confronted in-session via Q1–Q4 + Q15–Q16.
+
+## Why
+
+The current `/art/mondrian` page is a functional but plain generator (number inputs, raw HTML controls, white box, two animation modes). Reference: [`apps/borso-fr/site/art/mondrian/index.html`](../../../../../apps/borso-fr/site/art/mondrian/index.html) and [`painting.js`](../../../../../apps/borso-fr/site/art/mondrian/painting.js). The user's complaint, verbatim from the Claude Design transcript: *"I want the same feature, but with a way more artsy design. Fancy fonts (artistic), user friendly settings, maybe better animation… I just want it to be beautiful AND responsive."*
+
+The user iterated through four rounds with Claude Design and landed on **Atelier**: a gallery-catalog UI with serif/mono typography, a left "wall label" rail of curated controls, a centered framed canvas, and four animation modes (Still / Drift / Breathe / Cascade).
+
+**Measurable objective (single):** the page should work simultaneously as a *piece showing the user's artsy side* and as a *tool for friends to play with* — no mode toggle, no compromise on either. Operationally that means: typography & layout match the design pixel-for-pixel; the canvas is the visual hero; the page is responsive down to 380 px; both pressing space *and* tapping the canvas recompose; the seed is in the URL so a friend can share what they made.
+
+Field observation (Gemba): the iteration history in `mondrian-generator/chats/chat1.md` *is* the field observation — the user has already used the existing tool, found it insufficient, and produced the visual target through dialogue with the design assistant.
+
+## Result
+
+Single page at `/art/mondrian/`, replacing the existing one. Visual reference: the design HTML at `mondrian-generator/project/Mondrian Atelier.html` (the bundle's primary file). The implementation must match that file's rendered output 1:1 for visual concerns — colors, type scale, spacing, animation amplitudes, swatch layout, segmented controls, palette presets, custom palette picker, frame shadow & vignette, responsive breakpoints (960 px, 520 px, 380 px), and the short-viewport rule (<700 px tall).
+
+**Out-of-scope visual changes:** none. Don't redesign during port — if the design has a quirk, it's intentional.
+
+**Out-of-scope features:** the `TweaksPanel` from the prototype (claude.ai/design's edit-mode host protocol — invisible outside that host) and its `useTweaks` persistence shim. State becomes plain `React.useState`.
+
+**Product changes vs. design:**
+- Stage header gets a *dynamic* title (not the design's static "Untitled, in primary colors").
+- Brandmark in the rail header is "Borso's Atelier · Est. 1999" (not the design's "Atelier · Est. 1917").
+- Seed lives in the URL (`?seed=…`), shareable; refresh restores the same composition.
+- Compose pushes onto browser history (so Back returns to the previous composition).
+- Mobile gets *both* tap-the-canvas and a Compose button promoted out of the drawer onto the stage.
+
+## Use cases / edge cases
+
+Happy path:
+1. User navigates to `/art/mondrian/` (no `?seed=`) → fresh seed.
+2. Page renders with default palette = Classique, complexity = 22, line weight = 6, balance = 0.5, **still** animation. Composition rendered via the inkbloom entry, dynamic title generated, seed reflected into `?seed=…` via `history.replaceState`.
+3. User adjusts complexity / line weight / balance sliders → canvas updates without reshuffling the layout (only colors / line widths change on balance/lineWeight; complexity *does* reshuffle).
+4. User clicks a palette segment (Classique / Muted / Nocturne / Garden / Custom) → page theme & canvas recolor; title regenerates because dominant color changes.
+5. With Custom selected, user clicks any of the 5 swatches → native color picker opens, color updates live.
+6. User clicks an animation mode segment → animation switches without re-triggering the inkbloom entry animation.
+7. User presses **space** (desktop), **taps the canvas** (mobile or desktop), or clicks **Compose** → new seed, layout reshuffles, ink-bloom entry replays, URL updates via `history.pushState`, dynamic title regenerates.
+8. User clicks browser **Back** → previous seed (and palette, if it had been changed via pushState) restored from URL, composition + title restored.
+9. User clicks **Download** → PNG of the current composition (2000×2000) downloads as `mondrian-{seed}.png`.
+10. User shares the URL with a friend; friend opens it; same composition renders in the same palette.
+
+Edge cases:
+- Mobile (<960 px): rail collapses to a top drawer, toggle button appears top-right; **Compose button is also rendered under the frame as a primary action** (this is mobile-only; on desktop it stays in the rail).
+- Phone (<520 px): swatches/segments shrink, stage-foot stacks.
+- Narrow phone (<380 px): animation segments wrap 2×2.
+- Short viewport (<700 px tall, ≥961 px wide): frame size capped to fit without scroll.
+- Cascade mode: a fresh seed every 5500 ms — must `clearInterval` on unmount and on mode switch. Cascade-driven seed changes use `replaceState` (not `pushState`) so the back-stack doesn't fill up with auto-cascades.
+- User typing in an input: space must NOT trigger compose (handled by the prototype's `e.target.tagName` check; preserve it).
+- Tap-the-canvas must not fire if the tap is on the framed-canvas overlay's edge that overlaps a control (unlikely given layout, but ensure the canvas's `<canvas>` element is the listener target, not the framed-canvas wrapper).
+- Caption swap on touch devices: replace "Press space to compose new" with "Tap the painting to compose new" when `(pointer: coarse)` matches.
+- `?seed=` invalid (non-hex / wrong length): fall back to a fresh seed; do NOT throw.
+
+Error cases:
+- None observable to the user. PNG download falls back silently if the browser lacks `canvas.toBlob` (basically nothing in 2026).
+- Invalid `?seed` query → silently regenerate.
+
+## Questions, Options and Decisions
+
+### Q1 — How to port the React+Babel-CDN prototype into a static-HTML app? `[2026-05-03]`
+- **Drop-in HTML with React via CDN** — zero infra change, but ships unminified Babel + does runtime JSX transform on every page load (~200 ms cold).
+- **esbuild one-shot** — small dev dep, bundles a single entry; loses HMR.
+- **Vite for the whole app** *(picked)* — borso-fr already needs a build step (`build` script does `cp -R`); upgrading it to a real Vite multi-page project gives clean dev/build/deploy and HMR for any future React work, at the cost of touching every page (each `.html` becomes a Vite entry).
+
+### Q2 — Where do build outputs land? `[2026-05-03]`
+- **dist-only, gitignored** *(picked)*. Vite default. CI/CD runs `pnpm build` before `cdk deploy`.
+- Commit `bundle.js` into `site/` — rejected (duplication, dirty diffs).
+
+### Q3 — Drop the TweaksPanel? `[2026-05-03]`
+- **Strip it** *(picked)*. The panel only renders if a parent frame posts `__activate_edit_mode`; outside claude.ai/design it's dead code. State moves to plain `useState`.
+- Keep it — rejected (dead code; ~390 lines of unused host-protocol).
+
+### Q4 — Old helper files (canvas.js, colors.js, color-grid.js, subdivision.js, script.js, style.css, painting.js)? `[2026-05-03]`
+- **Delete all** *(picked)*. None are imported after `index.html` is replaced.
+
+### Q5 — Tool or piece? `[2026-05-03]`
+- Tool — generator first.
+- Piece — ambient art first.
+- **Both, at the same time, like the design** *(picked)*. No mode toggle. Default mode is **Still** (see Q13) — the painting arrives composed via the inkbloom entry, then stays composed; the user opts into motion when they want it. Controls are visible (rail on desktop, drawer toggle on mobile); Compose and Download are primary affordances. The gallery framing/copy stays.
+
+### Q6 — Mobile compose? `[2026-05-03]`
+- Tap the canvas — discoverable via caption swap.
+- Compose button moves out of the drawer onto the stage on mobile.
+- **Both** *(picked)*. Tap-to-compose + visible Compose button under the frame on mobile. Belt-and-suspenders; ~10 lines.
+
+### Q7 — What goes in the URL? `[2026-05-03]`
+- Seed only.
+- **Seed + palette** *(picked)*. `?seed=0DCBA3F4&palette=nocturne`. Palette is part of the piece's identity (colour *is* the painting); a friend opening the link sees the same painting in the same key. Sliders + animation mode are *curator's choices that day*, not part of the piece — they reset on refresh. Compose updates URL via `history.pushState`; palette change updates URL via `history.replaceState` (palette flip is not a separate composition). Cascade auto-replaces.
+- Full state — rejected (verbose URL, animation mode is a viewing preference not a piece attribute).
+
+### Q8 — Palette scope? `[2026-05-03]`
+- **All 5: Classique, Muted, Nocturne, Garden, Custom** *(picked)*. Maximum variety, matches the design exactly.
+- 3 / 2 — rejected (sharper but loses the curator's-selection feel the user values).
+
+### Q9 — Editorial voice in the stage header? `[2026-05-03]`
+- Keep the design's static "Untitled, in primary colors".
+- Strip to minimal mono.
+- **Dynamic title from seed** *(picked)*. Refined in Q10.
+
+### Q10 — How is the dynamic title generated? `[2026-05-03]`
+- From dominant colors only (procedural, always grounded).
+- From a curated word list (delightful, but disconnected).
+- **Hybrid: curated adjectives + actual color** *(picked)*. Format: `"A {adjective} {noun} in {colorName}"` where:
+  - `{adjective}` is seed-keyed from the approved list: *quiet, restless, bright, hushed, slow, sudden, careful, generous, brief, patient*.
+  - `{noun}` is seed-keyed from the approved list: *study, song, gesture, conversation, breath, argument*.
+  - `{colorName}` is the human name of the largest non-neutral fill in the current composition (e.g. *cobalt*, *vermillion*, *saffron*) — pulled from the palette's `fills[i].name`.
+  - Title regenerates whenever the seed OR the palette changes (palette change flips colour names).
+  - Lists live in `titles.ts` so they're easy to extend later.
+
+### Q11 — Brandmark? `[2026-05-03]`
+- Keep "Atelier · Est. 1917".
+- Drop entirely.
+- **Personalise: "Borso's Atelier · Est. 1999"** *(picked)*. Same typography as the design, just different content.
+
+### Q12 — Series ambition / shell extraction? `[2026-05-03]`
+- One-off — the Atelier shell is decoration only.
+- Pre-split into `/art/_shared/` now.
+- **Leave room, don't pre-split** *(picked)*. Keep all code under `apps/borso-fr/site/art/mondrian/` for now. When (if) a second piece arrives, refactor the rail/stage/brandmark into a shared shell. Matches YAGNI; we accept one refactor cost later in exchange for not over-abstracting now. Naming convention noted: `/art/<artist>/` URL pattern is reserved.
+
+### Q13 — Default animation mode? `[2026-05-03]`
+- Drift — original choice; rejected after live use, the parallax sway turned out to fight the controls and pulled attention away from the painting itself.
+- Cascade — rejected (fights the controls; too aggressive on arrival).
+- **Still** *(picked, replacing the original Drift choice)* — the painting arrives composed and stays composed; the user opts into motion when they want it. Tool+piece framing still holds: the inkbloom entry keyframe gives the page life on arrival without continuous rAF churn.
+
+### Q14 — Compose history? `[2026-05-03]`
+- No back-stack.
+- **Back-stack via browser history** *(picked)*. Compose calls `history.pushState({ seed }, '', '?seed=…')`. Browser Back returns to previous seeds. Free affordance once seed-in-URL is in. Cascade uses `replaceState` so it doesn't pollute history.
+- Explicit Previous button — rejected (unnecessary UI when Back works).
+
+### Q15 — Two load-bearing implementation details from the design's round-4 debug. `[2026-05-03]`
+The Claude Design transcript (`mondrian-generator/chats/chat1.md`, rounds 3–4) recorded two bugs the user already paid to find — preserve the fix in the port, don't re-introduce them:
+
+1. **Layout vs. coloring must be memoised separately.** `generateLayout({ seed, complexity })` returns rectangles; `colorize(layout, { seed, palette, balance })` assigns fills. If they're collapsed, changing palette/balance reshuffles the composition (and replays inkbloom). Two `useMemo`s, two dep lists.
+2. **The `inkbloom` entry keyframe must not touch `transform`.** The runtime animation modes (Drift / Breathe) drive `style.transform` directly; if the keyframe also animates transform with `animation-fill-mode: both`, the keyframe's final transform pins forever and the live animation looks dead. Keyframe stays on `opacity` + `filter: blur(...)` only.
+
+### Q16 — Fonts? `[2026-05-03]`
+- The design loads Playfair Display, Cormorant Garamond, JetBrains Mono from Google Fonts. **Self-host via `@fontsource/*` NPM packages** *(picked, see also Q17)* — Vite bundles the woff2 directly; no third-party request. Trades ~150 KB of bundle for clean RGPD posture and a faster first paint (no extra round-trip to fonts.googleapis.com).
+
+### Q17 — RGPD / EU privacy posture? `[2026-05-03]`
+- Personal site on a `.fr` domain → RGPD applies even without a business stakeholder. **Self-host all fonts** *(picked, see Q16)*. **No analytics, no tracking, no third-party requests at all** after the migration. The page is a purely static document. No consent banner needed because there's nothing to consent to.
+
+### Q18 — Other RGPD considerations? `[2026-05-03]`
+- No cookies set by the page (no auth, no preferences-server, no analytics).
+- The seed-in-URL feature does not collect anything — it's local state mirrored into the URL, not a server request.
+- `?seed=…` URLs the user shares are public by definition (they typed them); no sensitive data possible in an 8-hex seed.
+- No imprint / mentions légales required for a non-commercial personal site (LCEN art. 6 III.2: pseudonymous publication permitted for non-professionals provided the host can identify them; AWS keeps the user's billing identity).
+
+### Q19 — `prefers-reduced-motion`? `[2026-05-03]`
+- Ignore the OS setting and ship the design as-is.
+- **Honour it** *(picked)*. When `(prefers-reduced-motion: reduce)` matches:
+  - Default animation mode is **Still** regardless of preference (see Q13). The reduced-motion branch therefore doesn't change the default mode — it changes the *entry* animation.
+  - The `inkbloom` entry keyframe drops the `filter: blur(6px)` step; rects fade in via opacity only, with no per-rect stagger (all rects fade at once, ~150 ms).
+  - Cascade is *not* disabled if the user explicitly selects it (their choice overrides the OS preference).
+
+### Q20 — `prefers-color-scheme: dark`? `[2026-05-03]`
+- Auto-pick Nocturne when the OS prefers dark.
+- **Always Classique on first visit** *(picked)*. Cleaner mental model; the dark palette is one click away. Avoids the "why is the page dark?" / "I can't find the light version" failure modes.
+
+### Q21 — Accessibility baseline? `[2026-05-03]`
+**Picked: ship a baseline polish pass on top of the design.** Concretely:
+- Visible focus rings (1 px solid `var(--ink)` + 2 px offset) on all interactive elements: rail buttons, sliders, segments, swatches, frame, mobile-Compose button.
+- The framed canvas is rendered as a `<button type="button">` with `aria-label="Composition. Click to recompose."` so keyboard and screen-reader users can recompose without the keyboard shortcut. Tap-to-compose (Q6) flows through the same handler.
+- An `aria-live="polite"` region announces the dynamic title on every recompose ("A quiet study in cobalt").
+- Fonts use `font-display: swap` (FOUT, not FOIT) so the page renders with system fonts before the woff2 lands.
+- Color contrast: spot-checked Classique and Nocturne — the design's `--ink-soft` at 0.7 opacity over `--paper` measures ≥ 4.5:1. Muted's body copy is the only borderline; left as the design specifies it (designer's call).
+- Keyboard: tab order is brandmark → sliders → palette segments → custom swatches → animation segments → Compose → Download → frame.
+
+## Changes
+
+### Types / domain model
+
+- `Palette { key, label, bg, line, fills: { name, hex }[] }` — preset or computed-from-tweaks.
+- `Rect { x, y, w, h, depth, id, fill, fillName }` — normalised 0..1 coordinates, IDs stable across recolors.
+- `Tweaks { paletteKey, complexity, lineWeight, balance, animationMode, customColor1..3, customPaper, customInk }` — flat React state; no longer a host-persisted blob.
+- `Title { adjective, noun, colorName }` — derived from seed + dominant fill via `buildTitle(seed, layout, palette)`.
+- URL schema: `/art/mondrian/?seed=<8-hex>&palette=<key>`; missing seed → fresh seed; missing/invalid palette → Classique; invalid seed → fresh seed (don't throw).
+
+### Database changes
+
+None. Site is fully client-side / static.
+
+### Files to change
+
+**NEW**
+- `apps/borso-fr/vite.config.ts` — multi-page entries: `index`, `family/mom`, `family/les-filles`, `art/mondrian`. Build root `site/`, outDir `../dist`.
+- `apps/borso-fr/vitest.config.ts` — `environment: 'jsdom'`; `coverage.provider: 'v8'`; `coverage.thresholds.100 = true`; `coverage.include = ['site/**/*.utils.ts']`. Treats every `*.utils.ts` as a coverage-gated unit.
+- `apps/borso-fr/tsconfig.json` — replaced. JSX `react-jsx`, lib DOM, includes `site/**/*.{ts,tsx}`, `vite.config.ts`, `vitest.config.ts`. The Vitest test files use named imports from `'vitest'` (`import { describe, expect, it } from 'vitest'`), so `vitest/globals` is **not** added to `types`.
+- `apps/borso-fr/tsconfig.cdk.json` — kept the prior CDK-only config (NodeNext, includes `bin`).
+- `apps/borso-fr/site/art/mondrian/main.tsx` — React entry: imports the four `@fontsource/*` font CSS bundles, imports `App.tsx`, calls `createRoot`. Fonts live here rather than in `index.html`'s `<head>` so Vite can bundle the woff2 files into `dist/assets/` and emit hashed asset URLs (otherwise the font CSS is unbundled).
+- `apps/borso-fr/site/art/mondrian/App.tsx` — the React tree from the design (palettes, RNG, generator, components) minus TweaksPanel; plus the seed-in-URL hook and tap-the-canvas handler.
+- `apps/borso-fr/site/art/mondrian/components.tsx` — `MondrianFrame`, `Field`, `Segments`, `ReadOnlySwatch`, `EditableSwatch`, `Announcer`. Split from `App.tsx` to stay under Biome's `noExcessiveLinesPerFile` threshold.
+- `apps/borso-fr/site/art/mondrian/use-animation.ts` — animation hook + drift / breathe transform helpers. Side-effecting (touches DOM `style.transform`), so does **not** carry the `.utils.ts` suffix.
+- `apps/borso-fr/site/art/mondrian/download.ts` — PNG export. Side-effecting (DOM-dependent SVG → canvas → blob → `<a download>`), so does **not** carry the `.utils.ts` suffix.
+- `apps/borso-fr/site/art/mondrian/painting.utils.ts` — pure: `mulberry32`, `generateLayout`, `colorize`, internal helpers. **Coverage-gated.**
+- `apps/borso-fr/site/art/mondrian/painting.utils.test.ts` — Vitest suite asserting determinism, layout invariants, neutrality probability.
+- `apps/borso-fr/site/art/mondrian/titles.utils.ts` — pure: `buildTitle`, `dominantColorName`, adjective/noun lists. **Coverage-gated.**
+- `apps/borso-fr/site/art/mondrian/titles.utils.test.ts` — Vitest suite.
+- `apps/borso-fr/site/art/mondrian/url-state.utils.ts` — pure: `freshSeed`, `seedToHex`, `parseSeedHex`, `readUrlState`, `buildSearch`. **Coverage-gated.**
+- `apps/borso-fr/site/art/mondrian/url-state.utils.test.ts` — Vitest suite.
+- `apps/borso-fr/site/art/mondrian/palettes.utils.ts` — pure: `PALETTES`, `buildCustomPalette`, `isPaletteKey`, `CUSTOM_DEFAULTS`, types. **Coverage-gated.**
+- `apps/borso-fr/site/art/mondrian/palettes.utils.test.ts` — Vitest suite.
+- `apps/borso-fr/site/art/mondrian/palette-theme.ts` — `applyPaperTheme` (DOM side effect: writes CSS custom properties on `documentElement`). Split from `palettes.ts` so the pure half can be coverage-gated cleanly.
+- `apps/borso-fr/site/art/mondrian/keyboard.utils.ts` — pure: `isComposeKeyEvent` (extracted from the Space-keydown guard so the "typing in `<input>` must not compose" edge case is covered by a unit test, not a manual sweep). **Coverage-gated.**
+- `apps/borso-fr/site/art/mondrian/keyboard.utils.test.ts` — Vitest suite.
+- `apps/borso-fr/site/art/mondrian/styles/{base,rail,controls,stage,responsive}.css` — the design's `<style>` block split by concern (base + paper grain, rail + brandmark + sliders, palette + segments + buttons, stage + frame + foot, media queries + keyframes). Split into five files to stay under Biome's `noExcessiveLinesPerFile` threshold; `main.tsx` imports them in order.
+
+**UPDATE**
+- `apps/borso-fr/site/art/mondrian/index.html` — replace contents with `<title>Atelier — A Mondrian Generator</title>` + meta + `<body><div id="root"></div><script type="module" src="./main.tsx"></script></body>`. Fonts are loaded from `main.tsx` (see *Fonts in main.tsx vs `<head>`* under Q.O.D.) — the `<head>` carries no `<link>` to fonts.googleapis.com and no inline font CSS.
+- `apps/borso-fr/package.json` — add `vite`, `@vitejs/plugin-react`, `react`, `react-dom`, `@types/react`, `@types/react-dom`, `vitest`, `@vitest/coverage-v8`, `jsdom`. Replace `dev` (`vite`), `build` (`vite build`); add `test` (`vitest run`) and `test:coverage` (`vitest run --coverage`); typecheck runs `tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit`.
+
+**DELETE**
+- `apps/borso-fr/site/art/mondrian/canvas.js`
+- `apps/borso-fr/site/art/mondrian/color-grid.js`
+- `apps/borso-fr/site/art/mondrian/colors.js`
+- `apps/borso-fr/site/art/mondrian/subdivision.js`
+- `apps/borso-fr/site/art/mondrian/script.js`
+- `apps/borso-fr/site/art/mondrian/style.css`
+- `apps/borso-fr/site/art/mondrian/painting.js`
+
+**Other apps:** untouched. The Vite config only governs `apps/borso-fr`.
+
+### Test strategy
+
+Autonomous pipeline. No manual sweeps; every assertion is checked by something the CI / a future Claude session can run unattended (see `.claude/skills/specification/SKILL.md` "Frontend apps don't need tests" failure mode).
+
+#### 1. Static gates
+
+- `pnpm --filter @borso-app/borso-fr run typecheck` — `tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit`.
+- `pnpm --filter @borso-app/borso-fr run build` — Vite build must succeed; `dist/` carries `index.html`, `family/{mom,les-filles}.html`, `art/mondrian/index.html`, `404.jpeg`.
+- `pnpm exec biome lint` — Biome rules from root config (incl. `no-type-assertion-except-unknown`, `noExcessiveLinesPerFile`).
+- `pnpm exec knip` — no unused exports / files / deps.
+
+#### 2. Unit tests on pure utilities (Vitest, 100% coverage)
+
+Repo rule (CLAUDE.md "Clean code"): pure-function modules end in `*.utils.ts` and ship at 100% statement / branch / function / line coverage. Files in this feature that hold pure logic are renamed to the suffix and paired with a sibling `*.utils.test.ts`:
+
+| Module | Renamed to | Tests |
+|---|---|---|
+| `painting.ts` | `painting.utils.ts` | `mulberry32` determinism + uniformity bounds; `generateLayout` produces ≥ N rects, never overlaps, depth bounded; `colorize` neutrality probability bounded by `balance`; `pickSplittableRectIndex` picks within the unsplittable threshold |
+| `titles.ts` | `titles.utils.ts` | `buildTitle` shape (`A {adj} {noun} in {color}`), determinism keyed off seed, dominant-color picks the largest non-neutral fill |
+| `url-state.ts` | `url-state.utils.ts` | `parseSeedHex` rejects non-hex / over-length input; `seedToHex` round-trips; `readUrlState` handles missing / invalid params; `buildSearch` round-trips with `readUrlState` |
+| `palettes.ts` (split) | `palettes.utils.ts` for `buildCustomPalette` / `isPaletteKey` / palette presets; `palette-theme.ts` keeps `applyPaperTheme` (DOM side effect) | `buildCustomPalette` shape; `isPaletteKey` accepts the five keys and rejects garbage; `PALETTES` keyed by every `PaletteKey` except `'custom'` |
+
+Workspace setup (NEW files, planned in the plan but listed here for traceability): `apps/borso-fr/vitest.config.ts` enabling `coverage.provider: 'v8'` with `coverage.thresholds.100: true` scoped to `**/*.utils.ts`; `apps/borso-fr/package.json` gains `"test": "vitest run"` and `"test:coverage": "vitest run --coverage"`; pre-commit hook runs the test script when any `apps/borso-fr/**/*.utils.ts` changed.
+
+#### 3. UI behavioural assertions — `/visual-validation`
+
+Every numbered happy-path step and every edge / error case from *Use cases / edge cases* is asserted by the dedicated `visual-validator` agent driving the running app via `agent-browser` (see `.claude/skills/visual-validation/SKILL.md`). The agent reads this spec to build its assertion list. Coverage:
+
+- Default render with `?seed=DEADBEEF&palette=classic` — typography, layout, framed canvas at 1280×800.
+- Sliders (complexity / line weight / balance) update without reshuffling layout — visible delta on slider drag, no inkbloom replay.
+- Palette segments recolor + retitle.
+- Custom palette: clicking a swatch opens the OS color picker; selecting a colour live-recolours.
+- Animation modes: Still / Drift / Breathe / Cascade are visually distinct; switching modes does not replay inkbloom.
+- Cascade cleanup: switching to Cascade and back to Drift within 5500 ms produces *exactly one* recomposition (the explicit Drift switch), proving the cascade `setInterval` is cleared on mode change. Seed in URL is observed before/after the switch.
+- Compose recomposes (space, tap-on-canvas, button) → new seed, URL `?seed=` updates via `pushState`, inkbloom replays.
+- Browser Back restores prior seed.
+- Refresh on a seed URL renders the same composition.
+- Download triggers a 2000×2000 PNG named `mondrian-<seed>.png`.
+- Mobile (≤ 960 px): drawer toggle visible, secondary Compose button under the frame, caption swap "Tap the painting".
+- Phone (≤ 520 px) and narrow phone (≤ 380 px): segments reflow, foot stacks.
+- Short viewport (< 700 px tall, ≥ 961 px wide): frame caps to fit.
+- `prefers-reduced-motion: reduce` (via `agent-browser set media`): default mode is Still, inkbloom keyframe is opacity-only, no per-rect stagger.
+- `prefers-color-scheme: dark`: still Classique on first visit (palette is never auto-flipped to Nocturne).
+- Invalid `?seed=garbage`: fresh composition, no console error.
+
+The visual-validation report (with screenshot evidence) lands at `docs/features/borso-fr/mondrian-atelier/validation/visual-validation-<timestamp>.md` and is committed.
+
+#### 4. Diff review — `/technical-validation`
+
+The dedicated `technical-validator` agent (see `.claude/skills/technical-validation/SKILL.md`) reads this spec, the plan, and the diff against `origin/main`, then walks four categories: correctness vs spec, code cleanliness (lint + knip + clean-code rules), tests pass (the Vitest runner above, plus 100% coverage on every `*.utils.ts`), and test coverage of spec (every use case has a `*.utils.test.ts` row or a `/visual-validation` row). Verdict must be PASS before push.
+
+#### 5. Coverage gates already in place
+
+- `infra/cdk` and `infra/shared` retain their 100% line-coverage gate. This feature does not touch those workspaces.
+
+## Production strategy
+
+- **Analytics:** none. Personal site, no telemetry today; this spec doesn't introduce any.
+- **Zero-defect strategy:** the StaticSite CDK construct already serves `dist/` via CloudFront. The only new failure surface is the Vite build itself — a build failure breaks deploy CI before traffic ever sees it. No runtime alerting needed. Family pages (`mom.html`, `les-filles.html`) are pulled into the Vite multi-page graph but contain only inline `<style>` and reference local PNGs; verify they still render after build.
+- **Post-deploy smoke (autonomous belt):** a `/visual-validation` run against the production URL `https://borso.fr/art/mondrian/` (instead of the local dev URL) re-uses the same assertion list as the pre-merge run. Sibling pages (`https://borso.fr/`, `https://borso.fr/family/mom.html`, `https://borso.fr/family/les-filles.html`) get a one-shot reachability check — HTTP 200 + non-empty body — wired into the deploy CI job rather than a human spot-check.

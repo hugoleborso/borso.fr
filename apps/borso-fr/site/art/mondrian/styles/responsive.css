@@ -1,0 +1,147 @@
+@media (max-width: 960px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .rail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: auto;
+    max-height: 88dvh;
+    border-right: none;
+    border-bottom: 1px solid var(--rule-strong);
+    transform: translateY(-101%);
+    transition: transform 360ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    z-index: 20;
+    box-shadow: var(--shadow);
+    overflow-y: auto;
+  }
+  .rail.open {
+    transform: translateY(0);
+  }
+  .rail-toggle {
+    display: block;
+  }
+  .stage {
+    padding: 80px 24px 48px;
+  }
+  .stage-head {
+    flex-wrap: wrap;
+  }
+  .stage-head .meta {
+    text-align: left;
+  }
+  .frame-wrap {
+    max-width: min(100%, calc(100dvh - 280px));
+  }
+  h1.title {
+    font-size: 44px;
+  }
+  .stage-compose {
+    display: inline-block;
+  }
+}
+
+@media (max-width: 520px) {
+  .stage {
+    padding: 72px 16px 32px;
+    gap: 14px;
+  }
+  .stage-head .work-title {
+    font-size: 18px;
+  }
+  .stage-foot {
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+    font-size: 12px;
+  }
+  .frame-wrap {
+    max-width: 100%;
+  }
+  h1.title {
+    font-size: 38px;
+  }
+  .rail {
+    padding: 32px 22px 40px;
+  }
+  .palette {
+    gap: 8px;
+  }
+  .swatch {
+    width: 32px;
+    height: 32px;
+  }
+  .seg {
+    font-size: 12px;
+    padding: 10px 4px;
+  }
+  .btn {
+    font-size: 14px;
+    padding: 12px 14px;
+  }
+  .field-name {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .segments.five {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .segments.five .seg:last-child {
+    grid-column: 1 / -1;
+  }
+  .segments.five .seg:nth-child(2n) {
+    border-right: none;
+  }
+  .segments.five .seg:nth-child(-n + 4) {
+    border-bottom: 1px solid var(--rule);
+  }
+}
+
+@media (max-width: 380px) {
+  .segments.four {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .segments.four .seg:nth-child(2) {
+    border-right: none;
+  }
+  .segments.four .seg:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--rule);
+  }
+}
+
+@media (max-height: 700px) and (min-width: 961px) {
+  .stage {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+  .stage-head {
+    max-width: 100%;
+  }
+  .frame-wrap {
+    max-width: min(880px, calc(100dvh - 180px));
+  }
+}
+
+@keyframes inkbloom {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes inkbloom-reduced {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
