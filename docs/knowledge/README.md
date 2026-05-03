@@ -42,6 +42,10 @@ Two failure modes to watch for:
 
 - [`macos-bsd-vs-aws-cli-quirks.md`](./macos-bsd-vs-aws-cli-quirks.md) — BSD `date`, AWS CLI v2 list-parsing, `fileb://` for binary inputs.
 
+### Validation tooling
+
+- [`agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md) — `agent-browser set device` does not propagate `matchMedia('(pointer: coarse)')`; touch-affordance assertions land UNVERIFIABLE without a workaround.
+
 ## Adding a new entry
 
 Knowledge entries don't need YAML frontmatter or a fixed structure —
