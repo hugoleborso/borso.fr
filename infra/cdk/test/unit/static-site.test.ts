@@ -44,6 +44,19 @@ describe('StaticSite (prod)', () => {
   it('creates A and AAAA Route 53 alias records', () => {
     tpl.resourceCountIs('AWS::Route53::RecordSet', 2);
   });
+
+  it('returns /404.jpeg directly as the 404 response body', () => {
+    tpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+      DistributionConfig: Match.objectLike({
+        CustomErrorResponses: Match.arrayWith([
+          Match.objectLike({
+            ErrorCode: 404,
+            ResponsePagePath: '/404.jpeg',
+          }),
+        ]),
+      }),
+    });
+  });
 });
 
 describe('StaticSite (preview)', () => {

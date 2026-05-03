@@ -122,7 +122,10 @@ export class StaticSite extends Construct {
       httpVersion: HttpVersion.HTTP2_AND_3,
       priceClass: PriceClass.PRICE_CLASS_100,
       errorResponses: [
-        { httpStatus: 404, responsePagePath: '/404.html', ttl: Duration.minutes(5) },
+        // Serve the JPEG directly as the 404 response body (no wrapping HTML).
+        // CloudFront returns the file as-is; S3 supplies the image/jpeg
+        // Content-Type. The browser renders it as a full-page image.
+        { httpStatus: 404, responsePagePath: '/404.jpeg', ttl: Duration.minutes(5) },
       ],
     });
 
