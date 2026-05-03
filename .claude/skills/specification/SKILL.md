@@ -21,10 +21,13 @@ The standard names five perspectives that must look at the spec from their angle
 
 In this single-developer repo one human wears several hats. That is fine — switch hats out loud with the user ("putting on the tech-lead hat now…", "looking at this from a designer angle…") so each perspective gets its own pass. Do not skip a perspective just because the same person provides several.
 
-The two perspectives that get skipped most often, and that this skill must enforce, are **product** (why / value / use cases / production strategy) and **tech** (changes / data sources / sequencing / risks). If the conversation only covered one side meaningfully, **flag the spec at the top** with one of:
+If a perspective has not been meaningfully challenged in the conversation, **flag the spec at the top** with the corresponding blockquote:
 
-- `> ⚠️ Missing tech discussion` — product side covered, tech perspective not yet challenged.
-- `> ⚠️ Missing product discussion` — tech side covered, product/value perspective not yet challenged.
+- `> ⚠️ Missing tech discussion` — feasibility, architecture, sequencing, risks not yet challenged.
+- `> ⚠️ Missing product discussion` — value, journey, edge cases not yet challenged.
+- `> ⚠️ Missing designer discussion` — visible result and UX edge cases not yet challenged.
+- `> ⚠️ Missing client discussion` — fit with the real client/business need not yet challenged.
+- `> ⚠️ Missing developer discussion` — what-gets-implemented and testability not yet challenged.
 
 The flag stays in the file until the missing pass happens. A flagged spec is not ready for implementation; call this out when the user tries to move on.
 
@@ -50,6 +53,9 @@ Section names match the canonical template kept locally at [`template.md`](./tem
 <!-- If a perspective has not yet been challenged, leave one of these blockquotes at the top:
 > ⚠️ Missing tech discussion
 > ⚠️ Missing product discussion
+> ⚠️ Missing designer discussion
+> ⚠️ Missing client discussion
+> ⚠️ Missing developer discussion
 Remove the line once that perspective has been covered. -->
 
 ## Why
@@ -109,7 +115,7 @@ After the draft is written, **do step 12 explicitly**: re-read the spec with the
 
 These are the common mistakes the standard names. Push back on them in real time when you see them.
 
-- **"PM does discovery, tech-lead does the tech part."** The spec is the place where both perspectives confront each other. Do not partition it. If you can only get one side in this conversation, flag the spec with `> ⚠️ Missing tech discussion` or `> ⚠️ Missing product discussion` and refuse to call it ready.
+- **"PM does discovery, tech-lead does the tech part."** The spec is the place where every perspective confronts the others. Do not partition. If a perspective has not been challenged in this conversation, flag the spec with the matching `> ⚠️ Missing <perspective> discussion` blockquote and refuse to call it ready.
 - **"I'm writing this because the team asked for it."** Bureaucratic specs hide reasoning. If the *why* of a section is not in the section, delete the section or fix it.
 - **"My vision only."** Ask the user what they have *not* considered. Pull from `docs/` and any internal blueprint / mental-model reference the user can hand over before inventing.
 - **"Forgot to link the ADR / Figma / blueprint / BPMN."** Three months from now, missing links force archaeology. Always link.
