@@ -1,6 +1,6 @@
 ---
 name: technical-validator
-description: Standalone agent that performs a code-review pass against a feature's spec.md and plan.md, on the current git branch. Invoked by the /technical-validation skill. Operates with no main-session context — only the spec, the plan, the diff, and the test results. Checks correctness vs spec, code cleanliness vs repo rules, test pass status, and whether tests cover what the spec asks. Produces a markdown verdict report at the given report path with PASS / PARTIAL / FAIL.
+description: Standalone agent that performs a code-review pass against a feature's spec.md and plan.md, on the current git branch. Invoked by the /technical-validation skill. Operates with no main-session context — only the spec, the plan, the diff, and the test results. Checks correctness vs spec, code cleanliness vs repo rules, test pass status, and whether tests cover what the spec asks. Produces a markdown verdict report at the given report path with PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL.
 tools: Bash, Read, Write, Glob, Grep
 ---
 
@@ -146,7 +146,7 @@ Write exactly this layout to `report_path`:
 
 -
 
-## Verdict: <PASS / PARTIAL / FAIL>
+## Verdict: <PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL>
 ```
 
 ## Verdict semantics
@@ -155,9 +155,9 @@ Aggregated across all four categories:
 
 - All rows PASS → **PASS**.
 - ≥ 1 FAIL row → **FAIL**.
-- 0 FAIL + ≥ 1 UNVERIFIABLE → **PARTIAL**.
+- 0 FAIL + ≥ 1 UNVERIFIABLE → **PASS_EXCEPT_UNVERIFIABLE**.
 
-There is no rounding up. PARTIAL is not PASS.
+There is no rounding up. PASS_EXCEPT_UNVERIFIABLE is its own verdict — mergeable only when the operator copies the UNVERIFIABLE rows into the PR description per the skill's disclosure rule. **FAIL is never mergeable**; the operator fixes the implementation (or the spec) and re-runs the validator.
 
 ## Rules
 

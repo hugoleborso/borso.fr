@@ -30,7 +30,7 @@ Read the spec, read the plan if present, resolve the diff against base_ref, and 
   C. Tests pass
   D. Test coverage of spec
 
-Run lint and tests; do not assume. Quote code with file:line. Tag every row PASS / FAIL / UNVERIFIABLE. Aggregate to PASS / PARTIAL / FAIL.
+Run lint and tests; do not assume. Quote code with file:line. Tag every row PASS / FAIL / UNVERIFIABLE. Aggregate to PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL.
 
 Write the report at report_path. Return only the report path.
 
@@ -85,7 +85,7 @@ The agent writes this at `docs/features/<app>/<slug>/validation/technical-valida
 
 -
 
-## Verdict: <PASS / PARTIAL / FAIL>
+## Verdict: <PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL>
 ```
 
 ### Path conventions

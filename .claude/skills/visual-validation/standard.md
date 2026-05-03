@@ -69,9 +69,9 @@ Final verdict:
 
 - All rows PASS → **PASS**.
 - ≥ 1 FAIL row → **FAIL**.
-- 0 FAIL rows + ≥ 1 UNVERIFIABLE row → **PARTIAL**.
+- 0 FAIL rows + ≥ 1 UNVERIFIABLE row → **PASS_EXCEPT_UNVERIFIABLE**.
 
-There is no rounding up. PARTIAL is not PASS.
+There is no rounding up. PASS_EXCEPT_UNVERIFIABLE is its own verdict, not a flavour of PASS — it is mergeable only if the operator copies the UNVERIFIABLE rows into the PR description per the disclosure rule in `SKILL.md`. **FAIL is never mergeable** — the operator fixes the implementation (or the spec) and re-runs.
 
 ## Evidence is committed
 

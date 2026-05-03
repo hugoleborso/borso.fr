@@ -106,9 +106,9 @@ Final verdict, aggregated across categories A–D:
 
 - All rows PASS → **PASS**.
 - ≥ 1 FAIL row → **FAIL**.
-- 0 FAIL + ≥ 1 UNVERIFIABLE → **PARTIAL**.
+- 0 FAIL + ≥ 1 UNVERIFIABLE → **PASS_EXCEPT_UNVERIFIABLE**.
 
-PARTIAL is not PASS.
+PASS_EXCEPT_UNVERIFIABLE is its own verdict — mergeable only if the operator copies the UNVERIFIABLE rows into the PR description per the disclosure rule in `SKILL.md`. **FAIL is never mergeable** — the operator fixes the implementation (or the spec) and re-runs.
 
 ## Common mistakes
 

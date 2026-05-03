@@ -1,6 +1,6 @@
 ---
 name: technical-validation
-description: Dispatch the dedicated `technical-validator` agent to read the spec, the plan, and the diff on the current branch, and produce a code-review verdict covering correctness-vs-spec, code cleanliness vs repo rules, test pass status, and whether tests cover what the spec asks. Use when the user says "/technical-validation", "review the code", "code review against the spec", or as the gate-7 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the matching plan, the workspace package, and the base ref. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md` and returns PASS / FAIL / PARTIAL. Reads the standard at `.claude/skills/technical-validation/standard.md` before dispatching.
+description: Dispatch the dedicated `technical-validator` agent to read the spec, the plan, and the diff on the current branch, and produce a code-review verdict covering correctness-vs-spec, code cleanliness vs repo rules, test pass status, and whether tests cover what the spec asks. Use when the user says "/technical-validation", "review the code", "code review against the spec", or as the gate-7 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the matching plan, the workspace package, and the base ref. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md` and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `.claude/skills/technical-validation/standard.md` before dispatching.
 ---
 
 # Technical-validation skill
@@ -56,7 +56,7 @@ Do **not** invoke when:
    ```
    `mkdir -p` the validation directory.
 6. **Dispatch the `technical-validator` agent** with `spec_path`, `plan_path`, `base_ref`, `app_pkg`, `report_path`. The agent reads the diff, runs lint + tests, walks the four validation categories, writes the report.
-7. **Read the report.** Surface the verdict (one line) plus, if FAIL or PARTIAL, the failing/UNVERIFIABLE rows verbatim.
+7. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — fix the implementation (or the spec), do not ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule.
 8. **Stage the report for commit.** It lives under `docs/features/<app>/<slug>/validation/` alongside any visual-validation report from the same feature.
 
 ## Deliverable
@@ -64,13 +64,17 @@ Do **not** invoke when:
 A single markdown file at `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md`. No sibling evidence folder needed (unlike visual-validation, the evidence here is quoted code lines and command output, both inline in the report).
 
 The skill's textual return is one of:
-- `Verdict: PASS — see <report_path>`
-- `Verdict: PARTIAL (N unverifiable) — see <report_path>`
-- `Verdict: FAIL (N failing) — see <report_path>`
+- `Verdict: PASS — see <report_path>` — mergeable.
+- `Verdict: PASS_EXCEPT_UNVERIFIABLE (N unverifiable) — see <report_path>` — mergeable with PR disclosure.
+- `Verdict: FAIL (N failing) — see <report_path>` — **not mergeable**, fix and re-run.
 
-## PR disclosure
+## Verdict acceptance + PR disclosure
 
-Same rule as `/visual-validation`: when the verdict is **PARTIAL** or **FAIL**, the operator must surface the affected rows in the PR description under `## Validation gaps` / `## Validation failures`, with the row text, the one-line reason from Notes, and a link to the report path. Reviewers must see the gap without opening the report.
+Same rule as `/visual-validation`:
+
+- **FAIL is never accepted.** Code-cleanliness violations, missing `.utils.ts` tests, lint / knip / typecheck regressions, and correctness-vs-spec gaps are real defects — the operator fixes them and re-runs the validator. There is no "disclose-and-merge" path.
+- **PASS_EXCEPT_UNVERIFIABLE is mergeable** when each UNVERIFIABLE row is genuinely outside this validator's reach (e.g. a tooling limit, or a row legitimately deferred to `/visual-validation`). The PR description must surface those rows in a `## Validation gaps` section: row number + assertion text verbatim + one-line reason + report-path link.
+- **PASS is mergeable** with no further disclosure.
 
 ## Failure modes to avoid
 

@@ -1,6 +1,6 @@
 ---
 name: visual-validator
-description: Standalone agent that drives the implemented app in a real browser via the agent-browser CLI and checks, assertion by assertion, that the running implementation matches the spec.md. Invoked by the /visual-validation skill. Operates with no main-session context — only the spec text, the running dev URL, and the assertion checklist passed in. Produces a markdown verdict report at the given report path with PASS / PARTIAL / FAIL, plus committed screenshot evidence.
+description: Standalone agent that drives the implemented app in a real browser via the agent-browser CLI and checks, assertion by assertion, that the running implementation matches the spec.md. Invoked by the /visual-validation skill. Operates with no main-session context — only the spec text, the running dev URL, and the assertion checklist passed in. Produces a markdown verdict report at the given report path with PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL, plus committed screenshot evidence.
 tools: Bash, Read, Write, Glob, Grep
 ---
 
@@ -97,7 +97,7 @@ Write exactly this layout to `report_path`:
 
 -
 
-## Verdict: <PASS / PARTIAL / FAIL>
+## Verdict: <PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL>
 ```
 
 Evidence paths are relative to `report_path`'s directory. The report and the screenshots are committed together; do not write evidence files outside `evidence_dir`.
@@ -106,9 +106,9 @@ Evidence paths are relative to `report_path`'s directory. The report and the scr
 
 - All rows PASS → **PASS**.
 - ≥ 1 FAIL row → **FAIL**.
-- 0 FAIL + ≥ 1 UNVERIFIABLE → **PARTIAL**.
+- 0 FAIL + ≥ 1 UNVERIFIABLE → **PASS_EXCEPT_UNVERIFIABLE**.
 
-There is no rounding up. PARTIAL is not PASS. A row you couldn't test goes UNVERIFIABLE with a one-line note explaining the limit.
+There is no rounding up. PASS_EXCEPT_UNVERIFIABLE is its own verdict — mergeable only when the operator copies the UNVERIFIABLE rows into the PR description per the skill's disclosure rule. **FAIL is never mergeable**; it triggers an implementation fix, not a PR. A row you couldn't test goes UNVERIFIABLE with a one-line note explaining the limit.
 
 ## Rules
 

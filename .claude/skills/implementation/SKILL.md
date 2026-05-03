@@ -99,7 +99,7 @@ Manual sweeps are not a valid coverage path — repo rule.
 5. **Run `/visual-validation`** for UI work. Read the report; the verdict must be PASS before push.
 6. **Run `/technical-validation`** always. Read the report; the verdict must be PASS before push.
 7. **Push.** The branch's CI is the last gate; the local gates are stricter.
-8. **Open the PR.** If any validator returned **PARTIAL** or **FAIL** (tool gap, tooling-side limitation, spec-deferred coverage), the PR description **must** include a `## Validation gaps` / `## Validation failures` section copying the affected rows + one-line reason + report link. Per the validation skills' PR-disclosure rule — a reviewer reads the PR description, not the validation report; the gap has to be up-front.
+8. **Open the PR.** A **FAIL** validator verdict is fix-required — do not open a PR while the latest validation report is FAIL. A **PASS_EXCEPT_UNVERIFIABLE** verdict is mergeable, but the PR description must include a `## Validation gaps` section listing the UNVERIFIABLE rows verbatim with the one-line reason + report-path link. **PASS** ships without per-row disclosure. Per the validation skills' PR-disclosure rule — a reviewer reads the PR description, not the validation report; the gap has to be up-front.
 
 ## Failure modes to avoid
 

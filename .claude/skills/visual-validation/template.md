@@ -56,7 +56,7 @@ The agent writes this at `docs/features/<app>/<slug>/validation/visual-validatio
 
 -
 
-## Verdict: <PASS / PARTIAL / FAIL>
+## Verdict: <PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL>
 ```
 
 ### Path conventions

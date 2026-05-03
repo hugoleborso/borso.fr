@@ -1,6 +1,6 @@
 ---
 name: visual-validation
-description: Dispatch the dedicated `visual-validator` agent to open the implemented feature in a real browser (via the agent-browser CLI) and check, point by point, that every visible and behavioural assertion in the spec actually holds. Use when the user says "/visual-validation", "validate visually", "check the spec is implemented", or as the gate-5 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the dev-server command from the workspace's `package.json`. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md` plus a sibling folder of committed screenshot evidence, and returns PASS / FAIL / PARTIAL. Reads the standard at `.claude/skills/visual-validation/standard.md` before dispatching.
+description: Dispatch the dedicated `visual-validator` agent to open the implemented feature in a real browser (via the agent-browser CLI) and check, point by point, that every visible and behavioural assertion in the spec actually holds. Use when the user says "/visual-validation", "validate visually", "check the spec is implemented", or as the gate-5 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the dev-server command from the workspace's `package.json`. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md` plus a sibling folder of committed screenshot evidence, and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `.claude/skills/visual-validation/standard.md` before dispatching.
 ---
 
 # Visual-validation skill
@@ -64,7 +64,7 @@ Do **not** invoke when:
    ```
    `mkdir -p` the evidence directory so the validator can drop PNGs straight in.
 5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths and the dev URL. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path.
-6. **Read the report.** Surface the verdict (one line) plus, if FAIL or PARTIAL, the list of failing/UNVERIFIABLE rows verbatim. Do **not** summarise — the user reads the report.
+6. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — the next move is to fix the implementation, not to ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule. Do **not** summarise — the user reads the report.
 7. **Stop the dev server** if the skill spawned it. Leave it running if the operator started it.
 8. **Stage the report and evidence for commit.** They live under `docs/features/<app>/<slug>/validation/` which is *not* gitignored — the screenshots are part of the report and must be committed alongside it.
 
@@ -78,21 +78,27 @@ Two artefacts at `docs/features/<app>/<slug>/validation/`:
 Both are committed. Do not gitignore them. Validation evidence rots and gets contested without a permanent record.
 
 The skill's textual return to the user is one of:
-- `Verdict: PASS — see <report_path>`
-- `Verdict: PARTIAL (N unverifiable) — see <report_path>`
-- `Verdict: FAIL (N failing) — see <report_path>`
+- `Verdict: PASS — see <report_path>` — mergeable.
+- `Verdict: PASS_EXCEPT_UNVERIFIABLE (N unverifiable) — see <report_path>` — mergeable with PR disclosure (see below).
+- `Verdict: FAIL (N failing) — see <report_path>` — **not mergeable**, fix the implementation and re-run.
 
-## PR disclosure
+## Verdict acceptance rules
 
-When the verdict is **PARTIAL** or **FAIL**, the operator opening the PR must surface the affected rows in the PR description under a `## Validation gaps` (PARTIAL) or `## Validation failures` (FAIL) heading. Each row gets:
+- **FAIL is never accepted.** Failing rows are real defects — the implementation, the spec, or both have to change. The operator does not open a PR while the most recent validation report is FAIL. There is no "disclose-and-merge" path for FAIL.
+- **PASS_EXCEPT_UNVERIFIABLE is mergeable** when every UNVERIFIABLE row is a tool gap (something the validator could not exercise — see `docs/knowledge/` for the catalog) or a spec-deferred row (handled by another validator), not a "we couldn't test it because we couldn't think how" sidestep. The bar for accepting an UNVERIFIABLE row is that closing it would require either a vendor change or a workspace-scope refactor.
+- **PASS is mergeable** with no further disclosure.
+
+## PR disclosure (for PASS_EXCEPT_UNVERIFIABLE only)
+
+The operator opening the PR must surface the UNVERIFIABLE rows in the PR description under a `## Validation gaps` heading. Each row:
 
 - Row number + the assertion text, verbatim from the report.
-- The one-line reason from the report's Notes (tool-gap / spec-deferred / actual defect).
+- The one-line reason from the report's Notes (tool-gap pointer to `docs/knowledge/`, spec-deferred pointer to the other validator's report).
 - A link to the report path under `docs/features/<app>/<slug>/validation/`.
 
-A reviewer reads the PR description without opening the report; the gap has to be visible up-front. A PARTIAL or FAIL validation that ships without this disclosure is a Dantotsu candidate against this skill — the gate exists so tool gaps and tooling-side limitations don't slip through silently into main.
+A reviewer reads the PR description without opening the report; the gap has to be visible up-front. A PASS_EXCEPT_UNVERIFIABLE validation that ships without this disclosure is a Dantotsu candidate against this skill — the gate exists so tool-side limitations don't slip through silently into main.
 
-A PASS verdict only needs a link to the report — no per-row disclosure.
+A PASS verdict needs only a link to the report — no per-row disclosure.
 
 ## Failure modes to avoid
 
@@ -103,7 +109,7 @@ A PASS verdict only needs a link to the report — no per-row disclosure.
 - **"Looks right" without evidence.** Every PASS must reference a captured screenshot or a deterministic check (selector found, attribute equal, URL matches). "Looks right" alone is not a PASS.
 - **Validating against the implementation, not the spec.** The agent reads the spec to know what to check. If a feature exists in code but isn't claimed in the spec, it isn't validated. If a claim is in the spec but missing from the code, that's a FAIL — never "the implementer probably meant…".
 - **Skipping edge cases because they're hard.** The validator must resize, emulate dark mode, emulate touch device, emulate reduced motion. These are exactly the cases users hit; they're not optional.
-- **Treating UNVERIFIABLE as PASS.** PARTIAL is not PASS.
+- **Treating UNVERIFIABLE as PASS.** PASS_EXCEPT_UNVERIFIABLE is its own verdict — same as PASS for mergeability if and only if the operator copies the UNVERIFIABLE rows into the PR description.
 - **Gitignoring the validation folder.** The evidence is part of the report. Commit both.
 
 ## Repo-specific notes
