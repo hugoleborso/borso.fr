@@ -15,18 +15,18 @@ A spec is **a conversation, not a writing task**. Drive it with the `AskUserQues
 
 Suggested cadence: ask, capture the answer in the draft, ask the next question, capture, repeat. Batch only when the questions are genuinely independent.
 
-## Tech and product perspectives — both, in the same conversation
+## Perspectives to confront — five, not two
 
-The spec must confront the **product** perspective (why, value, use cases, results, monitoring) **and** the **tech** perspective (data sources, components, implementation sequence, risks). The standard's #1 named failure is partitioning these into separate phases.
+The standard names five perspectives that must look at the spec from their angle: **client / business**, **product**, **tech-lead**, **developer**, **designer**. The #1 named failure mode is partitioning these (e.g. PM does discovery, tech-lead does the tech part). The spec is the document where they confront each other.
 
-In this repo a single human often wears both hats. That is fine — explicitly switch hats with the user ("putting on the tech-lead hat now…") so each angle gets its own pass. Do not skip an angle just because the same person provides both.
+In this single-developer repo one human wears several hats. That is fine — switch hats out loud with the user ("putting on the tech-lead hat now…", "looking at this from a designer angle…") so each perspective gets its own pass. Do not skip a perspective just because the same person provides several.
 
-If you finish the conversation having only meaningfully covered one side, **flag the spec at the top** with one of:
+The two perspectives that get skipped most often, and that this skill must enforce, are **product** (why / value / use cases / production strategy) and **tech** (changes / data sources / sequencing / risks). If the conversation only covered one side meaningfully, **flag the spec at the top** with one of:
 
 - `> ⚠️ Missing tech discussion` — product side covered, tech perspective not yet challenged.
 - `> ⚠️ Missing product discussion` — tech side covered, product/value perspective not yet challenged.
 
-The flag stays in the file until the missing pass happens. A flagged spec is not ready for implementation; call this out when the user tries to move on.
+Use the same blockquote pattern (`> ⚠️ Missing <perspective> discussion`) for designer / client / developer perspectives when relevant. The flag stays in the file until the missing pass happens. A flagged spec is not ready for implementation; call this out when the user tries to move on.
 
 ## When to invoke
 
@@ -42,40 +42,47 @@ Produce a single markdown file at `docs/specs/<feature-slug>.md`. One file per f
 
 Every spec must have these top-level sections, in this order. Empty sections are a smell — either fill them or justify the gap inline.
 
+Section names match the [canonical Notion template](https://www.notion.so/2b78f3776f4f80f48904cb189d806c19) so that local specs and Theodo Academy specs read the same.
+
 ```markdown
 # <Feature title — phrased as the user-visible outcome>
 
-<!-- If only one perspective has been covered so far, leave one of these blockquotes at the top:
+<!-- If a perspective has not yet been challenged, leave one of these blockquotes at the top:
 > ⚠️ Missing tech discussion
 > ⚠️ Missing product discussion
-Remove the line once both perspectives have been challenged. -->
+> ⚠️ Missing designer discussion
+Remove the line once that perspective has been covered. -->
 
 ## Why
 - Business / customer / user value, in one paragraph.
-- The measurable objective: revenue / quality / lead time / productivity. Pick one. A wish-list of four objectives means none of them.
-- Link to any field observation (Gemba) that validates the *problem* exists, not just that the solution is wanted.
+- One measurable objective: revenue / quality / lead time / productivity. A wish-list of four objectives means none of them.
+- Link any field observation (Gemba) that validates the *problem* exists, not just that the solution is wanted.
 
-## Use cases
-- The happy-path end-to-end journey, as a numbered list of user-visible steps.
-- Edge cases and error cases, each one a bullet. If a use case is not listed here, it does not exist for this iteration.
+## Result
+- The final, visible result: Figma / wireframes / API endpoints / dashboard / before-and-after screens.
+- "No visible result" is a red flag — name it.
 
-## Results
-- What changes for the user once shipped. Before / after.
-- Mockups, screens, workflows. Link to Figma if it exists; embed ASCII or a screenshot otherwise. "No visible result" is a red flag — name it.
+## Use cases / edge cases
+- Visual first: BPMN, sequence diagram, or domain model. Plain text only when a visual is genuinely overkill.
+- Numbered happy path + bulleted edge cases + bulleted error cases. If a case is not listed here, it does not exist for this iteration.
+
+## Questions, Options and Decisions
+- Each hard point: the question, 2–3 options with trade-offs, and the decision taken (with date). ADR-equivalent. Keep resolved decisions — future-you needs the reasoning.
+- Link out to full ADRs / blueprints / POCs when they exist; do not duplicate.
+- Include what is explicitly **out of scope**.
 
 ## Changes
-- **Business model:** entities, relationships, shared vocabulary.
-- **Data sources:** APIs / databases / files / external services. Verify availability *before* committing to the design.
-- **Components:** 2–3 technical alternatives with a justified choice. Premature single-option lock-in is the failure mode.
-- **Implementation sequence:** order of deployment, technical risks, critical dependencies.
+- **Types / domain model** (DDD): entities, value objects, relationships, shared vocabulary.
+- **Database changes**: migrations, new columns, indexes.
+- **Files to change**: backend + frontend, each path called out, marked NEW / UPDATE.
+- **Test strategy**: what gives you confidence the feature works without defects.
 
-## Questions / Options / Decisions
-- Open questions, the options considered, and the decision taken (with date). This is the ADR-equivalent for the spec. Keep decisions even after they are resolved — future-you will need the reasoning.
-
-## Monitoring
-- **Analytics:** which events, which thresholds define success.
-- **Zero-defect strategy:** which error cases trigger which alerts. The real feature is the one used in production; if you cannot see it, you cannot fix it.
+## Production strategy
+- **Analytics**: named events, p50/p75/p90 thresholds where relevant, success criteria.
+- **Zero-defect strategy**: named error classes, when they fire, alerting thresholds (e.g. Sentry tags + N occurrences in M minutes).
 ```
+
+For tone and depth, mirror the worked example: [As a commuter, I want to see the waiting time for a new ride](https://www.notion.so/2b88f3776f4f80528054c19a1a84aebe).
 
 ## Operating mode
 
@@ -85,17 +92,17 @@ Walk the user through these 13 steps, in order. Do not skip ahead — each step 
 | --- | --- | --- | --- |
 | 1 | Work *back* from the solution to the problem | Why | Stakeholders arrive with a solution. Reverse-engineering the problem is faster than asking for it cold. |
 | 2 | Observe the work in the field (Gemba) | Why | Prevents a solution in search of a problem. Watch the current behaviour with all its constraints before changing it. |
-| 3 | Clarify the expected value | Why / Results | One measurable objective. Refuse a wish-list. |
-| 4 | Map the target behaviour | Use cases | End-to-end happy path so inconsistencies are visible at a glance. |
-| 5 | Conduct research (external + internal) | Why | Industry standards + Theodo blueprints / `docs/`. Reduces test-and-learn. |
-| 6 | Collect use cases | Use cases | Normal + edge + error. Anything missing here will break in production. |
-| 7 | Define the business model | Changes | Entities, relationships, shared vocabulary. Stabilises business/tech terminology. |
+| 3 | Clarify the expected value | Why / Result | One measurable objective. Refuse a wish-list. |
+| 4 | Map the target behaviour | Use cases / edge cases | End-to-end happy path so inconsistencies are visible at a glance. |
+| 5 | Conduct research (external + internal) | Why | Industry standards + Theodo [App blueprints](https://www.notion.so/2768f3776f4f80b2bc50cd04b5367e69) + repo `docs/`. Reduces test-and-learn. |
+| 6 | Collect use cases | Use cases / edge cases | Normal + edge + error. Anything missing here will break in production. |
+| 7 | Define the business model | Changes | Entities, relationships, shared vocabulary (DDD). Stabilises business/tech terminology. |
 | 8 | Identify data sources | Changes | Verify required data actually exists before designing around it. |
-| 9 | Define the interface | Results | Mockups, screens, before/after. Forces a visible result. |
+| 9 | Define the interface | Result | Mockups, screens, before/after. Forces a visible result. |
 | 10 | Make component choices | Changes / Q.O.D. | 2–3 alternatives, justified pick. Avoids premature constraints. |
 | 11 | Identify key implementation points | Changes / Q.O.D. | Sequence, risks, critical dependencies. |
 | 12 | Identify inconsistencies in the spec | Q.O.D. | Re-read the whole document looking for problem/solution misalignment. This is the step the skill exists for. |
-| 13 | Identify how to iterate in production | Monitoring | Analytics + alerting. The real feature is the one used in production. |
+| 13 | Identify how to iterate in production | Production strategy | Analytics + alerting. The real feature is the one used in production. |
 
 After the draft is written, **do step 12 explicitly**: re-read the spec with the user and call out misalignments. This is non-negotiable — skipping it converts the spec into a hand-off document, which is the failure mode the standard exists to prevent.
 
@@ -105,7 +112,7 @@ These are the common mistakes the standard names. Push back on them in real time
 
 - **"PM does discovery, tech-lead does the tech part."** The spec is the place where both perspectives confront each other. Do not partition it. If you can only get one side in this conversation, flag the spec with `> ⚠️ Missing tech discussion` or `> ⚠️ Missing product discussion` and refuse to call it ready.
 - **"I'm writing this because the team asked for it."** Bureaucratic specs hide reasoning. If the *why* of a section is not in the section, delete the section or fix it.
-- **"My vision only."** Ask the user what they have *not* considered. Pull from `docs/` and existing app blueprints before inventing.
+- **"My vision only."** Ask the user what they have *not* considered. Pull from `docs/`, existing [App blueprints](https://www.notion.so/2768f3776f4f80b2bc50cd04b5367e69), and the [Books / Mental schemas](https://www.notion.so/2e38f3776f4f8046a5ddded3a22ed2cb) gallery before inventing.
 - **"Forgot to link the ADR / Figma / blueprint / BPMN."** Three months from now, missing links force archaeology. Always link.
 - **"The spec is too long."** Iteration becomes impossible. Cut. Two pages of prose is the soft ceiling.
 - **"Adoption is someone else's problem."** Without analytics + alerting, the spec is incomplete. Step 13 is not optional.
