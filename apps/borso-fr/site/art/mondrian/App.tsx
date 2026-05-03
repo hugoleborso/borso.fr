@@ -139,6 +139,17 @@ export function App() {
     [seed],
   );
 
+  // On first paint, mirror the resolved state into the URL so a fresh visit (no
+  // ?seed=) and an invalid-?seed= visit both end up with a shareable address bar.
+  useEffect(() => {
+    const { seed: initialSeed, paletteKey: initialPaletteKey } = initialUrlState;
+    window.history.replaceState(
+      { seed: initialSeed, paletteKey: initialPaletteKey },
+      '',
+      buildSearch({ seed: initialSeed, paletteKey: initialPaletteKey }),
+    );
+  }, [initialUrlState]);
+
   useEffect(() => {
     const onPopState = () => {
       const restored = readUrlState(window.location.search, { paletteKey: 'classic' });
