@@ -1,0 +1,103 @@
+# Belt-and-braces cleanup of preview stacks whose PRs are already
+# closed. The previews S3 bucket has a 60-day lifecycle rule as a
+# separate safety net; this workflow handles the CFN-stack side.
+#
+# Triggers:
+#   - PR close — runs immediately after preview.yml's teardown so
+#     anything teardown left behind (failed destroy, races, future
+#     bugs) gets swept up before it lingers.
+#   - Nightly cron — catches stacks orphaned by edge cases that
+#     skipped both preview.yml teardown and the close trigger.
+#   - workflow_dispatch — manual sweep.
+#
+# Logic (same in every trigger):
+#   1. List CFN stacks whose names match `<app>-pr-<n>`. No age
+#      threshold — the per-PR state check is the safety.
+#   2. Look up PR <n> via gh; only destroy if state is CLOSED or
+#      MERGED. OPEN/DRAFT/UNKNOWN → leave alone.
+#   3. Skip stacks whose `<app>` isn't a known workspace slug
+#      (defensive — shouldn't happen if naming.ts is the only source
+#      of stack names).
+
+name: cleanup-orphans
+
+on:
+  schedule:
+    - cron: '17 3 * * *' # 03:17 UTC daily
+  pull_request:
+    types: [closed]
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency: cleanup-orphans
+
+# Run JS-based actions on Node 24 — Node 20 will be removed from runners
+# in Sep 2026. Drop this once every action below ships a Node-24 release.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+      STAGE: preview
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Destroy orphan <app>-pr-<n> stacks
+        shell: bash
+        run: |
+          set -euo pipefail
+          all_apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
+            | jq -r '.[].name' | sed 's|^@borso-app/||')
+
+          # Filter to terminal states only — never touch IN_PROGRESS stacks.
+          # The state check (CLOSED/MERGED below) is the actual gate.
+          stacks=$(aws cloudformation list-stacks \
+            --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE UPDATE_ROLLBACK_COMPLETE \
+            --query "StackSummaries[].StackName" \
+            --output text | tr '\t' '\n')
+
+          for stack in $stacks; do
+            if [[ ! "$stack" =~ ^(.+)-pr-([0-9]+)$ ]]; then continue; fi
+            app="${BASH_REMATCH[1]}"
+            pr="${BASH_REMATCH[2]}"
+
+            if ! grep -qx "$app" <<<"$all_apps"; then
+              echo "[skip] $stack: app '$app' not in workspace"
+              continue
+            fi
+
+            state=$(gh pr view "$pr" --repo "$GH_REPO" --json state -q .state 2>/dev/null || echo UNKNOWN)
+            case "$state" in
+              CLOSED|MERGED)
+                echo "[orphan] destroying $stack (PR #$pr is $state)"
+                STAGE=preview PR_NUMBER="$pr" \
+                  pnpm --filter "@borso-app/$app" run destroy \
+                  || echo "(destroy failed; investigate manually)"
+                ;;
+              OPEN|DRAFT)
+                echo "[active] keeping $stack (PR #$pr is $state)"
+                ;;
+              *)
+                echo "[unknown] keeping $stack (PR #$pr state=$state)"
+                ;;
+            esac
+          done

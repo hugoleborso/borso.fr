@@ -1,0 +1,7 @@
+set -e
+
+# Dead-code detection across the workspace.
+# Runs only at push time so multi-commit branches with intermediate
+# unused-export states aren't blocked mid-story.
+echo "[pre-push] running knip"
+pnpm exec knip

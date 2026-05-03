@@ -1,0 +1,220 @@
+# Per-PR preview deploys. Trusts repo:hugoleborso/borso.fr:pull_request
+# via PreviewDeployRole (provisioned by infra/shared).
+#
+# Flow:
+#   detect → which apps changed in this PR (or all, if infra/cdk changed)
+#   deploy → matrix per affected app, cdk deploy <app>-pr-<n>, sticky
+#            comment the preview URL on the PR
+#   teardown → on PR close, iterate every app and cdk destroy. Failures
+#              are swallowed (the stack might never have existed).
+#
+# concurrency: never cancel in-flight deploys mid-CFN-transaction or
+# you orphan stack state. Each PR has its own concurrency group.
+
+name: preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  deployments: write
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+# Run JS-based actions on Node 24 — Node 20 will be removed from runners
+# in Sep 2026. Drop this once every action below ships a Node-24 release.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  detect:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.compute.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: .github/path-filters.yml
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: compute
+        env:
+          CHANGES: ${{ steps.filter.outputs.changes }}
+        run: |
+          # All app slugs from the workspace (dynamic — no hard-coded list).
+          all_apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
+            | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
+
+          # If infra/cdk changed, redeploy every app's preview — constructs
+          # are the contract.
+          if jq -e 'index("infra")' <<<"$CHANGES" >/dev/null; then
+            echo "apps=$all_apps" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Otherwise intersect changes with known apps.
+          apps=$(jq -c --argjson all "$all_apps" \
+            'map(select(. as $c | $all | index($c)))' <<<"$CHANGES")
+          echo "apps=$apps" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: detect
+    if: needs.detect.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: ${{ fromJson(needs.detect.outputs.apps) }}
+      fail-fast: false
+    env:
+      STAGE: preview
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+      PREVIEW_URL: https://${{ matrix.app }}-pr-${{ github.event.pull_request.number }}.preview.borso.fr
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      # Open a GitHub Deployment so the PR sidebar shows the native
+      # "Deployments" panel (Vercel/Netlify-style). Marked transient +
+      # non-production so closing the PR auto-deactivates it.
+      - id: deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data } = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.payload.pull_request.head.sha,
+              environment: `preview-${{ matrix.app }}-pr-${{ github.event.pull_request.number }}`,
+              auto_merge: false,
+              required_contexts: [],
+              transient_environment: true,
+              production_environment: false,
+              description: `Preview of ${{ matrix.app }} for PR #${{ github.event.pull_request.number }}`,
+            });
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: data.id,
+              state: 'in_progress',
+              log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+            core.setOutput('id', data.id);
+      - run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
+      - id: meta
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: echo "short_sha=${HEAD_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: preview-${{ matrix.app }}
+          message: |
+            ### Preview deployed — `${{ matrix.app }}`
+
+            <${{ env.PREVIEW_URL }}>
+
+            <sub>Updated from <code>${{ steps.meta.outputs.short_sha }}</code> · <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">build log</a></sub>
+      # Close the GitHub Deployment with the final state. Runs whether
+      # the deploy step succeeded or failed so the PR panel never gets
+      # stuck in "in_progress".
+      - if: always() && steps.deployment.outputs.id
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const state = '${{ job.status }}' === 'success' ? 'success' : 'failure';
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.id }},
+              state,
+              environment_url: process.env.PREVIEW_URL,
+              log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              auto_inactive: true,
+            });
+
+  teardown:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    env:
+      STAGE: preview
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - id: apps
+        run: |
+          apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
+            | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
+          echo "list=$apps" >> "$GITHUB_OUTPUT"
+      - name: Destroy every app's per-PR stack (ignore missing)
+        env:
+          APPS_JSON: ${{ steps.apps.outputs.list }}
+        run: |
+          for app in $(jq -r '.[]' <<<"$APPS_JSON"); do
+            echo "[teardown] destroying $app-pr-$PR_NUMBER..."
+            pnpm --filter "@borso-app/$app" run destroy \
+              || echo "(stack does not exist or already destroyed)"
+          done
+      # Mark each preview Deployment inactive so the PR sidebar reflects
+      # that the URL is gone. transient_environment + auto_inactive on the
+      # active status mean GitHub already hides it once the env is unused;
+      # we set state=inactive explicitly so the PR timeline reads cleanly.
+      - if: always()
+        uses: actions/github-script@v7
+        env:
+          APPS_JSON: ${{ steps.apps.outputs.list }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        with:
+          script: |
+            const apps = JSON.parse(process.env.APPS_JSON);
+            for (const app of apps) {
+              const env = `preview-${app}-pr-${process.env.PR_NUMBER}`;
+              const { data: deployments } = await github.rest.repos.listDeployments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                environment: env,
+              });
+              for (const d of deployments) {
+                await github.rest.repos.createDeploymentStatus({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  deployment_id: d.id,
+                  state: 'inactive',
+                });
+              }
+            }

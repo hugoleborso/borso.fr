@@ -1,0 +1,29 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "ignoreBinaries": ["typecheck", "build"]
+    },
+    "apps/borso-fr": {
+      "entry": ["bin/app.ts"],
+      "project": ["bin/**/*.ts"],
+      "ignoreDependencies": ["tsx"],
+      "ignoreBinaries": ["python3"]
+    },
+    "infra/cdk": {
+      "entry": [
+        "src/index.ts",
+        "src/internal/migration-runner/index.ts",
+        "src/internal/cf-host-routing-function.code.js",
+        "test/**/*.test.ts",
+        "test/unit/fixtures/handler.ts"
+      ],
+      "ignoreDependencies": ["esbuild"]
+    },
+    "infra/shared": {
+      "entry": ["bin/shared.ts", "test/unit/**/*.test.ts"],
+      "project": ["bin/**/*.ts", "lib/**/*.ts", "test/**/*.ts"],
+      "ignoreDependencies": ["tsx"]
+    }
+  }
+}

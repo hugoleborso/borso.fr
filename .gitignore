@@ -1,0 +1,14 @@
+node_modules/
+dist/
+cdk.out/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.local
+.env.production
+.env.*.local
+
+*.log
+.DS_Store
+.cache/

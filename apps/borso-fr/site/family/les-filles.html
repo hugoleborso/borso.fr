@@ -94,11 +94,11 @@
     <script>
         // Script to generate more falling poop PNGs evenly spaced
         for (let i = 0; i < 30; i++) {
-            let poop = document.createElement('div');
+            const poop = document.createElement('div');
             poop.classList.add('poop');
-            poop.style.left = Math.random() * 100 + '%';  // Random horizontal position
-            poop.style.top = Math.random() * -100 + 'px'; // Start from just above the viewport
-            poop.style.animationDuration = Math.random() * 3 + 4 + 's'; // Randomize fall speed
+            poop.style.left = `${Math.random() * 100}%`;  // Random horizontal position
+            poop.style.top = `${Math.random() * -100}px`; // Start from just above the viewport
+            poop.style.animationDuration = `${Math.random() * 3 + 4}s`; // Randomize fall speed
             poop.innerHTML = '<img src="poop.png" alt="Poop" style="width: 30px; height: 30px;">'; // Fixed size
             document.body.appendChild(poop);
         }

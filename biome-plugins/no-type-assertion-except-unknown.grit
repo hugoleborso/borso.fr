@@ -1,0 +1,42 @@
+// Forbid TypeScript type assertions (`x as Type`) except `x as unknown`
+// and `x as const`.
+//
+// Rationale: arbitrary type assertions silently bypass the type-checker.
+// The repo allows exactly two single-step escape hatches:
+//   - `as unknown` — widening to top type, used as a single step (e.g.
+//     for JSON-parsing escape hatches). NEVER chained: `as unknown as
+//     Foo` is also banned because the outer assertion `as Foo` is
+//     flagged independently. If you need a narrower type after
+//     `as unknown`, use a TypeScript type guard (`x is Foo`) or parse
+//     with a Zod schema.
+//   - `as const` — TypeScript's const-assertion. Narrows to literal
+//     types; does not change the runtime type. Used for SSM-path
+//     constants and similar compile-time-only freezes.
+//
+// Anything else (`as any`, `as never`, `as Foo`) hides a type error
+// that should be fixed at its root.
+//
+// Paired with biome's recommended `noExplicitAny` (catches `as any`
+// directly via the `any` keyword).
+//
+// Implementation notes:
+//   - Scoping to `TsAsExpression()` excludes the homograph `import { Foo
+//     as Bar }` (an ImportSpecifier with renaming, syntactically the
+//     same `as` token but a different AST node).
+//   - Backtick patterns (`$type <: not `unknown``) match AST nodes, but
+//     `as const` parses as a different node from `as Foo`/`as unknown`,
+//     so AST-node exclusion misses it. Anchored regex (`r"^const$"`)
+//     matches the asserted type's source text and covers both forms.
+
+language js
+
+TsAsExpression() as $assertion where {
+  $assertion <: `$expr as $type`,
+  $type <: not r"^unknown$",
+  $type <: not r"^const$",
+  register_diagnostic(
+    span = $type,
+    message = "Type assertions are restricted. Allowed: `as unknown` (single step, for JSON-parsing escape hatches) and `as const` (literal narrowing). For narrower typing after `as unknown`, use a TypeScript type guard or a Zod schema.",
+    severity = "error"
+  )
+}
