@@ -136,6 +136,18 @@
   margin: 0 4px;
 }
 
+.hint-coarse {
+  display: none;
+}
+@media (pointer: coarse) {
+  .hint-fine {
+    display: none;
+  }
+  .hint-coarse {
+    display: inline;
+  }
+}
+
 .rail-toggle {
   display: none;
   position: fixed;

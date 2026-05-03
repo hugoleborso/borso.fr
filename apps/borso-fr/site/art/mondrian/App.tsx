@@ -54,21 +54,8 @@ function usePrefersReducedMotion(): boolean {
   return matches;
 }
 
-function useCoarsePointer(): boolean {
-  const query = '(pointer: coarse)';
-  const [coarse, setCoarse] = useState(() => window.matchMedia(query).matches);
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(query);
-    const onChange = (event: MediaQueryListEvent) => setCoarse(event.matches);
-    mediaQuery.addEventListener('change', onChange);
-    return () => mediaQuery.removeEventListener('change', onChange);
-  }, []);
-  return coarse;
-}
-
 export function App() {
   const reducedMotion = usePrefersReducedMotion();
-  const coarsePointer = useCoarsePointer();
 
   const initialUrlState = useMemo(
     () => readUrlState(window.location.search, { paletteKey: 'classic' }),
@@ -180,8 +167,6 @@ export function App() {
     () => new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
     [],
   );
-
-  const composeHint = coarsePointer ? 'Tap the painting to compose anew' : 'Press space to compose';
 
   return (
     <div className="app">
@@ -331,8 +316,10 @@ export function App() {
 
         <p className="credit">
           <b>Studio note</b>
-          Each composition is generated from a single seed. {composeHint}. Hold a palette to sit
-          with it; switch to <i>Cascade</i> to let the room rearrange itself.
+          Each composition is generated from a single seed.{' '}
+          <span className="hint-fine">Press space to compose anew</span>
+          <span className="hint-coarse">Tap the painting to compose anew</span>
+          . Hold a palette to sit with it; switch to <i>Cascade</i> to let the room rearrange itself.
         </p>
       </aside>
 
@@ -369,10 +356,11 @@ export function App() {
 
         <div className="stage-foot">
           <span className="seed">Seed · {seedToHex(seed)}</span>
-          <span>
-            <i>{coarsePointer ? 'Tap the painting' : 'Press'}</i>
-            {!coarsePointer && <span className="kbd">space</span>}
-            <i>to compose</i>
+          <span className="hint-fine">
+            <i>Press</i> <span className="kbd">space</span> <i>to compose</i>
+          </span>
+          <span className="hint-coarse">
+            <i>Tap the painting to compose</i>
           </span>
         </div>
       </main>
