@@ -4,6 +4,16 @@ One developer. pnpm workspaces. Node 22. AWS eu-west-3 (+ us-east-1 for ACM).
 
 For any "how does X actually work" question, [`docs/`](./docs/) is the source of truth.
 
+## North star
+
+The human's time on this repo is for *interesting* conversations with the AI. Three things qualify:
+
+- **Giving important tech or product direction** — handled, in its structured form, by the `specification` skill; expect it to evolve as we find gaps.
+- **Learning** — surfacing tradeoffs, naming patterns, explaining *why* over *what*.
+- **Improving the system** that keeps the boring conversations rare — new skills, hooks, settings, `docs/` entries, the `dantotsu` skill (problem-fixing), and so on.
+
+Anything else is a bug in the system. **Operational rule:** when a conversation starts feeling repetitive — manual guidance through a mechanical task, the same correction twice, the same question shape three times — stop and propose a concrete system change (a skill, a hook, a settings entry, a `docs/` page, a CLAUDE.md update). Do not push through manually.
+
 ## Layout
 
 - `apps/<slug>/` — one folder per app. Standalone-openable: `cd apps/<x> && pnpm dev` works on a fresh checkout. **No cross-app imports.**
