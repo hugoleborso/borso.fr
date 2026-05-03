@@ -54,6 +54,7 @@ Pulled from CLAUDE.md "Clean code" and the repo's biome config:
 - `noUncheckedIndexedAccess` honoured.
 - `pnpm exec biome lint` passes on changed files.
 - `pnpm exec knip` clean on the workspace.
+- **`useEffect` is a smell.** Every `useEffect` introduced or modified in the diff has to justify itself in the row's evidence — what external system is being synchronised, why CSS / derived state / event handlers / `useSyncExternalStore` couldn't do it. Effects that watch React state to set other React state are the classic anti-pattern (almost always `useMemo` in disguise) and land FAIL. Effects that subscribe to globals (`addEventListener`, `setInterval`, `MutationObserver`, `matchMedia`) or run a one-time mount-side replace (URL replaceState mirroring initial state) are legitimate and PASS with a one-line note. See CLAUDE.md "Clean code" and [*You Might Not Need an Effect*](https://react.dev/learn/you-might-not-need-an-effect).
 
 ### C. Tests pass
 

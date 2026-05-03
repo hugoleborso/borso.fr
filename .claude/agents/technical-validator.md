@@ -57,6 +57,7 @@ The repo's rules from CLAUDE.md "Clean code" + biome plugins. Each is one row:
 - No `any`. Run `grep -nP '\bany\b' <changed-files>` to confirm.
 - `noUncheckedIndexedAccess` honoured — every array access in changed code has a fallback or a type guard.
 - `pnpm exec biome lint` passes on the changed files. Run it. Report failures verbatim.
+- **`useEffect` is a smell.** `grep -nE '\buseEffect\(' <changed .tsx/.ts files>`. For each result, check the evidence: what external system is being synchronised? CSS / derived state / event handlers / `useSyncExternalStore` would not have done it? Effects that watch React state to set other React state ("when X changes, also set Y") are the canonical anti-pattern — `useMemo` (derived state) covers them. Tag those rows **FAIL**. Effects that subscribe to globals (`addEventListener`, `setInterval`, `MutationObserver`, `matchMedia`) or run a one-time mount-side replace (e.g. `replaceState` mirroring initial URL state) are legitimate — PASS with a one-line note in the row's evidence column explaining the external system. See CLAUDE.md "Clean code".
 
 ### C. Tests pass
 

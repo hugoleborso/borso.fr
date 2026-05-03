@@ -69,6 +69,12 @@ Live as you write, not as you review:
 - **No `any`.** `noExplicitAny` is hard-banned. If you can't type something, that's a design problem, not a typing problem.
 - **`noUncheckedIndexedAccess` is on.** Every array access has a fallback (`?? default`) or a guard (`if (!current) break`). No `arr[0]!` workarounds.
 - **JSDoc only on shared / exported functions** — and only to capture contract the types don't carry. No JSDoc on internals.
+- **`useEffect` is a smell.** Before writing `useEffect`, try the alternatives in this order:
+  1. **Derived state** — compute the value during render (a plain expression, or `useMemo` if expensive). Most "set state when prop X changes" effects are derived state in disguise.
+  2. **Event handlers** — do the work in `onClick` / `onChange` / etc., not in an effect that watches the resulting state.
+  3. **CSS** — media queries, animations, transitions, hover/focus pseudo-classes. If the only thing your effect drives is text content or a class flip on a media query, CSS does it without re-renders. (See the `useCoarsePointer` removal in commit history for the canonical example.)
+  4. **`useSyncExternalStore`** — for third-party stores or browser APIs that already expose subscribe/unsubscribe, this is the React-team-recommended escape hatch.
+  Reach for `useEffect` only when you genuinely need to synchronise React state with an external system — focus management after a real user action, `addEventListener` for global keyboard shortcuts, an interval/observer that owns its own lifecycle, a `replaceState` reflecting initial state into the URL once on mount. If you're updating React state inside an effect that watched another piece of React state, you've almost certainly recreated `useMemo`. See [*You Might Not Need an Effect*](https://react.dev/learn/you-might-not-need-an-effect). Every effect that survives the filter should be obvious-on-rereading why it earned its place; a future `/technical-validation` will ask.
 
 ### 3. Tests track the spec
 
