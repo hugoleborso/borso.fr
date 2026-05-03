@@ -5,11 +5,6 @@ agent's behaviour stays anchored to it. The
 [`SKILL.md`](./SKILL.md) summarises and adapts; this file is the
 reference.
 
-> **First thing first**
-> Watch [the talk](https://youtu.be/OLVyQduiIa0) before facilitating
-> a Dantotsu for the first time. The verbal explanation conveys the
-> spirit better than text.
-
 ## Intent
 
 > Inspire every developer to care about quality by fostering a deep
@@ -190,8 +185,6 @@ through these steps with everyone who might make the same mistake.
 
 Use **Weak Point Management** to track recurring patterns and defect
 categories.
-
-Coaching gestures: TODO
 
 ## Reframes
 
