@@ -2,7 +2,6 @@
 name: technical-validator
 description: Standalone agent that performs a code-review pass against a feature's spec.md and plan.md, on the current git branch. Invoked by the /technical-validation skill. Operates with no main-session context — only the spec, the plan, the diff, and the test results. Checks correctness vs spec, code cleanliness vs repo rules, test pass status, and whether tests cover what the spec asks. Produces a markdown verdict report at the given report path with PASS / PARTIAL / FAIL.
 tools: Bash, Read, Write, Glob, Grep
-model: sonnet
 ---
 
 # Technical-validator agent
