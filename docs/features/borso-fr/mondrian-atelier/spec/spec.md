@@ -211,31 +211,60 @@ None. Site is fully client-side / static.
 
 ### Test strategy
 
-Static gates:
-- `pnpm --filter @borso-app/borso-fr run typecheck` (TS strict on App.tsx, RNG / layout / colorize modules).
-- `pnpm --filter @borso-app/borso-fr run build` — Vite build must succeed; family pages and index must remain in `dist/`.
-- `pnpm exec biome lint apps/borso-fr` — Biome rules from root config (incl. `no-type-assertion-except-unknown`, `noExcessiveLinesPerFile`).
-- `pnpm exec knip` — pre-push hook; new TSX entries must be declared in `knip.json`.
+Autonomous pipeline. No manual sweeps; every assertion is checked by something the CI / a future Claude session can run unattended (see `.claude/skills/specification/SKILL.md` "Frontend apps don't need tests" failure mode).
 
-Local visual QA (Playwright, headed-script-as-screenshot):
-1. `pnpm --filter @borso-app/borso-fr dev` (background process).
-2. One-shot `npx playwright@1` script under `apps/borso-fr/scripts/screenshot.mjs` that opens Chromium at three viewports (1280×800 desktop, 720×1024 tablet, 380×800 narrow phone), navigates to `http://localhost:5173/art/mondrian/`, waits for the inkbloom entry to settle (~600 ms), and saves PNGs to `apps/borso-fr/.screenshots/{breakpoint}.png`.
-3. `.screenshots/` is gitignored.
-4. The user inspects the screenshots to validate the design match before approving.
+#### 1. Static gates
 
-Manual interaction sweep (single pass, on the local dev server, after the screenshots):
-- Each animation mode visibly differs (Still / Drift / Breathe / Cascade).
-- Space and clicking the canvas both recompose; URL `?seed=` updates (push), back-button returns to previous seed.
-- Refresh on `?seed=X&palette=nocturne` → same composition, same palette.
-- `?seed=garbage` → fresh composition, no console error.
-- Download produces `mondrian-<seed>.png` at 2000×2000.
-- Custom palette swatches open the OS colour picker; live recolour.
-- Dynamic title changes on Compose and on palette change.
+- `pnpm --filter @borso-app/borso-fr run typecheck` — `tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit`.
+- `pnpm --filter @borso-app/borso-fr run build` — Vite build must succeed; `dist/` carries `index.html`, `family/{mom,les-filles}.html`, `art/mondrian/index.html`, `404.jpeg`.
+- `pnpm exec biome lint` — Biome rules from root config (incl. `no-type-assertion-except-unknown`, `noExcessiveLinesPerFile`).
+- `pnpm exec knip` — no unused exports / files / deps.
 
-No automated visual regression (single-developer site, not worth the maintenance).
+#### 2. Unit tests on pure utilities (Vitest, 100% coverage)
+
+Repo rule (CLAUDE.md "Clean code"): pure-function modules end in `*.utils.ts` and ship at 100% statement / branch / function / line coverage. Files in this feature that hold pure logic are renamed to the suffix and paired with a sibling `*.utils.test.ts`:
+
+| Module | Renamed to | Tests |
+|---|---|---|
+| `painting.ts` | `painting.utils.ts` | `mulberry32` determinism + uniformity bounds; `generateLayout` produces ≥ N rects, never overlaps, depth bounded; `colorize` neutrality probability bounded by `balance`; `pickSplittableRectIndex` picks within the unsplittable threshold |
+| `titles.ts` | `titles.utils.ts` | `buildTitle` shape (`A {adj} {noun} in {color}`), determinism keyed off seed, dominant-color picks the largest non-neutral fill |
+| `url-state.ts` | `url-state.utils.ts` | `parseSeedHex` rejects non-hex / over-length input; `seedToHex` round-trips; `readUrlState` handles missing / invalid params; `buildSearch` round-trips with `readUrlState` |
+| `palettes.ts` (split) | `palettes.utils.ts` for `buildCustomPalette` / `isPaletteKey` / palette presets; `palette-theme.ts` keeps `applyPaperTheme` (DOM side effect) | `buildCustomPalette` shape; `isPaletteKey` accepts the five keys and rejects garbage; `PALETTES` keyed by every `PaletteKey` except `'custom'` |
+
+Workspace setup (NEW files, planned in the plan but listed here for traceability): `apps/borso-fr/vitest.config.ts` enabling `coverage.provider: 'v8'` with `coverage.thresholds.100: true` scoped to `**/*.utils.ts`; `apps/borso-fr/package.json` gains `"test": "vitest run"` and `"test:coverage": "vitest run --coverage"`; pre-commit hook runs the test script when any `apps/borso-fr/**/*.utils.ts` changed.
+
+#### 3. UI behavioural assertions — `/visual-validation`
+
+Every numbered happy-path step and every edge / error case from *Use cases / edge cases* is asserted by the dedicated `visual-validator` agent driving the running app via `agent-browser` (see `.claude/skills/visual-validation/SKILL.md`). The agent reads this spec to build its assertion list. Coverage:
+
+- Default render with `?seed=DEADBEEF&palette=classic` — typography, layout, framed canvas at 1280×800.
+- Sliders (complexity / line weight / balance) update without reshuffling layout — visible delta on slider drag, no inkbloom replay.
+- Palette segments recolor + retitle.
+- Custom palette: clicking a swatch opens the OS color picker; selecting a colour live-recolours.
+- Animation modes: Still / Drift / Breathe / Cascade are visually distinct; switching modes does not replay inkbloom.
+- Compose recomposes (space, tap-on-canvas, button) → new seed, URL `?seed=` updates via `pushState`, inkbloom replays.
+- Browser Back restores prior seed.
+- Refresh on a seed URL renders the same composition.
+- Download triggers a 2000×2000 PNG named `mondrian-<seed>.png`.
+- Mobile (≤ 960 px): drawer toggle visible, secondary Compose button under the frame, caption swap "Tap the painting".
+- Phone (≤ 520 px) and narrow phone (≤ 380 px): segments reflow, foot stacks.
+- Short viewport (< 700 px tall, ≥ 961 px wide): frame caps to fit.
+- `prefers-reduced-motion: reduce` (via `agent-browser set media`): default mode is Still, inkbloom keyframe is opacity-only, no per-rect stagger.
+- `prefers-color-scheme: dark`: still Classique on first visit (palette is never auto-flipped to Nocturne).
+- Invalid `?seed=garbage`: fresh composition, no console error.
+
+The visual-validation report (with screenshot evidence) lands at `docs/features/borso-fr/mondrian-atelier/validation/visual-validation-<timestamp>.md` and is committed.
+
+#### 4. Diff review — `/technical-validation`
+
+The dedicated `technical-validator` agent (see `.claude/skills/technical-validation/SKILL.md`) reads this spec, the plan, and the diff against `origin/main`, then walks four categories: correctness vs spec, code cleanliness (lint + knip + clean-code rules), tests pass (the Vitest runner above, plus 100% coverage on every `*.utils.ts`), and test coverage of spec (every use case has a `*.utils.test.ts` row or a `/visual-validation` row). Verdict must be PASS before push.
+
+#### 5. Coverage gates already in place
+
+- `infra/cdk` and `infra/shared` retain their 100% line-coverage gate. This feature does not touch those workspaces.
 
 ## Production strategy
 
 - **Analytics:** none. Personal site, no telemetry today; this spec doesn't introduce any.
 - **Zero-defect strategy:** the StaticSite CDK construct already serves `dist/` via CloudFront. The only new failure surface is the Vite build itself — a build failure breaks deploy CI before traffic ever sees it. No runtime alerting needed. Family pages (`mom.html`, `les-filles.html`) are pulled into the Vite multi-page graph but contain only inline `<style>` and reference local PNGs; verify they still render after build.
-- **Manual smoke after deploy:** `https://borso.fr/art/mondrian/` loads, type renders (Playfair+Cormorant+JBM), palette switching re-themes, space recomposes, `?seed=` URLs are stable. Spot-check `https://borso.fr/`, `https://borso.fr/family/mom.html`, `https://borso.fr/family/les-filles.html` — none should regress from the Vite migration.
+- **Post-deploy smoke (autonomous belt):** a `/visual-validation` run against the production URL `https://borso.fr/art/mondrian/` (instead of the local dev URL) re-uses the same assertion list as the pre-merge run. Sibling pages (`https://borso.fr/`, `https://borso.fr/family/mom.html`, `https://borso.fr/family/les-filles.html`) get a one-shot reachability check — HTTP 200 + non-empty body — wired into the deploy CI job rather than a human spot-check.
