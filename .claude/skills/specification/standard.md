@@ -22,7 +22,7 @@ A defect is usually the moment someone took a decision on one dimension of the p
 
 An hour spent on the spec is far cheaper than the cost of fighting delays, last-minute UX rework with the client, and ping-ponging with developers afterwards.
 
-## Audience — five perspectives, not two
+## Audience — five perspectives
 
 A spec is not a hand-off between PM and tech-lead. It is the document where these perspectives converge and challenge each other:
 

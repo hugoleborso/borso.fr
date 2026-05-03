@@ -15,7 +15,7 @@ A spec is **a conversation, not a writing task**. Drive it with the `AskUserQues
 
 Suggested cadence: ask, capture the answer in the draft, ask the next question, capture, repeat. Batch only when the questions are genuinely independent.
 
-## Perspectives to confront — five, not two
+## Perspectives to confront
 
 The standard names five perspectives that must look at the spec from their angle: **client / business**, **product**, **tech-lead**, **developer**, **designer**. The #1 named failure mode is partitioning these (e.g. PM does discovery, tech-lead does the tech part). The spec is the document where they confront each other.
 
