@@ -2,7 +2,9 @@
 
 > Source standard for the `specification` skill. The skill enforces this; this file is the canonical text it points back to. Edit this file when the standard itself evolves; edit `SKILL.md` when the *enforcement* of the standard evolves.
 >
-> Mirrored (with live links and visuals) from the Theodo Academy Notion: <https://www.notion.so/2b78f3776f4f800fb6d2db39ddb6c7c1>.
+> Companion docs in this folder:
+> - [`template.md`](./template.md) — empty template to copy into `docs/specs/<slug>.md`.
+> - [`worked-example.md`](./worked-example.md) — a complete spec used as a depth/brevity reference.
 
 ## What a specification is
 
@@ -14,9 +16,11 @@ A specification is an end-to-end understanding of a requested feature, the domai
 
 The principle is borrowed from lean / TPS *jidoka*: to go faster, you make fewer defects; to make fewer defects, you catch them as early as possible. In feature work, the earliest place defects appear is **the specification**. The role of the spec is to confront the perspectives of client, product, and tech *as early as possible* so that contradictions surface on paper instead of during development or, worse, in production.
 
-A defect is usually the moment someone took a decision on one dimension of the product without seeing the consequences on another (UX without infra, API without callers, schema without analytics). A good spec lets every perspective look at the feature from its angle before a line of code is written.
+A defect is usually the moment someone took a decision on one dimension of the product without seeing the consequences on another — UX without infra, API without callers, schema without analytics. A good spec lets every perspective look at the feature from its angle before a line of code is written.
 
-> "Ne pas prévoir, c'est déjà gémir." — Leonardo da Vinci, quoted in [Pitch de reframe](https://www.notion.so/2c58f3776f4f80af9424cddef9919d33).
+> "Ne pas prévoir, c'est déjà gémir." — Leonardo da Vinci.
+
+An hour spent on the spec is far cheaper than the cost of fighting delays, last-minute UX rework with the client, and ping-ponging with developers afterwards.
 
 ## Audience — five perspectives, not two
 
@@ -32,7 +36,7 @@ In a single-dev repo one human wears several hats. That is fine — switch hats 
 
 ## Required sections (canonical template)
 
-The [Spec template](https://www.notion.so/2b78f3776f4f80f48904cb189d806c19) has six sections, in this order. Each one carries a callout in Notion; the prompt text below is reproduced verbatim from there.
+Six sections, in this order. The full empty template lives in [`template.md`](./template.md); the prompt text below is reproduced verbatim from the canonical Notion callouts so the standard is self-contained.
 
 ### 1. Why
 > *Describe what is requested. Describe how it contributes to the business or user value. Level 2: relate it to your product's critical performances.*
@@ -47,7 +51,7 @@ The [Spec template](https://www.notion.so/2b78f3776f4f80f48904cb189d806c19) has 
 > *List the hard points you need to solve. This part is needed to help your team understand your way of crafting the feature. Empower your reflection with LLM. Include ADRs, POCs, blueprints considered as support, and what has been put out of scope.*
 
 ### 5. Changes
-> *Show types you need to create/update (DDD). Show database changes. Include the architectural schema and files to change (use LLM for challenging). Show the test strategy implemented by the team that will give you 100% confidence the feature is working without defects.*
+> *Show types you need to create/update (DDD). Show database changes. Include the architectural schema and files to change (use LLM for challenging). Show the test strategy implemented by the team, that will give you 100% confidence the feature is working without defects.*
 
 ### 6. Production strategy
 > *Include what analytics you will add and the key metrics to consider to make the feature a success. Include error cases you manage and how it reflects in your alerting system.*
@@ -60,7 +64,7 @@ The [Spec template](https://www.notion.so/2b78f3776f4f80f48904cb189d806c19) has 
 | 2 | Observe the work in the field (Gemba) | Why | Validate the real problem | Prevents a solution in search of a problem; understand current behaviour, with all its constraints, before changing it |
 | 3 | Clarify the expected value | Why / Result | Measurable objective (revenue / quality / lead time / productivity) | Avoids a "wish list" by focusing on value |
 | 4 | Map the target behaviour | Use cases / edge cases | End-to-end user journey (happy path) | Lets everyone visualise the solution and spot inconsistencies |
-| 5 | Conduct research (external + internal) | Why | Industry standards + Theodo blueprints (see below) | Reduces "test & learn" |
+| 5 | Conduct research (external + internal) | Why | Industry standards + repo `docs/` + existing blueprints | Reduces "test & learn" |
 | 6 | Collect use cases | Use cases / edge cases | Normal + edge + error cases | Avoids breaking points caused by ignored use cases |
 | 7 | Define the business model | Changes | Entities / relationships / shared business terminology | Stabilises business/tech vocabulary (DDD) |
 | 8 | Identify data sources | Changes | APIs / databases / files / external services | Avoids poorly-scoped external dependencies |
@@ -84,22 +88,4 @@ The [Spec template](https://www.notion.so/2b78f3776f4f80f48904cb189d806c19) has 
 
 ## Worked example
 
-[As a commuter, I want to see the waiting time for a new ride](https://www.notion.so/2b88f3776f4f80528054c19a1a84aebe) — a complete spec following this template, with measurable targets (95% accuracy / ~10% cancellation reduction), a BPMN for use cases, a Q.O.D. table linking to an [ADR on waiting-time computation](https://www.notion.so/2c48f3776f4f8008838acc7d0a74f757) and a [Blueprint — Estimated Delivery Time (ETA)](https://www.notion.so/2b88f3776f4f80779b15d2c1edae3805), code & SQL changes in *Changes*, and a *Production strategy* with named analytics events and Sentry alerting thresholds.
-
-Use it as a reference for the level of detail expected — and for the level of brevity (it stays well under two pages of prose despite covering all six sections).
-
-## Enablers
-
-- [Spec template](https://www.notion.so/2b78f3776f4f80f48904cb189d806c19) — the empty Notion page to copy.
-- [App blueprints](https://www.notion.so/2768f3776f4f80b2bc50cd04b5367e69) — index page pointing to:
-    - [Theodo Apps blueprints standard](https://www.notion.so/1a48f3776f4f806ab9d5f8e60f97b0a9)
-    - [Theodo Apps blueprints database](https://www.notion.so/2768f3776f4f80fab708f4d5d54d0f3a)
-    - [Blueprint backlog](https://www.notion.so/2c78f3776f4f8000a243e194c7bcfb33)
-- [Books / Mental schemas](https://www.notion.so/2e38f3776f4f8046a5ddded3a22ed2cb) — gallery of references for product-management thinking.
-
-## Visuals & rationale
-
-- [Pitch de reframe](https://www.notion.so/2c58f3776f4f80af9424cddef9919d33) — the *why* of the spec, in narrative form. Useful when convincing someone (or yourself) that the spec is not bureaucracy.
-- [Visuals for building the page](https://www.notion.so/2c98f3776f4f80ddbe95e9ce27ac169d) — links to:
-    - [Whimsical board](https://whimsical.com/standard-spec-KgbmpykfpNptaTSRkLgogG)
-    - [Google Slides deck](https://docs.google.com/presentation/d/1koi_kNegpFdIDlsag5Ptm4l2AMzfvlSSNLf07yRL3Tg/edit)
+See [`worked-example.md`](./worked-example.md) — a complete spec ("As a commuter, I want to see the waiting time for a new ride") covering all six sections with measurable targets, a Q.O.D. table, code & SQL changes, and analytics + alerting thresholds. Use it as a reference for the level of detail expected, and for the level of brevity (well under two pages despite covering everything).

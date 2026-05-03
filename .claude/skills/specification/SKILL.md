@@ -42,7 +42,7 @@ Produce a single markdown file at `docs/specs/<feature-slug>.md`. One file per f
 
 Every spec must have these top-level sections, in this order. Empty sections are a smell — either fill them or justify the gap inline.
 
-Section names match the [canonical Notion template](https://www.notion.so/2b78f3776f4f80f48904cb189d806c19) so that local specs and Theodo Academy specs read the same.
+Section names match the canonical template kept locally at [`template.md`](./template.md), so that local specs and external Theodo Academy specs read the same. Copy that file into `docs/specs/<slug>.md` to start a new spec.
 
 ```markdown
 # <Feature title — phrased as the user-visible outcome>
@@ -82,7 +82,7 @@ Remove the line once that perspective has been covered. -->
 - **Zero-defect strategy**: named error classes, when they fire, alerting thresholds (e.g. Sentry tags + N occurrences in M minutes).
 ```
 
-For tone and depth, mirror the worked example: [As a commuter, I want to see the waiting time for a new ride](https://www.notion.so/2b88f3776f4f80528054c19a1a84aebe).
+For tone and depth, mirror the worked example at [`worked-example.md`](./worked-example.md) ("As a commuter, I want to see the waiting time for a new ride").
 
 ## Operating mode
 
@@ -94,7 +94,7 @@ Walk the user through these 13 steps, in order. Do not skip ahead — each step 
 | 2 | Observe the work in the field (Gemba) | Why | Prevents a solution in search of a problem. Watch the current behaviour with all its constraints before changing it. |
 | 3 | Clarify the expected value | Why / Result | One measurable objective. Refuse a wish-list. |
 | 4 | Map the target behaviour | Use cases / edge cases | End-to-end happy path so inconsistencies are visible at a glance. |
-| 5 | Conduct research (external + internal) | Why | Industry standards + Theodo [App blueprints](https://www.notion.so/2768f3776f4f80b2bc50cd04b5367e69) + repo `docs/`. Reduces test-and-learn. |
+| 5 | Conduct research (external + internal) | Why | Industry standards + repo `docs/` + any internal blueprint material the user can share. Reduces test-and-learn. |
 | 6 | Collect use cases | Use cases / edge cases | Normal + edge + error. Anything missing here will break in production. |
 | 7 | Define the business model | Changes | Entities, relationships, shared vocabulary (DDD). Stabilises business/tech terminology. |
 | 8 | Identify data sources | Changes | Verify required data actually exists before designing around it. |
@@ -112,7 +112,7 @@ These are the common mistakes the standard names. Push back on them in real time
 
 - **"PM does discovery, tech-lead does the tech part."** The spec is the place where both perspectives confront each other. Do not partition it. If you can only get one side in this conversation, flag the spec with `> ⚠️ Missing tech discussion` or `> ⚠️ Missing product discussion` and refuse to call it ready.
 - **"I'm writing this because the team asked for it."** Bureaucratic specs hide reasoning. If the *why* of a section is not in the section, delete the section or fix it.
-- **"My vision only."** Ask the user what they have *not* considered. Pull from `docs/`, existing [App blueprints](https://www.notion.so/2768f3776f4f80b2bc50cd04b5367e69), and the [Books / Mental schemas](https://www.notion.so/2e38f3776f4f8046a5ddded3a22ed2cb) gallery before inventing.
+- **"My vision only."** Ask the user what they have *not* considered. Pull from `docs/` and any internal blueprint / mental-model reference the user can hand over before inventing.
 - **"Forgot to link the ADR / Figma / blueprint / BPMN."** Three months from now, missing links force archaeology. Always link.
 - **"The spec is too long."** Iteration becomes impossible. Cut. Two pages of prose is the soft ceiling.
 - **"Adoption is someone else's problem."** Without analytics + alerting, the spec is incomplete. Step 13 is not optional.
