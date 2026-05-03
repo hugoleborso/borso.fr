@@ -125,17 +125,6 @@ export class StaticSite extends Construct {
         // Serve the JPEG directly as the 404 response body (no wrapping HTML).
         // CloudFront returns the file as-is; S3 supplies the image/jpeg
         // Content-Type. The browser renders it as a full-page image.
-        //
-        // We have to catch 403 too: S3 with Origin Access Control returns 403
-        // (not 404) for missing keys, because CloudFront's principal lacks
-        // s3:ListBucket and S3 can't disambiguate "missing" from "forbidden".
-        // Remap to status 404 so clients see a correct error code.
-        {
-          httpStatus: 403,
-          responseHttpStatus: 404,
-          responsePagePath: '/404.jpeg',
-          ttl: Duration.minutes(5),
-        },
         { httpStatus: 404, responsePagePath: '/404.jpeg', ttl: Duration.minutes(5) },
       ],
     });
