@@ -1,6 +1,6 @@
 import type { Palette } from './palettes';
 
-export type Rect = {
+type Rect = {
   x: number;
   y: number;
   width: number;

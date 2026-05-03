@@ -14,7 +14,7 @@ const BREATHE_TIME_SCALE_DRIFT = 0.4;
 const BREATHE_SCALE_AMPLITUDE = 0.04;
 const BREATHE_DRIFT_AMPLITUDE_PX = 1.5;
 
-export const ANIMATION_MODES = ['still', 'drift', 'breathe', 'cascade'] as const;
+const ANIMATION_MODES = ['still', 'drift', 'breathe', 'cascade'] as const;
 export type AnimationMode = (typeof ANIMATION_MODES)[number];
 
 const ANIMATION_MODE_SET: ReadonlySet<string> = new Set(ANIMATION_MODES);
