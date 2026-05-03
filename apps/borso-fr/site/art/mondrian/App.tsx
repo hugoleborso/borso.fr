@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Announcer, EditableSwatch, Field, MondrianFrame, ReadOnlySwatch, Segments } from './components';
 import { downloadCompositionPng } from './download';
-import { colorize, generateLayout } from './painting';
+import { isComposeKeyEvent } from './keyboard.utils';
+import { applyPaperTheme } from './palette-theme';
 import {
-  applyPaperTheme,
   buildCustomPalette,
   CUSTOM_DEFAULTS,
   PALETTES,
   type CustomColors,
   type PaletteKey,
-} from './palettes';
-import { buildTitle } from './titles';
+} from './palettes.utils';
+import { colorize, generateLayout } from './painting.utils';
+import { buildTitle } from './titles.utils';
 import { isAnimationMode, type AnimationMode } from './use-animation';
-import { buildSearch, freshSeed, readUrlState, seedToHex } from './url-state';
+import { buildSearch, freshSeed, readUrlState, seedToHex } from './url-state.utils';
 
 const CASCADE_INTERVAL_MS = 5500;
 
@@ -127,12 +128,12 @@ export function App() {
   }, [paletteKey]);
 
   const changePalette = useCallback(
-    (next: PaletteKey) => {
-      setPaletteKey(next);
+    (nextPaletteKey: PaletteKey) => {
+      setPaletteKey(nextPaletteKey);
       window.history.replaceState(
-        { seed, paletteKey: next },
+        { seed, paletteKey: nextPaletteKey },
         '',
-        buildSearch({ seed, paletteKey: next }),
+        buildSearch({ seed, paletteKey: nextPaletteKey }),
       );
     },
     [seed],
@@ -150,14 +151,9 @@ export function App() {
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      const target = event.target;
-      if (target instanceof HTMLElement) {
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-      }
-      if (event.code === 'Space') {
-        event.preventDefault();
-        compose();
-      }
+      if (!isComposeKeyEvent(event)) return;
+      event.preventDefault();
+      compose();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -260,27 +256,37 @@ export function App() {
               <EditableSwatch
                 color={customColors.customColor1}
                 name="Color 1"
-                onColorChange={(next) => setCustomColors((current) => ({ ...current, customColor1: next }))}
+                onColorChange={(nextHex) =>
+                  setCustomColors((previousColors) => ({ ...previousColors, customColor1: nextHex }))
+                }
               />
               <EditableSwatch
                 color={customColors.customColor2}
                 name="Color 2"
-                onColorChange={(next) => setCustomColors((current) => ({ ...current, customColor2: next }))}
+                onColorChange={(nextHex) =>
+                  setCustomColors((previousColors) => ({ ...previousColors, customColor2: nextHex }))
+                }
               />
               <EditableSwatch
                 color={customColors.customColor3}
                 name="Color 3"
-                onColorChange={(next) => setCustomColors((current) => ({ ...current, customColor3: next }))}
+                onColorChange={(nextHex) =>
+                  setCustomColors((previousColors) => ({ ...previousColors, customColor3: nextHex }))
+                }
               />
               <EditableSwatch
                 color={customColors.customPaper}
                 name="Paper"
-                onColorChange={(next) => setCustomColors((current) => ({ ...current, customPaper: next }))}
+                onColorChange={(nextHex) =>
+                  setCustomColors((previousColors) => ({ ...previousColors, customPaper: nextHex }))
+                }
               />
               <EditableSwatch
                 color={customColors.customInk}
                 name="Ink"
-                onColorChange={(next) => setCustomColors((current) => ({ ...current, customInk: next }))}
+                onColorChange={(nextHex) =>
+                  setCustomColors((previousColors) => ({ ...previousColors, customInk: nextHex }))
+                }
               />
             </>
           ) : (
@@ -297,8 +303,8 @@ export function App() {
           layout="four"
           legend="Animation mode"
           value={animationMode}
-          onChange={(next) => {
-            if (isAnimationMode(next)) setAnimationMode(next);
+          onChange={(candidateMode) => {
+            if (isAnimationMode(candidateMode)) setAnimationMode(candidateMode);
           }}
           options={ANIMATION_OPTIONS}
         />

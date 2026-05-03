@@ -1,4 +1,4 @@
-import { isPaletteKey, type PaletteKey } from './palettes';
+import { isPaletteKey, type PaletteKey } from './palettes.utils';
 
 type UrlState = { seed: number; paletteKey: PaletteKey };
 
@@ -16,19 +16,18 @@ export function seedToHex(seed: number): string {
 }
 
 function parseSeedHex(input: string | null): number | null {
-  if (!input) return null;
+  if (input === null || input === '') return null;
   if (!SEED_HEX_PATTERN.test(input)) return null;
-  const parsed = Number.parseInt(input, SEED_RADIX);
-  return Number.isFinite(parsed) ? parsed >>> 0 : null;
+  return Number.parseInt(input, SEED_RADIX) >>> 0;
 }
 
 export function readUrlState(search: string, defaults: { paletteKey: PaletteKey }): UrlState {
   const params = new URLSearchParams(search);
-  const seedParam = parseSeedHex(params.get('seed'));
+  const parsedSeed = parseSeedHex(params.get('seed'));
   const paletteParam = params.get('palette');
-  const paletteKey = paletteParam && isPaletteKey(paletteParam) ? paletteParam : defaults.paletteKey;
+  const paletteKey = paletteParam !== null && isPaletteKey(paletteParam) ? paletteParam : defaults.paletteKey;
   return {
-    seed: seedParam ?? freshSeed(),
+    seed: parsedSeed ?? freshSeed(),
     paletteKey,
   };
 }

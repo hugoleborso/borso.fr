@@ -7,13 +7,10 @@
     "apps/borso-fr": {
       "entry": [
         "bin/app.ts",
-        "vite.config.ts",
         "site/art/mondrian/main.tsx",
-        "scripts/screenshot.mjs"
+        "site/**/*.utils.test.ts"
       ],
-      "project": ["bin/**/*.ts", "site/**/*.ts", "site/**/*.tsx", "vite.config.ts"],
-      "ignoreDependencies": ["tsx"],
-      "ignoreBinaries": ["vite"]
+      "project": ["bin/**/*.ts", "site/**/*.ts", "site/**/*.tsx"]
     },
     "infra/cdk": {
       "entry": [

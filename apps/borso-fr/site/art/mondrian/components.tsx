@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import type { ColoredRect } from './painting';
-import type { Palette } from './palettes';
+import type { Palette } from './palettes.utils';
+import type { ColoredRect } from './painting.utils';
 import { useAnimation, type AnimationMode } from './use-animation';
 
 const INKBLOOM_STAGGER_TOTAL_MS = 600;
@@ -45,7 +45,7 @@ export function ReadOnlySwatch({ color, name }: ReadOnlySwatchProps) {
 type EditableSwatchProps = {
   color: string;
   name: string;
-  onColorChange: (next: string) => void;
+  onColorChange: (nextHex: string) => void;
 };
 
 export function EditableSwatch({ color, name, onColorChange }: EditableSwatchProps) {
@@ -65,7 +65,7 @@ export function EditableSwatch({ color, name, onColorChange }: EditableSwatchPro
 type SegmentsProps<Value extends string> = {
   options: readonly { value: Value; label: string }[];
   value: Value;
-  onChange: (next: Value) => void;
+  onChange: (nextValue: Value) => void;
   layout?: 'four' | 'five';
   legend: string;
 };

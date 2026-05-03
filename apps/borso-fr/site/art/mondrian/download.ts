@@ -1,6 +1,6 @@
-import type { ColoredRect } from './painting';
-import type { Palette } from './palettes';
-import { seedToHex } from './url-state';
+import type { Palette } from './palettes.utils';
+import type { ColoredRect } from './painting.utils';
+import { seedToHex } from './url-state.utils';
 
 const PNG_EXPORT_SIZE_PX = 2000;
 const DESIGN_FRAME_REFERENCE_WIDTH_PX = 880;

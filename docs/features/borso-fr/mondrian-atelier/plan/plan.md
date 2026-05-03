@@ -56,17 +56,21 @@
 - [x] Magic strings extracted: animation modes, palette keys, URL param names live in named constants / typed unions.
 - [x] Comments only document non-obvious WHY (focus-ring rationale, inkbloom-vs-transform note in spec). No what-comments.
 - [x] No JSDoc on internals.
-- [x] Function names describe results: `buildTitle`, `dominantColorName`, `chooseSplitFraction`, `pickSplittableRectIndex`, `clearTransforms`, `applyDriftTransforms`, `applyBreatheTransforms`, `readUrlState`, `buildSearch`, `paletteOf`, `applyPaperTheme`.
+- [x] Function names describe results: `buildTitle`, `dominantColorName`, `pickSplitFraction`, `pickSplittableEntry`, `pickFromNonEmptyList`, `pickUniform`, `clearTransforms`, `applyDriftTransforms`, `applyBreatheTransforms`, `readUrlState`, `buildSearch`, `applyPaperTheme`, `isComposeKeyEvent`.
+- [x] Pure helpers in `*.utils.ts` (`painting.utils.ts`, `palettes.utils.ts`, `titles.utils.ts`, `url-state.utils.ts`, `keyboard.utils.ts`) at 100% coverage; DOM side effects split into `palette-theme.ts` (no `.utils` suffix).
+- [x] No defensive code for impossible cases — algorithm restructured (cumulative-probability bands, typed non-empty-list picker, return-by-let-variable pattern) so every branch is genuinely reachable. No `/* v8 ignore */`.
+- [x] No generic-name variables (`current` / `next` / `result` / `data`) outside React-internal `ref.current`. Names: `rectBeingSplit`, `splitTargetIndex`, `cumulativeWeight`, `nextHex`, `nextPaletteKey`, `previousColors`, `candidateMode`.
 
 ## Pre-flight gates (run, in order, before push)
 
 1. `pnpm install` — new deps land.
 2. `pnpm --filter @borso-app/borso-fr typecheck` — TS clean.
-3. `pnpm exec biome lint apps/borso-fr` — incl. type-assertion plugin.
-4. `pnpm --filter @borso-app/borso-fr build` — Vite build succeeds; `dist/` is populated.
-5. `pnpm --filter @borso-app/borso-fr dev` (background) → `pnpm --filter @borso-app/borso-fr screenshot` → review `.screenshots/{1280,720,380}.png` against the design.
+3. `pnpm exec biome lint` — incl. type-assertion plugin.
+4. `pnpm --filter @borso-app/borso-fr test:coverage` — every `*.utils.ts` at 100 % statements / branches / functions / lines.
+5. `pnpm --filter @borso-app/borso-fr build` — Vite build succeeds; `dist/` is populated.
 6. `pnpm exec knip` — no unused entries.
-7. Manual sweep per spec test-strategy: animation modes; URL push/replace; back-stack; refresh; download; custom palette picker; reduced-motion DevTools toggle.
+7. `/visual-validation docs/features/borso-fr/mondrian-atelier/spec/spec.md` — verdict PASS.
+8. `/technical-validation docs/features/borso-fr/mondrian-atelier/spec/spec.md` — verdict PASS.
 
 ## Open questions / unknowns
 

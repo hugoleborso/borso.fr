@@ -187,16 +187,30 @@ None. Site is fully client-side / static.
 
 **NEW**
 - `apps/borso-fr/vite.config.ts` — multi-page entries: `index`, `family/mom`, `family/les-filles`, `art/mondrian`. Build root `site/`, outDir `../dist`.
-- `apps/borso-fr/tsconfig.json` — replaced. JSX `react-jsx`, lib DOM, includes `site/**/*.{ts,tsx}` and `vite.config.ts`.
+- `apps/borso-fr/vitest.config.ts` — `environment: 'jsdom'`; `coverage.provider: 'v8'`; `coverage.thresholds.100 = true`; `coverage.include = ['site/**/*.utils.ts']`. Treats every `*.utils.ts` as a coverage-gated unit.
+- `apps/borso-fr/tsconfig.json` — replaced. JSX `react-jsx`, lib DOM, includes `site/**/*.{ts,tsx}`, `vite.config.ts`, `vitest.config.ts`. Pulls `vitest/globals` into `types`.
 - `apps/borso-fr/tsconfig.cdk.json` — kept the prior CDK-only config (NodeNext, includes `bin`).
-- `apps/borso-fr/site/art/mondrian/main.tsx` — React entry: imports `App.tsx`, calls `createRoot`.
+- `apps/borso-fr/site/art/mondrian/main.tsx` — React entry: imports the four `@fontsource/*` font CSS bundles, imports `App.tsx`, calls `createRoot`. Fonts live here rather than in `index.html`'s `<head>` so Vite can bundle the woff2 files into `dist/assets/` and emit hashed asset URLs (otherwise the font CSS is unbundled).
 - `apps/borso-fr/site/art/mondrian/App.tsx` — the React tree from the design (palettes, RNG, generator, components) minus TweaksPanel; plus the seed-in-URL hook and tap-the-canvas handler.
-- `apps/borso-fr/site/art/mondrian/styles.css` — the design's `<style>` block extracted (paper, rail, slider, segments, swatches, frame, responsive).
-- `apps/borso-fr/site/art/mondrian/titles.ts` — adjective/noun lists for `buildTitle`.
+- `apps/borso-fr/site/art/mondrian/components.tsx` — `MondrianFrame`, `Field`, `Segments`, `ReadOnlySwatch`, `EditableSwatch`, `Announcer`. Split from `App.tsx` to stay under Biome's `noExcessiveLinesPerFile` threshold.
+- `apps/borso-fr/site/art/mondrian/use-animation.ts` — animation hook + drift / breathe transform helpers. Side-effecting (touches DOM `style.transform`), so does **not** carry the `.utils.ts` suffix.
+- `apps/borso-fr/site/art/mondrian/download.ts` — PNG export. Side-effecting (DOM-dependent SVG → canvas → blob → `<a download>`), so does **not** carry the `.utils.ts` suffix.
+- `apps/borso-fr/site/art/mondrian/painting.utils.ts` — pure: `mulberry32`, `generateLayout`, `colorize`, internal helpers. **Coverage-gated.**
+- `apps/borso-fr/site/art/mondrian/painting.utils.test.ts` — Vitest suite asserting determinism, layout invariants, neutrality probability.
+- `apps/borso-fr/site/art/mondrian/titles.utils.ts` — pure: `buildTitle`, `dominantColorName`, adjective/noun lists. **Coverage-gated.**
+- `apps/borso-fr/site/art/mondrian/titles.utils.test.ts` — Vitest suite.
+- `apps/borso-fr/site/art/mondrian/url-state.utils.ts` — pure: `freshSeed`, `seedToHex`, `parseSeedHex`, `readUrlState`, `buildSearch`. **Coverage-gated.**
+- `apps/borso-fr/site/art/mondrian/url-state.utils.test.ts` — Vitest suite.
+- `apps/borso-fr/site/art/mondrian/palettes.utils.ts` — pure: `PALETTES`, `buildCustomPalette`, `isPaletteKey`, `CUSTOM_DEFAULTS`, types. **Coverage-gated.**
+- `apps/borso-fr/site/art/mondrian/palettes.utils.test.ts` — Vitest suite.
+- `apps/borso-fr/site/art/mondrian/palette-theme.ts` — `applyPaperTheme` (DOM side effect: writes CSS custom properties on `documentElement`). Split from `palettes.ts` so the pure half can be coverage-gated cleanly.
+- `apps/borso-fr/site/art/mondrian/keyboard.utils.ts` — pure: `isComposeKeyEvent` (extracted from the Space-keydown guard so the "typing in `<input>` must not compose" edge case is covered by a unit test, not a manual sweep). **Coverage-gated.**
+- `apps/borso-fr/site/art/mondrian/keyboard.utils.test.ts` — Vitest suite.
+- `apps/borso-fr/site/art/mondrian/styles/{base,rail,controls,stage,responsive}.css` — the design's `<style>` block split by concern (base + paper grain, rail + brandmark + sliders, palette + segments + buttons, stage + frame + foot, media queries + keyframes). Split into five files to stay under Biome's `noExcessiveLinesPerFile` threshold; `main.tsx` imports them in order.
 
 **UPDATE**
-- `apps/borso-fr/site/art/mondrian/index.html` — replace contents with the design's `<head>` (fonts, meta) + `<body><div id="root"></div><script type="module" src="./main.tsx"></script></body>`.
-- `apps/borso-fr/package.json` — add `vite`, `@vitejs/plugin-react`, `react`, `react-dom`, `@types/react`, `@types/react-dom`. Replace `dev` (`vite`) and `build` (`vite build`); typecheck runs `tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit`.
+- `apps/borso-fr/site/art/mondrian/index.html` — replace contents with `<title>Atelier — A Mondrian Generator</title>` + meta + `<body><div id="root"></div><script type="module" src="./main.tsx"></script></body>`. Fonts are loaded from `main.tsx` (see *Fonts in main.tsx vs `<head>`* under Q.O.D.) — the `<head>` carries no `<link>` to fonts.googleapis.com and no inline font CSS.
+- `apps/borso-fr/package.json` — add `vite`, `@vitejs/plugin-react`, `react`, `react-dom`, `@types/react`, `@types/react-dom`, `vitest`, `@vitest/coverage-v8`, `jsdom`. Replace `dev` (`vite`), `build` (`vite build`); add `test` (`vitest run`) and `test:coverage` (`vitest run --coverage`); typecheck runs `tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit`.
 
 **DELETE**
 - `apps/borso-fr/site/art/mondrian/canvas.js`
@@ -242,6 +256,7 @@ Every numbered happy-path step and every edge / error case from *Use cases / edg
 - Palette segments recolor + retitle.
 - Custom palette: clicking a swatch opens the OS color picker; selecting a colour live-recolours.
 - Animation modes: Still / Drift / Breathe / Cascade are visually distinct; switching modes does not replay inkbloom.
+- Cascade cleanup: switching to Cascade and back to Drift within 5500 ms produces *exactly one* recomposition (the explicit Drift switch), proving the cascade `setInterval` is cleared on mode change. Seed in URL is observed before/after the switch.
 - Compose recomposes (space, tap-on-canvas, button) → new seed, URL `?seed=` updates via `pushState`, inkbloom replays.
 - Browser Back restores prior seed.
 - Refresh on a seed URL renders the same composition.
