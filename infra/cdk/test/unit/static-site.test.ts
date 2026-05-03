@@ -45,12 +45,26 @@ describe('StaticSite (prod)', () => {
     tpl.resourceCountIs('AWS::Route53::RecordSet', 2);
   });
 
-  it('returns /404.jpeg directly as the 404 response body', () => {
+  it('returns /404.jpeg as the 404 response body', () => {
     tpl.hasResourceProperties('AWS::CloudFront::Distribution', {
       DistributionConfig: Match.objectLike({
         CustomErrorResponses: Match.arrayWith([
           Match.objectLike({
             ErrorCode: 404,
+            ResponsePagePath: '/404.jpeg',
+          }),
+        ]),
+      }),
+    });
+  });
+
+  it('also remaps S3-OAC 403 (missing key) to 404 + /404.jpeg', () => {
+    tpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+      DistributionConfig: Match.objectLike({
+        CustomErrorResponses: Match.arrayWith([
+          Match.objectLike({
+            ErrorCode: 403,
+            ResponseCode: 404,
             ResponsePagePath: '/404.jpeg',
           }),
         ]),
