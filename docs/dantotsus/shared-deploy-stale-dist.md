@@ -4,7 +4,9 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: high
 related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-commit: daf6ebb
+fix-pr: https://github.com/hugoleborso/borso.fr/pull/2
+fix-commits: [daf6ebb]
+eradication-rung: 1
 time-to-detect: 30+ minutes of debugging (the symptom looked like AWS, not local)
 tags: [pnpm, cdk, monorepo, build-graph]
 ---
@@ -82,20 +84,28 @@ stale bytes silently.
   `apps/borso-fr/package.json`. `destroy` is left alone (teardown
   doesn't need fresh source).
 
-## Eradication
+## Eradication (rung 1 — structural by convention)
 
-- **Sibling defects swept:** every `package.json` in the repo whose
-  scripts call `cdk` audited. All `synth`/`diff`/`deploy` chain a
-  `pnpm --filter @borso/infra run build` first. New apps following
-  the templates in `docs/adding-an-app.md` and
-  `docs/adding-a-fullstack-app.md` already include the chain.
-- **Tooling change:** documented the convention in the handover
-  docs. Could go further with a workspace-wide build-graph tool
-  (turbo, nx) that rebuilds upstream deps on demand. Overkill for
-  a 4-package monorepo.
-- **Detection improvement:** a `predeploy` hook script that
-  checks whether `dist/index.js` is older than `src/index.ts`
-  would catch a regression. Not implemented; the chained build
-  step is simpler.
-- **Knowledge sharing:** this entry; the package.json scripts
-  themselves model the pattern.
+- **Rung:** 1 (structural). Every `package.json` whose scripts
+  call `cdk` (synth/diff/deploy) chains
+  `pnpm --filter @borso/infra run build &&` first. The
+  handover docs (`docs/adding-an-app.md`,
+  `docs/adding-a-fullstack-app.md`) bake the same chain into the
+  recommended scripts. A new package that wants to call `cdk`
+  follows the template and gets the chain for free.
+- **What changed:** `infra/shared/package.json` and
+  `apps/borso-fr/package.json` both replaced one-line `cdk deploy`
+  scripts with two-step chains that build the dep first.
+- **PR:** [#2](https://github.com/hugoleborso/borso.fr/pull/2).
+- **Commit:** [`daf6ebb`](https://github.com/hugoleborso/borso.fr/commit/daf6ebb).
+- **Diff snippet (essence of the fix):**
+  ```diff
+  - "deploy": "cdk deploy --all --require-approval never",
+  + "deploy": "pnpm --filter @borso/infra run build && cdk deploy --all --require-approval never",
+  ```
+- **Sibling defects swept:** every `cdk`-calling package.json in
+  the repo audited; all chain the build.
+- **Why not workspace-wide build orchestrator (turbo, nx):**
+  considered and rejected. Would add a build-config layer for a
+  4-package monorepo whose dep graph fits on a Post-it. The
+  per-script chain is loud and obvious in `package.json` review.

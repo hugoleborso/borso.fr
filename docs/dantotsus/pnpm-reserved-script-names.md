@@ -4,7 +4,9 @@ introduced-at: implementation
 detected-at: ci
 severity: high
 related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-commit: 10f3f10
+fix-pr: https://github.com/hugoleborso/borso.fr/pull/4
+fix-commits: [10f3f10, 181f266]
+eradication-rung: 2
 time-to-detect: minutes (first preview deploy attempt in CI)
 tags: [pnpm, ci, github-actions]
 ---
@@ -73,20 +75,48 @@ shadows it.
   resolution. Affected: `preview.yml`, `deploy.yml`,
   `cleanup-orphans.yml`, `shared-deploy.yml`.
 
-## Eradication
+## Eradication (rung 2 — DevX check via pre-push grep)
 
-- **Sibling defects swept:** every `pnpm --filter ... <verb>` in the
-  repo audited. All deploy/destroy/sync/install verbs that overlap
-  with pnpm built-ins are now `pnpm run <verb>`.
-- **Tooling change:** captured the rule in CLAUDE.md ("Always use
-  `pnpm run <script>` for `deploy` / `destroy` (and any name pnpm
-  reserves)"). A custom Biome / regex pre-commit could enforce
-  "any `pnpm --filter` invocation in `.github/workflows/` ends
-  with `run <name>` not `<name>`". Not implemented; one CLAUDE.md
-  rule plus the existing audit feels sufficient until we add more
-  scripts.
-- **Detection improvement:** none beyond the run-keyword convention.
-- **Knowledge sharing:** this entry; CLAUDE.md convention; the
-  scripts in `infra/shared/package.json` and
-  `apps/borso-fr/package.json` lead with `pnpm --filter @borso/infra
-  run build` to model the right pattern locally.
+- **Rung:** 2 (DevX check). `.husky/pre-push` now greps every
+  workflow YAML for `pnpm --filter <pkg> <reserved-name>`
+  without `run`. Reserved set: `deploy`, `destroy`, `install`,
+  `update`, `sync`, `fetch`, `publish`. The push is rejected
+  before the workflow ships if a regression sneaks in. Fast
+  regex; zero external deps.
+- **Why not rung 1 (structural):** workflows are YAML; no type
+  surface. A wrapper script `pnpm-app-run <pkg> <verb>` could
+  enforce `run` semantically, but it adds a layer for a regex
+  check that already does the job.
+- **What changed:**
+  - All four workflows
+    (`preview.yml`, `deploy.yml`, `cleanup-orphans.yml`,
+    `shared-deploy.yml`) use `pnpm --filter <pkg> run <verb>`.
+  - `.husky/pre-push` greps for the bad form and exits 1 if
+    found.
+  - CLAUDE.md captures the rule under Conventions.
+- **PR:** [#2](https://github.com/hugoleborso/borso.fr/pull/2)
+  (workflow fix) +
+  [#4](https://github.com/hugoleborso/borso.fr/pull/4) (pre-push
+  grep).
+- **Commits:**
+  [`10f3f10`](https://github.com/hugoleborso/borso.fr/commit/10f3f10)
+  (qualify with `run`),
+  [`181f266`](https://github.com/hugoleborso/borso.fr/commit/181f266)
+  (pre-push grep).
+- **Diff snippet (essence of the fix):**
+  ```diff
+  # .github/workflows/preview.yml etc.
+  -      - run: pnpm --filter "@borso-app/${{ matrix.app }}" deploy
+  +      - run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
+  ```
+  ```diff
+  # .husky/pre-push (new)
+  + PNPM_RESERVED_REGEX='pnpm[[:space:]]+--filter[[:space:]]+("[^"]+"|[^[:space:]]+)[[:space:]]+(deploy|destroy|install|update|sync|fetch|publish)([[:space:]]|$)'
+  + if grep -nrE "$PNPM_RESERVED_REGEX" .github/workflows/ >&2; then
+  +   echo "[pre-push] ERROR: pnpm built-in shadowing — use 'pnpm --filter <pkg> run <name>'." >&2
+  +   exit 1
+  + fi
+  ```
+- **Sibling defects swept:** every `pnpm --filter ... <verb>` in
+  the repo audited. The pre-push grep covers any future workflow
+  added.

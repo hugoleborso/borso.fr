@@ -4,7 +4,9 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-commit: a3cd942
+fix-pr: https://github.com/hugoleborso/borso.fr/pull/4
+fix-commits: [a3cd942, 92d6ae2, d5714ae]
+eradication-rung: 4
 time-to-detect: minutes (first hit on the live preview URL)
 tags: [cloudfront, javascript, edge-runtime]
 ---
@@ -74,23 +76,58 @@ accepts the syntax at deploy time but fails opaquely at first invocation.
   write is what runs on the edge.
 - **Operator action:** none beyond redeploying shared after pulling.
 
-## Eradication
+## Eradication (rung 4 — source-level detection test)
 
-- **Sibling defects swept:** only one CF Function in the repo today.
-  Documented the pattern in the file's header so any future addition
-  follows the ES5 convention.
-- **Tooling change:** per-file Biome override + an explanatory comment
-  inside the file. Could go further with a Biome-plugin rule "any
-  `*.code.js` under `infra/cdk/src/internal/` is ES5-only" if we add
-  more CF Functions; not worth it for one.
-- **Detection improvement:** AWS's `test-function` API is the right
-  detection layer (would have caught this at deploy time) but it's been
-  flaky in our experience. Worth retrying once it's stable.
-- **Knowledge sharing:** this entry; CLAUDE.md links to it; the file
-  header references the constraint.
+- **Rung:** 4 (detection). A vitest in
+  `infra/cdk/test/unit/eradication-checks.test.ts` reads
+  `cf-host-routing-function.code.js` and asserts: no `let`/`const`
+  variable declarations, no optional chaining (`?.`), no template
+  literals. Combined with the per-file Biome override that turns
+  off the `useTemplate`/`useOptionalChain`/`noInnerDeclarations`
+  rules, the linter no longer pushes you toward the broken
+  syntax AND a hard test fails CI if the patterns sneak in.
+- **Why not rung 1 (structural):** the file is JS source shipped
+  to a foreign runtime (CloudFront edge); we can't impose CDK
+  types on it. The closest rung-1 fix would be transpiling from
+  ES2020 → ES5 at build time, but that's a build chain for one
+  small file. Rung 4 is the realistic ceiling.
+- **What changed:**
+  - `infra/cdk/src/internal/cf-host-routing-function.code.js` —
+    full ES5 rewrite (`var`, string concat, no `?.`, no template
+    literals).
+  - `infra/cdk/biome.jsonc` — per-file override exempting the
+    file from `useTemplate` / `useOptionalChain` /
+    `noInnerDeclarations`.
+  - `infra/cdk/test/unit/eradication-checks.test.ts` (new) —
+    asserts the ES5 patterns hold.
+- **PR:** [#2](https://github.com/hugoleborso/2) (rewrite +
+  Biome) and [#4](https://github.com/hugoleborso/borso.fr/pull/4)
+  (test backstop).
+- **Commits:**
+  [`a3cd942`](https://github.com/hugoleborso/borso.fr/commit/a3cd942)
+  (ES5 rewrite),
+  [`92d6ae2`](https://github.com/hugoleborso/borso.fr/commit/92d6ae2)
+  (Biome override),
+  [`d5714ae`](https://github.com/hugoleborso/borso.fr/commit/d5714ae)
+  (test).
+- **Diff snippet (essence of the fix):**
+  ```diff
+  - const request = event.request;
+  - const host = request.headers.host?.value;
+  + var request = event.request;
+  + var host = request.headers.host && request.headers.host.value;
+  …
+  - request.uri = `/${prefix}${app}/pr-${pr}${uri}`;
+  + request.uri = '/' + prefix + app + '/pr-' + pr + uri;
+  ```
+- **Sibling defects swept:** only one CF Function in the repo
+  today; the test covers any future `*.code.js` files added to
+  `src/internal/` as well (it currently only checks the existing
+  file by path; extend the glob if more are added).
 
-## Related
+## See also
 
-After deploying the fix, the function went from `FunctionExecutionError`
-to `FunctionThrottledError` for ~10 min — see
-[`cloudfront-function-throttle-persistence.md`](./cloudfront-function-throttle-persistence.md).
+- After deploying the fix, the function went from
+  `FunctionExecutionError` to `FunctionThrottledError` for
+  ~10 min — see
+  [`../knowledge/cloudfront-function-throttle-persistence.md`](../knowledge/cloudfront-function-throttle-persistence.md).

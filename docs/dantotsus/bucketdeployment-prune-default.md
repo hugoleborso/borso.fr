@@ -4,7 +4,9 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: low
 related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-commit: 2a4aef4
+fix-pr: https://github.com/hugoleborso/borso.fr/pull/2
+fix-commits: [2a4aef4]
+eradication-rung: 4
 time-to-detect: minutes (next CI deploy after manual upload)
 tags: [cdk, s3, bucketdeployment]
 ---
@@ -72,17 +74,34 @@ sync semantics.
   expecting it to survive. Or version it in `apps/<slug>/site/` and
   let it ship through the normal pipeline.
 
-## Eradication
+## Eradication (rung 4 — explicit choice baked into the construct)
 
+- **Rung:** 4 (detection by inspection). Every `BucketDeployment`
+  in the repo's constructs sets `prune` explicitly with an inline
+  comment naming the policy choice (multi-tenant → off,
+  single-tenant → default true). The previews path's `prune: false`
+  is asserted by a synth-time test in `static-site.test.ts`.
+- **Why not rung 1 (structural):** `prune` is genuinely a
+  per-context decision (multi-tenant vs single-tenant bucket).
+  Forcing one default at the construct level would just move the
+  problem. Rung 4 (explicit + tested) is the right ceiling.
+- **What changed:** `infra/cdk/src/constructs/static-site.ts`'s
+  preview path now sets `prune: false` with a comment explaining
+  the multi-tenant rationale. Prod path keeps the default `true`
+  (single-tenant per-app bucket). `static-site.test.ts` asserts
+  the preview path's `Prune: false` in the synth output.
+- **PR:** [#2](https://github.com/hugoleborso/borso.fr/pull/2).
+- **Commit:** [`2a4aef4`](https://github.com/hugoleborso/borso.fr/commit/2a4aef4).
+- **Diff snippet (essence of the fix):**
+  ```diff
+    new BucketDeployment(this, 'Deploy', {
+      sources: [Source.asset(path.resolve(props.assetsPath))],
+      destinationBucket: sharedBucket,
+      destinationKeyPrefix: keyPrefix,
+  +   prune: false,  // multi-tenant — don't wipe other apps' previews
+      distribution: previewsDistribution,
+      distributionPaths: [`/${keyPrefix}/*`],
+    });
+  ```
 - **Sibling defects swept:** every `BucketDeployment` in the repo
-  reviewed. Each one's prune choice is now intentional and
-  commented in the construct.
-- **Tooling change:** the `_template.md` in `docs/knowledge/`
-  encourages future authors to capture this kind of choice. No
-  linter rule — `prune` is genuinely a per-context decision.
-- **Detection improvement:** none — operator detection was
-  fast enough (next deploy). If we wanted earlier signal, we'd
-  alarm on "object count dropped sharply between deploys".
-- **Knowledge sharing:** this entry; CLAUDE.md mentions the split
-  rule (multi-tenant → prune off, single-tenant → prune default);
-  inline comment in `buildPreview` explains the choice.
+  audited; both have intentional prune choices.

@@ -4,7 +4,9 @@ introduced-at: conception
 detected-at: production
 severity: medium
 related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-commit: 2a4aef4
+fix-pr: https://github.com/hugoleborso/borso.fr/pull/2
+fix-commits: [2a4aef4]
+eradication-rung: 1
 time-to-detect: hours per redeploy (bug surfaced every iteration)
 tags: [cdk, cloudfront, s3, bucketdeployment, caching]
 ---
@@ -87,18 +89,41 @@ SSM for the shared previews CDN.
   new SSM param is published; preview deploys synth-fail with
   `SSM Parameter Store value not found` until then.
 
-## Eradication
+## Eradication (rung 1 — structural impossibility)
 
-- **Sibling defects swept:** every `BucketDeployment` in the repo is
-  now paired with a distribution. Verified via grep:
-  `grep -rn 'new BucketDeployment' infra/cdk/src/`.
-- **Tooling change:** added a synth-time test:
-  `BucketDeployment in preview path emits DistributionPaths` (in
-  `static-site.test.ts`) so a future refactor that drops the prop
-  fails CI immediately.
-- **Detection improvement:** test above is the gate. No production
-  alarm for content age — would be useful but adds complexity.
-  Captured as follow-up if the issue recurs.
-- **Knowledge sharing:** this entry; the comment block above the
-  `BucketDeployment` call in `static-site.ts` explains why the
-  `distribution` prop is mandatory in this codebase.
+- **Rung:** 1 (structural). Every `BucketDeployment` in the repo
+  lives inside the `StaticSite` construct, which now plumbs
+  `distribution + distributionPaths` from SSM unconditionally. New
+  apps using the construct cannot produce a CloudFront-fronted
+  bucket without invalidation; the misconception "I can deploy
+  static assets without invalidating" can't be expressed against
+  `StaticSite`.
+- **What changed:** `infra/cdk/src/constructs/static-site.ts`
+  reads the previews CDN's id + domain from SSM, builds an
+  `IDistribution` via `Distribution.fromDistributionAttributes`,
+  and passes it to `BucketDeployment` along with a path scoped to
+  this PR's prefix. `infra/shared/lib/shared-stack.ts` publishes
+  the new `previewsDistributionDomain` SSM param. Synth-time test
+  in `static-site.test.ts` asserts `DistributionPaths` is set.
+- **PR:** [#2](https://github.com/hugoleborso/borso.fr/pull/2).
+- **Commit:** [`2a4aef4`](https://github.com/hugoleborso/borso.fr/commit/2a4aef4).
+- **Diff snippet (essence of the fix):**
+  ```diff
+  + const previewsDistribution = Distribution.fromDistributionAttributes(...);
+    new BucketDeployment(this, 'Deploy', {
+      sources: [Source.asset(path.resolve(props.assetsPath))],
+      destinationBucket: sharedBucket,
+      destinationKeyPrefix: keyPrefix,
+      prune: false,
+  +   distribution: previewsDistribution,
+  +   distributionPaths: [`/${keyPrefix}/*`],
+    });
+  ```
+- **Sibling defects swept:** verified every `BucketDeployment` in
+  `infra/cdk/src/` is paired with a distribution
+  (`grep -rn 'new BucketDeployment' infra/cdk/src/`).
+- **Detection backstop:** the synth-time test in
+  `static-site.test.ts` would fail CI on a regression that drops
+  the prop. The `StaticSite` construct is the only path; raw
+  `BucketDeployment` usage outside it is not present and would be
+  caught at code review.
