@@ -60,6 +60,8 @@ When a PR uncovers a new trap, run the [`/dantotsu`](.claude/skills/dantotsu/SKI
 
 **After every PR you ship merges or closes, open a follow-up PR with the lessons from that PR captured into your own config** — this file (CLAUDE.md), per-app rules, hooks, biome overrides, knip ignores, skills, whatever fits the lesson. Even small ones: a new gotcha, a clarified convention, a removed footgun. The loop is the system that keeps an AI-driven repo improving instead of regressing.
 
+The mechanic: invoke the [`/after-task-dantotsus`](.claude/skills/after-task-dantotsus/SKILL.md) skill — it sweeps the just-merged PR (commits + review comments + CI failures + webhook events), classifies each candidate (real defect / vendor surprise / design pivot / operator confusion / no-op), and writes one Dantotsu per subject under `docs/knowledge/`. Tag the resulting PR with `kaizen` so the loop's output is visible in the PR list.
+
 What counts as a "lesson":
 - A pitfall that bit you and would bite again — add a new file under [`docs/knowledge/`](./docs/knowledge/) using the Dantotsu template (Symptom → causal chain → Fix), and link it from the index.
 - A naming/style choice you made repeatedly that wasn't documented (add to **Conventions** or **Clean code**).

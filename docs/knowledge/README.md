@@ -1,13 +1,8 @@
 # Knowledge base
 
-One file per recurring trap. Each entry follows a **Dantotsu** root-cause structure:
+One file per defect or vendor-knowledge gap, written as a **Dantotsu**: Symptom → Root-cause chain → Detection failure causes → Countermeasure → Eradication. Template at [`_template.md`](./_template.md). Each entry has YAML frontmatter capturing the date, the **stage at which the defect was introduced** (conception, implementation, self-validation, code review, or vendor-knowledge), where it was eventually detected, severity, and the related PR / fix commit — useful for spotting patterns over time (e.g. "we keep introducing defects at conception" → invest in design rigour).
 
-- **Symptom** — what we observed (from the user's perspective when there is one).
-- **Root-cause chain** — successive *whys* down to the developer's misconception.
-- **Detection failure causes** — which layer should have caught it and why didn't (optional but encouraged).
-- **Countermeasure + Eradication** — what was committed, what's left, what the operator must do (config, console, registrar).
-
-If a PR uncovers a new trap, run the [`/dantotsu`](../../.claude/skills/dantotsu/SKILL.md) Claude Code skill — it walks the seven steps and produces a file in this folder. Even if the fix turns out to be "the operator changes a console setting", capture it; the value is in the causal chain, not just the conclusion.
+If a PR uncovers a new trap, run the [`/dantotsu`](../../.claude/skills/dantotsu/SKILL.md) Claude Code skill — it walks the seven steps and produces an entry that copies the template. Even if the fix turns out to be "the operator changes a console setting", capture it; the value is in the causal chain, not the conclusion.
 
 ## Index
 
@@ -40,38 +35,24 @@ If a PR uncovers a new trap, run the [`/dantotsu`](../../.claude/skills/dantotsu
 
 ## Adding a new entry
 
-The `/dantotsu` Claude Code skill ([`.claude/skills/dantotsu/SKILL.md`](../../.claude/skills/dantotsu/SKILL.md)) walks through the seven steps and produces a complete entry. Run it whenever a PR uncovers a non-trivial defect.
+The `/dantotsu` Claude Code skill ([`.claude/skills/dantotsu/SKILL.md`](../../.claude/skills/dantotsu/SKILL.md)) walks through the seven steps and produces a complete entry. Run it whenever a PR uncovers a non-trivial defect or vendor surprise.
 
-If you're writing one by hand, use this template:
+If writing by hand, copy [`_template.md`](./_template.md) and fill the frontmatter + sections. Then add a one-line entry to the index above under the right heading.
 
-```md
-# <Title — sparks curiosity, hints at the lesson, NOT the user-story name>
+## Reading the frontmatter
 
-## Symptom
-<from the user's perspective, with screenshot/error if available>
+Each entry's YAML frontmatter is structured so it can be aggregated later if we want metrics:
 
-## Root-cause chain
-1. **Why?** <step-1 question>
-   <answer>
-2. **Why?** <step-2 question>
-   <answer>
-…
-**Root cause:** <one-sentence misconception, in "thought X, actually Y" form>
+| Field | Meaning |
+| --- | --- |
+| `introduced-at` | Stage where the defect was *born*. `conception` (the design itself was wrong), `implementation` (design was right, code didn't match), `self-validation` (developer's manual checks didn't reveal it), `code-review` (reviewer didn't catch it), `n/a-vendor-knowledge` (no defect on our side — a vendor / external system surprised us). |
+| `detected-at` | Where the defect was *finally* caught. Walk the defence-in-depth ladder: typing → linter → local → ci → review → qa → staging → production → operator-deploy. The Detection failure causes section explains why every earlier layer missed it. |
+| `severity` | User impact at the time of detection. `low`: nobody noticed. `medium`: degraded UX, recoverable. `high`: user-blocking or data integrity. |
+| `time-to-detect` | Wall-clock time from "defect lives in main" to "we noticed". A long TTD on a high-severity defect is its own thing to investigate. |
+| `tags` | Topics for grep / future skill matching: `cdk`, `cloudfront`, `s3`, `ci`, `pnpm`, `dsql`, `github-actions`, `aws-cli`, etc. |
 
-## Detection failure causes
-- **<layer>:** <why this layer didn't catch it>
-- …
+Patterns to watch for as the corpus grows:
 
-## Countermeasure
-- **Code:** <commit sha / pseudo-diff + why this addresses the root cause specifically>
-- **Operator action:** <if anything is required outside the codebase>
-
-## Eradication
-- <sibling latent defects swept (with paths/commits)>
-- <tooling change applied>
-- <knowledge sharing planned or done>
-```
-
-Then add a one-line entry to the index above under the right heading.
-
-The 15 entries committed alongside this README are "Dantotsu-lite" — they predate the skill and have Symptom / Root-cause chain / Fix only. Future entries follow the full template above. If you're updating an old entry while debugging something related, take the chance to flesh out its Detection failure causes and Eradication sections.
+- Many `introduced-at: conception` → design isn't getting enough scrutiny; invest in pre-implementation review or spec writing.
+- Many `detected-at: production` with high severity → defence-in-depth has gaps; invest in earlier layers.
+- Recurring tags → consider a primer doc, a linter rule, or a construct-level guarantee that eliminates the class.
