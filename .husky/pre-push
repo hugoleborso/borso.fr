@@ -5,3 +5,27 @@ set -e
 # unused-export states aren't blocked mid-story.
 echo "[pre-push] running knip"
 pnpm exec knip
+
+# Reject any workflow YAML invoking `pnpm --filter <pkg> <reserved-name>`
+# without `run`. `deploy`, `destroy`, `install`, `update`, `sync`, `fetch`,
+# `publish` are pnpm built-in commands; without `run` they shadow the
+# package's scripts.* entry and silently do the wrong thing. Rung-2
+# eradication of docs/dantotsus/pnpm-reserved-script-names.md.
+echo "[pre-push] checking workflows for pnpm reserved-name shadowing"
+PNPM_RESERVED_REGEX='pnpm[[:space:]]+--filter[[:space:]]+("[^"]+"|[^[:space:]]+)[[:space:]]+(deploy|destroy|install|update|sync|fetch|publish)([[:space:]]|$)'
+if grep -nrE "$PNPM_RESERVED_REGEX" .github/workflows/ >&2; then
+  echo "[pre-push] ERROR: above lines invoke a pnpm built-in instead of a package script." >&2
+  echo "[pre-push] Use 'pnpm --filter <pkg> run <name>' to force script lookup." >&2
+  exit 1
+fi
+
+# Workflow lint — catches paths-filter base misuses, deprecated action
+# versions, shell-quoting bugs in `run:` blocks, etc. Rung-2 eradication
+# of docs/dantotsus/paths-filter-base-head1-on-push.md and a generic net
+# for the next workflow trap.
+if command -v actionlint >/dev/null 2>&1; then
+  echo "[pre-push] running actionlint"
+  actionlint
+else
+  echo "[pre-push] WARN: actionlint not installed — skipping. Install via the SessionStart hook (.claude/hooks/session-start.sh)." >&2
+fi
