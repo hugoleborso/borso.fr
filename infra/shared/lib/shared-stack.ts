@@ -13,7 +13,7 @@ import {
   ViewerProtocolPolicy,
 } from 'aws-cdk-lib/aws-cloudfront';
 import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
-import { OpenIdConnectProvider } from 'aws-cdk-lib/aws-iam';
+import { OpenIdConnectProvider, PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { ARecord, AaaaRecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
@@ -91,7 +91,30 @@ export class SharedStack extends Stack {
       certificate: props.previewCert,
       httpVersion: HttpVersion.HTTP2_AND_3,
       priceClass: PriceClass.PRICE_CLASS_100,
+      errorResponses: [
+        // S3 returns 404 for missing keys (now that we grant ListBucket
+        // below). Serve a fallback /404.jpeg from the bucket root, shared
+        // across every preview subdomain. Hugo uploads the file once
+        // post-deploy; if it isn't there, CloudFront falls back to its
+        // default error page after a short loop.
+        { httpStatus: 404, responsePagePath: '/404.jpeg', ttl: Duration.minutes(5) },
+      ],
     });
+
+    // Grant the CloudFront OAC principal s3:ListBucket so S3 can return 404
+    // (instead of 403) for missing keys. Without this, broken preview links
+    // surface as "Access Denied" and the 404 errorResponses entry above
+    // never fires. Mirrors the per-app prod equivalent in StaticSite.
+    previewsBucket.addToResourcePolicy(
+      new PolicyStatement({
+        actions: ['s3:ListBucket'],
+        principals: [new ServicePrincipal('cloudfront.amazonaws.com')],
+        resources: [previewsBucket.bucketArn],
+        conditions: {
+          StringEquals: { 'aws:SourceArn': previewsDistribution.distributionArn },
+        },
+      }),
+    );
 
     // Wildcard DNS into the previews distribution. Without this, every
     // <app>-pr-<n>.preview.borso.fr resolves to NXDOMAIN even though the

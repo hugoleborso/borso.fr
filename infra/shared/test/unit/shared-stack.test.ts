@@ -129,6 +129,33 @@ describe('SharedStack', () => {
       });
     });
 
+    it('configures /404.jpeg as the 404 response body on the previews CDN', () => {
+      tpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+        DistributionConfig: Match.objectLike({
+          CustomErrorResponses: Match.arrayWith([
+            Match.objectLike({
+              ErrorCode: 404,
+              ResponsePagePath: '/404.jpeg',
+            }),
+          ]),
+        }),
+      });
+    });
+
+    it('grants the CloudFront OAC principal s3:ListBucket on the previews bucket', () => {
+      tpl.hasResourceProperties('AWS::S3::BucketPolicy', {
+        PolicyDocument: Match.objectLike({
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Effect: 'Allow',
+              Action: 's3:ListBucket',
+              Principal: { Service: 'cloudfront.amazonaws.com' },
+            }),
+          ]),
+        }),
+      });
+    });
+
     it('creates wildcard A + AAAA Route 53 records for *.preview.borso.fr', () => {
       tpl.hasResourceProperties('AWS::Route53::RecordSet', {
         Name: '*.preview.borso.fr.',
