@@ -121,6 +121,8 @@ Walk these 7 steps, in order.
 - **Pre-flight gates without a runner.** Every gate must be a command or a skill invocation. "Make sure it works" is not a gate.
 - **Hidden assumptions.** Anything you assumed the spec said but didn't say belongs in "Open questions / unknowns" so it gets caught now, not in the post-mortem.
 - **Skipping sub-skills you have.** If `/vite` exists and the plan touches Vite, invoke it. The skill author knows things you don't.
+- **Pure helpers planned into `<name>.ts` instead of `<name>.utils.ts`.** Repo rule (CLAUDE.md "Clean code"): pure-function modules end in `.utils.ts` and ship at 100% coverage. The plan must commit to the suffix at planning time so the implementation skill doesn't have to rename files. Applies to every workspace, including frontend-only apps; no "too small to test" exemption. Each `*.utils.ts` row in *Files to change* is paired with the matching `*.utils.test.ts` row.
+- **Planning a feature without a test runner.** If the touched workspace has no Vitest (or equivalent) wired up and the plan introduces utilities, *the plan must include the runner setup as one of its rows* — wired up by `/implementation`, not deferred.
 
 ## Repo-specific notes
 

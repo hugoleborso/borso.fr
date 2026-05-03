@@ -39,6 +39,7 @@ Delete the block-quoted prompt under each heading once the section is written.
 - [ ] Function names describe the result, not the mechanism.
 - [ ] Conventional-commit scope matches the touched app (`borso-fr`, `borsouvertures`, `infra`, `ci`, `docs`, `deps`).
 - [ ] `pnpm exec knip` clean — no unused exports / files / deps.
+- [ ] Every pure helper this feature introduces lives in `<name>.utils.ts` with a sibling `<name>.utils.test.ts` covered at 100% (statements / branches / functions / lines). Repo rule, no exemption for frontend-only or "small" workspaces. See CLAUDE.md "Clean code".
 
 ## Pre-flight gates
 
