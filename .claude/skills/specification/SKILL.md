@@ -39,18 +39,24 @@ If unsure, ask one question: "Is this feature already scoped, or do you want to 
 
 ## Deliverable
 
-Produce a single markdown file at `docs/features/<feature-slug>/spec/spec.md`. One file per feature, kebab-case slug derived from the feature's user-visible outcome (not the technical mechanism). The folder layout is:
+Produce a single markdown file at `docs/features/<app>/<feature-slug>/spec/spec.md`. One file per feature, kebab-case slug derived from the feature's user-visible outcome (not the technical mechanism). The folder layout is:
 
 ```
-docs/features/<slug>/
+docs/features/<app>/<slug>/
     spec/
-        spec.md                  # this file
-        <other-supporting-docs>  # mockups, BPMN exports, ADRs scoped to this feature, transcripts
+        spec.md                              # this file
+        <other-supporting-docs>              # mockups, BPMN exports, ADRs scoped to this feature, transcripts
     plan/
-        plan.md                  # produced later by /technical-conception
+        plan.md                              # produced later by /technical-conception
+    validation/
+        visual-validation-<timestamp>.md     # produced by /visual-validation
+        visual-validation-<timestamp>/       # screenshots referenced by the report (committed)
+        technical-validation-<timestamp>.md  # produced by /technical-validation
 ```
 
-Drop screenshots, exported Figma frames, BPMN XML, design-tool transcripts, and other supporting material **next to `spec.md` inside `spec/`** rather than inlining megabytes into the spec body.
+`<app>` is the workspace slug under `apps/` (e.g. `borso-fr`, `borsouvertures`). Use `<app> = infra` for features that only touch `infra/cdk/` or `infra/shared/`.
+
+Drop screenshots, exported Figma frames, BPMN XML, design-tool transcripts, and other supporting material **next to `spec.md` inside `spec/`** rather than inlining megabytes into the spec body. Validation evidence (visual-validation screenshots) lives under `validation/` and is committed alongside its report.
 
 The spec itself is **short by design** — if it grows past ~2 pages of prose, the team can no longer iterate on it. Cut, don't append.
 
@@ -58,7 +64,7 @@ The spec itself is **short by design** — if it grows past ~2 pages of prose, t
 
 Every spec must have these top-level sections, in this order. Empty sections are a smell — either fill them or justify the gap inline.
 
-Section names match the canonical template kept locally at [`template.md`](./template.md), so that local specs and external Theodo Academy specs read the same. Copy that file into `docs/features/<slug>/spec/spec.md` to start a new spec.
+Section names match the canonical template kept locally at [`template.md`](./template.md), so that local specs and external Theodo Academy specs read the same. Copy that file into `docs/features/<app>/<slug>/spec/spec.md` to start a new spec.
 
 ```markdown
 # <Feature title — phrased as the user-visible outcome>
@@ -137,8 +143,8 @@ These are the common mistakes the standard names. Push back on them in real time
 
 ## Repo-specific notes
 
-- Specs live at `docs/features/<slug>/spec/spec.md`. Create the folder structure if it does not exist (`docs/features/<slug>/spec/` and the sibling `plan/`).
-- Slugs map to apps when relevant: prefix with the app slug (`borso-fr-`, `borsouvertures-`, `infra-`) so commitlint scopes line up trivially.
+- Specs live at `docs/features/<app>/<slug>/spec/spec.md`. Create `spec/`, `plan/`, and `validation/` as siblings under each feature folder.
+- The `<app>` segment is the workspace slug (`borso-fr`, `borsouvertures`, `infra`). The commitlint scope is `<app>` directly — no further prefix on the slug.
 - Architectural decisions that survive past the spec belong in their own ADR under `docs/adr/` — reference them from the spec's *Questions / Options / Decisions* section, do not duplicate.
 - For infra changes (`infra/cdk/**`, `infra/shared/**`), the *Changes* section must call out the test-coverage impact — those packages are coverage-gated.
 

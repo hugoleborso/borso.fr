@@ -1,6 +1,6 @@
 # Spec template
 
-Copy this into `docs/features/<feature-slug>/spec/spec.md` and fill it in. Section names and italic guidance match the canonical Theodo Academy template — keep them identical so local specs and external specs read the same.
+Copy this into `docs/features/<app>/<feature-slug>/spec/spec.md` and fill it in. Section names and italic guidance match the canonical Theodo Academy template — keep them identical so local specs and external specs read the same.
 
 Drop supporting material (mockups, BPMN exports, design-tool bundles) **next to `spec.md`** inside the same `spec/` folder rather than inlining megabytes into the spec body.
 

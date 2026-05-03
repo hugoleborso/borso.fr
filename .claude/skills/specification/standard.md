@@ -3,7 +3,7 @@
 > Source standard for the `specification` skill. The skill enforces this; this file is the canonical text it points back to. Edit this file when the standard itself evolves; edit `SKILL.md` when the *enforcement* of the standard evolves.
 >
 > Companion docs in this folder:
-> - [`template.md`](./template.md) — empty template to copy into `docs/features/<slug>/spec/spec.md`.
+> - [`template.md`](./template.md) — empty template to copy into `docs/features/<app>/<slug>/spec/spec.md`.
 > - [`worked-example.md`](./worked-example.md) — a complete spec used as a depth/brevity reference.
 
 ## What a specification is

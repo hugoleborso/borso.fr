@@ -7,7 +7,7 @@
 
 ## Why
 
-The current `/art/mondrian` page is a functional but plain generator (number inputs, raw HTML controls, white box, two animation modes). Reference: [`apps/borso-fr/site/art/mondrian/index.html`](../../apps/borso-fr/site/art/mondrian/index.html) and [`painting.js`](../../apps/borso-fr/site/art/mondrian/painting.js). The user's complaint, verbatim from the Claude Design transcript: *"I want the same feature, but with a way more artsy design. Fancy fonts (artistic), user friendly settings, maybe better animation… I just want it to be beautiful AND responsive."*
+The current `/art/mondrian` page is a functional but plain generator (number inputs, raw HTML controls, white box, two animation modes). Reference: [`apps/borso-fr/site/art/mondrian/index.html`](../../../../../apps/borso-fr/site/art/mondrian/index.html) and [`painting.js`](../../../../../apps/borso-fr/site/art/mondrian/painting.js). The user's complaint, verbatim from the Claude Design transcript: *"I want the same feature, but with a way more artsy design. Fancy fonts (artistic), user friendly settings, maybe better animation… I just want it to be beautiful AND responsive."*
 
 The user iterated through four rounds with Claude Design and landed on **Atelier**: a gallery-catalog UI with serif/mono typography, a left "wall label" rail of curated controls, a centered framed canvas, and four animation modes (Still / Drift / Breathe / Cascade).
 

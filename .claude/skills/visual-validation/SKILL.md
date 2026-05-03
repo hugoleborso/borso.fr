@@ -1,6 +1,6 @@
 ---
 name: visual-validation
-description: Run a standalone agent that opens the implemented feature in a real browser and checks, point by point, that every visible and behavioural assertion in the spec actually holds. Use when the user says "/visual-validation", "validate visually", "check the spec is implemented", or as the gate-5 step in a `/technical-conception` plan. Takes a path to `docs/features/<slug>/spec/spec.md` as the only required argument; the skill discovers the dev-server command from the workspace's `package.json`. The validation agent runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<slug>/spec/visual-validation-<timestamp>.md` and returns PASS / FAIL / PARTIAL. Reads the standard at `.claude/skills/visual-validation/standard.md` before dispatching.
+description: Dispatch the dedicated `visual-validator` agent to open the implemented feature in a real browser (via the agent-browser CLI) and check, point by point, that every visible and behavioural assertion in the spec actually holds. Use when the user says "/visual-validation", "validate visually", "check the spec is implemented", or as the gate-5 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the dev-server command from the workspace's `package.json`. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md` plus a sibling folder of committed screenshot evidence, and returns PASS / FAIL / PARTIAL. Reads the standard at `.claude/skills/visual-validation/standard.md` before dispatching.
 ---
 
 # Visual-validation skill
@@ -11,93 +11,93 @@ The canonical standard this skill enforces lives at [`standard.md`](./standard.m
 
 ## The standalone-agent rule
 
-The validation agent runs in **a fresh Agent invocation** with no chat context. This is non-negotiable. The implementer (the main session) has already convinced themselves the feature works; running validation in their context inherits that bias. The validation agent reads only the spec and the running app — nothing else. If it can't be shown a defect, it isn't there.
+The validation agent runs in **a fresh `Agent` invocation** with no chat context. This is non-negotiable. The implementer (the main session) has already convinced themselves the feature works; running validation in their context inherits that bias.
 
-In Claude Code this means: the skill (running in the main session) calls the `Agent` tool with a self-contained prompt. The prompt carries the spec path, the dev URL, and the report path, and nothing else. It does not summarise what the main session did or believes.
+Use the dedicated `visual-validator` agent defined at `.claude/agents/visual-validator.md`. Do **not** dispatch `general-purpose` for this — the dedicated agent's brief is the structural mitigation, and a generic agent would inherit the main session's optimism through whatever prompt you write.
+
+```
+Agent({
+  subagent_type: "visual-validator",
+  description: "Visual validation against spec",
+  prompt: <self-contained brief — see template.md>,
+})
+```
+
+The brief carries the spec path, dev URL, report path, and evidence directory — and *nothing else*. It does not summarise the implementation, list known gotchas, or hint at what to look for.
+
+## Tooling: agent-browser
+
+The validator drives the browser via [`agent-browser`](https://github.com/vercel-labs/agent-browser) — the LLM-oriented CLI that exposes a reference-based snapshot/click/screenshot interface tuned for agents. Not Playwright: agent-browser is the right shape for an LLM-driven validator (text refs over selectors, JSON snapshots over imperative API calls).
+
+If `agent-browser` is not installed on the system, the validator surfaces that as a single FAIL row titled "Tooling unavailable" and exits without falling back. Install:
+
+```bash
+npm install -g agent-browser
+agent-browser install   # provisions the daemon + its browser
+```
+
+The skill (this file, running in the main session) does not install agent-browser automatically — that's an explicit operator decision since it touches the global npm prefix and provisions a Chromium binary. Surface the install command to the user if it's missing.
 
 ## When to invoke
 
 Invoke when:
-- A feature has shipped to a local dev server (or a preview URL) and `spec.md` is present.
+- A feature has shipped to a local dev server (or a preview URL) and `spec.md` is present at `docs/features/<app>/<slug>/spec/spec.md`.
 - The user asks for `/visual-validation`, "validate the spec", "check it works".
 - The `/technical-conception` plan reaches gate 5 (UI work).
 
 Do **not** invoke when:
-- There is no spec at `docs/features/<slug>/spec/spec.md`.
+- There is no spec at the expected path.
 - The feature is purely backend / infra (no visible result).
-- The dev server isn't running and the workspace has no `dev` script the skill can use.
+- The dev server isn't running and the workspace has no `dev` script.
 
-## How this phase works
+## How this phase works (skill, in the main session)
 
-1. **Discover the workspace.** Given `docs/features/<slug>/spec/spec.md`, infer which workspace under `apps/` the feature lives in. The slug usually carries the app prefix (`borso-fr-…` → `apps/borso-fr`); fall back to asking the user once if the prefix is ambiguous.
-2. **Start the dev server** if it isn't already running. `pnpm --filter <pkg> dev` in the background. Wait for an HTTP 200 on the dev URL.
-3. **Build the assertion checklist.** Read `spec.md` and extract one bullet per assertion:
-   - Every item under **Result** (typography, layout, colours, copy).
-   - Every numbered step in the happy path under **Use cases / edge cases**.
-   - Every bullet under **Edge cases** and **Error cases**.
-   - Every Q.O.D. row whose decision is user-visible (palette options, default mode, URL behaviour, mobile affordances, accessibility decisions).
-4. **Dispatch the validation agent.** Pass it the assertion checklist, the dev URL, the spec path, and the target report path. The agent runs alone.
-5. **The agent drives the browser** — Playwright today; agent-browser when available. For each assertion: click / type / resize / navigate as needed, capture a screenshot or action trace as evidence, decide PASS / FAIL / UNVERIFIABLE.
-6. **The agent writes the report** to `docs/features/<slug>/spec/visual-validation-<YYYY-MM-DD-HHmm>.md`.
-7. **The skill (main session) reads the report**, summarises the verdict for the user, and points at any FAIL or UNVERIFIABLE rows.
+1. **Parse the argument.** `spec_path = docs/features/<app>/<slug>/spec/spec.md`. Derive `<app>` from the path itself — it's the segment after `docs/features/`.
+2. **Discover the workspace.** `app_pkg = "@borso-app/<app>"` (the workspace conventions live in CLAUDE.md). Confirm `apps/<app>/package.json` exists.
+3. **Probe the dev server** at `http://localhost:5173/` (or the port from `apps/<app>/vite.config.ts`). If 200, reuse it. If not, spawn `pnpm --filter <app_pkg> dev` in the background and poll until 200.
+4. **Build the run folder paths.**
+   ```
+   timestamp        = <YYYY-MM-DD-HHmm>
+   validation_dir   = docs/features/<app>/<slug>/validation
+   report_path      = <validation_dir>/visual-validation-<timestamp>.md
+   evidence_dir     = <validation_dir>/visual-validation-<timestamp>/
+   ```
+   `mkdir -p` the evidence directory so the validator can drop PNGs straight in.
+5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths and the dev URL. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path.
+6. **Read the report.** Surface the verdict (one line) plus, if FAIL or PARTIAL, the list of failing/UNVERIFIABLE rows verbatim. Do **not** summarise — the user reads the report.
+7. **Stop the dev server** if the skill spawned it. Leave it running if the operator started it.
+8. **Stage the report and evidence for commit.** They live under `docs/features/<app>/<slug>/validation/` which is *not* gitignored — the screenshots are part of the report and must be committed alongside it.
 
 ## Deliverable
 
-A markdown report at `docs/features/<slug>/spec/visual-validation-<timestamp>.md`. The report is the artefact; the skill's textual return is a one-line summary. Report format mirrors [`template.md`](./template.md).
+Two artefacts at `docs/features/<app>/<slug>/validation/`:
 
-The report **must** end with one of:
-- `## Verdict: PASS` — every assertion verified.
-- `## Verdict: PARTIAL` — at least one UNVERIFIABLE row, no FAIL rows. Implementer can decide if the unverifiable ones are blockers.
-- `## Verdict: FAIL` — at least one FAIL row. Implementation is not ready for push.
+- `visual-validation-<timestamp>.md` — the markdown verdict report.
+- `visual-validation-<timestamp>/` — the folder of PNG screenshots referenced from the report.
 
-## Operating mode (skill, in the main session)
+Both are committed. Do not gitignore them. Validation evidence rots and gets contested without a permanent record.
 
-```
-1. Parse args → spec_path = docs/features/<slug>/spec/spec.md
-2. Slug = parent of "spec/" → app_pkg = "@borso-app/<slug-app-prefix>"
-3. Probe http://localhost:5173 — running? skip step 4.
-4. Spawn `pnpm --filter <app_pkg> dev` in background, wait for 200.
-5. Read spec_path, extract assertions (Result + Use cases + Q.O.D. user-visible).
-6. Build report_path = docs/features/<slug>/spec/visual-validation-<timestamp>.md
-7. Agent({
-     subagent_type: "general-purpose",
-     description: "Visual validation against spec",
-     prompt: `<self-contained brief — see template.md>`,
-   })
-8. Read the report file, surface PASS / PARTIAL / FAIL summary to user.
-9. Stop the background dev server if we started it.
-```
-
-## Operating mode (validation agent, dispatched)
-
-The agent receives a self-contained prompt. It does **not** see this conversation. It does not see the spec author's intent. It sees:
-- The spec file.
-- The dev URL.
-- The report path to write.
-- The list of assertions to check (extracted by the skill in step 5).
-- Tooling: Playwright (or agent-browser equivalent), Read, Write, Bash for screenshot saving.
-
-For each assertion:
-1. Plan the browser action that would prove the assertion (e.g. "set window to 380×800, navigate to `/art/mondrian/`, screenshot the frame").
-2. Execute it.
-3. Compare the observation against the assertion. If the comparison is mechanical (presence of text, attribute value, URL match), it's deterministic. If it requires visual judgement (typography matches the design), capture a screenshot and judge directly.
-4. Tag the row PASS / FAIL / UNVERIFIABLE with a one-line evidence reference.
-
-The agent writes the report and exits. It does not ask the user questions; it does not request clarification. If an assertion is ambiguous, the agent tags it UNVERIFIABLE with a note explaining what's missing.
+The skill's textual return to the user is one of:
+- `Verdict: PASS — see <report_path>`
+- `Verdict: PARTIAL (N unverifiable) — see <report_path>`
+- `Verdict: FAIL (N failing) — see <report_path>`
 
 ## Failure modes to avoid
 
-- **Optimism leak.** The skill must not pre-summarise the implementation for the agent ("the feature is mostly working, just check…"). Pass the spec and the URL; nothing else. The whole point is unbiased eyes.
-- **Flaky-animation pseudo-failures.** Animations driving rAF will produce different pixels every frame. Agent must wait for `networkidle` + an explicit settle delay before screenshotting, and use deterministic seeds (e.g. URL `?seed=DEADBEEF`) where the spec supports it.
+- **Optimism leak.** The skill must not pre-summarise the implementation for the agent ("the feature is mostly working, just check…"). Pass the spec path and the URL; nothing else. The whole point is unbiased eyes.
+- **Falling back to Playwright when agent-browser is missing.** The structural mitigation (LLM-shaped tool) goes away. Surface the install command and stop.
+- **Dispatching `general-purpose` instead of `visual-validator`.** A generic agent has none of the dedicated agent's structural rules — it can ask the user questions, drift into implementation reasoning, etc.
+- **Flaky-animation pseudo-failures.** Animations driving rAF produce different pixels every frame. The agent waits for `networkidle` plus a 600 ms settle before screenshotting; deterministic seeds (e.g. `?seed=DEADBEEF`) when the spec supports them.
 - **"Looks right" without evidence.** Every PASS must reference a captured screenshot or a deterministic check (selector found, attribute equal, URL matches). "Looks right" alone is not a PASS.
-- **Validating against the implementation, not the spec.** The agent reads the spec to know what to check. If a feature exists in code but isn't claimed in the spec, it isn't validated. If a claim is in the spec but missing from the code, that's a FAIL — never a "well, the implementer probably meant…".
-- **Skipping edge cases because they're hard.** "<380 px" requires resizing. "prefers-reduced-motion" requires `page.emulateMedia({ reducedMotion: 'reduce' })`. Reduced motion + dark mode + small viewports are exactly the cases users hit; these are the ones the agent must check, not the ones it can.
-- **Treating UNVERIFIABLE as PASS.** The verdict downgrades to PARTIAL when any row is UNVERIFIABLE. Surface them.
+- **Validating against the implementation, not the spec.** The agent reads the spec to know what to check. If a feature exists in code but isn't claimed in the spec, it isn't validated. If a claim is in the spec but missing from the code, that's a FAIL — never "the implementer probably meant…".
+- **Skipping edge cases because they're hard.** The validator must resize, emulate dark mode, emulate touch device, emulate reduced motion. These are exactly the cases users hit; they're not optional.
+- **Treating UNVERIFIABLE as PASS.** PARTIAL is not PASS.
+- **Gitignoring the validation folder.** The evidence is part of the report. Commit both.
 
 ## Repo-specific notes
 
-- Workspaces live under `apps/<slug>/`. The dev server is started via `pnpm --filter @borso-app/<slug> dev`.
-- Default dev port is 5173 unless the workspace's `vite.config.ts` overrides it. Detect by reading the config or polling.
-- The borso-fr workspace already ships Playwright as a dev dep and a screenshot script at `apps/borso-fr/scripts/screenshot.mjs` — reuse the agent's setup pattern.
-- Reports go in `docs/features/<slug>/spec/` (next to the spec, per the spec skill's "additional documents" rule).
-- When the report verdict is FAIL, the user is shown the failing rows verbatim and given the option to re-run validation after fixes, not asked to interpret the report themselves.
+- Workspaces live under `apps/<app>/`. Dev server: `pnpm --filter @borso-app/<app> dev`.
+- Default dev port is 5173; check `apps/<app>/vite.config.ts` to override.
+- Reports + evidence go in `docs/features/<app>/<slug>/validation/` (siblings to `spec/` and `plan/`).
+- The validator only writes inside `evidence_dir` and `report_path`. It does not modify code, the spec, or anything else.
+- When the verdict is FAIL, the user is shown the failing rows verbatim — they are not asked to interpret the report themselves.

@@ -4,7 +4,7 @@
 >
 > Companion docs in this folder:
 > - [`template.md`](./template.md) — empty plan template.
-> - The borso-fr Mondrian Atelier plan at `docs/features/borso-fr-mondrian-atelier/plan/plan.md` is kept as a reference example.
+> - The borso-fr Mondrian Atelier plan at `docs/features/borso-fr/mondrian-atelier/plan/plan.md` is kept as a reference example.
 
 ## What a plan is
 

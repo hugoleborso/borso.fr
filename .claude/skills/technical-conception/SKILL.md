@@ -12,7 +12,7 @@ The canonical standard this skill enforces lives at [`standard.md`](./standard.m
 ## When to invoke
 
 Invoke when:
-- A feature spec exists at `docs/features/<slug>/spec/spec.md` and is not flagged with a missing-perspective blockquote.
+- A feature spec exists at `docs/features/<app>/<slug>/spec/spec.md` and is not flagged with a missing-perspective blockquote.
 - The user signals they want to move from spec → implementation: "let's plan", "technical conception", "/technical-conception", "spec is done, plan it".
 
 Do **not** invoke when:
@@ -44,7 +44,7 @@ The seed for those skills is patterns.dev: <https://www.patterns.dev/ai/skills/>
 
 ## Deliverable
 
-A single markdown file at `docs/features/<slug>/plan/plan.md`. Replaces the file if it exists — the plan is the latest snapshot, not an append-only log.
+A single markdown file at `docs/features/<app>/<slug>/plan/plan.md`. Replaces the file if it exists — the plan is the latest snapshot, not an append-only log.
 
 The plan **must** open with a one-line statement of intent and a link back to the spec. It **must** end with the pre-flight gates the implementation will pass.
 
@@ -98,7 +98,7 @@ Run, in order, before push:
 - Skills that would have helped but don't yet exist under `.claude/skills/`. Seed them next.
 ```
 
-For tone and depth, mirror the worked example at [`../../../docs/features/borso-fr-mondrian-atelier/plan/plan.md`](../../../docs/features/borso-fr-mondrian-atelier/plan/plan.md).
+For tone and depth, mirror the worked example at [`../../../docs/features/borso-fr/mondrian-atelier/plan/plan.md`](../../../docs/features/borso-fr/mondrian-atelier/plan/plan.md).
 
 ## Operating mode
 
@@ -124,7 +124,7 @@ Walk these 7 steps, in order.
 
 ## Repo-specific notes
 
-- Plans live at `docs/features/<slug>/plan/plan.md`. The folder is created next to the spec.
+- Plans live at `docs/features/<app>/<slug>/plan/plan.md`. The folder is created next to the spec.
 - For `infra/cdk/**` and `infra/shared/**` work, the plan must explicitly call out the 100%-coverage impact in the risk register.
 - Pre-flight gate 5 (`/visual-validation`) only applies to UI work. Skip it for backend / infra.
 - Pre-flight gate 7 (`/technical-validation`) applies whenever code is added, period.

@@ -1,6 +1,6 @@
 # Plan template
 
-Copy this into `docs/features/<feature-slug>/plan/plan.md` and fill it in. Section names match the standard at [`standard.md`](./standard.md); keep them identical so plans are diff-able.
+Copy this into `docs/features/<app>/<feature-slug>/plan/plan.md` and fill it in. Section names match the standard at [`standard.md`](./standard.md); keep them identical so plans are diff-able.
 
 Delete the block-quoted prompt under each heading once the section is written.
 
@@ -48,9 +48,9 @@ Delete the block-quoted prompt under each heading once the section is written.
 2. `pnpm --filter <pkg> typecheck`.
 3. `pnpm exec biome lint`.
 4. `pnpm --filter <pkg> build`.
-5. (UI work only) `/visual-validation docs/features/<slug>/spec/spec.md`.
+5. (UI work only) `/visual-validation docs/features/<app>/<slug>/spec/spec.md`.
 6. `pnpm exec knip`.
-7. (Test-bearing code only) `/technical-validation docs/features/<slug>/spec/spec.md`.
+7. (Test-bearing code only) `/technical-validation docs/features/<app>/<slug>/spec/spec.md`.
 
 ## Open questions / unknowns
 
