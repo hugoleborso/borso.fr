@@ -1,6 +1,7 @@
 import * as path from 'node:path';
 import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
+import { PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import {
   AllowedMethods,
   CachePolicy,
@@ -128,6 +129,23 @@ export class StaticSite extends Construct {
         { httpStatus: 404, responsePagePath: '/404.jpeg', ttl: Duration.minutes(5) },
       ],
     });
+
+    // Grant the CloudFront OAC principal s3:ListBucket so S3 can return 404
+    // for missing keys instead of 403. The default OAC policy only grants
+    // s3:GetObject, which leaves S3 unable to disambiguate "not found" from
+    // "forbidden" — so it returns 403 for both. With ListBucket added, S3
+    // can answer NoSuchKey and CloudFront's errorResponses 404 -> /404.jpeg
+    // mapping fires for genuinely-missing paths.
+    bucket.addToResourcePolicy(
+      new PolicyStatement({
+        actions: ['s3:ListBucket'],
+        principals: [new ServicePrincipal('cloudfront.amazonaws.com')],
+        resources: [bucket.bucketArn],
+        conditions: {
+          StringEquals: { 'aws:SourceArn': distribution.distributionArn },
+        },
+      }),
+    );
 
     new BucketDeployment(this, 'Deploy', {
       sources: [Source.asset(path.resolve(props.assetsPath))],

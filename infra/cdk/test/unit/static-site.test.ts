@@ -57,6 +57,20 @@ describe('StaticSite (prod)', () => {
       }),
     });
   });
+
+  it('grants the CloudFront OAC principal s3:ListBucket so S3 returns 404 (not 403) for missing keys', () => {
+    tpl.hasResourceProperties('AWS::S3::BucketPolicy', {
+      PolicyDocument: Match.objectLike({
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Effect: 'Allow',
+            Action: 's3:ListBucket',
+            Principal: { Service: 'cloudfront.amazonaws.com' },
+          }),
+        ]),
+      }),
+    });
+  });
 });
 
 describe('StaticSite (preview)', () => {
