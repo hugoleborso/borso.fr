@@ -39,13 +39,26 @@ If unsure, ask one question: "Is this feature already scoped, or do you want to 
 
 ## Deliverable
 
-Produce a single markdown file at `docs/specs/<feature-slug>.md`. One file per feature, kebab-case slug derived from the feature's user-visible outcome (not the technical mechanism). The spec is **short by design** — if it grows past ~2 pages of prose, the team can no longer iterate on it. Cut, don't append.
+Produce a single markdown file at `docs/features/<feature-slug>/spec/spec.md`. One file per feature, kebab-case slug derived from the feature's user-visible outcome (not the technical mechanism). The folder layout is:
+
+```
+docs/features/<slug>/
+    spec/
+        spec.md                  # this file
+        <other-supporting-docs>  # mockups, BPMN exports, ADRs scoped to this feature, transcripts
+    plan/
+        plan.md                  # produced later by /technical-conception
+```
+
+Drop screenshots, exported Figma frames, BPMN XML, design-tool transcripts, and other supporting material **next to `spec.md` inside `spec/`** rather than inlining megabytes into the spec body.
+
+The spec itself is **short by design** — if it grows past ~2 pages of prose, the team can no longer iterate on it. Cut, don't append.
 
 ## Required sections
 
 Every spec must have these top-level sections, in this order. Empty sections are a smell — either fill them or justify the gap inline.
 
-Section names match the canonical template kept locally at [`template.md`](./template.md), so that local specs and external Theodo Academy specs read the same. Copy that file into `docs/specs/<slug>.md` to start a new spec.
+Section names match the canonical template kept locally at [`template.md`](./template.md), so that local specs and external Theodo Academy specs read the same. Copy that file into `docs/features/<slug>/spec/spec.md` to start a new spec.
 
 ```markdown
 # <Feature title — phrased as the user-visible outcome>
@@ -124,7 +137,11 @@ These are the common mistakes the standard names. Push back on them in real time
 
 ## Repo-specific notes
 
-- Specs live at `docs/specs/<slug>.md`. Create the folder if it does not exist.
+- Specs live at `docs/features/<slug>/spec/spec.md`. Create the folder structure if it does not exist (`docs/features/<slug>/spec/` and the sibling `plan/`).
 - Slugs map to apps when relevant: prefix with the app slug (`borso-fr-`, `borsouvertures-`, `infra-`) so commitlint scopes line up trivially.
 - Architectural decisions that survive past the spec belong in their own ADR under `docs/adr/` — reference them from the spec's *Questions / Options / Decisions* section, do not duplicate.
 - For infra changes (`infra/cdk/**`, `infra/shared/**`), the *Changes* section must call out the test-coverage impact — those packages are coverage-gated.
+
+## What comes next
+
+Once every perspective has been confronted and no `> ⚠️ Missing …` flag remains, the spec is **ready for `/technical-conception`**. That skill reads this `spec.md` and produces the engineering `plan.md` next to it (under `plan/plan.md`). Do not start implementation directly from a spec — the plan is the artefact a future Dantotsu traces defects back to, and skipping it removes the trail.
