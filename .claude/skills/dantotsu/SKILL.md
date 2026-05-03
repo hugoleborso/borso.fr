@@ -229,6 +229,19 @@ Without that link the dantotsu doesn't qualify.
 
 (Full list at [`standard.md` §Reframes](./standard.md#reframes).)
 
+## Listing existing dantotsus
+
+To get a structured view of every dantotsu (file, date, severity,
+level, tags, title) before deciding whether a new defect overlaps
+with an existing entry, run:
+
+```bash
+.claude/skills/dantotsu/scripts/list.sh             # markdown table
+.claude/skills/dantotsu/scripts/list.sh --json      # ndjson, agent-friendly
+```
+
+Sorted newest-first. Skips `_template.md` and `README.md`.
+
 ## In this repo
 
 - **`docs/dantotsus/`** — RCAs with eradication commits. Every entry

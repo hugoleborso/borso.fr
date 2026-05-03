@@ -31,26 +31,19 @@ reached. The ladder, top is best:
 A Dantotsu whose only eradication is "knowledge" is almost always
 misclassified — re-read the root-cause section and push harder.
 
-## Index
+## Listing the entries
 
-### CDK / AWS infrastructure
+Plain `ls *.md` is the fast path. For a structured table with
+metadata pulled from each entry's frontmatter, run the helper
+shipped with the dantotsu skill:
 
-- [`bucketdeployment-cloudfront-invalidation.md`](./bucketdeployment-cloudfront-invalidation.md) — preview HTML stayed stale ~24 h after redeploy.
-- [`bucketdeployment-prune-default.md`](./bucketdeployment-prune-default.md) — manually-uploaded objects vanished on the next deploy.
-- [`cdk-nodejsfunction-bundling.md`](./cdk-nodejsfunction-bundling.md) — synth-heavy unit tests hit a vitest worker IPC timeout.
-- [`cloudfront-function-runtime-es5.md`](./cloudfront-function-runtime-es5.md) — preview returned `503 FunctionExecutionError`.
-- [`s3-oac-403-not-404.md`](./s3-oac-403-not-404.md) — broken links rendered "Access Denied"; custom 404 rule never fired.
-- [`aws-budgets-usd-only.md`](./aws-budgets-usd-only.md) — `cdk deploy` of the shared stack failed on budget unit.
-- [`dsql-first-deploy-must-be-prod.md`](./dsql-first-deploy-must-be-prod.md) — preview synth failed with SSM-parameter-not-found for a brand-new DB-using app.
+```bash
+.claude/skills/dantotsu/scripts/list.sh
+```
 
-### GitHub Actions / CI
-
-- [`paths-filter-base-head1-on-push.md`](./paths-filter-base-head1-on-push.md) — `detect` job aborted with `git exit 128` on push to main.
-
-### pnpm / monorepo
-
-- [`pnpm-reserved-script-names.md`](./pnpm-reserved-script-names.md) — CI's "deploy" step ran the wrong thing (pnpm built-in vs script).
-- [`shared-deploy-stale-dist.md`](./shared-deploy-stale-dist.md) — `pnpm shared-infra deploy` shipped a stale `@borso/infra` dist.
+Outputs a markdown table with file, date, severity, level, tags,
+title — sorted by date. Pass `--json` for machine-readable
+output.
 
 ## Reading the frontmatter
 
