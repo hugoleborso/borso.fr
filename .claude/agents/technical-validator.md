@@ -64,15 +64,23 @@ The repo's rules from CLAUDE.md "Clean code" + biome plugins. Each is one row:
 - For each, find the test script: `pnpm --filter <pkg> run test` or whatever the workspace defines.
 - Run it. Capture exit code + the last 30 lines on failure.
 - For coverage-gated workspaces (`infra/cdk`, `infra/shared`), run `test:coverage` instead and confirm 100%.
-- A workspace with no tests is **not** a free PASS — note it as UNVERIFIABLE if the spec implies test coverage.
+- **Enumerate every `*.utils.ts` file in the touched workspaces.** Repo rule (CLAUDE.md "Clean code"): pure utilities ship at 100% coverage. For each `*.utils.ts`, confirm a sibling `*.utils.test.ts` exists and the runner picks it up. A `*.utils.ts` without its matching test file is **FAIL**. A workspace that touched any `*.utils.ts` but has no `test` script at all is **FAIL** — utilities are coverage-gated, so a missing runner is a missing gate.
+- A workspace with no `*.utils.ts` files and no test script is UNVERIFIABLE with a note.
 
 ### D. Test coverage of spec
 
 For every numbered step in the spec's "Use cases / edge cases — happy path" and every bullet under "edge cases" / "error cases":
 
-- Locate a test that exercises that case. Quote the test's `describe`/`it` description as evidence.
-- If no test exists for a given case, tag it FAIL (the spec asks for it; the implementation didn't deliver coverage). Exception: when the spec's test strategy explicitly says "manual sweep only" for a case — then UNVERIFIABLE with a note.
-- Trivially-static features (no app logic) where the spec lists no behaviour to test: skip this category and note "no behavioural assertions in spec".
+- Locate a test that exercises that case (unit test for pure-function assertions; visual-validation report row for UI assertions). Quote the test's `describe`/`it` text or the visual-validation row as evidence.
+- If no test or visual-validation assertion exists for a given case, tag it **FAIL** — the spec asks for it; the implementation didn't deliver coverage.
+
+**Manual-sweep waivers are not honoured.** The repo's spec rule (see `.claude/skills/specification/SKILL.md`) forbids manual-sweep test strategies. If the spec under validation has one anyway:
+
+- Emit **one** FAIL row at the top of category D titled "Spec waives autonomous coverage — non-conformant". Reference the offending Test-strategy line.
+- Recommend re-running `/specification` to bring the spec into compliance.
+- Do **not** echo UNVERIFIABLE across each individual use case — one root-cause row, not seventeen identical ones.
+
+Trivially-static features (no app logic) where the spec lists no behaviour to test: skip this category and note "no behavioural assertions in spec".
 
 ## Procedure
 

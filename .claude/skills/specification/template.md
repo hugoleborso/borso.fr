@@ -77,8 +77,14 @@ src/.../Existing.ts                  // UPDATE: <what>
 ```
 
 ### Test strategy
-- Unit / integration / e2e split, plus the specific scenarios that give you confidence the feature works without defects.
-- For `infra/cdk/**` and `infra/shared/**`, restate the impact on the 100%-coverage gate.
+
+> *The validation pipeline must be **autonomous** — a future Claude session running `/visual-validation` and `/technical-validation` should be able to clear the spec without a human-in-the-loop manual sweep. "I'll click around to check it" is **not** a valid test strategy. List the autonomous pieces below; each pure helper goes through unit tests, each behavioural use case goes through `/visual-validation`, the diff goes through `/technical-validation`.*
+
+- **Unit tests on pure utilities.** Every file matching `**/*.utils.ts` ships at 100% coverage (statement / branch / function / line). List the new utility files this feature introduces, and any pure helpers extracted from existing modules.
+- **Visual validation.** Every numbered happy-path step and every edge / error case under *Use cases / edge cases* is asserted by the `/visual-validation` agent driving the running app via agent-browser. The agent reads this section to build its assertion list, so phrasing matters.
+- **Technical validation.** `/technical-validation` runs after the implementation lands: lint + knip + typecheck + build + the unit-test runner above, plus a per-Q.O.D. correctness pass on the diff.
+- **Coverage gates already in place** stay in place: `infra/cdk/**` and `infra/shared/**` are 100% line-coverage gated and any change here must restate the impact.
+- **Manual sweeps are not allowed as the test strategy.** They are at most a *belt* on top of the automated suspenders, called out under "Production strategy → Manual smoke after deploy" if relevant.
 
 ## Production strategy
 

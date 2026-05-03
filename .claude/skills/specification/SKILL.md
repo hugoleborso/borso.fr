@@ -98,8 +98,8 @@ Remove the line once that perspective has been covered. -->
 ## Changes
 - **Types / domain model** (DDD): entities, value objects, relationships, shared vocabulary.
 - **Database changes**: migrations, new columns, indexes.
-- **Files to change**: backend + frontend, each path called out, marked NEW / UPDATE.
-- **Test strategy**: what gives you confidence the feature works without defects.
+- **Files to change**: backend + frontend, each path called out, marked NEW / UPDATE. Pure helpers go in `*.utils.ts` (see CLAUDE.md "Clean code") so the test runner can enforce 100% coverage on them.
+- **Test strategy**: the autonomous validation pipeline that gives confidence the feature ships without defects. Manual sweeps are forbidden — the spec is approved when `/visual-validation` and `/technical-validation` can both pass against it without a human clicking through anything. See the template's *Test strategy* section for the shape.
 
 ## Production strategy
 - **Analytics**: named events, p50/p75/p90 thresholds where relevant, success criteria.
@@ -140,6 +140,8 @@ These are the common mistakes the standard names. Push back on them in real time
 - **"Forgot to link the ADR / Figma / blueprint / BPMN."** Three months from now, missing links force archaeology. Always link.
 - **"The spec is too long."** Iteration becomes impossible. Cut. Two pages of prose is the soft ceiling.
 - **"Adoption is someone else's problem."** Without analytics + alerting, the spec is incomplete. Step 13 is not optional.
+- **"I'll click around to check it."** Manual sweeps are forbidden as the test strategy. The spec is approved when a future Claude session running `/visual-validation` and `/technical-validation` can clear it autonomously, with no human-in-the-loop verification. If the *Test strategy* section says "manual" for anything other than a post-deploy smoke check, push back and split the assertion into a unit test (`*.utils.ts`) or a visual-validation row.
+- **"Frontend-only apps don't need tests."** False. Pure helpers go in `*.utils.ts` and ship at 100% coverage regardless of whether the app has a backend, regardless of whether the app has a Sentry connection, regardless of how small the app is. Utilities are tested precisely because they are the cheapest things to cover. See CLAUDE.md "Clean code".
 
 ## Repo-specific notes
 

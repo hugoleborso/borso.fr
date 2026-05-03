@@ -59,17 +59,21 @@ Pulled from CLAUDE.md "Clean code" and the repo's biome config:
 
 For each touched workspace, run the test script and capture exit code + tail of output.
 
-- App workspaces: `pnpm --filter <pkg> run test`.
+- App workspaces: `pnpm --filter <pkg> run test`. **A workspace that touched any `*.utils.ts` file but has no `test` script is FAIL** — utilities are coverage-gated by repo rule (CLAUDE.md "Clean code"), so a missing runner is a missing gate, not an "ah well".
 - Coverage-gated workspaces (`infra/cdk`, `infra/shared`): `pnpm --filter <pkg> run test:coverage`. <100% is FAIL.
-- A workspace with no test script is **not** a free PASS — UNVERIFIABLE with a note.
+- A workspace with no `*.utils.ts` files and no test script is UNVERIFIABLE with a note — not a free PASS.
+
+The validator additionally enumerates every `*.utils.ts` file in the touched workspaces and confirms each one has a sibling test (`*.utils.test.ts`) that the runner picks up. Files matching `*.utils.ts` without a corresponding test file are FAIL.
 
 ### D. Test coverage of spec
 
-For every numbered step in the spec's *Use cases / edge cases — happy path*, every bullet under *edge cases*, and every bullet under *error cases*: the validator finds a test that exercises that case. Evidence is the test's `describe`/`it` text and its file:line.
+For every numbered step in the spec's *Use cases / edge cases — happy path*, every bullet under *edge cases*, and every bullet under *error cases*: the validator finds a test or a `/visual-validation` assertion that exercises that case. Evidence is the test's `describe`/`it` text and file:line, or the visual-validation report row that asserts it.
 
-A use case with no covering test is FAIL — the spec asked for it; the implementation didn't deliver coverage. Exception: when the spec's *Test strategy* explicitly says "manual sweep only" for a case, the row is UNVERIFIABLE.
+A use case with no covering test or visual-validation assertion is **FAIL** — the spec asked for it; the implementation didn't deliver coverage.
 
-Trivially-static features that have no behaviour to test (e.g. a static-content page) skip category D entirely with a note in the preamble.
+**Manual-sweep waivers are not honoured.** The repo's spec rule (see `.claude/skills/specification/SKILL.md`) forbids manual-sweep test strategies. If the spec under validation has one anyway, the validator emits a single FAIL row at the top of category D titled "Spec waives autonomous coverage — non-conformant" and recommends re-running `/specification` to fix the spec. Do **not** echo UNVERIFIABLE across every use case — one root-cause row, surfaced once.
+
+Trivially-static features that have no behaviour to test (e.g. a static-content page with no logic) skip category D entirely with a note in the preamble.
 
 ## What does not get validated
 
