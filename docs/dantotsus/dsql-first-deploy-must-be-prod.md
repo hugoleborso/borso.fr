@@ -5,8 +5,8 @@ detected-at: ci
 severity: medium
 related-pr: https://github.com/hugoleborso/borso.fr/pull/2
 fix-pr: https://github.com/hugoleborso/borso.fr/pull/4
-fix-commits: [785cc80, 9adfe24]
-eradication-level: 4
+fix-commits: [9e78acb]
+eradication-level: 1
 time-to-detect: minutes (first preview push of a DB-using app)
 tags: [dsql, ssm, cdk, ordering]
 ---
@@ -74,46 +74,93 @@ prod first.
 
 ## Countermeasure
 
-- **Code:** commit `785cc80` (the per-app refactor itself) —
-  acceptance is that the constraint is unavoidable given the
-  architecture. The fix is documentation, not code.
-- **Operator action when introducing a DB-using app:**
-  - Open the PR with the new app as usual.
-  - **Don't expect the preview to come up green on the first push.**
-  - Either merge to `main` first and approve the prod-environment
-    gate (which provisions the cluster + SSM); subsequent PR pushes
-    synth fine. OR deploy prod manually from a local checkout once
-    (`STAGE=prod pnpm --filter @borso-app/<slug> run deploy`).
-  - Frontend-only apps (no `database`) aren't affected.
+- **Code:** commit [`9e78acb`](https://github.com/hugoleborso/borso.fr/commit/9e78acb) —
+  the cluster moved out of the prod stage stack into a dedicated
+  `DsqlClusterStack`. `PreviewableApp.database` now requires
+  `cluster: IDsqlCluster` as a prop, passed in from the cluster
+  stack via cross-stack reference. CDK's reference machinery
+  orders deploys automatically — `cdk deploy --all` walks the
+  cluster stack first, then the stage stack.
+- **Operator action when introducing a DB-using app:** none beyond
+  the standard handover doc — declare `DsqlClusterStack` and the
+  stage stack in `bin/app.ts`, pass `clusterStack.cluster` into
+  `PreviewableApp.database`. First preview deploy of a brand-new
+  app just works regardless of stage.
 
 ## Eradication
 
-**Type:** detection (level 4 — synth-time CDK annotation)
+**Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** [PR #2](https://github.com/hugoleborso/borso.fr/pull/2) (per-app refactor) · [PR #4](https://github.com/hugoleborso/borso.fr/pull/4) (synth annotation) · commits [`785cc80`](https://github.com/hugoleborso/borso.fr/commit/785cc80) (refactor that creates the constraint), [`9adfe24`](https://github.com/hugoleborso/borso.fr/commit/9adfe24) (annotation)
+**Reference:** [PR #4](https://github.com/hugoleborso/borso.fr/pull/4) · commit [`9e78acb`](https://github.com/hugoleborso/borso.fr/commit/9e78acb)
 
 **The actual fix:**
 
 ```diff
-  // infra/cdk/src/constructs/dsql-cluster.ts
-  export function lookupDsqlCluster(scope: Construct, app: string): IDsqlCluster {
-    validateAppSlug(app);
-    const paths = dsqlClusterSsmPaths(app);
-+   Annotations.of(scope).addInfo([
-+     `lookupDsqlCluster reads ${paths.arn} (and .endpoint) from SSM at deploy time.`,
-+     "These params are published by the prod stack's DsqlCluster construct.",
-+     `For a brand-new app, deploy prod FIRST: STAGE=prod pnpm --filter @borso-app/${app} run deploy.`,
-+     'See docs/dantotsus/dsql-first-deploy-must-be-prod.md for the full chain.',
-+   ].join(' '));
-    const clusterArn = StringParameter.valueForStringParameter(scope, paths.arn);
-    …
+  // infra/cdk/src/constructs/previewable-app.ts
+- readonly database?: { readonly migrationsPath: string };
++ readonly database?: {
++   readonly migrationsPath: string;
++   readonly cluster: IDsqlCluster;  // required: passed from DsqlClusterStack
++ };
+…
+  if (props.database) {
+-   this.cluster =
+-     props.stage === 'prod'
+-       ? new DsqlCluster(this, 'Cluster', { app: props.app, stage: props.stage })
+-       : lookupDsqlCluster(this, props.app);
++   this.cluster = props.database.cluster;
+    this.database = new DsqlSchema(this, 'Db', {
+      …
+      cluster: this.cluster,
+    });
   }
 ```
 
-Visible in `cdk synth` / `cdk diff` output before the operator attempts a deploy. The underlying CFN error (still opaque) becomes the second line of defence rather than the first. The handover docs (`docs/adding-an-app.md`, `docs/adding-a-fullstack-app.md`) also document the ordering.
+```ts
+// New: infra/cdk/src/constructs/dsql-cluster-stack.ts
+export class DsqlClusterStack extends Stack {
+  public readonly cluster: IDsqlCluster;
+  constructor(scope: Construct, id: string, props: DsqlClusterStackProps) {
+    super(scope, id, props);
+    this.cluster = new DsqlCluster(this, 'Cluster', {
+      app: props.app,
+      stage: 'prod',
+    });
+  }
+}
+```
 
-**Sibling defects swept:** there are no other "lookup-from-SSM-published-elsewhere" patterns in the repo today. If one is added, it should follow the same annotation convention.
+```ts
+// Operator's bin/app.ts now declares:
+const clusterStack = new DsqlClusterStack(app, `${APP_SLUG}-cluster`, { env, app: APP_SLUG });
+const stageStack = new Stack(app, stageId, { env });
+new PreviewableApp(stageStack, 'App', {
+  …
+  database: { migrationsPath, cluster: clusterStack.cluster },
+});
+```
 
-**Why not level 1 (structural):** the chicken-and-egg is intentional — DSQL clusters are per-app and owned by prod stacks deliberately, to isolate blast radius. Eliminating the dependency would either move the cluster out of prod (worse blast-radius) or bake conditional cluster creation into `PreviewableApp` (large refactor). Level 4 is the pragmatic ceiling without disturbing the architectural call.
+The misconception "preview can run before prod for a brand-new
+app" is now structurally impossible to express against
+`PreviewableApp`'s API. The `cluster: IDsqlCluster` prop is
+required when `database` is set; the only way to obtain one is
+either `DsqlClusterStack.cluster` (canonical) or
+`lookupDsqlCluster` (advanced, decoupled). Either way, the
+cluster either exists in the same `cdk.App` invocation (cross-
+stack ref → automatic deploy ordering) or has been deployed
+previously (SSM resolves at deploy time).
 
-**Why not level 2 (synth-time hard error):** would require shelling out to AWS CLI (`aws ssm get-parameter`) at synth time, coupling synth to the operator's environment AND making unit tests mock `execSync`. The annotation gives visible signal at the same surface without that cost.
+**Sibling defects swept:**
+- `PreviewableApp` no longer has a `stage === 'prod' ? new : lookup`
+  branch; the conditional is gone.
+- `lookupDsqlCluster` kept as a public helper for advanced use
+  but no longer emits its synth-time annotation (the chicken-and-
+  egg is no longer a thing in the canonical path).
+- Tests: `previewable-app.test.ts` rewritten to use the new
+  bin/app.ts shape (cluster stack first, stage stack second).
+  New `dsql-cluster-stack.test.ts` covers the new construct.
+
+**Earlier eradication (level 4) superseded:** the synth-time
+`Annotations.addInfo` previously added in commit `9adfe24` was
+removed — it's no longer needed because the chicken-and-egg
+itself is gone. See the diff snippet above.
