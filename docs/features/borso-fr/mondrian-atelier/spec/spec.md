@@ -188,7 +188,7 @@ None. Site is fully client-side / static.
 **NEW**
 - `apps/borso-fr/vite.config.ts` — multi-page entries: `index`, `family/mom`, `family/les-filles`, `art/mondrian`. Build root `site/`, outDir `../dist`.
 - `apps/borso-fr/vitest.config.ts` — `environment: 'jsdom'`; `coverage.provider: 'v8'`; `coverage.thresholds.100 = true`; `coverage.include = ['site/**/*.utils.ts']`. Treats every `*.utils.ts` as a coverage-gated unit.
-- `apps/borso-fr/tsconfig.json` — replaced. JSX `react-jsx`, lib DOM, includes `site/**/*.{ts,tsx}`, `vite.config.ts`, `vitest.config.ts`. Pulls `vitest/globals` into `types`.
+- `apps/borso-fr/tsconfig.json` — replaced. JSX `react-jsx`, lib DOM, includes `site/**/*.{ts,tsx}`, `vite.config.ts`, `vitest.config.ts`. The Vitest test files use named imports from `'vitest'` (`import { describe, expect, it } from 'vitest'`), so `vitest/globals` is **not** added to `types`.
 - `apps/borso-fr/tsconfig.cdk.json` — kept the prior CDK-only config (NodeNext, includes `bin`).
 - `apps/borso-fr/site/art/mondrian/main.tsx` — React entry: imports the four `@fontsource/*` font CSS bundles, imports `App.tsx`, calls `createRoot`. Fonts live here rather than in `index.html`'s `<head>` so Vite can bundle the woff2 files into `dist/assets/` and emit hashed asset URLs (otherwise the font CSS is unbundled).
 - `apps/borso-fr/site/art/mondrian/App.tsx` — the React tree from the design (palettes, RNG, generator, components) minus TweaksPanel; plus the seed-in-URL hook and tap-the-canvas handler.

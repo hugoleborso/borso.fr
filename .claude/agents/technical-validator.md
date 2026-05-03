@@ -69,10 +69,15 @@ The repo's rules from CLAUDE.md "Clean code" + biome plugins. Each is one row:
 
 ### D. Test coverage of spec
 
-For every numbered step in the spec's "Use cases / edge cases — happy path" and every bullet under "edge cases" / "error cases":
+`/technical-validation` and `/visual-validation` split the work. Each behavioural assertion belongs to exactly one of them — never both. Category D below covers only the assertions assigned to **this** validator. Browser-runtime assertions live in `/visual-validation`'s report.
 
-- Locate a test that exercises that case (unit test for pure-function assertions; visual-validation report row for UI assertions). Quote the test's `describe`/`it` text or the visual-validation row as evidence.
-- If no test or visual-validation assertion exists for a given case, tag it **FAIL** — the spec asks for it; the implementation didn't deliver coverage.
+Procedure:
+
+1. Read the spec's *Test strategy* section in full. The "UI behavioural assertions — `/visual-validation`" sub-section enumerates every assertion that is **not** your responsibility. Treat that list as authoritative — do **not** second-guess the spec author's routing.
+2. Build the category D row list from the spec's "Use cases / edge cases" minus everything routed to `/visual-validation`. The remaining rows are pure-function or deterministic non-DOM behaviours testable by Vitest.
+3. Note in the report's preamble: `N use cases routed to /visual-validation; out of scope for this report.`
+4. For each in-scope row, locate a test that exercises it. Quote the test's `describe`/`it` text and its file:line. If no test exists, the row is **FAIL** — the spec asked for unit coverage and the implementation didn't deliver.
+5. **Do not emit UNVERIFIABLE rows for visual-routed assertions.** They are not your job to verify; tagging them UNVERIFIABLE pretends they are and clutters the report.
 
 **Manual-sweep waivers are not honoured.** The repo's spec rule (see `.claude/skills/specification/SKILL.md`) forbids manual-sweep test strategies. If the spec under validation has one anyway:
 

@@ -67,9 +67,20 @@ The validator additionally enumerates every `*.utils.ts` file in the touched wor
 
 ### D. Test coverage of spec
 
-For every numbered step in the spec's *Use cases / edge cases — happy path*, every bullet under *edge cases*, and every bullet under *error cases*: the validator finds a test or a `/visual-validation` assertion that exercises that case. Evidence is the test's `describe`/`it` text and file:line, or the visual-validation report row that asserts it.
+`/technical-validation` and `/visual-validation` split the work. **Each behavioural assertion belongs to exactly one of them — never both.** Category D below covers only the assertions assigned to *this* validator. Browser-runtime assertions live in `/visual-validation`'s report.
 
-A use case with no covering test or visual-validation assertion is **FAIL** — the spec asked for it; the implementation didn't deliver coverage.
+The split:
+
+- **In scope for category D** — assertions whose ground truth is a pure function or a deterministic non-DOM behaviour. Unit tests in `*.utils.test.ts` (or, when integration is required, a JSDOM-backed test) cover them. Examples: RNG determinism, URL parser behaviour, palette validators, dominant-colour selection, keyboard-event guards.
+- **Out of scope for category D — handled by `/visual-validation`.** Assertions whose ground truth lives in the running browser: rendered layout, animation visibility, focus rings, click → screenshot diff, viewport-driven layout shifts, media-query-driven defaults (`prefers-reduced-motion`, `prefers-color-scheme`), DOM side-effect-only flows like the PNG download.
+
+The spec's *Test strategy* section enumerates which assertions go where. The **"UI behavioural assertions — `/visual-validation`"** sub-section lists every assertion that is *not* this validator's concern. Procedure:
+
+1. Read that sub-section first.
+2. Build the category D row list from the spec's "Use cases / edge cases" minus everything routed to `/visual-validation`. The remaining rows are pure-function or deterministic non-DOM behaviours.
+3. Note in the report's preamble: `N use cases routed to /visual-validation; out of scope for this report.`
+4. For each in-scope row, locate a test that exercises it. Quote the test's `describe`/`it` text and file:line. If no test exists, the row is **FAIL** — the spec asked for unit coverage and the implementation didn't deliver.
+5. **Do not emit UNVERIFIABLE rows for visual-routed assertions.** They are not your job; tagging them UNVERIFIABLE pretends they are and clutters the report.
 
 **Manual-sweep waivers are not honoured.** The repo's spec rule (see `.claude/skills/specification/SKILL.md`) forbids manual-sweep test strategies. If the spec under validation has one anyway, the validator emits a single FAIL row at the top of category D titled "Spec waives autonomous coverage — non-conformant" and recommends re-running `/specification` to fix the spec. Do **not** echo UNVERIFIABLE across every use case — one root-cause row, surfaced once.
 
