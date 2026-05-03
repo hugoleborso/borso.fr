@@ -91,9 +91,9 @@ For each surviving subject:
    existing one fits.
 4. Walk the seven Dantotsu steps (see [`/dantotsu`](../dantotsu/SKILL.md)).
 5. **Ship the eradication** — code, in this PR. Pick the highest
-   feasible rung of the ladder (1 = structural impossibility, 5 =
+   feasible level of the ladder (1 = structural impossibility, 5 =
    knowledge as last resort). The frontmatter records
-   `eradication-rung`. Each entry links the commit SHA + diff
+   `eradication-level`. Each entry links the commit SHA + diff
    snippet of the eradication.
 6. Add a one-line entry to `docs/dantotsus/README.md` index.
 
@@ -150,7 +150,7 @@ not its volume, is what keeps the system improving.
 ## Hard rules
 
 - **No "captured as follow-up; not implemented yet"** in any
-  Eradication section. Either implement it or pick a lower rung
+  Eradication section. Either implement it or pick a lower level
   that you can implement now.
 - **No issue creation as a substitute for a code commit.** Issues
   drift; the loop dies.
@@ -168,7 +168,7 @@ not its volume, is what keeps the system improving.
 - [ ] Each subject classified using the table; no-ops dropped.
 - [ ] Each surviving real-defect / design-pivot subject has a file
       under `docs/dantotsus/` matching `_template.md`, with
-      `eradication-rung` ≥ 1 backed by a commit reference.
+      `eradication-level` ≥ 1 backed by a commit reference.
 - [ ] Each surviving vendor-surprise / operator-confusion /
       reusable-insight subject has a file under `docs/knowledge/`.
 - [ ] Frontmatter on every new dantotsu file is filled (no
@@ -197,5 +197,5 @@ not its volume, is what keeps the system improving.
   freshest. The skill exists because this debt always slips.
 - **"Knowledge is enough for this defect."**
   → Almost always wrong. Re-read the root cause and push for the
-  highest rung you can reach. Knowledge is the *floor*, not the
+  highest level you can reach. Knowledge is the *floor*, not the
   default.

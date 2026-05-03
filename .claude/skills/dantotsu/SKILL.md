@@ -131,7 +131,7 @@ wrap the failing path in `if` and walk away.
 **This step ships code.** The skill rejects "captured as follow-up"
 or "knowledge entry only" except as the last-resort floor.
 
-Pick the highest rung of the ladder you can reach (preferred order,
+Pick the highest level of the ladder you can reach (preferred order,
 top is best):
 
 1. **Structural impossibility.** Change types, API shapes, or
@@ -164,7 +164,7 @@ reference** in the entry — not a placeholder. The dantotsu file
 links the commit hash, PR, and a relative-path diff snippet that
 shows what changed.
 
-If a Dantotsu's "highest rung reached" is (5) alone, it's almost
+If a Dantotsu's "highest level reached" is (5) alone, it's almost
 always misclassified. Re-read step 3 — the misconception is usually
 expressible in code if you push hard enough.
 
@@ -192,7 +192,7 @@ Without that link the dantotsu doesn't qualify.
   Issues drift; the loop dies. The dev's sole and last goal between
   PRs is shipping the eradications.
 - **No "captured as follow-up; not implemented yet"** in the
-  Eradication section. Either implement it or pick a lower rung that
+  Eradication section. Either implement it or pick a lower level that
   you can implement now.
 - **The agent never opens PRs against repositories outside
   `hugoleborso/*`.** For upstream patches, produce

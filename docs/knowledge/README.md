@@ -10,7 +10,7 @@ from first principles.
 Knowledge is the floor of the eradication ladder defined in
 [`../dantotsus/README.md`](../dantotsus/README.md#eradication-ladder).
 A Dantotsu can fall back to "add a knowledge entry" when no higher
-rung is feasible — but knowledge entries can also stand alone, no
+level is feasible — but knowledge entries can also stand alone, no
 defect required.
 
 ## When does an entry belong here vs in `docs/dantotsus/`?

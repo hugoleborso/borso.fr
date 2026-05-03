@@ -6,7 +6,7 @@ severity: medium
 related-pr: https://github.com/hugoleborso/borso.fr/pull/2
 fix-pr: https://github.com/hugoleborso/borso.fr/pull/4
 fix-commits: [785cc80, 9adfe24]
-eradication-rung: 4
+eradication-level: 4
 time-to-detect: minutes (first preview push of a DB-using app)
 tags: [dsql, ssm, cdk, ordering]
 ---
@@ -86,53 +86,34 @@ prod first.
     (`STAGE=prod pnpm --filter @borso-app/<slug> run deploy`).
   - Frontend-only apps (no `database`) aren't affected.
 
-## Eradication (rung 4 — synth-time annotation)
+## Eradication
 
-- **Rung:** 4 (detection). `lookupDsqlCluster` now emits a CDK
-  `Annotations.of(scope).addInfo(...)` at synth time, surfacing
-  the "first deploy must be prod" constraint with a
-  copy-pasteable fix command. Visible in `cdk synth` and `cdk
-  diff` output before the operator even attempts a deploy. The
-  underlying CFN error (still opaque) becomes the second line
-  of defence rather than the first.
-- **Why not rung 1 (structural):** the chicken-and-egg is
-  intentional in the architecture — DSQL clusters are
-  per-app and owned by prod stacks deliberately, to isolate
-  blast radius. Eliminating the dependency would either
-  (a) move the cluster out of prod (worse blast-radius story)
-  or (b) bake the cluster into the CDK app code with conditional
-  creation (large refactor of `PreviewableApp`). Rung 4 is the
-  pragmatic ceiling without disturbing the architectural call.
-- **Why not rung 2 (synth-time hard error):** would require
-  shelling out to AWS CLI (`aws ssm get-parameter`) at synth
-  time, coupling synth to the operator's environment AND making
-  unit tests need to mock `execSync`. The annotation gives
-  visible signal at the same surface (synth output) without
-  that cost.
-- **What changed:** `infra/cdk/src/constructs/dsql-cluster.ts`
-  imports `Annotations` and emits an INFO-level annotation
-  inside `lookupDsqlCluster`. The handover docs
-  (`docs/adding-an-app.md`, `docs/adding-a-fullstack-app.md`)
-  call out the ordering constraint.
-- **PR:** [#2](https://github.com/hugoleborso/borso.fr/pull/2)
-  (per-app refactor) +
-  [#4](https://github.com/hugoleborso/borso.fr/pull/4) (synth
-  annotation).
-- **Commits:**
-  [`785cc80`](https://github.com/hugoleborso/borso.fr/commit/785cc80)
-  (per-app refactor that creates the constraint),
-  [`9adfe24`](https://github.com/hugoleborso/borso.fr/commit/9adfe24)
-  (synth-time annotation).
-- **Diff snippet (essence of the fix):**
-  ```diff
-  + Annotations.of(scope).addInfo([
-  +   `lookupDsqlCluster reads ${paths.arn} (and .endpoint) from SSM at deploy time.`,
-  +   "These params are published by the prod stack's DsqlCluster construct.",
-  +   `For a brand-new app, deploy prod FIRST: STAGE=prod pnpm --filter @borso-app/${app} run deploy.`,
-  +   'See docs/dantotsus/dsql-first-deploy-must-be-prod.md for the full chain.',
-  + ].join(' '));
-  ```
-- **Sibling defects swept:** there are no other
-  "lookup-from-SSM-published-elsewhere" patterns in the repo
-  today. If one is added, it should follow the same annotation
-  convention.
+**Type:** detection (level 4 — synth-time CDK annotation)
+
+**Reference:** [PR #2](https://github.com/hugoleborso/borso.fr/pull/2) (per-app refactor) · [PR #4](https://github.com/hugoleborso/borso.fr/pull/4) (synth annotation) · commits [`785cc80`](https://github.com/hugoleborso/borso.fr/commit/785cc80) (refactor that creates the constraint), [`9adfe24`](https://github.com/hugoleborso/borso.fr/commit/9adfe24) (annotation)
+
+**The actual fix:**
+
+```diff
+  // infra/cdk/src/constructs/dsql-cluster.ts
+  export function lookupDsqlCluster(scope: Construct, app: string): IDsqlCluster {
+    validateAppSlug(app);
+    const paths = dsqlClusterSsmPaths(app);
++   Annotations.of(scope).addInfo([
++     `lookupDsqlCluster reads ${paths.arn} (and .endpoint) from SSM at deploy time.`,
++     "These params are published by the prod stack's DsqlCluster construct.",
++     `For a brand-new app, deploy prod FIRST: STAGE=prod pnpm --filter @borso-app/${app} run deploy.`,
++     'See docs/dantotsus/dsql-first-deploy-must-be-prod.md for the full chain.',
++   ].join(' '));
+    const clusterArn = StringParameter.valueForStringParameter(scope, paths.arn);
+    …
+  }
+```
+
+Visible in `cdk synth` / `cdk diff` output before the operator attempts a deploy. The underlying CFN error (still opaque) becomes the second line of defence rather than the first. The handover docs (`docs/adding-an-app.md`, `docs/adding-a-fullstack-app.md`) also document the ordering.
+
+**Sibling defects swept:** there are no other "lookup-from-SSM-published-elsewhere" patterns in the repo today. If one is added, it should follow the same annotation convention.
+
+**Why not level 1 (structural):** the chicken-and-egg is intentional — DSQL clusters are per-app and owned by prod stacks deliberately, to isolate blast radius. Eliminating the dependency would either move the cluster out of prod (worse blast-radius) or bake conditional cluster creation into `PreviewableApp` (large refactor). Level 4 is the pragmatic ceiling without disturbing the architectural call.
+
+**Why not level 2 (synth-time hard error):** would require shelling out to AWS CLI (`aws ssm get-parameter`) at synth time, coupling synth to the operator's environment AND making unit tests mock `execSync`. The annotation gives visible signal at the same surface without that cost.

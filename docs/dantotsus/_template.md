@@ -6,7 +6,7 @@ severity: <level>                   # low | medium | high
 related-pr: <#n or url>             # the PR where the defect first lived
 fix-pr: <#n or url>                 # the PR that landed the eradication (often the kaizen PR for this dantotsu)
 fix-commits: [<sha>, …]             # the commits on fix-pr that actually moved the eradication
-eradication-rung: <1-5>             # 1=structural impossibility | 2=devx check | 3=vendor patch | 4=detection | 5=knowledge
+eradication-level: <1-5>             # 1=structural impossibility | 2=devx check | 3=vendor patch | 4=detection | 5=knowledge
 time-to-detect: <minutes/hours/days>
 tags: [<topic>, …]                  # cdk, cloudfront, s3, ci, pnpm, dsql, github-actions, …
 ---
@@ -56,7 +56,7 @@ developer understood the cause.
 
 ## Eradication (mandatory — code-level)
 
-Rung reached on the eradication ladder (top is best):
+Level reached on the eradication ladder (top is best):
 
 1. **Structural impossibility** — types / API shapes prevent the
    misconception from being expressed.
@@ -72,19 +72,27 @@ Rung reached on the eradication ladder (top is best):
    impossible. Pure-knowledge subjects belong under
    `docs/knowledge/`, not here.
 
-Concrete eradication shipped:
+Fill exactly these three blocks per shipped eradication. Keep them
+explicit so a reviewer can audit: *what type of fix, where it
+lives, what changed*.
 
-- **Rung:** <number>
-- **What changed:** <one paragraph>
-- **PR:** <#n or url>
-- **Commit(s):** `<sha>` [+ `<sha>` ...]
-- **Diff snippet (essence of the fix):**
-  ```diff
-  - <removed>
-  + <added>
-  ```
-- **Sibling defects swept:** <paths / commits where similar latent
-  issues existed and were also addressed>
+**Type:** <one of: code diff · DevX check · vendor patch · detection · knowledge addition> (level <N> — <name>)
+
+**Reference:** [PR #<n>](url) · commits [`<sha>`](url)[, [`<sha>`](url) ...]
+
+**The actual fix:**
+
+```diff
+- <removed>
++ <added>
+```
+
+For a `knowledge addition` type, replace the diff with a link to
+the `docs/knowledge/<slug>.md` entry and a brief summary of what
+it captures.
+
+**Sibling defects swept:** <paths / commits where similar latent
+issues existed and were also addressed>
 
 ## See also
 

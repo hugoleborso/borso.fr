@@ -6,7 +6,7 @@ severity: low
 related-pr: https://github.com/hugoleborso/borso.fr/pull/2
 fix-pr: https://github.com/hugoleborso/borso.fr/pull/2
 fix-commits: [5c47cc2]
-eradication-rung: 5
+eradication-level: 5
 time-to-detect: minutes (failed at first cdk deploy of shared)
 tags: [aws-budgets, cfn, currency]
 ---
@@ -72,34 +72,34 @@ the billing console is separate.
   which on a personal infra bill at this scale tracks closely with
   euros (€5 ≈ $5 ± a few %).
 
-## Eradication (rung 5 — knowledge as floor, justified)
+## Eradication
 
-- **Rung:** 5 (knowledge).
-- **Why not higher:** rung 1 (a typed `monthlyUsdBudget(amountUsd)`
-  helper that hardcodes USD) was considered and explicitly rejected.
-  This codebase has exactly three budget alarms; we don't expect to
-  add more, and the inline comment above the loop already documents
-  the USD-only constraint clearly. Extracting a helper for a
-  one-time-only call site would add ceremony without preventing a
-  realistic recurrence. Rung 5 is the honest ceiling here.
-- **What changed:** the original countermeasure flipped `unit: 'EUR'`
-  → `unit: 'USD'` and renamed the budgets to `borso-monthly-Xusd`.
-  An inline comment above the `for (const amount of [5, 20, 50])`
-  loop in `infra/shared/lib/shared-stack.ts` documents that AWS
-  Budgets only accepts USD. This entry plus that comment is the
-  full eradication.
-- **PR:** [#2](https://github.com/hugoleborso/borso.fr/pull/2).
-- **Commit:** [`5c47cc2`](https://github.com/hugoleborso/borso.fr/commit/5c47cc2).
-- **Diff snippet (essence of the fix):**
-  ```diff
-  - budgetName: `borso-monthly-${amount}eur`,
-  - budgetLimit: { amount, unit: 'EUR' },
-  + // AWS Budgets only accepts USD as the currency unit.
-  + budgetName: `borso-monthly-${amount}usd`,
-  + budgetLimit: { amount, unit: 'USD' },
-  ```
-- **Sibling defects swept:** verified Budgets is the only place a
-  currency literal lives — `grep -rn "unit: '" infra/` shows no
-  other matches.
-- **If we ever add more budgets:** revisit this; promote to rung 1
-  (extract the helper).
+**Type:** code diff + inline comment (level 5 — knowledge as floor, justified)
+
+**Reference:** [PR #2](https://github.com/hugoleborso/borso.fr/pull/2) · commit [`5c47cc2`](https://github.com/hugoleborso/borso.fr/commit/5c47cc2)
+
+**The actual fix:**
+
+```diff
++ // AWS Budgets only accepts USD as the currency unit. The amounts
++ // below are dollar thresholds — close enough to euro at the tiny
++ // absolute scale we operate at, and AWS rejects any other Unit
++ // value at deploy time.
+  for (const amount of [5, 20, 50]) {
+    new CfnBudget(this, `Budget${amount}`, {
+      budget: {
+-       budgetName: `borso-monthly-${amount}eur`,
++       budgetName: `borso-monthly-${amount}usd`,
+        budgetType: 'COST',
+        timeUnit: 'MONTHLY',
+-       budgetLimit: { amount, unit: 'EUR' },
++       budgetLimit: { amount, unit: 'USD' },
+      },
+      …
+    });
+  }
+```
+
+**Sibling defects swept:** Budgets is the only place a currency literal lives — `grep -rn "unit: '" infra/` shows no other matches.
+
+**Why not level 1 (structural):** a typed `monthlyUsdBudget(amountUsd)` helper that hardcodes USD was considered and rejected. This codebase has exactly three budget alarms with no expected addition; extracting a helper for a one-time-only call site adds ceremony without preventing a realistic recurrence. The inline comment is the honest ceiling. **If we ever add more budgets, revisit this and promote to level 1.**

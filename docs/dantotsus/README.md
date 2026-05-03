@@ -11,7 +11,7 @@ Template at [`_template.md`](./_template.md). Skill at
 
 ## Eradication ladder
 
-Each entry's `eradication-rung` frontmatter records which rung was
+Each entry's `eradication-level` frontmatter records which level was
 reached. The ladder, top is best:
 
 1. **Structural impossibility** — types / API shapes prevent the
@@ -59,7 +59,7 @@ misclassified — re-read the root-cause section and push harder.
 | `introduced-at` | Stage where the defect was *born*. `conception` (design wrong), `implementation` (design right, code didn't match), `self-validation` (developer's checks didn't catch), `code-review` (reviewer didn't catch). |
 | `detected-at` | Where the defect was *finally* caught. Walk the defence-in-depth ladder: typing → linter → local → ci → review → qa → staging → production → operator-deploy. |
 | `severity` | User impact at the time of detection. `low`: nobody noticed. `medium`: degraded UX, recoverable. `high`: user-blocking or data-integrity. |
-| `eradication-rung` | Rung reached on the ladder above. Should be 1 if at all possible. |
+| `eradication-level` | Level reached on the ladder above. Should be 1 if at all possible. |
 | `fix-commits` | The actual commits that landed the eradication — not the original countermeasure. Always linkable. |
 | `time-to-detect` | Wall-clock from "lives in main" to "we noticed". |
 | `tags` | Topics for grep / future skill matching. |
@@ -68,7 +68,7 @@ Patterns to watch as the corpus grows:
 
 - Many `introduced-at: conception` → design isn't getting enough scrutiny.
 - Many `detected-at: production` with `high` severity → defence-in-depth has gaps.
-- Many `eradication-rung: 5` → we're settling for documentation when we could reach higher. Push back.
+- Many `eradication-level: 5` → we're settling for documentation when we could reach higher. Push back.
 
 ## Adding a new entry
 

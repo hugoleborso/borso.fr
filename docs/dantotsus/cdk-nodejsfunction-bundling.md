@@ -6,7 +6,7 @@ severity: medium
 related-pr: https://github.com/hugoleborso/borso.fr/pull/2
 fix-pr: https://github.com/hugoleborso/borso.fr/pull/4
 fix-commits: [1758f91, d5714ae]
-eradication-rung: 4
+eradication-level: 4
 time-to-detect: hours (every CI run was slow + flaky)
 tags: [cdk, nodejs-function, esbuild, vitest]
 ---
@@ -76,48 +76,42 @@ on every synth.
   esbuild from the workspace's existing `node_modules/`. Suite went
   from ~100 s + flaky to ~48 s + clean.
 
-## Eradication (rung 4 — source-level detection test)
+## Eradication
 
-- **Rung:** 4 (detection). A vitest in
-  `infra/cdk/test/unit/eradication-checks.test.ts` reads every
-  file under `src/constructs/`, strips comments, and asserts none
-  contain `nodeModules:`. A regression that adds `nodeModules`
-  back fails CI immediately and the pre-commit hook (which runs
-  `test:coverage` for `infra/cdk/**` changes).
-- **Why not rung 1 (structural):** would require a wrapper around
-  `NodejsFunction` that omits the `bundling.nodeModules` field
-  from its surface entirely. Plausible but adds a layer for one
-  field. Rung 4's static-source check is roughly equivalent in
-  practice (the field is unspeakable in the codebase) without
-  the abstraction tax.
-- **What changed:**
-  - `infra/cdk/src/constructs/dsql-schema.ts` removed
-    `nodeModules: ['postgres', '@aws-sdk/dsql-signer']` and set
-    `externalModules: ['@aws-sdk/client-*']` (only the
-    Lambda-runtime-provided AWS SDK clients stay external).
-  - `infra/cdk/test/unit/eradication-checks.test.ts` (new) asserts
-    no construct file contains `nodeModules:`.
-- **PR:** [#4](https://github.com/hugoleborso/borso.fr/pull/4)
-  (this PR landed both the bundling fix and the test).
-- **Commits:**
-  [`1758f91`](https://github.com/hugoleborso/borso.fr/commit/1758f91)
-  (drop `nodeModules`),
-  [`d5714ae`](https://github.com/hugoleborso/borso.fr/commit/d5714ae)
-  (test backstop).
-- **Diff snippet (essence of the fix):**
-  ```diff
-  - externalModules: ['@aws-sdk/*'],
-  - nodeModules: ['postgres', '@aws-sdk/dsql-signer'],
-  + externalModules: ['@aws-sdk/client-*'],
-  ```
-  ```ts
-  // eradication-checks.test.ts
+**Type:** DevX check (level 4 — source-level detection test)
+
+**Reference:** [PR #4](https://github.com/hugoleborso/borso.fr/pull/4) · commits [`1758f91`](https://github.com/hugoleborso/borso.fr/commit/1758f91) (drop `nodeModules`), [`d5714ae`](https://github.com/hugoleborso/borso.fr/commit/d5714ae) (test backstop)
+
+**The actual fix:**
+
+```diff
+  // infra/cdk/src/constructs/dsql-schema.ts
+  bundling: {
+    target: 'node22',
+    format: OutputFormat.ESM,
+-   externalModules: ['@aws-sdk/*'],
+-   nodeModules: ['postgres', '@aws-sdk/dsql-signer'],
++   // Keep ONLY the Lambda-runtime-provided clients external. We do
++   // NOT include @aws-sdk/dsql-signer here — the runtime doesn't
++   // ship it, so esbuild bundles it inline from the workspace's
++   // node_modules (same with `postgres`).
++   externalModules: ['@aws-sdk/client-*'],
+  },
+```
+
+```ts
+// infra/cdk/test/unit/eradication-checks.test.ts (new)
+describe('eradication: no `bundling.nodeModules` in CDK constructs', () => {
+  const files = fs.readdirSync(CONSTRUCTS_DIR).filter((n) => n.endsWith('.ts'));
   it.each(files)('%s', (file) => {
     const stripped = readStripped(path.join(CONSTRUCTS_DIR, file));
     expect(stripped).not.toMatch(/\bnodeModules\s*:/);
   });
-  ```
-- **Sibling defects swept:** every `NodejsFunction` in the repo
-  audited; `LambdaApi` was already clean, only `DsqlSchema` had
-  the issue. Test now covers all current and future construct
-  files.
+});
+```
+
+A regression that adds `nodeModules` back fails CI immediately (and the pre-commit hook, which runs `test:coverage` on `infra/cdk/**` changes).
+
+**Sibling defects swept:** every `NodejsFunction` in the repo audited. `LambdaApi` was already clean; only `DsqlSchema` had the issue. The test now covers all current and future construct files.
+
+**Why not level 1 (structural):** would require a wrapper around `NodejsFunction` that omits the `bundling.nodeModules` field from its surface. Plausible but adds a layer for one field. Level 4's static-source check is equivalent in practice — the field is unspeakable in the codebase — without the abstraction tax.

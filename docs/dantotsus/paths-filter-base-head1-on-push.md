@@ -6,7 +6,7 @@ severity: high
 related-pr: https://github.com/hugoleborso/borso.fr/pull/2
 fix-pr: https://github.com/hugoleborso/borso.fr/pull/4
 fix-commits: [b13966a, 181f266]
-eradication-rung: 2
+eradication-level: 2
 time-to-detect: minutes (first push to main after merging PR #2)
 tags: [github-actions, paths-filter, ci]
 ---
@@ -83,54 +83,49 @@ shallow checkout, and exits 128.
   without any ref lookup. An inline comment in the workflow
   explains why we don't specify `base:`.
 
-## Eradication (rung 2 — DevX check via actionlint)
+## Eradication
 
-- **Rung:** 2 (DevX check). `actionlint` now runs in
-  `.husky/pre-push` and on each session-start (binary installed
-  conditionally by `scripts/install-repo-deps.sh`). It catches
-  unusual `paths-filter` arguments, deprecated action versions,
-  shell-quoting bugs in `run:` blocks, and a host of other
-  workflow misuses before they reach CI.
-- **Why not rung 1 (structural):** workflows are YAML, not
-  TypeScript — there's no construct surface to type-constrain.
-  A custom DSL or a typed wrapper around GitHub Actions is way
-  out of proportion.
-- **What changed:**
-  - `.github/workflows/deploy.yml` dropped the `base: HEAD~1`
-    line (commit `b13966a`, on origin/main).
-  - `.husky/pre-push` runs `actionlint` if available; if the
-    binary isn't installed, prints a warning pointing at the
-    SessionStart hook (commit `181f266`).
-  - `scripts/install-repo-deps.sh` installs the
-    `actionlint v1.7.7` prebuilt binary into `~/.local/bin` if
-    missing (same conditional pattern as AWS CLI v2).
-- **PR:** [#3](https://github.com/hugoleborso/borso.fr/pull/3)
-  (deploy.yml fix) and
-  [#4](https://github.com/hugoleborso/borso.fr/pull/4)
-  (actionlint pre-push).
-- **Commits:**
-  [`b13966a`](https://github.com/hugoleborso/borso.fr/commit/b13966a)
-  (drop `base: HEAD~1`),
-  [`181f266`](https://github.com/hugoleborso/borso.fr/commit/181f266)
-  (actionlint pre-push + installer).
-- **Diff snippet (essence of the fix):**
-  ```diff
+**Type:** code diff + DevX check (level 2 — `actionlint` in pre-push)
+
+**Reference:** [PR #3](https://github.com/hugoleborso/borso.fr/pull/3) (deploy.yml fix) · [PR #4](https://github.com/hugoleborso/borso.fr/pull/4) (actionlint pre-push) · commits [`b13966a`](https://github.com/hugoleborso/borso.fr/commit/b13966a) (drop `base: HEAD~1`), [`181f266`](https://github.com/hugoleborso/borso.fr/commit/181f266) (actionlint pre-push + installer)
+
+**The actual fix:**
+
+```diff
   # .github/workflows/deploy.yml
     - uses: dorny/paths-filter@v3
       id: filter
       with:
         filters: .github/path-filters.yml
-  -     base: HEAD~1
-  ```
-  ```diff
+-     base: HEAD~1
++     # No `base:` — paths-filter defaults to ${{ github.event.before }}
++     # for push events, the SHA of the previous main commit. Specifying
++     # `base: HEAD~1` triggers a `git merge-base HEAD~1 main` lookup that
++     # fails with `git exit 128` because `main` isn't set up as a local
++     # tracking branch with fetch-depth=2.
+```
+
+```diff
   # .husky/pre-push
-  + if command -v actionlint >/dev/null 2>&1; then
-  +   echo "[pre-push] running actionlint"
-  +   actionlint
-  + fi
-  ```
-- **Sibling defects swept:** `preview.yml` and
-  `cleanup-orphans.yml` also use `paths-filter`; both run on
-  `pull_request` events where the action's default base is the
-  PR base ref (always resolvable). actionlint covers all three
-  workflows.
++ # Workflow lint — catches paths-filter base misuses, deprecated action
++ # versions, shell-quoting bugs in `run:` blocks, etc.
++ if command -v actionlint >/dev/null 2>&1; then
++   echo "[pre-push] running actionlint"
++   actionlint
++ else
++   echo "[pre-push] WARN: actionlint not installed — skipping." >&2
++ fi
+```
+
+```diff
+  # scripts/install-repo-deps.sh — conditional binary install
++ if ! command -v actionlint >/dev/null 2>&1; then
++   curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v1.7.7/…" \
++     | tar -xz -C "$tmp" actionlint
++   install -m 0755 "$tmp/actionlint" "$HOME/.local/bin/actionlint"
++ fi
+```
+
+**Sibling defects swept:** `preview.yml` and `cleanup-orphans.yml` also use `paths-filter`; both run on `pull_request` events where the action's default base is the PR base ref (always resolvable). `actionlint` covers all three workflows.
+
+**Why not level 1 (structural):** workflows are YAML, not TypeScript — there's no construct surface to type-constrain. A custom DSL or typed wrapper around GitHub Actions would be wildly out of proportion to the problem.
