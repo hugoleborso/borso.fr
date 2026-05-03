@@ -65,4 +65,29 @@ if [ -n "${AWS_ACCESS_KEY_ID:-}" ] && ! command -v aws >/dev/null 2>&1; then
   log "aws: $(aws --version)"
 fi
 
+# 5. actionlint — workflow linter, used by the pre-push hook to catch
+# GitHub Actions misuses (paths-filter base, action versions, shell
+# quoting in run blocks, etc.) before they hit CI. Lightweight Go binary.
+if ! command -v actionlint >/dev/null 2>&1; then
+  log "actionlint not found; installing the prebuilt binary into ~/.local/bin"
+  arch=$(uname -m)
+  os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  case "$arch" in
+    x86_64) actionlint_arch="amd64" ;;
+    aarch64|arm64) actionlint_arch="arm64" ;;
+    *) fail "Unsupported architecture for actionlint auto-install: $arch" ;;
+  esac
+  case "$os" in
+    linux|darwin) actionlint_os="$os" ;;
+    *) fail "Unsupported OS for actionlint auto-install: $os" ;;
+  esac
+  tmp=$(mktemp -d)
+  curl -fsSL \
+    "https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_${actionlint_os}_${actionlint_arch}.tar.gz" \
+    | tar -xz -C "$tmp" actionlint
+  install -m 0755 "$tmp/actionlint" "$HOME/.local/bin/actionlint"
+  rm -rf "$tmp"
+  log "actionlint: $(actionlint -version | head -n 1)"
+fi
+
 log "done"

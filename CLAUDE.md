@@ -38,7 +38,43 @@ For any "how does X actually work" question, [`docs/`](./docs/) is the source of
 
 ## AWS access from a session
 
-If `AWS_ACCESS_KEY_ID` is in the env, the SessionStart hook installs AWS CLI v2 and you can run `aws …` directly. The keys come from claude.ai/code's per-project environment configuration; setup is in [`docs/aws-setup.md`](./docs/aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws). The IAM user behind those keys is read-only with explicit denies on every mutation verb — you can `aws s3 ls`, `aws cloudformation list-stacks`, `aws ce get-cost-and-usage` etc., but can't mutate anything.
+Two ways an agent/session gets read-only AWS access:
+
+- **Local Claude Code** (terminal): your shell already has `borso-admin` and `borso-claude` AWS SSO profiles configured (see [`docs/aws-setup.md#3`](./docs/aws-setup.md#3-configure-sso-profiles-locally)). Run `aws sso login --profile borso-claude` once per session — creds expire hourly.
+- **Claude Code on the web** (claude.ai/code): set these in the project's environment-configuration UI:
+  - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — long-lived keys for the `claude-readonly` IAM user (rotate every 90 days).
+  - `AWS_REGION=eu-west-3`
+  - `AWS_ACCOUNT_ID=<12-digit account id>`
+
+When `AWS_ACCESS_KEY_ID` is present, the SessionStart hook installs AWS CLI v2 conditionally and `aws ...` works in Bash. The IAM user behind those keys has `ReadOnlyAccess` + an inline deny on every mutation verb (`iam:*`, `cloudformation:Create*/Update*/Delete*`, `s3:Put*/Delete*`, `lambda:*`, `cloudfront:Create*/Update*/Delete*`, `route53:Change*/Create*/Delete*`, `dsql:*`). You can list, describe, and read; you can't change anything.
+
+Full setup including key rotation: [`docs/aws-setup.md#12`](./docs/aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
+
+## Dantotsus and knowledge
+
+Two complementary folders, one purpose: keep the team's mental model ahead of the codebase's failure modes.
+
+- [`docs/dantotsus/`](./docs/dantotsus/) — root-cause analyses with shipped eradications. Each entry follows the [Dantotsu standard](./.claude/skills/dantotsu/standard.md): Symptom → Root-cause chain → Detection failure causes → Countermeasure → **Eradication** (code-level, non-optional, linked by commit hash + diff). Eradication ladder, top is best: structural impossibility → DevX check → vendor patch → detection → knowledge (floor).
+- [`docs/knowledge/`](./docs/knowledge/) — broad reference docs. Vendor quirks, CLI contracts, conventions, debugging recipes, anything the team needs to know that doesn't trace to a code-level fix.
+
+Skim the indexes before starting non-trivial CDK / CloudFront / S3 / GitHub Actions work — the cost of reading a 30-line entry is far lower than the cost of re-discovering the trap.
+
+When a PR uncovers a new trap, run the [`/dantotsu`](.claude/skills/dantotsu/SKILL.md) skill — it walks the seven Dantotsu steps and produces an entry under `docs/dantotsus/` with the eradication shipped in code. The Self-improvement loop rule below pulls this together.
+
+## Self-improvement loop
+
+**After every PR you ship merges or closes, open a follow-up PR with the lessons from that PR captured into your own config** — this file (CLAUDE.md), per-app rules, hooks, biome overrides, knip ignores, skills, whatever fits the lesson. Even small ones: a new gotcha, a clarified convention, a removed footgun. The loop is the system that keeps an AI-driven repo improving instead of regressing.
+
+The mechanic: invoke the [`/after-task-dantotsus`](.claude/skills/after-task-dantotsus/SKILL.md) skill — it sweeps the just-merged PR (commits + review comments + CI failures + webhook events), classifies each candidate (real defect / vendor surprise / design pivot / operator confusion / no-op), and writes one Dantotsu per subject under `docs/knowledge/`. Tag the resulting PR with `kaizen` so the loop's output is visible in the PR list.
+
+What counts as a "lesson":
+- A pitfall that bit you and would bite again — add a new file under [`docs/knowledge/`](./docs/knowledge/) using the Dantotsu template (Symptom → causal chain → Fix), and link it from the index.
+- A naming/style choice you made repeatedly that wasn't documented (add to **Conventions** or **Clean code**).
+- A new doc that answered a question you had to research (add a link from CLAUDE.md to the doc).
+- A hook / Biome rule / commitlint scope / knip entry / `.gitignore` line that should have existed before you needed it.
+- A workflow / construct / package script change that codifies the lesson (commit alongside).
+
+If a PR ships zero lessons, that's fine — open the follow-up PR with a note saying "no setup changes from PR #N" so the loop's existence stays visible. The cost of capturing is low; the cost of re-discovering the same trap is the multi-hour debug session you just had.
 
 ## Don'ts
 

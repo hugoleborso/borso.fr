@@ -6,7 +6,7 @@ The shape we're describing:
 
 - A static frontend served from CloudFront + S3 (per-app prod bucket, shared previews bucket).
 - A single-Lambda HTTP API (Hono-style routing inside one function) at its own domain.
-- A per-app Aurora DSQL cluster (created by the prod stack, looked up by preview/integ stacks) with a per-stage Postgres schema.
+- A per-app Aurora DSQL cluster (owned by a dedicated `<slug>-cluster` stack) with a per-stage Postgres schema.
 
 ## 0. Pre-flight
 
@@ -75,9 +75,12 @@ apps/<slug>/
 
 ## 3. CDK entry: `bin/app.ts`
 
+DB-using apps declare **two stacks**: a long-lived `<slug>-cluster` that owns the DSQL cluster, and a per-stage stack that owns everything else. CDK's cross-stack reference machinery makes `cdk deploy --all` walk them in dep order automatically — no manual ordering, no first-deploy footgun.
+
 ```ts
 #!/usr/bin/env tsx
 import {
+  DsqlClusterStack,
   PreviewableApp,
   requireAwsAccount,
   requireDeployStage,
@@ -93,16 +96,26 @@ const REGION = 'eu-west-3';
 const stage = requireDeployStage();                  // throws on STAGE=dev
 const prNumber = stage === 'prod' ? undefined : requirePrNumber();
 const account = requireAwsAccount();
-const stackId =
+const stageStackId =
   stage === 'prod' ? `${APP_SLUG}-prod` : `${APP_SLUG}-pr-${prNumber}`;
 
 const app = new App();
-const stack = new Stack(app, stackId, {
+
+// 1. Cluster stack — long-lived, owns the per-app DSQL cluster + SSM
+//    publication. Deletion-protected. Same on every cdk synth/deploy
+//    regardless of stage.
+const clusterStack = new DsqlClusterStack(app, `${APP_SLUG}-cluster`, {
+  env: { account, region: REGION },
+  app: APP_SLUG,
+});
+
+// 2. Stage stack — created/destroyed per stage (prod / preview / integ).
+const stageStack = new Stack(app, stageStackId, {
   env: { account, region: REGION },
   crossRegionReferences: true,
 });
 
-new PreviewableApp(stack, 'App', {
+new PreviewableApp(stageStack, 'App', {
   app: APP_SLUG,
   stage,
   prNumber,
@@ -116,11 +129,14 @@ new PreviewableApp(stack, 'App', {
   },
   database: {
     migrationsPath: path.resolve('./db/migrations'),
+    cluster: clusterStack.cluster,  // cross-stack ref; CDK orders the deploys
   },
 });
 ```
 
 Output: the `PreviewableApp` exposes `site`, `api`, `database`, `cluster` as public fields if you need to pass them to other constructs.
+
+Frontend-only apps don't need the cluster stack — drop both `database` and the `DsqlClusterStack` instantiation.
 
 ## 4. The API handler (`api/index.ts`)
 
@@ -204,34 +220,22 @@ Same as `adding-an-app.md`:
 
 Workflows auto-discover the app from the workspace.
 
-## 8. First-deploy ordering — the only sharp edge
-
-Because preview/integ stacks **look up** the per-app DSQL cluster from SSM, an app's first deploy MUST be to prod. The prod stack creates the cluster, publishes `/borso/<slug>/dsql-cluster-{arn,endpoint}` to SSM, and then preview/integ stacks of the same app can find it.
-
-Practical implication for a brand-new app:
-
-1. Open a PR with the app folder. Preview deploy will FAIL at synth — `lookupDsqlCluster` errors with "SSM parameter not found".
-2. Either (a) merge to main first to trigger a prod deploy via `deploy.yml` (manual approval gate), then re-push the PR; or (b) deploy prod manually from a local checkout of `main` once, then PRs work.
-
-If the app has no DB (`database: undefined`), this constraint doesn't apply.
-
-## 9. Local dev
+## 8. Local dev
 
 - **Frontend:** `pnpm dev:site` — `python3 -m http.server` from `site/`.
 - **API:** `pnpm dev:api` — `tsx watch api/index.ts`. The handler runs as a plain Node process; mock the request via `curl localhost:3000/health` (Hono's local adapter).
 - **DB (DEV mode):** unspecified. The first DB-backed app should add a `docker-compose.yml` (per-app or repo-root) that stands up local Postgres on `:5432`, set `DSQL_ENDPOINT=localhost` / `DSQL_SCHEMA=dev` in `.env.development`, and patch the API handler's `db()` factory to skip the DSQL signer when `STAGE === 'dev'`. See the open question in `CLAUDE.md` for the per-app vs shared compose-file decision.
 
-## 10. Acceptance checklist (pre-merge)
+## 9. Acceptance checklist (pre-merge)
 
 - [ ] `cd apps/<slug> && pnpm install && pnpm dev` works on a fresh checkout.
 - [ ] No imports from sibling apps. Imports `@borso/infra` only.
 - [ ] `pnpm --filter @borso-app/<slug> build` succeeds.
-- [ ] `pnpm --filter @borso-app/<slug> synth` produces a CFN template referencing the right cert + alias + per-app DSQL cluster SSM path.
-- [ ] **Prod stack deploys first** (manually from a local checkout, or via `deploy.yml` on main) — this is what creates the DSQL cluster. Verify `/borso/<slug>/dsql-cluster-{arn,endpoint}` appear in SSM.
-- [ ] PR preview deploys after prod exists; sticky comment URL renders the app, `/health` returns 200, `/items` (or whatever your seed migration creates) returns expected data.
-- [ ] Closing the PR tears down `<slug>-pr-<n>` cleanly. The cluster persists; only the schema is dropped.
+- [ ] `pnpm --filter @borso-app/<slug> synth` produces TWO stacks: `<slug>-cluster` and `<slug>-{prod,pr-<n>}`.
+- [ ] PR preview deploys cleanly on first push (no manual prod-first ordering needed). `cdk deploy --all` walks the cluster stack first because of the cross-stack reference. Sticky comment URL renders the app, `/health` returns 200, `/items` (or whatever your seed migration creates) returns expected data.
+- [ ] Closing the PR tears down `<slug>-pr-<n>` cleanly. The cluster stack persists across PR teardowns; only the per-stage schema is dropped.
 
-## 11. What you don't have to do
+## 10. What you don't have to do
 
 - **Add the app slug to a workflow's matrix.** The workflows discover apps via `pnpm ls -r --filter "./apps/*" --json`.
 - **Wire IAM for the Lambda → DSQL grant.** `PreviewableApp` does it.

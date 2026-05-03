@@ -2,7 +2,7 @@ import { CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { type Stage, assertDeployStage, validateAppSlug } from '../internal/naming.js';
 import { applyStandardTags } from '../internal/tags.js';
-import { DsqlCluster, type IDsqlCluster, lookupDsqlCluster } from './dsql-cluster.js';
+import type { IDsqlCluster } from './dsql-cluster.js';
 import { DsqlSchema } from './dsql-schema.js';
 import { LambdaApi } from './lambda-api.js';
 import { StaticSite } from './static-site.js';
@@ -25,18 +25,26 @@ export interface PreviewableAppProps {
     readonly environment?: Readonly<Record<string, string>>;
   };
   /**
-   * Optional DSQL schema. The first time an app deploys to prod, the
-   * cluster is created and the prod schema initialized. Preview/integ
-   * stacks of the same app share that cluster (looked up via SSM) and
-   * get their own schema.
+   * Optional DSQL schema.
+   *
+   * The cluster is owned by a separate `DsqlClusterStack` declared
+   * alongside this stack in `bin/app.ts` and passed in here. CDK's
+   * cross-stack reference machinery makes `cdk deploy --all` order the
+   * cluster stack before this stage stack automatically — no
+   * "first deploy must be prod" footgun. See
+   * `docs/dantotsus/dsql-first-deploy-must-be-prod.md`.
    */
-  readonly database?: { readonly migrationsPath: string };
+  readonly database?: {
+    readonly migrationsPath: string;
+    readonly cluster: IDsqlCluster;
+  };
 }
 
 /**
  * High-level construct composing `StaticSite` + optional `LambdaApi` +
- * optional `DsqlSchema` (with its per-app `DsqlCluster` owned by the
- * prod stack).
+ * optional `DsqlSchema`. The DSQL cluster lives in a dedicated
+ * `DsqlClusterStack` (one per app) and is passed in via
+ * `props.database.cluster`.
  *
  * The /api/* routing on the shared previews distribution is **not** wired
  * in v0.1.x — preview frontends hit the API at its own HTTP API URL. This
@@ -57,10 +65,7 @@ export class PreviewableApp extends Construct {
     applyStandardTags(this, props);
 
     if (props.database) {
-      this.cluster =
-        props.stage === 'prod'
-          ? new DsqlCluster(this, 'Cluster', { app: props.app, stage: props.stage })
-          : lookupDsqlCluster(this, props.app);
+      this.cluster = props.database.cluster;
       this.database = new DsqlSchema(this, 'Db', {
         app: props.app,
         stage: props.stage,

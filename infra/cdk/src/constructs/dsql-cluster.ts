@@ -105,8 +105,12 @@ export class DsqlCluster extends Construct implements IDsqlCluster {
 }
 
 /**
- * Look up the per-app cluster from SSM. Used by preview/integ stacks that
- * share the prod-owned cluster.
+ * Look up the per-app cluster from SSM. Kept for advanced operators who
+ * want SSM-decoupled access (e.g. cross-account workflows). The standard
+ * path is to instantiate a {@link DsqlClusterStack} alongside your stage
+ * stack and pass `clusterStack.cluster` directly into
+ * `PreviewableApp.database.cluster` — that gives you a cross-stack
+ * reference, deterministic deploy order via CDK, and no SSM ceremony.
  *
  * @beta
  */
