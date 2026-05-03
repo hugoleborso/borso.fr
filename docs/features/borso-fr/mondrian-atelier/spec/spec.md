@@ -34,7 +34,7 @@ Single page at `/art/mondrian/`, replacing the existing one. Visual reference: t
 
 Happy path:
 1. User navigates to `/art/mondrian/` (no `?seed=`) → fresh seed.
-2. Page renders with default palette = Classique, complexity = 22, line weight = 6, balance = 0.5, **drift** animation. Composition rendered, dynamic title generated, seed reflected into `?seed=…` via `history.replaceState`.
+2. Page renders with default palette = Classique, complexity = 22, line weight = 6, balance = 0.5, **still** animation. Composition rendered via the inkbloom entry, dynamic title generated, seed reflected into `?seed=…` via `history.replaceState`.
 3. User adjusts complexity / line weight / balance sliders → canvas updates without reshuffling the layout (only colors / line widths change on balance/lineWeight; complexity *does* reshuffle).
 4. User clicks a palette segment (Classique / Muted / Nocturne / Garden / Custom) → page theme & canvas recolor; title regenerates because dominant color changes.
 5. With Custom selected, user clicks any of the 5 swatches → native color picker opens, color updates live.
@@ -80,7 +80,7 @@ Error cases:
 ### Q5 — Tool or piece? `[2026-05-03]`
 - Tool — generator first.
 - Piece — ambient art first.
-- **Both, at the same time, like the design** *(picked)*. No mode toggle. Default mode is Drift (subtle parallax) — the page feels alive on arrival but isn't auto-recomposing; controls are visible (rail on desktop, drawer toggle on mobile); Compose and Download are primary affordances. The gallery framing/copy stays.
+- **Both, at the same time, like the design** *(picked)*. No mode toggle. Default mode is **Still** (see Q13) — the painting arrives composed via the inkbloom entry, then stays composed; the user opts into motion when they want it. Controls are visible (rail on desktop, drawer toggle on mobile); Compose and Download are primary affordances. The gallery framing/copy stays.
 
 ### Q6 — Mobile compose? `[2026-05-03]`
 - Tap the canvas — discoverable via caption swap.
@@ -122,9 +122,9 @@ Error cases:
 - **Leave room, don't pre-split** *(picked)*. Keep all code under `apps/borso-fr/site/art/mondrian/` for now. When (if) a second piece arrives, refactor the rail/stage/brandmark into a shared shell. Matches YAGNI; we accept one refactor cost later in exchange for not over-abstracting now. Naming convention noted: `/art/<artist>/` URL pattern is reserved.
 
 ### Q13 — Default animation mode? `[2026-05-03]`
-- **Drift** *(picked)* — design default; tool+piece middle ground.
+- Drift — original choice; rejected after live use, the parallax sway turned out to fight the controls and pulled attention away from the painting itself.
 - Cascade — rejected (fights the controls; too aggressive on arrival).
-- Still — rejected (kills the "alive on arrival" effect).
+- **Still** *(picked, replacing the original Drift choice)* — the painting arrives composed and stays composed; the user opts into motion when they want it. Tool+piece framing still holds: the inkbloom entry keyframe gives the page life on arrival without continuous rAF churn.
 
 ### Q14 — Compose history? `[2026-05-03]`
 - No back-stack.
@@ -152,7 +152,7 @@ The Claude Design transcript (`mondrian-generator/chats/chat1.md`, rounds 3–4)
 ### Q19 — `prefers-reduced-motion`? `[2026-05-03]`
 - Ignore the OS setting and ship the design as-is.
 - **Honour it** *(picked)*. When `(prefers-reduced-motion: reduce)` matches:
-  - Default animation mode flips from Drift → **Still** on first visit. User can still pick any mode from the segmented control afterward.
+  - Default animation mode is **Still** regardless of preference (see Q13). The reduced-motion branch therefore doesn't change the default mode — it changes the *entry* animation.
   - The `inkbloom` entry keyframe drops the `filter: blur(6px)` step; rects fade in via opacity only, with no per-rect stagger (all rects fade at once, ~150 ms).
   - Cascade is *not* disabled if the user explicitly selects it (their choice overrides the OS preference).
 

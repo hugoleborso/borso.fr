@@ -160,5 +160,6 @@
   font-family: var(--serif);
   font-style: italic;
   font-size: 14px;
+  color: var(--ink);
   cursor: pointer;
 }

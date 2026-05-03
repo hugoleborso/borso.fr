@@ -88,12 +88,15 @@
 
 @media (max-width: 480px) {
   .segments.five {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
-  .segments.five .seg:nth-child(3) {
+  .segments.five .seg:last-child {
+    grid-column: 1 / -1;
+  }
+  .segments.five .seg:nth-child(2n) {
     border-right: none;
   }
-  .segments.five .seg:nth-child(-n + 3) {
+  .segments.five .seg:nth-child(-n + 4) {
     border-bottom: 1px solid var(--rule);
   }
 }

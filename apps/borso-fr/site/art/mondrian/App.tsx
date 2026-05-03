@@ -68,9 +68,7 @@ export function App() {
   const [complexity, setComplexity] = useState(DEFAULT_COMPLEXITY);
   const [lineWeight, setLineWeight] = useState(DEFAULT_LINE_WEIGHT);
   const [balance, setBalance] = useState(DEFAULT_BALANCE);
-  const [animationMode, setAnimationMode] = useState<AnimationMode>(
-    reducedMotion ? 'still' : 'drift',
-  );
+  const [animationMode, setAnimationMode] = useState<AnimationMode>('still');
   const [railOpen, setRailOpen] = useState(false);
 
   const palette = useMemo(
