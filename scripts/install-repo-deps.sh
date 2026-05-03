@@ -90,4 +90,21 @@ if ! command -v actionlint >/dev/null 2>&1; then
   log "actionlint: $(actionlint -version | head -n 1)"
 fi
 
+# 6. agent-browser — LLM-oriented browser automation CLI used by the
+# /visual-validation skill (see .claude/agents/visual-validator.md). Global
+# npm install + a one-shot post-install that provisions Chromium for the
+# daemon. Skipped on machines without npm (rare in this repo, but the
+# install is non-fatal there — the validator surfaces the missing tool as
+# a FAIL row rather than the session refusing to start).
+if ! command -v agent-browser >/dev/null 2>&1; then
+  if command -v npm >/dev/null 2>&1; then
+    log "agent-browser not found; installing globally via npm"
+    npm install -g agent-browser >/dev/null
+    agent-browser install >/dev/null || log "agent-browser install (Chromium provision) failed; /visual-validation will surface this"
+    log "agent-browser: $(agent-browser --version 2>/dev/null || echo 'installed')"
+  else
+    log "npm not available; skipping agent-browser install (/visual-validation will surface this)"
+  fi
+fi
+
 log "done"
