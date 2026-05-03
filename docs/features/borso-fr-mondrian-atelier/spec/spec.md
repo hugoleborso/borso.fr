@@ -1,9 +1,9 @@
 # Atelier — a gallery-style Mondrian generator on borso.fr
 
-> ⚠️ Missing client discussion — N/A (personal site, no business stakeholder).
-> Designer: confronted *outside this session* — user iterated through Claude Design and exported a finished prototype.
-> Product: confronted in-session via three rounds of structured Q.O.D. (see Q5–Q11). Decisions inline.
-> Tech-lead / developer: confronted in-session via Q1–Q4 + Q12.
+> Client / audience: degenerate as a *business* stakeholder (personal site), but visitor-facing concerns confronted in Q17–Q18 (RGPD/Google Fonts, EU privacy posture).
+> Designer: visual design confronted *outside this session* via Claude Design and exported as the bundle at `mondrian-generator/`. Design-adjacent concerns the prototype didn't settle (motion / dark-mode / a11y) confronted in-session, Q19–Q21.
+> Product: confronted in-session via Q5–Q14.
+> Tech-lead / developer: confronted in-session via Q1–Q4 + Q15–Q16.
 
 ## Why
 
@@ -138,7 +138,36 @@ The Claude Design transcript (`mondrian-generator/chats/chat1.md`, rounds 3–4)
 2. **The `inkbloom` entry keyframe must not touch `transform`.** The runtime animation modes (Drift / Breathe) drive `style.transform` directly; if the keyframe also animates transform with `animation-fill-mode: both`, the keyframe's final transform pins forever and the live animation looks dead. Keyframe stays on `opacity` + `filter: blur(...)` only.
 
 ### Q16 — Fonts? `[2026-05-03]`
-- The design loads Playfair Display, Cormorant Garamond, JetBrains Mono from Google Fonts. **Keep as-is** — same external dependency model as the existing site (which already uses Google Fonts on `/index.html` and others). No SLO impact.
+- The design loads Playfair Display, Cormorant Garamond, JetBrains Mono from Google Fonts. **Self-host via `@fontsource/*` NPM packages** *(picked, see also Q17)* — Vite bundles the woff2 directly; no third-party request. Trades ~150 KB of bundle for clean RGPD posture and a faster first paint (no extra round-trip to fonts.googleapis.com).
+
+### Q17 — RGPD / EU privacy posture? `[2026-05-03]`
+- Personal site on a `.fr` domain → RGPD applies even without a business stakeholder. **Self-host all fonts** *(picked, see Q16)*. **No analytics, no tracking, no third-party requests at all** after the migration. The page is a purely static document. No consent banner needed because there's nothing to consent to.
+
+### Q18 — Other RGPD considerations? `[2026-05-03]`
+- No cookies set by the page (no auth, no preferences-server, no analytics).
+- The seed-in-URL feature does not collect anything — it's local state mirrored into the URL, not a server request.
+- `?seed=…` URLs the user shares are public by definition (they typed them); no sensitive data possible in an 8-hex seed.
+- No imprint / mentions légales required for a non-commercial personal site (LCEN art. 6 III.2: pseudonymous publication permitted for non-professionals provided the host can identify them; AWS keeps the user's billing identity).
+
+### Q19 — `prefers-reduced-motion`? `[2026-05-03]`
+- Ignore the OS setting and ship the design as-is.
+- **Honour it** *(picked)*. When `(prefers-reduced-motion: reduce)` matches:
+  - Default animation mode flips from Drift → **Still** on first visit. User can still pick any mode from the segmented control afterward.
+  - The `inkbloom` entry keyframe drops the `filter: blur(6px)` step; rects fade in via opacity only, with no per-rect stagger (all rects fade at once, ~150 ms).
+  - Cascade is *not* disabled if the user explicitly selects it (their choice overrides the OS preference).
+
+### Q20 — `prefers-color-scheme: dark`? `[2026-05-03]`
+- Auto-pick Nocturne when the OS prefers dark.
+- **Always Classique on first visit** *(picked)*. Cleaner mental model; the dark palette is one click away. Avoids the "why is the page dark?" / "I can't find the light version" failure modes.
+
+### Q21 — Accessibility baseline? `[2026-05-03]`
+**Picked: ship a baseline polish pass on top of the design.** Concretely:
+- Visible focus rings (1 px solid `var(--ink)` + 2 px offset) on all interactive elements: rail buttons, sliders, segments, swatches, frame, mobile-Compose button.
+- The framed canvas is rendered as a `<button type="button">` with `aria-label="Composition. Click to recompose."` so keyboard and screen-reader users can recompose without the keyboard shortcut. Tap-to-compose (Q6) flows through the same handler.
+- An `aria-live="polite"` region announces the dynamic title on every recompose ("A quiet study in cobalt").
+- Fonts use `font-display: swap` (FOUT, not FOIT) so the page renders with system fonts before the woff2 lands.
+- Color contrast: spot-checked Classique and Nocturne — the design's `--ink-soft` at 0.7 opacity over `--paper` measures ≥ 4.5:1. Muted's body copy is the only borderline; left as the design specifies it (designer's call).
+- Keyboard: tab order is brandmark → sliders → palette segments → custom swatches → animation segments → Compose → Download → frame.
 
 ## Changes
 

@@ -5,10 +5,15 @@
       "ignoreBinaries": ["typecheck", "build"]
     },
     "apps/borso-fr": {
-      "entry": ["bin/app.ts"],
-      "project": ["bin/**/*.ts"],
+      "entry": [
+        "bin/app.ts",
+        "vite.config.ts",
+        "site/art/mondrian/main.tsx",
+        "scripts/screenshot.mjs"
+      ],
+      "project": ["bin/**/*.ts", "site/**/*.ts", "site/**/*.tsx", "vite.config.ts"],
       "ignoreDependencies": ["tsx"],
-      "ignoreBinaries": ["python3"]
+      "ignoreBinaries": ["vite"]
     },
     "infra/cdk": {
       "entry": [

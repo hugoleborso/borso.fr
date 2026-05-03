@@ -1,0 +1,152 @@
+.stage {
+  padding: clamp(28px, 4vw, 56px) clamp(24px, 4vw, 56px) clamp(40px, 5vw, 80px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100dvh;
+  gap: clamp(16px, 2vw, 28px);
+  position: relative;
+}
+
+.stage-head {
+  width: 100%;
+  max-width: 880px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+}
+.stage-head .work-no {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  opacity: 0.6;
+}
+.stage-head .work-title {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 24px;
+  line-height: 1.1;
+  margin: 4px 0 0;
+  color: var(--ink);
+}
+.stage-head .meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  opacity: 0.65;
+  text-align: right;
+}
+
+.frame-wrap {
+  width: 100%;
+  max-width: min(880px, calc(100dvh - 240px));
+  aspect-ratio: 1 / 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.frame {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #fafafa;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  isolation: isolate;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  display: block;
+}
+.frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 120% at 50% 0%, transparent 65%, rgba(0, 0, 0, 0.06));
+  pointer-events: none;
+  z-index: 5;
+}
+.canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-origin: center;
+}
+.rect {
+  position: absolute;
+  transform-origin: center;
+  pointer-events: none;
+}
+
+/* Mobile-only secondary Compose button under the frame (Q6). */
+.stage-compose {
+  display: none;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 16px;
+  padding: 14px 24px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.stage-compose .arrow {
+  display: inline-block;
+  margin-left: 6px;
+}
+
+.stage-foot {
+  width: 100%;
+  max-width: 880px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--serif-soft);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-soft);
+  opacity: 0.7;
+}
+.stage-foot .seed {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.stage-foot .kbd {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid var(--rule-strong);
+  margin: 0 4px;
+}
+
+.rail-toggle {
+  display: none;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 30;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  padding: 10px 14px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  cursor: pointer;
+}

@@ -4,24 +4,36 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "python3 -m http.server --directory site 5173",
-    "build": "rm -rf dist && cp -R site dist",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "lint": "biome lint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit",
+    "screenshot": "node scripts/screenshot.mjs",
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk deploy --all --require-approval never",
     "destroy": "cdk destroy --all --force"
   },
   "dependencies": {
-    "@borso/infra": "workspace:*"
+    "@borso/infra": "workspace:*",
+    "@fontsource/cormorant-garamond": "^5.1.0",
+    "@fontsource/jetbrains-mono": "^5.1.0",
+    "@fontsource/playfair-display": "^5.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
     "aws-cdk": "^2.180.0",
     "aws-cdk-lib": "^2.180.0",
     "constructs": "^10.4.2",
+    "playwright": "^1.49.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
   }
 }
