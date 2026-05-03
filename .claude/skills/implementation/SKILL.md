@@ -99,7 +99,7 @@ Manual sweeps are not a valid coverage path — repo rule.
 5. **Run `/visual-validation`** for UI work. Read the report; the verdict must be PASS before push.
 6. **Run `/technical-validation`** always. Read the report; the verdict must be PASS before push.
 7. **Push.** The branch's CI is the last gate; the local gates are stricter.
-8. **Open the PR.** A **FAIL** validator verdict is fix-required — do not open a PR while the latest validation report is FAIL. A **PASS_EXCEPT_UNVERIFIABLE** verdict is mergeable, but the PR description must include a `## Validation gaps` section listing the UNVERIFIABLE rows verbatim with the one-line reason + report-path link. **PASS** ships without per-row disclosure. Per the validation skills' PR-disclosure rule — a reviewer reads the PR description, not the validation report; the gap has to be up-front.
+8. **Open the PR.** A **FAIL** validator verdict is fix-required — do not open a PR while the latest validation report is FAIL. A **PASS_EXCEPT_UNVERIFIABLE** verdict is mergeable, but the PR description must include a `## Validation gaps` section listing the UNVERIFIABLE rows verbatim with the one-line reason + report-path link. **PASS** ships without per-row disclosure. Either way, the PR description includes a `## Visual evidence` section with the screenshots from the latest visual-validation report — see `/visual-validation`'s "Visual evidence in the PR body" section for the SHA-pinned-raw-URL generator. Reviewers read the PR description, not the validation report; the gap and the visuals have to be up-front.
 
 ## Failure modes to avoid
 

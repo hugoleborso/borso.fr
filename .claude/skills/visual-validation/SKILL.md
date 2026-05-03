@@ -100,6 +100,43 @@ A reviewer reads the PR description without opening the report; the gap has to b
 
 A PASS verdict needs only a link to the report — no per-row disclosure.
 
+## Visual evidence in the PR body
+
+Regardless of verdict (PASS or PASS_EXCEPT_UNVERIFIABLE), the PR description includes a `## Visual evidence` section with the screenshots from the latest validation report embedded inline. Reviewers should see the rendered feature without leaving the PR page.
+
+GitHub does **not** render relative-path images in PR descriptions; they must be absolute URLs. The robust pattern is the raw blob URL pinned to a commit SHA — the SHA persists after the branch is deleted at merge time, so the URLs do not 404 on historical PRs.
+
+```
+https://github.com/<owner>/<repo>/raw/<sha>/<path-to-png>
+```
+
+Generator (run after all commits are in, before opening the PR):
+
+```bash
+slug_path=docs/features/<app>/<slug>/validation
+report_dir=$(ls -1td "$slug_path"/visual-validation-*/ 2>/dev/null | head -1)
+sha=$(git rev-parse HEAD)
+repo_path=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+for png in "$report_dir"*.png; do
+  rel=${png#./}
+  echo "![${png##*/}](https://github.com/$repo_path/raw/$sha/$rel)"
+done
+```
+
+The output is markdown ready to paste. Suggested PR-body shape:
+
+```markdown
+## Visual evidence
+
+<!-- output of the generator above -->
+
+## Validation gaps   <!-- only on PASS_EXCEPT_UNVERIFIABLE -->
+
+- Row 35: <verbatim assertion> — <one-line reason> — see [visual-validation-<ts>.md](docs/features/<app>/<slug>/validation/visual-validation-<ts>.md).
+```
+
+If the screenshot set is large (>5 PNGs), wrap the lower-priority breakpoints in `<details><summary>Mobile / edge cases</summary> … </details>` so the desktop hero stays above the fold.
+
 ## Failure modes to avoid
 
 - **Optimism leak.** The skill must not pre-summarise the implementation for the agent ("the feature is mostly working, just check…"). Pass the spec path and the URL; nothing else. The whole point is unbiased eyes.
