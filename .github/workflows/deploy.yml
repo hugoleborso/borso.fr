@@ -39,7 +39,11 @@ jobs:
         id: filter
         with:
           filters: .github/path-filters.yml
-          base: HEAD~1
+          # No `base:` — paths-filter defaults to ${{ github.event.before }}
+          # for push events, which is the SHA of the previous main commit.
+          # Specifying `base: HEAD~1` triggers a `git merge-base HEAD~1 main`
+          # lookup that fails with `git exit 128` because `main` isn't set
+          # up as a local tracking branch with fetch-depth=2.
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
