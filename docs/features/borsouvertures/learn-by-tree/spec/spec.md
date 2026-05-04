@@ -202,8 +202,11 @@ or explicitly defer with rationale).
     (machine plays White's first move when side=Black on Start), B2 (arrows are derived
     state, not eagerly cleared in the move handler), B4 (machine refuses Start with empty
     scope), B5 (generation counter), B6 (arrow recomputation is a machine-state derivation).
-  - `site/state/useAppState.ts` — extend the Zustand store to read / write the localStorage
-    `borsouvertures.v1` namespace (last selection, side, theme, treeVisualizationMode).
+  - `site/state/useAppState.ts` — drop the `zustand` dependency in favour of a plain external
+    store on `useSyncExternalStore`, mirroring `learnTreeMachine` / `playMachine`. One state
+    pattern across the app, not two. Persistence to the localStorage `borsouvertures.v1`
+    namespace (last selection, side, theme, treeVisualizationMode) lives in
+    `localStorage.utils.ts`.
   - `site/App.tsx` — gate the selector behind `loading`, fixes B7. Replace
     `ModeLearn` import with `ModeLearnTree`. Wire the inline banner.
   - `site/openings/loadOpenings.ts` — surface a hard error UI path when both fetch + bundled
