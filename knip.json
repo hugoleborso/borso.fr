@@ -17,6 +17,7 @@
         "src/index.ts",
         "src/internal/migration-runner/index.ts",
         "src/internal/cf-host-routing-function.code.js",
+        "src/internal/cf-static-site-index-rewrite.code.js",
         "test/**/*.test.ts",
         "test/unit/fixtures/handler.ts"
       ],
