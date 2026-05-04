@@ -156,3 +156,7 @@ If the screenshot set is large (>5 PNGs), wrap the lower-priority breakpoints in
 - Reports + evidence go in `docs/features/<app>/<slug>/validation/` (siblings to `spec/` and `plan/`).
 - The validator only writes inside `evidence_dir` and `report_path`. It does not modify code, the spec, or anything else.
 - When the verdict is FAIL, the user is shown the failing rows verbatim — they are not asked to interpret the report themselves.
+
+## Auto-chain on PR merge: `/after-task-dantotsus`
+
+When GitHub fires `pull_request.closed` with `merged: true` for a PR this skill validated (visible to the agent as a `<github-webhook-activity>` block), the agent immediately invokes `/after-task-dantotsus` for the merged PR. If not subscribed to the PR's webhook activity, the agent asks once whether to subscribe. The same auto-chain lives in `/technical-validation` — whichever validator the chain reached last carries the trigger.

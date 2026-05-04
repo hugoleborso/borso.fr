@@ -12,7 +12,7 @@ The block-quoted prompt under each heading is guidance for the author; delete it
 
 ## Perspectives confronted
 
-> *Hard gate: every checkbox below must be ticked **and** carry a one-line justification before any other section is drafted. A box may be ticked only after the user has answered at least one `AskUserQuestion` from that perspective, OR has explicitly confirmed (also via `AskUserQuestion`) that the perspective is degenerate for this feature. Silent self-reported "N/A" is the failure mode this gate is built to prevent — see [`docs/dantotsus/spec-skill-let-perspectives-be-skipped.md`](../../../docs/dantotsus/spec-skill-let-perspectives-be-skipped.md).*
+> *Hard gate: every checkbox below must be ticked **and** carry a one-line justification before any other section is drafted. A box may be ticked only after the user has answered at least one `AskUserQuestion` from that perspective, OR has explicitly confirmed (also via `AskUserQuestion`) that the perspective is degenerate for this feature. Silent self-reported "N/A" is the failure mode this gate is built to prevent.*
 
 - [ ] **Client / business** — <one-line: what was confirmed; or "user confirmed degenerate because <reason>">
 - [ ] **Product** — <one-line>
@@ -48,7 +48,6 @@ Use only when the user knowingly defers the perspective for a follow-up; never a
 - Numbered happy path.
 - Bulleted edge cases.
 - Bulleted error cases.
-- **On-mount side-effects.** *Required* sub-section if the feature mirrors React state (or any client-side state) to an external system on first paint — URL, `localStorage`, `document.title`, focus management, analytics events. Each mirror is a discrete assertion with the same status as a happy-path step: `<state> mirrored to <system> via <call> (<push|replace|other>)` on initial render, before any user interaction. The validators check these explicitly; if you don't list it, the technical-validator can't see it (it tests what's named, not what's missing) and any defect lives until visual-validation catches it the hard way. See [`docs/dantotsus/mount-time-side-effects-implied-not-asserted.md`](../../../docs/dantotsus/mount-time-side-effects-implied-not-asserted.md) for the worked example.
 - If a case is not listed here, it does not exist for this iteration.
 
 ## Questions, Options and Decisions

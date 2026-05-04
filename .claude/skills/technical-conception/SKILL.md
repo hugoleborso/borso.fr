@@ -133,4 +133,4 @@ Walk these 7 steps, in order.
 
 ## Auto-chain to `/implementation`
 
-When this skill finishes (the plan is written, all open questions are answered or escalated, the user has approved the plan), the agent immediately invokes `/implementation` via the `Skill` tool with the spec path as argument. Do not stop and wait for the user to type "/implementation" — the chain is operational, not documentary. See [`docs/dantotsus/feature-flow-skills-do-not-auto-trigger.md`](../../docs/dantotsus/feature-flow-skills-do-not-auto-trigger.md) for why.
+When this skill finishes (the plan is written, all open questions are answered or escalated, the user has approved the plan), the agent immediately invokes `/implementation` via the `Skill` tool with the spec path as argument. Do not stop and wait for the user to type "/implementation" — the chain is operational, not documentary.

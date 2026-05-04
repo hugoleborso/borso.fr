@@ -156,4 +156,4 @@ Once every perspective has been confronted and no `> ⚠️ Missing …` flag re
 
 ## Auto-chain to `/technical-conception`
 
-When this skill finishes (no `> ⚠️ Missing` flag remains, every perspective checkbox in the spec preamble is ticked, the user has approved the spec), the agent immediately invokes `/technical-conception` via the `Skill` tool with the spec path as argument. Do not stop and wait for the user to type "/technical-conception" — the chain is operational, not documentary. See [`docs/dantotsus/feature-flow-skills-do-not-auto-trigger.md`](../../docs/dantotsus/feature-flow-skills-do-not-auto-trigger.md) for why.
+When this skill finishes (no `> ⚠️ Missing` flag remains, every perspective checkbox in the spec preamble is ticked, the user has approved the spec), the agent immediately invokes `/technical-conception` via the `Skill` tool with the spec path as argument. Do not stop and wait for the user to type "/technical-conception" — the chain is operational, not documentary.

@@ -110,44 +110,23 @@ aws s3 rb s3://borso-fr-prod
 - **Code:** none for the recovery itself.
 - **Operator action:** above commands, then re-run CI.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — pre-deploy preflight script)
+**Type:** Knowledge entry (level 5 — floor)
 
-**Reference:** PR #7 · commit `<kaizen-commit>`
+**Reference:** PR #7 · [`docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md`](../knowledge/cdk-retain-buckets-orphan-on-failed-create.md)
 
-**The actual fix:** add a second preflight script
-`scripts/preflight-orphan-buckets.sh` that runs after
-`scripts/preflight-cloudfront-aliases.sh` and before `cdk deploy`. It walks
-every `AWS::S3::Bucket` resource in `cdk.out/*.template.json` that declares
-a literal `BucketName`, and for each:
+**Decision:** an earlier draft of this entry shipped a `scripts/preflight-orphan-buckets.sh` (level 2 DevX check) that scanned `cdk.out` for pinned `BucketName`s and head-checked each one against S3 + CFN before allowing `cdk deploy` to proceed. PR #7 review concluded the gate was heavy-handed for a rare failure mode (first-deploy partial rollback) with a three-command manual recovery, and rolled it back in favour of a knowledge entry.
 
-1. `aws s3api head-bucket` — if the name is free, no conflict.
-2. `aws cloudformation describe-stack-resources --physical-resource-id` —
-   if the bucket is owned by the *target* stack, CFN will issue an update
-   not a create, so no conflict.
-3. Otherwise the bucket is either an orphan from a prior failed deploy or
-   owned by a different stack. The script lists it and exits non-zero with
-   the recovery commands inline (`aws s3 ls`, `aws s3 rb`).
+The knowledge entry [`docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md`](../knowledge/cdk-retain-buckets-orphan-on-failed-create.md) carries:
 
-The borso-fr deploy script is updated to chain the new preflight after the
-existing CloudFront-alias preflight:
+- the conditions under which the orphan path triggers (literal `bucketName` + `RemovalPolicy.RETAIN` + first-deploy failure post-bucket-create),
+- three structural alternatives ranked by strength (drop the literal name, rehearse via preview, document recovery),
+- the verbatim three-command recovery (head-check empty, confirm no live owner, `aws s3 rb`).
 
-```diff
-- "deploy": "… && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy …",
-+ "deploy": "… && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && ../../scripts/preflight-orphan-buckets.sh cdk.out && cdk deploy …",
-```
+Future occurrences are expected to be detected at deploy time (CFN fails with `BucketAlreadyOwnedByYou`) and resolved by an operator following the recovery commands. If the failure mode recurs more than once, escalate this back to a level-2 eradication.
 
-The pattern generalises: every fixed-name AWS resource the CDK creates with
-`RemovalPolicy.RETAIN` can produce orphans the same way (Route53 records,
-IAM roles with literal names, DSQL clusters, etc.). For now the script
-covers S3 only, since that's the resource type that bit us this PR. Future
-deploys touching other retained-with-fixed-name resources should extend
-the script with a new section per type.
-
-**Sibling defects swept:** none yet observed in the repo, but the same
-pattern applies to every consumer of `StaticSite` (`borsouvertures` when its
-migration runs) and to any future construct that pins a `bucketName`.
+**Sibling defects swept:** none yet observed. The same pattern applies to every consumer of `StaticSite` and to any future construct pinning a `bucketName` with `RETAIN`; the knowledge entry is the team-wide notice.
 
 ## See also
 

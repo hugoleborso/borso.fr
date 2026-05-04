@@ -35,6 +35,10 @@ Two failure modes to watch for:
 - [`cloudfront-get-function-binary-output.md`](./cloudfront-get-function-binary-output.md) — `aws cloudfront get-function` writes the source to a positional outfile, not stdout.
 - [`cloudfront-cname-uniqueness.md`](./cloudfront-cname-uniqueness.md) — aliases (CNAMEs) are single-distribution; release from the old distribution before redeploying the new one.
 
+### CDK / S3
+
+- [`cdk-retain-buckets-orphan-on-failed-create.md`](./cdk-retain-buckets-orphan-on-failed-create.md) — `RemovalPolicy.RETAIN` on a literal-named bucket leaves an orphan if the first deploy of the stack fails post-bucket-create; manual `aws s3 rb` recovery.
+
 ### GitHub Actions
 
 - [`workflow-dispatch-default-branch.md`](./workflow-dispatch-default-branch.md) — `workflow_dispatch` and `issue_comment` workflows only show in the UI once on the default branch.

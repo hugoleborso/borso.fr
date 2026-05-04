@@ -90,9 +90,9 @@ If a PR ships zero lessons, that's fine — open the follow-up PR with a note sa
 
 ## Deployments
 
-- **Preview deploys are automatic.** A preview stack is created/updated on every PR push, and torn down on PR close, by the GitHub Actions workflow. Claude does not run preview deploys by hand — they happen by themselves on push.
-- **Prod deploys require explicit human approval, every time.** Claude does **not** run `pnpm --filter @borso-app/<app> run deploy`, `pnpm --filter @borso/infra run deploy`, `pnpm --filter @borso/shared-infra run deploy`, or any equivalent prod-stage `cdk deploy` on its own. The user runs these from their terminal after review. Even after the user has approved one prod deploy, that approval does not roll forward to the next one. If you find yourself about to type a prod deploy command, stop and ask. The `/implementation` skill ends at "open the PR" — there is no "deploy from the skill" step, and there should never be one.
-- **Migration cutovers (alias takeovers, bucket renames, CDK construct rewrites) are higher-risk prod deploys.** They additionally require the operator to walk the migration runbook for the affected resource. CloudFront alias takeovers are gated by `scripts/preflight-cloudfront-aliases.sh` which fails the deploy if a desired alias is currently held by a different distribution; see [`docs/knowledge/cloudfront-cname-uniqueness.md`](./docs/knowledge/cloudfront-cname-uniqueness.md).
+- **Preview deploys are automatic.** A preview stack is created/updated on every PR push, and torn down on PR close, by the GitHub Actions workflow.
+- **Prod deploys run from CI on push to `main`, gated by manual approval of the `prod` GitHub environment.** The workflow `.github/workflows/deploy.yml` does the work; Claude never runs `pnpm --filter ... run deploy` locally. **After a PR merges, Claude's deploy-related action is to remind the user to go approve the pending deploy in GitHub Actions** — once approved, the deploy is automatic. The reminder is not optional: a merged PR touching infra or app code sits in the approval queue until Hugo clicks Approve.
+- **Migration cutovers (alias takeovers, bucket renames, CDK construct rewrites) are higher-risk prod deploys.** They additionally require the operator to walk the migration runbook for the affected resource. CloudFront alias takeovers are gated by `scripts/preflight-cloudfront-aliases.sh`; see [`docs/knowledge/cloudfront-cname-uniqueness.md`](./docs/knowledge/cloudfront-cname-uniqueness.md).
 
 ## Don'ts
 
@@ -100,4 +100,4 @@ If a PR ships zero lessons, that's fine — open the follow-up PR with a note sa
 - Don't `import`/`export` in `infra/cdk/src/internal/cf-host-routing-function.code.js` — it's CloudFront Function source, read at synth time as a string and shipped to the edge runtime.
 - Don't add an app without updating `.github/path-filters.yml` and the commitlint scope-enum.
 - Don't `--no-verify`. Ever. Fix the hook failure instead.
-- Don't run prod deploys without explicit human approval — see *Deployments* above.
+- Don't forget the post-merge reminder: when a PR touching infra or app code merges, ping the user to approve the pending deploy in GitHub Actions — see *Deployments* above.
