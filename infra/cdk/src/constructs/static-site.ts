@@ -6,6 +6,10 @@ import {
   AllowedMethods,
   CachePolicy,
   Distribution,
+  Function as CloudFrontFunction,
+  FunctionCode,
+  FunctionEventType,
+  FunctionRuntime,
   HttpVersion,
   PriceClass,
   ResponseHeadersPolicy,
@@ -27,6 +31,7 @@ import {
   validateAppSlug,
 } from '../internal/naming.js';
 import { applyStandardTags } from '../internal/tags.js';
+import { STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE } from '../internal/cf-static-site-index-rewrite.js';
 
 /**
  * SSM parameter paths owned by infra/shared/. Constructs read these at synth
@@ -108,6 +113,16 @@ export class StaticSite extends Construct {
     const certArn = StringParameter.valueForStringParameter(this, SHARED_SSM.certBorsoFrArn);
     const cert = Certificate.fromCertificateArn(this, 'Cert', certArn);
 
+    // Rewrites directory-style URIs to /<dir>/index.html so subpaths like
+    // /art/mondrian/ and /art/mondrian both resolve to the index.html in S3.
+    // CloudFront's `defaultRootObject` only handles the apex /, not nested
+    // dirs. See infra/cdk/src/internal/cf-static-site-index-rewrite.code.js.
+    const indexRewriteFunction = new CloudFrontFunction(this, 'IndexRewriteFunction', {
+      runtime: FunctionRuntime.JS_2_0,
+      code: FunctionCode.fromInline(STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE),
+      comment: 'Rewrite directory-style URIs to /<dir>/index.html',
+    });
+
     const distribution = new Distribution(this, 'Distribution', {
       defaultBehavior: {
         origin: S3BucketOrigin.withOriginAccessControl(bucket),
@@ -116,6 +131,12 @@ export class StaticSite extends Construct {
         cachePolicy: CachePolicy.CACHING_OPTIMIZED,
         responseHeadersPolicy: ResponseHeadersPolicy.SECURITY_HEADERS,
         compress: true,
+        functionAssociations: [
+          {
+            function: indexRewriteFunction,
+            eventType: FunctionEventType.VIEWER_REQUEST,
+          },
+        ],
       },
       defaultRootObject: 'index.html',
       domainNames: [props.domainName],

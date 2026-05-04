@@ -153,3 +153,7 @@ These are the common mistakes the standard names. Push back on them in real time
 ## What comes next
 
 Once every perspective has been confronted and no `> ⚠️ Missing …` flag remains, the spec is **ready for `/technical-conception`**. That skill reads this `spec.md` and produces the engineering `plan.md` next to it (under `plan/plan.md`). Do not start implementation directly from a spec — the plan is the artefact a future Dantotsu traces defects back to, and skipping it removes the trail.
+
+## Auto-chain to `/technical-conception`
+
+When this skill finishes (no `> ⚠️ Missing` flag remains, every perspective checkbox in the spec preamble is ticked, the user has approved the spec), the agent immediately invokes `/technical-conception` via the `Skill` tool with the spec path as argument. Do not stop and wait for the user to type "/technical-conception" — the chain is operational, not documentary.

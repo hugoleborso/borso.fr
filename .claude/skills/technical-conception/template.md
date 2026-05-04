@@ -18,6 +18,14 @@ Delete the block-quoted prompt under each heading once the section is written.
 |---|---|---|---|
 | Q1 |  |  |  |
 
+## Mount-time contract
+
+> *Required if the feature mirrors React state (or any client-side state) to an external system on first paint — URL, `localStorage`, `document.title`, focus management, analytics events. Each mirror is a discrete assertion the validators check explicitly: an unlisted mirror is invisible to `/technical-validation`, and any defect in it lives until `/visual-validation` catches it the hard way. Skip the section entirely (delete the heading) if no mount-time mirroring exists.*
+
+| State | External system | Call | History mode | When |
+|---|---|---|---|---|
+|  |  | `history.replaceState` / `localStorage.setItem` / … | push / replace / N/A | initial render, before any user interaction |
+
 ## Risk register
 
 > *Every risk that can ship needs a detection path. If a risk has no detection, escalate to the spec author — it's a Sentry blind spot.*

@@ -101,6 +101,8 @@ Manual sweeps are not a valid coverage path — repo rule.
 7. **Push.** The branch's CI is the last gate; the local gates are stricter.
 8. **Open the PR.** A **FAIL** validator verdict is fix-required — do not open a PR while the latest validation report is FAIL. A **PASS_EXCEPT_UNVERIFIABLE** verdict is mergeable, but the PR description must include a `## Validation gaps` section listing the UNVERIFIABLE rows verbatim with the one-line reason + report-path link. **PASS** ships without per-row disclosure. Either way, the PR description includes a `## Visual evidence` section with the screenshots from the latest visual-validation report — see `/visual-validation`'s "Visual evidence in the PR body" section for the SHA-pinned-raw-URL generator. Reviewers read the PR description, not the validation report; the gap and the visuals have to be up-front.
 
+> **The skill ends here.** Once the PR is open, the implementation skill is done. Preview deploys run automatically on PR push; prod deploys run in CI after Hugo approves the `prod` GitHub environment (see CLAUDE.md "Deployments"). Claude never runs `pnpm ... run deploy` locally — the workflow does. After the PR merges, the agent's only deploy-related action is the reminder to approve the pending deploy in GitHub Actions.
+
 ## Failure modes to avoid
 
 - **Skipping `/technical-conception`** — implementing straight from the spec misses the plan's risk register and self-checks; the implementer ends up rediscovering the same questions.
@@ -117,3 +119,7 @@ Manual sweeps are not a valid coverage path — repo rule.
 - Conventional-commit scopes: `borso-fr`, `borsouvertures`, `infra`, `ci`, `docs`, `deps`. Multi-commit per feature is fine; small, focused commits beat one giant landing.
 - `infra/cdk` and `infra/shared` are 100%-coverage gated by hook; their pre-commit runs `test:coverage` before letting the commit through.
 - Reports from validators land at `docs/features/<app>/<slug>/validation/`; commit them alongside the implementation diff in the same PR.
+
+## After this skill
+
+Step 8 ends `/implementation`. The chain continues with `/visual-validation` (UI work) and `/technical-validation` (always) — both validators carry the post-merge auto-chain to `/after-task-dantotsus`.

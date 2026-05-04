@@ -37,32 +37,103 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 
 ## The procedure
 
-### 1. Inventory the PR
+> **Lean orientation: spend a long time on the problem before any solution.**
+> The instinct is to read the PR, name two or three "lessons", and rush
+> to write the dantotsus. That is solution-oriented thinking and it is
+> the failure mode this skill exists to prevent. Step 1 below is the
+> heart of the skill — do it exhaustively, in writing, in the PR
+> description, **before** classifying anything. If step 1 produces fewer
+> than ~10 rows for any non-trivial PR, you are skimming. Restart.
 
-Build a list of "things that happened" from:
+### 1. Build the friction inventory — exhaustive, not curated
 
-- **Commit history** on the PR branch (`git log --oneline <merge-base>..<head>`).
-- **Force-pushed reverts** (`Revert "…"` commits — a common signal
-  that an approach was tried, rejected, and replaced).
-- **Review comments** on the PR
-  (`mcp__github__pull_request_read` with method
-  `get_review_comments`) — every back-and-forth thread is a
-  candidate.
-- **CI failures** during the PR
-  (`mcp__github__pull_request_read` with method `get_check_runs`)
-  — failed runs that were eventually green tell you something
-  tripped a guard.
-- **Webhook events** received during the session
-  (`<github-webhook-activity>` blocks) — bot comments, status
-  changes, deployment failures.
-- **Conversation transcript** if the user agreed in chat that
-  something was a pitfall ("oh, I didn't know X works that way").
+Catalogue **every** moment of friction during the PR — not just the
+ones that look like dantotsu material. The table is the **first
+section of the kaizen PR description** so a reader sees the full
+reality before any conclusions.
 
-Output: a flat list of `(subject, evidence)` pairs.
+Sources to walk in order, capturing each friction event as one row:
 
-### 2. Classify each subject
+- **Conversation transcript.** Every interrupt-and-redirect from
+  the user (*"wait, you missed X"*, *"NO, do Y"*, *"why did you
+  assume Z"*, *"that doesn't work, try …"*, *"there was a lot more
+  friction than what you said"*) is a row. Every silent
+  course-correction the user made is a row.
+- **Commit history**, especially:
+  - `Revert "…"` commits (an approach tried, rejected, replaced).
+  - `--amend`-noisy stretches (commitlint failures, missed scope, …).
+  - Refactor commits that immediately follow feat/fix commits
+    (signals: "I shipped it then realised I should have done it
+    differently").
+- **CI failures** during the PR (`get_check_runs`). Every red run
+  that went green later is a row.
+- **Validation reports** committed to the PR
+  (`docs/features/<app>/<slug>/validation/`). Every FAIL or
+  UNVERIFIABLE row in any report is a friction event.
+- **Tooling warnings** that fired during the session: knip noise,
+  Biome plugin diagnostics, Husky hook rejections, AWS API errors,
+  build pipeline surprises, dev-server crashes.
+- **Vendor "I didn't know it did that" moments** — every time
+  documentation contradicted observation.
+- **Skill / harness misfires** — skills that didn't auto-trigger
+  when they should have, tools called with the wrong shape, paths
+  assumed instead of verified.
 
-For every candidate, decide:
+Output: a markdown table with these columns, **at the very top of
+the kaizen PR description**, before any other section:
+
+| # | When | Friction | Sources / evidence | Decision |
+| --- | --- | --- | --- | --- |
+| 01 | spec | … | <commit / report / chat snippet> | dantotsu / knowledge / no-op (with one-line reason) |
+
+Conventions:
+
+- `When`: stage where the friction occurred — `conception` /
+  `spec` / `plan` / `implementation` / `validation` /
+  `pr-description` / `deploy` / `post-merge`.
+- `Friction`: one sentence, user-perspective. *"I assumed X without
+  asking; user pulled me back"*, *"deploy failed with CNAME
+  conflict"*, *"validation rule missing led to false PASS"*.
+- `Sources / evidence`: at least one of `commit:<sha>`,
+  `report:<path>`, `comment:<github-link>`, `transcript:<paraphrase>`,
+  `ci:<run-url>`. Concrete. A row without evidence is a row that
+  can't be audited.
+- `Decision`: one of:
+  - `dantotsu: <slug>` — defect or design pivot with code-level
+    eradication available. Spawn a `docs/dantotsus/<slug>.md`
+    entry.
+  - `knowledge: <slug>` — vendor surprise or operator confusion.
+    Spawn a `docs/knowledge/<slug>.md` entry.
+  - `merge into <slug>` — covered by another row's entry.
+  - `no-op: <one-line reason>` — friction was real but already
+    eradicated by an upstream rule, or genuinely too small. **The
+    reason is required.** "Already covered by the `*.utils.ts`
+    rule landed earlier in the same PR" is fine; "skipped" is not.
+
+**Hard floor: every row has a decision. No `?` cells. No "we'll
+think about this later".**
+
+### 2. Re-read the table top-to-bottom — only now classify
+
+After the table is committed to writing, scan it as a whole.
+Patterns emerge that single-row inspection misses:
+
+- *Three rows of the form "I assumed X without asking"* → the
+  spec skill needs a stricter perspective-confrontation rule, not
+  three separate dantotsus.
+- *Two rows of "the validator missed Y because Y wasn't named in
+  the spec"* → spec template needs a new sub-section, one
+  dantotsu covers both.
+- *Five rows of "tool W errored on input Z"* → one knowledge
+  entry for the tool quirk, not five.
+
+Drop subjects that overlap (use `merge into <slug>` rows). Be
+ruthless: ten thin entries help nobody; three sharp ones do — but
+the inventory has to come first, so the ruthless cut is *informed*.
+
+### 2b. Classification cheatsheet
+
+For each surviving subject (i.e. not a `merge into` row):
 
 | Class | Test | Output |
 | --- | --- | --- |
@@ -71,11 +142,7 @@ For every candidate, decide:
 | **Vendor surprise** (AWS, GitHub, pnpm, etc. behaved unlike its docs) | The behaviour is a fact of life of the underlying tool; nothing in our code is broken. | **Knowledge entry** under `docs/knowledge/`. No causal-chain ceremony required. |
 | **Operator confusion** (a one-liner failed because of shell / CLI quirks) | The "fix" was a doc / convention, no code change. | **Knowledge entry** under `docs/knowledge/`. |
 | **Reusable insight** (something the team should know but isn't really a defect) | We learned how something works; future contributors would benefit. | **Knowledge entry**. Knowledge is broad — anything genuinely useful. |
-| **No-op** | PR shipped clean, no debugging visible. | Skip (but still open the kaizen PR with a "no setup changes from PR #N" note). |
-
-Drop subjects that overlap — if two candidates trace to the same
-root cause, write one entry and reference the second's evidence.
-Be ruthless: ten thin entries help nobody; three sharp ones do.
+| **No-op** | Friction was real but already eradicated by an upstream rule, or genuinely too small. | One-line reason inline in the table. Never a silent skip. |
 
 ### 3. Write the entries
 
@@ -119,9 +186,26 @@ PR's number).
 
 Commit one or more commits scoped `docs:` (commitlint scope-enum)
 plus whatever code commits the eradications required. PR title:
-`docs: lessons from PR #<N>`. PR body lists each entry with a
-one-line summary so the reviewer can skim, plus a list of the
-eradication commits.
+`docs: lessons from PR #<N>`.
+
+**PR body shape (in this order, every section required):**
+
+1. `## Friction inventory` — the table built in step 1, verbatim.
+   This is the *first* thing in the PR body; reviewers see the
+   problem space before any conclusion.
+2. `## Patterns` — a short paragraph naming the patterns the
+   inventory revealed (see step 2). Keep it to 3–5 bullets.
+3. `## Dantotsus shipped` — bulleted list of the
+   `docs/dantotsus/<slug>.md` entries with one-line summaries.
+4. `## Knowledge entries shipped` — bulleted list of the
+   `docs/knowledge/<slug>.md` entries with one-line summaries.
+5. `## Eradication commits` — bulleted list of `feat:` / `fix:` /
+   `chore:` commits on this branch that landed code-level
+   eradications, each linked.
+
+If the PR has zero entries (everything classified `no-op`), the
+inventory still goes first; the patterns / dantotsus / knowledge
+sections become "none — see inventory for reasons".
 
 **Apply the `kaizen` label.** This is non-optional — the label is
 the visible signature of the self-improvement loop in the repo.

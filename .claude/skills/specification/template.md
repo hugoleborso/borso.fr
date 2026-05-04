@@ -10,13 +10,19 @@ The block-quoted prompt under each heading is guidance for the author; delete it
 
 # <Feature title — phrased as the user-visible outcome>
 
-<!-- If a perspective has not yet been challenged, leave one of these blockquotes at the top:
-> ⚠️ Missing tech discussion
-> ⚠️ Missing product discussion
-> ⚠️ Missing designer discussion
-> ⚠️ Missing client discussion
-> ⚠️ Missing developer discussion
-Remove the line once that perspective has been covered. -->
+## Perspectives confronted
+
+> *Hard gate: every checkbox below must be ticked **and** carry a one-line justification before any other section is drafted. A box may be ticked only after the user has answered at least one `AskUserQuestion` from that perspective, OR has explicitly confirmed (also via `AskUserQuestion`) that the perspective is degenerate for this feature. Silent self-reported "N/A" is the failure mode this gate is built to prevent.*
+
+- [ ] **Client / business** — <one-line: what was confirmed; or "user confirmed degenerate because <reason>">
+- [ ] **Product** — <one-line>
+- [ ] **Tech-lead** — <one-line>
+- [ ] **Developer** — <one-line>
+- [ ] **Designer** — <one-line>
+
+<!-- Optional fallback if a perspective is genuinely missing despite a confront attempt:
+> ⚠️ Missing <perspective> discussion
+Use only when the user knowingly defers the perspective for a follow-up; never as a substitute for the checklist. -->
 
 ## Why
 

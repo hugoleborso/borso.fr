@@ -93,3 +93,11 @@ Same rule as `/visual-validation`:
 - Default base ref is `origin/main`. Feature branches are typically `claude/<slug>` per CLAUDE.md.
 - Reports go in `docs/features/<app>/<slug>/validation/` (siblings to `spec/`, `plan/`, and any visual-validation reports).
 - Pair with `/visual-validation` (UI work): visual catches "doesn't render right"; technical catches "renders fine but the code is rotten or untested".
+
+## Auto-chain on PR merge: `/after-task-dantotsus`
+
+When GitHub fires `pull_request.closed` with `merged: true` for a PR this skill validated (visible to the agent as a `<github-webhook-activity>` block), the agent immediately invokes `/after-task-dantotsus` for the merged PR. If not subscribed to the PR's webhook activity, the agent asks once whether to subscribe. The same auto-chain lives in `/visual-validation` — whichever validator the chain reached last carries the trigger.
+
+## Post-merge: remind to approve the prod deploy
+
+When the merged PR touches infra or app code, prod CI is now waiting on Hugo to approve the `prod` GitHub environment (CLAUDE.md "Deployments"). The agent's first response after the merge webhook is the reminder — *before* the kaizen sweep, since the deploy queue waits on a human.
