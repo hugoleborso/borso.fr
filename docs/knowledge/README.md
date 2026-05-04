@@ -61,6 +61,10 @@ Two failure modes to watch for:
 - [`agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md) — `agent-browser set device` does not propagate `matchMedia('(pointer: coarse)')`; touch-affordance assertions land UNVERIFIABLE without a workaround.
 - [`agent-browser-cdp-click-no-op-on-react-onclick.md`](./agent-browser-cdp-click-no-op-on-react-onclick.md) — CDP `click @ref` doesn't reliably fire React `onClick`; fall back to `element.click()` via `agent-browser eval`.
 
+### Spec & metrics framing
+
+- [`input-vs-output-metrics.md`](./input-vs-output-metrics.md) — Amazon flywheel framing for the *Why → measurable objective* split; visual-validation drives input metrics only.
+
 ## Adding a new entry
 
 Knowledge entries don't need YAML frontmatter or a fixed structure —

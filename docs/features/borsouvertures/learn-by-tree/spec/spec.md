@@ -18,13 +18,20 @@ break offline; the imported borsouvertures app removes that friction but in its 
 drills *single lines*, which doesn't match how someone actually adds a variation to their
 repertoire (a variation is a *tree* of book moves, not a single sequence).
 
-**One measurable objective for v1, machine-checkable:** the visual-validator, driving the app in
-a real browser, can in a single session: (a) pick any variation in the dataset, (b) drill the
-Learn-tree until the *Variation cleared* banner appears, (c) tap *Switch to Play with this scope*,
-(d) play every leaf line of that variation in Play mode without the app ever surfacing an
-*Out-of-book* state. Pass = `/visual-validation` reports PASS on this assertion. The qualitative
-"clan members feel they learned something" objective is real but lives outside CI; this spec is
-satisfied when the engine gate is green.
+**Output metric (lagging, real-world, *not* asserted by `/visual-validation`):** clan members
+have added a new variation to their personal repertoire after a single ~15-minute session.
+Measured out-of-band by self-report — *"yes, I can play this now"* — when Hugo asks at family
+dinner. Quarterly check, no instrumentation.
+
+**Input metric (leading, machine-observable, asserted by `/visual-validation`):** in a single
+browser session the validator can (a) pick any variation in the dataset, (b) drill the
+Learn-tree until the *Variation cleared* banner appears, (c) tap *Switch to Play with this
+scope*, (d) play every leaf line of that variation in Play mode without the app ever surfacing
+an *Out-of-book* state. PASS on this assertion is the merge gate.
+
+(See [`docs/knowledge/input-vs-output-metrics.md`](../../../../knowledge/input-vs-output-metrics.md)
+for the framing — visual-validation drives input metrics only; the output metric is a proxy
+humans review periodically, not a CI gate.)
 
 Field observation (Gemba): Hugo currently uses Lichess Studies for this loop on a phone, hits
 ads + login screen + slow chessboard, gives up.
@@ -217,7 +224,29 @@ or explicitly defer with rationale).
 
 ## Production strategy
 
-- **Analytics.** None for v1. Five users, no instrumentation cost-benefit.
-- **Zero-defect strategy.** No Sentry. The CI gates (lint / typecheck / 100% utils coverage /
-  visual-validation against this spec) are the safety net. If a bug lands in clan-prod, Hugo
-  files a `/dantotsu` and the eradication ships in the same week.
+### Analytics
+
+**Input metrics** (the leading behaviours we expect a clan member to perform; CI-gated via
+visual-validation, not via runtime telemetry):
+
+- *Variation drilled to completion* — every leaf in the chosen variation visited in a single
+  Learn-tree session.
+- *Switch-to-Play tap* — banner CTA pressed within the same session.
+- *Play scope reaches every leaf without OOB* — every leaf playable in Play mode without an
+  out-of-book event.
+
+These are NOT instrumented as runtime events. Five users; the visual-validator proves the
+flow works, the absence of bug reports proves it keeps working. If usage grows past the clan
+we re-spec to add real telemetry.
+
+**Output metric** (lagging, out-of-band, manual): Hugo asks at family dinner whether the
+person can now play that variation. Quarterly review of "did the Learn-tree drill actually
+land?" If the answer trends to "no", the *input metrics still pass but the output stalls* —
+that's the signal to re-spec the Learn flow (e.g. add spaced repetition).
+
+### Zero-defect strategy
+
+No Sentry, no alerting infrastructure for v1. The CI gates (lint / typecheck / 100% utils
+coverage / `/visual-validation` against the input-metric assertion above + the bug-list
+assertions B1–B7) are the safety net. If a bug lands in clan-prod, Hugo files a `/dantotsu`
+and the eradication ships in the same week.

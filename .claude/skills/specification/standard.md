@@ -22,6 +22,43 @@ A defect is usually the moment someone took a decision on one dimension of the p
 
 An hour spent on the spec is far cheaper than the cost of fighting delays, last-minute UX rework with the client, and ping-ponging with developers afterwards.
 
+## Input vs output metrics (Amazon flywheel)
+
+Borrowed from Amazon's *controllable input metrics* framing (Bezos: "obsess over input
+metrics; output metrics will follow"). Every spec's *Why → measurable objective* names two
+kinds of metric, and the *Test strategy* / *Production strategy* sections must be honest about
+which kind each gate proves.
+
+- **Output metric** — the lagging, multi-causal end-state we actually care about. *"Users
+  learn an opening." "Cart abandonment drops." "Customer NPS rises."* You can measure it
+  eventually, in production, with real users — but never directly, never from CI, and never on
+  a single PR. Most output metrics are months-long signals.
+- **Input metric** — the leading, controllable, observable behaviour that — when consistently
+  executed — produces the output. *"Variation drilled to completion." "Add-to-cart →
+  checkout completes within 2 s p75." "Page load p75 < 1 s."* Input metrics are deterministic
+  flows or numeric thresholds an automated harness can verify on demand.
+
+| Output metric (lagging, real-world)         | Input metric(s) (leading, machine-observable)                                                            |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Users learn an opening                      | Variation drilled to completion; user clicks "Switch to Play" after drill; Play scope reaches every leaf without OOB |
+| Users buy more                              | Add-to-cart → checkout p75 < 2 s; abandonment rate; logged-in user opens product page                    |
+| Customer happiness                          | Page load p75 < 1 s; support response time < 4 h; zero P1s in last 30 d                                  |
+| Engineers ship faster                       | PR review p75 < 24 h; CI green-rate > 95 %; rollback rate < 1 % of deploys                               |
+
+Rules for the spec:
+
+1. *Why → measurable objective* names the **output metric** in plain language. One. Not four.
+2. *Why → input metrics* (sub-bullet) names the leading behaviours that drive the output —
+   the ones a future Claude session can assert.
+3. *Test strategy* states explicitly which input metrics `/visual-validation` will drive. Output
+   metrics are out of scope for `/visual-validation`; never claim a green visual-validation run
+   proves the output.
+4. *Production strategy → Analytics* lists the named events / thresholds that surface the input
+   metrics in production. Output-metric measurement (NPS, retention, learning self-reports) is
+   labelled as such — out-of-band of CI, often manual or third-party.
+
+Reference: [`docs/knowledge/input-vs-output-metrics.md`](../../../docs/knowledge/input-vs-output-metrics.md).
+
 ## Audience — five perspectives
 
 A spec is not a hand-off between PM and tech-lead. It is the document where these perspectives converge and challenge each other:
@@ -85,6 +122,7 @@ Six sections, in this order. The full empty template lives in [`template.md`](./
 | Forget to update the deliverable with the ADR, blueprints, Figma and BPMN links | The spec is a long-term tool. Three months later you do archaeology to find the right info. |
 | The spec is too long | The team can no longer iterate on it. Lead-time estimation becomes hard. |
 | I do not consider adoption as the final result of the spec | No quality monitoring (zero-defect strategy), no usage monitoring (analytics, gain, value), and future investigations become very hard. |
+| I confuse output for input metric | The spec's *measurable objective* reads "users learn an opening" and the test strategy claims `/visual-validation` will validate it. Visual-validation cannot drive a human's brain; it can only assert the behaviours that *lead to* learning. The result is a green CI gate that proves nothing about adoption, and a missing input-metric layer that *could* have been gated. See [`input-vs-output-metrics`](#input-vs-output-metrics-amazon-flywheel) above. |
 
 ## Worked example
 
