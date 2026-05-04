@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ChessboardDnDProvider } from 'react-chessboard';
+import { LoadingPanel } from '@/components/LoadingPanel';
 import { OpeningFlowSelector } from '@/components/OpeningFlowSelector';
 import { SideSelector } from '@/components/SideSelector';
 import { ToggleSlider } from '@/components/ToggleSlider';
@@ -58,7 +59,9 @@ export default function App() {
           onBoardStyleChange={setBoardStyle}
         />
 
-        {view === 'select' && (
+        {view === 'select' && loading && <LoadingPanel />}
+
+        {view === 'select' && !loading && (
           <>
             <div className="panel">
               <SideSelector value={side} onChange={setSide} />
@@ -117,7 +120,7 @@ export default function App() {
               </div>
             </div>
             {loading ? (
-              <div className="panel">Loading openings…</div>
+              <LoadingPanel />
             ) : mode === 'learn' ? (
               <ModeLearn
                 openings={openings}

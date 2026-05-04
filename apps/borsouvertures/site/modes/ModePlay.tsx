@@ -78,10 +78,6 @@ export function ModePlay({
   }
 
   function handleMove(sourceSquare: string, targetSquare: string): boolean {
-    setHighlightSquares({});
-    setArrows([]);
-    setManualArrows(false);
-    setShowSuccess(false);
     const move = gameRef.current.move({
       from: sourceSquare,
       to: targetSquare,
@@ -100,6 +96,14 @@ export function ModePlay({
       return false;
     }
 
+    // Move is valid AND in-book. Only now is it safe to clear the arrow /
+    // highlight overlays — clearing them on every drop would wipe a "Show
+    // Book Moves" reveal as soon as the user grabs a piece, even if they
+    // never actually make a move.
+    setHighlightSquares({});
+    setArrows([]);
+    setManualArrows(false);
+    setShowSuccess(false);
     setPlayedMoves(nextMoves);
 
     if (autoOpponent && state.inBook && state.possibleNextMovesUci.length > 0) {
