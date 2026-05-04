@@ -1,17 +1,18 @@
-import { create } from 'zustand';
+import { useSyncExternalStore } from 'react';
 import { ALL_KEY, type Selection } from '@/openings/selectors.utils';
 import type { Opening } from '@/openings/types';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
+import {
+  parsePersistedState,
+  type PersistedState,
+  stringifyPersistedState,
+} from './persistedState.utils';
 
-export type Mode = 'learn' | 'play';
-export type Side = 'white' | 'black';
-type View = 'select' | 'session';
+import type { Mode, PlayScope, Side, View } from './persistedState.utils';
 
-export interface PlayScope {
-  openingIds: string[];
-  variationIds: string[];
-  lineIds: string[];
-}
+export type { Mode, PlayScope, Side };
+
+const STORAGE_KEY = 'borsouvertures.v1';
 
 interface AppState {
   mode: Mode;
@@ -22,6 +23,83 @@ interface AppState {
   view: View;
   playAutoOpponent: boolean;
   playScope: PlayScope;
+}
+
+const INITIAL_PERSISTED_STATE: PersistedState = {
+  mode: 'learn',
+  side: 'white',
+  boardStyle: 'chesscom',
+  selection: { openingId: ALL_KEY, variationId: ALL_KEY, lineId: ALL_KEY },
+  view: 'select',
+  playAutoOpponent: true,
+  playScope: { openingIds: [], variationIds: [], lineIds: [] },
+};
+
+function loadInitial(): AppState {
+  let restored: PersistedState | null = null;
+  try {
+    restored = parsePersistedState(window.localStorage.getItem(STORAGE_KEY));
+  } catch {
+    // localStorage unavailable (private mode / quota / Safari throwback) —
+    // fall through to defaults; persistence will degrade silently below too.
+  }
+  return { ...(restored ?? INITIAL_PERSISTED_STATE), openings: [] };
+}
+
+function persistSafely(persisted: PersistedState): void {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, stringifyPersistedState(persisted));
+  } catch {
+    // Same reasoning as loadInitial — degrade silently.
+  }
+}
+
+let state: AppState = loadInitial();
+const listeners = new Set<() => void>();
+
+function notifyListeners(): void {
+  for (const listener of listeners) listener();
+}
+
+function persistedSliceOf(snapshot: AppState): PersistedState {
+  return {
+    mode: snapshot.mode,
+    side: snapshot.side,
+    boardStyle: snapshot.boardStyle,
+    selection: snapshot.selection,
+    view: snapshot.view,
+    playAutoOpponent: snapshot.playAutoOpponent,
+    playScope: snapshot.playScope,
+  };
+}
+
+function update(next: Partial<AppState>): void {
+  state = { ...state, ...next };
+  persistSafely(persistedSliceOf(state));
+  notifyListeners();
+}
+
+const subscribe = (listener: () => void): (() => void) => {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+};
+
+const getSnapshot = (): AppState => state;
+
+const dispatchers = {
+  setMode: (mode: Mode) => update({ mode }),
+  setSide: (side: Side) => update({ side }),
+  setBoardStyle: (boardStyle: BoardThemeId) => update({ boardStyle }),
+  setSelection: (selection: Selection) => update({ selection }),
+  setOpenings: (openings: Opening[]) => update({ openings }),
+  setView: (view: View) => update({ view }),
+  setPlayAutoOpponent: (playAutoOpponent: boolean) => update({ playAutoOpponent }),
+  setPlayScope: (playScope: PlayScope) => update({ playScope }),
+};
+
+interface AppStateApi extends AppState {
   setMode: (mode: Mode) => void;
   setSide: (side: Side) => void;
   setBoardStyle: (style: BoardThemeId) => void;
@@ -32,21 +110,7 @@ interface AppState {
   setPlayScope: (scope: PlayScope) => void;
 }
 
-export const useAppState = create<AppState>((set) => ({
-  mode: 'learn',
-  side: 'white',
-  boardStyle: 'chesscom',
-  selection: { openingId: ALL_KEY, variationId: ALL_KEY, lineId: ALL_KEY },
-  openings: [],
-  view: 'select',
-  playAutoOpponent: true,
-  playScope: { openingIds: [], variationIds: [], lineIds: [] },
-  setMode: (mode) => set({ mode }),
-  setSide: (side) => set({ side }),
-  setBoardStyle: (boardStyle) => set({ boardStyle }),
-  setSelection: (selection) => set({ selection }),
-  setOpenings: (openings) => set({ openings }),
-  setView: (view) => set({ view }),
-  setPlayAutoOpponent: (value) => set({ playAutoOpponent: value }),
-  setPlayScope: (playScope) => set({ playScope }),
-}));
+export function useAppState(): AppStateApi {
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot);
+  return { ...snapshot, ...dispatchers };
+}
