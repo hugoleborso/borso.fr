@@ -88,9 +88,16 @@ What counts as a "lesson":
 
 If a PR ships zero lessons, that's fine — open the follow-up PR with a note saying "no setup changes from PR #N" so the loop's existence stays visible. The cost of capturing is low; the cost of re-discovering the same trap is the multi-hour debug session you just had.
 
+## Deployments
+
+- **Preview deploys are automatic.** A preview stack is created/updated on every PR push, and torn down on PR close, by the GitHub Actions workflow. Claude does not run preview deploys by hand — they happen by themselves on push.
+- **Prod deploys require explicit human approval, every time.** Claude does **not** run `pnpm --filter @borso-app/<app> run deploy`, `pnpm --filter @borso/infra run deploy`, `pnpm --filter @borso/shared-infra run deploy`, or any equivalent prod-stage `cdk deploy` on its own. The user runs these from their terminal after review. Even after the user has approved one prod deploy, that approval does not roll forward to the next one. If you find yourself about to type a prod deploy command, stop and ask. The `/implementation` skill ends at "open the PR" — there is no "deploy from the skill" step, and there should never be one.
+- **Migration cutovers (alias takeovers, bucket renames, CDK construct rewrites) are higher-risk prod deploys.** They additionally require the operator to walk the migration runbook for the affected resource. CloudFront alias takeovers are gated by `scripts/preflight-cloudfront-aliases.sh` which fails the deploy if a desired alias is currently held by a different distribution; see [`docs/knowledge/cloudfront-cname-uniqueness.md`](./docs/knowledge/cloudfront-cname-uniqueness.md).
+
 ## Don'ts
 
 - Don't reintroduce `pragma` as a slug — it's the upstream `borso-platform` test fixture, renamed to `test-app` here.
 - Don't `import`/`export` in `infra/cdk/src/internal/cf-host-routing-function.code.js` — it's CloudFront Function source, read at synth time as a string and shipped to the edge runtime.
 - Don't add an app without updating `.github/path-filters.yml` and the commitlint scope-enum.
 - Don't `--no-verify`. Ever. Fix the hook failure instead.
+- Don't run prod deploys without explicit human approval — see *Deployments* above.

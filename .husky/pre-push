@@ -29,3 +29,9 @@ if command -v actionlint >/dev/null 2>&1; then
 else
   echo "[pre-push] WARN: actionlint not installed — skipping. Install via the SessionStart hook (.claude/hooks/session-start.sh)." >&2
 fi
+
+# Reject non-module <script src> tags in app HTML; they ship un-bundled
+# and 404 in production preview / prod builds. Rung-2 eradication of
+# docs/dantotsus/vite-non-module-script-tags-arent-bundled.md.
+echo "[pre-push] checking app HTML for non-module <script src> tags"
+scripts/check-non-module-scripts.sh

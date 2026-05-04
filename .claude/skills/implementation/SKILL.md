@@ -101,6 +101,8 @@ Manual sweeps are not a valid coverage path — repo rule.
 7. **Push.** The branch's CI is the last gate; the local gates are stricter.
 8. **Open the PR.** A **FAIL** validator verdict is fix-required — do not open a PR while the latest validation report is FAIL. A **PASS_EXCEPT_UNVERIFIABLE** verdict is mergeable, but the PR description must include a `## Validation gaps` section listing the UNVERIFIABLE rows verbatim with the one-line reason + report-path link. **PASS** ships without per-row disclosure. Either way, the PR description includes a `## Visual evidence` section with the screenshots from the latest visual-validation report — see `/visual-validation`'s "Visual evidence in the PR body" section for the SHA-pinned-raw-URL generator. Reviewers read the PR description, not the validation report; the gap and the visuals have to be up-front.
 
+> **The skill ends here.** Prod deploys are NOT a step of `/implementation`. Per CLAUDE.md "Deployments" + "Don'ts", `pnpm --filter @borso-app/<app> run deploy` (and the `@borso/infra` / `@borso/shared-infra` equivalents) require explicit human approval, every time, run from the user's own terminal. Preview deploys are automatic on PR push; the implementation skill does not invoke either. If at any point in this skill you find yourself about to type a prod-deploy command, stop and ask the user.
+
 ## Failure modes to avoid
 
 - **Skipping `/technical-conception`** — implementing straight from the spec misses the plan's risk register and self-checks; the implementer ends up rediscovering the same questions.
@@ -117,3 +119,7 @@ Manual sweeps are not a valid coverage path — repo rule.
 - Conventional-commit scopes: `borso-fr`, `borsouvertures`, `infra`, `ci`, `docs`, `deps`. Multi-commit per feature is fine; small, focused commits beat one giant landing.
 - `infra/cdk` and `infra/shared` are 100%-coverage gated by hook; their pre-commit runs `test:coverage` before letting the commit through.
 - Reports from validators land at `docs/features/<app>/<slug>/validation/`; commit them alongside the implementation diff in the same PR.
+
+## Auto-chain on PR merge: `/after-task-dantotsus`
+
+After step 8 the agent's job in `/implementation` is done. The chain continues *off-session* — when GitHub fires `pull_request.closed` with `merged: true` (visible to the agent as a `<github-webhook-activity>` block), the agent immediately invokes `/after-task-dantotsus` for the merged PR. If the agent is not subscribed to the PR's webhook activity, it asks the user once whether to subscribe. See [`docs/dantotsus/feature-flow-skills-do-not-auto-trigger.md`](../../docs/dantotsus/feature-flow-skills-do-not-auto-trigger.md).

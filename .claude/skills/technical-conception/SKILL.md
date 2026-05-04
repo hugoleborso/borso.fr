@@ -130,3 +130,7 @@ Walk these 7 steps, in order.
 - For `infra/cdk/**` and `infra/shared/**` work, the plan must explicitly call out the 100%-coverage impact in the risk register.
 - Pre-flight gate 5 (`/visual-validation`) only applies to UI work. Skip it for backend / infra.
 - Pre-flight gate 7 (`/technical-validation`) applies whenever code is added, period.
+
+## Auto-chain to `/implementation`
+
+When this skill finishes (the plan is written, all open questions are answered or escalated, the user has approved the plan), the agent immediately invokes `/implementation` via the `Skill` tool with the spec path as argument. Do not stop and wait for the user to type "/implementation" — the chain is operational, not documentary. See [`docs/dantotsus/feature-flow-skills-do-not-auto-trigger.md`](../../docs/dantotsus/feature-flow-skills-do-not-auto-trigger.md) for why.
