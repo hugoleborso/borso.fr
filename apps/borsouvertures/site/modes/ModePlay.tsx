@@ -5,6 +5,7 @@ import { Modal } from '@/components/Modal';
 import { StatusPanel } from '@/components/StatusPanel';
 import { useBoardSize } from '@/hooks/useBoardSize';
 import type { PlayScopeFilter } from '@/openings/bookEngine.utils';
+import { shortLineName } from '@/openings/lineDisplay.utils';
 import { createPlayMachine, type PlayMachine } from '@/openings/playMachine.utils';
 import type { Selection } from '@/openings/selectors.utils';
 import type { Opening } from '@/openings/types';
@@ -103,7 +104,15 @@ export function ModePlay({
           candidateCount={snapshot.candidateCount}
           openingName={snapshot.uniqueOpening?.name}
           variationName={snapshot.uniqueVariation?.name}
-          lineName={snapshot.uniqueLine?.name}
+          lineName={
+            snapshot.uniqueOpening && snapshot.uniqueVariation && snapshot.uniqueLine
+              ? (shortLineName(
+                  snapshot.uniqueOpening,
+                  snapshot.uniqueVariation,
+                  snapshot.uniqueLine,
+                ) ?? undefined)
+              : undefined
+          }
         />
       </div>
 

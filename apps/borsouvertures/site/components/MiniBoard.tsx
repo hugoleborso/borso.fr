@@ -12,7 +12,7 @@ interface MiniBoardProps {
 }
 
 export function MiniBoard({ fen, orientation = 'white', boardStyleId }: MiniBoardProps) {
-  const { theme, customPieces } = getBoardAppearance(boardStyleId);
+  const { theme } = getBoardAppearance(boardStyleId);
   return (
     <div style={{ width: MINI_BOARD_PX, height: MINI_BOARD_PX }}>
       <Chessboard
@@ -25,7 +25,6 @@ export function MiniBoard({ fen, orientation = 'white', boardStyleId }: MiniBoar
         customArrowColor={theme.arrow}
         customArrows={[]}
         customSquareStyles={{}}
-        customPieces={customPieces}
         arePiecesDraggable={false}
         animationDuration={0}
         boardWidth={MINI_BOARD_PX}

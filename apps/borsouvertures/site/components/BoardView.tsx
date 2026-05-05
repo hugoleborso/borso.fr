@@ -1,8 +1,8 @@
 import { Chessboard } from 'react-chessboard';
 import type { Arrow, CustomSquareStyles } from 'react-chessboard/dist/chessboard/types';
+import type { Side } from '@/state/useAppState';
 import { getBoardAppearance } from '@/theme/boardAppearance';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
-import type { Side } from '@/state/useAppState';
 
 interface BoardViewProps {
   orientation: Side;
@@ -23,7 +23,7 @@ export function BoardView({
   boardStyleId,
   boardWidth,
 }: BoardViewProps) {
-  const { theme, customPieces } = getBoardAppearance(boardStyleId);
+  const { theme } = getBoardAppearance(boardStyleId);
   return (
     <div className="panel board-container" style={{ width: '100%' }}>
       <Chessboard
@@ -37,7 +37,6 @@ export function BoardView({
         customArrowColor={theme.arrow}
         customArrows={arrows}
         customSquareStyles={highlightSquares}
-        customPieces={customPieces}
         animationDuration={200}
         arePiecesDraggable
         boardWidth={boardWidth}
