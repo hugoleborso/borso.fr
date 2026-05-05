@@ -5,11 +5,13 @@ import { OpeningFlowSelector } from '@/components/OpeningFlowSelector';
 import { SideSelector } from '@/components/SideSelector';
 import { ToggleSlider } from '@/components/ToggleSlider';
 import { TopBar } from '@/components/TopBar';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { loadOpenings } from '@/openings/loadOpenings';
 import { ALL_KEY } from '@/openings/selectors.utils';
-import { ModeLearn } from '@/modes/ModeLearn';
+import type { Variation } from '@/openings/types';
+import { ModeLearnTree } from '@/modes/ModeLearnTree';
 import { ModePlay } from '@/modes/ModePlay';
-import { type Mode, useAppState } from '@/state/useAppState';
+import { type Mode, type TreeVisualizationMode, useAppState } from '@/state/useAppState';
 
 export default function App() {
   const {
@@ -29,9 +31,12 @@ export default function App() {
     setPlayAutoOpponent,
     playScope,
     setPlayScope,
+    treeVisualizationMode,
+    setTreeVisualizationMode,
   } = useAppState();
   const [loading, setLoading] = useState(true);
   const [showMoves, setShowMoves] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadOpenings()
@@ -47,6 +52,30 @@ export default function App() {
       setSelection({ openingId: ALL_KEY, variationId: ALL_KEY, lineId: ALL_KEY });
     }
     setMode(nextMode);
+  }
+
+  function handleSwitchToPlayWithVariation(variation: Variation): void {
+    const openingId = openings.find((opening) =>
+      opening.variations.some((v) => v.id === variation.id),
+    )?.id;
+    setPlayScope({
+      openingIds: openingId ? [openingId] : [],
+      variationIds: [variation.id],
+      lineIds: [],
+    });
+    setSelection({ openingId: ALL_KEY, variationId: ALL_KEY, lineId: ALL_KEY });
+    setMode('play');
+  }
+
+  // The toggle exposes 'arrows' / 'buttons' as a binary; persisted null means
+  // "follow the device default" (mobile → buttons, desktop → arrows).
+  const treeVisualizationDefault: 'arrows' | 'buttons' = isMobile ? 'buttons' : 'arrows';
+  const effectiveTreeVisualization: 'arrows' | 'buttons' =
+    treeVisualizationMode ?? treeVisualizationDefault;
+
+  function handleTreeVisualizationToggle(useButtons: boolean): void {
+    const next: TreeVisualizationMode = useButtons ? 'buttons' : 'arrows';
+    setTreeVisualizationMode(next);
   }
 
   return (
@@ -108,6 +137,15 @@ export default function App() {
                   rightLabel="Show moves"
                   ariaLabel="Show moves toggle"
                 />
+                {mode === 'learn' && (
+                  <ToggleSlider
+                    value={effectiveTreeVisualization === 'buttons'}
+                    onChange={handleTreeVisualizationToggle}
+                    leftLabel="Arrows"
+                    rightLabel="Buttons"
+                    ariaLabel="Tree visualization mode"
+                  />
+                )}
                 {mode === 'play' && (
                   <ToggleSlider
                     value={playAutoOpponent}
@@ -122,12 +160,13 @@ export default function App() {
             {loading ? (
               <LoadingPanel />
             ) : mode === 'learn' ? (
-              <ModeLearn
+              <ModeLearnTree
                 openings={openings}
                 selection={selection}
                 side={side}
                 boardStyle={boardStyle}
-                showMoves={showMoves}
+                treeVisualizationMode={treeVisualizationMode}
+                onSwitchToPlayWithVariation={handleSwitchToPlayWithVariation}
               />
             ) : (
               <ModePlay

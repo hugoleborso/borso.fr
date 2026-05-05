@@ -8,9 +8,15 @@ import {
   stringifyPersistedState,
 } from './persistedState.utils';
 
-import type { Mode, PlayScope, Side, View } from './persistedState.utils';
+import type {
+  Mode,
+  PlayScope,
+  Side,
+  TreeVisualizationMode,
+  View,
+} from './persistedState.utils';
 
-export type { Mode, PlayScope, Side };
+export type { Mode, PlayScope, Side, TreeVisualizationMode };
 
 const STORAGE_KEY = 'borsouvertures.v1';
 
@@ -23,6 +29,7 @@ interface AppState {
   view: View;
   playAutoOpponent: boolean;
   playScope: PlayScope;
+  treeVisualizationMode: TreeVisualizationMode;
 }
 
 const INITIAL_PERSISTED_STATE: PersistedState = {
@@ -33,6 +40,7 @@ const INITIAL_PERSISTED_STATE: PersistedState = {
   view: 'select',
   playAutoOpponent: true,
   playScope: { openingIds: [], variationIds: [], lineIds: [] },
+  treeVisualizationMode: null,
 };
 
 function loadInitial(): AppState {
@@ -70,6 +78,7 @@ function persistedSliceOf(snapshot: AppState): PersistedState {
     view: snapshot.view,
     playAutoOpponent: snapshot.playAutoOpponent,
     playScope: snapshot.playScope,
+    treeVisualizationMode: snapshot.treeVisualizationMode,
   };
 }
 
@@ -97,6 +106,8 @@ const dispatchers = {
   setView: (view: View) => update({ view }),
   setPlayAutoOpponent: (playAutoOpponent: boolean) => update({ playAutoOpponent }),
   setPlayScope: (playScope: PlayScope) => update({ playScope }),
+  setTreeVisualizationMode: (treeVisualizationMode: TreeVisualizationMode) =>
+    update({ treeVisualizationMode }),
 };
 
 interface AppStateApi extends AppState {
@@ -108,6 +119,7 @@ interface AppStateApi extends AppState {
   setView: (view: View) => void;
   setPlayAutoOpponent: (value: boolean) => void;
   setPlayScope: (scope: PlayScope) => void;
+  setTreeVisualizationMode: (mode: TreeVisualizationMode) => void;
 }
 
 export function useAppState(): AppStateApi {

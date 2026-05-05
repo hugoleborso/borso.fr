@@ -4,6 +4,12 @@ import { type BoardThemeId, isBoardThemeId } from '@/theme/boardThemes.utils';
 export type Mode = 'learn' | 'play';
 export type Side = 'white' | 'black';
 export type View = 'select' | 'session';
+/**
+ * `null` defers to the device default (mobile → buttons, desktop → arrows);
+ * `'arrows'` / `'buttons'` are explicit user choices that survive across
+ * devices.
+ */
+export type TreeVisualizationMode = 'arrows' | 'buttons' | null;
 
 export interface PlayScope {
   openingIds: string[];
@@ -24,6 +30,7 @@ export interface PersistedState {
   view: View;
   playAutoOpponent: boolean;
   playScope: PlayScope;
+  treeVisualizationMode: TreeVisualizationMode;
 }
 
 /**
@@ -53,6 +60,7 @@ export function parsePersistedState(raw: string | null): PersistedState | null {
   const view = parseView(parsed.view);
   const playAutoOpponent = parseBoolean(parsed.playAutoOpponent);
   const playScope = parsePlayScope(parsed.playScope);
+  const treeVisualizationMode = parseTreeVisualizationMode(parsed.treeVisualizationMode);
 
   if (
     mode === null ||
@@ -61,11 +69,27 @@ export function parsePersistedState(raw: string | null): PersistedState | null {
     selection === null ||
     view === null ||
     playAutoOpponent === null ||
-    playScope === null
+    playScope === null ||
+    treeVisualizationMode === undefined
   ) {
     return null;
   }
-  return { mode, side, boardStyle, selection, view, playAutoOpponent, playScope };
+  return {
+    mode,
+    side,
+    boardStyle,
+    selection,
+    view,
+    playAutoOpponent,
+    playScope,
+    treeVisualizationMode,
+  };
+}
+
+function parseTreeVisualizationMode(value: unknown): TreeVisualizationMode | undefined {
+  if (value === null) return null;
+  if (value === 'arrows' || value === 'buttons') return value;
+  return undefined;
 }
 
 export function stringifyPersistedState(state: PersistedState): string {

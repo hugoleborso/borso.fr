@@ -144,6 +144,31 @@
   }
 }
 
+.inline-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  background: linear-gradient(135deg, rgba(108, 99, 255, 0.18), rgba(164, 125, 255, 0.08));
+  border-color: #a47dff;
+}
+
+.inline-banner-message {
+  font-weight: 600;
+}
+
+.move-button-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 0.5rem;
+}
+
+.move-button {
+  font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.95rem;
+}
+
 .modal-dialog {
   border: none;
   padding: 0;

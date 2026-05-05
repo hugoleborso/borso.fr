@@ -17,6 +17,7 @@ const VALID_STATE: PersistedState = {
     variationIds: ['main'],
     lineIds: ['classical'],
   },
+  treeVisualizationMode: 'buttons',
 };
 
 describe('parsePersistedState', () => {
@@ -116,6 +117,26 @@ describe('parsePersistedState', () => {
       ...VALID_STATE,
       playScope: { openingIds: ['italian-game'], variationIds: ['main'] },
     };
+    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
+  });
+
+  it('accepts a null treeVisualizationMode (auto by viewport)', () => {
+    const state: PersistedState = { ...VALID_STATE, treeVisualizationMode: null };
+    expect(parsePersistedState(stringifyPersistedState(state))).toEqual(state);
+  });
+
+  it('accepts the explicit arrows value for treeVisualizationMode', () => {
+    const state: PersistedState = { ...VALID_STATE, treeVisualizationMode: 'arrows' };
+    expect(parsePersistedState(stringifyPersistedState(state))).toEqual(state);
+  });
+
+  it('rejects an unknown treeVisualizationMode string', () => {
+    const corrupted: Record<string, unknown> = { ...VALID_STATE, treeVisualizationMode: 'pies' };
+    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
+  });
+
+  it('rejects a non-string-non-null treeVisualizationMode', () => {
+    const corrupted: Record<string, unknown> = { ...VALID_STATE, treeVisualizationMode: 42 };
     expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
   });
 });
