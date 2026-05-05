@@ -23,7 +23,7 @@ interface ModeLearnTreeProps {
   side: Side;
   boardStyle: BoardThemeId;
   treeVisualizationMode: TreeVisualizationMode;
-  onSwitchToPlayWithVariation: (variation: Variation) => void;
+  onSwitchToPlayWithVariation: (opening: Opening, variation: Variation) => void;
 }
 
 export function ModeLearnTree({
@@ -43,10 +43,14 @@ export function ModeLearnTree({
   const boardWidth = useBoardSize();
   const isMobile = useIsMobile();
 
-  const variation = useMemo(() => {
-    const opening = findOpening(openings, selection.openingId);
-    return findVariation(opening, selection.variationId);
-  }, [openings, selection]);
+  const opening = useMemo(
+    () => findOpening(openings, selection.openingId),
+    [openings, selection.openingId],
+  );
+  const variation = useMemo(
+    () => findVariation(opening, selection.variationId),
+    [opening, selection.variationId],
+  );
 
   // Sync the machine with React props. The machine is the external system here
   // (it owns chess.js + setTimeout); useEffect is the right escape hatch.
@@ -55,7 +59,7 @@ export function ModeLearnTree({
     machine.start(variation, side);
   }, [machine, variation, side]);
 
-  if (!variation || selection.variationId === ALL_KEY) {
+  if (!opening || !variation || selection.variationId === ALL_KEY) {
     return <LoadingPanel message="Pick an opening + variation to drill its tree." />;
   }
 
@@ -77,6 +81,15 @@ export function ModeLearnTree({
   return (
     <div className="layout">
       <div className="board-area">
+        {snapshot.variationCleared && (
+          <InlineBanner
+            message="Variation cleared — every line visited at least once"
+            primaryLabel="Switch to Play with this scope"
+            onPrimaryClick={() => onSwitchToPlayWithVariation(opening, variation)}
+            secondaryLabel="Drill again"
+            onSecondaryClick={machine.reset}
+          />
+        )}
         <BoardView
           orientation={side}
           fen={snapshot.fen}
@@ -86,15 +99,6 @@ export function ModeLearnTree({
           boardStyleId={boardStyle}
           boardWidth={boardWidth}
         />
-        {snapshot.variationCleared && (
-          <InlineBanner
-            message="Variation cleared — every line visited at least once"
-            primaryLabel="Switch to Play with this scope"
-            onPrimaryClick={() => onSwitchToPlayWithVariation(variation)}
-            secondaryLabel="Drill again"
-            onSecondaryClick={machine.reset}
-          />
-        )}
       </div>
       <div className="play-aside">
         <div className="panel">

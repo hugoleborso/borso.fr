@@ -9,7 +9,7 @@ import { TopBar } from '@/components/TopBar';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { loadOpenings } from '@/openings/loadOpenings';
 import { ALL_KEY } from '@/openings/selectors.utils';
-import type { Variation } from '@/openings/types';
+import type { Opening, Variation } from '@/openings/types';
 import { ModeLearnTree } from '@/modes/ModeLearnTree';
 import { ModePlay } from '@/modes/ModePlay';
 import { type Mode, type TreeVisualizationMode, useAppState } from '@/state/useAppState';
@@ -81,13 +81,12 @@ export default function App() {
     mode === 'learn'
       ? 'Pick an opening + variation to drill its tree.'
       : 'Pick at least one opening, variation, or line to play.';
+  const sessionStartLabel =
+    mode === 'learn' ? 'Drill this variation' : 'Play within this scope';
 
-  function handleSwitchToPlayWithVariation(variation: Variation): void {
-    const openingId = openings.find((opening) =>
-      opening.variations.some((v) => v.id === variation.id),
-    )?.id;
+  function handleSwitchToPlayWithVariation(opening: Opening, variation: Variation): void {
     setPlayScope({
-      openingIds: openingId ? [openingId] : [],
+      openingIds: [opening.id],
       variationIds: [variation.id],
       lineIds: [],
     });
@@ -157,7 +156,7 @@ export default function App() {
                 onClick={() => setView('session')}
                 disabled={!sessionStartIsAllowed}
               >
-                Start session
+                {sessionStartLabel}
               </button>
               {!sessionStartIsAllowed && (
                 <p style={{ marginTop: '0.5rem', opacity: 0.8 }}>{sessionStartHint}</p>
