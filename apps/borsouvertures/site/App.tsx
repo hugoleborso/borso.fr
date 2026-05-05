@@ -54,6 +54,21 @@ export default function App() {
     setMode(nextMode);
   }
 
+  const learnReady = mode === 'learn' && selection.variationId !== ALL_KEY;
+  const playReady =
+    mode === 'play' &&
+    (selection.openingId !== ALL_KEY ||
+      selection.variationId !== ALL_KEY ||
+      selection.lineId !== ALL_KEY ||
+      playScope.openingIds.length > 0 ||
+      playScope.variationIds.length > 0 ||
+      playScope.lineIds.length > 0);
+  const sessionStartIsAllowed = learnReady || playReady;
+  const sessionStartHint =
+    mode === 'learn'
+      ? 'Pick an opening + variation to drill its tree.'
+      : 'Pick at least one opening, variation, or line to play.';
+
   function handleSwitchToPlayWithVariation(variation: Variation): void {
     const openingId = openings.find((opening) =>
       opening.variations.some((v) => v.id === variation.id),
@@ -116,9 +131,17 @@ export default function App() {
               onPlayScopeChange={setPlayScope}
             />
             <div className="panel">
-              <button type="button" className="btn active" onClick={() => setView('session')}>
+              <button
+                type="button"
+                className="btn active"
+                onClick={() => setView('session')}
+                disabled={!sessionStartIsAllowed}
+              >
                 Start session
               </button>
+              {!sessionStartIsAllowed && (
+                <p style={{ marginTop: '0.5rem', opacity: 0.8 }}>{sessionStartHint}</p>
+              )}
             </div>
           </>
         )}
