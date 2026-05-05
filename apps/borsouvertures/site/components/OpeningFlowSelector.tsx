@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   type LineEntry,
   LinesPanel,
@@ -98,7 +98,11 @@ export function OpeningFlowSelector({
     [variationsForLines],
   );
 
-  const openingsPagination = usePaginatedList(openings, PAGE_SIZE);
+  const openingsResetKey = `${mode}|${playScope.openingIds.join(',')}`;
+  const variationsResetKey = `${mode}|${openingId ?? ''}|${playScope.openingIds.join(',')}|${playScope.variationIds.join(',')}`;
+  const linesResetKey = `${mode}|${variationId ?? ''}|${playScope.variationIds.join(',')}|${playScope.lineIds.join(',')}`;
+
+  const openingsPagination = usePaginatedList(openings, openingsResetKey, PAGE_SIZE);
   const variationsPagination = usePaginatedList<VariationEntry>(
     isPlay
       ? variationEntries
@@ -109,6 +113,7 @@ export function OpeningFlowSelector({
             preview: buildVariationPreview(selectedOpening, variation),
           }))
         : [],
+    variationsResetKey,
     PAGE_SIZE,
   );
   const linesPagination = usePaginatedList<LineEntry>(
@@ -120,23 +125,9 @@ export function OpeningFlowSelector({
             preview: buildLinePreview(selectedOpening, selectedVariation, line),
           }))
         : [],
+    linesResetKey,
     PAGE_SIZE,
   );
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: paging resets on scope inputs only; the pagination handle itself is stable.
-  useEffect(() => {
-    openingsPagination.reset();
-  }, [openings, playScope.openingIds, mode]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: same as above.
-  useEffect(() => {
-    variationsPagination.reset();
-  }, [openingId, playScope.openingIds, playScope.variationIds, mode]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: same as above.
-  useEffect(() => {
-    linesPagination.reset();
-  }, [variationId, playScope.variationIds, playScope.lineIds, mode]);
 
   const openingsPanel = (
     <OpeningsPanel

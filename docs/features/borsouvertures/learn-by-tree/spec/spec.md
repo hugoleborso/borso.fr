@@ -123,11 +123,17 @@ Error cases:
      fragile and per-page attribution complicates the repo's commit story.
 4. **Spaced repetition.** Out of scope for v1 (needs per-position persistence; clan-only audience
    doesn't justify the storage / sync complexity yet). Re-spec later.
-5. **Persistence between sessions.** Decided: *localStorage on the device*. The store keeps last
-   selection (opening / variation / side / theme), and the set of leaves visited per variation
-   during the current drill. Survives reload, doesn't sync across devices. No DSQL, no auth.
-   Schema: `borsouvertures.v1` namespace; future schema bumps key as `borsouvertures.v2` and the
-   v1 entry is dropped — no in-place migration logic for a clan-only app.
+5. **Persistence between sessions.** Decided: *localStorage on the device*. The store keeps the
+   last selection (opening / variation / side / theme / `treeVisualizationMode`). Survives
+   reload, doesn't sync across devices. No DSQL, no auth. Schema: `borsouvertures.v1`
+   namespace; future schema bumps key as `borsouvertures.v2` and the v1 entry is dropped — no
+   in-place migration logic for a clan-only app.
+
+   *Visited-leaves are intentionally **not** persisted.* Each Learn-tree drill is one
+   training session — reloading the page or switching variation starts a fresh drill, even if
+   the previous one wasn't cleared. Persisting partial-drill state would force a cross-tab
+   sync question this iteration explicitly defers. If a clan member asks for "resume drill,"
+   re-spec it.
 6. **Auth / shareable links / leaderboards.** Out of scope. Clan-only. Anyone with the URL can
    use it; that's the whole story.
 7. **Device weighting.** Decided: *mobile-first*. Hugo's primary surface is iPhone on the couch.

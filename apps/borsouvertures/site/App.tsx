@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ChessboardDnDProvider } from 'react-chessboard';
+import { ErrorPanel } from '@/components/ErrorPanel';
 import { LoadingPanel } from '@/components/LoadingPanel';
 import { OpeningFlowSelector } from '@/components/OpeningFlowSelector';
 import { SideSelector } from '@/components/SideSelector';
@@ -35,14 +36,26 @@ export default function App() {
     setTreeVisualizationMode,
   } = useAppState();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<Error | null>(null);
   const [showMoves, setShowMoves] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     loadOpenings()
-      .then(setOpenings)
+      .then((result) => {
+        if (result.ok) {
+          setOpenings(result.openings);
+          setLoadError(null);
+        } else {
+          setLoadError(result.error);
+        }
+      })
       .finally(() => setLoading(false));
   }, [setOpenings]);
+
+  function handleReload(): void {
+    window.location.reload();
+  }
 
   function handleModeChange(nextMode: Mode): void {
     if (nextMode === 'play' && mode !== 'play') {
@@ -103,9 +116,16 @@ export default function App() {
           onBoardStyleChange={setBoardStyle}
         />
 
-        {view === 'select' && loading && <LoadingPanel />}
+        {loadError && (
+          <ErrorPanel
+            message="The opening dataset failed to load. Try reloading the page."
+            onReload={handleReload}
+          />
+        )}
 
-        {view === 'select' && !loading && (
+        {!loadError && view === 'select' && loading && <LoadingPanel />}
+
+        {!loadError && view === 'select' && !loading && (
           <>
             <div className="panel">
               <SideSelector value={side} onChange={setSide} />
@@ -146,7 +166,7 @@ export default function App() {
           </>
         )}
 
-        {view === 'session' && (
+        {!loadError && view === 'session' && (
           <>
             <div className="controls-row" style={{ justifyContent: 'space-between' }}>
               <div className="controls-row">
