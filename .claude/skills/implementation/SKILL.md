@@ -86,10 +86,26 @@ For every numbered happy-path step, every edge case, every error case in the spe
 
 Manual sweeps are not a valid coverage path — repo rule.
 
+### 4. Self-screenshot UI work before declaring it green
+
+If the slice you just shipped touches visible UI, **open it in the running dev server and screenshot it yourself before declaring the row done**. Read the screenshot — not the DOM dump, not the `agent-browser snapshot` JSON, the actual PNG. Visible defects (broken `<img>` fallbacks rendering alt text, missing icons, layout breakage at narrow viewports, overflow, contrast disasters) are invisible to type-checks and unit tests; they are obvious in a screenshot a human looks at for two seconds.
+
+The cost is two `agent-browser` commands per slice. The cost of *not* doing this is the implementer reporting the slice green, the visual-validator FAILing it, and the user catching it after that (which is where the eradications behind `docs/dantotsus/described-screenshot-without-checking-pixels.md` and the related broken-CDN story came from).
+
+Pair this with the broken-image scan from `/visual-validation`'s standard if you want a one-shot self-check:
+
+```bash
+agent-browser screenshot /tmp/self-check.png
+agent-browser eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => img.src)"
+```
+
+A non-empty `eval` result is a stop-the-line — the row is not done, the broken `<img>` has to be diagnosed and fixed *before* you tag the slice complete.
+
 ## Procedure
 
 1. **Read** `spec.md` and `plan.md` end-to-end. Build a mental model.
-2. **Inventory** technical surfaces. For each, invoke the matching sub-skill via `Skill` if one exists. Note any missing.
+1a. **Verify the plan has no open questions left unanswered.** Grep `plan.md` for "Open question", "TBD", "?", "decide", "still need". Any open item is a **stop-and-ask** — the implementer must surface it to the user and get an explicit answer *before walking the table*. Open questions in the plan are the single most common source of bias-laundered implementation defects: the implementer picks one of the answers themselves, the validator then validates against that silently-chosen answer, and the spec-vs-implementation gap is invisible. See `docs/dantotsus/plan-open-question-leaked-to-validator-fail.md`.
+2. **Inventory** technical surfaces. For each, invoke the matching sub-skill via `Skill` if one exists. Note any missing. **When a third-party library appears in the inventory, spend a minute on its current docs/changelog before re-implementing any of its capabilities** — many "I'll just write a quick X" moments dissolve when you discover the library already ships X natively. See `docs/dantotsus/built-my-own-before-checking-the-library.md` and `docs/knowledge/audit-imported-deps-and-patterns-when-planning.md`.
 3. **Walk the plan's "How each spec decision becomes code" table top-down.** For each row:
    a. Open the file the row points at (or create it).
    b. Apply the change.
@@ -112,6 +128,8 @@ Manual sweeps are not a valid coverage path — repo rule.
 - **Skipping a sub-skill that exists** — domain knowledge in the sub-skill goes unenforced; defects predicted by it ship anyway.
 - **Bypassing a hook** with `--no-verify` — repo rule says never. Fix the hook failure.
 - **Deferring the test-runner setup** — if the workspace has no Vitest yet, set it up *as part of this implementation*. Otherwise the implementation lands without coverage and the next session inherits a broken gate.
+- **Reinventing what the library already does.** Before writing a "quick custom X" on top of an imported library, spend one minute reading the library's current docs / changelog / `defaultOptions`. The L-shaped knight arrow we built by decomposing into two arrows already existed natively in `react-chessboard@^5.4.0`; we shipped a wrong custom workaround on v4. See `docs/dantotsus/built-my-own-before-checking-the-library.md`.
+- **Walking the plan with open questions still in it.** Step 1a of the procedure is non-negotiable. If `plan.md` carries unanswered items, the implementer must surface them to the user *before* writing code. Picking the answer yourself silently bakes the implementer's preference into both the implementation and the validation that follows.
 
 ## Repo-specific notes
 
