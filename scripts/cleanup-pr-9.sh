@@ -30,13 +30,9 @@ confirm() {
   [[ "$reply" == "y" || "$reply" == "Y" ]]
 }
 
-pnpm --filter @borso/infra run build
-# cdk destroy synthesizes first, and synth needs apps/borso-fr/dist/
-# to exist because Source.asset() resolves at synth time. The destroy
-# script in package.json doesn't chain `pnpm build` (deploy does, but
-# destroy doesn't) — that's the actual root cause of the original
-# silent-destroy failures the workflow `|| echo` was masking.
-pnpm --filter @borso-app/borso-fr run build
+# `pnpm --filter @borso-app/borso-fr run destroy` now chains the
+# infra build + app build internally (see apps/borso-fr/package.json
+# in this PR). No need to pre-build here.
 
 # ─────────────────────────────────────────────────────────────────────
 # 1. Destroy stale preview stacks

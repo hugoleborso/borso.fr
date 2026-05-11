@@ -36,6 +36,31 @@ describe('eradication: no `bundling.nodeModules` in CDK constructs', () => {
   });
 });
 
+describe('eradication: every app `destroy` script chains the same builds as `deploy`', () => {
+  // docs/dantotsus/cdk-destroy-failure-swallowed-by-trailing-or-echo.md
+  // — cdk destroy synthesizes the app first, and Source.asset() resolves
+  // at synth time. Without `pnpm build` before destroy, synth fails with
+  // CannotFindAsset and DeleteStack is never reached. The fix is making
+  // destroy symmetric with deploy: both chain the build.
+  const APPS_DIR = path.resolve(HERE, '../../../../apps');
+  const appNames = fs.existsSync(APPS_DIR)
+    ? fs.readdirSync(APPS_DIR).filter((entry) => {
+        const pkgJsonPath = path.join(APPS_DIR, entry, 'package.json');
+        return fs.existsSync(pkgJsonPath);
+      })
+    : [];
+
+  it.each(appNames)('%s/package.json: destroy chains the build', (appName) => {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(APPS_DIR, appName, 'package.json'), 'utf-8'),
+    );
+    const destroy: string = pkg.scripts?.destroy ?? '';
+    expect(destroy).toContain('pnpm --filter @borso/infra run build');
+    expect(destroy).toContain('pnpm build');
+    expect(destroy).toContain('cdk destroy');
+  });
+});
+
 describe('eradication: no RemovalPolicy.RETAIN on static-site buckets', () => {
   // docs/dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md
   // — the failed-first-deploy orphan trap requires literal bucketName +
