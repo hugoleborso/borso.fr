@@ -5,7 +5,7 @@ detected-at: qa
 severity: medium
 related-pr: https://github.com/hugoleborso/borso.fr/pull/8
 fix-pr: https://github.com/hugoleborso/borso.fr/pull/8
-fix-commits: [99e91a4]
+fix-commits: [6833755, f97e162]
 eradication-level: 1
 time-to-detect: hours
 tags: [react, identifiers, domain-model, borsouvertures]
@@ -86,7 +86,7 @@ pair.
 
 ## Countermeasure
 
-`handleSwitchToPlayWithVariation` was changed in commit `99e91a4` to take
+`handleSwitchToPlayWithVariation` was changed in commit `6833755` to take
 *both* the opening and the variation as parameters, and to write both IDs
 directly without a lookup:
 
@@ -122,7 +122,7 @@ requires both `Opening` and `Variation`, so the wrong-lookup pattern is
 no longer expressible at the call site).
 
 **Reference:** [PR #8](https://github.com/hugoleborso/borso.fr/pull/8) ·
-commit [`99e91a4`](https://github.com/hugoleborso/borso.fr/commit/99e91a4).
+commit [`6833755`](https://github.com/hugoleborso/borso.fr/commit/6833755).
 
 **The actual fix:** see the diff above. The function now takes both
 identities; the bug is structurally impossible to reintroduce without
