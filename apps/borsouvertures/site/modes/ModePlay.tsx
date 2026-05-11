@@ -1,5 +1,5 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react';
-import type { Arrow, CustomSquareStyles } from 'react-chessboard/dist/chessboard/types';
+import { type CSSProperties, useEffect, useRef, useSyncExternalStore } from 'react';
+import type { Arrow } from 'react-chessboard';
 import { BoardView } from '@/components/BoardView';
 import { InlineBanner } from '@/components/InlineBanner';
 import { Modal } from '@/components/Modal';
@@ -24,7 +24,7 @@ interface ModePlayProps {
   playScope: PlayScopeFilter;
 }
 
-const NO_HIGHLIGHTS: CustomSquareStyles = {};
+const NO_HIGHLIGHTS: Record<string, CSSProperties> = {};
 
 export function ModePlay({
   openings,

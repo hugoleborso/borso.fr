@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
-import type { Arrow, CustomSquareStyles } from 'react-chessboard/dist/chessboard/types';
+import { type CSSProperties, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import type { Arrow } from 'react-chessboard';
 import { BoardView } from '@/components/BoardView';
 import { InlineBanner } from '@/components/InlineBanner';
 import { LoadingPanel } from '@/components/LoadingPanel';
@@ -71,7 +71,7 @@ export function ModeLearnTree({
     !showButtons && snapshot.showRevealedArrows
       ? snapshot.nextBookMovesUci.map((uci) => uciToArrow(uci))
       : [];
-  const highlightSquares: CustomSquareStyles = {};
+  const highlightSquares: Record<string, CSSProperties> = {};
 
   function handleMove(sourceSquare: string, targetSquare: string): boolean {
     const uci = `${sourceSquare}${targetSquare}`;

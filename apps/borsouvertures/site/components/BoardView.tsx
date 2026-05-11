@@ -1,5 +1,6 @@
-import { Chessboard } from 'react-chessboard';
-import type { Arrow, CustomSquareStyles } from 'react-chessboard/dist/chessboard/types';
+import { Chessboard, defaultArrowOptions } from 'react-chessboard';
+import type { Arrow } from 'react-chessboard';
+import type { CSSProperties } from 'react';
 import type { Side } from '@/state/useAppState';
 import { getBoardAppearance } from '@/theme/boardAppearance';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
@@ -9,7 +10,7 @@ interface BoardViewProps {
   fen: string;
   onMove: (sourceSquare: string, targetSquare: string) => boolean;
   arrows?: Arrow[];
-  highlightSquares?: CustomSquareStyles;
+  highlightSquares?: Record<string, CSSProperties>;
   boardStyleId: BoardThemeId;
   boardWidth?: number;
 }
@@ -24,22 +25,28 @@ export function BoardView({
   boardWidth,
 }: BoardViewProps) {
   const { theme } = getBoardAppearance(boardStyleId);
+  const wrapperStyle: CSSProperties =
+    boardWidth !== undefined ? { width: `${boardWidth}px` } : { width: '100%' };
   return (
-    <div className="panel board-container" style={{ width: '100%' }}>
+    <div className="panel board-container" style={wrapperStyle}>
       <Chessboard
-        id="bors-board"
-        position={fen}
-        boardOrientation={orientation}
-        onPieceDrop={(sourceSquare, targetSquare) => onMove(sourceSquare, targetSquare)}
-        customDarkSquareStyle={{ backgroundColor: theme.dark }}
-        customLightSquareStyle={{ backgroundColor: theme.light }}
-        customBoardStyle={{ borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.4)' }}
-        customArrowColor={theme.arrow}
-        customArrows={arrows}
-        customSquareStyles={highlightSquares}
-        animationDuration={200}
-        arePiecesDraggable
-        boardWidth={boardWidth}
+        options={{
+          id: 'bors-board',
+          position: fen,
+          boardOrientation: orientation,
+          darkSquareStyle: { backgroundColor: theme.dark },
+          lightSquareStyle: { backgroundColor: theme.light },
+          boardStyle: { borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.4)' },
+          arrowOptions: { ...defaultArrowOptions, color: theme.arrow },
+          arrows,
+          squareStyles: highlightSquares,
+          animationDurationInMs: 200,
+          allowDragging: true,
+          onPieceDrop: ({ sourceSquare, targetSquare }) => {
+            if (targetSquare === null) return false;
+            return onMove(sourceSquare, targetSquare);
+          },
+        }}
       />
     </div>
   );

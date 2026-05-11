@@ -48,7 +48,11 @@ describe('UCI helpers', () => {
     expect(uciPromotion('e2e4')).toBeUndefined();
   });
 
-  it('builds a chessboard arrow', () => {
-    expect(uciToArrow('g1f3')).toEqual(['g1', 'f3']);
+  it('builds a chessboard v5 arrow object with endpoints + color', () => {
+    expect(uciToArrow('g1f3')).toEqual({
+      startSquare: 'g1',
+      endSquare: 'f3',
+      color: expect.any(String),
+    });
   });
 });

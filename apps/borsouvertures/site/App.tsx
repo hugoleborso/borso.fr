@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { ChessboardDnDProvider } from 'react-chessboard';
 import { ErrorPanel } from '@/components/ErrorPanel';
 import { LoadingPanel } from '@/components/LoadingPanel';
 import { OpeningFlowSelector } from '@/components/OpeningFlowSelector';
@@ -106,8 +105,7 @@ export default function App() {
   }
 
   return (
-    <ChessboardDnDProvider>
-      <div className="app-shell">
+    <div className="app-shell">
         <TopBar
           mode={mode}
           onModeChange={handleModeChange}
@@ -223,7 +221,6 @@ export default function App() {
             )}
           </>
         )}
-      </div>
-    </ChessboardDnDProvider>
+    </div>
   );
 }
