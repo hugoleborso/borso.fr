@@ -1,0 +1,13 @@
+export const ACCENT = '#e85a25';
+export const INK = '#171410';
+export const PAPER = '#f4ede1';
+export const MUTED = '#8a8175';
+export const RULE = '#1a1815';
+export const STRIPE_LIGHT = '#d6cdb8';
+export const STRIPE_DARK = '#cec4ad';
+export const STRIPE_ACCENT_DARK = '#d44b1c';
+export const DASH_RULE = '#c8bea4';
+export const PROOF_BG = '#e6dcc4';
+export const WARN_INK = '#a86b16';
+export const BAD_INK = '#9a3b2c';
+export const NOTE_INK = '#3a3530';

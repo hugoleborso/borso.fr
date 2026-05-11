@@ -8,6 +8,7 @@
       "entry": [
         "bin/app.ts",
         "site/art/mondrian/main.tsx",
+        "site/12-travaux/main.tsx",
         "site/**/*.utils.test.ts"
       ],
       "project": ["bin/**/*.ts", "site/**/*.ts", "site/**/*.tsx"]
