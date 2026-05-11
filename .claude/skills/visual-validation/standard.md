@@ -83,6 +83,45 @@ Screenshots referenced from a verdict report are checked into git alongside the 
 
 `.gitignore` at the repo root **must not** match `docs/features/**/validation/**`. The visual-validator agent never writes outside its given `evidence_dir` so the rule is enforced by the agent's behaviour, not by an ignore pattern.
 
+## Pixel-content checks (every screenshot)
+
+Before declaring any row PASS, the validator runs the broken-image scan
+against the current page. A typical PWA / SPA defect is that an `<img src>`
+404s or 403s (third-party CDN block, CORS refusal, missing asset) and the
+browser falls back to rendering the `alt` text in place of the image. DOM
+assertions pass — the `<img>` is there, the parent component rendered, the
+layout is correct — but the user sees broken alt-text where pieces /
+icons / glyphs should be.
+
+The canonical check:
+
+```js
+Array.from(document.querySelectorAll('img'))
+  .filter((img) => img.complete && img.naturalWidth === 0)
+  .map((img) => ({ src: img.src, alt: img.alt, parent: img.parentElement?.tagName }));
+```
+
+Returns the set of `<img>` tags that completed loading their alt text
+instead of the actual image. Non-empty → FAIL the row that covered the
+screenshot and name the broken src(s) in the report. The validator runs
+this **for every screenshot it takes**, not just suspect ones; the cost is
+one `agent-browser eval` per shot.
+
+Sibling checks worth running per row when the asserted UI has them:
+
+- *"Does the rendered text match what the spec says?"* — `eval`
+  `document.querySelector(<selector>).textContent` and compare verbatim,
+  not just check existence.
+- *"Is the element positioned where the spec says it should be?"* —
+  `getBoundingClientRect()` against the related elements (e.g. "banner
+  above board" → `banner.top < board.top`).
+
+These three checks together turn the validator from a *DOM-presence
+inspector* into a *rendered-pixel-content inspector*, which is the gap
+that let the broken chess.com sprites + the below-the-board banner ship
+in [PR #8](https://github.com/hugoleborso/borso.fr/pull/8). See
+[`docs/dantotsus/described-screenshot-without-checking-pixels.md`](../../docs/dantotsus/described-screenshot-without-checking-pixels.md).
+
 ## Common mistakes
 
 | Typical error | Consequences |
@@ -95,3 +134,4 @@ Screenshots referenced from a verdict report are checked into git alongside the 
 | Verdict reports don't reference evidence | Reviewers can't tell PASS from "agent said so". Treat unsourced PASS as UNVERIFIABLE. |
 | Skipping edge-case rows because they require setup (resize, set device, set media) | The defects users hit live there. Pre-flight gate is meaningless without them. |
 | Gitignoring the validation folder | Evidence vanishes; reports become hearsay. |
+| **Verdict on DOM-presence without checking rendered pixels** | Broken `<img>` tags + alt-text fallback + content-mismatched text all pass DOM checks while users see a broken UI. Run the *Pixel-content checks* section above per screenshot. |

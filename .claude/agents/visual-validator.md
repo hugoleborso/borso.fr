@@ -63,7 +63,12 @@ If `agent-browser` is missing on the system, install it: `npm install -g agent-b
    a. Plan the browser action that would prove it.
    b. Execute it. Use deterministic seeds where the spec supports it (e.g. `?seed=DEADBEEF&palette=classic`).
    c. Capture evidence. **Screenshots go to `<evidence_dir>/<row-id>-<short-slug>.png` as absolute paths**, e.g. `<evidence_dir>/01-default-render.png`. Deterministic checks (URL match, attribute equal, text present) need a one-line note instead of a screenshot.
-   d. Tag the row PASS / FAIL / UNVERIFIABLE with a one-line evidence reference.
+   d. **Pixel-content check (per screenshot, mandatory).** Immediately after taking a screenshot, run the broken-image scan against the current page:
+      ```bash
+      agent-browser eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => ({ src: img.src, alt: img.alt, parent: img.parentElement?.tagName }))"
+      ```
+      A non-empty result means one or more `<img>` rendered their `alt` text instead of the image (CDN 403, hotlink block, missing asset). The row is then **FAIL** — record the broken `src` values in the report's Notes. DOM-presence assertions never override this — users see broken alt-text where icons / sprites / glyphs should be.
+   e. Tag the row PASS / FAIL / UNVERIFIABLE with a one-line evidence reference.
 5. **Walk the edge-case categories the spec likely mentions:**
    - Narrow-viewport thresholds (e.g. ≤ 960 px, ≤ 520 px, ≤ 380 px) — `agent-browser set viewport <w> <h>` and re-check the layout claims.
    - `prefers-color-scheme: dark` — `agent-browser set media dark` and re-check first-visit palette claim.
