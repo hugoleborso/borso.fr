@@ -36,6 +36,20 @@ describe('eradication: no `bundling.nodeModules` in CDK constructs', () => {
   });
 });
 
+describe('eradication: no RemovalPolicy.RETAIN on static-site buckets', () => {
+  // docs/dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md
+  // — the failed-first-deploy orphan trap requires literal bucketName +
+  // RETAIN. Static-site buckets hold only rebuildable build output, so
+  // DESTROY + autoDeleteObjects is correct. A future construct re-
+  // introducing RETAIN here would silently reintroduce the trap.
+  const sourcePath = path.join(CONSTRUCTS_DIR, 'static-site.ts');
+  const stripped = readStripped(sourcePath);
+
+  it('does not reference RemovalPolicy.RETAIN', () => {
+    expect(stripped).not.toMatch(/RemovalPolicy\.RETAIN/);
+  });
+});
+
 describe('eradication: cf-host-routing-function uses ES5-only syntax', () => {
   // docs/dantotsus/cloudfront-function-runtime-es5.md — CloudFront
   // Functions runtime 2.0 advertises ES2020 but is unreliable. Stay on

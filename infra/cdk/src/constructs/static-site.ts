@@ -107,7 +107,16 @@ export class StaticSite extends Construct {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
       versioned: false,
-      removalPolicy: RemovalPolicy.RETAIN,
+      // Static-site buckets hold only build artefacts from dist/ — no
+      // user-generated content, fully rebuildable from source. The usual
+      // "RETAIN buckets to protect user data" reflex buys no protection
+      // here, and the combination of pinned bucketName + RETAIN caused
+      // the failed-first-deploy orphan trap (see dantotsu
+      // cdk-failed-deploy-leaves-retained-buckets-orphaned). DESTROY +
+      // autoDeleteObjects: failed creates roll back cleanly, intentional
+      // destroys actually destroy.
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
     });
 
     const certArn = StringParameter.valueForStringParameter(this, SHARED_SSM.certBorsoFrArn);
