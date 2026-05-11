@@ -1,7 +1,26 @@
 ---
 date: 2026-05-04
-tags: [cdk, s3, cloudformation, deploy]
+superseded: 2026-05-11
+tags: [cdk, s3, cloudformation, deploy, historical]
 ---
+
+> ### Superseded 2026-05-11 — kept for audit trail
+>
+> This entry was written when the [parent dantotsu](../dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md)
+> sat at rung 5 (knowledge floor). On 2026-05-11 the dantotsu's
+> eradication was upgraded to rung 1 (structural impossibility): the
+> `StaticSite` construct now creates prod buckets with
+> `RemovalPolicy.DESTROY` + `autoDeleteObjects: true`, and an
+> eradication-check test refuses to let `RemovalPolicy.RETAIN` be
+> reintroduced into `static-site.ts`. The failed-first-deploy orphan
+> trap can no longer occur in this repo.
+>
+> The text below is preserved unchanged. Read it as historical context
+> — *why we thought a knowledge floor was sufficient* and *what we
+> learned that made us re-examine* — not as current operational guidance.
+> If you arrive here looking for the recovery commands, you almost
+> certainly don't need them anymore. If you somehow do, the three-line
+> recovery at the bottom still works mechanically.
 
 # CDK `RemovalPolicy.RETAIN` on a literal-named bucket leaves orphans on first-deploy failure
 
