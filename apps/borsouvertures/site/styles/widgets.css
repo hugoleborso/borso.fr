@@ -157,6 +157,41 @@
   font-weight: 600;
 }
 
+/* Line-completed celebration in Play mode + variation-cleared in Learn-tree
+   when the operator opts in via `celebrate`. Gold-ish gradient, slow pulse,
+   soft glow. Honours prefers-reduced-motion. */
+.inline-banner-celebrate {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.32), rgba(108, 99, 255, 0.28));
+  border-color: #ffd84a;
+  box-shadow:
+    0 0 0 1px rgba(255, 216, 74, 0.4),
+    0 10px 30px rgba(255, 216, 74, 0.18),
+    0 0 60px rgba(108, 99, 255, 0.25);
+  animation: inline-banner-celebrate-pulse 2.2s ease-in-out infinite alternate;
+}
+
+.inline-banner-celebrate .inline-banner-message {
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+
+@keyframes inline-banner-celebrate-pulse {
+  from {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  to {
+    transform: scale(1.012);
+    filter: brightness(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inline-banner-celebrate {
+    animation: none;
+  }
+}
+
 .move-button-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));

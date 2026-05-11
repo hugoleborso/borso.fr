@@ -1,6 +1,7 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import type { Arrow, CustomSquareStyles } from 'react-chessboard/dist/chessboard/types';
 import { BoardView } from '@/components/BoardView';
+import { InlineBanner } from '@/components/InlineBanner';
 import { Modal } from '@/components/Modal';
 import { StatusPanel } from '@/components/StatusPanel';
 import { useBoardSize } from '@/hooks/useBoardSize';
@@ -65,9 +66,31 @@ export function ModePlay({
     return machine.playMove(`${sourceSquare}${targetSquare}`) === 'accepted';
   }
 
+  const completedLineLabel =
+    snapshot.uniqueOpening && snapshot.uniqueVariation && snapshot.uniqueLine
+      ? (shortLineName(
+          snapshot.uniqueOpening,
+          snapshot.uniqueVariation,
+          snapshot.uniqueLine,
+        ) ?? snapshot.uniqueVariation.name)
+      : null;
+  const celebrationMessage = completedLineLabel
+    ? `Line completed — ${completedLineLabel}!`
+    : 'Line completed!';
+
   return (
     <div className="play-grid">
       <div className="board-area">
+        {snapshot.successOpen && (
+          <InlineBanner
+            celebrate
+            message={celebrationMessage}
+            primaryLabel="Play again"
+            onPrimaryClick={machine.reset}
+            secondaryLabel="Dismiss"
+            onSecondaryClick={machine.dismissSuccess}
+          />
+        )}
         <BoardView
           orientation={side}
           fen={snapshot.fen}
@@ -129,15 +152,6 @@ export function ModePlay({
         </Modal>
       )}
 
-      {snapshot.successOpen && (
-        <Modal title="You reached the end of the line!" onClose={machine.dismissSuccess}>
-          <div className="controls-row modal-actions">
-            <button type="button" className="btn active" onClick={machine.reset}>
-              Play again
-            </button>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }

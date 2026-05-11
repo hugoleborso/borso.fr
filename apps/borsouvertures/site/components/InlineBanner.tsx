@@ -4,6 +4,8 @@ interface InlineBannerProps {
   onPrimaryClick: () => void;
   secondaryLabel?: string;
   onSecondaryClick?: () => void;
+  /** When true, applies the gold-gradient + soft pulse animation. */
+  celebrate?: boolean;
 }
 
 export function InlineBanner({
@@ -12,10 +14,15 @@ export function InlineBanner({
   onPrimaryClick,
   secondaryLabel,
   onSecondaryClick,
+  celebrate,
 }: InlineBannerProps) {
   return (
-    <div className="panel inline-banner" role="status" aria-live="polite">
-      <div className="inline-banner-message">{message}</div>
+    <div
+      className={`panel inline-banner${celebrate ? ' inline-banner-celebrate' : ''}`}
+      role="status"
+      aria-live="polite"
+    >
+      <div className="inline-banner-message">{celebrate && <span aria-hidden>🎉 </span>}{message}</div>
       <div className="controls-row">
         <button type="button" className="btn active" onClick={onPrimaryClick}>
           {primaryLabel}

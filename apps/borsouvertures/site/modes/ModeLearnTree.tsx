@@ -83,6 +83,7 @@ export function ModeLearnTree({
       <div className="board-area">
         {snapshot.variationCleared && (
           <InlineBanner
+            celebrate
             message="Variation cleared — every line visited at least once"
             primaryLabel="Switch to Play with this scope"
             onPrimaryClick={() => onSwitchToPlayWithVariation(opening, variation)}
