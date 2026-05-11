@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Les 12 travaux de Borso — explorations</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #f0eee9; }
+  #root { width: 100vw; height: 100vh; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="direction-a.jsx"></script>
+<script type="text/babel" src="direction-b.jsx"></script>
+<script type="text/babel" src="direction-c.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+function Page() {
+  return (
+    <DesignCanvas>
+      <DCSection
+        id="explorations"
+        title="Les 12 travaux de Borso — calendrier des défis"
+        subtitle="Trois directions pour la nouvelle page du site. Cliquez sur n'importe quelle œuvre pour la mettre en plein-écran. Toutes les interactions (clic mois, panneau détail, hover) sont vivantes dans chaque œuvre."
+      >
+        <DCArtboard id="dirA" label="A · Stèle éditoriale" width={1360} height={1720}>
+          <DirA_App />
+        </DCArtboard>
+        <DCArtboard id="dirB" label="B · Carnet de coach" width={1280} height={2220}>
+          <DirB_App />
+        </DCArtboard>
+        <DCArtboard id="dirC" label="C · Frise magazine" width={1440} height={1480}>
+          <DirC_App />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection
+        id="notes"
+        title="Notes"
+        subtitle="Quelques pistes pour la suite."
+      >
+        <DCPostIt id="note-extension" x={40} y={40}>
+          <strong>Extensible</strong> — la donnée est centralisée dans data.js. Ajouter une année = ajouter une clé. Chaque mois peut contenir N défis avec statuts différents.
+        </DCPostIt>
+        <DCPostIt id="note-proofs" x={300} y={40}>
+          <strong>Preuves</strong> — photos, liens (Strava, articles), vidéos, notes courtes, stats chiffrées. Toutes prises en compte dans les 3 directions.
+        </DCPostIt>
+        <DCPostIt id="note-current" x={560} y={40}>
+          <strong>Mois courant</strong> — mai 2026 est marqué « en cours » dans chaque direction. La donnée today permet d'animer ça automatiquement.
+        </DCPostIt>
+        <DCPostIt id="note-edit" x={820} y={40}>
+          <strong>Mode édition</strong> — bouton « ajouter une preuve » dans chaque panneau de détail. À brancher sur ton back ou un fichier JSON local.
+        </DCPostIt>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Page />);
+</script>
+</body>
+</html>
