@@ -68,3 +68,11 @@ question about a trade-off.
   — common-mistake row pointing back here.
 - [`.claude/skills/technical-conception/SKILL.md`](../../.claude/skills/technical-conception/SKILL.md#failure-modes-to-avoid)
   — failure-mode row referencing this file.
+
+## Related
+
+- [`docs/dantotsus/built-my-own-before-checking-the-library.md`](../dantotsus/built-my-own-before-checking-the-library.md)
+  — the implementation-time sibling: even when planning audited deps, the implementer may
+  still re-build something the library already ships. The two rules together close both halves
+  of the "before writing custom X, check the library" loop (one at plan time, one at write
+  time).
