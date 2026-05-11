@@ -117,10 +117,9 @@ Sibling checks worth running per row when the asserted UI has them:
   above board" → `banner.top < board.top`).
 
 These three checks together turn the validator from a *DOM-presence
-inspector* into a *rendered-pixel-content inspector*, which is the gap
-that let the broken chess.com sprites + the below-the-board banner ship
-in [PR #8](https://github.com/hugoleborso/borso.fr/pull/8). See
-[`docs/dantotsus/described-screenshot-without-checking-pixels.md`](../../docs/dantotsus/described-screenshot-without-checking-pixels.md).
+inspector* into a *rendered-pixel-content inspector*. The gap closed
+here is the one where DOM assertions pass against an image that never
+actually rendered.
 
 ## Common mistakes
 
