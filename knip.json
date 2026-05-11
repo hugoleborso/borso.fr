@@ -5,12 +5,12 @@
       "ignoreBinaries": ["typecheck", "build"]
     },
     "apps/borso-fr": {
-      "entry": [
-        "bin/app.ts",
-        "site/art/mondrian/main.tsx",
-        "site/**/*.utils.test.ts"
-      ],
+      "entry": ["bin/app.ts", "site/art/mondrian/main.tsx", "site/**/*.utils.test.ts"],
       "project": ["bin/**/*.ts", "site/**/*.ts", "site/**/*.tsx"]
+    },
+    "apps/borsouvertures": {
+      "entry": ["bin/app.ts", "site/**/*.utils.test.ts"],
+      "project": ["bin/**/*.ts", "scripts/**/*.ts", "site/**/*.ts", "site/**/*.tsx"]
     },
     "infra/cdk": {
       "entry": [
