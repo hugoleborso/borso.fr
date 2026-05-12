@@ -13,6 +13,28 @@
       "entry": ["bin/app.ts", "site/**/*.utils.test.ts"],
       "project": ["bin/**/*.ts", "scripts/**/*.ts", "site/**/*.ts", "site/**/*.tsx"]
     },
+    "apps/last-loop-lepin": {
+      "entry": [
+        "cdk/bin/cdk.ts",
+        "site/src/main.tsx",
+        "api/src/main.ts",
+        "api/src/main.dev.ts",
+        "api/src/**/*.test.ts",
+        "site/src/**/*.utils.test.ts",
+        "test/**/*.ts",
+        "drizzle.config.ts",
+        "vite.config.ts",
+        "vitest.config.ts"
+      ],
+      "project": [
+        "cdk/**/*.ts",
+        "site/src/**/*.ts",
+        "site/src/**/*.tsx",
+        "api/src/**/*.ts",
+        "test/**/*.ts"
+      ],
+      "ignoreDependencies": ["@vitest/coverage-v8", "jsdom", "aws-cdk", "drizzle-kit"]
+    },
     "infra/cdk": {
       "entry": [
         "src/index.ts",

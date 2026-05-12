@@ -17,4 +17,5 @@
 
 borso-fr: 'apps/borso-fr/**'
 borsouvertures: 'apps/borsouvertures/**'
+last-loop-lepin: 'apps/last-loop-lepin/**'
 infra: 'infra/cdk/**'
