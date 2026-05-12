@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from 'react';
-import { SpectatorPage } from './routes/SpectatorPage';
-import { RunnerFichePage } from './routes/RunnerFichePage';
 import { AdminPage } from './routes/AdminPage';
+import { ArchivesPage } from './routes/ArchivesPage';
+import { RunnerFichePage } from './routes/RunnerFichePage';
+import { SpectatorPage } from './routes/SpectatorPage';
 
 const listeners = new Set<() => void>();
 
@@ -29,9 +30,13 @@ function navigate(path: string): void {
   for (const listener of listeners) listener();
 }
 
-function parsePath(path: string): { route: 'spectator' | 'runner' | 'admin' | 'not-found'; params: Record<string, string> } {
+function parsePath(path: string): {
+  route: 'spectator' | 'runner' | 'admin' | 'archives' | 'not-found';
+  params: Record<string, string>;
+} {
   if (path === '/' || path === '/spectator') return { route: 'spectator', params: {} };
   if (path === '/admin') return { route: 'admin', params: {} };
+  if (path === '/archives') return { route: 'archives', params: {} };
   const runnerMatch = /^\/r\/([a-z0-9-]+)$/.exec(path);
   if (runnerMatch !== null) {
     const slug = runnerMatch[1];
@@ -61,6 +66,16 @@ function NavBar() {
           Course
         </a>
         <a
+          href="/archives"
+          className={pathname === '/archives' ? 'active' : ''}
+          onClick={(event) => {
+            event.preventDefault();
+            navigate('/archives');
+          }}
+        >
+          Archives
+        </a>
+        <a
           href="/admin"
           className={pathname.startsWith('/admin') ? 'active' : ''}
           onClick={(event) => {
@@ -84,6 +99,7 @@ export function App() {
       <NavBar />
       {route === 'spectator' ? <SpectatorPage /> : null}
       {route === 'admin' ? <AdminPage /> : null}
+      {route === 'archives' ? <ArchivesPage /> : null}
       {route === 'runner' ? (
         <RunnerFichePage editionSlug="lepin-2026" runnerSlug={params.runnerSlug ?? ''} />
       ) : null}

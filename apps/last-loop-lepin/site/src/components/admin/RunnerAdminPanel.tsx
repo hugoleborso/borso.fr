@@ -24,24 +24,55 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
 
   const [displayName, setDisplayName] = useState('');
   const [bib, setBib] = useState('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const ALLOWED_PHOTO_TYPES: ReadonlySet<string> = new Set(['image/jpeg', 'image/png', 'image/webp']);
+  const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+  async function uploadPhoto(slug: string, file: File): Promise<string> {
+    if (!ALLOWED_PHOTO_TYPES.has(file.type)) {
+      throw new Error(`Format ${file.type} non supporté (JPEG / PNG / WebP).`);
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      throw new Error('Photo > 5 Mo — refusée côté client.');
+    }
+    const presign = await apiClient.adminPresignPhoto({
+      editionSlug: edition.slug,
+      runnerSlug: slug,
+      contentType: file.type,
+    });
+    const uploadResponse = await fetch(presign.uploadUrl, {
+      method: 'PUT',
+      headers: { 'content-type': file.type },
+      body: file,
+    });
+    if (!uploadResponse.ok) {
+      throw new Error(`Upload S3 a échoué (${uploadResponse.status}).`);
+    }
+    return presign.objectKey;
+  }
 
   async function handleSubmit(event: React.FormEvent): Promise<void> {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
     try {
+      const slug = slugify(displayName);
       const trimmedBib = bib.trim();
       const parsedBib = trimmedBib.length === 0 ? null : Number.parseInt(trimmedBib, 10);
+      const photoKey = photoFile === null ? null : await uploadPhoto(slug, photoFile);
       await apiClient.adminCreateRunner({
         editionSlug: edition.slug,
-        slug: slugify(displayName),
+        slug,
         displayName: displayName.trim(),
         bib: parsedBib !== null && Number.isFinite(parsedBib) ? parsedBib : null,
+        photoKey,
       });
       setDisplayName('');
       setBib('');
+      setPhotoFile(null);
       invalidateResource(rosterKey);
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 409) {
@@ -84,11 +115,25 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
               min={1}
             />
           </div>
+          <div className="field" style={{ flex: 1, minWidth: 180 }}>
+            <label className="field-label" htmlFor="runner-photo">Photo (selfie ou upload)</label>
+            <input
+              id="runner-photo"
+              type="file"
+              className="input"
+              accept="image/jpeg,image/png,image/webp"
+              capture="user"
+              onChange={(event) => setPhotoFile(event.target.files?.[0] ?? null)}
+            />
+          </div>
           <div className="field" style={{ alignSelf: 'flex-end' }}>
             <button className="btn btn-primary btn-sm" type="submit" disabled={submitting}>
-              Ajouter
+              {submitting ? 'Envoi…' : 'Ajouter'}
             </button>
           </div>
+        </div>
+        <div className="muted mono" style={{ fontSize: 11 }}>
+          Aucune photo → initiales déterministes sur fond coloré (fallback automatique).
         </div>
         {error !== null ? <div className="error-text">{error}</div> : null}
       </form>

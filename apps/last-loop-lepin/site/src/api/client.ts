@@ -87,6 +87,11 @@ const standingsEnvelopeSchema = z.object({
   mostRecentCorrectionAt: z.string().nullable().optional(),
 });
 const loginResponseSchema = z.object({ expiresAt: z.string() });
+const presignResponseSchema = z.object({
+  uploadUrl: z.string().url(),
+  objectKey: z.string(),
+  expiresAt: z.string(),
+});
 const passthroughSchema = z.unknown();
 
 async function fetchUnknown(path: string, init?: RequestInit): Promise<unknown> {
@@ -170,6 +175,11 @@ export const apiClient = {
     reason: 'late' | 'manual';
   }) =>
     fetchJson('/api/admin/dnfs', passthroughSchema, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  adminPresignPhoto: (input: { editionSlug: string; runnerSlug: string; contentType: string }) =>
+    fetchJson('/api/admin/media/presign', presignResponseSchema, {
       method: 'POST',
       body: JSON.stringify(input),
     }),

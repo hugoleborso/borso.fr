@@ -125,7 +125,15 @@ export function SpectatorPage() {
   return (
     <div className="main">
       {isFinished ? (
-        <div className="banner">Course terminée — classement final affiché.</div>
+        <div className="banner row" style={{ justifyContent: 'space-between' }}>
+          <span>Course terminée — classement final affiché.</span>
+          <a
+            className="btn btn-sm"
+            href={`/api/standings/${encodeURIComponent(edition.slug)}/csv`}
+          >
+            Télécharger le CSV
+          </a>
+        </div>
       ) : null}
       <CorrectionBanner correctedAt={mostRecentCorrection} />
       <div className="spectator-grid">
