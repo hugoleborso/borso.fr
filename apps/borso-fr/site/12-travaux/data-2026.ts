@@ -13,7 +13,18 @@ export const Y2026: Year = {
           kind: 'daily',
           status: 'done',
         },
-        { t: 'Sport tous les jours', kind: 'daily', status: 'done' },
+        {
+          t: 'Sport tous les jours',
+          kind: 'daily',
+          status: 'done',
+          proofs: [
+            { type: 'stat', v: '31', label: 'Jours' },
+            { type: 'stat', v: '26h', label: 'Temps' },
+            { type: 'stat', v: '196,9 km', label: 'Distance' },
+            { type: 'stat', v: '1 165 m', label: 'Dénivelé' },
+            { type: 'photo', v: '/media/12-travaux/janvier-2026-sport-strava.png' },
+          ],
+        },
       ],
     },
     {
@@ -25,6 +36,10 @@ export const Y2026: Year = {
           kind: 'daily',
           status: 'partial',
           note: '3 semaines sur 4. Sacrés changements de vie ; sympa de se lever sans réveil.',
+          proofs: [
+            { type: 'photo', v: '/media/12-travaux/fevrier-2026-nuit-1.jpg' },
+            { type: 'photo', v: '/media/12-travaux/fevrier-2026-nuit-2.jpg' },
+          ],
         },
         {
           t: 'Trouver et organiser 2 dates pour Pragma',
