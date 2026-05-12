@@ -3,20 +3,6 @@
   "root": false,
   "extends": ["../../biome.jsonc"],
   "plugins": ["../../biome-plugins/no-type-assertion-except-unknown.grit"],
-  "linter": {
-    "rules": {
-      "style": {
-        // The repo bans `as Foo` casts via the custom Grit plugin (CLAUDE.md
-        // "Clean code"). `!` (TsNonNullExpression) is the only escape hatch
-        // left for narrowing past a runtime invariant the type system can't
-        // model — regex capture groups that always match, array indices that
-        // are bounded one line above, etc. Each `!` in this workspace is
-        // adjacent to a comment that names the invariant. Disabling the rule
-        // here is intentional, not casual.
-        "noNonNullAssertion": "off"
-      }
-    }
-  },
   "files": {
     "includes": ["api/**", "site/**", "cdk/**", "test/**", "bin/**"]
   }

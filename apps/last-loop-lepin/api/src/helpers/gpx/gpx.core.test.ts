@@ -1,5 +1,29 @@
 import { describe, expect, it } from 'vitest';
-import { GpxParseError, parseGpx } from './gpx.core';
+import { GpxParseError, parseGpx, tryParseFloat } from './gpx.core';
+
+describe('tryParseFloat', () => {
+  it('returns null for undefined (the unreachable-from-regex branch covered directly)', () => {
+    expect(tryParseFloat(undefined)).toBeNull();
+  });
+
+  it('returns null for non-numeric strings', () => {
+    expect(tryParseFloat('abc')).toBeNull();
+  });
+
+  it('returns null for the empty string', () => {
+    expect(tryParseFloat('')).toBeNull();
+  });
+
+  it('parses finite numerics', () => {
+    expect(tryParseFloat('1.5')).toBe(1.5);
+    expect(tryParseFloat('-2.0')).toBe(-2);
+    expect(tryParseFloat('1e3')).toBe(1000);
+  });
+
+  it('returns null for Infinity-producing input', () => {
+    expect(tryParseFloat('Infinity')).toBeNull();
+  });
+});
 
 const MINIMAL_GPX = `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="test">
@@ -70,6 +94,15 @@ describe('parseGpx', () => {
   it('throws GpxParseError when <gpx> contains no <trkpt>', () => {
     const empty = '<gpx><trk><trkseg></trkseg></trk></gpx>';
     expect(() => parseGpx(empty)).toThrow(GpxParseError);
+  });
+
+  it('ignores trkpt entries missing lat or lon attributes', () => {
+    const missingAttrs = `<gpx><trk><trkseg>
+      <trkpt foo="bar"/>
+      <trkpt lat="45.0" lon="5.0"/>
+    </trkseg></trk></gpx>`;
+    const track = parseGpx(missingAttrs);
+    expect(track.points).toHaveLength(1);
   });
 
   it('ignores trkpt entries with non-numeric coordinates', () => {

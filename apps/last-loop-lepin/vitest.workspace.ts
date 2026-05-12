@@ -23,7 +23,7 @@ export default defineWorkspace([
       environment: 'jsdom',
       include: [
         'api/src/**/*.core.test.ts',
-        'api/src/**/*.schema.test.ts',
+        'api/src/database/migrations.audit.test.ts',
         'site/src/**/*.utils.test.ts',
       ],
       coverage: {

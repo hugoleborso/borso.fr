@@ -27,18 +27,24 @@ function djb2Hash(input: string): number {
 }
 
 function pickInitials(displayName: string): string {
-  const words = displayName.trim().split(/\s+/).filter((word) => word.length > 0);
-  const firstWord = words[0];
-  if (firstWord === undefined) return '??';
+  const trimmed = displayName.trim();
+  if (trimmed.length === 0) return '??';
 
+  const words = trimmed.split(/\s+/);
   if (words.length === 1) {
-    return firstWord.slice(0, INITIALS_MAX_LENGTH).toUpperCase();
+    return trimmed.slice(0, INITIALS_MAX_LENGTH).toUpperCase();
   }
 
-  // words.length >= 2 here, so words[words.length - 1] is always defined —
-  // the `!` lets us skip a defensive branch that no input can reach.
-  const lastWord = words[words.length - 1]!;
-  return (firstWord.charAt(0) + lastWord.charAt(0)).toUpperCase();
+  let firstInitial = '';
+  let lastInitial = '';
+  // `forEach` exposes `word: string` (not `string | undefined`), sidestepping
+  // `noUncheckedIndexedAccess` without a non-null assertion.
+  words.forEach((word) => {
+    const initial = word.charAt(0);
+    if (firstInitial === '') firstInitial = initial;
+    lastInitial = initial;
+  });
+  return (firstInitial + lastInitial).toUpperCase();
 }
 
 /**
