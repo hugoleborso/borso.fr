@@ -149,7 +149,11 @@ export const Y2025: Year = {
           kind: 'oneshot',
           status: 'done',
           proofs: [
-            { type: 'stat', v: '6h19' },
+            { type: 'photo', v: '/media/12-travaux/septembre-2025-triathlon-groupe.jpg' },
+            { type: 'photo', v: '/media/12-travaux/septembre-2025-triathlon-avant.jpg' },
+            { type: 'photo', v: '/media/12-travaux/septembre-2025-triathlon-stretching.jpg' },
+            { type: 'photo', v: '/media/12-travaux/septembre-2025-triathlon-grass.jpg' },
+            { type: 'stat', v: '6h19', label: 'Temps total' },
             { type: 'link', v: 'https://www.strava.com/activities/15798133433', label: 'Nage' },
             { type: 'link', v: 'https://www.strava.com/activities/15798155427', label: 'Vélo' },
             { type: 'link', v: 'https://www.strava.com/activities/15798133580', label: 'Course' },
