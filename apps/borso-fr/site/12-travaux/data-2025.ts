@@ -97,8 +97,12 @@ export const Y2025: Year = {
           t: 'Le Monte-Cristo (5 km nage)',
           kind: 'oneshot',
           status: 'partial',
-          note: 'Course en mer annulée — 5 km en piscine à la place.',
-          proofs: [{ type: 'stat', v: "1h29'30" }],
+          note: 'Course en mer annulée — 5 km en piscine à la place, puis vues sur les calanques.',
+          proofs: [
+            { type: 'stat', v: "1h29'30", label: 'Temps piscine' },
+            { type: 'photo', v: '/media/12-travaux/juin-2025-marseille-calanques.jpg' },
+            { type: 'photo', v: '/media/12-travaux/juin-2025-marseille-salome.jpg' },
+          ],
         },
       ],
     },
@@ -129,6 +133,8 @@ export const Y2025: Year = {
           kind: 'oneshot',
           status: 'done',
           proofs: [
+            { type: 'photo', v: '/media/12-travaux/aout-2025-velo-selfie.jpg' },
+            { type: 'photo', v: '/media/12-travaux/aout-2025-velo-eglise.jpg' },
             { type: 'link', v: 'https://www.strava.com/activities/15639920646', label: 'Strava' },
           ],
         },
