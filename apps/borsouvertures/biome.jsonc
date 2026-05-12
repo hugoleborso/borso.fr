@@ -1,0 +1,15 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
+  "root": false,
+  "extends": ["../../biome.jsonc"],
+  "plugins": ["../../biome-plugins/no-type-assertion-except-unknown.grit"],
+  "files": {
+    "includes": [
+      "bin/**",
+      "scripts/**",
+      "site/**",
+      "!site/openings/openings.json",
+      "!site/public/openings.json"
+    ]
+  }
+}
