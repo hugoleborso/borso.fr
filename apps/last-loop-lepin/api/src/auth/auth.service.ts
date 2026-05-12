@@ -86,7 +86,3 @@ export async function login(database: Database, input: LoginInput, now: Date): P
   return { token, expiresAt };
 }
 
-export const AUTH_CONSTANTS = {
-  RATE_LIMIT_WINDOW_MS,
-  RATE_LIMIT_MAX_ATTEMPTS,
-} as const;

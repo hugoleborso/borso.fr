@@ -10,8 +10,6 @@ import type { Runner } from '../runner/runner.types';
 import type { RaceEdition } from './edition.types';
 
 const MILLISECONDS_PER_MINUTE = 60_000;
-const SECONDS_PER_MINUTE = 60;
-const TOLERANCE_SECONDS_AT_TOP = 30;
 
 /**
  * The next hourly-top boundary at or after `now`, or `null` once the race
@@ -107,8 +105,3 @@ export function totalHourlyTops(edition: RaceEdition): number {
   return Math.max(0, Math.floor(totalMinutes / edition.intervalMinutes));
 }
 
-export const EDITION_TIMING_CONSTANTS = {
-  MILLISECONDS_PER_MINUTE,
-  SECONDS_PER_MINUTE,
-  TOLERANCE_SECONDS_AT_TOP,
-} as const;

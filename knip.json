@@ -1,6 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignore": ["docs/**"],
+  "ignoreExportsUsedInFile": true,
   "workspaces": {
     ".": {
       "ignoreBinaries": ["typecheck", "build"]
@@ -16,9 +17,7 @@
     "apps/last-loop-lepin": {
       "entry": [
         "cdk/bin/cdk.ts",
-        "site/src/main.tsx",
         "api/src/main.ts",
-        "api/src/main.dev.ts",
         "api/src/**/*.test.ts",
         "site/src/**/*.utils.test.ts",
         "test/**/*.ts"
@@ -29,8 +28,7 @@
         "site/src/**/*.tsx",
         "api/src/**/*.ts",
         "test/**/*.ts"
-      ],
-      "ignoreDependencies": ["@vitest/coverage-v8", "jsdom", "aws-cdk", "drizzle-kit"]
+      ]
     },
     "infra/cdk": {
       "entry": [

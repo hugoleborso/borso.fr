@@ -55,8 +55,3 @@ export async function verifyAdminSession(secret: string, token: string): Promise
   }
 }
 
-export const JWT_CONSTANTS = {
-  JWT_TTL_SECONDS,
-  JWT_ISSUER,
-  JWT_AUDIENCE,
-} as const;

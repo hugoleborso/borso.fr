@@ -10,8 +10,6 @@ import { loopIndexAt } from '../edition/edition.core';
 import type { RaceEdition } from '../edition/edition.types';
 import type { LoopPunch } from './punch.types';
 
-const TOLERANCE_SECONDS_AT_TOP = 30;
-
 export type PunchValidation =
   | { readonly ok: true; readonly loopIndex: number }
   | { readonly ok: false; readonly reason: PunchRejectReason };
@@ -81,6 +79,3 @@ export function lastLoopDurationMs(
   return trace.last.finishedAt.getTime() - trace.previous.finishedAt.getTime();
 }
 
-export const PUNCH_CONSTANTS = {
-  TOLERANCE_SECONDS_AT_TOP,
-} as const;

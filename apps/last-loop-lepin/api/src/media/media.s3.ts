@@ -73,6 +73,3 @@ export async function createPresignedUpload(
   };
 }
 
-export const MEDIA_CONSTANTS = {
-  PRESIGN_EXPIRES_SECONDS,
-} as const;

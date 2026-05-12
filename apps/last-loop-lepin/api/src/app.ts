@@ -44,5 +44,3 @@ export function createApp(): Hono {
 
   return app;
 }
-
-export const TEST_SEED_FLAG_NAME = TEST_SEED_FLAG;

@@ -3,6 +3,7 @@ import { ApiError, apiClient } from '../api/client';
 import { useResource, invalidateResource } from '../data/useResource';
 import { useStandings } from '../data/useStandingsPoll';
 import { initialsAvatar } from '../domain/initials.utils';
+import { recordAnalyticsEvent } from '../observability/sentry';
 import type { RankedRunnerDto, RaceEditionDto, RunnerDto } from '../domain/types';
 
 const RACE_CACHE_KEY = 'edition:current';
@@ -85,6 +86,7 @@ function PunchPanel({ edition, ranked, onMutated }: {
     setError(null);
     try {
       await apiClient.adminRegisterPunch({ editionSlug: edition.slug, runnerSlug: runner.slug });
+      recordAnalyticsEvent('loop_punched', { editionSlug: edition.slug, runnerSlug: runner.slug });
       onMutated();
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 409) {
