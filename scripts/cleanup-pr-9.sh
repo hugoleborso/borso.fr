@@ -33,6 +33,12 @@ confirm() {
 # `pnpm --filter @borso-app/borso-fr run destroy` now chains the
 # infra build + app build internally (see apps/borso-fr/package.json
 # in this PR). No need to pre-build here.
+#
+# But we DO need dependencies materialized in node_modules — vite,
+# tsc, cdk are devDependencies. A stale or partial local install
+# (rtk-pnpm-install-can-skip-lockfile-write surfaces this) leaves
+# `vite: command not found` mid-destroy. Cheap to be defensive.
+pnpm install --frozen-lockfile
 
 # ─────────────────────────────────────────────────────────────────────
 # 1. Destroy stale preview stacks
