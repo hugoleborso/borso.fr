@@ -11,7 +11,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { zValidator } from '@hono/zod-validator';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { getDatabase } from '../database/client';
@@ -20,6 +20,7 @@ import {
   insertEdition,
   updateEditionStatus,
 } from '../edition/edition.repository';
+import { editionsTable } from '../edition/edition.schema';
 import type { RaceEdition } from '../edition/edition.types';
 import { computeSunriseSunset } from '../helpers/sun/sun.core';
 import { insertManualDnf, insertPunch } from '../punch/punch.repository';
@@ -109,14 +110,19 @@ async function ensureEditionAndRunners(now: Date, window: EditionWindow): Promis
     await insertEdition(database, buildEdition(now, window));
   } else {
     // Edition exists from a previous seed; align its window + status to the
-    // current fixture by writing fresh timestamps.
-    await database.execute(
-      sql`UPDATE editions
-          SET starts_at = ${window.startsAt},
-              ends_at   = ${window.endsAt},
-              status    = ${window.status}
-        WHERE slug = ${EDITION_SLUG}`,
-    );
+    // current fixture by writing fresh timestamps via the Drizzle update
+    // builder (postgres-js's raw template literal rejects Date objects).
+    const { sunriseAt, sunsetAt } = buildEdition(now, window);
+    await database
+      .update(editionsTable)
+      .set({
+        startsAt: window.startsAt,
+        endsAt: window.endsAt,
+        sunriseAt,
+        sunsetAt,
+        status: window.status,
+      })
+      .where(eq(editionsTable.slug, EDITION_SLUG));
     await updateEditionStatus(database, EDITION_SLUG, window.status);
   }
   const existingRunners = await listRunnersForEdition(database, EDITION_SLUG);
