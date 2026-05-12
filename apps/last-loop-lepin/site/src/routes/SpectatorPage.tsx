@@ -117,12 +117,10 @@ export function SpectatorPage() {
   const isLive = edition.status === 'live';
   const isFinished = edition.status === 'finished';
   const upcomingBoundary = nextLoopBoundary(edition, Date.now());
-  const mostRecentCorrection = standings?.ranked.reduce<Date | null>((accumulator, entry) => {
-    const candidate = entry.lastFinishedAt === null ? null : new Date(entry.lastFinishedAt);
-    return candidate !== null && (accumulator === null || candidate.getTime() > accumulator.getTime())
-      ? candidate
-      : accumulator;
-  }, null) ?? null;
+  const mostRecentCorrection =
+    standingsState.mostRecentCorrectionAt === null
+      ? null
+      : new Date(standingsState.mostRecentCorrectionAt);
 
   return (
     <div className="main">

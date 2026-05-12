@@ -20,10 +20,15 @@ const POLL_INTERVAL_MS = 2_000;
 
 export interface StandingsState {
   readonly standings: StandingsDto | null;
+  readonly mostRecentCorrectionAt: string | null;
   readonly error: Error | null;
 }
 
-const INITIAL_SNAPSHOT: StandingsState = { standings: null, error: null };
+const INITIAL_SNAPSHOT: StandingsState = {
+  standings: null,
+  mostRecentCorrectionAt: null,
+  error: null,
+};
 
 interface CacheEntry {
   snapshot: StandingsState;
@@ -52,11 +57,16 @@ function notify(entry: CacheEntry): void {
 async function fetchOnce(editionSlug: string): Promise<void> {
   const entry = ensureEntry(editionSlug);
   try {
-    const { standings } = await apiClient.getStandings(editionSlug);
-    entry.snapshot = { standings, error: null };
+    const response = await apiClient.getStandings(editionSlug);
+    entry.snapshot = {
+      standings: response.standings,
+      mostRecentCorrectionAt: response.mostRecentCorrectionAt ?? null,
+      error: null,
+    };
   } catch (error) {
     entry.snapshot = {
       standings: entry.snapshot.standings,
+      mostRecentCorrectionAt: entry.snapshot.mostRecentCorrectionAt,
       error: error instanceof Error ? error : new Error('unknown error'),
     };
   }

@@ -29,7 +29,13 @@ editionRouter.get('/current', async (context) => {
   const next = editions
     .filter((edition) => edition.status === 'setup')
     .toSorted((left, right) => left.startsAt.getTime() - right.startsAt.getTime())[0];
-  const current = live ?? next ?? null;
+  // Fallback to the most recent finished edition so spectators see the
+  // final ranking + "course terminée" banner until a new one starts,
+  // rather than the empty hors-jour-J archive card.
+  const lastFinished = editions
+    .filter((edition) => edition.status === 'finished')
+    .toSorted((left, right) => right.endsAt.getTime() - left.endsAt.getTime())[0];
+  const current = live ?? next ?? lastFinished ?? null;
   return context.json({ edition: current });
 });
 

@@ -11,6 +11,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { zValidator } from '@hono/zod-validator';
+import { sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { getDatabase } from '../database/client';
@@ -21,7 +22,7 @@ import {
 } from '../edition/edition.repository';
 import type { RaceEdition } from '../edition/edition.types';
 import { computeSunriseSunset } from '../helpers/sun/sun.core';
-import { insertManualDnf, insertPunch, listManualDnfsForEdition, listPunchesForEdition } from '../punch/punch.repository';
+import { insertManualDnf, insertPunch } from '../punch/punch.repository';
 import { insertRunner, listRunnersForEdition } from '../runner/runner.repository';
 import type { Runner } from '../runner/runner.types';
 
@@ -86,12 +87,36 @@ const fixtureSchema = z.object({
 
 const testSeedRouter = new Hono();
 
+async function clearEditionRows(): Promise<void> {
+  // Reset punches + DNFs scoped to our seeded edition before each fixture
+  // applies its own. Without this, switching between fixtures (e.g.
+  // race-finished → race-mid-loop-3) leaves stale punches from the previous
+  // run and the standings drift into nonsense (visual-validation #25).
+  const database = getDatabase();
+  await database.execute(
+    sql`DELETE FROM loop_punches WHERE edition_slug = ${EDITION_SLUG}`,
+  );
+  await database.execute(
+    sql`DELETE FROM manual_dnfs WHERE edition_slug = ${EDITION_SLUG}`,
+  );
+}
+
 async function ensureEditionAndRunners(now: Date, window: EditionWindow): Promise<void> {
   const database = getDatabase();
+  await clearEditionRows();
   const existing = await findEditionBySlug(database, EDITION_SLUG);
   if (existing === null) {
     await insertEdition(database, buildEdition(now, window));
   } else {
+    // Edition exists from a previous seed; align its window + status to the
+    // current fixture by writing fresh timestamps.
+    await database.execute(
+      sql`UPDATE editions
+          SET starts_at = ${window.startsAt},
+              ends_at   = ${window.endsAt},
+              status    = ${window.status}
+        WHERE slug = ${EDITION_SLUG}`,
+    );
     await updateEditionStatus(database, EDITION_SLUG, window.status);
   }
   const existingRunners = await listRunnersForEdition(database, EDITION_SLUG);
@@ -110,14 +135,9 @@ async function ensureEditionAndRunners(now: Date, window: EditionWindow): Promis
 }
 
 async function ensurePunch(runnerSlug: string, loopIndex: number, finishedAt: Date): Promise<void> {
-  const database = getDatabase();
-  const existing = await listPunchesForEdition(database, EDITION_SLUG);
-  const alreadyHas = existing.some(
-    (punch) =>
-      punch.runnerSlug === runnerSlug && punch.loopIndex === loopIndex && punch.voidedAt === null,
-  );
-  if (alreadyHas) return;
-  await insertPunch(database, {
+  // Always insert — `clearEditionRows` ran in `ensureEditionAndRunners`, so
+  // there is no duplicate to dedupe against.
+  await insertPunch(getDatabase(), {
     id: randomUUID(),
     editionSlug: EDITION_SLUG,
     runnerSlug,
@@ -134,10 +154,13 @@ async function ensureManualDnf(
   reason: 'late' | 'manual',
   decidedAt: Date,
 ): Promise<void> {
-  const database = getDatabase();
-  const existing = await listManualDnfsForEdition(database, EDITION_SLUG);
-  if (existing.some((dnf) => dnf.runnerSlug === runnerSlug)) return;
-  await insertManualDnf(database, { editionSlug: EDITION_SLUG, runnerSlug, outAtLoop, reason, decidedAt });
+  await insertManualDnf(getDatabase(), {
+    editionSlug: EDITION_SLUG,
+    runnerSlug,
+    outAtLoop,
+    reason,
+    decidedAt,
+  });
 }
 
 async function applyRaceMidLoop3(now: Date): Promise<void> {

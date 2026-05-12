@@ -82,7 +82,10 @@ const punchSchema = z.object({
 });
 
 const punchesListSchema = z.object({ punches: z.array(punchSchema) });
-const standingsEnvelopeSchema = z.object({ standings: standingsSchema });
+const standingsEnvelopeSchema = z.object({
+  standings: standingsSchema,
+  mostRecentCorrectionAt: z.string().nullable().optional(),
+});
 const loginResponseSchema = z.object({ expiresAt: z.string() });
 const passthroughSchema = z.unknown();
 
