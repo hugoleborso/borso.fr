@@ -68,7 +68,7 @@ Gates that need human judgement (e.g. "review the screenshots") are still listed
 
 ### 5. Open questions + missing technical skills
 
-- **Open questions** are the ambiguities planning surfaced that the spec didn't resolve. They go back to the spec author. The plan does not proceed past them silently.
+- **Open questions** are the ambiguities planning surfaced that the spec didn't resolve. They go back to the spec author. The plan does not proceed past them silently. Any item left here is a **hard block on `/implementation`** — the implementation skill's procedure step 1a refuses to walk the plan until every open question has an answer captured in the spec (or in a `## Decisions` section appended to the plan with the user's explicit confirmation).
 - **Missing technical skills** are domains that would have benefited from a `.claude/skills/<name>/` skill but didn't have one. Seeded next iteration.
 
 ## Operating mode

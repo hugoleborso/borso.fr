@@ -154,6 +154,24 @@ describe('gatherCandidates', () => {
       }),
     ).toHaveLength(1);
   });
+
+  it('isolates colliding variation slugs across openings (no global-id assumption)', () => {
+    const italianMains = gatherCandidates([italianMain, sicilian], {
+      openingId: 'italian-game',
+      variationId: 'main',
+      lineId: ALL_KEY,
+    });
+    expect(italianMains).toHaveLength(2);
+    expect(italianMains.every((candidate) => candidate.opening.id === 'italian-game')).toBe(true);
+
+    const sicilianMains = gatherCandidates([italianMain, sicilian], {
+      openingId: 'sicilian',
+      variationId: 'main',
+      lineId: ALL_KEY,
+    });
+    expect(sicilianMains).toHaveLength(1);
+    expect(sicilianMains[0]?.opening.id).toBe('sicilian');
+  });
 });
 
 describe('computeBookState', () => {
