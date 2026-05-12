@@ -16,4 +16,5 @@
 # via `pnpm ls --filter './apps/*' --json`.
 
 borso-fr: 'apps/borso-fr/**'
+borsouvertures: 'apps/borsouvertures/**'
 infra: 'infra/cdk/**'

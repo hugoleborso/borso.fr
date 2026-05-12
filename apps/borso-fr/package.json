@@ -22,13 +22,13 @@
     "@fontsource/cormorant-garamond": "^5.1.0",
     "@fontsource/jetbrains-mono": "^5.1.0",
     "@fontsource/playfair-display": "^5.1.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^2.1.8",
     "aws-cdk": "^2.180.0",

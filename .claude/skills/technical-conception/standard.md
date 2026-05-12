@@ -68,7 +68,7 @@ Gates that need human judgement (e.g. "review the screenshots") are still listed
 
 ### 5. Open questions + missing technical skills
 
-- **Open questions** are the ambiguities planning surfaced that the spec didn't resolve. They go back to the spec author. The plan does not proceed past them silently.
+- **Open questions** are the ambiguities planning surfaced that the spec didn't resolve. They go back to the spec author. The plan does not proceed past them silently. Any item left here is a **hard block on `/implementation`** — the implementation skill's procedure step 1a refuses to walk the plan until every open question has an answer captured in the spec (or in a `## Decisions` section appended to the plan with the user's explicit confirmation).
 - **Missing technical skills** are domains that would have benefited from a `.claude/skills/<name>/` skill but didn't have one. Seeded next iteration.
 
 ## Operating mode
@@ -78,6 +78,7 @@ Gates that need human judgement (e.g. "review the screenshots") are still listed
 | 1 | Read `spec.md` end-to-end | mental model |
 | 2 | Inventory the technical surface | list of frameworks, pipelines, data stores |
 | 3 | Invoke any present sub-skills (`/vite`, `/three-js`, `/controller`, …) | their plan slices |
+| 3.5 | **Pattern Coherence pass** — list deps the spec doesn't justify, list state-management patterns, ask whether new patterns absorb old ones | one row in section 1 (or one entry in *Open questions* if multiplicity is deliberate). See [`docs/knowledge/audit-imported-deps-and-patterns-when-planning.md`](../../../docs/knowledge/audit-imported-deps-and-patterns-when-planning.md). |
 | 4 | Map every Q.O.D. and every Changes entry to a code location | section 1 table |
 | 5 | Walk the spec's risks + your own | section 2 table |
 | 6 | Self-check repo code-quality rules | section 3 checkboxes |
@@ -94,3 +95,4 @@ Gates that need human judgement (e.g. "review the screenshots") are still listed
 | Hidden assumptions inlined into the table without flagging | Surface as defects later, with no record they were assumed. |
 | Skipping a present sub-skill because the agent thinks it knows the domain | Sub-skill rules go unenforced; defects predicted by the sub-skill ship anyway. |
 | Plan never re-read after written | Plans rot. Re-read at the end of step 8 with one question in mind: "would a future Dantotsu trace defects to anything I wrote here?" If not, cut the row and try again. |
+| Carrying forward imported deps and patterns without justifying them | Vendor surface propagates by inertia; introducing a new pattern without re-evaluating existing ones leaves two parallel patterns the next maintainer has to learn. Run a Pattern Coherence pass — see [`docs/knowledge/audit-imported-deps-and-patterns-when-planning.md`](../../../docs/knowledge/audit-imported-deps-and-patterns-when-planning.md). The borsouvertures plan kept `zustand` next to two new `useSyncExternalStore` machines until the reviewer asked "why zustand?" — the audit should have surfaced it before the plan landed. |
