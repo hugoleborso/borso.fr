@@ -63,16 +63,17 @@ When `AWS_ACCESS_KEY_ID` is present, the SessionStart hook installs AWS CLI v2 c
 
 Full setup including key rotation: [`docs/aws-setup.md#12`](./docs/aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
 
-## Dantotsus and knowledge
+## Dantotsus, knowledge, and ADRs
 
-Two complementary folders, one purpose: keep the team's mental model ahead of the codebase's failure modes.
+Three complementary folders, one purpose: keep the team's mental model ahead of the codebase's failure modes and the *why* of past trade-offs.
 
 - [`docs/dantotsus/`](./docs/dantotsus/) — root-cause analyses with shipped eradications. Each entry follows the [Dantotsu standard](./.claude/skills/dantotsu/standard.md): Symptom → Root-cause chain → Detection failure causes → Countermeasure → **Eradication** (code-level, non-optional, linked by commit hash + diff). Eradication ladder, top is best: structural impossibility → DevX check → vendor patch → detection → knowledge (floor).
 - [`docs/knowledge/`](./docs/knowledge/) — broad reference docs. Vendor quirks, CLI contracts, conventions, debugging recipes, anything the team needs to know that doesn't trace to a code-level fix.
+- [`docs/adr/`](./docs/adr/) — Architecture Decision Records, one per non-trivial design trade-off. The audit trail of *why the code looks the way it does*: chosen path, alternatives, evaluation rubric, consequences. The [`/adr`](./.claude/skills/adr/SKILL.md) skill is the decision-support walk that produces them (the walkthrough is the value; the markdown file is the byproduct). Consumed downstream by [`/open-pr`](./.claude/skills/open-pr/SKILL.md) — every ADR referenced in a branch becomes a `<details>`-toggled section in the PR description, so reviewers can drill into the rationale without leaving the PR page.
 
 Skim the indexes before starting non-trivial CDK / CloudFront / S3 / GitHub Actions work — the cost of reading a 30-line entry is far lower than the cost of re-discovering the trap.
 
-When a PR uncovers a new trap, run the [`/dantotsu`](.claude/skills/dantotsu/SKILL.md) skill — it walks the seven Dantotsu steps and produces an entry under `docs/dantotsus/` with the eradication shipped in code. The Self-improvement loop rule below pulls this together.
+When a PR uncovers a new trap, run the [`/dantotsu`](.claude/skills/dantotsu/SKILL.md) skill — it walks the seven Dantotsu steps and produces an entry under `docs/dantotsus/` with the eradication shipped in code. When you face a non-trivial architectural trade-off, run [`/adr`](./.claude/skills/adr/SKILL.md) *before* picking — it forces you to define criteria before options, name alternatives, and acknowledge two negative consequences of the chosen path. The Self-improvement loop rule below pulls this together.
 
 ## Self-improvement loop
 
