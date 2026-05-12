@@ -10,15 +10,14 @@ import { useStandings } from '../data/useStandingsPoll';
 import type { RaceEditionDto } from '../domain/types';
 
 const RACE_CACHE_KEY = 'edition:current';
+const ALL_EDITIONS_KEY = 'editions:all';
 
-function describeEdition(edition: RaceEditionDto | null): string {
-  if (edition === null) return "Pas d'édition annoncée pour l'instant.";
-  const date = new Date(edition.startsAt).toLocaleDateString('fr-FR', {
+function formatRaceDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
-  return `${edition.displayName} — ${date}, Lépin-le-Lac.`;
 }
 
 function nextLoopBoundary(edition: RaceEditionDto, now: number): number {
@@ -32,9 +31,69 @@ function nextLoopBoundary(edition: RaceEditionDto, now: number): number {
   return startMs + (elapsedIntervals + 1) * intervalMs;
 }
 
+function HorsJourJ({
+  upcoming,
+  archives,
+}: {
+  readonly upcoming: RaceEditionDto | null;
+  readonly archives: readonly RaceEditionDto[];
+}) {
+  return (
+    <div className="main col">
+      <div className="card">
+        <div className="card-head">
+          <h2 className="card-title">Last Loop Lépin</h2>
+          <span className="muted mono">Lépin-le-Lac</span>
+        </div>
+        <div className="card-body col">
+          {upcoming === null ? (
+            <div className="muted">Pas d'édition annoncée pour l'instant.</div>
+          ) : (
+            <>
+              <strong style={{ fontSize: 18 }}>{upcoming.displayName}</strong>
+              <span className="muted">
+                Départ : {formatRaceDate(upcoming.startsAt)} ·{' '}
+                {upcoming.gpx.distanceMeters > 0
+                  ? `${(upcoming.gpx.distanceMeters / 1000).toFixed(2)} km`
+                  : 'Tracé à venir'}{' '}
+                · {Math.round(upcoming.gpx.elevationGainMeters)} m D+
+              </span>
+              <Countdown targetEpochMs={new Date(upcoming.startsAt).getTime()} label="Départ dans" />
+            </>
+          )}
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-head">
+          <h2 className="card-title">Archives</h2>
+          <span className="muted mono">{archives.length} édition{archives.length === 1 ? '' : 's'}</span>
+        </div>
+        <div className="card-body">
+          {archives.length === 0 ? (
+            <div className="muted">Aucune édition archivée.</div>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {archives.map((edition) => (
+                <li key={edition.slug} style={{ padding: '8px 0', borderBottom: '1px solid var(--line-soft)' }}>
+                  <strong>{edition.displayName}</strong>
+                  <span className="muted" style={{ marginLeft: 8 }}>
+                    {formatRaceDate(edition.startsAt)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SpectatorPage() {
   const editionState = useResource(RACE_CACHE_KEY, () => apiClient.getCurrentEdition());
+  const allEditionsState = useResource(ALL_EDITIONS_KEY, () => apiClient.listEditions());
   const edition = editionState.value?.edition ?? null;
+  const allEditions = allEditionsState.value?.editions ?? [];
   const standingsState = useStandings(edition?.slug ?? '');
   const standings = standingsState.standings;
 
@@ -50,33 +109,29 @@ export function SpectatorPage() {
     );
   }
 
-  if (edition === null) {
-    return (
-      <div className="main">
-        <div className="card">
-          <div className="card-head">
-            <h2 className="card-title">Last Loop Lépin</h2>
-          </div>
-          <div className="card-body muted">{describeEdition(edition)}</div>
-        </div>
-      </div>
-    );
+  if (edition === null || edition.status === 'setup') {
+    const archives = allEditions.filter((entry) => entry.status === 'finished');
+    return <HorsJourJ upcoming={edition} archives={archives} />;
   }
 
   const isLive = edition.status === 'live';
   const isFinished = edition.status === 'finished';
   const upcomingBoundary = nextLoopBoundary(edition, Date.now());
+  const mostRecentCorrection = standings?.ranked.reduce<Date | null>((accumulator, entry) => {
+    const candidate = entry.lastFinishedAt === null ? null : new Date(entry.lastFinishedAt);
+    return candidate !== null && (accumulator === null || candidate.getTime() > accumulator.getTime())
+      ? candidate
+      : accumulator;
+  }, null) ?? null;
 
   return (
     <div className="main">
       {isFinished ? (
         <div className="banner">Course terminée — classement final affiché.</div>
       ) : null}
-      {/* Real "last correction" wiring lands once /api/standings exposes
-         correctedAt per ranked entry — the component self-hides on null. */}
-      <CorrectionBanner correctedAt={null} />
+      <CorrectionBanner correctedAt={mostRecentCorrection} />
       <div className="spectator-grid">
-        <div className="card" style={{ gridColumn: '1', gridRow: '1' }}>
+        <div className="card">
           <div className="card-head">
             <h2 className="card-title">Classement</h2>
             {isLive ? <span className="live-pill">Live</span> : null}
@@ -85,7 +140,7 @@ export function SpectatorPage() {
             <Leaderboard ranked={standings?.ranked ?? []} />
           </div>
         </div>
-        <div className="card" style={{ gridColumn: '2', gridRow: '1' }}>
+        <div className="card">
           <div className="card-head">
             <h2 className="card-title">Prochain top horaire</h2>
             <span className="muted mono">{edition.displayName}</span>
@@ -94,13 +149,13 @@ export function SpectatorPage() {
             <Countdown targetEpochMs={upcomingBoundary} label="Tic-tac" />
           </div>
         </div>
-        <div className="card" style={{ gridColumn: '1', gridRow: '2' }}>
+        <div className="card">
           <div className="card-head">
             <h2 className="card-title">Mur des éliminés</h2>
           </div>
           <EliminatedWall ranked={standings?.ranked ?? []} />
         </div>
-        <div className="card" style={{ gridColumn: '2', gridRow: '2' }}>
+        <div className="card">
           <div className="card-head">
             <h2 className="card-title">Tracé</h2>
           </div>

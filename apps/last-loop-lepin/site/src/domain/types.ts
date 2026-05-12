@@ -31,6 +31,16 @@ export interface RunnerDto {
   readonly bib: number | null;
 }
 
+export interface LoopPunchDto {
+  readonly id: string;
+  readonly editionSlug: string;
+  readonly runnerSlug: string;
+  readonly loopIndex: number;
+  readonly finishedAt: string;
+  readonly correctedAt: string | null;
+  readonly voidedAt: string | null;
+}
+
 export type RunnerStatusDto =
   | { readonly kind: 'in-race'; readonly lastLoop: number }
   | { readonly kind: 'dnf'; readonly outAtLoop: number; readonly reason: 'late' | 'manual' };

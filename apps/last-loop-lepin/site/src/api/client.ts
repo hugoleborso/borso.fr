@@ -71,6 +71,17 @@ const editionNullableEnvelopeSchema = z.object({ edition: raceEditionSchema.null
 const editionsListEnvelopeSchema = z.object({ editions: z.array(raceEditionSchema) });
 const runnerEnvelopeSchema = z.object({ runner: runnerSchema });
 const runnersListEnvelopeSchema = z.object({ runners: z.array(runnerSchema) });
+const punchSchema = z.object({
+  id: z.string(),
+  editionSlug: z.string(),
+  runnerSlug: z.string(),
+  loopIndex: z.number(),
+  finishedAt: z.string(),
+  correctedAt: z.string().nullable(),
+  voidedAt: z.string().nullable(),
+});
+
+const punchesListSchema = z.object({ punches: z.array(punchSchema) });
 const standingsEnvelopeSchema = z.object({ standings: standingsSchema });
 const loginResponseSchema = z.object({ expiresAt: z.string() });
 const passthroughSchema = z.unknown();
@@ -108,6 +119,11 @@ export const apiClient = {
     ),
   listRunners: (editionSlug: string) =>
     fetchJson(`/api/editions/${encodeURIComponent(editionSlug)}/runners`, runnersListEnvelopeSchema),
+  listRunnerPunches: (editionSlug: string, runnerSlug: string) =>
+    fetchJson(
+      `/api/editions/${encodeURIComponent(editionSlug)}/runners/${encodeURIComponent(runnerSlug)}/punches`,
+      punchesListSchema,
+    ),
   adminLogin: (pin: string) =>
     fetchJson('/api/admin/auth/login', loginResponseSchema, {
       method: 'POST',

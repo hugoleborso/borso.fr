@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { ApiError, apiClient } from '../api/client';
+import { CorrectionPanel } from '../components/admin/CorrectionPanel';
+import { DnfCandidatesPanel } from '../components/admin/DnfCandidatesPanel';
+import { RunnerAdminPanel } from '../components/admin/RunnerAdminPanel';
+import { SetupPanel } from '../components/admin/SetupPanel';
 import { useResource, invalidateResource } from '../data/useResource';
 import { useStandings } from '../data/useStandingsPoll';
 import { initialsAvatar } from '../domain/initials.utils';
-import { recordAnalyticsEvent } from '../observability/sentry';
 import type { RankedRunnerDto, RaceEditionDto, RunnerDto } from '../domain/types';
+import { recordAnalyticsEvent } from '../observability/sentry';
 
 const RACE_CACHE_KEY = 'edition:current';
 
@@ -22,13 +26,9 @@ function PinForm({ onAuthenticated }: { onAuthenticated: () => void }) {
       setState('authenticated');
       onAuthenticated();
     } catch (error) {
-      if (error instanceof ApiError && error.status === 429) {
-        setState('rate-limited');
-      } else if (error instanceof ApiError && error.status === 401) {
-        setState('denied');
-      } else {
-        setState('unknown-error');
-      }
+      if (error instanceof ApiError && error.status === 429) setState('rate-limited');
+      else if (error instanceof ApiError && error.status === 401) setState('denied');
+      else setState('unknown-error');
     }
   }
 
@@ -48,9 +48,7 @@ function PinForm({ onAuthenticated }: { onAuthenticated: () => void }) {
       </div>
       <div className="card-body col">
         <div className="field">
-          <label className="field-label" htmlFor="pin">
-            PIN
-          </label>
+          <label className="field-label" htmlFor="pin">PIN</label>
           <input
             id="pin"
             type="password"
@@ -71,10 +69,14 @@ function PinForm({ onAuthenticated }: { onAuthenticated: () => void }) {
   );
 }
 
-function PunchPanel({ edition, ranked, onMutated }: {
-  edition: RaceEditionDto;
-  ranked: readonly RankedRunnerDto[];
-  onMutated: () => void;
+function PunchPanel({
+  edition,
+  ranked,
+  onMutated,
+}: {
+  readonly edition: RaceEditionDto;
+  readonly ranked: readonly RankedRunnerDto[];
+  readonly onMutated: () => void;
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -137,11 +139,37 @@ function PunchPanel({ edition, ranked, onMutated }: {
   );
 }
 
+type Tab = 'setup' | 'runners' | 'punch' | 'dnf' | 'corrections';
+
+function TabButton({
+  current,
+  target,
+  label,
+  setTab,
+}: {
+  readonly current: Tab;
+  readonly target: Tab;
+  readonly label: string;
+  readonly setTab: (tab: Tab) => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={current === target ? 'active' : ''}
+      onClick={() => setTab(target)}
+    >
+      {label}
+    </button>
+  );
+}
+
 export function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [tab, setTab] = useState<Tab>('punch');
   const editionState = useResource(RACE_CACHE_KEY, () => apiClient.getCurrentEdition());
   const edition = editionState.value?.edition ?? null;
   const standingsState = useStandings(edition?.slug ?? '');
+  const ranked = standingsState.standings?.ranked ?? [];
 
   if (!authenticated) {
     return (
@@ -151,23 +179,38 @@ export function AdminPage() {
     );
   }
 
-  if (edition === null) {
-    return (
-      <div className="main">
-        <div className="card">
-          <div className="card-body muted">Aucune édition active. Créez-en une via /admin/setup.</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="main col">
-      <PunchPanel
-        edition={edition}
-        ranked={standingsState.standings?.ranked ?? []}
-        onMutated={() => invalidateResource(`standings:${edition.slug}`)}
-      />
+      <nav className="nav" style={{ marginLeft: 0 }}>
+        <TabButton current={tab} target="setup" label="Setup" setTab={setTab} />
+        <TabButton current={tab} target="runners" label="Coureurs" setTab={setTab} />
+        <TabButton current={tab} target="punch" label="Pointage" setTab={setTab} />
+        <TabButton current={tab} target="dnf" label="DNF" setTab={setTab} />
+        <TabButton current={tab} target="corrections" label="Corrections" setTab={setTab} />
+      </nav>
+
+      {tab === 'setup' ? <SetupPanel currentEdition={edition} /> : null}
+
+      {edition === null && tab !== 'setup' ? (
+        <div className="card">
+          <div className="card-body muted">
+            Aucune édition active. Allez sur l'onglet <strong>Setup</strong> pour en créer une.
+          </div>
+        </div>
+      ) : null}
+
+      {edition !== null && tab === 'runners' ? <RunnerAdminPanel edition={edition} /> : null}
+      {edition !== null && tab === 'punch' ? (
+        <PunchPanel
+          edition={edition}
+          ranked={ranked}
+          onMutated={() => invalidateResource(`standings:${edition.slug}`)}
+        />
+      ) : null}
+      {edition !== null && tab === 'dnf' ? (
+        <DnfCandidatesPanel edition={edition} ranked={ranked} />
+      ) : null}
+      {edition !== null && tab === 'corrections' ? <CorrectionPanel edition={edition} /> : null}
     </div>
   );
 }

@@ -4,16 +4,20 @@
 
 .spectator-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   gap: var(--d-4);
+}
+
+.spectator-grid > * {
+  min-width: 0;
 }
 
 @media (max-width: 900px) {
   .spectator-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
+
 
 .card {
   background: var(--bg-elev);
@@ -128,10 +132,11 @@
 .countdown {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 56px;
+  font-size: clamp(28px, 8vw, 56px);
   font-weight: 700;
   text-align: center;
   color: var(--ink);
+  overflow-wrap: anywhere;
 }
 
 .countdown small {

@@ -2,6 +2,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { getDatabase } from '../database/client';
 import { requireAdminSession } from '../auth/auth.middleware';
+import { listPunchesForEdition } from '../punch/punch.repository';
 import { createRunnerInputSchema } from './runner.schema';
 import {
   RunnerAlreadyExistsError,
@@ -30,6 +31,16 @@ runnerRouter.get('/editions/:editionSlug/runners/:runnerSlug', async (context) =
     if (error instanceof RunnerNotFoundError) return context.json({ error: error.message }, 404);
     throw error;
   }
+});
+
+runnerRouter.get('/editions/:editionSlug/runners/:runnerSlug/punches', async (context) => {
+  const editionSlug = context.req.param('editionSlug');
+  const runnerSlug = context.req.param('runnerSlug');
+  const allPunches = await listPunchesForEdition(getDatabase(), editionSlug);
+  const punches = allPunches
+    .filter((punch) => punch.runnerSlug === runnerSlug)
+    .toSorted((left, right) => left.loopIndex - right.loopIndex);
+  return context.json({ punches });
 });
 
 const adminRunnerRouter = new Hono();
