@@ -45,6 +45,8 @@ export const Y2025: Year = {
           kind: 'oneshot',
           status: 'done',
           proofs: [
+            { type: 'photo', v: '/media/12-travaux/mars-2025-fleche-or-pin.jpg' },
+            { type: 'video', v: '/media/12-travaux/mars-2025-fleche-or.mp4' },
             {
               type: 'link',
               v: 'https://technique.esf.net/index.php?page=resultat&code=102154',
@@ -64,6 +66,7 @@ export const Y2025: Year = {
           status: 'done',
           proofs: [
             { type: 'stat', v: "19'17" },
+            { type: 'photo', v: '/media/12-travaux/avril-2025-foulees-podium.jpg' },
             { type: 'link', v: 'https://www.strava.com/activities/14026738794', label: 'Strava' },
           ],
         },
@@ -78,6 +81,9 @@ export const Y2025: Year = {
           kind: 'oneshot',
           status: 'done',
           proofs: [
+            { type: 'photo', v: '/media/12-travaux/mai-2025-gr75-corentin-borne.jpg' },
+            { type: 'photo', v: '/media/12-travaux/mai-2025-gr75-selfie-borne.jpg' },
+            { type: 'photo', v: '/media/12-travaux/mai-2025-gr75-betise.jpg' },
             { type: 'link', v: 'https://www.strava.com/activities/14416006753', label: 'Strava' },
           ],
         },
@@ -177,6 +183,10 @@ export const Y2025: Year = {
             { type: 'stat', v: '7h14', label: 'Temps total' },
             { type: 'stat', v: '30 km', label: 'Distance' },
             { type: 'stat', v: '3 900 D+', label: 'Dénivelé Strava' },
+            { type: 'photo', v: '/media/12-travaux/novembre-2025-montmartre-hugo.jpg' },
+            { type: 'photo', v: '/media/12-travaux/novembre-2025-montmartre-groupe.jpg' },
+            { type: 'photo', v: '/media/12-travaux/novembre-2025-montmartre-crepuscule.jpg' },
+            { type: 'photo', v: '/media/12-travaux/novembre-2025-montmartre-nuit.jpg' },
             {
               type: 'link',
               v: 'https://www.strava.com/activities/16533006331',
