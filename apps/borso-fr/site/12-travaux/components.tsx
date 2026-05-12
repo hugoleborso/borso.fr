@@ -1,17 +1,6 @@
 import type { ChallengeStatus } from './data';
 import { statusColorRole, statusLabel } from './data.utils';
-import {
-  ACCENT,
-  BAD_INK,
-  INK,
-  MUTED,
-  PAPER,
-  RULE,
-  STRIPE_ACCENT_DARK,
-  STRIPE_DARK,
-  STRIPE_LIGHT,
-  WARN_INK,
-} from './theme';
+import { ACCENT, BAD_INK, INK, MUTED, PAPER, RULE, WARN_INK } from './theme';
 
 const ROLE_COLOR = {
   ink: INK,
@@ -50,46 +39,6 @@ export function StatusTag({ status, big }: { status: ChallengeStatus; big?: bool
     >
       {statusLabel(status)}
     </span>
-  );
-}
-
-export function ImageSlot({
-  label,
-  height,
-  accent,
-}: {
-  label: string;
-  height?: number;
-  accent?: boolean;
-}) {
-  const base = accent ? ACCENT : STRIPE_LIGHT;
-  const alt = accent ? STRIPE_ACCENT_DARK : STRIPE_DARK;
-  return (
-    <div
-      style={{
-        height: height ?? 240,
-        background: `repeating-linear-gradient(135deg, ${base} 0 8px, ${alt} 8px 16px)`,
-        position: 'relative',
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'flex-end',
-      }}
-    >
-      <div
-        style={{
-          fontFamily: '"Space Grotesk", sans-serif',
-          fontSize: 10,
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-          color: '#fff',
-          background: 'rgba(23,20,16,0.85)',
-          padding: '4px 8px',
-          margin: 8,
-        }}
-      >
-        {label}
-      </div>
-    </div>
   );
 }
 

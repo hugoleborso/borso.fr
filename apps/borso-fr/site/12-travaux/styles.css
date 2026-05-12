@@ -39,6 +39,10 @@ body {
   grid-template-columns: 320px minmax(0, 1fr);
 }
 
+.twelve-travaux-featured--no-cover {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .twelve-travaux-masthead-title {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
@@ -71,9 +75,6 @@ body {
     grid-template-columns: repeat(12, minmax(160px, 1fr));
     overflow-x: auto;
     padding-bottom: 8px;
-  }
-  .twelve-travaux-cover-empty {
-    display: none;
   }
   .twelve-travaux-month-name {
     font-size: 72px;

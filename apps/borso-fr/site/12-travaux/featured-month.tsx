@@ -1,4 +1,4 @@
-import { ImageSlot, StatusTag } from './components';
+import { StatusTag } from './components';
 import type { Challenge, Month, Proof } from './data';
 import { formatScore, kindLabel, monthScore, pickMonthCover, proofIcon } from './data.utils';
 import { ACCENT, DASH_RULE, INK, MUTED, NOTE_INK, PROOF_BG, RULE, STRIPE_LIGHT } from './theme';
@@ -182,9 +182,13 @@ function ChallengeRow({
 export function FeaturedMonth({ month, year }: { month: Month; year: number }) {
   const score = monthScore(month);
   const pct = score.total ? score.done / score.total : 0;
+  const cover = pickMonthCover(month);
+  const articleClass = cover
+    ? 'twelve-travaux-featured'
+    : 'twelve-travaux-featured twelve-travaux-featured--no-cover';
   return (
     <article
-      className="twelve-travaux-featured"
+      className={articleClass}
       style={{
         borderTop: `1px solid ${RULE}`,
         borderBottom: `1px solid ${RULE}`,
@@ -192,22 +196,15 @@ export function FeaturedMonth({ month, year }: { month: Month; year: number }) {
         gap: 48,
       }}
     >
-      {(() => {
-        const cover = pickMonthCover(month);
-        return cover ? (
-          <div>
-            <img
-              src={cover}
-              alt={`Couverture ${month.name}`}
-              style={{ display: 'block', width: '100%', height: 'auto' }}
-            />
-          </div>
-        ) : (
-          <div className="twelve-travaux-cover-empty">
-            <ImageSlot label={month.name} height={420} />
-          </div>
-        );
-      })()}
+      {cover && (
+        <div>
+          <img
+            src={cover}
+            alt={`Couverture ${month.name}`}
+            style={{ display: 'block', width: '100%', height: 'auto' }}
+          />
+        </div>
+      )}
       <div>
         <div
           style={{
