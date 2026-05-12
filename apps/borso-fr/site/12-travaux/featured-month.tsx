@@ -77,7 +77,7 @@ function ChallengeRow({
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: '28px 1fr',
+        gridTemplateColumns: '28px minmax(0, 1fr)',
         gap: 20,
         paddingBottom: 20,
         borderBottom: isLast ? 'none' : `1px dashed ${DASH_RULE}`,
@@ -144,7 +144,7 @@ function ChallengeRow({
           </div>
         )}
         {challenge.proofs && challenge.proofs.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
             {challenge.proofs.some((proof) => proof.type === 'photo' || proof.type === 'video') && (
               <div
                 style={{
