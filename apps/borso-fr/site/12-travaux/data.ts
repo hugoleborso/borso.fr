@@ -51,7 +51,12 @@ export const DATA: Data = {
           m: 1,
           name: 'Janvier',
           challenges: [
-            { t: 'Sport tous les jours', kind: 'daily', status: 'done' },
+            {
+              t: 'Sport tous les jours',
+              kind: 'daily',
+              status: 'partial',
+              note: "Un blocage de dos au milieu du mois m'a coupé la série ; j'ai rattrapé des jours en février.",
+            },
             { t: 'Smasher correctement au volley', kind: 'oneshot', status: 'done' },
           ],
         },
@@ -59,59 +64,172 @@ export const DATA: Data = {
           m: 2,
           name: 'Février',
           challenges: [
-            { t: '2h de téléphone / jour en moyenne', kind: 'daily', status: 'done' },
-            { t: '14 livres dans le mois', kind: 'count', status: 'done' },
+            {
+              t: '2h de téléphone / jour en moyenne',
+              kind: 'daily',
+              status: 'partial',
+              note: 'Plutôt bien réussi, modulo quelques petits écarts.',
+            },
+            {
+              t: '14 livres dans le mois',
+              kind: 'count',
+              status: 'partial',
+              note: '7 livres lus : Barjavel, Gogol, Benzine, Roux, da Empoli, Henn.',
+              proofs: [{ type: 'stat', v: '7 / 14' }],
+            },
           ],
         },
         {
           m: 3,
           name: 'Mars',
-          challenges: [{ t: "Passer la Flèche d'Or", kind: 'oneshot', status: 'done' }],
+          challenges: [
+            {
+              t: "Passer la Flèche d'Or",
+              kind: 'oneshot',
+              status: 'done',
+              proofs: [
+                {
+                  type: 'link',
+                  v: 'https://technique.esf.net/index.php?page=resultat&code=102154',
+                  label: 'Résultat ESF',
+                },
+              ],
+            },
+          ],
         },
         {
           m: 4,
           name: 'Avril',
-          challenges: [{ t: '5 km sub-20', kind: 'oneshot', status: 'done' }],
+          challenges: [
+            {
+              t: '5 km sub-20',
+              kind: 'oneshot',
+              status: 'done',
+              proofs: [
+                { type: 'stat', v: "19'17" },
+                {
+                  type: 'link',
+                  v: 'https://www.strava.com/activities/14026738794',
+                  label: 'Strava',
+                },
+              ],
+            },
+          ],
         },
-        { m: 5, name: 'Mai', challenges: [{ t: 'Le GR75', kind: 'oneshot', status: 'done' }] },
+        {
+          m: 5,
+          name: 'Mai',
+          challenges: [
+            {
+              t: 'Le GR75',
+              kind: 'oneshot',
+              status: 'done',
+              proofs: [
+                {
+                  type: 'link',
+                  v: 'https://www.strava.com/activities/14416006753',
+                  label: 'Strava',
+                },
+              ],
+            },
+          ],
+        },
         {
           m: 6,
           name: 'Juin',
-          challenges: [{ t: 'Finir la Montecristo', kind: 'oneshot', status: 'done' }],
+          challenges: [
+            {
+              t: 'Le Monte-Cristo (5 km nage)',
+              kind: 'oneshot',
+              status: 'partial',
+              note: 'Course en mer annulée — 5 km en piscine à la place.',
+              proofs: [{ type: 'stat', v: "1h29'30" }],
+            },
+          ],
         },
         {
           m: 7,
           name: 'Juillet',
           challenges: [
-            { t: 'Apprendre 1 ouverture / jour', kind: 'daily', status: 'done' },
-            { t: 'Monter à 1500 en rapid', kind: 'oneshot', status: 'done' },
+            {
+              t: 'Apprendre 1 ouverture / jour',
+              kind: 'daily',
+              status: 'failed',
+              note: "C'est les vacances tu connais.",
+            },
+            {
+              t: 'Monter à 1500 en rapid',
+              kind: 'oneshot',
+              status: 'failed',
+              note: "C'est les vacances tu connais.",
+            },
           ],
         },
         {
           m: 8,
           name: 'Août',
           challenges: [
-            { t: "200 km à vélo d'un coup", kind: 'oneshot', status: 'done' },
-            { t: 'Traversée de la Méditerranée en bateau', kind: 'oneshot', status: 'done' },
+            {
+              t: "200 km à vélo d'un coup",
+              kind: 'oneshot',
+              status: 'done',
+              proofs: [
+                {
+                  type: 'link',
+                  v: 'https://www.strava.com/activities/15639920646',
+                  label: 'Strava',
+                },
+              ],
+            },
+            {
+              t: 'Traversée de la Méditerranée en bateau',
+              kind: 'oneshot',
+              status: 'abandoned',
+              note: "J'y reviendrai.",
+            },
           ],
         },
         {
           m: 9,
           name: 'Septembre',
           challenges: [
-            { t: 'Triathlon L et battre mon record', kind: 'oneshot', status: 'done' },
             {
-              t: 'Apprendre les départements (numéro + localisation)',
-              kind: 'daily',
+              t: 'Triathlon L et battre mon record',
+              kind: 'oneshot',
               status: 'done',
+              proofs: [
+                { type: 'stat', v: '6h19' },
+                {
+                  type: 'link',
+                  v: 'https://www.strava.com/activities/15798133433',
+                  label: 'Nage',
+                },
+                {
+                  type: 'link',
+                  v: 'https://www.strava.com/activities/15798155427',
+                  label: 'Vélo',
+                },
+                {
+                  type: 'link',
+                  v: 'https://www.strava.com/activities/15798133580',
+                  label: 'Course',
+                },
+              ],
             },
-            { t: 'Sport tous les jours', kind: 'daily', status: 'done' },
+            { t: 'Sport tous les jours', kind: 'daily', status: 'abandoned' },
           ],
         },
         {
           m: 10,
           name: 'Octobre',
-          challenges: [{ t: '20 m en apnée', kind: 'oneshot', status: 'done' }],
+          challenges: [
+            {
+              t: '20 m en apnée',
+              kind: 'oneshot',
+              status: 'partial',
+              note: "10 m en fosse (max autorisé) ; 50 m en dynamique à côté. Génial — et plus facile que prévu.",
+            },
+          ],
         },
         {
           m: 11,
@@ -121,6 +239,7 @@ export const DATA: Data = {
               t: '100× les marches de Montmartre dans la journée',
               kind: 'oneshot',
               status: 'done',
+              note: '7h14, 30 km, 3 900 D+ Strava (4 300 D+ casquette verte).',
             },
           ],
         },
@@ -128,8 +247,8 @@ export const DATA: Data = {
           m: 12,
           name: 'Décembre',
           challenges: [
-            { t: "Aller en Italie sans utiliser l'anglais", kind: 'oneshot', status: 'done' },
-            { t: 'Faire un muscle-up', kind: 'oneshot', status: 'done' },
+            { t: "Aller en Italie sans utiliser l'anglais", kind: 'oneshot', status: 'abandoned' },
+            { t: 'Faire un muscle-up', kind: 'oneshot', status: 'abandoned' },
           ],
         },
       ],
@@ -155,9 +274,24 @@ export const DATA: Data = {
           m: 2,
           name: 'Février',
           challenges: [
-            { t: 'Au lit à 23h, extinction 23h30 (6j/7)', kind: 'daily', status: 'done' },
-            { t: 'Trouver et organiser 2 dates pour Pragma', kind: 'oneshot', status: 'todo' },
-            { t: '10×1h de sport dans la même journée', kind: 'oneshot', status: 'done' },
+            {
+              t: 'Au lit à 23h, extinction 23h30 (6j/7)',
+              kind: 'daily',
+              status: 'partial',
+              note: '3 semaines sur 4. Sacrés changements de vie ; sympa de se lever sans réveil.',
+            },
+            {
+              t: 'Trouver et organiser 2 dates pour Pragma',
+              kind: 'oneshot',
+              status: 'abandoned',
+              note: 'Décalé à septembre.',
+            },
+            {
+              t: '10×1h de sport dans la même journée',
+              kind: 'oneshot',
+              status: 'done',
+              note: 'Aux Pyramides avec Arnoult et Matmat. Sacrée journée.',
+            },
           ],
         },
         {
@@ -165,8 +299,13 @@ export const DATA: Data = {
           name: 'Mars',
           challenges: [
             { t: 'Être admissible au CAPES de maths', kind: 'oneshot', status: 'done' },
-            { t: 'Battre le métro entre 2 stations', kind: 'oneshot', status: 'done' },
-            { t: '3h de HT par semaine', kind: 'daily', status: 'todo' },
+            {
+              t: 'Battre le métro entre 2 stations',
+              kind: 'oneshot',
+              status: 'done',
+              note: 'Saint-Georges → Notre-Dame-de-Lorette.',
+            },
+            { t: '3h de HT par semaine', kind: 'daily', status: 'abandoned' },
           ],
         },
         {
@@ -176,7 +315,15 @@ export const DATA: Data = {
             {
               t: "Courir toutes les lignes de métro dans l'ordre en 1 mois",
               kind: 'daily',
-              status: 'todo',
+              status: 'done',
+              note: '263 km de course, 24h51 de course, 8h44 de métro. Dernière ligne : la 14.',
+              proofs: [
+                {
+                  type: 'link',
+                  v: 'https://www.strava.com/activities/18324410776',
+                  label: 'Strava (ligne 14)',
+                },
+              ],
             },
           ],
         },
@@ -221,7 +368,10 @@ export const DATA: Data = {
         {
           m: 9,
           name: 'Septembre',
-          challenges: [{ t: 'Sub-6h au L de Lépin', kind: 'oneshot', status: 'todo' }],
+          challenges: [
+            { t: 'Sub-6h au L de Lépin', kind: 'oneshot', status: 'todo' },
+            { t: 'Trouver et organiser 2 dates pour Pragma', kind: 'oneshot', status: 'todo' },
+          ],
         },
         {
           m: 10,
