@@ -72,6 +72,9 @@ body {
     overflow-x: auto;
     padding-bottom: 8px;
   }
+  .twelve-travaux-cover-empty {
+    display: none;
+  }
   .twelve-travaux-month-name {
     font-size: 72px;
   }

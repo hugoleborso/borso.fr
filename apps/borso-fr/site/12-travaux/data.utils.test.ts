@@ -210,6 +210,23 @@ describe('pickMonthCover', () => {
     expect(pickMonthCover(month)).toBe('/first.jpg');
   });
 
+  it('returns undefined when there is exactly one photo proof (would just duplicate the carousel)', () => {
+    const month: Month = {
+      m: 1,
+      name: 'Jan',
+      challenges: [
+        {
+          ...challenge('done'),
+          proofs: [
+            { type: 'photo', v: '/only.jpg' },
+            { type: 'stat', v: '1h' },
+          ],
+        },
+      ],
+    };
+    expect(pickMonthCover(month)).toBeUndefined();
+  });
+
   it('returns undefined when no cover and no photo proofs exist', () => {
     const month: Month = {
       m: 1,

@@ -192,20 +192,22 @@ export function FeaturedMonth({ month, year }: { month: Month; year: number }) {
         gap: 48,
       }}
     >
-      <div>
-        {(() => {
-          const cover = pickMonthCover(month);
-          return cover ? (
+      {(() => {
+        const cover = pickMonthCover(month);
+        return cover ? (
+          <div>
             <img
               src={cover}
               alt={`Couverture ${month.name}`}
               style={{ display: 'block', width: '100%', height: 'auto' }}
             />
-          ) : (
+          </div>
+        ) : (
+          <div className="twelve-travaux-cover-empty">
             <ImageSlot label={month.name} height={420} />
-          );
-        })()}
-      </div>
+          </div>
+        );
+      })()}
       <div>
         <div
           style={{

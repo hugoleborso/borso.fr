@@ -135,10 +135,15 @@ export function selectFeaturedMonth(year: Year, monthNumber: number): Month {
 
 export function pickMonthCover(month: Month): string | undefined {
   if (month.cover) return month.cover;
+  let firstPhoto: string | undefined;
+  let photoCount = 0;
   for (const challenge of month.challenges) {
     if (!challenge.proofs) continue;
     for (const proof of challenge.proofs) {
-      if (proof.type === 'photo') return proof.v;
+      if (proof.type !== 'photo') continue;
+      photoCount += 1;
+      if (!firstPhoto) firstPhoto = proof.v;
+      if (photoCount > 1) return firstPhoto;
     }
   }
   return undefined;

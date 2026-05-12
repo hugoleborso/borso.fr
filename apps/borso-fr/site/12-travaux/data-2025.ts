@@ -201,8 +201,8 @@ export const Y2025: Year = {
             { type: 'stat', v: '7h14', label: 'Temps total' },
             { type: 'stat', v: '30 km', label: 'Distance' },
             { type: 'stat', v: '3 900 D+', label: 'Dénivelé Strava' },
-            { type: 'photo', v: '/media/12-travaux/novembre-2025-montmartre-hugo.jpg' },
             { type: 'photo', v: '/media/12-travaux/novembre-2025-montmartre-groupe.jpg' },
+            { type: 'photo', v: '/media/12-travaux/novembre-2025-montmartre-hugo.jpg' },
             { type: 'photo', v: '/media/12-travaux/novembre-2025-montmartre-crepuscule.jpg' },
             { type: 'photo', v: '/media/12-travaux/novembre-2025-montmartre-nuit.jpg' },
             {
