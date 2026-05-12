@@ -50,7 +50,6 @@ export const Y2026: Year = {
           kind: 'oneshot',
           status: 'done',
           note: 'Saint-Georges → Notre-Dame-de-Lorette.',
-          proofs: [{ type: 'photo', v: '/media/12-travaux/mars-2026-metro.jpg' }],
         },
         { t: '3h de HT par semaine', kind: 'daily', status: 'abandoned' },
       ],
