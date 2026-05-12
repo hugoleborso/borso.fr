@@ -1,0 +1,157 @@
+/**
+ * Typed fetch wrapper. Same-origin in prod (CloudFront routes /api/*
+ * to the Lambda); in dev Vite proxies /api to the local Hono server.
+ *
+ * Every response is parsed through a Zod schema. The repo's type-assertion
+ * plugin bans `as T`, so the narrowing has to happen at runtime — Zod
+ * doubles as the trust boundary between server JSON and TS-typed front state.
+ */
+
+import { z } from 'zod';
+
+class ApiError extends Error {
+  constructor(public readonly status: number, public readonly body: unknown) {
+    super(`api error ${status}`);
+  }
+}
+
+const latLngSchema = z.object({ lat: z.number(), lng: z.number() });
+
+const raceEditionSchema = z.object({
+  slug: z.string(),
+  displayName: z.string(),
+  startsAt: z.string(),
+  endsAt: z.string(),
+  sunriseAt: z.string(),
+  sunsetAt: z.string(),
+  intervalMinutes: z.number(),
+  gpx: z.object({
+    distanceMeters: z.number(),
+    elevationGainMeters: z.number(),
+    trackJson: z.object({ points: z.array(latLngSchema) }),
+    startLatLng: latLngSchema,
+  }),
+  status: z.enum(['setup', 'live', 'finished']),
+});
+
+const runnerSchema = z.object({
+  editionSlug: z.string(),
+  slug: z.string(),
+  displayName: z.string(),
+  photoKey: z.string().nullable(),
+  bib: z.number().nullable(),
+});
+
+const runnerStatusSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('in-race'), lastLoop: z.number() }),
+  z.object({
+    kind: z.literal('dnf'),
+    outAtLoop: z.number(),
+    reason: z.enum(['late', 'manual']),
+  }),
+]);
+
+const rankedRunnerSchema = z.object({
+  runner: runnerSchema,
+  rank: z.union([z.number(), z.literal('ex-aequo')]),
+  status: runnerStatusSchema,
+  lastLoopDurationMs: z.number().nullable(),
+  lastFinishedAt: z.string().nullable(),
+});
+
+const standingsSchema = z.object({
+  editionSlug: z.string(),
+  computedAt: z.string(),
+  raceEnded: z.boolean(),
+  ranked: z.array(rankedRunnerSchema),
+});
+
+const editionEnvelopeSchema = z.object({ edition: raceEditionSchema });
+const editionNullableEnvelopeSchema = z.object({ edition: raceEditionSchema.nullable() });
+const editionsListEnvelopeSchema = z.object({ editions: z.array(raceEditionSchema) });
+const runnerEnvelopeSchema = z.object({ runner: runnerSchema });
+const runnersListEnvelopeSchema = z.object({ runners: z.array(runnerSchema) });
+const standingsEnvelopeSchema = z.object({ standings: standingsSchema });
+const loginResponseSchema = z.object({ expiresAt: z.string() });
+const passthroughSchema = z.unknown();
+
+async function fetchUnknown(path: string, init?: RequestInit): Promise<unknown> {
+  const response = await fetch(path, {
+    headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) },
+    credentials: 'include',
+    ...init,
+  });
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) throw new ApiError(response.status, body);
+  return body;
+}
+
+async function fetchJson<T>(
+  path: string,
+  schema: z.ZodType<T>,
+  init?: RequestInit,
+): Promise<T> {
+  return schema.parse(await fetchUnknown(path, init));
+}
+
+export { ApiError };
+
+export const apiClient = {
+  getCurrentEdition: () => fetchJson('/api/editions/current', editionNullableEnvelopeSchema),
+  listEditions: () => fetchJson('/api/editions', editionsListEnvelopeSchema),
+  getStandings: (editionSlug: string) =>
+    fetchJson(`/api/standings/${encodeURIComponent(editionSlug)}`, standingsEnvelopeSchema),
+  getRunner: (editionSlug: string, runnerSlug: string) =>
+    fetchJson(
+      `/api/editions/${encodeURIComponent(editionSlug)}/runners/${encodeURIComponent(runnerSlug)}`,
+      runnerEnvelopeSchema,
+    ),
+  listRunners: (editionSlug: string) =>
+    fetchJson(`/api/editions/${encodeURIComponent(editionSlug)}/runners`, runnersListEnvelopeSchema),
+  adminLogin: (pin: string) =>
+    fetchJson('/api/admin/auth/login', loginResponseSchema, {
+      method: 'POST',
+      body: JSON.stringify({ pin }),
+    }),
+  adminCreateEdition: (input: {
+    slug: string;
+    displayName: string;
+    startsAt: string;
+    endsAt: string;
+    gpxXml: string;
+  }) =>
+    fetchJson('/api/admin/editions', editionEnvelopeSchema, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  adminCreateRunner: (input: {
+    editionSlug: string;
+    slug: string;
+    displayName: string;
+    photoKey?: string | null;
+    bib?: number | null;
+  }) =>
+    fetchJson('/api/admin/runners', runnerEnvelopeSchema, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  adminRegisterPunch: (input: { editionSlug: string; runnerSlug: string }) =>
+    fetchJson('/api/admin/punches', passthroughSchema, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  adminVoidPunch: (id: string) =>
+    fetchJson(`/api/admin/punches/${encodeURIComponent(id)}`, passthroughSchema, {
+      method: 'DELETE',
+    }),
+  adminRecordDnf: (input: {
+    editionSlug: string;
+    runnerSlug: string;
+    outAtLoop: number;
+    reason: 'late' | 'manual';
+  }) =>
+    fetchJson('/api/admin/dnfs', passthroughSchema, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+};

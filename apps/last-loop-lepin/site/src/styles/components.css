@@ -1,0 +1,271 @@
+.main {
+  padding: var(--d-6);
+}
+
+.spectator-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  grid-template-rows: auto auto;
+  gap: var(--d-4);
+}
+
+@media (max-width: 900px) {
+  .spectator-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--d-3);
+  padding: var(--d-4) var(--d-5);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.card-body {
+  padding: var(--d-4) var(--d-5);
+  flex: 1;
+  overflow: auto;
+}
+
+.card-body.flush {
+  padding: 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--radius-2);
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: color-mix(in oklch, var(--danger) 50%, var(--line));
+}
+
+.btn-sm {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-2);
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--d-3);
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--d-3);
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+.countdown {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 56px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--ink);
+}
+
+.countdown small {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto;
+  align-items: center;
+  gap: var(--d-3);
+  padding: 10px var(--d-5);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.leaderboard-row .rank {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.leaderboard-row .runner-name {
+  font-weight: 500;
+}
+
+.leaderboard-row .loop-info {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-pill.in-race {
+  background: color-mix(in oklch, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+.status-pill.dnf {
+  background: color-mix(in oklch, var(--danger) 14%, transparent);
+  color: var(--danger);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: #0a0b0d;
+}
+
+.wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--d-3);
+}
+
+.wall-card {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-2);
+  padding: var(--d-3);
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timeline-tick {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: var(--d-3);
+  padding: 6px var(--d-3);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.timeline-tick.sunrise {
+  background: color-mix(in oklch, var(--warn) 8%, transparent);
+}
+
+.timeline-tick.sunset {
+  background: color-mix(in oklch, var(--danger) 6%, transparent);
+}
+
+.timeline-tick .hour {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.banner {
+  background: color-mix(in oklch, var(--warn) 20%, transparent);
+  color: var(--warn);
+  padding: var(--d-3) var(--d-5);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
+  border-bottom: 1px solid color-mix(in oklch, var(--warn) 40%, transparent);
+}
+
+.pin-form {
+  max-width: 360px;
+  margin: 10vh auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--d-3);
+}
+
+.error-text {
+  color: var(--danger);
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
