@@ -182,6 +182,9 @@ export class StaticSite extends Construct {
       destinationBucket: bucket,
       distribution,
       distributionPaths: ['/*'],
+      // 128 MB (the default) leaves no headroom for `aws s3 sync` to upload
+      // multi-MiB media bundles and crashes with `[SSL: UNEXPECTED_EOF_WHILE_READING]`.
+      memoryLimit: 512,
     });
 
     const zoneName = StringParameter.valueForStringParameter(this, SHARED_SSM.hostedZoneName);
@@ -239,6 +242,9 @@ export class StaticSite extends Construct {
       // Scope the invalidation to this PR's hostname-routed prefix, so
       // co-tenant previews don't pay for unrelated cache busting.
       distributionPaths: [`/${keyPrefix}/*`],
+      // 128 MB (the default) leaves no headroom for `aws s3 sync` to upload
+      // multi-MiB media bundles and crashes with `[SSL: UNEXPECTED_EOF_WHILE_READING]`.
+      memoryLimit: 512,
     });
     return `https://${previewHostname(props)}`;
   }

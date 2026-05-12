@@ -1,0 +1,82 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #f4ede1;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.twelve-travaux-page {
+  padding: 36px 48px 48px;
+}
+
+.twelve-travaux-title {
+  font-size: 148px;
+}
+
+.twelve-travaux-hero-year {
+  font-size: 220px;
+}
+
+.twelve-travaux-month-name {
+  font-size: 108px;
+}
+
+.twelve-travaux-hero {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+}
+
+.twelve-travaux-featured {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+}
+
+.twelve-travaux-featured--no-cover {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.twelve-travaux-masthead-title {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+}
+
+.twelve-travaux-filmstrip {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .twelve-travaux-hero-year {
+    font-size: 140px;
+  }
+  .twelve-travaux-title {
+    font-size: 96px;
+  }
+}
+
+@media (max-width: 760px) {
+  .twelve-travaux-page {
+    padding: 24px 20px 32px;
+  }
+  .twelve-travaux-hero,
+  .twelve-travaux-featured,
+  .twelve-travaux-masthead-title {
+    grid-template-columns: 1fr;
+  }
+  .twelve-travaux-filmstrip {
+    grid-template-columns: repeat(12, minmax(160px, 1fr));
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .twelve-travaux-month-name {
+    font-size: 72px;
+  }
+}
