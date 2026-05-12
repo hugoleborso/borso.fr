@@ -92,10 +92,10 @@ export const Y2026: Year = {
       challenges: [
         { t: '1 poème / jour à une personne différente', kind: 'daily', status: 'todo' },
         {
-          t: 'Sub-1h30 au Montecristo',
+          t: 'Finir la Montecristo',
           kind: 'oneshot',
           status: 'todo',
-          note: '5 km de nage en eau libre à Marseille, avec Salomé.',
+          note: 'Objectif subsidiaire : sub-1h30. 5 km de nage en eau libre à Marseille, avec Salomé.',
         },
       ],
     },
