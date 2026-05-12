@@ -1,6 +1,6 @@
 import { ImageSlot, StatusTag } from './components';
 import type { Challenge, Month, Proof } from './data';
-import { formatScore, kindLabel, monthScore, proofIcon } from './data.utils';
+import { formatScore, kindLabel, monthScore, pickMonthCover, proofIcon } from './data.utils';
 import { ACCENT, DASH_RULE, INK, MUTED, NOTE_INK, PROOF_BG, RULE, STRIPE_LIGHT } from './theme';
 
 function proofKey(challengeTitle: string, type: string, value: string): string {
@@ -193,15 +193,18 @@ export function FeaturedMonth({ month, year }: { month: Month; year: number }) {
       }}
     >
       <div>
-        {month.cover ? (
-          <img
-            src={month.cover}
-            alt={`Couverture ${month.name}`}
-            style={{ display: 'block', width: '100%', height: 'auto' }}
-          />
-        ) : (
-          <ImageSlot label={month.name} height={420} />
-        )}
+        {(() => {
+          const cover = pickMonthCover(month);
+          return cover ? (
+            <img
+              src={cover}
+              alt={`Couverture ${month.name}`}
+              style={{ display: 'block', width: '100%', height: 'auto' }}
+            />
+          ) : (
+            <ImageSlot label={month.name} height={420} />
+          );
+        })()}
       </div>
       <div>
         <div

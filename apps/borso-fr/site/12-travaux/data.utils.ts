@@ -132,3 +132,14 @@ export function selectFeaturedMonth(year: Year, monthNumber: number): Month {
   if (!featured) throw new Error('Year has no months');
   return featured;
 }
+
+export function pickMonthCover(month: Month): string | undefined {
+  if (month.cover) return month.cover;
+  for (const challenge of month.challenges) {
+    if (!challenge.proofs) continue;
+    for (const proof of challenge.proofs) {
+      if (proof.type === 'photo') return proof.v;
+    }
+  }
+  return undefined;
+}

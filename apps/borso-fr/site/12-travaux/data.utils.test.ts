@@ -8,6 +8,7 @@ import {
   monthScore,
   pickDefaultMonth,
   pickDefaultYear,
+  pickMonthCover,
   proofIcon,
   selectFeaturedMonth,
   selectYearData,
@@ -176,6 +177,49 @@ describe('selectYearData', () => {
 
   it('throws when the year entry is missing', () => {
     expect(() => selectYearData(data, 2099)).toThrowError('No data for year 2099');
+  });
+});
+
+describe('pickMonthCover', () => {
+  it('returns the explicit cover when set', () => {
+    const month: Month = {
+      m: 1,
+      name: 'Jan',
+      cover: '/cover.jpg',
+      challenges: [{ ...challenge('done'), proofs: [{ type: 'photo', v: '/photo.jpg' }] }],
+    };
+    expect(pickMonthCover(month)).toBe('/cover.jpg');
+  });
+
+  it('falls back to the first photo proof when no cover is set', () => {
+    const month: Month = {
+      m: 1,
+      name: 'Jan',
+      challenges: [
+        { ...challenge('done'), proofs: [{ type: 'stat', v: '1h' }] },
+        {
+          ...challenge('done'),
+          proofs: [
+            { type: 'link', v: 'https://x', label: 'X' },
+            { type: 'photo', v: '/first.jpg' },
+            { type: 'photo', v: '/second.jpg' },
+          ],
+        },
+      ],
+    };
+    expect(pickMonthCover(month)).toBe('/first.jpg');
+  });
+
+  it('returns undefined when no cover and no photo proofs exist', () => {
+    const month: Month = {
+      m: 1,
+      name: 'Jan',
+      challenges: [
+        challenge('done'),
+        { ...challenge('done'), proofs: [{ type: 'stat', v: '1h' }] },
+      ],
+    };
+    expect(pickMonthCover(month)).toBeUndefined();
   });
 });
 
