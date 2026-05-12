@@ -47,24 +47,32 @@ function proofChipText(proof: Proof): string {
 }
 
 function ProofChip({ proof }: { proof: Proof }) {
-  return (
-    <span
-      style={{
-        fontFamily: '"Space Grotesk", sans-serif',
-        fontSize: 11,
-        color: INK,
-        background: PROOF_BG,
-        padding: '4px 9px',
-        letterSpacing: '0.02em',
-        display: 'inline-flex',
-        gap: 6,
-        alignItems: 'center',
-      }}
-    >
+  const chipStyle = {
+    fontFamily: '"Space Grotesk", sans-serif',
+    fontSize: 11,
+    color: INK,
+    background: PROOF_BG,
+    padding: '4px 9px',
+    letterSpacing: '0.02em',
+    display: 'inline-flex',
+    gap: 6,
+    alignItems: 'center',
+    textDecoration: 'none',
+  } as const;
+  const inner = (
+    <>
       <span style={{ color: ACCENT, fontWeight: 600 }}>{proofIcon(proof.type)}</span>
       {proofChipText(proof)}
-    </span>
+    </>
   );
+  if (proof.type === 'link') {
+    return (
+      <a href={proof.v} target="_blank" rel="noopener noreferrer" style={chipStyle}>
+        {inner}
+      </a>
+    );
+  }
+  return <span style={chipStyle}>{inner}</span>;
 }
 
 function ChallengeRow({
