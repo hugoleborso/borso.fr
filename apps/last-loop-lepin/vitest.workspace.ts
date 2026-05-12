@@ -24,6 +24,7 @@ export default defineWorkspace([
       include: [
         'api/src/**/*.core.test.ts',
         'api/src/database/migrations.audit.test.ts',
+        'cdk/test/**/*.test.ts',
         'site/src/**/*.utils.test.ts',
       ],
       coverage: {
