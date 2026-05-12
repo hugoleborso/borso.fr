@@ -1,4 +1,4 @@
-import type { ChallengeKind, ChallengeStatus, Month, ProofType, Year } from './data';
+import type { ChallengeKind, ChallengeStatus, Data, Month, ProofType, Year } from './data';
 
 const DONE_WEIGHT = 1;
 const PARTIAL_WEIGHT = 0.5;
@@ -103,11 +103,32 @@ export function countChallenges(
   year: Year,
   predicate: (kind: ChallengeKind, status: ChallengeStatus) => boolean,
 ): number {
-  let n = 0;
+  let matches = 0;
   for (const month of year.months) {
     for (const challenge of month.challenges) {
-      if (predicate(challenge.kind, challenge.status)) n += 1;
+      if (predicate(challenge.kind, challenge.status)) matches += 1;
     }
   }
-  return n;
+  return matches;
+}
+
+export function pickDefaultMonth(year: number, today: Date): number {
+  if (year === today.getFullYear()) return today.getMonth() + 1;
+  return 1;
+}
+
+export function pickDefaultYear(availableYears: number[], fallbackYear: number): number {
+  return availableYears[availableYears.length - 1] ?? fallbackYear;
+}
+
+export function selectYearData(data: Data, year: number): Year {
+  const yearData = data.years[year];
+  if (!yearData) throw new Error(`No data for year ${year}`);
+  return yearData;
+}
+
+export function selectFeaturedMonth(year: Year, monthNumber: number): Month {
+  const featured = year.months.find((month) => month.m === monthNumber) ?? year.months[0];
+  if (!featured) throw new Error('Year has no months');
+  return featured;
 }

@@ -38,6 +38,7 @@ export type {
   Challenge,
   ChallengeKind,
   ChallengeStatus,
+  Data,
   Month,
   Proof,
   ProofType,

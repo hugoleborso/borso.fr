@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { MiniStat } from './components';
 import { DATA } from './data';
-import { countChallenges, formatScore, yearScore } from './data.utils';
+import {
+  countChallenges,
+  formatScore,
+  pickDefaultMonth,
+  pickDefaultYear,
+  selectFeaturedMonth,
+  selectYearData,
+  yearScore,
+} from './data.utils';
 import { FeaturedMonth } from './featured-month';
 import { FilmstripCard } from './filmstrip-card';
 import { ACCENT, INK, MUTED, PAPER, RULE, STRIPE_LIGHT } from './theme';
@@ -10,20 +18,13 @@ const ALL_YEARS = Object.keys(DATA.years)
   .map(Number)
   .sort((a, b) => a - b);
 const FALLBACK_YEAR = new Date().getFullYear();
-const DEFAULT_YEAR = ALL_YEARS[ALL_YEARS.length - 1] ?? FALLBACK_YEAR;
-
-function pickDefaultMonth(year: number): number {
-  const now = new Date();
-  if (year === now.getFullYear()) return now.getMonth() + 1;
-  return 1;
-}
+const DEFAULT_YEAR = pickDefaultYear(ALL_YEARS, FALLBACK_YEAR);
 
 export function App() {
   const [year, setYear] = useState(DEFAULT_YEAR);
-  const [selected, setSelected] = useState(() => pickDefaultMonth(DEFAULT_YEAR));
+  const [selected, setSelected] = useState(() => pickDefaultMonth(DEFAULT_YEAR, new Date()));
 
-  const yearData = DATA.years[year];
-  if (!yearData) throw new Error(`No data for year ${year}`);
+  const yearData = selectYearData(DATA, year);
 
   const now = new Date();
   const todayYear = now.getFullYear();
@@ -31,8 +32,7 @@ export function App() {
 
   const score = yearScore(yearData);
   const pct = score.total ? score.done / score.total : 0;
-  const featured = yearData.months.find((m) => m.m === selected) ?? yearData.months[0];
-  if (!featured) throw new Error(`Year ${year} has no months`);
+  const featured = selectFeaturedMonth(yearData, selected);
 
   const dailyCount = countChallenges(yearData, (kind) => kind === 'daily');
   const oneshotCount = countChallenges(yearData, (kind) => kind === 'oneshot');
@@ -80,13 +80,13 @@ export function App() {
           borso<span style={{ color: ACCENT }}>.</span>fr
         </a>
         <div style={{ display: 'flex', gap: 0 }}>
-          {ALL_YEARS.map((y) => (
+          {ALL_YEARS.map((candidateYear) => (
             <button
               type="button"
-              key={y}
+              key={candidateYear}
               onClick={() => {
-                setYear(y);
-                setSelected(pickDefaultMonth(y));
+                setYear(candidateYear);
+                setSelected(pickDefaultMonth(candidateYear, new Date()));
               }}
               style={{
                 all: 'unset',
@@ -95,13 +95,13 @@ export function App() {
                 fontWeight: 500,
                 fontSize: 12,
                 padding: '8px 14px',
-                background: y === year ? INK : 'transparent',
-                color: y === year ? PAPER : INK,
+                background: candidateYear === year ? INK : 'transparent',
+                color: candidateYear === year ? PAPER : INK,
                 border: `1px solid ${INK}`,
                 letterSpacing: '0.08em',
               }}
             >
-              {y}
+              {candidateYear}
             </button>
           ))}
         </div>
