@@ -1,4 +1,5 @@
 import { apiClient } from '../api/client';
+import { CorrectionBanner } from '../components/CorrectionBanner';
 import { Countdown } from '../components/Countdown';
 import { CourseMap } from '../components/CourseMap';
 import { EliminatedWall } from '../components/EliminatedWall';
@@ -71,6 +72,9 @@ export function SpectatorPage() {
       {isFinished ? (
         <div className="banner">Course terminée — classement final affiché.</div>
       ) : null}
+      {/* Real "last correction" wiring lands once /api/standings exposes
+         correctedAt per ranked entry — the component self-hides on null. */}
+      <CorrectionBanner correctedAt={null} />
       <div className="spectator-grid">
         <div className="card" style={{ gridColumn: '1', gridRow: '1' }}>
           <div className="card-head">

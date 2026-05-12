@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Database } from '../database/client';
+import { loopIndexAt } from '../edition/edition.core';
 import { getEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
 import { validatePunchTiming, type PunchRejectReason } from './punch.core';
@@ -43,11 +44,12 @@ export async function registerPunch(
   const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
   if (!validation.ok) {
     if (validation.reason === 'already-punched-this-loop') {
+      const conflictLoop = Math.max(1, loopIndexAt(edition, now));
       const existing = await findActivePunchForLoop(
         database,
         input.editionSlug,
         input.runnerSlug,
-        runnerPunches.length + 1,
+        conflictLoop,
       );
       if (existing !== null) throw new PunchConflictError(existing);
     }
