@@ -1,5 +1,21 @@
 import { integer, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import type { EditionStatus, GpxMetadata } from './edition.types';
+
+const latLngSchema = z.object({ lat: z.number(), lng: z.number() });
+
+export const gpxMetadataSchema: z.ZodType<GpxMetadata> = z.object({
+  distanceMeters: z.number(),
+  elevationGainMeters: z.number(),
+  trackJson: z.object({ points: z.array(latLngSchema) }),
+  startLatLng: latLngSchema,
+});
+
+const editionStatusValues: ReadonlySet<string> = new Set(['setup', 'live', 'finished']);
+
+export function isEditionStatus(value: unknown): value is EditionStatus {
+  return typeof value === 'string' && editionStatusValues.has(value);
+}
 
 export const editionsTable = pgTable('editions', {
   slug: text('slug').primaryKey(),

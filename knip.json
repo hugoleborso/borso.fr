@@ -21,10 +21,7 @@
         "api/src/main.dev.ts",
         "api/src/**/*.test.ts",
         "site/src/**/*.utils.test.ts",
-        "test/**/*.ts",
-        "drizzle.config.ts",
-        "vite.config.ts",
-        "vitest.config.ts"
+        "test/**/*.ts"
       ],
       "project": [
         "cdk/**/*.ts",
