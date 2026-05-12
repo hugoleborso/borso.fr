@@ -7,34 +7,23 @@ function proofKey(challengeTitle: string, type: string, value: string): string {
   return `${challengeTitle}::${type}::${value}`;
 }
 
+const CAROUSEL_ITEM_HEIGHT = 220;
+
+const carouselItemStyle = {
+  display: 'block',
+  height: CAROUSEL_ITEM_HEIGHT,
+  width: 'auto',
+  flexShrink: 0,
+  background: PROOF_BG,
+  scrollSnapAlign: 'start',
+} as const;
+
 function ProofMedia({ proof }: { proof: Proof }) {
   if (proof.type === 'photo') {
-    return (
-      <img
-        src={proof.v}
-        alt={proof.label ?? ''}
-        style={{
-          display: 'block',
-          width: '100%',
-          height: 'auto',
-          background: PROOF_BG,
-        }}
-      />
-    );
+    return <img src={proof.v} alt={proof.label ?? ''} style={carouselItemStyle} />;
   }
   return (
-    <video
-      src={proof.v}
-      controls
-      playsInline
-      preload="metadata"
-      style={{
-        display: 'block',
-        width: '100%',
-        height: 'auto',
-        background: PROOF_BG,
-      }}
-    >
+    <video src={proof.v} controls playsInline preload="metadata" style={carouselItemStyle}>
       <track kind="captions" />
     </video>
   );
@@ -157,7 +146,16 @@ function ChallengeRow({
         {challenge.proofs && challenge.proofs.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {challenge.proofs.some((proof) => proof.type === 'photo' || proof.type === 'video') && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  gap: 8,
+                  overflowX: 'auto',
+                  scrollSnapType: 'x mandatory',
+                  paddingBottom: 4,
+                }}
+              >
                 {challenge.proofs
                   .filter((proof) => proof.type === 'photo' || proof.type === 'video')
                   .map((proof) => (
