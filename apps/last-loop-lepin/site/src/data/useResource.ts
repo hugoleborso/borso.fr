@@ -2,30 +2,51 @@
  * Tiny one-shot async resource — `useSyncExternalStore` style. The
  * thunk runs once per key; concurrent consumers share the result.
  *
+ * Snapshot stability: the entry caches its `ResourceState`-shaped
+ * snapshot, and only rebuilds it when `load()` finishes or
+ * `invalidateResource()` is called. The hook's `getSnapshot` callback
+ * returns the same object reference between mutations — without this,
+ * React detects an infinite loop ("The result of getSnapshot should be
+ * cached") and unmounts the tree.
+ *
  * Storage is `unknown`-typed because the registry holds heterogeneous
- * values. Narrowing back to `T` happens through a type-predicate trampoline
- * that never inspects the value — callers are responsible for handing in a
- * thunk that already returns a `T`-typed result (api/client.ts parses
- * every server response through Zod before resolving).
+ * values. Narrowing back to `T` happens through a type-predicate
+ * trampoline that never inspects the value — callers are responsible
+ * for handing in a thunk that already returns a `T`-typed result
+ * (api/client.ts parses every server response through Zod before
+ * resolving).
  */
 
 import { useSyncExternalStore } from 'react';
 
+interface RawSnapshot {
+  readonly value: unknown;
+  readonly error: Error | null;
+}
+
 interface ResourceEntry {
-  value: unknown;
-  error: Error | null;
+  snapshot: RawSnapshot;
   inFlight: boolean;
   listeners: Set<() => void>;
 }
 
+const INITIAL_SNAPSHOT: RawSnapshot = { value: null, error: null };
 const registry = new Map<string, ResourceEntry>();
 
 function ensureEntry(key: string): ResourceEntry {
   const existing = registry.get(key);
   if (existing !== undefined) return existing;
-  const entry: ResourceEntry = { value: null, error: null, inFlight: false, listeners: new Set() };
+  const entry: ResourceEntry = {
+    snapshot: INITIAL_SNAPSHOT,
+    inFlight: false,
+    listeners: new Set(),
+  };
   registry.set(key, entry);
   return entry;
+}
+
+function notify(entry: ResourceEntry): void {
+  for (const listener of entry.listeners) listener();
 }
 
 async function load<T>(key: string, thunk: () => Promise<T>): Promise<void> {
@@ -33,22 +54,19 @@ async function load<T>(key: string, thunk: () => Promise<T>): Promise<void> {
   if (entry.inFlight) return;
   entry.inFlight = true;
   try {
-    entry.value = await thunk();
-    entry.error = null;
+    const value = await thunk();
+    entry.snapshot = { value, error: null };
   } catch (error) {
-    entry.error = error instanceof Error ? error : new Error('unknown error');
+    entry.snapshot = {
+      value: entry.snapshot.value,
+      error: error instanceof Error ? error : new Error('unknown error'),
+    };
   } finally {
     entry.inFlight = false;
-    for (const listener of entry.listeners) listener();
+    notify(entry);
   }
 }
 
-/**
- * Lying type predicate — narrows `unknown` to `T` without runtime check.
- * Safe here because the caller's thunk already produced a typed result;
- * the registry just widens the storage type. The grit plugin bans
- * `value as T`; this construct is a type predicate, which it accepts.
- */
 function trustsThunkResult<T>(_value: unknown): _value is T {
   return true;
 }
@@ -66,25 +84,25 @@ export interface ResourceState<T> {
 
 export function useResource<T>(key: string, thunk: () => Promise<T>): ResourceState<T> {
   const entry = ensureEntry(key);
-  return useSyncExternalStore(
+  const rawSnapshot = useSyncExternalStore(
     (listener) => {
       entry.listeners.add(listener);
-      if (entry.value === null && entry.error === null) {
+      if (entry.snapshot === INITIAL_SNAPSHOT) {
         void load(key, thunk);
       }
       return () => {
         entry.listeners.delete(listener);
       };
     },
-    () => ({ value: narrow<T>(entry.value), error: entry.error }),
-    () => ({ value: null, error: null }),
+    () => entry.snapshot,
+    () => INITIAL_SNAPSHOT,
   );
+  return { value: narrow<T>(rawSnapshot.value), error: rawSnapshot.error };
 }
 
 export function invalidateResource(key: string): void {
   const entry = registry.get(key);
   if (entry === undefined) return;
-  entry.value = null;
-  entry.error = null;
-  for (const listener of entry.listeners) listener();
+  entry.snapshot = INITIAL_SNAPSHOT;
+  notify(entry);
 }
