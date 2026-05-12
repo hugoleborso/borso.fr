@@ -172,7 +172,17 @@ export const Y2025: Year = {
           t: '100× les marches de Montmartre dans la journée',
           kind: 'oneshot',
           status: 'done',
-          note: '7h14, 30 km, 3 900 D+ Strava (4 300 D+ casquette verte).',
+          note: '4 300 D+ avec casquette verte.',
+          proofs: [
+            { type: 'stat', v: '7h14', label: 'Temps total' },
+            { type: 'stat', v: '30 km', label: 'Distance' },
+            { type: 'stat', v: '3 900 D+', label: 'Dénivelé Strava' },
+            {
+              type: 'link',
+              v: 'https://www.strava.com/activities/16533006331',
+              label: 'Strava',
+            },
+          ],
         },
       ],
     },
