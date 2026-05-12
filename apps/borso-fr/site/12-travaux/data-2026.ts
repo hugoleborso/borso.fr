@@ -63,8 +63,12 @@ export const Y2026: Year = {
           t: "Courir toutes les lignes de métro dans l'ordre en 1 mois",
           kind: 'daily',
           status: 'done',
-          note: '263 km de course, 24h51 de course, 8h44 de métro. Dernière ligne : la 14.',
+          note: 'Dernière ligne : la 14.',
           proofs: [
+            { type: 'stat', v: '263 km', label: 'Distance totale' },
+            { type: 'stat', v: '24h51', label: 'Temps en mouvement' },
+            { type: 'stat', v: '5:40/km', label: 'Allure moyenne' },
+            { type: 'stat', v: '8h44', label: 'Si pris en métro' },
             { type: 'photo', v: '/media/12-travaux/avril-2026-journal.jpg' },
             {
               type: 'link',
@@ -88,9 +92,10 @@ export const Y2026: Year = {
       challenges: [
         { t: '1 poème / jour à une personne différente', kind: 'daily', status: 'todo' },
         {
-          t: 'Montecristo — finir, puis sub-1h30 sur semi en parallèle',
+          t: 'Sub-1h30 au Montecristo',
           kind: 'oneshot',
           status: 'todo',
+          note: '5 km de nage en eau libre à Marseille, avec Salomé.',
         },
       ],
     },
@@ -119,7 +124,12 @@ export const Y2026: Year = {
       m: 10,
       name: 'Octobre',
       challenges: [
-        { t: 'Paris–Dieppe à vélo en 1j et se baigner', kind: 'oneshot', status: 'todo' },
+        {
+          t: 'Paris–Dieppe à vélo en 1j et se baigner',
+          kind: 'oneshot',
+          status: 'todo',
+          note: 'Avec les colocs.',
+        },
       ],
     },
     {

@@ -40,6 +40,12 @@ function ProofMedia({ proof }: { proof: Proof }) {
   );
 }
 
+function proofChipText(proof: Proof): string {
+  if (proof.type === 'link') return proof.label ?? proof.v;
+  if (proof.type === 'stat' && proof.label) return `${proof.label} · ${proof.v}`;
+  return proof.v;
+}
+
 function ProofChip({ proof }: { proof: Proof }) {
   return (
     <span
@@ -56,7 +62,7 @@ function ProofChip({ proof }: { proof: Proof }) {
       }}
     >
       <span style={{ color: ACCENT, fontWeight: 600 }}>{proofIcon(proof.type)}</span>
-      {proof.type === 'link' ? (proof.label ?? proof.v) : proof.v}
+      {proofChipText(proof)}
     </span>
   );
 }
