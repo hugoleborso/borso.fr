@@ -38,7 +38,10 @@ describe('race day 2026 — end-to-end', () => {
   const app = createApp();
 
   beforeAll(() => {
-    vi.useFakeTimers({ shouldAdvanceTime: false });
+    // Only fake `Date` — leaving setTimeout/setInterval real so postgres-js's
+    // internal pool keeps working. Anything that drives time in the back-end
+    // reads `new Date()` directly (the `.core.ts` rule), so Date is enough.
+    vi.useFakeTimers({ toFake: ['Date'] });
   });
 
   afterAll(() => {

@@ -16,7 +16,7 @@ Anything else is a bug in the system. **Operational rule:** when a conversation 
 
 ## Layout
 
-- `apps/<slug>/` — one folder per app. Standalone-openable: `cd apps/<x> && pnpm dev` works on a fresh checkout. **No cross-app imports.** Front-end-only apps (`borso-fr`, `borsouvertures`) have a single `site/`; full-stack apps (`last-loop-lepin`) split `site/` (Vite + React), `api/` (Hono on Lambda), and `cdk/` (CDK stack composing the constructs) under the same workspace.
+- `apps/<slug>/` — one folder per app. Standalone-openable: `cd apps/<x> && pnpm dev` works on a fresh checkout. **No cross-app imports.** Front-end-only apps (`borso-fr`, `borsouvertures`) have a single `site/`; full-stack apps (`last-loop-lepin`) split `site/` (Vite + React), `api/` (Hono on Lambda), and `cdk/` (CDK stack composing the constructs) under the same workspace. Full-stack apps that need a Postgres locally call [`scripts/local-postgres.sh`](./scripts/local-postgres.sh) — boots a Docker-less, sandbox-private cluster; wired into `pnpm run test` so the back-e2e gate runs autonomously even where Docker isn't reachable. See [`docs/knowledge/local-postgres-without-docker.md`](./docs/knowledge/local-postgres-without-docker.md).
 - `infra/cdk/` — `@borso/infra`, the CDK constructs (StaticSite, LambdaApi, DsqlCluster, DsqlSchema, PreviewableApp). **100% test coverage gated.**
 - `infra/shared/` — `@borso/shared-infra`, account-level singletons (certs, OIDC, previews CDN, deploy roles). DSQL clusters are per-app, owned by each app's prod stack.
 

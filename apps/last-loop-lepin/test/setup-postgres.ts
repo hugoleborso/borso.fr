@@ -1,7 +1,14 @@
 /**
- * Vitest globalSetup — boots a single Postgres testcontainer for the
- * back-e2e gate, applies the committed Drizzle migrations once, and
- * publishes the connection URL via `DATABASE_URL`.
+ * Vitest globalSetup for the back-e2e gate.
+ *
+ * Two modes:
+ *
+ * 1. **External Postgres** — if `DATABASE_URL` is already set, we trust the
+ *    caller (CI runner, local sandbox with a system Postgres) and just
+ *    apply the migrations once. Cheaper and works in environments that
+ *    can't run nested containers.
+ * 2. **Testcontainers** — otherwise, boot a Postgres 16 container, apply
+ *    migrations, expose its URL.
  *
  * Per-suite isolation: every test that wants its own data set should call
  * `truncateAllTables(database)` in a `beforeEach`. Schema is shared across
@@ -42,6 +49,11 @@ function readMigrationStatements(): readonly string[] {
 async function applyMigrations(connectionString: string): Promise<void> {
   const sql = postgres(connectionString, { max: 1, onnotice: () => undefined });
   try {
+    // Always start from an empty database — a previous run may have left
+    // tables behind under an external Postgres. DROP IF EXISTS keeps it idempotent.
+    await sql.unsafe(
+      'DROP TABLE IF EXISTS loop_punches, manual_dnfs, runners, editions, auth_attempts CASCADE',
+    );
     for (const statement of readMigrationStatements()) {
       await sql.unsafe(statement);
     }
@@ -50,7 +62,24 @@ async function applyMigrations(connectionString: string): Promise<void> {
   }
 }
 
+function setProcessEnv(databaseUrl: string): void {
+  process.env.DATABASE_URL = databaseUrl;
+  process.env.STAGE = 'dev';
+  process.env.JWT_SECRET = 'test-jwt-secret-not-for-prod-not-for-prod-not-for-prod';
+  process.env.PHOTOS_BUCKET = 'last-loop-lepin-test-photos';
+  // PIN "lastloop" pre-hashed with scrypt (salt + key generated once for tests).
+  process.env.PIN_HASH =
+    'scrypt$6ccc66eb93981b9b83e8817f584ca8f5$60191a1c31f18e88590e0e5c6995d1d6f7f0f053b6ffce8e3ea4288c56bd0e790d6a340ad59de2d29792c9d471ad144907d5d10e05ef03d0aea5f6383f734107';
+}
+
 export async function setup(): Promise<void> {
+  const externalUrl = process.env.DATABASE_URL;
+  if (externalUrl !== undefined && externalUrl.length > 0) {
+    await applyMigrations(externalUrl);
+    setProcessEnv(externalUrl);
+    return;
+  }
+
   container = await new PostgreSqlContainer('postgres:16-alpine')
     .withDatabase('lastloop')
     .withUsername('lastloop')
@@ -58,12 +87,7 @@ export async function setup(): Promise<void> {
     .start();
   const url = container.getConnectionUri();
   await applyMigrations(url);
-  process.env.DATABASE_URL = url;
-  process.env.STAGE = 'dev';
-  process.env.JWT_SECRET = 'test-jwt-secret-not-for-prod-not-for-prod-not-for-prod';
-  process.env.PHOTOS_BUCKET = 'last-loop-lepin-test-photos';
-  // PIN "lastloop" → scrypt hash, generated once and pinned here.
-  process.env.PIN_HASH = 'scrypt$73657374$d4f6b0d3c8e4a7b2f6f1d3a8b9c0e1f2a3b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2';
+  setProcessEnv(url);
 }
 
 export async function teardown(): Promise<void> {
