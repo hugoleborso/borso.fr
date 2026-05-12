@@ -72,10 +72,15 @@ run_as_postgres() {
   # initdb / pg_ctl refuse to run as root. We `su postgres` (the system
   # role created by the apt package) to invoke them, even when we're the
   # owner of the host's filesystem.
+  #
+  # `9>&-` closes the lockfile FD inherited from cmd_start's subshell so
+  # the postgres daemon (forked by pg_ctl) doesn't inherit it — otherwise
+  # the daemon would hold the lock for its entire lifetime and no other
+  # process could ever acquire it.
   if [ "$(id -u)" -eq 0 ]; then
-    su -s /bin/sh "${PG_USER_OS}" -c "$1"
+    su -s /bin/sh "${PG_USER_OS}" -c "$1" 9>&-
   else
-    sh -c "$1"
+    sh -c "$1" 9>&-
   fi
 }
 
@@ -85,29 +90,38 @@ is_running() {
 
 cmd_start() {
   ensure_pg_installed
-  if [ ! -f "${PG_HOME}/PG_VERSION" ]; then
-    mkdir -p "${PG_HOME}"
-    chown "${PG_USER_OS}:${PG_USER_OS}" "${PG_HOME}"
-    run_as_postgres "${PG_BIN}/initdb -D '${PG_HOME}' -U '${PG_USER_DB}' --auth=trust --no-sync --encoding=UTF8" >/dev/null
-  fi
-
-  if ! is_running; then
-    chown -R "${PG_USER_OS}:${PG_USER_OS}" "${PG_HOME}"
-    run_as_postgres "${PG_BIN}/pg_ctl -D '${PG_HOME}' -l '${PG_LOG}' -o '-p ${PG_PORT} -h 127.0.0.1 -F' start" >/dev/null
-  fi
-
-  # Wait for readiness (cheap because we hit the local socket).
-  for _ in $(seq 1 20); do
-    if PGPASSWORD= "${PG_BIN}/psql" -h 127.0.0.1 -p "${PG_PORT}" -U "${PG_USER_DB}" -d postgres -c 'select 1' >/dev/null 2>&1; then
-      break
+  # Mutex around init+start so two concurrent callers (e.g. `pnpm dev`'s
+  # dev:db and dev:api launched in parallel by concurrently) can't race
+  # each other into a half-initialised data dir. The whole critical
+  # section runs in a subshell whose FD 9 is the lockfile; subshell exit
+  # releases the lock automatically. `9>&-` on the run_as_postgres calls
+  # prevents the postgres daemon from inheriting (and pinning) the FD.
+  (
+    flock 9
+    if [ ! -f "${PG_HOME}/PG_VERSION" ]; then
+      rm -rf "${PG_HOME}"
+      mkdir -p "${PG_HOME}"
+      chown "${PG_USER_OS}:${PG_USER_OS}" "${PG_HOME}"
+      run_as_postgres "${PG_BIN}/initdb -D '${PG_HOME}' -U '${PG_USER_DB}' --auth=trust --no-sync --encoding=UTF8" >/dev/null
     fi
-    sleep 0.2
-  done
 
-  # Create the per-app database if it doesn't exist yet.
-  if ! PGPASSWORD= "${PG_BIN}/psql" -h 127.0.0.1 -p "${PG_PORT}" -U "${PG_USER_DB}" -d postgres -tAc "select 1 from pg_database where datname='${DB_NAME}'" | grep -q 1; then
-    PGPASSWORD= "${PG_BIN}/psql" -h 127.0.0.1 -p "${PG_PORT}" -U "${PG_USER_DB}" -d postgres -c "create database \"${DB_NAME}\"" >/dev/null
-  fi
+    if ! is_running; then
+      chown -R "${PG_USER_OS}:${PG_USER_OS}" "${PG_HOME}"
+      run_as_postgres "${PG_BIN}/pg_ctl -D '${PG_HOME}' -l '${PG_LOG}' -o '-p ${PG_PORT} -h 127.0.0.1 -F' start" >/dev/null
+    fi
+
+    # Wait for readiness (cheap because we hit the local socket).
+    for _ in $(seq 1 20); do
+      if PGPASSWORD= "${PG_BIN}/psql" -h 127.0.0.1 -p "${PG_PORT}" -U "${PG_USER_DB}" -d postgres -c 'select 1' >/dev/null 2>&1; then
+        break
+      fi
+      sleep 0.2
+    done
+
+    if ! PGPASSWORD= "${PG_BIN}/psql" -h 127.0.0.1 -p "${PG_PORT}" -U "${PG_USER_DB}" -d postgres -tAc "select 1 from pg_database where datname='${DB_NAME}'" | grep -q 1; then
+      PGPASSWORD= "${PG_BIN}/psql" -h 127.0.0.1 -p "${PG_PORT}" -U "${PG_USER_DB}" -d postgres -c "create database \"${DB_NAME}\"" >/dev/null
+    fi
+  ) 9>"/tmp/borso-pg-${APP_SLUG}.lock"
 
   printf 'postgresql://%s@127.0.0.1:%d/%s\n' "${PG_USER_DB}" "${PG_PORT}" "${DB_NAME}"
 }
