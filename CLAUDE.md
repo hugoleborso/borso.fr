@@ -19,12 +19,14 @@ Anything else is a bug in the system. **Operational rule:** when a conversation 
 - `apps/<slug>/` — one folder per app. Standalone-openable: `cd apps/<x> && pnpm dev` works on a fresh checkout. **No cross-app imports.**
 - `infra/cdk/` — `@borso/infra`, the CDK constructs (StaticSite, LambdaApi, DsqlCluster, DsqlSchema, PreviewableApp). **100% test coverage gated.**
 - `infra/shared/` — `@borso/shared-infra`, account-level singletons (certs, OIDC, previews CDN, deploy roles). DSQL clusters are per-app, owned by each app's prod stack.
+- `.claude/skills/<slug>/` — skills. Markdown-only by default. A skill becomes a **pnpm workspace** (`.claude/skills/*` is listed in `pnpm-workspace.yaml`) the moment it ships testable code — i.e. one or more `*.utils.ts` files. Without a `package.json`, the folder stays inert. Floor for adding `package.json`: real `*.utils.ts` code worth covering at 100 %. Don't promote a markdown-only skill just to "have a workspace".
+- `docs/features/<app>/<slug>/` — the conversation that produced a feature: `spec/spec.md`, `plan/plan.md`, `validation/`. `<app>` here is a **docs slug**, not necessarily a pnpm workspace. Valid docs slugs: every `apps/<slug>` plus `meta` (for repo-internal work like skills, hooks, conventions). `meta` does **not** need an entry in `.github/path-filters.yml` — it isn't deployable.
 
 ## Conventions
 
 - **pnpm always** — no `npm` / `yarn`. Lockfile is committed.
 - **Always use `pnpm run <script>` for `deploy` / `destroy` (and any name pnpm reserves).** `pnpm --filter <pkg> deploy` invokes pnpm's built-in `deploy` command (which copies a workspace package into a deployable bundle), not the package's `scripts.deploy`. Same hazard with `destroy`. The four CI workflows already use `run`; the local equivalent is e.g. `pnpm --filter @borso/shared-infra run deploy`.
-- **Conventional commits**, scope-enum: `borso-fr`, `borsouvertures`, `infra`, `ci`, `docs`, `deps`. Husky enforces.
+- **Conventional commits**, scope-enum: `borso-fr`, `borsouvertures`, `infra`, `ci`, `docs`, `deps`, `meta`. `meta` covers repo-internal work (skills, hooks, conventions, ADRs) — anything under `.claude/`, `docs/adr/`, or `docs/features/meta/`. Husky enforces.
 - **Biome** rules live in the root `biome.jsonc` and reach every workspace. Per-app configs extend root and set `"root": false`.
 - **Stage** type is `'dev' | 'preview' | 'integ' | 'prod'`. `'dev'` is an app-code marker; constructs reject it via `assertDeployStage`.
 
@@ -98,6 +100,6 @@ If a PR ships zero lessons, that's fine — open the follow-up PR with a note sa
 
 - Don't reintroduce `pragma` as a slug — it's the upstream `borso-platform` test fixture, renamed to `test-app` here.
 - Don't `import`/`export` in `infra/cdk/src/internal/cf-host-routing-function.code.js` — it's CloudFront Function source, read at synth time as a string and shipped to the edge runtime.
-- Don't add an app without updating `.github/path-filters.yml` and the commitlint scope-enum.
+- Don't add an app without updating `.github/path-filters.yml` and the commitlint scope-enum. (Docs-only slugs like `meta` don't need `.github/path-filters.yml` — they aren't workspaces.)
 - Don't `--no-verify`. Ever. Fix the hook failure instead.
 - Don't forget the post-merge reminder: when a PR touching infra or app code merges, ping the user to approve the pending deploy in GitHub Actions — see *Deployments* above.
