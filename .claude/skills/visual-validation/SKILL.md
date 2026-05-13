@@ -158,6 +158,12 @@ If the screenshot set is large (>5 PNGs), wrap the lower-priority breakpoints in
 - The validator only writes inside `evidence_dir` and `report_path`. It does not modify code, the spec, or anything else.
 - When the verdict is FAIL, the user is shown the failing rows verbatim — they are not asked to interpret the report themselves.
 
+## Verdict émis (when piloted by `/tech-lead-orchestrator`)
+
+When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"pilotedByTechLead": true`, the skill writes an additional verdict file at `runs/<run-id>/agents/visual-validator-<step>.md` per [`.claude/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md). Mapping from PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL to the YAML front-matter mirrors `/technical-validation`'s *Verdict émis* table.
+
+**No UI surface.** When the feature has no visible UI, `/visual-validation` should not be invoked at all. The orchestrator owns the skip (decision Q-VIS-VAL): it emits a `tech_lead_visual_validation_skipped` journal event and does not call this skill. No verdict file is written.
+
 ## Auto-chain on PR merge: `/after-task-dantotsus`
 
 When GitHub fires `pull_request.closed` with `merged: true` for a PR this skill validated (visible to the agent as a `<github-webhook-activity>` block), the agent immediately invokes `/after-task-dantotsus` for the merged PR. If not subscribed to the PR's webhook activity, the agent asks once whether to subscribe. The same auto-chain lives in `/technical-validation` — whichever validator the chain reached last carries the trigger.

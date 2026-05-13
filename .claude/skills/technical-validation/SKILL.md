@@ -98,6 +98,21 @@ Same rule as `/visual-validation`:
 
 When GitHub fires `pull_request.closed` with `merged: true` for a PR this skill validated (visible to the agent as a `<github-webhook-activity>` block), the agent immediately invokes `/after-task-dantotsus` for the merged PR. If not subscribed to the PR's webhook activity, the agent asks once whether to subscribe. The same auto-chain lives in `/visual-validation` — whichever validator the chain reached last carries the trigger.
 
+## Verdict émis (when piloted by `/tech-lead-orchestrator`)
+
+When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"pilotedByTechLead": true`, the skill writes an additional verdict file at `runs/<run-id>/agents/technical-validator-<step>.md` per [`.claude/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md). Mapping from the validator's PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL to the YAML front-matter:
+
+| Validator verdict | `status` | `next.kind` |
+|---|---|---|
+| PASS | `done` | (omit) |
+| PASS_EXCEPT_UNVERIFIABLE | `done` | (omit) — UNVERIFIABLE rows go in the body |
+| FAIL (local code defect) | `failed` | omit `next`; orchestrator's `nextAction` maps this to `fix` |
+| FAIL (plan flaw) | `failed` | `replan` with `scope: '<plan section>'` |
+| FAIL (spec gap) | `failed` | `escalate` with `reason: 'spec-gap-<short>'` |
+| FAIL (validator crash) | `failed` | `escalate` with `reason: 'validator-crash-<short>'` |
+
+`summary:` is the report's headline (≤ 200 words). `artifacts:` is the path to the full verdict report under `validation/`. The standard report file is still produced — the verdict file is an additional artefact, not a replacement.
+
 ## Post-merge: remind to approve the prod deploy
 
 When the merged PR touches infra or app code, prod CI is now waiting on Hugo to approve the `prod` GitHub environment (CLAUDE.md "Deployments"). The agent's first response after the merge webhook is the reminder — *before* the kaizen sweep, since the deploy queue waits on a human.

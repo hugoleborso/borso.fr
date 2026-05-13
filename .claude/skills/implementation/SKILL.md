@@ -138,6 +138,18 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
 - `infra/cdk` and `infra/shared` are 100%-coverage gated by hook; their pre-commit runs `test:coverage` before letting the commit through.
 - Reports from validators land at `docs/features/<app>/<slug>/validation/`; commit them alongside the implementation diff in the same PR.
 
+## Verdict émis (when piloted by `/tech-lead-orchestrator`)
+
+When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"pilotedByTechLead": true`, **do not auto-chain to `/visual-validation` or `/technical-validation`**. Instead, write a verdict file at `docs/features/<app>/<slug>/runs/<run-id>/agents/implementation-<step>.md` per [`.claude/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md):
+
+- `status: done` if all gates pass; `failed` if any gate failed; `question` if a human decision is needed mid-implementation.
+- `next: { kind: validate }` on `done`. The orchestrator dispatches the validators in parallel.
+- `next: { kind: replan, scope: '<plan section>' }` if a gate uncovered a plan flaw.
+- `next: { kind: escalate, reason: '<short reason>' }` if `spec.md` needs to change (you never edit it; the orchestrator surfaces the proposed change to the human).
+- `artifacts:` relative paths of files you produced or modified.
+
+The body is free-form (full report, diff summary, debugging notes) — the orchestrator reads only the front-matter.
+
 ## After this skill
 
 Step 8 ends `/implementation`. The chain continues with `/visual-validation` (UI work) and `/technical-validation` (always) — both validators carry the post-merge auto-chain to `/after-task-dantotsus`.

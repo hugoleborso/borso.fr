@@ -135,3 +135,5 @@ Walk these 7 steps, in order.
 ## Auto-chain to `/implementation`
 
 When this skill finishes (the plan is written, all open questions are answered or escalated, the user has approved the plan), the agent immediately invokes `/implementation` via the `Skill` tool with the spec path as argument. Do not stop and wait for the user to type "/implementation" — the chain is operational, not documentary.
+
+**Conditional suppression when piloted by `/tech-lead-orchestrator`.** Before auto-chaining, check whether `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists and contains `"pilotedByTechLead": true`. If yes, **do not auto-chain**. Instead, emit a verdict at `runs/<run-id>/agents/technical-conception-<step>.md` per [`.claude/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md) with `status: done`, `next: { kind: validate }`, and stop. The orchestrator handles the ADR pass and the implementation invocation itself.
