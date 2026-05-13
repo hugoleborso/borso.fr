@@ -74,6 +74,15 @@ async function ensureSchema(sql: postgres.Sql, schemaName: string): Promise<void
   `);
 }
 
+const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
+
+function splitStatements(sql: string): readonly string[] {
+  return sql
+    .split(STATEMENT_BREAKPOINT)
+    .map((chunk) => chunk.trim())
+    .filter((chunk) => chunk.length > 0);
+}
+
 async function applyMigrations(
   sql: postgres.Sql,
   schemaName: string,
@@ -86,7 +95,15 @@ async function applyMigrations(
   for (const m of migrations) {
     if (appliedSet.has(m.name)) continue;
     await sql.unsafe(`SET search_path TO "${schemaName}"`);
-    await sql.unsafe(m.sql);
+    // Aurora DSQL rejects multiple DDL statements in one transaction
+    // ("multiple ddl statements not supported in a transaction"), and
+    // `sql.unsafe(<multi-statement>)` would wrap the file's CREATE TABLE
+    // / CREATE INDEX / ALTER TABLE block in a single tx. Drizzle-kit
+    // separates statements with `--> statement-breakpoint`; we run each
+    // fragment in its own round-trip so DSQL sees one DDL per tx.
+    for (const statement of splitStatements(m.sql)) {
+      await sql.unsafe(statement);
+    }
     // `ON CONFLICT DO NOTHING` is the only concurrency guard we get on
     // Aurora DSQL — `pg_advisory_lock` is not in the supported subset,
     // so two simultaneous custom-resource retries can race here. The
