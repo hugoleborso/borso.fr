@@ -1,13 +1,4 @@
-import { sql } from 'drizzle-orm';
-import {
-  integer,
-  pgTable,
-  primaryKey,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { editionSlugSchema } from '../edition/edition.schema';
 import { runnerSlugSchema } from '../runner/runner.schema';
@@ -16,26 +7,24 @@ import { runnerSlugSchema } from '../runner/runner.schema';
 // rejects `ALTER TABLE ADD CONSTRAINT` (drizzle-kit's FK emission shape),
 // and the engine doesn't enforce FK semantics at write time anyway.
 // App-level invariants are kept by the service layer.
-export const loopPunchesTable = pgTable(
-  'loop_punches',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    editionSlug: text('edition_slug').notNull(),
-    runnerSlug: text('runner_slug').notNull(),
-    loopIndex: integer('loop_index').notNull(),
-    finishedAt: timestamp('finished_at', { withTimezone: true, mode: 'date' }).notNull(),
-    correctedAt: timestamp('corrected_at', { withTimezone: true, mode: 'date' }),
-    voidedAt: timestamp('voided_at', { withTimezone: true, mode: 'date' }),
-    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
-      .notNull()
-      .defaultNow(),
-  },
-  (table) => ({
-    activePunchUnique: uniqueIndex('loop_punches_active_uq')
-      .on(table.editionSlug, table.runnerSlug, table.loopIndex)
-      .where(sql`voided_at IS NULL`),
-  }),
-);
+//
+// The previous partial unique index `(edition_slug, runner_slug, loop_index)
+// WHERE voided_at IS NULL` is gone too: DSQL doesn't support partial
+// indexes (`WHERE not supported for CREATE INDEX`) and a full unique on
+// the same columns would block the void-then-re-punch flow. The
+// re-punch guard now lives entirely in `validatePunchTiming` (app side).
+export const loopPunchesTable = pgTable('loop_punches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  editionSlug: text('edition_slug').notNull(),
+  runnerSlug: text('runner_slug').notNull(),
+  loopIndex: integer('loop_index').notNull(),
+  finishedAt: timestamp('finished_at', { withTimezone: true, mode: 'date' }).notNull(),
+  correctedAt: timestamp('corrected_at', { withTimezone: true, mode: 'date' }),
+  voidedAt: timestamp('voided_at', { withTimezone: true, mode: 'date' }),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+    .notNull()
+    .defaultNow(),
+});
 
 export const manualDnfsTable = pgTable(
   'manual_dnfs',

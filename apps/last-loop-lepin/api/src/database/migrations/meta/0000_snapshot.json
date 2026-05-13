@@ -1,5 +1,5 @@
 {
-  "id": "b16227c0-edac-432d-acab-b0370c12b866",
+  "id": "5b294e87-3764-48af-95bf-16bbdb50e632",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -173,36 +173,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "loop_punches_active_uq": {
-          "name": "loop_punches_active_uq",
-          "columns": [
-            {
-              "expression": "edition_slug",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "runner_slug",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "loop_index",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "voided_at IS NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

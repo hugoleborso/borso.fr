@@ -66,21 +66,13 @@ export async function registerPunch(
     voidedAt: null,
   };
 
-  try {
-    await insertPunch(database, punch);
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('loop_punches_active_uq')) {
-      const existing = await findActivePunchForLoop(
-        database,
-        punch.editionSlug,
-        punch.runnerSlug,
-        punch.loopIndex,
-      );
-      if (existing !== null) throw new PunchConflictError(existing);
-    }
-    throw error;
-  }
-
+  // No DB-level uniqueness on (edition_slug, runner_slug, loop_index)
+  // any more — Aurora DSQL rejects the partial unique index we used to
+  // rely on, and a non-partial unique would block the void-then-re-punch
+  // flow. The race window between `validatePunchTiming` and `insertPunch`
+  // stays narrow in practice (single tap-in per runner from one phone);
+  // if it ever matters, the next layer is a `SELECT ... FOR UPDATE`.
+  await insertPunch(database, punch);
   return punch;
 }
 

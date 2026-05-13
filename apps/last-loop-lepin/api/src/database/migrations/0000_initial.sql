@@ -47,5 +47,3 @@ CREATE TABLE "runners" (
 	"bib" integer,
 	CONSTRAINT "runners_edition_slug_slug_pk" PRIMARY KEY("edition_slug","slug")
 );
---> statement-breakpoint
-CREATE UNIQUE INDEX "loop_punches_active_uq" ON "loop_punches" USING btree ("edition_slug","runner_slug","loop_index") WHERE voided_at IS NULL;
