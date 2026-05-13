@@ -25,6 +25,13 @@ This skill replaces the previous linear auto-chain
 /visual-validation`) with a single orchestrator that pilots every step,
 arbitrates failures, decides when to escalate, and produces ADRs along the way.
 
+**Markdown-driven.** This skill carries no code — the LLM is the runtime.
+Every primitive below (parsing verdicts, deciding the next action,
+classifying human messages, summing milestones) is described in prose for
+the LLM to follow. There is no `package.json`, no test suite — the
+artefacts the orchestrator produces (`state.json`, `journal.md.jsonl`,
+verdict files) are the only state.
+
 ## North star
 
 The human stays in the loop for **direction** (the `/specification` step) and
@@ -61,26 +68,28 @@ stage: spec → plan → adrs → implement → validate → arbitrate → ship
                                                   escalated (terminal)
 ```
 
-Each transition serializes a `JournalEvent` into
-`runs/<run-id>/journal.md.jsonl` via `src/journal.utils.ts`'s `serializeEvent`.
-The orchestrator never reads back its own journal — it only writes.
+Each transition appends one JSON object per line to
+`runs/<run-id>/journal.md.jsonl`. The schema for those events is given in
+[`standard.md`](./standard.md) (*Journal event schema*). The orchestrator
+never reads back its own journal during a run — it only writes; metrics
+are computed post-hoc.
 
 ### Stages
 
 1. **spec.** Check whether `docs/features/<app>/<slug>/spec/spec.md` exists.
    - If not: invoke `/specification` via `Skill`. Sub-skill writes the spec
-     interactively with the human. Auto-chain to `/technical-conception` is
-     **suppressed** because `runs/<run-id>/state.json#pilotedByTechLead`
+     interactively with the human. Its auto-chain to `/technical-conception`
+     is **suppressed** because `runs/<run-id>/state.json#pilotedByTechLead`
      is `true`.
-   - If yes: record `specChecksum(specContent)` into state and continue.
+   - If yes: hash the spec content (SHA-256, hex) and store the digest in
+     `state.specChecksum`. Continue.
 2. **plan.** Invoke `/technical-conception` with the spec path. Sub-skill
-   writes `plan.md`. Auto-chain to `/implementation` is **suppressed**.
-3. **adrs.** For each architectural choice surfaced by the plan, run
-   `triggersFor(candidate)` from `src/adr-trigger.utils.ts`. If
-   `needsAdr(candidate)` is true, invoke `/adr-writer` with the candidate's
-   slug and the trigger list. Record each ADR number into state via
-   `recordAdr`. Do **not** invoke `/adr-writer` for trivial choices; the
-   four triggers are the gate.
+   writes `plan.md`. Its auto-chain to `/implementation` is **suppressed**.
+3. **adrs.** For each architectural choice surfaced by the plan, evaluate
+   the 4 ADR triggers (cf. [`standard.md`](./standard.md#adr-triggers-4-or)).
+   If any trigger fires, invoke `/adr-writer` with the candidate's slug
+   and the trigger list. Append each new ADR number to `state.adrIndex`.
+   Do **not** invoke `/adr-writer` for trivial choices.
 4. **implement.** Spawn a sub-agent for `/implementation` with the spec +
    plan paths. The sub-agent writes its verdict YAML to
    `runs/<run-id>/agents/implementation-<step>.md` per
@@ -90,14 +99,15 @@ The orchestrator never reads back its own journal — it only writes.
    **in parallel** via two `Agent` tool calls in the same message. Each
    writes its verdict YAML next to the implementation's.
    - If the feature has no UI surface, **skip silently** (decision
-     Q-VIS-VAL): emit `tech_lead_visual_validation_skipped` and proceed
+     Q-VIS-VAL): append a `visual_validation_skipped` event and proceed
      with only the technical verdict.
-6. **arbitrate.** Read only the **front-matter** of each verdict via
-   `parseVerdictFromMarkdown`. Determine `verdictKind` (`pass` /
-   `fail-local` / `fail-plan` / `fail-spec` / `crash`) from the union of
-   the verdicts. Call `nextAction(retries, verdictKind, maxRetries)`:
-   - `fix` → re-spawn `/implementation` with the verdict context. Increment
-     `retries.implement`.
+6. **arbitrate.** Read only the YAML **front-matter** of each verdict (use
+   `Read` with `limit:` to fetch the first ~15 lines). Determine the
+   `verdictKind` per the table in
+   [`standard.md`](./standard.md#deriving-verdictkind). Take the next
+   action per [`standard.md`](./standard.md#retry-policy):
+   - `fix` → re-spawn `/implementation` with the verdict context.
+     Increment `state.retries.implement`.
    - `replan` → spawn `/technical-conception` scoped to the flagged
      sub-section. Then re-implement.
    - `escalate` → write an escalation message to the terminal, transition
@@ -116,22 +126,26 @@ Every sub-skill (`/specification`, `/technical-conception`,
 `/adr-writer`) emits a verdict at end-of-run when piloted by the
 tech-lead-orchestrator. The contract is documented in
 [`sub-agent-contract.md`](./sub-agent-contract.md). The orchestrator
-reads **only** the YAML front-matter via `parseVerdictFromMarkdown` —
-it does not absorb the full body. The body stays on disk for
-post-mortems and Dantotsus.
+reads **only** the YAML front-matter (the block between the leading
+`---` delimiters) — it does not absorb the full body. The body stays on
+disk for post-mortems and Dantotsus.
 
 ### Context discipline
 
 The orchestrator's own context is the failure mode of failure modes —
 it sees every artefact, every retry, every escalation. To keep it small:
 
-- Read verdict files with `limit:` to fetch only the front-matter.
+- Read verdict files with `limit:` to fetch only the front-matter (≈ 15
+  lines covers `status` / `summary` / `artifacts` / `next`).
 - Skim, don't absorb. `Read` a plan in full only when arbitrating a
   `fail-plan` verdict.
-- `recordContextBytes(state, addedBytes, now)` instruments cumulative
-  reads; events `tech_lead_context_growth` are emitted at log-scale
-  milestones (1 / 2 / 4 / 8 / 16 / … KiB). There is **no hard cap**
-  (decision Q-CONTEXT) — the signal goes to `pnpm tech-lead:metrics`
+- Track cumulative bytes read over the run (the orchestrator estimates
+  this from the lines it has read × ~120 bytes/line, or from `wc -c`
+  when it explicitly fetches a file). Emit a
+  `context_growth` event at each log-scale milestone (1 / 2 / 4 / 8 /
+  16 / … KiB). There is **no hard cap** (decision Q-CONTEXT) — the
+  signal is post-hoc, fed to the metrics aggregation recipe in
+  [`docs/knowledge/tech-lead-orchestrator.md`](../../../docs/knowledge/tech-lead-orchestrator.md)
   and feeds the post-merge `/after-task-dantotsus` kaizen pass.
 
 ### Human-message classification
@@ -142,7 +156,7 @@ message before continuing:
 - `guidance` — the human is shaping direction (welcome, fine).
 - `answer` — the human is answering an `AskUserQuestion` (welcome).
 - `correction` — the human is correcting an AI mistake that the AI
-  should have avoided. Emits `tech_lead_human_message_received` with
+  should have avoided. Appends a `human_message_received` event with
   `category: 'correction'`. This is the signal that feeds the
   `count(human_corrections_per_run)` metric — every correction is a
   Dantotsu candidate.
@@ -158,28 +172,31 @@ arbitrate, never `--no-verify` (CLAUDE.md *Hooks* rule).
 
 ### Spec immutability
 
-`recordSpecChecksum` is called once at the end of `spec`. Before invoking
-any subsequent sub-agent, the orchestrator calls `assertSpecUnchanged`
-with the current file contents; an
-`OrchestratorSpecMutationAttemptedError` throw is an escalation, no
-retries.
+The spec checksum recorded at stage `spec` is the anchor. Before invoking
+any subsequent sub-agent, the orchestrator re-reads `spec.md` and
+re-hashes it; a mismatch is an immediate escalation (reason:
+`spec-mutation-attempted`), no retries. `spec.md` is never edited by any
+sub-agent — that's a contract violation surfaced via the journal and the
+escalation message.
 
 ## Procedure (when invoked)
 
 1. **Read** this SKILL.md, [`standard.md`](./standard.md), and
    [`sub-agent-contract.md`](./sub-agent-contract.md).
-2. **Bootstrap state.** Generate `runId` (timestamp-based). Compute the
-   feature's `<app>` and `<slug>` from the user's invocation
-   (`<app>` defaults to `meta` for repo-internal features).
-   `initialState({ runId, app, slug, now })` and write to
-   `docs/features/<app>/<slug>/runs/<run-id>/state.json`. Emit
-   `tech_lead_run_started`.
+2. **Bootstrap state.** Generate `runId` (timestamp-based, e.g.
+   `2026-05-13-1530-abc`). Compute the feature's `<app>` and `<slug>`
+   from the user's invocation (`<app>` defaults to `meta` for repo-
+   internal features). Initialise `state.json` per the schema in
+   [`standard.md`](./standard.md#statejson-schema) and write to
+   `docs/features/<app>/<slug>/runs/<run-id>/state.json`. Append a
+   `run_started` event.
 3. **Walk the state machine** per the *Stages* section above. After
-   every stage transition, write state, emit `tech_lead_stage_changed`.
+   every stage transition, write `state.json`, append a
+   `stage_changed` event.
 4. **At `ship`:** commit aborted-and-current runs, commit feature diff,
    push.
-5. **Emit `tech_lead_run_completed`** with the final stage, the ADR
-   count, the total retries.
+5. **Append `run_completed`** with the final stage, the ADR count, the
+   total retries.
 6. **Tell Hugo** to approve the pending prod deploy in GitHub Actions
    (CLAUDE.md *Deployments* rule).
 
@@ -190,12 +207,15 @@ retries.
   a paper trail.
 - **Absorbing verdict bodies.** Reading the full body of a verdict
   destroys the context budget. Front-matter only.
-- **Editing `spec.md` after `recordSpecChecksum`.** That's an escalation
-  trigger, not a fix attempt.
-- **Bypassing `nextAction`.** Don't guess what to do next from the
-  verdict body — feed `verdictKind` into the budget function, take
-  its output.
+- **Editing `spec.md` after the run records its checksum.** That's an
+  escalation trigger, not a fix attempt.
+- **Bypassing the retry-action table.** Don't guess what to do next from
+  the verdict body — look up `verdictKind` in
+  [`standard.md`](./standard.md#retry-policy) and take the named action.
 - **Auto-chaining sub-skills when piloted.** `/specification` and
   `/technical-conception`'s auto-chain blocks **must** check
   `state.json#pilotedByTechLead` and stand down when it's true. The
   orchestrator drives every transition itself.
+- **Inventing TS code for the orchestrator.** This skill is markdown-
+  driven. If a future change feels like it needs a TS workspace, that's
+  a smell — re-read CLAUDE.md *Layout* and reconsider.

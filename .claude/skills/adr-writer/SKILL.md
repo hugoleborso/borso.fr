@@ -7,20 +7,19 @@ description: |
   cross-cutting impact, divergence from a convention, looks-standard-or-
   exists-elsewhere). Also usable directly: "/adr-writer <decision title>",
   "write an ADR for X". The skill picks the next sequential number, drafts
-  the ADR from the template, runs `findConflictingAdrs` against existing
-  accepted ADRs sharing the same slug, and either ships the file or
-  escalates the conflict to the human. Reads the standard at
-  `.claude/skills/adr-writer/standard.md` before writing.
+  the ADR from the template, checks for slug conflicts with existing
+  accepted ADRs, and either ships the file or escalates the conflict to
+  the human. Reads the standard at `.claude/skills/adr-writer/standard.md`
+  before writing.
 ---
 
 # adr-writer skill
 
 The skill writes one ADR per invocation. ADRs live at
 [`docs/adr/NNNN-<slug>.md`](../../../docs/adr/). Format and rules live in
-[`standard.md`](./standard.md); the squelette in [`template.md`](./template.md).
-Pure helpers (number picking, rendering, conflict detection) live in
-[`src/`](./src/) and ship at 100 % coverage via the workspace's `test:coverage`
-script.
+[`standard.md`](./standard.md); the skeleton in [`template.md`](./template.md).
+The whole skill is markdown-driven — there is no code to run, the LLM
+follows the procedure below.
 
 ## When to invoke
 
@@ -47,37 +46,42 @@ Do **not** invoke when:
 - The choice is reversible in < 1 commit with no migration (just do it,
   ADR overhead doesn't pay).
 - An accepted ADR with the same slug already exists — invoke once with
-  `supersedes: [NNNN]` to declare the override, otherwise
-  `findConflictingAdrs` will flag the conflict and the tech lead escalates
-  to the human.
+  `supersedes: [NNNN]` to declare the override, otherwise the conflict
+  rule below applies and the tech lead escalates to the human.
 
 ## Procedure
 
 1. **Read** the latest version of `standard.md` and `template.md`.
-2. **List** existing ADRs: `ls docs/adr/` (or read `docs/adr/README.md`).
-3. **Pick the number** via `nextAdrNumber(filenames)` from
-   `src/adr-number.utils.ts`. The first ADR is `0001`.
-4. **Check conflicts** via `findConflictingAdrs({ slug, supersedes }, existing)`.
-   If the function returns a non-empty list:
+2. **List existing ADRs:** `ls docs/adr/`. Filter for filenames matching
+   `NNNN-<slug>.md`.
+3. **Pick the number.** Find the highest 4-digit prefix across the listing
+   and add 1. If the directory is empty, the next number is `0001`.
+4. **Check conflicts.** Iterate the existing ADRs. An ADR is conflicting
+   when (a) its slug equals the new ADR's slug **and** (b) its status is
+   `accepted` **and** (c) its number is NOT declared in the new ADR's
+   `supersedes:` header. If any conflict exists:
    - If the new ADR was meant to replace them, add their numbers to
      `supersedes` and continue.
-   - Otherwise, emit a `SubAgentVerdict` with
-     `status: 'blocked'`, `next: { kind: 'escalate', reason: 'adr-conflict' }`
-     and stop. The tech lead escalates to the human.
+   - Otherwise, write the verdict to
+     `docs/features/<app>/<slug>/runs/<run-id>/agents/adr-writer-<step>.md`
+     with `status: blocked`, `next: { kind: escalate, reason: adr-conflict-<slug> }`,
+     and stop. The tech lead surfaces the conflict to the human.
 5. **Fill the template** — Context (the situation that forced the choice,
    not a generic intro), Decision (the chosen path, in one paragraph
    maximum + a single bullet list if needed), Consequences (what becomes
    easier, what becomes harder, what now needs to be remembered).
-6. **Render and write** the file at
-   `docs/adr/NNNN-<slug>.md` via `renderAdrMarkdown(adr)` +
-   `renderAdrFilename(adr)`.
-7. **Update the index** `docs/adr/README.md` with a one-line entry.
-8. **Mark superseded** — if `supersedes` is non-empty, edit each predecessor's
-   front-matter / header to set `status: superseded` and add
+6. **Write the file** at `docs/adr/NNNN-<slug>.md` with the rendered
+   markdown. Pad the number to 4 digits in the header (`# ADR 0007 — …`).
+7. **Update the index** `docs/adr/README.md` with a one-line entry in the
+   table.
+8. **Mark superseded predecessors.** If `supersedes` is non-empty, edit
+   each predecessor's header: set `**Status:** superseded` and add
    `**Superseded by:** NNNN`.
-9. **Emit verdict** — write the contract YAML to the tech lead's
-   `runs/<run-id>/agents/adr-writer-<step>.md` file (see the
-   tech-lead-orchestrator's `sub-agent-contract.md`).
+9. **Emit verdict** — write the contract YAML to
+   `docs/features/<app>/<slug>/runs/<run-id>/agents/adr-writer-<step>.md`
+   per the tech lead's
+   [`sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md):
+   `status: done`, `artifacts: [<adr-path>]`, no `next` block needed.
 
 ## Composability
 
@@ -91,8 +95,8 @@ when an ADR is needed outside a feature-orchestration run.
   CLAUDE.md *Clean code*, not in `docs/adr/`.
 - **Skipping the conflict check.** Two accepted ADRs with the same slug
   silently coexisting is a worse failure than blocking on a conflict.
-- **Re-using a number.** Always call `nextAdrNumber()` against a fresh
-  filesystem listing — never hard-code.
+- **Re-using a number.** Always pick from a fresh `ls docs/adr/` listing —
+  never hard-code.
 - **Writing prose instead of decisions.** The Context section is the
   *forcing function*, not a recap of the feature. If you find yourself
   paraphrasing the spec, you don't need an ADR — you need a link.

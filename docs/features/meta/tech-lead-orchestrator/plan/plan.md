@@ -2,6 +2,8 @@
 
 > Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md). When a defect lands and a Dantotsu traces back here, the chain is visible: the plan either named the risk and we missed mitigating it, didn't name the risk at all (planning gap), or named it correctly and the defect comes from elsewhere.
 
+> **2026-05-13 — correction d'architecture mid-flight.** Le plan ci-dessous a fait fausse route en routant la plupart des décisions vers des fichiers TypeScript dans des workspaces pnpm sous `.claude/skills/<skill>/src/`. **Les skills sont markdown-only** — pas de `package.json`, pas de vitest, pas de `*.utils.ts`. Toutes les colonnes "Where it lands" qui pointent vers `src/*.utils.ts` ou `tests/scenario.test.ts` sont à lire comme **"primitive décrite en prose dans le SKILL.md / standard.md"**. Le contrat YAML front-matter reste valide (le LLM le lit nativement). Les Decisions Q-CONTEXT / Q-HUMAN-MSG / Q-VIS-VAL / Q-RUN-COMMIT restent valides. Cette correction supprime aussi le risque "skills workspace prolifération" (entrée du risk register : devenu sans objet) et alimente une entrée Dantotsu post-merge sur "skills are markdown-only, do not invent a workspace". L'éradication code-level visible dans le diff de ce PR : suppression de tout le scaffolding TS, retrait de `.claude/skills/*` du `pnpm-workspace.yaml`, mise à jour de la *Layout* dans CLAUDE.md.
+
 ## How each spec decision becomes code
 
 | Spec ref | Decision | Where it lands | Self-check |

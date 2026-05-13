@@ -27,14 +27,6 @@
       "entry": ["bin/shared.ts", "test/unit/**/*.test.ts"],
       "project": ["bin/**/*.ts", "lib/**/*.ts", "test/**/*.ts"],
       "ignoreDependencies": ["tsx"]
-    },
-    ".claude/skills/adr-writer": {
-      "entry": ["src/**/*.utils.test.ts"],
-      "project": ["src/**/*.ts"]
-    },
-    ".claude/skills/tech-lead-orchestrator": {
-      "entry": ["src/**/*.utils.test.ts", "tests/**/*.test.ts"],
-      "project": ["bin/**/*.ts", "src/**/*.ts", "tests/**/*.ts"]
     }
   }
 }

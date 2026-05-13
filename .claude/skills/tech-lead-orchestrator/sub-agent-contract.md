@@ -3,9 +3,9 @@
 Every sub-skill invoked by `/tech-lead-orchestrator` ends its run by
 writing a single markdown file with **YAML front-matter** to
 `docs/features/<app>/<slug>/runs/<run-id>/agents/<agent>-<step>.md`. The
-orchestrator parses **only** the front-matter via
-`src/verdict-parser.utils.ts:parseVerdictFromMarkdown`. The body is for
-human readers and post-mortems.
+orchestrator reads **only** the front-matter (the block between the
+leading `---` delimiters), via `Read` with `limit:` of ~15 lines. The
+body is for human readers and post-mortems.
 
 ## Front-matter schema
 
@@ -38,10 +38,20 @@ next:                                # optional; structured hint
   the run.
 - `artifacts` is a list of strings (may be empty).
 
-Any deviation (missing field, wrong type, malformed YAML) produces a
+Any deviation (missing field, wrong type, malformed YAML) the
+orchestrator detects as it reads the front-matter is treated as a
 synthetic `blocked` verdict with
 `next: { kind: 'escalate', reason: 'unparseable-verdict: <why>' }`.
-See `verdict-parser.utils.ts` tests for the full matrix.
+The `<why>` values:
+
+- `missing-front-matter` — no leading `---\n…\n---` block.
+- `malformed-yaml` — indentation / quoting / type errors in the block.
+- `front-matter-not-object` — top-level is a scalar / list.
+- `invalid-status` — `status` field missing or not in the enum.
+- `missing-summary` — `summary` field absent.
+- `invalid-artifacts` — `artifacts` set but not a list of strings.
+- `invalid-next` — `next` block malformed (missing required field
+  for the declared `kind`).
 
 ## File naming
 
@@ -119,6 +129,6 @@ next:
 
 ## Why YAML and not JSON
 
-The body of the file is markdown, optimized for human reading. YAML
-front-matter is the standard for that pattern (Jekyll / Hugo / Astro);
-the `yaml` npm package handles parsing safely.
+The body of the file is markdown, optimised for human reading. YAML
+front-matter is the standard for that pattern (Jekyll / Hugo / Astro)
+and the LLM reads it natively without an explicit parser dependency.

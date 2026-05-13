@@ -8,8 +8,9 @@
 ## File location and naming
 
 - Path: `docs/adr/NNNN-<slug>.md`.
-- `NNNN` is a 4-digit zero-padded sequential number, picked by
-  `nextAdrNumber()` against the existing `docs/adr/` listing.
+- `NNNN` is a 4-digit zero-padded sequential number, picked by scanning
+  the existing `docs/adr/` listing and adding 1 to the highest number
+  found (or `0001` if the directory is empty).
 - `<slug>` is kebab-case, ≤ 6 words, describes the **decision**, not the
   feature. `0007-tenant-isolation-per-database.md`, not
   `0007-multi-tenancy-feature.md`.
@@ -31,15 +32,17 @@
 
 ## Rendering
 
-The rendered ADR uses the layout in
-[`template.md`](./template.md), produced by
-`renderAdrMarkdown(adr)` from `src/adr-render.utils.ts`. Do not hand-edit
-the header lines — re-render if the metadata changes.
+The rendered ADR follows the layout in [`template.md`](./template.md):
+a level-1 heading with the padded number + title, the `**Status:**` and
+`**Date:**` header lines, optional `**Supersedes:**` / `**Superseded
+by:**`, and then the Context / Decision / Consequences sections.
+Re-render the header lines from the canonical metadata; don't hand-edit
+them piecewise once the file is on disk.
 
 ## Conflict rules
 
-- Two accepted ADRs **must not** share a slug. `findConflictingAdrs` is
-  the gate.
+- Two accepted ADRs **must not** share a slug. The conflict check in the
+  skill's procedure step 4 is the gate.
 - An ADR that overrides a previous one must list every overridden number
   in `supersedes`. Silently making the predecessor wrong is a defect.
 - A superseded ADR stays in the tree (history matters); only its status

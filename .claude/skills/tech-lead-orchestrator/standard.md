@@ -15,71 +15,116 @@ The 8 stages are: `spec`, `plan`, `adrs`, `implement`, `validate`,
 | adrs | implement | All ADR-trigger candidates have been processed; each ADR number is in `state.adrIndex`. If no candidates, transition immediately. |
 | implement | validate | `/implementation` returns `done` with a `next: { kind: 'validate' }` hint. |
 | validate | arbitrate | At least one validator returned a verdict. |
-| arbitrate | implement | `nextAction` is `fix`. `retries.implement++`. |
-| arbitrate | plan | `nextAction` is `replan`. Scope flagged in the replan verdict. |
-| arbitrate | escalated | `nextAction` is `escalate`. Terminal. |
+| arbitrate | implement | `verdictKind` maps to action `fix`. `retries.implement++`. |
+| arbitrate | plan | `verdictKind` maps to action `replan`. Scope flagged in the replan verdict. |
+| arbitrate | escalated | `verdictKind` maps to action `escalate`. Terminal. |
 | arbitrate | ship | All verdicts PASS. |
 | ship | (end) | Push successful, deploy reminder issued. |
+
+## `state.json` schema
+
+```jsonc
+{
+  "runId": "2026-05-13-1530-abc",         // timestamp + random suffix
+  "feature": { "app": "meta", "slug": "tech-lead-orchestrator" },
+  "pilotedByTechLead": true,
+  "stage": "spec",                         // current stage from the diagram above
+  "retries": { "implement": 0, "validate": 0 },
+  "adrIndex": [1, 2],                      // numbers of ADRs created this run
+  "bytesRead": 0,                          // cumulative, for context-growth events
+  "specChecksum": null,                    // SHA-256 hex of spec.md once recorded
+  "startedAt": "2026-05-13T15:30:00.000Z",
+  "updatedAt": "2026-05-13T15:32:00.000Z"
+}
+```
+
+The orchestrator overwrites `state.json` on every stage transition and
+on every retry-counter increment. The file is committed at `ship`.
 
 ## Verdict YAML contract
 
 See [`sub-agent-contract.md`](./sub-agent-contract.md) for the full
 contract. The orchestrator's promise:
 
-- Read **only** the YAML front-matter via
-  `parseVerdictFromMarkdown(content)`.
+- Read **only** the YAML front-matter (the block between the leading
+  `---` delimiters), via `Read` with a `limit:` of ~15 lines.
 - Never absorb the markdown body except when the verdict is
   `fail-plan` or `escalate` and the body is needed to inform the
   next stage's prompt.
-- Treat unparseable verdicts as `blocked` with
-  `next: { kind: 'escalate', reason: 'unparseable-verdict: <reason>' }`.
+- Treat unparseable front-matter (missing block, malformed YAML,
+  missing required field) as `blocked` with
+  `next: { kind: 'escalate', reason: 'unparseable-verdict: <why>' }`.
+
+### Deriving verdictKind
+
+Compose the `verdictKind` from the verdict's `status` + `next`:
+
+| Verdict `status` | Verdict `next.kind` | `verdictKind` |
+|---|---|---|
+| `done` | (any) | `pass` |
+| `failed` | omitted or absent | `fail-local` |
+| `failed` | `replan` | `fail-plan` |
+| `failed` | `escalate` | `fail-spec` |
+| `blocked` | `escalate` | `fail-spec` (if reason mentions spec) / `crash` (otherwise) |
+| `question` | `answer-needed` | (re-prompt the sub-agent after human answers; no retry consumed) |
 
 ## ADR triggers (4, OR)
 
 A choice qualifies for an ADR when **at least one** of these flags is
-`true` (cf. `src/adr-trigger.utils.ts`):
+`true`. Detection is fuzzy — the orchestrator (the LLM) reads the plan
+and judges each candidate:
 
-1. `hasMultipleSeriousAlternatives` — ≥ 2 serious paths were considered.
-2. `hasCrossCuttingImpact` — touches ≥ 2 apps or ≥ 2 modules.
-3. `divergesFromConvention` — contradicts CLAUDE.md, an existing ADR,
+1. **multiple-alternatives** — ≥ 2 serious paths were considered.
+2. **cross-cutting** — touches ≥ 2 apps or ≥ 2 modules.
+3. **diverges-from-convention** — contradicts CLAUDE.md, an existing ADR,
    or a `docs/knowledge/` entry.
-4. `looksStandardOrExistsElsewhere` — industry-standard pattern or
-   already solved in another repo. The ADR records reuse vs. reinvent.
+4. **looks-standard** — industry-standard pattern or already solved in
+   another repo. The ADR records reuse vs. reinvent.
 
-The composition is a pure function; the *detection* (i.e. setting the
-flags) is fuzzy and stays in the LLM's hands during the `plan → adrs`
-transition.
+If none of the four fires for a candidate, no ADR — that's the gate
+against ADR spam.
 
 ## Retry policy
 
-- Cap: `getMaxRetries(process.env.TECH_LEAD_MAX_RETRIES)`, default `3`.
-- Action: `nextAction(retries, verdictKind, maxRetries)` returns one
-  of `fix` / `replan` / `escalate`.
-- A spec-flaw verdict (`fail-spec`) escalates immediately — `spec.md`
-  is never edited by the orchestrator.
-- A crash verdict (`crash`) escalates immediately — investigate
-  manually.
+- Cap: `MAX_RETRIES = 3`. Override via the `TECH_LEAD_MAX_RETRIES`
+  environment variable when invoking the orchestrator (e.g. in tests).
+- Lookup table from `verdictKind` + current retry count to next action:
+
+| `retries.implement` ≥ `MAX_RETRIES` | `verdictKind` | Action |
+|---|---|---|
+| yes | (any) | `escalate` |
+| no | `pass` | (degenerate — orchestrator should have transitioned to `ship`) |
+| no | `fail-spec` | `escalate` immediately |
+| no | `crash` | `escalate` immediately |
+| no | `fail-plan` | `replan` |
+| no | `fail-local` | `fix` |
+
+A question verdict (`status: question`) does **not** consume a retry —
+the orchestrator surfaces the question to the human via
+`AskUserQuestion`, then re-invokes the sub-agent with the answer.
 
 ## Spec immutability
 
-- `recordSpecChecksum(state, specContent, now)` is called once after
-  the `spec` stage.
-- `assertSpecUnchanged(previousChecksum, currentContent)` is called
-  before every sub-agent invocation.
-- On `OrchestratorSpecMutationAttemptedError`: revert the file (`git
-  checkout HEAD -- docs/features/<app>/<slug>/spec/spec.md`),
-  transition to `escalated`, emit `tech_lead_escalation` with reason
-  `spec-mutation-attempted`.
+- The orchestrator records `state.specChecksum = sha256(specContent)`
+  once, at the end of stage `spec`.
+- Before every sub-agent invocation that follows, the orchestrator
+  re-reads `spec.md`, re-hashes, and compares.
+- On mismatch: revert the file with
+  `git checkout HEAD -- docs/features/<app>/<slug>/spec/spec.md`,
+  append an `escalation` event with reason `spec-mutation-attempted`,
+  and transition to `escalated`.
 
 ## Context discipline (no hard cap)
 
-- `recordContextBytes(state, addedBytes, now)` accumulates and returns
-  `crossedMilestone` when a log-scale boundary is reached.
-- A non-null `crossedMilestone` triggers a `tech_lead_context_growth`
-  event with the milestone value (in bytes).
+- The orchestrator tracks `state.bytesRead` cumulatively (estimated
+  from line counts × ~120 bytes when reading files; exact when
+  `wc -c` is run).
+- At each log-scale palier crossed (1 / 2 / 4 / 8 / 16 / … KiB), it
+  appends a `context_growth` event with the milestone value.
 - The cap is **deliberately absent** (decision Q-CONTEXT). The signal
-  is post-hoc, fed to `pnpm tech-lead:metrics` and the post-merge
-  `/after-task-dantotsus` pass.
+  is post-hoc, fed to the metrics recipe in
+  [`docs/knowledge/tech-lead-orchestrator.md`](../../../docs/knowledge/tech-lead-orchestrator.md)
+  and surfaced by `/after-task-dantotsus`.
 
 ## Human-message classification
 
@@ -91,17 +136,36 @@ When the human re-engages mid-run, classify before continuing:
   should have known. This is the only category that counts toward
   `human_corrections_per_run` and feeds Dantotsu candidates.
 
-The orchestrator calls `journal.utils.ts:serializeEvent` with a
-`human_message_received` event and the chosen category. No hook
-(decision Q-HUMAN-MSG).
+The orchestrator appends a `human_message_received` event with the
+chosen `category` to `journal.md.jsonl`. No hook (decision Q-HUMAN-MSG).
 
 ## Visual-validation skip
 
 A feature with no UI surface skips `/visual-validation` silently
-(decision Q-VIS-VAL). The orchestrator emits
-`tech_lead_visual_validation_skipped` with a `reason` (e.g.
+(decision Q-VIS-VAL). The orchestrator appends a
+`visual_validation_skipped` event with a `reason` (e.g.
 `"no-ui-surface: skill-only feature"`) and proceeds with only
 `/technical-validation`'s verdict.
+
+## Journal event schema
+
+`runs/<run-id>/journal.md.jsonl` contains one JSON object per line.
+Every line carries `kind`, `runId`, and `at` (ISO timestamp). The
+kinds and their extra fields:
+
+| `kind` | Extra fields |
+|---|---|
+| `run_started` | `app`, `slug` |
+| `stage_changed` | `from`, `to` |
+| `adr_written` | `number`, `trigger` (one of the 4 trigger names) |
+| `escalation` | `reason`, `stage`, `retries` |
+| `human_message_received` | `category` ∈ {`guidance`, `correction`, `answer`} |
+| `context_growth` | `bytes` (the milestone value crossed) |
+| `visual_validation_skipped` | `reason` |
+| `run_completed` | `finalStage` |
+
+Aggregation recipes live in
+[`docs/knowledge/tech-lead-orchestrator.md`](../../../docs/knowledge/tech-lead-orchestrator.md).
 
 ## Run artefacts (all committed)
 
