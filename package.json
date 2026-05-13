@@ -9,7 +9,8 @@
   "scripts": {
     "prepare": "husky",
     "lint": "biome lint",
-    "knip": "knip"
+    "knip": "knip",
+    "tech-lead:metrics": "pnpm --filter @borso/skill-tech-lead-orchestrator run metrics"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.0",
