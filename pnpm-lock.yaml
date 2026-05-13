@@ -17,6 +17,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^19.6.0
         version: 19.8.1
+      esbuild:
+        specifier: ^0.24.0
+        version: 0.24.2
       husky:
         specifier: ^9.1.0
         version: 9.1.7

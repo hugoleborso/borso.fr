@@ -4,7 +4,8 @@
   "ignoreExportsUsedInFile": true,
   "workspaces": {
     ".": {
-      "ignoreBinaries": ["typecheck", "build"]
+      "ignoreBinaries": ["typecheck", "build"],
+      "ignoreDependencies": ["esbuild"]
     },
     "apps/borso-fr": {
       "entry": [
