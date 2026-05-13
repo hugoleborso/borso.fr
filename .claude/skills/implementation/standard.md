@@ -45,6 +45,10 @@ Before any edit. Mental model first; without it, the diff drifts. Plan rows that
 
 The "How each spec decision becomes code" table is the work order. Implement rows top-down; stop and re-read the plan when a row turns out to need a structural change the plan didn't anticipate.
 
+### Re-walk the plan's §3 Code-quality self-check before pre-flight
+
+The plan ships a *Code-quality self-check* section listing repo-rule risks the plan author flagged for *this* feature ("rename `y` → `candidateYear`", "extract `pickDefaultMonth` to `data.utils.ts`", "no `useEffect` to derive state"). The author wrote them because they predicted the implementation would slip on them — the list is feature-specific, not a generic CLAUDE.md restatement. Re-walk it bullet by bullet against the diff before invoking the pre-flight gates. An unchecked bullet is a blocker: fix the diff. The skill enforces this via procedure step 3a; PR #11's `/technical-validation` FAIL ([`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md)) is the precedent.
+
 ### Compose with technical sub-skills
 
 Sub-skills (`/vite`, `/three-js`, `/controller`, `/database`, …) hold domain conventions. Before writing code that touches their surface, invoke them. Missing sub-skills get one-line entries in the plan's *Missing technical skills* section so the loop catches them.
