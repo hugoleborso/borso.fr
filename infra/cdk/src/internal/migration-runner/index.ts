@@ -97,12 +97,23 @@ function makeIdempotent(statement: string): string {
     .replace(/\bCREATE\s+SCHEMA(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE SCHEMA IF NOT EXISTS$1');
 }
 
+/**
+ * Strip the `USING <method>` access-method clause from CREATE INDEX.
+ * Aurora DSQL doesn't accept it ("USING not supported for CREATE INDEX")
+ * — DSQL only ships one storage layer, so naming btree explicitly is
+ * meaningless to its planner. drizzle-kit always emits `USING btree`;
+ * this rewrite drops it without touching the rest of the statement.
+ */
+function stripUsingClause(statement: string): string {
+  return statement.replace(/\)\s+USING\s+\w+\s+/i, ') ').replace(/\bUSING\s+\w+\s+\(/i, '(');
+}
+
 function splitStatements(sql: string): readonly string[] {
   return sql
     .split(STATEMENT_BREAKPOINT)
     .map((chunk) => chunk.trim())
     .filter((chunk) => chunk.length > 0)
-    .map(makeIdempotent);
+    .map((chunk) => stripUsingClause(makeIdempotent(chunk)));
 }
 
 async function applyMigrations(
