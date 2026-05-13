@@ -1,4 +1,4 @@
-type VerdictKind = 'pass' | 'fail-local' | 'fail-plan' | 'fail-spec' | 'crash';
+export type VerdictKind = 'pass' | 'fail-local' | 'fail-plan' | 'fail-spec' | 'crash';
 type RetryAction = 'fix' | 'replan' | 'escalate';
 
 const DEFAULT_MAX_RETRIES = 3;
