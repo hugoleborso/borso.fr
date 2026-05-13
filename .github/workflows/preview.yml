@@ -123,6 +123,11 @@ jobs:
               log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             });
             core.setOutput('id', data.id);
+      # Clean state left by previous failed runs (stack stuck in
+      # ROLLBACK_COMPLETE, orphan log groups, orphan named buckets).
+      # Idempotent — no-op on a clean account.
+      - name: Preflight recovery
+        run: ./scripts/preflight-preview-recovery.sh "${{ matrix.app }}" "$PR_NUMBER"
       - run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
       - id: meta
         env:
