@@ -61,8 +61,18 @@ describe('LambdaApi', () => {
   });
 
   it('honours customDomain in the output URL', () => {
-    const tpl = synth({ customDomain: 'api.borso.fr' });
+    const tpl = synth({
+      customDomain: {
+        hostname: 'api.borso.fr',
+        certificateArn: 'arn:aws:acm:eu-west-3:123456789012:certificate/aaaa-bbbb',
+        hostedZoneId: 'Z000000000000ABCDEFGH',
+        hostedZoneName: 'borso.fr',
+      },
+    });
     expect(outputValues(tpl)).toContain('https://api.borso.fr');
+    tpl.hasResourceProperties('AWS::ApiGatewayV2::DomainName', { DomainName: 'api.borso.fr' });
+    tpl.hasResourceProperties('AWS::ApiGatewayV2::ApiMapping', Match.objectLike({}));
+    tpl.resourceCountIs('AWS::Route53::RecordSet', 2);
   });
 
   it('rejects bad app slug', () => {

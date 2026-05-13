@@ -84,6 +84,11 @@ jobs:
       AWS_REGION: ${{ vars.AWS_REGION }}
       CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
       PREVIEW_URL: https://${{ matrix.app }}-pr-${{ github.event.pull_request.number }}.preview.borso.fr
+      # Baked into the frontend bundle at build time (Vite reads VITE_*
+      # env vars). Mirrors `previewApiHostname()` in @borso/infra — change
+      # both together. Same-origin /api routing on previews is intentional
+      # future work (see docs/knowledge/preview-api-cross-origin.md).
+      VITE_API_BASE: https://${{ matrix.app }}-pr-${{ github.event.pull_request.number }}-api.preview.borso.fr
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

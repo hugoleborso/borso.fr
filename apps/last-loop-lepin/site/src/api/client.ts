@@ -94,8 +94,23 @@ const presignResponseSchema = z.object({
 });
 const passthroughSchema = z.unknown();
 
+// `VITE_API_BASE` is baked in at build time. Empty/undefined → same-origin
+// (dev: Vite proxies /api → local Hono; prod TBD). Cross-origin previews set
+// it to the API custom domain (e.g. `https://<app>-pr-<n>-api.preview.borso.fr`).
+function readApiBase(): string {
+  const env: Record<string, unknown> = import.meta.env;
+  const raw = env.VITE_API_BASE;
+  return typeof raw === 'string' ? raw.replace(/\/$/, '') : '';
+}
+const API_BASE = readApiBase();
+
+function resolveUrl(path: string): string {
+  if (/^https?:\/\//.test(path)) return path;
+  return `${API_BASE}${path}`;
+}
+
 async function fetchUnknown(path: string, init?: RequestInit): Promise<unknown> {
-  const response = await fetch(path, {
+  const response = await fetch(resolveUrl(path), {
     headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) },
     credentials: 'include',
     ...init,

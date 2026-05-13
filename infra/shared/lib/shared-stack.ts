@@ -1,7 +1,11 @@
 import { HOST_ROUTING_FUNCTION_CODE } from '@borso/infra';
 import { Duration, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
 import { CfnBudget } from 'aws-cdk-lib/aws-budgets';
-import type { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
+import {
+  Certificate,
+  CertificateValidation,
+  type ICertificate,
+} from 'aws-cdk-lib/aws-certificatemanager';
 import {
   Distribution,
   Function as CfFunction,
@@ -131,6 +135,16 @@ export class SharedStack extends Stack {
       target: previewsAliasTarget,
     });
 
+    // Regional (eu-west-3) twin of the us-east-1 CloudFront cert. Needed
+    // for API Gateway HTTP API custom domains, which only accept certs
+    // from the same region as the API. Same wildcard, different region —
+    // API Gateway then serves preview-API hostnames like
+    // `<app>-pr-<n>-api.preview.borso.fr` under it.
+    const previewsRegionalCert = new Certificate(this, 'PreviewsRegionalCert', {
+      domainName: PREVIEWS_DOMAIN,
+      validation: CertificateValidation.fromDns(zone),
+    });
+
     const deployRoles = createDeployRoles(this, {
       oidcProviderArn: oidcProvider.openIdConnectProviderArn,
       account: this.account,
@@ -191,6 +205,10 @@ export class SharedStack extends Stack {
     new StringParameter(this, 'CertPreviewParam', {
       parameterName: '/borso/shared/cert-preview-borso-fr-arn',
       stringValue: props.previewCert.certificateArn,
+    });
+    new StringParameter(this, 'CertPreviewRegionalParam', {
+      parameterName: '/borso/shared/cert-preview-borso-fr-regional-arn',
+      stringValue: previewsRegionalCert.certificateArn,
     });
     new StringParameter(this, 'PreviewsBucketParam', {
       parameterName: '/borso/shared/previews-bucket-name',
