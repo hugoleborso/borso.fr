@@ -1,4 +1,4 @@
-import { integer, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import type { EditionStatus, GpxMetadata } from './edition.types';
 
@@ -25,7 +25,10 @@ export const editionsTable = pgTable('editions', {
   sunriseAt: timestamp('sunrise_at', { withTimezone: true, mode: 'date' }).notNull(),
   sunsetAt: timestamp('sunset_at', { withTimezone: true, mode: 'date' }).notNull(),
   intervalMinutes: integer('interval_min').notNull().default(60),
-  gpx: jsonb('gpx').notNull(),
+  // Aurora DSQL doesn't support `jsonb`. The GPX metadata is stored as
+  // JSON-encoded text and parsed via `gpxMetadataSchema` at the repository
+  // boundary, which doubles as runtime validation.
+  gpx: text('gpx').notNull(),
   status: text('status').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 });

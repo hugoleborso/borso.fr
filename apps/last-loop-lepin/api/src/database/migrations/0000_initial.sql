@@ -13,7 +13,7 @@ CREATE TABLE "editions" (
 	"sunrise_at" timestamp with time zone NOT NULL,
 	"sunset_at" timestamp with time zone NOT NULL,
 	"interval_min" integer DEFAULT 60 NOT NULL,
-	"gpx" jsonb NOT NULL,
+	"gpx" text NOT NULL,
 	"status" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );

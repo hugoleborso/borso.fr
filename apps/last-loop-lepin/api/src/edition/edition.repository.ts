@@ -11,12 +11,16 @@ interface EditionRow {
   readonly sunriseAt: Date;
   readonly sunsetAt: Date;
   readonly intervalMinutes: number;
-  readonly gpx: unknown;
+  readonly gpx: string;
   readonly status: string;
 }
 
 function rowToEdition(row: EditionRow): RaceEdition {
-  const gpx = gpxMetadataSchema.parse(row.gpx);
+  // gpx is stored as JSON-encoded text (Aurora DSQL doesn't support jsonb).
+  // The `as unknown` step is the JSON-parse escape hatch the repo allows;
+  // gpxMetadataSchema does the runtime validation.
+  const gpxRaw: unknown = JSON.parse(row.gpx);
+  const gpx = gpxMetadataSchema.parse(gpxRaw);
   if (!isEditionStatus(row.status)) {
     throw new Error(`unknown edition status in database: ${row.status}`);
   }
@@ -42,7 +46,7 @@ export async function insertEdition(database: Database, edition: RaceEdition): P
     sunriseAt: edition.sunriseAt,
     sunsetAt: edition.sunsetAt,
     intervalMinutes: edition.intervalMinutes,
-    gpx: edition.gpx,
+    gpx: JSON.stringify(edition.gpx),
     status: edition.status,
   });
 }

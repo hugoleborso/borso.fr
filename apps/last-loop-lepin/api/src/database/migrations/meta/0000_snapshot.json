@@ -1,5 +1,5 @@
 {
-  "id": "00506c40-140a-494b-a7fa-2dc997df10fe",
+  "id": "c7bf702d-8d62-4a78-b8d8-0a0f8ab5d59c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -92,7 +92,7 @@
         },
         "gpx": {
           "name": "gpx",
-          "type": "jsonb",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
