@@ -45,7 +45,6 @@ interface CfnResponse {
 
 const PG_USER = 'admin';
 const PG_DATABASE = 'postgres';
-const ADVISORY_LOCK_KEY = 0x626f72736f; // "borso" — keep migrations serialized
 
 async function connect(props: ResourceProps): Promise<postgres.Sql> {
   const signer = new DsqlSigner({
@@ -63,15 +62,6 @@ async function connect(props: ResourceProps): Promise<postgres.Sql> {
     max: 1,
     prepare: false,
   });
-}
-
-async function withSchemaLock<T>(sql: postgres.Sql, fn: () => Promise<T>): Promise<T> {
-  await sql`SELECT pg_advisory_lock(${ADVISORY_LOCK_KEY})`;
-  try {
-    return await fn();
-  } finally {
-    await sql`SELECT pg_advisory_unlock(${ADVISORY_LOCK_KEY})`;
-  }
 }
 
 async function ensureSchema(sql: postgres.Sql, schemaName: string): Promise<void> {
@@ -97,7 +87,14 @@ async function applyMigrations(
     if (appliedSet.has(m.name)) continue;
     await sql.unsafe(`SET search_path TO "${schemaName}"`);
     await sql.unsafe(m.sql);
-    await sql.unsafe(`INSERT INTO "${schemaName}"._migrations(name) VALUES ($1)`, [m.name]);
+    // `ON CONFLICT DO NOTHING` is the only concurrency guard we get on
+    // Aurora DSQL — `pg_advisory_lock` is not in the supported subset,
+    // so two simultaneous custom-resource retries can race here. The
+    // duplicate INSERT would otherwise throw and fail the deploy.
+    await sql.unsafe(
+      `INSERT INTO "${schemaName}"._migrations(name) VALUES ($1) ON CONFLICT (name) DO NOTHING`,
+      [m.name],
+    );
   }
 }
 
@@ -111,14 +108,12 @@ export async function handler(event: CfnEvent): Promise<CfnResponse> {
 
   const sql = await connect(props);
   try {
-    await withSchemaLock(sql, async () => {
-      if (event.RequestType === 'Delete') {
-        await dropSchema(sql, props.schemaName);
-        return;
-      }
+    if (event.RequestType === 'Delete') {
+      await dropSchema(sql, props.schemaName);
+    } else {
       await ensureSchema(sql, props.schemaName);
       await applyMigrations(sql, props.schemaName, props.migrations);
-    });
+    }
   } finally {
     await sql.end({ timeout: 5 });
   }

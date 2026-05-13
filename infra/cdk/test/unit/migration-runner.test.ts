@@ -111,8 +111,11 @@ describe('migration-runner handler', () => {
     expect(state.appliedMigrations.has('0001_init.sql')).toBe(true);
     expect(state.appliedMigrations.has('0002_more.sql')).toBe(true);
     expect(state.ended).toBe(1);
-    // advisory lock acquired + released via tagged-template calls
-    expect(state.taggedCalls.length).toBeGreaterThanOrEqual(2);
+    // Aurora DSQL doesn't support `pg_advisory_lock`; the runner now
+    // relies on (a) CFN's single-invocation contract for serialisation
+    // within one deploy, (b) `INSERT ... ON CONFLICT DO NOTHING` for
+    // belt-and-suspenders. No tagged-template lock calls should fire.
+    expect(state.taggedCalls.length).toBe(0);
   });
 
   it('Create: skips migrations already in _migrations', async () => {
