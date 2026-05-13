@@ -111,6 +111,7 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
    b. Apply the change.
    c. If the change is a pure helper, the file ends in `.utils.ts`; write the matching `.utils.test.ts` alongside it.
    d. Update local commits as you go — do not save the diff for one giant commit.
+3a. **Re-walk the plan's §3 Code-quality self-check section bullet by bullet.** Each bullet names a repo-rule risk the plan author flagged for *this* feature ("rename `y` → `candidateYear` in App.tsx's year-switch", "extract `pickDefaultMonth` to `data.utils.ts` so clock-dependent flows are testable", "no `useEffect` to derive `selected`", …). The plan-author wrote them because they predicted this implementation would slip on them. Verify each against the diff. An unchecked bullet is a blocker — fix the diff before running pre-flight gates; `/technical-validation` will FAIL on it otherwise. See [`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md) for the precedent.
 4. **Run the plan's pre-flight gates** in order. Fix issues, do not bypass.
 5. **Run `/visual-validation`** for UI work. Read the report; the verdict must be PASS before push.
 6. **Run `/technical-validation`** always. Read the report; the verdict must be PASS before push.

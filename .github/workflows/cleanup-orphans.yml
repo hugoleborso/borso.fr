@@ -75,13 +75,22 @@ jobs:
             --query "StackSummaries[].StackName" \
             --output text | tr '\t' '\n')
 
+          unknown_app_stacks=()
+          destroy_failures=()
+
           for stack in $stacks; do
             if [[ ! "$stack" =~ ^(.+)-pr-([0-9]+)$ ]]; then continue; fi
             app="${BASH_REMATCH[1]}"
             pr="${BASH_REMATCH[2]}"
 
+            # An <app>-pr-<n> stack whose app slug isn't in the workspace
+            # can never be destroyed by this sweeper — fail loud so the
+            # operator either renames the slug back into apps/ or deletes
+            # the stack manually. Silently skipping let borsouvertures-pr-*
+            # accrete cost while its source PR was still in flight.
             if ! grep -qx "$app" <<<"$all_apps"; then
-              echo "[skip] $stack: app '$app' not in workspace"
+              echo "::warning::stack $stack: app '$app' not in workspace; sweeper cannot destroy it"
+              unknown_app_stacks+=("$stack")
               continue
             fi
 
@@ -89,15 +98,34 @@ jobs:
             case "$state" in
               CLOSED|MERGED)
                 echo "[orphan] destroying $stack (PR #$pr is $state)"
-                STAGE=preview PR_NUMBER="$pr" \
-                  pnpm --filter "@borso-app/$app" run destroy \
-                  || echo "(destroy failed; investigate manually)"
+                if STAGE=preview PR_NUMBER="$pr" \
+                    pnpm --filter "@borso-app/$app" run destroy; then
+                  echo "[ok] $stack destroyed"
+                else
+                  echo "::error::$stack: cdk destroy exited non-zero (PR #$pr is $state)"
+                  destroy_failures+=("$stack")
+                fi
                 ;;
               OPEN|DRAFT)
                 echo "[active] keeping $stack (PR #$pr is $state)"
                 ;;
               *)
-                echo "[unknown] keeping $stack (PR #$pr state=$state)"
+                echo "::warning::$stack: PR #$pr state=$state; keeping (gh pr view may have failed)"
                 ;;
             esac
           done
+
+          # Silent green hid four merged-PR stacks for 7-8 days before
+          # manual discovery — see docs/dantotsus/cdk-destroy-failure-
+          # swallowed-by-trailing-or-echo.md. Either fail loud or the
+          # sweeper is theatre.
+          fail=0
+          if (( ${#unknown_app_stacks[@]} )); then
+            echo "::error::${#unknown_app_stacks[@]} stack(s) belong to slugs not in apps/: ${unknown_app_stacks[*]}"
+            fail=1
+          fi
+          if (( ${#destroy_failures[@]} )); then
+            echo "::error::${#destroy_failures[@]} cdk destroy failure(s): ${destroy_failures[*]}"
+            fail=1
+          fi
+          exit "$fail"

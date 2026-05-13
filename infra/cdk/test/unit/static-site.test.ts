@@ -32,6 +32,22 @@ describe('StaticSite (prod)', () => {
     });
   });
 
+  it('sets DeletionPolicy=Delete on the bucket so failed first deploys roll back cleanly', () => {
+    // Static-site buckets hold only rebuildable build output; eradicates
+    // the orphan-bucket trap documented in cdk-failed-deploy-leaves-
+    // retained-buckets-orphaned.md.
+    tpl.hasResource('AWS::S3::Bucket', {
+      DeletionPolicy: 'Delete',
+      UpdateReplacePolicy: 'Delete',
+    });
+  });
+
+  it('provisions an autoDeleteObjects custom resource so destroy actually destroys', () => {
+    tpl.hasResourceProperties('Custom::S3AutoDeleteObjects', {
+      BucketName: Match.anyValue(),
+    });
+  });
+
   it('creates a CloudFront distribution bound to the apex domain', () => {
     tpl.hasResourceProperties('AWS::CloudFront::Distribution', {
       DistributionConfig: Match.objectLike({
