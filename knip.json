@@ -31,6 +31,10 @@
     ".claude/skills/adr-writer": {
       "entry": ["src/**/*.utils.test.ts"],
       "project": ["src/**/*.ts"]
+    },
+    ".claude/skills/tech-lead-orchestrator": {
+      "entry": ["src/**/*.utils.test.ts", "tests/**/*.test.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
     }
   }
 }
