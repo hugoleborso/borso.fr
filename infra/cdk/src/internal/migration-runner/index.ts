@@ -76,11 +76,33 @@ async function ensureSchema(sql: postgres.Sql, schemaName: string): Promise<void
 
 const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
 
+/**
+ * Make a single DDL statement idempotent by injecting `IF NOT EXISTS`.
+ *
+ * Why: Aurora DSQL forbids multi-DDL transactions, so we ship each
+ * statement in its own tx. If the migration is interrupted partway —
+ * e.g. statement N succeeds, statement N+1 fails — the `_migrations`
+ * marker is never written and the retry restarts from statement 1.
+ * Without `IF NOT EXISTS`, re-creating the already-existing relations
+ * from the previous partial run fails with `relation X already exists`.
+ *
+ * Targets `CREATE TABLE`, `CREATE INDEX`, `CREATE UNIQUE INDEX`,
+ * `CREATE SCHEMA`. Leaves everything else (INSERT, SET, …) alone.
+ */
+function makeIdempotent(statement: string): string {
+  return statement
+    .replace(/\bCREATE\s+TABLE(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE TABLE IF NOT EXISTS$1')
+    .replace(/\bCREATE\s+UNIQUE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE UNIQUE INDEX IF NOT EXISTS$1')
+    .replace(/\bCREATE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE INDEX IF NOT EXISTS$1')
+    .replace(/\bCREATE\s+SCHEMA(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE SCHEMA IF NOT EXISTS$1');
+}
+
 function splitStatements(sql: string): readonly string[] {
   return sql
     .split(STATEMENT_BREAKPOINT)
     .map((chunk) => chunk.trim())
-    .filter((chunk) => chunk.length > 0);
+    .filter((chunk) => chunk.length > 0)
+    .map(makeIdempotent);
 }
 
 async function applyMigrations(
