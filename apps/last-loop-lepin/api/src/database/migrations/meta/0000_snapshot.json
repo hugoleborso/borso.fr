@@ -1,5 +1,5 @@
 {
-  "id": "c7bf702d-8d62-4a78-b8d8-0a0f8ab5d59c",
+  "id": "b16227c0-edac-432d-acab-b0370c12b866",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -203,23 +203,7 @@
           "with": {}
         }
       },
-      "foreignKeys": {
-        "loop_punches_edition_slug_runner_slug_runners_edition_slug_slug_fk": {
-          "name": "loop_punches_edition_slug_runner_slug_runners_edition_slug_slug_fk",
-          "tableFrom": "loop_punches",
-          "tableTo": "runners",
-          "columnsFrom": [
-            "edition_slug",
-            "runner_slug"
-          ],
-          "columnsTo": [
-            "edition_slug",
-            "slug"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -269,23 +253,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "manual_dnfs_edition_slug_runner_slug_runners_edition_slug_slug_fk": {
-          "name": "manual_dnfs_edition_slug_runner_slug_runners_edition_slug_slug_fk",
-          "tableFrom": "manual_dnfs",
-          "tableTo": "runners",
-          "columnsFrom": [
-            "edition_slug",
-            "runner_slug"
-          ],
-          "columnsTo": [
-            "edition_slug",
-            "slug"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {
         "manual_dnfs_edition_slug_runner_slug_pk": {
           "name": "manual_dnfs_edition_slug_runner_slug_pk",
@@ -336,21 +304,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "runners_edition_slug_editions_slug_fk": {
-          "name": "runners_edition_slug_editions_slug_fk",
-          "tableFrom": "runners",
-          "tableTo": "editions",
-          "columnsFrom": [
-            "edition_slug"
-          ],
-          "columnsTo": [
-            "slug"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {
         "runners_edition_slug_slug_pk": {
           "name": "runners_edition_slug_slug_pk",

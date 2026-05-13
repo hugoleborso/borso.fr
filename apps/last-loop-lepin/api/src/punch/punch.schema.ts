@@ -1,6 +1,5 @@
 import { sql } from 'drizzle-orm';
 import {
-  foreignKey,
   integer,
   pgTable,
   primaryKey,
@@ -11,8 +10,12 @@ import {
 } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { editionSlugSchema } from '../edition/edition.schema';
-import { runnerSlugSchema, runnersTable } from '../runner/runner.schema';
+import { runnerSlugSchema } from '../runner/runner.schema';
 
+// Foreign keys to `runners` are intentionally not declared. Aurora DSQL
+// rejects `ALTER TABLE ADD CONSTRAINT` (drizzle-kit's FK emission shape),
+// and the engine doesn't enforce FK semantics at write time anyway.
+// App-level invariants are kept by the service layer.
 export const loopPunchesTable = pgTable(
   'loop_punches',
   {
@@ -28,10 +31,6 @@ export const loopPunchesTable = pgTable(
       .defaultNow(),
   },
   (table) => ({
-    runnerFk: foreignKey({
-      columns: [table.editionSlug, table.runnerSlug],
-      foreignColumns: [runnersTable.editionSlug, runnersTable.slug],
-    }),
     activePunchUnique: uniqueIndex('loop_punches_active_uq')
       .on(table.editionSlug, table.runnerSlug, table.loopIndex)
       .where(sql`voided_at IS NULL`),
@@ -52,10 +51,6 @@ export const manualDnfsTable = pgTable(
   },
   (table) => ({
     primary: primaryKey({ columns: [table.editionSlug, table.runnerSlug] }),
-    runnerFk: foreignKey({
-      columns: [table.editionSlug, table.runnerSlug],
-      foreignColumns: [runnersTable.editionSlug, runnersTable.slug],
-    }),
   }),
 );
 

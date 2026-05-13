@@ -48,7 +48,4 @@ CREATE TABLE "runners" (
 	CONSTRAINT "runners_edition_slug_slug_pk" PRIMARY KEY("edition_slug","slug")
 );
 --> statement-breakpoint
-ALTER TABLE "loop_punches" ADD CONSTRAINT "loop_punches_edition_slug_runner_slug_runners_edition_slug_slug_fk" FOREIGN KEY ("edition_slug","runner_slug") REFERENCES "public"."runners"("edition_slug","slug") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "manual_dnfs" ADD CONSTRAINT "manual_dnfs_edition_slug_runner_slug_runners_edition_slug_slug_fk" FOREIGN KEY ("edition_slug","runner_slug") REFERENCES "public"."runners"("edition_slug","slug") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "runners" ADD CONSTRAINT "runners_edition_slug_editions_slug_fk" FOREIGN KEY ("edition_slug") REFERENCES "public"."editions"("slug") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "loop_punches_active_uq" ON "loop_punches" USING btree ("edition_slug","runner_slug","loop_index") WHERE voided_at IS NULL;
