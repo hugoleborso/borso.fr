@@ -131,6 +131,15 @@ export class DsqlSchema extends Construct {
       bundling: {
         target: 'node22',
         format: OutputFormat.ESM,
+        // Banner needed because `@aws-sdk/dsql-signer` (bundled inline) pulls
+        // in `@smithy/util-buffer-from` which `require('buffer')`. esbuild's
+        // ESM output replaces CJS `require` with a `__require` shim that
+        // can't resolve Node built-ins → the Lambda fails at cold start with
+        // `Dynamic require of "buffer" is not supported`. Re-exposing
+        // `createRequire(import.meta.url)` as `require` patches both Node
+        // built-ins and any other transitive CJS dep without re-bundling
+        // them as external (which would just push the problem to runtime).
+        banner: 'import { createRequire } from \'module\'; const require = createRequire(import.meta.url);',
         // Keep ONLY the Lambda-runtime-provided clients external. We do NOT
         // include @aws-sdk/dsql-signer here — the runtime doesn't ship it,
         // so esbuild bundles it inline from the workspace's node_modules

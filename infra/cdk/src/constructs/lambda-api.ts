@@ -100,6 +100,15 @@ export class LambdaApi extends Construct {
         target: 'node22',
         format: OutputFormat.ESM,
         mainFields: ['module', 'main'],
+        // Re-expose CommonJS `require` for transitive deps that need it.
+        // Some AWS SDK + smithy packages (notably `@aws-sdk/dsql-signer`
+        // → `@smithy/util-buffer-from`) do `require('buffer')` at module
+        // load, which esbuild's ESM `__require` shim can't resolve at
+        // runtime — the Lambda cold-starts with `Dynamic require of
+        // "buffer" is not supported`. The banner patches the shim with a
+        // real `createRequire` so every Node built-in + any other CJS
+        // transitive dep just works.
+        banner: 'import { createRequire } from \'module\'; const require = createRequire(import.meta.url);',
       },
     });
 
