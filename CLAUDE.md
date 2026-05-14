@@ -19,12 +19,14 @@ Anything else is a bug in the system. **Operational rule:** when a conversation 
 - `apps/<slug>/` — one folder per app. Standalone-openable: `cd apps/<x> && pnpm dev` works on a fresh checkout. **No cross-app imports.** Front-end-only apps (`borso-fr`, `borsouvertures`) have a single `site/`; full-stack apps (`last-loop-lepin`) split `site/` (Vite + React), `api/` (Hono on Lambda), and `cdk/` (CDK stack composing the constructs) under the same workspace. Full-stack apps that need a Postgres locally call [`scripts/local-postgres.sh`](./scripts/local-postgres.sh) — boots a Docker-less, sandbox-private cluster; wired into `pnpm run test` so the back-e2e gate runs autonomously even where Docker isn't reachable. See [`docs/knowledge/local-postgres-without-docker.md`](./docs/knowledge/local-postgres-without-docker.md).
 - `infra/cdk/` — `@borso/infra`, the CDK constructs (StaticSite, LambdaApi, DsqlCluster, DsqlSchema, PreviewableApp). **100% test coverage gated.**
 - `infra/shared/` — `@borso/shared-infra`, account-level singletons (certs, OIDC, previews CDN, deploy roles). DSQL clusters are per-app, owned by each app's prod stack.
+- `.claude/skills/<slug>/` — skills. **Markdown-only.** A skill is a set of instructions an LLM follows: `SKILL.md`, `standard.md`, `template.md`, `worked-example.md` as needed. **No `package.json`, no test runner, no TS utilities.** Primitives the skill needs (verdict parsing, state transitions, retry budgeting, journal aggregation) are described in prose; the LLM runtime executes them. Skills are not pnpm workspaces.
+- `docs/features/<app>/<slug>/` — the conversation that produced a feature: `spec/spec.md`, `plan/plan.md`, `validation/`. `<app>` here is a **docs slug**, not necessarily a pnpm workspace. Valid docs slugs: every `apps/<slug>` plus `meta` (for repo-internal work like skills, hooks, conventions). `meta` does **not** need an entry in `.github/path-filters.yml` — it isn't deployable.
 
 ## Conventions
 
 - **pnpm always** — no `npm` / `yarn`. Lockfile is committed.
 - **Always use `pnpm run <script>` for `deploy` / `destroy` (and any name pnpm reserves).** `pnpm --filter <pkg> deploy` invokes pnpm's built-in `deploy` command (which copies a workspace package into a deployable bundle), not the package's `scripts.deploy`. Same hazard with `destroy`. The four CI workflows already use `run`; the local equivalent is e.g. `pnpm --filter @borso/shared-infra run deploy`.
-- **Conventional commits**, scope-enum: `borso-fr`, `borsouvertures`, `last-loop-lepin`, `infra`, `ci`, `docs`, `deps`. Husky enforces.
+- **Conventional commits**, scope-enum: `borso-fr`, `borsouvertures`, `last-loop-lepin`, `infra`, `ci`, `docs`, `deps`, `meta`. `meta` covers repo-internal work (skills, hooks, conventions, ADRs) — anything under `.claude/`, `docs/adr/`, or `docs/features/meta/`. Husky enforces.
 - **Biome** rules live in the root `biome.jsonc` and reach every workspace. Per-app configs extend root and set `"root": false`.
 - **Stage** type is `'dev' | 'preview' | 'integ' | 'prod'`. `'dev'` is an app-code marker; constructs reject it via `assertDeployStage`.
 
@@ -100,6 +102,6 @@ If a PR ships zero lessons, that's fine — open the follow-up PR with a note sa
 
 - Don't reintroduce `pragma` as a slug — it's the upstream `borso-platform` test fixture, renamed to `test-app` here.
 - Don't `import`/`export` in `infra/cdk/src/internal/cf-host-routing-function.code.js` — it's CloudFront Function source, read at synth time as a string and shipped to the edge runtime.
-- Don't add an app without updating `.github/path-filters.yml` and the commitlint scope-enum.
+- Don't add an app without updating `.github/path-filters.yml` and the commitlint scope-enum. (Docs-only slugs like `meta` don't need `.github/path-filters.yml` — they aren't workspaces.)
 - Don't `--no-verify`. Ever. Fix the hook failure instead.
 - Don't forget the post-merge reminder: when a PR touching infra or app code merges, ping the user to approve the pending deploy in GitHub Actions — see *Deployments* above.

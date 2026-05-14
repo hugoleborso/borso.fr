@@ -157,3 +157,5 @@ Once every perspective has been confronted and no `> ⚠️ Missing …` flag re
 ## Auto-chain to `/technical-conception`
 
 When this skill finishes (no `> ⚠️ Missing` flag remains, every perspective checkbox in the spec preamble is ticked, the user has approved the spec), the agent immediately invokes `/technical-conception` via the `Skill` tool with the spec path as argument. Do not stop and wait for the user to type "/technical-conception" — the chain is operational, not documentary.
+
+**Conditional suppression when piloted by `/tech-lead-orchestrator`.** Before auto-chaining, check whether `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists and contains `"pilotedByTechLead": true`. If yes, **do not auto-chain**. Instead, emit a verdict at `runs/<run-id>/agents/specification-<step>.md` per [`.claude/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md) with `status: done`, `next: { kind: validate }`, and stop. The orchestrator handles the next stage itself.

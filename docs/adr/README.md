@@ -10,8 +10,13 @@ decision becomes code` table ("where it lands"). A plan row that says
 + criteria + justification go here, not in a commit message or a code
 comment that rots.
 
-Conventions live in [`.claude/skills/adr/standard.md`](../../.claude/skills/adr/standard.md).
-Drafting is `/adr` (see [`.claude/skills/adr/SKILL.md`](../../.claude/skills/adr/SKILL.md)).
+Conventions live in [`.claude/skills/adr/standard.md`](../../.claude/skills/adr/standard.md)
+and the writer rules in
+[`.claude/skills/adr-writer/standard.md`](../../.claude/skills/adr-writer/standard.md).
+Drafting is `/adr` (the decision-support walk — see
+[`.claude/skills/adr/SKILL.md`](../../.claude/skills/adr/SKILL.md)) or
+`/adr-writer` (direct file authoring, typically triggered by
+`/tech-lead-orchestrator`).
 
 ## Status lifecycle
 
@@ -40,15 +45,21 @@ No:
 ## Index
 
 <!-- New entries go under the right heading. If no heading fits, add
-     one. Manually curated — `/adr` never reorders. -->
+     one. Manually curated — `/adr` and `/adr-writer` never reorder. -->
+
+| # | Title | Status | Date |
+|---|---|---|---|
+| [0001](./0001-tech-lead-orchestrator-replaces-auto-chain.md) | `/tech-lead-orchestrator` replaces the linear skill auto-chain | accepted | 2026-05-13 |
+| [0002](./0002-vendor-react-bits-galaxy-shader.md) | Vendor the react-bits Galaxy WebGL shader instead of installing it | superseded by [0003](./0003-react-bits-galaxy-as-react-component.md) | 2026-05-14 |
+| [0003](./0003-react-bits-galaxy-as-react-component.md) | Mount the react-bits Galaxy as a React component on top of `ogl` | accepted | 2026-05-14 |
 
 ### Data layer
 
-_(no entries yet — first ADR lands when `/adr` first runs)_
+_(no entries yet)_
 
 ### App architecture
 
-_(no entries yet)_
+- 0002, 0003 — react-bits Galaxy integration (see table above).
 
 ### CDK / infra
 
@@ -60,7 +71,7 @@ _(no entries yet)_
 
 ### Tooling / DevX
 
-_(no entries yet)_
+- 0001 — `/tech-lead-orchestrator` replaces the linear skill auto-chain.
 
 ## How `/open-pr` uses ADRs
 

@@ -1,85 +1,51 @@
-const navIcon = document.getElementById('nav-icon');
-const navMenu = document.getElementById('nav-menu');
+const STAGGER_BASE_MS = 80;
+const STAGGER_STEP_MS = 60;
+const MENU_OPEN_CLASS = 'menu-open';
+const BURGER_OPEN_CLASS = 'is-open';
+const ANIMATE_IN_CLASS = 'animate-in';
+const LABEL_OPEN_MENU = 'Ouvrir le menu';
+const LABEL_CLOSE_MENU = 'Fermer le menu';
 
-navIcon.addEventListener('click', () => {
-  navIcon.classList.toggle('open');
-  navMenu.classList.toggle('open');
+const burger = document.getElementById('burger');
+const menu = document.getElementById('menu');
+const menuItems = menu.querySelectorAll('li');
+
+let menuOpen = false;
+
+function applyMenuState() {
+  document.body.classList.toggle(MENU_OPEN_CLASS, menuOpen);
+  burger.classList.toggle(BURGER_OPEN_CLASS, menuOpen);
+  menu.classList.toggle('is-open', menuOpen);
+  burger.setAttribute('aria-expanded', String(menuOpen));
+  burger.setAttribute('aria-label', menuOpen ? LABEL_CLOSE_MENU : LABEL_OPEN_MENU);
+  menu.setAttribute('aria-hidden', String(!menuOpen));
+
+  menuItems.forEach((item, index) => {
+    item.style.transitionDelay = menuOpen
+      ? `${STAGGER_BASE_MS + index * STAGGER_STEP_MS}ms`
+      : '0ms';
+  });
+}
+
+burger.addEventListener('click', () => {
+  menuOpen = !menuOpen;
+  applyMenuState();
 });
 
-const canvas = document.getElementById('gradient-canvas');
-const ctx = canvas.getContext('2d');
-let w, h;
-
-const POINTS_COUNT = 6;
-
-let points = [];
-
-const colors = ['#ff0057', '#1c92d2', '#ff7f50', '#6a0dad', '#fffd82', '#03fcba', '#f441a5'];
-
-function random(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-function initPoints() {
-  points = [];
-  for (let i = 0; i < POINTS_COUNT; i++) {
-    points.push({
-      x: random(0, w),
-      y: random(0, h),
-      vx: random(0, 1) > 0.5 ? random(0.3, 0.7) : random(-0.7, -0.3),
-      vy: random(0, 1) > 0.5 ? random(0.3, 0.7) : random(-0.7, -0.3),
-      color: colors[Math.floor(Math.random() * colors.length)],
-    });
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && menuOpen) {
+    menuOpen = false;
+    applyMenuState();
   }
-}
+});
 
-function resize() {
-  w = window.innerWidth;
-  h = window.innerHeight;
-  canvas.width = w;
-  canvas.height = h;
-  initPoints();
-}
+// Opt in to the fade-in animation only when the tab is actually visible
+// at load. Hidden tabs keep the title at full opacity (no animation tick
+// = no chance of being stuck at opacity:0).
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-window.addEventListener('resize', resize);
-resize();
-
-function animate() {
-  // Clear canvas
-  ctx.clearRect(0, 0, w, h);
-
-  // Draw each point as a radial gradient
-  ctx.globalCompositeOperation = 'screen';
-
-  for (let i = 0; i < points.length; i++) {
-    const p = points[i];
-
-    // Create radial gradient
-    const gradient = ctx.createRadialGradient(
-      p.x,
-      p.y,
-      0,
-      p.x,
-      p.y,
-      Math.min(w, h) * 0.6, // radius
-    );
-    gradient.addColorStop(0, p.color);
-    gradient.addColorStop(1, 'transparent');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(p.x - w * 0.6, p.y - h * 0.6, w * 1.2, h * 1.2);
-
-    // Move the points
-    p.x += p.vx;
-    p.y += p.vy;
-
-    // Bounce off edges
-    if (p.x < 0 || p.x > w) p.vx *= -1;
-    if (p.y < 0 || p.y > h) p.vy *= -1;
+window.addEventListener('pageshow', () => {
+  if (document.visibilityState !== 'hidden' && !prefersReducedMotion) {
+    document.body.classList.add(ANIMATE_IN_CLASS);
   }
-
-  ctx.globalCompositeOperation = 'source-over';
-
-  requestAnimationFrame(animate);
-}
-
-animate();
+});

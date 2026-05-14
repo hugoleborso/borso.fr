@@ -1,37 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>borso.fr</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Space+Mono:wght@400&display=swap"
+  >
+
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <canvas id="gradient-canvas"></canvas>
 
-  <div class="container">
-    <div class="welcome">Welcome to</div>
-    <div class="title">borso.fr</div>
-  </div>
+<div id="bg-canvas-wrap"></div>
+<div id="bg-grain"></div>
 
-  <div class="nav-icon" id="nav-icon">
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
+<main class="stage">
+  <div class="welcome">Bienvenue sur</div>
+  <h1 class="title">borso.fr</h1>
+</main>
 
-  <nav class="nav-menu" id="nav-menu">
-    <ul>
-      <li><a href="family/mom.html">Mom</a></li>
-      <li><a href="family/les-filles.html">Sisters</a></li>
-      <li><a href="art/mondrian">Art</a></li>
-      <li><a href="mailto:hugo.borsoni@gmail.com?subject=Demande de date Nom Prénom&body=Coucou tu m'as tapé dans l'oeil allons siroter un verre en terrasse">Demande de date</a></li>
-      <li><a href="12-travaux/">Les 12 travaux de Borso</a></li>
-    </ul>
-  </nav>
-  <script type="module" src="./script.js"></script>
+<button id="burger" class="burger" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="menu">
+  <svg class="burger-icon burger-icon--lines" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+    <line x1="3" y1="7" x2="19" y2="7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="3" y1="15" x2="19" y2="15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>
+  <svg class="burger-icon burger-icon--cross" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+    <line x1="4" y1="4" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="18" y1="4" x2="4" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>
+</button>
 
+<nav id="menu" class="menu" aria-hidden="true">
+  <ul>
+    <li><a href="family/mom.html">Maman</a></li>
+    <li><a href="family/les-filles.html">Les sœurs</a></li>
+    <li><a href="art/mondrian/">Art</a></li>
+    <li><a href="mailto:hugo.borsoni@gmail.com?subject=Demande de date Nom Pr%C3%A9nom&body=Coucou tu m'as tap%C3%A9 dans l'oeil allons siroter un verre en terrasse">Demande de date</a></li>
+    <li><a href="12-travaux/">Les 12 travaux de Borso</a></li>
+  </ul>
+</nav>
 
+<script type="module" src="./galaxy.tsx"></script>
+<script type="module" src="./script.js"></script>
 </body>
 </html>
