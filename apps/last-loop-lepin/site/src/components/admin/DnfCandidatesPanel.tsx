@@ -11,12 +11,17 @@ interface DnfCandidatesPanelProps {
 }
 
 /**
- * Surfaces the runners the system thinks should be DNFed and lets the
- * orga validate one by one. A candidate is a runner whose status is
- * already `dnf:late` (system projection) — the orga confirms by clicking
- * "valider DNF", which writes a `manual_dnf` row. Without confirmation,
- * the projection re-evaluates every poll cycle and could flip back if a
- * late punch lands.
+ * Two halves on the same panel:
+ *
+ * - **DNF à valider** lists runners the system already projects as
+ *   `dnf:late` (missed the top-of-hour). Confirming writes a
+ *   `manual_dnf` row so the projection stops flipping back when a late
+ *   punch could land.
+ * - **Abandon volontaire** covers every other in-race runner. The orga
+ *   marks them out *after* a closed loop — typically when the runner
+ *   walks back to the corral and tells you they're done. We record DNF
+ *   at the runner's last completed loop (`outAtLoop = lastLoop`) so the
+ *   final ranking sees the right finish line.
  */
 export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps) {
   const [busySlug, setBusySlug] = useState<string | null>(null);
@@ -25,16 +30,18 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
   const candidates = ranked.filter(
     (entry) => entry.status.kind === 'dnf' && entry.status.reason === 'late',
   );
+  const inRace = ranked.filter((entry) => entry.status.kind === 'in-race');
 
   async function confirmDnf(entry: RankedRunnerDto): Promise<void> {
-    if (entry.status.kind !== 'dnf') return;
+    const outAtLoop =
+      entry.status.kind === 'dnf' ? entry.status.outAtLoop : entry.status.lastLoop;
     setBusySlug(entry.runner.slug);
     setError(null);
     try {
       await apiClient.adminRecordDnf({
         editionSlug: edition.slug,
         runnerSlug: entry.runner.slug,
-        outAtLoop: entry.status.outAtLoop,
+        outAtLoop,
         reason: 'manual',
       });
       recordAnalyticsEvent('dnf_validated', {
@@ -49,42 +56,101 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
     }
   }
 
+  async function abandonVoluntarily(entry: RankedRunnerDto): Promise<void> {
+    if (entry.status.kind !== 'in-race') return;
+    const lastLoop = entry.status.lastLoop;
+    if (
+      !confirm(
+        `Marquer ${entry.runner.displayName} en abandon (boucle ${lastLoop}) ? Le coureur disparaît du classement live.`,
+      )
+    ) {
+      return;
+    }
+    await confirmDnf(entry);
+  }
+
   return (
-    <div className="card">
-      <div className="card-head">
-        <h2 className="card-title">DNF à valider</h2>
-        <span className="muted mono">{candidates.length} en attente</span>
-      </div>
-      <div className="card-body col">
-        {error !== null ? <div className="error-text">{error}</div> : null}
-        {candidates.length === 0 ? (
-          <div className="muted">Aucun coureur en attente de validation DNF.</div>
-        ) : (
-          candidates.map((entry) => {
-            const avatar = initialsAvatar(entry.runner.displayName);
-            const outAtLoop = entry.status.kind === 'dnf' ? entry.status.outAtLoop : 0;
-            return (
-              <div className="leaderboard-row" key={entry.runner.slug}>
-                <span className="rank mono">B{outAtLoop}</span>
-                <div className="row">
-                  <span className="avatar" style={{ background: avatar.backgroundColor }}>
-                    {avatar.initials}
-                  </span>
-                  <span className="runner-name">{entry.runner.displayName}</span>
+    <div className="col" style={{ gap: 'var(--d-4)' }}>
+      <div className="card">
+        <div className="card-head">
+          <h2 className="card-title">DNF à valider</h2>
+          <span className="muted mono">{candidates.length} en attente</span>
+        </div>
+        <div className="card-body col">
+          {error !== null ? <div className="error-text">{error}</div> : null}
+          {candidates.length === 0 ? (
+            <div className="muted">Aucun coureur en attente de validation DNF.</div>
+          ) : (
+            candidates.map((entry) => {
+              const avatar = initialsAvatar(entry.runner.displayName);
+              const outAtLoop = entry.status.kind === 'dnf' ? entry.status.outAtLoop : 0;
+              return (
+                <div className="leaderboard-row" key={entry.runner.slug}>
+                  <span className="rank mono">B{outAtLoop}</span>
+                  <div className="row">
+                    <span className="avatar" style={{ background: avatar.backgroundColor }}>
+                      {avatar.initials}
+                    </span>
+                    <span className="runner-name">{entry.runner.displayName}</span>
+                  </div>
+                  <span className="loop-info">Manqué le top après B{outAtLoop}</span>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    onClick={() => void confirmDnf(entry)}
+                    disabled={busySlug !== null}
+                  >
+                    {busySlug === entry.runner.slug ? 'Validation…' : 'Valider DNF'}
+                  </button>
                 </div>
-                <span className="loop-info">Manqué le top après B{outAtLoop}</span>
-                <button
-                  type="button"
-                  className="btn btn-danger btn-sm"
-                  onClick={() => void confirmDnf(entry)}
-                  disabled={busySlug !== null}
-                >
-                  {busySlug === entry.runner.slug ? 'Validation…' : 'Valider DNF'}
-                </button>
-              </div>
-            );
-          })
-        )}
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <h2 className="card-title">Abandon volontaire</h2>
+          <span className="muted mono">{inRace.length} en course</span>
+        </div>
+        <div className="card-body col">
+          <div className="muted" style={{ fontSize: 12 }}>
+            Pour un coureur qui jette l'éponge entre deux boucles. Marque DNF à la dernière
+            boucle bouclée et le retire du live.
+          </div>
+          {inRace.length === 0 ? (
+            <div className="muted">Personne en course.</div>
+          ) : (
+            inRace.map((entry) => {
+              const avatar = initialsAvatar(entry.runner.displayName);
+              const lastLoop = entry.status.kind === 'in-race' ? entry.status.lastLoop : 0;
+              return (
+                <div className="leaderboard-row" key={entry.runner.slug}>
+                  <span className="rank mono">B{lastLoop}</span>
+                  <div className="row">
+                    <span className="avatar" style={{ background: avatar.backgroundColor }}>
+                      {avatar.initials}
+                    </span>
+                    <span className="runner-name">{entry.runner.displayName}</span>
+                  </div>
+                  <span className="loop-info">
+                    {entry.runner.bib === null ? '' : `#${entry.runner.bib} · `}dernière B
+                    {lastLoop}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    onClick={() => void abandonVoluntarily(entry)}
+                    disabled={busySlug !== null}
+                  >
+                    {busySlug === entry.runner.slug ? 'Validation…' : 'Marquer abandon'}
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );
