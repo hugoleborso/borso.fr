@@ -55,6 +55,9 @@ export const correctPunchInputSchema = z.object({
 export const createDnfInputSchema = z.object({
   editionSlug: editionSlugSchema,
   runnerSlug: runnerSlugSchema,
-  outAtLoop: z.number().int().positive(),
+  // 0 = the runner didn't even close the first loop (the system projects
+  // them as `dnf:late` with `outAtLoop = 0`, and the orga may also mark a
+  // pre-race abandon by hand). Anything below 0 is meaningless.
+  outAtLoop: z.number().int().nonnegative(),
   reason: z.enum(['late', 'manual']),
 });
