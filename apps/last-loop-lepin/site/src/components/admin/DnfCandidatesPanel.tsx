@@ -33,7 +33,7 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
   //     the projection can flip back on a late punch — that's why we
   //     show the explicit "Valider DNF" button to lock it in.
   //   - `allDnfs` is the union of late + manual DNFs. Both need the
-  //     "Le faire passer (1 h)" escape hatch (system pre-DNFed too
+  //     "Faire passer (1 h)" escape hatch (system pre-DNFed too
   //     eagerly OR the orga regrets a manual call) so the operator can
   //     bring a runner back into the race retroactively.
   const lateCandidates = ranked.filter(
@@ -142,7 +142,7 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
                       disabled={busySlug !== null}
                       title="Crédite la boucle suivante avec un temps d'1 h (limite haute). Le coureur ressort de DNF et reprend la course."
                     >
-                      {busySlug === entry.runner.slug ? '…' : 'Le faire passer (1 h)'}
+                      {busySlug === entry.runner.slug ? '…' : 'Faire passer (1 h)'}
                     </button>
                     <button
                       type="button"
@@ -196,7 +196,7 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
                     onClick={() => void catchupRunner(entry)}
                     disabled={busySlug !== null}
                   >
-                    {busySlug === entry.runner.slug ? '…' : 'Le faire passer (1 h)'}
+                    {busySlug === entry.runner.slug ? '…' : 'Faire passer (1 h)'}
                   </button>
                 </div>
               );

@@ -18,6 +18,7 @@ function formatLastEventTime(entry: RankedRunnerDto): string {
   return new Date(entry.lastFinishedAt).toLocaleTimeString('fr-FR', {
     hour: '2-digit',
     minute: '2-digit',
+    second: '2-digit',
   });
 }
 
