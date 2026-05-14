@@ -28,30 +28,44 @@ function describeStatus(entry: RankedRunnerDto): string {
 }
 
 export function Leaderboard({ ranked }: LeaderboardProps) {
+  if (ranked.length === 0) {
+    return (
+      <div className="card-body muted">Aucun coureur inscrit pour l'instant.</div>
+    );
+  }
+  // CSS multi-column flow gives a Pinterest-style "masonry" layout
+  // without the experimental `grid-template-rows: masonry` — chips break
+  // vertically inside each column at whatever height they need, and
+  // column edges aren't forced to align across rows. `column-fill: balance`
+  // makes the columns roughly the same height even when chip counts vary.
   return (
-    <div className="leaderboard">
-      {ranked.length === 0 ? (
-        <div className="card-body muted">Aucun coureur inscrit pour l'instant.</div>
-      ) : (
-        ranked.map((entry) => {
-          const avatar = initialsAvatar(entry.runner.displayName);
-          return (
-            <div className="leaderboard-row" key={`${entry.runner.editionSlug}-${entry.runner.slug}`}>
-              <span className="rank mono">{entry.rank === 'ex-aequo' ? '=' : entry.rank}</span>
-              <div className="row">
-                <span className="avatar" style={{ background: avatar.backgroundColor }}>
-                  {avatar.initials}
-                </span>
-                <span className="runner-name">{entry.runner.displayName}</span>
-              </div>
-              <span className="loop-info">{formatLastEventTime(entry)}</span>
-              <span className={`status-pill ${entry.status.kind === 'in-race' ? 'in-race' : 'dnf'}`}>
+    <div className="leaderboard-chips">
+      {ranked.map((entry) => {
+        const avatar = initialsAvatar(entry.runner.displayName);
+        const isDnf = entry.status.kind === 'dnf';
+        return (
+          <div
+            className={`leaderboard-chip${isDnf ? ' leaderboard-chip--dnf' : ''}`}
+            key={`${entry.runner.editionSlug}-${entry.runner.slug}`}
+          >
+            <div className="leaderboard-chip__head">
+              <span className="leaderboard-chip__rank mono">
+                {entry.rank === 'ex-aequo' ? '=' : entry.rank}
+              </span>
+              <span className="avatar" style={{ background: avatar.backgroundColor }}>
+                {avatar.initials}
+              </span>
+              <span className="leaderboard-chip__name">{entry.runner.displayName}</span>
+            </div>
+            <div className="leaderboard-chip__foot">
+              <span className={`status-pill ${isDnf ? 'dnf' : 'in-race'}`}>
                 {describeStatus(entry)}
               </span>
+              <span className="leaderboard-chip__time mono">{formatLastEventTime(entry)}</span>
             </div>
-          );
-        })
-      )}
+          </div>
+        );
+      })}
     </div>
   );
 }

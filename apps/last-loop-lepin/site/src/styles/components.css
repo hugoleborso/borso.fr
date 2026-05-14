@@ -174,19 +174,6 @@
   font-weight: 500;
 }
 
-.leaderboard {
-  /*
-   * Multi-column grid: each row is ~280 px minimum; on a wide spectator
-   * monitor the leaderboard tiles into 2-3 columns so 20-30 runners fit
-   * without scrolling. On narrow viewports it falls back to a single
-   * column (the `minmax(0, 1fr)` carve-out lets long names ellipsise
-   * instead of pushing the column wider than its share).
-   */
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  align-content: start;
-}
-
 .leaderboard-row {
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr) auto auto;

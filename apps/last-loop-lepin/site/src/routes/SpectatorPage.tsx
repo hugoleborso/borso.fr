@@ -150,16 +150,16 @@ export function SpectatorPage() {
         </div>
       ) : null}
       <CorrectionBanner correctedAt={mostRecentCorrection} />
-      <div className="spectator-grid">
-        <div className="card">
-          <div className="card-head">
-            <h2 className="card-title">Classement</h2>
-            {isLive ? <span className="live-pill">Live</span> : null}
-          </div>
-          <div className="card-body flush">
-            <Leaderboard ranked={standings?.ranked ?? []} />
-          </div>
+      <div className="card classement-card">
+        <div className="card-head">
+          <h2 className="card-title">Classement</h2>
+          {isLive ? <span className="live-pill">Live</span> : null}
         </div>
+        <div className="card-body flush">
+          <Leaderboard ranked={standings?.ranked ?? []} />
+        </div>
+      </div>
+      <div className="spectator-grid">
         <div className="card">
           <div className="card-head">
             <h2 className="card-title">Prochain top horaire</h2>
