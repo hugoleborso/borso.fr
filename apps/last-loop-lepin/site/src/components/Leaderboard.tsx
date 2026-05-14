@@ -5,13 +5,20 @@ interface LeaderboardProps {
   readonly ranked: readonly RankedRunnerDto[];
 }
 
-function formatLoopDuration(ms: number | null): string {
-  if (ms === null) return '—';
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  const pad = (value: number): string => `${value}`.padStart(2, '0');
-  return `${pad(minutes)}:${pad(seconds)}`;
+/**
+ * Wall-clock time of the latest event for a runner: their last validated
+ * loop punch (in-race) or the moment they fell out (DNF). Read off the
+ * server-supplied `lastFinishedAt` ISO so timezones don't drift between
+ * client and server — `toLocaleTimeString` formats in the browser locale.
+ * Returns "—" for runners who never crossed the line (e.g. dnf:late at
+ * loop 0).
+ */
+function formatLastEventTime(entry: RankedRunnerDto): string {
+  if (entry.lastFinishedAt === null) return '—';
+  return new Date(entry.lastFinishedAt).toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 function describeStatus(entry: RankedRunnerDto): string {
@@ -36,7 +43,7 @@ export function Leaderboard({ ranked }: LeaderboardProps) {
                 </span>
                 <span className="runner-name">{entry.runner.displayName}</span>
               </div>
-              <span className="loop-info">{formatLoopDuration(entry.lastLoopDurationMs)}</span>
+              <span className="loop-info">{formatLastEventTime(entry)}</span>
               <span className={`status-pill ${entry.status.kind === 'in-race' ? 'in-race' : 'dnf'}`}>
                 {describeStatus(entry)}
               </span>

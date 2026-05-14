@@ -27,9 +27,19 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
   const [busySlug, setBusySlug] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const candidates = ranked.filter(
+  // Two views of the same DNF set:
+  //   - `lateCandidates` are runners the system *projected* as out (they
+  //     missed the top horaire). They aren't manually validated yet, so
+  //     the projection can flip back on a late punch — that's why we
+  //     show the explicit "Valider DNF" button to lock it in.
+  //   - `allDnfs` is the union of late + manual DNFs. Both need the
+  //     "Le faire passer (1 h)" escape hatch (system pre-DNFed too
+  //     eagerly OR the orga regrets a manual call) so the operator can
+  //     bring a runner back into the race retroactively.
+  const lateCandidates = ranked.filter(
     (entry) => entry.status.kind === 'dnf' && entry.status.reason === 'late',
   );
+  const allDnfs = ranked.filter((entry) => entry.status.kind === 'dnf');
   const inRace = ranked.filter((entry) => entry.status.kind === 'in-race');
 
   async function confirmDnf(entry: RankedRunnerDto): Promise<void> {
@@ -104,14 +114,14 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
       <div className="card">
         <div className="card-head">
           <h2 className="card-title">DNF à valider</h2>
-          <span className="muted mono">{candidates.length} en attente</span>
+          <span className="muted mono">{lateCandidates.length} en attente</span>
         </div>
         <div className="card-body col">
           {error !== null ? <div className="error-text">{error}</div> : null}
-          {candidates.length === 0 ? (
+          {lateCandidates.length === 0 ? (
             <div className="muted">Aucun coureur en attente de validation DNF.</div>
           ) : (
-            candidates.map((entry) => {
+            lateCandidates.map((entry) => {
               const avatar = initialsAvatar(entry.runner.displayName);
               const outAtLoop = entry.status.kind === 'dnf' ? entry.status.outAtLoop : 0;
               return (
@@ -143,6 +153,51 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
                       {busySlug === entry.runner.slug ? 'Validation…' : 'Valider DNF'}
                     </button>
                   </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <h2 className="card-title">Réintégrer un DNF</h2>
+          <span className="muted mono">{allDnfs.length} DNF</span>
+        </div>
+        <div className="card-body col">
+          <div className="muted" style={{ fontSize: 12 }}>
+            Si on a pré-DNFé un coureur qui était en fait à temps, ou qu'on s'est trompé
+            sur un abandon volontaire — un clic suffit pour le faire repasser. Lui crédite
+            la boucle manquée avec un temps d'1 h (plafond) et retire le DNF.
+          </div>
+          {allDnfs.length === 0 ? (
+            <div className="muted">Aucun DNF pour l'instant.</div>
+          ) : (
+            allDnfs.map((entry) => {
+              const avatar = initialsAvatar(entry.runner.displayName);
+              const outAtLoop = entry.status.kind === 'dnf' ? entry.status.outAtLoop : 0;
+              const reason = entry.status.kind === 'dnf' ? entry.status.reason : 'late';
+              return (
+                <div className="leaderboard-row" key={`reinstate-${entry.runner.slug}`}>
+                  <span className="rank mono">B{outAtLoop}</span>
+                  <div className="row">
+                    <span className="avatar" style={{ background: avatar.backgroundColor }}>
+                      {avatar.initials}
+                    </span>
+                    <span className="runner-name">{entry.runner.displayName}</span>
+                  </div>
+                  <span className="loop-info">
+                    {reason === 'manual' ? 'abandon manuel' : 'auto-DNF système'} · B{outAtLoop}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    onClick={() => void catchupRunner(entry)}
+                    disabled={busySlug !== null}
+                  >
+                    {busySlug === entry.runner.slug ? '…' : 'Le faire passer (1 h)'}
+                  </button>
                 </div>
               );
             })

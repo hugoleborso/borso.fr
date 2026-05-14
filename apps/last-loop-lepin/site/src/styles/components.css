@@ -243,16 +243,11 @@
   color: var(--danger);
 }
 
+/* `flex-shrink: 0` + `aspect-ratio` keep the avatar a perfect circle
+ * inside narrow flex parents (multi-col leaderboard grid). Without
+ * them, flexbox compresses width to fit, height stays at 32 px, and
+ * the circle squishes into an ellipsis. */
 .avatar {
-  /*
-   * `flex-shrink: 0` is the whole point — without it, when an avatar
-   * sits inside a flex row whose content overflows (long runner name +
-   * loop info + status pill in a narrow column of the multi-col
-   * leaderboard grid), flexbox compresses the avatar's width but leaves
-   * its height alone, so the 32×32 circle squishes into an ellipsis.
-   * `aspect-ratio` belt-and-suspenders the square shape even if a
-   * future container clamps height instead.
-   */
   flex-shrink: 0;
   width: 32px;
   height: 32px;
@@ -266,67 +261,3 @@
   color: #0a0b0d;
 }
 
-.wall {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--d-3);
-}
-
-.wall-card {
-  background: var(--bg-elev-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-2);
-  padding: var(--d-3);
-}
-
-.timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.timeline-tick {
-  display: grid;
-  grid-template-columns: 64px 1fr;
-  align-items: center;
-  gap: var(--d-3);
-  padding: 6px var(--d-3);
-  border-bottom: 1px solid var(--line-soft);
-}
-
-.timeline-tick.sunrise {
-  background: color-mix(in oklch, var(--warn) 8%, transparent);
-}
-
-.timeline-tick.sunset {
-  background: color-mix(in oklch, var(--danger) 6%, transparent);
-}
-
-.timeline-tick .hour {
-  font-family: var(--font-mono);
-  font-size: 13px;
-}
-
-.banner {
-  background: color-mix(in oklch, var(--warn) 20%, transparent);
-  color: var(--warn);
-  padding: var(--d-3) var(--d-5);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  text-align: center;
-  border-bottom: 1px solid color-mix(in oklch, var(--warn) 40%, transparent);
-}
-
-.pin-form {
-  max-width: 360px;
-  margin: 10vh auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--d-3);
-}
-
-.error-text {
-  color: var(--danger);
-  font-size: 12px;
-  font-family: var(--font-mono);
-}
