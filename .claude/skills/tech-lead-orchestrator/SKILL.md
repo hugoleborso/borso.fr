@@ -6,7 +6,7 @@ description: |
   — without continuous human supervision. Use when the user says
   "/tech-lead-orchestrator <feature>", "be my tech lead for X", "drive
   this feature", "ship X end-to-end". Pipelines `/specification`,
-  `/technical-conception`, `/adr-writer`, `/implementation`,
+  `/technical-conception`, `/adr`, `/implementation`,
   `/technical-validation`, `/visual-validation` in sequence; arbitrates
   retries (fix → replan → escalate) with a hard cap of 3; emits ADRs
   when a decision matches one of 4 triggers; never mutates `spec.md`
@@ -89,7 +89,7 @@ are computed post-hoc.
    *Changes / Types* section as the inventory the orchestrator mines next.
    If the spec is thin on tech surface (no Q.O.D., no Types), the
    orchestrator escalates back to `/specification` with a request for
-   detail — `/adr-writer` cannot conjure architectural choices that
+   detail — `/adr` cannot conjure architectural choices that
    weren't surfaced.
 
 2. **adrs.** Read the spec's Q.O.D. + Changes / Types sections. For each
@@ -98,7 +98,7 @@ are computed post-hoc.
    `candidates = [{ slug, decision-summary, triggers }, …]`.
 
    **Tech-lead validation (human in the loop).** Before invoking
-   `/adr-writer`, surface the candidate list to the human via
+   `/adr`, surface the candidate list to the human via
    `AskUserQuestion`: one question per candidate, options
    `[ "Write ADR (Recommended)", "Skip — not really architectural",
    "Merge with ADR <NNNN>" ]`. The human acts as tech-lead and either
@@ -108,7 +108,7 @@ are computed post-hoc.
    `human_message_received` event for each answer with the appropriate
    category.
 
-   For every confirmed candidate, invoke `/adr-writer` with the slug
+   For every confirmed candidate, invoke `/adr` (piloted mode — see [`adr/SKILL.md`](../adr/SKILL.md#mode-b--piloted-by-tech-lead-orchestrator)) with the slug
    and trigger list. Append each new ADR number to `state.adrIndex`. ADRs
    land before the plan because they **constrain** it: the plan must
    honour every accepted ADR.
@@ -151,7 +151,7 @@ are computed post-hoc.
 
 Every sub-skill (`/specification`, `/technical-conception`,
 `/implementation`, `/technical-validation`, `/visual-validation`,
-`/adr-writer`) emits a verdict at end-of-run when piloted by the
+`/adr`) emits a verdict at end-of-run when piloted by the
 tech-lead-orchestrator. The contract is documented in
 [`sub-agent-contract.md`](./sub-agent-contract.md). The orchestrator
 reads **only** the YAML front-matter (the block between the leading

@@ -36,7 +36,7 @@ for the full list. The dominant events:
 |---|---|---|
 | `run_started` | A run began. | `state.json` for the feature slug + run-id. |
 | `stage_changed` | Transition between stages. | The verdict in `agents/<previous-stage-agent>-*.md`. |
-| `adr_written` | `/adr-writer` shipped an ADR. | `docs/adr/NNNN-<slug>.md`. |
+| `adr_written` | `/adr` (piloted mode) shipped an ADR. | `docs/adr/NNNN-<slug>.md`. |
 | `escalation` | Run handed back to the human. The `reason` field tells you why. | `errors.log`, the offending verdict body. |
 | `human_message_received` (`category: correction`) | The human had to correct the AI. **Dantotsu candidate.** | The diff right before the message; the agent that needed correcting. |
 | `human_message_received` (`category: guidance` / `answer`) | Interesting conversation. Not a defect signal. | Nothing — productive engagement. |
