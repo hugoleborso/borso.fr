@@ -182,15 +182,20 @@ export class DsqlSchema extends Construct {
   }
 
   /**
-   * Grant `dsql:DbConnect` on the cluster to a Lambda. The grantee must
-   * connect with the schema as its `search_path`; the construct does not
-   * narrow IAM to a specific schema (DSQL doesn't support that today).
+   * Grant `dsql:DbConnectAdmin` on the cluster to a Lambda. The grantee
+   * MUST authenticate via `DsqlSigner.getDbConnectAdminAuthToken()` and
+   * set its connection `search_path` to {@link schemaName} — the
+   * schema-per-stage layout is what gives us isolation, because DSQL
+   * doesn't (yet) narrow IAM to a specific schema OR support non-admin
+   * application users we could provision from the migration runner.
+   * That's the tradeoff we accept until DSQL ships a finer-grained
+   * authn model.
    */
   public grantConnect(grantable: IGrantable): void {
     grantable.grantPrincipal.addToPrincipalPolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        actions: ['dsql:DbConnect'],
+        actions: ['dsql:DbConnectAdmin'],
         resources: [this.clusterArn],
       }),
     );

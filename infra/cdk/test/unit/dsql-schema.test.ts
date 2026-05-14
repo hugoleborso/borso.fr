@@ -79,7 +79,7 @@ describe('DsqlSchema', () => {
     ).toThrow(/migrationsPath does not exist/);
   });
 
-  it('grantConnect adds dsql:DbConnect to the principal policy', () => {
+  it('grantConnect adds dsql:DbConnectAdmin to the principal policy', () => {
     const app = new App();
     const stack = new Stack(app, 'S', {
       env: { account: '123456789012', region: 'eu-west-3' },
