@@ -35,3 +35,12 @@ fi
 # docs/dantotsus/vite-non-module-script-tags-arent-bundled.md.
 echo "[pre-push] checking app HTML for non-module <script src> tags"
 scripts/check-non-module-scripts.sh
+
+# Repo-wide Biome lint. CI doesn't run Biome and the pre-commit hook only
+# tests infra workspaces, so without this gate biome errors slip onto
+# main silently (PR #14 inherited 47 of them from earlier merges). Push
+# is the right place — biome takes ~1 s and catches real defects (banned
+# type assertions, useEffect smell, useHookAtTopLevel, etc.). Rung-2
+# eradication of docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
+echo "[pre-push] running biome lint"
+pnpm exec biome lint

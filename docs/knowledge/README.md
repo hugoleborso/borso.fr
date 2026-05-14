@@ -65,6 +65,7 @@ Two failure modes to watch for:
 
 - [`biome-stack-overflow-on-dist-binaries.md`](./biome-stack-overflow-on-dist-binaries.md) — Biome 2.x stack-overflows on woff/png binaries in `dist/`; turn on `vcs.useIgnoreFile`.
 - [`biome-ignore-must-be-single-line.md`](./biome-ignore-must-be-single-line.md) — Biome `lint:` suppression comments must be a single line directly above the diagnostic; multi-line forms silently no-op.
+- [`ts-narrowing-lost-in-function-declarations.md`](./ts-narrowing-lost-in-function-declarations.md) — TS preserves narrowing in arrow expressions but not in `function` declarations inside the same scope; convert helpers in `useEffect` to arrow form.
 
 ### Validation tooling
 
@@ -80,6 +81,14 @@ Two failure modes to watch for:
 ### Skills & orchestration
 
 - [`tech-lead-orchestrator.md`](./tech-lead-orchestrator.md) — operator notes for `/tech-lead-orchestrator`: artefact layout under `runs/<run-id>/`, how to read `journal.md.jsonl`, common debugging recipes (double auto-chain, unparseable verdict, spec mutation, hook failure), dogfooding expectations.
+
+### Fonts / typography
+
+- [`major-mono-display-monocase-vs-uppercase.md`](./major-mono-display-monocase-vs-uppercase.md) — Major Mono Display ships two glyph families; `text-transform: uppercase` is mandatory for the decorative caps-geo variant the design preset usually wants.
+
+### Vendored React components
+
+- [`react-bits-galaxy-mouse-events-vs-touch.md`](./react-bits-galaxy-mouse-events-vs-touch.md) — react-bits Galaxy listens on `mousemove` only; touch is silently broken on mobile. Swap to `pointermove`/`pointerleave` + `touch-action: none` on the container; also set `pointer-events: auto` if a parent has `none`.
 
 ### borsouvertures / chess libraries
 
