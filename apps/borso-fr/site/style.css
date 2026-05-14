@@ -172,6 +172,7 @@ body.menu-open .stage {
 
 @media (max-width: 640px) {
   .menu {
+    left: 0;
     padding: 0 24px;
     align-items: center;
     justify-content: center;

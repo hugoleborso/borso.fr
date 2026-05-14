@@ -8,7 +8,7 @@
   "stage": "validate",
   "retries": {
     "implement": 0,
-    "validate": 0
+    "validate": 1
   },
   "adrIndex": [
     "docs/adr/0002-vendor-react-bits-galaxy-shader.md"
@@ -17,5 +17,5 @@
   "specChecksum": "92c44bc4da58b6dd5638129c59699e9209de81c27c136d5d33fe18c13338486e",
   "planChecksum": "3a9f9606af30c3b64ead45b3fc5b43ad3d38e701f285e2367fceb80272844808",
   "startedAt": "2026-05-14T11:59:42.000Z",
-  "updatedAt": "2026-05-14T12:56:35.000Z"
+  "updatedAt": "2026-05-14T13:04:32.000Z"
 }
