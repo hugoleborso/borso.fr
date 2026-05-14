@@ -81,20 +81,29 @@ describe('last-loop-lepin app stack', () => {
   });
 
   it('injects PIN_HASH from the operator-owned Secrets Manager value on every stage', () => {
+    const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
+      const properties = resource.Properties;
+      if (typeof properties !== 'object' || properties === null) return {};
+      if (!('Environment' in properties)) return {};
+      const environment = properties.Environment;
+      if (typeof environment !== 'object' || environment === null) return {};
+      if (!('Variables' in environment)) return {};
+      const variables = environment.Variables;
+      return typeof variables === 'object' && variables !== null ? { ...variables } : {};
+    };
+
     for (const stage of ['prod', 'preview'] as const) {
       const template = synthAppStack(stage);
       const functions = template.findResources('AWS::Lambda::Function');
       const apiFn = Object.entries(functions).find(([logicalId]) =>
         /AppApiFn/.test(logicalId),
-      );
+      )?.[1];
       expect(apiFn, `api function not found in ${stage} template`).toBeDefined();
-      const envBlock = apiFn?.[1] as { readonly Properties?: { readonly Environment?: { readonly Variables?: Record<string, unknown> } } };
-      const variables = envBlock?.Properties?.Environment?.Variables ?? {};
+      const variables = apiFn === undefined ? {} : readEnvVars(apiFn);
       expect(variables).toHaveProperty('PIN_HASH');
-      const pinValue = variables.PIN_HASH;
       // Resolved at deploy time via `{{resolve:secretsmanager:...}}`; the
       // synthesised value is a Fn::Join intrinsic, not a literal scrypt hash.
-      expect(JSON.stringify(pinValue)).toContain('last-loop-lepin/admin-pin-hash');
+      expect(JSON.stringify(variables.PIN_HASH)).toContain('last-loop-lepin/admin-pin-hash');
     }
   });
 
