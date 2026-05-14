@@ -190,16 +190,17 @@ export class LambdaApi extends Construct {
           apiDomainName.regionalHostedZoneId,
         ),
       );
-      new ARecord(this, 'DomainAliasA', {
-        zone,
-        recordName: props.customDomain.hostname,
-        target: aliasTarget,
-      });
-      new AaaaRecord(this, 'DomainAliasAAAA', {
-        zone,
-        recordName: props.customDomain.hostname,
-        target: aliasTarget,
-      });
+      // Trailing dot tags the recordName as an FQDN so CDK's
+      // `determineFullyQualifiedDomainName` short-circuits and does NOT
+      // append the zone name. Without it, when `zoneName` is a CFN token
+      // (from SSM, as it is here), CDK's suffix check fails and the
+      // record ends up as `<hostname>.${zoneName}` → `last-loop-lepin-
+      // pr-12-api.preview.borso.fr.borso.fr` in Route 53, which loses the
+      // ALIAS race against the wildcard `*.preview.borso.fr` record on
+      // the shared previews distribution.
+      const fqdn = `${props.customDomain.hostname}.`;
+      new ARecord(this, 'DomainAliasA', { zone, recordName: fqdn, target: aliasTarget });
+      new AaaaRecord(this, 'DomainAliasAAAA', { zone, recordName: fqdn, target: aliasTarget });
     }
 
     const integration = new HttpLambdaIntegration('Int', this.handler);
