@@ -20,7 +20,7 @@ constrain it. Transitions:
 | arbitrate | plan | `verdictKind` maps to action `replan`. Scope flagged in the replan verdict. |
 | arbitrate | escalated | `verdictKind` maps to action `escalate`. Terminal. |
 | arbitrate | ship | All verdicts PASS. |
-| ship | (end) | Push successful, deploy reminder issued. |
+| ship | (end) | Push successful, deploy reminder issued, **PR description updated to reflect what the run actually shipped** (see *PR description maintenance* below). |
 
 The spec is the source of truth for ADR-qualifying choices. If the
 spec is thin on tech surface — no Q.O.D., no Types section, no
@@ -213,3 +213,39 @@ runs/<run-id>/errors.log                  (only when something throws)
 
 Aborted runs stay in the tree (decision Q-RUN-COMMIT). `git add -A`
 on the `runs/` folder at `ship` is part of the commit, not a follow-up.
+
+## PR description maintenance (stage `ship`)
+
+If the run is happening on a branch with an **open PR**, the orchestrator
+updates the PR title + body as part of the `ship` stage — before issuing
+the deploy reminder. PR descriptions are the reader's window into a
+merged PR; they go stale instantly when the work scope evolves
+mid-branch (a `feat(meta): seed X` PR that quietly grew a full feature
+redesign + two ADRs + a dantotsu reads like the wrong PR if its body
+still says "seed X").
+
+Check `mcp__github__list_pull_requests state=open` for a PR whose
+`head.ref` matches the current branch. If one exists:
+
+1. **Title** — rewrite to reflect what now lands. Conventional-commit
+   format with the dominant scope (`feat(borso-fr): galaxy WebGL apex
+   landing + dantotsu sweep`, not the original scope-of-day).
+2. **Body** — at minimum these sections, in order:
+   - `## Summary` — one paragraph + 3–5 bullets naming what the PR ships
+     vs. what it was originally intended to ship. Reference ADRs by
+     number.
+   - `## Validation gaps` — every `PASS_EXCEPT_UNVERIFIABLE` row from
+     the validators, named verbatim. Missing = the reader can't tell
+     whether the gate passed cleanly or with caveats.
+   - `## Visual evidence` — for UI work, SHA-pinned raw URLs to the
+     screenshots committed under
+     `docs/features/<app>/<slug>/validation/visual-validation-<ts>/`.
+     Pin to `head.sha` of the PR, not `main` (the latter changes when
+     the PR merges).
+   - `## Test plan` — checklist of manual checks the user runs on the
+     preview before merging.
+
+If no PR is open, skip — the orchestrator never opens PRs on its own
+unless the user explicitly asks. The deploy reminder still fires.
+
+Rung-2 eradication of `docs/dantotsus/orchestrator-shipped-with-stale-pr-description.md`.

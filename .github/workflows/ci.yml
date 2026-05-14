@@ -39,7 +39,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @borso/infra build
       - run: pnpm -r typecheck
+      # Per-workspace biome lint (each app's biome.jsonc has its own
+      # `includes` glob — e.g. apps/borso-fr restricts to bin/ + site/).
       - run: pnpm -r lint
+      # Repo-wide biome lint at root scope — covers files outside any
+      # workspace (scripts/, docs-adjacent code, biome-plugins/, etc.).
+      # Defense in depth on top of the .husky/pre-commit gate: catches
+      # commits that bypassed the local hook. Rung-1 eradication (paired
+      # with the pre-commit hook) of
+      # docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
+      - run: pnpm exec biome lint
       - run: pnpm --filter @borso/infra test:coverage
       - run: pnpm --filter @borso/shared-infra test:coverage
       - run: pnpm -r build
