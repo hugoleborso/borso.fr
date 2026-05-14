@@ -1,0 +1,6 @@
+{"kind":"run_started","runId":"2026-05-14-1140-fpr","app":"borso-fr","slug":"front-page-redesign","at":"2026-05-14T11:59:42.000Z"}
+{"kind":"stage_changed","runId":"2026-05-14-1140-fpr","from":"spec","to":"adrs","at":"2026-05-14T12:04:36.000Z"}
+{"kind":"adr_emitted","runId":"2026-05-14-1140-fpr","adr":"docs/adr/0002-vendor-react-bits-galaxy-shader.md","at":"2026-05-14T12:47:29.000Z"}
+{"kind":"stage_changed","runId":"2026-05-14-1140-fpr","from":"adrs","to":"plan","at":"2026-05-14T12:47:29.000Z"}
+{"kind":"stage_changed","runId":"2026-05-14-1140-fpr","from":"plan","to":"implement","at":"2026-05-14T12:49:54.000Z"}
+{"kind":"stage_changed","runId":"2026-05-14-1140-fpr","from":"implement","to":"validate","at":"2026-05-14T12:56:35.000Z"}
