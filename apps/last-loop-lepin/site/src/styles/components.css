@@ -202,8 +202,12 @@
 }
 
 .leaderboard-row .runner-name {
+  /* `text-overflow: clip` (not `ellipsis`) — in the multi-col grid a
+   * narrow column collapses the name to 0 width, and the … glyph alone
+   * shows up as a stray vertical stroke between the avatar and the
+   * time. Clip = silent overflow, no glyph artefact. */
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
   white-space: nowrap;
 }
 
