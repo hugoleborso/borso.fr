@@ -2,7 +2,27 @@
 
 > Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md). When a defect lands and a Dantotsu traces back here, the chain is visible: the plan either named the risk and we missed mitigating it, didn't name the risk at all (planning gap), or named it correctly and the defect comes from elsewhere.
 
-ADR ratifié associé : [`docs/adr/0002-vendor-react-bits-galaxy-shader.md`](../../../../adr/0002-vendor-react-bits-galaxy-shader.md).
+ADR ratifié associé : [`docs/adr/0003-react-bits-galaxy-as-react-component.md`](../../../../adr/0003-react-bits-galaxy-as-react-component.md) (supersedes [0002](../../../../adr/0002-vendor-react-bits-galaxy-shader.md)).
+
+## Revision 2 — 2026-05-14 (post-shipping)
+
+The first revision of this plan shipped against ADR 0002 (vendor vanilla WebGL). Hugo's review surfaced that the ADR's premise ("avoid forcing Vite + React into apps/borso-fr") was invalidated by the live workspace — Vite + React were already in place. The defect is captured in [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](../../../../dantotsus/believed-the-bundle-readme-not-the-live-package-json.md). The structural eradication lands in the same kaizen PR (`.claude/skills/specification/standard.md` and `.claude/skills/technical-conception/standard.md` now mandate a live-workspace cross-check before locking toolchain-shaped Q.O.D. rows).
+
+The code-level correction is this revision:
+
+| Spec ref (revised) | Decision | Where it lands | Self-check |
+|---|---|---|---|
+| Q.O.D. "Source du shader" (corrigé) | Install `ogl` + use react-bits Galaxy as a React component | `apps/borso-fr/package.json` gains `ogl` in dependencies. `apps/borso-fr/site/components/Galaxy.tsx` is the typed port (MIT attribution preserved). `apps/borso-fr/site/galaxy.tsx` is the entry: `createRoot(document.getElementById('bg-canvas-wrap')).render(<Galaxy {...PARAMS} disableAnimation={prefersReducedMotion} />)`. | `grep -c "from 'ogl'" apps/borso-fr/site/components/Galaxy.tsx` ≥ 1 ; `ls apps/borso-fr/site/shader-bg.js` returns "No such file or directory". |
+| Q.O.D. "Build pipeline" (corrigé) | Use the existing Vite (already in `apps/borso-fr/package.json`) | `vite.config.ts` unchanged — multi-entry already includes `site/index.html`. The new `galaxy.tsx` is loaded as `<script type="module" src="./galaxy.tsx">` from `index.html`; Vite picks it up via its HTML-entry scanner. | `pnpm --filter @borso-app/borso-fr build` produces `dist/index.html` + bundled `galaxy.*.js` containing the Galaxy component. |
+| Q.O.D. "Test runner" (corrigé) | Use the existing Vitest (already in `apps/borso-fr/package.json`) | No new `*.utils.ts` introduced by this feature — the DOM glue + React mount are side-effect, the Galaxy component is third-party. If a pure helper emerges later, it ships with its sibling `*.utils.test.ts` against the existing runner. | `find apps/borso-fr/site -name '*.utils.ts'` returns only the pre-existing mondrian utils. |
+| Q.O.D. "prefers-reduced-motion" (corrigé impl) | `<Galaxy disableAnimation={prefersReducedMotion}>` plus the CSS `@media (prefers-reduced-motion: reduce)` rule (unchanged). | `apps/borso-fr/site/galaxy.tsx` computes `prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches` once at mount and passes it as a prop. | Émuler reduced-motion → la galaxie reste figée (le composant n'appelle plus `requestAnimationFrame` quand `disableAnimation` est vrai). |
+| Risk register addendum | The Galaxy component uses `useEffect` for the WebGL lifecycle (mount canvas → rAF → cleanup on unmount). | CLAUDE.md "useEffect is a smell" — justification : c'est exactement le cas "synchronise React state with an external system" (WebGL renderer + listeners + animation frame ownership). Le `/technical-validation` lira ce row pour ne pas le flagger. | `grep -c useEffect apps/borso-fr/site/components/Galaxy.tsx` = 1 (le seul cas légitime). |
+
+Tout le reste du plan (table d'origine ci-dessous, risk register, code-quality self-check, pre-flight gates) reste applicable tel quel. Les rows obsoletes (`shader-bg.js`, "Source du shader → vendor", etc.) sont **remplacées** par celles de cette section ; pour la traçabilité historique, je les laisse en place ci-dessous avec leur cachet d'origine.
+
+---
+
+## (Original revision — superseded above for the rows marked obsolete)
 
 ## Technical surface inventory
 

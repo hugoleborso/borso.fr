@@ -72,15 +72,15 @@ flowchart TD
 | Question | Options | Decision (2026-05-14) |
 | --- | --- | --- |
 | État par défaut du burger menu ? | (a) ouvert (design React, useState(true)) (b) fermé (site actuel) (c) conditionnel viewport | **(b) Fermé par défaut.** Continuité avec `borso.fr` actuel ; le titre est plein à l'arrivée, le menu se découvre. Le `useState(true)` du prototype était une commodité du design tool. |
-| `prefers-reduced-motion` ? | (a) respecter (galaxie figée, pas de fade-up) (b) ignorer (c) fallback gradient | **(a) Respecter.** Accessibilité + perf appareils faibles. Implémentation : `matchMedia('(prefers-reduced-motion: reduce)')` → ne pas démarrer `requestAnimationFrame`, le premier `drawArrays` synchrone suffit ; ajouter `body.no-animation` qui désactive les keyframes CSS. |
-| Stratégie perf mobile ? | (a) identique (b) DPR/density réduits (c) pas de shader | **(a) Identique au desktop.** Le shader cap déjà DPR à 2. Si les retours utilisateurs montrent un problème, raffiner via une PR `kaizen`. |
+| `prefers-reduced-motion` ? | (a) respecter (galaxie figée, pas de fade-up) (b) ignorer (c) fallback gradient | **(a) Respecter.** Accessibilité + perf appareils faibles. Implémentation (corrigée 2026-05-14T13h+ par ADR 0003) : passer `disableAnimation={matchMedia('(prefers-reduced-motion: reduce)').matches}` au composant `<Galaxy />`, qui freeze son rAF interne ; côté CSS, désactiver les keyframes via media query. |
+| Stratégie perf mobile ? | (a) identique (b) DPR/density réduits (c) pas de shader | **(a) Identique au desktop.** Le composant Galaxy gère son sizing via `Renderer.setSize`. Si les retours utilisateurs montrent un problème, raffiner via une PR `kaizen`. |
 | Police du titre ? | Itération longue dans le chat (11 → 15 propositions) | **Major Mono Display (caps geo)** — choix de Hugo dans le chat. Importé via Google Fonts `family=Major+Mono+Display`. |
-| Fallback WebGL ? | (a) gradient CSS (b) image PNG (c) rien (body bg) | **(c) Rien.** `init()` early-return ; le `body { background: #05070d }` + grain suffit visuellement. Minimaliste, zéro asset à maintenir. |
-| Source du shader ? | (a) react-bits OGL (npm) (b) vanilla WebGL forké du design (c) écrire à partir de zéro | **(b) Vanilla WebGL forké.** Le fichier `design-shader-bg.js` est porté tel quel sous `apps/borso-fr/site/shader-bg.js`. License MIT (David Haz / react-bits) — attribution dans le commentaire en tête. Pas de dépendance npm ajoutée, cohérent avec l'app plain-HTML actuelle. |
-| Tweaks panel ? | (a) garder (b) supprimer | **(b) Supprimé.** Hugo confirmé dans le chat : "pas besoin de mettre les settings de galaxy dans les tweaks, ils sont bien comme ça". Les paramètres sont gelés en haut de `shader-bg.js`. |
+| Fallback WebGL ? | (a) gradient CSS (b) image PNG (c) rien (body bg) | **(c) Rien.** Si `ogl` ne peut pas obtenir un contexte WebGL, le composant Galaxy ne monte rien ; le `body { background: #05070d }` + grain suffit visuellement. Minimaliste, zéro asset à maintenir. |
+| Source du shader ? | (a) react-bits installé via `pnpm add ogl` + composant React copié (b) vanilla WebGL forké du design (c) écrire à partir de zéro | **(a) react-bits comme composant React + ogl npm.** Décision **corrigée** le 2026-05-14 — ADR 0003 supersedes ADR 0002. La décision initiale (vendoring vanilla) était motivée par "éviter de forcer Vite + React" — prémisse invalidée par cat'ing `apps/borso-fr/package.json` (Vite + React 19 déjà en place pour `art/mondrian`). Le composant est copié dans `apps/borso-fr/site/components/Galaxy.tsx`, monté par `apps/borso-fr/site/galaxy.tsx` sur `#bg-canvas-wrap`. Attribution MIT (David Haz) en tête du fichier. Dantotsu pour le défaut de cross-check : [`believed-the-bundle-readme-not-the-live-package-json.md`](../../../../dantotsus/believed-the-bundle-readme-not-the-live-package-json.md). |
+| Tweaks panel ? | (a) garder (b) supprimer | **(b) Supprimé.** Hugo confirmé dans le chat : "pas besoin de mettre les settings de galaxy dans les tweaks, ils sont bien comme ça". Les paramètres sont gelés en haut de `galaxy.tsx` (le mount entry). |
 | Tracking analytics ? | (a) Plausible / GA (b) rien | **(b) Rien.** Site perso, pas de RGPD-consent flow. Métriques Web Vitals via `web-vitals` non-instrumentées (on les regarde via Lighthouse manuellement si besoin). |
-| Build pipeline ? | (a) introduire Vite (b) garder `cp -R site dist` | **(b) Garder.** `apps/borso-fr` reste plain HTML/CSS/JS. Switch à Vite quand le contenu le justifie (cf. `apps/borso-fr/README.md` "switches to a build tool when content needs it"). |
-| Test runner pour borso-fr ? | (a) ajouter Vitest pour les utils (b) skipper | **(b) Skipper.** Aucune logique pure de qualité "*.utils.ts" n'émerge dans cette PR (le seul JS est du DOM glue + WebGL setup, donc side-effect). Si une util pure apparaît plus tard, on ajoutera Vitest à ce moment-là, pas avant. |
+| Build pipeline ? | (a) introduire Vite (b) garder `cp -R site dist` | **Déjà sur Vite.** Décision **corrigée** le 2026-05-14 — le brief Claude Design parlait de `cp -R site dist` mais `apps/borso-fr/package.json` a `"build": "vite build"` depuis deux PRs (consommé par `art/mondrian`). Pas de toolchain à introduire ; on consomme l'existant. Voir le dantotsu cité ci-dessus pour le cross-check qui aurait dû fire. |
+| Test runner pour borso-fr ? | (a) ajouter Vitest pour les utils (b) skipper | **Déjà sur Vitest.** Décision **corrigée** le 2026-05-14 — `apps/borso-fr/package.json` a Vitest + coverage-v8 (consommé par `art/mondrian/painting.utils.test.ts` et `keyboard.utils.test.ts`). Aucune util pure n'émerge dans cette PR — pas de nouveau `*.utils.ts`. Si une util pure apparaît plus tard, on l'ajoute avec son `*.utils.test.ts` au runner existant. |
 
 **Out of scope :**
 - Mise à jour des sous-pages (`family/mom.html`, `family/les-filles.html`, `art/mondrian/`). Elles continuent d'exister comme aujourd'hui.
@@ -102,13 +102,23 @@ Aucun.
 ### Files to change
 
 ```
-apps/borso-fr/site/index.html         # UPDATE — nouvelle structure (bg-canvas-wrap, grain, app, burger, nav, scripts en ordre).
+apps/borso-fr/package.json            # UPDATE — `pnpm --filter @borso-app/borso-fr add ogl` (ajoute ogl en dependencies)
+apps/borso-fr/site/index.html         # UPDATE — nouvelle structure (bg-canvas-wrap, grain, stage, burger, nav, scripts type=module en ordre).
 apps/borso-fr/site/style.css          # UPDATE — full rewrite. Variables CSS, font Major Mono Display, grid centré, burger + menu, reduced-motion media query, responsive < 640 px.
 apps/borso-fr/site/script.js          # UPDATE — port vanilla de landing.jsx : burger toggle, Escape ferme, body.menu-open, staggered transitionDelay sur les <li>, animate-in sur pageshow visible.
-apps/borso-fr/site/shader-bg.js       # NEW — copie du design-shader-bg.js, attribution MIT en tête, init() respecte prefers-reduced-motion (ne démarre pas rAF si reduce).
+apps/borso-fr/site/galaxy.tsx         # NEW — entry React qui mount <Galaxy {...PARAMS} disableAnimation={prefersReducedMotion} /> sur #bg-canvas-wrap via createRoot.
+apps/borso-fr/site/components/Galaxy.tsx  # NEW — port TSX du composant react-bits Galaxy (MIT, David Haz, attribution préservée).
+apps/borso-fr/site/components/Galaxy.css  # NEW — .galaxy-container { position:absolute; inset:0; width:100%; height:100%; display:block }
 
-docs/features/borso-fr/front-page-redesign/spec/spec.md           # ce fichier
+apps/borso-fr/site/shader-bg.js       # DELETED — ADR 0002 superseded par ADR 0003.
+
+docs/features/borso-fr/front-page-redesign/spec/spec.md           # ce fichier (Q.O.D. corrigés)
 docs/features/borso-fr/front-page-redesign/spec/design-*           # 4 fichiers de référence copiés depuis le bundle Claude Design
+docs/adr/0002-vendor-react-bits-galaxy-shader.md                   # marqué superseded
+docs/adr/0003-react-bits-galaxy-as-react-component.md              # NEW
+docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md  # NEW — racine du défaut détecté
+.claude/skills/specification/standard.md                            # éradication (level 2)
+.claude/skills/technical-conception/standard.md                     # éradication (level 2)
 ```
 
 Pas de changement `apps/borso-fr/package.json` (pas de nouvelle dépendance). Pas de changement `bin/app.ts` ou CDK (le `StaticSite` route le `dist/` qui contient tout le `site/`).

@@ -1,7 +1,10 @@
 # ADR 0002 — Vendor the react-bits Galaxy WebGL shader instead of installing it
 
-**Status:** accepted
+**Status:** superseded
 **Date:** 2026-05-14
+**Superseded by:** [0003](./0003-react-bits-galaxy-as-react-component.md)
+
+> The decision below shipped briefly. It was made on a false premise — `apps/borso-fr` was already on Vite + React, contradicting this ADR's first argument. See [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](../dantotsus/believed-the-bundle-readme-not-the-live-package-json.md). ADR 0003 records the corrected decision.
 
 ## Context
 
