@@ -12,7 +12,7 @@ constrain it. Transitions:
 | From | To | When |
 |---|---|---|
 | spec | adrs | `spec.md` present (or `/specification` returns `done`). Spec checksum recorded. Spec carries enough tech surface (Q.O.D. + Changes / Types) to surface architectural choices. |
-| adrs | plan | Every ADR-qualifying candidate from the spec has been ratified by the human (tech-lead validation via `AskUserQuestion`) and the confirmed ones have been written via `/adr-writer`. ADR numbers are in `state.adrIndex`. If no candidates, transition immediately. |
+| adrs | plan | Every ADR-qualifying candidate from the spec has been ratified by the human (tech-lead validation via `AskUserQuestion`) and the confirmed ones have been written via `/adr` (piloted mode). ADR numbers are in `state.adrIndex`. If no candidates, transition immediately. |
 | plan | implement | `/technical-conception` returns `done` with `plan.md` next to spec. The plan references every ADR in `state.adrIndex`. |
 | implement | validate | `/implementation` returns `done` with a `next: { kind: 'validate' }` hint. |
 | validate | arbitrate | At least one validator returned a verdict. |
@@ -95,10 +95,10 @@ against ADR spam.
 ### Tech-lead validation (human in the loop)
 
 The orchestrator's judgment on which candidates qualify is a **draft**.
-Before invoking `/adr-writer`, surface the candidate list to Hugo via
+Before invoking `/adr` (piloted mode), surface the candidate list to Hugo via
 `AskUserQuestion`, one question per candidate, with options:
 
-- *Write ADR (Recommended)* — confirm, proceed to `/adr-writer`.
+- *Write ADR (Recommended)* — confirm, proceed to `/adr` (piloted mode).
 - *Skip — not really architectural* — drop the candidate, no ADR.
 - *Merge with ADR &lt;NNNN&gt;* — fold into an existing ADR (the
   orchestrator records the link, no new ADR written).

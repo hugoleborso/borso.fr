@@ -10,13 +10,12 @@ decision becomes code` table ("where it lands"). A plan row that says
 + criteria + justification go here, not in a commit message or a code
 comment that rots.
 
-Conventions live in [`.claude/skills/adr/standard.md`](../../.claude/skills/adr/standard.md)
-and the writer rules in
-[`.claude/skills/adr-writer/standard.md`](../../.claude/skills/adr-writer/standard.md).
-Drafting is `/adr` (the decision-support walk — see
-[`.claude/skills/adr/SKILL.md`](../../.claude/skills/adr/SKILL.md)) or
-`/adr-writer` (direct file authoring, typically triggered by
-`/tech-lead-orchestrator`).
+Conventions live in [`.claude/skills/adr/standard.md`](../../.claude/skills/adr/standard.md).
+Drafting is `/adr` — the skill has two entry modes (see
+[`.claude/skills/adr/SKILL.md`](../../.claude/skills/adr/SKILL.md)):
+the interactive decision-support walk when a human invokes it, or a
+piloted mode that takes a pre-built payload when
+`/tech-lead-orchestrator` calls it.
 
 ## Status lifecycle
 
@@ -45,7 +44,7 @@ No:
 ## Index
 
 <!-- New entries go under the right heading. If no heading fits, add
-     one. Manually curated — `/adr` and `/adr-writer` never reorder. -->
+     one. Manually curated — `/adr` never reorders existing entries. -->
 
 | # | Title | Status | Date |
 |---|---|---|---|

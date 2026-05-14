@@ -1,22 +1,30 @@
 ---
 name: adr
-description: Help the operator take a good architectural decision — quickly. The skill walks the trade-off (frame the problem, surface options, define criteria, score, force the choice + its consequences) and produces an Architecture Decision Record at `docs/adr/<NNNN>-<slug>.md` as the byproduct. The walkthrough is the value; the markdown file is the audit trail. Use when the user says "/adr", "I need to decide between X and Y", "help me pick", "draft an ADR", "record this choice", or whenever a `/technical-conception` plan surfaces a row whose decision rationale isn't obvious. Loads its standard and template from `.claude/skills/adr/`.
+description: Write an Architecture Decision Record under `docs/adr/NNNN-<slug>.md`. Two entry modes — (a) interactive: walk the operator through a 5-round decision-support trade-off (frame → criteria → options → score → choice + consequences), where the markdown file is the byproduct; (b) piloted: invoked by `/tech-lead-orchestrator` with the slug, decision summary, alternatives, and triggers already mined from the spec, in which case the walk is skipped and the file is written from the inputs. Use when the user says "/adr", "I need to decide between X and Y", "help me pick", "draft an ADR", "record this choice", "write an ADR for X", or when `/tech-lead-orchestrator` calls it after the human ratifies an ADR candidate. Loads its standard and template from `.claude/skills/adr/`.
 ---
 
 # ADR skill
 
-The skill is a **decision-support walk**. The 30-minute conversation the operator wishes they'd had before silently picking Option A and discovering at PR-time that Option C was strictly better. The markdown file at `docs/adr/<NNNN>-<slug>.md` is just the byproduct — useful, but downstream of the value.
+One skill, two entry modes — both end with `docs/adr/NNNN-<slug>.md` written, the index updated, and (when piloted) a verdict YAML emitted for the orchestrator.
 
-Two failure modes the skill exists to prevent:
+- **Interactive (default).** Human types `/adr` or asks for help on a trade-off. The skill walks the 5 rounds — *frame → criteria → options → score → choose* — and refuses to write the file if any round is shortcut. The 30-minute conversation the operator wishes they'd had before silently picking Option A.
+- **Piloted (called by `/tech-lead-orchestrator`).** The orchestrator has already mined the spec's Q.O.D. + Changes / Types sections, surfaced candidates to Hugo via `AskUserQuestion`, and is invoking `/adr` for each ratified candidate. The walk is **skipped** — the orchestrator hands over `{ slug, decision-summary, triggers, alternatives, supersedes? }` and expects the file written + a verdict YAML emitted per the [sub-agent contract](../tech-lead-orchestrator/sub-agent-contract.md).
 
-1. **Optimistic-default.** "We'll use X — everyone does." The skill forces the operator to name at least one viable alternative and articulate the cost of *not* picking it.
-2. **Retro-justification.** Listing criteria *after* the choice is made is opinion dressed as analysis. The skill builds the rubric first and only then maps options onto it.
+Whichever mode runs, the skill calls the same **mechanical procedure** (numbering, conflict check, write, index update, supersedes handling) — described in *Procedure* below.
 
 The canonical standard lives at [`standard.md`](./standard.md). The markdown template the skill emits is at [`template.md`](./template.md).
 
-## The walkthrough (skill loop)
+## Failure modes the skill exists to prevent
 
-Five short rounds. Each round is one `AskUserQuestion` (or two, when the answer drives the next question). The skill never synthesises rationale on the operator's behalf — that defeats the audit.
+1. **Optimistic-default.** "We'll use X — everyone does." The skill forces the operator to name at least one viable alternative and articulate the cost of *not* picking it. (Interactive mode catches this in Round 3; piloted mode rejects an `alternatives` input of length < 2.)
+2. **Retro-justification.** Listing criteria *after* the choice is made is opinion dressed as analysis. Interactive mode builds the rubric before scoring; piloted mode requires the orchestrator to pass `criteria[]` upfront.
+3. **Decision-without-alternatives.** ≥ 2 viable options is the floor; one is a constraint, not a decision. The skill refuses to write the file.
+4. **Missing consequences.** Two negative consequences are mandatory in *Consequences*. If the operator (or the orchestrator's payload) can't name them, the analysis was lopsided.
+5. **Lopsided rubric.** If every cell of the comparison matrix agrees, the rubric doesn't differentiate. Push back.
+
+## Mode A — Interactive walkthrough (5 rounds)
+
+Each round is one `AskUserQuestion` (or two, when the answer drives the next question). The skill never synthesises rationale on the operator's behalf — that defeats the audit.
 
 ### Round 1 — Frame the problem
 
@@ -74,7 +82,55 @@ Ask the operator to:
 - **List two negative consequences** of the winner. *Closed doors, costs we're now paying.* The skill writes them into *Consequences* under `-`. If the operator can't name a negative, the analysis was lopsided.
 - **State the rejection rationale** for each non-winner: *"loses on criterion X by Y"*. The skill writes those into *Alternatives considered*.
 
-Then write the file via [`template.md`](./template.md), and update `docs/adr/README.md`.
+Then call the *Procedure* below to write the file.
+
+## Mode B — Piloted by `/tech-lead-orchestrator`
+
+The orchestrator invokes this skill via the `Skill` tool with a payload describing one ratified ADR candidate. Expected inputs in the invocation prompt:
+
+- `slug` — kebab-case, ≤ 6 words, describes the **decision**, not the feature.
+- `triggers` — non-empty subset of the 4 ADR triggers (cf. [tech-lead-orchestrator/standard.md *ADR triggers*](../tech-lead-orchestrator/standard.md#adr-triggers-4-or)).
+- `decision-summary` — one paragraph naming the chosen path.
+- `alternatives` — list of ≥ 1 rejected option (+1 chosen = ≥ 2 total). Each entry carries `name`, `summary`, `rejection-rationale`.
+- `criteria` — list of 3–5 criteria with weights and a one-line "why it matters" anchored to the spec.
+- `score-matrix` — table mapping each (option, criterion) to `✓` / `✗` + justification.
+- `consequences` — at least two `-` (closed doors / costs), one or more `+`, optional `~`.
+- `supersedes?` — list of ADR numbers explicitly replaced (optional).
+- `feature-path` — `docs/features/<app>/<slug>/` for the verdict YAML location.
+- `run-id`, `step` — to locate `runs/<run-id>/agents/adr-<step>.md`.
+
+The skill **does not** re-walk the rounds. It validates the payload (≥ 2 alternatives, ≥ 2 negative consequences, rubric differentiates), runs *Procedure*, and emits a verdict YAML to `<feature-path>/runs/<run-id>/agents/adr-<step>.md`. If validation fails (e.g. `alternatives.length < 2`), the verdict is `status: blocked` with `next: { kind: 'escalate', reason: '<why>' }`.
+
+## Procedure (both modes)
+
+1. **Read** the latest version of [`standard.md`](./standard.md) and [`template.md`](./template.md).
+2. **List existing ADRs:** `ls docs/adr/`. Filter for filenames matching `NNNN-<slug>.md`.
+3. **Pick the number.** Find the highest 4-digit prefix across the listing and add 1. Pad to 4 digits. If the directory has no matching files, the next number is `0001`.
+4. **Check conflicts.** Iterate the existing ADRs. An ADR conflicts when **all** of:
+   - its slug equals the new ADR's slug, **and**
+   - its status is `accepted`, **and**
+   - its number is **not** declared in the new ADR's `supersedes`.
+
+   If any conflict exists:
+   - **Piloted mode:** emit verdict `status: blocked`, `next: { kind: 'escalate', reason: 'adr-conflict-<slug>' }`, and stop. The orchestrator surfaces the conflict to the human.
+   - **Interactive mode:** ask the operator via `AskUserQuestion` whether the new ADR supersedes the conflicting one(s). If yes, add the numbers to `supersedes` and continue. If no, bail out with a message.
+5. **Fill the template.** Map inputs (interactive: collected across rounds; piloted: from the payload) to the 7 mandatory sections of [`template.md`](./template.md): header block, Context, Decision, Consequences, Alternatives considered (chosen first), Evaluation rubric, Implementation pointers.
+6. **Write the file** at `docs/adr/NNNN-<slug>.md` with the rendered markdown. Header reads `# ADR-NNNN: <title>` with the number zero-padded to 4 digits.
+7. **Update the index** `docs/adr/README.md`:
+   - Append a row to the main `| # | Title | Status | Date |` table.
+   - Append a one-line entry under the right area heading (CDK, App architecture, Data, Observability, Tooling / DevX). Create the heading if it doesn't exist. **Never reorder existing entries** — the README is manually curated.
+8. **Mark superseded predecessors.** If `supersedes` is non-empty, edit each predecessor's header: set `**Status:** superseded by ADR-NNNN`, leave the rest of the file untouched.
+9. **Piloted mode only — emit verdict YAML.** Write to `<feature-path>/runs/<run-id>/agents/adr-<step>.md`:
+   ```yaml
+   ---
+   status: done
+   summary: ADR-NNNN written at docs/adr/NNNN-<slug>.md.
+   artifacts:
+     - docs/adr/NNNN-<slug>.md
+     - docs/adr/README.md
+   ---
+   ```
+   Append `# Detail` + a short human-readable body below. The orchestrator reads only the front-matter.
 
 ## When to invoke
 
@@ -83,10 +139,13 @@ Yes:
 - The choice is hard to reverse — vendor lock, schema shape, framework choice, security model.
 - A `/technical-conception` plan row already lists a trade-off but doesn't anchor *why this side won*.
 - The operator says "I'm tempted to do X, but…"
+- The orchestrator detects an ADR-qualifying decision in the spec's Q.O.D. + Changes / Types sections and Hugo confirmed *Write ADR*.
 
 No:
 - Reversible-at-zero-cost choices (variable names, file layout within a folder).
 - Cases where `CLAUDE.md` or a `docs/knowledge/` entry already settles the question. Cross-link instead.
+- A coding-style choice already covered by Biome / CLAUDE.md *Clean code* — those go in the linter.
+- An accepted ADR with the same slug already exists and the new invocation hasn't declared `supersedes`. See *Procedure* step 4.
 
 ## What `/open-pr` reads back
 
@@ -98,15 +157,7 @@ The PR description's `## Architecture choices` section is *built from the ADRs* 
 
 The ADR is the only source for those sections. `/open-pr` does **not** synthesise architecture-choice content from commits or plan rows — if a non-trivial decision in the diff has no ADR, `/open-pr` flags it in *Known gaps* and points back here.
 
-That's the contract: the ADR walk produces a record rich enough that the PR description carries the full reasoning without re-deriving it. If the ADR is sloppy, the PR body inherits the sloppiness.
-
-## Failure modes the walk catches
-
-- **Decision-without-alternatives** (Round 3). The skill refuses to write the file.
-- **Retro-justification** (Round 2 before Round 3). Criteria locked before options are scored.
-- **Lopsided rubric** (Round 4). If every cell agrees, the skill pushes back.
-- **Missing consequences** (Round 5). Two negatives are mandatory, not optional.
-- **Subjective grades** (Round 4). `✓ / ✗` with a justification — no scales.
+That's the contract: the walk (or the orchestrator's payload) produces a record rich enough that the PR description carries the full reasoning without re-deriving it. If the inputs are sloppy, the PR body inherits the sloppiness.
 
 ## Auto-chain & maintenance
 
@@ -117,4 +168,5 @@ That's the contract: the ADR walk produces a record rich enough that the PR desc
 
 - ADRs live at `docs/adr/`, next to `docs/dantotsus/` and `docs/knowledge/`.
 - Filename: `NNNN-kebab-slug.md`. NNNN is zero-padded to 4 digits, monotonically increasing.
-- The skill always reads [`standard.md`](./standard.md) before walking — that's where section names, status lifecycle, and the rubric format are pinned. Drift would break `/open-pr`.
+- The skill always reads [`standard.md`](./standard.md) before walking or rendering — that's where section names, status lifecycle, and the rubric format are pinned. Drift would break `/open-pr`.
+- This skill is markdown-driven. No `package.json`, no test suite. The LLM is the runtime.

@@ -59,7 +59,7 @@ The `<why>` values:
 runs/<run-id>/agents/<agent>-<step>.md
 ```
 
-- `<agent>` ∈ { `specification`, `technical-conception`, `adr-writer`,
+- `<agent>` ∈ { `specification`, `technical-conception`, `adr`,
   `implementation`, `technical-validator`, `visual-validator` }.
 - `<step>` is a zero-padded integer starting at `01`, incrementing each
   time the same sub-agent is re-invoked in the same run (retry, replan,
@@ -111,7 +111,7 @@ next:
 ---
 ```
 
-### `/adr-writer` finds a conflict
+### `/adr` (piloted mode) finds a conflict
 
 ```markdown
 ---
