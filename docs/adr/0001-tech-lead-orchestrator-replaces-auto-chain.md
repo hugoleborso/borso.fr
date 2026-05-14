@@ -39,8 +39,11 @@ All three triggers fire — the ADR is mandatory.
 ## Decision
 
 Replace the linear auto-chain with `/tech-lead-orchestrator`, a single
-skill that pilots every transition: spec → plan → ADRs → implement →
-validate → arbitrate → ship.
+skill that pilots every transition: spec → ADRs → plan → implement →
+validate → arbitrate → ship. (ADRs come before plan: they constrain
+the plan rather than being mined out of it. The orchestrator surfaces
+the ADR candidate list to the human for tech-lead ratification before
+writing any ADR.)
 
 - The orchestrator suppresses the existing auto-chain in
   `/specification` and `/technical-conception` via a runtime flag

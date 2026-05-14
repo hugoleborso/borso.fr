@@ -1,18 +1,36 @@
 # Déléguer une feature au tech-lead-orchestrator et la retrouver en PR prêt à déployer
 
-> **2026-05-13 — correction d'architecture mid-flight.** Hugo a corrigé une
-> erreur structurelle pendant `/implementation` : les skills ne sont **pas**
-> des workspaces pnpm. Les sections *Changes / Types*, *Changes / Files to
-> change*, *Test strategy* / unit tests + scenario test, ainsi que les
-> mentions de `pnpm tech-lead:metrics` doivent être lues à travers ce
-> filtre : aucun fichier `*.utils.ts`, `package.json`, `vitest.config.ts`
-> ou test runner ne ship dans `.claude/skills/`. Les primitives décrites
-> en TypeScript ci-dessous sont conservées comme **prose descriptive**
-> (le LLM les exécute en lisant SKILL.md / standard.md) — pas comme code.
+> **2026-05-13 — corrections d'architecture mid-flight (deux passes).**
+>
+> **(1) Skills are markdown-only.** Hugo a corrigé une erreur
+> structurelle : les skills ne sont **pas** des workspaces pnpm. Les
+> sections *Changes / Types*, *Changes / Files to change*, *Test
+> strategy* / unit tests + scenario test, ainsi que les mentions de
+> `pnpm tech-lead:metrics` doivent être lues à travers ce filtre : aucun
+> fichier `*.utils.ts`, `package.json`, `vitest.config.ts` ou test
+> runner ne ship dans `.claude/skills/`. Les primitives décrites en
+> TypeScript ci-dessous sont conservées comme **prose descriptive** (le
+> LLM les exécute en lisant SKILL.md / standard.md) — pas comme code.
 > Le contrat sub-agent (YAML front-matter) reste valide ; sa lecture est
-> faite par l'LLM, pas par un parser TS. Les Q.O.D. et décisions Q-* ne
-> changent pas. Cette correction alimente l'entrée Dantotsu post-merge
-> "skills are markdown-only, do not invent a workspace".
+> faite par l'LLM, pas par un parser TS.
+>
+> **(2) ADRs come BEFORE the plan, with human tech-lead validation.**
+> Hugo a corrigé l'ordre des stages : `spec → adrs → plan → implement →
+> validate → arbitrate → ship`. Les ADRs contraignent le plan, pas
+> l'inverse. La détection des choix ADR-qualifiants se fait depuis la
+> spec (Q.O.D. + Changes / Types) — c'est pour cela que la spec doit
+> être suffisamment détaillée techniquement. Avant d'invoquer
+> `/adr-writer`, l'orchestrateur surface sa liste de candidats à Hugo
+> via `AskUserQuestion` (un question par candidat : Write ADR / Skip /
+> Merge with existing) — Hugo agit comme tech-lead pour ratifier ou
+> rejeter. Le diagramme de la *Q.O.D. — Use cases / edge cases* ci-
+> dessous reste valide mais l'ordre des nœuds `Spec → Plan → ADRgate`
+> doit être lu comme `Spec → ADRgate → Plan`.
+>
+> Les Q.O.D. et décisions Q-* ne changent pas. Les deux corrections
+> alimentent l'entrée Dantotsu post-merge — la première sur "skills are
+> markdown-only", la seconde sur "ADRs precede plan, with tech-lead
+> validation".
 
 ## Perspectives confronted
 

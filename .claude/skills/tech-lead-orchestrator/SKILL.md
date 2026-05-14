@@ -61,7 +61,7 @@ with the feature** — every run, including aborted ones, stays in the
 PR's history for audit.
 
 ```
-stage: spec → plan → adrs → implement → validate → arbitrate → ship
+stage: spec → adrs → plan → implement → validate → arbitrate → ship
                                               ↑          ↓
                                               └──── retry-loop
                                                           ↓
@@ -83,13 +83,41 @@ are computed post-hoc.
      is `true`.
    - If yes: hash the spec content (SHA-256, hex) and store the digest in
      `state.specChecksum`. Continue.
-2. **plan.** Invoke `/technical-conception` with the spec path. Sub-skill
-   writes `plan.md`. Its auto-chain to `/implementation` is **suppressed**.
-3. **adrs.** For each architectural choice surfaced by the plan, evaluate
-   the 4 ADR triggers (cf. [`standard.md`](./standard.md#adr-triggers-4-or)).
-   If any trigger fires, invoke `/adr-writer` with the candidate's slug
-   and the trigger list. Append each new ADR number to `state.adrIndex`.
-   Do **not** invoke `/adr-writer` for trivial choices.
+
+   The spec is the source of truth for ADR-qualifying choices in stage 2.
+   Treat its *Questions, Options and Decisions* (Q.O.D.) section and
+   *Changes / Types* section as the inventory the orchestrator mines next.
+   If the spec is thin on tech surface (no Q.O.D., no Types), the
+   orchestrator escalates back to `/specification` with a request for
+   detail — `/adr-writer` cannot conjure architectural choices that
+   weren't surfaced.
+
+2. **adrs.** Read the spec's Q.O.D. + Changes / Types sections. For each
+   decision surfaced there, judge the 4 ADR triggers (cf.
+   [`standard.md`](./standard.md#adr-triggers-4-or)). Build a draft list
+   `candidates = [{ slug, decision-summary, triggers }, …]`.
+
+   **Tech-lead validation (human in the loop).** Before invoking
+   `/adr-writer`, surface the candidate list to the human via
+   `AskUserQuestion`: one question per candidate, options
+   `[ "Write ADR (Recommended)", "Skip — not really architectural",
+   "Merge with ADR <NNNN>" ]`. The human acts as tech-lead and either
+   confirms, drops, or merges each candidate. This is a `guidance` /
+   `answer` human-message, **not** a `correction` — the orchestrator's
+   judgment is a draft, the human ratifies. Append a
+   `human_message_received` event for each answer with the appropriate
+   category.
+
+   For every confirmed candidate, invoke `/adr-writer` with the slug
+   and trigger list. Append each new ADR number to `state.adrIndex`. ADRs
+   land before the plan because they **constrain** it: the plan must
+   honour every accepted ADR.
+
+3. **plan.** Invoke `/technical-conception` with the spec path **and the
+   list of ADR numbers in `state.adrIndex`**. The plan must reference
+   each ADR explicitly and shape its Files / Test strategy / Risk
+   register around them. Sub-skill's auto-chain to `/implementation` is
+   **suppressed**.
 4. **implement.** Spawn a sub-agent for `/implementation` with the spec +
    plan paths. The sub-agent writes its verdict YAML to
    `runs/<run-id>/agents/implementation-<step>.md` per
@@ -216,6 +244,14 @@ escalation message.
   `/technical-conception`'s auto-chain blocks **must** check
   `state.json#pilotedByTechLead` and stand down when it's true. The
   orchestrator drives every transition itself.
+- **Writing ADRs after the plan.** ADRs come *before* the plan — they
+  constrain it. Mining the plan for ADR candidates is too late and lets
+  the plan ossify around assumptions that should have been ratified
+  ADRs.
+- **Skipping the tech-lead validation step on ADR candidates.** The
+  orchestrator's judgment is a draft; the human ratifies. Bypassing the
+  `AskUserQuestion` round and writing ADRs unilaterally is a defect —
+  pollutes `docs/adr/` and erodes trust in the orchestrator.
 - **Inventing TS code for the orchestrator.** This skill is markdown-
   driven. If a future change feels like it needs a TS workspace, that's
   a smell — re-read CLAUDE.md *Layout* and reconsider.

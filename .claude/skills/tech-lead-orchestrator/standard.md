@@ -5,14 +5,15 @@ reviewing a tech-lead-orchestrator change.
 
 ## Stage diagram
 
-The 8 stages are: `spec`, `plan`, `adrs`, `implement`, `validate`,
-`arbitrate`, `ship`, `escalated`. Transitions:
+The 8 stages are: `spec`, `adrs`, `plan`, `implement`, `validate`,
+`arbitrate`, `ship`, `escalated`. **ADRs come before the plan** — they
+constrain it. Transitions:
 
 | From | To | When |
 |---|---|---|
-| spec | plan | `spec.md` present (or `/specification` returns `done`). Spec checksum recorded. |
-| plan | adrs | `/technical-conception` returns `done` with `plan.md` next to spec. |
-| adrs | implement | All ADR-trigger candidates have been processed; each ADR number is in `state.adrIndex`. If no candidates, transition immediately. |
+| spec | adrs | `spec.md` present (or `/specification` returns `done`). Spec checksum recorded. Spec carries enough tech surface (Q.O.D. + Changes / Types) to surface architectural choices. |
+| adrs | plan | Every ADR-qualifying candidate from the spec has been ratified by the human (tech-lead validation via `AskUserQuestion`) and the confirmed ones have been written via `/adr-writer`. ADR numbers are in `state.adrIndex`. If no candidates, transition immediately. |
+| plan | implement | `/technical-conception` returns `done` with `plan.md` next to spec. The plan references every ADR in `state.adrIndex`. |
 | implement | validate | `/implementation` returns `done` with a `next: { kind: 'validate' }` hint. |
 | validate | arbitrate | At least one validator returned a verdict. |
 | arbitrate | implement | `verdictKind` maps to action `fix`. `retries.implement++`. |
@@ -20,6 +21,13 @@ The 8 stages are: `spec`, `plan`, `adrs`, `implement`, `validate`,
 | arbitrate | escalated | `verdictKind` maps to action `escalate`. Terminal. |
 | arbitrate | ship | All verdicts PASS. |
 | ship | (end) | Push successful, deploy reminder issued. |
+
+The spec is the source of truth for ADR-qualifying choices. If the
+spec is thin on tech surface — no Q.O.D., no Types section, no
+architectural decisions visible — the orchestrator escalates back to
+`/specification` (reason: `spec-thin-on-tech-surface`) rather than
+guessing the choices itself. ADRs derived from invented decisions
+poison the audit trail.
 
 ## `state.json` schema
 
@@ -71,8 +79,8 @@ Compose the `verdictKind` from the verdict's `status` + `next`:
 ## ADR triggers (4, OR)
 
 A choice qualifies for an ADR when **at least one** of these flags is
-`true`. Detection is fuzzy — the orchestrator (the LLM) reads the plan
-and judges each candidate:
+`true`. Detection is fuzzy — the orchestrator (the LLM) reads the
+spec's Q.O.D. + Changes / Types sections and judges each candidate:
 
 1. **multiple-alternatives** — ≥ 2 serious paths were considered.
 2. **cross-cutting** — touches ≥ 2 apps or ≥ 2 modules.
@@ -83,6 +91,26 @@ and judges each candidate:
 
 If none of the four fires for a candidate, no ADR — that's the gate
 against ADR spam.
+
+### Tech-lead validation (human in the loop)
+
+The orchestrator's judgment on which candidates qualify is a **draft**.
+Before invoking `/adr-writer`, surface the candidate list to Hugo via
+`AskUserQuestion`, one question per candidate, with options:
+
+- *Write ADR (Recommended)* — confirm, proceed to `/adr-writer`.
+- *Skip — not really architectural* — drop the candidate, no ADR.
+- *Merge with ADR &lt;NNNN&gt;* — fold into an existing ADR (the
+  orchestrator records the link, no new ADR written).
+
+The human's answers are `guidance` / `answer` messages, not
+`corrections` — confirming a draft list is productive engagement, not
+a defect signal. Append one `human_message_received` event per
+answer with the appropriate category.
+
+If Hugo declines every candidate, the orchestrator transitions
+`adrs → plan` with `state.adrIndex = []`. That's a valid outcome — not
+every feature has an ADR-qualifying choice.
 
 ## Retry policy
 
