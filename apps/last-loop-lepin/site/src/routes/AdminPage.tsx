@@ -69,19 +69,40 @@ function PinForm({ onAuthenticated }: { onAuthenticated: () => void }) {
   );
 }
 
+function formatPace(durationMs: number | null): string {
+  if (durationMs === null || durationMs <= 0) return '—';
+  const totalSeconds = Math.floor(durationMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}'${String(seconds).padStart(2, '0')}"`;
+}
+
 function PunchPanel({
   edition,
   ranked,
+  now,
   onMutated,
 }: {
   readonly edition: RaceEditionDto;
   readonly ranked: readonly RankedRunnerDto[];
+  readonly now: Date;
   readonly onMutated: () => void;
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const inRace = ranked.filter((entry) => entry.status.kind === 'in-race');
+
+  // "Punched this loop?" = the runner's lastLoop matches the loop the race
+  // is currently in. We derive it from elapsed/intervalMinutes rather than
+  // adding a new API field — the server already computes lastLoop, so the
+  // tile flips to "Pointé·e" as soon as the next standings poll lands.
+  const startMs = new Date(edition.startsAt).getTime();
+  const loopMs = Math.max(edition.intervalMinutes, 1) * 60_000;
+  const elapsed = Math.max(0, now.getTime() - startMs);
+  const currentLoopIndex = Math.floor(elapsed / loopMs) + 1;
+  const progressInLoop = (elapsed % loopMs) / loopMs;
+  const minutesLeft = Math.max(0, Math.ceil(((1 - progressInLoop) * loopMs) / 60_000));
 
   async function handlePunch(runner: RunnerDto): Promise<void> {
     setBusy(runner.slug);
@@ -104,35 +125,66 @@ function PunchPanel({
   return (
     <div className="card">
       <div className="card-head">
-        <h2 className="card-title">Pointage</h2>
-        <span className="muted mono">{inRace.length} en course</span>
+        <h2 className="card-title">
+          Pointage · boucle <span className="mono">{String(currentLoopIndex).padStart(2, '0')}</span>
+        </h2>
+        <span className="muted mono">
+          top horaire dans {minutesLeft} min · {inRace.length} en course
+        </span>
       </div>
-      <div className="card-body col">
-        {error !== null ? <div className="error-text">{error}</div> : null}
+      <div className="card-body" style={{ padding: 0 }}>
+        {error !== null ? (
+          <div className="error-text" style={{ padding: 'var(--d-3) var(--d-5)' }}>
+            {error}
+          </div>
+        ) : null}
         {inRace.length === 0 ? (
-          <div className="muted">Personne en course.</div>
+          <div className="muted" style={{ padding: 'var(--d-5)' }}>
+            Personne en course.
+          </div>
         ) : (
-          inRace.map((entry) => {
-            const avatar = initialsAvatar(entry.runner.displayName);
-            return (
-              <button
-                type="button"
-                className="btn"
-                key={entry.runner.slug}
-                onClick={() => void handlePunch(entry.runner)}
-                disabled={busy !== null}
-                style={{ justifyContent: 'flex-start' }}
-              >
-                <span className="avatar" style={{ background: avatar.backgroundColor }}>
-                  {avatar.initials}
-                </span>
-                <span>{entry.runner.displayName}</span>
-                <span className="muted mono" style={{ marginLeft: 'auto' }}>
-                  Boucle {entry.status.kind === 'in-race' ? entry.status.lastLoop : '—'}
-                </span>
-              </button>
-            );
-          })
+          <div className="punch-grid">
+            {inRace.map((entry) => {
+              const avatar = initialsAvatar(entry.runner.displayName);
+              const punched =
+                entry.status.kind === 'in-race' && entry.status.lastLoop >= currentLoopIndex;
+              const late = !punched && progressInLoop > 0.85;
+              return (
+                <button
+                  type="button"
+                  className={`punch-tile${punched ? ' punched' : ''}${late ? ' late' : ''}`}
+                  key={entry.runner.slug}
+                  onClick={() => void handlePunch(entry.runner)}
+                  disabled={busy !== null}
+                >
+                  <span className="punch-check" aria-hidden>
+                    ✓
+                  </span>
+                  <span className="punch-top">
+                    <span className="avatar" style={{ background: avatar.backgroundColor }}>
+                      {avatar.initials}
+                    </span>
+                    <span className="punch-id">
+                      <span className="punch-bib">
+                        #{entry.runner.bib === null ? '—' : String(entry.runner.bib).padStart(3, '0')}
+                      </span>
+                      <span className="punch-name">{entry.runner.displayName}</span>
+                    </span>
+                  </span>
+                  <span className="punch-bottom">
+                    <span className="punch-meta">
+                      {punched
+                        ? '✓ Pointé·e'
+                        : entry.status.kind === 'in-race'
+                          ? `${entry.status.lastLoop} boucle${entry.status.lastLoop > 1 ? 's' : ''}`
+                          : '—'}
+                    </span>
+                    <span className="punch-pace">~{formatPace(entry.lastLoopDurationMs)}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
@@ -204,6 +256,7 @@ export function AdminPage() {
         <PunchPanel
           edition={edition}
           ranked={ranked}
+          now={new Date()}
           onMutated={() => invalidateResource(`standings:${edition.slug}`)}
         />
       ) : null}

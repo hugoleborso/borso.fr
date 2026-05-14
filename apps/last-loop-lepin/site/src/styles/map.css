@@ -3,8 +3,26 @@
   background: var(--bg-elev);
 }
 .course-map .leaflet-tile {
-  /* Soft tint on the OSM raster so the polyline + avatars pop on dark UI. */
-  filter: saturate(0.85) brightness(0.95);
+  /* CARTO Dark Matter already ships in a dark palette; no client-side
+   * filter needed. We dim the labels slightly so the polyline reads
+   * cleanly against road geometry. */
+  filter: brightness(0.92);
+}
+.course-map .leaflet-control-attribution {
+  background: color-mix(in oklch, var(--bg-elev) 70%, transparent);
+  color: var(--ink-3);
+  font-size: 10px;
+}
+.course-map .leaflet-control-attribution a {
+  color: var(--ink-2);
+}
+.course-map .leaflet-bar a {
+  background: var(--bg-elev);
+  color: var(--ink);
+  border-bottom-color: var(--line);
+}
+.course-map .leaflet-bar a:hover {
+  background: var(--bg-elev-2);
 }
 .map-start-icon {
   /* Override leaflet's default divIcon background. */

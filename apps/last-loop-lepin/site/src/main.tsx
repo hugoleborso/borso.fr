@@ -6,6 +6,8 @@ import './styles/tokens.css';
 import './styles/chrome.css';
 import './styles/components.css';
 import './styles/map.css';
+import './styles/countdown.css';
+import './styles/punch.css';
 
 initSentry();
 

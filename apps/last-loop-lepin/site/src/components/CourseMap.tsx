@@ -111,10 +111,14 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
     if (points.length === 0) return;
     const latLngs: L.LatLngTuple[] = points.map((p) => [p.lat, p.lng]);
     const map = L.map(container, { attributionControl: true, zoomControl: true });
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      maxZoom: 20,
+      // CARTO Dark Matter — free for non-commercial use, OSM-derived.
+      // Quieter palette than osm.org so the accent polyline + runner
+      // chips own the visual weight.
       attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · &copy; <a href="https://carto.com/attributions">CARTO</a>',
     }).addTo(map);
     polylineRef.current = L.polyline(latLngs, {
       color: 'var(--accent, #f43f5e)',
