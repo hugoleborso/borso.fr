@@ -175,7 +175,9 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
     showReadonlyCard && currentEdition !== null ? (
       <div className="card">
         <div className="card-head">
-          <h2 className="card-title">Édition courante</h2>
+          <h2 className="card-title">
+            Édition {currentEdition.status === 'live' ? 'en cours' : 'précédente'}
+          </h2>
           <span className="muted mono">
             {currentEdition.displayName} · {currentEdition.status}
           </span>
@@ -354,10 +356,13 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
   if (isEditing) {
     return formCard;
   }
+  // Create form on top — that's the primary action the orga lands here
+  // for ("set up the next race"). The previous edition's status card sits
+  // below as context, with the secondary "Réouvrir" / "Terminer" controls.
   return (
     <>
-      {readonlyCard}
       {formCard}
+      {readonlyCard}
     </>
   );
 }
