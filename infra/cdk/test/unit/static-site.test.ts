@@ -23,6 +23,37 @@ describe('StaticSite (prod)', () => {
     });
   });
 
+  it('opts into deleteExisting on both alias records so the construct can take over a manually-created record on first deploy', () => {
+    // The StaticSite construct is, by convention, the canonical owner of
+    // `props.domainName` in this account. `deleteExisting: true` pre-deletes
+    // any same-name record before CDK creates its own, eliminating
+    // `RRSetExists` collisions on alias takeovers (legacy → CDK migrations,
+    // recovery after a botched cleanup). The trade-off is silent overwrite;
+    // documented in the construct's source.
+    tpl.resourceCountIs('Custom::DeleteExistingRecordSet', 2);
+  });
+
+  it('creates the alias R53 records with the exact FQDN (no zone double-suffix)', () => {
+    // Regression for the relative-recordName-doubles-zone trap: CDK's ARecord
+    // silently appends the zone when recordName has no trailing dot, so
+    // passing `'borso.fr'` against zone `borso.fr` produced `borso.fr.borso.fr.`
+    // in R53 — a phantom record that resolved nothing. Constructs MUST
+    // synthesise records whose Name equals "<domain>." exactly.
+    tpl.hasResourceProperties('AWS::Route53::RecordSet', {
+      Type: 'A',
+      Name: 'borso.fr.',
+    });
+    tpl.hasResourceProperties('AWS::Route53::RecordSet', {
+      Type: 'AAAA',
+      Name: 'borso.fr.',
+    });
+    // Belt-and-braces: assert the bug shape is structurally absent from the
+    // synthesised template. If anyone re-introduces a relative recordName,
+    // the synth output will contain `borso.fr.borso.fr.` and this assertion
+    // will fail before the deploy ever touches R53.
+    expect(JSON.stringify(tpl.toJSON())).not.toContain('borso.fr.borso.fr');
+  });
+
   it('creates a private S3 bucket with TLS-only access', () => {
     tpl.hasResourceProperties('AWS::S3::Bucket', {
       PublicAccessBlockConfiguration: {
@@ -86,6 +117,52 @@ describe('StaticSite (prod)', () => {
         ]),
       }),
     });
+  });
+});
+
+describe('StaticSite (prod, subdomain)', () => {
+  // The relative-recordName bug ALSO bit any subdomain caller: passing
+  // `'borsouvertures.borso.fr'` against zone `borso.fr` produced
+  // `borsouvertures.borso.fr.borso.fr.` — same shape, same phantom record.
+  const tpl = synth((stack) => {
+    new StaticSite(stack, 'Site', {
+      app: 'borsouvertures',
+      stage: 'prod',
+      domainName: 'borsouvertures.borso.fr',
+      assetsPath: '.',
+    });
+  });
+
+  it('creates the alias R53 records with the exact subdomain FQDN', () => {
+    tpl.hasResourceProperties('AWS::Route53::RecordSet', {
+      Type: 'A',
+      Name: 'borsouvertures.borso.fr.',
+    });
+    tpl.hasResourceProperties('AWS::Route53::RecordSet', {
+      Type: 'AAAA',
+      Name: 'borsouvertures.borso.fr.',
+    });
+    expect(JSON.stringify(tpl.toJSON())).not.toContain('borsouvertures.borso.fr.borso.fr');
+  });
+});
+
+describe('StaticSite (prod, trailing-dot domainName is idempotent)', () => {
+  // A caller passing the already-absolute form must not double the dot.
+  const tpl = synth((stack) => {
+    new StaticSite(stack, 'Site', {
+      app: 'borso-fr',
+      stage: 'prod',
+      domainName: 'borso.fr.',
+      assetsPath: '.',
+    });
+  });
+
+  it('keeps the record Name as a single-trailing-dot FQDN', () => {
+    tpl.hasResourceProperties('AWS::Route53::RecordSet', {
+      Type: 'A',
+      Name: 'borso.fr.',
+    });
+    expect(JSON.stringify(tpl.toJSON())).not.toContain('borso.fr..');
   });
 });
 

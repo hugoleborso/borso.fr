@@ -193,15 +193,32 @@ export class StaticSite extends Construct {
       hostedZoneId: zoneId,
       zoneName,
     });
+    // CDK's ARecord treats a recordName without a trailing dot as relative to
+    // the zone and silently appends the zone name. Passing `'borso.fr'` against
+    // zone `borso.fr` yields the R53 record `borso.fr.borso.fr.` — a record
+    // that resolves nothing useful and forced operators to recreate the alias
+    // manually outside CDK. Force absolute (FQDN with trailing dot) so the
+    // record always matches `props.domainName` exactly.
+    const recordName = props.domainName.endsWith('.') ? props.domainName : `${props.domainName}.`;
+    // `deleteExisting: true` lets the construct take over an apex/subdomain
+    // that was previously claimed by a manually-created record (legacy migrations,
+    // recovery after a botched cleanup, etc.) without a `RRSetExists` collision.
+    // The trade-off is mild — a CDK deploy will silently overwrite whatever
+    // record is in place — but the StaticSite construct is, by design, the
+    // canonical owner of `props.domainName` in this account, so silent takeover
+    // matches the intended ownership model. Revisit if this repo ever grows
+    // multiple teams managing R53.
     new ARecord(this, 'AliasA', {
       zone,
-      recordName: props.domainName,
+      recordName,
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
+      deleteExisting: true,
     });
     new AaaaRecord(this, 'AliasAAAA', {
       zone,
-      recordName: props.domainName,
+      recordName,
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
+      deleteExisting: true,
     });
 
     return `https://${props.domainName}`;
