@@ -5,37 +5,34 @@
 
 ## Context
 
-The operator perceives the repo's infra as an *usine à gaz* and believes it costs more than a managed PaaS would. Cost Explorer for the last 6 months (Dec 2025 → May 2026) tells a different story:
+The operator perceives the repo's infra as an *usine à gaz*. Cost Explorer (Dec 2025 → May 2026) shows actual AWS spend is **~$6.13/mo** ($5 WAF fixed fee, $1 tax, $0.50 Route 53, $0.12 S3; CloudFront/Lambda/DSQL/ACM all in free tier). So money is *not* the forcing function — mental load is.
 
-| Service | Monthly | Note |
-|---|---|---|
-| AWS WAF | **$5.00** | 1 WebACL on CloudFront, fixed fee |
-| Tax | $1.02 | ~20% TVA |
-| Route 53 | $0.50 | borso.fr hosted zone |
-| S3 | $0.12 | 3 sites + photo bucket |
-| Lambda / CloudFront / ACM / DSQL | $0.00 | free-tier or unused |
-| **Total** | **~$6.13 / €5.70** | ~€68 / year |
+Criteria, **set by the operator before options were weighed**:
 
-What is actually expensive is the **mental load**: the repo ships a homegrown mini-PaaS (`StaticSite`, `LambdaApi`, `DsqlCluster`, `DsqlSchema`, `PreviewableApp`) over CDK + GitHub Actions + DSQL + WAF + 5 CloudFront distributions. The North Star (CLAUDE.md) reserves the operator's time for *interesting conversations*; any time spent debugging custom CDK is a tax. Three serious managed-PaaS alternatives exist (Vercel, Cloudflare, Netlify), each with auto-previews and Postgres branching, but each comes with a commercial-use clause, a vendor-lock dimension, and a domain-DNS migration. The cost premise that motivated the question is wrong, so the decision is **complexity vs. lock-in**, not money.
+1. **Charge mentale minimale** — fewer constructs / fewer custom stacks to hold in head.
+2. **Preview auto natif** — `PR → URL` with zero custom wiring.
+3. **Compatible workflow IA** — the infra layer must stay readable and repairable by the repo's LLM skills.
+4. **Effort budget: one weekend (~1–2 days).** Full rewrite of three apps + DSQL→Postgres + DNS cutover is ~1 week and falls outside the budget.
+
+Explicitly **not** criteria: monthly cost (already negligible), vendor lock-in (acceptable), commercial-use restriction (no commercial usage planned). The mini-PaaS (`StaticSite`, `LambdaApi`, `DsqlCluster`, `DsqlSchema`, `PreviewableApp`) is *neutral* — keep or drop, decide on the criteria above.
+
+Inventory: `apps/borso-fr` and `apps/borsouvertures` are pure Vite static sites (`vite build` → `dist/`), trivially portable. `apps/last-loop-lepin` is the only stack that actually exercises the full mini-PaaS (Hono on Lambda + DSQL + S3 photos + JWT).
 
 ## Decision
 
-**Stay on AWS, drop the WAF line, defer migration; revisit only when complexity actually bites.**
+**Hybrid migration in one weekend: move the two static apps to Vercel Hobby; keep `last-loop-lepin` on AWS as-is.**
 
-The mini-PaaS *is* the asset, not the liability — it produced ADR-0001, three feature pipelines, and a working preview system. Migrating now trades €0/mo savings (already there) for €0–€38/mo of new vendor cost, commercial-use risk, and a one-shot ~2-week rewrite of three apps + DSQL→Postgres adapter swap + domain NS cutover. The options weighed:
+The two static sites are where the mini-PaaS ceremony is *over-engineered for the use case* — a CDK stack, a CloudFront distribution, an ACM cert, a Route 53 record, and a preview subdomain for what is `vite build && rsync`. Vercel collapses that to a `vercel.json` + a GitHub connection, with native per-PR preview URLs. `last-loop-lepin` is the one stack where the mini-PaaS earns its weight (multi-region DSQL, Hono Lambda, custom JWT, S3 photos with presigned URLs) — moving it costs a week and gains little on the criteria above.
 
-- **A. Stay on AWS, simplify** *(chosen)*: drop WAF if not used (-$5/mo → €0.85/mo), keep constructs.
-- **B. Vercel Hobby + Neon Free**: €0 but commercial-use TOS risk for borsouvertures.
-- **C. Vercel Pro + Neon Launch**: €38/mo + lock-in, 3× more expensive than today.
-- **D. Cloudflare Pages + Workers + Neon Free**: €0, no commercial caveat, but full DSQL→Postgres + S3→R2 + CDK→Pages rewrite.
-- **E. Netlify + Supabase**: same shape as D, smaller free tier.
-
-Trigger to reconsider: AWS bill > €25/mo for 3 consecutive months, OR ≥ 2 dantotsus rooted in the custom CDK in one quarter.
+- borso-fr, borsouvertures → Vercel Hobby projects, free, native PR previews.
+- last-loop-lepin → unchanged, stays on CDK + DSQL + Lambda.
+- Route 53 stays authoritative; A/AAAA records repointed for the two static apps.
+- WAF stays (only `last-loop-lepin` keeps a CloudFront distribution).
 
 ## Consequences
 
-**Easier:** no migration project; CLAUDE.md, skills, ADR-0001 stay coherent; DSQL multi-region active-active stays available for `last-loop-lepin`; the borso.fr Route53 zone keeps owning DNS.
+**Easier:** two CDK stacks deleted (`borso-fr-prod`, `borsouvertures-prod`) + their preview siblings; the `*.preview.borso.fr` CloudFront distribution can probably be retired (last-loop-lepin keeps its own); `PreviewableApp` and `StaticSite` constructs drop from 3 to 1 consumer — candidate for deletion if `last-loop-lepin` inlines them. PR previews on the static apps become a Vercel URL in the PR comment, no `cdk deploy` step in CI. Repo's mental footprint shrinks on the two apps the operator touches most.
 
-**Harder:** the *usine à gaz* feeling is unresolved — the operator must accept that the mini-PaaS is intentional, or escalate to a `/dantotsu` whenever it leaks. The custom constructs need to stay well-documented because the LLM workforce has no Vercel-shaped escape hatch.
+**Harder:** the repo now has *two* deployment models (Vercel for static, CDK for full-stack). The `meta` skills (`/specification`, `/technical-conception`, `/implementation`, `/visual-validation`) need a small per-app dispatch — already partly the case (`docs slug` ≠ workspace). Domain DNS is split-brain: Route 53 holds the zone, Vercel owns the apex `A` record's destination.
 
-**Load-bearing:** the WAF deletion is gated on confirming no WebACL rule is actually filtering traffic (read `aws wafv2 get-web-acl` before destroy). A future ADR-0005 can supersede this one if option D becomes cheap to migrate to — re-evaluation is welcome, silent drift is not. Drizzle is already the ORM, so a future move off DSQL is a connection-string swap (`@aws-sdk/dsql-signer` removal), not a schema rewrite — the migration cost is bounded.
+**Load-bearing:** the path filters in `.github/path-filters.yml` and the prod deploy workflow must drop the two static apps before tear-down; DNS cutover is reversible (TTL 60s) so it can be rolled back in minutes; the WAF deletion is **not** included here — that's a separate change, gated on confirming no rule is filtering real traffic. A future ADR can promote `last-loop-lepin` to a managed PaaS too, but only if the criteria shift (e.g. DSQL gets retired upstream).

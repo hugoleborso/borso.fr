@@ -64,7 +64,7 @@ _(no entries yet)_
 
 ### CDK / infra
 
-- 0004 — Migrate from custom AWS CDK to a managed PaaS *(proposed — stay on AWS)*.
+- 0004 — Migrate from custom AWS CDK to a managed PaaS *(proposed — hybrid: static apps to Vercel, last-loop-lepin stays on AWS)*.
 
 ### Observability
 
