@@ -91,7 +91,10 @@
  * still scan both on a phone. */
 .spectator-hero {
   display: grid;
-  grid-template-columns: minmax(360px, auto) minmax(0, 1fr);
+  /* Countdown gets ~60 % of the row, map ~40 %. Both have generous
+   * `minmax` mins so the flaps stay legible and the map doesn't shrink
+   * below the point where the polyline is recognisable. */
+  grid-template-columns: minmax(480px, 1.5fr) minmax(280px, 1fr);
   gap: var(--d-4);
 }
 

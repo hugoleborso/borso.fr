@@ -27,8 +27,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: clamp(48px, 12vw, 96px);
-  height: clamp(64px, 16vw, 128px);
+  width: clamp(64px, 14vw, 128px);
+  height: clamp(80px, 18vw, 160px);
   background: linear-gradient(
     180deg,
     var(--bg-elev-2) 0%,
@@ -41,7 +41,7 @@
   color: var(--ink);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(40px, 10vw, 84px);
+  font-size: clamp(56px, 12vw, 112px);
   letter-spacing: -0.02em;
   line-height: 1;
   position: relative;
