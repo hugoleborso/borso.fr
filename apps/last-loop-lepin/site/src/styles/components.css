@@ -244,8 +244,19 @@
 }
 
 .avatar {
+  /*
+   * `flex-shrink: 0` is the whole point — without it, when an avatar
+   * sits inside a flex row whose content overflows (long runner name +
+   * loop info + status pill in a narrow column of the multi-col
+   * leaderboard grid), flexbox compresses the avatar's width but leaves
+   * its height alone, so the 32×32 circle squishes into an ellipsis.
+   * `aspect-ratio` belt-and-suspenders the square shape even if a
+   * future container clamps height instead.
+   */
+  flex-shrink: 0;
   width: 32px;
   height: 32px;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   display: flex;
   align-items: center;
