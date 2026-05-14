@@ -1,38 +1,39 @@
-# ADR 0004 — Migrate from custom AWS CDK to a managed PaaS
+# ADR 0004 — Migrate from custom AWS CDK to Vercel + Neon
 
 **Status:** proposed
 **Date:** 2026-05-14
 
 ## Context
 
-The operator perceives the repo's infra as an *usine à gaz*. Cost Explorer (Dec 2025 → May 2026) shows actual AWS spend is **~$6.13/mo** ($5 WAF fixed fee, $1 tax, $0.50 Route 53, $0.12 S3; CloudFront/Lambda/DSQL/ACM all in free tier). So money is *not* the forcing function — mental load is.
+Operator's perception: the AWS CDK setup is an *usine à gaz*. Cost Explorer (Dec 2025 → May 2026) confirms money is **not** the forcing function — actual spend is ~$6.13/mo ($5 WAF + $1 tax + $0.50 Route 53 + $0.12 S3; CloudFront/Lambda/DSQL/ACM all in free tier). The forcing function is mental load + the existence of a homegrown mini-PaaS (`StaticSite`, `LambdaApi`, `DsqlCluster`, `DsqlSchema`, `PreviewableApp`) that duplicates what hosted PaaS providers do natively.
 
-Criteria, **set by the operator before options were weighed**:
+Criteria, **set by the operator before options were weighed** (`/adr`-style):
 
-1. **Charge mentale minimale** — fewer constructs / fewer custom stacks to hold in head.
+1. **Charge mentale minimale** — fewer constructs, fewer custom stacks.
 2. **Preview auto natif** — `PR → URL` with zero custom wiring.
-3. **Compatible workflow IA** — the infra layer must stay readable and repairable by the repo's LLM skills.
-4. **Effort budget: one weekend (~1–2 days).** Full rewrite of three apps + DSQL→Postgres + DNS cutover is ~1 week and falls outside the budget.
+3. **Compatible workflow IA** — `vercel.json` in git + LLM-known CLI > opaque dashboards or DIY CDK.
+4. **Effort budget: one weekend (~1–2 days).**
 
-Explicitly **not** criteria: monthly cost (already negligible), vendor lock-in (acceptable), commercial-use restriction (no commercial usage planned). The mini-PaaS (`StaticSite`, `LambdaApi`, `DsqlCluster`, `DsqlSchema`, `PreviewableApp`) is *neutral* — keep or drop, decide on the criteria above.
+Explicitly **not** criteria: monthly cost (already negligible), vendor lock-in (acceptable), commercial-use restriction (no commercial usage), apprentissage transférable, mini-PaaS preservation. The operator's first message also pre-decided two directions: *toutes les apps* migrent, et *plus de DSQL — Drizzle Postgres avec schemas + constraints*. The ADR documents this, it does not re-decide it.
 
-Inventory: `apps/borso-fr` and `apps/borsouvertures` are pure Vite static sites (`vite build` → `dist/`), trivially portable. `apps/last-loop-lepin` is the only stack that actually exercises the full mini-PaaS (Hono on Lambda + DSQL + S3 photos + JWT).
+Inventory: 3 apps (`borso-fr`, `borsouvertures` = pure Vite static; `last-loop-lepin` = Vite + Hono on Lambda + DSQL + S3 photos + JWT). Registrar is **Gandi**, not AWS — only the DNS zone is in Route 53. Drizzle already abstracts the schema, so DSQL → Postgres is a connection-string swap, not a schema rewrite.
 
 ## Decision
 
-**Hybrid migration in one weekend: move the two static apps to Vercel Hobby; keep `last-loop-lepin` on AWS as-is.**
+**Full migration to Vercel + Neon. All three apps, the DSQL data, and DNS hosting leave AWS in one weekend. Registrar stays at Gandi.**
 
-The two static sites are where the mini-PaaS ceremony is *over-engineered for the use case* — a CDK stack, a CloudFront distribution, an ACM cert, a Route 53 record, and a preview subdomain for what is `vite build && rsync`. Vercel collapses that to a `vercel.json` + a GitHub connection, with native per-PR preview URLs. `last-loop-lepin` is the one stack where the mini-PaaS earns its weight (multi-region DSQL, Hono Lambda, custom JWT, S3 photos with presigned URLs) — moving it costs a week and gains little on the criteria above.
+Hybrid was rejected because two deploy models is *more* charge mentale, not less — and the operator already said "toutes les apps". Half-measures contradict criterion 1.
 
-- borso-fr, borsouvertures → Vercel Hobby projects, free, native PR previews.
-- last-loop-lepin → unchanged, stays on CDK + DSQL + Lambda.
-- Route 53 stays authoritative; A/AAAA records repointed for the two static apps.
-- WAF stays (only `last-loop-lepin` keeps a CloudFront distribution).
+- **Apps:** `borso-fr`, `borsouvertures`, `last-loop-lepin/site` → 3 Vercel projects (Vite preset, `vercel.json` in git). `last-loop-lepin/api` (Hono) → Vercel Functions via `@hono/vercel`.
+- **Database:** Neon project + branch-per-PR; `apps/last-loop-lepin/api/src/database/client.ts` swaps `DsqlSigner` for a plain `postgres` URL.
+- **DNS:** Gandi NS → `ns1.vercel-dns.com` / `ns2.vercel-dns.com`. Vercel manages cert + the preview wildcard.
+- **Photos bucket:** S3 stays read-only behind a presigned URL until a follow-up ADR picks Vercel Blob or R2.
+- **AWS tear-down:** delete CDK stacks, Route 53 zone, ACM certs. WAF goes with the CloudFront distributions.
 
 ## Consequences
 
-**Easier:** two CDK stacks deleted (`borso-fr-prod`, `borsouvertures-prod`) + their preview siblings; the `*.preview.borso.fr` CloudFront distribution can probably be retired (last-loop-lepin keeps its own); `PreviewableApp` and `StaticSite` constructs drop from 3 to 1 consumer — candidate for deletion if `last-loop-lepin` inlines them. PR previews on the static apps become a Vercel URL in the PR comment, no `cdk deploy` step in CI. Repo's mental footprint shrinks on the two apps the operator touches most.
+**Easier:** one deploy model across the repo (`vercel.json`); native PR preview URLs from Vercel with a per-PR Neon branch; `infra/cdk/`, `infra/shared/`, and every app's `cdk/` + `bin/` folder are deletable; CLAUDE.md's *Deployments*, *Hooks (pre-commit CDK coverage)*, *Don'ts* (pragma, CloudFront Function code.js), *preflight-cloudfront-aliases.sh* all retire. `meta` skills (`/specification`, `/technical-conception`, `/implementation`, `/visual-validation`) stay provider-agnostic.
 
-**Harder:** the repo now has *two* deployment models (Vercel for static, CDK for full-stack). The `meta` skills (`/specification`, `/technical-conception`, `/implementation`, `/visual-validation`) need a small per-app dispatch — already partly the case (`docs slug` ≠ workspace). Domain DNS is split-brain: Route 53 holds the zone, Vercel owns the apex `A` record's destination.
+**Harder:** vendor lock-in to Vercel + Neon, accepted explicitly. The `meta` skills that lean on CDK (`PreviewableApp`, `DsqlSchema` migration runner) need re-pointing or deletion. The photos bucket sits in a temporary half-state until the follow-up ADR. Local Postgres for tests stays via `scripts/local-postgres.sh` — Neon is for deployed environments only.
 
-**Load-bearing:** the path filters in `.github/path-filters.yml` and the prod deploy workflow must drop the two static apps before tear-down; DNS cutover is reversible (TTL 60s) so it can be rolled back in minutes; the WAF deletion is **not** included here — that's a separate change, gated on confirming no rule is filtering real traffic. A future ADR can promote `last-loop-lepin` to a managed PaaS too, but only if the criteria shift (e.g. DSQL gets retired upstream).
+**Load-bearing:** Gandi NS cutover propagates in ~24h with TTL 60s, so rollback is minutes if Vercel breaks. The Drizzle migration files in `apps/last-loop-lepin/api/src/database/migrations/` re-run cleanly on Neon — verify on a Neon branch *before* DNS cutover, not after. A separate dantotsu/knowledge entry will capture the meta-lesson: this ADR went through three drafts because the writer kept projecting unrequested criteria onto the operator's stated direction; the `/adr` decision-support walk (criteria → options → score) is the correct first step, not `/adr-writer`.
