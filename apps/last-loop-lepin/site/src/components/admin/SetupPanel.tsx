@@ -54,24 +54,51 @@ function summariseZodError(body: unknown): string | null {
 
 const EDITING_SLUG_KEY = 'setup-slug';
 
+/**
+ * Suggest the next edition's slug. If the current edition slug ends in a
+ * 4-digit year (`lepin-2026`), increment it (`lepin-2027`). Otherwise
+ * append `-next` to avoid colliding with the existing slug.
+ */
+function suggestNextSlug(currentSlug: string | undefined): string {
+  if (currentSlug === undefined) return 'lepin-2026';
+  const match = /^(.*?)(\d{4})$/.exec(currentSlug);
+  if (match !== null) {
+    const stem = match[1] ?? '';
+    const year = Number.parseInt(match[2] ?? '0', 10);
+    return `${stem}${year + 1}`;
+  }
+  return `${currentSlug}-next`;
+}
+
 export function SetupPanel({ currentEdition }: SetupPanelProps) {
-  // When an edition is already in `setup`, the form re-opens in "edit"
-  // mode: every field is pre-filled with the persisted value, the slug
-  // becomes read-only (it's the PK), and submit fires PUT instead of
-  // POST. The GPX textarea stays empty by default — pasting + submitting
-  // replaces the persisted GPX, which is the explicit ergonomic goal:
-  // iterate the trace without recreating the whole edition.
+  // Three rendering modes:
+  //   - `setup` edition in progress → edit mode (PUT, slug read-only)
+  //   - `live` / `finished` edition  → readonly card on top + create form
+  //     for the NEXT edition below (POST, slug pre-filled with a sensible
+  //     suggestion like `lepin-2026` → `lepin-2027`)
+  //   - no edition                  → just the create form
   const isEditing = currentEdition !== null && currentEdition.status === 'setup';
-  const [slug, setSlug] = useState(currentEdition?.slug ?? 'lepin-2026');
-  const [displayName, setDisplayName] = useState(currentEdition?.displayName ?? 'Last Loop Lépin 2026');
+  const showReadonlyCard = currentEdition !== null && currentEdition.status !== 'setup';
+  const initialSlug = isEditing
+    ? (currentEdition?.slug ?? 'lepin-2026')
+    : suggestNextSlug(currentEdition?.slug);
+  const initialDisplayName = isEditing
+    ? (currentEdition?.displayName ?? 'Last Loop Lépin 2026')
+    : 'Last Loop Lépin';
+  const [slug, setSlug] = useState(initialSlug);
+  const [displayName, setDisplayName] = useState(initialDisplayName);
   const [startsAt, setStartsAt] = useState(
-    currentEdition === null ? defaultStartsAt() : isoLocal(new Date(currentEdition.startsAt)),
+    isEditing && currentEdition !== null
+      ? isoLocal(new Date(currentEdition.startsAt))
+      : defaultStartsAt(),
   );
   const [endsAt, setEndsAt] = useState(
-    currentEdition === null ? defaultEndsAt() : isoLocal(new Date(currentEdition.endsAt)),
+    isEditing && currentEdition !== null
+      ? isoLocal(new Date(currentEdition.endsAt))
+      : defaultEndsAt(),
   );
   const [intervalMinutes, setIntervalMinutes] = useState(
-    String(currentEdition?.intervalMinutes ?? 60),
+    String(isEditing && currentEdition !== null ? currentEdition.intervalMinutes : 60),
   );
   const [gpxXml, setGpxXml] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -166,29 +193,26 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
     }
   }
 
-  if (currentEdition !== null && currentEdition.status !== 'setup') {
-    const isLive = currentEdition.status === 'live';
-    return (
+  const readonlyCard =
+    showReadonlyCard && currentEdition !== null ? (
       <div className="card">
         <div className="card-head">
-          <h2 className="card-title">Setup de course</h2>
-          <span className="muted mono">{currentEdition.displayName}</span>
+          <h2 className="card-title">Édition courante</h2>
+          <span className="muted mono">
+            {currentEdition.displayName} · {currentEdition.status}
+          </span>
         </div>
         <div className="card-body col">
-          <div className="muted">
-            Édition courante : <strong>{currentEdition.displayName}</strong> ({currentEdition.status})
+          <div className="muted mono">
+            Distance : {(currentEdition.gpx.distanceMeters / 1000).toFixed(2)} km · D+{' '}
+            {Math.round(currentEdition.gpx.elevationGainMeters)} m
           </div>
           <div className="muted mono">
-            Distance : {(currentEdition.gpx.distanceMeters / 1000).toFixed(2)} km ·{' '}
-            D+ : {Math.round(currentEdition.gpx.elevationGainMeters)} m
+            Lever : {new Date(currentEdition.sunriseAt).toLocaleTimeString('fr-FR')} · Coucher :{' '}
+            {new Date(currentEdition.sunsetAt).toLocaleTimeString('fr-FR')}
           </div>
-          <div className="muted mono">
-            Lever : {new Date(currentEdition.sunriseAt).toLocaleTimeString('fr-FR')} ·{' '}
-            Coucher : {new Date(currentEdition.sunsetAt).toLocaleTimeString('fr-FR')}
-          </div>
-          {error !== null ? <div className="error-text">{error}</div> : null}
-          <div className="row" style={{ gap: 'var(--d-2)' }}>
-            {isLive ? (
+          <div className="row" style={{ gap: 'var(--d-2)', flexWrap: 'wrap' }}>
+            {currentEdition.status === 'live' ? (
               <button
                 type="button"
                 className="btn btn-primary"
@@ -203,22 +227,32 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
                 className="btn"
                 onClick={() => void handleTransition('setup')}
                 disabled={transitioning}
+                title="Annule le 'finished' et permet de re-modifier l'édition. Conserve les coureurs et les pointages."
               >
-                {transitioning ? 'Mise à jour…' : 'Réouvrir en setup'}
+                {transitioning ? 'Mise à jour…' : 'Réouvrir cette édition'}
               </button>
             )}
           </div>
         </div>
       </div>
-    );
-  }
+    ) : null;
 
-  return (
+  const formCard = (
     <div className="card">
       <div className="card-head">
-        <h2 className="card-title">Setup de course</h2>
+        <h2 className="card-title">
+          {isEditing
+            ? "Modifier l'édition"
+            : showReadonlyCard
+              ? 'Créer la prochaine édition'
+              : 'Créer une édition'}
+        </h2>
         <span className="muted mono">
-          {isEditing ? "Modifier l'édition (status: setup)" : "Créer / configurer l'édition"}
+          {isEditing
+            ? 'status: setup'
+            : showReadonlyCard
+              ? 'nouveau slug requis'
+              : 'configuration initiale'}
         </span>
       </div>
       <form className="card-body col" onSubmit={(event) => void handleSubmit(event)}>
@@ -325,5 +359,15 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
         </div>
       </form>
     </div>
+  );
+
+  if (isEditing) {
+    return formCard;
+  }
+  return (
+    <>
+      {readonlyCard}
+      {formCard}
+    </>
   );
 }
