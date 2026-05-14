@@ -73,6 +73,7 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
   const [gpxXml, setGpxXml] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent): Promise<void> {
@@ -116,6 +117,28 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
     }
   }
 
+  async function handleTransition(nextStatus: 'setup' | 'live' | 'finished'): Promise<void> {
+    if (currentEdition === null) return;
+    const label =
+      nextStatus === 'live'
+        ? 'Démarrer la course maintenant ? Le classement live devient visible côté spectateur.'
+        : nextStatus === 'finished'
+          ? 'Terminer la course ? Plus aucun pointage ne sera accepté.'
+          : "Réouvrir l'édition en setup ? Tu pourras modifier le GPX et les horaires de nouveau.";
+    if (!confirm(label)) return;
+    setTransitioning(true);
+    setError(null);
+    try {
+      await apiClient.adminTransitionEditionStatus(currentEdition.slug, nextStatus);
+      invalidateResource('edition:current');
+      invalidateResource('editions:all');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+    } finally {
+      setTransitioning(false);
+    }
+  }
+
   async function handleDelete(): Promise<void> {
     if (currentEdition === null) return;
     if (!confirm(`Supprimer l'édition "${currentEdition.displayName}" ? Cette action est irréversible.`)) {
@@ -139,6 +162,7 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
   }
 
   if (currentEdition !== null && currentEdition.status !== 'setup') {
+    const isLive = currentEdition.status === 'live';
     return (
       <div className="card">
         <div className="card-head">
@@ -156,6 +180,28 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
           <div className="muted mono">
             Lever : {new Date(currentEdition.sunriseAt).toLocaleTimeString('fr-FR')} ·{' '}
             Coucher : {new Date(currentEdition.sunsetAt).toLocaleTimeString('fr-FR')}
+          </div>
+          {error !== null ? <div className="error-text">{error}</div> : null}
+          <div className="row" style={{ gap: 'var(--d-2)' }}>
+            {isLive ? (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => void handleTransition('finished')}
+                disabled={transitioning}
+              >
+                {transitioning ? 'Mise à jour…' : 'Terminer la course'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn"
+                onClick={() => void handleTransition('setup')}
+                disabled={transitioning}
+              >
+                {transitioning ? 'Mise à jour…' : 'Réouvrir en setup'}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -222,8 +268,12 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
           Sunrise / sunset sont calculés depuis le premier point du GPX et la date de départ.
         </div>
         {error !== null ? <div className="error-text">{error}</div> : null}
-        <div className="row" style={{ gap: 'var(--d-2)' }}>
-          <button className="btn btn-primary" type="submit" disabled={submitting || deleting}>
+        <div className="row" style={{ gap: 'var(--d-2)', flexWrap: 'wrap' }}>
+          <button
+            className="btn btn-primary"
+            type="submit"
+            disabled={submitting || deleting || transitioning}
+          >
             {submitting
               ? isEditing
                 ? 'Mise à jour…'
@@ -233,14 +283,25 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
                 : "Créer l'édition"}
           </button>
           {isEditing ? (
-            <button
-              className="btn btn-danger"
-              type="button"
-              onClick={() => void handleDelete()}
-              disabled={submitting || deleting}
-            >
-              {deleting ? 'Suppression…' : "Supprimer l'édition"}
-            </button>
+            <>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => void handleTransition('live')}
+                disabled={submitting || deleting || transitioning}
+                title="Passe l'édition en status live. Le classement devient visible côté spectateur et les pointages sont acceptés."
+              >
+                {transitioning ? 'Démarrage…' : '🏁 Démarrer la course'}
+              </button>
+              <button
+                className="btn btn-danger"
+                type="button"
+                onClick={() => void handleDelete()}
+                disabled={submitting || deleting || transitioning}
+              >
+                {deleting ? 'Suppression…' : "Supprimer l'édition"}
+              </button>
+            </>
           ) : null}
         </div>
       </form>

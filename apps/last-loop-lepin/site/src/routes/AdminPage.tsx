@@ -4,7 +4,6 @@ import { CorrectionPanel } from '../components/admin/CorrectionPanel';
 import { DnfCandidatesPanel } from '../components/admin/DnfCandidatesPanel';
 import { RunnerAdminPanel } from '../components/admin/RunnerAdminPanel';
 import { SetupPanel } from '../components/admin/SetupPanel';
-import { TestSeedPanel } from '../components/admin/TestSeedPanel';
 import { useResource, invalidateResource } from '../data/useResource';
 import { useStandings } from '../data/useStandingsPoll';
 import { initialsAvatar } from '../domain/initials.utils';
@@ -12,15 +11,6 @@ import type { RankedRunnerDto, RaceEditionDto, RunnerDto } from '../domain/types
 import { recordAnalyticsEvent } from '../observability/sentry';
 
 const RACE_CACHE_KEY = 'edition:current';
-
-function isTestSeedAvailable(): boolean {
-  const env: Record<string, unknown> = import.meta.env;
-  const stage = env.VITE_STAGE;
-  // Backend mounts `/api/__test/seed` whenever `LASTLOOP_ALLOW_TEST_SEED='1'`,
-  // which CDK sets on every stage except prod. Mirror that on the front:
-  // hide the panel in prod, show everywhere else (preview, integ, dev).
-  return typeof stage === 'string' && stage !== 'prod';
-}
 
 type LoginState = 'idle' | 'submitting' | 'authenticated' | 'denied' | 'rate-limited' | 'unknown-error';
 
@@ -199,12 +189,7 @@ export function AdminPage() {
         <TabButton current={tab} target="corrections" label="Corrections" setTab={setTab} />
       </nav>
 
-      {tab === 'setup' ? (
-        <>
-          <SetupPanel currentEdition={edition} />
-          {isTestSeedAvailable() ? <TestSeedPanel /> : null}
-        </>
-      ) : null}
+      {tab === 'setup' ? <SetupPanel currentEdition={edition} /> : null}
 
       {edition === null && tab !== 'setup' ? (
         <div className="card">
