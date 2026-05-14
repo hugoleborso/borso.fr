@@ -2,9 +2,11 @@ import { parseGpx } from '../helpers/gpx/gpx.core';
 import { computeSunriseSunset } from '../helpers/sun/sun.core';
 import type { Database } from '../database/client';
 import {
+  deleteEdition,
   findEditionBySlug,
   insertEdition,
   listEditions,
+  updateEditionSetup,
   updateEditionStatus,
 } from './edition.repository';
 import type { RaceEdition } from './edition.types';
@@ -17,6 +19,10 @@ export class EditionAlreadyExistsError extends Error {
 
 export class EditionNotFoundError extends Error {
   override readonly name = 'EditionNotFoundError';
+}
+
+export class EditionNotInSetupError extends Error {
+  override readonly name = 'EditionNotInSetupError';
 }
 
 export interface CreateEditionInput {
@@ -81,4 +87,54 @@ export async function transitionEditionStatus(
   const edition = await getEdition(database, slug);
   if (edition.status === status) return;
   await updateEditionStatus(database, slug, status);
+}
+
+export interface UpdateSetupEditionInput {
+  readonly displayName: string;
+  readonly startsAt: Date;
+  readonly endsAt: Date;
+  readonly gpxXml: string;
+}
+
+/**
+ * Re-parses the GPX, recomputes sunrise/sunset, and writes every mutable
+ * field on the existing edition row. Refused (with
+ * {@link EditionNotInSetupError}) once the race has gone live — the
+ * GPX + schedule are the contract the spectators see and shouldn't shift
+ * mid-race. Slug is the primary key and never edits.
+ */
+export async function replaceSetupEdition(
+  database: Database,
+  slug: string,
+  input: UpdateSetupEditionInput,
+): Promise<RaceEdition> {
+  if (input.startsAt.getTime() >= input.endsAt.getTime()) {
+    throw new Error('startsAt must precede endsAt');
+  }
+  const existing = await getEdition(database, slug);
+  if (existing.status !== 'setup') throw new EditionNotInSetupError(slug);
+  const track = parseGpx(input.gpxXml);
+  const { sunriseAt, sunsetAt } = computeSunriseSunset(track.startLatLng, input.startsAt);
+  const replaced: RaceEdition = {
+    ...existing,
+    displayName: input.displayName,
+    startsAt: input.startsAt,
+    endsAt: input.endsAt,
+    sunriseAt,
+    sunsetAt,
+    gpx: {
+      distanceMeters: track.distanceMeters,
+      elevationGainMeters: track.elevationGainMeters,
+      trackJson: { points: track.points },
+      startLatLng: track.startLatLng,
+    },
+  };
+  await updateEditionSetup(database, slug, replaced);
+  return replaced;
+}
+
+export async function removeSetupEdition(database: Database, slug: string): Promise<void> {
+  const existing = await getEdition(database, slug);
+  if (existing.status !== 'setup') throw new EditionNotInSetupError(slug);
+  await deleteEdition(database, slug);
 }

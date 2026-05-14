@@ -46,3 +46,7 @@ export const createEditionInputSchema = z.object({
   endsAt: z.string().datetime({ offset: true }),
   gpxXml: z.string().min(1),
 });
+
+// Mutating an existing setup edition: same payload minus the slug
+// (it's the primary key, taken from the URL path, never the body).
+export const updateEditionInputSchema = createEditionInputSchema.omit({ slug: true });

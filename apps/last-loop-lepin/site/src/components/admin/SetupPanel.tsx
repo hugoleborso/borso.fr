@@ -25,12 +25,6 @@ function defaultEndsAt(): string {
   return isoLocal(now);
 }
 
-/**
- * Pull a human-readable summary out of a `zValidator` 400 body. Hono's
- * default error shape is `{ success: false, error: { issues: [...] } }`
- * — surface the path + message of each issue so the operator sees which
- * field actually failed instead of a generic "données invalides" hint.
- */
 const zodValidationErrorSchema = z.object({
   error: z.object({
     issues: z
@@ -44,6 +38,12 @@ const zodValidationErrorSchema = z.object({
   }),
 });
 
+/**
+ * Pull a human-readable summary out of a `zValidator` 400 body. Hono's
+ * default error shape is `{ success: false, error: { issues: [...] } }`
+ * — surface the path + message of each issue so the operator sees which
+ * field actually failed instead of a generic "données invalides" hint.
+ */
 function summariseZodError(body: unknown): string | null {
   const parsed = zodValidationErrorSchema.safeParse(body);
   if (!parsed.success) return null;
@@ -52,13 +52,27 @@ function summariseZodError(body: unknown): string | null {
     .join(' · ');
 }
 
+const EDITING_SLUG_KEY = 'setup-slug';
+
 export function SetupPanel({ currentEdition }: SetupPanelProps) {
-  const [slug, setSlug] = useState('lepin-2026');
-  const [displayName, setDisplayName] = useState('Last Loop Lépin 2026');
-  const [startsAt, setStartsAt] = useState(defaultStartsAt());
-  const [endsAt, setEndsAt] = useState(defaultEndsAt());
+  // When an edition is already in `setup`, the form re-opens in "edit"
+  // mode: every field is pre-filled with the persisted value, the slug
+  // becomes read-only (it's the PK), and submit fires PUT instead of
+  // POST. The GPX textarea stays empty by default — pasting + submitting
+  // replaces the persisted GPX, which is the explicit ergonomic goal:
+  // iterate the trace without recreating the whole edition.
+  const isEditing = currentEdition !== null && currentEdition.status === 'setup';
+  const [slug, setSlug] = useState(currentEdition?.slug ?? 'lepin-2026');
+  const [displayName, setDisplayName] = useState(currentEdition?.displayName ?? 'Last Loop Lépin 2026');
+  const [startsAt, setStartsAt] = useState(
+    currentEdition === null ? defaultStartsAt() : isoLocal(new Date(currentEdition.startsAt)),
+  );
+  const [endsAt, setEndsAt] = useState(
+    currentEdition === null ? defaultEndsAt() : isoLocal(new Date(currentEdition.endsAt)),
+  );
   const [gpxXml, setGpxXml] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent): Promise<void> {
@@ -66,18 +80,27 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
     setSubmitting(true);
     setError(null);
     try {
-      await apiClient.adminCreateEdition({
-        slug,
+      const payload = {
         displayName,
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
         gpxXml,
-      });
+      };
+      if (isEditing && currentEdition !== null) {
+        await apiClient.adminReplaceEdition(currentEdition.slug, payload);
+      } else {
+        await apiClient.adminCreateEdition({ slug, ...payload });
+      }
+      setGpxXml('');
       invalidateResource('edition:current');
       invalidateResource('editions:all');
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 409) {
-        setError('Une édition avec ce slug existe déjà.');
+        setError(
+          isEditing
+            ? "L'édition a démarré : modification verrouillée."
+            : 'Une édition avec ce slug existe déjà.',
+        );
       } else if (caught instanceof ApiError && caught.status === 400) {
         const summary = summariseZodError(caught.body);
         setError(
@@ -90,6 +113,28 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
       }
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(): Promise<void> {
+    if (currentEdition === null) return;
+    if (!confirm(`Supprimer l'édition "${currentEdition.displayName}" ? Cette action est irréversible.`)) {
+      return;
+    }
+    setDeleting(true);
+    setError(null);
+    try {
+      await apiClient.adminDeleteEdition(currentEdition.slug);
+      invalidateResource('edition:current');
+      invalidateResource('editions:all');
+    } catch (caught) {
+      if (caught instanceof ApiError && caught.status === 409) {
+        setError("L'édition a démarré : suppression verrouillée.");
+      } else {
+        setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+      }
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -121,12 +166,23 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
     <div className="card">
       <div className="card-head">
         <h2 className="card-title">Setup de course</h2>
-        <span className="muted mono">Créer / configurer l'édition</span>
+        <span className="muted mono">
+          {isEditing ? "Modifier l'édition (status: setup)" : "Créer / configurer l'édition"}
+        </span>
       </div>
       <form className="card-body col" onSubmit={(event) => void handleSubmit(event)}>
         <div className="field">
-          <label className="field-label" htmlFor="setup-slug">Slug</label>
-          <input id="setup-slug" className="input" value={slug} onChange={(event) => setSlug(event.target.value)} required minLength={3} />
+          <label className="field-label" htmlFor={EDITING_SLUG_KEY}>Slug</label>
+          <input
+            id={EDITING_SLUG_KEY}
+            className="input"
+            value={slug}
+            onChange={(event) => setSlug(event.target.value)}
+            required
+            minLength={3}
+            readOnly={isEditing}
+            disabled={isEditing}
+          />
         </div>
         <div className="field">
           <label className="field-label" htmlFor="setup-name">Nom</label>
@@ -142,8 +198,16 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
             <input id="setup-end" type="datetime-local" className="input" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} required />
           </div>
         </div>
+        {isEditing && currentEdition !== null ? (
+          <div className="muted mono" style={{ fontSize: 11 }}>
+            GPX actuel : {(currentEdition.gpx.distanceMeters / 1000).toFixed(2)} km · D+ {Math.round(currentEdition.gpx.elevationGainMeters)} m.
+            Coller un nouveau GPX ci-dessous le remplace.
+          </div>
+        ) : null}
         <div className="field">
-          <label className="field-label" htmlFor="setup-gpx">GPX (collé tel quel)</label>
+          <label className="field-label" htmlFor="setup-gpx">
+            GPX {isEditing ? '(nouveau tracé)' : '(collé tel quel)'}
+          </label>
           <textarea
             id="setup-gpx"
             className="input"
@@ -158,9 +222,27 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
           Sunrise / sunset sont calculés depuis le premier point du GPX et la date de départ.
         </div>
         {error !== null ? <div className="error-text">{error}</div> : null}
-        <button className="btn btn-primary" type="submit" disabled={submitting}>
-          {submitting ? 'Création…' : 'Créer l\'édition'}
-        </button>
+        <div className="row" style={{ gap: 'var(--d-2)' }}>
+          <button className="btn btn-primary" type="submit" disabled={submitting || deleting}>
+            {submitting
+              ? isEditing
+                ? 'Mise à jour…'
+                : 'Création…'
+              : isEditing
+                ? 'Remplacer le GPX / mettre à jour'
+                : "Créer l'édition"}
+          </button>
+          {isEditing ? (
+            <button
+              className="btn btn-danger"
+              type="button"
+              onClick={() => void handleDelete()}
+              disabled={submitting || deleting}
+            >
+              {deleting ? 'Suppression…' : "Supprimer l'édition"}
+            </button>
+          ) : null}
+        </div>
       </form>
     </div>
   );

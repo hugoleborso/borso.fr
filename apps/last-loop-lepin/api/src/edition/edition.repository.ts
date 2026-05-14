@@ -87,3 +87,31 @@ export async function updateEditionStatus(
     .set({ status })
     .where(eq(editionsTable.slug, slug));
 }
+
+/**
+ * Replace every mutable field of an existing edition. The caller is
+ * responsible for gating this on `status === 'setup'` — once the race
+ * is live, the schedule + GPX become history and shouldn't shift.
+ */
+export async function updateEditionSetup(
+  database: Database,
+  slug: string,
+  edition: RaceEdition,
+): Promise<void> {
+  await database
+    .update(editionsTable)
+    .set({
+      displayName: edition.displayName,
+      startsAt: edition.startsAt,
+      endsAt: edition.endsAt,
+      sunriseAt: edition.sunriseAt,
+      sunsetAt: edition.sunsetAt,
+      intervalMinutes: edition.intervalMinutes,
+      gpx: JSON.stringify(edition.gpx),
+    })
+    .where(eq(editionsTable.slug, slug));
+}
+
+export async function deleteEdition(database: Database, slug: string): Promise<void> {
+  await database.delete(editionsTable).where(eq(editionsTable.slug, slug));
+}

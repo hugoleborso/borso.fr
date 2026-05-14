@@ -5,14 +5,17 @@ import { getDatabase } from '../database/client';
 import { requireAdminSession } from '../auth/auth.middleware';
 import { GpxParseError } from '../helpers/gpx/gpx.core';
 import { SunCalculationError } from '../helpers/sun/sun.core';
-import { createEditionInputSchema } from './edition.schema';
+import { createEditionInputSchema, updateEditionInputSchema } from './edition.schema';
 import {
   EditionAlreadyExistsError,
   EditionNotFoundError,
+  EditionNotInSetupError,
   createEdition,
   getAllEditions,
   getEdition,
   getEditionOrNull,
+  removeSetupEdition,
+  replaceSetupEdition,
   transitionEditionStatus,
 } from './edition.service';
 
@@ -87,6 +90,54 @@ adminEditionRouter.post(
     }
   },
 );
+
+adminEditionRouter.put(
+  '/:slug',
+  zValidator('json', updateEditionInputSchema),
+  async (context) => {
+    const slug = context.req.param('slug');
+    const input = context.req.valid('json');
+    try {
+      const edition = await replaceSetupEdition(getDatabase(), slug, {
+        displayName: input.displayName,
+        startsAt: new Date(input.startsAt),
+        endsAt: new Date(input.endsAt),
+        gpxXml: input.gpxXml,
+      });
+      return context.json({ edition });
+    } catch (error) {
+      if (error instanceof EditionNotFoundError) {
+        return context.json({ error: error.message }, 404);
+      }
+      if (error instanceof EditionNotInSetupError) {
+        return context.json({ error: 'edition has already started; setup is locked' }, 409);
+      }
+      if (error instanceof GpxParseError) {
+        return context.json({ error: 'gpx parse error', detail: error.message }, 400);
+      }
+      if (error instanceof SunCalculationError) {
+        return context.json({ error: 'sun calculation failed', detail: error.message }, 400);
+      }
+      throw error;
+    }
+  },
+);
+
+adminEditionRouter.delete('/:slug', async (context) => {
+  const slug = context.req.param('slug');
+  try {
+    await removeSetupEdition(getDatabase(), slug);
+    return context.json({ slug, deleted: true });
+  } catch (error) {
+    if (error instanceof EditionNotFoundError) {
+      return context.json({ error: error.message }, 404);
+    }
+    if (error instanceof EditionNotInSetupError) {
+      return context.json({ error: 'edition has already started; delete is locked' }, 409);
+    }
+    throw error;
+  }
+});
 
 const statusUpdateSchema = z.object({ status: z.enum(['setup', 'live', 'finished']) });
 

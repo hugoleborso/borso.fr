@@ -163,6 +163,23 @@ export const apiClient = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+  adminReplaceEdition: (
+    slug: string,
+    input: {
+      displayName: string;
+      startsAt: string;
+      endsAt: string;
+      gpxXml: string;
+    },
+  ) =>
+    fetchJson(`/api/admin/editions/${encodeURIComponent(slug)}`, editionEnvelopeSchema, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    }),
+  adminDeleteEdition: (slug: string) =>
+    fetchJson(`/api/admin/editions/${encodeURIComponent(slug)}`, passthroughSchema, {
+      method: 'DELETE',
+    }),
   adminCreateRunner: (input: {
     editionSlug: string;
     slug: string;
