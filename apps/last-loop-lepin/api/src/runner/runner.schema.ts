@@ -27,10 +27,15 @@ export const runnerSlugSchema = z
   .max(64)
   .regex(/^[a-z0-9-]+$/, 'lowercase letters, digits and dashes only');
 
+// `bib` is mandatory at the API boundary — the orga always knows the
+// dossard before the runner steps on the start line, and downstream UI
+// (Pointage, Mur des éliminés) reads it as "this is the runner". The DB
+// column stays nullable to keep migrations cheap and to leave the door
+// open for historical imports that have no bib.
 export const createRunnerInputSchema = z.object({
   editionSlug: editionSlugSchema,
   slug: runnerSlugSchema,
   displayName: z.string().min(1).max(120),
   photoKey: z.string().min(1).max(255).nullable().optional(),
-  bib: z.number().int().positive().max(9999).nullable().optional(),
+  bib: z.number().int().positive().max(9999),
 });

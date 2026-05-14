@@ -44,6 +44,10 @@ export const createEditionInputSchema = z.object({
   displayName: z.string().min(1).max(120),
   startsAt: z.string().datetime({ offset: true }),
   endsAt: z.string().datetime({ offset: true }),
+  // 1–240 min covers the realistic range: 1 min is the smallest useful
+  // testing value (sub-minute loops would race the wall-clock validation
+  // window in punch.core); 240 min caps absurd inputs. Defaults to 60.
+  intervalMinutes: z.number().int().min(1).max(240).optional(),
   gpxXml: z.string().min(1),
 });
 

@@ -157,6 +157,7 @@ export const apiClient = {
     displayName: string;
     startsAt: string;
     endsAt: string;
+    intervalMinutes?: number;
     gpxXml: string;
   }) =>
     fetchJson('/api/admin/editions', editionEnvelopeSchema, {
@@ -169,6 +170,7 @@ export const apiClient = {
       displayName: string;
       startsAt: string;
       endsAt: string;
+      intervalMinutes?: number;
       gpxXml: string;
     },
   ) =>
@@ -194,7 +196,7 @@ export const apiClient = {
     slug: string;
     displayName: string;
     photoKey?: string | null;
-    bib?: number | null;
+    bib: number;
   }) =>
     fetchJson('/api/admin/runners', runnerEnvelopeSchema, {
       method: 'POST',

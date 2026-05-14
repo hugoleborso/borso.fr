@@ -30,6 +30,7 @@ export interface CreateEditionInput {
   readonly displayName: string;
   readonly startsAt: Date;
   readonly endsAt: Date;
+  readonly intervalMinutes?: number;
   readonly gpxXml: string;
 }
 
@@ -52,7 +53,7 @@ export async function createEdition(database: Database, input: CreateEditionInpu
     endsAt: input.endsAt,
     sunriseAt,
     sunsetAt,
-    intervalMinutes: DEFAULT_INTERVAL_MINUTES,
+    intervalMinutes: input.intervalMinutes ?? DEFAULT_INTERVAL_MINUTES,
     gpx: {
       distanceMeters: track.distanceMeters,
       elevationGainMeters: track.elevationGainMeters,
@@ -93,6 +94,7 @@ export interface UpdateSetupEditionInput {
   readonly displayName: string;
   readonly startsAt: Date;
   readonly endsAt: Date;
+  readonly intervalMinutes?: number;
   readonly gpxXml: string;
 }
 
@@ -122,6 +124,7 @@ export async function replaceSetupEdition(
     endsAt: input.endsAt,
     sunriseAt,
     sunsetAt,
+    intervalMinutes: input.intervalMinutes ?? existing.intervalMinutes,
     gpx: {
       distanceMeters: track.distanceMeters,
       elevationGainMeters: track.elevationGainMeters,

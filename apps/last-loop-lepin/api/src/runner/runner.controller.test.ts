@@ -62,6 +62,7 @@ describe('runner controller', () => {
       editionSlug: 'lepin-2026',
       slug: 'dora',
       displayName: 'Dora',
+      bib: 4,
     };
     const first = await app.request('/api/admin/runners', {
       method: 'POST',

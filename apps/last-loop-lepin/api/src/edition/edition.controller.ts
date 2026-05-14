@@ -73,6 +73,7 @@ adminEditionRouter.post(
         displayName: input.displayName,
         startsAt: new Date(input.startsAt),
         endsAt: new Date(input.endsAt),
+        ...(input.intervalMinutes !== undefined ? { intervalMinutes: input.intervalMinutes } : {}),
         gpxXml: input.gpxXml,
       });
       return context.json({ edition }, 201);
@@ -102,6 +103,7 @@ adminEditionRouter.put(
         displayName: input.displayName,
         startsAt: new Date(input.startsAt),
         endsAt: new Date(input.endsAt),
+        ...(input.intervalMinutes !== undefined ? { intervalMinutes: input.intervalMinutes } : {}),
         gpxXml: input.gpxXml,
       });
       return context.json({ edition });

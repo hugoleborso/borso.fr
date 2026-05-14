@@ -1,0 +1,40 @@
+/* Leaflet course map overlays */
+.course-map {
+  background: var(--bg-elev);
+}
+.course-map .leaflet-tile {
+  /* Soft tint on the OSM raster so the polyline + avatars pop on dark UI. */
+  filter: saturate(0.85) brightness(0.95);
+}
+.map-start-icon {
+  /* Override leaflet's default divIcon background. */
+  background: transparent;
+  border: none;
+}
+.map-start-dot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+.map-runner-icon {
+  background: transparent;
+  border: none;
+}
+.map-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-ink, #111);
+  border: 2px solid var(--bg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}

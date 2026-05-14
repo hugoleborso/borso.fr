@@ -60,14 +60,18 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
     setError(null);
     try {
       const slug = slugify(displayName);
-      const trimmedBib = bib.trim();
-      const parsedBib = trimmedBib.length === 0 ? null : Number.parseInt(trimmedBib, 10);
+      const parsedBib = Number.parseInt(bib.trim(), 10);
+      if (!Number.isFinite(parsedBib) || parsedBib <= 0) {
+        setError('Le numéro de dossard est obligatoire (1 ou plus).');
+        setSubmitting(false);
+        return;
+      }
       const photoKey = photoFile === null ? null : await uploadPhoto(slug, photoFile);
       await apiClient.adminCreateRunner({
         editionSlug: edition.slug,
         slug,
         displayName: displayName.trim(),
-        bib: parsedBib !== null && Number.isFinite(parsedBib) ? parsedBib : null,
+        bib: parsedBib,
         photoKey,
       });
       setDisplayName('');
@@ -113,6 +117,8 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
               value={bib}
               onChange={(event) => setBib(event.target.value)}
               min={1}
+              max={9999}
+              required
             />
           </div>
           <div className="field" style={{ flex: 1, minWidth: 180 }}>

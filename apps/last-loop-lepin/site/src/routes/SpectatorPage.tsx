@@ -164,8 +164,11 @@ export function SpectatorPage() {
         <div className="card">
           <div className="card-head">
             <h2 className="card-title">Tracé</h2>
+            <span className="muted mono">
+              {standings === null ? '' : `${standings.ranked.filter((entry) => entry.status.kind === 'in-race').length} en course`}
+            </span>
           </div>
-          <CourseMap edition={edition} />
+          <CourseMap edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
         </div>
       </div>
       <div className="card" style={{ marginTop: 'var(--d-4)' }}>

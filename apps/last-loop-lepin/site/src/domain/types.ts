@@ -6,6 +6,11 @@
 
 export type EditionStatus = 'setup' | 'live' | 'finished';
 
+export interface LatLngDto {
+  readonly lat: number;
+  readonly lng: number;
+}
+
 export interface RaceEditionDto {
   readonly slug: string;
   readonly displayName: string;

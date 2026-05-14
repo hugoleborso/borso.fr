@@ -70,6 +70,9 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
   const [endsAt, setEndsAt] = useState(
     currentEdition === null ? defaultEndsAt() : isoLocal(new Date(currentEdition.endsAt)),
   );
+  const [intervalMinutes, setIntervalMinutes] = useState(
+    String(currentEdition?.intervalMinutes ?? 60),
+  );
   const [gpxXml, setGpxXml] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -81,10 +84,12 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
     setSubmitting(true);
     setError(null);
     try {
+      const intervalMinutesNumber = Number.parseInt(intervalMinutes, 10);
       const payload = {
         displayName,
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
+        intervalMinutes: Number.isFinite(intervalMinutesNumber) ? intervalMinutesNumber : 60,
         gpxXml,
       };
       if (isEditing && currentEdition !== null) {
@@ -242,6 +247,20 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
           <div className="field" style={{ flex: 1 }}>
             <label className="field-label" htmlFor="setup-end">Fin</label>
             <input id="setup-end" type="datetime-local" className="input" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} required />
+          </div>
+          <div className="field" style={{ flex: '0 0 140px' }}>
+            <label className="field-label" htmlFor="setup-interval">Boucle (min)</label>
+            <input
+              id="setup-interval"
+              type="number"
+              className="input"
+              value={intervalMinutes}
+              onChange={(event) => setIntervalMinutes(event.target.value)}
+              min={1}
+              max={240}
+              step={1}
+              required
+            />
           </div>
         </div>
         {isEditing && currentEdition !== null ? (

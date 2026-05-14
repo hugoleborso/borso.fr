@@ -5,6 +5,7 @@ import { initSentry } from './observability/sentry';
 import './styles/tokens.css';
 import './styles/chrome.css';
 import './styles/components.css';
+import './styles/map.css';
 
 initSentry();
 
