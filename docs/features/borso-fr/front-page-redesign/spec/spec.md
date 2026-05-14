@@ -137,14 +137,14 @@ Pas de changement `apps/borso-fr/package.json` (pas de nouvelle dépendance). Pa
   - Edge : `prefers-reduced-motion: reduce` (émulé via `agent-browser set device`) → pas d'animation perçue.
   - Edge : WebGL désactivé (Chrome flag) → page reste fonctionnelle, fond uni.
   - Vérification broken-image scan (cf. `/visual-validation` standard) sur toutes les screenshots.
-- **`/technical-validation`** — couvre :
-  - Aucune trace de React / Babel / JSX / `react-bits` import dans le diff (le port doit être vanilla).
-  - Aucun usage de `as Foo` (biome plugin), aucun `any`, `noUncheckedIndexedAccess` propre sur tout nouveau TS si introduit (mais ce PR n'introduit pas de TS).
-  - `apps/borso-fr/site/shader-bg.js` porte l'attribution MIT (David Haz, react-bits) en tête.
-  - Pas de duplication de logique entre `script.js` et `shader-bg.js`.
-  - Le `index.html` charge les scripts dans l'ordre : `shader-bg.js` (load defer ou en bas), puis `script.js`.
-- **Pas de `*.utils.ts` ⇒ pas de gate coverage** (le code est purement side-effect : DOM, WebGL, événements).
-- **Pré-flight gate** (manuel pour cette feature, par l'implementer) : `pnpm --filter @borso-app/borso-fr run dev` et ouvrir `http://localhost:5173/` ; screenshot self-check + scan broken-image.
+- **`/technical-validation`** — couvre (corrigé après ADR 0003) :
+  - Aucun usage de `as Foo` ni `as unknown as Foo` (biome plugin), aucun `any`, `noUncheckedIndexedAccess` propre sur le TSX nouvellement introduit (`apps/borso-fr/site/components/Galaxy.tsx`, `apps/borso-fr/site/galaxy.tsx`).
+  - `apps/borso-fr/site/components/Galaxy.tsx` porte l'en-tête MIT (David Haz / react-bits) — load-bearing, voir ADR 0003.
+  - Le seul `useEffect` introduit (dans `Galaxy.tsx`) est le cas légitime "synchronise React avec un système externe" (WebGL renderer + rAF + listeners), avec cleanup complet (cancelAnimationFrame, remove listeners, removeChild canvas, `WEBGL_lose_context`).
+  - `apps/borso-fr/site/shader-bg.js` n'existe plus (deleted).
+  - Le `index.html` charge `./galaxy.tsx` (handled par Vite) puis `./script.js` (module ESM).
+- **Pas de `*.utils.ts` ⇒ pas de gate coverage** (le code introduit par cette PR est purement side-effect : React mount, DOM glue, WebGL setup via composant).
+- **Pré-flight gate** (autonome, sans humain) : `pnpm --filter @borso-app/borso-fr run dev` + `/visual-validation` ouvre `http://localhost:5173/` via `agent-browser` ; screenshot self-check + scan broken-image.
 
 ## Production strategy
 
