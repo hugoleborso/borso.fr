@@ -1,20 +1,46 @@
 .main {
   padding: var(--d-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--d-4);
+  /*
+   * The shell sets `.app { display: grid; grid-template-rows: auto 1fr; min-height: 100vh }`,
+   * so `.main` lives inside a row that's at least 100vh − topbar. `min-height: 0` is the
+   * flexbox escape hatch that lets nested `flex: 1` actually win against intrinsic content
+   * heights — without it, a leaderboard with 100 rows would push `.main` past the viewport
+   * instead of confining itself to a scrollable card body.
+   */
+  min-height: 0;
 }
 
 .spectator-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   gap: var(--d-4);
+  /*
+   * Take whatever vertical room is left in `.main` after the (optional) banner +
+   * correction-banner above and the LoopsTimeline card below. Each grid cell gets
+   * `min-height: 0` for the same flex-overflow reason as `.main`, so a tall leaderboard
+   * scrolls inside its own card-body rather than blowing past the viewport.
+   */
+  flex: 1;
+  min-height: 0;
 }
 
 .spectator-grid > * {
   min-width: 0;
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
   .spectator-grid {
     grid-template-columns: minmax(0, 1fr);
+    /*
+     * On narrow viewports the grid stacks vertically — letting it still flex-grow would
+     * collapse every card to its content height and never give the leaderboard the room
+     * it deserves. Let the page scroll instead.
+     */
+    flex: initial;
   }
 }
 

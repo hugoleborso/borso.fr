@@ -180,6 +180,10 @@ export const apiClient = {
     fetchJson(`/api/admin/editions/${encodeURIComponent(slug)}`, passthroughSchema, {
       method: 'DELETE',
     }),
+  adminSeedFixture: (fixture: 'race-mid-loop-3' | 'top-with-dnf-candidates' | 'race-finished') =>
+    fetchJson(`/api/__test/seed?fixture=${encodeURIComponent(fixture)}`, passthroughSchema, {
+      method: 'POST',
+    }),
   adminCreateRunner: (input: {
     editionSlug: string;
     slug: string;

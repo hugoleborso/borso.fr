@@ -89,6 +89,9 @@ jobs:
       # both together. Same-origin /api routing on previews is intentional
       # future work (see docs/knowledge/preview-api-cross-origin.md).
       VITE_API_BASE: https://${{ matrix.app }}-pr-${{ github.event.pull_request.number }}-api.preview.borso.fr
+      # Surfaces non-prod-only UI affordances (test fixture seeders, etc.).
+      # Stage value also drives Sentry environment tagging.
+      VITE_STAGE: preview
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
