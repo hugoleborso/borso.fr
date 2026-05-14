@@ -74,6 +74,11 @@ async function fetchOnce(editionSlug: string): Promise<void> {
 }
 
 function subscribe(editionSlug: string, listener: () => void): () => void {
+  // No edition selected (e.g. spectator landing with no current edition):
+  // skip the poll entirely. Otherwise we hammer `/api/standings/` (empty
+  // segment → 404) every 2 s, per mounted consumer. The hook still hands
+  // back `INITIAL_SNAPSHOT` so callers don't have to special-case it.
+  if (editionSlug === '') return () => {};
   const entry = ensureEntry(editionSlug);
   entry.listeners.add(listener);
   if (entry.intervalId === null) {
@@ -92,10 +97,16 @@ function subscribe(editionSlug: string, listener: () => void): () => void {
 }
 
 export function useStandings(editionSlug: string): StandingsState {
-  const entry = ensureEntry(editionSlug);
+  // Reach into the cache lazily on every getSnapshot call — the cache
+  // entry itself is stable (created once via ensureEntry), only
+  // `entry.snapshot` mutates as fetches resolve. For the empty-slug
+  // short-circuit, return the same `INITIAL_SNAPSHOT` reference every
+  // time (otherwise React's `getSnapshot should be cached` warning fires
+  // and the tree remounts in a loop).
+  const entry = editionSlug === '' ? null : ensureEntry(editionSlug);
   return useSyncExternalStore(
     (listener) => subscribe(editionSlug, listener),
-    () => entry.snapshot,
+    () => (entry === null ? INITIAL_SNAPSHOT : entry.snapshot),
     () => INITIAL_SNAPSHOT,
   );
 }

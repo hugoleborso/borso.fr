@@ -9,6 +9,12 @@ import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import type { Construct } from 'constructs';
 
 const APP_SLUG = 'last-loop-lepin';
+// One scrypt-hashed PIN shared across every stage (preview/integ/prod).
+// Operator-managed via the AWS Secrets Manager console / CLI — the CDK
+// stack reads it at deploy time, it never lives in code or workflow env.
+// Rotate with `put-secret-value` + redeploy. See
+// docs/knowledge/preview-api-cross-origin.md neighbours for context.
+const ADMIN_PIN_HASH_SECRET_NAME = `${APP_SLUG}/admin-pin-hash`;
 
 export interface BuildAppStackProps {
   readonly scope: Construct;
@@ -59,6 +65,20 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
     },
   });
 
+  // PIN hash is operator-owned (Hugo). The stack consumes the Secrets
+  // Manager value at deploy time — same secret for every stage — and the
+  // Lambda receives `PIN_HASH` as a plaintext env var. To rotate without
+  // touching this code:
+  //   aws secretsmanager put-secret-value \
+  //     --secret-id last-loop-lepin/admin-pin-hash \
+  //     --secret-string 'scrypt$<salt>$<key>'
+  //   # then redeploy so CFN picks up the new value.
+  const pinHashSecret = Secret.fromSecretNameV2(
+    props.scope,
+    'AdminPinHashSecret',
+    ADMIN_PIN_HASH_SECRET_NAME,
+  );
+
   const allowSeedFlag: Record<string, string> =
     props.stage === 'prod' ? {} : { LASTLOOP_ALLOW_TEST_SEED: '1' };
 
@@ -73,6 +93,7 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
       environment: {
         PHOTOS_BUCKET: photosBucket.bucketName,
         JWT_SECRET: jwtSecret.secretValue.unsafeUnwrap(),
+        PIN_HASH: pinHashSecret.secretValue.unsafeUnwrap(),
         ...allowSeedFlag,
       },
     },
@@ -86,5 +107,6 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
     photosBucket.grantPut(previewableApp.api.handler);
     photosBucket.grantRead(previewableApp.api.handler);
     jwtSecret.grantRead(previewableApp.api.handler);
+    pinHashSecret.grantRead(previewableApp.api.handler);
   }
 }
