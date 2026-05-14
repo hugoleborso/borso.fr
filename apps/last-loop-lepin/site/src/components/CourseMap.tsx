@@ -145,11 +145,13 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
     };
   }, [points, startLat, startLng]);
 
-  // Re-paint runner markers on each standings poll. Each in-race runner
-  // gets dropped at their estimated position: fraction =
-  // elapsed-since-last-punch / pace, capped at 1. Pace falls back to the
-  // edition's interval (one loop per top) when the runner hasn't closed
-  // a loop yet.
+  // Re-paint runner markers on each standings poll. Backyard rule: every
+  // loop starts on the top-of-hour boundary, NOT when the previous loop
+  // closes. A runner who clears loop N early waits at the corral until
+  // T0 + N·loopMs, then everyone re-departs together. The projection
+  // therefore reads `elapsed-since-loop-boundary` (not since last punch)
+  // and parks the avatar at the start point when the runner has already
+  // closed the current loop (= "at corral, done for this hour").
   useEffect(() => {
     const layer = runnerLayerRef.current;
     if (layer === null) return;
@@ -157,16 +159,18 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
     if (edition.status !== 'live') return;
     const track = indexTrack(points);
     if (track.total === 0) return;
-    const fallbackPaceMs = Math.max(edition.intervalMinutes, 1) * 60_000;
+    const loopMs = Math.max(edition.intervalMinutes, 1) * 60_000;
     const startMs = new Date(edition.startsAt).getTime();
     const nowMs = now.getTime();
+    const elapsedSinceRace = Math.max(0, nowMs - startMs);
+    const currentLoopIndex = Math.floor(elapsedSinceRace / loopMs) + 1;
+    const currentLoopStartMs = startMs + (currentLoopIndex - 1) * loopMs;
+    const elapsedInLoopMs = nowMs - currentLoopStartMs;
     for (const entry of ranked) {
       if (entry.status.kind !== 'in-race') continue;
-      const lastPunchMs =
-        entry.lastFinishedAt === null ? startMs : new Date(entry.lastFinishedAt).getTime();
-      const elapsedMs = Math.max(0, nowMs - lastPunchMs);
-      const paceMs = runnerLoopPaceMs(entry, fallbackPaceMs);
-      const fraction = paceMs === 0 ? 0 : elapsedMs / paceMs;
+      const restingAtCorral = entry.status.lastLoop >= currentLoopIndex;
+      const paceMs = restingAtCorral ? loopMs : runnerLoopPaceMs(entry, loopMs);
+      const fraction = restingAtCorral || paceMs === 0 ? 0 : elapsedInLoopMs / paceMs;
       const position = projectFraction(track, fraction);
       L.marker([position.lat, position.lng], {
         icon: L.divIcon({
@@ -175,7 +179,9 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
           iconSize: [28, 28],
           iconAnchor: [14, 14],
         }),
-        title: `${entry.runner.displayName} · boucle ${entry.status.lastLoop} · ${Math.round(fraction * 100)}%`,
+        title: restingAtCorral
+          ? `${entry.runner.displayName} · au corral · ${entry.status.lastLoop} boucles validées`
+          : `${entry.runner.displayName} · boucle ${currentLoopIndex} · ${Math.round(fraction * 100)}%`,
       }).addTo(layer);
     }
     // `squaredDegrees` stays used as a future hook for "which segment am I
