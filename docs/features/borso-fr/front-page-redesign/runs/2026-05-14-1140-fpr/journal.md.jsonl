@@ -5,3 +5,5 @@
 {"kind":"stage_changed","runId":"2026-05-14-1140-fpr","from":"plan","to":"implement","at":"2026-05-14T12:49:54.000Z"}
 {"kind":"stage_changed","runId":"2026-05-14-1140-fpr","from":"implement","to":"validate","at":"2026-05-14T12:56:35.000Z"}
 {"kind":"validate_fail","runId":"2026-05-14-1140-fpr","verdict":"FAIL","row":"A12 mobile menu width","action":"fix","at":"2026-05-14T13:04:32.000Z"}
+{"kind":"validate_pass","runId":"2026-05-14-1140-fpr","technical":"PASS_EXCEPT_UNVERIFIABLE","visual":"PASS","at":"2026-05-14T13:09:24.000Z"}
+{"kind":"stage_changed","runId":"2026-05-14-1140-fpr","from":"validate","to":"ship","at":"2026-05-14T13:09:24.000Z"}
