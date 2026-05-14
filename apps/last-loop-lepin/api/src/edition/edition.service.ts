@@ -95,7 +95,13 @@ export interface UpdateSetupEditionInput {
   readonly startsAt: Date;
   readonly endsAt: Date;
   readonly intervalMinutes?: number;
-  readonly gpxXml: string;
+  /**
+   * Omitted (or empty) → keep the persisted GPX + sunrise/sunset.
+   * Provided → re-parse, recompute, replace. Empty strings are coerced
+   * to `undefined` by the controller so the schema-side `.optional()`
+   * + this branch agree.
+   */
+  readonly gpxXml?: string;
 }
 
 /**
@@ -115,8 +121,14 @@ export async function replaceSetupEdition(
   }
   const existing = await getEdition(database, slug);
   if (existing.status !== 'setup') throw new EditionNotInSetupError(slug);
-  const track = parseGpx(input.gpxXml);
-  const { sunriseAt, sunsetAt } = computeSunriseSunset(track.startLatLng, input.startsAt);
+  const newTrack = input.gpxXml === undefined || input.gpxXml.length === 0
+    ? null
+    : parseGpx(input.gpxXml);
+  // Sunrise/sunset depend on (a) the start coordinates and (b) the start
+  // date. Re-compute whenever either changed — i.e. when the user uploaded
+  // a new GPX OR shifted `startsAt`.
+  const startLatLng = newTrack?.startLatLng ?? existing.gpx.startLatLng;
+  const { sunriseAt, sunsetAt } = computeSunriseSunset(startLatLng, input.startsAt);
   const replaced: RaceEdition = {
     ...existing,
     displayName: input.displayName,
@@ -125,12 +137,14 @@ export async function replaceSetupEdition(
     sunriseAt,
     sunsetAt,
     intervalMinutes: input.intervalMinutes ?? existing.intervalMinutes,
-    gpx: {
-      distanceMeters: track.distanceMeters,
-      elevationGainMeters: track.elevationGainMeters,
-      trackJson: { points: track.points },
-      startLatLng: track.startLatLng,
-    },
+    gpx: newTrack === null
+      ? existing.gpx
+      : {
+          distanceMeters: newTrack.distanceMeters,
+          elevationGainMeters: newTrack.elevationGainMeters,
+          trackJson: { points: newTrack.points },
+          startLatLng: newTrack.startLatLng,
+        },
   };
   await updateEditionSetup(database, slug, replaced);
   return replaced;

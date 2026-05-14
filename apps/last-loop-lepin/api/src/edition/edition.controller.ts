@@ -104,7 +104,7 @@ adminEditionRouter.put(
         startsAt: new Date(input.startsAt),
         endsAt: new Date(input.endsAt),
         ...(input.intervalMinutes !== undefined ? { intervalMinutes: input.intervalMinutes } : {}),
-        gpxXml: input.gpxXml,
+        ...(input.gpxXml !== undefined ? { gpxXml: input.gpxXml } : {}),
       });
       return context.json({ edition });
     } catch (error) {

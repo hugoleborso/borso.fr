@@ -171,7 +171,7 @@ export const apiClient = {
       startsAt: string;
       endsAt: string;
       intervalMinutes?: number;
-      gpxXml: string;
+      gpxXml?: string;
     },
   ) =>
     fetchJson(`/api/admin/editions/${encodeURIComponent(slug)}`, editionEnvelopeSchema, {

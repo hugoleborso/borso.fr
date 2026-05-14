@@ -1,74 +1,20 @@
 import { useState } from 'react';
-import { z } from 'zod';
 import { ApiError, apiClient } from '../../api/client';
 import { invalidateResource } from '../../data/useResource';
 import type { RaceEditionDto } from '../../domain/types';
+import {
+  defaultEndsAt,
+  defaultStartsAt,
+  isoLocal,
+  suggestNextSlug,
+  summariseZodError,
+} from './setup-form.utils';
 
 interface SetupPanelProps {
   readonly currentEdition: RaceEditionDto | null;
 }
 
-function isoLocal(date: Date): string {
-  const pad = (value: number): string => `${value}`.padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function defaultStartsAt(): string {
-  const now = new Date();
-  now.setHours(6, 0, 0, 0);
-  return isoLocal(now);
-}
-
-function defaultEndsAt(): string {
-  const now = new Date();
-  now.setHours(22, 0, 0, 0);
-  return isoLocal(now);
-}
-
-const zodValidationErrorSchema = z.object({
-  error: z.object({
-    issues: z
-      .array(
-        z.object({
-          path: z.array(z.union([z.string(), z.number()])).optional(),
-          message: z.string().optional(),
-        }),
-      )
-      .min(1),
-  }),
-});
-
-/**
- * Pull a human-readable summary out of a `zValidator` 400 body. Hono's
- * default error shape is `{ success: false, error: { issues: [...] } }`
- * — surface the path + message of each issue so the operator sees which
- * field actually failed instead of a generic "données invalides" hint.
- */
-function summariseZodError(body: unknown): string | null {
-  const parsed = zodValidationErrorSchema.safeParse(body);
-  if (!parsed.success) return null;
-  return parsed.data.error.issues
-    .map((issue) => `${(issue.path ?? []).join('.') || '?'}: ${issue.message ?? 'invalide'}`)
-    .join(' · ');
-}
-
 const EDITING_SLUG_KEY = 'setup-slug';
-
-/**
- * Suggest the next edition's slug. If the current edition slug ends in a
- * 4-digit year (`lepin-2026`), increment it (`lepin-2027`). Otherwise
- * append `-next` to avoid colliding with the existing slug.
- */
-function suggestNextSlug(currentSlug: string | undefined): string {
-  if (currentSlug === undefined) return 'lepin-2026';
-  const match = /^(.*?)(\d{4})$/.exec(currentSlug);
-  if (match !== null) {
-    const stem = match[1] ?? '';
-    const year = Number.parseInt(match[2] ?? '0', 10);
-    return `${stem}${year + 1}`;
-  }
-  return `${currentSlug}-next`;
-}
 
 export function SetupPanel({ currentEdition }: SetupPanelProps) {
   // Three rendering modes:
@@ -101,6 +47,8 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
     String(isEditing && currentEdition !== null ? currentEdition.intervalMinutes : 60),
   );
   const [gpxXml, setGpxXml] = useState('');
+  const [gpxFileName, setGpxFileName] = useState<string | null>(null);
+  const [gpxReadError, setGpxReadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
@@ -112,19 +60,26 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
     setError(null);
     try {
       const intervalMinutesNumber = Number.parseInt(intervalMinutes, 10);
-      const payload = {
+      const basePayload = {
         displayName,
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
         intervalMinutes: Number.isFinite(intervalMinutesNumber) ? intervalMinutesNumber : 60,
-        gpxXml,
       };
       if (isEditing && currentEdition !== null) {
-        await apiClient.adminReplaceEdition(currentEdition.slug, payload);
+        // In edit mode, an empty `gpxXml` means "keep the persisted trace".
+        // The server schema marks `gpxXml` optional on update so we just
+        // omit the key — `adminReplaceEdition` returns a JSON without the
+        // sunrise / GPX shift in that case.
+        await apiClient.adminReplaceEdition(
+          currentEdition.slug,
+          gpxXml.length === 0 ? basePayload : { ...basePayload, gpxXml },
+        );
       } else {
-        await apiClient.adminCreateEdition({ slug, ...payload });
+        await apiClient.adminCreateEdition({ slug, ...basePayload, gpxXml });
       }
       setGpxXml('');
+      setGpxFileName(null);
       invalidateResource('edition:current');
       invalidateResource('editions:all');
     } catch (caught) {
@@ -300,22 +255,47 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
         {isEditing && currentEdition !== null ? (
           <div className="muted mono" style={{ fontSize: 11 }}>
             GPX actuel : {(currentEdition.gpx.distanceMeters / 1000).toFixed(2)} km · D+ {Math.round(currentEdition.gpx.elevationGainMeters)} m.
-            Coller un nouveau GPX ci-dessous le remplace.
+            Choisir un nouveau fichier ci-dessous le remplace.
           </div>
         ) : null}
         <div className="field">
           <label className="field-label" htmlFor="setup-gpx">
-            GPX {isEditing ? '(nouveau tracé)' : '(collé tel quel)'}
+            GPX {isEditing ? '(nouveau tracé)' : '(fichier .gpx)'}
           </label>
-          <textarea
+          <input
             id="setup-gpx"
+            type="file"
             className="input"
-            rows={6}
-            value={gpxXml}
-            onChange={(event) => setGpxXml(event.target.value)}
-            placeholder="<?xml version=…><gpx><trk>…</trk></gpx>"
-            required
+            accept=".gpx,application/gpx+xml,text/xml,application/xml"
+            onChange={(event) => {
+              const file = event.target.files?.[0] ?? null;
+              setGpxReadError(null);
+              if (file === null) {
+                setGpxXml('');
+                setGpxFileName(null);
+                return;
+              }
+              setGpxFileName(file.name);
+              // `file.text()` reads as UTF-8 — Strava + Garmin both export
+              // UTF-8 GPX so that's the right default.
+              file
+                .text()
+                .then((content) => setGpxXml(content))
+                .catch((caught: unknown) => {
+                  setGpxXml('');
+                  setGpxReadError(
+                    caught instanceof Error ? caught.message : 'Lecture du fichier impossible.',
+                  );
+                });
+            }}
+            required={!isEditing}
           />
+          {gpxFileName !== null ? (
+            <div className="muted mono" style={{ fontSize: 11 }}>
+              {gpxFileName} ({(gpxXml.length / 1024).toFixed(1)} kB chargés)
+            </div>
+          ) : null}
+          {gpxReadError !== null ? <div className="error-text">{gpxReadError}</div> : null}
         </div>
         <div className="muted mono" style={{ fontSize: 11 }}>
           Sunrise / sunset sont calculés depuis le premier point du GPX et la date de départ.

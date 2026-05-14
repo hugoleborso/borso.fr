@@ -53,4 +53,8 @@ export const createEditionInputSchema = z.object({
 
 // Mutating an existing setup edition: same payload minus the slug
 // (it's the primary key, taken from the URL path, never the body).
-export const updateEditionInputSchema = createEditionInputSchema.omit({ slug: true });
+// `gpxXml` becomes optional — the orga may want to fix the schedule or
+// the displayName without re-uploading the trace.
+export const updateEditionInputSchema = createEditionInputSchema
+  .omit({ slug: true })
+  .extend({ gpxXml: z.string().min(1).optional() });
