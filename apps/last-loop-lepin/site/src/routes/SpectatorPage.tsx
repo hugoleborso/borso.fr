@@ -4,7 +4,6 @@ import { Countdown } from '../components/Countdown';
 import { CourseMap } from '../components/CourseMap';
 import { EliminatedWall } from '../components/EliminatedWall';
 import { Leaderboard } from '../components/Leaderboard';
-import { LoopsTimeline } from '../components/LoopsTimeline';
 import { useResource } from '../data/useResource';
 import { useStandings } from '../data/useStandingsPoll';
 import type { RaceEditionDto, RankedRunnerDto } from '../domain/types';
@@ -150,6 +149,16 @@ export function SpectatorPage() {
         </div>
       ) : null}
       <CorrectionBanner correctedAt={mostRecentCorrection} />
+      <div className="card countdown-card">
+        <div className="card-head">
+          <h2 className="card-title">Prochain top horaire</h2>
+          <span className="muted mono">{edition.displayName}</span>
+        </div>
+        <div className="card-body col">
+          <Countdown targetEpochMs={upcomingBoundary} label="" />
+          <InRaceCounter ranked={standings?.ranked ?? []} />
+        </div>
+      </div>
       <div className="card classement-card">
         <div className="card-head">
           <h2 className="card-title">Classement</h2>
@@ -160,16 +169,6 @@ export function SpectatorPage() {
         </div>
       </div>
       <div className="spectator-grid">
-        <div className="card">
-          <div className="card-head">
-            <h2 className="card-title">Prochain top horaire</h2>
-            <span className="muted mono">{edition.displayName}</span>
-          </div>
-          <div className="card-body col">
-            <Countdown targetEpochMs={upcomingBoundary} label="" />
-            <InRaceCounter ranked={standings?.ranked ?? []} />
-          </div>
-        </div>
         <div className="card">
           <div className="card-head">
             <h2 className="card-title">Mur des éliminés</h2>
@@ -184,15 +183,6 @@ export function SpectatorPage() {
             </span>
           </div>
           <CourseMap edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
-        </div>
-      </div>
-      <div className="card" style={{ marginTop: 'var(--d-4)' }}>
-        <div className="card-head">
-          <h2 className="card-title">Boucles</h2>
-          <span className="muted mono">Tops + lever/coucher du soleil</span>
-        </div>
-        <div className="card-body flush">
-          <LoopsTimeline edition={edition} />
         </div>
       </div>
     </div>

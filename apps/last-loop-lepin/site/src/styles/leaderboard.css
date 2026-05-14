@@ -76,10 +76,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Promote the classement card visually: spans the full content width
- * above the spectator-grid widgets and takes ~⅔ of the available
- * vertical room (flex ratio 2:1 against the widget row below). */
+/* Classement spans the full content width above the spectator-grid
+ * widgets. Content-sized (no `flex`) so the widget row below claims
+ * the rest of the viewport instead of fighting for a ratio that
+ * leaves the map / countdown clipped. */
 .classement-card {
-  flex: 2;
   min-height: 0;
 }
