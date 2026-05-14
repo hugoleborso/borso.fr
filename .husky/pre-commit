@@ -1,5 +1,17 @@
 set -e
 
+# Repo-wide Biome lint at every commit — fast, catches per-file issues
+# before they accumulate in a branch. Runs at root scope so it covers
+# files outside any pnpm workspace (e.g., scripts/, docs/-adjacent code),
+# complementing the per-workspace `pnpm -r lint` step in CI. Biome takes
+# ~1 s on this repo. Rung-1 eradication (combined with the ci.yml backup
+# below) of docs/dantotsus/biome-lint-was-not-gated-anywhere.md — the
+# defect class is now structurally unable to land in main: pre-commit
+# rejects the introducing commit, and if the hook is bypassed CI rejects
+# the PR.
+echo "[pre-commit] running biome lint"
+pnpm exec biome lint
+
 # Run the relevant @borso/* infra package's full test suite (including 100%
 # coverage thresholds) whenever a commit touches its source. Cheap to skip
 # when nothing under infra/ changed.
