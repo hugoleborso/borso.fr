@@ -11,11 +11,12 @@ import {
   FunctionEventType,
   FunctionRuntime,
   HttpVersion,
+  OriginRequestPolicy,
   PriceClass,
   ResponseHeadersPolicy,
   ViewerProtocolPolicy,
 } from 'aws-cdk-lib/aws-cloudfront';
-import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
+import { HttpOrigin, S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { ARecord, AaaaRecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
@@ -65,6 +66,23 @@ export interface StaticSiteProps {
   readonly prNumber?: number;
   /** Path to the directory with built assets to upload. */
   readonly assetsPath: string;
+  /**
+   * Optional same-origin API routing for prod. When set, the prod
+   * CloudFront distribution forwards requests matching `pathPattern`
+   * (default `/api/*`) to `domainName` as an additional origin. Used by
+   * full-stack apps that compose a `LambdaApi` alongside the site — the
+   * frontend can then call `/api/*` same-origin, no CORS needed.
+   *
+   * Ignored for preview/integ stages: previews use the shared CloudFront
+   * distribution (no per-PR routing surface there) and rely on a
+   * cross-origin API hostname injected at build time via `VITE_API_BASE`.
+   */
+  readonly api?: {
+    /** API origin hostname (no scheme, no path). */
+    readonly domainName: string;
+    /** CloudFront path pattern. Default: `/api/*`. */
+    readonly pathPattern?: string;
+  };
 }
 
 /**
@@ -159,6 +177,25 @@ export class StaticSite extends Construct {
         { httpStatus: 404, responsePagePath: '/404.jpeg', ttl: Duration.minutes(5) },
       ],
     });
+
+    if (props.api) {
+      // Same-origin API routing. CACHING_DISABLED keeps every request reaching
+      // the Lambda (API responses are per-user, edge caching would leak between
+      // sessions). ALL_VIEWER_EXCEPT_HOST_HEADER forwards every viewer header
+      // to the API — except Host, which CloudFront must override to the
+      // *.execute-api.* origin hostname so API Gateway's virtual-host routing
+      // resolves to the right HTTP API.
+      distribution.addBehavior(
+        props.api.pathPattern ?? '/api/*',
+        new HttpOrigin(props.api.domainName),
+        {
+          allowedMethods: AllowedMethods.ALLOW_ALL,
+          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        },
+      );
+    }
 
     // Grant the CloudFront OAC principal s3:ListBucket so S3 can return 404
     // for missing keys instead of 403. The default OAC policy only grants
