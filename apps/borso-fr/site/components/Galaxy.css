@@ -4,11 +4,16 @@
   width: 100%;
   height: 100%;
   display: block;
-  /* Explicit pointer-events:auto so mousemove fires for the warp/repulsion
+  /* Explicit pointer-events:auto so pointermove fires for the warp/repulsion
      effect even though the parent #bg-canvas-wrap has pointer-events:none
      (which lets clicks on the canvas region fall through to whatever is
      stacked below). */
   pointer-events: auto;
+  /* touch-action:none keeps the browser from claiming finger drags as a
+     scroll/zoom gesture, so pointermove keeps firing on mobile as the user
+     slides. Safe here because <body> has overflow:hidden — there is no
+     scroll to compete with. */
+  touch-action: none;
 }
 
 .galaxy-container canvas {

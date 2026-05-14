@@ -312,7 +312,7 @@ export function Galaxy({
     animateId = requestAnimationFrame(update);
     container.appendChild(gl.canvas);
 
-    const handleMouseMove = (event: MouseEvent) => {
+    const handlePointerMove = (event: PointerEvent) => {
       const rect = container.getBoundingClientRect();
       const x = (event.clientX - rect.left) / rect.width;
       const y = 1.0 - (event.clientY - rect.top) / rect.height;
@@ -320,21 +320,24 @@ export function Galaxy({
       targetMouseActive.current = 1.0;
     };
 
-    const handleMouseLeave = () => {
+    const handlePointerLeave = () => {
       targetMouseActive.current = 0.0;
     };
 
     if (mouseInteraction) {
-      container.addEventListener('mousemove', handleMouseMove);
-      container.addEventListener('mouseleave', handleMouseLeave);
+      // pointermove instead of mousemove so finger drags on touch devices
+      // also drive the warp — the upstream component listened for mouse
+      // events only, which silently dropped the effect on mobile.
+      container.addEventListener('pointermove', handlePointerMove);
+      container.addEventListener('pointerleave', handlePointerLeave);
     }
 
     return () => {
       cancelAnimationFrame(animateId);
       window.removeEventListener('resize', resize);
       if (mouseInteraction) {
-        container.removeEventListener('mousemove', handleMouseMove);
-        container.removeEventListener('mouseleave', handleMouseLeave);
+        container.removeEventListener('pointermove', handlePointerMove);
+        container.removeEventListener('pointerleave', handlePointerLeave);
       }
       container.removeChild(gl.canvas);
       gl.getExtension('WEBGL_lose_context')?.loseContext();
