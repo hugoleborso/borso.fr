@@ -221,6 +221,11 @@ export const apiClient = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+  adminCatchupPunch: (input: { editionSlug: string; runnerSlug: string; loopIndex: number }) =>
+    fetchJson('/api/admin/punches/catchup', passthroughSchema, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
   adminPresignPhoto: (input: { editionSlug: string; runnerSlug: string; contentType: string }) =>
     fetchJson('/api/admin/media/presign', presignResponseSchema, {
       method: 'POST',

@@ -178,6 +178,10 @@ describe('computeStandings', () => {
   });
 
   it('attaches lastLoopDurationMs and lastFinishedAt for in-race runners', () => {
+    // Loop 2 starts at 07:00 (top of the hour, EDITION starts 06:00).
+    // Alice punches it at 07:55 → 55 min of actual running, not 60.
+    // The hour gap between punches 1 and 2 includes corral rest, which
+    // doesn't count toward the loop time.
     const now = new Date('2026-09-19T08:30:00+02:00');
     const punches = [
       punch('alice', 1, '2026-09-19T06:55:00+02:00'),
@@ -185,7 +189,7 @@ describe('computeStandings', () => {
     ];
     const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
     const alice = standings.ranked.find((entry) => entry.runner.slug === 'alice');
-    expect(alice?.lastLoopDurationMs).toBe(60 * 60_000);
+    expect(alice?.lastLoopDurationMs).toBe(55 * 60_000);
     expect(alice?.lastFinishedAt).toEqual(new Date('2026-09-19T07:55:00+02:00'));
   });
 

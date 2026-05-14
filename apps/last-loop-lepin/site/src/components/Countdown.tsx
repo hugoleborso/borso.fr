@@ -60,8 +60,8 @@ export function Countdown({ targetEpochMs, label }: CountdownProps) {
   const accessibleValue = `${String(display.left).padStart(2, '0')}:${String(display.right).padStart(2, '0')} ${display.format}`;
   return (
     <div className="countdown countdown-flap" role="timer" aria-live="off">
-      <small>{label}</small>
-      <div className="flap-row" role="img" aria-label={`${label} ${accessibleValue}`}>
+      {label.length > 0 ? <small>{label}</small> : null}
+      <div className="flap-row" role="img" aria-label={`${label} ${accessibleValue}`.trim()}>
         <FlapPair value={display.left} />
         <span className="flap-colon" aria-hidden>:</span>
         <FlapPair value={display.right} />

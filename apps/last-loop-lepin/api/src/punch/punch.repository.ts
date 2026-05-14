@@ -86,6 +86,26 @@ export async function insertManualDnf(database: Database, dnf: ManualDnf): Promi
   await database.insert(manualDnfsTable).values(dnf);
 }
 
+/**
+ * Drop the manual_dnf row for a runner. Used when the orga retroactively
+ * validates a missed loop (catch-up flow) — the runner walks back into
+ * `in-race` once their DNF marker is gone and the catch-up punch lands.
+ */
+export async function deleteManualDnf(
+  database: Database,
+  editionSlug: string,
+  runnerSlug: string,
+): Promise<void> {
+  await database
+    .delete(manualDnfsTable)
+    .where(
+      and(
+        eq(manualDnfsTable.editionSlug, editionSlug),
+        eq(manualDnfsTable.runnerSlug, runnerSlug),
+      ),
+    );
+}
+
 export async function listManualDnfsForEdition(
   database: Database,
   editionSlug: string,

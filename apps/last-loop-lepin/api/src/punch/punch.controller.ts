@@ -6,12 +6,18 @@ import { PunchConflictError } from './punch.repository';
 import {
   PunchNotFoundError,
   PunchRejectedError,
+  catchupPunch,
   correctPunch,
   recordManualDnf,
   registerPunch,
   voidPunch,
 } from './punch.service';
-import { correctPunchInputSchema, createDnfInputSchema, createPunchInputSchema } from './punch.schema';
+import {
+  catchupPunchInputSchema,
+  correctPunchInputSchema,
+  createDnfInputSchema,
+  createPunchInputSchema,
+} from './punch.schema';
 
 const adminPunchRouter = new Hono();
 
@@ -68,5 +74,25 @@ adminPunchRouter.post('/dnfs', zValidator('json', createDnfInputSchema), async (
   const dnf = await recordManualDnf(getDatabase(), input, new Date());
   return context.json({ dnf }, 201);
 });
+
+adminPunchRouter.post(
+  '/punches/catchup',
+  zValidator('json', catchupPunchInputSchema),
+  async (context) => {
+    const input = context.req.valid('json');
+    try {
+      const punch = await catchupPunch(getDatabase(), input, new Date());
+      return context.json({ punch }, 201);
+    } catch (error) {
+      if (error instanceof PunchConflictError) {
+        return context.json({ error: 'already punched', punch: error.existing }, 409);
+      }
+      if (error instanceof PunchRejectedError) {
+        return context.json({ error: error.reason }, 400);
+      }
+      throw error;
+    }
+  },
+);
 
 export { adminPunchRouter };

@@ -52,6 +52,12 @@ export const correctPunchInputSchema = z.object({
   finishedAt: z.string().datetime({ offset: true }),
 });
 
+export const catchupPunchInputSchema = z.object({
+  editionSlug: editionSlugSchema,
+  runnerSlug: runnerSlugSchema,
+  loopIndex: z.number().int().positive(),
+});
+
 export const createDnfInputSchema = z.object({
   editionSlug: editionSlugSchema,
   runnerSlug: runnerSlugSchema,

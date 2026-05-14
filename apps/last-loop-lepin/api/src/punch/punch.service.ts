@@ -6,6 +6,7 @@ import type { RaceEdition } from '../edition/edition.types';
 import { validatePunchTiming, type PunchRejectReason } from './punch.core';
 import {
   PunchConflictError,
+  deleteManualDnf,
   findActivePunchForLoop,
   findPunchById,
   insertManualDnf,
@@ -117,4 +118,62 @@ export async function getPunchesForEdition(
   editionSlug: string,
 ): Promise<readonly LoopPunch[]> {
   return listPunchesForEdition(database, editionSlug);
+}
+
+export interface CatchupPunchInput {
+  readonly editionSlug: string;
+  readonly runnerSlug: string;
+  /**
+   * 1-based loop index to validate retroactively. Typically `outAtLoop + 1`
+   * for a runner the system marked `dnf:late outAtLoop=K` — the orga gives
+   * them credit for loop K+1 with a conservative 1-h time.
+   */
+  readonly loopIndex: number;
+}
+
+/**
+ * Retroactively credit a missed loop to a DNFed runner, then drop any
+ * manual_dnf row so they walk back into `in-race`. The punch's
+ * `finishedAt` is parked at the END of the requested loop's hour
+ * (top + intervalMs − 1 ms), which gives the runner a one-hour loop
+ * time — the worst case allowed in a backyard, and the natural
+ * "default" when the orga forgot to scan them mid-loop.
+ *
+ * Rejected when:
+ *   - the runner already has an active punch for this loop (would
+ *     duplicate the in-race row);
+ *   - the requested loop hasn't started yet (`loopIndex` > current).
+ */
+export async function catchupPunch(
+  database: Database,
+  input: CatchupPunchInput,
+  now: Date,
+): Promise<LoopPunch> {
+  const edition = await getEdition(database, input.editionSlug);
+  const intervalMs = edition.intervalMinutes * 60_000;
+  const startMs = edition.startsAt.getTime();
+  const currentLoopFloor = loopIndexAt(edition, now);
+  if (input.loopIndex > currentLoopFloor) {
+    throw new PunchRejectedError('race-not-started');
+  }
+  const existing = await findActivePunchForLoop(
+    database,
+    input.editionSlug,
+    input.runnerSlug,
+    input.loopIndex,
+  );
+  if (existing !== null) throw new PunchConflictError(existing);
+
+  const punch: LoopPunch = {
+    id: randomUUID(),
+    editionSlug: input.editionSlug,
+    runnerSlug: input.runnerSlug,
+    loopIndex: input.loopIndex,
+    finishedAt: new Date(startMs + input.loopIndex * intervalMs - 1),
+    correctedAt: now,
+    voidedAt: null,
+  };
+  await insertPunch(database, punch);
+  await deleteManualDnf(database, input.editionSlug, input.runnerSlug);
+  return punch;
 }

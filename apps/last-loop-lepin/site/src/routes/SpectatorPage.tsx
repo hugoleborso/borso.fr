@@ -166,7 +166,7 @@ export function SpectatorPage() {
             <span className="muted mono">{edition.displayName}</span>
           </div>
           <div className="card-body col">
-            <Countdown targetEpochMs={upcomingBoundary} label="Tic-tac" />
+            <Countdown targetEpochMs={upcomingBoundary} label="" />
             <InRaceCounter ranked={standings?.ranked ?? []} />
           </div>
         </div>

@@ -69,6 +69,36 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
     await confirmDnf(entry);
   }
 
+  async function catchupRunner(entry: RankedRunnerDto): Promise<void> {
+    if (entry.status.kind !== 'dnf') return;
+    const missedLoop = entry.status.outAtLoop + 1;
+    if (
+      !confirm(
+        `Rattraper ${entry.runner.displayName} sur la boucle ${missedLoop} ? Temps par défaut 1 h ; le coureur revient en course et tu lui ajoutes ce pointage.`,
+      )
+    ) {
+      return;
+    }
+    setBusySlug(entry.runner.slug);
+    setError(null);
+    try {
+      await apiClient.adminCatchupPunch({
+        editionSlug: edition.slug,
+        runnerSlug: entry.runner.slug,
+        loopIndex: missedLoop,
+      });
+      recordAnalyticsEvent('correction_applied', {
+        editionSlug: edition.slug,
+        runnerSlug: entry.runner.slug,
+      });
+      invalidateResource(`standings:${edition.slug}`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+    } finally {
+      setBusySlug(null);
+    }
+  }
+
   return (
     <div className="col" style={{ gap: 'var(--d-4)' }}>
       <div className="card">
@@ -94,14 +124,25 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
                     <span className="runner-name">{entry.runner.displayName}</span>
                   </div>
                   <span className="loop-info">Manqué le top après B{outAtLoop}</span>
-                  <button
-                    type="button"
-                    className="btn btn-danger btn-sm"
-                    onClick={() => void confirmDnf(entry)}
-                    disabled={busySlug !== null}
-                  >
-                    {busySlug === entry.runner.slug ? 'Validation…' : 'Valider DNF'}
-                  </button>
+                  <div className="row" style={{ gap: 'var(--d-2)', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      onClick={() => void catchupRunner(entry)}
+                      disabled={busySlug !== null}
+                      title="Crédite la boucle suivante avec un temps d'1 h (limite haute). Le coureur ressort de DNF et reprend la course."
+                    >
+                      {busySlug === entry.runner.slug ? '…' : 'Le faire passer (1 h)'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-danger btn-sm"
+                      onClick={() => void confirmDnf(entry)}
+                      disabled={busySlug !== null}
+                    >
+                      {busySlug === entry.runner.slug ? 'Validation…' : 'Valider DNF'}
+                    </button>
+                  </div>
                 </div>
               );
             })

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ApiError, apiClient } from '../api/client';
 import { CorrectionPanel } from '../components/admin/CorrectionPanel';
 import { DnfCandidatesPanel } from '../components/admin/DnfCandidatesPanel';
@@ -90,6 +90,13 @@ function PunchPanel({
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Optimistic punch set: slug+currentLoopIndex entries the orga just
+  // tapped. Flips the tile to "Pointé·e" instantly without waiting for
+  // the next standings poll. Cleared as soon as `entry.status.lastLoop`
+  // catches up (or rolled back on API error).
+  const [optimisticPunches, setOptimisticPunches] = useState<ReadonlySet<string>>(
+    () => new Set<string>(),
+  );
 
   const inRace = ranked.filter((entry) => entry.status.kind === 'in-race');
 
@@ -104,14 +111,41 @@ function PunchPanel({
   const progressInLoop = (elapsed % loopMs) / loopMs;
   const minutesLeft = Math.max(0, Math.ceil(((1 - progressInLoop) * loopMs) / 60_000));
 
+  // Reset the optimistic set every time the race ticks into a new loop.
+  // A "pending" punch from the previous hour is no longer relevant — the
+  // server-confirmed `lastLoop` covers what stuck, and anything we missed
+  // surfaces as `dnf:late` automatically. Without this, stale entries
+  // would falsely paint runners as already-punched for the new loop.
+  // The `void` keeps the value referenced so biome doesn't flag it as a
+  // "useless dep" — we genuinely want the effect to re-run on each tick.
+  useEffect(() => {
+    void currentLoopIndex;
+    setOptimisticPunches(new Set<string>());
+  }, [currentLoopIndex]);
+
   async function handlePunch(runner: RunnerDto): Promise<void> {
     setBusy(runner.slug);
     setError(null);
+    // Optimistic flip — tile turns "Pointé·e" before the round-trip lands,
+    // so the orga can keep tapping the next bib without waiting on the
+    // 2-second standings poll.
+    setOptimisticPunches((previous) => {
+      const next = new Set(previous);
+      next.add(runner.slug);
+      return next;
+    });
     try {
       await apiClient.adminRegisterPunch({ editionSlug: edition.slug, runnerSlug: runner.slug });
       recordAnalyticsEvent('loop_punched', { editionSlug: edition.slug, runnerSlug: runner.slug });
       onMutated();
     } catch (caught) {
+      // Roll the optimistic punch back so the tile flips out of the
+      // "punched" state and the orga sees the error inline.
+      setOptimisticPunches((previous) => {
+        const next = new Set(previous);
+        next.delete(runner.slug);
+        return next;
+      });
       if (caught instanceof ApiError && caught.status === 409) {
         setError(`${runner.displayName} a déjà pointé pour cette boucle.`);
       } else {
@@ -146,8 +180,9 @@ function PunchPanel({
           <div className="punch-grid">
             {inRace.map((entry) => {
               const avatar = initialsAvatar(entry.runner.displayName);
-              const punched =
+              const serverPunched =
                 entry.status.kind === 'in-race' && entry.status.lastLoop >= currentLoopIndex;
+              const punched = serverPunched || optimisticPunches.has(entry.runner.slug);
               const late = !punched && progressInLoop > 0.85;
               return (
                 <button

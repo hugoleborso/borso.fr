@@ -51,31 +51,38 @@ export function validatePunchTiming(
 }
 
 /**
- * Duration of the last completed loop for a runner, in milliseconds.
- * Returns `null` when the runner has not punched at least one loop, or
- * when their first punch precedes `edition.startsAt`.
+ * Time the runner spent on their last completed loop, in milliseconds.
+ *
+ * Backyard rule: every loop starts on the top of the hour. A runner who
+ * clears their loop early waits at the corral until the next top, then
+ * starts again with everyone. So the actually-meaningful loop time is
+ *
+ *   punch.finishedAt − (startsAt + (loopIndex − 1) × intervalMs)
+ *
+ * not the wall-clock gap between two consecutive punches (which counts
+ * the corral rest period too).
+ *
+ * Returns `null` when the runner has no punch yet or when their last
+ * punch lands before the loop's top-of-hour boundary (clock skew /
+ * pre-race punches recorded for testing).
  */
 export function lastLoopDurationMs(
   edition: RaceEdition,
   runnerSlug: string,
   validPunchesForRunner: readonly LoopPunch[],
 ): number | null {
-  // `reduce` carries the last-seen punch and the one before it without ever
-  // indexing into the array — sidesteps `noUncheckedIndexedAccess` and the
-  // closure-capture narrowing limit on `forEach` with mutable locals.
-  const trace = validPunchesForRunner
+  // `reduce` carries the last-seen punch without ever indexing into the
+  // array — sidesteps `noUncheckedIndexedAccess` and the closure-capture
+  // narrowing limit on `forEach` with mutable locals.
+  const lastPunch = validPunchesForRunner
     .filter((punch) => punch.runnerSlug === runnerSlug)
     .toSorted((left, right) => left.loopIndex - right.loopIndex)
-    .reduce<{ last: LoopPunch | null; previous: LoopPunch | null }>(
-      (accumulator, punch) => ({ last: punch, previous: accumulator.last }),
-      { last: null, previous: null },
-    );
+    .reduce<LoopPunch | null>((_, punch) => punch, null);
 
-  if (trace.last === null) return null;
-  if (trace.previous === null) {
-    const fromStart = trace.last.finishedAt.getTime() - edition.startsAt.getTime();
-    return fromStart >= 0 ? fromStart : null;
-  }
-  return trace.last.finishedAt.getTime() - trace.previous.finishedAt.getTime();
+  if (lastPunch === null) return null;
+  const intervalMs = edition.intervalMinutes * 60_000;
+  const loopStartMs = edition.startsAt.getTime() + (lastPunch.loopIndex - 1) * intervalMs;
+  const elapsed = lastPunch.finishedAt.getTime() - loopStartMs;
+  return elapsed >= 0 ? elapsed : null;
 }
 

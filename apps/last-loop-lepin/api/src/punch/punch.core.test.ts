@@ -103,14 +103,16 @@ describe('lastLoopDurationMs', () => {
     expect(lastLoopDurationMs(EDITION, 'alice', [punch])).toBeNull();
   });
 
-  it('returns the gap between the last two punches when there are multiple', () => {
+  it("uses the loop's top-of-hour boundary as the start, not the previous punch", () => {
+    // Loop 1 closed at 06:48:30 (the punch). Loop 2 starts at 07:00 (top of
+    // the hour) regardless of when the runner arrived back at the corral.
+    // Loop 2 punch at 07:51:15 → 51 min 15 s of actual running, not the
+    // 1h02m45s wall-clock gap between the two punches.
     const punches = [
       makePunch(1, '2026-09-19T06:48:30+02:00'),
       makePunch(2, '2026-09-19T07:51:15+02:00'),
     ];
-    const expectedMs = new Date('2026-09-19T07:51:15+02:00').getTime() -
-      new Date('2026-09-19T06:48:30+02:00').getTime();
-    expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(expectedMs);
+    expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(51 * 60_000 + 15_000);
   });
 
   it('ignores punches from other runners', () => {
@@ -118,6 +120,14 @@ describe('lastLoopDurationMs', () => {
       makePunch(1, '2026-09-19T06:48:30+02:00'),
       { ...makePunch(2, '2026-09-19T07:50:00+02:00'), runnerSlug: 'bob' },
     ];
+    expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(48.5 * 60_000);
+  });
+
+  it('uses the punch loopIndex (not array length) to find the top-of-hour boundary', () => {
+    // A runner who skipped loop 1 and only punched loop 2 has their loop
+    // time measured from 07:00, not 06:00 — the boundary is keyed on the
+    // recorded loopIndex.
+    const punches = [makePunch(2, '2026-09-19T07:48:30+02:00')];
     expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(48.5 * 60_000);
   });
 });
