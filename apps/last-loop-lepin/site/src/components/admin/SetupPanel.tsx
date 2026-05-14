@@ -266,7 +266,11 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
             id="setup-gpx"
             type="file"
             className="input"
-            accept=".gpx,application/gpx+xml,text/xml,application/xml"
+            // iOS Files filters by UTI and has no built-in entry for `.gpx`,
+            // so any `accept` value greys the file out on the picker. Skip
+            // the hint — server-side `parseGpx` rejects non-GPX content with
+            // a 400 anyway, and the loaded-kB readout below makes the
+            // selection visible.
             onChange={(event) => {
               const file = event.target.files?.[0] ?? null;
               setGpxReadError(null);
