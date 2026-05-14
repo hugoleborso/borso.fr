@@ -107,7 +107,16 @@ export class StaticSite extends Construct {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
       versioned: false,
-      removalPolicy: RemovalPolicy.RETAIN,
+      // Static-site buckets hold only build artefacts from dist/ — no
+      // user-generated content, fully rebuildable from source. The usual
+      // "RETAIN buckets to protect user data" reflex buys no protection
+      // here, and the combination of pinned bucketName + RETAIN caused
+      // the failed-first-deploy orphan trap (see dantotsu
+      // cdk-failed-deploy-leaves-retained-buckets-orphaned). DESTROY +
+      // autoDeleteObjects: failed creates roll back cleanly, intentional
+      // destroys actually destroy.
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
     });
 
     const certArn = StringParameter.valueForStringParameter(this, SHARED_SSM.certBorsoFrArn);
@@ -173,6 +182,9 @@ export class StaticSite extends Construct {
       destinationBucket: bucket,
       distribution,
       distributionPaths: ['/*'],
+      // 128 MB (the default) leaves no headroom for `aws s3 sync` to upload
+      // multi-MiB media bundles and crashes with `[SSL: UNEXPECTED_EOF_WHILE_READING]`.
+      memoryLimit: 512,
     });
 
     const zoneName = StringParameter.valueForStringParameter(this, SHARED_SSM.hostedZoneName);
@@ -230,6 +242,9 @@ export class StaticSite extends Construct {
       // Scope the invalidation to this PR's hostname-routed prefix, so
       // co-tenant previews don't pay for unrelated cache busting.
       distributionPaths: [`/${keyPrefix}/*`],
+      // 128 MB (the default) leaves no headroom for `aws s3 sync` to upload
+      // multi-MiB media bundles and crashes with `[SSL: UNEXPECTED_EOF_WHILE_READING]`.
+      memoryLimit: 512,
     });
     return `https://${previewHostname(props)}`;
   }

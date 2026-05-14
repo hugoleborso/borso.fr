@@ -181,15 +181,38 @@ jobs:
           apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
             | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
           echo "list=$apps" >> "$GITHUB_OUTPUT"
-      - name: Destroy every app's per-PR stack (ignore missing)
+      - name: Destroy every app's per-PR stack
         env:
           APPS_JSON: ${{ steps.apps.outputs.list }}
+        shell: bash
         run: |
+          set -euo pipefail
+          failures=()
           for app in $(jq -r '.[]' <<<"$APPS_JSON"); do
-            echo "[teardown] destroying $app-pr-$PR_NUMBER..."
-            pnpm --filter "@borso-app/$app" run destroy \
-              || echo "(stack does not exist or already destroyed)"
+            stack="$app-pr-$PR_NUMBER"
+            # Probe before destroy so a genuinely-missing stack (PR was
+            # never deployed, or already torn down) stays quiet while a
+            # real cdk-destroy failure surfaces. The previous form was
+            # `cdk destroy || echo`, which conflated the two and let
+            # broken destroys ship as silent green.
+            if ! aws cloudformation describe-stacks \
+                --stack-name "$stack" >/dev/null 2>&1; then
+              echo "[skip] $stack: stack does not exist"
+              continue
+            fi
+            echo "[teardown] destroying $stack..."
+            if pnpm --filter "@borso-app/$app" run destroy; then
+              echo "[ok] $stack destroyed"
+            else
+              echo "::error::$stack: cdk destroy exited non-zero"
+              failures+=("$stack")
+            fi
           done
+          if (( ${#failures[@]} )); then
+            echo "::error::${#failures[@]} stack(s) failed to destroy: ${failures[*]}"
+            echo "cleanup-orphans nightly will retry, but investigate the root cause now."
+            exit 1
+          fi
       # Mark each preview Deployment inactive so the PR sidebar reflects
       # that the URL is gone. transient_environment + auto_inactive on the
       # active status mean GitHub already hides it once the env is unused;

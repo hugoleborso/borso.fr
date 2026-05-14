@@ -16,6 +16,7 @@ export default defineConfig({
         mom: fromHere('./site/family/mom.html'),
         lesFilles: fromHere('./site/family/les-filles.html'),
         mondrian: fromHere('./site/art/mondrian/index.html'),
+        douzeTravaux: fromHere('./site/12-travaux/index.html'),
       },
     },
   },
