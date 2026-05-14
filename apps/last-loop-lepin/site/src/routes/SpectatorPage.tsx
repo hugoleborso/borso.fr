@@ -7,7 +7,21 @@ import { Leaderboard } from '../components/Leaderboard';
 import { LoopsTimeline } from '../components/LoopsTimeline';
 import { useResource } from '../data/useResource';
 import { useStandings } from '../data/useStandingsPoll';
-import type { RaceEditionDto } from '../domain/types';
+import type { RaceEditionDto, RankedRunnerDto } from '../domain/types';
+
+function InRaceCounter({ ranked }: { readonly ranked: readonly RankedRunnerDto[] }) {
+  const inRace = ranked.filter((entry) => entry.status.kind === 'in-race').length;
+  const dnf = ranked.length - inRace;
+  return (
+    <div className="in-race-counter">
+      <div className="in-race-counter__main">
+        <span className="in-race-counter__value mono">{inRace}</span>
+        <span className="in-race-counter__label">en course</span>
+      </div>
+      <span className="in-race-counter__detail muted mono">{dnf} DNF</span>
+    </div>
+  );
+}
 
 const RACE_CACHE_KEY = 'edition:current';
 const ALL_EDITIONS_KEY = 'editions:all';
@@ -151,8 +165,9 @@ export function SpectatorPage() {
             <h2 className="card-title">Prochain top horaire</h2>
             <span className="muted mono">{edition.displayName}</span>
           </div>
-          <div className="card-body">
+          <div className="card-body col">
             <Countdown targetEpochMs={upcomingBoundary} label="Tic-tac" />
+            <InRaceCounter ranked={standings?.ranked ?? []} />
           </div>
         </div>
         <div className="card">

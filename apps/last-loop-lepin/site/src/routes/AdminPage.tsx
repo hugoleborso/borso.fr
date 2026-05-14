@@ -191,6 +191,59 @@ function PunchPanel({
   );
 }
 
+function FinishRacePrompt({
+  edition,
+  totalRunners,
+}: {
+  readonly edition: RaceEditionDto;
+  readonly totalRunners: number;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleFinish(): Promise<void> {
+    if (
+      !confirm(
+        `Terminer la course ? Les ${totalRunners} dossards sont tous en DNF — le classement final sera figé.`,
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await apiClient.adminTransitionEditionStatus(edition.slug, 'finished');
+      invalidateResource('edition:current');
+      invalidateResource('editions:all');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="admin-finish-banner">
+      <div className="admin-finish-banner__msg">
+        <strong>Plus personne en course.</strong>
+        <small>
+          {totalRunners} coureur{totalRunners > 1 ? 's' : ''} en DNF. La course est terminée
+          dans les faits.
+        </small>
+        {error !== null ? <div className="error-text">{error}</div> : null}
+      </div>
+      <button
+        type="button"
+        className="btn btn-primary"
+        onClick={() => void handleFinish()}
+        disabled={busy}
+      >
+        {busy ? 'Mise à jour…' : 'Terminer la course'}
+      </button>
+    </div>
+  );
+}
+
 type Tab = 'setup' | 'runners' | 'punch' | 'dnf' | 'corrections';
 
 function TabButton({
@@ -231,8 +284,15 @@ export function AdminPage() {
     );
   }
 
+  const inRaceCount = ranked.filter((entry) => entry.status.kind === 'in-race').length;
+  const showFinishPrompt =
+    edition !== null && edition.status === 'live' && ranked.length > 0 && inRaceCount === 0;
+
   return (
     <div className="main col">
+      {showFinishPrompt && edition !== null ? (
+        <FinishRacePrompt edition={edition} totalRunners={ranked.length} />
+      ) : null}
       <nav className="nav" style={{ marginLeft: 0 }}>
         <TabButton current={tab} target="setup" label="Setup" setTab={setTab} />
         <TabButton current={tab} target="runners" label="Coureurs" setTab={setTab} />
