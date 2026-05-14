@@ -1,0 +1,8 @@
+dist/
+cdk.out/
+.cdk.staging/
+node_modules/
+*.log
+.env
+.env.local
+coverage/

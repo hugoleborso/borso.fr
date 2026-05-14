@@ -34,6 +34,7 @@ Two failure modes to watch for:
 - [`cloudfront-resources-in-us-east-1.md`](./cloudfront-resources-in-us-east-1.md) — control plane is region-pinned regardless of the distribution's data-plane region.
 - [`cloudfront-get-function-binary-output.md`](./cloudfront-get-function-binary-output.md) — `aws cloudfront get-function` writes the source to a positional outfile, not stdout.
 - [`cloudfront-cname-uniqueness.md`](./cloudfront-cname-uniqueness.md) — aliases (CNAMEs) are single-distribution; release from the old distribution before redeploying the new one.
+- [`preview-api-cross-origin.md`](./preview-api-cross-origin.md) — previews use a custom-domain API per PR (`<app>-pr-<n>-api.preview.borso.fr`) because the shared previews distribution can't host per-app `/api/*` routing.
 
 ### CDK / S3
 
@@ -60,6 +61,10 @@ Two failure modes to watch for:
 - [`askuserquestion-tool-requires-question-field.md`](./askuserquestion-tool-requires-question-field.md) — `AskUserQuestion` rejects calls that omit the `question` field per item; `header` alone is not enough.
 - [`claude-code-session-attachments-on-disk.md`](./claude-code-session-attachments-on-disk.md) — chat attachments live at `/root/.claude/uploads/<session>/...` (uploads) and inside `/root/.claude/projects/<workspace>/<session>.jsonl` (inlined base64 images); extractable without an explicit tool.
 - [`pr-body-from-cc-ui-skips-skill-sections.md`](./pr-body-from-cc-ui-skips-skill-sections.md) — PRs opened from the Claude Code UI auto-generate a body that omits `## Visual evidence` and `## Validation gaps`; retrofit via `mcp__github__update_pull_request` after open.
+
+### Local dev / Postgres
+
+- [`local-postgres-without-docker.md`](./local-postgres-without-docker.md) — `scripts/local-postgres.sh` boots a sandbox-private Postgres for any borso app when Docker is unavailable (claude.ai/code sandbox); per-app stable port, Drizzle-friendly, `pnpm run test` wires `DATABASE_URL` automatically.
 
 ### Build / lint tooling
 

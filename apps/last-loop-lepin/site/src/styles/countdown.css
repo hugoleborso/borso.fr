@@ -1,0 +1,96 @@
+/* Airport split-flap countdown — pairs of "flaps" with a horizontal hinge
+ * line at mid-height, a CSS gradient for the top/bottom shade split, and a
+ * 0.4 s flip animation on digit change (keyed via React's element identity
+ * — see `Flap` in components/Countdown.tsx).
+ */
+
+.countdown-flap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--d-3);
+  padding: var(--d-3) 0;
+}
+
+.flap-row {
+  display: flex;
+  align-items: center;
+  gap: var(--d-3);
+}
+
+.flap-pair {
+  display: flex;
+  gap: var(--d-2);
+}
+
+.flap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(64px, 14vw, 128px);
+  height: clamp(80px, 18vw, 160px);
+  background: linear-gradient(
+    180deg,
+    var(--bg-elev-2) 0%,
+    var(--bg-elev-2) 49%,
+    var(--bg) 50%,
+    var(--bg) 100%
+  );
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(56px, 12vw, 112px);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  position: relative;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  animation: flap 0.4s ease-out;
+}
+
+.flap-char {
+  position: relative;
+  z-index: 1;
+}
+
+.flap-hinge {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.flap-colon {
+  font-family: var(--font-mono);
+  font-size: clamp(28px, 7vw, 56px);
+  color: var(--ink-mute);
+  line-height: 1;
+  transform: translateY(-6%);
+}
+
+.flap-format {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+
+@keyframes flap {
+  0% {
+    transform: rotateX(-92deg);
+    opacity: 0.3;
+    transform-origin: top;
+  }
+  60% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}

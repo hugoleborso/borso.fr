@@ -2,14 +2,18 @@ import { CfnOutput, Duration, Stack } from 'aws-cdk-lib';
 import {
   CorsHttpMethod,
   type CorsPreflightOptions,
+  DomainName,
   HttpApi,
   HttpMethod,
 } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Alarm, ComparisonOperator, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch';
 import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { ARecord, AaaaRecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import { ApiGatewayv2DomainProperties } from 'aws-cdk-lib/aws-route53-targets';
 import { Construct } from 'constructs';
 import {
   type Stage,
@@ -43,8 +47,31 @@ export interface LambdaApiProps {
   readonly environment?: Readonly<Record<string, string>>;
   /** If provided, the Lambda is granted IAM auth to this DSQL schema. */
   readonly dsqlSchema?: DsqlSchema;
-  /** Optional custom domain (e.g. "api.borso.fr"). DNS is the caller's job. */
-  readonly customDomain?: string;
+  /**
+   * Optional custom domain for the HTTP API. When set, the construct
+   * provisions:
+   *   - an APIGW v2 `DomainName` (regional) backed by `certificateArn`
+   *   - an `ApiMapping` from the HttpApi to that DomainName
+   *   - A + AAAA Route 53 alias records in `hostedZoneName` pointing the
+   *     hostname at the DomainName.
+   *
+   * The cert MUST be in the same region as the API (eu-west-3) — API
+   * Gateway regional custom domains reject cross-region certs.
+   */
+  readonly customDomain?: {
+    readonly hostname: string;
+    readonly certificateArn: string;
+    readonly hostedZoneId: string;
+    readonly hostedZoneName: string;
+  };
+  /**
+   * Origins allowed to call this API. When set, CORS uses these specific
+   * origins and enables `Access-Control-Allow-Credentials: true` (browsers
+   * reject `*` for credentialed fetches, and the Hono back-end relies on
+   * cookies for admin auth). When unset, falls back to wildcard origin
+   * without credentials.
+   */
+  readonly allowedOrigins?: readonly string[];
   readonly cors?: CorsPreflightOptions;
 }
 
@@ -100,24 +127,81 @@ export class LambdaApi extends Construct {
         target: 'node22',
         format: OutputFormat.ESM,
         mainFields: ['module', 'main'],
+        // Re-expose CommonJS `require` for transitive deps that need it.
+        // Some AWS SDK + smithy packages (notably `@aws-sdk/dsql-signer`
+        // → `@smithy/util-buffer-from`) do `require('buffer')` at module
+        // load, which esbuild's ESM `__require` shim can't resolve at
+        // runtime — the Lambda cold-starts with `Dynamic require of
+        // "buffer" is not supported`. The banner patches the shim with a
+        // real `createRequire` so every Node built-in + any other CJS
+        // transitive dep just works.
+        banner: 'import { createRequire } from \'module\'; const require = createRequire(import.meta.url);',
       },
     });
 
+    const apiDomainName = props.customDomain
+      ? new DomainName(this, 'DomainName', {
+          domainName: props.customDomain.hostname,
+          certificate: Certificate.fromCertificateArn(
+            this,
+            'DomainCert',
+            props.customDomain.certificateArn,
+          ),
+        })
+      : undefined;
+
+    const corsMethods = [
+      CorsHttpMethod.GET,
+      CorsHttpMethod.POST,
+      CorsHttpMethod.PUT,
+      CorsHttpMethod.PATCH,
+      CorsHttpMethod.DELETE,
+      CorsHttpMethod.OPTIONS,
+    ];
+    const defaultCors: CorsPreflightOptions =
+      props.allowedOrigins && props.allowedOrigins.length > 0
+        ? {
+            allowOrigins: [...props.allowedOrigins],
+            allowCredentials: true,
+            allowHeaders: ['content-type', 'authorization'],
+            allowMethods: corsMethods,
+            maxAge: Duration.minutes(10),
+          }
+        : {
+            allowOrigins: ['*'],
+            allowMethods: corsMethods,
+            maxAge: Duration.minutes(10),
+          };
+
     this.httpApi = new HttpApi(this, 'HttpApi', {
       apiName,
-      corsPreflight: props.cors ?? {
-        allowOrigins: ['*'],
-        allowMethods: [
-          CorsHttpMethod.GET,
-          CorsHttpMethod.POST,
-          CorsHttpMethod.PUT,
-          CorsHttpMethod.PATCH,
-          CorsHttpMethod.DELETE,
-          CorsHttpMethod.OPTIONS,
-        ],
-        maxAge: Duration.minutes(10),
-      },
+      corsPreflight: props.cors ?? defaultCors,
+      ...(apiDomainName ? { defaultDomainMapping: { domainName: apiDomainName } } : {}),
     });
+
+    if (props.customDomain && apiDomainName) {
+      const zone = HostedZone.fromHostedZoneAttributes(this, 'DomainZone', {
+        hostedZoneId: props.customDomain.hostedZoneId,
+        zoneName: props.customDomain.hostedZoneName,
+      });
+      const aliasTarget = RecordTarget.fromAlias(
+        new ApiGatewayv2DomainProperties(
+          apiDomainName.regionalDomainName,
+          apiDomainName.regionalHostedZoneId,
+        ),
+      );
+      // Trailing dot tags the recordName as an FQDN so CDK's
+      // `determineFullyQualifiedDomainName` short-circuits and does NOT
+      // append the zone name. Without it, when `zoneName` is a CFN token
+      // (from SSM, as it is here), CDK's suffix check fails and the
+      // record ends up as `<hostname>.${zoneName}` → `last-loop-lepin-
+      // pr-12-api.preview.borso.fr.borso.fr` in Route 53, which loses the
+      // ALIAS race against the wildcard `*.preview.borso.fr` record on
+      // the shared previews distribution.
+      const fqdn = `${props.customDomain.hostname}.`;
+      new ARecord(this, 'DomainAliasA', { zone, recordName: fqdn, target: aliasTarget });
+      new AaaaRecord(this, 'DomainAliasAAAA', { zone, recordName: fqdn, target: aliasTarget });
+    }
 
     const integration = new HttpLambdaIntegration('Int', this.handler);
     this.httpApi.addRoutes({
@@ -142,7 +226,7 @@ export class LambdaApi extends Construct {
     props.dsqlSchema?.grantConnect(this.handler);
 
     this.url = props.customDomain
-      ? `https://${props.customDomain}`
+      ? `https://${props.customDomain.hostname}`
       : `https://${this.httpApi.apiId}.execute-api.${stack.region}.amazonaws.com`;
 
     new CfnOutput(this, 'Url', { value: this.url });

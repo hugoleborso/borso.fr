@@ -190,6 +190,7 @@ describe('SharedStack', () => {
       '/borso/shared/hosted-zone-name',
       '/borso/shared/cert-borso-fr-arn',
       '/borso/shared/cert-preview-borso-fr-arn',
+      '/borso/shared/cert-preview-borso-fr-regional-arn',
       '/borso/shared/previews-bucket-name',
       '/borso/shared/previews-distribution-id',
       '/borso/shared/previews-distribution-domain',

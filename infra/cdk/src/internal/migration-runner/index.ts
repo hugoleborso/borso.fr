@@ -45,7 +45,6 @@ interface CfnResponse {
 
 const PG_USER = 'admin';
 const PG_DATABASE = 'postgres';
-const ADVISORY_LOCK_KEY = 0x626f72736f; // "borso" — keep migrations serialized
 
 async function connect(props: ResourceProps): Promise<postgres.Sql> {
   const signer = new DsqlSigner({
@@ -65,15 +64,6 @@ async function connect(props: ResourceProps): Promise<postgres.Sql> {
   });
 }
 
-async function withSchemaLock<T>(sql: postgres.Sql, fn: () => Promise<T>): Promise<T> {
-  await sql`SELECT pg_advisory_lock(${ADVISORY_LOCK_KEY})`;
-  try {
-    return await fn();
-  } finally {
-    await sql`SELECT pg_advisory_unlock(${ADVISORY_LOCK_KEY})`;
-  }
-}
-
 async function ensureSchema(sql: postgres.Sql, schemaName: string): Promise<void> {
   await sql.unsafe(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
   await sql.unsafe(`
@@ -82,6 +72,48 @@ async function ensureSchema(sql: postgres.Sql, schemaName: string): Promise<void
       applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `);
+}
+
+const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
+
+/**
+ * Make a single DDL statement idempotent by injecting `IF NOT EXISTS`.
+ *
+ * Why: Aurora DSQL forbids multi-DDL transactions, so we ship each
+ * statement in its own tx. If the migration is interrupted partway —
+ * e.g. statement N succeeds, statement N+1 fails — the `_migrations`
+ * marker is never written and the retry restarts from statement 1.
+ * Without `IF NOT EXISTS`, re-creating the already-existing relations
+ * from the previous partial run fails with `relation X already exists`.
+ *
+ * Targets `CREATE TABLE`, `CREATE INDEX`, `CREATE UNIQUE INDEX`,
+ * `CREATE SCHEMA`. Leaves everything else (INSERT, SET, …) alone.
+ */
+function makeIdempotent(statement: string): string {
+  return statement
+    .replace(/\bCREATE\s+TABLE(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE TABLE IF NOT EXISTS$1')
+    .replace(/\bCREATE\s+UNIQUE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE UNIQUE INDEX IF NOT EXISTS$1')
+    .replace(/\bCREATE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE INDEX IF NOT EXISTS$1')
+    .replace(/\bCREATE\s+SCHEMA(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE SCHEMA IF NOT EXISTS$1');
+}
+
+/**
+ * Strip the `USING <method>` access-method clause from CREATE INDEX.
+ * Aurora DSQL doesn't accept it ("USING not supported for CREATE INDEX")
+ * — DSQL only ships one storage layer, so naming btree explicitly is
+ * meaningless to its planner. drizzle-kit always emits `USING btree`;
+ * this rewrite drops it without touching the rest of the statement.
+ */
+function stripUsingClause(statement: string): string {
+  return statement.replace(/\)\s+USING\s+\w+\s+/i, ') ').replace(/\bUSING\s+\w+\s+\(/i, '(');
+}
+
+function splitStatements(sql: string): readonly string[] {
+  return sql
+    .split(STATEMENT_BREAKPOINT)
+    .map((chunk) => chunk.trim())
+    .filter((chunk) => chunk.length > 0)
+    .map((chunk) => stripUsingClause(makeIdempotent(chunk)));
 }
 
 async function applyMigrations(
@@ -96,8 +128,23 @@ async function applyMigrations(
   for (const m of migrations) {
     if (appliedSet.has(m.name)) continue;
     await sql.unsafe(`SET search_path TO "${schemaName}"`);
-    await sql.unsafe(m.sql);
-    await sql.unsafe(`INSERT INTO "${schemaName}"._migrations(name) VALUES ($1)`, [m.name]);
+    // Aurora DSQL rejects multiple DDL statements in one transaction
+    // ("multiple ddl statements not supported in a transaction"), and
+    // `sql.unsafe(<multi-statement>)` would wrap the file's CREATE TABLE
+    // / CREATE INDEX / ALTER TABLE block in a single tx. Drizzle-kit
+    // separates statements with `--> statement-breakpoint`; we run each
+    // fragment in its own round-trip so DSQL sees one DDL per tx.
+    for (const statement of splitStatements(m.sql)) {
+      await sql.unsafe(statement);
+    }
+    // `ON CONFLICT DO NOTHING` is the only concurrency guard we get on
+    // Aurora DSQL — `pg_advisory_lock` is not in the supported subset,
+    // so two simultaneous custom-resource retries can race here. The
+    // duplicate INSERT would otherwise throw and fail the deploy.
+    await sql.unsafe(
+      `INSERT INTO "${schemaName}"._migrations(name) VALUES ($1) ON CONFLICT (name) DO NOTHING`,
+      [m.name],
+    );
   }
 }
 
@@ -111,14 +158,12 @@ export async function handler(event: CfnEvent): Promise<CfnResponse> {
 
   const sql = await connect(props);
   try {
-    await withSchemaLock(sql, async () => {
-      if (event.RequestType === 'Delete') {
-        await dropSchema(sql, props.schemaName);
-        return;
-      }
+    if (event.RequestType === 'Delete') {
+      await dropSchema(sql, props.schemaName);
+    } else {
       await ensureSchema(sql, props.schemaName);
       await applyMigrations(sql, props.schemaName, props.migrations);
-    });
+    }
   } finally {
     await sql.end({ timeout: 5 });
   }

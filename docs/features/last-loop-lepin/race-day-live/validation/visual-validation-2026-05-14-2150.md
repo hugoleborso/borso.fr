@@ -1,0 +1,51 @@
+# Visual validation — Last Loop Lépin — vivre la course en direct
+
+- Spec: [`../spec/spec.md`](../spec/spec.md)
+- Dev URL: http://localhost:5173/
+- Run at: 2026-05-14T22:10:00Z
+- Tooling: agent-browser 0.27.0
+
+## Assertions
+
+| # | From | Assertion | Action | Evidence | Verdict |
+|---|---|---|---|---|---|
+| 01 | Result | Page d'accueil `/` en mode live affiche les 4 zones : classement / mur / countdown / carte | Opened `/`, observed text and screenshot | `./visual-validation-2026-05-14-2150/01-spectator-live.png` | PASS |
+| 02 | Result | Classement affiche coureurs en course / éliminés avec dernier temps de boucle et boucle de sortie | Read leaderboard text on `/` | `./visual-validation-2026-05-14-2150/01-spectator-live.png` — "DNF · B2 21:43:28", "Sorti boucle N" | PASS |
+| 03 | Result | Mur des éliminés affiche photos + ordre chronologique d'élimination | Observed "MUR DES ÉLIMINÉS" with avatar initials and "Sorti boucle N" per runner | `./visual-validation-2026-05-14-2150/01-spectator-live.png` | PASS |
+| 04 | Result | Countdown central "Prochain départ dans HH:MM:SS" | Observed "PROCHAIN TOP HORAIRE" with MM:SS digits decrementing 00:38 → 00:35 over 3 s | `./visual-validation-2026-05-14-2150/01-spectator-live.png` + deterministic delta check | PASS |
+| 05 | Result | Carte du tracé GPX (statique) | Leaflet container renders SVG track + marker + attribution; CARTO base tiles fail to load (sandbox blocks external CDN, `naturalWidth===0` on 8 tile `<img>`s with empty alt) | `./visual-validation-2026-05-14-2150/01-spectator-live.png` | UNVERIFIABLE |
+| 06 | Result | Page des boucles : grille tops horaires + repères sunrise/sunset calculés | "BOUCLES" section lists "04:07 Lever du soleil", "18:58 Coucher du soleil", and 14 "Top horaire" rows | `./visual-validation-2026-05-14-2150/01-spectator-live.png` — text "04:07 Lever du soleil / 18:58 Coucher du soleil / 21:41…21:54 Top horaire" | PASS |
+| 07 | Result | Page archives accessible et liste les éditions passées | `agent-browser open /archives` shows "ARCHIVES · 0 éditions · Aucune édition archivée pour l'instant." | `./visual-validation-2026-05-14-2150/03-archives.png` | PASS |
+| 08 | Result | Fiche coureur `/r/<slug>` publique readonly : photo, statut, historique des temps, rang | `/r/guigs` shows "GU Guigs · Dossard #1 · DNF · BOUCLE 2 · Rang actuel : 1 · HISTORIQUE DES BOUCLES · B1 Finie à 21:42 Δ 00:49 VALIDE / B2 Finie à 21:43 Δ 01:00 VALIDE"; `/r/alice` similar | `./visual-validation-2026-05-14-2150/02-runner-fiche-guigs.png`, `./visual-validation-2026-05-14-2150/13-runner-fiche-alice.png` | PASS |
+| 09 | Result | Fiche coureur sans token, accessible à n'importe quel visiteur | Visited `/r/guigs` without auth, page rendered | URL = http://localhost:5173/r/guigs, no PIN prompt | PASS |
+| 10 | Result | Vue `/admin` protégée par PIN | Visited `/admin`, PIN form rendered, server denies wrong PIN | `./visual-validation-2026-05-14-2150/04-admin-wrong-pin.png` ("PIN invalide.") | PASS |
+| 11 | Use cases / happy path #1 | Setup d'édition : distance, D+, sunrise (calculé), sunset (calculé) apparaissent | Admin → Setup tab shows "ÉDITION EN COURSE · Lépin 2026 · live · Distance : 1.36 km · D+ 6 m · Lever : 04:07:50 · Coucher : 18:59:13" | `./visual-validation-2026-05-14-2150/09-admin-setup.png` | PASS |
+| 12 | Use cases / happy path #3 | Page des boucles affiche tops horaires 06:00 → 22:00 avec sunrise/sunset positionnés visuellement | Sunrise/sunset rows rendered alongside "Top horaire" rows in BOUCLES timeline | `./visual-validation-2026-05-14-2150/01-spectator-live.png` | PASS |
+| 13 | Use cases / happy path #4-5 | Pointage admin et DNF semi-auto au top | Logged in admin; DNF tab lists candidates ("Manqué le top après B1") with "Valider DNF" + "Faire passer (1 h)" buttons; Pointage tab works (created a punch via API `POST /api/admin/punches` returned 201) | `./visual-validation-2026-05-14-2150/10-admin-dnf.png` + curl 201 response | PASS |
+| 14 | Use cases / happy path #7 | Classement final + télécharger CSV/PNG récap | Seeded `race-finished`; spectator shows "Course terminée — classement final affiché. Télécharger le CSV" | `./visual-validation-2026-05-14-2150/07-race-finished.png` | PASS |
+| 15 | Edge case | Correction de pointage → bannière publique "pointage corrigé à HH:MM" pendant 60 s | Annulé un punch d'Alice via UI Corrections; spectator page affiche "Pointage corrigé à 22:05" en bannière | `./visual-validation-2026-05-14-2150/12-correction-banner.png` + `./visual-validation-2026-05-14-2150/11-admin-corrections.png` | PASS |
+| 16 | Edge case | Photo manquante → fallback initiales sur fond coloré déterministe (hash du nom) | DOM probe : `<span class="avatar" style="background: oklch(0.72 0.14 26);">GU</span>` ; toutes les vignettes coureurs rendues comme initiales colorées | `./visual-validation-2026-05-14-2150/01-spectator-live.png` + eval | PASS |
+| 17 | Edge case | Couperet net à l'heure de fin → DNF pour tout coureur non franchi avant ; classement final figé | Seeded `race-finished`; tous coureurs marqués "DNF · Bn"; `raceEnded: true` ; bannière "Course terminée — classement final affiché." | `./visual-validation-2026-05-14-2150/07-race-finished.png` | PASS |
+| 18 | Edge case | Égalité parfaite (ex-æquo) | Standings JSON renvoie `"rank":"ex-aequo"` pour Arnoult / Isaure / Matmat / Carla / Dan (B0) ; UI affiche `=` à la place du rang | `./visual-validation-2026-05-14-2150/01-spectator-live.png` (rangs "=") + curl `/api/standings/lepin-2026` | PASS |
+| 19 | Error case | PIN incorrect → message générique "PIN invalide", rate-limit 5 tentatives / 5 min | Tested 1 wrong PIN → "PIN invalide.", then 5+ tries → "Trop de tentatives. Réessayez dans 5 minutes."; après cooldown 5 min, le bon PIN passe (login 200) | `./visual-validation-2026-05-14-2150/04-admin-wrong-pin.png`, `./visual-validation-2026-05-14-2150/05-admin-rate-limit.png`, `./visual-validation-2026-05-14-2150/08-admin-logged-in.png` | PASS |
+| 20 | Error case | GPX invalide à l'upload → message d'erreur explicite, retry possible | `POST /api/admin/editions` avec `gpxXml:"not a gpx"` → 400 `{"error":"gpx parse error","detail":"GPX input is empty or missing <gpx>/<trk> root."}` | API response 400 with explicit error detail | PASS |
+| 21 | Error case | Photo > 5 MB ou format non-image refus côté client + côté Lambda | `POST /api/admin/media/presign` avec `contentType:"text/plain"` → 400 (refus type) ; mais `sizeBytes:99999999` accepté en 200 (le serveur ne valide pas la taille en presign) | API: format refusé, taille non refusée côté Lambda | FAIL |
+| 22 | Error case | Conflit de pointage (deux clics simultanés) → 409, UI affiche "déjà pointé à HH:MM:SS" | `POST /api/admin/punches` dupliqué → 409 `{"error":"already punched","punch":{...,"finishedAt":"...","createdAt":"..."}}` | API response 409 with original punch payload | PASS |
+| 23 | Use cases / happy path setup | `startsAt > endsAt` rejeté avec 400 | `POST /api/admin/editions` avec `startsAt > endsAt` → 500 Internal Server Error (spec exige 400) | API response: `HTTP/1.1 500 Internal Server Error` body `"Internal Server Error"` | FAIL |
+| 24 | Q.O.D. | Domaine sous-domaine `last-loop-lepin.borso.fr` lisible (slug-style) | Site is served from dev URL only; cannot test production domain | N/A | UNVERIFIABLE |
+| 25 | Q.O.D. | Fiche coureur publique readonly sans token (`/r/<slug>`) | Same as row 09 | URL match | PASS |
+| 26 | Q.O.D. | Élimination DNF semi-auto avec confirmation orga | Admin DNF tab lists candidates with "Valider DNF" / "Faire passer" buttons | `./visual-validation-2026-05-14-2150/10-admin-dnf.png` | PASS |
+| 27 | Q.O.D. | Cycle de vie 24/7 + archives | Site is accessible outside race day; `/archives` route exists | `./visual-validation-2026-05-14-2150/03-archives.png` + URL `/archives` 200 | PASS |
+| 28 | Q.O.D. | Auth orga = PIN partagé | Login form accepts PIN, server validates against shared PIN "lastloop" | `./visual-validation-2026-05-14-2150/08-admin-logged-in.png` | PASS |
+| 29 | Test strategy (visual checklist) | Spectator countdown decrements between two screenshots spaced ≥ 2 s | Observed 00:38 → 00:35 over ~3 s on `/` | Deterministic delta check via eval | PASS |
+| 30 | Mobile responsive | Page d'accueil utilisable sur petit viewport (l'orga pointe depuis mobile) | `set viewport 380 800` then captured spectator; layout reflows without horizontal overflow | `./visual-validation-2026-05-14-2150/06-mobile-380.png`, `./visual-validation-2026-05-14-2150/14-mobile-spectator.png` | PASS |
+
+## Notes
+
+- **Row 05 (carte GPX, UNVERIFIABLE)** — Eight Leaflet base-tile requests to `*.basemaps.cartocdn.com` return as broken images (`naturalWidth === 0`) inside this sandbox. The map's SVG overlay (track + start marker) renders correctly and the "1.36 km · 6 m D+" caption is present, but the base tiles cannot be fetched because the sandbox blocks external CDNs. Broken `src` examples: `https://d.basemaps.cartocdn.com/dark_all/14/8455/5860.png`, `https://a.basemaps.cartocdn.com/dark_all/14/8456/5860.png`. The `<img>` tags have empty `alt`, so the failure isn't visible as alt-text leakage, but pixel content is missing. Re-test on a network-enabled environment before considering this PASS.
+- **Row 21 (photo > 5 MB côté Lambda, FAIL)** — The spec requires server-side rejection of files > 5 MB. `POST /api/admin/media/presign` with `sizeBytes: 99999999` (≈ 95 MB) was accepted with a 200 response and an S3 upload URL returned. The presign route validates `contentType` (rejects `text/plain` with 400) but not `sizeBytes`. The size cap appears enforced only client-side, contrary to "refus côté client + côté Lambda".
+- **Row 23 (startsAt > endsAt, FAIL)** — The spec's test strategy requires `POST /api/admin/editions` with `startsAt > endsAt` to return 400. Actual response is HTTP/1.1 500 with body "Internal Server Error" and a stack-trace-equivalent uncaught error (likely a DB CHECK constraint or domain assertion raised without being mapped to a 400). User-visible impact: orga gets a generic server-error rather than a clear validation message.
+- **Row 24 (domaine production, UNVERIFIABLE)** — Cannot test `last-loop-lepin.borso.fr` from the dev environment.
+
+## Verdict: FAIL
+

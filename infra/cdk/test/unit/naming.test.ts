@@ -4,6 +4,7 @@ import {
   bucketName,
   dsqlSchemaName,
   lambdaFunctionName,
+  previewApiHostname,
   previewHostname,
   previewS3Prefix,
   stackName,
@@ -130,6 +131,19 @@ describe('previewHostname / previewS3Prefix', () => {
 
   it('previewS3Prefix throws for prod stage', () => {
     expect(() => previewS3Prefix({ app: 'test-app', stage: 'prod' })).toThrow();
+  });
+
+  it('api hostname mirrors frontend hostname with -api suffix', () => {
+    expect(previewApiHostname({ app: 'test-app', stage: 'preview', prNumber: 5 })).toBe(
+      'test-app-pr-5-api.preview.borso.fr',
+    );
+    expect(previewApiHostname({ app: 'test-app', stage: 'integ', prNumber: 5 })).toBe(
+      'bp-integ-test-app-pr-5-api.preview.borso.fr',
+    );
+  });
+
+  it('previewApiHostname throws for prod stage', () => {
+    expect(() => previewApiHostname({ app: 'test-app', stage: 'prod' })).toThrow();
   });
 
   it('rejects non-integer or non-positive prNumber', () => {

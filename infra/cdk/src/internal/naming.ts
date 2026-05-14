@@ -165,6 +165,23 @@ export function previewHostname(ctx: NameContext): string {
 }
 
 /**
+ * Hostname for the per-PR HTTP API behind a preview frontend. Mirrors
+ * {@link previewHostname} with an `-api` suffix so the wildcard cert
+ * `*.preview.borso.fr` covers both. The frontend points at this hostname
+ * via the build-time `VITE_API_BASE` env var.
+ */
+export function previewApiHostname(ctx: NameContext): string {
+  validateAppSlug(ctx.app);
+  assertDeployStage(ctx.stage);
+  if (ctx.stage === 'prod') {
+    throw new Error('previewApiHostname() is not for prod stage.');
+  }
+  const suffix = previewSuffix(ctx.prNumber);
+  const integPrefix = ctx.stage === 'integ' ? `${INTEG_STACK_PREFIX}-` : '';
+  return `${integPrefix}${ctx.app}-${suffix}-api.${PREVIEW_PARENT_DOMAIN}`;
+}
+
+/**
  * Host header → S3 key prefix used by the CloudFront viewer-request function.
  * Mirrors the previewHostname() convention so changes here ripple to
  * cf-host-routing-function.ts.

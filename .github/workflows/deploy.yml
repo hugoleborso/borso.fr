@@ -77,6 +77,9 @@ jobs:
       STAGE: prod
       AWS_REGION: ${{ vars.AWS_REGION }}
       CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+      # Front reads this at build time (Sentry tagging + gating non-prod-only
+      # affordances like the test-fixture panel in admin).
+      VITE_STAGE: prod
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

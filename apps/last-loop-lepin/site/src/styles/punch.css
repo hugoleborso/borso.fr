@@ -1,0 +1,126 @@
+/* Admin "Pointage" grid — large tap tiles optimised for the top-of-hour
+ * rush. Mirrors the mockup at docs/features/last-loop-lepin/race-day-live/
+ * spec/mockups/project/pages/admin.jsx → PunchGrid. */
+
+.punch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--d-3);
+  padding: var(--d-4) var(--d-5);
+}
+
+.punch-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--d-3);
+  padding: var(--d-3) var(--d-4);
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-3);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.05s ease;
+  position: relative;
+  min-height: 104px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+}
+
+.punch-tile:hover {
+  border-color: var(--ink-mute);
+  background: var(--bg-elev-2);
+}
+
+.punch-tile:active {
+  transform: scale(0.985);
+}
+
+.punch-tile:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.punch-tile.punched {
+  background: color-mix(in oklch, var(--accent) 14%, var(--bg-elev));
+  border-color: var(--accent);
+}
+
+.punch-tile.late {
+  border-color: color-mix(in oklch, var(--warn) 50%, var(--line));
+}
+
+.punch-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  display: grid;
+  place-items: center;
+  color: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.punch-tile.punched .punch-check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.punch-top {
+  display: flex;
+  align-items: center;
+  gap: var(--d-3);
+  min-width: 0;
+}
+
+.punch-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.punch-bib {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-mute);
+  letter-spacing: 0.08em;
+}
+
+.punch-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.punch-bottom {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--d-3);
+}
+
+.punch-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.punch-tile.punched .punch-meta {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.punch-pace {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-mute);
+  letter-spacing: 0.04em;
+}

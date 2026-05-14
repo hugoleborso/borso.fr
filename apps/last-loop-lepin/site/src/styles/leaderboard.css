@@ -1,0 +1,105 @@
+/* Chip-style leaderboard, masonry-ish flow via CSS multi-column.
+ *
+ * `column-width` packs as many ~220 px columns as the card body allows;
+ * `break-inside: avoid` keeps each chip whole; `column-fill: balance`
+ * equalises column heights when chips have different intrinsic sizes
+ * (long names, ex-aequo ranks). The result reads like a Pinterest grid
+ * without depending on the still-experimental `grid-template-rows:
+ * masonry`. Column breaks aren't aligned across rows — that's the point.
+ */
+.leaderboard-chips {
+  column-width: 220px;
+  column-gap: var(--d-3);
+  column-fill: balance;
+  padding: var(--d-4) var(--d-5);
+}
+
+.leaderboard-chip {
+  break-inside: avoid;
+  display: flex;
+  flex-direction: column;
+  gap: var(--d-2);
+  padding: var(--d-3);
+  margin-bottom: var(--d-3);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-2);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.leaderboard-chip:hover {
+  border-color: var(--ink-mute);
+}
+
+.leaderboard-chip--dnf {
+  opacity: 0.75;
+  background: color-mix(in oklch, var(--danger) 4%, var(--bg-elev-2));
+  border-color: color-mix(in oklch, var(--danger) 25%, var(--line));
+}
+
+.leaderboard-chip__head {
+  display: flex;
+  align-items: center;
+  gap: var(--d-3);
+  min-width: 0;
+}
+
+.leaderboard-chip__rank {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--ink-3);
+  min-width: 20px;
+  text-align: right;
+}
+
+.leaderboard-chip__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.leaderboard-chip__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--d-3);
+}
+
+.leaderboard-chip__time {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Classement spans the full content width above the spectator-grid
+ * widgets. Content-sized (no `flex`) so the widget row below claims
+ * the rest of the viewport instead of fighting for a ratio that
+ * leaves the map / countdown clipped. */
+.classement-card {
+  min-height: 0;
+}
+
+/* Top-of-page hero row: split-flap countdown on the left, GPX map on
+ * the right. The countdown card is content-sized (clamp font keeps
+ * the flaps readable at any width), the map card flex-grows to fill
+ * the rest. Stacks vertically under 900 px so the spectator can
+ * still scan both on a phone. */
+.spectator-hero {
+  display: grid;
+  /* Countdown gets ~60 % of the row, map ~40 %. Both have generous
+   * `minmax` mins so the flaps stay legible and the map doesn't shrink
+   * below the point where the polyline is recognisable. */
+  grid-template-columns: minmax(480px, 1.5fr) minmax(280px, 1fr);
+  gap: var(--d-4);
+}
+
+@media (max-width: 900px) {
+  .spectator-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

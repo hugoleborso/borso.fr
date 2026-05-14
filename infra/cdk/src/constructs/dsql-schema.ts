@@ -131,6 +131,15 @@ export class DsqlSchema extends Construct {
       bundling: {
         target: 'node22',
         format: OutputFormat.ESM,
+        // Banner needed because `@aws-sdk/dsql-signer` (bundled inline) pulls
+        // in `@smithy/util-buffer-from` which `require('buffer')`. esbuild's
+        // ESM output replaces CJS `require` with a `__require` shim that
+        // can't resolve Node built-ins → the Lambda fails at cold start with
+        // `Dynamic require of "buffer" is not supported`. Re-exposing
+        // `createRequire(import.meta.url)` as `require` patches both Node
+        // built-ins and any other transitive CJS dep without re-bundling
+        // them as external (which would just push the problem to runtime).
+        banner: 'import { createRequire } from \'module\'; const require = createRequire(import.meta.url);',
         // Keep ONLY the Lambda-runtime-provided clients external. We do NOT
         // include @aws-sdk/dsql-signer here — the runtime doesn't ship it,
         // so esbuild bundles it inline from the workspace's node_modules
@@ -173,15 +182,20 @@ export class DsqlSchema extends Construct {
   }
 
   /**
-   * Grant `dsql:DbConnect` on the cluster to a Lambda. The grantee must
-   * connect with the schema as its `search_path`; the construct does not
-   * narrow IAM to a specific schema (DSQL doesn't support that today).
+   * Grant `dsql:DbConnectAdmin` on the cluster to a Lambda. The grantee
+   * MUST authenticate via `DsqlSigner.getDbConnectAdminAuthToken()` and
+   * set its connection `search_path` to {@link schemaName} — the
+   * schema-per-stage layout is what gives us isolation, because DSQL
+   * doesn't (yet) narrow IAM to a specific schema OR support non-admin
+   * application users we could provision from the migration runner.
+   * That's the tradeoff we accept until DSQL ships a finer-grained
+   * authn model.
    */
   public grantConnect(grantable: IGrantable): void {
     grantable.grantPrincipal.addToPrincipalPolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        actions: ['dsql:DbConnect'],
+        actions: ['dsql:DbConnectAdmin'],
         resources: [this.clusterArn],
       }),
     );

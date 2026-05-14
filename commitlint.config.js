@@ -5,7 +5,7 @@ export default {
     'scope-enum': [
       2,
       'always',
-      ['borso-fr', 'borsouvertures', 'infra', 'ci', 'docs', 'deps', 'meta'],
+      ['borso-fr', 'borsouvertures', 'last-loop-lepin', 'infra', 'ci', 'docs', 'deps', 'meta'],
     ],
   },
 };

@@ -87,6 +87,54 @@ describe('PreviewableApp (preview with db)', () => {
   });
 });
 
+describe('PreviewableApp (prod, missing domainName + api)', () => {
+  it('throws — CORS allow-list needs the prod hostname', () => {
+    const { clusterStack, stageStack } = bootstrap('S');
+    expect(() => {
+      new PreviewableApp(stageStack, 'App', {
+        app: 'test-app',
+        stage: 'prod',
+        frontend: { distPath: '.' },
+        api: { entry: ENTRY },
+        database: { migrationsPath: MIGRATIONS, cluster: clusterStack.cluster },
+      });
+    }).toThrow(/domainName is required for stage="prod"/);
+  });
+});
+
+describe('PreviewableApp (preview with api → custom domain)', () => {
+  const { clusterStack, stageStack } = bootstrap('S');
+  new PreviewableApp(stageStack, 'App', {
+    app: 'test-app',
+    stage: 'preview',
+    prNumber: 12,
+    frontend: { distPath: '.' },
+    api: { entry: ENTRY },
+    database: { migrationsPath: MIGRATIONS, cluster: clusterStack.cluster },
+  });
+  const stageTpl = Template.fromStack(stageStack);
+
+  it('provisions an APIGW v2 DomainName at <app>-pr-<n>-api.preview.borso.fr', () => {
+    stageTpl.hasResourceProperties('AWS::ApiGatewayV2::DomainName', {
+      DomainName: 'test-app-pr-12-api.preview.borso.fr',
+    });
+    stageTpl.resourceCountIs('AWS::ApiGatewayV2::ApiMapping', 1);
+  });
+
+  it('provisions A + AAAA Route 53 alias records for the API hostname', () => {
+    stageTpl.resourceCountIs('AWS::Route53::RecordSet', 2);
+  });
+
+  it('uses specific origin + credentials for CORS (not wildcard)', () => {
+    stageTpl.hasResourceProperties('AWS::ApiGatewayV2::Api', {
+      CorsConfiguration: {
+        AllowCredentials: true,
+        AllowOrigins: ['https://test-app-pr-12.preview.borso.fr'],
+      },
+    });
+  });
+});
+
 describe('PreviewableApp (preview, no api/db)', () => {
   it('omits the api + db when not requested', () => {
     const app = new App();

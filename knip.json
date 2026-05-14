@@ -1,9 +1,11 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignore": ["docs/**"],
+  "ignoreExportsUsedInFile": true,
   "workspaces": {
     ".": {
-      "ignoreBinaries": ["typecheck", "build"]
+      "ignoreBinaries": ["typecheck", "build"],
+      "ignoreDependencies": ["esbuild"]
     },
     "apps/borso-fr": {
       "entry": [
@@ -17,6 +19,22 @@
     "apps/borsouvertures": {
       "entry": ["bin/app.ts", "site/**/*.utils.test.ts"],
       "project": ["bin/**/*.ts", "scripts/**/*.ts", "site/**/*.ts", "site/**/*.tsx"]
+    },
+    "apps/last-loop-lepin": {
+      "entry": [
+        "cdk/bin/cdk.ts",
+        "api/src/main.ts",
+        "api/src/**/*.test.ts",
+        "site/src/**/*.utils.test.ts",
+        "test/**/*.ts"
+      ],
+      "project": [
+        "cdk/**/*.ts",
+        "site/src/**/*.ts",
+        "site/src/**/*.tsx",
+        "api/src/**/*.ts",
+        "test/**/*.ts"
+      ]
     },
     "infra/cdk": {
       "entry": [

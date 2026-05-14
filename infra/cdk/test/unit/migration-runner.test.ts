@@ -106,13 +106,19 @@ describe('migration-runner handler', () => {
     const queries = state.unsafeCalls.map((c) => c.query).join('\n');
     expect(queries).toMatch(/CREATE SCHEMA IF NOT EXISTS "test_app"/);
     expect(queries).toMatch(/CREATE TABLE IF NOT EXISTS "test_app"\._migrations/);
-    expect(queries).toMatch(/CREATE TABLE a/);
-    expect(queries).toMatch(/CREATE TABLE b/);
+    // Migration SQL is run through `makeIdempotent` before each round-trip
+    // so DSQL can retry a half-applied migration (a relation may already
+    // exist from a previous failed run).
+    expect(queries).toMatch(/CREATE TABLE IF NOT EXISTS a/);
+    expect(queries).toMatch(/CREATE TABLE IF NOT EXISTS b/);
     expect(state.appliedMigrations.has('0001_init.sql')).toBe(true);
     expect(state.appliedMigrations.has('0002_more.sql')).toBe(true);
     expect(state.ended).toBe(1);
-    // advisory lock acquired + released via tagged-template calls
-    expect(state.taggedCalls.length).toBeGreaterThanOrEqual(2);
+    // Aurora DSQL doesn't support `pg_advisory_lock`; the runner now
+    // relies on (a) CFN's single-invocation contract for serialisation
+    // within one deploy, (b) `INSERT ... ON CONFLICT DO NOTHING` for
+    // belt-and-suspenders. No tagged-template lock calls should fire.
+    expect(state.taggedCalls.length).toBe(0);
   });
 
   it('Create: skips migrations already in _migrations', async () => {
@@ -123,9 +129,9 @@ describe('migration-runner handler', () => {
     });
     const sqlsRun = state.unsafeCalls
       .map((c) => c.query)
-      .filter((q) => /CREATE TABLE [ab] /.test(q));
-    expect(sqlsRun.some((s) => s.includes('CREATE TABLE a'))).toBe(false);
-    expect(sqlsRun.some((s) => s.includes('CREATE TABLE b'))).toBe(true);
+      .filter((q) => /CREATE TABLE (IF NOT EXISTS )?[ab] /.test(q));
+    expect(sqlsRun.some((s) => /CREATE TABLE IF NOT EXISTS a/.test(s))).toBe(false);
+    expect(sqlsRun.some((s) => /CREATE TABLE IF NOT EXISTS b/.test(s))).toBe(true);
   });
 
   it('Update: passes through PhysicalResourceId', async () => {
