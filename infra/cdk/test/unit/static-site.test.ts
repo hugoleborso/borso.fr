@@ -23,6 +23,16 @@ describe('StaticSite (prod)', () => {
     });
   });
 
+  it('opts into deleteExisting on both alias records so the construct can take over a manually-created record on first deploy', () => {
+    // The StaticSite construct is, by convention, the canonical owner of
+    // `props.domainName` in this account. `deleteExisting: true` pre-deletes
+    // any same-name record before CDK creates its own, eliminating
+    // `RRSetExists` collisions on alias takeovers (legacy → CDK migrations,
+    // recovery after a botched cleanup). The trade-off is silent overwrite;
+    // documented in the construct's source.
+    tpl.resourceCountIs('Custom::DeleteExistingRecordSet', 2);
+  });
+
   it('creates the alias R53 records with the exact FQDN (no zone double-suffix)', () => {
     // Regression for the relative-recordName-doubles-zone trap: CDK's ARecord
     // silently appends the zone when recordName has no trailing dot, so
