@@ -76,7 +76,9 @@ Do **not** invoke when:
 ## Failure modes to avoid
 
 - **Over-summarising.** Level 1 is not a tagline; it has to actually let a reviewer decide whether to merge without opening any toggle. If the level 1 summary requires "see details" to make sense, it's wrong.
+- **Stingy with `<details>`.** The opposite failure mode of *Over-summarising*. Default to collapsing aggressively — anything that isn't strictly load-bearing for the merge decision goes in a toggle. File-by-file rationale, trade-offs, alternatives considered, references-left-intact, test plan: every one of these is a `<details>` by default. Level 1 stays tight; the reviewer expands only what they need. The two failure modes set the band: Level 1 must stand alone, *and* everything else must collapse.
 - **Pseudo-toggles.** A `<details>` with one line inside is noise. Either inline or skip.
+- **Parroting git output.** Don't paste `git diff --stat`, `git log --oneline`, or `git grep` commands into the PR body — GitHub already renders the diff, the file tree, and the commit list natively on the PR page. The body's job is to talk about *what changed and why*, not *which lines moved*. Same goes for the test plan: don't write `git grep adr-writer returns nothing` — write the behavioural assertion ("no live references to the deleted skill remain in the active config").
 - **Lying screenshots.** SHA-pin every screenshot URL to the head commit before opening the PR; raw GitHub URLs to `main` rot when the branch is deleted.
 - **Inventing content.** Level-1 lines are sourced from spec / plan / ADR; the skill never paraphrases beyond what those documents say. If the spec is sloppy, fix the spec — don't paper over it in the PR body.
 - **Skipping the architecture-choices section** when ADRs exist. Reviewers care more about *why this design* than *what changed* — the choice block is the section they'd add on a code review even if it's missing.
