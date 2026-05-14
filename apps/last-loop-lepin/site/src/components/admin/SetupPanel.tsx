@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { z } from 'zod';
 import { ApiError, apiClient } from '../../api/client';
 import { invalidateResource } from '../../data/useResource';
 import type { RaceEditionDto } from '../../domain/types';
@@ -22,6 +23,33 @@ function defaultEndsAt(): string {
   const now = new Date();
   now.setHours(22, 0, 0, 0);
   return isoLocal(now);
+}
+
+/**
+ * Pull a human-readable summary out of a `zValidator` 400 body. Hono's
+ * default error shape is `{ success: false, error: { issues: [...] } }`
+ * — surface the path + message of each issue so the operator sees which
+ * field actually failed instead of a generic "données invalides" hint.
+ */
+const zodValidationErrorSchema = z.object({
+  error: z.object({
+    issues: z
+      .array(
+        z.object({
+          path: z.array(z.union([z.string(), z.number()])).optional(),
+          message: z.string().optional(),
+        }),
+      )
+      .min(1),
+  }),
+});
+
+function summariseZodError(body: unknown): string | null {
+  const parsed = zodValidationErrorSchema.safeParse(body);
+  if (!parsed.success) return null;
+  return parsed.data.error.issues
+    .map((issue) => `${(issue.path ?? []).join('.') || '?'}: ${issue.message ?? 'invalide'}`)
+    .join(' · ');
 }
 
 export function SetupPanel({ currentEdition }: SetupPanelProps) {
@@ -51,7 +79,12 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
       if (caught instanceof ApiError && caught.status === 409) {
         setError('Une édition avec ce slug existe déjà.');
       } else if (caught instanceof ApiError && caught.status === 400) {
-        setError('Données invalides (vérifier le GPX et les horaires).');
+        const summary = summariseZodError(caught.body);
+        setError(
+          summary === null
+            ? 'Données invalides (vérifier le GPX et les horaires).'
+            : `Données invalides → ${summary}`,
+        );
       } else {
         setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
       }
