@@ -77,6 +77,10 @@ Two failure modes to watch for:
 - [`input-vs-output-metrics.md`](./input-vs-output-metrics.md) — Amazon flywheel framing for the *Why → measurable objective* split; visual-validation drives input metrics only.
 - [`audit-imported-deps-and-patterns-when-planning.md`](./audit-imported-deps-and-patterns-when-planning.md) — when porting / iterating, run a Pattern Coherence pass at planning time; question every dep and every state-management pattern instead of carrying them forward.
 
+### Skills & orchestration
+
+- [`tech-lead-orchestrator.md`](./tech-lead-orchestrator.md) — operator notes for `/tech-lead-orchestrator`: artefact layout under `runs/<run-id>/`, how to read `journal.md.jsonl`, common debugging recipes (double auto-chain, unparseable verdict, spec mutation, hook failure), dogfooding expectations.
+
 ### borsouvertures / chess libraries
 
 - [`chessjs-v1-throws-on-illegal-move.md`](./chessjs-v1-throws-on-illegal-move.md) — `chess.js` v1 throws on illegal moves; v0 returned `null`. Wrap every `chess.move` in `try`/`catch`.
