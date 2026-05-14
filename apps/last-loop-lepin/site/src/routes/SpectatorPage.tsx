@@ -149,14 +149,25 @@ export function SpectatorPage() {
         </div>
       ) : null}
       <CorrectionBanner correctedAt={mostRecentCorrection} />
-      <div className="card countdown-card">
-        <div className="card-head">
-          <h2 className="card-title">Prochain top horaire</h2>
-          <span className="muted mono">{edition.displayName}</span>
+      <div className="spectator-hero">
+        <div className="card countdown-card">
+          <div className="card-head">
+            <h2 className="card-title">Prochain top horaire</h2>
+            <span className="muted mono">{edition.displayName}</span>
+          </div>
+          <div className="card-body col">
+            <Countdown targetEpochMs={upcomingBoundary} label="" />
+            <InRaceCounter ranked={standings?.ranked ?? []} />
+          </div>
         </div>
-        <div className="card-body col">
-          <Countdown targetEpochMs={upcomingBoundary} label="" />
-          <InRaceCounter ranked={standings?.ranked ?? []} />
+        <div className="card">
+          <div className="card-head">
+            <h2 className="card-title">Tracé</h2>
+            <span className="muted mono">
+              {standings === null ? '' : `${standings.ranked.filter((entry) => entry.status.kind === 'in-race').length} en course`}
+            </span>
+          </div>
+          <CourseMap edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
         </div>
       </div>
       <div className="card classement-card">
@@ -168,22 +179,11 @@ export function SpectatorPage() {
           <Leaderboard ranked={standings?.ranked ?? []} />
         </div>
       </div>
-      <div className="spectator-grid">
-        <div className="card">
-          <div className="card-head">
-            <h2 className="card-title">Mur des éliminés</h2>
-          </div>
-          <EliminatedWall ranked={standings?.ranked ?? []} />
+      <div className="card">
+        <div className="card-head">
+          <h2 className="card-title">Mur des éliminés</h2>
         </div>
-        <div className="card">
-          <div className="card-head">
-            <h2 className="card-title">Tracé</h2>
-            <span className="muted mono">
-              {standings === null ? '' : `${standings.ranked.filter((entry) => entry.status.kind === 'in-race').length} en course`}
-            </span>
-          </div>
-          <CourseMap edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
-        </div>
+        <EliminatedWall ranked={standings?.ranked ?? []} />
       </div>
     </div>
   );

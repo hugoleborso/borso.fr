@@ -83,3 +83,20 @@
 .classement-card {
   min-height: 0;
 }
+
+/* Top-of-page hero row: split-flap countdown on the left, GPX map on
+ * the right. The countdown card is content-sized (clamp font keeps
+ * the flaps readable at any width), the map card flex-grows to fill
+ * the rest. Stacks vertically under 900 px so the spectator can
+ * still scan both on a phone. */
+.spectator-hero {
+  display: grid;
+  grid-template-columns: minmax(360px, auto) minmax(0, 1fr);
+  gap: var(--d-4);
+}
+
+@media (max-width: 900px) {
+  .spectator-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
