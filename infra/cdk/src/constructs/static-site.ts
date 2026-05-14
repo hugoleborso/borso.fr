@@ -193,14 +193,21 @@ export class StaticSite extends Construct {
       hostedZoneId: zoneId,
       zoneName,
     });
+    // CDK's ARecord treats a recordName without a trailing dot as relative to
+    // the zone and silently appends the zone name. Passing `'borso.fr'` against
+    // zone `borso.fr` yields the R53 record `borso.fr.borso.fr.` — a record
+    // that resolves nothing useful and forced operators to recreate the alias
+    // manually outside CDK. Force absolute (FQDN with trailing dot) so the
+    // record always matches `props.domainName` exactly.
+    const recordName = props.domainName.endsWith('.') ? props.domainName : `${props.domainName}.`;
     new ARecord(this, 'AliasA', {
       zone,
-      recordName: props.domainName,
+      recordName,
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     });
     new AaaaRecord(this, 'AliasAAAA', {
       zone,
-      recordName: props.domainName,
+      recordName,
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     });
 
