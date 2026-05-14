@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ApiError, apiClient } from '../../api/client';
 import { invalidateResource } from '../../data/useResource';
 import type { RaceEditionDto } from '../../domain/types';
+import { CreateEditionForm } from './CreateEditionForm';
 import {
   defaultEndsAt,
   defaultStartsAt,
@@ -353,15 +354,40 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
     </div>
   );
 
+  // Two independent surfaces, always rendered (one or both, never zero):
+  //
+  //   1. Current edition card — edit form in `setup`, readonly + transition
+  //      buttons in `live` / `finished`.
+  //   2. Create form — POSTs a new edition. Always available so the orga
+  //      can prep next year's race even while the current one is still in
+  //      setup / live / finished. Slug is auto-suggested (`lepin-2026 →
+  //      lepin-2027`) when there's an existing edition to draw from.
+  //
+  // We keep them as separate components so their input state never bleeds
+  // across (previous bug: the "Créer" form was hidden as soon as a setup
+  // edition existed, leaving the orga no path to register the next race).
+  const createTitle =
+    currentEdition === null ? 'Créer une édition' : 'Créer une nouvelle édition';
+  const createHint = currentEdition === null ? 'configuration initiale' : 'slug différent';
+  const createForm = (
+    <CreateEditionForm
+      suggestedSlug={suggestNextSlug(currentEdition?.slug)}
+      suggestedDisplayName="Last Loop Lépin"
+      headerTitle={createTitle}
+      headerHint={createHint}
+    />
+  );
   if (isEditing) {
-    return formCard;
+    return (
+      <>
+        {formCard}
+        {createForm}
+      </>
+    );
   }
-  // Create form on top — that's the primary action the orga lands here
-  // for ("set up the next race"). The previous edition's status card sits
-  // below as context, with the secondary "Réouvrir" / "Terminer" controls.
   return (
     <>
-      {formCard}
+      {createForm}
       {readonlyCard}
     </>
   );
