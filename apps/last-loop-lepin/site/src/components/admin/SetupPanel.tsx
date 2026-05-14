@@ -46,13 +46,32 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
   const [intervalMinutes, setIntervalMinutes] = useState(
     String(isEditing && currentEdition !== null ? currentEdition.intervalMinutes : 60),
   );
-  const [gpxXml, setGpxXml] = useState('');
-  const [gpxFileName, setGpxFileName] = useState<string | null>(null);
+  // Hold the picked `File` rather than its text content. Reading via
+  // `file.text()` is async — if we kicked it off in `onChange`, a quick
+  // submit could race the read and POST an empty `gpxXml`. Reading at
+  // submit time removes the race.
+  const [gpxFile, setGpxFile] = useState<File | null>(null);
   const [gpxReadError, setGpxReadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function readGpxFromState(): Promise<string | null> {
+    if (gpxFile === null) return null;
+    try {
+      const text = await gpxFile.text();
+      if (text.length === 0) {
+        setGpxReadError('Le fichier choisi est vide.');
+        return null;
+      }
+      setGpxReadError(null);
+      return text;
+    } catch (caught) {
+      setGpxReadError(caught instanceof Error ? caught.message : 'Lecture du fichier impossible.');
+      return null;
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent): Promise<void> {
     event.preventDefault();
@@ -66,20 +85,24 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
         endsAt: new Date(endsAt).toISOString(),
         intervalMinutes: Number.isFinite(intervalMinutesNumber) ? intervalMinutesNumber : 60,
       };
+      const gpxXml = await readGpxFromState();
       if (isEditing && currentEdition !== null) {
-        // In edit mode, an empty `gpxXml` means "keep the persisted trace".
-        // The server schema marks `gpxXml` optional on update so we just
-        // omit the key — `adminReplaceEdition` returns a JSON without the
-        // sunrise / GPX shift in that case.
+        // In edit mode, an empty file picker means "keep the persisted
+        // trace". `gpxXml === null` covers both "no file chosen" and "file
+        // read failed" — we treat both as a no-op on the GPX side and let
+        // the schedule / displayName update land.
         await apiClient.adminReplaceEdition(
           currentEdition.slug,
-          gpxXml.length === 0 ? basePayload : { ...basePayload, gpxXml },
+          gpxXml === null ? basePayload : { ...basePayload, gpxXml },
         );
       } else {
+        if (gpxXml === null) {
+          setError('Choisis un fichier GPX avant de créer l\'édition.');
+          return;
+        }
         await apiClient.adminCreateEdition({ slug, ...basePayload, gpxXml });
       }
-      setGpxXml('');
-      setGpxFileName(null);
+      setGpxFile(null);
       invalidateResource('edition:current');
       invalidateResource('editions:all');
     } catch (caught) {
@@ -268,35 +291,18 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
             className="input"
             // iOS Files filters by UTI and has no built-in entry for `.gpx`,
             // so any `accept` value greys the file out on the picker. Skip
-            // the hint — server-side `parseGpx` rejects non-GPX content with
-            // a 400 anyway, and the loaded-kB readout below makes the
-            // selection visible.
+            // the hint — server-side `parseGpx` rejects non-GPX content
+            // with a 400 anyway.
             onChange={(event) => {
               const file = event.target.files?.[0] ?? null;
+              setGpxFile(file);
               setGpxReadError(null);
-              if (file === null) {
-                setGpxXml('');
-                setGpxFileName(null);
-                return;
-              }
-              setGpxFileName(file.name);
-              // `file.text()` reads as UTF-8 — Strava + Garmin both export
-              // UTF-8 GPX so that's the right default.
-              file
-                .text()
-                .then((content) => setGpxXml(content))
-                .catch((caught: unknown) => {
-                  setGpxXml('');
-                  setGpxReadError(
-                    caught instanceof Error ? caught.message : 'Lecture du fichier impossible.',
-                  );
-                });
             }}
             required={!isEditing}
           />
-          {gpxFileName !== null ? (
+          {gpxFile !== null ? (
             <div className="muted mono" style={{ fontSize: 11 }}>
-              {gpxFileName} ({(gpxXml.length / 1024).toFixed(1)} kB chargés)
+              {gpxFile.name} ({(gpxFile.size / 1024).toFixed(1)} kB)
             </div>
           ) : null}
           {gpxReadError !== null ? <div className="error-text">{gpxReadError}</div> : null}
