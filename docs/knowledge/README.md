@@ -35,6 +35,7 @@ Two failure modes to watch for:
 - [`cloudfront-get-function-binary-output.md`](./cloudfront-get-function-binary-output.md) — `aws cloudfront get-function` writes the source to a positional outfile, not stdout.
 - [`cloudfront-cname-uniqueness.md`](./cloudfront-cname-uniqueness.md) — aliases (CNAMEs) are single-distribution; release from the old distribution before redeploying the new one.
 - [`preview-api-cross-origin.md`](./preview-api-cross-origin.md) — previews use a custom-domain API per PR (`<app>-pr-<n>-api.preview.borso.fr`) because the shared previews distribution can't host per-app `/api/*` routing.
+- [`cdk-route53-zone-token-pitfall.md`](./cdk-route53-zone-token-pitfall.md) — `ARecord(recordName: '<host>')` doubles the zone suffix when `zoneName` is a CFN token (resolves at deploy time, fails the literal-string suffix check). Trailing-dot the `recordName` to short-circuit.
 
 ### CDK / S3
 
@@ -66,6 +67,11 @@ Two failure modes to watch for:
 
 - [`local-postgres-without-docker.md`](./local-postgres-without-docker.md) — `scripts/local-postgres.sh` boots a sandbox-private Postgres for any borso app when Docker is unavailable (claude.ai/code sandbox); per-app stable port, Drizzle-friendly, `pnpm run test` wires `DATABASE_URL` automatically.
 
+### Aurora DSQL
+
+- [`dsql-postgres-compat-gaps.md`](./dsql-postgres-compat-gaps.md) — catalogue of DSQL's divergences from Postgres (no jsonb, no FKs, no multi-DDL tx, no partial indexes, no advisory locks, no `USING <method>` on CREATE INDEX, retries need `IF NOT EXISTS`, only `admin` user, IAM is per-cluster).
+- [`dsql-serverless-pricing-vs-aurora.md`](./dsql-serverless-pricing-vs-aurora.md) — DSQL bills per DPU + per GB-month, not per cluster; idle clusters cost ~nothing. The "one-cluster-per-app" choice is about latency + quotas + ordering, not cost.
+
 ### Build / lint tooling
 
 - [`biome-stack-overflow-on-dist-binaries.md`](./biome-stack-overflow-on-dist-binaries.md) — Biome 2.x stack-overflows on woff/png binaries in `dist/`; turn on `vcs.useIgnoreFile`.
@@ -77,6 +83,7 @@ Two failure modes to watch for:
 - [`agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md) — `agent-browser set device` does not propagate `matchMedia('(pointer: coarse)')`; touch-affordance assertions land UNVERIFIABLE without a workaround.
 - [`agent-browser-cdp-click-no-op-on-react-onclick.md`](./agent-browser-cdp-click-no-op-on-react-onclick.md) — CDP `click @ref` doesn't reliably fire React `onClick`; fall back to `element.click()` via `agent-browser eval`.
 - [`visual-validator-image-size-limit.md`](./visual-validator-image-size-limit.md) — past ~20 high-res screenshots, the validator's API session crashes on the per-image 2000 px ceiling; cap screenshots at 10 and prefer viewport over full-page.
+- [`visual-validation-skill-vs-agent-browser-direct.md`](./visual-validation-skill-vs-agent-browser-direct.md) — `/visual-validation` is the feature-gate skill (full spec walk, separate agent, committed evidence); for single-fix iteration use `agent-browser` directly in the main session — minutes vs seconds.
 
 ### Spec & metrics framing
 
@@ -86,6 +93,10 @@ Two failure modes to watch for:
 ### Skills & orchestration
 
 - [`tech-lead-orchestrator.md`](./tech-lead-orchestrator.md) — operator notes for `/tech-lead-orchestrator`: artefact layout under `runs/<run-id>/`, how to read `journal.md.jsonl`, common debugging recipes (double auto-chain, unparseable verdict, spec mutation, hook failure), dogfooding expectations.
+
+### Browser / forms
+
+- [`ios-files-picker-uti-greys-extensions.md`](./ios-files-picker-uti-greys-extensions.md) — iOS Files filters file inputs by Apple UTI, not by extension or MIME. `.gpx` and other unregistered extensions are greyed out when `accept` lists them; drop `accept` and validate server-side.
 
 ### Fonts / typography
 

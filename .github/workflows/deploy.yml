@@ -8,6 +8,8 @@
 #
 # max-parallel: 1 — avoid simultaneous CFN updates touching shared
 # zone records.
+# fail-fast: false — one app failing must not cancel the others'
+# turn; each app's deploy is independent.
 
 name: deploy
 
@@ -70,6 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod # gated by manual approval
     strategy:
+      fail-fast: false
       matrix:
         app: ${{ fromJson(needs.detect.outputs.apps) }}
       max-parallel: 1
