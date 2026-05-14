@@ -2,10 +2,10 @@
 date: 2026-05-14
 introduced-at: implementation
 detected-at: production
-severity: high
+severity: medium
 related-pr: n/a (present since the StaticSite construct was first written)
 fix-pr: TBD
-fix-commits: [TBD]
+fix-commits: [3df59de]
 eradication-level: 4
 time-to-detect: ~10 days
 tags: [cdk, route53, cloudfront, static-site, drift]
@@ -17,26 +17,38 @@ tags: [cdk, route53, cloudfront, static-site, drift]
 
 The `borso-fr-prod` CDK stack reported `CREATE_COMPLETE` and the CloudFormation
 resources listed `SiteAliasA5601B07F` and `SiteAliasAAAAD7B32221` as healthy.
-But `borso.fr` did not resolve to the CDK distribution — it kept returning the
-output of a different, manually-created CloudFront distribution
-(`E80907R476ZAJ`) backed by a manually-uploaded S3 website bucket. An operator
-investigating cost drift queried Route 53 directly:
+`https://borso.fr` worked fine — the CDK-built site was being served. But an
+operator auditing CloudFront cost noticed two distributions claiming overlap
+on the apex domain and queried Route 53 directly:
 
 ```text
 $ aws route53 list-resource-record-sets --hosted-zone-id Z040…
 …
-{ "Name": "borso.fr.borso.fr.", "Type": "A",    "AliasTarget": { … d2yfgg8…cloudfront.net … } }
-{ "Name": "borso.fr.borso.fr.", "Type": "AAAA", "AliasTarget": { … d2yfgg8…cloudfront.net … } }
+{ "Name": "borso.fr.",          "Type": "A",    "AliasTarget": { … d2kjwt…cloudfront.net (E80907R476ZAJ — manual) … } }
+{ "Name": "borso.fr.borso.fr.", "Type": "A",    "AliasTarget": { … d3cets…cloudfront.net (E25779EK6PTEZ2 — CDK)   … } }
+{ "Name": "borso.fr.borso.fr.", "Type": "AAAA", "AliasTarget": { … d3cets…cloudfront.net (E25779EK6PTEZ2 — CDK)   … } }
 ```
 
 Two phantom records — `borso.fr.borso.fr.`, not `borso.fr.` — owned by the
-CDK stack, resolving nothing useful. Whoever had brought the site online had
-silently created `A borso.fr. → cloudfront(E80907R476ZAJ)` by hand outside CDK
-because the CDK stack's alias was inert. The same trap was about to bite
-`borsouvertures-prod`: a deploy attempt on 2026-05-12 failed mid-rollback,
-leaving an orphan `borsouvertures-prod` S3 bucket — and even if it had
-succeeded, the synthesised record would have been
-`borsouvertures.borso.fr.borso.fr.`.
+CDK stack, resolving nothing useful. The apex stayed live anyway because
+CloudFront's edge does **SNI-based routing**: a request with `SNI=borso.fr`
+gets matched to whichever distribution declared `borso.fr` in its `Aliases`,
+regardless of which `d*.cloudfront.net` the R53 alias points at. The CDK
+distribution `E25779EK6PTEZ2` had declared the alias, so it served the
+traffic; the operator-created `A borso.fr. → d2kjwt…` record pointing at the
+*other* (alias-less) distribution `E80907R476ZAJ` was a misleading label
+that happened to land on a CloudFront edge IP that worked anyway. Hidden
+double-failure: the phantom CDK records `borso.fr.borso.fr.` were inert
+(nobody queries that name), and the wrong-target manual record was masked
+by SNI routing. The system *looked* correct from the only observable that
+mattered to a user — `curl https://borso.fr` returned 200 — while the R53
+layer was a mess of dangling claims that would re-bite on any reorg.
+
+The same trap was about to bite `borsouvertures-prod`: a deploy attempt on
+2026-05-12 failed mid-rollback, leaving an orphan `borsouvertures-prod` S3
+bucket — and even if it had succeeded, the synthesised record would have
+been `borsouvertures.borso.fr.borso.fr.`, again inert, with operator-created
+manual records doing the real work.
 
 ## Root-cause chain
 
@@ -54,10 +66,23 @@ succeeded, the synthesised record would have been
    (`d2yfgg8…cloudfront.net`) without surfacing the synthesised R53 record
    name — so the deploy looks healthy from CFN's perspective.
 4. **Why did the operator never notice the phantom record?**
-   Because something else was already serving `borso.fr`. The manual record
-   created out-of-band hid the breakage: traffic resolved, the site loaded,
-   no alarm fired. The CDK-created record sat next to the manual one in Route
-   53, never queried.
+   The user-facing observable (`curl https://borso.fr → 200`) stayed
+   healthy thanks to CloudFront's SNI-based routing: the CDK distribution
+   *did* declare `borso.fr` in its Aliases, so any HTTPS request with
+   `SNI=borso.fr` was routed to it by the edge — regardless of the
+   `d*.cloudfront.net` hostname encoded in the R53 alias target. The
+   phantom `borso.fr.borso.fr.` records nobody queries; the misleading
+   manual record at the apex points at a different distribution but still
+   lands on a working edge. Two layers of "looks broken but works" hid
+   the construct bug.
+
+5. **Why did the cost audit, not the functional test, catch it?**
+   Because the symptom of the bug isn't a user-visible failure — it's a
+   *resource graveyard*. The manual distribution + cert + WAF +
+   subscription kept billing for serving an alias that CloudFront SNI
+   routing was already handing to the CDK distribution next door.
+   Functional tests had no reason to alarm; only the bill (and the
+   confusing R53 listing) surfaced the drift.
 
 **Root cause:** I thought `recordName: 'borso.fr'` against zone `'borso.fr'`
 would produce the apex record `borso.fr.`; actually CDK's `ARecord` treats
@@ -87,20 +112,27 @@ the apex case.
   knowledge to spot.
 - **Staging monitoring:** No staging for this stack; preview deploys don't
   exercise the prod R53 branch.
-- **Production monitoring / alerting:** The CDK distribution was reachable
-  via its `*.cloudfront.net` hostname. Nothing alerted on "the alias I
-  thought I created doesn't resolve" — that signal isn't produced by any
-  AWS health check we had configured.
+- **Production monitoring / alerting:** Nothing alerted on "the R53 record
+  I thought I created doesn't exist with that name" — that signal isn't
+  produced by any AWS health check we had configured, and the
+  user-facing site stayed up because of CloudFront SNI routing. The
+  cost layer would have eventually flagged the duplicate distribution +
+  WAF + subscription, but it took an explicit cost-audit pass to look.
 
 ## Countermeasure
 
-- **Code:** commit `TBD` — `infra/cdk/src/constructs/static-site.ts` now
-  normalises `props.domainName` to a single-trailing-dot FQDN before
+- **Code:** commit `3df59de` — `infra/cdk/src/constructs/static-site.ts`
+  now normalises `props.domainName` to a single-trailing-dot FQDN before
   passing it to `ARecord` / `AaaaRecord`. Idempotent for the
   already-absolute form (`'borso.fr.'`).
-- **Operator action:** the existing phantom records and the manual apex
-  setup need to be reconciled in a separate migration step — the construct
-  fix alone does not erase live state. See migration runbook in PR.
+- **Operator action:** the existing phantom records, the manual apex
+  distribution + cert + WAF + subscription, and the legacy S3 content
+  (`s3://borso.fr/coucou-mom/ /dtl/ /lucie/`) need to be reconciled in a
+  separate migration step — the construct fix alone does not erase live
+  state. The script `scripts/migrate-static-sites-to-cdk.sh` (commit
+  `9109730`) automates phases 2–6 of that reconciliation; the console
+  step (cancel CloudFront security protections subscription) stays
+  manual.
 
 ## Eradication (mandatory — code-level)
 
@@ -138,7 +170,7 @@ This is level 4, not level 1, because:
   — disproportionate for a single occurrence today. If a second callsite
   ever appears, escalate the eradication.
 
-**Reference:** [PR #TBD](TBD) · commits [`TBD`](TBD)
+**Reference:** PR TBD · commit `3df59de` (construct fix + tests + this dantotsu)
 
 **The actual fix:**
 
