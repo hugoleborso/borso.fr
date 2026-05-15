@@ -246,8 +246,13 @@ export function avatarHtmlWithPhoto(input: AvatarHtmlInput): string {
   // `onerror` rewrites the wrapper's innerHTML to the initials span. The
   // wrapper itself sticks around (its size + class anchor the Leaflet icon
   // bounding box), so the swap is a contained DOM mutation that survives
-  // re-paints of nearby markers.
-  return `<span class="runner-avatar map-avatar" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px"><img class="runner-avatar--photo" src="${escapeHtml(avatar.url)}" alt="${escapeHtml(input.displayName)}" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px" onerror="this.parentNode.innerHTML=${JSON.stringify(fallbackHtml)}"></span>`;
+  // re-paints of nearby markers. The JSON string is HTML-attribute-escaped
+  // (the raw `JSON.stringify` output starts with `"` which would close the
+  // attribute mid-flight and leak the rest of the markup into the DOM).
+  // The browser decodes `&quot;` back to `"` when reading the attribute,
+  // then JS evaluates the string literal as written.
+  const escapedFallbackJson = escapeHtml(JSON.stringify(fallbackHtml));
+  return `<span class="runner-avatar map-avatar" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px"><img class="runner-avatar--photo" src="${escapeHtml(avatar.url)}" alt="${escapeHtml(input.displayName)}" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px" onerror="this.parentNode.innerHTML=${escapedFallbackJson}"></span>`;
 }
 
 /**

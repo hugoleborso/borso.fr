@@ -83,9 +83,16 @@ export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps
         role="img"
         aria-label="Profil de dénivelé de la boucle"
         viewBox={`0 0 ${PROFILE_VIEWBOX_WIDTH} ${PROFILE_VIEWBOX_HEIGHT}`}
-        preserveAspectRatio="none"
+        /* `preserveAspectRatio="xMidYMid meet"` keeps the SVG content
+         * in its native 4:1 aspect, centred in the card body. Without
+         * it (or with the previous `none`), the runner pastilles
+         * stretched into ellipses because the card body's aspect
+         * rarely matches the viewBox. Letterboxing the elevation curve
+         * is the visual price for circular pastilles; readability of
+         * the curve is unaffected. */
+        preserveAspectRatio="xMidYMid meet"
         width="100%"
-        height={PROFILE_MIN_HEIGHT_PX}
+        height="100%"
       >
         <defs>
           <linearGradient id={PROFILE_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
