@@ -11,7 +11,7 @@ interface LoopPunchRow {
   readonly finishedAt: Date;
   readonly correctedAt: Date | null;
   readonly voidedAt: Date | null;
-  readonly source: string;
+  readonly source: string | null;
   readonly clientLat: number | null;
   readonly clientLng: number | null;
   readonly clientAccuracyM: number | null;
@@ -19,12 +19,13 @@ interface LoopPunchRow {
   readonly userAgent: string | null;
 }
 
-// The column is `text` in the SQL schema, so drizzle types it as `string`.
-// The app-level invariant is the two-element union — every row was written
-// by a code path that picked either `'admin'` or `'self'`. Treat anything
-// else as the safer default (`'admin'`) and surface it later via the audit
-// query, rather than crash a hot read.
-function narrowPunchSource(raw: string): PunchSource {
+// `source` is `text` (nullable) at the DB level — DSQL would not let us
+// declare it NOT NULL post-creation (cf. punch.schema.ts comment). The
+// app-level invariant is the two-element union — every row is written by
+// a code path that picks either `'admin'` or `'self'`. Anything else
+// (including a stray NULL from a hypothetically broken writer or an
+// out-of-band INSERT) reads as the safer default `'admin'`.
+function narrowPunchSource(raw: string | null): PunchSource {
   return raw === 'self' ? 'self' : 'admin';
 }
 

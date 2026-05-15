@@ -32,13 +32,20 @@ export const loopPunchesTable = pgTable('loop_punches', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
     .notNull()
     .defaultNow(),
-  // Self-punch metadata. `source` is the only NOT NULL — every row belongs to
-  // either the admin or the runner-driven flow. The geo columns and the user
-  // agent are nullable because the admin-punch path doesn't carry them; an
-  // admin row reads as `source='admin', client_lat=NULL, ...`. No IP column
-  // by design (cf. spec Q.O.D. Q8 option (d)): an IP doesn't add contestation
-  // value on top of the user agent + coordinates and attracts privacy attention.
-  source: text('source').notNull().default('admin'),
+  // Self-punch metadata. `source` is left nullable at the DB level because
+  // DSQL rejects `ADD COLUMN ... NOT NULL DEFAULT` AND the fallback
+  // `ALTER COLUMN ... SET NOT NULL` / `SET DEFAULT` — the only ALTER TABLE
+  // action that takes a column-level option in DSQL is plain `ADD COLUMN
+  // <type>` (cf. docs/knowledge/dsql-postgres-compat-gaps.md §10, sourced
+  // from the AWS DSQL ALTER TABLE syntax doc which lists the exhaustive
+  // supported actions). The app-level invariant — every code path that
+  // writes a punch picks `'admin'` or `'self'` — holds the contract.
+  // `narrowPunchSource` in `punch.repository.ts` is the read-side narrow.
+  // Same shape as the FK-less invariants the rest of this file leans on.
+  // No IP column by design (cf. spec Q.O.D. Q8 option (d)): an IP doesn't
+  // add contestation value over the user agent + coordinates and attracts
+  // privacy attention.
+  source: text('source'),
   clientLat: doublePrecision('client_lat'),
   clientLng: doublePrecision('client_lng'),
   clientAccuracyM: doublePrecision('client_accuracy_m'),
