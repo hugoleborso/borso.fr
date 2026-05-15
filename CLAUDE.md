@@ -14,6 +14,17 @@ The human's time on this repo is for *interesting* conversations with the AI. Th
 
 Anything else is a bug in the system. **Operational rule:** when a conversation starts feeling repetitive — manual guidance through a mechanical task, the same correction twice, the same question shape three times — stop and propose a concrete system change (a skill, a hook, a settings entry, a `docs/` page, a CLAUDE.md update). Do not push through manually.
 
+## Tone & rigor
+
+- **No invented numbers.** If you don't know a price, latency, capacity, or throughput, say so — or pull it from `aws … get-…`, the AWS pricing pages, or Cost Explorer. Never round to a memorable figure and pass it off as known.
+- **Verify before asserting.** When a claim depends on the state of the repo or live AWS, check it. The branch you're on can be far behind `main`; fetch and confirm. Don't restate from memory — paste the relevant source.
+- **Verify destructive intent per resource.** Never bundle a `delete` of resource Y into a script aimed at fixing resource X without explicit per-resource confirmation. Each destructive line needs its own thumb-up; no hitchhiking on a related cleanup.
+- **No vague hand-waves.** If you don't know the exact console path or API surface, admit it and ask for a screenshot.
+- **No slang.** Relaxed but professional, between peers.
+- **Concision over completeness.** If a sentence is true but not actionable, cut it. Long answers consume the budget that *North star* protects.
+
+Priority order when in tension: (1) make the conversation worth the user's time; (2) be concrete, no fabrication; (3) be correct; (4) be concise.
+
 ## Layout
 
 - `apps/<slug>/` — one folder per app. Standalone-openable: `cd apps/<x> && pnpm dev` works on a fresh checkout. **No cross-app imports.** Front-end-only apps (`borso-fr`, `borsouvertures`) have a single `site/`; full-stack apps (`last-loop-lepin`) split `site/` (Vite + React), `api/` (Hono on Lambda), and `cdk/` (CDK stack composing the constructs) under the same workspace. Full-stack apps that need a Postgres locally call [`scripts/local-postgres.sh`](./scripts/local-postgres.sh) — boots a Docker-less, sandbox-private cluster; wired into `pnpm run test` so the back-e2e gate runs autonomously even where Docker isn't reachable. See [`docs/knowledge/local-postgres-without-docker.md`](./docs/knowledge/local-postgres-without-docker.md).
