@@ -9,9 +9,9 @@
  */
 .leaderboard-chips {
   column-width: 220px;
-  column-gap: var(--d-3);
+  column-gap: var(--d-2);
   column-fill: balance;
-  padding: var(--d-4) var(--d-5);
+  padding: var(--d-3) var(--d-4);
 }
 
 .leaderboard-chip {
@@ -22,9 +22,9 @@
   break-inside: avoid;
   display: flex;
   flex-direction: column;
-  gap: var(--d-2);
-  padding: var(--d-3);
-  margin-bottom: var(--d-3);
+  gap: var(--d-1);
+  padding: var(--d-2) var(--d-3);
+  margin-bottom: var(--d-2);
   background: var(--bg-elev-2);
   border: 1px solid var(--line);
   border-radius: var(--radius-2);
@@ -125,7 +125,7 @@
  * 900 px so the spectator can scan everything on a phone. */
 .spectator-hero {
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) minmax(0, 2fr);
+  grid-template-columns: minmax(280px, 2fr) minmax(0, 1fr);
   grid-template-rows: 1fr 1fr;
   gap: var(--d-4);
 }
