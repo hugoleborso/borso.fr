@@ -17,4 +17,13 @@ export interface Standings {
   readonly computedAt: Date;
   readonly raceEnded: boolean;
   readonly ranked: readonly RankedRunner[];
+  /**
+   * Edition record-holder(s) for the fastest single loop. Empty when no
+   * loop has been closed; length ≥ 2 means a millisecond-tie between
+   * distinct runners (both chips are decorated by the front).
+   */
+  readonly fastestLap: ReadonlyArray<{
+    readonly runnerSlug: string;
+    readonly durationMs: number;
+  }>;
 }

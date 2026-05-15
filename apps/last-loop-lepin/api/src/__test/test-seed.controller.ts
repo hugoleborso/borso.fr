@@ -83,7 +83,7 @@ function alignedToTopOfHour(date: Date, offsetHours: number): Date {
 }
 
 const fixtureSchema = z.object({
-  fixture: z.enum(['race-mid-loop-3', 'race-finished', 'top-with-dnf-candidates']),
+  fixture: z.enum(['race-down-to-one-survivor', 'race-finished', 'top-with-dnf-candidates']),
 });
 
 const testSeedRouter = new Hono();
@@ -91,7 +91,7 @@ const testSeedRouter = new Hono();
 async function clearEditionRows(): Promise<void> {
   // Reset punches + DNFs scoped to our seeded edition before each fixture
   // applies its own. Without this, switching between fixtures (e.g.
-  // race-finished → race-mid-loop-3) leaves stale punches from the previous
+  // race-finished → race-down-to-one-survivor) leaves stale punches from the previous
   // run and the standings drift into nonsense (visual-validation #25).
   const database = getDatabase();
   await database.execute(
@@ -151,6 +151,12 @@ async function ensurePunch(runnerSlug: string, loopIndex: number, finishedAt: Da
     finishedAt,
     correctedAt: null,
     voidedAt: null,
+    source: 'admin',
+    clientLat: null,
+    clientLng: null,
+    clientAccuracyM: null,
+    distanceFromCenterM: null,
+    userAgent: null,
   });
 }
 
@@ -169,8 +175,16 @@ async function ensureManualDnf(
   });
 }
 
-async function applyRaceMidLoop3(now: Date): Promise<void> {
-  // Race started 3 hours ago, runs for 16h. Currently mid loop 4.
+async function applyRaceDownToOneSurvivor(now: Date): Promise<void> {
+  // Race started 3 hours ago, runs for 16h. Alice is the sole survivor —
+  // every other runner has DNF'd by loop 2 or 3. Per the backyard rule
+  // documented at `ranking.core.ts:7-8` ("race ends when at most one runner
+  // is still in-race"), `raceEnded` is `true` in the resulting standings
+  // even though `endsAt` is 13h away. That is the intended semantic of this
+  // fixture — used to verify the "last man standing" UI state, not a
+  // mid-race scenario. The name reflects the backyard semantic; the
+  // earlier name `race-mid-loop-3` mis-described it and tripped a
+  // validator (cf. visual-validation report 2026-05-15-1412).
   const startsAt = alignedToTopOfHour(now, -3);
   const endsAt = new Date(startsAt.getTime() + 16 * HOUR_MS);
   await ensureEditionAndRunners(now, { startsAt, endsAt, status: 'live' });
@@ -216,7 +230,7 @@ async function applyRaceFinished(now: Date): Promise<void> {
 testSeedRouter.post('/seed', zValidator('query', fixtureSchema), async (context) => {
   const { fixture } = context.req.valid('query');
   const now = new Date();
-  if (fixture === 'race-mid-loop-3') await applyRaceMidLoop3(now);
+  if (fixture === 'race-down-to-one-survivor') await applyRaceDownToOneSurvivor(now);
   else if (fixture === 'top-with-dnf-candidates') await applyTopWithDnfCandidates(now);
   else await applyRaceFinished(now);
 

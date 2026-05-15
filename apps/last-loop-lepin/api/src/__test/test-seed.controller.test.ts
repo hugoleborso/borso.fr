@@ -44,8 +44,8 @@ describe('__test/test-seed.controller', () => {
     expect(response.status).toBe(400);
   });
 
-  it('seeds the race-mid-loop-3 fixture (edition + roster + alice punches)', async () => {
-    const response = await seed('race-mid-loop-3');
+  it('seeds the race-down-to-one-survivor fixture (edition + roster + alice punches)', async () => {
+    const response = await seed('race-down-to-one-survivor');
     expect(response.status).toBe(200);
 
     const database = freshDatabase();

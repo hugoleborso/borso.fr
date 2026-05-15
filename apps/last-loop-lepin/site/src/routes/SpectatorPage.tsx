@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { apiClient } from '../api/client';
 import { CorrectionBanner } from '../components/CorrectionBanner';
 import { Countdown } from '../components/Countdown';
 import { CourseMap } from '../components/CourseMap';
-import { EliminatedWall } from '../components/EliminatedWall';
+import { ElevationProfile } from '../components/ElevationProfile';
 import { Leaderboard } from '../components/Leaderboard';
+import { SelfPunchModal } from '../components/SelfPunchModal';
 import { useResource } from '../data/useResource';
 import { useStandings } from '../data/useStandingsPoll';
 import type { RaceEditionDto, RankedRunnerDto } from '../domain/types';
@@ -109,6 +111,7 @@ export function SpectatorPage() {
   const allEditions = allEditionsState.value?.editions ?? [];
   const standingsState = useStandings(edition?.slug ?? '');
   const standings = standingsState.standings;
+  const [selectedRunner, setSelectedRunner] = useState<RankedRunnerDto | null>(null);
 
   if (editionState.error !== null) {
     return (
@@ -149,7 +152,11 @@ export function SpectatorPage() {
         </div>
       ) : null}
       <CorrectionBanner correctedAt={mostRecentCorrection} />
-      <div className="spectator-hero">
+      {/* 2×2 grid via `grid-template-areas`: row 1 = countdown + trace
+          (natural height of the countdown), row 2 = classement + profile
+          (grows to fill the remaining viewport via `flex: 1`). Row tops
+          align across columns. */}
+      <div className="spectator-layout">
         <div className="card countdown-card">
           <div className="card-head">
             <h2 className="card-title">Prochain top horaire</h2>
@@ -160,7 +167,7 @@ export function SpectatorPage() {
             <InRaceCounter ranked={standings?.ranked ?? []} />
           </div>
         </div>
-        <div className="card">
+        <div className="card map-card">
           <div className="card-head">
             <h2 className="card-title">Tracé</h2>
             <span className="muted mono">
@@ -169,22 +176,42 @@ export function SpectatorPage() {
           </div>
           <CourseMap edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
         </div>
-      </div>
-      <div className="card classement-card">
-        <div className="card-head">
-          <h2 className="card-title">Classement</h2>
-          {isLive ? <span className="live-pill">Live</span> : null}
+        <div className="card classement-card">
+          <div className="card-head">
+            <h2 className="card-title">Classement</h2>
+            {isLive ? <span className="live-pill">Live</span> : null}
+          </div>
+          <div className="card-body flush">
+            <Leaderboard
+              ranked={standings?.ranked ?? []}
+              fastestLapSlugs={
+                new Set((standings?.fastestLap ?? []).map((entry) => entry.runnerSlug))
+              }
+              onChipSelect={setSelectedRunner}
+            />
+          </div>
         </div>
-        <div className="card-body flush">
-          <Leaderboard ranked={standings?.ranked ?? []} />
+        <div className="card profile-card">
+          <div className="card-head">
+            <h2 className="card-title">Profil</h2>
+            <span className="muted mono">
+              {Math.round(edition.gpx.elevationGainMeters)} m D+
+            </span>
+          </div>
+          <ElevationProfile edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
         </div>
       </div>
-      <div className="card">
-        <div className="card-head">
-          <h2 className="card-title">Mur des éliminés</h2>
-        </div>
-        <EliminatedWall ranked={standings?.ranked ?? []} />
-      </div>
+      {selectedRunner === null ? null : (
+        <SelfPunchModal
+          runner={selectedRunner}
+          editionSlug={edition.slug}
+          onClose={() => setSelectedRunner(null)}
+          onPunchPersisted={() => {
+            // The standings poll auto-refreshes every 2 s; nothing to do
+            // here on success beyond letting the user dismiss the modal.
+          }}
+        />
+      )}
     </div>
   );
 }

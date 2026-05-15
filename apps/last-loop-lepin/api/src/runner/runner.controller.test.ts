@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { createApp } from '../app';
 import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
@@ -12,12 +12,19 @@ const runnerEnvelopeSchema = z.object({
     slug: z.string(),
     displayName: z.string(),
     photoKey: z.string().nullable(),
+    photoUrl: z.string().nullable(),
     bib: z.number().nullable(),
   }),
 });
 
 const runnersListSchema = z.object({
-  runners: z.array(z.object({ slug: z.string(), displayName: z.string() })),
+  runners: z.array(
+    z.object({
+      slug: z.string(),
+      displayName: z.string(),
+      photoUrl: z.string().nullable(),
+    }),
+  ),
 });
 
 describe('runner controller', () => {
@@ -93,5 +100,60 @@ describe('runner controller', () => {
   it('returns 404 on unknown runner', async () => {
     const response = await app.request('/api/editions/lepin-2026/runners/ghost');
     expect(response.status).toBe(404);
+  });
+
+  describe('photoUrl composition', () => {
+    let savedCdnHost: string | undefined;
+
+    beforeEach(() => {
+      savedCdnHost = process.env.PHOTOS_CDN_HOST;
+    });
+
+    afterEach(() => {
+      if (savedCdnHost === undefined) {
+        delete process.env.PHOTOS_CDN_HOST;
+      } else {
+        process.env.PHOTOS_CDN_HOST = savedCdnHost;
+      }
+    });
+
+    it('exposes photoUrl composed from PHOTOS_CDN_HOST + photoKey on the GET endpoint', async () => {
+      process.env.PHOTOS_CDN_HOST = 'photos-cdn.test.example';
+      const cookie = await adminCookie();
+      await app.request('/api/admin/runners', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', cookie },
+        body: JSON.stringify({
+          editionSlug: 'lepin-2026',
+          slug: 'frida',
+          displayName: 'Frida',
+          photoKey: 'lepin-2026/frida/x.jpg',
+          bib: 5,
+        }),
+      });
+      const response = await app.request('/api/editions/lepin-2026/runners/frida');
+      expect(response.status).toBe(200);
+      const body = runnerEnvelopeSchema.parse(await response.json());
+      expect(body.runner.photoUrl).toBe('https://photos-cdn.test.example/lepin-2026/frida/x.jpg');
+    });
+
+    it('exposes photoUrl=null when PHOTOS_CDN_HOST is unset', async () => {
+      delete process.env.PHOTOS_CDN_HOST;
+      const cookie = await adminCookie();
+      await app.request('/api/admin/runners', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', cookie },
+        body: JSON.stringify({
+          editionSlug: 'lepin-2026',
+          slug: 'gabi',
+          displayName: 'Gabi',
+          photoKey: 'lepin-2026/gabi/x.jpg',
+          bib: 6,
+        }),
+      });
+      const response = await app.request('/api/editions/lepin-2026/runners/gabi');
+      const body = runnerEnvelopeSchema.parse(await response.json());
+      expect(body.runner.photoUrl).toBeNull();
+    });
   });
 });

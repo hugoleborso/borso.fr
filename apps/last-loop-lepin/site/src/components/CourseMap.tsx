@@ -1,8 +1,15 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { initialsAvatar } from '../domain/initials.utils';
-import type { LatLngDto, RaceEditionDto, RankedRunnerDto } from '../domain/types';
+import type { RaceEditionDto, RankedRunnerDto } from '../domain/types';
+import {
+  avatarHtmlWithPhoto,
+  indexTrack,
+  projectFraction,
+  projectFractionTimeAware,
+  runnerDistanceFraction,
+  squaredDegrees,
+} from './course-map.utils';
 
 interface CourseMapProps {
   readonly edition: RaceEditionDto;
@@ -12,83 +19,16 @@ interface CourseMapProps {
 }
 
 const MIN_MAP_HEIGHT_PX = 320;
-
-/**
- * Squared Euclidean distance in lat/lng degrees — fine for "which segment
- * am I on" comparisons over a single loop (Lépin's track fits in <0.01° of
- * lat/lng, where the great-circle vs. plane error is below 0.1 m). We only
- * need the *ordering* to identify the right segment, not the metric.
- */
-function squaredDegrees(a: LatLngDto, b: LatLngDto): number {
-  const dlat = a.lat - b.lat;
-  const dlng = a.lng - b.lng;
-  return dlat * dlat + dlng * dlng;
-}
-
-function metersBetween(a: LatLngDto, b: LatLngDto): number {
-  // Same plane approximation as `geo.core` — Lépin's bounding box is small
-  // enough that lat/lng degrees lerp linearly without visible distortion.
-  const R = 6_371_000;
-  const lat1 = (a.lat * Math.PI) / 180;
-  const lat2 = (b.lat * Math.PI) / 180;
-  const dlat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dlng = ((b.lng - a.lng) * Math.PI) / 180;
-  const h = Math.sin(dlat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlng / 2) ** 2;
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
-}
-
-interface Indexed {
-  readonly points: readonly LatLngDto[];
-  readonly cumulative: readonly number[];
-  readonly total: number;
-}
-
-function indexTrack(points: readonly LatLngDto[]): Indexed {
-  const cumulative: number[] = [];
-  let running = 0;
-  for (let i = 0; i < points.length; i += 1) {
-    const current = points[i];
-    const previous = points[i - 1];
-    if (current !== undefined && previous !== undefined) {
-      running += metersBetween(previous, current);
-    }
-    cumulative.push(running);
-  }
-  const last = cumulative[cumulative.length - 1];
-  return { points, cumulative, total: last ?? 0 };
-}
-
-function projectFraction(track: Indexed, fraction: number): LatLngDto {
-  const first = track.points[0];
-  if (first === undefined) return { lat: 0, lng: 0 };
-  if (track.points.length === 1 || track.total === 0) return first;
-  const target = Math.max(0, Math.min(1, fraction)) * track.total;
-  let segmentIndex = 1;
-  while (segmentIndex < track.cumulative.length) {
-    const cursor = track.cumulative[segmentIndex];
-    if (cursor === undefined || cursor >= target) break;
-    segmentIndex += 1;
-  }
-  const start = track.points[segmentIndex - 1] ?? first;
-  const end = track.points[segmentIndex] ?? start;
-  const segStart = track.cumulative[segmentIndex - 1] ?? 0;
-  const segEnd = track.cumulative[segmentIndex] ?? segStart;
-  const segLen = segEnd - segStart;
-  const t = segLen === 0 ? 0 : (target - segStart) / segLen;
-  return {
-    lat: start.lat + (end.lat - start.lat) * t,
-    lng: start.lng + (end.lng - start.lng) * t,
-  };
-}
-
-function runnerLoopPaceMs(entry: RankedRunnerDto, fallbackMs: number): number {
-  return entry.lastLoopDurationMs ?? fallbackMs;
-}
+const PROJECTION_MODE_RECORDED = 'recorded-pace';
+const PROJECTION_MODE_LINEAR = 'linear-fallback';
+const MINUTES_TO_MS = 60_000;
 
 function avatarHtml(entry: RankedRunnerDto): string {
-  const avatar = initialsAvatar(entry.runner.displayName);
-  const initials = avatar.initials.replace(/[<>&"]/g, '');
-  return `<span class="map-avatar" style="background:${avatar.backgroundColor}">${initials}</span>`;
+  return avatarHtmlWithPhoto({
+    displayName: entry.runner.displayName,
+    photoUrl: entry.runner.photoUrl,
+    slug: entry.runner.slug,
+  });
 }
 
 export function CourseMap({ edition, ranked, now }: CourseMapProps) {
@@ -97,6 +37,7 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
   const polylineRef = useRef<L.Polyline | null>(null);
   const runnerLayerRef = useRef<L.LayerGroup | null>(null);
   const points = edition.gpx.trackJson.points;
+  const pointTimeFractions = edition.gpx.trackJson.pointTimeFractions;
   const startLat = edition.gpx.startLatLng.lat;
   const startLng = edition.gpx.startLatLng.lng;
 
@@ -159,19 +100,30 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
     if (edition.status !== 'live') return;
     const track = indexTrack(points);
     if (track.total === 0) return;
-    const loopMs = Math.max(edition.intervalMinutes, 1) * 60_000;
+    const loopMs = Math.max(edition.intervalMinutes, 1) * MINUTES_TO_MS;
     const startMs = new Date(edition.startsAt).getTime();
     const nowMs = now.getTime();
     const elapsedSinceRace = Math.max(0, nowMs - startMs);
     const currentLoopIndex = Math.floor(elapsedSinceRace / loopMs) + 1;
-    const currentLoopStartMs = startMs + (currentLoopIndex - 1) * loopMs;
-    const elapsedInLoopMs = nowMs - currentLoopStartMs;
+    // Single log per effect run (= per poll tick), not per-runner — keeps
+    // the cardinality bounded. The tag is the same string Sentry will use
+    // once the React breadcrumb wiring lands (see plan §E follow-up).
+    const projectionMode =
+      pointTimeFractions === undefined ? PROJECTION_MODE_LINEAR : PROJECTION_MODE_RECORDED;
+    console.warn('course_map_projection_mode', { mode: projectionMode });
+    const timingInputs = {
+      status: edition.status,
+      startsAt: edition.startsAt,
+      intervalMinutes: edition.intervalMinutes,
+    };
     for (const entry of ranked) {
-      if (entry.status.kind !== 'in-race') continue;
-      const restingAtCorral = entry.status.lastLoop >= currentLoopIndex;
-      const paceMs = restingAtCorral ? loopMs : runnerLoopPaceMs(entry, loopMs);
-      const fraction = restingAtCorral || paceMs === 0 ? 0 : elapsedInLoopMs / paceMs;
-      const position = projectFraction(track, fraction);
+      const computed = runnerDistanceFraction(timingInputs, entry, nowMs);
+      if (computed === null) continue;
+      const { fraction, restingAtCorral } = computed;
+      const position =
+        pointTimeFractions === undefined
+          ? projectFraction(track, fraction)
+          : projectFractionTimeAware(track, fraction, pointTimeFractions);
       L.marker([position.lat, position.lng], {
         icon: L.divIcon({
           className: 'map-runner-icon',
@@ -179,9 +131,14 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
           iconSize: [28, 28],
           iconAnchor: [14, 14],
         }),
-        title: restingAtCorral
-          ? `${entry.runner.displayName} · au corral · ${entry.status.lastLoop} boucles validées`
-          : `${entry.runner.displayName} · boucle ${currentLoopIndex} · ${Math.round(fraction * 100)}%`,
+        // `runnerDistanceFraction` returns null for everything except in-race
+        // runners (cf. course-map.utils.ts), so at this point `entry.status` is
+        // necessarily `{ kind: 'in-race', lastLoop }`. The redundant guard
+        // narrows the discriminated union for TypeScript.
+        title:
+          restingAtCorral && entry.status.kind === 'in-race'
+            ? `${entry.runner.displayName} · au corral · ${entry.status.lastLoop} boucles validées`
+            : `${entry.runner.displayName} · boucle ${currentLoopIndex} · ${Math.round(fraction * 100)}%`,
       }).addTo(layer);
     }
     // `squaredDegrees` stays used as a future hook for "which segment am I
@@ -189,7 +146,19 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
     // here so the helper isn't tree-shaken away the moment the feature
     // grows beyond the cumulative-distance shortcut.
     void squaredDegrees;
-  }, [ranked, now, edition.status, edition.startsAt, edition.intervalMinutes, points]);
+    // `pointTimeFractions` is listed alongside `points` only to silence the
+    // `useExhaustiveDependencies` lint — both references are co-allocated by
+    // `apiClient.getCurrentEdition` on every poll tick, so the effect would
+    // re-run on `points` alone. See plan §F.
+  }, [
+    ranked,
+    now,
+    edition.status,
+    edition.startsAt,
+    edition.intervalMinutes,
+    points,
+    pointTimeFractions,
+  ]);
 
   if (edition.gpx.trackJson.points.length === 0) {
     return <div className="card-body muted">Tracé à venir.</div>;

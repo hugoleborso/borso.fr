@@ -8,6 +8,7 @@ import './styles/components.css';
 import './styles/timeline.css';
 import './styles/leaderboard.css';
 import './styles/map.css';
+import './styles/runner-avatar.css';
 import './styles/countdown.css';
 import './styles/punch.css';
 import './styles/widgets.css';

@@ -28,7 +28,11 @@ const raceEditionSchema = z.object({
   gpx: z.object({
     distanceMeters: z.number(),
     elevationGainMeters: z.number(),
-    trackJson: z.object({ points: z.array(latLngSchema) }),
+    trackJson: z.object({
+      points: z.array(latLngSchema),
+      pointTimeFractions: z.array(z.number()).optional(),
+      pointElevations: z.array(z.number()).optional(),
+    }),
     startLatLng: latLngSchema,
   }),
   status: z.enum(['setup', 'live', 'finished']),
@@ -39,6 +43,13 @@ const runnerSchema = z.object({
   slug: z.string(),
   displayName: z.string(),
   photoKey: z.string().nullable(),
+  // `photoUrl` is composed server-side from `photoKey` + `PHOTOS_CDN_HOST`.
+  // `.default(null)` handles older server responses that omit the key —
+  // they land as `null`, same as a runner without a photo. The runtime
+  // accepts `string | null | undefined` from the wire; the output type
+  // is `string | null` so the front doesn't have to defensively `?? null`
+  // at every render site.
+  photoUrl: z.string().url().nullable().default(null),
   bib: z.number().nullable(),
 });
 
@@ -64,6 +75,14 @@ const standingsSchema = z.object({
   computedAt: z.string(),
   raceEnded: z.boolean(),
   ranked: z.array(rankedRunnerSchema),
+  // Absorb the deploy gap between server shipping the field and client
+  // reading it: an older server response that omits the key parses to
+  // `fastestLap: []`. The infer-to-`T | undefined` shape that bleeds out
+  // of `z.object` is normalised to a guaranteed-array at the snapshot
+  // construction site (see `useStandingsPoll.ts`).
+  fastestLap: z
+    .array(z.object({ runnerSlug: z.string(), durationMs: z.number() }))
+    .optional(),
 });
 
 const editionEnvelopeSchema = z.object({ edition: raceEditionSchema });
@@ -79,6 +98,12 @@ const punchSchema = z.object({
   finishedAt: z.string(),
   correctedAt: z.string().nullable(),
   voidedAt: z.string().nullable(),
+  source: z.enum(['admin', 'self']),
+  clientLat: z.number().nullable(),
+  clientLng: z.number().nullable(),
+  clientAccuracyM: z.number().nullable(),
+  distanceFromCenterM: z.number().nullable(),
+  userAgent: z.string().nullable(),
 });
 
 const punchesListSchema = z.object({ punches: z.array(punchSchema) });
@@ -104,7 +129,7 @@ function readApiBase(): string {
 }
 const API_BASE = readApiBase();
 
-function resolveUrl(path: string): string {
+export function resolveUrl(path: string): string {
   if (/^https?:\/\//.test(path)) return path;
   return `${API_BASE}${path}`;
 }

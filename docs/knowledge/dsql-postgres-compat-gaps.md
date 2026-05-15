@@ -129,6 +129,70 @@ connection via `connection: { search_path: schemaName }` in
 prefix, so the search_path is the only thing that decides which data
 the Lambda sees.
 
+## 10. `ALTER TABLE` only accepts a narrow subset of actions — no constraints, no DEFAULT, no SET/DROP NOT NULL
+
+```
+ALTER TABLE ADD COLUMN with constraint not supported
+unsupported ALTER TABLE ALTER COLUMN ... SET NOT NULL statement
+```
+
+The [AWS DSQL `ALTER TABLE` syntax doc](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/alter-table-syntax-support.html)
+lists exhaustively the actions allowed post-creation. Only these go
+through:
+
+```
+ADD [COLUMN] [IF NOT EXISTS] column_name data_type [STORAGE ...]
+ADD table_constraint_using_index           -- UNIQUE via an existing index, only
+ALTER [COLUMN] ... SET STORAGE ...
+ALTER [COLUMN] ... SET GENERATED ... | SET sequence_option | RESTART
+ALTER [COLUMN] ... DROP IDENTITY
+OWNER TO ...
+RENAME COLUMN / CONSTRAINT / TABLE
+SET SCHEMA
+```
+
+Everything else is rejected at runtime:
+- `ADD COLUMN <type> NOT NULL` / `... DEFAULT <value>` / `... CHECK (...)`
+  / `... UNIQUE` / `... PRIMARY KEY` / `... REFERENCES ...` — the
+  supported syntax for `ADD COLUMN` carries *no constraint clause*.
+- `ALTER COLUMN ... SET NOT NULL` / `... DROP NOT NULL`.
+- `ALTER COLUMN ... SET DEFAULT` / `... DROP DEFAULT`.
+- `ALTER COLUMN ... TYPE ...`.
+- `ADD CONSTRAINT ...` (anything other than `UNIQUE USING INDEX`).
+- `DROP COLUMN`.
+- `DROP CONSTRAINT`.
+
+The local Postgres under `pnpm dev` accepts all of the above without
+complaint, which is exactly the trap — the back-e2e suite passes,
+preview deploys fail. First observed on the preview deploy of PR #23
+(`last-loop-lepin-pr-23`) on 2026-05-15 while migrating `loop_punches`
+for the runner self-punch feature: the compact `ADD COLUMN source TEXT
+NOT NULL DEFAULT 'admin'` failed, the obvious fallback `ALTER COLUMN
+SET NOT NULL` failed too.
+
+**Adaptation: design the schema so post-creation constraints are never
+needed.** Constraints (NOT NULL, DEFAULT, CHECK, UNIQUE, PK) only live
+on `CREATE TABLE` statements. For a column added by a later migration:
+
+- The column stays nullable at the DB level forever; the app-level
+  invariant carries the contract (drizzle write-side always provides a
+  value; read-side narrows `string | null → 'admin' | 'self'` via a
+  small helper like `narrowPunchSource` in `punch.repository.ts`).
+- If a runtime default is needed on inserts that omit the column,
+  carry it in the *drizzle write-side* (the service or the repository),
+  not in the SQL schema. Drop `.notNull()` and `.default('x')` from the
+  drizzle column declaration — keeping them would (a) lie about the DB
+  state and (b) make every future `drizzle-kit generate` emit an
+  `ALTER COLUMN SET NOT NULL` that DSQL rejects.
+
+For the worked example see commits `20bbed6` (the §10 trap surfacing
+when the first fallback failed) and the follow-up that strips
+`.notNull().default()` from `loopPunchesTable.source` in
+`apps/last-loop-lepin/api/src/punch/punch.schema.ts`. The migration
+keeps the two statements `ADD COLUMN source text` and `UPDATE … SET
+source = 'admin'` so a re-deploy on an existing cluster doesn't leave
+old rows visibly NULL on the read side either.
+
 ## Symptoms quick-table
 
 If you see this error… | …it's this divergence
@@ -141,6 +205,8 @@ If you see this error… | …it's this divergence
 - `WHERE not supported for CREATE INDEX` → §6
 - `function pg_advisory_lock not supported` → §7
 - `not authorized to perform: dsql:DbConnectAdmin` → §8
+- `ALTER TABLE ADD COLUMN with constraint not supported` → §10
+- `unsupported ALTER TABLE ALTER COLUMN ... SET NOT NULL statement` → §10
 
 ## See also
 

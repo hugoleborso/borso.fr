@@ -1,5 +1,6 @@
 import {
   type IDsqlCluster,
+  PhotosCdn,
   PreviewableApp,
   type Stage,
 } from '@borso/infra';
@@ -9,6 +10,7 @@ import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import type { Construct } from 'constructs';
 
 const APP_SLUG = 'last-loop-lepin';
+const PHOTOS_CDN_PROD_HOSTNAME = 'photos-cdn.borso.fr';
 // One scrypt-hashed PIN shared across every stage (preview/integ/prod).
 // Operator-managed via the AWS Secrets Manager console / CLI — the CDK
 // stack reads it at deploy time, it never lives in code or workflow env.
@@ -79,6 +81,23 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
     ADMIN_PIN_HASH_SECRET_NAME,
   );
 
+  // Photos CDN — CloudFront fronting `photosBucket`, deterministic URL
+  // scheme `https://<hostname>/<photoKey>`. Spec
+  // `docs/features/last-loop-lepin/runner-photos-everywhere`. The
+  // `PHOTOS_CDN_HOST` env var flows into the API Lambda so the runner
+  // DTO mapper can compose `photoUrl` server-side.
+  const photosCdnHostname =
+    props.stage === 'prod'
+      ? PHOTOS_CDN_PROD_HOSTNAME
+      : `${APP_SLUG}-pr-${props.prNumber ?? 0}-photos.preview.borso.fr`;
+  const photosCdn = new PhotosCdn(props.scope, 'PhotosCdn', {
+    app: APP_SLUG,
+    stage: props.stage,
+    ...(props.prNumber !== undefined ? { prNumber: props.prNumber } : {}),
+    bucket: photosBucket,
+    hostname: photosCdnHostname,
+  });
+
   const allowSeedFlag: Record<string, string> =
     props.stage === 'prod' ? {} : { LASTLOOP_ALLOW_TEST_SEED: '1' };
 
@@ -92,6 +111,7 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
       entry: props.apiEntry,
       environment: {
         PHOTOS_BUCKET: photosBucket.bucketName,
+        PHOTOS_CDN_HOST: photosCdn.hostname,
         JWT_SECRET: jwtSecret.secretValue.unsafeUnwrap(),
         PIN_HASH: pinHashSecret.secretValue.unsafeUnwrap(),
         ...allowSeedFlag,

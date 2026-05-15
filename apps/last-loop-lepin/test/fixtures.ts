@@ -54,6 +54,12 @@ export function makePunch(
     finishedAt: new Date(finishedAtIso),
     correctedAt: null,
     voidedAt: null,
+    source: 'admin',
+    clientLat: null,
+    clientLng: null,
+    clientAccuracyM: null,
+    distanceFromCenterM: null,
+    userAgent: null,
     ...overrides,
   };
 }

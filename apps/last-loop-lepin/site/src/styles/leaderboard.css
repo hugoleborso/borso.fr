@@ -8,23 +8,61 @@
  * masonry`. Column breaks aren't aligned across rows — that's the point.
  */
 .leaderboard-chips {
-  column-width: 220px;
-  column-gap: var(--d-3);
+  /* `column-width: 170` packs ~5 columns into the classement card at the
+   * typical retransmission viewport (1400 px → main column ~900 px). At
+   * 4 chips per column that gives 20 chips visible without scroll,
+   * which is the design target. Wider viewports get more columns
+   * automatically; narrower ones drop to fewer columns and the card
+   * body scrolls vertically. */
+  column-width: 170px;
+  column-gap: var(--d-2);
   column-fill: balance;
-  padding: var(--d-4) var(--d-5);
+  padding: var(--d-2) var(--d-3);
 }
 
 .leaderboard-chip {
+  /* `position: relative` anchors the absolutely-positioned fastest-lap
+   * badge to the chip rather than to the surrounding column container.
+   * No descendant relies on the chip being statically positioned today. */
+  position: relative;
   break-inside: avoid;
   display: flex;
   flex-direction: column;
-  gap: var(--d-2);
-  padding: var(--d-3);
-  margin-bottom: var(--d-3);
+  gap: var(--d-1);
+  padding: var(--d-2) var(--d-3);
+  margin-bottom: var(--d-2);
   background: var(--bg-elev-2);
   border: 1px solid var(--line);
   border-radius: var(--radius-2);
   transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+/* Violet F1-style "Fastest lap" sticker on the top-right corner of a
+ * chip whose runner holds the edition's single-loop record. Slight
+ * overhang via negative offsets makes it read like a sticker pasted on
+ * the chip. The fallback hex stays inline as a safety net in case
+ * `--accent-fastest-lap` drifts out of `tokens.css`. */
+.leaderboard-chip__fastest-lap-badge {
+  --badge-size: 16px;
+  --badge-offset: -6px;
+  position: absolute;
+  top: var(--badge-offset);
+  right: var(--badge-offset);
+  width: var(--badge-size);
+  height: var(--badge-size);
+  border-radius: 50%;
+  background: var(--accent-fastest-lap, #a020f0);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  z-index: 1;
+}
+
+.leaderboard-chip__fastest-lap-badge svg {
+  width: 10px;
+  height: 10px;
+  fill: white;
 }
 
 .leaderboard-chip:hover {
@@ -84,22 +122,51 @@
   min-height: 0;
 }
 
-/* Top-of-page hero row: split-flap countdown on the left, GPX map on
- * the right. The countdown card is content-sized (clamp font keeps
- * the flaps readable at any width), the map card flex-grows to fill
- * the rest. Stacks vertically under 900 px so the spectator can
- * still scan both on a phone. */
-.spectator-hero {
+/* Top-of-page layout: 2×2 grid with named areas so row tops align
+ * across columns. Row 1 takes the natural height of the countdown
+ * (the trace card matches it). Row 2 grows (1fr) and the layout
+ * itself is `flex: 1` inside `.main` so the spectator page fills
+ * the viewport — the classement and the profile each take half of
+ * the remaining vertical space. `minmax(0, …)` on the side column
+ * lets the cell shrink under its content width: without the `0`
+ * floor the map's Leaflet container would push the column wider
+ * than the viewport. Stacks to a single column under 900 px. */
+.spectator-layout {
   display: grid;
-  /* Countdown gets ~60 % of the row, map ~40 %. Both have generous
-   * `minmax` mins so the flaps stay legible and the map doesn't shrink
-   * below the point where the polyline is recognisable. */
-  grid-template-columns: minmax(480px, 1.5fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(280px, 2fr) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'countdown trace'
+    'classement profile';
   gap: var(--d-4);
+  flex: 1;
+  min-height: 0;
+}
+
+.spectator-layout .countdown-card {
+  grid-area: countdown;
+}
+.spectator-layout .map-card {
+  grid-area: trace;
+}
+.spectator-layout .classement-card {
+  grid-area: classement;
+  min-height: 0;
+}
+.spectator-layout .profile-card {
+  grid-area: profile;
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
-  .spectator-hero {
+  .spectator-layout {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas:
+      'countdown'
+      'trace'
+      'profile'
+      'classement';
+    flex: initial;
   }
 }

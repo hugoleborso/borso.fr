@@ -9,6 +9,7 @@ import {
   correctPunch,
   recordManualDnf,
   registerPunch,
+  registerSelfPunch,
   voidPunch,
 } from './punch.service';
 
@@ -84,5 +85,115 @@ describe('punch.service', () => {
       new Date('2026-09-19T07:01:00+02:00'),
     );
     expect(dnf.reason).toBe('manual');
+  });
+
+  // Geofence centre per makeEdition: { lat: 45.55, lng: 5.78 }. The intra-100m
+  // point shifts latitude by ~0.0005°, ~56 m at this latitude — well inside
+  // the 100 m radius. The out-of-zone point shifts by 0.01°, ~1.1 km — far
+  // outside.
+  const IN_ZONE = { lat: 45.5505, lng: 5.78 };
+  const OUT_OF_ZONE = { lat: 45.56, lng: 5.78 };
+
+  it('self-punch: persists a punch with source=self and the metadata fields', async () => {
+    vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
+    const database = freshDatabase();
+    const punch = await registerSelfPunch(
+      database,
+      {
+        editionSlug: 'lepin-2026',
+        runnerSlug: 'alice',
+        clientLat: IN_ZONE.lat,
+        clientLng: IN_ZONE.lng,
+        clientAccuracyM: 12,
+      },
+      'Mozilla/5.0 Test',
+      new Date(),
+    );
+    expect(punch.source).toBe('self');
+    expect(punch.clientLat).toBe(IN_ZONE.lat);
+    expect(punch.clientLng).toBe(IN_ZONE.lng);
+    expect(punch.clientAccuracyM).toBe(12);
+    expect(punch.distanceFromCenterM).not.toBeNull();
+    expect(punch.distanceFromCenterM).toBeLessThan(100);
+    expect(punch.userAgent).toBe('Mozilla/5.0 Test');
+    expect(punch.loopIndex).toBe(1);
+  });
+
+  it('self-punch: records distance metadata when coordinates are provided (no longer used for rejection)', async () => {
+    vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
+    const database = freshDatabase();
+    const punch = await registerSelfPunch(
+      database,
+      {
+        editionSlug: 'lepin-2026',
+        runnerSlug: 'alice',
+        clientLat: OUT_OF_ZONE.lat,
+        clientLng: OUT_OF_ZONE.lng,
+        clientAccuracyM: 8,
+      },
+      'ua',
+      new Date(),
+    );
+    expect(punch.source).toBe('self');
+    expect(punch.distanceFromCenterM).not.toBeNull();
+  });
+
+  it('self-punch: accepts null coordinates (geoloc removed from the client flow)', async () => {
+    vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
+    const database = freshDatabase();
+    const punch = await registerSelfPunch(
+      database,
+      {
+        editionSlug: 'lepin-2026',
+        runnerSlug: 'alice',
+        clientLat: null,
+        clientLng: null,
+        clientAccuracyM: null,
+      },
+      'ua',
+      new Date(),
+    );
+    expect(punch.source).toBe('self');
+    expect(punch.distanceFromCenterM).toBeNull();
+    expect(punch.clientLat).toBeNull();
+  });
+
+  it('self-punch: rejects before the race starts', async () => {
+    vi.setSystemTime(new Date('2026-09-19T05:30:00+02:00'));
+    const database = freshDatabase();
+    await expect(
+      registerSelfPunch(
+        database,
+        {
+          editionSlug: 'lepin-2026',
+          runnerSlug: 'alice',
+          clientLat: IN_ZONE.lat,
+          clientLng: IN_ZONE.lng,
+          clientAccuracyM: null,
+        },
+        null,
+        new Date(),
+      ),
+    ).rejects.toMatchObject({ name: 'PunchRejectedError', reason: 'race-not-started' });
+  });
+
+  it('self-punch: conflicts with an existing admin punch on the same loop', async () => {
+    vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
+    const database = freshDatabase();
+    await registerPunch(database, { editionSlug: 'lepin-2026', runnerSlug: 'alice' }, new Date());
+    await expect(
+      registerSelfPunch(
+        database,
+        {
+          editionSlug: 'lepin-2026',
+          runnerSlug: 'alice',
+          clientLat: IN_ZONE.lat,
+          clientLng: IN_ZONE.lng,
+          clientAccuracyM: null,
+        },
+        null,
+        new Date(),
+      ),
+    ).rejects.toBeInstanceOf(PunchConflictError);
   });
 });

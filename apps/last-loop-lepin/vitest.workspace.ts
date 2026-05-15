@@ -23,6 +23,7 @@ export default defineWorkspace([
       environment: 'jsdom',
       include: [
         'api/src/**/*.core.test.ts',
+        'api/src/**/*.utils.test.ts',
         'api/src/database/migrations.audit.test.ts',
         'cdk/test/**/*.test.ts',
         'site/src/**/*.utils.test.ts',
@@ -30,7 +31,11 @@ export default defineWorkspace([
       coverage: {
         provider: 'v8',
         all: false,
-        include: ['api/src/**/*.core.ts', 'site/src/**/*.utils.ts'],
+        include: [
+          'api/src/**/*.core.ts',
+          'api/src/**/*.utils.ts',
+          'site/src/**/*.utils.ts',
+        ],
         thresholds: { perFile: true, ...COVERAGE_THRESHOLDS },
       },
     },

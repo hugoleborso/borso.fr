@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RaceEdition } from '../edition/edition.types';
-import { lastLoopDurationMs, validatePunchTiming } from './punch.core';
+import { lastLoopDurationMs, loopDurationMs, validatePunchTiming } from './punch.core';
 import type { LoopPunch } from './punch.types';
 
 const EDITION: RaceEdition = {
@@ -29,6 +29,12 @@ function makePunch(loopIndex: number, finishedAtIso: string): LoopPunch {
     finishedAt: new Date(finishedAtIso),
     correctedAt: null,
     voidedAt: null,
+    source: 'admin',
+    clientLat: null,
+    clientLng: null,
+    clientAccuracyM: null,
+    distanceFromCenterM: null,
+    userAgent: null,
   };
 }
 
@@ -129,5 +135,22 @@ describe('lastLoopDurationMs', () => {
     // recorded loopIndex.
     const punches = [makePunch(2, '2026-09-19T07:48:30+02:00')];
     expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(48.5 * 60_000);
+  });
+});
+
+describe('loopDurationMs', () => {
+  it('returns the elapsed time from the loop boundary to finishedAt', () => {
+    const punch = makePunch(1, '2026-09-19T06:48:30+02:00');
+    expect(loopDurationMs(EDITION, punch)).toBe(48.5 * 60_000);
+  });
+
+  it('returns null when finishedAt precedes the loop boundary (clock skew)', () => {
+    const punch = makePunch(1, '2026-09-19T05:30:00+02:00');
+    expect(loopDurationMs(EDITION, punch)).toBeNull();
+  });
+
+  it('returns 0 when finishedAt equals the loop boundary exactly', () => {
+    const punch = makePunch(1, '2026-09-19T06:00:00+02:00');
+    expect(loopDurationMs(EDITION, punch)).toBe(0);
   });
 });

@@ -84,17 +84,22 @@ const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
  * e.g. statement N succeeds, statement N+1 fails — the `_migrations`
  * marker is never written and the retry restarts from statement 1.
  * Without `IF NOT EXISTS`, re-creating the already-existing relations
- * from the previous partial run fails with `relation X already exists`.
+ * from the previous partial run fails with `relation X already exists`
+ * (or `column X already exists` for `ADD COLUMN`).
  *
- * Targets `CREATE TABLE`, `CREATE INDEX`, `CREATE UNIQUE INDEX`,
- * `CREATE SCHEMA`. Leaves everything else (INSERT, SET, …) alone.
+ * Targets the create-shape DDL that drizzle-kit emits: `CREATE TABLE`,
+ * `CREATE INDEX`, `CREATE UNIQUE INDEX`, `CREATE SCHEMA`, and
+ * `ALTER TABLE ... ADD COLUMN`. Leaves everything else (INSERT, UPDATE,
+ * SET, RENAME, …) alone — those are either re-entry-safe or carry their
+ * own conditional shape.
  */
 function makeIdempotent(statement: string): string {
   return statement
     .replace(/\bCREATE\s+TABLE(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE TABLE IF NOT EXISTS$1')
     .replace(/\bCREATE\s+UNIQUE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE UNIQUE INDEX IF NOT EXISTS$1')
     .replace(/\bCREATE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE INDEX IF NOT EXISTS$1')
-    .replace(/\bCREATE\s+SCHEMA(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE SCHEMA IF NOT EXISTS$1');
+    .replace(/\bCREATE\s+SCHEMA(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE SCHEMA IF NOT EXISTS$1')
+    .replace(/\bADD\s+COLUMN(\s+(?!IF\s+NOT\s+EXISTS))/i, 'ADD COLUMN IF NOT EXISTS$1');
 }
 
 /**

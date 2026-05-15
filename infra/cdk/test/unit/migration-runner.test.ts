@@ -156,6 +156,40 @@ describe('migration-runner handler', () => {
     expect(state.ended).toBe(1);
   });
 
+  it('Create: rewrites ALTER TABLE ADD COLUMN to ADD COLUMN IF NOT EXISTS so partial retries are safe', async () => {
+    // DSQL §10 + §4: post-creation `ADD COLUMN` must survive a half-applied
+    // migration retry (`column "x" of relation "y" already exists`). The
+    // runner injects `IF NOT EXISTS` the same way it does for CREATE TABLE.
+    await handler({
+      RequestType: 'Create',
+      ResourceProperties: {
+        ...baseProps,
+        migrations: [
+          { name: '0001_init.sql', sql: 'CREATE TABLE a (id INT);' },
+          {
+            name: '0002_columns.sql',
+            sql: 'ALTER TABLE a ADD COLUMN b TEXT;\n--> statement-breakpoint\nALTER TABLE a ADD COLUMN c INT;',
+          },
+        ],
+      },
+    });
+    const queries = state.unsafeCalls.map((c) => c.query);
+    expect(queries.some((q) => /ALTER TABLE a ADD COLUMN IF NOT EXISTS b/.test(q))).toBe(true);
+    expect(queries.some((q) => /ALTER TABLE a ADD COLUMN IF NOT EXISTS c/.test(q))).toBe(true);
+    // A statement that already has IF NOT EXISTS shouldn't be doubled up.
+    await handler({
+      RequestType: 'Create',
+      ResourceProperties: {
+        ...baseProps,
+        migrations: [
+          { name: '0003_again.sql', sql: 'ALTER TABLE a ADD COLUMN IF NOT EXISTS d BOOL;' },
+        ],
+      },
+    });
+    const requeried = state.unsafeCalls.map((c) => c.query).join('\n');
+    expect(requeried).not.toMatch(/ADD COLUMN IF NOT EXISTS IF NOT EXISTS/);
+  });
+
   it('releases the advisory lock even on inner failure', async () => {
     // Arm the shared mock to reject the very next `.unsafe()` call.
     // `.end()` still bumps `state.ended` so the test confirms the

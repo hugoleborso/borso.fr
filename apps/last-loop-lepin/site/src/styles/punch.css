@@ -124,3 +124,76 @@
   color: var(--ink-mute);
   letter-spacing: 0.04em;
 }
+
+/* Self-punch modal — full-viewport overlay anchored to the spectator
+ * page. The shell renders three siblings in `<SelfPunchModal>`: the
+ * backdrop wrapper, a transparent button covering the backdrop (so a
+ * click outside the panel dismisses), and the panel itself. CSS is the
+ * only thing that turns the wrapper from in-flow content into an
+ * overlay — without it the modal stacked below the spectator grid
+ * (cf. 2026-05-15 preview screenshot).
+ *
+ * `position: fixed` + `inset: 0` plus a high `z-index` so it floats
+ * above Leaflet (`leaflet-container` ships at z-index 400) and the
+ * sticky correction banner. The panel itself recovers pointer events
+ * because the dismiss button covers the rest of the backdrop. */
+.self-punch-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: color-mix(in oklch, var(--bg) 80%, transparent);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--d-4);
+}
+
+.self-punch-modal-dismiss {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.self-punch-modal {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: var(--d-4);
+  padding: var(--d-5);
+}
+
+.self-punch-modal__head {
+  display: flex;
+  align-items: center;
+  gap: var(--d-3);
+}
+
+.self-punch-modal__head-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--d-1);
+  min-width: 0;
+}
+
+.self-punch-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--d-3);
+}
+
+.self-punch-modal__actions {
+  display: flex;
+  gap: var(--d-2);
+  justify-content: flex-end;
+}

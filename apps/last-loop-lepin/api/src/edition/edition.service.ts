@@ -1,4 +1,4 @@
-import { parseGpx } from '../helpers/gpx/gpx.core';
+import { type GpxTrack, parseGpx } from '../helpers/gpx/gpx.core';
 import { computeSunriseSunset } from '../helpers/sun/sun.core';
 import type { Database } from '../database/client';
 import {
@@ -9,9 +9,29 @@ import {
   updateEditionSetup,
   updateEditionStatus,
 } from './edition.repository';
-import type { RaceEdition } from './edition.types';
+import type { GpxMetadata, RaceEdition } from './edition.types';
 
 const DEFAULT_INTERVAL_MINUTES = 60;
+
+/**
+ * Build the persisted `trackJson` from a parser output. Centralises the
+ * `null` (core boundary) → omitted-key (DTO / persisted JSON) translation
+ * for `pointTimeFractions` — without this, `JSON.stringify` would emit
+ * `"pointTimeFractions": null`, which the Zod refine on read would reject.
+ */
+function trackJsonOf(track: GpxTrack): GpxMetadata['trackJson'] {
+  // Both `pointTimeFractions` and `pointElevations` follow the
+  // `null` (core) → omitted-key (DTO) translation — emitting `null` would
+  // round-trip through `JSON.stringify` as `"…": null` and trip the Zod
+  // `.optional()` on read.
+  const base: GpxMetadata['trackJson'] = { points: track.points };
+  const withTimings: GpxMetadata['trackJson'] =
+    track.pointTimeFractions === null
+      ? base
+      : { ...base, pointTimeFractions: track.pointTimeFractions };
+  if (track.pointElevations === null) return withTimings;
+  return { ...withTimings, pointElevations: track.pointElevations };
+}
 
 export class EditionAlreadyExistsError extends Error {
   override readonly name = 'EditionAlreadyExistsError';
@@ -57,7 +77,7 @@ export async function createEdition(database: Database, input: CreateEditionInpu
     gpx: {
       distanceMeters: track.distanceMeters,
       elevationGainMeters: track.elevationGainMeters,
-      trackJson: { points: track.points },
+      trackJson: trackJsonOf(track),
       startLatLng: track.startLatLng,
     },
     status: 'setup',
@@ -142,7 +162,7 @@ export async function replaceSetupEdition(
       : {
           distanceMeters: newTrack.distanceMeters,
           elevationGainMeters: newTrack.elevationGainMeters,
-          trackJson: { points: newTrack.points },
+          trackJson: trackJsonOf(newTrack),
           startLatLng: newTrack.startLatLng,
         },
   };

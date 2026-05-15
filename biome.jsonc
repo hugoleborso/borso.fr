@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!docs/**"]
+    "includes": ["**", "!docs"]
   },
   "linter": {
     "enabled": true,
@@ -40,5 +40,35 @@
       "trailingCommas": "all",
       "semicolons": "always"
     }
-  }
+  },
+  "overrides": [
+    {
+      // CloudFront Function source — read as a string at synth time, shipped to
+      // the edge runtime. Stays on ES5 syntax (var + string concat) defensively
+      // even though runtime 2.0 advertises ES2020+ support. See
+      // infra/cdk/src/internal/cf-static-site-index-rewrite.code.js header.
+      "includes": ["**/*.code.js"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useTemplate": "off"
+          }
+        }
+      }
+    },
+    {
+      // Cohesive Vitest suite covering all the pure helpers exported by
+      // `course-map.utils.ts`. The runner-fraction helper has its own
+      // sibling file (`course-map.runner-fraction.test.ts`) ; the rest
+      // is one suite worth keeping co-located while the surface evolves.
+      "includes": ["**/course-map.utils.test.ts"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noExcessiveLinesPerFile": "off"
+          }
+        }
+      }
+    }
+  ]
 }

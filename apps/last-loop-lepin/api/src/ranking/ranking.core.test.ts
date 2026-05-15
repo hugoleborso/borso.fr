@@ -41,6 +41,12 @@ function punch(
     finishedAt: new Date(finishedAtIso),
     correctedAt: null,
     voidedAt: voidedAtIso === null ? null : new Date(voidedAtIso),
+    source: 'admin',
+    clientLat: null,
+    clientLng: null,
+    clientAccuracyM: null,
+    distanceFromCenterM: null,
+    userAgent: null,
   };
 }
 
@@ -197,5 +203,27 @@ describe('computeStandings', () => {
     const now = new Date('2026-09-19T08:30:00+02:00');
     const standings = computeStandings(EDITION, RUNNERS, [], [], now);
     expect(standings.computedAt).toEqual(now);
+  });
+
+  it('returns an empty fastestLap before any punch is recorded', () => {
+    const now = new Date('2026-09-19T06:30:00+02:00');
+    const standings = computeStandings(EDITION, RUNNERS, [], [], now);
+    expect(standings.fastestLap).toEqual([]);
+  });
+
+  it('surfaces the fastest runner in fastestLap after a few loops, with the expected durationMs', () => {
+    // Alice loop 1 = 45 min, loop 2 = 50 min.
+    // Bob   loop 1 = 47 min, loop 2 = 42 min  → Bob holds 42 min.
+    // Carla loop 1 = 51 min.
+    const now = new Date('2026-09-19T08:30:00+02:00');
+    const punches = [
+      punch('alice', 1, '2026-09-19T06:45:00+02:00'),
+      punch('alice', 2, '2026-09-19T07:50:00+02:00'),
+      punch('bob', 1, '2026-09-19T06:47:00+02:00'),
+      punch('bob', 2, '2026-09-19T07:42:00+02:00'),
+      punch('carla', 1, '2026-09-19T06:51:00+02:00'),
+    ];
+    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    expect(standings.fastestLap).toEqual([{ runnerSlug: 'bob', durationMs: 42 * 60_000 }]);
   });
 });
