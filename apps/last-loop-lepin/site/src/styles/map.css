@@ -56,3 +56,16 @@
   border: 2px solid var(--bg);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
+
+/* SVG profile under the course map. Same hero panel as the map; same
+ * `.card-body.flush` convention so the SVG can fill the card edge to
+ * edge. The min-height matches the map's so the 2×2 grid renders with
+ * equal-height rows. */
+.elevation-profile {
+  background: var(--bg-elev);
+  display: flex;
+  flex-direction: column;
+}
+.elevation-profile svg {
+  display: block;
+}

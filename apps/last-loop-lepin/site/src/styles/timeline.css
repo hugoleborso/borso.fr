@@ -1,19 +1,7 @@
-/* Wall of eliminated runners + sun/loop timeline + correction banner +
- * PIN gate form. Pulled out of `components.css` to keep that file
- * under the per-file line cap. */
-
-.wall {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--d-3);
-}
-
-.wall-card {
-  background: var(--bg-elev-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-2);
-  padding: var(--d-3);
-}
+/* Sun/loop timeline + correction banner + PIN gate form. Pulled out
+ * of `components.css` to keep that file under the per-file line cap.
+ * The Wall of eliminated runners has been replaced by chip-level DNF
+ * decoration on the leaderboard. */
 
 .timeline {
   display: flex;

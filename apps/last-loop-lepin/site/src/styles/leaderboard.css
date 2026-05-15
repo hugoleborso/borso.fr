@@ -116,22 +116,34 @@
   min-height: 0;
 }
 
-/* Top-of-page hero row: split-flap countdown on the left, GPX map on
- * the right. The countdown card is content-sized (clamp font keeps
- * the flaps readable at any width), the map card flex-grows to fill
- * the rest. Stacks vertically under 900 px so the spectator can
- * still scan both on a phone. */
+/* Top-of-page hero row: 2×2 grid. Countdown spans both rows of the
+ * left column, the map sits top-right, the elevation profile bottom-
+ * right. `minmax(0, …)` on the right column lets the cell shrink under
+ * content width — without the `0` floor the map's Leaflet container
+ * (intrinsically `width: 100 %` of its grid cell) would push the
+ * column wider than the viewport. Stacks to a single column under
+ * 900 px so the spectator can scan everything on a phone. */
 .spectator-hero {
   display: grid;
-  /* Countdown gets ~60 % of the row, map ~40 %. Both have generous
-   * `minmax` mins so the flaps stay legible and the map doesn't shrink
-   * below the point where the polyline is recognisable. */
-  grid-template-columns: minmax(480px, 1.5fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(280px, 1fr) minmax(0, 2fr);
+  grid-template-rows: 1fr 1fr;
   gap: var(--d-4);
+}
+
+/* Countdown owns the full left column height; without the row-span the
+ * 2×2 grid would halve it and the split-flap digits would clip. */
+.spectator-hero .countdown-card {
+  grid-column: 1;
+  grid-row: 1 / span 2;
 }
 
 @media (max-width: 900px) {
   .spectator-hero {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+  .spectator-hero .countdown-card {
+    grid-column: auto;
+    grid-row: auto;
   }
 }

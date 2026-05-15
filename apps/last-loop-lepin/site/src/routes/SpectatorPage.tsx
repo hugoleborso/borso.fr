@@ -3,7 +3,7 @@ import { apiClient } from '../api/client';
 import { CorrectionBanner } from '../components/CorrectionBanner';
 import { Countdown } from '../components/Countdown';
 import { CourseMap } from '../components/CourseMap';
-import { EliminatedWall } from '../components/EliminatedWall';
+import { ElevationProfile } from '../components/ElevationProfile';
 import { Leaderboard } from '../components/Leaderboard';
 import { SelfPunchModal } from '../components/SelfPunchModal';
 import { useResource } from '../data/useResource';
@@ -163,7 +163,7 @@ export function SpectatorPage() {
             <InRaceCounter ranked={standings?.ranked ?? []} />
           </div>
         </div>
-        <div className="card">
+        <div className="card map-card">
           <div className="card-head">
             <h2 className="card-title">Tracé</h2>
             <span className="muted mono">
@@ -171,6 +171,15 @@ export function SpectatorPage() {
             </span>
           </div>
           <CourseMap edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
+        </div>
+        <div className="card profile-card">
+          <div className="card-head">
+            <h2 className="card-title">Profil</h2>
+            <span className="muted mono">
+              {Math.round(edition.gpx.elevationGainMeters)} m D+
+            </span>
+          </div>
+          <ElevationProfile edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
         </div>
       </div>
       <div className="card classement-card">
@@ -200,12 +209,6 @@ export function SpectatorPage() {
           }}
         />
       )}
-      <div className="card">
-        <div className="card-head">
-          <h2 className="card-title">Mur des éliminés</h2>
-        </div>
-        <EliminatedWall ranked={standings?.ranked ?? []} />
-      </div>
     </div>
   );
 }
