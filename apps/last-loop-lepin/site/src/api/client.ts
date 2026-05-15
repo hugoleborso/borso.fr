@@ -129,7 +129,7 @@ function readApiBase(): string {
 }
 const API_BASE = readApiBase();
 
-function resolveUrl(path: string): string {
+export function resolveUrl(path: string): string {
   if (/^https?:\/\//.test(path)) return path;
   return `${API_BASE}${path}`;
 }

@@ -18,6 +18,7 @@
  */
 
 import { useState, type ReactElement } from 'react';
+import { resolveUrl } from '../api/client';
 import type { RankedRunnerDto } from '../domain/types';
 import { RunnerAvatar } from './RunnerAvatar';
 import {
@@ -99,7 +100,7 @@ export function SelfPunchModal({
     setState((current) => nextStep(current, { type: 'confirm-tap' }));
 
     try {
-      const response = await fetch('/api/self-punches', {
+      const response = await fetch(resolveUrl('/api/self-punches'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
