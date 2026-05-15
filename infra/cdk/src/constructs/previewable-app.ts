@@ -1,4 +1,4 @@
-import { CfnOutput } from 'aws-cdk-lib';
+import { CfnOutput, Stack } from 'aws-cdk-lib';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import {
@@ -68,16 +68,21 @@ export interface PreviewableAppProps {
  * `DsqlClusterStack` (one per app) and is passed in via
  * `props.database.cluster`.
  *
- * Preview API access: when `props.api` is set for a non-prod stage, the
- * HTTP API gets a custom domain at `previewApiHostname(props)` (e.g.
- * `last-loop-lepin-pr-12-api.preview.borso.fr`) backed by the shared
- * regional cert `*.preview.borso.fr`. The frontend reads this URL via
- * the build-time `VITE_API_BASE` env var — preview is cross-origin. The
- * cert ARN + hosted zone come from SSM, both seeded by `SharedStack`.
+ * API routing depends on stage:
  *
- * Prod API still uses the HTTP API id URL by default; the prod /api
- * same-origin routing on a dedicated CloudFront distribution remains
- * future work.
+ * - **prod**: the dedicated CloudFront distribution (owned by `StaticSite`)
+ *   gets an extra `/api/*` cache behavior pointing at the HTTP API
+ *   `*.execute-api.<region>.amazonaws.com` hostname. The frontend calls
+ *   `/api/*` same-origin — no CORS, no extra hostname to remember. The
+ *   API Gateway keeps its raw id URL too; CloudFront just fronts it.
+ * - **preview / integ**: the HTTP API gets a custom domain at
+ *   `previewApiHostname(props)` (e.g. `last-loop-lepin-pr-12-api.preview.borso.fr`)
+ *   backed by the shared regional cert `*.preview.borso.fr`. The frontend
+ *   reads this URL via the build-time `VITE_API_BASE` env var — preview is
+ *   cross-origin because the shared previews CloudFront distribution is
+ *   host-routed per PR, with no surface to add per-PR cache behaviors.
+ *
+ * Cert ARN + hosted zone come from SSM, seeded by `SharedStack`.
  *
  * @beta
  */
@@ -142,6 +147,18 @@ export class PreviewableApp extends Construct {
       prNumber: props.prNumber,
       domainName: props.domainName,
       assetsPath: props.frontend.distPath,
+      // Prod: wire same-origin `/api/*` through the dedicated CloudFront
+      // distribution so the frontend can call its own API without CORS.
+      // Preview/integ keep cross-origin via a build-time `VITE_API_BASE`
+      // — the shared previews distribution is host-routed per PR, no
+      // surface to add per-PR cache behaviors.
+      ...(this.api && props.stage === 'prod'
+        ? {
+            api: {
+              domainName: apiHttpHostname(this.api),
+            },
+          }
+        : {}),
     });
 
     new CfnOutput(this, 'FrontendUrl', { value: this.site.url });
@@ -152,6 +169,15 @@ export class PreviewableApp extends Construct {
       new CfnOutput(this, 'DbSchema', { value: this.database.schemaName });
     }
   }
+}
+
+/**
+ * Hostname (no scheme, no path) of the HTTP API's default
+ * `*.execute-api.<region>.amazonaws.com` endpoint. Used as the CloudFront
+ * origin domain for same-origin `/api/*` routing in prod.
+ */
+function apiHttpHostname(api: LambdaApi): string {
+  return `${api.httpApi.apiId}.execute-api.${Stack.of(api).region}.amazonaws.com`;
 }
 
 function resolveAllowedOrigins(props: {

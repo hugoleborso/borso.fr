@@ -105,6 +105,12 @@ describe('StaticSite (prod)', () => {
     });
   });
 
+  it('omits the /api/* cache behavior when no api prop is passed', () => {
+    tpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+      DistributionConfig: Match.objectLike({ CacheBehaviors: Match.absent() }),
+    });
+  });
+
   it('grants the CloudFront OAC principal s3:ListBucket so S3 returns 404 (not 403) for missing keys', () => {
     tpl.hasResourceProperties('AWS::S3::BucketPolicy', {
       PolicyDocument: Match.objectLike({
@@ -115,6 +121,53 @@ describe('StaticSite (prod)', () => {
             Principal: { Service: 'cloudfront.amazonaws.com' },
           }),
         ]),
+      }),
+    });
+  });
+});
+
+describe('StaticSite (prod, with same-origin /api/* routing)', () => {
+  // AWS-managed CachingDisabled policy ID — stable documented constant.
+  // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html
+  const CACHING_DISABLED_ID = '4135ea2d-6df8-44a3-9df3-4b5a84be39ad';
+  const tpl = synth((stack) => {
+    new StaticSite(stack, 'Site', {
+      app: 'last-loop-lepin',
+      stage: 'prod',
+      domainName: 'last-loop-lepin.borso.fr',
+      assetsPath: '.',
+      api: { domainName: 'reocri5iel.execute-api.eu-west-3.amazonaws.com' },
+    });
+  });
+
+  it('routes /api/* to the API hostname with caching disabled', () => {
+    tpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+      DistributionConfig: Match.objectLike({
+        CacheBehaviors: Match.arrayWith([Match.objectLike({ PathPattern: '/api/*' })]),
+        Origins: Match.arrayWith([
+          Match.objectLike({
+            DomainName: 'reocri5iel.execute-api.eu-west-3.amazonaws.com',
+            CustomOriginConfig: Match.anyValue(),
+          }),
+        ]),
+      }),
+    });
+    expect(JSON.stringify(tpl.toJSON())).toContain(CACHING_DISABLED_ID);
+  });
+
+  it('respects a custom pathPattern', () => {
+    const customTpl = synth((stack) => {
+      new StaticSite(stack, 'Site', {
+        app: 'borso-fr',
+        stage: 'prod',
+        domainName: 'borso.fr',
+        assetsPath: '.',
+        api: { domainName: 'x.execute-api.eu-west-3.amazonaws.com', pathPattern: '/v1/*' },
+      });
+    });
+    customTpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+      DistributionConfig: Match.objectLike({
+        CacheBehaviors: Match.arrayWith([Match.objectLike({ PathPattern: '/v1/*' })]),
       }),
     });
   });
