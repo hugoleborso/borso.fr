@@ -7,6 +7,7 @@ import {
   indexTrack,
   projectFraction,
   projectFractionTimeAware,
+  runnerDistanceFraction,
   squaredDegrees,
 } from './course-map.utils';
 
@@ -20,10 +21,7 @@ interface CourseMapProps {
 const MIN_MAP_HEIGHT_PX = 320;
 const PROJECTION_MODE_RECORDED = 'recorded-pace';
 const PROJECTION_MODE_LINEAR = 'linear-fallback';
-
-function runnerLoopPaceMs(entry: RankedRunnerDto, fallbackMs: number): number {
-  return entry.lastLoopDurationMs ?? fallbackMs;
-}
+const MINUTES_TO_MS = 60_000;
 
 function avatarHtml(entry: RankedRunnerDto): string {
   const avatar = initialsAvatar(entry.runner.displayName);
@@ -100,24 +98,26 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
     if (edition.status !== 'live') return;
     const track = indexTrack(points);
     if (track.total === 0) return;
-    const loopMs = Math.max(edition.intervalMinutes, 1) * 60_000;
+    const loopMs = Math.max(edition.intervalMinutes, 1) * MINUTES_TO_MS;
     const startMs = new Date(edition.startsAt).getTime();
     const nowMs = now.getTime();
     const elapsedSinceRace = Math.max(0, nowMs - startMs);
     const currentLoopIndex = Math.floor(elapsedSinceRace / loopMs) + 1;
-    const currentLoopStartMs = startMs + (currentLoopIndex - 1) * loopMs;
-    const elapsedInLoopMs = nowMs - currentLoopStartMs;
     // Single log per effect run (= per poll tick), not per-runner — keeps
     // the cardinality bounded. The tag is the same string Sentry will use
     // once the React breadcrumb wiring lands (see plan §E follow-up).
     const projectionMode =
       pointTimeFractions === undefined ? PROJECTION_MODE_LINEAR : PROJECTION_MODE_RECORDED;
     console.warn('course_map_projection_mode', { mode: projectionMode });
+    const timingInputs = {
+      status: edition.status,
+      startsAt: edition.startsAt,
+      intervalMinutes: edition.intervalMinutes,
+    };
     for (const entry of ranked) {
-      if (entry.status.kind !== 'in-race') continue;
-      const restingAtCorral = entry.status.lastLoop >= currentLoopIndex;
-      const paceMs = restingAtCorral ? loopMs : runnerLoopPaceMs(entry, loopMs);
-      const fraction = restingAtCorral || paceMs === 0 ? 0 : elapsedInLoopMs / paceMs;
+      const computed = runnerDistanceFraction(timingInputs, entry, nowMs);
+      if (computed === null) continue;
+      const { fraction, restingAtCorral } = computed;
       const position =
         pointTimeFractions === undefined
           ? projectFraction(track, fraction)
@@ -129,9 +129,14 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
           iconSize: [28, 28],
           iconAnchor: [14, 14],
         }),
-        title: restingAtCorral
-          ? `${entry.runner.displayName} · au corral · ${entry.status.lastLoop} boucles validées`
-          : `${entry.runner.displayName} · boucle ${currentLoopIndex} · ${Math.round(fraction * 100)}%`,
+        // `runnerDistanceFraction` returns null for everything except in-race
+        // runners (cf. course-map.utils.ts), so at this point `entry.status` is
+        // necessarily `{ kind: 'in-race', lastLoop }`. The redundant guard
+        // narrows the discriminated union for TypeScript.
+        title:
+          restingAtCorral && entry.status.kind === 'in-race'
+            ? `${entry.runner.displayName} · au corral · ${entry.status.lastLoop} boucles validées`
+            : `${entry.runner.displayName} · boucle ${currentLoopIndex} · ${Math.round(fraction * 100)}%`,
       }).addTo(layer);
     }
     // `squaredDegrees` stays used as a future hook for "which segment am I

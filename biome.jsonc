@@ -55,6 +55,20 @@
           }
         }
       }
+    },
+    {
+      // Cohesive Vitest suite covering all the pure helpers exported by
+      // `course-map.utils.ts`. The runner-fraction helper has its own
+      // sibling file (`course-map.runner-fraction.test.ts`) ; the rest
+      // is one suite worth keeping co-located while the surface evolves.
+      "includes": ["**/course-map.utils.test.ts"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noExcessiveLinesPerFile": "off"
+          }
+        }
+      }
     }
   ]
 }

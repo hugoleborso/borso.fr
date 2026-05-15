@@ -31,6 +31,7 @@ const raceEditionSchema = z.object({
     trackJson: z.object({
       points: z.array(latLngSchema),
       pointTimeFractions: z.array(z.number()).optional(),
+      pointElevations: z.array(z.number()).optional(),
     }),
     startLatLng: latLngSchema,
   }),

@@ -20,10 +20,17 @@ const DEFAULT_INTERVAL_MINUTES = 60;
  * `"pointTimeFractions": null`, which the Zod refine on read would reject.
  */
 function trackJsonOf(track: GpxTrack): GpxMetadata['trackJson'] {
-  if (track.pointTimeFractions === null) {
-    return { points: track.points };
-  }
-  return { points: track.points, pointTimeFractions: track.pointTimeFractions };
+  // Both `pointTimeFractions` and `pointElevations` follow the
+  // `null` (core) → omitted-key (DTO) translation — emitting `null` would
+  // round-trip through `JSON.stringify` as `"…": null` and trip the Zod
+  // `.optional()` on read.
+  const base: GpxMetadata['trackJson'] = { points: track.points };
+  const withTimings: GpxMetadata['trackJson'] =
+    track.pointTimeFractions === null
+      ? base
+      : { ...base, pointTimeFractions: track.pointTimeFractions };
+  if (track.pointElevations === null) return withTimings;
+  return { ...withTimings, pointElevations: track.pointElevations };
 }
 
 export class EditionAlreadyExistsError extends Error {

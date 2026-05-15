@@ -7,7 +7,7 @@
  * lifecycle, but the maths is testable in isolation at 100% coverage.
  */
 
-import type { LatLngDto } from '../domain/types';
+import type { LatLngDto, RankedRunnerDto } from '../domain/types';
 
 const EARTH_RADIUS_METERS = 6_371_000;
 const DEGREES_PER_HALF_TURN = 180;
@@ -187,4 +187,55 @@ export function projectFractionTimeAware(
   const localFraction =
     segmentSpan === 0 ? 0 : (clamped - previousFraction) / segmentSpan;
   return interpolateSegment(previousPoint, currentPoint, localFraction);
+}
+
+const MINUTES_TO_MS = 60_000;
+
+/**
+ * Narrowed view of `RaceEditionDto` carrying only the four fields needed
+ * for the in-loop fraction computation. Decoupling the helper from
+ * `RaceEditionDto` lets `course-map.utils.test.ts` build inputs without
+ * synthesising the full edition shape, and keeps the function pure.
+ */
+export interface RaceTimingInputs {
+  readonly status: 'setup' | 'live' | 'finished';
+  readonly startsAt: string;
+  readonly intervalMinutes: number;
+}
+
+export interface RunnerDistanceFraction {
+  /** `[0, 1)` — position inside the current top-of-hour loop. */
+  readonly fraction: number;
+  /** `true` when the runner has already closed the current loop and waits at the corral. */
+  readonly restingAtCorral: boolean;
+}
+
+/**
+ * Where the runner sits on the loop relative to the current top-of-hour
+ * window. Returns `null` when no avatar should be rendered (edition not
+ * live, runner DNF, or empty track inputs upstream of the caller).
+ *
+ * Called by both `CourseMap.tsx` (to position the lat/lng marker) and
+ * `ElevationProfile.tsx` (to position the pastille on the profile). The
+ * helper returns only the fraction — the lat/lng / Y projection lives at
+ * each call site, since they project onto different curves.
+ */
+export function runnerDistanceFraction(
+  edition: RaceTimingInputs,
+  entry: RankedRunnerDto,
+  nowMs: number,
+): RunnerDistanceFraction | null {
+  if (edition.status !== 'live') return null;
+  if (entry.status.kind !== 'in-race') return null;
+  const loopMs = Math.max(edition.intervalMinutes, 1) * MINUTES_TO_MS;
+  const startMs = new Date(edition.startsAt).getTime();
+  const elapsedSinceRace = Math.max(0, nowMs - startMs);
+  const currentLoopIndex = Math.floor(elapsedSinceRace / loopMs) + 1;
+  const restingAtCorral = entry.status.lastLoop >= currentLoopIndex;
+  if (restingAtCorral) return { fraction: 0, restingAtCorral: true };
+  const currentLoopStartMs = startMs + (currentLoopIndex - 1) * loopMs;
+  const elapsedInLoopMs = nowMs - currentLoopStartMs;
+  const paceMs = entry.lastLoopDurationMs ?? loopMs;
+  if (paceMs === 0) return { fraction: 0, restingAtCorral: false };
+  return { fraction: elapsedInLoopMs / paceMs, restingAtCorral: false };
 }

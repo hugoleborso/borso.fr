@@ -27,6 +27,13 @@ export interface GpxTrack {
    * convention. The DTO boundary converts `null` → omitted JSON key.
    */
   readonly pointTimeFractions: readonly number[] | null;
+  /**
+   * Per-point elevation in meters, parallel to {@link points}. `null` when
+   * at least one `<trkpt>` lacks a parseable `<ele>` — same all-or-nothing
+   * convention as {@link pointTimeFractions}. The DTO boundary converts
+   * `null` → omitted JSON key.
+   */
+  readonly pointElevations: readonly number[] | null;
 }
 
 export class GpxParseError extends Error {
@@ -132,6 +139,23 @@ export function buildPointTimeFractions(
 }
 
 /**
+ * Build the parallel array of per-point elevations. Returns `null` if any
+ * element is `null` (all-or-nothing convention — same shape as
+ * {@link buildPointTimeFractions}), otherwise the elevations as a fresh
+ * `number[]`.
+ */
+export function buildPointElevations(
+  elevations: readonly (number | null)[],
+): readonly number[] | null {
+  const collected: number[] = [];
+  for (const elevation of elevations) {
+    if (elevation === null) return null;
+    collected.push(elevation);
+  }
+  return collected;
+}
+
+/**
  * Parse a GPX file and derive the metadata needed for an edition setup.
  *
  * Throws {@link GpxParseError} when the input is empty, lacks a `<gpx>` or
@@ -149,17 +173,23 @@ export function parseGpx(xml: string): GpxTrack {
   }
 
   const points: readonly LatLng[] = rawPoints.map((entry) => ({ lat: entry.lat, lng: entry.lng }));
-  const elevations: readonly number[] = rawPoints
-    .map((entry) => entry.elevation)
-    .filter((value): value is number => value !== null);
+  const rawElevations: readonly (number | null)[] = rawPoints.map((entry) => entry.elevation);
+  // The D+ derivation drops the missing slots (filter); the parallel-array
+  // preservation rejects the whole series when any slot is missing
+  // (all-or-nothing). Two different consumers, two different shapes.
+  const elevationsForDPlus: readonly number[] = rawElevations.filter(
+    (value): value is number => value !== null,
+  );
+  const pointElevations = buildPointElevations(rawElevations);
   const timestampsMs: readonly (number | null)[] = rawPoints.map((entry) => entry.timestampMs);
   const pointTimeFractions = buildPointTimeFractions(timestampsMs);
 
   return {
     distanceMeters: polylineDistanceMeters(points),
-    elevationGainMeters: smoothedElevationGainMeters(elevations),
+    elevationGainMeters: smoothedElevationGainMeters(elevationsForDPlus),
     startLatLng: { lat: start.lat, lng: start.lng },
     points,
     pointTimeFractions,
+    pointElevations,
   };
 }

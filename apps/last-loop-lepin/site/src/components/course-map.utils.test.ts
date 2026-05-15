@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { LatLngDto } from '../domain/types';
+import type { LatLngDto, RankedRunnerDto } from '../domain/types';
 import {
   type Indexed,
+  type RaceTimingInputs,
   indexTrack,
   metersBetween,
   projectFraction,
   projectFractionTimeAware,
+  runnerDistanceFraction,
   squaredDegrees,
 } from './course-map.utils';
 
@@ -236,5 +238,131 @@ describe('projectFractionTimeAware', () => {
     const pointTimeFractions: ReadonlyArray<number> = [0, 0, 0.5, 1];
     const position = projectFractionTimeAware(track, 0, pointTimeFractions);
     expect(position).toEqual(SAMPLE_POINTS[0]);
+  });
+});
+
+describe('runnerDistanceFraction', () => {
+  const RACE_START_ISO = '2026-09-19T06:00:00Z';
+  const RACE_START_MS = new Date(RACE_START_ISO).getTime();
+  const LIVE_TIMING: RaceTimingInputs = {
+    status: 'live',
+    startsAt: RACE_START_ISO,
+    intervalMinutes: 60,
+  };
+  const ONE_HOUR_MS = 60 * 60_000;
+
+  function makeInRaceEntry(
+    lastLoop: number,
+    lastLoopDurationMs: number | null = null,
+  ): RankedRunnerDto {
+    return {
+      runner: {
+        editionSlug: 'lepin-2026',
+        slug: 'jean',
+        displayName: 'Jean Test',
+        photoKey: null,
+        bib: null,
+      },
+      rank: 1,
+      status: { kind: 'in-race', lastLoop },
+      lastLoopDurationMs,
+      lastFinishedAt: null,
+    };
+  }
+
+  function makeDnfEntry(): RankedRunnerDto {
+    return {
+      runner: {
+        editionSlug: 'lepin-2026',
+        slug: 'paul',
+        displayName: 'Paul DNF',
+        photoKey: null,
+        bib: null,
+      },
+      rank: 'ex-aequo',
+      status: { kind: 'dnf', outAtLoop: 3, reason: 'late' },
+      lastLoopDurationMs: null,
+      lastFinishedAt: null,
+    };
+  }
+
+  it('returns null when the edition is in setup', () => {
+    const result = runnerDistanceFraction(
+      { ...LIVE_TIMING, status: 'setup' },
+      makeInRaceEntry(0),
+      RACE_START_MS,
+    );
+    expect(result).toBeNull();
+  });
+
+  it('returns null when the edition is finished', () => {
+    const result = runnerDistanceFraction(
+      { ...LIVE_TIMING, status: 'finished' },
+      makeInRaceEntry(0),
+      RACE_START_MS + ONE_HOUR_MS,
+    );
+    expect(result).toBeNull();
+  });
+
+  it('returns null when the entry is DNF', () => {
+    const result = runnerDistanceFraction(LIVE_TIMING, makeDnfEntry(), RACE_START_MS + 1_000);
+    expect(result).toBeNull();
+  });
+
+  it('returns elapsedInLoopMs / paceMs when the runner is still inside the current loop', () => {
+    // 18 min into loop 1, paceMs = 30 min → fraction = 0.6.
+    const nowMs = RACE_START_MS + 18 * 60_000;
+    const result = runnerDistanceFraction(LIVE_TIMING, makeInRaceEntry(0, 30 * 60_000), nowMs);
+    expect(result).toEqual({ fraction: 0.6, restingAtCorral: false });
+  });
+
+  it('falls back to loopMs when lastLoopDurationMs is null', () => {
+    // 15 min into loop 1, no recorded pace → fraction = 15/60 = 0.25.
+    const nowMs = RACE_START_MS + 15 * 60_000;
+    const result = runnerDistanceFraction(LIVE_TIMING, makeInRaceEntry(0, null), nowMs);
+    expect(result).toEqual({ fraction: 0.25, restingAtCorral: false });
+  });
+
+  it('reports restingAtCorral when the runner has already closed the current loop', () => {
+    // 10 min into loop 1 (currentLoopIndex = 1); runner already validated
+    // loop 1 → resting at corral until the next top-of-hour.
+    const nowMs = RACE_START_MS + 10 * 60_000;
+    const result = runnerDistanceFraction(LIVE_TIMING, makeInRaceEntry(1, 8 * 60_000), nowMs);
+    expect(result).toEqual({ fraction: 0, restingAtCorral: true });
+  });
+
+  it('returns fraction 0 when paceMs is exactly zero (degenerate punch sequence)', () => {
+    // A `lastLoopDurationMs` of 0 would only happen with a corrupted punch
+    // sequence; the helper still defends against the divide-by-zero.
+    const nowMs = RACE_START_MS + 5 * 60_000;
+    const result = runnerDistanceFraction(LIVE_TIMING, makeInRaceEntry(0, 0), nowMs);
+    expect(result).toEqual({ fraction: 0, restingAtCorral: false });
+  });
+
+  it('clamps elapsedSinceRace to zero when nowMs precedes startsAt (currentLoopIndex stays 1)', () => {
+    // elapsedSinceRace is `Math.max(0, …)`, so a nowMs before the start
+    // can't push currentLoopIndex below 1. The elapsed-in-loop the helper
+    // forwards as the numerator still reflects `nowMs - startMs`
+    // (potentially negative) — same as the inline arithmetic on the map
+    // before the extraction. The wire-up doesn't try to be smarter than
+    // the original; preserving the projection is the refactor's whole
+    // point.
+    const nowMs = RACE_START_MS - 5_000;
+    const result = runnerDistanceFraction(LIVE_TIMING, makeInRaceEntry(0, 60 * 60_000), nowMs);
+    expect(result?.restingAtCorral).toBe(false);
+    expect(result?.fraction).toBeCloseTo(-5_000 / (60 * 60_000), 9);
+  });
+
+  it('coerces intervalMinutes < 1 to 1 (defensive)', () => {
+    // `Math.max(intervalMinutes, 1)` guards against a corrupted edition
+    // with `intervalMinutes: 0` → division by zero in the loop arithmetic.
+    const nowMs = RACE_START_MS + 30 * 1_000;
+    const result = runnerDistanceFraction(
+      { ...LIVE_TIMING, intervalMinutes: 0 },
+      makeInRaceEntry(0, 60_000),
+      nowMs,
+    );
+    expect(result?.restingAtCorral).toBe(false);
+    expect(result?.fraction).toBeCloseTo(0.5, 5);
   });
 });

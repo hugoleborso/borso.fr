@@ -20,6 +20,13 @@ export interface GpxMetadata {
      * triggers the silent linear-projection fallback on the front.
      */
     readonly pointTimeFractions?: ReadonlyArray<number>;
+    /**
+     * Per-point elevation in meters, one per `points` entry. Optional —
+     * absent when the source GPX lacked `<ele>` on any `<trkpt>`. Drives
+     * the under-map elevation profile on the spectator page; absent ⇒
+     * placeholder "Profil indisponible".
+     */
+    readonly pointElevations?: ReadonlyArray<number>;
   };
   readonly startLatLng: { readonly lat: number; readonly lng: number };
 }

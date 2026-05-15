@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   GpxParseError,
+  buildPointElevations,
   buildPointTimeFractions,
   parseGpx,
   tryParseDate,
@@ -81,6 +82,22 @@ describe('buildPointTimeFractions', () => {
     // First half spans 9s (slow uphill), second half 1s (fast downhill).
     const fractions = buildPointTimeFractions([0, 9000, 10000]) ?? [];
     expect(fractions).toEqual([0, 0.9, 1]);
+  });
+});
+
+describe('buildPointElevations', () => {
+  it('returns the elevations array when every entry is present', () => {
+    expect(buildPointElevations([100, 110, 120])).toEqual([100, 110, 120]);
+  });
+
+  it('returns null when any entry is null (all-or-nothing)', () => {
+    expect(buildPointElevations([100, null, 120])).toBeNull();
+    expect(buildPointElevations([null, 110, 120])).toBeNull();
+    expect(buildPointElevations([100, 110, null])).toBeNull();
+  });
+
+  it('returns an empty array for empty input (degenerate but well-defined)', () => {
+    expect(buildPointElevations([])).toEqual([]);
   });
 });
 
@@ -326,5 +343,40 @@ describe('parseGpx', () => {
     const track = parseGpx(singlePoint);
     expect(track.points).toHaveLength(1);
     expect(track.pointTimeFractions).toBeNull();
+  });
+
+  it('all-elevated: preserves pointElevations parallel to points (MINIMAL_GPX)', () => {
+    const track = parseGpx(MINIMAL_GPX);
+    expect(track.pointElevations).toEqual([400, 450, 500, 520]);
+    expect(track.pointElevations).toHaveLength(track.points.length);
+  });
+
+  it('all-elevated: Strava sample preserves elevations on every point', () => {
+    const track = parseGpx(STRAVA_RECORDED_SAMPLE);
+    const elevations = track.pointElevations;
+    expect(elevations).not.toBeNull();
+    if (elevations === null) return;
+    expect(elevations).toHaveLength(track.points.length);
+    expect(elevations[0]).toBe(382);
+    expect(elevations[elevations.length - 1]).toBe(391);
+  });
+
+  it('one-missing-ele: returns null pointElevations (all-or-nothing)', () => {
+    const oneMissing = `<gpx><trk><trkseg>
+      <trkpt lat="0.0" lon="0.0"><ele>100</ele></trkpt>
+      <trkpt lat="0.0" lon="0.001"></trkpt>
+      <trkpt lat="0.0" lon="0.002"><ele>120</ele></trkpt>
+    </trkseg></trk></gpx>`;
+    const track = parseGpx(oneMissing);
+    expect(track.pointElevations).toBeNull();
+  });
+
+  it('none-elevated: returns null pointElevations when no <ele> at all', () => {
+    const noElevation = `<gpx><trk><trkseg>
+      <trkpt lat="0.0" lon="0.0"></trkpt>
+      <trkpt lat="0.0" lon="0.001"></trkpt>
+    </trkseg></trk></gpx>`;
+    const track = parseGpx(noElevation);
+    expect(track.pointElevations).toBeNull();
   });
 });

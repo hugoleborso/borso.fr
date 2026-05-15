@@ -11,16 +11,25 @@ const pointTimeFractionsSchema = z
     message: 'pointTimeFractions must be strictly monotonic, start at 0 and end at 1',
   });
 
+const pointElevationsSchema = z.array(z.number().finite());
+
 const trackJsonSchema = z
   .object({
     points: z.array(latLngSchema),
     pointTimeFractions: pointTimeFractionsSchema.optional(),
+    pointElevations: pointElevationsSchema.optional(),
   })
   .refine(
     (trackJson) =>
       trackJson.pointTimeFractions === undefined ||
       trackJson.pointTimeFractions.length === trackJson.points.length,
     { message: 'pointTimeFractions.length must match points.length' },
+  )
+  .refine(
+    (trackJson) =>
+      trackJson.pointElevations === undefined ||
+      trackJson.pointElevations.length === trackJson.points.length,
+    { message: 'pointElevations.length must match points.length' },
   );
 
 export const gpxMetadataSchema: z.ZodType<GpxMetadata> = z.object({

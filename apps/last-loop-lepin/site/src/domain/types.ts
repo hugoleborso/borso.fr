@@ -31,6 +31,12 @@ export interface RaceEditionDto {
        * then falls back to the linear time→distance algorithm.
        */
       readonly pointTimeFractions?: ReadonlyArray<number>;
+      /**
+       * Per-point elevation in meters, one per `points` entry. Absent when
+       * the source GPX lacked `<ele>` on any `<trkpt>` — the elevation
+       * profile then renders a "Profil indisponible" placeholder.
+       */
+      readonly pointElevations?: ReadonlyArray<number>;
     };
     readonly startLatLng: { readonly lat: number; readonly lng: number };
   };
