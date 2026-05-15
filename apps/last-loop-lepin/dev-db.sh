@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Owns the local Postgres lifecycle for `pnpm dev`. Boots the cluster
 # via scripts/local-postgres.sh, applies the Drizzle migrations once,
-# seeds the race-mid-loop-3 fixture, then idles so concurrently keeps
-# the process alive. SIGTERM stops the cluster cleanly.
+# then idles so concurrently keeps the process alive. Seeding test
+# fixtures (`race-down-to-one-survivor` etc.) is the caller's job via
+# POST /api/__test/seed. SIGTERM stops the cluster cleanly.
 set -euo pipefail
 
 cd "$(dirname "$0")"
