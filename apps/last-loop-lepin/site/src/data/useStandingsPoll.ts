@@ -12,7 +12,7 @@
  * and unmounts the tree.
  */
 
-import { useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import { apiClient } from '../api/client';
 import type { StandingsDto } from '../domain/types';
 
@@ -111,9 +111,26 @@ export function useStandings(editionSlug: string): StandingsState {
   // time (otherwise React's `getSnapshot should be cached` warning fires
   // and the tree remounts in a loop).
   const entry = editionSlug === '' ? null : ensureEntry(editionSlug);
-  return useSyncExternalStore(
-    (listener) => subscribe(editionSlug, listener),
+  // `subscribe` MUST keep the same reference across renders for a given
+  // editionSlug. Without `useCallback`, React's `useSyncExternalStore`
+  // sees a new function on every render → runs cleanup → re-subscribes →
+  // the re-subscribe immediately fires `fetchOnce` because the cleanup
+  // just cleared `intervalId`. Net effect: one extra fetch per render
+  // ON TOP of the 2 s timer, which compounds — every fetch resolution
+  // re-renders the consumer, which re-fetches, which re-renders, … and
+  // the back gets hammered far beyond the intended 1 request / 2 s.
+  // Pinning the arrow with `useCallback` keeps the subscription stable.
+  const subscribeForEdition = useCallback(
+    (listener: () => void) => subscribe(editionSlug, listener),
+    [editionSlug],
+  );
+  const getSnapshot = useCallback(
     () => (entry === null ? INITIAL_SNAPSHOT : entry.snapshot),
+    [entry],
+  );
+  return useSyncExternalStore(
+    subscribeForEdition,
+    getSnapshot,
     () => INITIAL_SNAPSHOT,
   );
 }
