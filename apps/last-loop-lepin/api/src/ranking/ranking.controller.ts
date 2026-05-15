@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { getDatabase } from '../database/client';
 import { EditionNotFoundError } from '../edition/edition.service';
 import { listPunchesForEdition } from '../punch/punch.repository';
+import { readPhotosCdnHost, toRunnerDto } from '../runner/runner.dto.utils';
 import { computeStandingsForEdition } from './ranking.service';
 
 const rankingRouter = new Hono();
@@ -30,8 +31,13 @@ rankingRouter.get('/standings/:editionSlug', async (context) => {
       );
     }, null);
     context.header('Cache-Control', 'max-age=2, stale-while-revalidate=10');
+    const cdnHost = readPhotosCdnHost();
+    const rankedWithDto = standings.ranked.map((entry) => ({
+      ...entry,
+      runner: toRunnerDto(entry.runner, cdnHost),
+    }));
     return context.json({
-      standings,
+      standings: { ...standings, ranked: rankedWithDto },
       mostRecentCorrectionAt: mostRecentCorrectionAt?.toISOString() ?? null,
     });
   } catch (error) {

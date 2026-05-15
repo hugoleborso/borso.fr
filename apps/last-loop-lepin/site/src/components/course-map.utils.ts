@@ -7,6 +7,7 @@
  * lifecycle, but the maths is testable in isolation at 100% coverage.
  */
 
+import { buildRunnerAvatar } from '../domain/runner-avatar.utils';
 import type { LatLngDto, RankedRunnerDto } from '../domain/types';
 
 const EARTH_RADIUS_METERS = 6_371_000;
@@ -190,6 +191,64 @@ export function projectFractionTimeAware(
 }
 
 const MINUTES_TO_MS = 60_000;
+
+const MAP_AVATAR_PX = 28;
+const HTML_AMP = /&/g;
+const HTML_LT = /</g;
+const HTML_GT = />/g;
+const HTML_DQ = /"/g;
+const HTML_SQ = /'/g;
+
+/**
+ * Escape a string for safe substitution into an HTML attribute or text
+ * node. Conservative — quotes, ampersands, and angle brackets all get
+ * entity-encoded. Used by `avatarHtmlWithPhoto` to compose the Leaflet
+ * `divIcon` markup from runner-supplied display names + photo URLs.
+ */
+export function escapeHtml(input: string): string {
+  return input
+    .replace(HTML_AMP, '&amp;')
+    .replace(HTML_LT, '&lt;')
+    .replace(HTML_GT, '&gt;')
+    .replace(HTML_DQ, '&quot;')
+    .replace(HTML_SQ, '&#39;');
+}
+
+interface AvatarHtmlInput {
+  readonly displayName: string;
+  readonly photoUrl: string | null | undefined;
+  readonly slug: string;
+}
+
+function initialsSpanHtml(input: AvatarHtmlInput, fallbackInitials: string, fallbackBg: string): string {
+  return `<span class="runner-avatar runner-avatar--initials map-avatar" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px;background:${escapeHtml(fallbackBg)}">${escapeHtml(fallbackInitials)}</span>`;
+}
+
+/**
+ * Build the HTML string Leaflet's `L.divIcon` ships into the DOM for a
+ * runner marker. Mirrors the React `<RunnerAvatar>` component's logic in
+ * pure-string form — Leaflet renders raw HTML, so we can't inject a React
+ * tree, but the visible output must match. When `photoUrl` is set, we
+ * render an `<img>` wrapped by a span; an inline `onerror` rewrites the
+ * wrapper's innerHTML to the initials span on load failure (the cascade
+ * from spec §"Edge cases — Photo dont l'URL retourne 404"). When
+ * `photoUrl` is null, we render the initials span directly.
+ *
+ * Keep in sync with `RunnerAvatar.tsx` — every visual change there has to
+ * mirror here.
+ */
+export function avatarHtmlWithPhoto(input: AvatarHtmlInput): string {
+  const avatar = buildRunnerAvatar({ displayName: input.displayName, photoUrl: input.photoUrl });
+  if (avatar.kind === 'initials') {
+    return initialsSpanHtml(input, avatar.initials, avatar.backgroundColor);
+  }
+  const fallbackHtml = initialsSpanHtml(input, avatar.fallback.initials, avatar.fallback.backgroundColor);
+  // `onerror` rewrites the wrapper's innerHTML to the initials span. The
+  // wrapper itself sticks around (its size + class anchor the Leaflet icon
+  // bounding box), so the swap is a contained DOM mutation that survives
+  // re-paints of nearby markers.
+  return `<span class="runner-avatar map-avatar" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px"><img class="runner-avatar--photo" src="${escapeHtml(avatar.url)}" alt="${escapeHtml(input.displayName)}" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px" onerror="this.parentNode.innerHTML=${JSON.stringify(fallbackHtml)}"></span>`;
+}
 
 /**
  * Narrowed view of `RaceEditionDto` carrying only the four fields needed

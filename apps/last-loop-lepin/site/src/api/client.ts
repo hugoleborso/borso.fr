@@ -43,6 +43,13 @@ const runnerSchema = z.object({
   slug: z.string(),
   displayName: z.string(),
   photoKey: z.string().nullable(),
+  // `photoUrl` is composed server-side from `photoKey` + `PHOTOS_CDN_HOST`.
+  // `.default(null)` handles older server responses that omit the key —
+  // they land as `null`, same as a runner without a photo. The runtime
+  // accepts `string | null | undefined` from the wire; the output type
+  // is `string | null` so the front doesn't have to defensively `?? null`
+  // at every render site.
+  photoUrl: z.string().url().nullable().default(null),
   bib: z.number().nullable(),
 });
 

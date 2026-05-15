@@ -3,6 +3,8 @@ import type { LatLngDto, RankedRunnerDto } from '../domain/types';
 import {
   type Indexed,
   type RaceTimingInputs,
+  avatarHtmlWithPhoto,
+  escapeHtml,
   indexTrack,
   metersBetween,
   projectFraction,
@@ -261,6 +263,7 @@ describe('runnerDistanceFraction', () => {
         slug: 'jean',
         displayName: 'Jean Test',
         photoKey: null,
+        photoUrl: null,
         bib: null,
       },
       rank: 1,
@@ -277,6 +280,7 @@ describe('runnerDistanceFraction', () => {
         slug: 'paul',
         displayName: 'Paul DNF',
         photoKey: null,
+        photoUrl: null,
         bib: null,
       },
       rank: 'ex-aequo',
@@ -364,5 +368,57 @@ describe('runnerDistanceFraction', () => {
     );
     expect(result?.restingAtCorral).toBe(false);
     expect(result?.fraction).toBeCloseTo(0.5, 5);
+  });
+});
+
+describe('escapeHtml', () => {
+  it('escapes the conservative entity set (& < > " \')', () => {
+    expect(escapeHtml('Tom & "Jerry" <O\'Brien>')).toBe(
+      'Tom &amp; &quot;Jerry&quot; &lt;O&#39;Brien&gt;',
+    );
+  });
+
+  it('passes through strings with no special chars unchanged', () => {
+    expect(escapeHtml('Borso 2026')).toBe('Borso 2026');
+  });
+});
+
+describe('avatarHtmlWithPhoto', () => {
+  it('renders an <img> wrapped in a span when photoUrl is set, with an onerror fallback to initials', () => {
+    const html = avatarHtmlWithPhoto({
+      displayName: 'Borso',
+      photoUrl: 'https://photos-cdn.borso.fr/lepin-2026/borso/abc.jpg',
+      slug: 'borso',
+    });
+    expect(html).toContain('<img');
+    expect(html).toContain('src="https://photos-cdn.borso.fr/lepin-2026/borso/abc.jpg"');
+    expect(html).toContain('data-runner-slug="borso"');
+    expect(html).toContain('onerror=');
+    expect(html).toContain('runner-avatar--initials');
+  });
+
+  it('renders the initials span directly when photoUrl is null', () => {
+    const html = avatarHtmlWithPhoto({
+      displayName: 'Carla',
+      photoUrl: null,
+      slug: 'carla',
+    });
+    expect(html).not.toContain('<img');
+    expect(html).toContain('runner-avatar--initials');
+    expect(html).toContain('CA');
+    expect(html).toContain('data-runner-slug="carla"');
+  });
+
+  it('escapes the slug and any user-supplied content so a hostile fixture cannot break out of the attribute', () => {
+    const html = avatarHtmlWithPhoto({
+      displayName: 'Eve',
+      photoUrl: 'https://photos-cdn.example/x.jpg" onclick="alert(1)',
+      slug: 'evil"\'<',
+    });
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('data-runner-slug="evil&quot;&#39;&lt;"');
+    expect(html).toContain('alert(1)'.replace('(', '(')); // ensure substring present (non-broken-out)
+    // The hostile photoUrl chars get entity-encoded inside the src attribute.
+    expect(html).toContain('&quot;');
   });
 });

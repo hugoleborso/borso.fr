@@ -1,5 +1,7 @@
-import { initialsAvatar } from '../domain/initials.utils';
 import type { RankedRunnerDto } from '../domain/types';
+import { RunnerAvatar } from './RunnerAvatar';
+
+const LEADERBOARD_AVATAR_PX = 32;
 
 interface LeaderboardProps {
   readonly ranked: readonly RankedRunnerDto[];
@@ -76,7 +78,6 @@ export function Leaderboard({ ranked, fastestLapSlugs, onChipSelect }: Leaderboa
   return (
     <div className="leaderboard-chips">
       {ranked.map((entry) => {
-        const avatar = initialsAvatar(entry.runner.displayName);
         const isDnf = entry.status.kind === 'dnf';
         const isInteractive = onChipSelect !== undefined;
         const hasFastestLap = decoratedSlugs.has(entry.runner.slug);
@@ -87,9 +88,11 @@ export function Leaderboard({ ranked, fastestLapSlugs, onChipSelect }: Leaderboa
               <span className="leaderboard-chip__rank mono">
                 {entry.rank === 'ex-aequo' ? '=' : entry.rank}
               </span>
-              <span className="avatar" style={{ background: avatar.backgroundColor }}>
-                {avatar.initials}
-              </span>
+              <RunnerAvatar
+                runner={entry.runner}
+                size={LEADERBOARD_AVATAR_PX}
+                surface="leaderboard"
+              />
               <span className="leaderboard-chip__name">{entry.runner.displayName}</span>
             </div>
             <div className="leaderboard-chip__foot">

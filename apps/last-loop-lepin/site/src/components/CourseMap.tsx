@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { initialsAvatar } from '../domain/initials.utils';
 import type { RaceEditionDto, RankedRunnerDto } from '../domain/types';
 import {
+  avatarHtmlWithPhoto,
   indexTrack,
   projectFraction,
   projectFractionTimeAware,
@@ -24,9 +24,11 @@ const PROJECTION_MODE_LINEAR = 'linear-fallback';
 const MINUTES_TO_MS = 60_000;
 
 function avatarHtml(entry: RankedRunnerDto): string {
-  const avatar = initialsAvatar(entry.runner.displayName);
-  const initials = avatar.initials.replace(/[<>&"]/g, '');
-  return `<span class="map-avatar" style="background:${avatar.backgroundColor}">${initials}</span>`;
+  return avatarHtmlWithPhoto({
+    displayName: entry.runner.displayName,
+    photoUrl: entry.runner.photoUrl,
+    slug: entry.runner.slug,
+  });
 }
 
 export function CourseMap({ edition, ranked, now }: CourseMapProps) {

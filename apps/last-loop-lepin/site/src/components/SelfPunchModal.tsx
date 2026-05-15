@@ -10,9 +10,9 @@
 
 import { useState, type ReactElement } from 'react';
 import { haversineDistanceMeters } from '../domain/haversine.utils';
-import { initialsAvatar } from '../domain/initials.utils';
 import { requestPosition } from '../domain/requestPosition.utils';
 import type { LatLngDto, RankedRunnerDto } from '../domain/types';
+import { RunnerAvatar } from './RunnerAvatar';
 import {
   initialSelfPunchState,
   nextStep,
@@ -21,6 +21,7 @@ import {
 } from './SelfPunchModal.utils';
 
 const GEOFENCE_RADIUS_METERS = 100;
+const MODAL_AVATAR_PX = 64;
 
 interface SelfPunchModalProps {
   readonly runner: RankedRunnerDto;
@@ -180,8 +181,6 @@ export function SelfPunchModal({
     setState((current) => nextStep(current, { type: 'retry' }));
   }
 
-  const avatar = initialsAvatar(runner.runner.displayName);
-
   function renderBody(): ReactElement {
     switch (state.kind) {
       case 'confirm': {
@@ -311,9 +310,11 @@ export function SelfPunchModal({
         aria-label="Validation de boucle"
       >
         <div className="self-punch-modal__head">
-          <span className="avatar" style={{ background: avatar.backgroundColor }}>
-            {avatar.initials}
-          </span>
+          <RunnerAvatar
+            runner={runner.runner}
+            size={MODAL_AVATAR_PX}
+            surface="modal"
+          />
           <div className="self-punch-modal__head-text">
             <strong>{runner.runner.displayName}</strong>
             {runner.runner.bib === null ? null : (

@@ -48,6 +48,17 @@ export interface RunnerDto {
   readonly slug: string;
   readonly displayName: string;
   readonly photoKey: string | null;
+  /**
+   * Fully-qualified URL of the runner's photo thumbnail (server-composed
+   * from `photoKey` + `PHOTOS_CDN_HOST`). `null` when the runner has no
+   * `photoKey` or the CDN host is not configured on the API — the front
+   * cascades to the initials avatar in either case. Optional on the wire
+   * to absorb the deploy gap between server shipping the field and client
+   * reading it; the runtime Zod default coerces `undefined` to `null`, so
+   * call sites see `string | null | undefined` and `?? null` at the use
+   * site (mirrors the `fastestLap` pattern).
+   */
+  readonly photoUrl?: string | null;
   readonly bib: number | null;
 }
 

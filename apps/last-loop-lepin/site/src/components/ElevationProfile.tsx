@@ -1,4 +1,4 @@
-import { initialsAvatar } from '../domain/initials.utils';
+import { buildRunnerAvatar } from '../domain/runner-avatar.utils';
 import type { RaceEditionDto, RankedRunnerDto } from '../domain/types';
 import { indexTrack, runnerDistanceFraction } from './course-map.utils';
 import { buildProfileGeometry } from './elevation-profile.utils';
@@ -112,20 +112,34 @@ export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps
           const computed = runnerDistanceFraction(timingInputs, entry, nowMs);
           if (computed === null) return null;
           if (computed.restingAtCorral) return null;
-          const avatar = initialsAvatar(entry.runner.displayName);
+          const avatar = buildRunnerAvatar({
+            displayName: entry.runner.displayName,
+            photoUrl: entry.runner.photoUrl,
+          });
+          const fallback = avatar.kind === 'photo' ? avatar.fallback : avatar;
           const centerX = computed.fraction * PROFILE_VIEWBOX_WIDTH;
           const centerY = geometry.yAt(computed.fraction);
-          /* Smooth advancement: place the pastille via the `transform`
-           * attribute on a wrapper `<g>` and let CSS transition the
-           * transform property. React keeps the same DOM node across
-           * polls thanks to the stable key, so the transition runs from
-           * the previous translate to the new one on every 2 s standings
-           * poll. The class `runner-pastille` carries the transition
-           * declaration (see `map.css`). The inner shapes sit at the
-           * origin so the wrapper's translate is the only motion. */
+          const runnerKey = `${entry.runner.editionSlug}-${entry.runner.slug}`;
+          /* Two things happen on the wrapper `<g>`:
+           *
+           *   1. Smooth advancement. The `transform="translate(x y)"`
+           *      attribute is set on every render; React keeps the same
+           *      DOM node across renders thanks to the stable key, so
+           *      CSS interpolates the transform between polls (see
+           *      `.runner-pastille` in `map.css`). Inner shapes sit at
+           *      the origin so the wrapper's translate is the only
+           *      motion.
+           *
+           *   2. Photo cascade without JS. When the runner has a
+           *      `photoUrl`, we render an `<image>` clipped by a per-
+           *      pastille `<clipPath>` LAYERED OVER the initials circle.
+           *      A broken/loading image lets the circle show through —
+           *      free fallback, no `onError` handler needed (SVG `error`
+           *      events are not cross-browser reliable for hiding the
+           *      image element). */
           return (
             <g
-              key={`${entry.runner.editionSlug}-${entry.runner.slug}`}
+              key={runnerKey}
               className="runner-pastille"
               transform={`translate(${centerX} ${centerY})`}
               filter={`url(#${PROFILE_PASTILLE_SHADOW_ID})`}
@@ -134,26 +148,42 @@ export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps
                 cx={0}
                 cy={0}
                 r={PROFILE_AVATAR_RADIUS_PX}
-                fill={avatar.backgroundColor}
+                fill={fallback.backgroundColor}
                 stroke="var(--bg)"
                 strokeWidth="2"
+                data-runner-slug={entry.runner.slug}
               />
               <text
                 x={0}
                 y={0}
                 textAnchor="middle"
-                /* `dominant-baseline="central"` centres SVG text vertically
-                 * on its anchor across every browser this app targets
-                 * (Chromium + Firefox). Without it, baseline drift on
-                 * different glyphs would push 2-letter initials below
-                 * the circle's centre. */
                 dominantBaseline="central"
                 fontSize={PROFILE_AVATAR_FONT_PX}
                 fontWeight="700"
                 fill="var(--accent-ink, #111)"
               >
-                {avatar.initials}
+                {fallback.initials}
               </text>
+              {avatar.kind === 'photo' ? (
+                <>
+                  <defs>
+                    <clipPath id={`profile-avatar-clip-${runnerKey}`}>
+                      <circle cx={0} cy={0} r={PROFILE_AVATAR_RADIUS_PX} />
+                    </clipPath>
+                  </defs>
+                  <image
+                    href={avatar.url}
+                    x={-PROFILE_AVATAR_RADIUS_PX}
+                    y={-PROFILE_AVATAR_RADIUS_PX}
+                    width={PROFILE_AVATAR_RADIUS_PX * 2}
+                    height={PROFILE_AVATAR_RADIUS_PX * 2}
+                    clipPath={`url(#profile-avatar-clip-${runnerKey})`}
+                    preserveAspectRatio="xMidYMid slice"
+                    data-runner-slug={entry.runner.slug}
+                    data-surface="profile"
+                  />
+                </>
+              ) : null}
             </g>
           );
         })}

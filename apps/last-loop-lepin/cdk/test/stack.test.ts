@@ -118,4 +118,52 @@ describe('last-loop-lepin app stack', () => {
       }),
     );
   });
+
+  it('provisions a PhotosCdn distribution on prod (photos-cdn.borso.fr)', () => {
+    const prodTemplate = synthAppStack('prod');
+    prodTemplate.hasResourceProperties(
+      'AWS::CloudFront::Distribution',
+      Match.objectLike({
+        DistributionConfig: Match.objectLike({
+          Aliases: ['photos-cdn.borso.fr'],
+        }),
+      }),
+    );
+  });
+
+  it('provisions a per-PR PhotosCdn distribution on preview', () => {
+    const previewTemplate = synthAppStack('preview');
+    previewTemplate.hasResourceProperties(
+      'AWS::CloudFront::Distribution',
+      Match.objectLike({
+        DistributionConfig: Match.objectLike({
+          Aliases: ['last-loop-lepin-pr-1-photos.preview.borso.fr'],
+        }),
+      }),
+    );
+  });
+
+  it('injects PHOTOS_CDN_HOST env var on the API Lambda for every stage', () => {
+    const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
+      const properties = resource.Properties;
+      if (typeof properties !== 'object' || properties === null) return {};
+      if (!('Environment' in properties)) return {};
+      const environment = properties.Environment;
+      if (typeof environment !== 'object' || environment === null) return {};
+      if (!('Variables' in environment)) return {};
+      const variables = environment.Variables;
+      return typeof variables === 'object' && variables !== null ? { ...variables } : {};
+    };
+
+    for (const stage of ['prod', 'preview'] as const) {
+      const template = synthAppStack(stage);
+      const functions = template.findResources('AWS::Lambda::Function');
+      const apiFn = Object.entries(functions).find(([logicalId]) =>
+        /AppApiFn/.test(logicalId),
+      )?.[1];
+      expect(apiFn, `api function not found in ${stage} template`).toBeDefined();
+      const variables = apiFn === undefined ? {} : readEnvVars(apiFn);
+      expect(variables).toHaveProperty('PHOTOS_CDN_HOST');
+    }
+  });
 });

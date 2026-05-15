@@ -1,0 +1,33 @@
+/* Shared dimensions + circle clipping for `<RunnerAvatar>`. Caller-provided
+ * `size` lands on the element via inline `style` (width/height in px); the
+ * common rules below give the circle shape, the cover crop, and the
+ * initials-fallback layout. */
+.runner-avatar {
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.runner-avatar--photo {
+  object-fit: cover;
+  object-position: center;
+  /* Block-display so an alt-text "broken image" icon doesn't leak whitespace
+   * the moment the cascade kicks in. The fallback span replaces this element
+   * entirely on `onError`, but a fraction of a frame can still show. */
+  display: block;
+}
+
+.runner-avatar--initials {
+  font-weight: 700;
+  color: #0a0b0d;
+  /* Reasonable default font size; scales roughly with the avatar size via
+   * the inline width/height. Override via specific surface rules if a
+   * given size needs a tighter ratio. */
+  font-size: calc(min(var(--avatar-initials-size, 12px), 14px));
+  text-transform: uppercase;
+}
