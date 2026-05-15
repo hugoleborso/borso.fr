@@ -80,7 +80,7 @@ describe('last-loop-lepin app stack', () => {
     );
   });
 
-  it('injects PIN_HASH from the operator-owned Secrets Manager value on every stage', () => {
+  it('injects PIN_HASH from the operator-owned SSM Parameter Store value on every stage', () => {
     const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
       const properties = resource.Properties;
       if (typeof properties !== 'object' || properties === null) return {};
@@ -101,9 +101,16 @@ describe('last-loop-lepin app stack', () => {
       expect(apiFn, `api function not found in ${stage} template`).toBeDefined();
       const variables = apiFn === undefined ? {} : readEnvVars(apiFn);
       expect(variables).toHaveProperty('PIN_HASH');
-      // Resolved at deploy time via `{{resolve:secretsmanager:...}}`; the
-      // synthesised value is a Fn::Join intrinsic, not a literal scrypt hash.
-      expect(JSON.stringify(variables.PIN_HASH)).toContain('last-loop-lepin/admin-pin-hash');
+      // Resolved at deploy time via `{{resolve:ssm:...}}`; the synthesised
+      // value is a Fn::Join intrinsic, not a literal scrypt hash. We assert
+      // both the dynamic-reference scheme AND the parameter path so anyone
+      // accidentally switching to ssm-secure (which CFN forbids in Lambda
+      // env vars) trips this test instead of failing at deploy time.
+      const serializedPinHash = JSON.stringify(variables.PIN_HASH);
+      expect(serializedPinHash).toContain('resolve:ssm:');
+      expect(serializedPinHash).toContain('/borso/last-loop-lepin/admin-pin-hash');
+      expect(serializedPinHash).not.toContain('resolve:ssm-secure');
+      expect(serializedPinHash).not.toContain('resolve:secretsmanager');
     }
   });
 
