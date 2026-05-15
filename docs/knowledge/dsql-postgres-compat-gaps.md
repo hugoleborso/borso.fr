@@ -129,6 +129,43 @@ connection via `connection: { search_path: schemaName }` in
 prefix, so the search_path is the only thing that decides which data
 the Lambda sees.
 
+## 10. `ALTER TABLE ADD COLUMN <type> NOT NULL DEFAULT <value>` is rejected on non-empty tables
+
+```
+ALTER TABLE ADD COLUMN with constraint not supported
+```
+
+The compact form that bundles `NOT NULL DEFAULT 'x'` into the same
+`ADD COLUMN` statement is rejected by DSQL when the target table is
+non-empty (the engine appears to refuse the implicit backfill that
+Postgres performs to satisfy the constraint). The local Postgres under
+`pnpm dev` accepts it without complaint, which is exactly the trap —
+the back-e2e suite passes, preview deploys fail. First observed on the
+preview deploy of PR #23 (`last-loop-lepin-pr-23`) on 2026-05-15 while
+migrating `loop_punches` for the runner self-punch feature.
+
+**Adaptation:** split into four statements, each separated by drizzle-kit's
+`--> statement-breakpoint` marker so the migration runner round-trips
+them independently (§3 forbids multi-DDL transactions). Canonical form:
+
+```sql
+ALTER TABLE "<table>" ADD COLUMN "<col>" <type>;
+--> statement-breakpoint
+UPDATE "<table>" SET "<col>" = '<default>' WHERE "<col>" IS NULL;
+--> statement-breakpoint
+ALTER TABLE "<table>" ALTER COLUMN "<col>" SET NOT NULL;
+--> statement-breakpoint
+ALTER TABLE "<table>" ALTER COLUMN "<col>" SET DEFAULT '<default>';
+```
+
+The order matters: backfill before SET NOT NULL (otherwise NOT NULL
+trips on the still-NULL rows). Adding SET DEFAULT last means future
+INSERTs without the column still get the default. Drizzle-kit emits
+the compact form by default — hand-edit the generated migration to
+apply the fallback before pushing. See
+`apps/last-loop-lepin/api/src/database/migrations/0001_self_punch_columns.sql`
+for the worked example.
+
 ## Symptoms quick-table
 
 If you see this error… | …it's this divergence
@@ -141,6 +178,7 @@ If you see this error… | …it's this divergence
 - `WHERE not supported for CREATE INDEX` → §6
 - `function pg_advisory_lock not supported` → §7
 - `not authorized to perform: dsql:DbConnectAdmin` → §8
+- `ALTER TABLE ADD COLUMN with constraint not supported` → §10
 
 ## See also
 
