@@ -11,9 +11,9 @@ const selfPunchResponseSchema = z.object({
     id: z.string(),
     loopIndex: z.number(),
     source: z.literal('self'),
-    clientLat: z.number(),
-    clientLng: z.number(),
-    distanceFromCenterM: z.number(),
+    clientLat: z.number().nullable(),
+    clientLng: z.number().nullable(),
+    distanceFromCenterM: z.number().nullable(),
     userAgent: z.string().nullable(),
   }),
 });
