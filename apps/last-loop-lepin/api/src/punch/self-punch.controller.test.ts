@@ -67,18 +67,19 @@ describe('self-punch controller (public, no admin middleware)', () => {
     expect(body.punch.userAgent).toBe(TEST_USER_AGENT);
   });
 
-  it('rejects an out-of-zone POST with 400 out-of-zone, body never written', async () => {
+  it('accepts a POST without geo coordinates (geofence removed)', async () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
     const response = await postSelfPunch({
       editionSlug: 'lepin-2026',
       runnerSlug: 'alice',
-      clientLat: OUT_OF_ZONE_LAT,
-      clientLng: OUT_OF_ZONE_LNG,
+      clientLat: null,
+      clientLng: null,
       clientAccuracyM: null,
     });
-    expect(response.status).toBe(400);
-    const body = z.object({ error: z.literal('out-of-zone') }).parse(await response.json());
-    expect(body.error).toBe('out-of-zone');
+    expect(response.status).toBe(201);
+    const body = selfPunchResponseSchema.parse(await response.json());
+    expect(body.punch.source).toBe('self');
+    expect(body.punch.distanceFromCenterM).toBeNull();
   });
 
   it('rejects with 400 race-not-started before the race starts', async () => {

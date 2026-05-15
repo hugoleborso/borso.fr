@@ -119,23 +119,43 @@ describe('punch.service', () => {
     expect(punch.loopIndex).toBe(1);
   });
 
-  it('self-punch: rejects positions outside the 100 m geofence', async () => {
+  it('self-punch: records distance metadata when coordinates are provided (no longer used for rejection)', async () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
     const database = freshDatabase();
-    await expect(
-      registerSelfPunch(
-        database,
-        {
-          editionSlug: 'lepin-2026',
-          runnerSlug: 'alice',
-          clientLat: OUT_OF_ZONE.lat,
-          clientLng: OUT_OF_ZONE.lng,
-          clientAccuracyM: 8,
-        },
-        'ua',
-        new Date(),
-      ),
-    ).rejects.toMatchObject({ name: 'PunchRejectedError', reason: 'out-of-zone' });
+    const punch = await registerSelfPunch(
+      database,
+      {
+        editionSlug: 'lepin-2026',
+        runnerSlug: 'alice',
+        clientLat: OUT_OF_ZONE.lat,
+        clientLng: OUT_OF_ZONE.lng,
+        clientAccuracyM: 8,
+      },
+      'ua',
+      new Date(),
+    );
+    expect(punch.source).toBe('self');
+    expect(punch.distanceFromCenterM).not.toBeNull();
+  });
+
+  it('self-punch: accepts null coordinates (geoloc removed from the client flow)', async () => {
+    vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
+    const database = freshDatabase();
+    const punch = await registerSelfPunch(
+      database,
+      {
+        editionSlug: 'lepin-2026',
+        runnerSlug: 'alice',
+        clientLat: null,
+        clientLng: null,
+        clientAccuracyM: null,
+      },
+      'ua',
+      new Date(),
+    );
+    expect(punch.source).toBe('self');
+    expect(punch.distanceFromCenterM).toBeNull();
+    expect(punch.clientLat).toBeNull();
   });
 
   it('self-punch: rejects before the race starts', async () => {

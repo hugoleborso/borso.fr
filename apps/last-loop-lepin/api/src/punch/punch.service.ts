@@ -22,11 +22,9 @@ export class PunchNotFoundError extends Error {
   override readonly name = 'PunchNotFoundError';
 }
 
-export type PunchRejectExtendedReason = PunchRejectReason | 'out-of-zone';
-
 export class PunchRejectedError extends Error {
   override readonly name = 'PunchRejectedError';
-  constructor(public readonly reason: PunchRejectExtendedReason) {
+  constructor(public readonly reason: PunchRejectReason) {
     super(`punch rejected: ${reason}`);
   }
 }
@@ -86,24 +84,24 @@ export async function registerPunch(
   return punch;
 }
 
-const GEOFENCE_RADIUS_METERS = 100;
-
 export interface SelfPunchInput {
   readonly editionSlug: string;
   readonly runnerSlug: string;
-  readonly clientLat: number;
-  readonly clientLng: number;
+  readonly clientLat: number | null;
+  readonly clientLng: number | null;
   readonly clientAccuracyM: number | null;
 }
 
 /**
- * Runner-driven punch. Loads the edition, recomputes the great-circle
- * distance from the GPX start point (server-side guard, independent of any
- * client-side filter), rejects with `'out-of-zone'` past the geofence,
- * delegates to `validatePunchTiming` for the timing rules, then writes the
- * row with `source='self'` and the full metadata (lat, lng, accuracy,
- * distance, user agent). No IP captured — `userAgent` + coordinates are
- * the contestability surface, IP adds nothing on top (cf. spec Q.O.D. Q8).
+ * Runner-driven punch. Loads the edition; when both `clientLat` and
+ * `clientLng` are provided, records the great-circle distance from the
+ * GPX start point as observability metadata (no longer used as a
+ * rejection signal — the geofence check was removed per operator
+ * decision on 2026-05-15). Delegates to `validatePunchTiming` for the
+ * timing rules, then writes the row with `source='self'` and the
+ * available metadata. No IP captured — `userAgent` + coordinates are
+ * the contestability surface, IP adds nothing on top (cf. spec Q.O.D.
+ * Q8).
  */
 export async function registerSelfPunch(
   database: Database,
@@ -112,13 +110,13 @@ export async function registerSelfPunch(
   now: Date,
 ): Promise<LoopPunch> {
   const edition: RaceEdition = await getEdition(database, input.editionSlug);
-  const distanceFromCenter = haversineDistanceMeters(
-    { lat: input.clientLat, lng: input.clientLng },
-    edition.gpx.startLatLng,
-  );
-  if (distanceFromCenter >= GEOFENCE_RADIUS_METERS) {
-    throw new PunchRejectedError('out-of-zone');
-  }
+  const distanceFromCenter =
+    input.clientLat === null || input.clientLng === null
+      ? null
+      : haversineDistanceMeters(
+          { lat: input.clientLat, lng: input.clientLng },
+          edition.gpx.startLatLng,
+        );
 
   const existingPunches = await listPunchesForEdition(database, input.editionSlug);
   const runnerPunches = existingPunches.filter((punch) => punch.runnerSlug === input.runnerSlug);

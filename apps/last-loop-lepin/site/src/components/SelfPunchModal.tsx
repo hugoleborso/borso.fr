@@ -3,15 +3,22 @@
  * FSM. The orchestration is in `nextStep`; this file only renders the
  * current state and wires events to it.
  *
- * No `useEffect`: the geoloc dance is launched from the "Je suis là" click
- * handler, so React doesn't need to synchronise with anything (cf. CLAUDE.md
+ * No `useEffect`: the submit happens on the "Je suis là" click handler,
+ * so React doesn't need to synchronise with anything (cf. CLAUDE.md
  * "useEffect is a smell"). A single `useState<SelfPunchState>` is all we need.
+ *
+ * The geofence check used to gate this flow (request browser geolocation,
+ * compute haversine vs the GPX start, refuse outside 100 m). Operator
+ * disabled it on 2026-05-15 for the live retransmission — geolocation
+ * permission prompts blocked too many spectators. The server now accepts
+ * a punch with `clientLat=null` and the FSM's geo-* states became
+ * unreachable from this shell (kept in the util as dead branches in case
+ * the geofence comes back; deleting them would force a wider test
+ * rewrite for no real gain).
  */
 
 import { useState, type ReactElement } from 'react';
-import { haversineDistanceMeters } from '../domain/haversine.utils';
-import { requestPosition } from '../domain/requestPosition.utils';
-import type { LatLngDto, RankedRunnerDto } from '../domain/types';
+import type { RankedRunnerDto } from '../domain/types';
 import { RunnerAvatar } from './RunnerAvatar';
 import {
   initialSelfPunchState,
@@ -20,13 +27,11 @@ import {
   type SelfPunchState,
 } from './SelfPunchModal.utils';
 
-const GEOFENCE_RADIUS_METERS = 100;
 const MODAL_AVATAR_PX = 64;
 
 interface SelfPunchModalProps {
   readonly runner: RankedRunnerDto;
   readonly editionSlug: string;
-  readonly geofenceCenter: LatLngDto;
   readonly onClose: () => void;
   readonly onPunchPersisted: () => void;
 }
@@ -77,28 +82,9 @@ function formatBusinessMessage(reason: SelfPunchBusinessReason | undefined): str
   }
 }
 
-/**
- * Determine the per-browser reactivation guide for a denied geolocation.
- * Picks Safari iOS vs Chrome Android vs generic from the user agent — text
- * only, no DOM trickery, no `navigator.userAgentData` (which Safari doesn't
- * implement at the time of writing).
- */
-function reactivationHint(): string {
-  if (typeof navigator === 'undefined') return 'Active la localisation dans les réglages du navigateur.';
-  const userAgent = navigator.userAgent;
-  if (/iPhone|iPad|iPod/.test(userAgent)) {
-    return 'Réglages → Safari → Localisation → Autoriser.';
-  }
-  if (/Android/.test(userAgent)) {
-    return 'Cadenas dans la barre d\'adresse → Autorisations → Localisation.';
-  }
-  return 'Active la localisation dans les réglages du navigateur.';
-}
-
 export function SelfPunchModal({
   runner,
   editionSlug,
-  geofenceCenter,
   onClose,
   onPunchPersisted,
 }: SelfPunchModalProps) {
@@ -112,31 +98,6 @@ export function SelfPunchModal({
   async function handleConfirmTap(): Promise<void> {
     setState((current) => nextStep(current, { type: 'confirm-tap' }));
 
-    const positionResult = await requestPosition();
-    if (positionResult.kind === 'denied') {
-      setState((current) => nextStep(current, { type: 'geo-denied' }));
-      return;
-    }
-    if (positionResult.kind === 'timeout') {
-      setState((current) => nextStep(current, { type: 'geo-timeout' }));
-      return;
-    }
-    if (positionResult.kind === 'unavailable') {
-      setState((current) => nextStep(current, { type: 'geo-unavailable' }));
-      return;
-    }
-
-    const clientDistance = haversineDistanceMeters(
-      { lat: positionResult.position.lat, lng: positionResult.position.lng },
-      geofenceCenter,
-    );
-    if (clientDistance >= GEOFENCE_RADIUS_METERS) {
-      setState((current) =>
-        nextStep(current, { type: 'geo-out-of-zone', distanceMeters: clientDistance }),
-      );
-      return;
-    }
-
     try {
       const response = await fetch('/api/self-punches', {
         method: 'POST',
@@ -144,9 +105,9 @@ export function SelfPunchModal({
         body: JSON.stringify({
           editionSlug,
           runnerSlug: runner.runner.slug,
-          clientLat: positionResult.position.lat,
-          clientLng: positionResult.position.lng,
-          clientAccuracyM: positionResult.position.accuracy,
+          clientLat: null,
+          clientLng: null,
+          clientAccuracyM: null,
         }),
       });
       const body: unknown = await response.json().catch(() => null);
@@ -211,7 +172,7 @@ export function SelfPunchModal({
         );
       }
       case 'awaiting-geo':
-        return <p>Localisation en cours…</p>;
+        return <p>Envoi en cours…</p>;
       case 'success':
         return (
           <>
@@ -219,20 +180,6 @@ export function SelfPunchModal({
               Boucle <strong>{state.validatedLoopIndex ?? '?'}</strong> validée !
             </p>
             <button type="button" className="btn btn-primary" onClick={onClose}>
-              Fermer
-            </button>
-          </>
-        );
-      case 'out-of-zone':
-        return (
-          <>
-            <p>
-              {state.distanceMeters === undefined
-                ? 'Tu es hors de la zone de pointage.'
-                : `Tu es à ${Math.round(state.distanceMeters)} m du point de pointage.`}{' '}
-              Le pointage n'est possible qu'à moins de 100 m.
-            </p>
-            <button type="button" className="btn" onClick={onClose}>
               Fermer
             </button>
           </>
@@ -249,22 +196,19 @@ export function SelfPunchModal({
             </button>
           </>
         );
+      case 'out-of-zone':
       case 'permission-denied':
-        return (
-          <>
-            <p>Active la localisation pour pointer.</p>
-            <p className="muted">{reactivationHint()}</p>
-            <button type="button" className="btn btn-primary" onClick={handleRetry}>
-              Réessayer
-            </button>
-          </>
-        );
       case 'timeout':
+        /* Geofence flow disabled on 2026-05-15; these FSM states are
+         * unreachable from the current shell but kept in the union so
+         * the switch stays exhaustive. If they ever fire (a stale
+         * client cache running an older path) we fall through to a
+         * generic close. */
         return (
           <>
-            <p>Impossible d'obtenir ta position. Réessaie.</p>
-            <button type="button" className="btn btn-primary" onClick={handleRetry}>
-              Réessayer
+            <p>Pointage interrompu. Réessaie.</p>
+            <button type="button" className="btn" onClick={onClose}>
+              Fermer
             </button>
           </>
         );

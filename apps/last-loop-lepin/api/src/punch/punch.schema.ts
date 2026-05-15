@@ -88,8 +88,8 @@ export const catchupPunchInputSchema = z.object({
 export const selfPunchInputSchema = z.object({
   editionSlug: editionSlugSchema,
   runnerSlug: runnerSlugSchema,
-  clientLat: z.number().min(-90).max(90),
-  clientLng: z.number().min(-180).max(180),
+  clientLat: z.number().min(-90).max(90).nullable(),
+  clientLng: z.number().min(-180).max(180).nullable(),
   clientAccuracyM: z.number().nonnegative().nullable(),
 });
 

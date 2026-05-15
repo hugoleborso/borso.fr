@@ -205,7 +205,6 @@ export function SpectatorPage() {
         <SelfPunchModal
           runner={selectedRunner}
           editionSlug={edition.slug}
-          geofenceCenter={edition.gpx.startLatLng}
           onClose={() => setSelectedRunner(null)}
           onPunchPersisted={() => {
             // The standings poll auto-refreshes every 2 s; nothing to do
