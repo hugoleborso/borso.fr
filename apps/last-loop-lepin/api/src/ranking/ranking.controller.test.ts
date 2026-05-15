@@ -19,6 +19,7 @@ const standingsResponseSchema = z.object({
         lastFinishedAt: z.string().nullable(),
       }),
     ),
+    fastestLap: z.array(z.object({ runnerSlug: z.string(), durationMs: z.number() })),
   }),
 });
 
@@ -87,5 +88,23 @@ describe('ranking controller', () => {
     expect(body.standings.ranked[0]?.status.kind).toBe('in-race');
     expect(body.standings.ranked[1]?.runner.slug).toBe('bob');
     expect(body.standings.ranked[1]?.status.kind).toBe('dnf');
+  });
+
+  it('surfaces fastestLap on the response body and matches the seeded record holder', async () => {
+    // Alice loop 1 = 55 min, Bob loop 1 = 58 min → Alice holds at 55 min.
+    const database = freshDatabase();
+    await truncateAllTables(database);
+    await insertEdition(database, makeEdition({ status: 'live' }));
+    await insertRunner(database, makeRunner('alice'));
+    await insertRunner(database, makeRunner('bob'));
+    await insertPunch(database, makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
+    await insertPunch(database, makePunch('bob', 1, '2026-09-19T06:58:00+02:00'));
+
+    vi.setSystemTime(new Date('2026-09-19T07:30:00+02:00'));
+    const response = await app.request('/api/standings/lepin-2026');
+    const body = standingsResponseSchema.parse(await response.json());
+    expect(body.standings.fastestLap).toEqual([
+      { runnerSlug: 'alice', durationMs: 55 * 60_000 },
+    ]);
   });
 });

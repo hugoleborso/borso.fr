@@ -179,7 +179,13 @@ export function SpectatorPage() {
           {isLive ? <span className="live-pill">Live</span> : null}
         </div>
         <div className="card-body flush">
-          <Leaderboard ranked={standings?.ranked ?? []} onChipSelect={setSelectedRunner} />
+          <Leaderboard
+            ranked={standings?.ranked ?? []}
+            fastestLapSlugs={
+              new Set((standings?.fastestLap ?? []).map((entry) => entry.runnerSlug))
+            }
+            onChipSelect={setSelectedRunner}
+          />
         </div>
       </div>
       {selectedRunner === null ? null : (

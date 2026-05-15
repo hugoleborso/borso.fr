@@ -80,4 +80,13 @@ export interface StandingsDto {
   readonly computedAt: string;
   readonly raceEnded: boolean;
   readonly ranked: readonly RankedRunnerDto[];
+  /**
+   * Edition record-holder(s) for the fastest single loop. Empty when no
+   * loop has been closed; length ≥ 2 means a millisecond-tie between
+   * distinct runners (every matching chip is decorated by the front).
+   */
+  readonly fastestLap: ReadonlyArray<{
+    readonly runnerSlug: string;
+    readonly durationMs: number;
+  }>;
 }

@@ -58,8 +58,15 @@ async function fetchOnce(editionSlug: string): Promise<void> {
   const entry = ensureEntry(editionSlug);
   try {
     const response = await apiClient.getStandings(editionSlug);
+    // Normalise the deploy-gap optional: the server may temporarily omit
+    // `fastestLap` during the rollout window, which Zod parses as
+    // `undefined`. Pin it to `[]` here so downstream consumers always see
+    // an array (`StandingsDto.fastestLap` is non-optional).
     entry.snapshot = {
-      standings: response.standings,
+      standings: {
+        ...response.standings,
+        fastestLap: response.standings.fastestLap ?? [],
+      },
       mostRecentCorrectionAt: response.mostRecentCorrectionAt ?? null,
       error: null,
     };

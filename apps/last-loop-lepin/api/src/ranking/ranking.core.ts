@@ -18,6 +18,7 @@ import type { RaceEdition } from '../edition/edition.types';
 import { lastLoopDurationMs } from '../punch/punch.core';
 import type { LoopPunch, ManualDnf } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
+import { fastestLap } from './fastest-lap.core';
 import type { RankedRunner, RunnerStatus, Standings } from './ranking.types';
 
 interface RunnerProgress {
@@ -166,5 +167,6 @@ export function computeStandings(
     computedAt: now,
     raceEnded: isRaceEndReached(edition, now) || inRaceCount <= 1,
     ranked,
+    fastestLap: fastestLap(edition, validPunches),
   };
 }

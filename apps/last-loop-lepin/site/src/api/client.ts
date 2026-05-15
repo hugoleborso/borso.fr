@@ -67,6 +67,14 @@ const standingsSchema = z.object({
   computedAt: z.string(),
   raceEnded: z.boolean(),
   ranked: z.array(rankedRunnerSchema),
+  // Absorb the deploy gap between server shipping the field and client
+  // reading it: an older server response that omits the key parses to
+  // `fastestLap: []`. The infer-to-`T | undefined` shape that bleeds out
+  // of `z.object` is normalised to a guaranteed-array at the snapshot
+  // construction site (see `useStandingsPoll.ts`).
+  fastestLap: z
+    .array(z.object({ runnerSlug: z.string(), durationMs: z.number() }))
+    .optional(),
 });
 
 const editionEnvelopeSchema = z.object({ edition: raceEditionSchema });

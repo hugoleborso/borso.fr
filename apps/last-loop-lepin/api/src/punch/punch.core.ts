@@ -51,7 +51,7 @@ export function validatePunchTiming(
 }
 
 /**
- * Time the runner spent on their last completed loop, in milliseconds.
+ * Time spent on a single loop, in milliseconds.
  *
  * Backyard rule: every loop starts on the top of the hour. A runner who
  * clears their loop early waits at the corral until the next top, then
@@ -62,9 +62,23 @@ export function validatePunchTiming(
  * not the wall-clock gap between two consecutive punches (which counts
  * the corral rest period too).
  *
- * Returns `null` when the runner has no punch yet or when their last
- * punch lands before the loop's top-of-hour boundary (clock skew /
- * pre-race punches recorded for testing).
+ * Returns `null` when the punch lands before its loop's top-of-hour
+ * boundary (clock skew / pre-race punches recorded for testing).
+ *
+ * Shared between `lastLoopDurationMs` (here) and `fastestLap` (in
+ * `ranking/fastest-lap.core.ts`) — the formula is defined exactly once.
+ */
+export function loopDurationMs(edition: RaceEdition, punch: LoopPunch): number | null {
+  const intervalMs = edition.intervalMinutes * 60_000;
+  const loopStartMs = edition.startsAt.getTime() + (punch.loopIndex - 1) * intervalMs;
+  const elapsed = punch.finishedAt.getTime() - loopStartMs;
+  return elapsed >= 0 ? elapsed : null;
+}
+
+/**
+ * Time the runner spent on their last completed loop, in milliseconds.
+ * Returns `null` when the runner has no punch yet, or when the underlying
+ * `loopDurationMs` for their last punch is `null`.
  */
 export function lastLoopDurationMs(
   edition: RaceEdition,
@@ -80,9 +94,6 @@ export function lastLoopDurationMs(
     .reduce<LoopPunch | null>((_, punch) => punch, null);
 
   if (lastPunch === null) return null;
-  const intervalMs = edition.intervalMinutes * 60_000;
-  const loopStartMs = edition.startsAt.getTime() + (lastPunch.loopIndex - 1) * intervalMs;
-  const elapsed = lastPunch.finishedAt.getTime() - loopStartMs;
-  return elapsed >= 0 ? elapsed : null;
+  return loopDurationMs(edition, lastPunch);
 }
 
