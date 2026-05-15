@@ -13,3 +13,9 @@ coverage/
 *.log
 .DS_Store
 .cache/
+
+# Sub-agent isolated worktrees (Agent tool with `isolation: worktree`).
+# Each agent gets its own .claude/worktrees/agent-<id>/ checkout that is
+# auto-cleaned at the end of the agent run; we don't want git to track them
+# while they exist.
+.claude/worktrees/
