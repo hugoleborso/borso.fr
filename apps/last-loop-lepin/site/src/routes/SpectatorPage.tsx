@@ -152,58 +152,53 @@ export function SpectatorPage() {
         </div>
       ) : null}
       <CorrectionBanner correctedAt={mostRecentCorrection} />
+      {/* 2×2 grid via `grid-template-areas`: row 1 = countdown + trace
+          (natural height of the countdown), row 2 = classement + profile
+          (grows to fill the remaining viewport via `flex: 1`). Row tops
+          align across columns. */}
       <div className="spectator-layout">
-        {/* Left column owns the headline content for retransmission: the
-            countdown (when does the next top horaire fire?) on top, then
-            the classement filling the rest. The right column is a
-            separate flow — the two columns have no shared heights, so a
-            long classement does not push the profile down. */}
-        <div className="spectator-col-main">
-          <div className="card countdown-card">
-            <div className="card-head">
-              <h2 className="card-title">Prochain top horaire</h2>
-              <span className="muted mono">{edition.displayName}</span>
-            </div>
-            <div className="card-body col">
-              <Countdown targetEpochMs={upcomingBoundary} label="" />
-              <InRaceCounter ranked={standings?.ranked ?? []} />
-            </div>
+        <div className="card countdown-card">
+          <div className="card-head">
+            <h2 className="card-title">Prochain top horaire</h2>
+            <span className="muted mono">{edition.displayName}</span>
           </div>
-          <div className="card classement-card">
-            <div className="card-head">
-              <h2 className="card-title">Classement</h2>
-              {isLive ? <span className="live-pill">Live</span> : null}
-            </div>
-            <div className="card-body flush">
-              <Leaderboard
-                ranked={standings?.ranked ?? []}
-                fastestLapSlugs={
-                  new Set((standings?.fastestLap ?? []).map((entry) => entry.runnerSlug))
-                }
-                onChipSelect={setSelectedRunner}
-              />
-            </div>
+          <div className="card-body col">
+            <Countdown targetEpochMs={upcomingBoundary} label="" />
+            <InRaceCounter ranked={standings?.ranked ?? []} />
           </div>
         </div>
-        <div className="spectator-col-side">
-          <div className="card map-card">
-            <div className="card-head">
-              <h2 className="card-title">Tracé</h2>
-              <span className="muted mono">
-                {standings === null ? '' : `${standings.ranked.filter((entry) => entry.status.kind === 'in-race').length} en course`}
-              </span>
-            </div>
-            <CourseMap edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
+        <div className="card map-card">
+          <div className="card-head">
+            <h2 className="card-title">Tracé</h2>
+            <span className="muted mono">
+              {standings === null ? '' : `${standings.ranked.filter((entry) => entry.status.kind === 'in-race').length} en course`}
+            </span>
           </div>
-          <div className="card profile-card">
-            <div className="card-head">
-              <h2 className="card-title">Profil</h2>
-              <span className="muted mono">
-                {Math.round(edition.gpx.elevationGainMeters)} m D+
-              </span>
-            </div>
-            <ElevationProfile edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
+          <CourseMap edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
+        </div>
+        <div className="card classement-card">
+          <div className="card-head">
+            <h2 className="card-title">Classement</h2>
+            {isLive ? <span className="live-pill">Live</span> : null}
           </div>
+          <div className="card-body flush">
+            <Leaderboard
+              ranked={standings?.ranked ?? []}
+              fastestLapSlugs={
+                new Set((standings?.fastestLap ?? []).map((entry) => entry.runnerSlug))
+              }
+              onChipSelect={setSelectedRunner}
+            />
+          </div>
+        </div>
+        <div className="card profile-card">
+          <div className="card-head">
+            <h2 className="card-title">Profil</h2>
+            <span className="muted mono">
+              {Math.round(edition.gpx.elevationGainMeters)} m D+
+            </span>
+          </div>
+          <ElevationProfile edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
         </div>
       </div>
       {selectedRunner === null ? null : (

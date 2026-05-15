@@ -8,8 +8,14 @@
  * masonry`. Column breaks aren't aligned across rows — that's the point.
  */
 .leaderboard-chips {
-  column-width: 220px;
-  column-gap: var(--d-1);
+  /* `column-width: 170` packs ~5 columns into the classement card at the
+   * typical retransmission viewport (1400 px → main column ~900 px). At
+   * 4 chips per column that gives 20 chips visible without scroll,
+   * which is the design target. Wider viewports get more columns
+   * automatically; narrower ones drop to fewer columns and the card
+   * body scrolls vertically. */
+  column-width: 170px;
+  column-gap: var(--d-2);
   column-fill: balance;
   padding: var(--d-2) var(--d-3);
 }
@@ -23,8 +29,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--d-1);
-  padding: var(--d-1) var(--d-2);
-  margin-bottom: var(--d-1);
+  padding: var(--d-2) var(--d-3);
+  margin-bottom: var(--d-2);
   background: var(--bg-elev-2);
   border: 1px solid var(--line);
   border-radius: var(--radius-2);
@@ -116,33 +122,51 @@
   min-height: 0;
 }
 
-/* Top-of-page layout: two independent columns. The main column (~2/3)
- * stacks the countdown on top of the classement; the side column
- * (~1/3) stacks the map on top of the elevation profile. Each column
- * is a `flex-direction: column` flow, so a tall classement does NOT
- * push the profile down — the two columns scroll past each other
- * naturally. `minmax(0, …)` on the side column lets the cell shrink
- * under its content width — without the `0` floor the map's Leaflet
- * container (intrinsically `width: 100 %` of its grid cell) would push
- * the column wider than the viewport. Stacks to a single column under
- * 900 px so the spectator can scan everything on a phone. */
+/* Top-of-page layout: 2×2 grid with named areas so row tops align
+ * across columns. Row 1 takes the natural height of the countdown
+ * (the trace card matches it). Row 2 grows (1fr) and the layout
+ * itself is `flex: 1` inside `.main` so the spectator page fills
+ * the viewport — the classement and the profile each take half of
+ * the remaining vertical space. `minmax(0, …)` on the side column
+ * lets the cell shrink under its content width: without the `0`
+ * floor the map's Leaflet container would push the column wider
+ * than the viewport. Stacks to a single column under 900 px. */
 .spectator-layout {
   display: grid;
   grid-template-columns: minmax(280px, 2fr) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'countdown trace'
+    'classement profile';
   gap: var(--d-4);
-  align-items: start;
+  flex: 1;
+  min-height: 0;
 }
 
-.spectator-col-main,
-.spectator-col-side {
-  display: flex;
-  flex-direction: column;
-  gap: var(--d-4);
-  min-width: 0;
+.spectator-layout .countdown-card {
+  grid-area: countdown;
+}
+.spectator-layout .map-card {
+  grid-area: trace;
+}
+.spectator-layout .classement-card {
+  grid-area: classement;
+  min-height: 0;
+}
+.spectator-layout .profile-card {
+  grid-area: profile;
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
   .spectator-layout {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas:
+      'countdown'
+      'trace'
+      'profile'
+      'classement';
+    flex: initial;
   }
 }
