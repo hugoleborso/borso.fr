@@ -1,13 +1,32 @@
 import { integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { isMonotonicZeroToOne } from './edition.schema.utils';
 import type { EditionStatus, GpxMetadata } from './edition.types';
 
 const latLngSchema = z.object({ lat: z.number(), lng: z.number() });
 
+const pointTimeFractionsSchema = z
+  .array(z.number())
+  .refine(isMonotonicZeroToOne, {
+    message: 'pointTimeFractions must be strictly monotonic, start at 0 and end at 1',
+  });
+
+const trackJsonSchema = z
+  .object({
+    points: z.array(latLngSchema),
+    pointTimeFractions: pointTimeFractionsSchema.optional(),
+  })
+  .refine(
+    (trackJson) =>
+      trackJson.pointTimeFractions === undefined ||
+      trackJson.pointTimeFractions.length === trackJson.points.length,
+    { message: 'pointTimeFractions.length must match points.length' },
+  );
+
 export const gpxMetadataSchema: z.ZodType<GpxMetadata> = z.object({
   distanceMeters: z.number(),
   elevationGainMeters: z.number(),
-  trackJson: z.object({ points: z.array(latLngSchema) }),
+  trackJson: trackJsonSchema,
   startLatLng: latLngSchema,
 });
 

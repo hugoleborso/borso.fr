@@ -42,4 +42,47 @@ describe('edition.repository', () => {
     const reloaded = await findEditionBySlug(database, 'lepin-2026');
     expect(reloaded?.status).toBe('live');
   });
+
+  it('persists pointTimeFractions when present and round-trips it', async () => {
+    const database = freshDatabase();
+    await insertEdition(
+      database,
+      makeEdition({
+        slug: 'lepin-ttf-roundtrip',
+        gpx: {
+          distanceMeters: 5_800,
+          elevationGainMeters: 250,
+          trackJson: {
+            points: [
+              { lat: 45.55, lng: 5.78 },
+              { lat: 45.555, lng: 5.785 },
+              { lat: 45.56, lng: 5.79 },
+            ],
+            pointTimeFractions: [0, 0.4, 1],
+          },
+          startLatLng: { lat: 45.55, lng: 5.78 },
+        },
+      }),
+    );
+    const found = await findEditionBySlug(database, 'lepin-ttf-roundtrip');
+    expect(found?.gpx.trackJson.pointTimeFractions).toEqual([0, 0.4, 1]);
+  });
+
+  it('absent pointTimeFractions stays undefined after a write→read cycle (no `null` leak)', async () => {
+    const database = freshDatabase();
+    await insertEdition(
+      database,
+      makeEdition({
+        slug: 'lepin-ttf-absent',
+        gpx: {
+          distanceMeters: 5_800,
+          elevationGainMeters: 250,
+          trackJson: { points: [{ lat: 45.55, lng: 5.78 }] },
+          startLatLng: { lat: 45.55, lng: 5.78 },
+        },
+      }),
+    );
+    const found = await findEditionBySlug(database, 'lepin-ttf-absent');
+    expect(found?.gpx.trackJson.pointTimeFractions).toBeUndefined();
+  });
 });

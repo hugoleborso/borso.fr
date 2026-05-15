@@ -11,7 +11,16 @@ export type EditionStatus = 'setup' | 'live' | 'finished';
 export interface GpxMetadata {
   readonly distanceMeters: number;
   readonly elevationGainMeters: number;
-  readonly trackJson: { readonly points: ReadonlyArray<{ readonly lat: number; readonly lng: number }> };
+  readonly trackJson: {
+    readonly points: ReadonlyArray<{ readonly lat: number; readonly lng: number }>;
+    /**
+     * Cumulative normalised time fractions, one per `points` entry,
+     * strictly monotonic from `0` to `1`. Optional — absent (omitted JSON
+     * key) when the source GPX lacked per-`<trkpt>` `<time>` data, which
+     * triggers the silent linear-projection fallback on the front.
+     */
+    readonly pointTimeFractions?: ReadonlyArray<number>;
+  };
   readonly startLatLng: { readonly lat: number; readonly lng: number };
 }
 

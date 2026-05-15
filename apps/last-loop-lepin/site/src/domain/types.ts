@@ -22,7 +22,16 @@ export interface RaceEditionDto {
   readonly gpx: {
     readonly distanceMeters: number;
     readonly elevationGainMeters: number;
-    readonly trackJson: { readonly points: ReadonlyArray<{ readonly lat: number; readonly lng: number }> };
+    readonly trackJson: {
+      readonly points: ReadonlyArray<{ readonly lat: number; readonly lng: number }>;
+      /**
+       * Cumulative normalised time fractions, one per `points` entry,
+       * strictly monotonic from `0` to `1`. Absent when the server-side
+       * GPX parser had no per-trkpt timing data — the avatar projection
+       * then falls back to the linear time→distance algorithm.
+       */
+      readonly pointTimeFractions?: ReadonlyArray<number>;
+    };
     readonly startLatLng: { readonly lat: number; readonly lng: number };
   };
   readonly status: EditionStatus;

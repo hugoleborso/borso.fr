@@ -28,7 +28,10 @@ const raceEditionSchema = z.object({
   gpx: z.object({
     distanceMeters: z.number(),
     elevationGainMeters: z.number(),
-    trackJson: z.object({ points: z.array(latLngSchema) }),
+    trackJson: z.object({
+      points: z.array(latLngSchema),
+      pointTimeFractions: z.array(z.number()).optional(),
+    }),
     startLatLng: latLngSchema,
   }),
   status: z.enum(['setup', 'live', 'finished']),
@@ -79,6 +82,12 @@ const punchSchema = z.object({
   finishedAt: z.string(),
   correctedAt: z.string().nullable(),
   voidedAt: z.string().nullable(),
+  source: z.enum(['admin', 'self']),
+  clientLat: z.number().nullable(),
+  clientLng: z.number().nullable(),
+  clientAccuracyM: z.number().nullable(),
+  distanceFromCenterM: z.number().nullable(),
+  userAgent: z.string().nullable(),
 });
 
 const punchesListSchema = z.object({ punches: z.array(punchSchema) });
