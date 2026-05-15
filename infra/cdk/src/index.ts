@@ -23,6 +23,9 @@ export type { DsqlClusterStackProps } from './constructs/dsql-cluster-stack.js';
 export { PreviewableApp } from './constructs/previewable-app.js';
 export type { PreviewableAppProps } from './constructs/previewable-app.js';
 
+export { PhotosCdn } from './constructs/photos-cdn.js';
+export type { PhotosCdnProps } from './constructs/photos-cdn.js';
+
 export type { Stage } from './internal/naming.js';
 
 // Env-validation helpers for app CDK entrypoints (`apps/<x>/bin/app.ts`).
