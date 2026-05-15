@@ -1,4 +1,12 @@
-import { integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  doublePrecision,
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { editionSlugSchema } from '../edition/edition.schema';
 import { runnerSlugSchema } from '../runner/runner.schema';
@@ -24,6 +32,18 @@ export const loopPunchesTable = pgTable('loop_punches', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
     .notNull()
     .defaultNow(),
+  // Self-punch metadata. `source` is the only NOT NULL — every row belongs to
+  // either the admin or the runner-driven flow. The geo columns and the user
+  // agent are nullable because the admin-punch path doesn't carry them; an
+  // admin row reads as `source='admin', client_lat=NULL, ...`. No IP column
+  // by design (cf. spec Q.O.D. Q8 option (d)): an IP doesn't add contestation
+  // value on top of the user agent + coordinates and attracts privacy attention.
+  source: text('source').notNull().default('admin'),
+  clientLat: doublePrecision('client_lat'),
+  clientLng: doublePrecision('client_lng'),
+  clientAccuracyM: doublePrecision('client_accuracy_m'),
+  distanceFromCenterM: doublePrecision('distance_from_center_m'),
+  userAgent: text('user_agent'),
 });
 
 export const manualDnfsTable = pgTable(
@@ -56,6 +76,14 @@ export const catchupPunchInputSchema = z.object({
   editionSlug: editionSlugSchema,
   runnerSlug: runnerSlugSchema,
   loopIndex: z.number().int().positive(),
+});
+
+export const selfPunchInputSchema = z.object({
+  editionSlug: editionSlugSchema,
+  runnerSlug: runnerSlugSchema,
+  clientLat: z.number().min(-90).max(90),
+  clientLng: z.number().min(-180).max(180),
+  clientAccuracyM: z.number().nonnegative().nullable(),
 });
 
 export const createDnfInputSchema = z.object({

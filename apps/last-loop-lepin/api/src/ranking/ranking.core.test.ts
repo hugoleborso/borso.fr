@@ -41,6 +41,12 @@ function punch(
     finishedAt: new Date(finishedAtIso),
     correctedAt: null,
     voidedAt: voidedAtIso === null ? null : new Date(voidedAtIso),
+    source: 'admin',
+    clientLat: null,
+    clientLng: null,
+    clientAccuracyM: null,
+    distanceFromCenterM: null,
+    userAgent: null,
   };
 }
 

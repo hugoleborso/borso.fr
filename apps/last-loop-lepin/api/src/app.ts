@@ -16,6 +16,7 @@ import { authRouter } from './auth/auth.controller';
 import { editionRouter, adminEditionRouter } from './edition/edition.controller';
 import { mediaRouter } from './media/media.controller';
 import { adminPunchRouter } from './punch/punch.controller';
+import { selfPunchRouter } from './punch/self-punch.controller';
 import { rankingRouter } from './ranking/ranking.controller';
 import { runnerRouter, adminRunnerRouter } from './runner/runner.controller';
 
@@ -31,6 +32,7 @@ export function createApp(): Hono {
   app.route('/api/editions', editionRouter);
   app.route('/api', runnerRouter);
   app.route('/api', rankingRouter);
+  app.route('/api', selfPunchRouter);
 
   app.route('/api/admin/auth', authRouter);
   app.route('/api/admin/editions', adminEditionRouter);

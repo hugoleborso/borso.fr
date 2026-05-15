@@ -3,6 +3,7 @@ import type { Database } from '../database/client';
 import { loopIndexAt } from '../edition/edition.core';
 import { getEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
+import { haversineDistanceMeters } from '../helpers/geo/haversine.utils';
 import { validatePunchTiming, type PunchRejectReason } from './punch.core';
 import {
   PunchConflictError,
@@ -21,9 +22,11 @@ export class PunchNotFoundError extends Error {
   override readonly name = 'PunchNotFoundError';
 }
 
+export type PunchRejectExtendedReason = PunchRejectReason | 'out-of-zone';
+
 export class PunchRejectedError extends Error {
   override readonly name = 'PunchRejectedError';
-  constructor(public readonly reason: PunchRejectReason) {
+  constructor(public readonly reason: PunchRejectExtendedReason) {
     super(`punch rejected: ${reason}`);
   }
 }
@@ -65,6 +68,12 @@ export async function registerPunch(
     finishedAt: now,
     correctedAt: null,
     voidedAt: null,
+    source: 'admin',
+    clientLat: null,
+    clientLng: null,
+    clientAccuracyM: null,
+    distanceFromCenterM: null,
+    userAgent: null,
   };
 
   // No DB-level uniqueness on (edition_slug, runner_slug, loop_index)
@@ -73,6 +82,77 @@ export async function registerPunch(
   // flow. The race window between `validatePunchTiming` and `insertPunch`
   // stays narrow in practice (single tap-in per runner from one phone);
   // if it ever matters, the next layer is a `SELECT ... FOR UPDATE`.
+  await insertPunch(database, punch);
+  return punch;
+}
+
+const GEOFENCE_RADIUS_METERS = 100;
+
+export interface SelfPunchInput {
+  readonly editionSlug: string;
+  readonly runnerSlug: string;
+  readonly clientLat: number;
+  readonly clientLng: number;
+  readonly clientAccuracyM: number | null;
+}
+
+/**
+ * Runner-driven punch. Loads the edition, recomputes the great-circle
+ * distance from the GPX start point (server-side guard, independent of any
+ * client-side filter), rejects with `'out-of-zone'` past the geofence,
+ * delegates to `validatePunchTiming` for the timing rules, then writes the
+ * row with `source='self'` and the full metadata (lat, lng, accuracy,
+ * distance, user agent). No IP captured — `userAgent` + coordinates are
+ * the contestability surface, IP adds nothing on top (cf. spec Q.O.D. Q8).
+ */
+export async function registerSelfPunch(
+  database: Database,
+  input: SelfPunchInput,
+  userAgent: string | null,
+  now: Date,
+): Promise<LoopPunch> {
+  const edition: RaceEdition = await getEdition(database, input.editionSlug);
+  const distanceFromCenter = haversineDistanceMeters(
+    { lat: input.clientLat, lng: input.clientLng },
+    edition.gpx.startLatLng,
+  );
+  if (distanceFromCenter >= GEOFENCE_RADIUS_METERS) {
+    throw new PunchRejectedError('out-of-zone');
+  }
+
+  const existingPunches = await listPunchesForEdition(database, input.editionSlug);
+  const runnerPunches = existingPunches.filter((punch) => punch.runnerSlug === input.runnerSlug);
+
+  const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
+  if (!validation.ok) {
+    if (validation.reason === 'already-punched-this-loop') {
+      const conflictLoop = Math.max(1, loopIndexAt(edition, now));
+      const existing = await findActivePunchForLoop(
+        database,
+        input.editionSlug,
+        input.runnerSlug,
+        conflictLoop,
+      );
+      if (existing !== null) throw new PunchConflictError(existing);
+    }
+    throw new PunchRejectedError(validation.reason);
+  }
+
+  const punch: LoopPunch = {
+    id: randomUUID(),
+    editionSlug: input.editionSlug,
+    runnerSlug: input.runnerSlug,
+    loopIndex: validation.loopIndex,
+    finishedAt: now,
+    correctedAt: null,
+    voidedAt: null,
+    source: 'self',
+    clientLat: input.clientLat,
+    clientLng: input.clientLng,
+    clientAccuracyM: input.clientAccuracyM,
+    distanceFromCenterM: distanceFromCenter,
+    userAgent,
+  };
   await insertPunch(database, punch);
   return punch;
 }
@@ -172,6 +252,12 @@ export async function catchupPunch(
     finishedAt: new Date(startMs + input.loopIndex * intervalMs - 1),
     correctedAt: now,
     voidedAt: null,
+    source: 'admin',
+    clientLat: null,
+    clientLng: null,
+    clientAccuracyM: null,
+    distanceFromCenterM: null,
+    userAgent: null,
   };
   await insertPunch(database, punch);
   await deleteManualDnf(database, input.editionSlug, input.runnerSlug);

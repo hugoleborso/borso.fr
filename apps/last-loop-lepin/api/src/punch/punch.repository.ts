@@ -1,7 +1,50 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import type { Database } from '../database/client';
 import { loopPunchesTable, manualDnfsTable } from './punch.schema';
-import type { LoopPunch, ManualDnf } from './punch.types';
+import type { LoopPunch, ManualDnf, PunchSource } from './punch.types';
+
+interface LoopPunchRow {
+  readonly id: string;
+  readonly editionSlug: string;
+  readonly runnerSlug: string;
+  readonly loopIndex: number;
+  readonly finishedAt: Date;
+  readonly correctedAt: Date | null;
+  readonly voidedAt: Date | null;
+  readonly source: string;
+  readonly clientLat: number | null;
+  readonly clientLng: number | null;
+  readonly clientAccuracyM: number | null;
+  readonly distanceFromCenterM: number | null;
+  readonly userAgent: string | null;
+}
+
+// The column is `text` in the SQL schema, so drizzle types it as `string`.
+// The app-level invariant is the two-element union — every row was written
+// by a code path that picked either `'admin'` or `'self'`. Treat anything
+// else as the safer default (`'admin'`) and surface it later via the audit
+// query, rather than crash a hot read.
+function narrowPunchSource(raw: string): PunchSource {
+  return raw === 'self' ? 'self' : 'admin';
+}
+
+function rowToLoopPunch(row: LoopPunchRow): LoopPunch {
+  return {
+    id: row.id,
+    editionSlug: row.editionSlug,
+    runnerSlug: row.runnerSlug,
+    loopIndex: row.loopIndex,
+    finishedAt: row.finishedAt,
+    correctedAt: row.correctedAt,
+    voidedAt: row.voidedAt,
+    source: narrowPunchSource(row.source),
+    clientLat: row.clientLat,
+    clientLng: row.clientLng,
+    clientAccuracyM: row.clientAccuracyM,
+    distanceFromCenterM: row.distanceFromCenterM,
+    userAgent: row.userAgent,
+  };
+}
 
 export class PunchConflictError extends Error {
   override readonly name = 'PunchConflictError';
@@ -19,6 +62,12 @@ export async function insertPunch(database: Database, punch: LoopPunch): Promise
     finishedAt: punch.finishedAt,
     correctedAt: punch.correctedAt,
     voidedAt: punch.voidedAt,
+    source: punch.source,
+    clientLat: punch.clientLat,
+    clientLng: punch.clientLng,
+    clientAccuracyM: punch.clientAccuracyM,
+    distanceFromCenterM: punch.distanceFromCenterM,
+    userAgent: punch.userAgent,
   });
 }
 
@@ -40,14 +89,19 @@ export async function findActivePunchForLoop(
       ),
     )
     .limit(1);
-  return rows[0] ?? null;
+  const first = rows[0];
+  return first === undefined ? null : rowToLoopPunch(first);
 }
 
 export async function listPunchesForEdition(
   database: Database,
   editionSlug: string,
 ): Promise<readonly LoopPunch[]> {
-  return database.select().from(loopPunchesTable).where(eq(loopPunchesTable.editionSlug, editionSlug));
+  const rows = await database
+    .select()
+    .from(loopPunchesTable)
+    .where(eq(loopPunchesTable.editionSlug, editionSlug));
+  return rows.map(rowToLoopPunch);
 }
 
 export async function findPunchById(database: Database, id: string): Promise<LoopPunch | null> {
@@ -56,7 +110,8 @@ export async function findPunchById(database: Database, id: string): Promise<Loo
     .from(loopPunchesTable)
     .where(eq(loopPunchesTable.id, id))
     .limit(1);
-  return rows[0] ?? null;
+  const first = rows[0];
+  return first === undefined ? null : rowToLoopPunch(first);
 }
 
 export async function markPunchCorrected(

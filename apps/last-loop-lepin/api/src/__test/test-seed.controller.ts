@@ -151,6 +151,12 @@ async function ensurePunch(runnerSlug: string, loopIndex: number, finishedAt: Da
     finishedAt,
     correctedAt: null,
     voidedAt: null,
+    source: 'admin',
+    clientLat: null,
+    clientLng: null,
+    clientAccuracyM: null,
+    distanceFromCenterM: null,
+    userAgent: null,
   });
 }
 

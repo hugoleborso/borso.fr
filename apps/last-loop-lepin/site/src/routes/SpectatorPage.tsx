@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { apiClient } from '../api/client';
 import { CorrectionBanner } from '../components/CorrectionBanner';
 import { Countdown } from '../components/Countdown';
 import { CourseMap } from '../components/CourseMap';
 import { EliminatedWall } from '../components/EliminatedWall';
 import { Leaderboard } from '../components/Leaderboard';
+import { SelfPunchModal } from '../components/SelfPunchModal';
 import { useResource } from '../data/useResource';
 import { useStandings } from '../data/useStandingsPoll';
 import type { RaceEditionDto, RankedRunnerDto } from '../domain/types';
@@ -109,6 +111,7 @@ export function SpectatorPage() {
   const allEditions = allEditionsState.value?.editions ?? [];
   const standingsState = useStandings(edition?.slug ?? '');
   const standings = standingsState.standings;
+  const [selectedRunner, setSelectedRunner] = useState<RankedRunnerDto | null>(null);
 
   if (editionState.error !== null) {
     return (
@@ -176,9 +179,21 @@ export function SpectatorPage() {
           {isLive ? <span className="live-pill">Live</span> : null}
         </div>
         <div className="card-body flush">
-          <Leaderboard ranked={standings?.ranked ?? []} />
+          <Leaderboard ranked={standings?.ranked ?? []} onChipSelect={setSelectedRunner} />
         </div>
       </div>
+      {selectedRunner === null ? null : (
+        <SelfPunchModal
+          runner={selectedRunner}
+          editionSlug={edition.slug}
+          geofenceCenter={edition.gpx.startLatLng}
+          onClose={() => setSelectedRunner(null)}
+          onPunchPersisted={() => {
+            // The standings poll auto-refreshes every 2 s; nothing to do
+            // here on success beyond letting the user dismiss the modal.
+          }}
+        />
+      )}
       <div className="card">
         <div className="card-head">
           <h2 className="card-title">Mur des éliminés</h2>

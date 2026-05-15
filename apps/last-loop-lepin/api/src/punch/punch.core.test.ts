@@ -29,6 +29,12 @@ function makePunch(loopIndex: number, finishedAtIso: string): LoopPunch {
     finishedAt: new Date(finishedAtIso),
     correctedAt: null,
     voidedAt: null,
+    source: 'admin',
+    clientLat: null,
+    clientLng: null,
+    clientAccuracyM: null,
+    distanceFromCenterM: null,
+    userAgent: null,
   };
 }
 

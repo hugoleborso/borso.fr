@@ -3,6 +3,12 @@ import type { RankedRunnerDto } from '../domain/types';
 
 interface LeaderboardProps {
   readonly ranked: readonly RankedRunnerDto[];
+  /**
+   * Tap on a chip — handled by the parent (typically the spectator page),
+   * which opens the self-punch modale. Omitted on screens where chips are
+   * not interactive (the retransmission display, e.g.).
+   */
+  readonly onChipSelect?: (entry: RankedRunnerDto) => void;
 }
 
 /**
@@ -27,7 +33,7 @@ function describeStatus(entry: RankedRunnerDto): string {
   return `DNF · B${entry.status.outAtLoop}`;
 }
 
-export function Leaderboard({ ranked }: LeaderboardProps) {
+export function Leaderboard({ ranked, onChipSelect }: LeaderboardProps) {
   if (ranked.length === 0) {
     return (
       <div className="card-body muted">Aucun coureur inscrit pour l'instant.</div>
@@ -43,11 +49,9 @@ export function Leaderboard({ ranked }: LeaderboardProps) {
       {ranked.map((entry) => {
         const avatar = initialsAvatar(entry.runner.displayName);
         const isDnf = entry.status.kind === 'dnf';
-        return (
-          <div
-            className={`leaderboard-chip${isDnf ? ' leaderboard-chip--dnf' : ''}`}
-            key={`${entry.runner.editionSlug}-${entry.runner.slug}`}
-          >
+        const isInteractive = onChipSelect !== undefined;
+        const chipContent = (
+          <>
             <div className="leaderboard-chip__head">
               <span className="leaderboard-chip__rank mono">
                 {entry.rank === 'ex-aequo' ? '=' : entry.rank}
@@ -63,6 +67,27 @@ export function Leaderboard({ ranked }: LeaderboardProps) {
               </span>
               <span className="leaderboard-chip__time mono">{formatLastEventTime(entry)}</span>
             </div>
+          </>
+        );
+        const chipClassName = `leaderboard-chip${isDnf ? ' leaderboard-chip--dnf' : ''}`;
+        const key = `${entry.runner.editionSlug}-${entry.runner.slug}`;
+        // `<button>` over `<div>` only when the parent gave us a handler.
+        // This keeps the retransmission screen (where no handler is supplied)
+        // structurally identical to before and prevents an inert button from
+        // catching keyboard focus on a non-tactile display.
+        return isInteractive ? (
+          <button
+            type="button"
+            className={chipClassName}
+            key={key}
+            data-testid="leaderboard-chip"
+            onClick={() => onChipSelect(entry)}
+          >
+            {chipContent}
+          </button>
+        ) : (
+          <div className={chipClassName} key={key}>
+            {chipContent}
           </div>
         );
       })}

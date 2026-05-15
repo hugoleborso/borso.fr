@@ -45,6 +45,8 @@ export interface RunnerDto {
   readonly bib: number | null;
 }
 
+export type PunchSourceDto = 'admin' | 'self';
+
 export interface LoopPunchDto {
   readonly id: string;
   readonly editionSlug: string;
@@ -53,6 +55,12 @@ export interface LoopPunchDto {
   readonly finishedAt: string;
   readonly correctedAt: string | null;
   readonly voidedAt: string | null;
+  readonly source: PunchSourceDto;
+  readonly clientLat: number | null;
+  readonly clientLng: number | null;
+  readonly clientAccuracyM: number | null;
+  readonly distanceFromCenterM: number | null;
+  readonly userAgent: string | null;
 }
 
 export type RunnerStatusDto =
