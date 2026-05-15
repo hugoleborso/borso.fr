@@ -1,11 +1,13 @@
 # Continuous integration: typecheck, lint, dead-code, coverage, build
 # on every PR and every push to main.
 #
-# Coverage is enforced for the infra packages (100% statements/branches/
-# functions/lines, gated by vitest config). Apps don't have coverage
-# scripts yet; add them per-app as test suites grow.
+# Coverage is enforced for the infra packages and for every `*.utils.ts`
+# / `*.core.ts` file (100% statements/branches/functions/lines, gated by
+# each workspace's vitest config — see CLAUDE.md "Clean code").
 #
-# The commitlint job runs only on PRs (it diffs against the base branch).
+# Three jobs: `build` (typecheck/lint/build/infra-tests/knip), `app-tests`
+# (vitest for every app, with a Postgres service for last-loop-lepin's
+# back-e2e gate), and `commitlint` (PR-only).
 
 name: ci
 
@@ -53,6 +55,50 @@ jobs:
       - run: pnpm --filter @borso/shared-infra test:coverage
       - run: pnpm -r build
       - run: pnpm exec knip
+
+  app-tests:
+    runs-on: ubuntu-latest
+    # Postgres for last-loop-lepin's back-e2e suite. The vitest globalSetup
+    # at apps/last-loop-lepin/test/setup-postgres.ts honours `DATABASE_URL`
+    # when set (skips testcontainers, uses this service instead). Local
+    # sandbox runs without Docker use scripts/local-postgres.sh — same
+    # contract, different boot mechanism.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lastloop
+          POSTGRES_PASSWORD: lastloop
+          POSTGRES_DB: lastloop
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lastloop"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://lastloop:lastloop@localhost:5432/lastloop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # `cdk/test/stack.test.ts` in last-loop-lepin imports `@borso/infra`
+      # via its package entry — the CDK constructs must be built first.
+      - run: pnpm --filter @borso/infra build
+      # Frontend-only apps: pure `*.utils.ts` coverage at 100 %.
+      - run: pnpm --filter @borso-app/borso-fr run test:coverage
+      - run: pnpm --filter @borso-app/borsouvertures run test:coverage
+      # last-loop-lepin: `core` project (no DB) + `back-e2e` project (uses
+      # the Postgres service above). Invoke vitest directly to bypass the
+      # `test` script's local-postgres.sh wrapper, which is for sandboxes
+      # without Docker — irrelevant here.
+      - run: pnpm --filter @borso-app/last-loop-lepin run test:core
+      - run: pnpm --filter @borso-app/last-loop-lepin exec vitest run --project back-e2e
 
   commitlint:
     if: github.event_name == 'pull_request'
