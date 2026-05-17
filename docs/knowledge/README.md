@@ -41,6 +41,7 @@ Two failure modes to watch for:
 
 - [`cdk-retain-buckets-orphan-on-failed-create.md`](./cdk-retain-buckets-orphan-on-failed-create.md) — `RemovalPolicy.RETAIN` on a literal-named bucket leaves an orphan if the first deploy of the stack fails post-bucket-create; manual `aws s3 rb` recovery.
 - [`cfn-rollback-blocks-redeploys.md`](./cfn-rollback-blocks-redeploys.md) — `UPDATE_ROLLBACK_IN_PROGRESS` rejects new deploys; a CI retry fails in ~40 s and looks like a code regression. Poll status, wait for terminal state, then trigger.
+- [`cfn-update-rollback-recovery.md`](./cfn-update-rollback-recovery.md) — recipe for unsticking a stack from `*_ROLLBACK_IN_PROGRESS`: wait → describe → continue-update-rollback with `--resources-to-skip` if needed. Includes the queued-`delete-stack`-races-CI-redeploy trap from PR #23.
 
 ### GitHub Actions
 
@@ -62,6 +63,7 @@ Two failure modes to watch for:
 - [`askuserquestion-tool-requires-question-field.md`](./askuserquestion-tool-requires-question-field.md) — `AskUserQuestion` rejects calls that omit the `question` field per item; `header` alone is not enough.
 - [`claude-code-session-attachments-on-disk.md`](./claude-code-session-attachments-on-disk.md) — chat attachments live at `/root/.claude/uploads/<session>/...` (uploads) and inside `/root/.claude/projects/<workspace>/<session>.jsonl` (inlined base64 images); extractable without an explicit tool.
 - [`pr-body-from-cc-ui-skips-skill-sections.md`](./pr-body-from-cc-ui-skips-skill-sections.md) — PRs opened from the Claude Code UI auto-generate a body that omits `## Visual evidence` and `## Validation gaps`; retrofit via `mcp__github__update_pull_request` after open.
+- [`github-mcp-pr-body-sanitizer.md`](./github-mcp-pr-body-sanitizer.md) — `mcp__github__create_pull_request` / `update_pull_request` strip `<details>` blocks, wrap `![]()` image markdown in backticks, and strip pseudo-HTML tags inside inline code. Use raw `<img>` tags + drop `<tag>` inside backticks.
 
 ### Local dev / Postgres
 
@@ -105,6 +107,15 @@ Two failure modes to watch for:
 ### Vendored React components
 
 - [`react-bits-galaxy-mouse-events-vs-touch.md`](./react-bits-galaxy-mouse-events-vs-touch.md) — react-bits Galaxy listens on `mousemove` only; touch is silently broken on mobile. Swap to `pointermove`/`pointerleave` + `touch-action: none` on the container; also set `pointer-events: auto` if a parent has `none`.
+
+### Frontend / React
+
+- [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](./rolled-our-own-data-fetching-instead-of-tanstack-query.md) — the cost of writing custom `useStandingsPoll` / `useResource` hooks instead of TanStack Query: each new bug found in our hooks (the PR #23 polling storm) would've been a library author's problem already. Migration sketch when the data layer needs to grow.
+- [`svg-preserveaspectratio-distorts-non-uniform.md`](./svg-preserveaspectratio-distorts-non-uniform.md) — `preserveAspectRatio="none"` distorts circles into ellipses when the container aspect ≠ viewBox aspect. Default (`xMidYMid meet`) preserves and letterboxes.
+
+### last-loop-lepin app domain
+
+- [`race-end-signal-duality.md`](./race-end-signal-duality.md) — two end-of-race signals (`edition.status === 'finished'` admin intent, `standings.raceEnded` engine truth) and which call sites should consume which.
 
 ### borsouvertures / chess libraries
 

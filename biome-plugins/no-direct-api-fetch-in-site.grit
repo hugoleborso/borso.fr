@@ -1,0 +1,45 @@
+// Forbid `fetch('/api/...', ...)` with a same-origin relative path in
+// site/ code. Previews and prod live on different origins from the
+// API: the front sits on a static-site CloudFront distribution that
+// serves only the bundle; the API has its own custom domain
+// (`*-api.preview.borso.fr` / `api.borso.fr`). A relative `/api/...`
+// URL therefore hits the static-site CDN, which returns 403 because
+// it has no behaviour for `/api/*`. The result is silent — the front
+// reads the body as an opaque error and falls back to a generic
+// message.
+//
+// The repo ships `apiClient` (apps/<x>/site/src/api/client.ts) which
+// prepends `VITE_API_BASE` via `resolveUrl`. Every fetch site MUST
+// go through it (or call `resolveUrl` directly for one-off cases
+// where the apiClient's Zod-parsed envelope is inconvenient).
+//
+// First observed in PR #23: `SelfPunchModal.tsx` called
+// `fetch('/api/self-punches', ...)` directly; the preview punch
+// returned a 403 from CloudFront and the FSM displayed "Tu n'es pas
+// inscrit comme coureur" for every attempt. See
+// docs/dantotsus/frontend-fetch-must-go-through-api-client.md.
+//
+// Allowed:
+//   apiClient.someMethod(...)
+//   fetch(resolveUrl('/api/...'), init)
+//   fetch('https://...', init)              // explicit absolute URL
+//   fetch(someVariableUrl, init)            // not a literal — out of scope
+//
+// Forbidden:
+//   fetch('/api/...', init)
+//   fetch(`/api/${dynamic}`, init)
+
+language js
+
+`fetch($url, $rest)` as $call where {
+  $url <: or {
+    `"/api/$_"`,
+    `'/api/$_'`,
+    `\`/api/$_\``,
+  },
+  register_diagnostic(
+    span = $url,
+    message = "Direct fetch() on a relative `/api/...` URL bypasses the apiClient and hits the static-site CloudFront (which has no /api/* behaviour) on preview / prod. Use `apiClient.<method>` for typed responses, or `fetch(resolveUrl('/api/...'), init)` for one-off raw fetches. See docs/dantotsus/frontend-fetch-must-go-through-api-client.md.",
+    severity = "error"
+  )
+}
