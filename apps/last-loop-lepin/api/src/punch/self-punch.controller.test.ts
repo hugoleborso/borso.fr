@@ -100,14 +100,13 @@ describe('self-punch controller (public, no admin middleware)', () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
     // Plant an admin punch via the same controller surface so the conflict is
     // observable end-to-end.
-    const { signAdminSession } = await import('../auth/auth.jwt');
-    const secret = process.env.JWT_SECRET ?? 'unset';
-    const token = await signAdminSession(secret, new Date());
+    const { adminSessionCookie } = await import('../../../test/database-utils');
+    const cookie = await adminSessionCookie(freshDatabase());
     const adminResponse = await app.request('/api/admin/punches', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        cookie: `lastloop_admin=${token}`,
+        cookie,
       },
       body: JSON.stringify({ editionSlug: 'lepin-2026', runnerSlug: 'alice' }),
     });

@@ -80,7 +80,7 @@ describe('last-loop-lepin app stack', () => {
     );
   });
 
-  it('injects PIN_HASH from the operator-owned Secrets Manager value on every stage', () => {
+  it('drops PIN_HASH and JWT_SECRET env vars — admin auth lives in the DB now', () => {
     const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
       const properties = resource.Properties;
       if (typeof properties !== 'object' || properties === null) return {};
@@ -100,11 +100,43 @@ describe('last-loop-lepin app stack', () => {
       )?.[1];
       expect(apiFn, `api function not found in ${stage} template`).toBeDefined();
       const variables = apiFn === undefined ? {} : readEnvVars(apiFn);
-      expect(variables).toHaveProperty('PIN_HASH');
-      // Resolved at deploy time via `{{resolve:secretsmanager:...}}`; the
-      // synthesised value is a Fn::Join intrinsic, not a literal scrypt hash.
-      expect(JSON.stringify(variables.PIN_HASH)).toContain('last-loop-lepin/admin-pin-hash');
+      expect(variables).not.toHaveProperty('PIN_HASH');
+      expect(variables).not.toHaveProperty('JWT_SECRET');
     }
+
+    // And no AWS::SecretsManager::Secret resource is provisioned anymore.
+    for (const stage of ['prod', 'preview'] as const) {
+      synthAppStack(stage).resourceCountIs('AWS::SecretsManager::Secret', 0);
+    }
+  });
+
+  it('injects ALLOWED_ORIGIN on the API Lambda — prod=apex, preview=per-PR host', () => {
+    const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
+      const properties = resource.Properties;
+      if (typeof properties !== 'object' || properties === null) return {};
+      if (!('Environment' in properties)) return {};
+      const environment = properties.Environment;
+      if (typeof environment !== 'object' || environment === null) return {};
+      if (!('Variables' in environment)) return {};
+      const variables = environment.Variables;
+      return typeof variables === 'object' && variables !== null ? { ...variables } : {};
+    };
+
+    const prodVars = (() => {
+      const fn = Object.entries(synthAppStack('prod').findResources('AWS::Lambda::Function')).find(
+        ([logicalId]) => /AppApiFn/.test(logicalId),
+      )?.[1];
+      return fn === undefined ? {} : readEnvVars(fn);
+    })();
+    expect(prodVars.ALLOWED_ORIGIN).toBe('https://last-loop-lepin.borso.fr');
+
+    const previewVars = (() => {
+      const fn = Object.entries(
+        synthAppStack('preview').findResources('AWS::Lambda::Function'),
+      ).find(([logicalId]) => /AppApiFn/.test(logicalId))?.[1];
+      return fn === undefined ? {} : readEnvVars(fn);
+    })();
+    expect(previewVars.ALLOWED_ORIGIN).toBe('https://last-loop-lepin-pr-1.preview.borso.fr');
   });
 
   it('uses the custom prod domain for the cloudfront distribution', () => {

@@ -15,6 +15,13 @@
       "when": 1778849689994,
       "tag": "0001_self_punch_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779060947051,
+      "tag": "0002_admin_auth_tables",
+      "breakpoints": true
     }
   ]
 }

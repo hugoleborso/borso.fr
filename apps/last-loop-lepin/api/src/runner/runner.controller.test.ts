@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { createApp } from '../app';
-import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
-import { signAdminSession } from '../auth/auth.jwt';
+import { adminSessionCookie, freshDatabase, truncateAllTables } from '../../../test/database-utils';
 import { insertEdition } from '../edition/edition.repository';
 import { makeEdition } from '../../../test/fixtures';
 
@@ -37,9 +36,7 @@ describe('runner controller', () => {
   });
 
   async function adminCookie(): Promise<string> {
-    const secret = process.env.JWT_SECRET ?? 'unset';
-    const token = await signAdminSession(secret, new Date());
-    return `lastloop_admin=${token}`;
+    return adminSessionCookie(freshDatabase());
   }
 
   it('creates a runner and surfaces it in the public list', async () => {

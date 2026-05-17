@@ -7,4 +7,8 @@
 export { editionsTable } from '../edition/edition.schema';
 export { runnersTable } from '../runner/runner.schema';
 export { loopPunchesTable, manualDnfsTable } from '../punch/punch.schema';
-export { authAttemptsTable } from '../auth/auth.schema';
+export {
+  adminCredentialsTable,
+  adminSessionsTable,
+  authAttemptsTable,
+} from '../auth/auth.schema';

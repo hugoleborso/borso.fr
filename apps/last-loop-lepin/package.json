@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently -k -n db,api,site -c blue,magenta,green 'pnpm dev:db' 'pnpm dev:api' 'pnpm dev:site'",
     "dev:db": "./dev-db.sh",
-    "dev:api": "DATABASE_URL=$(../../scripts/local-postgres.sh start last-loop-lepin) STAGE=dev LASTLOOP_ALLOW_TEST_SEED=1 JWT_SECRET=dev-jwt-secret-not-for-prod-not-for-prod-not-for-prod PIN_HASH=scrypt\\$6ccc66eb93981b9b83e8817f584ca8f5\\$60191a1c31f18e88590e0e5c6995d1d6f7f0f053b6ffce8e3ea4288c56bd0e790d6a340ad59de2d29792c9d471ad144907d5d10e05ef03d0aea5f6383f734107 PHOTOS_BUCKET=dev-bucket tsx watch api/src/main.dev.ts",
+    "dev:api": "DATABASE_URL=$(../../scripts/local-postgres.sh start last-loop-lepin) STAGE=dev LASTLOOP_ALLOW_TEST_SEED=1 ALLOWED_ORIGIN=http://localhost:5173 PHOTOS_BUCKET=dev-bucket tsx watch api/src/main.dev.ts",
     "dev:site": "vite",
     "db:local:start": "../../scripts/local-postgres.sh start last-loop-lepin",
     "db:local:stop": "../../scripts/local-postgres.sh stop last-loop-lepin",
