@@ -34,7 +34,6 @@
     "@sentry/react": "^8.50.0",
     "drizzle-orm": "^0.36.0",
     "hono": "^4.6.0",
-    "jose": "^5.9.6",
     "leaflet": "1.9.4",
     "postgres": "^3.4.5",
     "react": "^19.0.0",
