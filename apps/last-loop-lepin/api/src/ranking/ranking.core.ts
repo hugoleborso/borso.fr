@@ -13,7 +13,7 @@
  *   loop-depth descending then finish-time ascending.
  */
 
-import { isRaceEndReached, loopIndexAt } from '../edition/edition.core';
+import { isRaceEndReached, loopIndexAt, totalHourlyTops } from '../edition/edition.core';
 import type { RaceEdition } from '../edition/edition.types';
 import { lastLoopDurationMs } from '../punch/punch.core';
 import type { LoopPunch, ManualDnf } from '../punch/punch.types';
@@ -112,10 +112,20 @@ export function computeStandings(
   for (const dnf of manualDnfs) manualDnfsBySlug.set(dnf.runnerSlug, dnf);
 
   const validPunches = punches.filter((punch) => punch.voidedAt === null);
-  const expectedClosedLoop = Math.max(0, loopIndexAt(edition, now) - 1);
+  // `loopIndexAt` keeps growing linearly past `endsAt` — for a 15-loop
+  // race viewed two days later it returns ~70, which would silently flip
+  // every finisher to `dnf reason='late'` (their `lastValidLoop` of 15 is
+  // less than the bogus expected 69). The race has a fixed number of
+  // loops, so the expectation has to cap there.
+  const expectedClosedLoop = Math.min(
+    totalHourlyTops(edition),
+    Math.max(0, loopIndexAt(edition, now) - 1),
+  );
 
   const progresses = runners
-    .map((runner) => progressFor(runner, validPunches, manualDnfsBySlug.get(runner.slug), expectedClosedLoop))
+    .map((runner) =>
+      progressFor(runner, validPunches, manualDnfsBySlug.get(runner.slug), expectedClosedLoop),
+    )
     .toSorted(compareProgresses);
 
   // `reduce` over progresses to build the ranked list while carrying the

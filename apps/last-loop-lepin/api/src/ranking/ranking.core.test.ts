@@ -127,7 +127,9 @@ describe('computeStandings', () => {
       },
     ];
     const standings = computeStandings(EDITION, RUNNERS, punches, manualDnfs, now);
-    expect(standings.ranked.find((entry) => entry.runner.slug === 'alice')?.status.kind).toBe('dnf');
+    expect(standings.ranked.find((entry) => entry.runner.slug === 'alice')?.status.kind).toBe(
+      'dnf',
+    );
   });
 
   it('ignores voided punches', () => {
@@ -209,6 +211,71 @@ describe('computeStandings', () => {
     const now = new Date('2026-09-19T06:30:00+02:00');
     const standings = computeStandings(EDITION, RUNNERS, [], [], now);
     expect(standings.fastestLap).toEqual([]);
+  });
+
+  it('keeps full-distance finishers in-race when standings are recomputed long after endsAt', () => {
+    // The race is 16 loops (06:00 → 22:00, 60-min interval). Two days
+    // after `endsAt`, `loopIndexAt` would naively report ~64; without
+    // capping the expected closed loop at `totalHourlyTops`, every
+    // finisher would flip to DNF "late" the day after the race. This is
+    // the regression that hid the four real finishers behind a wall of
+    // `dnf outAtLoop=15` on the archived 3L 2026 standings.
+    const now = new Date('2026-09-21T22:30:00+02:00');
+    const punches = Array.from({ length: 16 }, (_, index) =>
+      // Finish 5 min before each top-of-hour — same shape as a real run.
+      punch('alice', index + 1, `2026-09-19T${String(6 + index).padStart(2, '0')}:55:00+02:00`),
+    );
+    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const alice = standings.ranked.find((entry) => entry.runner.slug === 'alice');
+    expect(alice?.status).toEqual({ kind: 'in-race', lastLoop: 16 });
+    expect(standings.raceEnded).toBe(true);
+  });
+
+  it('keeps the DNF reason and outAtLoop honest for runners who stopped before the end, regardless of how long ago endsAt was', () => {
+    const now = new Date('2026-09-21T22:30:00+02:00');
+    // Bob completed loops 1..10 then stopped — outAtLoop should report
+    // his actual last-completed loop, not whatever bogus expectedClosedLoop
+    // the uncapped formula would have produced.
+    const punches = Array.from({ length: 10 }, (_, index) =>
+      punch('bob', index + 1, `2026-09-19T${String(6 + index).padStart(2, '0')}:55:00+02:00`),
+    );
+    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const bob = standings.ranked.find((entry) => entry.runner.slug === 'bob');
+    expect(bob?.status).toEqual({ kind: 'dnf', outAtLoop: 10, reason: 'late' });
+  });
+
+  it('ranks four 16-loop finishers in finish-time order when viewed days after endsAt', () => {
+    // Mirrors the actual 3L race: four runners cleared all loops, with
+    // different last-loop wall-clock times. After the fix they must
+    // appear as ranks 1..4 in-race, ordered by `lastFinishedAt` ascending.
+    const now = new Date('2026-09-21T22:30:00+02:00');
+    const finisherSlugs = ['alice', 'bob', 'carla'] as const;
+    const finishMinutesByLoop16: Record<(typeof finisherSlugs)[number], number> = {
+      alice: 50,
+      bob: 53,
+      carla: 56,
+    };
+    const punches = finisherSlugs.flatMap((slug) =>
+      Array.from({ length: 16 }, (_, index) =>
+        punch(
+          slug,
+          index + 1,
+          index === 15
+            ? `2026-09-19T21:${String(finishMinutesByLoop16[slug]).padStart(2, '0')}:00+02:00`
+            : `2026-09-19T${String(6 + index).padStart(2, '0')}:55:00+02:00`,
+        ),
+      ),
+    );
+    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    expect(standings.ranked.slice(0, 3).map((entry) => entry.runner.slug)).toEqual([
+      'alice',
+      'bob',
+      'carla',
+    ]);
+    expect(standings.ranked.slice(0, 3).every((entry) => entry.status.kind === 'in-race')).toBe(
+      true,
+    );
+    expect(standings.ranked.slice(0, 3).map((entry) => entry.rank)).toEqual([1, 2, 3]);
   });
 
   it('surfaces the fastest runner in fastestLap after a few loops, with the expected durationMs', () => {

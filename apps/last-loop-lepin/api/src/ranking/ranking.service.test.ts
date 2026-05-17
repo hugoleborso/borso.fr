@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { makeEdition, makePunch, makeRunner } from '../../../test/fixtures';
 import { insertEdition } from '../edition/edition.repository';
 import { EditionNotFoundError } from '../edition/edition.service';
 import { insertPunch } from '../punch/punch.repository';
 import { insertRunner } from '../runner/runner.repository';
-import { makeEdition, makePunch, makeRunner } from '../../../test/fixtures';
 import { computeStandingsForEdition } from './ranking.service';
 
 describe('ranking.service', () => {
