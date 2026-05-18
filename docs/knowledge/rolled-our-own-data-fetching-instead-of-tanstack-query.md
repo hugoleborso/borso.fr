@@ -1,74 +1,73 @@
-# We rolled our own `useStandingsPoll` / `useResource` instead of using TanStack Query
+# `hc` + TanStack Query — the data-layer migration shipped in the PR #23 kaizen
 
-Operator observation, post-merge on PR #23: *« apiClient was not
-tanstackQuery ??? »*. Captured here so the next data-layer touch
-revisits the call.
+Operator observation that triggered this:
 
-## What we have today
+> *« apiClient was not tanstackQuery ??? »* — post-merge PR #23 review.
 
-Two custom hooks living under `apps/last-loop-lepin/site/src/data/`:
+The previous data layer was two hand-rolled hooks
+(`useStandingsPoll.ts`, `useResource.ts`) over `useSyncExternalStore`
+plus a hand-rolled `apiClient` that re-typed every endpoint with a
+Zod schema on the read side. The combination paid for itself twice
+in PR #23: the polling-storm dantotsu
+([`usesyncexternal-store-subscribe-must-be-stable.md`](../dantotsus/usesyncexternal-store-subscribe-must-be-stable.md))
+and the relative-fetch dantotsu
+([`frontend-fetch-must-go-through-api-client.md`](../dantotsus/frontend-fetch-must-go-through-api-client.md)).
+The kaizen migration replaced both layers.
 
-- `useResource<T>(key, thunk)` — one-shot async resource, cached by
-  string key. Used for `editions/current`, `editions:all`,
-  per-runner lookups, per-runner-punch lookups.
-- `useStandings(editionSlug)` — 2 s-interval polling against
-  `/api/standings/:slug`. Used by the spectator page, runner-fiche
-  page, and admin page.
+## What landed
 
-Both are thin wrappers over `useSyncExternalStore` with a module-scope
-cache map. ~110 lines each. Implemented from scratch when the data
-layer was minimal — no mutations, no auth-aware queries, no
-optimistic updates, no infinite scrolling.
+**Back (`apps/last-loop-lepin/api/src/`):** every controller is now
+a chained `new Hono().get(...).route(...)...` so Hono can infer
+each route's path × method × request/response shape into the
+router's TS type. `app.ts` composes the controllers via `.route()`
+chaining at module level and exports `type AppType = ReturnType<typeof
+buildAppRouter>` — the type carries the full route tree.
 
-## What we paid for the rollout
+**Front (`apps/last-loop-lepin/site/src/`):**
 
-- **PR #23: the polling-storm dantotsu**
-  ([`usesyncexternal-store-subscribe-must-be-stable.md`](../dantotsus/usesyncexternal-store-subscribe-must-be-stable.md)).
-  TanStack Query's `useQuery` hook would not have made the same
-  identity mistake because its subscribe wiring is internal — the
-  consumer just hands in `queryKey` and `queryFn` and gets a
-  cached, deduplicated, refetch-on-mount, interval-polled result.
-  Even a naïve implementation would have had ~14 req/s caught by
-  the library author's own tests, not ours, months ago.
-- **Boilerplate every time we add an endpoint.** Each new resource
-  needs a key naming convention, a thunk that closes over the
-  args, and consumers that re-derive the cache entry on every
-  render. With React Query it's `useQuery({ queryKey: [...], queryFn:
-  () => ... })`.
-- **No mutation primitive.** When we ship the next admin mutation
-  (e.g. a button that updates an edition), we'll need a third
-  custom hook. TanStack Query ships `useMutation` for that, with
-  built-in `onSuccess` invalidate-this-query support.
+- `api/client.ts` was rewritten on top of `hc<AppType>(API_BASE)`.
+  Each `apiClient.<method>` dispatches to the typed
+  `client.api.<path>.$<method>(...)`. The response is narrowed via
+  `r.ok` and `.json()` returns the OK-branch body, fully typed from
+  the back. No Zod schema on the read side, no path string written
+  twice.
+- `data/useStandingsPoll.ts` is now a thin adapter over `useQuery`
+  with `refetchInterval: 2_000`. The cache map, the listener set,
+  the lazy-start guard, and the subscribe arrow that caused
+  PR #23's polling storm are all gone.
+- `data/useResource.ts` is a thin adapter over `useQuery`.
+- `main.tsx` wraps `<App>` in a `<QueryClientProvider>` with
+  `refetchOnWindowFocus: false` (we already poll standings ; focus-
+  refetch would compound).
 
-## Reframes that kept us off the library
+## What the kaizen kept
 
-- *"We don't have many endpoints; the boilerplate is fine."* — true
-  until the polling bug burnt 4 hours of debug + cost ~13× the
-  intended request rate on the back during live retransmission.
-- *"useSyncExternalStore is the modern primitive; React 18 makes
-  rolling our own easy."* — true that the primitive is good. Easy
-  is a different question — see the dantotsu.
+The two Biome Grit plugins ship as defence-in-depth even though the
+direct causes are gone:
 
-## The follow-up (when, not whether)
+- [`no-inline-subscribe-in-use-sync-external-store.grit`](../../biome-plugins/no-inline-subscribe-in-use-sync-external-store.grit)
+  — guards the three remaining direct `useSyncExternalStore` call
+  sites (clock-store consumers) and anything that bypasses TanStack
+  Query in the future.
+- [`no-direct-api-fetch-in-site.grit`](../../biome-plugins/no-direct-api-fetch-in-site.grit)
+  — guards against any reintroduction of `fetch('/api/...')`
+  literals outside the apiClient.
 
-Pick this up as a feature task next time the data layer needs to
-grow (next mutation, next non-trivial cache invalidation, next
-optimistic-update site). Drop-in migration:
+## What's still wrong (follow-up)
 
-1. `pnpm --filter @borso-app/last-loop-lepin add @tanstack/react-query`.
-2. Wrap `<App>` in a `QueryClientProvider`.
-3. Convert `useResource` call sites to `useQuery({ queryKey, queryFn:
-   thunk })`. Keys are already stable strings.
-4. Convert `useStandings` to `useQuery({ queryKey: ['standings',
-   slug], queryFn: ..., refetchInterval: 2_000 })`. Mark the queryKey
-   `['standings', slug]` so the cache shape is explicit.
-5. Delete `useResource.ts` + `useStandingsPoll.ts`.
-6. The Biome plugin
-   [`no-inline-subscribe-in-use-sync-external-store.grit`](../../biome-plugins/no-inline-subscribe-in-use-sync-external-store.grit)
-   stays — it covers any other library / our-own code that touches
-   the primitive directly.
+- **No mutation primitive in use yet.** The admin actions
+  (`adminCreateEdition`, `adminVoidPunch`, etc.) still call
+  `apiClient.<method>` imperatively from event handlers and reload
+  the page or rely on the standings poll to pick up the change.
+  Next admin-feature touch should adopt `useMutation` + `queryClient.invalidateQueries`
+  so the relevant queries refresh deterministically.
+- **A few `.ts` consumers still narrow `result.data` from a hc-
+  inferred union to the domain DTO via a runtime spread.** This
+  works but means the DTO and the inferred type can drift. Next
+  read-side touch should consider replacing the domain DTO with
+  the inferred type directly (no spread, no duplication).
 
 ## See also
 
-- [`docs/dantotsus/built-my-own-before-checking-the-library.md`](../dantotsus/built-my-own-before-checking-the-library.md) — the umbrella dantotsu on this pattern; this knowledge entry is the latest concrete instance.
-- [`docs/dantotsus/usesyncexternal-store-subscribe-must-be-stable.md`](../dantotsus/usesyncexternal-store-subscribe-must-be-stable.md) — the specific bug a battle-tested library would have prevented.
+- [`docs/dantotsus/built-my-own-before-checking-the-library.md`](../dantotsus/built-my-own-before-checking-the-library.md) — umbrella dantotsu on the NIH pattern.
+- [`docs/dantotsus/usesyncexternal-store-subscribe-must-be-stable.md`](../dantotsus/usesyncexternal-store-subscribe-must-be-stable.md), [`docs/dantotsus/frontend-fetch-must-go-through-api-client.md`](../dantotsus/frontend-fetch-must-go-through-api-client.md) — the two bugs this migration eradicated structurally.

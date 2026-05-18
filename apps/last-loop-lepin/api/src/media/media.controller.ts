@@ -11,23 +11,21 @@ const presignInputSchema = z.object({
   contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
 });
 
-const mediaRouter = new Hono();
-
-mediaRouter.use('*', requireAdminSession);
-
-mediaRouter.post('/presign', zValidator('json', presignInputSchema), async (context) => {
-  try {
-    const result = await presignRunnerPhotoUpload(context.req.valid('json'), new Date());
-    return context.json({
-      uploadUrl: result.uploadUrl,
-      objectKey: result.objectKey,
-      expiresAt: result.expiresAt.toISOString(),
-    });
-  } catch (error) {
-    if (error instanceof MediaConfigError) return context.json({ error: error.message }, 500);
-    if (error instanceof MediaContentTypeError) return context.json({ error: error.message }, 400);
-    throw error;
-  }
-});
+const mediaRouter = new Hono()
+  .use('*', requireAdminSession)
+  .post('/presign', zValidator('json', presignInputSchema), async (context) => {
+    try {
+      const result = await presignRunnerPhotoUpload(context.req.valid('json'), new Date());
+      return context.json({
+        uploadUrl: result.uploadUrl,
+        objectKey: result.objectKey,
+        expiresAt: result.expiresAt.toISOString(),
+      });
+    } catch (error) {
+      if (error instanceof MediaConfigError) return context.json({ error: error.message }, 500);
+      if (error instanceof MediaContentTypeError) return context.json({ error: error.message }, 400);
+      throw error;
+    }
+  });
 
 export { mediaRouter };

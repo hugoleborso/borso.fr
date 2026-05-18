@@ -1,24 +1,5 @@
-/**
- * Self-punch modale shell. Thin React wrapper around `SelfPunchModal.utils`'s
- * FSM. The orchestration is in `nextStep`; this file only renders the
- * current state and wires events to it.
- *
- * No `useEffect`: the submit happens on the "Je suis là" click handler,
- * so React doesn't need to synchronise with anything (cf. CLAUDE.md
- * "useEffect is a smell"). A single `useState<SelfPunchState>` is all we need.
- *
- * The geofence check used to gate this flow (request browser geolocation,
- * compute haversine vs the GPX start, refuse outside 100 m). Operator
- * disabled it on 2026-05-15 for the live retransmission — geolocation
- * permission prompts blocked too many spectators. The server now accepts
- * a punch with `clientLat=null` and the FSM's geo-* states became
- * unreachable from this shell (kept in the util as dead branches in case
- * the geofence comes back; deleting them would force a wider test
- * rewrite for no real gain).
- */
-
 import { useState, type ReactElement } from 'react';
-import { resolveUrl } from '../api/client';
+import { ApiError, apiClient } from '../api/client';
 import type { RankedRunnerDto } from '../domain/types';
 import { RunnerAvatar } from './RunnerAvatar';
 import {
@@ -100,24 +81,23 @@ export function SelfPunchModal({
     setState((current) => nextStep(current, { type: 'confirm-tap' }));
 
     try {
-      const response = await fetch(resolveUrl('/api/self-punches'), {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          editionSlug,
-          runnerSlug: runner.runner.slug,
-          clientLat: null,
-          clientLng: null,
-          clientAccuracyM: null,
-        }),
+      const body: unknown = await apiClient.selfPunch({
+        editionSlug,
+        runnerSlug: runner.runner.slug,
+        clientLat: null,
+        clientLng: null,
+        clientAccuracyM: null,
       });
-      const body: unknown = await response.json().catch(() => null);
-      if (response.ok) {
-        const loopIndex = readLoopIndex(body);
-        setState((current) => nextStep(current, { type: 'server-success', loopIndex }));
-        onPunchPersisted();
+      const loopIndex = readLoopIndex(body);
+      setState((current) => nextStep(current, { type: 'server-success', loopIndex }));
+      onPunchPersisted();
+      return;
+    } catch (error) {
+      if (!(error instanceof ApiError)) {
+        setState((current) => nextStep(current, { type: 'network-error' }));
         return;
       }
+      const body: unknown = error.body;
       const errorField = readErrorField(body);
       if (errorField === 'out-of-zone') {
         setState((current) => nextStep(current, { type: 'server-out-of-zone' }));
@@ -134,8 +114,6 @@ export function SelfPunchModal({
           reason: 'runner-not-in-race',
         }),
       );
-    } catch {
-      setState((current) => nextStep(current, { type: 'network-error' }));
     }
   }
 
@@ -200,11 +178,6 @@ export function SelfPunchModal({
       case 'out-of-zone':
       case 'permission-denied':
       case 'timeout':
-        /* Geofence flow disabled on 2026-05-15; these FSM states are
-         * unreachable from the current shell but kept in the union so
-         * the switch stays exhaustive. If they ever fire (a stale
-         * client cache running an older path) we fall through to a
-         * generic close. */
         return (
           <>
             <p>Pointage interrompu. Réessaie.</p>

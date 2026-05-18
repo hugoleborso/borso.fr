@@ -57,22 +57,7 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
-/* Smooth the runner pastilles when their position updates on every
- * standings poll. Leaflet sets a `transform: translate3d(...)` on the
- * marker container; CSS interpolates between old and new on each
- * update so the avatar glides instead of teleporting. The transition
- * also engages during pan/zoom, but the marker positions reflow at
- * 60 fps in those events, so the visual lag is imperceptible
- * (Leaflet itself caps to one frame). */
-.course-map .leaflet-marker-icon {
-  transition: transform 0.6s ease-out;
-}
-
-/* Same idea on the SVG elevation-profile pastilles — the `<g>` wrapper
- * carries `transform="translate(x y)"` set on every render; CSS
- * interpolates between updates. `transform-box: fill-box` anchors the
- * transform around the wrapper's own bbox so the circle stays put when
- * the SVG is scaled to its container. */
+.course-map .leaflet-marker-icon,
 .runner-pastille {
   transition: transform 0.6s ease-out;
 }

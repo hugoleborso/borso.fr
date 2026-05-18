@@ -122,15 +122,9 @@
   min-height: 0;
 }
 
-/* Top-of-page layout: 2×2 grid with named areas so row tops align
- * across columns. Row 1 takes the natural height of the countdown
- * (the trace card matches it). Row 2 grows (1fr) and the layout
- * itself is `flex: 1` inside `.main` so the spectator page fills
- * the viewport — the classement and the profile each take half of
- * the remaining vertical space. `minmax(0, …)` on the side column
- * lets the cell shrink under its content width: without the `0`
- * floor the map's Leaflet container would push the column wider
- * than the viewport. Stacks to a single column under 900 px. */
+/* `minmax(0, …)` on the side column lets the cell shrink under its
+ * content width — without the `0` floor the map's Leaflet container
+ * (intrinsic 100% width) would push the column past the viewport. */
 .spectator-layout {
   display: grid;
   grid-template-columns: minmax(280px, 2fr) minmax(0, 1fr);
