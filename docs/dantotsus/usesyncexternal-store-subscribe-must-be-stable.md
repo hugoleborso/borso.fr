@@ -7,7 +7,7 @@ related-pr: 23
 fix-pr: this PR (branch `claude/lessons-from-pr-23`)
 fix-commits: [<pending — pushed in this kaizen PR>]
 prior-fix-commits: [4426fe4]
-eradication-level: 2
+eradication-level: 1
 time-to-detect: hours
 tags: [react, performance, observability]
 ---
@@ -101,43 +101,28 @@ cadence matches the 2 s `POLL_INTERVAL_MS`.
 
 ## Eradication (mandatory — code-level)
 
-**Type:** DevX check (level 2 — Biome Grit plugin).
+**Type:** code diff (level 1 — structural impossibility) + DevX check (Biome Grit plugin) as defence-in-depth.
 
-**Reference:** this kaizen PR ·
-[`biome-plugins/no-inline-subscribe-in-use-sync-external-store.grit`](../../biome-plugins/no-inline-subscribe-in-use-sync-external-store.grit) ·
-registered in `apps/last-loop-lepin/biome.jsonc`.
+**Reference:** this kaizen PR.
 
-**The actual fix:**
+**The actual fix:** two layers.
 
-```grit
-`useSyncExternalStore($subscribe, $rest)` as $call where {
-  $subscribe <: or {
-    `($_) => $_`,
-    `function($_) { $_ }`,
-    `function $_($_) { $_ }`,
-  },
-  register_diagnostic(
-    span = $subscribe,
-    message = "The `subscribe` argument to `useSyncExternalStore` must keep the same reference across renders, or React re-subscribes on every render. Wrap in `useCallback(...)` with the relevant deps, or hoist the function to module scope.",
-    severity = "error"
-  )
-}
-```
+*Layer 1 — the cause was removed.* `useStandingsPoll.ts` and
+`useResource.ts` no longer call `useSyncExternalStore` at all. The
+hand-rolled cache + listener set + lazy-start guard is gone ; both
+hooks now wrap `useQuery` from `@tanstack/react-query`, which owns
+the subscription lifecycle internally. The misconception that caused
+the original bug can't be expressed — there is no developer-written
+subscribe arrow to be unstable. See the companion knowledge entry
+[`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](../knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
 
-The rule fires whenever an inline arrow or function literal is passed
-as the first argument to `useSyncExternalStore`. The two acceptable
-forms are a stable module-scope function or a `useCallback`-wrapped
-arrow — both yield a `CallExpression` or an `Identifier` in that
-position, neither of which matches the pattern above.
-
-**Sibling defects swept:** repo-wide grep for
-`useSyncExternalStore\(` returned three call sites
-(`useStandingsPoll.ts`, `useResource.ts`, `clock-store.ts` indirectly).
-All three were inspected; `useStandingsPoll.ts` was the only one with
-the failure mode (because it's the only one whose subscribe callback
-has a side effect on lazy-start). The others survive the rule today
-either by binding a stable function or by their lazy-start being
-idempotent — but they would now be forced to stay that way.
+*Layer 2 — anyone who reaches for `useSyncExternalStore` directly in
+the future gets a lint error if they pass an inline arrow.* The
+Biome Grit plugin [`no-inline-subscribe-in-use-sync-external-store.grit`](../../biome-plugins/no-inline-subscribe-in-use-sync-external-store.grit)
+fires on any literal arrow or function expression in that position.
+Registered in `apps/last-loop-lepin/biome.jsonc`. The current three
+direct call sites (`Countdown.tsx`, `CorrectionBanner.tsx`,
+`App.tsx`) all pass module-scope identifiers and survive the rule.
 
 ## See also
 

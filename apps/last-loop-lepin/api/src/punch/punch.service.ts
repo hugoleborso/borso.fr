@@ -92,17 +92,6 @@ export interface SelfPunchInput {
   readonly clientAccuracyM: number | null;
 }
 
-/**
- * Runner-driven punch. Loads the edition; when both `clientLat` and
- * `clientLng` are provided, records the great-circle distance from the
- * GPX start point as observability metadata (no longer used as a
- * rejection signal — the geofence check was removed per operator
- * decision on 2026-05-15). Delegates to `validatePunchTiming` for the
- * timing rules, then writes the row with `source='self'` and the
- * available metadata. No IP captured — `userAgent` + coordinates are
- * the contestability surface, IP adds nothing on top (cf. spec Q.O.D.
- * Q8).
- */
 export async function registerSelfPunch(
   database: Database,
   input: SelfPunchInput,

@@ -7,7 +7,7 @@ related-pr: 23
 fix-pr: this PR (branch `claude/lessons-from-pr-23`)
 fix-commits: [<pending — pushed in this kaizen PR>]
 prior-fix-commits: [3415a37]
-eradication-level: 2
+eradication-level: 1
 time-to-detect: minutes
 tags: [react, cloudfront, frontend, api]
 ---
@@ -90,40 +90,33 @@ envelope shape (its error handling is custom).
 
 ## Eradication (mandatory — code-level)
 
-**Type:** DevX check (level 2 — Biome Grit plugin).
+**Type:** code diff (level 1 — structural impossibility) + DevX check (Biome Grit plugin) as defence-in-depth.
 
-**Reference:** this kaizen PR ·
-[`biome-plugins/no-direct-api-fetch-in-site.grit`](../../biome-plugins/no-direct-api-fetch-in-site.grit) ·
-registered in `apps/last-loop-lepin/biome.jsonc`.
+**Reference:** this kaizen PR.
 
-**The actual fix:**
+**The actual fix:** two layers.
 
-```grit
-`fetch($url, $rest)` as $call where {
-  $url <: or {
-    `"/api/$_"`,
-    `'/api/$_'`,
-    `\`/api/$_\``,
-  },
-  register_diagnostic(
-    span = $url,
-    message = "Direct fetch() on a relative `/api/...` URL bypasses the apiClient and hits the static-site CloudFront (which has no /api/* behaviour) on preview / prod. Use `apiClient.<method>` for typed responses, or `fetch(resolveUrl('/api/...'), init)` for one-off raw fetches.",
-    severity = "error"
-  )
-}
-```
+*Layer 1 — every front-side fetch now goes through Hono's `hc`
+client.* The site's `api/client.ts` was rewritten on top of
+`hc<AppType>` (the back's chained-router type, exported from
+`apps/.../api/src/app.ts`). Each `apiClient.<method>` dispatches to
+the typed `client.api.<path>.$<method>(...)` and unwraps via
+`r.ok` narrowing. There is no `fetch('/api/...')` literal anywhere
+in the source — the only direct fetch left is the photo PUT against
+a *presigned absolute URL* returned by the API, which is by
+definition not a `/api/...` path. End-to-end typing of every front
+call comes from the back's Hono types ; no hand-rolled Zod schema
+on the read side. See the companion knowledge entry
+[`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](../knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
 
-The rule fires on any literal `'/api/...'` argument to `fetch`. It
-intentionally doesn't catch dynamic URLs (a variable holding an
-absolute URL is fine, a template literal where the prefix is itself
-a variable is fine) — those are the legitimate cases for absolute or
-externally-built URLs.
-
-**Sibling defects swept:** repo-wide grep for `fetch\(['"]/api/`
-returned exactly one call site, the one in PR #23 just fixed.
-`RunnerAdminPanel.tsx`'s photo PUT uses a *presigned absolute URL*
-returned by the API (`presign.uploadUrl`) and isn't a same-origin
-relative path — out of scope for the rule.
+*Layer 2 — anyone reintroducing a bare `fetch('/api/...')` in site/
+code gets a lint error.* The Biome Grit plugin
+[`no-direct-api-fetch-in-site.grit`](../../biome-plugins/no-direct-api-fetch-in-site.grit)
+fires on any string-literal `/api/...` URL passed as the first
+argument to `fetch`. Registered in `apps/last-loop-lepin/biome.jsonc`.
+Dynamic URLs (variables, absolute URLs returned by the API) are
+intentionally not caught — those are the legitimate non-apiClient
+cases.
 
 ## See also
 

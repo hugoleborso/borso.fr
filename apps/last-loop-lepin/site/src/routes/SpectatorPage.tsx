@@ -131,17 +131,6 @@ export function SpectatorPage() {
   }
 
   const isLive = edition.status === 'live';
-  // `raceEnded` is the canonical "the race is over" signal: it fires
-  // when either (a) wall-clock crosses `endsAt`, or (b) at most one
-  // runner is still in-race (backyard rule — cf. `ranking.core.ts`).
-  // Reading the banner gate off `edition.status === 'finished'` —
-  // which is admin-managed and not auto-transitioned — left a UX gap
-  // on PR #23: the race could be over per the leaderboard while the
-  // page still rendered as live. The two signals can disagree
-  // (admin-finished + race-not-yet-ended cannot happen in practice;
-  // race-ended + admin-still-live happens every time the admin forgets
-  // to click the transition). Trusting `raceEnded` collapses the gap.
-  // See docs/dantotsus/race-end-banner-uses-computed-raceended.md.
   const raceEnded = standingsState.standings?.raceEnded === true;
   const isFinished = edition.status === 'finished' || raceEnded;
   const upcomingBoundary = nextLoopBoundary(edition, Date.now());
@@ -164,10 +153,6 @@ export function SpectatorPage() {
         </div>
       ) : null}
       <CorrectionBanner correctedAt={mostRecentCorrection} />
-      {/* 2×2 grid via `grid-template-areas`: row 1 = countdown + trace
-          (natural height of the countdown), row 2 = classement + profile
-          (grows to fill the remaining viewport via `flex: 1`). Row tops
-          align across columns. */}
       <div className="spectator-layout">
         <div className="card countdown-card">
           <div className="card-head">
