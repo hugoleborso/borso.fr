@@ -17,7 +17,6 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
-import { requireSharedPasswordSession } from './auth/shared-password.middleware';
 
 export interface CreateAppOptions {
   readonly auth?: BuildAuthRouterOptions;
@@ -30,20 +29,21 @@ export function createApp(options: CreateAppOptions = {}): Hono {
 
   app.get('/api/health', (context) => context.json({ ok: true }));
 
-  const { publicRouter, adminRouter } = buildAuthRouter(options.auth ?? {});
+  const { publicRouter, bootstrapRouter, rotateRouter } = buildAuthRouter(
+    options.auth ?? {},
+  );
   app.route('/api/auth', publicRouter);
 
-  // `set-password` is intentionally NOT gated — it can only succeed
-  // when the row doesn't yet exist. Mount BEFORE the session middleware.
-  app.route('/api/admin', adminRouter);
-
-  // Everything else under /api/admin is gated; mounted as no-op for now
-  // because domain admin endpoints land in a follow-up PR. The session
-  // middleware itself is wired here so the rotate-password path stays
-  // protected.
-  const gated = new Hono();
-  gated.use('*', requireSharedPasswordSession);
-  app.route('/api/admin/protected', gated);
+  // Two distinct routers share the `/api/admin` prefix on purpose:
+  // - `bootstrapRouter` (set-password) MUST stay ungated — it is the
+  //   first-deploy seed and is protected by the row-absent guard.
+  // - `rotateRouter` (rotate-password) carries the session middleware
+  //   on the router itself, so an authenticated cookie is required.
+  // Mounting them as one router was the original bug (validation
+  // 2026-05-19-2111, row A09): a single ungated mount made the rotate
+  // endpoint publicly callable, allowing anyone to lock the band out.
+  app.route('/api/admin', bootstrapRouter);
+  app.route('/api/admin', rotateRouter);
 
   return app;
 }

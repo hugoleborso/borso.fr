@@ -9,7 +9,12 @@
  * The bootstrap endpoint is intentionally NOT gated by the session
  * middleware — it can only succeed exactly once, when the singleton row
  * does not yet exist. The rotate endpoint IS gated by the session
- * middleware (mounted upstream by the route registrar).
+ * middleware: it is mounted on a dedicated router that applies
+ * `requireSharedPasswordSession` to every route. Returning two distinct
+ * admin routers (bootstrap vs. rotate) prevents the wiring mistake of
+ * accidentally putting the rotate handler on an ungated router — see
+ * `docs/features/pragma/first-features/validation/technical-validation-2026-05-19-2111.md`
+ * row A09 for the original failure mode.
  */
 
 import argon2 from 'argon2';
@@ -28,6 +33,7 @@ import {
   recordAttempt,
 } from './rate-limit.utils';
 import { SESSION_COOKIE_NAME, SESSION_TTL_MS, buildCookie } from './session-cookie.utils';
+import { requireSharedPasswordSession } from './shared-password.middleware';
 
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 256;
@@ -45,7 +51,8 @@ export interface BuildAuthRouterOptions {
 
 export function buildAuthRouter(options: BuildAuthRouterOptions = {}): {
   publicRouter: Hono;
-  adminRouter: Hono;
+  bootstrapRouter: Hono;
+  rotateRouter: Hono;
 } {
   const bucketStore = options.bucketStore ?? createBucketStore();
   const clock = options.clock ?? (() => new Date());
@@ -80,33 +87,45 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}): {
     return context.json({ expiresAt: new Date(now.getTime() + SESSION_TTL_MS).toISOString() });
   });
 
-  const adminRouter = new Hono();
+  const bootstrapRouter = new Hono();
+  bootstrapRouter.post(
+    '/set-password',
+    zValidator('json', credentialsSchema),
+    async (context) => {
+      const database = getDatabase();
+      const existing = await loadAppConfig(database);
+      if (existing !== null) {
+        return context.json({ error: 'already-bootstrapped' }, 409);
+      }
+      const { password } = context.req.valid('json');
+      const hash = await argon2.hash(password, { type: argon2.argon2id });
+      const hmacKey = randomBytes(HMAC_KEY_BYTES);
+      await insertInitialAppConfig(database, hash, hmacKey, clock());
+      return context.json({ ok: true });
+    },
+  );
 
-  adminRouter.post('/set-password', zValidator('json', credentialsSchema), async (context) => {
-    const database = getDatabase();
-    const existing = await loadAppConfig(database);
-    if (existing !== null) {
-      return context.json({ error: 'already-bootstrapped' }, 409);
-    }
-    const { password } = context.req.valid('json');
-    const hash = await argon2.hash(password, { type: argon2.argon2id });
-    const hmacKey = randomBytes(HMAC_KEY_BYTES);
-    await insertInitialAppConfig(database, hash, hmacKey, clock());
-    return context.json({ ok: true });
-  });
+  const rotateRouter = new Hono();
+  // The session middleware is applied here, on the rotate-only router,
+  // so the bootstrap route can stay ungated while every rotate call is
+  // forced through cookie verification.
+  rotateRouter.use('*', requireSharedPasswordSession);
+  rotateRouter.post(
+    '/rotate-password',
+    zValidator('json', credentialsSchema),
+    async (context) => {
+      const database = getDatabase();
+      const existing = await loadAppConfig(database);
+      if (existing === null) {
+        return context.json({ error: 'auth-not-bootstrapped' }, 503);
+      }
+      const { password } = context.req.valid('json');
+      const hash = await argon2.hash(password, { type: argon2.argon2id });
+      const hmacKey = randomBytes(HMAC_KEY_BYTES);
+      await updateAppConfig(database, hash, hmacKey, clock());
+      return context.json({ ok: true });
+    },
+  );
 
-  adminRouter.post('/rotate-password', zValidator('json', credentialsSchema), async (context) => {
-    const database = getDatabase();
-    const existing = await loadAppConfig(database);
-    if (existing === null) {
-      return context.json({ error: 'auth-not-bootstrapped' }, 503);
-    }
-    const { password } = context.req.valid('json');
-    const hash = await argon2.hash(password, { type: argon2.argon2id });
-    const hmacKey = randomBytes(HMAC_KEY_BYTES);
-    await updateAppConfig(database, hash, hmacKey, clock());
-    return context.json({ ok: true });
-  });
-
-  return { publicRouter, adminRouter };
+  return { publicRouter, bootstrapRouter, rotateRouter };
 }
