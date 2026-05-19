@@ -2,14 +2,14 @@
   "runId": "2026-05-19-1937-pragma",
   "feature": { "app": "pragma", "slug": "first-features" },
   "pilotedByTechLead": true,
-  "stage": "validate",
+  "stage": "ship-ready",
   "retries": { "implement": 1, "validate": 1 },
   "adrIndex": [4],
   "implementationSha": "f26014f",
-  "lastTechnicalValidation": "FAIL",
+  "lastTechnicalValidation": "PASS_EXCEPT_UNVERIFIABLE",
   "lastVisualValidation": "PASS_EXCEPT_UNVERIFIABLE",
-  "fixScope": "auth bypass on /api/admin/rotate-password — landed at f26014f, awaiting re-validation",
+  "blocker": null,
   "specChecksum": "1e8c3e5ea12d94b6ded1ad45bc8c9eaf8962fb5286cfa4867496b8f51d7df65f",
   "startedAt": "2026-05-19T19:37:16.000Z",
-  "updatedAt": "2026-05-19T21:55:00.000Z"
+  "updatedAt": "2026-05-19T22:08:00.000Z"
 }
