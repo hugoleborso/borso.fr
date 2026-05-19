@@ -2,11 +2,12 @@
   "runId": "2026-05-19-1937-pragma",
   "feature": { "app": "pragma", "slug": "first-features" },
   "pilotedByTechLead": true,
-  "stage": "implement",
+  "stage": "validate",
   "retries": { "implement": 0, "validate": 0 },
   "adrIndex": [4],
-  "bytesRead": 60000,
+  "implementationSha": "65954cc",
+  "implementationStatus": "partial",
   "specChecksum": "1e8c3e5ea12d94b6ded1ad45bc8c9eaf8962fb5286cfa4867496b8f51d7df65f",
   "startedAt": "2026-05-19T19:37:16.000Z",
-  "updatedAt": "2026-05-19T20:32:00.000Z"
+  "updatedAt": "2026-05-19T21:10:00.000Z"
 }
