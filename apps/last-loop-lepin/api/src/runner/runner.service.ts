@@ -1,4 +1,7 @@
 import type { Database } from '../database/client';
+import { listPunchesForEdition } from '../punch/punch.repository';
+import type { LoopPunch } from '../punch/punch.types';
+import { readPhotosCdnHost, toRunnerDto, type RunnerDto } from './runner.dto.utils';
 import {
   findRunner,
   insertRunner,
@@ -20,6 +23,11 @@ export interface CreateRunnerInput {
   readonly displayName: string;
   readonly photoKey?: string | null;
   readonly bib?: number | null;
+}
+
+export async function createRunnerAsDto(database: Database, input: CreateRunnerInput): Promise<RunnerDto> {
+  const runner = await createRunner(database, input);
+  return toRunnerDto(runner, readPhotosCdnHost());
 }
 
 export async function createRunner(database: Database, input: CreateRunnerInput): Promise<Runner> {
@@ -52,4 +60,33 @@ export async function getRunner(
 
 export async function listRunners(database: Database, editionSlug: string): Promise<readonly Runner[]> {
   return listRunnersForEdition(database, editionSlug);
+}
+
+export async function listRunnersAsDto(
+  database: Database,
+  editionSlug: string,
+): Promise<ReadonlyArray<RunnerDto>> {
+  const cdnHost = readPhotosCdnHost();
+  const runners = await listRunnersForEdition(database, editionSlug);
+  return runners.map((runner) => toRunnerDto(runner, cdnHost));
+}
+
+export async function getRunnerAsDto(
+  database: Database,
+  editionSlug: string,
+  runnerSlug: string,
+): Promise<RunnerDto> {
+  const runner = await getRunner(database, editionSlug, runnerSlug);
+  return toRunnerDto(runner, readPhotosCdnHost());
+}
+
+export async function listPunchesForRunner(
+  database: Database,
+  editionSlug: string,
+  runnerSlug: string,
+): Promise<readonly LoopPunch[]> {
+  const allPunches = await listPunchesForEdition(database, editionSlug);
+  return allPunches
+    .filter((punch) => punch.runnerSlug === runnerSlug)
+    .toSorted((left, right) => left.loopIndex - right.loopIndex);
 }

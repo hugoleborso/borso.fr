@@ -9,5 +9,11 @@
   ],
   "files": {
     "includes": ["api/**", "site/**", "cdk/**", "test/**", "bin/**"]
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.controller.ts", "!**/__test/test-seed.controller.ts"],
+      "plugins": ["../../biome-plugins/no-controller-imports-outside-service.grit"]
+    }
+  ]
 }

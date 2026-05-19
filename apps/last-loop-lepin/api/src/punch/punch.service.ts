@@ -4,6 +4,8 @@ import { loopIndexAt } from '../edition/edition.core';
 import { getEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
 import { haversineDistanceMeters } from '../helpers/geo/haversine.utils';
+export { PunchConflictError } from './punch.repository';
+
 import { validatePunchTiming, type PunchRejectReason } from './punch.core';
 import {
   PunchConflictError,

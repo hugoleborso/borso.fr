@@ -2,8 +2,8 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { getDatabase } from '../database/client';
 import { requireAdminSession } from '../auth/auth.middleware';
-import { PunchConflictError } from './punch.repository';
 import {
+  PunchConflictError,
   PunchNotFoundError,
   PunchRejectedError,
   catchupPunch,
