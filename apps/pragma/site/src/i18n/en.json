@@ -1,0 +1,27 @@
+{
+  "appName": "pragma",
+  "nav": {
+    "catalog": "Catalog",
+    "sessions": "Sessions",
+    "bars": "Bars",
+    "members": "Members",
+    "instruments": "Instruments"
+  },
+  "auth": {
+    "passwordLabel": "Shared password",
+    "submit": "Enter",
+    "rateLimited": "Too many attempts — try again in a few minutes.",
+    "invalidPassword": "Wrong password.",
+    "title": "Pragma — band space"
+  },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "scaffold": {
+    "title": "Pragma — scaffold ready",
+    "subtitle": "First slice: auth, schema, design tokens, i18n. UI surfaces ship in follow-up PRs."
+  }
+}
