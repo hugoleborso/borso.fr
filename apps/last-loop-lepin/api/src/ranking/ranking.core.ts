@@ -170,3 +170,44 @@ export function computeStandings(
     fastestLap: fastestLap(edition, validPunches),
   };
 }
+
+export function mostRecentCorrectionAt(punches: readonly LoopPunch[]): Date | null {
+  return punches.reduce<Date | null>((accumulator, punch) => {
+    const candidates: Date[] = [];
+    if (punch.correctedAt !== null) candidates.push(punch.correctedAt);
+    if (punch.voidedAt !== null) candidates.push(punch.voidedAt);
+    return candidates.reduce<Date | null>(
+      (inner, candidate) =>
+        inner === null || candidate.getTime() > inner.getTime() ? candidate : inner,
+      accumulator,
+    );
+  }, null);
+}
+
+const CSV_HEADER = 'rank,bib,runner_slug,display_name,status,out_at_loop,last_loop,last_finished_at';
+
+function csvQuote(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+function formatStandingsRow(entry: Standings['ranked'][number]): string {
+  const status = entry.status.kind;
+  const outAtLoop = entry.status.kind === 'dnf' ? entry.status.outAtLoop : '';
+  const lastLoop = entry.status.kind === 'in-race' ? entry.status.lastLoop : '';
+  const finishedIso = entry.lastFinishedAt?.toISOString() ?? '';
+  return [
+    entry.rank === 'ex-aequo' ? 'ex-aequo' : `${entry.rank}`,
+    entry.runner.bib ?? '',
+    entry.runner.slug,
+    csvQuote(entry.runner.displayName),
+    status,
+    outAtLoop,
+    lastLoop,
+    finishedIso,
+  ].join(',');
+}
+
+export function formatStandingsAsCsv(standings: Standings): string {
+  const lines = standings.ranked.map(formatStandingsRow);
+  return `${CSV_HEADER}\n${lines.join('\n')}\n`;
+}

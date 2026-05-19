@@ -45,6 +45,9 @@ export class EditionNotInSetupError extends Error {
   override readonly name = 'EditionNotInSetupError';
 }
 
+export { GpxParseError } from '../helpers/gpx/gpx.core';
+export { SunCalculationError } from '../helpers/sun/sun.core';
+
 export interface CreateEditionInput {
   readonly slug: string;
   readonly displayName: string;
@@ -98,6 +101,65 @@ export async function getEditionOrNull(database: Database, slug: string): Promis
 
 export async function getAllEditions(database: Database): Promise<readonly RaceEdition[]> {
   return listEditions(database);
+}
+
+export interface CreateEditionFromIsoInput {
+  readonly slug: string;
+  readonly displayName: string;
+  readonly startsAt: string;
+  readonly endsAt: string;
+  readonly intervalMinutes?: number;
+  readonly gpxXml: string;
+}
+
+export async function createEditionFromInput(
+  database: Database,
+  input: CreateEditionFromIsoInput,
+): Promise<RaceEdition> {
+  return createEdition(database, {
+    slug: input.slug,
+    displayName: input.displayName,
+    startsAt: new Date(input.startsAt),
+    endsAt: new Date(input.endsAt),
+    ...(input.intervalMinutes !== undefined ? { intervalMinutes: input.intervalMinutes } : {}),
+    gpxXml: input.gpxXml,
+  });
+}
+
+export interface ReplaceEditionFromIsoInput {
+  readonly displayName: string;
+  readonly startsAt: string;
+  readonly endsAt: string;
+  readonly intervalMinutes?: number;
+  readonly gpxXml?: string;
+}
+
+export async function replaceEditionFromInput(
+  database: Database,
+  slug: string,
+  input: ReplaceEditionFromIsoInput,
+): Promise<RaceEdition> {
+  return replaceSetupEdition(database, slug, {
+    displayName: input.displayName,
+    startsAt: new Date(input.startsAt),
+    endsAt: new Date(input.endsAt),
+    ...(input.intervalMinutes !== undefined ? { intervalMinutes: input.intervalMinutes } : {}),
+    ...(input.gpxXml !== undefined ? { gpxXml: input.gpxXml } : {}),
+  });
+}
+
+export async function getCurrentEdition(database: Database): Promise<RaceEdition | null> {
+  const editions = await listEditions(database);
+  const live = editions.find((edition) => edition.status === 'live');
+  if (live !== undefined) return live;
+  const nextSetup = editions
+    .filter((edition) => edition.status === 'setup')
+    .toSorted((left, right) => left.startsAt.getTime() - right.startsAt.getTime())[0];
+  if (nextSetup !== undefined) return nextSetup;
+  const lastFinished = editions
+    .filter((edition) => edition.status === 'finished')
+    .toSorted((left, right) => right.endsAt.getTime() - left.endsAt.getTime())[0];
+  return lastFinished ?? null;
 }
 
 export async function transitionEditionStatus(
