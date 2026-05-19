@@ -25,15 +25,23 @@ CREATE TABLE "instrument" (
 	"is_harmonic" boolean DEFAULT false NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "member_instrument" (
+	"member_id" uuid NOT NULL,
+	"instrument_id" uuid NOT NULL,
+	CONSTRAINT "member_instrument_member_id_instrument_id_pk" PRIMARY KEY("member_id","instrument_id")
+);
+--> statement-breakpoint
 CREATE TABLE "song" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"title" text NOT NULL,
+	"artist" text DEFAULT '' NOT NULL,
 	"status" text NOT NULL,
 	"links" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"chart" jsonb,
 	"tonality_start" text,
 	"tonality_end" text,
 	"default_lineup" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"base_energy" integer,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -75,7 +83,10 @@ CREATE TABLE "setlist_entry" (
 	"song_id" uuid NOT NULL,
 	"position" integer NOT NULL,
 	"lineup_override" jsonb,
-	"energy" integer
+	"energy" integer,
+	"key_override" text,
+	"capo" integer,
+	"notes" text DEFAULT '' NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX "setlist_entry_setlist_id_position_idx" ON "setlist_entry" ("setlist_id","position");
@@ -95,5 +106,10 @@ CREATE TABLE "bar" (
 	"name" text NOT NULL,
 	"status" text NOT NULL,
 	"notes" text DEFAULT '' NOT NULL,
-	"last_interaction_at" timestamp with time zone
+	"last_interaction_at" timestamp with time zone,
+	"city" text,
+	"capacity" integer,
+	"contact_name" text,
+	"contact_email" text,
+	"contact_phone" text
 );

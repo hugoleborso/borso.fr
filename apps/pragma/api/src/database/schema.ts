@@ -58,15 +58,42 @@ export const instrumentTable = pgTable('instrument', {
   isHarmonic: boolean('is_harmonic').notNull().default(false),
 });
 
+/**
+ * Many-to-many link between members and instruments. A row says
+ * "this member plays this instrument as one of their possible
+ * stations". The default lineup on a song picks one of these per
+ * member; the mastery default / override tables hold the per-pair
+ * score independently of whether the pair is listed here. The link
+ * is purely for the members admin UI ("which instruments can each
+ * member play"); removing a row does NOT cascade-delete the score.
+ */
+export const memberInstrumentTable = pgTable(
+  'member_instrument',
+  {
+    memberId: uuid('member_id').notNull(),
+    instrumentId: uuid('instrument_id').notNull(),
+  },
+  (table) => ({
+    primary: primaryKey({ columns: [table.memberId, table.instrumentId] }),
+  }),
+);
+
 export const songTable = pgTable('song', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: text('title').notNull(),
+  artist: text('artist').notNull().default(''),
   status: text('status').notNull(),
   links: jsonb('links').notNull().default([]),
   chart: jsonb('chart'),
   tonalityStart: text('tonality_start'),
   tonalityEnd: text('tonality_end'),
   defaultLineup: jsonb('default_lineup').notNull().default({}),
+  // baseEnergy is the "what energy does this song carry on average"
+  // hint; the per-entry energy on setlist_entry overrides it for the
+  // sparkline. Spec wants 1..10; we stay nullable to keep the form
+  // optional. (Prompt mentions 0-10 but spec.md TYPES says 1..10 — we
+  // honor the spec range.)
+  baseEnergy: integer('base_energy'),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 });
 
@@ -118,6 +145,9 @@ export const setlistEntryTable = pgTable('setlist_entry', {
   position: integer('position').notNull(),
   lineupOverride: jsonb('lineup_override'),
   energy: integer('energy'),
+  keyOverride: text('key_override'),
+  capo: integer('capo'),
+  notes: text('notes').notNull().default(''),
 });
 
 export const transitionCommentTable = pgTable(
@@ -137,9 +167,19 @@ export const transitionCommentTable = pgTable(
 export const barTable = pgTable('bar', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
+  // BarStatus per the spec: 'lead' | 'contacted' | 'booked' | 'played'
+  // | 'cold'. The kanban columns on /bars map 1:1 to these values.
   status: text('status').notNull(),
   notes: text('notes').notNull().default(''),
   lastInteractionAt: timestamp('last_interaction_at', { withTimezone: true, mode: 'date' }),
+  // Extension fields the spec did not require but the v1 CRM surface
+  // needs to be useful: city for filtering, capacity for the kanban
+  // card, contact name + email/phone for outreach.
+  city: text('city'),
+  capacity: integer('capacity'),
+  contactName: text('contact_name'),
+  contactEmail: text('contact_email'),
+  contactPhone: text('contact_phone'),
 });
 
 export const authAttemptTable = pgTable('auth_attempt', {

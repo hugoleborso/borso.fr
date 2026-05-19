@@ -17,6 +17,7 @@ const ALL_TABLES: readonly string[] = [
   'mastery_override',
   'mastery_default',
   'song',
+  'member_instrument',
   'instrument',
   'member',
 ];
