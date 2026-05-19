@@ -15,7 +15,7 @@ The spec's *Open questions for the designer pass → resolutions* and Q.O.D. row
 
 ## Decision
 
-**Shared-password authentication.** A single team-wide secret, stored as a scrypt hash in CDK secrets, gates the entire app. Failed attempts are rate-limited per IP (5 attempts / 15 min). The five members share one secret, rotated by Hugo when needed. Per-user identity exists in the data model (the `Member` row carries the name and colour), but the auth layer does not bind a session to a particular member — any authenticated client is "the band". Picked over individual accounts because friction at access (paid 5×/session) dominates over attribution (which a 5-person team can resolve out-of-band).
+**Shared-password authentication.** A single team-wide secret, stored as an **argon2id** hash in CDK secrets, gates the entire app. POST `/api/auth` accepts the plaintext password, compares against the stored hash, and on success sets a **signed `HttpOnly` cookie** with `SameSite=Strict` and a 30-day TTL. The middleware validates the cookie's HMAC signature on every subsequent request. Failed attempts are rate-limited per `ip_hash` (5 attempts / 15 min). The five members share one secret, rotated by Hugo when needed — rotation invalidates every cookie by rotating the HMAC signing key alongside the password hash. Per-user identity exists in the data model (the `Member` row carries the name and colour), but the auth layer does not bind a session to a particular member — any authenticated client is "the band". Picked over individual accounts because friction at access (paid 5×/session) dominates over attribution (which a 5-person team can resolve out-of-band). Picked argon2id (over scrypt or bcrypt) for memory-hardness + current best-practice; picked HttpOnly cookie (over a JS-readable JWT) for XSS-resistance, since pragma is single-origin and the JWT's local-introspection advantage is solvable with a non-secret `last-login` timestamp in `localStorage`.
 
 ## Consequences
 
@@ -31,7 +31,7 @@ The spec's *Open questions for the designer pass → resolutions* and Q.O.D. row
 
 ### Option A — Shared password (chosen)
 
-- **Summary:** One team-wide secret (`PRAGMA_BAND_PASSWORD_HASH`) stored as a scrypt hash in CDK secrets. POST `/api/auth` accepts a plaintext password, compares against the hash, returns a signed session cookie on success. Rate-limited by `ip_hash`.
+- **Summary:** One team-wide secret stored as an **argon2id** hash in CDK secrets (`PRAGMA_BAND_PASSWORD_HASH`), alongside a separate HMAC signing key (`PRAGMA_SESSION_HMAC_KEY`). POST `/api/auth` accepts a plaintext password, verifies via `argon2.verify`, on success sets a signed `HttpOnly; Secure; SameSite=Strict` session cookie with 30-day TTL. Subsequent requests carry the cookie automatically; the middleware re-verifies the HMAC. Rotation = rotate both secrets together in CDK, redeploy, every device re-auths. Rate-limited by `ip_hash` (5 attempts / 15 min).
 - **Strengths:**
   - One input on login (matches the design bundle's mobile auth screen 1:1).
   - Zero provisioning surface — no user table, no password-reset flow, no email verification.
@@ -44,7 +44,7 @@ The spec's *Open questions for the designer pass → resolutions* and Q.O.D. row
 
 ### Option B — Individual accounts (rejected)
 
-- **Summary:** Per-member account row in `pragma.member_auth` (email + scrypt PIN hash + recovery flow). Sessions bind to a `member_id`; every mutation log carries the author. Mirrors `last-loop-lepin`'s scheme.
+- **Summary:** Per-member account row in `pragma.member_auth` (email + argon2id PIN hash + recovery flow). Sessions bind to a `member_id`; every mutation log carries the author. Mirrors the per-user shape `last-loop-lepin` ships (the latter uses scrypt for its PIN; this option assumes the more modern argon2id for consistency with the chosen path).
 - **Strengths:**
   - Per-user attribution on every write — `member_id` foreign-key on every audit row, no Slack archaeology.
   - Compromise contained to one user — revoke a single PIN without paging the band.
@@ -78,8 +78,9 @@ The rubric differentiates: shared wins 2/4 on the highest-weighted criteria; ind
 - Spec: [`docs/features/pragma/first-features/spec/spec.md`](../features/pragma/first-features/spec/spec.md) — Q.O.D. row "Auth model", *Zero-defect strategy* section (`ip_hash` rate-limit), and *Out of scope* item "Per-user audit trail (shared password)".
 - Plan: `docs/features/pragma/first-features/plan/plan.md` — auth-middleware row (to be added in stage `plan`).
 - Commit: stamped by `/after-task-dantotsus` on merge.
-- Files (anticipated, written under `/implementation`):
-  - `apps/pragma/api/src/auth/shared-password.middleware.ts` — Hono middleware comparing the request's cookie against the scrypt hash.
+- Files (anticipated, written under `/implementation` — names not contractual, the `/implementation` agent may pick neighbouring paths):
+  - `apps/pragma/api/src/auth/shared-password.middleware.ts` — Hono middleware verifying the signed cookie's HMAC and (on POST `/api/auth`) the argon2id password hash.
   - `apps/pragma/api/src/auth/rate-limit.utils.ts` — per-`ip_hash` token bucket, 100% coverage.
-  - `apps/pragma/cdk/lib/pragma-stack.ts` — `PRAGMA_BAND_PASSWORD_HASH` secret + Lambda env wiring.
+  - `apps/pragma/cdk/lib/pragma-stack.ts` — `PRAGMA_BAND_PASSWORD_HASH` + `PRAGMA_SESSION_HMAC_KEY` secrets + Lambda env wiring.
+- **Caveat on the rubric** (added 2026-05-19 after tech-lead audit): the criteria + weights table below was inferred by the orchestrator from the spec's framing prose; it was not separately ratified by Hugo at ADR-creation time. The ratification we have is on the binary "shared password vs individual accounts" — the relative weights are the orchestrator's reading. If the weighting feels off in retrospect, supersede via a Revision block or a new ADR rather than silently editing this one.
 - Related ADRs: none directly. Contrast point with `last-loop-lepin`'s JWT + PIN (no ADR — that app pre-dates the ADR convention; if revisited, this ADR is the precedent for "lighter auth when the user set is small and trusted").
