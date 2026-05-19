@@ -15,3 +15,7 @@
 {"kind":"implementation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:08:00.000Z","status":"partial","commits":6,"files":51,"tests":115,"sha":"65954cc"}
 {"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:10:00.000Z","from":"implement","to":"validate"}
 {"kind":"context_growth","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:10:00.000Z","bytes":48000}
+{"kind":"visual_validation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:25:00.000Z","status":"PASS_EXCEPT_UNVERIFIABLE","pass":4,"fail":0,"unverifiable":18,"next":"ship"}
+{"kind":"technical_validation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:32:00.000Z","status":"FAIL","pass":74,"fail":1,"unverifiable":12,"next":"fix","blocker":"auth-bypass-rotate-password"}
+{"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:35:00.000Z","from":"validate","to":"implement","reason":"fix-round-1"}
+{"kind":"context_growth","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:35:00.000Z","bytes":56000}

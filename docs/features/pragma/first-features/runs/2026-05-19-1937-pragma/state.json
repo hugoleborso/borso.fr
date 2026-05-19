@@ -2,12 +2,14 @@
   "runId": "2026-05-19-1937-pragma",
   "feature": { "app": "pragma", "slug": "first-features" },
   "pilotedByTechLead": true,
-  "stage": "validate",
-  "retries": { "implement": 0, "validate": 0 },
+  "stage": "implement",
+  "retries": { "implement": 1, "validate": 1 },
   "adrIndex": [4],
   "implementationSha": "65954cc",
-  "implementationStatus": "partial",
+  "lastTechnicalValidation": "FAIL",
+  "lastVisualValidation": "PASS_EXCEPT_UNVERIFIABLE",
+  "fixScope": "auth bypass on /api/admin/rotate-password (app.ts:38; auth.controller.test.ts:124 asserts the bug)",
   "specChecksum": "1e8c3e5ea12d94b6ded1ad45bc8c9eaf8962fb5286cfa4867496b8f51d7df65f",
   "startedAt": "2026-05-19T19:37:16.000Z",
-  "updatedAt": "2026-05-19T21:10:00.000Z"
+  "updatedAt": "2026-05-19T21:35:00.000Z"
 }
