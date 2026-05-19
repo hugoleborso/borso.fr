@@ -10,6 +10,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Hono } from 'hono';
 import { createApp } from '../app';
+import { loadAppConfig } from './app-config.repository';
 import { requireSharedPasswordSession } from './shared-password.middleware';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 
@@ -110,7 +111,32 @@ describe('shared-password auth controller (back-e2e)', () => {
     expect(withCookie.status).toBe(200);
   });
 
-  it('rotates password + HMAC key and invalidates every existing cookie', async () => {
+  it('rejects rotate-password with 401 when no session cookie is presented', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrap(app, VALID_PASSWORD);
+    const configBefore = await loadAppConfig(testDatabase());
+    expect(configBefore).not.toBeNull();
+
+    const rotateResponse = await app.request(`${ANY_HOST}/api/admin/rotate-password`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ password: 'new-correct-horse-battery' }),
+    });
+    expect(rotateResponse.status).toBe(401);
+
+    // The row MUST stay untouched: anyone hitting the endpoint without
+    // a cookie should not be able to mutate password_hash or hmac_key.
+    const configAfter = await loadAppConfig(testDatabase());
+    expect(configAfter).not.toBeNull();
+    expect(configAfter?.passwordHash).toBe(configBefore?.passwordHash);
+    expect(configAfter?.hmacKey.equals(configBefore?.hmacKey ?? Buffer.alloc(0))).toBe(true);
+
+    // The original password still works.
+    const stillValid = await login(app, VALID_PASSWORD, '203.0.113.50');
+    expect(stillValid.status).toBe(200);
+  });
+
+  it('rotates password + HMAC key and invalidates every existing cookie when a valid session cookie is presented', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrap(app, VALID_PASSWORD);
     const initialLogin = await login(app, VALID_PASSWORD);
@@ -121,12 +147,24 @@ describe('shared-password auth controller (back-e2e)', () => {
     });
     expect(protectedBefore.status).toBe(200);
 
+    const configBefore = await loadAppConfig(testDatabase());
+    expect(configBefore).not.toBeNull();
+
     const rotateResponse = await app.request(`${ANY_HOST}/api/admin/rotate-password`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        cookie: `pragma_session=${initialCookie}`,
+      },
       body: JSON.stringify({ password: 'new-correct-horse-battery' }),
     });
     expect(rotateResponse.status).toBe(200);
+
+    // The row MUST have been mutated: both columns rewritten.
+    const configAfter = await loadAppConfig(testDatabase());
+    expect(configAfter).not.toBeNull();
+    expect(configAfter?.passwordHash).not.toBe(configBefore?.passwordHash);
+    expect(configAfter?.hmacKey.equals(configBefore?.hmacKey ?? Buffer.alloc(0))).toBe(false);
 
     // Old cookie no longer matches the rotated HMAC key.
     const protectedAfter = await app.request(`${ANY_HOST}/protected/ping`, {
