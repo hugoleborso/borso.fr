@@ -4,6 +4,7 @@
     "catalog": "Catalog",
     "sessions": "Sessions",
     "bars": "Bars",
+    "mastery": "Mastery",
     "members": "Members",
     "instruments": "Instruments"
   },
@@ -12,16 +13,113 @@
     "submit": "Enter",
     "rateLimited": "Too many attempts — try again in a few minutes.",
     "invalidPassword": "Wrong password.",
+    "notBootstrapped": "The application is not yet bootstrapped.",
+    "unknownError": "Unexpected error.",
     "title": "Pragma — band space"
   },
   "common": {
     "loading": "Loading…",
     "save": "Save",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "offline": "Offline — read only"
   },
   "scaffold": {
     "title": "Pragma — scaffold ready",
     "subtitle": "First slice: auth, schema, design tokens, i18n. UI surfaces ship in follow-up PRs."
+  },
+  "instruments": {
+    "title": "Instruments",
+    "name": "Name",
+    "isHarmonic": "Harmonic (counts for transition analysis)",
+    "harmonic": "harmonic",
+    "percussive": "percussive",
+    "newTitle": "New instrument",
+    "editTitle": "Edit instrument"
+  },
+  "members": {
+    "title": "Members",
+    "firstName": "First name",
+    "color": "Color (hex)",
+    "instrumentsAssigned": "Instruments played",
+    "newTitle": "New member",
+    "editTitle": "Edit member",
+    "noInstrumentsYet": "No instruments assigned"
+  },
+  "catalog": {
+    "title": "Catalog",
+    "newSong": "New song",
+    "songTitle": "Title",
+    "artist": "Artist",
+    "status": "Status",
+    "statusIdea": "idea",
+    "statusWip": "in progress",
+    "statusRehearsed": "rehearsed",
+    "statusConcertReady": "concert ready",
+    "tonalityStart": "Key — start",
+    "tonalityEnd": "Key — end",
+    "baseEnergy": "Base energy (1-10)",
+    "chordChart": "Chord chart",
+    "chartChordpro": "ChordPro text",
+    "chartPdf": "PDF",
+    "chartImage": "Image",
+    "links": "External links",
+    "emptyList": "No songs yet."
+  },
+  "mastery": {
+    "title": "Mastery matrix",
+    "subtitle": "Member × Instrument — 0 = does not play, 10 = excellent.",
+    "noData": "Add members and instruments to populate the matrix."
+  },
+  "sessions": {
+    "title": "Sessions",
+    "newSession": "New session",
+    "kindConcert": "Concert",
+    "kindPractice": "Practice",
+    "date": "Date",
+    "venue": "Venue",
+    "capacity": "Capacity",
+    "gear": "Gear",
+    "preparedConcert": "Prepared concert",
+    "noPreparedConcert": "—",
+    "friendsCount": "Expected friends count",
+    "setlist": "Setlist",
+    "buildSetlist": "Build setlist"
+  },
+  "setlist": {
+    "addSong": "Add song",
+    "removeEntry": "Remove",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "keyOverride": "Key (override)",
+    "capo": "Capo",
+    "notes": "Notes",
+    "energy": "Energy",
+    "transitionWarning": "Risky transition",
+    "openTransitionComment": "View / comment the transition",
+    "transitionCommentTitle": "Transition comment"
+  },
+  "bars": {
+    "title": "Bars",
+    "viewList": "List",
+    "viewKanban": "Kanban",
+    "name": "Name",
+    "status": "Status",
+    "statusLead": "Lead",
+    "statusContacted": "Contacted",
+    "statusBooked": "Booked",
+    "statusPlayed": "Played",
+    "statusCold": "Cold",
+    "city": "City",
+    "capacity": "Capacity",
+    "contactName": "Contact",
+    "contactEmail": "Email",
+    "contactPhone": "Phone",
+    "lastInteractionAt": "Last interaction",
+    "notes": "Notes",
+    "newBar": "New bar"
   }
 }

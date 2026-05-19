@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './i18n/i18n';
 import './styles/design-tokens.css';
+import './styles/shell.css';
+import './styles/member-music.css';
+import './styles/setlist-bars.css';
 
 const rootElement = document.getElementById('root');
 if (rootElement === null) {
