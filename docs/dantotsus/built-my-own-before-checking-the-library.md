@@ -128,6 +128,24 @@ rule will fire next time the agent reaches for "I'll just write a small
 helper that does what react-chessboard / chess.js / vite-plugin-pwa /
 react-dnd already does."
 
+> **Update 2026-05-18 — extended to the kaizen layer.**
+> The same misconception fired again at *kaizen time* during the
+> PR #23 sweep: the agent classified two friction rows as *"ship a
+> Biome plugin (level 2)"* without first asking *"is there a library
+> that would delete the code hosting the bug (level 1)?"*. The
+> `/after-task-dantotsus` skill now carries a parallel rule —
+> Step 2c, *Library-search pass — before writing custom anything*.
+> The operator's quote that triggered the update:
+>
+> > *« Mais même si tanstack n'était pas installé, la bonne méthode
+> > ici serait de checker des libs, trouver tanstack, et décider ou
+> > non de l'installer suivant notre contexte. C'est génial de build
+> > nos plugins custom mais il faut aussi savoir réutiliser ce qui
+> > existe déjà. »*
+>
+> Same anti-pattern, three layers (planning, implementation, kaizen).
+> All three now have a procedural prompt.
+
 ## See also
 
 - [`docs/knowledge/audit-imported-deps-and-patterns-when-planning.md`](../knowledge/audit-imported-deps-and-patterns-when-planning.md) —
