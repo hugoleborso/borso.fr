@@ -4,6 +4,7 @@
     "catalog": "Catalogue",
     "sessions": "Sessions",
     "bars": "Bars",
+    "mastery": "Maîtrise",
     "members": "Membres",
     "instruments": "Instruments"
   },
@@ -12,16 +13,113 @@
     "submit": "Entrer",
     "rateLimited": "Trop d'essais — réessaie dans quelques minutes.",
     "invalidPassword": "Mauvais mot de passe.",
+    "notBootstrapped": "L'application n'est pas encore initialisée.",
+    "unknownError": "Erreur inattendue.",
     "title": "Pragma — espace du groupe"
   },
   "common": {
     "loading": "Chargement…",
     "save": "Enregistrer",
     "cancel": "Annuler",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "back": "Retour",
+    "offline": "Hors-ligne — lecture seule"
   },
   "scaffold": {
     "title": "Pragma — squelette prêt",
     "subtitle": "Première tranche : auth, schéma, design tokens, i18n. Les surfaces UI arrivent dans les PR suivantes."
+  },
+  "instruments": {
+    "title": "Instruments",
+    "name": "Nom",
+    "isHarmonic": "Harmonique (compte pour l'analyse de transition)",
+    "harmonic": "harmonique",
+    "percussive": "percussif",
+    "newTitle": "Nouvel instrument",
+    "editTitle": "Modifier l'instrument"
+  },
+  "members": {
+    "title": "Membres",
+    "firstName": "Prénom",
+    "color": "Couleur (hex)",
+    "instrumentsAssigned": "Instruments joués",
+    "newTitle": "Nouveau membre",
+    "editTitle": "Modifier le membre",
+    "noInstrumentsYet": "Aucun instrument assigné"
+  },
+  "catalog": {
+    "title": "Catalogue",
+    "newSong": "Nouveau morceau",
+    "songTitle": "Titre",
+    "artist": "Interprète",
+    "status": "Statut",
+    "statusIdea": "idée",
+    "statusWip": "en chantier",
+    "statusRehearsed": "répété",
+    "statusConcertReady": "prêt scène",
+    "tonalityStart": "Tonalité — début",
+    "tonalityEnd": "Tonalité — fin",
+    "baseEnergy": "Énergie de base (1-10)",
+    "chordChart": "Chord chart",
+    "chartChordpro": "Texte ChordPro",
+    "chartPdf": "PDF",
+    "chartImage": "Image",
+    "links": "Liens externes",
+    "emptyList": "Aucun morceau pour l'instant."
+  },
+  "mastery": {
+    "title": "Matrice de maîtrise",
+    "subtitle": "Membre × Instrument — 0 = ne joue pas, 10 = excellent.",
+    "noData": "Crée des membres et des instruments pour remplir la matrice."
+  },
+  "sessions": {
+    "title": "Sessions",
+    "newSession": "Nouvelle session",
+    "kindConcert": "Concert",
+    "kindPractice": "Répétition",
+    "date": "Date",
+    "venue": "Lieu",
+    "capacity": "Jauge",
+    "gear": "Matos",
+    "preparedConcert": "Concert préparé",
+    "noPreparedConcert": "—",
+    "friendsCount": "Nombre d'amis attendus",
+    "setlist": "Setlist",
+    "buildSetlist": "Composer la setlist"
+  },
+  "setlist": {
+    "addSong": "Ajouter un morceau",
+    "removeEntry": "Retirer",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "keyOverride": "Tonalité (override)",
+    "capo": "Capo",
+    "notes": "Notes",
+    "energy": "Énergie",
+    "transitionWarning": "Transition à risque",
+    "openTransitionComment": "Voir / commenter la transition",
+    "transitionCommentTitle": "Commentaire de transition"
+  },
+  "bars": {
+    "title": "Bars",
+    "viewList": "Liste",
+    "viewKanban": "Kanban",
+    "name": "Nom",
+    "status": "Statut",
+    "statusLead": "Piste",
+    "statusContacted": "Contacté",
+    "statusBooked": "Réservé",
+    "statusPlayed": "Joué",
+    "statusCold": "Froid",
+    "city": "Ville",
+    "capacity": "Capacité",
+    "contactName": "Contact",
+    "contactEmail": "Email",
+    "contactPhone": "Téléphone",
+    "lastInteractionAt": "Dernier contact",
+    "notes": "Notes",
+    "newBar": "Nouveau bar"
   }
 }

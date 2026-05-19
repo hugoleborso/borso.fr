@@ -12,6 +12,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@site': fromHere('./site/src'),
+      '@api': fromHere('./api/src'),
     },
   },
   build: {
