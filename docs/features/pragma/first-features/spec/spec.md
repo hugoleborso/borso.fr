@@ -32,11 +32,11 @@ This is the band's tool. The single measurable outcome is **rehearsal-time effic
 Functional surfaces required (one route group per capability):
 
 - `/catalog` — songs list + per-song detail (title, status, links, charts, tonality, default lineup, mastery matrix).
-- `/sessions` — practices + concerts. Concert detail = matos, date, lieu, capacity, friends-per-member, setlist, energy curve.
+- `/sessions` — practices + concerts. Concert detail = gear, date, venue, capacity, friends-per-member, setlist, energy curve.
 - `/sessions/<id>/setlist` — drag-reorder song list, lineup-override per entry, energy 1-10 slider, transition warning surface, transition comment.
 - `/bars` — CRM list + kanban view.
-- `/members` — admin (prénom, color, avatar).
-- `/instruments` — admin (name, `porteurTonal` flag).
+- `/members` — admin (firstName, color, avatar).
+- `/instruments` — admin (name, `isHarmonic` flag).
 
 **No public-facing view.** All routes are behind the shared password.
 
@@ -65,7 +65,7 @@ Edge cases:
 1. User opens the concert, taps "build setlist".
 2. Drags songs from the catalog into ordered positions.
 3. For each `SetlistEntry`, optionally overrides the default lineup per member.
-4. As soon as 2+ entries exist, the **transition warning** is computed for each consecutive pair. A pair warns if **no porteur-tonal instrument is held by the same member across the two songs**. Warning is a visual marker on the boundary, with hover/tap revealing the offending instrument list.
+4. As soon as 2+ entries exist, the **transition warning** is computed for each consecutive pair. A pair warns if **no harmonic instrument is held by the same member across the two songs**. Warning is a visual marker on the boundary, with hover/tap revealing the offending instrument list.
 5. User attaches a `TransitionComment` to the (songA, songB) pair (global, not per-session — comment is shared across all setlists using that ordering).
 6. User fills in energy 1-10 per entry; the curve renders below.
 7. Saves implicitly on each edit (no draft mode).
@@ -77,7 +77,7 @@ Edge cases:
 - Setlist edited concurrently by two members → last-write-wins on the whole `SetlistEntry[]`.
 
 ### 3. Sessions — link practices to concerts
-1. User creates a `Concert` with date / lieu / capacity / matos.
+1. User creates a `Concert` with date / venue / capacity / gear.
 2. Each band member opens the concert, fills in their `friendsCountPerMember` field.
 3. User creates a `Practice` and links it to the upcoming concert via `preparedConcertId`.
 4. Practice and concert can share or have distinct setlists.
@@ -106,7 +106,7 @@ Edge case:
 erDiagram
     MEMBER {
         uuid id PK
-        text prenom
+        text firstName
         text color_hex
         text avatar_s3_key "nullable"
     }
@@ -114,7 +114,7 @@ erDiagram
     INSTRUMENT {
         uuid id PK
         text name
-        bool porteur_tonal
+        bool is_harmonic
     }
 
     SONG {
@@ -142,9 +142,9 @@ erDiagram
         timestamptz date
         uuid setlist_id FK "nullable, 1..1"
         uuid prepared_concert_id FK "nullable, practice only"
-        text lieu "concert only"
+        text venue "concert only"
         int capacity "concert only"
-        text matos "concert only"
+        text gear "concert only"
         jsonb friends_count_per_member "concert only, MemberId -> int"
     }
 
@@ -206,7 +206,7 @@ Notes on the diagram:
 | Auth model | individual accounts vs shared password | shared password (2026-05-19) — 5 known people, audit not needed, friction tax of per-user login wasted on this scale. Migration path documented in Q.O.D. |
 | Concurrency | OT / CRDT / advisory lock / last-write-wins | last-write-wins (2026-05-19) — 5 users, rare overlap, complexity of anything else not justified. |
 | Mastery matrix locus | per-member-global or per-song | per-song (2026-05-19) — "Bob masters the guitar *on this song*" is the meaningful unit. A `MasteryEntry(Member, Instrument, Song) → 1..10`. |
-| Transition warning rule | which combinations trigger | a pair warns iff **no porteur-tonal instrument stays held by the same member across both songs** (2026-05-19). The list of tonal instruments is data, set per-instrument via `porteurTonal: boolean`. |
+| Transition warning rule | which combinations trigger | a pair warns iff **no harmonic instrument stays held by the same member across both songs** (2026-05-19). The list of tonal instruments is data, set per-instrument via `isHarmonic: boolean`. |
 | Transition comment locus | per-session or global per song-pair | global per (songA, songB) (2026-05-19) — the issue is musical, not per-event. One comment, reused everywhere that pair appears. |
 | Transition comment orientation | ordered pair or unordered pair | **ordered** (2026-05-19) — A→B is a different musical transition than B→A and warrants its own comment. The DB unique index is on the ordered pair `(song_a_id, song_b_id)`. If a song appears several times in a setlist and creates multiple A→B occurrences, they all share the single ordered-pair comment. |
 | Mastery matrix UI locus | song detail / dedicated matrix view / inline in setlist | **song detail** (2026-05-19) — the matrix is part of "knowing this song"; editing happens where the song lives. No dedicated matrix view in v1. |
@@ -218,6 +218,8 @@ Notes on the diagram:
 | Concurrent-edit story for setlist | warn / merge / overwrite | overwrite (last-write-wins) (2026-05-19) — same answer as global concurrency. |
 | DB seed | import / manual UI entry | manual UI (2026-05-19) — no historical data to import. |
 | `friendsCountPerMember` | who fills it | each member fills their own count (2026-05-19) — for venue capacity planning. |
+| Code language | English / French / mixed | **English** (2026-05-19) — repo convention: all code, schemas, identifiers, comments, and specs are in English. |
+| User-facing language | FR only / EN only / FR+EN i18n | **FR + EN i18n** (2026-05-19) — the platform serves the band (FR) but is built as a portfolio piece visible to EN-speaking reviewers. Implies a translation layer (e.g. `react-i18next`) on every user-visible string and locale-aware date/number formatting via `Intl`. User-input data (song titles, notes, comments) stays in whatever language the user typed; no auto-translation. |
 
 **Out of scope (explicit, do not implement):**
 - Ultimate Guitar automated rip (CGU §2.6 prohibits scraping — flagged in KAIZEN for `docs/knowledge/`).
@@ -244,7 +246,7 @@ type BarId = string;
 
 interface Member {
   id: MemberId;
-  prenom: string;
+  firstName: string;
   color: string;        // hex, used to tint Member chips across UI
   avatarS3Key: string | null;
 }
@@ -252,7 +254,7 @@ interface Member {
 interface Instrument {
   id: InstrumentId;
   name: string;
-  porteurTonal: boolean; // governs the transition-warning algorithm
+  isHarmonic: boolean; // governs the transition-warning algorithm
 }
 
 type SongStatus = 'idea' | 'wip' | 'rehearsed' | 'concert_ready';
@@ -302,9 +304,9 @@ interface Practice extends SessionBase {
 
 interface Concert extends SessionBase {
   kind: 'concert';
-  lieu: string;
+  venue: string;
   capacity: number;
-  matos: string;
+  gear: string;
   friendsCountPerMember: Record<MemberId, number>;
 }
 
@@ -363,6 +365,8 @@ apps/pragma/site/src/routes/bars/                            // NEW: list + kanb
 apps/pragma/site/src/routes/members/                         // NEW: admin
 apps/pragma/site/src/routes/instruments/                     // NEW: admin
 apps/pragma/site/src/sw/                                     // NEW: PWA service worker, offline cache
+apps/pragma/site/src/i18n/                                   // NEW: react-i18next setup + en.json / fr.json catalogs
+apps/pragma/site/src/i18n/i18n.utils.ts                      // NEW: locale detection + Intl date/number helpers, 100% gated
 apps/pragma/api/                                             // NEW: Hono on Lambda
 apps/pragma/api/src/domain/transition.core.ts                // NEW: warning rule, 100% gated
 apps/pragma/api/src/domain/tonality.core.ts                  // NEW: derive start/end from ChordPro, 100% gated
@@ -390,6 +394,7 @@ CLAUDE.md                                                    // UPDATE (via KAIZ
 - **Unit tests on `*.utils.ts` at 100% coverage**: formatters (date, capacity), color contrast for Member chips, embed-URL detector (Spotify vs Deezer vs YouTube vs other), kebab-case utilities.
 - **Integration tests on the back-end** using the repo's Docker-less Postgres via `scripts/local-postgres.sh`: full CRUD for songs, setlists, sessions, bars; concurrent-edit last-write-wins semantics; auth middleware (shared password).
 - **Front-end component tests** for the setlist drag-reorder behavior, kanban column moves, energy slider, ChordPro text editor.
+- **i18n coverage test** (back-end script): asserts that every key referenced by the front-end exists in both `en.json` and `fr.json`, and that the two catalogs have the exact same key set (no missing translations on either side).
 - **Visual validation rows** — once the designer pass produces mockups, each numbered happy-path step under *Use cases* becomes one `/visual-validation` assertion. The agent drives a real browser against the dev server. Pending designer pass, this section lists assertion *intents*:
   - Catalog: a new song with all 3 chart formats can be created and re-read.
   - Setlist: dragging produces a new order; warning surfaces between known-bad pairs from fixtures.

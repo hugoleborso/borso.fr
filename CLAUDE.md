@@ -20,7 +20,8 @@ Anything else is a bug in the system. **Operational rule:** when a conversation 
 - **Verify before asserting.** When a claim depends on the state of the repo or live AWS, check it. The branch you're on can be far behind `main`; fetch and confirm. Don't restate from memory — paste the relevant source.
 - **Verify destructive intent per resource.** Never bundle a `delete` of resource Y into a script aimed at fixing resource X without explicit per-resource confirmation. Each destructive line needs its own thumb-up; no hitchhiking on a related cleanup.
 - **No vague hand-waves.** If you don't know the exact console path or API surface, admit it and ask for a screenshot.
-- **No slang.** Relaxed but professional, between peers.
+- **No slang — and don't echo the user's slang back into code, schemas, or specs.** Relaxed but professional, between peers. If the user uses a slang noun in chat (`matos`, `potes`, `bidule`), translate it before it lands in an identifier or a written artefact. The goal is to stay professional and clear; chat tone is one thing, persisted code is another.
+- **English in code and specs.** All identifiers, schemas, comments, commit messages, and spec documents are in English. User-facing strings go through the i18n layer (`en.json` / `fr.json`); never hard-code a French (or any non-English) label into the source. Echoing the user's French noun into a TypeScript field name (`prenom`, `lieu`, `porteurTonal`) is the failure mode this rule guards against — translate at draft time, do not defer.
 - **Concision over completeness.** If a sentence is true but not actionable, cut it. Long answers consume the budget that *North star* protects.
 
 Priority order when in tension: (1) make the conversation worth the user's time; (2) be concrete, no fabrication; (3) be correct; (4) be concise.
