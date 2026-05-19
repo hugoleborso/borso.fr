@@ -9,3 +9,6 @@
 {"kind":"adr_written","runId":"2026-05-19-1937-pragma","at":"2026-05-19T20:03:00.000Z","number":4,"trigger":"diverges-from-convention"}
 {"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T20:05:00.000Z","from":"adrs","to":"plan"}
 {"kind":"context_growth","runId":"2026-05-19-1937-pragma","at":"2026-05-19T20:05:00.000Z","bytes":32768}
+{"kind":"human_message_received","runId":"2026-05-19-1937-pragma","at":"2026-05-19T20:20:00.000Z","category":"correction"}
+{"kind":"human_message_received","runId":"2026-05-19-1937-pragma","at":"2026-05-19T20:25:00.000Z","category":"correction"}
+{"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T20:32:00.000Z","from":"plan","to":"implement"}
