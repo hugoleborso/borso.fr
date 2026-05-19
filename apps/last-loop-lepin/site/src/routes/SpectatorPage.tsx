@@ -131,7 +131,8 @@ export function SpectatorPage() {
   }
 
   const isLive = edition.status === 'live';
-  const isFinished = edition.status === 'finished';
+  const raceEnded = standingsState.standings?.raceEnded === true;
+  const isFinished = edition.status === 'finished' || raceEnded;
   const upcomingBoundary = nextLoopBoundary(edition, Date.now());
   const mostRecentCorrection =
     standingsState.mostRecentCorrectionAt === null
@@ -152,10 +153,6 @@ export function SpectatorPage() {
         </div>
       ) : null}
       <CorrectionBanner correctedAt={mostRecentCorrection} />
-      {/* 2×2 grid via `grid-template-areas`: row 1 = countdown + trace
-          (natural height of the countdown), row 2 = classement + profile
-          (grows to fill the remaining viewport via `flex: 1`). Row tops
-          align across columns. */}
       <div className="spectator-layout">
         <div className="card countdown-card">
           <div className="card-head">

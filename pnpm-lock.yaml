@@ -178,6 +178,9 @@ importers:
       '@sentry/react':
         specifier: ^8.50.0
         version: 8.55.2(react@19.2.6)
+      '@tanstack/react-query':
+        specifier: 5.100.10
+        version: 5.100.10(react@19.2.6)
       drizzle-orm:
         specifier: ^0.36.0
         version: 0.36.4(@types/react@19.2.14)(postgres@3.4.9)(react@19.2.6)
@@ -2931,6 +2934,14 @@ packages:
 
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     resolution: {integrity: sha512-lR8q/9W7hZpMWweNiAKU7NQerBnzQQLvi8qnTDU/fxItPhtZVMbPV3lbCwjhIlNBe9Bbr5V+KHshvWmVSG9cxQ==}
+
+  '@tanstack/query-core@5.100.10':
+    resolution: {integrity: sha512-8UR0yJR+GiQ40m3lPhUr0xbfAupe6GSQiksSBSa9SM2NjezFyxXCIA69/lz8cSoNKZLrw1/PktIyQBJcVeMi3w==}
+
+  '@tanstack/react-query@5.100.10':
+    resolution: {integrity: sha512-FLaZf2RCrA/Zgp4aiu5tG3TyasTRO7aZ99skxQpr3Hg/zXOhu6yq5FZCYQ/tRaJtM9ylnoK8tFK7PolXQadv6Q==}
+    peerDependencies:
+      react: ^18 || ^19
 
   '@testcontainers/postgresql@10.28.0':
     resolution: {integrity: sha512-NN25rruG5D4Q7pCNIJuHwB+G85OSeJ3xHZ2fWx0O6sPoPEfCYwvpj8mq99cyn68nxFkFYZeyrZJtSFO+FnydiA==}
@@ -8130,6 +8141,13 @@ snapshots:
       json5: 2.2.3
       magic-string: 0.25.9
       string.prototype.matchall: 4.0.12
+
+  '@tanstack/query-core@5.100.10': {}
+
+  '@tanstack/react-query@5.100.10(react@19.2.6)':
+    dependencies:
+      '@tanstack/query-core': 5.100.10
+      react: 19.2.6
 
   '@testcontainers/postgresql@10.28.0':
     dependencies:

@@ -86,8 +86,6 @@ const fixtureSchema = z.object({
   fixture: z.enum(['race-down-to-one-survivor', 'race-finished', 'top-with-dnf-candidates']),
 });
 
-const testSeedRouter = new Hono();
-
 async function clearEditionRows(): Promise<void> {
   // Reset punches + DNFs scoped to our seeded edition before each fixture
   // applies its own. Without this, switching between fixtures (e.g.
@@ -227,15 +225,16 @@ async function applyRaceFinished(now: Date): Promise<void> {
   await ensureManualDnf('dan', 0, 'manual', new Date(startsAt.getTime() + 0.5 * HOUR_MS));
 }
 
-testSeedRouter.post('/seed', zValidator('query', fixtureSchema), async (context) => {
-  const { fixture } = context.req.valid('query');
-  const now = new Date();
-  if (fixture === 'race-down-to-one-survivor') await applyRaceDownToOneSurvivor(now);
-  else if (fixture === 'top-with-dnf-candidates') await applyTopWithDnfCandidates(now);
-  else await applyRaceFinished(now);
+const testSeedRouter = new Hono()
+  .post('/seed', zValidator('query', fixtureSchema), async (context) => {
+    const { fixture } = context.req.valid('query');
+    const now = new Date();
+    if (fixture === 'race-down-to-one-survivor') await applyRaceDownToOneSurvivor(now);
+    else if (fixture === 'top-with-dnf-candidates') await applyTopWithDnfCandidates(now);
+    else await applyRaceFinished(now);
 
-  const runners = await listRunnersForEdition(getDatabase(), EDITION_SLUG);
-  return context.json({ fixture, edition: EDITION_SLUG, runners: runners.length });
-});
+    const runners = await listRunnersForEdition(getDatabase(), EDITION_SLUG);
+    return context.json({ fixture, edition: EDITION_SLUG, runners: runners.length });
+  });
 
 export { testSeedRouter };
