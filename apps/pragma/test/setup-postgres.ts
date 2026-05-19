@@ -28,6 +28,7 @@ const TRACKED_TABLES = [
   'mastery_override',
   'mastery_default',
   'song',
+  'member_instrument',
   'instrument',
   'member',
 ];

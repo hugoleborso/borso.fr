@@ -21,8 +21,6 @@ const selfPunchResponseSchema = z.object({
 // Geofence centre per makeEdition: { lat: 45.55, lng: 5.78 }. ~56 m offset.
 const IN_ZONE_LAT = 45.5505;
 const IN_ZONE_LNG = 5.78;
-const OUT_OF_ZONE_LAT = 45.56;
-const OUT_OF_ZONE_LNG = 5.78;
 const TEST_USER_AGENT = 'Mozilla/5.0 (iPhone) AppleWebKit Test';
 
 describe('self-punch controller (public, no admin middleware)', () => {
