@@ -52,7 +52,8 @@ Visual: per-capability sequence sketch. Full BPMN deferred to designer pass.
 5. **If ChordPro text:** the `tonality.core.ts` deduces start / end tonality from first / last chord. User can override.
 6. **If PDF/image:** tonality fields are manual.
 7. Selects default lineup: for each Member, picks an Instrument. Optional; can be left empty.
-8. Saves. Song lands in the catalog.
+8. **Edits the mastery matrix inline in the song detail:** for each (Member, Instrument) cell relevant to this song, sets a 1-10 score. The matrix UI is part of the song detail page — there is no separate "matrix view" in v1.
+9. Saves. Song lands in the catalog.
 
 Edge cases:
 - Two members open the same song concurrently → last-write-wins; the loser's edit is silently discarded.
@@ -93,10 +94,109 @@ Edge case:
 - Bar deleted while displayed in the kanban → optimistic remove; refetch confirms.
 
 ### 5. Offline use
-1. On install, PWA caches: catalog + chord charts (all 3 formats) + planned (future) setlists.
+1. On install (and on every successful sync after that), the PWA service worker caches: the full catalog + all chord charts (3 formats) + **the setlist of the next upcoming session only** (whichever session — practice or concert — has the smallest future `date`).
 2. User boards the metro to the concert, no signal.
-3. Opens setlist, reads chord charts, sees the energy curve. All works.
-4. Edits made offline? **Not supported in v1.** All writes require online.
+3. Opens the catalog or the next session's setlist, reads chord charts, sees the energy curve. All works.
+4. Edits made offline? **Not supported in v1.** All writes require online; the UI surfaces an "offline — read-only" banner.
+5. Subsequent (further-in-the-future) sessions' setlists are not cached. Opening them offline shows an empty state.
+
+## Domain model — relational diagram
+
+```mermaid
+erDiagram
+    MEMBER {
+        uuid id PK
+        text prenom
+        text color_hex
+        text avatar_s3_key "nullable"
+    }
+
+    INSTRUMENT {
+        uuid id PK
+        text name
+        bool porteur_tonal
+    }
+
+    SONG {
+        uuid id PK
+        text title
+        text status "idea|wip|rehearsed|concert_ready"
+        jsonb links "SongExternalLink[]"
+        jsonb chart "ChordChart variant"
+        text tonality_start "nullable"
+        text tonality_end "nullable"
+        jsonb default_lineup "MemberId -> InstrumentId|null"
+    }
+
+    MASTERY_ENTRY {
+        uuid id PK
+        uuid member_id FK
+        uuid instrument_id FK
+        uuid song_id FK
+        int score "1..10"
+    }
+
+    SESSION {
+        uuid id PK
+        text kind "practice|concert"
+        timestamptz date
+        uuid setlist_id FK "nullable, 1..1"
+        uuid prepared_concert_id FK "nullable, practice only"
+        text lieu "concert only"
+        int capacity "concert only"
+        text matos "concert only"
+        jsonb friends_count_per_member "concert only, MemberId -> int"
+    }
+
+    SETLIST {
+        uuid id PK
+        uuid session_id FK "1..1"
+    }
+
+    SETLIST_ENTRY {
+        uuid id PK
+        uuid setlist_id FK
+        uuid song_id FK
+        int position
+        jsonb lineup_override "nullable, MemberId -> InstrumentId|null"
+        int energy "nullable, 1..10"
+    }
+
+    TRANSITION_COMMENT {
+        uuid id PK
+        uuid song_a_id FK
+        uuid song_b_id FK
+        text comment
+        timestamptz updated_at
+    }
+
+    BAR {
+        uuid id PK
+        text name
+        text status "lead|contacted|booked|played|cold"
+        text notes
+        timestamptz last_interaction_at "nullable"
+    }
+
+    MEMBER ||--o{ MASTERY_ENTRY : "rated on"
+    INSTRUMENT ||--o{ MASTERY_ENTRY : "with"
+    SONG ||--o{ MASTERY_ENTRY : "for"
+
+    SONG ||--o{ SETLIST_ENTRY : "appears as"
+    SETLIST ||--o{ SETLIST_ENTRY : "contains"
+    SESSION ||--|| SETLIST : "has at most one"
+    SESSION }o--o| SESSION : "practice prepares concert"
+
+    SONG ||--o{ TRANSITION_COMMENT : "is A in"
+    SONG ||--o{ TRANSITION_COMMENT : "is B in"
+```
+
+Notes on the diagram:
+- `MASTERY_ENTRY` is the M:N:M join across (Member, Instrument, Song). Unique index on `(member_id, instrument_id, song_id)`.
+- `TRANSITION_COMMENT` is the **ordered** pair (A→B). Unique index on `(song_a_id, song_b_id)` — so A→B and B→A can coexist as two distinct rows.
+- `SESSION` is single-table inheritance keyed by `kind`. Concert-only columns are nullable; the API validates the shape per kind.
+- `SETLIST` is split from `SESSION` (rather than embedded) so a session can swap its setlist without copying the entries array.
+- JSONB blobs (`links`, `chart`, `default_lineup`, `lineup_override`, `friends_count_per_member`) are validated via Zod on read/write; their shapes are pinned in the *Types* section.
 
 ## Questions, Options and Decisions
 
@@ -108,6 +208,9 @@ Edge case:
 | Mastery matrix locus | per-member-global or per-song | per-song (2026-05-19) — "Bob masters the guitar *on this song*" is the meaningful unit. A `MasteryEntry(Member, Instrument, Song) → 1..10`. |
 | Transition warning rule | which combinations trigger | a pair warns iff **no porteur-tonal instrument stays held by the same member across both songs** (2026-05-19). The list of tonal instruments is data, set per-instrument via `porteurTonal: boolean`. |
 | Transition comment locus | per-session or global per song-pair | global per (songA, songB) (2026-05-19) — the issue is musical, not per-event. One comment, reused everywhere that pair appears. |
+| Transition comment orientation | ordered pair or unordered pair | **ordered** (2026-05-19) — A→B is a different musical transition than B→A and warrants its own comment. The DB unique index is on the ordered pair `(song_a_id, song_b_id)`. If a song appears several times in a setlist and creates multiple A→B occurrences, they all share the single ordered-pair comment. |
+| Mastery matrix UI locus | song detail / dedicated matrix view / inline in setlist | **song detail** (2026-05-19) — the matrix is part of "knowing this song"; editing happens where the song lives. No dedicated matrix view in v1. |
+| Offline cache scope for setlists | all future / next session only / all setlists | **next session only** (2026-05-19) — bounded by what fits in the PWA cache budget and matches the actual offline need (the concert you are heading to). |
 | Energy viz | single setlist / comparator | single-setlist only in v1 (2026-05-19) — comparator deferred. |
 | Chord chart formats | one canonical / accept all | accept ChordPro text + PDF + image, no privileged format (2026-05-19) — friction of conversion higher than the cost of storing 3 shapes. |
 | OCR/import of charts | automatic / assistant / none | assistant (2026-05-19, Q.O.D.) — user pastes a PDF or photo, system proposes a ChordPro draft, user corrects before save. Quality is honest about scan vs photo. |
