@@ -1,0 +1,27 @@
+{
+  "appName": "pragma",
+  "nav": {
+    "catalog": "Catalogue",
+    "sessions": "Sessions",
+    "bars": "Bars",
+    "members": "Membres",
+    "instruments": "Instruments"
+  },
+  "auth": {
+    "passwordLabel": "Mot de passe partagé",
+    "submit": "Entrer",
+    "rateLimited": "Trop d'essais — réessaie dans quelques minutes.",
+    "invalidPassword": "Mauvais mot de passe.",
+    "title": "Pragma — espace du groupe"
+  },
+  "common": {
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer"
+  },
+  "scaffold": {
+    "title": "Pragma — squelette prêt",
+    "subtitle": "Première tranche : auth, schéma, design tokens, i18n. Les surfaces UI arrivent dans les PR suivantes."
+  }
+}

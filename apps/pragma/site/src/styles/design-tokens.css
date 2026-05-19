@@ -1,0 +1,90 @@
+/*
+ * Pragma design tokens — single source of truth for accent, member
+ * palette, paper background, type scale. Editorial-jazz aesthetic
+ * adopted from the design bundle under
+ * `docs/features/pragma/first-features/spec/design-bundle/`.
+ *
+ * Dark mode is opt-in via the OS `prefers-color-scheme` query only
+ * (no in-app toggle in v1) — see CLAUDE.md "useEffect is a smell"
+ * for the reasoning that motivates CSS-driven dark mode.
+ */
+
+:root {
+  --accent: #2d5fa0;
+  --accent-strong: #1f4275;
+  --accent-on-dark: #6b9bd6;
+
+  --paper: #f5f1e8;
+  --paper-edge: #ebe5d4;
+  --ink: #1a1814;
+  --ink-soft: #4a463e;
+  --ink-faint: #8c8678;
+
+  --surface: #fffefa;
+  --surface-edge: #e6dfca;
+
+  --member-coral: #d96f5a;
+  --member-teal: #3f8e8a;
+  --member-mustard: #c79b3e;
+  --member-plum: #7b5786;
+  --member-sage: #7a8f5a;
+
+  --status-lead: #b8a06b;
+  --status-contacted: #4a7e9b;
+  --status-booked: #3e8a6c;
+  --status-played: #6e5b8b;
+  --status-cold: #8c8678;
+
+  --font-display: 'Instrument Serif', 'Times New Roman', serif;
+  --font-body: 'Geist', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+
+  --shadow-card: 0 2px 12px rgba(26, 24, 20, 0.08);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: var(--accent-on-dark);
+    --accent-strong: #88b4e6;
+    --paper: #1a1814;
+    --paper-edge: #2a2620;
+    --ink: #f5f1e8;
+    --ink-soft: #c8c2b3;
+    --ink-faint: #8c8678;
+    --surface: #221f1a;
+    --surface-edge: #36302a;
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+  }
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
