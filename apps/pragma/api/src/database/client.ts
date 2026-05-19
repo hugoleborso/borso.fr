@@ -28,7 +28,6 @@ interface LocalConfig {
 }
 
 let cachedDatabase: Database | null = null;
-let cachedClient: Sql | null = null;
 
 function readEnv(name: string): string | undefined {
   const value = process.env[name];
@@ -76,13 +75,7 @@ export function getDatabase(): Database {
   if (client === null) {
     throw new Error('Database not configured: set DSQL_ENDPOINT+DSQL_SCHEMA or DATABASE_URL.');
   }
-  cachedClient = client;
   cachedDatabase = drizzle(client, { schema });
   return cachedDatabase;
 }
 
-export function resetDatabaseForTests(): void {
-  cachedDatabase = null;
-  void cachedClient?.end({ timeout: 1 });
-  cachedClient = null;
-}
