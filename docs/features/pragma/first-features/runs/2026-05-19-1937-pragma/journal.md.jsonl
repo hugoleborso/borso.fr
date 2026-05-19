@@ -19,3 +19,5 @@
 {"kind":"technical_validation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:32:00.000Z","status":"FAIL","pass":74,"fail":1,"unverifiable":12,"next":"fix","blocker":"auth-bypass-rotate-password"}
 {"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:35:00.000Z","from":"validate","to":"implement","reason":"fix-round-1"}
 {"kind":"context_growth","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:35:00.000Z","bytes":56000}
+{"kind":"implementation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:54:00.000Z","status":"done","retry":1,"sha":"f26014f","scope":"auth-bypass-fix"}
+{"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T21:55:00.000Z","from":"implement","to":"validate","reason":"re-validate-after-fix-1"}
