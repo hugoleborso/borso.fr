@@ -23,20 +23,24 @@ import { sessionTable, setlistEntryTable, setlistTable } from '../database/schem
 
 const friendsCountSchema = z.record(z.string().uuid(), z.number().int().min(0).max(1_000));
 
-const concertCreateSchema = z.object({
-  kind: z.literal('concert'),
-  date: z.string().datetime(),
-  venue: z.string().trim().min(1).max(256),
-  capacity: z.number().int().min(0).max(100_000),
-  gear: z.string().max(2_048).default(''),
-  friendsCountPerMember: friendsCountSchema.default({}),
-});
+const concertCreateSchema = z
+  .object({
+    kind: z.literal('concert'),
+    date: z.string().datetime(),
+    venue: z.string().trim().min(1).max(256),
+    capacity: z.number().int().min(0).max(100_000),
+    gear: z.string().max(2_048).default(''),
+    friendsCountPerMember: friendsCountSchema.default({}),
+  })
+  .strict();
 
-const practiceCreateSchema = z.object({
-  kind: z.literal('practice'),
-  date: z.string().datetime(),
-  preparedConcertId: z.string().uuid().nullable().default(null),
-});
+const practiceCreateSchema = z
+  .object({
+    kind: z.literal('practice'),
+    date: z.string().datetime(),
+    preparedConcertId: z.string().uuid().nullable().default(null),
+  })
+  .strict();
 
 const sessionCreateSchema = z.discriminatedUnion('kind', [
   concertCreateSchema,
