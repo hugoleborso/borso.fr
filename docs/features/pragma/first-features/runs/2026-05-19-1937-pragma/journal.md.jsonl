@@ -1,0 +1,4 @@
+{"kind":"run_started","runId":"2026-05-19-1937-pragma","at":"2026-05-19T19:37:16.000Z","app":"pragma","slug":"first-features"}
+{"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-19T19:39:00.000Z","from":"spec","to":"adrs"}
+{"kind":"context_growth","runId":"2026-05-19-1937-pragma","at":"2026-05-19T19:39:00.000Z","bytes":16384}
+{"kind":"human_message_received","runId":"2026-05-19-1937-pragma","at":"2026-05-19T19:38:30.000Z","category":"correction"}
