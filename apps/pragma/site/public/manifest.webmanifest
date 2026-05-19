@@ -1,0 +1,11 @@
+{
+  "name": "pragma",
+  "short_name": "pragma",
+  "description": "Band ERP / CRM / PWA for the band's catalog, setlists, sessions and bars.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f1e8",
+  "theme_color": "#2d5fa0",
+  "lang": "fr",
+  "icons": []
+}
