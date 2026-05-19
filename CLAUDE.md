@@ -112,7 +112,7 @@ If a PR ships zero lessons, that's fine — open the follow-up PR with a note sa
 
 ## Don'ts
 
-- Don't reintroduce `pragma` as a slug — it's the upstream `borso-platform` test fixture, renamed to `test-app` here.
+- `pragma` is the slug for the band-ERP app (`apps/pragma/`). The earlier "don't reintroduce pragma" rule referenced the upstream `borso-platform` test fixture, which lives under `test-app` here and is unrelated. The two namespaces don't collide; if confusion ever arises again, refer to the upstream as `test-app`, not "pragma".
 - Don't `import`/`export` in `infra/cdk/src/internal/cf-host-routing-function.code.js` — it's CloudFront Function source, read at synth time as a string and shipped to the edge runtime.
 - Don't add an app without updating `.github/path-filters.yml` and the commitlint scope-enum. (Docs-only slugs like `meta` don't need `.github/path-filters.yml` — they aren't workspaces.)
 - Don't `--no-verify`. Ever. Fix the hook failure instead.
