@@ -10,9 +10,9 @@ Bootstrap spec for `apps/pragma/`, the band's private ERP/CRM/PWA at `pragma.bor
 - [x] **Product** — value prioritisation done across 8 rounds: catalog + setlists + transition warnings are MVP; energy curve viz is MVP single-setlist only; CRM bars is MVP minus push notifications.
 - [x] **Tech-lead** — stack pinned to the `last-loop-lepin` full-stack pattern (Vite + Hono + DSQL + CDK); shared password rejected for individual auth on cost/benefit; OCR moved to Q.O.D.; concurrency is last-write-wins.
 - [x] **Developer** — testability call: every domain rule (transition warning, tonality derivation from ChordPro, lineup defaulting, energy-curve smoothing) lives in `*.core.ts` with `now` injection, gated at 100%. User-stated rule: *"je veux TOUJOURS le maximum de tests"* — codified in KAIZEN as a CLAUDE.md amendment.
-- [ ] **Designer** — deferred. User will run a dedicated `/designer` consult before implementation. No UI direction, palette, component library, or mobile-vs-desktop layouts decided here.
+- [x] **Designer** — Claude Design pass shipped on 2026-05-19. Decisions adopted into production (no Tweaks panel — that was a design-time exploration tool, not a runtime feature): editorial-jazz aesthetic (Instrument Serif display + Geist body + JetBrains Mono for tags), cream paper background, **blue accent** (user override on the design's original amber), member palette of 5 distinct equal-chroma hues (coral / teal / mustard / plum / sage), **member style: `chip`**, **energy viz: `sparkline`**, **mobile drag pattern: `handle`**, **density: `comfortable`**, dark mode opt-in via OS `prefers-color-scheme` only (no in-app toggle in v1), responsive layout (desktop ≥ 1024 px, mobile < 1024 px — no manual frame switcher). Side-gutter transition warnings, inline chord chart preview that taps into a fullscreen Mode Scène, kanban + list views for bars.
 
-> ⚠️ Missing designer discussion — UI direction, mobile/desktop layouts, component library, color palette per member, kanban visual, energy curve chart style. Pick this up before `/technical-conception` so the plan has UI inputs to lean on.
+> Designer pass complete (2026-05-19). Source files (HTML/JSX/CSS prototype) live under `docs/features/pragma/first-features/spec/design-bundle/` for future reference; implementation re-creates them in production code under `apps/pragma/site/`.
 
 ## Why
 
@@ -27,7 +27,7 @@ This is the band's tool. The single measurable outcome is **rehearsal-time effic
 
 ## Result
 
-> ⚠️ Visible result deferred to the designer pass. This section will be filled in after `/designer` consult. The spec defines *what* the screens must do, not *what they look like*.
+Visible result: a French-language PWA at `pragma.borso.fr` (private, shared password) implementing the Claude Design bundle pixel-by-pixel — editorial-jazz aesthetic, blue accent on cream paper, responsive layout, fullscreen Mode Scène for chord display, side-gutter transition warnings, drag-reorder setlist, kanban + list bars view. The 12-file prototype under `docs/features/pragma/first-features/spec/design-bundle/` is the visual source of truth; this spec is the functional one.
 
 Functional surfaces required (one route group per capability):
 
@@ -52,8 +52,14 @@ Visual: per-capability sequence sketch. Full BPMN deferred to designer pass.
 5. **If ChordPro text:** the `tonality.core.ts` deduces start / end tonality from first / last chord. User can override.
 6. **If PDF/image:** tonality fields are manual.
 7. Selects default lineup: for each Member, picks an Instrument. Optional; can be left empty.
-8. **Edits the mastery matrix inline in the song detail:** for each (Member, Instrument) cell relevant to this song, sets a 1-10 score. The matrix UI is part of the song detail page — there is no separate "matrix view" in v1.
+8. (Optional, per-song override) Edits the mastery override on the song detail: for any (Member, Instrument) cell where this song deviates from the band-wide default, sets a 1-10 score that overrides the default for this song only. Most songs leave this empty and inherit the global matrix.
 9. Saves. Song lands in the catalog.
+
+### 1bis. Members admin — edit the global mastery matrix
+1. User opens `/members`.
+2. Sees the 5-member × 7-instrument matrix, each cell holding a 0-10 score. Click a cell to edit; scroll-wheel to ±1; right-click to clear.
+3. Row averages (per-member overall musicianship) and column averages (per-instrument bench strength) update live.
+4. This matrix is the **global default**; per-song overrides (see step 1.8) shadow these values only where set.
 
 Edge cases:
 - Two members open the same song concurrently → last-write-wins; the loser's edit is silently discarded.
@@ -128,12 +134,19 @@ erDiagram
         jsonb default_lineup "MemberId -> InstrumentId|null"
     }
 
-    MASTERY_ENTRY {
+    MASTERY_DEFAULT {
+        uuid id PK
+        uuid member_id FK
+        uuid instrument_id FK
+        int score "0..10"
+    }
+
+    MASTERY_OVERRIDE {
         uuid id PK
         uuid member_id FK
         uuid instrument_id FK
         uuid song_id FK
-        int score "1..10"
+        int score "0..10"
     }
 
     SESSION {
@@ -178,9 +191,11 @@ erDiagram
         timestamptz last_interaction_at "nullable"
     }
 
-    MEMBER ||--o{ MASTERY_ENTRY : "rated on"
-    INSTRUMENT ||--o{ MASTERY_ENTRY : "with"
-    SONG ||--o{ MASTERY_ENTRY : "for"
+    MEMBER ||--o{ MASTERY_DEFAULT : "rated on"
+    INSTRUMENT ||--o{ MASTERY_DEFAULT : "with"
+    MEMBER ||--o{ MASTERY_OVERRIDE : "song-specific rating"
+    INSTRUMENT ||--o{ MASTERY_OVERRIDE : "with"
+    SONG ||--o{ MASTERY_OVERRIDE : "overrides for"
 
     SONG ||--o{ SETLIST_ENTRY : "appears as"
     SETLIST ||--o{ SETLIST_ENTRY : "contains"
@@ -192,7 +207,7 @@ erDiagram
 ```
 
 Notes on the diagram:
-- `MASTERY_ENTRY` is the M:N:M join across (Member, Instrument, Song). Unique index on `(member_id, instrument_id, song_id)`.
+- Mastery splits in two: `MASTERY_DEFAULT` holds the band-wide global score for `(member, instrument)` — unique index on the pair, max 35 rows. `MASTERY_OVERRIDE` holds the sparse per-song deviations — unique index on `(member_id, instrument_id, song_id)`, only rows where a song genuinely deviates from the default exist. Effective mastery = `override ?? default`.
 - `TRANSITION_COMMENT` is the **ordered** pair (A→B). Unique index on `(song_a_id, song_b_id)` — so A→B and B→A can coexist as two distinct rows.
 - `SESSION` is single-table inheritance keyed by `kind`. Concert-only columns are nullable; the API validates the shape per kind.
 - `SETLIST` is split from `SESSION` (rather than embedded) so a session can swap its setlist without copying the entries array.
@@ -205,11 +220,12 @@ Notes on the diagram:
 | App-workspace slug | `pragma-musik`, `pragma-erp`, `pragma` | `pragma` (2026-05-19) — Hugo reserved the bare slug; the `test-app` rename in CLAUDE.md's *Don'ts* targets the old borso-platform fixture, not this. KAIZEN item to amend the rule. |
 | Auth model | individual accounts vs shared password | shared password (2026-05-19) — 5 known people, audit not needed, friction tax of per-user login wasted on this scale. Migration path documented in Q.O.D. |
 | Concurrency | OT / CRDT / advisory lock / last-write-wins | last-write-wins (2026-05-19) — 5 users, rare overlap, complexity of anything else not justified. |
-| Mastery matrix locus | per-member-global or per-song | per-song (2026-05-19) — "Bob masters the guitar *on this song*" is the meaningful unit. A `MasteryEntry(Member, Instrument, Song) → 1..10`. |
+| Mastery matrix locus | per-song only / per-member-global only / hybrid | **hybrid** (2026-05-19, revised after designer pass) — global default lives at `MasteryDefault(Member, Instrument) → 0..10` (35 cells, edited from `/members`); per-song override lives at `MasteryOverride(Member, Instrument, Song) → 0..10` (sparse, edited from `/songs/<id>`). A song's effective mastery for `(member, instrument)` is `override ?? default`. Mean mastery for a song = average of `effective(member, lineup[member])` across the lineup. |
 | Transition warning rule | which combinations trigger | a pair warns iff **no harmonic instrument stays held by the same member across both songs** (2026-05-19). The list of tonal instruments is data, set per-instrument via `isHarmonic: boolean`. |
 | Transition comment locus | per-session or global per song-pair | global per (songA, songB) (2026-05-19) — the issue is musical, not per-event. One comment, reused everywhere that pair appears. |
 | Transition comment orientation | ordered pair or unordered pair | **ordered** (2026-05-19) — A→B is a different musical transition than B→A and warrants its own comment. The DB unique index is on the ordered pair `(song_a_id, song_b_id)`. If a song appears several times in a setlist and creates multiple A→B occurrences, they all share the single ordered-pair comment. |
-| Mastery matrix UI locus | song detail / dedicated matrix view / inline in setlist | **song detail** (2026-05-19) — the matrix is part of "knowing this song"; editing happens where the song lives. No dedicated matrix view in v1. |
+| Mastery matrix UI locus | song detail / dedicated matrix view / both | **both** (2026-05-19, revised) — the global default matrix lives on `/members` as a 5×7 editable grid (row + column averages, click/scroll/right-click affordances); per-song overrides are edited inline on the song detail. Aligned with the hybrid model above. |
+| Accent color | amber / blue / other | **blue** (2026-05-19) — user override on the design's stage-light amber. Cobalt-ish to pair with the cream paper. Tokenised as `--accent` so future palettes are one CSS-variable swap. |
 | Offline cache scope for setlists | all future / next session only / all setlists | **next session only** (2026-05-19) — bounded by what fits in the PWA cache budget and matches the actual offline need (the concert you are heading to). |
 | Energy viz | single setlist / comparator | single-setlist only in v1 (2026-05-19) — comparator deferred. |
 | Chord chart formats | one canonical / accept all | accept ChordPro text + PDF + image, no privileged format (2026-05-19) — friction of conversion higher than the cost of storing 3 shapes. |
@@ -281,11 +297,17 @@ interface Song {
   defaultLineup: Record<MemberId, InstrumentId | null>;
 }
 
-interface MasteryEntry {
+interface MasteryDefault {
+  member: MemberId;
+  instrument: InstrumentId;
+  score: number; // 0..10 ; 0 = "ne joue pas"
+}
+
+interface MasteryOverride {
   member: MemberId;
   instrument: InstrumentId;
   song: SongId;
-  score: number; // 1..10
+  score: number; // 0..10 ; only exists when the song deviates from the global default
 }
 
 type SessionKind = 'practice' | 'concert';
@@ -345,12 +367,13 @@ interface Bar {
 
 ### Database changes
 
-DSQL Postgres, fresh schema (no migration from a previous state). One schema `pragma`, tables: `member`, `instrument`, `song`, `song_external_link`, `mastery_entry`, `session`, `setlist`, `setlist_entry`, `transition_comment`, `bar`. UUID PKs everywhere. JSONB for `Song.links`, `Song.chart`, `SetlistEntry.lineup_override`, `Concert.friends_count_per_member`. Avatars / charts in S3 under `pragma-uploads-<env>/`.
+DSQL Postgres, fresh schema (no migration from a previous state). One schema `pragma`, tables: `member`, `instrument`, `song`, `song_external_link`, `mastery_default`, `mastery_override`, `session`, `setlist`, `setlist_entry`, `transition_comment`, `bar`. UUID PKs everywhere. JSONB for `Song.links`, `Song.chart`, `SetlistEntry.lineup_override`, `Concert.friends_count_per_member`. Avatars / charts in S3 under `pragma-uploads-<env>/`.
 
 Indexes day 1:
 - `setlist_entry (setlist_id, position)` for ordered reads.
-- `mastery_entry (song_id)` to fetch a song's matrix in one query.
-- `transition_comment (song_a_id, song_b_id) unique` to enforce one comment per pair.
+- `mastery_default (member_id, instrument_id) unique` — at most one default per (member, instrument) pair.
+- `mastery_override (member_id, instrument_id, song_id) unique` — at most one override per (member, instrument, song) triple; the sparse-by-design table only holds rows that deviate from the default.
+- `transition_comment (song_a_id, song_b_id) unique` to enforce one comment per ordered pair.
 
 ### Files to change
 
@@ -372,13 +395,15 @@ apps/pragma/api/src/domain/transition.core.ts                // NEW: warning rul
 apps/pragma/api/src/domain/tonality.core.ts                  // NEW: derive start/end from ChordPro, 100% gated
 apps/pragma/api/src/domain/lineup.core.ts                    // NEW: default + override resolution, 100% gated
 apps/pragma/api/src/domain/energy-curve.core.ts              // NEW: 1..10 smoothing for viz, 100% gated
-apps/pragma/api/src/domain/mastery.core.ts                   // NEW: aggregations, 100% gated
+apps/pragma/api/src/domain/mastery.core.ts                   // NEW: effective = override ?? default; song-mean over lineup; 100% gated
+apps/pragma/site/src/design-tokens.css                       // NEW: blue accent, member palette, paper background, type scale (Instrument Serif / Geist / JetBrains Mono)
 apps/pragma/api/src/routes/                                  // NEW: REST endpoints, integration-tested
 apps/pragma/cdk/                                             // NEW: stack composing LambdaApi + StaticSite + DsqlCluster + DsqlSchema + S3 uploads bucket
 infra/shared/                                                // UPDATE: register pragma.borso.fr cert if not covered by wildcard
 .github/path-filters.yml                                     // UPDATE: add pragma filter
 commitlint.config.js                                         // UPDATE: add 'pragma' to scope-enum
-CLAUDE.md                                                    // UPDATE (via KAIZEN follow-up): authorize apps/pragma/ + carve in "always max tests" rule
+CLAUDE.md                                                    // UPDATE: amend "Don'ts" to authorize apps/pragma/ + carve in "always max tests" rule (KAIZEN follow-up)
+docs/features/pragma/first-features/spec/design-bundle/      // NEW: archived Claude Design HTML/JSX/CSS prototype, source of UI truth
 ```
 
 ### Test strategy
@@ -390,12 +415,12 @@ CLAUDE.md                                                    // UPDATE (via KAIZ
   - `tonality.core.ts` — ChordPro parser fixtures covering valid first/last chord, ambiguous chord, no chord, malformed input.
   - `lineup.core.ts` — default + override merge semantics. Override null vs absent vs explicit-null-instrument disambiguation.
   - `energy-curve.core.ts` — nullable points, all-null, all-equal, monotonic, peak detection.
-  - `mastery.core.ts` — aggregations for "who can play this song", "what songs can this member sing", with rank thresholds.
+  - `mastery.core.ts` — `effective(member, instrument, song)` = override ?? default, `meanForSong(songId, lineup)` = average over lineup, plus "who can play this song" / "what songs can this member sing" aggregations with rank thresholds. Edge case: missing default. Edge case: override = 0.
 - **Unit tests on `*.utils.ts` at 100% coverage**: formatters (date, capacity), color contrast for Member chips, embed-URL detector (Spotify vs Deezer vs YouTube vs other), kebab-case utilities.
 - **Integration tests on the back-end** using the repo's Docker-less Postgres via `scripts/local-postgres.sh`: full CRUD for songs, setlists, sessions, bars; concurrent-edit last-write-wins semantics; auth middleware (shared password).
 - **Front-end component tests** for the setlist drag-reorder behavior, kanban column moves, energy slider, ChordPro text editor.
 - **i18n coverage test** (back-end script): asserts that every key referenced by the front-end exists in both `en.json` and `fr.json`, and that the two catalogs have the exact same key set (no missing translations on either side).
-- **Visual validation rows** — once the designer pass produces mockups, each numbered happy-path step under *Use cases* becomes one `/visual-validation` assertion. The agent drives a real browser against the dev server. Pending designer pass, this section lists assertion *intents*:
+- **Visual validation rows** — each numbered happy-path step under *Use cases* becomes one `/visual-validation` assertion driven against the running dev server. The design bundle under `docs/features/pragma/first-features/spec/design-bundle/` is the pixel-level reference for these assertions:
   - Catalog: a new song with all 3 chart formats can be created and re-read.
   - Setlist: dragging produces a new order; warning surfaces between known-bad pairs from fixtures.
   - Setlist: energy curve renders with N+1 points for N entries (or null gaps).
@@ -434,12 +459,13 @@ Out-of-the-box events on every page view + every domain mutation. CloudWatch met
   - DSQL connection errors > 3 in 5 min → page.
 - The shared-password auth has no per-user audit; failed login attempts are still logged with `ip_hash` and rate-limited (5 attempts / 15 min per IP) to deter brute force.
 
-## Open questions for the designer pass
+## Designer-pass resolutions
 
-The `> ⚠️ Missing designer discussion` flag at the top stays until these are resolved:
-1. Mobile-vs-desktop layout for the setlist editor (drag handles, energy slider placement, transition warning surface).
-2. Visual treatment of Member colors (chip vs full background vs accent only).
-3. Kanban visual for bars (columns, card density).
-4. Energy curve chart style (sparkline / full chart / inline gradient bar).
-5. Chord chart viewer for PDF and image (zoom, rotate, full-screen).
-6. PWA install prompt placement and offline-mode banner.
+The questions listed here as "open" pre-designer have all been resolved by the Claude Design bundle (2026-05-19). They are kept for traceability:
+
+1. **Mobile-vs-desktop layout for the setlist editor** — handle drag pattern on mobile (preserves discoverability over long-press; gesture-free), energy slider inline on each row, transition warnings in a left-side gutter with margin markers (severity-coloured `!`).
+2. **Visual treatment of Member colors** — **chip** (small coloured initial in a circle); 4 alternative treatments (`pill`, `accent`, `avatar`) explored during design but not surfaced at runtime.
+3. **Kanban visual for bars** — 5 status columns (`lead`, `contacted`, `booked`, `played`, `cold`); medium-density cards showing name + last-interaction date + small notes preview + contact-owner initial.
+4. **Energy curve chart style** — **sparkline** (compact, fits the row-density of the setlist; alternates `bars` / `stripe` / `gradient` explored but not surfaced at runtime).
+5. **Chord chart viewer** — inline preview on the song detail page; tap to enter fullscreen **Mode Scène** (black background, large chord grid, auto-scroll, A−/A+ zoom, keyboard nav, song-pill carousel of the setlist).
+6. **PWA install prompt** — floating card 16 px from sides + 80 px above the bottom of the mobile nav; **offline-mode banner** is a full-width strip across the top of the main content area with a pulse indicator and a retry shortcut.
