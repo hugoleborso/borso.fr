@@ -6,6 +6,8 @@
  *
  * HTML5 drag suffices for the kanban — the design bundle's "handle
  * pattern" applies to mobile setlist reorder, not the desktop kanban.
+ * The stale-bar banner + per-row badge fire from `stale-bar.utils`
+ * (closes A20).
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -13,9 +15,15 @@ import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { formatCapacity } from '../../lib/formatters.utils';
-
-const BAR_STATUSES = ['lead', 'contacted', 'booked', 'played', 'cold'] as const;
-type BarStatus = (typeof BAR_STATUSES)[number];
+import { countStale, isStale } from '../../lib/stale-bar.utils';
+import {
+  BAR_STATUSES,
+  BAR_STATUS_KEY,
+  BLANK_BAR_DRAFT,
+  type BarDraftState,
+  type BarStatus,
+  BarForm,
+} from './BarForm';
 
 const barSchema = z.object({
   id: z.string().uuid(),
@@ -35,39 +43,7 @@ const singleSchema = z.object({ bar: barSchema });
 type Bar = z.infer<typeof barSchema>;
 type View = 'list' | 'kanban';
 
-const STATUS_KEY: Record<BarStatus, string> = {
-  lead: 'bars.statusLead',
-  contacted: 'bars.statusContacted',
-  booked: 'bars.statusBooked',
-  played: 'bars.statusPlayed',
-  cold: 'bars.statusCold',
-};
-
-interface DraftState {
-  id: string | null;
-  name: string;
-  status: BarStatus;
-  notes: string;
-  city: string;
-  capacity: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-}
-
-const BLANK_DRAFT: DraftState = {
-  id: null,
-  name: '',
-  status: 'lead',
-  notes: '',
-  city: '',
-  capacity: '',
-  contactName: '',
-  contactEmail: '',
-  contactPhone: '',
-};
-
-function fromBar(bar: Bar): DraftState {
+function fromBar(bar: Bar): BarDraftState {
   return {
     id: bar.id,
     name: bar.name,
@@ -81,7 +57,7 @@ function fromBar(bar: Bar): DraftState {
   };
 }
 
-function payloadFrom(draft: DraftState): Record<string, unknown> {
+function payloadFrom(draft: BarDraftState): Record<string, unknown> {
   return {
     name: draft.name.trim(),
     status: draft.status,
@@ -98,7 +74,7 @@ export function BarsPage(): JSX.Element {
   const { t } = useTranslation();
   const [view, setView] = useState<View>('list');
   const [bars, setBars] = useState<Bar[]>([]);
-  const [draft, setDraft] = useState<DraftState>(BLANK_DRAFT);
+  const [draft, setDraft] = useState<BarDraftState>(BLANK_BAR_DRAFT);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -123,6 +99,10 @@ export function BarsPage(): JSX.Element {
     () => bars.toSorted((left, right) => left.name.localeCompare(right.name)),
     [bars],
   );
+
+  const now = useMemo(() => new Date(), []);
+  const staleCount = useMemo(() => countStale(bars, now), [bars, now]);
+  const isBarStale = useCallback((bar: Bar): boolean => isStale(bar, now), [now]);
 
   const grouped = useMemo(() => {
     const out: Record<BarStatus, Bar[]> = {
@@ -150,9 +130,11 @@ export function BarsPage(): JSX.Element {
         const updated = singleSchema.parse(
           await apiRequest(`/api/bars/${draft.id}`, { method: 'PUT', body: payload }),
         );
-        setBars((current) => current.map((row) => (row.id === updated.bar.id ? updated.bar : row)));
+        setBars((current) =>
+          current.map((row) => (row.id === updated.bar.id ? updated.bar : row)),
+        );
       }
-      setDraft(BLANK_DRAFT);
+      setDraft(BLANK_BAR_DRAFT);
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'unknown-error');
     }
@@ -162,7 +144,7 @@ export function BarsPage(): JSX.Element {
     try {
       await apiRequest(`/api/bars/${id}`, { method: 'DELETE' });
       setBars((current) => current.filter((row) => row.id !== id));
-      if (draft.id === id) setDraft(BLANK_DRAFT);
+      if (draft.id === id) setDraft(BLANK_BAR_DRAFT);
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'unknown-error');
     }
@@ -202,12 +184,20 @@ export function BarsPage(): JSX.Element {
       </header>
       {error !== null ? <p className="admin-page-error">{error}</p> : null}
       {loading ? <p className="admin-page-loading">{t('common.loading')}</p> : null}
+      {staleCount > 0 ? (
+        <div className="bars-stale-banner" role="alert">
+          {t('bars.staleBanner', { count: staleCount })}
+        </div>
+      ) : null}
 
       {view === 'list' ? (
         <div className="admin-page-layout">
           <ul className="admin-page-list">
             {sortedBars.map((bar) => (
-              <li key={bar.id} className="admin-page-row">
+              <li
+                key={bar.id}
+                className={`admin-page-row${isBarStale(bar) ? ' admin-page-row--stale' : ''}`}
+              >
                 <button
                   type="button"
                   className="admin-page-row-name"
@@ -216,8 +206,11 @@ export function BarsPage(): JSX.Element {
                   {bar.name}
                 </button>
                 <span className={`bar-status bar-status--${bar.status}`}>
-                  {t(STATUS_KEY[bar.status])}
+                  {t(BAR_STATUS_KEY[bar.status])}
                 </span>
+                {isBarStale(bar) ? (
+                  <span className="bar-stale-badge">{t('bars.staleBadge')}</span>
+                ) : null}
                 <span className="bar-meta">{bar.city ?? ''}</span>
                 <span className="bar-meta">{formatCapacity(bar.capacity)}</span>
                 <button
@@ -231,127 +224,12 @@ export function BarsPage(): JSX.Element {
               </li>
             ))}
           </ul>
-          <form onSubmit={submit} className="admin-page-form">
-            <h3 className="admin-page-form-title">
-              {draft.id === null ? t('bars.newBar') : draft.name}
-            </h3>
-            <label className="admin-page-form-label" htmlFor="bar-name">
-              {t('bars.name')}
-            </label>
-            <input
-              id="bar-name"
-              type="text"
-              value={draft.name}
-              onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-              required
-              className="admin-page-form-input"
-            />
-            <label className="admin-page-form-label" htmlFor="bar-status">
-              {t('bars.status')}
-            </label>
-            <select
-              id="bar-status"
-              value={draft.status}
-              onChange={(event) =>
-                setDraft((current) => {
-                  const parsed = z.enum(BAR_STATUSES).safeParse(event.target.value);
-                  return parsed.success ? { ...current, status: parsed.data } : current;
-                })
-              }
-              className="admin-page-form-input"
-            >
-              {BAR_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {t(STATUS_KEY[status])}
-                </option>
-              ))}
-            </select>
-            <label className="admin-page-form-label" htmlFor="bar-city">
-              {t('bars.city')}
-            </label>
-            <input
-              id="bar-city"
-              type="text"
-              value={draft.city}
-              onChange={(event) => setDraft((current) => ({ ...current, city: event.target.value }))}
-              className="admin-page-form-input"
-            />
-            <label className="admin-page-form-label" htmlFor="bar-capacity">
-              {t('bars.capacity')}
-            </label>
-            <input
-              id="bar-capacity"
-              type="number"
-              min={0}
-              value={draft.capacity}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, capacity: event.target.value }))
-              }
-              className="admin-page-form-input"
-            />
-            <label className="admin-page-form-label" htmlFor="bar-contact">
-              {t('bars.contactName')}
-            </label>
-            <input
-              id="bar-contact"
-              type="text"
-              value={draft.contactName}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, contactName: event.target.value }))
-              }
-              className="admin-page-form-input"
-            />
-            <label className="admin-page-form-label" htmlFor="bar-email">
-              {t('bars.contactEmail')}
-            </label>
-            <input
-              id="bar-email"
-              type="email"
-              value={draft.contactEmail}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, contactEmail: event.target.value }))
-              }
-              className="admin-page-form-input"
-            />
-            <label className="admin-page-form-label" htmlFor="bar-phone">
-              {t('bars.contactPhone')}
-            </label>
-            <input
-              id="bar-phone"
-              type="tel"
-              value={draft.contactPhone}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, contactPhone: event.target.value }))
-              }
-              className="admin-page-form-input"
-            />
-            <label className="admin-page-form-label" htmlFor="bar-notes">
-              {t('bars.notes')}
-            </label>
-            <textarea
-              id="bar-notes"
-              value={draft.notes}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, notes: event.target.value }))
-              }
-              rows={4}
-              className="admin-page-form-input"
-            />
-            <div className="admin-page-form-actions">
-              <button type="submit" className="admin-page-form-submit">
-                {t('common.save')}
-              </button>
-              {draft.id !== null ? (
-                <button
-                  type="button"
-                  className="admin-page-form-cancel"
-                  onClick={() => setDraft(BLANK_DRAFT)}
-                >
-                  {t('common.cancel')}
-                </button>
-              ) : null}
-            </div>
-          </form>
+          <BarForm
+            draft={draft}
+            onChange={setDraft}
+            onSubmit={submit}
+            onCancel={() => setDraft(BLANK_BAR_DRAFT)}
+          />
         </div>
       ) : (
         <div className="bars-kanban">
@@ -359,7 +237,7 @@ export function BarsPage(): JSX.Element {
             <section
               key={status}
               className={`bars-kanban-column bars-kanban-column--${status}`}
-              aria-label={t(STATUS_KEY[status])}
+              aria-label={t(BAR_STATUS_KEY[status])}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
@@ -367,17 +245,22 @@ export function BarsPage(): JSX.Element {
                 if (draggedId.length > 0) void dropOnColumn(status, draggedId);
               }}
             >
-              <h3 className="bars-kanban-column-title">{t(STATUS_KEY[status])}</h3>
+              <h3 className="bars-kanban-column-title">{t(BAR_STATUS_KEY[status])}</h3>
               {grouped[status].map((bar) => (
                 <button
                   key={bar.id}
                   type="button"
-                  className="bars-kanban-card"
+                  className={`bars-kanban-card${isBarStale(bar) ? ' bars-kanban-card--stale' : ''}`}
                   draggable
                   onDragStart={(event) => event.dataTransfer.setData('text/plain', bar.id)}
                   onClick={() => setDraft(fromBar(bar))}
                 >
-                  <div className="bars-kanban-card-name">{bar.name}</div>
+                  <div className="bars-kanban-card-name">
+                    {bar.name}
+                    {isBarStale(bar) ? (
+                      <span className="bar-stale-badge">{t('bars.staleBadge')}</span>
+                    ) : null}
+                  </div>
                   <div className="bars-kanban-card-meta">
                     {bar.city ?? ''} · {formatCapacity(bar.capacity)}
                   </div>

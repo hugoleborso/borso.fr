@@ -25,13 +25,35 @@ export interface SetlistEntryRowProps {
   readonly onMove: (entryId: string, direction: -1 | 1) => void;
   readonly onRemove: (entryId: string) => void;
   readonly onOpenTransition: (songAId: string, songBId: string) => void;
+  readonly onDragStart: (entryId: string) => void;
+  readonly onDropOn: (targetEntryId: string) => void;
 }
 
 export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
   const isWarn = props.warnTransitionFromSongId !== null;
   return (
-    <li className={isWarn ? 'setlist-entry is-warn' : 'setlist-entry'}>
+    <li
+      className={isWarn ? 'setlist-entry is-warn' : 'setlist-entry'}
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => {
+        event.preventDefault();
+        props.onDropOn(props.entryId);
+      }}
+    >
+      <button
+        type="button"
+        className="setlist-entry-handle"
+        aria-label={t('setlist.dragHandle')}
+        draggable
+        onDragStart={(event) => {
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', props.entryId);
+          props.onDragStart(props.entryId);
+        }}
+      >
+        ⋮⋮
+      </button>
       {isWarn ? (
         <button
           type="button"

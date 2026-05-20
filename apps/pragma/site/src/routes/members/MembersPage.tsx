@@ -11,7 +11,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+import { MasteryMatrix } from '../../components/MasteryMatrix';
 import { ApiError, apiRequest } from '../../lib/api-client';
+import { cellKey } from '../../lib/mastery-matrix.utils';
 import { readableForeground } from '../../lib/member-color.utils';
 
 const memberSchema = z.object({
@@ -30,6 +32,13 @@ const instrumentSchema = z.object({
 });
 const instrumentListSchema = z.object({ instruments: z.array(instrumentSchema) });
 
+const masteryDefaultSchema = z.object({
+  memberId: z.string().uuid(),
+  instrumentId: z.string().uuid(),
+  score: z.number().int().min(0).max(10),
+});
+const masteryDefaultListSchema = z.object({ defaults: z.array(masteryDefaultSchema) });
+
 type Member = z.infer<typeof memberSchema>;
 type Instrument = z.infer<typeof instrumentSchema>;
 
@@ -47,18 +56,25 @@ export function MembersPage(): JSX.Element {
   const [instruments, setInstruments] = useState<Instrument[]>([]);
   const [assignedByMember, setAssignedByMember] = useState<Record<string, string[]>>({});
   const [draft, setDraft] = useState<DraftState>(BLANK_DRAFT);
+  const [masteryScores, setMasteryScores] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
-      const [membersBody, instrumentsBody] = await Promise.all([
+      const [membersBody, instrumentsBody, masteryBody] = await Promise.all([
         apiRequest('/api/members').then((body) => memberListSchema.parse(body)),
         apiRequest('/api/instruments').then((body) => instrumentListSchema.parse(body)),
+        apiRequest('/api/mastery/defaults').then((body) => masteryDefaultListSchema.parse(body)),
       ]);
       setMembers(membersBody.members);
       setInstruments(instrumentsBody.instruments);
+      const nextScores: Record<string, number> = {};
+      for (const row of masteryBody.defaults) {
+        nextScores[cellKey(row.memberId, row.instrumentId)] = row.score;
+      }
+      setMasteryScores(nextScores);
       const assignments: Record<string, string[]> = {};
       await Promise.all(
         membersBody.members.map(async (member) => {
@@ -256,6 +272,13 @@ export function MembersPage(): JSX.Element {
           </div>
         </form>
       </div>
+      <MasteryMatrix
+        members={sortedMembers}
+        instruments={instruments.toSorted((left, right) => left.name.localeCompare(right.name))}
+        scores={masteryScores}
+        onScoresChange={setMasteryScores}
+        onError={setError}
+      />
     </section>
   );
 }
