@@ -1,12 +1,20 @@
 /**
- * Session detail. For concerts: venue / capacity / gear (free-text)
- * editable inline + friends-count-per-member grid (one row per band
- * member, integer 0..1000). For practices: a "prepared concert"
- * selector + a visible link to the concert it prepares.
+ * Session detail — read-only display by default. Mirrors the
+ * prototype's `ConcertDetail` (sessions.jsx lines 108-202) and
+ * `PracticeDetail` (lines 222-277). The concert read view + practice
+ * read view live in sibling files so this page stays a thin
+ * orchestrator: data fetch, edit-mode toggle, setlist mount.
  *
- * Closes V2 (concert detail surface — gear, friends-per-member,
- * inline edit of venue/capacity) and V3 (practice → concert linkage
- * UI).
+ * Concert: venue as H1, date + capacity + total-friends in the
+ * sub-line, friends-per-member bars on the left, gear card + venue
+ * panel on the right. The "Edit" button opens ConcertEditForm
+ * (existing) in place.
+ *
+ * Practice: prepared-concert link as the focal piece (with the
+ * existing dropdown affordance to pick or change the concert).
+ *
+ * Setlist editor mounts below the detail block when a setlist exists,
+ * with a "Build setlist" CTA when it doesn't.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -14,13 +22,13 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '../../components/atoms/Button';
-import { Card } from '../../components/atoms/Card';
 import { Icon } from '../../components/atoms/Icon';
-import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { SetlistEditor } from '../setlists/SetlistEditor';
 import { ConcertEditForm } from './ConcertEditForm';
+import { ConcertReadView } from './ConcertReadView';
+import { PracticeReadView } from './PracticeReadView';
 
 const friendsCountShape = z.record(z.string().uuid(), z.number());
 
@@ -124,6 +132,16 @@ export function SessionDetailPage(): JSX.Element {
     );
   }, [session, upcomingConcerts]);
 
+  const friendsCounts = useMemo(
+    () => (session === null ? {} : parseFriendsCounts(session.friendsCountPerMember)),
+    [session],
+  );
+
+  const friendsTotal = useMemo(
+    () => Object.values(friendsCounts).reduce((accumulator, value) => accumulator + value, 0),
+    [friendsCounts],
+  );
+
   const buildSetlist = async (): Promise<void> => {
     if (sessionId === undefined) return;
     try {
@@ -183,30 +201,9 @@ export function SessionDetailPage(): JSX.Element {
     );
   }
 
-  const renderConcertReadView = (): JSX.Element => (
-    <Card className="flex flex-col gap-3">
-      <dl className="grid grid-cols-[140px_1fr] gap-y-2 gap-x-4 text-sm">
-        <dt className="text-[11px] tracking-wider uppercase text-ink-400 font-medium self-center">
-          {t('sessions.venue')}
-        </dt>
-        <dd className="text-ink-900">{session.venue ?? '—'}</dd>
-        <dt className="text-[11px] tracking-wider uppercase text-ink-400 font-medium self-center">
-          {t('sessions.capacity')}
-        </dt>
-        <dd className="text-ink-900 font-mono">{session.capacity ?? '—'}</dd>
-        <dt className="text-[11px] tracking-wider uppercase text-ink-400 font-medium self-center">
-          {t('sessions.gear')}
-        </dt>
-        <dd className="text-ink-700 whitespace-pre-line">{session.gear ?? '—'}</dd>
-      </dl>
-      <div>
-        <Button variant="default" onClick={() => setEditingConcert(true)}>
-          <Icon name="edit" size={14} />
-          {t('sessions.editConcertDetails')}
-        </Button>
-      </div>
-    </Card>
-  );
+  const isConcert = session.kind === 'concert';
+  const formattedDate = formatSessionDate(session.date, i18n.language);
+  const titleText = isConcert ? session.venue ?? formattedDate : t('sessions.kindPractice');
 
   return (
     <section className="px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
@@ -217,19 +214,60 @@ export function SessionDetailPage(): JSX.Element {
         <Icon name="chevL" size={14} />
         {t('common.back')}
       </Link>
-      <PageHeader
-        crumb={t(
-          session.kind === 'concert' ? 'sessions.kindConcert' : 'sessions.kindPractice',
-        )}
-        title={formatSessionDate(session.date, i18n.language)}
-      />
+
+      <header className="flex items-end justify-between gap-4 flex-wrap">
+        <div className="min-w-0">
+          <div className="text-[11px] tracking-wider uppercase text-ink-500 mb-1">
+            {t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
+          </div>
+          <h1 className="font-display italic text-[56px] leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 mb-2">
+            {titleText}
+          </h1>
+          <div className="flex items-center gap-2.5 text-[13px] text-ink-500 flex-wrap">
+            <span>{formattedDate}</span>
+            {isConcert && session.capacity !== null ? (
+              <>
+                <span className="text-ink-300">·</span>
+                <span>
+                  {t('sessions.capacity')} {session.capacity}
+                </span>
+              </>
+            ) : null}
+            {isConcert && friendsTotal > 0 ? (
+              <>
+                <span className="text-ink-300">·</span>
+                <span>
+                  {friendsTotal} {t('sessions.friendsCount').toLowerCase()}
+                </span>
+              </>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {isConcert && !editingConcert ? (
+            <Button variant="default" onClick={() => setEditingConcert(true)}>
+              <Icon name="edit" size={14} />
+              {t('common.edit')}
+            </Button>
+          ) : null}
+          {setlist !== null ? (
+            <Link to="/setlists">
+              <Button variant="accent" type="button">
+                <Icon name="setlist" size={14} />
+                {t('sessions.setlist')}
+              </Button>
+            </Link>
+          ) : null}
+        </div>
+      </header>
+
       {error !== null ? (
         <p className="text-danger text-sm" role="alert">
           {error}
         </p>
       ) : null}
 
-      {session.kind === 'concert' ? (
+      {isConcert ? (
         editingConcert ? (
           <ConcertEditForm
             members={members}
@@ -245,45 +283,23 @@ export function SessionDetailPage(): JSX.Element {
             onCancel={() => setEditingConcert(false)}
           />
         ) : (
-          renderConcertReadView()
+          <ConcertReadView
+            venue={session.venue}
+            capacity={session.capacity}
+            gear={session.gear}
+            friendsCounts={friendsCounts}
+            members={members}
+            friendsTotal={friendsTotal}
+          />
         )
       ) : (
-        <Card className="flex flex-col gap-2">
-          <label
-            className="text-[11px] tracking-wider uppercase text-ink-400 font-medium"
-            htmlFor="practice-prepared-concert"
-          >
-            {t('sessions.preparedConcert')}
-          </label>
-          <select
-            id="practice-prepared-concert"
-            className="w-full bg-bg-elev border border-line text-ink-900 rounded-md px-3 py-2 text-[13px] outline-none focus:border-ink-700"
-            value={session.preparedConcertId ?? ''}
-            onChange={(event) => {
-              const next = event.target.value.length === 0 ? null : event.target.value;
-              void setPreparedConcert(next);
-            }}
-          >
-            <option value="">—</option>
-            {upcomingConcerts.map((concert) => (
-              <option key={concert.id} value={concert.id}>
-                {formatSessionDate(concert.date, i18n.language)} — {concert.venue ?? '—'}
-              </option>
-            ))}
-          </select>
-          {preparedConcert !== null ? (
-            <p className="text-sm text-ink-500 mt-1">
-              {t('sessions.preparesConcert')}{' '}
-              <Link
-                to={`/sessions/${preparedConcert.id}`}
-                className="text-accent hover:underline"
-              >
-                {formatSessionDate(preparedConcert.date, i18n.language)}
-                {preparedConcert.venue !== null ? ` — ${preparedConcert.venue}` : ''}
-              </Link>
-            </p>
-          ) : null}
-        </Card>
+        <PracticeReadView
+          session={session}
+          preparedConcert={preparedConcert}
+          upcomingConcerts={upcomingConcerts}
+          onChangePreparedConcert={(id) => void setPreparedConcert(id)}
+          language={i18n.language}
+        />
       )}
 
       <h3 className="font-display italic text-2xl text-ink-900 m-0 mt-4">
