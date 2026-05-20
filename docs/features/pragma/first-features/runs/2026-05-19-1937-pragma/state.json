@@ -2,26 +2,14 @@
   "runId": "2026-05-19-1937-pragma",
   "feature": { "app": "pragma", "slug": "first-features" },
   "pilotedByTechLead": true,
-  "stage": "implement",
-  "retries": { "implement": 5, "validate": 4 },
-  "retryPolicy": "progress-based — escalate only on stuck-loop / regression-net-negative / product-ambiguity",
+  "stage": "validate",
+  "retries": { "implement": 6, "validate": 5 },
+  "retryPolicy": "progress-based",
   "adrIndex": [4],
-  "implementationSha": "a84b276",
-  "lastTechnicalValidation": "PASS",
-  "lastVisualValidation": "FAIL",
-  "openBlockers": [
-    "Tailwind v4 dark-mode pattern wrong — @theme inside @media collapses to :root, cream paper never renders (regression)",
-    "Catalog chart-kind icon broken — `chordChart` vs `chart` field mismatch",
-    "Song detail page is an edit form, should be a read-only display with Edit affordance",
-    "Session detail page same — edit form, should be display + Edit affordance",
-    "Setlist editor missing drag handle, energy sparkline, side-gutter transition warnings",
-    "Mode Scène loads inside AppShell — should be fullscreen takeover route",
-    "Sidebar missing /setlist entry + badge counts",
-    "No mobile-nav fallback at narrow viewports"
-  ],
+  "implementationSha": "5b9e43e",
   "draftPR": "https://github.com/hugoleborso/borso.fr/pull/26",
   "deliveryShape": "monolithic",
   "specChecksum": "1e8c3e5ea12d94b6ded1ad45bc8c9eaf8962fb5286cfa4867496b8f51d7df65f",
   "startedAt": "2026-05-19T19:37:16.000Z",
-  "updatedAt": "2026-05-20T15:40:00.000Z"
+  "updatedAt": "2026-05-20T16:40:00.000Z"
 }
