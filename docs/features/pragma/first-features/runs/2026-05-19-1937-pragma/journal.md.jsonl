@@ -34,3 +34,7 @@
 {"kind":"technical_validation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T10:45:00.000Z","status":"PASS","retry":3,"blockers_closed_count":6,"next":"ship"}
 {"kind":"visual_validation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T11:00:00.000Z","status":"PASS_EXCEPT_UNVERIFIABLE","retry":3,"pass":21,"fail":0,"unverifiable":2,"next":"ship"}
 {"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T11:05:00.000Z","from":"validate","to":"ship","reason":"both-validators-green"}
+{"kind":"human_message_received","runId":"2026-05-19-1937-pragma","at":"2026-05-20T12:10:00.000Z","category":"correction","subject":"design-fidelity"}
+{"kind":"human_message_received","runId":"2026-05-19-1937-pragma","at":"2026-05-20T12:15:00.000Z","category":"correction","subject":"tailwind-atomic-design"}
+{"kind":"convention_codified","runId":"2026-05-19-1937-pragma","at":"2026-05-20T12:20:00.000Z","files":["CLAUDE.md","implementation/standard.md","visual-validation/standard.md"],"rules":["design-bundle-pixel-fidelity","tailwind-only-no-raw-css","atomic-design-components"]}
+{"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T12:25:00.000Z","from":"ship","to":"implement","reason":"visual-rework-round-design-bundle-fidelity"}
