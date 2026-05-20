@@ -252,3 +252,24 @@
   color: #0a0b0d;
 }
 
+.not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--d-4);
+  padding: var(--d-5);
+}
+
+.not-found-image {
+  max-width: 100%;
+  max-height: 60vh;
+  border-radius: var(--radius-2);
+  object-fit: contain;
+}
+
+.not-found-home {
+  font-size: 14px;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
