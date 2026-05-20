@@ -78,6 +78,7 @@ Conventional-commit, small focused units. Push only after typecheck, biome, knip
 | 1 | Read `spec.md` and `plan.md` end-to-end | mental model |
 | 2 | Inventory technical surfaces; invoke each present sub-skill | conventions loaded |
 | 3 | Walk the plan's code-map table top-down, applying each change and committing in small units | the diff |
+| 3a | **Before creating any file under `apps/<app>/api/src/`**, answer: *"which bounded context owns this?"* The answer names the folder; the layered triad names the filename. Every backend domain folder must contain at minimum `<domain>.controller.ts` + `<domain>.service.ts` + `<domain>.repository.ts` + `<domain>.schema.ts` (plus optional `<domain>.core.ts` and `<domain>.types.ts`). Never create horizontal aggregator folders (`domain/`, `controllers/`, `services/`, `repositories/`, `routes/`) — pure-domain `.core.ts` files live INSIDE the bounded context's folder. The plan's *Where it lands* column names paths; treat path strings as advisory hints, not as licence to bypass the triad. Reference: `apps/last-loop-lepin/api/src/{auth,edition,punch,runner,ranking,media}/`. See CLAUDE.md "Clean code" — *Back-end domains are vertical slices*. | per-domain layered triad |
 | 4 | For every pure helper introduced, file ends in `.utils.ts` and a sibling `.utils.test.ts` ships with it | tested utilities |
 | 5 | Run pre-flight gates (typecheck, biome, knip, build) | green gates |
 | 6 | Run `/visual-validation` for UI work; read the report | UI verdict |
@@ -92,6 +93,8 @@ Conventional-commit, small focused units. Push only after typecheck, biome, knip
 | Naming a pure helper `<name>.ts` instead of `<name>.utils.ts` | Coverage gate misses it; technical-validator FAILs the row; rewrite filename in a follow-up commit. |
 | "I'll add tests later" | Later never comes; coverage debt compounds; a future feature inherits the gap. |
 | Stuffing pure helpers into a file with DOM / network code | The file can't be coverage-gated cleanly. Split it. |
+| Creating a horizontal `domain/` (or `controllers/`, `services/`, `repositories/`, `routes/`) folder in `api/src/` | Forbidden by CLAUDE.md. Pure-domain `.core.ts` files live in the bounded context's folder (`song/tonality.core.ts`, not `domain/tonality.core.ts`). The technical-validator FAILs the row; rewrite the folder structure in a follow-up commit. |
+| Shipping a controller without its sibling `service` / `repository` / `schema` files | Layered triad missing. The controller ends up with DB queries + business rules + HTTP shape co-mingled. Split into the four files; the controller carries only Hono routing + response shape. Pattern reference: `apps/last-loop-lepin/api/src/punch/`. |
 | Skipping an existing sub-skill | The sub-skill's conventions go unenforced; defects predicted by it ship anyway. |
 | Bypassing a hook (`--no-verify`) | Repo rule says never. The gate exists because culture wasn't enough. |
 | Deferring the test-runner setup | The implementation lands without coverage and the next session inherits a broken gate. |
