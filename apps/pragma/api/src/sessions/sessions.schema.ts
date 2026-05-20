@@ -4,10 +4,12 @@
  * nullable; the API validates the shape per kind via the discriminated
  * union below. Both branches are `strict()` so a practice payload
  * carrying a concert-only key (or vice versa) is rejected at the
- * controller boundary.
+ * controller boundary. `friends_count_per_member` is stored as TEXT
+ * (JSON-encoded) because Aurora DSQL doesn't support `jsonb` — see
+ * docs/knowledge/dsql-postgres-compat-gaps.md §1.
  */
 
-import { integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
 export const sessionTable = pgTable('session', {
@@ -18,10 +20,14 @@ export const sessionTable = pgTable('session', {
   venue: text('venue'),
   capacity: integer('capacity'),
   gear: text('gear'),
-  friendsCountPerMember: jsonb('friends_count_per_member'),
+  // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
+  friendsCountPerMember: text('friends_count_per_member'),
 });
 
-const friendsCountSchema = z.record(z.string().uuid(), z.number().int().min(0).max(1_000));
+// Also used by the repository to validate the JSON blob deserialised
+// from the `friends_count_per_member` text column (Aurora DSQL stores
+// it as TEXT — see docs/knowledge/dsql-postgres-compat-gaps.md §1).
+export const friendsCountSchema = z.record(z.string().uuid(), z.number().int().min(0).max(1_000));
 
 export const concertCreateSchema = z
   .object({
