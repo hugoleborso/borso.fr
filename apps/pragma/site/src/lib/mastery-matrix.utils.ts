@@ -5,11 +5,6 @@
  * matrix is edited.
  */
 
-export interface CellKey {
-  readonly memberId: string;
-  readonly instrumentId: string;
-}
-
 export function cellKey(memberId: string, instrumentId: string): string {
   return `${memberId}/${instrumentId}`;
 }
