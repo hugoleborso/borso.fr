@@ -147,6 +147,11 @@ export class PreviewableApp extends Construct {
       prNumber: props.prNumber,
       domainName: props.domainName,
       assetsPath: props.frontend.distPath,
+      // PreviewableApp is the SPA + API composition. Every consumer has
+      // client-side routes (`/r/<slug>`, `/admin`, …) that don't map to
+      // physical S3 keys, so direct nav / refresh on those paths must
+      // resolve to the React bundle, not the catch-all JPEG.
+      spaFallback: true,
       // Prod: wire same-origin `/api/*` through the dedicated CloudFront
       // distribution so the frontend can call its own API without CORS.
       // Preview/integ keep cross-origin via a build-time `VITE_API_BASE`

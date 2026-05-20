@@ -7,6 +7,23 @@
  * repo-wide no-type-assertion rule.
  */
 
+import { App, Stack } from 'aws-cdk-lib';
+import { Template } from 'aws-cdk-lib/assertions';
+
+/** Standard CDK env used across construct unit tests. */
+export const TEST_ENV = { account: '123456789012', region: 'eu-west-3' } as const;
+
+/**
+ * Synthesize a one-stack CDK app and return its CFN template. Constructs
+ * scoped under `setup` land in a stack named `TestStack` with `TEST_ENV`.
+ */
+export function synthTemplate(setup: (stack: Stack) => void): Template {
+  const app = new App();
+  const stack = new Stack(app, 'TestStack', { env: TEST_ENV });
+  setup(stack);
+  return Template.fromStack(stack);
+}
+
 export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

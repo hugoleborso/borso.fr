@@ -1,17 +1,7 @@
-import { App, Stack } from 'aws-cdk-lib';
-import { Match, Template } from 'aws-cdk-lib/assertions';
+import { Match } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { StaticSite } from '../../src/constructs/static-site.js';
-import { outputValues } from './helpers/template.js';
-
-function synth(setup: (stack: Stack) => void): Template {
-  const app = new App();
-  const stack = new Stack(app, 'TestStack', {
-    env: { account: '123456789012', region: 'eu-west-3' },
-  });
-  setup(stack);
-  return Template.fromStack(stack);
-}
+import { outputValues, synthTemplate as synth } from './helpers/template.js';
 
 describe('StaticSite (prod)', () => {
   const tpl = synth((stack) => {
@@ -82,7 +72,7 @@ describe('StaticSite (prod)', () => {
     tpl.resourceCountIs('AWS::Route53::RecordSet', 2);
   });
 
-  it('returns /404.jpeg directly as the 404 response body', () => {
+  it('returns /404.jpeg directly as the 404 response body when spaFallback is off', () => {
     tpl.hasResourceProperties('AWS::CloudFront::Distribution', {
       DistributionConfig: Match.objectLike({
         CustomErrorResponses: Match.arrayWith([
@@ -93,6 +83,10 @@ describe('StaticSite (prod)', () => {
         ]),
       }),
     });
+    // Belt-and-braces: assert the SPA fallback shape is NOT present, so a
+    // future edit that flips the default doesn't silently turn every multi-
+    // page static site (borso-fr, borsouvertures) into a soft-404 trap.
+    expect(JSON.stringify(tpl.toJSON())).not.toContain('"ResponseCode":"200"');
   });
 
   it('omits the /api/* cache behavior when no api prop is passed', () => {
