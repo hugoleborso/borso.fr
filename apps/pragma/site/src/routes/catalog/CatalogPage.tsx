@@ -1,7 +1,13 @@
 /**
  * Catalog list page. Renders songs as cards (title + artist + status
- * badge) and links to the per-song detail page. A "new song" button
- * opens the song create form on the detail route with no id.
+ * badge + energy badge + mastery aggregate) and links to the per-song
+ * detail page. A "new song" button opens the song create form on the
+ * detail route with no id.
+ *
+ * Energy badge: shows the song's baseEnergy if any, coloured per the
+ * design bundle's energy palette. Mastery aggregate: mean
+ * `effective(member, defaultLineup[member])` across the song's lineup —
+ * computed front-side via a thin port of `mastery.core.ts`.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -9,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
 import { ApiError, apiRequest } from '../../lib/api-client';
+import { meanMasteryForSong } from '../../lib/mastery-aggregate.utils';
 
 const songSchema = z.object({
   id: z.string().uuid(),
@@ -18,10 +25,19 @@ const songSchema = z.object({
   tonalityStart: z.string().nullable(),
   tonalityEnd: z.string().nullable(),
   baseEnergy: z.number().nullable(),
+  defaultLineup: z.record(z.string(), z.string().nullable()).default({}),
 });
-const listSchema = z.object({ songs: z.array(songSchema) });
+const songListSchema = z.object({ songs: z.array(songSchema) });
+
+const masteryDefaultSchema = z.object({
+  memberId: z.string().uuid(),
+  instrumentId: z.string().uuid(),
+  score: z.number(),
+});
+const masteryDefaultListSchema = z.object({ defaults: z.array(masteryDefaultSchema) });
 
 type Song = z.infer<typeof songSchema>;
+type MasteryDefault = z.infer<typeof masteryDefaultSchema>;
 
 function statusKey(status: string): string {
   if (status === 'idea') return 'catalog.statusIdea';
@@ -30,17 +46,29 @@ function statusKey(status: string): string {
   return 'catalog.statusConcertReady';
 }
 
+function energyClassName(baseEnergy: number | null): string {
+  if (baseEnergy === null) return 'catalog-card-energy catalog-card-energy--none';
+  if (baseEnergy <= 3) return 'catalog-card-energy catalog-card-energy--low';
+  if (baseEnergy <= 7) return 'catalog-card-energy catalog-card-energy--mid';
+  return 'catalog-card-energy catalog-card-energy--high';
+}
+
 export function CatalogPage(): JSX.Element {
   const { t } = useTranslation();
   const [songs, setSongs] = useState<Song[]>([]);
+  const [defaults, setDefaults] = useState<MasteryDefault[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
-      const body = listSchema.parse(await apiRequest('/api/songs'));
-      setSongs(body.songs);
+      const [songsBody, masteryBody] = await Promise.all([
+        apiRequest('/api/songs'),
+        apiRequest('/api/mastery/defaults'),
+      ]);
+      setSongs(songListSchema.parse(songsBody).songs);
+      setDefaults(masteryDefaultListSchema.parse(masteryBody).defaults);
       setError(null);
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'unknown-error');
@@ -72,18 +100,29 @@ export function CatalogPage(): JSX.Element {
         <p className="admin-page-loading">{t('catalog.emptyList')}</p>
       ) : null}
       <ul className="catalog-list">
-        {sortedSongs.map((song) => (
-          <li key={song.id} className="catalog-card">
-            <Link to={`/catalog/${song.id}`} className="catalog-card-link">
-              <h3 className="catalog-card-title">{song.title}</h3>
-              <p className="catalog-card-artist">{song.artist}</p>
-              <span className="catalog-card-status">{t(statusKey(song.status))}</span>
-              {song.tonalityStart !== null ? (
-                <span className="catalog-card-tonality">{song.tonalityStart}</span>
-              ) : null}
-            </Link>
-          </li>
-        ))}
+        {sortedSongs.map((song) => {
+          const mastery = meanMasteryForSong(song.defaultLineup, defaults);
+          return (
+            <li key={song.id} className="catalog-card">
+              <Link to={`/catalog/${song.id}`} className="catalog-card-link">
+                <h3 className="catalog-card-title">{song.title}</h3>
+                <p className="catalog-card-artist">{song.artist}</p>
+                <span className="catalog-card-status">{t(statusKey(song.status))}</span>
+                {song.tonalityStart !== null ? (
+                  <span className="catalog-card-tonality">{song.tonalityStart}</span>
+                ) : null}
+                <span className={energyClassName(song.baseEnergy)}>
+                  {t('catalog.energyBadge')}{' '}
+                  {song.baseEnergy === null ? t('catalog.noMastery') : song.baseEnergy}
+                </span>
+                <span className="catalog-card-mastery">
+                  {t('catalog.masteryBadge')}{' '}
+                  {mastery === null ? t('catalog.noMastery') : mastery.toFixed(1)}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

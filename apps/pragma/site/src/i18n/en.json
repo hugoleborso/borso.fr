@@ -47,7 +47,11 @@
     "instrumentsAssigned": "Instruments played",
     "newTitle": "New member",
     "editTitle": "Edit member",
-    "noInstrumentsYet": "No instruments assigned"
+    "noInstrumentsYet": "No instruments assigned",
+    "masteryMatrixTitle": "Mastery matrix",
+    "masteryMatrixSubtitle": "Click to edit; scroll to adjust ±1; right-click to clear. Row averages = per-member musicianship; column averages = per-instrument bench strength.",
+    "rowAverage": "Avg",
+    "columnAverage": "Avg"
   },
   "catalog": {
     "title": "Catalog",
@@ -67,7 +71,14 @@
     "chartPdf": "PDF",
     "chartImage": "Image",
     "links": "External links",
-    "emptyList": "No songs yet."
+    "linksTitle": "External links",
+    "linkPlaceholder": "https://…",
+    "previewTitle": "Chord chart preview",
+    "openScene": "Open Mode Scène",
+    "emptyList": "No songs yet.",
+    "energyBadge": "E",
+    "masteryBadge": "M",
+    "noMastery": "—"
   },
   "mastery": {
     "title": "Mastery matrix",
@@ -84,16 +95,23 @@
     "capacity": "Capacity",
     "gear": "Gear",
     "preparedConcert": "Prepared concert",
+    "preparesConcert": "Preparing the concert of",
     "noPreparedConcert": "—",
     "friendsCount": "Expected friends count",
+    "friendsCountPerMember": "Friends per member",
+    "myFriendsCount": "My friends count",
     "setlist": "Setlist",
-    "buildSetlist": "Build setlist"
+    "buildSetlist": "Build setlist",
+    "editConcertDetails": "Edit concert details",
+    "saveConcertDetails": "Save",
+    "selectMember": "Member"
   },
   "setlist": {
     "addSong": "Add song",
     "removeEntry": "Remove",
     "moveUp": "Move up",
     "moveDown": "Move down",
+    "dragHandle": "Drag to reorder",
     "keyOverride": "Key (override)",
     "capo": "Capo",
     "notes": "Notes",
@@ -101,6 +119,14 @@
     "transitionWarning": "Risky transition",
     "openTransitionComment": "View / comment the transition",
     "transitionCommentTitle": "Transition comment"
+  },
+  "scene": {
+    "title": "Mode Scène",
+    "transposeUp": "Transpose up",
+    "transposeDown": "Transpose down",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "noChordpro": "No ChordPro chart attached to this song."
   },
   "bars": {
     "title": "Bars",
@@ -120,6 +146,8 @@
     "contactPhone": "Phone",
     "lastInteractionAt": "Last interaction",
     "notes": "Notes",
-    "newBar": "New bar"
+    "newBar": "New bar",
+    "staleBanner": "{{count}} bars haven't been touched in 60+ days — give them a poke.",
+    "staleBadge": "Stale"
   }
 }

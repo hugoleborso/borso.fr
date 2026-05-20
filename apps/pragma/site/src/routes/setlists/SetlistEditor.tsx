@@ -4,9 +4,10 @@
  * the key/capo overrides, the energy slider, and a notes field. Above
  * the list, the energy sparkline derived from `energy-curve.core.ts`.
  *
- * Reordering uses up/down buttons rather than HTML5 drag (handle
- * pattern from the design bundle stays a v2 polish — buttons cover the
- * same intent and are accessible without pointer drag).
+ * Reordering uses HTML5 drag-from-handle per the design bundle's
+ * mobile-drag pattern (closes blocker A18). The up/down arrow buttons
+ * stay as a keyboard / a11y fallback — both routes call the same
+ * server reorder API.
  *
  * Transition warnings are computed by `transition.core.ts` between
  * each consecutive pair; a warned row carries an inline button that
@@ -82,6 +83,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const [transitionEditing, setTransitionEditing] = useState<
     { songAId: string; songBId: string } | null
   >(null);
+  const [draggingEntryId, setDraggingEntryId] = useState<string | null>(null);
 
   const refresh = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -185,6 +187,29 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     }
   };
 
+  const dropOnEntry = async (targetEntryId: string): Promise<void> => {
+    const draggedId = draggingEntryId;
+    setDraggingEntryId(null);
+    if (draggedId === null || draggedId === targetEntryId) return;
+    const ordered = entries.map((entry) => entry.id);
+    const fromIndex = ordered.indexOf(draggedId);
+    const toIndex = ordered.indexOf(targetEntryId);
+    if (fromIndex === -1 || toIndex === -1) return;
+    const next = [...ordered];
+    const moved = next.splice(fromIndex, 1)[0];
+    if (moved === undefined) return;
+    next.splice(toIndex, 0, moved);
+    try {
+      await apiRequest(`/api/setlists/${setlistId}/reorder`, {
+        method: 'PUT',
+        body: { entryIds: next },
+      });
+      await refresh();
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
+    }
+  };
+
   const updateEntry = async (entryId: string, patch: Record<string, unknown>): Promise<void> => {
     try {
       const updated = singleEntrySchema.parse(
@@ -241,6 +266,8 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
               onOpenTransition={(songAId, songBId) =>
                 setTransitionEditing({ songAId, songBId })
               }
+              onDragStart={(id) => setDraggingEntryId(id)}
+              onDropOn={(id) => void dropOnEntry(id)}
             />
           );
         })}

@@ -3,107 +3,46 @@
  * create flow; any UUID loads the existing song and edits it in place.
  *
  * The form covers the spec's `Song` interface: title, artist, status,
- * tonality (start + end), base energy, and the chord chart variant
- * (chordpro text, pdf s3 key, or image s3 key). The upload UX is a
- * stub — the back-end returns a synthetic key (CDK item 9 wires the
- * real S3 PUT).
+ * tonality, base energy, external links (rendered via SongExternalLinks
+ * + embed.utils), and the chord-chart variant. ChordPro charts get an
+ * inline preview + a "Mode Scène" link to the fullscreen viewer.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
+import { ChordChartViewer } from '../../components/ChordChartViewer';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { deriveTonality } from '../../lib/tonality-bridge';
-
-const songStatuses = ['idea', 'wip', 'rehearsed', 'concert_ready'] as const;
-
-const songSchema = z.object({
-  id: z.string().uuid(),
-  title: z.string(),
-  artist: z.string(),
-  status: z.enum(songStatuses),
-  tonalityStart: z.string().nullable(),
-  tonalityEnd: z.string().nullable(),
-  baseEnergy: z.number().nullable(),
-  chart: z
-    .union([
-      z.object({ kind: z.literal('chordpro'), text: z.string() }),
-      z.object({ kind: z.literal('pdf'), s3Key: z.string() }),
-      z.object({ kind: z.literal('image'), s3Key: z.string() }),
-    ])
-    .nullable(),
-});
-const singleSchema = z.object({ song: songSchema });
-
-type Song = z.infer<typeof songSchema>;
-type SongStatus = (typeof songStatuses)[number];
-
-type ChartKind = 'none' | 'chordpro' | 'pdf' | 'image';
-
-interface DraftState {
-  title: string;
-  artist: string;
-  status: SongStatus;
-  tonalityStart: string;
-  tonalityEnd: string;
-  baseEnergy: string;
-  chartKind: ChartKind;
-  chordproText: string;
-  pdfS3Key: string;
-  imageS3Key: string;
-}
-
-const BLANK_DRAFT: DraftState = {
-  title: '',
-  artist: '',
-  status: 'idea',
-  tonalityStart: '',
-  tonalityEnd: '',
-  baseEnergy: '',
-  chartKind: 'none',
-  chordproText: '',
-  pdfS3Key: '',
-  imageS3Key: '',
-};
-
-function fromSong(song: Song): DraftState {
-  return {
-    title: song.title,
-    artist: song.artist,
-    status: song.status,
-    tonalityStart: song.tonalityStart ?? '',
-    tonalityEnd: song.tonalityEnd ?? '',
-    baseEnergy: song.baseEnergy === null ? '' : String(song.baseEnergy),
-    chartKind: song.chart === null ? 'none' : song.chart.kind,
-    chordproText: song.chart !== null && song.chart.kind === 'chordpro' ? song.chart.text : '',
-    pdfS3Key: song.chart !== null && song.chart.kind === 'pdf' ? song.chart.s3Key : '',
-    imageS3Key: song.chart !== null && song.chart.kind === 'image' ? song.chart.s3Key : '',
-  };
-}
-
-function chartFromDraft(draft: DraftState): Song['chart'] {
-  if (draft.chartKind === 'none') return null;
-  if (draft.chartKind === 'chordpro') return { kind: 'chordpro', text: draft.chordproText };
-  if (draft.chartKind === 'pdf') return { kind: 'pdf', s3Key: draft.pdfS3Key };
-  return { kind: 'image', s3Key: draft.imageS3Key };
-}
+import { SongChartFields } from './SongChartFields';
+import { SongExternalLinks } from './SongExternalLinks';
+import {
+  BLANK_SONG_DRAFT,
+  chartFromDraft,
+  detectProvider,
+  type SongDraftState,
+  singleSongSchema,
+  songFromApi,
+  songStatuses,
+} from './song-draft';
 
 export function SongDetailPage(): JSX.Element {
   const { t } = useTranslation();
   const { songId } = useParams<{ songId: string }>();
   const navigate = useNavigate();
   const isNew = songId === 'new';
-  const [draft, setDraft] = useState<DraftState>(BLANK_DRAFT);
+  const [draft, setDraft] = useState<SongDraftState>(BLANK_SONG_DRAFT);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!isNew);
+  const [newLinkUrl, setNewLinkUrl] = useState('');
 
   const load = useCallback(async (): Promise<void> => {
     if (isNew || songId === undefined) return;
     setLoading(true);
     try {
-      const body = singleSchema.parse(await apiRequest(`/api/songs/${songId}`));
-      setDraft(fromSong(body.song));
+      const body = singleSongSchema.parse(await apiRequest(`/api/songs/${songId}`));
+      setDraft(songFromApi(body.song));
       setError(null);
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'unknown-error');
@@ -124,15 +63,29 @@ export function SongDetailPage(): JSX.Element {
       return {
         ...current,
         chordproText: text,
-        // Only auto-fill empty tonality fields — never overwrite an
-        // operator's manual choice. The spec's "user can override"
-        // requirement makes this directional.
         tonalityStart:
           startCurrentlyEmpty && derived.start !== null ? derived.start : current.tonalityStart,
         tonalityEnd:
           endCurrentlyEmpty && derived.end !== null ? derived.end : current.tonalityEnd,
       };
     });
+  };
+
+  const addLink = (): void => {
+    const trimmed = newLinkUrl.trim();
+    if (trimmed.length === 0) return;
+    setDraft((current) => ({
+      ...current,
+      links: [...current.links, { url: trimmed, provider: detectProvider(trimmed), comment: '' }],
+    }));
+    setNewLinkUrl('');
+  };
+
+  const removeLink = (index: number): void => {
+    setDraft((current) => ({
+      ...current,
+      links: current.links.filter((_, currentIndex) => currentIndex !== index),
+    }));
   };
 
   const submit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
@@ -148,10 +101,11 @@ export function SongDetailPage(): JSX.Element {
       tonalityEnd: draft.tonalityEnd.trim().length === 0 ? null : draft.tonalityEnd.trim(),
       baseEnergy: baseEnergyValue,
       chart: chartFromDraft(draft),
+      links: draft.links,
     };
     try {
       if (isNew) {
-        const created = singleSchema.parse(
+        const created = singleSongSchema.parse(
           await apiRequest('/api/songs', { method: 'POST', body: payload }),
         );
         navigate(`/catalog/${created.song.id}`, { replace: true });
@@ -180,10 +134,23 @@ export function SongDetailPage(): JSX.Element {
       <Link className="back-link" to="/catalog">
         {t('common.back')}
       </Link>
-      <h2 className="admin-page-title">
-        {isNew ? t('catalog.newSong') : draft.title}
-      </h2>
+      <h2 className="admin-page-title">{isNew ? t('catalog.newSong') : draft.title}</h2>
+      {!isNew && songId !== undefined ? (
+        <Link className="song-detail-scene-link" to={`/catalog/${songId}/scene`}>
+          {t('catalog.openScene')}
+        </Link>
+      ) : null}
       {error !== null ? <p className="admin-page-error">{error}</p> : null}
+
+      {draft.chartKind === 'chordpro' && draft.chordproText.length > 0 ? (
+        <section className="song-detail-preview">
+          <h3 className="song-detail-section-title">{t('catalog.previewTitle')}</h3>
+          <ChordChartViewer source={draft.chordproText} compact />
+        </section>
+      ) : null}
+
+      <SongExternalLinks links={draft.links} onRemove={removeLink} />
+
       <form onSubmit={submit} className="song-detail-form">
         <label className="admin-page-form-label" htmlFor="song-title">
           {t('catalog.songTitle')}
@@ -218,131 +185,56 @@ export function SongDetailPage(): JSX.Element {
           value={draft.status}
           onChange={(event) => {
             const parsed = z.enum(songStatuses).safeParse(event.target.value);
-            if (parsed.success) {
-              setDraft((current) => ({ ...current, status: parsed.data }));
-            }
+            if (parsed.success) setDraft((current) => ({ ...current, status: parsed.data }));
           }}
           className="admin-page-form-input"
         >
           {songStatuses.map((status) => (
             <option key={status} value={status}>
-              {t(`catalog.status${status.charAt(0).toUpperCase() + status.slice(1).replace('_r', 'R').replace('_', '')}`)}
+              {t(
+                `catalog.status${status.charAt(0).toUpperCase() + status.slice(1).replace('_r', 'R').replace('_', '')}`,
+              )}
             </option>
           ))}
         </select>
 
-        <label className="admin-page-form-label" htmlFor="song-tonality-start">
-          {t('catalog.tonalityStart')}
-        </label>
-        <input
-          id="song-tonality-start"
-          type="text"
-          value={draft.tonalityStart}
-          onChange={(event) =>
-            setDraft((current) => ({ ...current, tonalityStart: event.target.value }))
+        <SongChartFields
+          chartKind={draft.chartKind}
+          chordproText={draft.chordproText}
+          pdfS3Key={draft.pdfS3Key}
+          imageS3Key={draft.imageS3Key}
+          tonalityStart={draft.tonalityStart}
+          tonalityEnd={draft.tonalityEnd}
+          baseEnergy={draft.baseEnergy}
+          onChartKindChange={(kind) => setDraft((current) => ({ ...current, chartKind: kind }))}
+          onChordproChange={onChordproChange}
+          onPdfKeyChange={(value) => setDraft((current) => ({ ...current, pdfS3Key: value }))}
+          onImageKeyChange={(value) => setDraft((current) => ({ ...current, imageS3Key: value }))}
+          onTonalityStartChange={(value) =>
+            setDraft((current) => ({ ...current, tonalityStart: value }))
           }
-          maxLength={16}
-          className="admin-page-form-input"
-        />
-
-        <label className="admin-page-form-label" htmlFor="song-tonality-end">
-          {t('catalog.tonalityEnd')}
-        </label>
-        <input
-          id="song-tonality-end"
-          type="text"
-          value={draft.tonalityEnd}
-          onChange={(event) =>
-            setDraft((current) => ({ ...current, tonalityEnd: event.target.value }))
+          onTonalityEndChange={(value) =>
+            setDraft((current) => ({ ...current, tonalityEnd: value }))
           }
-          maxLength={16}
-          className="admin-page-form-input"
-        />
-
-        <label className="admin-page-form-label" htmlFor="song-base-energy">
-          {t('catalog.baseEnergy')}
-        </label>
-        <input
-          id="song-base-energy"
-          type="number"
-          min={1}
-          max={10}
-          value={draft.baseEnergy}
-          onChange={(event) =>
-            setDraft((current) => ({ ...current, baseEnergy: event.target.value }))
+          onBaseEnergyChange={(value) =>
+            setDraft((current) => ({ ...current, baseEnergy: value }))
           }
-          className="admin-page-form-input"
         />
 
         <fieldset className="admin-page-form-fieldset">
-          <legend>{t('catalog.chordChart')}</legend>
-          <label className="admin-page-form-checkbox">
+          <legend>{t('catalog.linksTitle')}</legend>
+          <div className="song-detail-link-add">
             <input
-              type="radio"
-              name="chart-kind"
-              checked={draft.chartKind === 'none'}
-              onChange={() => setDraft((current) => ({ ...current, chartKind: 'none' }))}
-            />
-            —
-          </label>
-          <label className="admin-page-form-checkbox">
-            <input
-              type="radio"
-              name="chart-kind"
-              checked={draft.chartKind === 'chordpro'}
-              onChange={() => setDraft((current) => ({ ...current, chartKind: 'chordpro' }))}
-            />
-            {t('catalog.chartChordpro')}
-          </label>
-          <label className="admin-page-form-checkbox">
-            <input
-              type="radio"
-              name="chart-kind"
-              checked={draft.chartKind === 'pdf'}
-              onChange={() => setDraft((current) => ({ ...current, chartKind: 'pdf' }))}
-            />
-            {t('catalog.chartPdf')}
-          </label>
-          <label className="admin-page-form-checkbox">
-            <input
-              type="radio"
-              name="chart-kind"
-              checked={draft.chartKind === 'image'}
-              onChange={() => setDraft((current) => ({ ...current, chartKind: 'image' }))}
-            />
-            {t('catalog.chartImage')}
-          </label>
-          {draft.chartKind === 'chordpro' ? (
-            <textarea
-              value={draft.chordproText}
-              onChange={(event) => onChordproChange(event.target.value)}
-              className="admin-page-form-input chordpro-textarea"
-              rows={10}
-              maxLength={64_000}
-            />
-          ) : null}
-          {draft.chartKind === 'pdf' ? (
-            <input
-              type="text"
-              value={draft.pdfS3Key}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, pdfS3Key: event.target.value }))
-              }
+              type="url"
+              placeholder={t('catalog.linkPlaceholder')}
+              value={newLinkUrl}
+              onChange={(event) => setNewLinkUrl(event.target.value)}
               className="admin-page-form-input"
-              placeholder="pdf s3 key"
             />
-          ) : null}
-          {draft.chartKind === 'image' ? (
-            <input
-              type="text"
-              value={draft.imageS3Key}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, imageS3Key: event.target.value }))
-              }
-              className="admin-page-form-input"
-              placeholder="image s3 key"
-            />
-          ) : null}
+            <button type="button" onClick={addLink} className="admin-page-form-submit">
+              {t('common.add')}
+            </button>
+          </div>
         </fieldset>
 
         <div className="admin-page-form-actions">

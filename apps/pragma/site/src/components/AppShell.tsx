@@ -11,11 +11,12 @@ import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet } from 'react-router-dom';
 import { OfflineBanner } from './OfflineBanner';
 
+// Mastery matrix mounts ON /members per spec use case 1bis (A07/A08).
+// There is no standalone /mastery route in v1.
 const NAV_ITEMS = [
   { to: '/catalog', key: 'nav.catalog' },
   { to: '/sessions', key: 'nav.sessions' },
   { to: '/bars', key: 'nav.bars' },
-  { to: '/mastery', key: 'nav.mastery' },
   { to: '/members', key: 'nav.members' },
   { to: '/instruments', key: 'nav.instruments' },
 ] as const;

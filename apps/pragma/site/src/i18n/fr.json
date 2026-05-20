@@ -47,7 +47,11 @@
     "instrumentsAssigned": "Instruments joués",
     "newTitle": "Nouveau membre",
     "editTitle": "Modifier le membre",
-    "noInstrumentsYet": "Aucun instrument assigné"
+    "noInstrumentsYet": "Aucun instrument assigné",
+    "masteryMatrixTitle": "Matrice de maîtrise",
+    "masteryMatrixSubtitle": "Clic pour éditer ; molette pour ±1 ; clic-droit pour vider. Moyennes en ligne = musicalité du membre ; en colonne = effectif sur l'instrument.",
+    "rowAverage": "Moy.",
+    "columnAverage": "Moy."
   },
   "catalog": {
     "title": "Catalogue",
@@ -67,7 +71,14 @@
     "chartPdf": "PDF",
     "chartImage": "Image",
     "links": "Liens externes",
-    "emptyList": "Aucun morceau pour l'instant."
+    "linksTitle": "Liens externes",
+    "linkPlaceholder": "https://…",
+    "previewTitle": "Aperçu du chord chart",
+    "openScene": "Ouvrir Mode Scène",
+    "emptyList": "Aucun morceau pour l'instant.",
+    "energyBadge": "E",
+    "masteryBadge": "M",
+    "noMastery": "—"
   },
   "mastery": {
     "title": "Matrice de maîtrise",
@@ -82,18 +93,25 @@
     "date": "Date",
     "venue": "Lieu",
     "capacity": "Jauge",
-    "gear": "Matos",
+    "gear": "Matériel",
     "preparedConcert": "Concert préparé",
+    "preparesConcert": "Prépare le concert du",
     "noPreparedConcert": "—",
     "friendsCount": "Nombre d'amis attendus",
+    "friendsCountPerMember": "Amis par membre",
+    "myFriendsCount": "Mes amis",
     "setlist": "Setlist",
-    "buildSetlist": "Composer la setlist"
+    "buildSetlist": "Composer la setlist",
+    "editConcertDetails": "Modifier les infos concert",
+    "saveConcertDetails": "Enregistrer",
+    "selectMember": "Membre"
   },
   "setlist": {
     "addSong": "Ajouter un morceau",
     "removeEntry": "Retirer",
     "moveUp": "Monter",
     "moveDown": "Descendre",
+    "dragHandle": "Glisser pour réordonner",
     "keyOverride": "Tonalité (override)",
     "capo": "Capo",
     "notes": "Notes",
@@ -101,6 +119,14 @@
     "transitionWarning": "Transition à risque",
     "openTransitionComment": "Voir / commenter la transition",
     "transitionCommentTitle": "Commentaire de transition"
+  },
+  "scene": {
+    "title": "Mode Scène",
+    "transposeUp": "Transposer plus haut",
+    "transposeDown": "Transposer plus bas",
+    "zoomIn": "Agrandir",
+    "zoomOut": "Réduire",
+    "noChordpro": "Aucun chord chart ChordPro attaché à ce morceau."
   },
   "bars": {
     "title": "Bars",
@@ -120,6 +146,8 @@
     "contactPhone": "Téléphone",
     "lastInteractionAt": "Dernier contact",
     "notes": "Notes",
-    "newBar": "Nouveau bar"
+    "newBar": "Nouveau bar",
+    "staleBanner": "{{count}} bars n'ont pas été relancés depuis +60 jours — un petit coup de fil ?",
+    "staleBadge": "À relancer"
   }
 }
