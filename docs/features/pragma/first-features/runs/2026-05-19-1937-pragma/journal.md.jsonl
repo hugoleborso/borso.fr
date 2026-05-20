@@ -29,3 +29,5 @@
 {"kind":"visual_validation_completed","runId":"2026-05-20T08:30:00.000Z","at":"2026-05-20T08:30:00.000Z","status":"FAIL","retry":2,"pass":18,"fail":5,"unverifiable":5,"next":"fix"}
 {"kind":"retry_policy_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T08:45:00.000Z","from":"count-based-cap-3","to":"progress-based","reason":"hugo-correction-cap-is-~10-not-3"}
 {"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T08:50:00.000Z","from":"validate","to":"implement","reason":"unified-fix-round-11-blockers"}
+{"kind":"implementation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T10:25:00.000Z","status":"done","retry":3,"commits":5,"tests":296,"sha":"3267f91","scope":"unified-fix-11-blockers","partialDeferrals":0,"blockersClosed":["B08","A07","A08","A10","A13","A18","A20","D20","D21","V1","V2","V3","V5","VD"]}
+{"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T10:30:00.000Z","from":"implement","to":"validate","reason":"re-validate-after-unified-fix"}
