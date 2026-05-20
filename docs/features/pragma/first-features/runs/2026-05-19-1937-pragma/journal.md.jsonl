@@ -38,3 +38,5 @@
 {"kind":"human_message_received","runId":"2026-05-19-1937-pragma","at":"2026-05-20T12:15:00.000Z","category":"correction","subject":"tailwind-atomic-design"}
 {"kind":"convention_codified","runId":"2026-05-19-1937-pragma","at":"2026-05-20T12:20:00.000Z","files":["CLAUDE.md","implementation/standard.md","visual-validation/standard.md"],"rules":["design-bundle-pixel-fidelity","tailwind-only-no-raw-css","atomic-design-components"]}
 {"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T12:25:00.000Z","from":"ship","to":"implement","reason":"visual-rework-round-design-bundle-fidelity"}
+{"kind":"implementation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T13:40:00.000Z","status":"done","retry":5,"sha":"a84b276","scope":"visual-rework-tailwind-atomic","atoms":8,"molecules":10,"organisms":6,"screens":11,"tests":257,"partialDeferrals":0}
+{"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T13:45:00.000Z","from":"implement","to":"validate","reason":"validate-design-fidelity"}

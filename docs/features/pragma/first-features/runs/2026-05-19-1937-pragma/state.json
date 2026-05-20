@@ -2,20 +2,14 @@
   "runId": "2026-05-19-1937-pragma",
   "feature": { "app": "pragma", "slug": "first-features" },
   "pilotedByTechLead": true,
-  "stage": "implement",
-  "retries": { "implement": 4, "validate": 3 },
-  "retryPolicy": "progress-based (not count-based) — escalate only on stuck-loop / regression-net-negative / product-ambiguity",
+  "stage": "validate",
+  "retries": { "implement": 5, "validate": 4 },
+  "retryPolicy": "progress-based — escalate only on stuck-loop / regression-net-negative / product-ambiguity",
   "adrIndex": [4],
-  "implementationSha": "3267f91",
-  "lastTechnicalValidation": "PASS",
-  "lastVisualValidation": "PASS_EXCEPT_UNVERIFIABLE",
-  "openBlockers": [
-    "VISUAL FIDELITY — design bundle ignored. implementation matches tokens (accent #2d5fa0, cream bg) but NOT typography (no Instrument Serif, no JetBrains Mono), layout (no breadcrumb / subtitle / filter pills / search), affordances (no status chips with icons, no chart-kind icons, no member chips on cards), palette depth (only --accent + --bg-paper, missing every --ink-*, --bg-elev/sunk, --m-* member palette tone). Bundle README explicitly states: 'recreate them pixel-perfectly'.",
-    "FRONT-END ARCHITECTURE — raw CSS files used; design tokens flat. Required: Tailwind v4 utilities inline on JSX (no per-component .css), atomic design (atoms/molecules/organisms), design tokens via @theme declarations bridging the prototype's CSS variables to Tailwind utilities."
-  ],
+  "implementationSha": "a84b276",
   "draftPR": "https://github.com/hugoleborso/borso.fr/pull/26",
   "deliveryShape": "monolithic",
   "specChecksum": "1e8c3e5ea12d94b6ded1ad45bc8c9eaf8962fb5286cfa4867496b8f51d7df65f",
   "startedAt": "2026-05-19T19:37:16.000Z",
-  "updatedAt": "2026-05-20T12:25:00.000Z"
+  "updatedAt": "2026-05-20T13:45:00.000Z"
 }
