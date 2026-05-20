@@ -10,6 +10,8 @@
 
 import { Link } from 'react-router-dom';
 import { ChartKindIcon, type ChartKind } from '../molecules/ChartKindIcon';
+import { EnergyBadge } from '../molecules/EnergyBadge';
+import { MasteryBadge } from '../molecules/MasteryBadge';
 import { type LineupInstrument, type LineupMember, MemberLineup } from '../molecules/MemberLineup';
 import { StatusChip, type SongStatus } from '../molecules/StatusChip';
 
@@ -21,6 +23,8 @@ export interface SongCardProps {
   tonalityStart: string | null;
   tonalityEnd: string | null;
   chartKind: ChartKind;
+  baseEnergy: number | null;
+  meanMastery: number | null;
   defaultLineup: Record<string, string>;
   members: readonly LineupMember[];
   instruments: readonly LineupInstrument[];
@@ -34,6 +38,8 @@ export function SongCard({
   tonalityStart,
   tonalityEnd,
   chartKind,
+  baseEnergy,
+  meanMastery,
   defaultLineup,
   members,
   instruments,
@@ -66,7 +72,10 @@ export function SongCard({
           </>
         )}
       </div>
-      <div className="mt-3">
+      <div className="flex items-center gap-1.5 mt-3">
+        <EnergyBadge value={baseEnergy} />
+        <MasteryBadge value={meanMastery} />
+        <span className="flex-1" />
         <MemberLineup
           lineup={defaultLineup}
           members={members}

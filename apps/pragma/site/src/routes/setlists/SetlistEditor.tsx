@@ -17,13 +17,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+import { EnergySparkline } from '../../components/molecules/EnergySparkline';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { evaluateTransition } from '@api/setlists/transition.core';
 import { SetlistEntryRow } from './SetlistEntryRow';
-import { sparklinePath } from './sparkline.utils';
 import { TransitionCommentModal } from './TransitionCommentModal';
-
-const SPARKLINE_GEOMETRY = { width: 320, height: 48, padding: 4 } as const;
 
 const entrySchema = z.object({
   id: z.string().uuid(),
@@ -239,22 +237,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         <div className="text-[10.5px] font-mono uppercase tracking-wider text-ink-400 mb-2">
           {t('setlist.energy')}
         </div>
-        <svg
-          width={SPARKLINE_GEOMETRY.width}
-          height={SPARKLINE_GEOMETRY.height}
-          viewBox={`0 0 ${SPARKLINE_GEOMETRY.width} ${SPARKLINE_GEOMETRY.height}`}
-          aria-label={t('setlist.energy')}
-          className="w-full h-12"
-          preserveAspectRatio="none"
-        >
-          <path
-            d={sparklinePath(energyValues, SPARKLINE_GEOMETRY)}
-            fill="none"
-            stroke="var(--color-accent)"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
+        <EnergySparkline values={energyValues} height={56} />
       </div>
       <ul className="flex flex-col gap-2">
         {entries.map((entry, index) => {

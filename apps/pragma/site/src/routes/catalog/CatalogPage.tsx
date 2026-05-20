@@ -21,6 +21,7 @@ import { SearchBar } from '../../components/molecules/SearchBar';
 import { CatalogGrid } from '../../components/organisms/CatalogGrid';
 import type { SongCardProps } from '../../components/organisms/SongCard';
 import { ApiError, apiRequest } from '../../lib/api-client';
+import { meanMasteryForSong } from '../../lib/mastery-aggregate.utils';
 
 const songSchema = z.object({
   id: z.string().uuid(),
@@ -50,9 +51,17 @@ const memberListSchema = z.object({ members: z.array(memberSchema) });
 const instrumentSchema = z.object({ id: z.string().uuid(), name: z.string() });
 const instrumentListSchema = z.object({ instruments: z.array(instrumentSchema) });
 
+const masteryDefaultSchema = z.object({
+  memberId: z.string().uuid(),
+  instrumentId: z.string().uuid(),
+  score: z.number(),
+});
+const masteryDefaultListSchema = z.object({ defaults: z.array(masteryDefaultSchema) });
+
 type Song = z.infer<typeof songSchema>;
 type Member = z.infer<typeof memberSchema>;
 type Instrument = z.infer<typeof instrumentSchema>;
+type MasteryDefault = z.infer<typeof masteryDefaultSchema>;
 
 type StatusFilter = 'all' | 'concert_ready' | 'rehearsed' | 'wip' | 'idea';
 
@@ -87,6 +96,7 @@ export function CatalogPage(): JSX.Element {
   const [songs, setSongs] = useState<Song[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [instruments, setInstruments] = useState<Instrument[]>([]);
+  const [masteryDefaults, setMasteryDefaults] = useState<MasteryDefault[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -95,14 +105,16 @@ export function CatalogPage(): JSX.Element {
   const refresh = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
-      const [songsBody, membersBody, instrumentsBody] = await Promise.all([
+      const [songsBody, membersBody, instrumentsBody, masteryBody] = await Promise.all([
         apiRequest('/api/songs'),
         apiRequest('/api/members'),
         apiRequest('/api/instruments'),
+        apiRequest('/api/mastery/defaults'),
       ]);
       setSongs(songListSchema.parse(songsBody).songs);
       setMembers(memberListSchema.parse(membersBody).members);
       setInstruments(instrumentListSchema.parse(instrumentsBody).instruments);
+      setMasteryDefaults(masteryDefaultListSchema.parse(masteryBody).defaults);
       setError(null);
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'unknown-error');
@@ -176,11 +188,13 @@ export function CatalogPage(): JSX.Element {
         tonalityStart: song.tonalityStart,
         tonalityEnd: song.tonalityEnd,
         chartKind: song.chordChart?.kind ?? null,
+        baseEnergy: song.baseEnergy,
+        meanMastery: meanMasteryForSong(song.defaultLineup, masteryDefaults),
         defaultLineup: compactLineup(song.defaultLineup),
         members: lineupMembers,
         instruments,
       })),
-    [filteredSongs, lineupMembers, instruments],
+    [filteredSongs, lineupMembers, instruments, masteryDefaults],
   );
 
   const readyCount = countByStatus(songs, 'concert_ready');

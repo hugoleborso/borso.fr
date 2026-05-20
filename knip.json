@@ -52,7 +52,7 @@
         "api/src/**/*.ts",
         "test/**/*.ts"
       ],
-      "ignoreDependencies": ["@aws-sdk/client-s3", "@borso/infra"]
+      "ignoreDependencies": ["@aws-sdk/client-s3", "@borso/infra", "tailwindcss"]
     },
     "infra/cdk": {
       "entry": [
