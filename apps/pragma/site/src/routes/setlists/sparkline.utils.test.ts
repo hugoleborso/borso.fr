@@ -4,8 +4,12 @@ import { sparklinePath } from './sparkline.utils';
 const STANDARD_GEOMETRY = { width: 320, height: 48, padding: 4 } as const;
 
 describe('sparklinePath', () => {
-  it('returns an empty string when there are no values', () => {
-    expect(sparklinePath([], STANDARD_GEOMETRY)).toBe('');
+  it('still draws the baseline anchor when there are no entries', () => {
+    // smoothedSeries always inserts the BASELINE_ENERGY anchor at
+    // index 0, so even an empty entry array yields one path point.
+    const path = sparklinePath([], STANDARD_GEOMETRY);
+    expect(path).toMatch(/^M /);
+    expect(path).not.toContain('L ');
   });
 
   it('starts every series with an absolute `M` and continues with `L`', () => {

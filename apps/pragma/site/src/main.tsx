@@ -6,6 +6,9 @@ import './styles/design-tokens.css';
 import './styles/shell.css';
 import './styles/member-music.css';
 import './styles/setlist-bars.css';
+import { registerServiceWorker } from './sw/register-sw';
+
+registerServiceWorker();
 
 const rootElement = document.getElementById('root');
 if (rootElement === null) {

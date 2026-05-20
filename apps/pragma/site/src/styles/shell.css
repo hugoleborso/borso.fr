@@ -224,3 +224,13 @@
   color: var(--ink);
 }
 
+.offline-banner {
+  background: var(--status-cold);
+  color: var(--surface);
+  padding: 6px 16px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}

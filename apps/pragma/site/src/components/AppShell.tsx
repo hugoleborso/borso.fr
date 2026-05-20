@@ -9,6 +9,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet } from 'react-router-dom';
+import { OfflineBanner } from './OfflineBanner';
 
 const NAV_ITEMS = [
   { to: '/catalog', key: 'nav.catalog' },
@@ -23,6 +24,7 @@ export function AppShell(): JSX.Element {
   const { t } = useTranslation();
   return (
     <div className="app-shell">
+      <OfflineBanner />
       <header className="app-shell-header">
         <h1 className="app-shell-title">{t('appName')}</h1>
         <nav className="app-shell-nav">
