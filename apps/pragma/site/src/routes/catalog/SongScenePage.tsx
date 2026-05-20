@@ -65,44 +65,73 @@ export function SongScenePage(): JSX.Element {
     setFontSize((current) => Math.min(FONT_SIZE_MAX_PX, current + FONT_SIZE_STEP_PX));
   };
 
-  if (error !== null) return <p className="admin-page-error">{error}</p>;
-  if (song === null) return <p className="admin-page-loading">{t('common.loading')}</p>;
+  if (error !== null) {
+    return (
+      <p className="px-9 py-7 text-danger text-sm" role="alert">
+        {error}
+      </p>
+    );
+  }
+  if (song === null) {
+    return (
+      <p className="px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>
+    );
+  }
 
   const hasChordpro = song.chart !== null && song.chart.kind === 'chordpro';
+  const sceneButtonClass =
+    'bg-[rgba(255,255,255,0.08)] text-[#f1e9d8] border border-[rgba(255,255,255,0.14)] px-3 py-1.5 rounded-md text-sm cursor-pointer hover:bg-[rgba(255,255,255,0.14)] transition-colors';
 
   return (
-    <section className="scene-page" style={{ fontSize: `${fontSize}px` }}>
-      <header className="scene-page-header">
+    <section
+      className="fixed inset-0 z-50 bg-[#0d0a07] text-[#f1e9d8] overflow-y-auto p-10 grid grid-rows-[auto_1fr]"
+      style={{ fontSize: `${fontSize}px` }}
+    >
+      <header className="flex items-center gap-4 mb-6 pb-4 border-b border-[rgba(255,255,255,0.08)]">
         <button
           type="button"
-          className="scene-page-back"
+          className={sceneButtonClass}
           onClick={() => navigate(`/catalog/${song.id}`)}
         >
-          {t('common.back')}
+          ← {t('common.back')}
         </button>
-        <h2 className="scene-page-title">{song.title}</h2>
-        <div className="scene-page-controls">
+        <h2 className="font-display italic text-4xl text-[#f1e9d8] m-0 flex-1 truncate">
+          {song.title}
+        </h2>
+        <div className="flex items-center gap-2">
           <button
             type="button"
+            className={sceneButtonClass}
             onClick={() => setSemitones((current) => current - 1)}
             aria-label={t('scene.transposeDown')}
           >
             -1
           </button>
-          <span className="scene-page-transpose">
+          <span className="font-mono text-sm text-[rgba(241,233,216,0.7)] px-2">
             {semitones >= 0 ? `+${semitones}` : `${semitones}`}
           </span>
           <button
             type="button"
+            className={sceneButtonClass}
             onClick={() => setSemitones((current) => current + 1)}
             aria-label={t('scene.transposeUp')}
           >
             +1
           </button>
-          <button type="button" onClick={decrementFontSize} aria-label={t('scene.zoomOut')}>
+          <button
+            type="button"
+            className={sceneButtonClass}
+            onClick={decrementFontSize}
+            aria-label={t('scene.zoomOut')}
+          >
             A−
           </button>
-          <button type="button" onClick={incrementFontSize} aria-label={t('scene.zoomIn')}>
+          <button
+            type="button"
+            className={sceneButtonClass}
+            onClick={incrementFontSize}
+            aria-label={t('scene.zoomIn')}
+          >
             A+
           </button>
         </div>
@@ -110,7 +139,9 @@ export function SongScenePage(): JSX.Element {
       {hasChordpro && song.chart !== null && song.chart.kind === 'chordpro' ? (
         <ChordChartViewer source={song.chart.text} semitones={semitones} />
       ) : (
-        <p className="scene-page-empty">{t('scene.noChordpro')}</p>
+        <p className="text-center font-display italic text-2xl text-[rgba(241,233,216,0.5)] py-20">
+          {t('scene.noChordpro')}
+        </p>
       )}
     </section>
   );

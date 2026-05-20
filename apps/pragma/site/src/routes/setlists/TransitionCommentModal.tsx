@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+import { Button } from '../../components/atoms/Button';
 import { ApiError, apiRequest } from '../../lib/api-client';
 
 const commentSchema = z.object({
@@ -73,27 +74,38 @@ export function TransitionCommentModal({
   };
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal-card">
-        <h3>{t('setlist.transitionCommentTitle')}</h3>
-        {error !== null ? <p className="admin-page-error">{error}</p> : null}
+    <div
+      className="fixed inset-0 z-50 bg-ink-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="bg-bg-elev border border-line-strong rounded-lg p-6 w-full max-w-[480px] shadow-[0_18px_50px_rgba(26,22,18,0.18)]">
+        <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-4">
+          {t('setlist.transitionCommentTitle')}
+        </h3>
+        {error !== null ? (
+          <p className="text-danger text-sm mb-3" role="alert">
+            {error}
+          </p>
+        ) : null}
         {loading ? (
-          <p>{t('common.loading')}</p>
+          <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
         ) : (
           <textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             rows={6}
             maxLength={COMMENT_MAX_LENGTH}
+            className="w-full bg-bg border border-line rounded-md px-3 py-2 text-xs font-mono text-ink-700 outline-none focus:border-ink-700 resize-y"
           />
         )}
-        <div className="modal-actions">
-          <button type="button" className="admin-page-form-submit" onClick={() => void save()}>
-            {t('common.save')}
-          </button>
-          <button type="button" className="admin-page-form-cancel" onClick={onClose}>
+        <div className="flex gap-2 mt-4 justify-end">
+          <Button type="button" variant="ghost" onClick={onClose}>
             {t('common.cancel')}
-          </button>
+          </Button>
+          <Button type="button" variant="accent" onClick={() => void save()}>
+            {t('common.save')}
+          </Button>
         </div>
       </div>
     </div>
