@@ -12,6 +12,7 @@ import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
 import { MembersPage } from './routes/members/MembersPage';
 import { CatalogPage } from './routes/catalog/CatalogPage';
 import { SongDetailPage } from './routes/catalog/SongDetailPage';
+import { SongEditPage } from './routes/catalog/SongEditPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
 import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
@@ -33,6 +34,8 @@ export function App(): JSX.Element {
           <Route element={<AppShell />}>
             <Route path="/" element={<Navigate to="/catalog" replace />} />
             <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/catalog/new" element={<SongEditPage />} />
+            <Route path="/catalog/:songId/edit" element={<SongEditPage />} />
             <Route path="/catalog/:songId" element={<SongDetailPage />} />
             <Route path="/sessions" element={<SessionsPage />} />
             <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
