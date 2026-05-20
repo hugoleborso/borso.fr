@@ -49,3 +49,6 @@
 {"kind":"technical_validation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T17:15:00.000Z","status":"PASS","retry":5,"next":"ship"}
 {"kind":"visual_validation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T18:15:00.000Z","status":"PASS","retry":5,"per_screen_pass":11,"per_screen_fail":0,"blockers_closed":8,"next":"ship"}
 {"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T18:30:00.000Z","from":"validate","to":"ship-ready","reason":"design-fidelity-PASS"}
+{"kind":"preview_deploy_failure_diagnosed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T20:25:00.000Z","cause":"DSQL does not support jsonb datatype","stack":"pragma-pr-26","cfn_state":"ROLLBACK_COMPLETE","resource":"AppDbSchemaE757C77A","cfn_error":"datatype jsonb not supported","docs_ref":"docs/knowledge/dsql-postgres-compat-gaps.md §1","kaizen_added":"docs/knowledge entry was published but the implementation skill standard doesn't require scanning it before authoring DB schema"}
+{"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T20:30:00.000Z","from":"ship-ready","to":"implement","reason":"DSQL-jsonb-fix-round"}
+{"kind":"pr_body_updated","runId":"2026-05-19-1937-pragma","at":"2026-05-20T20:35:00.000Z","pr":26,"disclosure":"preview red + DSQL fix in flight"}
