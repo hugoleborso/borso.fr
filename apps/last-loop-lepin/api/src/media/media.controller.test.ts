@@ -6,8 +6,8 @@
 
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { adminSessionCookie, freshDatabase } from '../../../test/database-utils';
 import { createApp } from '../app';
-import { signAdminSession } from '../auth/auth.jwt';
 
 const presignResponseSchema = z.object({
   uploadUrl: z.string().url(),
@@ -19,9 +19,7 @@ describe('media controller', () => {
   const app = createApp();
 
   async function adminCookie(): Promise<string> {
-    const secret = process.env.JWT_SECRET ?? 'unset';
-    const token = await signAdminSession(secret, new Date());
-    return `lastloop_admin=${token}`;
+    return adminSessionCookie(freshDatabase());
   }
 
   it('returns 401 without admin cookie', async () => {

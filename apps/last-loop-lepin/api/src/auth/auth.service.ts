@@ -1,23 +1,29 @@
-import { scryptSync, timingSafeEqual } from 'node:crypto';
+import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { Database } from '../database/client';
-import { signAdminSession } from './auth.jwt';
-import { findBucket, upsertBucket, type RateLimitBucket } from './auth.repository';
+import {
+  type AdminSession,
+  createSession,
+  deleteSession,
+  findAdminPinHash,
+  findBucket,
+  findValidSession,
+  purgeExpiredSessions,
+  upsertBucket,
+  type RateLimitBucket,
+} from './auth.repository';
 
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_ATTEMPTS = 5;
 const SCRYPT_KEY_LENGTH = 64;
 const SCRYPT_PARTS_COUNT = 3;
+const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+const SESSION_ID_BYTES = 32;
 
 export class AuthDeniedError extends Error {
   override readonly name = 'AuthDeniedError';
   constructor(public readonly reason: 'rate-limited' | 'invalid-pin' | 'misconfigured') {
     super(`auth denied: ${reason}`);
   }
-}
-
-function readEnv(name: string): string | undefined {
-  const value = process.env[name];
-  return value === undefined || value.length === 0 ? undefined : value;
 }
 
 function verifyPinAgainstHash(pin: string, hashedPin: string): boolean {
@@ -66,14 +72,22 @@ export interface LoginInput {
 }
 
 export interface LoginResult {
-  readonly token: string;
+  readonly sessionId: string;
   readonly expiresAt: Date;
 }
 
+/**
+ * Verifies the PIN against the DB-stored scrypt hash and, on success,
+ * issues a new session row. The session id is a 32-byte random hex
+ * string carried by the `lastloop_admin` cookie. Replaces the previous
+ * stateless JWT flow — server-side logout becomes a single DELETE.
+ *
+ * Throws `AuthDeniedError('misconfigured')` if the operator hasn't seeded
+ * the `admin_credentials` row yet.
+ */
 export async function login(database: Database, input: LoginInput, now: Date): Promise<LoginResult> {
-  const pinHash = readEnv('PIN_HASH');
-  const jwtSecret = readEnv('JWT_SECRET');
-  if (pinHash === undefined || jwtSecret === undefined) {
+  const pinHash = await findAdminPinHash(database);
+  if (pinHash === null) {
     throw new AuthDeniedError('misconfigured');
   }
   await consumeRateLimit(database, input.ipAddress, now);
@@ -81,8 +95,26 @@ export async function login(database: Database, input: LoginInput, now: Date): P
     throw new AuthDeniedError('invalid-pin');
   }
   await resetRateLimit(database, input.ipAddress, now);
-  const token = await signAdminSession(jwtSecret, now);
-  const expiresAt = new Date(now.getTime() + 12 * 60 * 60 * 1000);
-  return { token, expiresAt };
+  await purgeExpiredSessions(database, now);
+  const sessionId = randomBytes(SESSION_ID_BYTES).toString('hex');
+  const expiresAt = new Date(now.getTime() + SESSION_TTL_MS);
+  await createSession(database, { id: sessionId, expiresAt });
+  return { sessionId, expiresAt };
 }
 
+/**
+ * Returns the session row when the cookie still maps to a live,
+ * unexpired session; `null` otherwise. The middleware uses the `null`
+ * result to issue 401 + clear the cookie.
+ */
+export async function verifySession(
+  database: Database,
+  sessionId: string,
+  now: Date,
+): Promise<AdminSession | null> {
+  return findValidSession(database, sessionId, now);
+}
+
+export async function logout(database: Database, sessionId: string): Promise<void> {
+  await deleteSession(database, sessionId);
+}

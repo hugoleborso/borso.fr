@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { createApp } from '../app';
-import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
-import { signAdminSession } from '../auth/auth.jwt';
+import { adminSessionCookie, freshDatabase, truncateAllTables } from '../../../test/database-utils';
 
 const editionEnvelopeSchema = z.object({
   edition: z.object({
@@ -34,9 +33,7 @@ describe('admin edition controller', () => {
   });
 
   async function adminCookie(): Promise<string> {
-    const secret = process.env.JWT_SECRET ?? 'unset';
-    const token = await signAdminSession(secret, new Date());
-    return `lastloop_admin=${token}`;
+    return adminSessionCookie(freshDatabase());
   }
 
   async function postEdition(input: {

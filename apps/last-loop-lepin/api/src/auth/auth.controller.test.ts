@@ -1,36 +1,57 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { createApp } from '../app';
-import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { freshDatabase, seedAdminCredentials, truncateAllTables } from '../../../test/database-utils';
+import { findValidSession } from './auth.repository';
 
 const loginResponseSchema = z.object({ expiresAt: z.string() });
 const errorResponseSchema = z.object({ error: z.string(), reason: z.string() });
 
+const ALLOWED_ORIGIN = 'https://last-loop-lepin.borso.fr';
+
+function readCookieValue(setCookie: string | null, name: string): string | null {
+  if (setCookie === null) return null;
+  const cookie = setCookie.split(',').find((part) => part.trim().startsWith(`${name}=`));
+  if (cookie === undefined) return null;
+  const valuePart = cookie.split(';')[0]?.split('=')[1];
+  return valuePart ?? null;
+}
+
 describe('admin auth controller', () => {
-  const app = createApp();
-  const originalEnv = { ...process.env };
+  const originalOrigin = process.env.ALLOWED_ORIGIN;
 
   beforeAll(() => {
-    process.env.PIN_HASH = process.env.PIN_HASH ?? 'scrypt$00$00';
+    process.env.ALLOWED_ORIGIN = ALLOWED_ORIGIN;
+  });
+
+  afterEach(() => {
+    process.env.ALLOWED_ORIGIN = ALLOWED_ORIGIN ?? originalOrigin;
   });
 
   afterAll(() => {
-    process.env = originalEnv;
+    // Restore so subsequent test files don't inherit the strict cross-origin
+    // check (POSTs without `origin` headers would 403 in this suite's wake).
+    if (originalOrigin === undefined) {
+      delete process.env.ALLOWED_ORIGIN;
+    } else {
+      process.env.ALLOWED_ORIGIN = originalOrigin;
+    }
   });
 
   beforeEach(async () => {
     await truncateAllTables(freshDatabase());
+    await seedAdminCredentials(freshDatabase());
   });
 
   async function login(pin: string, ip = '127.0.0.1') {
-    return app.request('/api/admin/auth/login', {
+    return createApp().request('/api/admin/auth/login', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
       body: JSON.stringify({ pin }),
     });
   }
 
-  it('returns 200 and sets the lastloop_admin cookie on a correct PIN', async () => {
+  it('returns 200 and sets the lastloop_admin cookie with SameSite=Lax on a correct PIN', async () => {
     const response = await login('lastloop');
     expect(response.status).toBe(200);
     const body = loginResponseSchema.parse(await response.json());
@@ -38,7 +59,16 @@ describe('admin auth controller', () => {
     const setCookie = response.headers.get('set-cookie');
     expect(setCookie).toMatch(/lastloop_admin=/);
     expect(setCookie).toMatch(/HttpOnly/i);
-    expect(setCookie).toMatch(/SameSite=Strict/i);
+    expect(setCookie).toMatch(/SameSite=Lax/i);
+  });
+
+  it('persists the session in the DB so verifySession can find it', async () => {
+    const response = await login('lastloop');
+    const sessionId = readCookieValue(response.headers.get('set-cookie'), 'lastloop_admin');
+    expect(sessionId).not.toBeNull();
+    if (sessionId === null) throw new Error('session cookie missing');
+    const session = await findValidSession(freshDatabase(), sessionId, new Date());
+    expect(session?.id).toBe(sessionId);
   });
 
   it('returns 401 on an incorrect PIN', async () => {
@@ -69,5 +99,23 @@ describe('admin auth controller', () => {
     expect(success.status).toBe(200);
     const nextAttempt = await login('totallywrong', ip);
     expect(nextAttempt.status).toBe(401);
+  });
+
+  it('POST /logout deletes the session and clears the cookie', async () => {
+    const loginResponse = await login('lastloop');
+    const sessionId = readCookieValue(loginResponse.headers.get('set-cookie'), 'lastloop_admin');
+    expect(sessionId).not.toBeNull();
+    if (sessionId === null) throw new Error('session cookie missing');
+
+    const logoutResponse = await createApp().request('/api/admin/auth/logout', {
+      method: 'POST',
+      headers: {
+        cookie: `lastloop_admin=${sessionId}`,
+        origin: ALLOWED_ORIGIN,
+      },
+    });
+    expect(logoutResponse.status).toBe(200);
+    expect(logoutResponse.headers.get('set-cookie')).toMatch(/lastloop_admin=;/);
+    expect(await findValidSession(freshDatabase(), sessionId, new Date())).toBeNull();
   });
 });

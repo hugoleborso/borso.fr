@@ -1,34 +1,21 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
-import { AuthDeniedError, login } from './auth.service';
-
-const SCRYPT_HASH_FOR_PIN_LASTLOOP =
-  'scrypt$6ccc66eb93981b9b83e8817f584ca8f5$60191a1c31f18e88590e0e5c6995d1d6f7f0f053b6ffce8e3ea4288c56bd0e790d6a340ad59de2d29792c9d471ad144907d5d10e05ef03d0aea5f6383f734107';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { freshDatabase, seedAdminCredentials, truncateAllTables } from '../../../test/database-utils';
+import { findValidSession } from './auth.repository';
+import { AuthDeniedError, login, logout, verifySession } from './auth.service';
 
 describe('auth.service', () => {
-  const original = { ...process.env };
-
-  beforeAll(() => {
-    process.env.PIN_HASH = SCRYPT_HASH_FOR_PIN_LASTLOOP;
-    process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'test-secret-32-chars-min-padding';
-  });
-
-  afterEach(() => {
-    process.env = { ...original, PIN_HASH: SCRYPT_HASH_FOR_PIN_LASTLOOP };
-  });
-
   beforeEach(async () => {
     await truncateAllTables(freshDatabase());
+    await seedAdminCredentials(freshDatabase());
   });
 
-  it('returns a token on the correct PIN', async () => {
-    const result = await login(
-      freshDatabase(),
-      { pin: 'lastloop', ipAddress: '10.0.0.1' },
-      new Date(),
-    );
-    expect(result.token.length).toBeGreaterThan(20);
-    expect(result.expiresAt.getTime()).toBeGreaterThan(Date.now());
+  it('returns a session id and persists the session row on the correct PIN', async () => {
+    const now = new Date('2026-09-19T06:00:00+02:00');
+    const result = await login(freshDatabase(), { pin: 'lastloop', ipAddress: '10.0.0.1' }, now);
+    expect(result.sessionId).toHaveLength(64);
+    expect(result.expiresAt.getTime()).toBeGreaterThan(now.getTime());
+    const persisted = await findValidSession(freshDatabase(), result.sessionId, now);
+    expect(persisted?.id).toBe(result.sessionId);
   });
 
   it('throws AuthDeniedError("invalid-pin") on wrong PIN', async () => {
@@ -48,10 +35,30 @@ describe('auth.service', () => {
     ).rejects.toMatchObject({ reason: 'rate-limited' });
   });
 
-  it('throws AuthDeniedError("misconfigured") when env is missing', async () => {
-    delete process.env.PIN_HASH;
+  it('throws AuthDeniedError("misconfigured") when admin_credentials is empty', async () => {
+    await truncateAllTables(freshDatabase());
     await expect(
       login(freshDatabase(), { pin: 'lastloop', ipAddress: '10.0.0.4' }, new Date()),
     ).rejects.toMatchObject({ reason: 'misconfigured' });
+  });
+
+  it('verifySession returns null for unknown ids and for expired sessions', async () => {
+    const now = new Date('2026-09-19T06:00:00+02:00');
+    const result = await login(freshDatabase(), { pin: 'lastloop', ipAddress: '10.0.0.5' }, now);
+    const live = await verifySession(freshDatabase(), result.sessionId, now);
+    expect(live?.id).toBe(result.sessionId);
+    const tooLate = new Date(result.expiresAt.getTime() + 1);
+    const expired = await verifySession(freshDatabase(), result.sessionId, tooLate);
+    expect(expired).toBeNull();
+    const missing = await verifySession(freshDatabase(), 'no-such-id', now);
+    expect(missing).toBeNull();
+  });
+
+  it('logout deletes the session so subsequent verify returns null', async () => {
+    const now = new Date('2026-09-19T06:00:00+02:00');
+    const result = await login(freshDatabase(), { pin: 'lastloop', ipAddress: '10.0.0.6' }, now);
+    await logout(freshDatabase(), result.sessionId);
+    const after = await verifySession(freshDatabase(), result.sessionId, now);
+    expect(after).toBeNull();
   });
 });

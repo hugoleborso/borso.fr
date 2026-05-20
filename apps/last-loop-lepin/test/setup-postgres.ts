@@ -52,7 +52,7 @@ async function applyMigrations(connectionString: string): Promise<void> {
     // Always start from an empty database — a previous run may have left
     // tables behind under an external Postgres. DROP IF EXISTS keeps it idempotent.
     await sql.unsafe(
-      'DROP TABLE IF EXISTS loop_punches, manual_dnfs, runners, editions, auth_attempts CASCADE',
+      'DROP TABLE IF EXISTS loop_punches, manual_dnfs, runners, editions, auth_attempts, admin_credentials, admin_sessions CASCADE',
     );
     for (const statement of readMigrationStatements()) {
       await sql.unsafe(statement);
@@ -65,11 +65,17 @@ async function applyMigrations(connectionString: string): Promise<void> {
 function setProcessEnv(databaseUrl: string): void {
   process.env.DATABASE_URL = databaseUrl;
   process.env.STAGE = 'dev';
-  process.env.JWT_SECRET = 'test-jwt-secret-not-for-prod-not-for-prod-not-for-prod';
   process.env.PHOTOS_BUCKET = 'last-loop-lepin-test-photos';
-  // PIN "lastloop" pre-hashed with scrypt (salt + key generated once for tests).
-  process.env.PIN_HASH =
-    'scrypt$6ccc66eb93981b9b83e8817f584ca8f5$60191a1c31f18e88590e0e5c6995d1d6f7f0f053b6ffce8e3ea4288c56bd0e790d6a340ad59de2d29792c9d471ad144907d5d10e05ef03d0aea5f6383f734107';
+  // ALLOWED_ORIGIN is intentionally left unset: the `requireAdminSession`
+  // middleware treats absence as "no Origin allow-list configured" and
+  // skips the cross-origin check, so controller tests can POST without
+  // setting `origin` on every request. The middleware unit test sets it
+  // locally to cover the strict-mode path.
+  delete process.env.ALLOWED_ORIGIN;
+  // The PIN hash is no longer an env var — tests that exercise the
+  // login flow seed `admin_credentials` via `seedAdminCredentials()`.
+  delete process.env.PIN_HASH;
+  delete process.env.JWT_SECRET;
 }
 
 export async function setup(): Promise<void> {

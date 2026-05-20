@@ -1,8 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { createApp } from '../app';
-import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
-import { signAdminSession } from '../auth/auth.jwt';
+import { adminSessionCookie, freshDatabase, truncateAllTables } from '../../../test/database-utils';
 import { insertEdition } from '../edition/edition.repository';
 import { insertRunner } from '../runner/runner.repository';
 import { makeEdition, makeRunner } from '../../../test/fixtures';
@@ -41,9 +40,7 @@ describe('admin punch controller', () => {
   });
 
   async function adminCookie(): Promise<string> {
-    const secret = process.env.JWT_SECRET ?? 'unset';
-    const token = await signAdminSession(secret, new Date());
-    return `lastloop_admin=${token}`;
+    return adminSessionCookie(freshDatabase());
   }
 
   async function postPunch(body: { editionSlug: string; runnerSlug: string }, cookie: string) {
