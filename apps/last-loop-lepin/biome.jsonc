@@ -8,7 +8,14 @@
     "../../biome-plugins/no-direct-api-fetch-in-site.grit"
   ],
   "files": {
-    "includes": ["api/**", "site/**", "cdk/**", "test/**", "bin/**"]
+    "includes": [
+      "api/**",
+      "site/**",
+      "cdk/**",
+      "test/**",
+      "bin/**",
+      "!api/src/database/migrations/meta"
+    ]
   },
   "overrides": [
     {

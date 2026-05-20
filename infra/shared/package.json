@@ -9,7 +9,7 @@
     "deploy": "pnpm --filter @borso/infra run build && cdk deploy --all --require-approval never",
     "destroy": "cdk destroy --all --force",
     "typecheck": "tsc --noEmit",
-    "lint": "biome lint",
+    "lint": "biome check",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
