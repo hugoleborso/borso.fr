@@ -33,7 +33,7 @@ import { buildBarsRouter } from './bars/bars.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
 import { buildMembersRouter } from './members/members.controller';
-import { buildSessionsRouter } from './sessions/sessions.controller';
+import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
 import { buildTransitionCommentsRouter } from './transitions/transition-comments.controller';
@@ -78,6 +78,7 @@ export function createApp(options: CreateAppOptions = {}): Hono {
   mountGated(app, '/api/songs', buildSongsRouter());
   mountGated(app, '/api/mastery', buildMasteryRouter());
   mountGated(app, '/api/sessions', buildSessionsRouter());
+  mountGated(app, '/api/offline-manifest', buildOfflineManifestRouter());
   mountGated(app, '/api/setlists', buildSetlistsRouter());
   mountGated(app, '/api/transition-comments', buildTransitionCommentsRouter());
   mountGated(app, '/api/bars', buildBarsRouter());
