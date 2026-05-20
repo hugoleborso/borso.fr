@@ -2,16 +2,20 @@
   "runId": "2026-05-19-1937-pragma",
   "feature": { "app": "pragma", "slug": "first-features" },
   "pilotedByTechLead": true,
-  "stage": "validate",
+  "stage": "ship",
   "retries": { "implement": 3, "validate": 3 },
   "retryPolicy": "progress-based (not count-based) — escalate only on stuck-loop / regression-net-negative / product-ambiguity",
   "adrIndex": [4],
   "implementationSha": "3267f91",
-  "lastTechnicalValidation": "FAIL",
-  "lastVisualValidation": "FAIL",
+  "lastTechnicalValidation": "PASS",
+  "lastVisualValidation": "PASS_EXCEPT_UNVERIFIABLE",
   "openBlockers": [],
+  "validationGaps": [
+    "i18n default FR — unverifiable (spec/tooling gap, mergeable with disclosure)",
+    "i18n runtime switcher — unverifiable (spec/tooling gap, mergeable with disclosure)"
+  ],
   "deliveryShape": "monolithic",
   "specChecksum": "1e8c3e5ea12d94b6ded1ad45bc8c9eaf8962fb5286cfa4867496b8f51d7df65f",
   "startedAt": "2026-05-19T19:37:16.000Z",
-  "updatedAt": "2026-05-20T10:30:00.000Z"
+  "updatedAt": "2026-05-20T11:05:00.000Z"
 }
