@@ -1,0 +1,120 @@
+/*
+ * Pragma — design tokens bridged to Tailwind v4 via `@theme`.
+ *
+ * Every variable declared inside `@theme` becomes a Tailwind utility
+ * automatically: `--color-bg-elev` → `bg-bg-elev` / `text-bg-elev`,
+ * `--font-display` → `font-display`, etc.
+ *
+ * This is the ONLY CSS file the site is allowed to ship beyond
+ * imports. Per CLAUDE.md "Clean code", component styles live inline
+ * as Tailwind utilities on the JSX.
+ */
+
+@import 'tailwindcss';
+
+@theme {
+  /* Paper palette — warm cream */
+  --color-bg: #f4efe6;
+  --color-bg-elev: #fbf7ef;
+  --color-bg-sunk: #ebe5d8;
+
+  /* Ink tones */
+  --color-ink-900: #1a1612;
+  --color-ink-700: #3d342a;
+  --color-ink-500: #6a5f53;
+  --color-ink-400: #8c8478;
+  --color-ink-300: #b4ac9f;
+
+  /* Lines */
+  --color-line: rgba(26, 22, 18, 0.1);
+  --color-line-strong: rgba(26, 22, 18, 0.22);
+
+  /* Accent — Hugo's override: blue, not the prototype's amber */
+  --color-accent: #2d5fa0;
+  --color-accent-ink: #1a3a6e;
+  --color-accent-soft: rgba(45, 95, 160, 0.1);
+
+  /* Status colours */
+  --color-warn: #b8841a;
+  --color-warn-soft: rgba(184, 132, 26, 0.14);
+  --color-danger: #a83a2a;
+  --color-good: #4a7a45;
+
+  /* Member palette — five distinct equal-chroma hues */
+  --color-member-coral: #c4583a;
+  --color-member-teal: #3d8a8a;
+  --color-member-mustard: #c4912b;
+  --color-member-plum: #8a4870;
+  --color-member-sage: #6e8a48;
+
+  /* Status-chip swatches (song states) */
+  --color-status-wip-bg: #efe3c7;
+  --color-status-wip-fg: #6b5012;
+  --color-status-wip-border: #e2d0a2;
+  --color-status-rehearsed-bg: #d8e6d0;
+  --color-status-rehearsed-fg: #3a5a32;
+  --color-status-rehearsed-border: #c5d8ba;
+
+  /* Typography stacks */
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Geist Variable', 'Söhne', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-xl: 22px;
+}
+
+/*
+ * Dark mode flips via prefers-color-scheme only — no in-app toggle in
+ * v1 (CLAUDE.md "useEffect is a smell" — CSS-driven over JS-driven).
+ */
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-bg: #16130f;
+    --color-bg-elev: #1f1b15;
+    --color-bg-sunk: #100d0a;
+    --color-ink-900: #f1ece2;
+    --color-ink-700: #d9d2c4;
+    --color-ink-500: #a39c8e;
+    --color-ink-400: #7a7367;
+    --color-ink-300: #4d4639;
+    --color-line: rgba(241, 236, 226, 0.1);
+    --color-line-strong: rgba(241, 236, 226, 0.22);
+    --color-accent: #6b9bd6;
+    --color-accent-ink: #88b4e6;
+    --color-accent-soft: rgba(107, 155, 214, 0.16);
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-ink-900);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Pulse animation for the offline banner indicator. */
+@keyframes pragma-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(224, 164, 69, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(224, 164, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(224, 164, 69, 0);
+  }
+}
