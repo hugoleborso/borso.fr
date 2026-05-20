@@ -41,6 +41,14 @@
       "semicolons": "always"
     }
   },
+  "css": {
+    // Enable parsing of Tailwind CSS 4.0 directives (`@theme`,
+    // `@apply`, `@variant`, etc.) — used in
+    // `apps/pragma/site/src/styles/tokens.css`.
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "overrides": [
     {
       // CloudFront Function source — read as a string at synth time, shipped to
