@@ -17,14 +17,14 @@
 
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError, apiRequest } from '../lib/api-client';
+import { ApiError, apiRequest } from '../../lib/api-client';
 import {
   cellKey,
   clampScore,
   columnAverage,
   rowAverage,
-} from '../lib/mastery-matrix.utils';
-import { readableForeground } from '../lib/member-color.utils';
+} from '../../lib/mastery-matrix.utils';
+import { readableForeground } from '../../lib/member-color.utils';
 
 export interface MasteryMatrixMember {
   readonly id: string;
@@ -46,6 +46,7 @@ interface MasteryMatrixProps {
 }
 
 const RIGHT_BUTTON = 2;
+const DECIMALS = 1;
 
 export function MasteryMatrix({
   members,
@@ -116,9 +117,6 @@ export function MasteryMatrix({
     void clearScore(memberId, instrumentId);
   };
 
-  // Mouse-button right-click on the cell wrapper also clears — Safari
-  // dispatches `contextmenu` reliably; the wrapper guard catches
-  // touch-and-hold patterns that fire `auxclick` instead.
   const handleAuxClick = (
     event: React.MouseEvent<HTMLTableCellElement>,
     memberId: string,
@@ -130,32 +128,41 @@ export function MasteryMatrix({
   };
 
   return (
-    <section className="mastery-matrix-wrapper" data-testid="mastery-matrix">
-      <h3 className="admin-page-form-title">{t('members.masteryMatrixTitle')}</h3>
-      <p className="mastery-page-subtitle">{t('members.masteryMatrixSubtitle')}</p>
+    <section className="bg-bg-elev border border-line rounded-lg p-4 overflow-x-auto" data-testid="mastery-matrix">
+      <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-1">
+        {t('members.masteryMatrixTitle')}
+      </h3>
+      <p className="text-xs text-ink-500 m-0 mb-4 leading-relaxed">
+        {t('members.masteryMatrixSubtitle')}
+      </p>
       {members.length === 0 || instruments.length === 0 ? (
-        <p className="admin-page-loading">{t('mastery.noData')}</p>
+        <p className="text-sm text-ink-400 italic">{t('mastery.noData')}</p>
       ) : (
-        <table className="mastery-table">
+        <table className="w-full border-collapse text-[12.5px]">
           <thead>
             <tr>
               <th />
               {instruments.map((instrument) => (
-                <th key={instrument.id} className="mastery-table-instrument">
+                <th
+                  key={instrument.id}
+                  className="text-center font-medium text-[10.5px] tracking-wider uppercase text-ink-500 px-2 py-3 border-b border-line align-bottom"
+                >
                   {instrument.name}
                 </th>
               ))}
-              <th className="mastery-table-avg">{t('members.rowAverage')}</th>
+              <th className="text-right font-medium text-[10.5px] tracking-wider uppercase text-ink-500 px-4 py-3 border-b border-line">
+                {t('members.rowAverage')}
+              </th>
             </tr>
           </thead>
           <tbody>
             {members.map((member) => {
               const average = rowAverage(member.id, instrumentIds, scores);
               return (
-                <tr key={member.id}>
-                  <th scope="row">
+                <tr key={member.id} className="hover:bg-[rgba(26,22,18,0.02)]">
+                  <th scope="row" className="text-left px-3 py-2 border-b border-line">
                     <span
-                      className="member-chip"
+                      className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-semibold mr-2 align-middle"
                       style={{
                         background: member.color,
                         color: readableForeground(member.color),
@@ -163,14 +170,14 @@ export function MasteryMatrix({
                     >
                       {member.firstName.slice(0, 1).toUpperCase()}
                     </span>
-                    {member.firstName}
+                    <span className="align-middle text-ink-900">{member.firstName}</span>
                   </th>
                   {instruments.map((instrument) => {
                     const value = scores[cellKey(member.id, instrument.id)] ?? 0;
                     return (
                       <td
                         key={instrument.id}
-                        className="mastery-table-cell"
+                        className="px-1 py-1 border-b border-line"
                         onAuxClick={(event) => handleAuxClick(event, member.id, instrument.id)}
                       >
                         <input
@@ -187,28 +194,30 @@ export function MasteryMatrix({
                             const parsed = clampScore(Number(event.target.value));
                             void writeScore(member.id, instrument.id, parsed);
                           }}
-                          className="mastery-table-input"
+                          className="w-12 text-center bg-bg-elev border border-line rounded-sm text-xs py-1 outline-none focus:border-ink-700 font-mono"
                         />
                       </td>
                     );
                   })}
-                  <td className="mastery-table-avg">
-                    {average === null ? '—' : average.toFixed(1)}
+                  <td className="text-right px-4 py-1 border-b border-line font-mono text-ink-500">
+                    {average === null ? '—' : average.toFixed(DECIMALS)}
                   </td>
                 </tr>
               );
             })}
-            <tr className="mastery-table-footer">
-              <th scope="row">{t('members.columnAverage')}</th>
+            <tr className="bg-bg-sunk">
+              <th scope="row" className="text-left px-3 py-3 font-medium text-ink-500 text-[10.5px] tracking-wider uppercase">
+                {t('members.columnAverage')}
+              </th>
               {instruments.map((instrument) => {
                 const average = columnAverage(instrument.id, memberIds, scores);
                 return (
-                  <td key={instrument.id} className="mastery-table-avg">
-                    {average === null ? '—' : average.toFixed(1)}
+                  <td key={instrument.id} className="text-center px-1 py-3 font-mono text-ink-500">
+                    {average === null ? '—' : average.toFixed(DECIMALS)}
                   </td>
                 );
               })}
-              <td className="mastery-table-avg" />
+              <td className="px-4 py-3" />
             </tr>
           </tbody>
         </table>
@@ -216,4 +225,3 @@ export function MasteryMatrix({
     </section>
   );
 }
-

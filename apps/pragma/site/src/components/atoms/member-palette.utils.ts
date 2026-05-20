@@ -40,6 +40,7 @@ function parseHexTriplet(hex: string): readonly [number, number, number] | null 
   const match = HEX_PATTERN.exec(hex.trim());
   if (!match) return null;
   const body = match[1];
+  if (body === undefined) return null;
   const red = Number.parseInt(body.slice(0, HEX_PAIR_LENGTH), HEX_RADIX);
   const green = Number.parseInt(body.slice(HEX_PAIR_LENGTH, HEX_PAIR_LENGTH * 2), HEX_RADIX);
   const blue = Number.parseInt(body.slice(HEX_PAIR_LENGTH * 2), HEX_RADIX);

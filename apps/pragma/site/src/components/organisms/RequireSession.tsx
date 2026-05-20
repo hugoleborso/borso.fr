@@ -12,7 +12,7 @@
 
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { ApiError, apiRequest } from '../lib/api-client';
+import { ApiError, apiRequest } from '../../lib/api-client';
 
 type SessionState = 'probing' | 'authenticated' | 'redirecting';
 
@@ -47,7 +47,11 @@ export function RequireSession(): JSX.Element {
   }, []);
 
   if (state === 'probing') {
-    return <div className="route-loading">…</div>;
+    return (
+      <div className="h-screen w-full flex items-center justify-center text-ink-400 text-sm">
+        …
+      </div>
+    );
   }
   if (state === 'redirecting') {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;

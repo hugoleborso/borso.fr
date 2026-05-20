@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
-import { MasteryMatrix } from '../../components/MasteryMatrix';
+import { MasteryMatrix } from '../../components/organisms/MasteryMatrix';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { cellKey } from '../../lib/mastery-matrix.utils';
 import { readableForeground } from '../../lib/member-color.utils';

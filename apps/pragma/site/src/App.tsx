@@ -5,8 +5,8 @@
  */
 
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { AppShell } from './components/AppShell';
-import { RequireSession } from './components/RequireSession';
+import { AppShell } from './components/organisms/AppShell';
+import { RequireSession } from './components/organisms/RequireSession';
 import { Login } from './routes/Login';
 import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
 import { MembersPage } from './routes/members/MembersPage';
