@@ -1,10 +1,12 @@
 /**
  * Drizzle schema for the setlists bounded context. A setlist belongs
  * to exactly one session; entries carry position, optional lineup
- * override, optional energy 1..10.
+ * override, optional energy 1..10. `lineup_override` is stored as TEXT
+ * (JSON-encoded) because Aurora DSQL doesn't support `jsonb` — see
+ * docs/knowledge/dsql-postgres-compat-gaps.md §1.
  */
 
-import { integer, jsonb, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
 export const setlistTable = pgTable('setlist', {
@@ -17,7 +19,8 @@ export const setlistEntryTable = pgTable('setlist_entry', {
   setlistId: uuid('setlist_id').notNull(),
   songId: uuid('song_id').notNull(),
   position: integer('position').notNull(),
-  lineupOverride: jsonb('lineup_override'),
+  // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
+  lineupOverride: text('lineup_override'),
   energy: integer('energy'),
   keyOverride: text('key_override'),
   capo: integer('capo'),
@@ -29,7 +32,10 @@ const ENERGY_MAX = 10;
 const CAPO_MIN = 0;
 const CAPO_MAX = 11;
 
-const lineupOverrideSchema = z.record(z.string().uuid(), z.string().uuid().nullable());
+// Also used by the repository to validate the JSON blob deserialised
+// from the `lineup_override` text column (Aurora DSQL stores it as
+// TEXT — see docs/knowledge/dsql-postgres-compat-gaps.md §1).
+export const lineupOverrideSchema = z.record(z.string().uuid(), z.string().uuid().nullable());
 
 export const setlistEntryCreateSchema = z.object({
   songId: z.string().uuid(),
