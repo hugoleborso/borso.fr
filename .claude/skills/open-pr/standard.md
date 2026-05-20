@@ -43,6 +43,80 @@ live in section 8.
 When either is `PASS_EXCEPT_UNVERIFIABLE`, append `(N unverifiable — see
 § Validation gaps)`.
 
+### Section 2.5: Orchestration trace (level 1 → 2)
+
+Only emitted when the PR was built under `/tech-lead-orchestrator` —
+detected by the presence of `docs/features/<app>/<slug>/runs/<run-id>/`
+on the branch. Skipped on manual / single-shot PRs (silence is
+information: a clean linear build doesn't need this section).
+
+The section answers a single reviewer question: *how messy was the
+build, and what did the safety net catch?* — without the reviewer
+having to read the journal themselves.
+
+**Level 1: one-sentence counter line.** Sourced from `state.json` +
+the per-agent verdict YAMLs. Includes:
+
+- Implementation rounds (`N` total, where `N − 1` are fix rounds).
+- Validation rounds (`N` total, where each FAIL added one).
+- Defects caught by validators (count of FAIL verdicts on dispatch).
+- Kaizen items queued (count of items captured during the run,
+  surfaced for `/after-task-dantotsus` post-merge).
+
+A clean run renders as: *"Built in 1 implementation round + 1
+validation round, 0 defects caught, 0 kaizen items."* — which itself
+is information: the system held the line, no rework was needed.
+
+**Level 2: a Mermaid flowchart + a per-agent table.**
+
+The flowchart's nodes are the sub-agents dispatched during the run
+(spec → ADRs → plan → implement-NN → validate). Edges are labelled
+with verdicts (`PASS`, `FAIL: <one-line reason>`, `PASS_EU`). FAIL
+edges loop back into a new `implement-NN` node so the rework is
+visually obvious. Three node classes (`fail`, `fix`, `ok`) colour
+the diagram.
+
+The per-agent table reproduces the same data in scannable form:
+
+| Round | Agent | Output | Verdict | Commits | Notes |
+
+One row per dispatched sub-agent, chronological. Pulled from the
+verdict YAMLs at `runs/<run-id>/agents/<agent>-<NN>.md`.
+
+The section closes with a single link to the run directory
+(`runs/<run-id>/`) so a reviewer who wants the full picture can dig
+into the journal + state file.
+
+```markdown
+## Orchestration trace
+
+Built in 2 implementation rounds + 2 validation rounds, 1 defect
+caught by the technical-validator (auth bypass on rotate-password),
+fix landed in round 2, 6 kaizen items queued for post-merge sweep.
+
+<details><summary>Flow diagram + per-stage results</summary>
+
+```mermaid
+flowchart LR
+  Spec --> Plan --> Impl1 --> Val1{{validators}}
+  Val1 -- PASS_EU (visual) --> Ship
+  Val1 -- FAIL (technical) --> Impl2
+  Impl2 --> Val2 --> Ship
+```
+
+| Round | Agent | Output | Verdict | Commits | Notes |
+|---|---|---|---|---|---|
+| 1 | implementation | foundation slice | done (partial) | 6 | priorities 1-5 + core modules |
+| 1 | visual-validation | 4P / 0F / 18U | PASS_EU | 0 | deferred UI = unverifiable |
+| 1 | technical-validation | 74P / 1F / 12U | FAIL | 0 | auth bypass on rotate-password |
+| 2 | implementation (fix) | gated rotate router | done | 1 | A09/D20 closed |
+| 2 | technical-validation | 0 new FAIL | PASS_EU | 0 | blocker closed, no regression |
+
+**Run state:** [`runs/2026-05-19-1937-pragma/`](…)
+
+</details>
+```
+
 ### Section 3: Architecture choices (level 1 → 2 → 3)
 
 One bullet per ADR referenced by the diff or the plan. Level 1 = the

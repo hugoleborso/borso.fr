@@ -51,6 +51,7 @@ No:
 | [0001](./0001-tech-lead-orchestrator-replaces-auto-chain.md) | `/tech-lead-orchestrator` replaces the linear skill auto-chain | accepted | 2026-05-13 |
 | [0002](./0002-vendor-react-bits-galaxy-shader.md) | Vendor the react-bits Galaxy WebGL shader instead of installing it | superseded by [0003](./0003-react-bits-galaxy-as-react-component.md) | 2026-05-14 |
 | [0003](./0003-react-bits-galaxy-as-react-component.md) | Mount the react-bits Galaxy as a React component on top of `ogl` | accepted | 2026-05-14 |
+| [0004](./0004-pragma-shared-password-auth.md) | Shared-password auth for the pragma band ERP | proposed | 2026-05-19 |
 
 ### Data layer
 
@@ -59,6 +60,7 @@ _(no entries yet)_
 ### App architecture
 
 - 0002, 0003 — react-bits Galaxy integration (see table above).
+- 0004 — shared-password auth for the pragma band ERP (5 trusted members, daily-use tool, friction dominates over attribution).
 
 ### CDK / infra
 

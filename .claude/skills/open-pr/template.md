@@ -22,6 +22,52 @@ spec.md § "Pourquoi" + the feature's headline result.}}
 - Visual:    {{PASS | PASS_EXCEPT_UNVERIFIABLE (N) | FAIL}} — [report](docs/features/{{app}}/{{slug}}/validation/visual-validation-{{ts}}.md)
 - Technical: {{PASS | PASS_EXCEPT_UNVERIFIABLE (N) | FAIL}} — [report](docs/features/{{app}}/{{slug}}/validation/technical-validation-{{ts}}.md)
 
+## Orchestration trace
+
+{{One-line level-1 summary — counters that tell the reviewer at-a-
+glance how messy the build was. Example:
+
+  *Built in 2 implementation rounds + 2 validation rounds, 1 defect
+  caught by the technical-validator (auth bypass on rotate-password),
+  fix landed in round 2, 6 kaizen items queued for post-merge sweep.*}}
+
+<details><summary>Flow diagram + per-stage results</summary>
+
+```mermaid
+flowchart LR
+  Spec[spec.md] --> Plan[plan.md]
+  Plan --> ADR0004["ADR-0004<br/>shared-password auth"]
+  ADR0004 --> Impl1["implement-01<br/>partial · 6 commits"]
+  Impl1 --> Val1{{validators}}
+  Val1 -- visual<br/>PASS_EU --> ShipReady
+  Val1 -- technical<br/>FAIL: auth bypass --> Impl2["implement-02<br/>fix · 1 commit"]
+  Impl2 --> Val2{{re-validate technical}}
+  Val2 -- PASS_EU --> ShipReady["ship-ready<br/>(this PR)"]
+  classDef fail fill:#ffd5d5,stroke:#cc0000
+  classDef fix fill:#fff3cd,stroke:#996600
+  classDef ok fill:#d4edda,stroke:#1e7e34
+  class Val1 fail
+  class Impl2 fix
+  class ShipReady ok
+```
+
+{{Render the diagram from `runs/<run-id>/journal.md.jsonl`: one node
+per dispatched sub-agent (implementation / technical-validation /
+visual-validation), with edge labels carrying the verdict.
+`fail` class for FAIL verdicts, `fix` class for retry rounds, `ok`
+class for ship-ready / PASS final nodes.}}
+
+| Round | Agent | Output | Verdict | Commits | Notes |
+|---|---|---|---|---|---|
+{{One row per dispatched agent, in chronological order. Pull
+`status`, `summary` (first sentence), `sha` from the agent's verdict
+YAML at `runs/<run-id>/agents/<agent>-<NN>.md`. Mark retries as
+"fix round 1", "fix round 2", etc.}}
+
+**Run state:** [`docs/features/{{app}}/{{slug}}/runs/{{run-id}}/`]({{path}}) — journal, per-agent verdicts, state checkpoint.
+
+</details>
+
 ## Architecture choices
 
 {{One bullet per ADR referenced by the diff or the plan. Level 1 line =
@@ -128,6 +174,7 @@ https://claude.ai/code/session_{{session_id}}
 |---|---|---|
 | Summary | `spec.md` § *Pourquoi* + headline result | near-verbatim |
 | Validation verdicts | latest report files under `validation/` | yes |
+| Orchestration trace | `runs/<run-id>/state.json` + `journal.md.jsonl` + `agents/*.md` | computed |
 | Architecture choices | `docs/adr/NNNN-*.md` (each referenced ADR) | yes |
 | What the user sees / does | `spec.md` § *Result* (visible / behaviour) | yes |
 | Visual evidence | `validation/visual-validation-<ts>/*.png` | n/a (binary) |

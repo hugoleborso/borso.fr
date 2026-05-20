@@ -19,3 +19,7 @@ coverage/
 # auto-cleaned at the end of the agent run; we don't want git to track them
 # while they exist.
 .claude/worktrees/
+
+# Per-session kaizen scratch file. Maintained during a task, consumed by
+# /after-task-dantotsus once the work merges. Local-only by design.
+KAIZEN.md
