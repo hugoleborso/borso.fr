@@ -1,7 +1,7 @@
 /**
  * ChordPro renderer. Pure-output wrapper around `parseChordPro` +
- * `transposeLines` — every layout decision is in CSS; this component
- * just emits the typed line tokens.
+ * `transposeLines` — every layout decision is in Tailwind utility
+ * classes on the rendered tokens.
  *
  * The viewer is used in two surfaces:
  *  - inline preview on `/catalog/:songId` (compact, no controls);
@@ -13,7 +13,8 @@
  */
 
 import { useMemo } from 'react';
-import { parseChordPro, transposeLines } from '../lib/chordpro.utils';
+import { parseChordPro, transposeLines } from '../../lib/chordpro.utils';
+import { cn } from '../atoms/cn.utils';
 
 interface ChordChartViewerProps {
   readonly source: string;
@@ -28,45 +29,54 @@ export function ChordChartViewer({
 }: ChordChartViewerProps): JSX.Element {
   const lines = useMemo(() => parseChordPro(source), [source]);
   const transposed = useMemo(() => transposeLines(lines, semitones), [lines, semitones]);
+  const fontSize = compact ? 'text-[13px] leading-[1.7]' : 'text-[18px] leading-[2]';
   return (
-    <div className={`chord-chart-viewer${compact ? ' chord-chart-viewer--compact' : ''}`}>
+    <div
+      className={cn(
+        'font-mono text-ink-700 whitespace-pre rounded-md overflow-x-auto',
+        fontSize,
+      )}
+    >
       {transposed.map((line, index) => {
         const key = `chord-line-${index}`;
-        if (line.kind === 'blank') return <div key={key} className="chord-chart-blank" />;
+        if (line.kind === 'blank') return <div key={key} className="h-4" />;
         if (line.kind === 'directive') {
           if (line.name === 'title' || line.name === 't') {
             return (
-              <h3 key={key} className="chord-chart-title">
+              <h3
+                key={key}
+                className="font-display italic text-2xl text-ink-900 m-0 mb-2 not-prose"
+              >
                 {line.value}
               </h3>
             );
           }
           return (
-            <p key={key} className="chord-chart-directive">
+            <p key={key} className="text-ink-500 italic text-xs m-0">
               {line.value}
             </p>
           );
         }
         if (line.kind === 'plain-line') {
           return (
-            <p key={key} className="chord-chart-plain">
+            <p key={key} className="text-ink-700 m-0">
               {line.text}
             </p>
           );
         }
         return (
-          <div key={key} className="chord-chart-line">
+          <div key={key} className="whitespace-pre">
             {line.tokens.map((token, tokenIndex) => {
               const tokenKey = `${key}-token-${tokenIndex}`;
               if (token.kind === 'chord') {
                 return (
-                  <span key={tokenKey} className="chord-chart-chord">
-                    {token.chord}
+                  <span key={tokenKey} className="text-accent font-semibold">
+                    [{token.chord}]
                   </span>
                 );
               }
               return (
-                <span key={tokenKey} className="chord-chart-lyric">
+                <span key={tokenKey} className="text-ink-700">
                   {token.text}
                 </span>
               );

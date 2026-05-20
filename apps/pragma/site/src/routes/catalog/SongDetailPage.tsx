@@ -12,7 +12,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
-import { ChordChartViewer } from '../../components/ChordChartViewer';
+import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { deriveTonality } from '../../lib/tonality-bridge';
 import { SongChartFields } from './SongChartFields';

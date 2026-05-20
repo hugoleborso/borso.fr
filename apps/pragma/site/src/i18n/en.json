@@ -1,12 +1,18 @@
 {
-  "appName": "pragma",
+  "appName": "Pragma",
+  "appWordmark": "Band ERP",
   "nav": {
     "catalog": "Catalog",
     "sessions": "Sessions",
     "bars": "Bars",
     "mastery": "Mastery",
     "members": "Members",
-    "instruments": "Instruments"
+    "instruments": "Instruments",
+    "administrationSection": "Administration"
+  },
+  "shell": {
+    "meName": "Hugo",
+    "meVersion": "Pragma · v0.1"
   },
   "auth": {
     "passwordLabel": "Shared password",
@@ -25,7 +31,13 @@
     "edit": "Edit",
     "add": "Add",
     "back": "Back",
-    "offline": "Offline — read only"
+    "offline": "Offline — read only",
+    "offlineTitle": "Offline mode",
+    "offlineHint": "catalog, charts and the next-concert setlist remain available. All edits are disabled.",
+    "search": "Search",
+    "filters": "Filters",
+    "all": "All",
+    "actions": "Actions"
   },
   "scaffold": {
     "title": "Pragma — scaffold ready",
@@ -33,6 +45,7 @@
   },
   "instruments": {
     "title": "Instruments",
+    "subtitle": "Harmonic instruments feed the transition analysis.",
     "name": "Name",
     "isHarmonic": "Harmonic (counts for transition analysis)",
     "harmonic": "harmonic",
@@ -42,6 +55,7 @@
   },
   "members": {
     "title": "Members",
+    "subtitle": "Members and their per-instrument mastery palette.",
     "firstName": "First name",
     "color": "Color (hex)",
     "instrumentsAssigned": "Instruments played",
@@ -55,14 +69,17 @@
   },
   "catalog": {
     "title": "Catalog",
+    "crumb": "Repertoire",
+    "subtitle_one": "{{total}} song, including {{ready}} ready for the stage",
+    "subtitle_other": "{{total}} songs, including {{ready}} ready for the stage",
     "newSong": "New song",
     "songTitle": "Title",
     "artist": "Artist",
     "status": "Status",
-    "statusIdea": "idea",
-    "statusWip": "in progress",
-    "statusRehearsed": "rehearsed",
-    "statusConcertReady": "concert ready",
+    "statusIdea": "Idea",
+    "statusWip": "In progress",
+    "statusRehearsed": "Rehearsed",
+    "statusConcertReady": "Concert ready",
     "tonalityStart": "Key — start",
     "tonalityEnd": "Key — end",
     "baseEnergy": "Base energy (1-10)",
@@ -73,12 +90,23 @@
     "links": "External links",
     "linksTitle": "External links",
     "linkPlaceholder": "https://…",
-    "previewTitle": "Chord chart preview",
-    "openScene": "Open Mode Scène",
+    "previewTitle": "Chord chart",
+    "openScene": "Scene mode",
     "emptyList": "No songs yet.",
     "energyBadge": "E",
     "masteryBadge": "M",
-    "noMastery": "—"
+    "noMastery": "—",
+    "noChartHint": "no chart",
+    "searchPlaceholder": "Search a title or an artist…",
+    "filterAll": "All",
+    "filterConcertReady": "Concert-ready",
+    "filterRehearsed": "Rehearsed",
+    "filterWip": "In progress",
+    "filterIdea": "Ideas",
+    "defaultLineup": "Default lineup",
+    "mastery": "Mastery",
+    "playedRecently": "Played recently",
+    "backToCatalog": "Catalog"
   },
   "mastery": {
     "title": "Mastery matrix",
@@ -87,6 +115,7 @@
   },
   "sessions": {
     "title": "Sessions",
+    "subtitle": "Upcoming concerts and preparation rehearsals.",
     "newSession": "New session",
     "kindConcert": "Concert",
     "kindPractice": "Practice",
@@ -107,6 +136,7 @@
     "selectMember": "Member"
   },
   "setlist": {
+    "title": "Setlist",
     "addSong": "Add song",
     "removeEntry": "Remove",
     "moveUp": "Move up",
@@ -121,7 +151,7 @@
     "transitionCommentTitle": "Transition comment"
   },
   "scene": {
-    "title": "Mode Scène",
+    "title": "Scene Mode",
     "transposeUp": "Transpose up",
     "transposeDown": "Transpose down",
     "zoomIn": "Zoom in",
@@ -130,6 +160,7 @@
   },
   "bars": {
     "title": "Bars",
+    "subtitle": "Leads, contacts and follow-up history.",
     "viewList": "List",
     "viewKanban": "Kanban",
     "name": "Name",

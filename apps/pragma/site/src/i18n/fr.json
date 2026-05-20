@@ -1,12 +1,18 @@
 {
-  "appName": "pragma",
+  "appName": "Pragma",
+  "appWordmark": "ERP du groupe",
   "nav": {
     "catalog": "Catalogue",
     "sessions": "Sessions",
     "bars": "Bars",
     "mastery": "Maîtrise",
     "members": "Membres",
-    "instruments": "Instruments"
+    "instruments": "Instruments",
+    "administrationSection": "Administration"
+  },
+  "shell": {
+    "meName": "Hugo",
+    "meVersion": "Pragma · v0.1"
   },
   "auth": {
     "passwordLabel": "Mot de passe partagé",
@@ -25,7 +31,13 @@
     "edit": "Modifier",
     "add": "Ajouter",
     "back": "Retour",
-    "offline": "Hors-ligne — lecture seule"
+    "offline": "Hors-ligne — lecture seule",
+    "offlineTitle": "Mode hors-ligne",
+    "offlineHint": "catalogue, accords et setlist du prochain concert disponibles. Toute modification est désactivée.",
+    "search": "Chercher",
+    "filters": "Filtres",
+    "all": "Toutes",
+    "actions": "Actions"
   },
   "scaffold": {
     "title": "Pragma — squelette prêt",
@@ -33,6 +45,7 @@
   },
   "instruments": {
     "title": "Instruments",
+    "subtitle": "Les instruments harmoniques entrent dans l'analyse de transition.",
     "name": "Nom",
     "isHarmonic": "Harmonique (compte pour l'analyse de transition)",
     "harmonic": "harmonique",
@@ -42,6 +55,7 @@
   },
   "members": {
     "title": "Membres",
+    "subtitle": "Membres et leur palette de maîtrise par instrument.",
     "firstName": "Prénom",
     "color": "Couleur (hex)",
     "instrumentsAssigned": "Instruments joués",
@@ -55,14 +69,17 @@
   },
   "catalog": {
     "title": "Catalogue",
-    "newSong": "Nouveau morceau",
+    "crumb": "Répertoire",
+    "subtitle_one": "{{total}} titre, dont {{ready}} prêt pour la scène",
+    "subtitle_other": "{{total}} titres, dont {{ready}} prêts pour la scène",
+    "newSong": "Nouveau titre",
     "songTitle": "Titre",
     "artist": "Interprète",
     "status": "Statut",
-    "statusIdea": "idée",
-    "statusWip": "en chantier",
-    "statusRehearsed": "répété",
-    "statusConcertReady": "prêt scène",
+    "statusIdea": "Idée",
+    "statusWip": "En travail",
+    "statusRehearsed": "Répété",
+    "statusConcertReady": "Prêt scène",
     "tonalityStart": "Tonalité — début",
     "tonalityEnd": "Tonalité — fin",
     "baseEnergy": "Énergie de base (1-10)",
@@ -73,12 +90,23 @@
     "links": "Liens externes",
     "linksTitle": "Liens externes",
     "linkPlaceholder": "https://…",
-    "previewTitle": "Aperçu du chord chart",
-    "openScene": "Ouvrir Mode Scène",
+    "previewTitle": "Grille d'accords",
+    "openScene": "Mode scène",
     "emptyList": "Aucun morceau pour l'instant.",
     "energyBadge": "E",
     "masteryBadge": "M",
-    "noMastery": "—"
+    "noMastery": "—",
+    "noChartHint": "pas d'accord",
+    "searchPlaceholder": "Chercher un titre, un artiste…",
+    "filterAll": "Toutes",
+    "filterConcertReady": "Prêtes scène",
+    "filterRehearsed": "Répétées",
+    "filterWip": "En travail",
+    "filterIdea": "Idées",
+    "defaultLineup": "Lineup par défaut",
+    "mastery": "Maîtrise",
+    "playedRecently": "Joué récemment",
+    "backToCatalog": "Catalogue"
   },
   "mastery": {
     "title": "Matrice de maîtrise",
@@ -87,6 +115,7 @@
   },
   "sessions": {
     "title": "Sessions",
+    "subtitle": "Concerts à venir et répétitions de préparation.",
     "newSession": "Nouvelle session",
     "kindConcert": "Concert",
     "kindPractice": "Répétition",
@@ -107,6 +136,7 @@
     "selectMember": "Membre"
   },
   "setlist": {
+    "title": "Setlist",
     "addSong": "Ajouter un morceau",
     "removeEntry": "Retirer",
     "moveUp": "Monter",
@@ -130,6 +160,7 @@
   },
   "bars": {
     "title": "Bars",
+    "subtitle": "Pistes, contacts et historique des relances.",
     "viewList": "Liste",
     "viewKanban": "Kanban",
     "name": "Nom",
