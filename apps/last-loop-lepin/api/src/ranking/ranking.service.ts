@@ -2,22 +2,21 @@ export { EditionNotFoundError } from '../edition/edition.service';
 
 import type { Database } from '../database/client';
 import { getEdition } from '../edition/edition.service';
-import { getPunchesForEdition } from '../punch/punch.service';
 import { listManualDnfsForEdition } from '../punch/punch.repository';
+import { getPunchesForEdition } from '../punch/punch.service';
+import type { RunnerDto } from '../runner/runner.dto.utils';
 import { readPhotosCdnHost, toRunnerDto } from '../runner/runner.dto.utils';
 import { listRunners } from '../runner/runner.service';
-import {
-  computeStandings,
-  formatStandingsAsCsv,
-  mostRecentCorrectionAt,
-} from './ranking.core';
+import { renderLapsCsv } from './laps-csv.core';
+import { computeStandings, formatStandingsAsCsv, mostRecentCorrectionAt } from './ranking.core';
 import type { RankedRunner, Standings } from './ranking.types';
-import type { RunnerDto } from '../runner/runner.dto.utils';
 
 export type RankedRunnerWithDto = Omit<RankedRunner, 'runner'> & { readonly runner: RunnerDto };
 
 export interface SpectatorStandings {
-  readonly standings: Omit<Standings, 'ranked'> & { readonly ranked: ReadonlyArray<RankedRunnerWithDto> };
+  readonly standings: Omit<Standings, 'ranked'> & {
+    readonly ranked: ReadonlyArray<RankedRunnerWithDto>;
+  };
   readonly mostRecentCorrectionAt: string | null;
 }
 
@@ -63,4 +62,17 @@ export async function getStandingsCsv(
 ): Promise<string> {
   const standings = await computeStandingsForEdition(database, editionSlug, now);
   return formatStandingsAsCsv(standings);
+}
+
+export async function getLapsCsv(
+  database: Database,
+  editionSlug: string,
+  now: Date,
+): Promise<string> {
+  const edition = await getEdition(database, editionSlug);
+  const [standings, punches] = await Promise.all([
+    computeStandingsForEdition(database, editionSlug, now),
+    getPunchesForEdition(database, editionSlug),
+  ]);
+  return renderLapsCsv(edition, standings.ranked, punches);
 }

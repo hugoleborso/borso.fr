@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { getDatabase } from '../database/client';
 import {
   EditionNotFoundError,
+  getLapsCsv,
   getSpectatorStandings,
   getStandingsCsv,
 } from './ranking.service';
@@ -24,6 +25,18 @@ const rankingRouter = new Hono()
       const csv = await getStandingsCsv(getDatabase(), editionSlug, new Date());
       context.header('content-type', 'text/csv; charset=utf-8');
       context.header('content-disposition', `attachment; filename="standings-${editionSlug}.csv"`);
+      return context.body(csv);
+    } catch (error) {
+      if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);
+      throw error;
+    }
+  })
+  .get('/standings/:editionSlug/laps.csv', async (context) => {
+    const editionSlug = context.req.param('editionSlug') ?? '';
+    try {
+      const csv = await getLapsCsv(getDatabase(), editionSlug, new Date());
+      context.header('content-type', 'text/csv; charset=utf-8');
+      context.header('content-disposition', `attachment; filename="laps-${editionSlug}.csv"`);
       return context.body(csv);
     } catch (error) {
       if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);
