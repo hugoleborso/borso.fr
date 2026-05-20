@@ -4,11 +4,14 @@
   "nav": {
     "catalog": "Catalogue",
     "sessions": "Sessions",
+    "setlists": "Setlists",
     "bars": "Bars",
     "mastery": "Maîtrise",
     "members": "Membres",
     "instruments": "Instruments",
-    "administrationSection": "Administration"
+    "administrationSection": "Administration",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
   },
   "shell": {
     "meName": "Hugo",
@@ -136,7 +139,9 @@
     "selectMember": "Membre"
   },
   "setlist": {
-    "title": "Setlist",
+    "title": "Setlists",
+    "indexSubtitle": "Setlists en cours, triées par date de concert.",
+    "indexEmpty": "Aucune setlist créée — ouvre un concert depuis /sessions pour en composer une.",
     "addSong": "Ajouter un morceau",
     "removeEntry": "Retirer",
     "moveUp": "Monter",
