@@ -68,11 +68,21 @@
 }
 
 /*
- * Dark mode flips via prefers-color-scheme only — no in-app toggle in
- * v1 (CLAUDE.md "useEffect is a smell" — CSS-driven over JS-driven).
+ * Dark mode — Tailwind v4 unwraps every `@theme` block into the top
+ * of `:root`, so two `@theme` declarations (even nested under
+ * `@media`) collapse and the second simply overrides the first
+ * unconditionally — cream paper would never reach the user. To
+ * genuinely flip with the OS preference we override the CSS
+ * variables on `:root` directly inside the media query, OUTSIDE any
+ * `@theme` block. Tailwind reads `@theme` only to discover utility
+ * names; the runtime values come from these `:root` overrides via
+ * normal CSS cascade.
+ *
+ * Flips via prefers-color-scheme only — no in-app toggle in v1
+ * (CLAUDE.md "useEffect is a smell" — CSS-driven over JS-driven).
  */
 @media (prefers-color-scheme: dark) {
-  @theme {
+  :root {
     --color-bg: #16130f;
     --color-bg-elev: #1f1b15;
     --color-bg-sunk: #100d0a;
