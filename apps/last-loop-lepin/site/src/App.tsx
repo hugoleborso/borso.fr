@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { AdminPage } from './routes/AdminPage';
 import { ArchivesPage } from './routes/ArchivesPage';
+import { NotFoundPage } from './routes/NotFoundPage';
 import { RunnerFichePage } from './routes/RunnerFichePage';
 import { SpectatorPage } from './routes/SpectatorPage';
 
@@ -103,13 +104,7 @@ export function App() {
       {route === 'runner' ? (
         <RunnerFichePage editionSlug="lepin-2026" runnerSlug={params.runnerSlug ?? ''} />
       ) : null}
-      {route === 'not-found' ? (
-        <div className="main">
-          <div className="card">
-            <div className="card-body muted">Page introuvable.</div>
-          </div>
-        </div>
-      ) : null}
+      {route === 'not-found' ? <NotFoundPage /> : null}
     </div>
   );
 }
