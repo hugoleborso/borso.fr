@@ -18,6 +18,7 @@ Anything else is a bug in the system. **Operational rule:** when a conversation 
 
 - **No invented numbers.** If you don't know a price, latency, capacity, or throughput, say so — or pull it from `aws … get-…`, the AWS pricing pages, or Cost Explorer. Never round to a memorable figure and pass it off as known.
 - **Verify before asserting.** When a claim depends on the state of the repo or live AWS, check it. The branch you're on can be far behind `main`; fetch and confirm. Don't restate from memory — paste the relevant source.
+- **"Preexisting" is not an excuse.** If a test fails, a build breaks, a linter shouts — fix it, regardless of who introduced it or when. CI gates every PR with the same suites, so a failure you walk past is a failure that will block the next push or, worse, a regression you mislabelled. Investigate, then either fix the underlying issue or fix the harness so it can't fire spuriously (e.g. a missing `pnpm --filter <pkg> run build` prerequisite belongs in the workspace's test script). Never qualify a failure as "preexisting" and move on.
 - **Verify destructive intent per resource.** Never bundle a `delete` of resource Y into a script aimed at fixing resource X without explicit per-resource confirmation. Each destructive line needs its own thumb-up; no hitchhiking on a related cleanup.
 - **No vague hand-waves.** If you don't know the exact console path or API surface, admit it and ask for a screenshot.
 - **No slang.** Relaxed but professional, between peers.

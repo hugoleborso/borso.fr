@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
 import { getDatabase } from '../database/client';
-import { EditionNotFoundError } from '../edition/edition.service';
+import { EditionNotFoundError, getEdition } from '../edition/edition.service';
 import { listPunchesForEdition } from '../punch/punch.repository';
 import { readPhotosCdnHost, toRunnerDto } from '../runner/runner.dto.utils';
+import { renderLapsCsv } from './laps-csv.core';
 import { computeStandingsForEdition } from './ranking.service';
 
 const rankingRouter = new Hono();
@@ -50,7 +51,8 @@ rankingRouter.get('/standings/:editionSlug/csv', async (context) => {
   const editionSlug = context.req.param('editionSlug') ?? '';
   try {
     const standings = await computeStandingsForEdition(getDatabase(), editionSlug, new Date());
-    const header = 'rank,bib,runner_slug,display_name,status,out_at_loop,last_loop,last_finished_at\n';
+    const header =
+      'rank,bib,runner_slug,display_name,status,out_at_loop,last_loop,last_finished_at\n';
     const lines = standings.ranked.map((entry) => {
       const status = entry.status.kind;
       const outAtLoop = entry.status.kind === 'dnf' ? entry.status.outAtLoop : '';
@@ -71,6 +73,25 @@ rankingRouter.get('/standings/:editionSlug/csv', async (context) => {
     const body = `${header}${lines.join('\n')}\n`;
     context.header('content-type', 'text/csv; charset=utf-8');
     context.header('content-disposition', `attachment; filename="standings-${editionSlug}.csv"`);
+    return context.body(body);
+  } catch (error) {
+    if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);
+    throw error;
+  }
+});
+
+rankingRouter.get('/standings/:editionSlug/laps.csv', async (context) => {
+  const editionSlug = context.req.param('editionSlug') ?? '';
+  try {
+    const now = new Date();
+    const [edition, standings, punches] = await Promise.all([
+      getEdition(getDatabase(), editionSlug),
+      computeStandingsForEdition(getDatabase(), editionSlug, now),
+      listPunchesForEdition(getDatabase(), editionSlug),
+    ]);
+    const body = renderLapsCsv(edition, standings.ranked, punches);
+    context.header('content-type', 'text/csv; charset=utf-8');
+    context.header('content-disposition', `attachment; filename="laps-${editionSlug}.csv"`);
     return context.body(body);
   } catch (error) {
     if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);

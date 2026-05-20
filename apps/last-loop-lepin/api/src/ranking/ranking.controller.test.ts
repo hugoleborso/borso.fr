@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { createApp } from '../app';
 import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { makeEdition, makePunch, makeRunner } from '../../../test/fixtures';
+import { createApp } from '../app';
 import { insertEdition } from '../edition/edition.repository';
 import { insertPunch } from '../punch/punch.repository';
 import { insertRunner } from '../runner/runner.repository';
-import { makeEdition, makePunch, makeRunner } from '../../../test/fixtures';
 
 const standingsResponseSchema = z.object({
   standings: z.object({
@@ -113,6 +113,35 @@ describe('ranking controller', () => {
     }
   });
 
+  it('exposes GET /standings/:slug/laps.csv with a header row and one row per runner', async () => {
+    const database = freshDatabase();
+    await truncateAllTables(database);
+    await insertEdition(database, makeEdition({ status: 'finished' }));
+    await insertRunner(database, makeRunner('alice', { bib: 1 }));
+    await insertRunner(database, makeRunner('bob', { bib: 2 }));
+    await insertPunch(database, makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
+    await insertPunch(database, makePunch('bob', 1, '2026-09-19T06:58:00+02:00'));
+
+    vi.setSystemTime(new Date('2026-09-21T12:00:00+02:00'));
+    const response = await app.request('/api/standings/lepin-2026/laps.csv');
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/csv');
+    expect(response.headers.get('content-disposition')).toContain('laps-lepin-2026.csv');
+    const body = await response.text();
+    const lines = body.split('\n');
+    expect(lines[0]?.startsWith('bib,runner_slug,display_name,B1,B2,')).toBe(true);
+    // Alice (55:00) finished her loop earlier than Bob (58:00), so she
+    // ranks above him — the CSV row order mirrors the ranked order.
+    expect(lines[1]?.startsWith('1,alice,')).toBe(true);
+    expect(lines[1]?.includes('55:00')).toBe(true);
+    expect(lines[2]?.startsWith('2,bob,')).toBe(true);
+  });
+
+  it('returns 404 on laps.csv for an unknown edition', async () => {
+    const response = await app.request('/api/standings/does-not-exist/laps.csv');
+    expect(response.status).toBe(404);
+  });
+
   it('surfaces fastestLap on the response body and matches the seeded record holder', async () => {
     // Alice loop 1 = 55 min, Bob loop 1 = 58 min → Alice holds at 55 min.
     const database = freshDatabase();
@@ -126,8 +155,6 @@ describe('ranking controller', () => {
     vi.setSystemTime(new Date('2026-09-19T07:30:00+02:00'));
     const response = await app.request('/api/standings/lepin-2026');
     const body = standingsResponseSchema.parse(await response.json());
-    expect(body.standings.fastestLap).toEqual([
-      { runnerSlug: 'alice', durationMs: 55 * 60_000 },
-    ]);
+    expect(body.standings.fastestLap).toEqual([{ runnerSlug: 'alice', durationMs: 55 * 60_000 }]);
   });
 });

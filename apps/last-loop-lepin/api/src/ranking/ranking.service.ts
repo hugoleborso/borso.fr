@@ -1,7 +1,7 @@
 import type { Database } from '../database/client';
 import { getEdition } from '../edition/edition.service';
-import { getPunchesForEdition } from '../punch/punch.service';
 import { listManualDnfsForEdition } from '../punch/punch.repository';
+import { getPunchesForEdition } from '../punch/punch.service';
 import { listRunners } from '../runner/runner.service';
 import { computeStandings } from './ranking.core';
 import type { Standings } from './ranking.types';

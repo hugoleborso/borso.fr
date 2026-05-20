@@ -24,7 +24,9 @@ export function ArchivesPage() {
       <div className="card">
         <div className="card-head">
           <h2 className="card-title">Archives</h2>
-          <span className="muted mono">{archives.length} édition{archives.length === 1 ? '' : 's'}</span>
+          <span className="muted mono">
+            {archives.length} édition{archives.length === 1 ? '' : 's'}
+          </span>
         </div>
         {archives.length === 0 ? (
           <div className="card-body muted">Aucune édition archivée pour l'instant.</div>
@@ -67,7 +69,9 @@ function ArchiveEntry({ edition }: { readonly edition: RaceEditionDto }) {
                     ? `B${entry.status.lastLoop}`
                     : `DNF B${entry.status.outAtLoop}`}
                 </span>
-                <span className={`status-pill ${entry.status.kind === 'in-race' ? 'in-race' : 'dnf'}`}>
+                <span
+                  className={`status-pill ${entry.status.kind === 'in-race' ? 'in-race' : 'dnf'}`}
+                >
                   {entry.status.kind === 'in-race' ? 'survivant' : 'dnf'}
                 </span>
               </li>
@@ -77,7 +81,13 @@ function ArchiveEntry({ edition }: { readonly edition: RaceEditionDto }) {
       </div>
       <div className="row" style={{ gap: 'var(--d-3)', marginTop: 'var(--d-2)' }}>
         <a className="btn btn-sm" href={`/api/standings/${encodeURIComponent(edition.slug)}/csv`}>
-          Télécharger CSV
+          Classement (CSV)
+        </a>
+        <a
+          className="btn btn-sm"
+          href={`/api/standings/${encodeURIComponent(edition.slug)}/laps.csv`}
+        >
+          Stats par boucle (CSV)
         </a>
       </div>
     </div>
