@@ -81,3 +81,37 @@ export async function patchSession(
 export async function removeSession(database: Database, id: string): Promise<boolean> {
   return await deleteSessionWithCascade(database, id);
 }
+
+export interface OfflineManifestPayload {
+  catalogListUrl: string;
+  songDetailUrls: string[];
+  nextSessionUrl: string | null;
+  nextSetlistUrl: string | null;
+}
+
+/**
+ * Composes the offline-manifest payload from session + song lists.
+ * The "next session" rule lives in `sw/manifest.utils.ts` (front-end
+ * pure utility) and is mirrored here in unit-friendly shape so the
+ * back-e2e test can assert the wire contract.
+ */
+export function buildNextSessionOfflineManifest(
+  sessions: readonly SessionRow[],
+  songs: readonly { id: string }[],
+  now: Date,
+): OfflineManifestPayload {
+  const futureSessions = sessions
+    .filter((session) => session.date.getTime() > now.getTime())
+    .toSorted((left, right) => {
+      const deltaMs = left.date.getTime() - right.date.getTime();
+      if (deltaMs !== 0) return deltaMs;
+      return left.id.localeCompare(right.id);
+    });
+  const next = futureSessions[0];
+  return {
+    catalogListUrl: '/api/songs',
+    songDetailUrls: songs.map((song) => `/api/songs/${song.id}`),
+    nextSessionUrl: next === undefined ? null : `/api/sessions/${next.id}`,
+    nextSetlistUrl: next === undefined ? null : `/api/setlists/by-session/${next.id}`,
+  };
+}

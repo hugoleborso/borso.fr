@@ -29,6 +29,10 @@ describe('sw-cache.utils', () => {
       expect(isReadableApiPath('/api/members')).toBe(true);
     });
 
+    it('caches the offline-manifest endpoint (SW reads it on every fetch)', () => {
+      expect(isReadableApiPath('/api/offline-manifest')).toBe(true);
+    });
+
     it('does not cache mutation-only endpoints', () => {
       expect(isReadableApiPath('/api/auth/login')).toBe(false);
       expect(isReadableApiPath('/api/admin/rotate-password')).toBe(false);

@@ -17,6 +17,7 @@ const EXACT_CACHEABLE_PATHS = new Set<string>([
   '/api/sessions',
   '/api/instruments',
   '/api/members',
+  '/api/offline-manifest',
 ]);
 
 export function isReadableApiPath(pathname: string): boolean {
