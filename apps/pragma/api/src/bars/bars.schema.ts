@@ -23,7 +23,7 @@ export const barTable = pgTable('bar', {
   contactPhone: text('contact_phone'),
 });
 
-export const barBaseSchema = z.object({
+export const barCreateSchema = z.object({
   name: z.string().trim().min(1).max(256),
   status: z.enum(BAR_STATUSES),
   notes: z.string().max(8_192).default(''),
@@ -35,8 +35,7 @@ export const barBaseSchema = z.object({
   contactPhone: z.string().max(32).nullable().default(null),
 });
 
-export const barCreateSchema = barBaseSchema;
-export const barUpdateSchema = barBaseSchema.partial();
+export const barUpdateSchema = barCreateSchema.partial();
 export const barIdParamSchema = z.object({ id: z.string().uuid() });
 
 export type BarStatus = (typeof BAR_STATUSES)[number];
