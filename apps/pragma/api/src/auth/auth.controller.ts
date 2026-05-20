@@ -1,5 +1,6 @@
 /**
- * Authentication controller.
+ * Authentication controller. Hono routing + Zod parsing; orchestration
+ * lives in `auth.service.ts`, DB access in `auth.repository.ts`.
  *
  *  - POST /api/auth/login           — verify password, set session cookie.
  *  - POST /api/admin/set-password    — bootstrap; rejected if a row already exists.
@@ -12,19 +13,15 @@
  * middleware: it is mounted on a dedicated router that applies
  * `requireSharedPasswordSession` to every route. Returning two distinct
  * admin routers (bootstrap vs. rotate) prevents the wiring mistake of
- * accidentally putting the rotate handler on an ungated router — see
- * `docs/features/pragma/first-features/validation/technical-validation-2026-05-19-2111.md`
- * row A09 for the original failure mode.
+ * accidentally putting the rotate handler on an ungated router.
  */
 
-import argon2 from 'argon2';
-import { randomBytes } from 'node:crypto';
 import { Hono } from 'hono';
 import { setCookie } from 'hono/cookie';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { getDatabase } from '../database/client';
-import { insertInitialAppConfig, loadAppConfig, updateAppConfig } from './app-config.repository';
+import { bootstrapAuth, getAppConfig, rotatePassword, verifyPassword } from './auth.service';
 import { hashIp, readClientIp } from './ip-hash.utils';
 import {
   type BucketStore,
@@ -37,7 +34,6 @@ import { requireSharedPasswordSession } from './shared-password.middleware';
 
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 256;
-const HMAC_KEY_BYTES = 32;
 const SESSION_COOKIE_MAX_AGE_S = SESSION_TTL_MS / 1000;
 
 const credentialsSchema = z.object({
@@ -66,12 +62,12 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}): {
     if (isRateLimited(updatedBucket)) {
       return context.json({ error: 'rate-limited' }, 429);
     }
-    const config = await loadAppConfig(getDatabase());
+    const config = await getAppConfig(getDatabase());
     if (config === null) {
       return context.json({ error: 'auth-not-bootstrapped' }, 503);
     }
     const { password } = context.req.valid('json');
-    const passwordOk = await argon2.verify(config.passwordHash, password);
+    const passwordOk = await verifyPassword(config, password);
     if (!passwordOk) {
       return context.json({ error: 'invalid-password' }, 401);
     }
@@ -92,15 +88,11 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}): {
     '/set-password',
     zValidator('json', credentialsSchema),
     async (context) => {
-      const database = getDatabase();
-      const existing = await loadAppConfig(database);
-      if (existing !== null) {
+      const { password } = context.req.valid('json');
+      const result = await bootstrapAuth(getDatabase(), password, clock());
+      if (result.kind === 'already-bootstrapped') {
         return context.json({ error: 'already-bootstrapped' }, 409);
       }
-      const { password } = context.req.valid('json');
-      const hash = await argon2.hash(password, { type: argon2.argon2id });
-      const hmacKey = randomBytes(HMAC_KEY_BYTES);
-      await insertInitialAppConfig(database, hash, hmacKey, clock());
       return context.json({ ok: true });
     },
   );
@@ -114,15 +106,11 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}): {
     '/rotate-password',
     zValidator('json', credentialsSchema),
     async (context) => {
-      const database = getDatabase();
-      const existing = await loadAppConfig(database);
-      if (existing === null) {
+      const { password } = context.req.valid('json');
+      const result = await rotatePassword(getDatabase(), password, clock());
+      if (result.kind === 'not-bootstrapped') {
         return context.json({ error: 'auth-not-bootstrapped' }, 503);
       }
-      const { password } = context.req.valid('json');
-      const hash = await argon2.hash(password, { type: argon2.argon2id });
-      const hmacKey = randomBytes(HMAC_KEY_BYTES);
-      await updateAppConfig(database, hash, hmacKey, clock());
       return context.json({ ok: true });
     },
   );

@@ -1,13 +1,13 @@
 /**
- * Repository for the `app_config` singleton row. ADR-0004 — the
- * password hash + HMAC signing key live here, not in AWS Secrets
- * Manager. The CHECK constraint `id = 1` is the singleton guard at the
- * database level.
+ * Repository for the auth bounded context. Owns the `app_config`
+ * singleton row (ADR-0004 — the password hash + HMAC signing key live
+ * here, not in AWS Secrets Manager). The CHECK constraint `id = 1` on
+ * the table is the singleton guard at the database level.
  */
 
 import { eq } from 'drizzle-orm';
 import type { Database } from '../database/client';
-import { appConfigTable } from '../database/schema';
+import { appConfigTable } from './auth.schema';
 
 export interface AppConfig {
   passwordHash: string;
