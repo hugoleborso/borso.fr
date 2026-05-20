@@ -58,6 +58,20 @@ export function SongScenePage(): JSX.Element {
     void load();
   }, [load]);
 
+  // ESC closes Mode Scène — the prototype's fullscreen takeover wires
+  // the same key (setlist.jsx line 443). Adding it here matches the
+  // muscle memory bandmates already have from the demo.
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      if (songId === undefined) return;
+      navigate(`/catalog/${songId}`);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [navigate, songId]);
+
   const decrementFontSize = (): void => {
     setFontSize((current) => Math.max(FONT_SIZE_MIN_PX, current - FONT_SIZE_STEP_PX));
   };

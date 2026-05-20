@@ -15,6 +15,7 @@ import { SongDetailPage } from './routes/catalog/SongDetailPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
 import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
+import { SetlistsPage } from './routes/setlists/SetlistsPage';
 import { BarsPage } from './routes/bars/BarsPage';
 
 export function App(): JSX.Element {
@@ -23,13 +24,19 @@ export function App(): JSX.Element {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={<RequireSession />}>
+          {/*
+            Mode Scène is a fullscreen takeover (black background,
+            edge-to-edge chord chart). It sits OUTSIDE the AppShell
+            so neither the sidebar nor the offline banner intrudes.
+          */}
+          <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
           <Route element={<AppShell />}>
             <Route path="/" element={<Navigate to="/catalog" replace />} />
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/catalog/:songId" element={<SongDetailPage />} />
-            <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
             <Route path="/sessions" element={<SessionsPage />} />
             <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
+            <Route path="/setlists" element={<SetlistsPage />} />
             <Route path="/bars" element={<BarsPage />} />
             <Route path="/members" element={<MembersPage />} />
             <Route path="/instruments" element={<InstrumentsPage />} />

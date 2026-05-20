@@ -13,6 +13,8 @@ import { cn } from './cn.utils';
 
 const ICONS = {
   catalog: <path d="M4 5h16M4 12h16M4 19h10" />,
+  menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  close: <path d="M6 6l12 12M18 6L6 18" />,
   song: (
     <>
       <circle cx="6.5" cy="17.5" r="2.5" />

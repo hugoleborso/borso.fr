@@ -4,11 +4,14 @@
   "nav": {
     "catalog": "Catalog",
     "sessions": "Sessions",
+    "setlists": "Setlists",
     "bars": "Bars",
     "mastery": "Mastery",
     "members": "Members",
     "instruments": "Instruments",
-    "administrationSection": "Administration"
+    "administrationSection": "Administration",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "shell": {
     "meName": "Hugo",
@@ -136,7 +139,9 @@
     "selectMember": "Member"
   },
   "setlist": {
-    "title": "Setlist",
+    "title": "Setlists",
+    "indexSubtitle": "Setlists in flight, sorted by concert date.",
+    "indexEmpty": "No setlist created yet — open a concert from /sessions and build one.",
     "addSong": "Add song",
     "removeEntry": "Remove",
     "moveUp": "Move up",
