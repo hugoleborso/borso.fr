@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { createApp } from '../app';
 import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { makeEdition, makeRunner } from '../../../test/fixtures';
+import { createApp } from '../app';
 import { insertEdition } from '../edition/edition.repository';
 import { insertRunner } from '../runner/runner.repository';
-import { makeEdition, makeRunner } from '../../../test/fixtures';
 
 const selfPunchResponseSchema = z.object({
   punch: z.object({
@@ -18,11 +18,12 @@ const selfPunchResponseSchema = z.object({
   }),
 });
 
-// Geofence centre per makeEdition: { lat: 45.55, lng: 5.78 }. ~56 m offset.
+// Sample client coordinates close to the makeEdition centre
+// ({ lat: 45.55, lng: 5.78 }). The geofence was dropped in 4bb4b78 — the
+// values still travel on the self-punch payload as proof-of-life telemetry,
+// but no longer gate acceptance.
 const IN_ZONE_LAT = 45.5505;
 const IN_ZONE_LNG = 5.78;
-const OUT_OF_ZONE_LAT = 45.56;
-const OUT_OF_ZONE_LNG = 5.78;
 const TEST_USER_AGENT = 'Mozilla/5.0 (iPhone) AppleWebKit Test';
 
 describe('self-punch controller (public, no admin middleware)', () => {
@@ -43,7 +44,10 @@ describe('self-punch controller (public, no admin middleware)', () => {
     await insertRunner(database, makeRunner('alice'));
   });
 
-  async function postSelfPunch(body: unknown, headers: Record<string, string> = {}): Promise<Response> {
+  async function postSelfPunch(
+    body: unknown,
+    headers: Record<string, string> = {},
+  ): Promise<Response> {
     return app.request('/api/self-punches', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'user-agent': TEST_USER_AGENT, ...headers },
