@@ -22,6 +22,7 @@ import { CatalogGrid } from '../../components/organisms/CatalogGrid';
 import type { SongCardProps } from '../../components/organisms/SongCard';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { meanMasteryForSong } from '../../lib/mastery-aggregate.utils';
+import { extractChartKind } from './chart-kind.utils';
 
 const songSchema = z.object({
   id: z.string().uuid(),
@@ -31,10 +32,16 @@ const songSchema = z.object({
   tonalityStart: z.string().nullable(),
   tonalityEnd: z.string().nullable(),
   baseEnergy: z.number().nullable(),
-  chordChart: z
+  // The API returns the chord-chart variant under the `chart` field
+  // (see apps/pragma/api/src/songs/songs.schema.ts) — the catalog page
+  // mirrors that name. Renaming to `chordChart` here would leave every
+  // card showing "pas d'accord" because the field would always be
+  // `undefined`.
+  chart: z
     .object({
       kind: z.enum(['chordpro', 'pdf', 'image']),
     })
+    .passthrough()
     .nullable()
     .optional(),
   defaultLineup: z.record(z.string(), z.string().nullable()).default({}),
@@ -187,7 +194,7 @@ export function CatalogPage(): JSX.Element {
         status: song.status,
         tonalityStart: song.tonalityStart,
         tonalityEnd: song.tonalityEnd,
-        chartKind: song.chordChart?.kind ?? null,
+        chartKind: extractChartKind(song.chart ?? null),
         baseEnergy: song.baseEnergy,
         meanMastery: meanMasteryForSong(song.defaultLineup, masteryDefaults),
         defaultLineup: compactLineup(song.defaultLineup),
