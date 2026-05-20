@@ -3,13 +3,24 @@
  * `song` table queries plus the manual cascade on delete
  * (mastery_override + setlist_entry rows, because DSQL does not
  * enforce FK at write time).
+ *
+ * The three JSON blobs (`links`, `chart`, `default_lineup`) are stored
+ * as TEXT (Aurora DSQL doesn't support jsonb — see
+ * docs/knowledge/dsql-postgres-compat-gaps.md §1). `rowToSong` is the
+ * single parse-and-Zod-validate boundary; writes JSON.stringify on the
+ * way in.
  */
 
 import { desc, eq } from 'drizzle-orm';
 import type { Database } from '../database/client';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
 import { setlistEntryTable } from '../setlists/setlists.schema';
-import { songTable } from './songs.schema';
+import {
+  chordChartSchema,
+  defaultLineupSchema,
+  songLinksRowSchema,
+  songTable,
+} from './songs.schema';
 
 export interface SongRow {
   id: string;
@@ -39,6 +50,20 @@ export interface SongInsertShape {
 
 export type SongPersistedShape = Partial<SongInsertShape>;
 
+interface SongRawRow {
+  id: string;
+  title: string;
+  artist: string;
+  status: string;
+  links: string;
+  chart: string | null;
+  tonalityStart: string | null;
+  tonalityEnd: string | null;
+  defaultLineup: string;
+  baseEnergy: number | null;
+  createdAt: Date;
+}
+
 const PROJECTION = {
   id: songTable.id,
   title: songTable.title,
@@ -53,8 +78,65 @@ const PROJECTION = {
   createdAt: songTable.createdAt,
 } as const;
 
+function rowToSong(row: SongRawRow): SongRow {
+  // The three JSON blobs are stored as TEXT because Aurora DSQL doesn't
+  // support jsonb. The `as unknown` step is the JSON-parse escape hatch
+  // the repo allows; Zod schemas do the runtime validation.
+  const linksRaw: unknown = JSON.parse(row.links);
+  const chartRaw: unknown = row.chart === null ? null : JSON.parse(row.chart);
+  const defaultLineupRaw: unknown = JSON.parse(row.defaultLineup);
+  return {
+    id: row.id,
+    title: row.title,
+    artist: row.artist,
+    status: row.status,
+    links: songLinksRowSchema.parse(linksRaw),
+    chart: chartRaw === null ? null : chordChartSchema.parse(chartRaw),
+    tonalityStart: row.tonalityStart,
+    tonalityEnd: row.tonalityEnd,
+    defaultLineup: defaultLineupSchema.parse(defaultLineupRaw),
+    baseEnergy: row.baseEnergy,
+    createdAt: row.createdAt,
+  };
+}
+
+type SongInsertEncoded = typeof songTable.$inferInsert;
+type SongUpdateEncoded = Partial<SongInsertEncoded>;
+
+function encodeInsert(values: SongInsertShape): SongInsertEncoded {
+  return {
+    title: values.title,
+    artist: values.artist,
+    status: values.status,
+    links: JSON.stringify(values.links ?? []),
+    chart: values.chart === null || values.chart === undefined ? null : JSON.stringify(values.chart),
+    tonalityStart: values.tonalityStart,
+    tonalityEnd: values.tonalityEnd,
+    defaultLineup: JSON.stringify(values.defaultLineup ?? {}),
+    baseEnergy: values.baseEnergy,
+  };
+}
+
+function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
+  const encoded: SongUpdateEncoded = {};
+  if ('title' in updates && updates.title !== undefined) encoded.title = updates.title;
+  if ('artist' in updates && updates.artist !== undefined) encoded.artist = updates.artist;
+  if ('status' in updates && updates.status !== undefined) encoded.status = updates.status;
+  if ('links' in updates) encoded.links = JSON.stringify(updates.links ?? []);
+  if ('chart' in updates) {
+    encoded.chart =
+      updates.chart === null || updates.chart === undefined ? null : JSON.stringify(updates.chart);
+  }
+  if ('tonalityStart' in updates) encoded.tonalityStart = updates.tonalityStart;
+  if ('tonalityEnd' in updates) encoded.tonalityEnd = updates.tonalityEnd;
+  if ('defaultLineup' in updates) encoded.defaultLineup = JSON.stringify(updates.defaultLineup ?? {});
+  if ('baseEnergy' in updates) encoded.baseEnergy = updates.baseEnergy;
+  return encoded;
+}
+
 export async function listSongsNewestFirst(database: Database): Promise<SongRow[]> {
-  return await database.select(PROJECTION).from(songTable).orderBy(desc(songTable.createdAt));
+  const rows = await database.select(PROJECTION).from(songTable).orderBy(desc(songTable.createdAt));
+  return rows.map((row) => rowToSong(row));
 }
 
 export async function findSongById(database: Database, id: string): Promise<SongRow | null> {
@@ -63,26 +145,14 @@ export async function findSongById(database: Database, id: string): Promise<Song
     .from(songTable)
     .where(eq(songTable.id, id))
     .limit(1);
-  return rows[0] ?? null;
+  const row = rows[0];
+  return row === undefined ? null : rowToSong(row);
 }
 
 export async function insertSong(database: Database, values: SongInsertShape): Promise<SongRow> {
-  const [row] = await database
-    .insert(songTable)
-    .values({
-      title: values.title,
-      artist: values.artist,
-      status: values.status,
-      links: values.links,
-      chart: values.chart,
-      tonalityStart: values.tonalityStart,
-      tonalityEnd: values.tonalityEnd,
-      defaultLineup: values.defaultLineup,
-      baseEnergy: values.baseEnergy,
-    })
-    .returning(PROJECTION);
+  const [row] = await database.insert(songTable).values(encodeInsert(values)).returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
-  return row;
+  return rowToSong(row);
 }
 
 export async function updateSong(
@@ -92,10 +162,10 @@ export async function updateSong(
 ): Promise<SongRow | null> {
   const [row] = await database
     .update(songTable)
-    .set(updates)
+    .set(encodeUpdate(updates))
     .where(eq(songTable.id, id))
     .returning(PROJECTION);
-  return row ?? null;
+  return row === undefined ? null : rowToSong(row);
 }
 
 export async function deleteSongWithCascade(database: Database, id: string): Promise<boolean> {

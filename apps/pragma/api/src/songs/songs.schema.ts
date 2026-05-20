@@ -1,11 +1,14 @@
 /**
- * Drizzle schema for the songs (catalog) bounded context. JSONB blobs
- * (`links`, `chart`, `default_lineup`) are validated via Zod at the
- * controller boundary; this file holds both the Drizzle table and the
- * Zod input schemas the controller defers to.
+ * Drizzle schema for the songs (catalog) bounded context. The three
+ * JSON blobs (`links`, `chart`, `default_lineup`) are stored as TEXT
+ * because Aurora DSQL doesn't support `jsonb` (see
+ * docs/knowledge/dsql-postgres-compat-gaps.md §1). The repository
+ * JSON.stringifies at insert and JSON.parse + Zod-validates at read.
+ * Zod schemas in this file double as runtime validators at both the
+ * controller (input) and repository (row) boundaries.
  */
 
-import { integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
 export const SONG_STATUSES = ['idea', 'wip', 'rehearsed', 'concert_ready'] as const;
@@ -18,11 +21,14 @@ export const songTable = pgTable('song', {
   title: text('title').notNull(),
   artist: text('artist').notNull().default(''),
   status: text('status').notNull(),
-  links: jsonb('links').notNull().default([]),
-  chart: jsonb('chart'),
+  // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
+  links: text('links').notNull().default('[]'),
+  // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
+  chart: text('chart'),
   tonalityStart: text('tonality_start'),
   tonalityEnd: text('tonality_end'),
-  defaultLineup: jsonb('default_lineup').notNull().default({}),
+  // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
+  defaultLineup: text('default_lineup').notNull().default('{}'),
   // baseEnergy is the "what energy does this song carry on average"
   // hint; the per-entry energy on setlist_entry overrides it for the
   // sparkline.
@@ -59,3 +65,9 @@ const songBaseSchema = z.object({
 export const songCreateInputSchema = songBaseSchema;
 export const songUpdateInputSchema = songBaseSchema.partial();
 export const songIdParamSchema = z.object({ id: z.string().uuid() });
+
+// Row-side Zod schema for the `links` text column — wraps the array
+// shape that the controller validates per-element. The repository uses
+// this + the existing `chordChartSchema` + `defaultLineupSchema` to
+// validate JSON blobs deserialised from text columns.
+export const songLinksRowSchema = z.array(songExternalLinkSchema);
