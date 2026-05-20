@@ -16,6 +16,14 @@
 # not supported" or similar. First-hand evidence in PR #23 — three
 # successive failed deploys before the migration was rewritten.
 #
+# WHY A LOCAL SCRIPT INSTEAD OF AN EXISTING LIBRARY: library-search
+# table in docs/dantotsus/dsql-alter-table-only-add-column.md §Library
+# search. Short version: aurora-dsql-connectors (connector libs only,
+# no linter), squawk (Postgres-self-hosted hazards, no DSQL rules),
+# atlas (lints its own diff output, not arbitrary drizzle SQL), AWS
+# user guide (prose, no companion tool). When AWS ships an official
+# DSQL DDL linter, delete this script.
+#
 # See docs/dantotsus/dsql-alter-table-only-add-column.md and
 # docs/knowledge/dsql-postgres-compat-gaps.md §10.
 

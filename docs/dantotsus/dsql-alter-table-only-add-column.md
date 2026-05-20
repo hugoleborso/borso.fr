@@ -113,6 +113,28 @@ rejected `action` clauses.
 
 ## Eradication (mandatory — code-level)
 
+### Library search (before reaching for a custom check)
+
+Per [`/after-task-dantotsus`](../../.claude/skills/after-task-dantotsus/SKILL.md)'s
+library-search pass, the question asked first was: *does an
+existing tool already know that DSQL rejects these DDL forms?*
+
+| Candidate                                                                                                  | Verdict | Why                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`awslabs/aurora-dsql-connectors`](https://github.com/awslabs/aurora-dsql-connectors)                      | No      | The repo ships eight per-language connectors (.NET, Go, Java, Node, PHP, Python, Ruby, Rust) — wire-protocol auth + signed-token helpers. **No migration validation, no DDL linter** — read the README and the package list to confirm. |
+| AWS Aurora DSQL [user guide](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-unsupported-features.html) | No      | Documents the unsupported feature surface as prose and tables; no companion linter or CI-ready tool is referenced anywhere in the guide.                                                     |
+| [`sbdchd/squawk`](https://github.com/sbdchd/squawk)                                                        | No      | Lints Postgres migrations for safety (locking, downtime, missing CONCURRENTLY) — but it's about *self-hosted Postgres* hazards. None of its rules know that DSQL rejects `ALTER COLUMN SET NOT NULL` outright. |
+| [`ariga/atlas`](https://github.com/ariga/atlas)                                                            | No      | Cross-engine schema migration tool; its `dsql` driver targets Aurora DSQL but the compat checks are about *its own diff output*, not arbitrary drizzle-kit-emitted SQL.                      |
+
+Conclusion: no off-the-shelf tool checks drizzle-kit's output
+against the DSQL DDL whitelist. The repo-local
+`scripts/check-migration-sql-dsql-compat.sh` is the cheapest
+gap-fill. If AWS ships an official DSQL linter later, this
+script becomes redundant and gets deleted — the dantotsu eradication
+level (DevX check via pre-commit + CI) doesn't change.
+
+### The check itself
+
 **Type:** DevX check (level 2 — pre-commit hook + CI gate, paired
 with the existing knowledge entry).
 

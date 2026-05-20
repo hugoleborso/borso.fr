@@ -1,78 +1,56 @@
-# GitHub MCP `create_pull_request` / `update_pull_request` body sanitizer quirks
+_Earlier versions of this entry catalogued three patterns
+(`<details>` stripped, `![alt](url)` wrapped in backticks,
+pseudo-HTML in backticks stripped) as if they were stable
+sanitizer behaviour. **Those claims could not be reproduced** —
+PR #26 was opened from the same harness with literal
+`<details>...</details>` blocks and `![Catalog](https://…)`
+markdown images, and both render fine in the stored body. The
+PR #23 ergonomic pain that prompted the entry was real, but its
+root cause was misdiagnosed (image tags emitted without `src`,
+operator-side iteration on wording, not a sanitiser rewrite).
+This file now documents only what is reproducible from the
+remote-execution harness today._
 
-The `mcp__github__*` tools (the GitHub MCP server provided by the
-remote-execution harness, not the REST API directly) run incoming PR
-bodies through a sanitizer that rewrites a few patterns silently.
-Discovered on PR #23 over two iterations of editing the description.
+## Verification procedure (run before claiming any new pattern)
 
-## Patterns rewritten / stripped
+Anything that looks like a sanitizer-stripped-or-rewrote claim
+gets confirmed against a real PR before landing in this file.
+Two cheap loops:
 
-1. **`<details>` and `<summary>` HTML tags are stripped entirely.**
-   The text inside them survives, but the collapsible toggle is
-   gone — every detail block ends up flattened into prose. The
-   open-pr skill's progressive-disclosure template relies on
-   `<details>`, so anything written through these tools renders as
-   a long flat block.
+1. **Round-trip on a draft PR.** Send a body with the suspected
+   pattern via `mcp__github__create_pull_request` or
+   `update_pull_request`, then immediately read the stored body
+   back via `mcp__github__pull_request_read method: get`. Diff
+   what you sent against what's stored. If they match
+   character-for-character, the sanitizer is not the cause.
 
-2. **`![alt](url)` image markdown is wrapped in backticks.** A line
-   like `![diagram](https://…/image.png)` becomes (literally, in
-   the stored body) `` !`[diagram](https://…/image.png)` `` — the
-   `!` survives, the rest is treated as inline code, and the image
-   never embeds. Easy to mistake for "GitHub doesn't render images
-   from this source"; it's actually the sanitizer.
+2. **Inspect a recent in-repo PR known to render the pattern.**
+   List recent PRs (`mcp__github__list_pull_requests
+   state: open|all`). If the pattern in question is present in
+   that PR's stored body and renders on GitHub, the sanitizer
+   doesn't touch it.
 
-3. **Pseudo-HTML tags inside backticks get stripped.** A documentation
-   snippet like `` `<time>` `` (intended to discuss a GPX `<time>`
-   element) becomes `` `` `` (empty backticks) because the
-   sanitizer applies its HTML-tag-stripping pass even inside inline
-   code spans. The same goes for `` `<trkpt>` ``, `` `<number>` ``,
-   anything that looks like a tag.
+Concrete reference points as of 2026-05-20:
 
-## Workarounds
+- PR #26 (`claude/pragma-erp-specification-…`) — stored body
+  contains `<details>` / `<summary>` blocks and `![alt](url)`
+  markdown images. Both render correctly on GitHub. Use this
+  PR as the control sample when adding a new claim.
 
-- For images: use **raw HTML `<img>` tags** instead of `![]()`. They
-  survive the sanitizer.
+## Confirmed sanitizer behaviours
 
-  ```html
-  <p><img src="https://raw.githubusercontent.com/.../shot.png"
-          alt="screenshot" width="480" /></p>
-  ```
+_(None at the moment — entries land here only after the
+verification procedure above produces a reproducible diff.)_
 
-- For tag-shaped substrings: drop the angle brackets. Rephrase
-  `` `<time>` `` as `the `time` element`. Or escape as
-  `` `&lt;time&gt;` `` — the entity passes through both passes
-  intact.
+## Why this entry still exists
 
-- For collapsibles: there isn't a workaround through the MCP. You
-  have to either accept the flat layout, or rewrite the body via a
-  different surface (`gh pr edit` from a local shell, GitHub web
-  UI). Neither is available from the remote-execution harness; in
-  practice the kaizen-time advice is to write a flat body and
-  separate sections with `#### Header` blocks instead of toggles.
-
-## Confirmation procedure
-
-To verify what was actually stored vs what was sent:
-
-```bash
-mcp__github__pull_request_read \
-  method: get \
-  owner: hugoleborso \
-  repo: borso.fr \
-  pullNumber: <n>
-```
-
-The `body` field in the response is the raw stored markdown — diff
-it against what you intended to send.
-
-## Why this matters
-
-The remote-execution agent never sees the rendered PR — only the
-markdown source. A sanitizer that silently rewrites markup means an
-agent that "wrote a perfect description" can be looking at a
-flattened or corrupted version on GitHub without ever knowing. PR #23
-spent multiple round-trips iterating on the body because the
-sanitizer's behaviour was not understood up-front.
+The remote-execution agent never sees the rendered PR — only
+the markdown source. **If a sanitizer ever does rewrite
+markup**, a future agent that "wrote a perfect description" can
+be looking at a corrupted version on GitHub without ever
+knowing. The verification procedure above is the cheap loop
+that protects against that, and this file is the place to
+catalogue any reproducible quirk that survives it.
 
 ## See also
 
