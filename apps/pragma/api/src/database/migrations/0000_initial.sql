@@ -36,11 +36,11 @@ CREATE TABLE "song" (
 	"title" text NOT NULL,
 	"artist" text DEFAULT '' NOT NULL,
 	"status" text NOT NULL,
-	"links" jsonb DEFAULT '[]'::jsonb NOT NULL,
-	"chart" jsonb,
+	"links" text DEFAULT '[]' NOT NULL,
+	"chart" text,
 	"tonality_start" text,
 	"tonality_end" text,
-	"default_lineup" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"default_lineup" text DEFAULT '{}' NOT NULL,
 	"base_energy" integer,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -68,7 +68,7 @@ CREATE TABLE "session" (
 	"venue" text,
 	"capacity" integer,
 	"gear" text,
-	"friends_count_per_member" jsonb
+	"friends_count_per_member" text
 );
 --> statement-breakpoint
 CREATE TABLE "setlist" (
@@ -82,7 +82,7 @@ CREATE TABLE "setlist_entry" (
 	"setlist_id" uuid NOT NULL,
 	"song_id" uuid NOT NULL,
 	"position" integer NOT NULL,
-	"lineup_override" jsonb,
+	"lineup_override" text,
 	"energy" integer,
 	"key_override" text,
 	"capo" integer,
