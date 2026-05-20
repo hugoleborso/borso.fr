@@ -40,3 +40,7 @@
 {"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T12:25:00.000Z","from":"ship","to":"implement","reason":"visual-rework-round-design-bundle-fidelity"}
 {"kind":"implementation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T13:40:00.000Z","status":"done","retry":5,"sha":"a84b276","scope":"visual-rework-tailwind-atomic","atoms":8,"molecules":10,"organisms":6,"screens":11,"tests":257,"partialDeferrals":0}
 {"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T13:45:00.000Z","from":"implement","to":"validate","reason":"validate-design-fidelity"}
+{"kind":"technical_validation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T14:25:00.000Z","status":"PASS","retry":4,"atoms":8,"molecules":11,"organisms":6,"next":"ship"}
+{"kind":"visual_validation_completed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T15:30:00.000Z","status":"FAIL","retry":4,"per_screen_pass":2,"per_screen_pass_caveat":1,"per_screen_fail":8,"regression":"light-mode","next":"fix"}
+{"kind":"stage_changed","runId":"2026-05-19-1937-pragma","at":"2026-05-20T15:40:00.000Z","from":"validate","to":"implement","reason":"design-fidelity-fix-round"}
+{"kind":"orchestrator_self_correction","runId":"2026-05-19-1937-pragma","at":"2026-05-20T15:40:00.000Z","note":"round-5 dispatch contained wrong Tailwind v4 dark-mode pattern (@theme inside @media); inherited by the rework agent"}
