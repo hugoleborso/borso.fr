@@ -13,6 +13,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+import { Badge } from '../../components/atoms/Badge';
+import { Chip } from '../../components/atoms/Chip';
+import { Icon } from '../../components/atoms/Icon';
+import { cn } from '../../components/atoms/cn.utils';
+import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { formatCapacity } from '../../lib/formatters.utils';
 import { countStale, isStale } from '../../lib/stale-bar.utils';
@@ -162,60 +167,85 @@ export function BarsPage(): JSX.Element {
   };
 
   return (
-    <section className="bars-page">
-      <header className="catalog-page-header">
-        <h2 className="admin-page-title">{t('bars.title')}</h2>
-        <div className="bars-view-toggle">
-          <button
-            type="button"
-            className={view === 'list' ? 'is-active' : ''}
-            onClick={() => setView('list')}
-          >
-            {t('bars.viewList')}
-          </button>
-          <button
-            type="button"
-            className={view === 'kanban' ? 'is-active' : ''}
-            onClick={() => setView('kanban')}
-          >
-            {t('bars.viewKanban')}
-          </button>
-        </div>
-      </header>
-      {error !== null ? <p className="admin-page-error">{error}</p> : null}
-      {loading ? <p className="admin-page-loading">{t('common.loading')}</p> : null}
+    <section className="px-9 py-7 pb-20 max-w-[1280px]">
+      <PageHeader
+        title={t('bars.title')}
+        subtitle={t('bars.subtitle')}
+        actions={
+          <div className="inline-flex gap-1 p-[3px] bg-bg-sunk rounded-lg">
+            <button
+              type="button"
+              onClick={() => setView('list')}
+              className={cn(
+                'px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors',
+                view === 'list'
+                  ? 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]'
+                  : 'bg-transparent text-ink-500 hover:text-ink-700',
+              )}
+            >
+              {t('bars.viewList')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('kanban')}
+              className={cn(
+                'px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors',
+                view === 'kanban'
+                  ? 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]'
+                  : 'bg-transparent text-ink-500 hover:text-ink-700',
+              )}
+            >
+              {t('bars.viewKanban')}
+            </button>
+          </div>
+        }
+      />
+
+      {error !== null ? (
+        <p className="text-danger text-sm mb-3" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {loading ? <p className="text-ink-400 italic text-sm">{t('common.loading')}</p> : null}
       {staleCount > 0 ? (
-        <div className="bars-stale-banner" role="alert">
+        <div
+          className="flex items-center gap-2 bg-warn-soft text-warn px-4 py-2.5 rounded-md text-sm mb-4"
+          role="alert"
+        >
+          <Icon name="warn" size={16} />
           {t('bars.staleBanner', { count: staleCount })}
         </div>
       ) : null}
 
       {view === 'list' ? (
-        <div className="admin-page-layout">
-          <ul className="admin-page-list">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 items-start">
+          <ul className="flex flex-col gap-1.5">
             {sortedBars.map((bar) => (
               <li
                 key={bar.id}
-                className={`admin-page-row${isBarStale(bar) ? ' admin-page-row--stale' : ''}`}
+                className={cn(
+                  'flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors',
+                  isBarStale(bar) && 'border-warn/40',
+                )}
               >
                 <button
                   type="button"
-                  className="admin-page-row-name"
+                  className="flex-1 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
                   onClick={() => setDraft(fromBar(bar))}
                 >
                   {bar.name}
                 </button>
-                <span className={`bar-status bar-status--${bar.status}`}>
-                  {t(BAR_STATUS_KEY[bar.status])}
-                </span>
+                <Chip tone="default">{t(BAR_STATUS_KEY[bar.status])}</Chip>
                 {isBarStale(bar) ? (
-                  <span className="bar-stale-badge">{t('bars.staleBadge')}</span>
+                  <Badge tone="warn">{t('bars.staleBadge')}</Badge>
                 ) : null}
-                <span className="bar-meta">{bar.city ?? ''}</span>
-                <span className="bar-meta">{formatCapacity(bar.capacity)}</span>
+                <span className="text-xs text-ink-500 hidden md:inline">{bar.city ?? ''}</span>
+                <span className="text-xs font-mono text-ink-400 hidden md:inline">
+                  {formatCapacity(bar.capacity)}
+                </span>
                 <button
                   type="button"
-                  className="admin-page-row-delete"
+                  className="text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
                   onClick={() => void remove(bar.id)}
                   aria-label={t('common.delete')}
                 >
@@ -232,11 +262,11 @@ export function BarsPage(): JSX.Element {
           />
         </div>
       ) : (
-        <div className="bars-kanban">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5 min-w-[1100px]">
           {BAR_STATUSES.map((status) => (
             <section
               key={status}
-              className={`bars-kanban-column bars-kanban-column--${status}`}
+              className="bg-bg-sunk rounded-lg p-3 min-h-[480px] flex flex-col gap-2"
               aria-label={t(BAR_STATUS_KEY[status])}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
@@ -245,27 +275,33 @@ export function BarsPage(): JSX.Element {
                 if (draggedId.length > 0) void dropOnColumn(status, draggedId);
               }}
             >
-              <h3 className="bars-kanban-column-title">{t(BAR_STATUS_KEY[status])}</h3>
+              <h3 className="font-medium text-[11px] tracking-wider uppercase text-ink-500 mx-1 mt-1 mb-1.5 flex items-center gap-2">
+                {t(BAR_STATUS_KEY[status])}
+                <span className="font-mono text-ink-400">{grouped[status].length}</span>
+              </h3>
               {grouped[status].map((bar) => (
                 <button
                   key={bar.id}
                   type="button"
-                  className={`bars-kanban-card${isBarStale(bar) ? ' bars-kanban-card--stale' : ''}`}
+                  className={cn(
+                    'block w-full text-left bg-bg-elev border border-line rounded-md px-3 py-2.5 cursor-grab hover:border-line-strong transition-colors',
+                    isBarStale(bar) && 'border-warn/40',
+                  )}
                   draggable
                   onDragStart={(event) => event.dataTransfer.setData('text/plain', bar.id)}
                   onClick={() => setDraft(fromBar(bar))}
                 >
-                  <div className="bars-kanban-card-name">
+                  <div className="flex items-center gap-2 text-[13.5px] font-medium text-ink-900 mb-1">
                     {bar.name}
                     {isBarStale(bar) ? (
-                      <span className="bar-stale-badge">{t('bars.staleBadge')}</span>
+                      <Badge tone="warn">{t('bars.staleBadge')}</Badge>
                     ) : null}
                   </div>
-                  <div className="bars-kanban-card-meta">
+                  <div className="text-[10.5px] font-mono text-ink-400 tracking-wide">
                     {bar.city ?? ''} · {formatCapacity(bar.capacity)}
                   </div>
                   {bar.contactName !== null ? (
-                    <div className="bars-kanban-card-contact">{bar.contactName}</div>
+                    <div className="text-[11.5px] text-ink-500 mt-1.5">{bar.contactName}</div>
                   ) : null}
                 </button>
               ))}

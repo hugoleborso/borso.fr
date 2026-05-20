@@ -11,6 +11,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+import { Badge } from '../../components/atoms/Badge';
+import { Button } from '../../components/atoms/Button';
+import { Card } from '../../components/atoms/Card';
+import { Input } from '../../components/atoms/Input';
+import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError, apiRequest } from '../../lib/api-client';
 
 const instrumentSchema = z.object({
@@ -96,31 +101,40 @@ export function InstrumentsPage(): JSX.Element {
   };
 
   return (
-    <section className="admin-page">
-      <h2 className="admin-page-title">{t('instruments.title')}</h2>
-      {error !== null ? <p className="admin-page-error">{error}</p> : null}
-      <div className="admin-page-layout">
-        <ul className="admin-page-list" aria-label={t('instruments.title')}>
-          {loading ? <li className="admin-page-loading">{t('common.loading')}</li> : null}
+    <section className="px-9 py-7 pb-20 max-w-[1280px]">
+      <PageHeader title={t('instruments.title')} subtitle={t('instruments.subtitle')} />
+      {error !== null ? (
+        <p className="text-danger text-sm mb-3" role="alert">
+          {error}
+        </p>
+      ) : null}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-5 items-start">
+        <ul className="flex flex-col gap-1.5" aria-label={t('instruments.title')}>
+          {loading ? (
+            <li className="text-ink-400 italic text-sm">{t('common.loading')}</li>
+          ) : null}
           {instruments
             .toSorted((left, right) => left.name.localeCompare(right.name))
             .map((row) => (
-              <li key={row.id} className="admin-page-row">
+              <li
+                key={row.id}
+                className="flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors"
+              >
                 <button
                   type="button"
-                  className="admin-page-row-name"
+                  className="flex-1 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
                   onClick={() =>
                     setDraft({ id: row.id, name: row.name, isHarmonic: row.isHarmonic })
                   }
                 >
                   {row.name}
                 </button>
-                <span className="admin-page-row-badge admin-page-row-badge--mono">
+                <Badge tone="mono">
                   {row.isHarmonic ? t('instruments.harmonic') : t('instruments.percussive')}
-                </span>
+                </Badge>
                 <button
                   type="button"
-                  className="admin-page-row-delete"
+                  className="text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
                   onClick={() => void remove(row.id)}
                   aria-label={t('common.delete')}
                 >
@@ -129,48 +143,54 @@ export function InstrumentsPage(): JSX.Element {
               </li>
             ))}
         </ul>
-        <form onSubmit={submit} className="admin-page-form">
-          <h3 className="admin-page-form-title">
+        <Card className="flex flex-col gap-3">
+          <h3 className="font-display italic text-2xl text-ink-900 m-0">
             {draft.id === null ? t('instruments.newTitle') : t('instruments.editTitle')}
           </h3>
-          <label className="admin-page-form-label" htmlFor="instrument-name">
-            {t('instruments.name')}
-          </label>
-          <input
-            id="instrument-name"
-            type="text"
-            value={draft.name}
-            onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-            className="admin-page-form-input"
-            required
-            minLength={1}
-            maxLength={64}
-          />
-          <label className="admin-page-form-checkbox">
-            <input
-              type="checkbox"
-              checked={draft.isHarmonic}
+          <form onSubmit={submit} className="flex flex-col gap-2.5">
+            <label
+              className="text-[11px] tracking-wider uppercase text-ink-400 font-medium"
+              htmlFor="instrument-name"
+            >
+              {t('instruments.name')}
+            </label>
+            <Input
+              id="instrument-name"
+              type="text"
+              value={draft.name}
               onChange={(event) =>
-                setDraft((current) => ({ ...current, isHarmonic: event.target.checked }))
+                setDraft((current) => ({ ...current, name: event.target.value }))
               }
+              required
+              minLength={1}
+              maxLength={64}
             />
-            {t('instruments.isHarmonic')}
-          </label>
-          <div className="admin-page-form-actions">
-            <button type="submit" className="admin-page-form-submit">
-              {t('common.save')}
-            </button>
-            {draft.id !== null ? (
-              <button
-                type="button"
-                className="admin-page-form-cancel"
-                onClick={() => setDraft(BLANK_DRAFT)}
-              >
-                {t('common.cancel')}
-              </button>
-            ) : null}
-          </div>
-        </form>
+            <label className="flex items-center gap-2 text-sm text-ink-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={draft.isHarmonic}
+                onChange={(event) =>
+                  setDraft((current) => ({ ...current, isHarmonic: event.target.checked }))
+                }
+              />
+              {t('instruments.isHarmonic')}
+            </label>
+            <div className="flex gap-2 mt-2">
+              <Button type="submit" variant="accent">
+                {t('common.save')}
+              </Button>
+              {draft.id !== null ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setDraft(BLANK_DRAFT)}
+                >
+                  {t('common.cancel')}
+                </Button>
+              ) : null}
+            </div>
+          </form>
+        </Card>
       </div>
     </section>
   );

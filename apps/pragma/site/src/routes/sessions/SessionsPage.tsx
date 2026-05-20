@@ -8,6 +8,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
+import { Button } from '../../components/atoms/Button';
+import { Icon } from '../../components/atoms/Icon';
+import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { formatSessionDate } from '../../lib/formatters.utils';
 
@@ -70,45 +73,63 @@ export function SessionsPage(): JSX.Element {
   };
 
   return (
-    <section className="sessions-page">
-      <header className="catalog-page-header">
-        <h2 className="admin-page-title">{t('sessions.title')}</h2>
-        <div className="sessions-page-actions">
-          <button
-            type="button"
-            className="admin-page-form-submit"
-            onClick={() => void createSession('concert')}
-          >
-            + {t('sessions.kindConcert')}
-          </button>
-          <button
-            type="button"
-            className="admin-page-form-cancel"
-            onClick={() => void createSession('practice')}
-          >
-            + {t('sessions.kindPractice')}
-          </button>
-        </div>
-      </header>
-      {error !== null ? <p className="admin-page-error">{error}</p> : null}
-      {loading ? <p className="admin-page-loading">{t('common.loading')}</p> : null}
-      <ul className="sessions-list">
-        {sessions.map((session) => (
-          <li key={session.id} className="session-row">
-            <Link to={`/sessions/${session.id}`} className="session-row-link">
-              <span className="session-row-kind">
-                {session.kind === 'concert' ? '♪' : '⟳'}{' '}
-                {t(session.kind === 'concert' ? 'sessions.kindConcert' : 'sessions.kindPractice')}
-              </span>
-              <span className="session-row-date">
-                {formatSessionDate(session.date, i18n.language)}
-              </span>
-              {session.venue !== null ? (
-                <span className="session-row-venue">{session.venue}</span>
-              ) : null}
-            </Link>
-          </li>
-        ))}
+    <section className="px-9 py-7 pb-20 max-w-[1280px]">
+      <PageHeader
+        title={t('sessions.title')}
+        subtitle={t('sessions.subtitle')}
+        actions={
+          <>
+            <Button variant="accent" onClick={() => void createSession('concert')}>
+              <Icon name="plus" size={14} />
+              {t('sessions.kindConcert')}
+            </Button>
+            <Button variant="default" onClick={() => void createSession('practice')}>
+              <Icon name="plus" size={14} />
+              {t('sessions.kindPractice')}
+            </Button>
+          </>
+        }
+      />
+
+      {error !== null ? (
+        <p className="text-danger text-sm mb-3" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {loading ? <p className="text-ink-400 italic text-sm">{t('common.loading')}</p> : null}
+
+      <ul className="relative pl-8 flex flex-col gap-1">
+        <span
+          className="absolute top-1 bottom-1 left-2 w-px bg-line-strong pointer-events-none"
+          aria-hidden="true"
+        />
+        {sessions.map((session) => {
+          const isConcert = session.kind === 'concert';
+          return (
+            <li key={session.id} className="relative py-2">
+              <span
+                className={`absolute -left-7 top-3.5 w-2.5 h-2.5 rounded-full ${
+                  isConcert ? 'bg-accent border-2 border-accent' : 'bg-bg border-2 border-ink-700'
+                }`}
+                aria-hidden="true"
+              />
+              <Link
+                to={`/sessions/${session.id}`}
+                className="block bg-bg-elev border border-line rounded-md px-4 py-3 hover:border-line-strong transition-colors"
+              >
+                <div className="text-[10.5px] font-mono uppercase tracking-wider text-ink-400 mb-1">
+                  {isConcert ? '♪' : '⟳'} {t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
+                </div>
+                <div className="font-display italic text-2xl text-ink-900 leading-tight">
+                  {formatSessionDate(session.date, i18n.language)}
+                </div>
+                {session.venue !== null ? (
+                  <div className="text-[12.5px] text-ink-500 mt-0.5">{session.venue}</div>
+                ) : null}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

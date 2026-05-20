@@ -11,6 +11,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+import { Button } from '../../components/atoms/Button';
+import { Card } from '../../components/atoms/Card';
+import { Input } from '../../components/atoms/Input';
+import { PageHeader } from '../../components/molecules/PageHeader';
 import { MasteryMatrix } from '../../components/organisms/MasteryMatrix';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { cellKey } from '../../lib/mastery-matrix.utils';
@@ -159,16 +163,25 @@ export function MembersPage(): JSX.Element {
   };
 
   return (
-    <section className="admin-page">
-      <h2 className="admin-page-title">{t('members.title')}</h2>
-      {error !== null ? <p className="admin-page-error">{error}</p> : null}
-      <div className="admin-page-layout">
-        <ul className="admin-page-list" aria-label={t('members.title')}>
-          {loading ? <li className="admin-page-loading">{t('common.loading')}</li> : null}
+    <section className="px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-6">
+      <PageHeader title={t('members.title')} subtitle={t('members.subtitle')} />
+      {error !== null ? (
+        <p className="text-danger text-sm" role="alert">
+          {error}
+        </p>
+      ) : null}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 items-start">
+        <ul className="flex flex-col gap-1.5" aria-label={t('members.title')}>
+          {loading ? (
+            <li className="text-ink-400 italic text-sm">{t('common.loading')}</li>
+          ) : null}
           {sortedMembers.map((member) => (
-            <li key={member.id} className="admin-page-row">
+            <li
+              key={member.id}
+              className="flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors"
+            >
               <span
-                className="member-chip"
+                className="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold"
                 style={{ background: member.color, color: readableForeground(member.color) }}
                 aria-hidden="true"
               >
@@ -176,7 +189,7 @@ export function MembersPage(): JSX.Element {
               </span>
               <button
                 type="button"
-                className="admin-page-row-name"
+                className="flex-1 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
                 onClick={() =>
                   setDraft({
                     id: member.id,
@@ -189,7 +202,7 @@ export function MembersPage(): JSX.Element {
               </button>
               <button
                 type="button"
-                className="admin-page-row-delete"
+                className="text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
                 onClick={() => void remove(member.id)}
                 aria-label={t('common.delete')}
               >
@@ -198,79 +211,91 @@ export function MembersPage(): JSX.Element {
             </li>
           ))}
         </ul>
-        <form onSubmit={submit} className="admin-page-form">
-          <h3 className="admin-page-form-title">
+        <Card>
+          <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-3">
             {draft.id === null ? t('members.newTitle') : t('members.editTitle')}
           </h3>
-          <label className="admin-page-form-label" htmlFor="member-first-name">
-            {t('members.firstName')}
-          </label>
-          <input
-            id="member-first-name"
-            type="text"
-            value={draft.firstName}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, firstName: event.target.value }))
-            }
-            className="admin-page-form-input"
-            required
-            minLength={1}
-            maxLength={64}
-          />
-          <label className="admin-page-form-label" htmlFor="member-color">
-            {t('members.color')}
-          </label>
-          <input
-            id="member-color"
-            type="color"
-            value={draft.color}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, color: event.target.value }))
-            }
-            className="admin-page-form-input"
-          />
-          {draft.id !== null ? (
-            <fieldset className="admin-page-form-fieldset">
-              <legend>{t('members.instrumentsAssigned')}</legend>
-              {instruments.length === 0 ? (
-                <p className="admin-page-form-hint">{t('members.noInstrumentsYet')}</p>
-              ) : null}
-              {instruments
-                .toSorted((left, right) => left.name.localeCompare(right.name))
-                .map((instrument) => {
-                  const assigned = (assignedByMember[draft.id ?? ''] ?? []).includes(instrument.id);
-                  return (
-                    <label key={instrument.id} className="admin-page-form-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={assigned}
-                        onChange={() => {
-                          if (draft.id !== null) {
-                            void toggleInstrument(draft.id, instrument.id);
-                          }
-                        }}
-                      />
-                      {instrument.name}
-                    </label>
-                  );
-                })}
-            </fieldset>
-          ) : null}
-          <div className="admin-page-form-actions">
-            <button type="submit" className="admin-page-form-submit">
-              {t('common.save')}
-            </button>
+          <form onSubmit={submit} className="flex flex-col gap-2.5">
+            <label
+              className="text-[11px] tracking-wider uppercase text-ink-400 font-medium"
+              htmlFor="member-first-name"
+            >
+              {t('members.firstName')}
+            </label>
+            <Input
+              id="member-first-name"
+              type="text"
+              value={draft.firstName}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, firstName: event.target.value }))
+              }
+              required
+              minLength={1}
+              maxLength={64}
+            />
+            <label
+              className="text-[11px] tracking-wider uppercase text-ink-400 font-medium"
+              htmlFor="member-color"
+            >
+              {t('members.color')}
+            </label>
+            <input
+              id="member-color"
+              type="color"
+              value={draft.color}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, color: event.target.value }))
+              }
+              className="w-full h-10 rounded-md bg-bg-elev border border-line cursor-pointer"
+            />
             {draft.id !== null ? (
-              <button
-                type="button"
-                className="admin-page-form-cancel"
-                onClick={() => setDraft(BLANK_DRAFT)}
-              >
-                {t('common.cancel')}
-              </button>
+              <fieldset className="border border-line rounded-md p-3 mt-2">
+                <legend className="text-[11px] tracking-wider uppercase text-ink-400 px-2">
+                  {t('members.instrumentsAssigned')}
+                </legend>
+                {instruments.length === 0 ? (
+                  <p className="text-xs italic text-ink-400">{t('members.noInstrumentsYet')}</p>
+                ) : null}
+                <div className="flex flex-col gap-1.5">
+                  {instruments
+                    .toSorted((left, right) => left.name.localeCompare(right.name))
+                    .map((instrument) => {
+                      const assigned = (assignedByMember[draft.id ?? ''] ?? []).includes(
+                        instrument.id,
+                      );
+                      return (
+                        <label
+                          key={instrument.id}
+                          className="flex items-center gap-2 text-sm text-ink-700 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={assigned}
+                            onChange={() => {
+                              if (draft.id !== null) {
+                                void toggleInstrument(draft.id, instrument.id);
+                              }
+                            }}
+                          />
+                          {instrument.name}
+                        </label>
+                      );
+                    })}
+                </div>
+              </fieldset>
             ) : null}
-          </div>
-        </form>
+            <div className="flex gap-2 mt-2">
+              <Button type="submit" variant="accent">
+                {t('common.save')}
+              </Button>
+              {draft.id !== null ? (
+                <Button type="button" variant="ghost" onClick={() => setDraft(BLANK_DRAFT)}>
+                  {t('common.cancel')}
+                </Button>
+              ) : null}
+            </div>
+          </form>
+        </Card>
       </div>
       <MasteryMatrix
         members={sortedMembers}
