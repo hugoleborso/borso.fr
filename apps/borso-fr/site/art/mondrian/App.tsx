@@ -1,19 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Announcer, EditableSwatch, Field, MondrianFrame, ReadOnlySwatch, Segments } from './components';
+import {
+  Announcer,
+  EditableSwatch,
+  Field,
+  MondrianFrame,
+  ReadOnlySwatch,
+  Segments,
+} from './components';
 import { downloadCompositionPng } from './download';
 import { isComposeKeyEvent } from './keyboard.utils';
+import { colorize, generateLayout } from './painting.utils';
 import { applyPaperTheme } from './palette-theme';
 import {
   buildCustomPalette,
   CUSTOM_DEFAULTS,
-  PALETTES,
   type CustomColors,
+  PALETTES,
   type PaletteKey,
 } from './palettes.utils';
-import { colorize, generateLayout } from './painting.utils';
 import { buildTitle } from './titles.utils';
-import { isAnimationMode, type AnimationMode } from './use-animation';
 import { buildSearch, freshSeed, readUrlState, seedToHex } from './url-state.utils';
+import { type AnimationMode, isAnimationMode } from './use-animation';
 
 const CASCADE_INTERVAL_MS = 5500;
 
@@ -162,7 +169,8 @@ export function App() {
   const title = useMemo(() => buildTitle(seed, rects, palette), [seed, rects, palette]);
   const workNumber = useMemo(() => `№ ${(seed % 9999).toString().padStart(4, '0')}`, [seed]);
   const todayLabel = useMemo(
-    () => new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    () =>
+      new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
     [],
   );
 
@@ -251,21 +259,30 @@ export function App() {
                 color={customColors.customColor1}
                 name="Color 1"
                 onColorChange={(nextHex) =>
-                  setCustomColors((previousColors) => ({ ...previousColors, customColor1: nextHex }))
+                  setCustomColors((previousColors) => ({
+                    ...previousColors,
+                    customColor1: nextHex,
+                  }))
                 }
               />
               <EditableSwatch
                 color={customColors.customColor2}
                 name="Color 2"
                 onColorChange={(nextHex) =>
-                  setCustomColors((previousColors) => ({ ...previousColors, customColor2: nextHex }))
+                  setCustomColors((previousColors) => ({
+                    ...previousColors,
+                    customColor2: nextHex,
+                  }))
                 }
               />
               <EditableSwatch
                 color={customColors.customColor3}
                 name="Color 3"
                 onColorChange={(nextHex) =>
-                  setCustomColors((previousColors) => ({ ...previousColors, customColor3: nextHex }))
+                  setCustomColors((previousColors) => ({
+                    ...previousColors,
+                    customColor3: nextHex,
+                  }))
                 }
               />
               <EditableSwatch
@@ -285,7 +302,9 @@ export function App() {
             </>
           ) : (
             palette.fills
-              .filter((fill, index, all) => all.findIndex((other) => other.hex === fill.hex) === index)
+              .filter(
+                (fill, index, all) => all.findIndex((other) => other.hex === fill.hex) === index,
+              )
               .map((fill) => <ReadOnlySwatch key={fill.hex} color={fill.hex} name={fill.name} />)
           )}
         </div>
@@ -316,8 +335,8 @@ export function App() {
           <b>Studio note</b>
           Each composition is generated from a single seed.{' '}
           <span className="hint-fine">Press space to compose anew</span>
-          <span className="hint-coarse">Tap the painting to compose anew</span>
-          . Hold a palette to sit with it; switch to <i>Cascade</i> to let the room rearrange itself.
+          <span className="hint-coarse">Tap the painting to compose anew</span>. Hold a palette to
+          sit with it; switch to <i>Cascade</i> to let the room rearrange itself.
         </p>
       </aside>
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LoopPunch } from '../punch/punch.types';
-import type { Runner } from './runner.types';
 import { slugifyDisplayName, totalElapsedMs, validateRunnerDraft } from './runner.core';
+import type { Runner } from './runner.types';
 
 function makeRunner(slug: string, bib: number | null = null): Runner {
   return {
@@ -44,10 +44,7 @@ describe('validateRunnerDraft', () => {
   const baseRoster = [makeRunner('alice', 1), makeRunner('bob', 2)];
 
   it('accepts a clean draft', () => {
-    const result = validateRunnerDraft(
-      { displayName: 'Carla', slug: 'carla', bib: 3 },
-      baseRoster,
-    );
+    const result = validateRunnerDraft({ displayName: 'Carla', slug: 'carla', bib: 3 }, baseRoster);
     expect(result.ok).toBe(true);
   });
 
@@ -68,10 +65,7 @@ describe('validateRunnerDraft', () => {
   });
 
   it('rejects slug shorter than 2 chars', () => {
-    const result = validateRunnerDraft(
-      { displayName: 'Carla', slug: 'a', bib: null },
-      baseRoster,
-    );
+    const result = validateRunnerDraft({ displayName: 'Carla', slug: 'a', bib: null }, baseRoster);
     expect(result).toEqual({ ok: false, reason: 'slug-too-short' });
   });
 
@@ -118,10 +112,7 @@ describe('validateRunnerDraft', () => {
   });
 
   it('rejects bib already taken by another runner in the same edition', () => {
-    const result = validateRunnerDraft(
-      { displayName: 'Carla', slug: 'carla', bib: 1 },
-      baseRoster,
-    );
+    const result = validateRunnerDraft({ displayName: 'Carla', slug: 'carla', bib: 1 }, baseRoster);
     expect(result).toEqual({ ok: false, reason: 'bib-already-taken' });
   });
 

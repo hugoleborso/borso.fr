@@ -126,10 +126,7 @@ export async function markPunchVoided(
   id: string,
   voidedAt: Date,
 ): Promise<void> {
-  await database
-    .update(loopPunchesTable)
-    .set({ voidedAt })
-    .where(eq(loopPunchesTable.id, id));
+  await database.update(loopPunchesTable).set({ voidedAt }).where(eq(loopPunchesTable.id, id));
 }
 
 export async function insertManualDnf(database: Database, dnf: ManualDnf): Promise<void> {
@@ -149,10 +146,7 @@ export async function deleteManualDnf(
   await database
     .delete(manualDnfsTable)
     .where(
-      and(
-        eq(manualDnfsTable.editionSlug, editionSlug),
-        eq(manualDnfsTable.runnerSlug, runnerSlug),
-      ),
+      and(eq(manualDnfsTable.editionSlug, editionSlug), eq(manualDnfsTable.runnerSlug, runnerSlug)),
     );
 }
 

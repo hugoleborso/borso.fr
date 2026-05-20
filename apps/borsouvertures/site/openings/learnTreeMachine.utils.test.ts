@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createLearnTreeMachine } from './learnTreeMachine.utils';
 import { buildDriver, ITALIAN_MAIN } from './learnTreeMachine.test-utils';
+import { createLearnTreeMachine } from './learnTreeMachine.utils';
 import type { Variation } from './types';
 
 describe('createLearnTreeMachine', () => {
@@ -58,7 +58,7 @@ describe('createLearnTreeMachine', () => {
     expect(calls).toBe(2);
   });
 
-  it('schedules an opponent reply after a user move when it is the opponent\'s turn', () => {
+  it("schedules an opponent reply after a user move when it is the opponent's turn", () => {
     const driver = buildDriver();
     driver.rngQueue.push('e7e5');
     const machine = createLearnTreeMachine(driver.options);
@@ -69,7 +69,7 @@ describe('createLearnTreeMachine', () => {
     expect(machine.getSnapshot().playedMovesUci).toEqual(['e2e4', 'e7e5']);
   });
 
-  it('plays White\'s first move when side is Black', () => {
+  it("plays White's first move when side is Black", () => {
     const driver = buildDriver();
     const machine = createLearnTreeMachine(driver.options);
     machine.start(ITALIAN_MAIN, 'black');
@@ -156,7 +156,7 @@ describe('createLearnTreeMachine', () => {
     expect(machine.getSnapshot().playedMovesUci).toEqual([]);
   });
 
-  it('rejects a play during the opponent\'s pending move', () => {
+  it("rejects a play during the opponent's pending move", () => {
     const driver = buildDriver();
     const machine = createLearnTreeMachine(driver.options);
     machine.start(ITALIAN_MAIN, 'white');
@@ -217,7 +217,7 @@ describe('createLearnTreeMachine', () => {
     expect(driver.pendingTimers).toHaveLength(0);
   });
 
-  it('does not schedule an opponent reply when the variation is cleared after the user\'s move', () => {
+  it("does not schedule an opponent reply when the variation is cleared after the user's move", () => {
     // One-line variation; user's last move clears the variation, no opponent reply.
     const trivial: Variation = {
       id: 'trivial',
@@ -257,7 +257,6 @@ describe('createLearnTreeMachine', () => {
       // Both Italian lines share 'e7e5' at this ply, so the picked move is 'e7e5'.
       expect(machine.getSnapshot().playedMovesUci).toEqual(['e2e4', 'e7e5']);
     });
-
   });
 
   it('uses the default RNG to pick when the picker has no seed available', () => {

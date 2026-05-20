@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import { ApiError, apiClient } from '../../api/client';
 import { invalidateResource } from '../../data/useResource';
-import {
-  defaultEndsAt,
-  defaultStartsAt,
-  summariseZodError,
-} from './setup-form.utils';
+import { defaultEndsAt, defaultStartsAt, summariseZodError } from './setup-form.utils';
 
 interface CreateEditionFormProps {
   readonly suggestedSlug: string;

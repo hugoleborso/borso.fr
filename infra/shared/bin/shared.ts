@@ -12,9 +12,7 @@ const app = new App();
 
 const account = process.env.CDK_DEFAULT_ACCOUNT ?? process.env.AWS_ACCOUNT_ID;
 if (!account) {
-  throw new Error(
-    'Set CDK_DEFAULT_ACCOUNT (or AWS_ACCOUNT_ID) before deploying shared infra.',
-  );
+  throw new Error('Set CDK_DEFAULT_ACCOUNT (or AWS_ACCOUNT_ID) before deploying shared infra.');
 }
 
 const primaryRegion = process.env.BORSO_REGION ?? DEFAULT_PRIMARY_REGION;

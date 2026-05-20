@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
-import { insertEdition } from '../edition/edition.repository';
 import { makeEdition, makeRunner } from '../../../test/fixtures';
+import { insertEdition } from '../edition/edition.repository';
 import { findRunner, insertRunner, listRunnersForEdition } from './runner.repository';
 
 describe('runner.repository', () => {

@@ -33,7 +33,10 @@ interface NowDefaultOccurrence {
 const CREATE_TABLE_PATTERN = /CREATE\s+TABLE\s+"?(\w+)"?\s*\(([\s\S]*?)\);/gi;
 const COLUMN_LINE_PATTERN = /^\s*"?(\w+)"?\s+[\w()\s]+DEFAULT\s+now\(\)/i;
 
-function scanFileForNowDefaults(filePath: string, fileName: string): readonly NowDefaultOccurrence[] {
+function scanFileForNowDefaults(
+  filePath: string,
+  fileName: string,
+): readonly NowDefaultOccurrence[] {
   const occurrences: NowDefaultOccurrence[] = [];
   const content = readFileSync(filePath, 'utf8');
   for (const match of content.matchAll(CREATE_TABLE_PATTERN)) {

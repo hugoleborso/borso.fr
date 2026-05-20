@@ -26,7 +26,10 @@ const state: {
  * be inferred via Object.assign — no `as Sql<...>` casts at the test
  * boundary, no need to satisfy the full library interface.
  */
-type SqlMock = ((strings: TemplateStringsArray, ...values: readonly unknown[]) => Promise<unknown[]>) & {
+type SqlMock = ((
+  strings: TemplateStringsArray,
+  ...values: readonly unknown[]
+) => Promise<unknown[]>) & {
   unsafe(query: string, params?: readonly unknown[]): Promise<unknown[]>;
   end(opts: { readonly timeout: number }): Promise<void>;
 };
@@ -196,9 +199,9 @@ describe('migration-runner handler', () => {
     // `finally` block ran.
     state.rejectNextUnsafe = new Error('boom');
 
-    await expect(
-      handler({ RequestType: 'Create', ResourceProperties: baseProps }),
-    ).rejects.toThrow('boom');
+    await expect(handler({ RequestType: 'Create', ResourceProperties: baseProps })).rejects.toThrow(
+      'boom',
+    );
     expect(state.ended).toBe(1); // sql.end() must run via finally
   });
 });

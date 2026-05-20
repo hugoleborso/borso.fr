@@ -4,9 +4,7 @@ import type { Opening } from './types';
 
 const OPENINGS_URL = '/openings.json';
 
-type LoadOpeningsResult =
-  | { ok: true; openings: Opening[] }
-  | { ok: false; error: Error };
+type LoadOpeningsResult = { ok: true; openings: Opening[] } | { ok: false; error: Error };
 
 /**
  * Fetch the openings dataset, falling back to the JSON bundled into the JS
@@ -35,8 +33,7 @@ export async function loadOpenings(): Promise<LoadOpeningsResult> {
     }
     return { ok: true, openings: fallback };
   } catch (bundledError) {
-    const error =
-      bundledError instanceof Error ? bundledError : new Error(String(bundledError));
+    const error = bundledError instanceof Error ? bundledError : new Error(String(bundledError));
     return { ok: false, error };
   }
 }

@@ -51,7 +51,10 @@ export async function insertEdition(database: Database, edition: RaceEdition): P
   });
 }
 
-export async function findEditionBySlug(database: Database, slug: string): Promise<RaceEdition | null> {
+export async function findEditionBySlug(
+  database: Database,
+  slug: string,
+): Promise<RaceEdition | null> {
   const rows = await database
     .select({
       slug: editionsTable.slug,
@@ -82,10 +85,7 @@ export async function updateEditionStatus(
   slug: string,
   status: EditionStatus,
 ): Promise<void> {
-  await database
-    .update(editionsTable)
-    .set({ status })
-    .where(eq(editionsTable.slug, slug));
+  await database.update(editionsTable).set({ status }).where(eq(editionsTable.slug, slug));
 }
 
 /**

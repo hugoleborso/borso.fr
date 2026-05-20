@@ -1,12 +1,8 @@
 import type { Database } from '../database/client';
 import { listPunchesForEdition } from '../punch/punch.repository';
 import type { LoopPunch } from '../punch/punch.types';
-import { readPhotosCdnHost, toRunnerDto, type RunnerDto } from './runner.dto.utils';
-import {
-  findRunner,
-  insertRunner,
-  listRunnersForEdition,
-} from './runner.repository';
+import { type RunnerDto, readPhotosCdnHost, toRunnerDto } from './runner.dto.utils';
+import { findRunner, insertRunner, listRunnersForEdition } from './runner.repository';
 import type { Runner } from './runner.types';
 
 export class RunnerAlreadyExistsError extends Error {
@@ -25,7 +21,10 @@ export interface CreateRunnerInput {
   readonly bib?: number | null;
 }
 
-export async function createRunnerAsDto(database: Database, input: CreateRunnerInput): Promise<RunnerDto> {
+export async function createRunnerAsDto(
+  database: Database,
+  input: CreateRunnerInput,
+): Promise<RunnerDto> {
   const runner = await createRunner(database, input);
   return toRunnerDto(runner, readPhotosCdnHost());
 }
@@ -33,7 +32,9 @@ export async function createRunnerAsDto(database: Database, input: CreateRunnerI
 export async function createRunner(database: Database, input: CreateRunnerInput): Promise<Runner> {
   const existing = await findRunner(database, input.editionSlug, input.slug);
   if (existing !== null) {
-    throw new RunnerAlreadyExistsError(`runner "${input.slug}" already in edition "${input.editionSlug}"`);
+    throw new RunnerAlreadyExistsError(
+      `runner "${input.slug}" already in edition "${input.editionSlug}"`,
+    );
   }
   const runner: Runner = {
     editionSlug: input.editionSlug,
@@ -58,7 +59,10 @@ export async function getRunner(
   return runner;
 }
 
-export async function listRunners(database: Database, editionSlug: string): Promise<readonly Runner[]> {
+export async function listRunners(
+  database: Database,
+  editionSlug: string,
+): Promise<readonly Runner[]> {
   return listRunnersForEdition(database, editionSlug);
 }
 

@@ -13,7 +13,10 @@ interface Tag {
 function isTagArray(value: unknown): value is readonly Tag[] {
   return (
     Array.isArray(value) &&
-    value.every((entry) => isObject(entry) && typeof entry.Key === 'string' && typeof entry.Value === 'string')
+    value.every(
+      (entry) =>
+        isObject(entry) && typeof entry.Key === 'string' && typeof entry.Value === 'string',
+    )
   );
 }
 

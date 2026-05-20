@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  parsePersistedState,
   type PersistedState,
+  parsePersistedState,
   stringifyPersistedState,
 } from './persistedState.utils';
 

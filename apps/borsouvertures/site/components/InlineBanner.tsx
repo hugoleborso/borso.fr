@@ -22,7 +22,10 @@ export function InlineBanner({
       role="status"
       aria-live="polite"
     >
-      <div className="inline-banner-message">{celebrate && <span aria-hidden>🎉 </span>}{message}</div>
+      <div className="inline-banner-message">
+        {celebrate && <span aria-hidden>🎉 </span>}
+        {message}
+      </div>
       <div className="controls-row">
         <button type="button" className="btn active" onClick={onPrimaryClick}>
           {primaryLabel}

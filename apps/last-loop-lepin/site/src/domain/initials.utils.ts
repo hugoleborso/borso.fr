@@ -54,7 +54,8 @@ function pickInitials(displayName: string): string {
  */
 export function initialsAvatar(displayName: string): InitialsAvatar {
   const hash = djb2Hash(displayName);
-  const hueDegrees = ((hash % HUE_DEGREES_FULL_CIRCLE) + HUE_DEGREES_FULL_CIRCLE) % HUE_DEGREES_FULL_CIRCLE;
+  const hueDegrees =
+    ((hash % HUE_DEGREES_FULL_CIRCLE) + HUE_DEGREES_FULL_CIRCLE) % HUE_DEGREES_FULL_CIRCLE;
   return {
     initials: pickInitials(displayName),
     backgroundColor: `oklch(${OKLCH_LIGHTNESS} ${OKLCH_CHROMA} ${hueDegrees})`,

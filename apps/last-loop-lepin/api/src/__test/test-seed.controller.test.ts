@@ -6,8 +6,8 @@
  */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createApp } from '../app';
 import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { createApp } from '../app';
 import { findEditionBySlug } from '../edition/edition.repository';
 import { listRunnersForEdition } from '../runner/runner.repository';
 

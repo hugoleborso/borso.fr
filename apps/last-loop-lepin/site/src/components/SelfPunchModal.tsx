@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 import { ApiError, apiClient } from '../api/client';
 import type { RankedRunnerDto } from '../domain/types';
 import { RunnerAvatar } from './RunnerAvatar';
@@ -124,8 +124,7 @@ export function SelfPunchModal({
   function renderBody(): ReactElement {
     switch (state.kind) {
       case 'confirm': {
-        const targetLoop =
-          runner.status.kind === 'in-race' ? runner.status.lastLoop + 1 : 1;
+        const targetLoop = runner.status.kind === 'in-race' ? runner.status.lastLoop + 1 : 1;
         return (
           <>
             <p>
@@ -167,8 +166,7 @@ export function SelfPunchModal({
         return (
           <>
             <p>
-              Ce coureur est déjà éliminé — adresse-toi à l'organisation si tu veux être
-              réintégré.
+              Ce coureur est déjà éliminé — adresse-toi à l'organisation si tu veux être réintégré.
             </p>
             <button type="button" className="btn" onClick={onClose}>
               Fermer
@@ -228,11 +226,7 @@ export function SelfPunchModal({
         aria-label="Validation de boucle"
       >
         <div className="self-punch-modal__head">
-          <RunnerAvatar
-            runner={runner.runner}
-            size={MODAL_AVATAR_PX}
-            surface="modal"
-          />
+          <RunnerAvatar runner={runner.runner} size={MODAL_AVATAR_PX} surface="modal" />
           <div className="self-punch-modal__head-text">
             <strong>{runner.runner.displayName}</strong>
             {runner.runner.bib === null ? null : (

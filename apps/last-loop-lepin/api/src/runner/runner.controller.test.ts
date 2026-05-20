@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { createApp } from '../app';
 import { adminSessionCookie, freshDatabase, truncateAllTables } from '../../../test/database-utils';
-import { insertEdition } from '../edition/edition.repository';
 import { makeEdition } from '../../../test/fixtures';
+import { createApp } from '../app';
+import { insertEdition } from '../edition/edition.repository';
 
 const runnerEnvelopeSchema = z.object({
   runner: z.object({

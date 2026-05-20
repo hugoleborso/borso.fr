@@ -9,9 +9,9 @@ import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import {
-  type Stage,
   assertDeployStage,
   dsqlSchemaName,
+  type Stage,
   validateAppSlug,
 } from '../internal/naming.js';
 import { applyStandardTags } from '../internal/tags.js';
@@ -139,7 +139,8 @@ export class DsqlSchema extends Construct {
         // `createRequire(import.meta.url)` as `require` patches both Node
         // built-ins and any other transitive CJS dep without re-bundling
         // them as external (which would just push the problem to runtime).
-        banner: 'import { createRequire } from \'module\'; const require = createRequire(import.meta.url);',
+        banner:
+          "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
         // Keep ONLY the Lambda-runtime-provided clients external. We do NOT
         // include @aws-sdk/dsql-signer here — the runtime doesn't ship it,
         // so esbuild bundles it inline from the workspace's node_modules

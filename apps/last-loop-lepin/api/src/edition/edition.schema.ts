@@ -5,11 +5,9 @@ import type { EditionStatus, GpxMetadata } from './edition.types';
 
 const latLngSchema = z.object({ lat: z.number(), lng: z.number() });
 
-const pointTimeFractionsSchema = z
-  .array(z.number())
-  .refine(isMonotonicZeroToOne, {
-    message: 'pointTimeFractions must be strictly monotonic, start at 0 and end at 1',
-  });
+const pointTimeFractionsSchema = z.array(z.number()).refine(isMonotonicZeroToOne, {
+  message: 'pointTimeFractions must be strictly monotonic, start at 0 and end at 1',
+});
 
 const pointElevationsSchema = z.array(z.number().finite());
 

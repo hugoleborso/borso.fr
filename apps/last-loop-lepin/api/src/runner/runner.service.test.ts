@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
-import { insertEdition } from '../edition/edition.repository';
 import { makeEdition } from '../../../test/fixtures';
+import { insertEdition } from '../edition/edition.repository';
 import {
-  RunnerAlreadyExistsError,
-  RunnerNotFoundError,
   createRunner,
   getRunner,
   listRunners,
+  RunnerAlreadyExistsError,
+  RunnerNotFoundError,
 } from './runner.service';
 
 describe('runner.service', () => {

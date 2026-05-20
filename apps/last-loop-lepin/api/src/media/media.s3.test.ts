@@ -3,7 +3,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { MediaConfigError, MediaContentTypeError, createPresignedUpload } from './media.s3';
+import { createPresignedUpload, MediaConfigError, MediaContentTypeError } from './media.s3';
 
 const PRESERVED_ENV: Record<string, string | undefined> = {
   AWS_REGION: process.env.AWS_REGION,
@@ -55,9 +55,7 @@ describe('media.s3', () => {
       { editionSlug: 'lepin-2026', runnerSlug: 'alice', contentType: 'image/jpeg' },
       new Date(),
     );
-    expect(jpeg.objectKey).toMatch(
-      /^editions\/lepin-2026\/runners\/alice\/[0-9a-f-]+\.jpg$/,
-    );
+    expect(jpeg.objectKey).toMatch(/^editions\/lepin-2026\/runners\/alice\/[0-9a-f-]+\.jpg$/);
     const png = await createPresignedUpload(
       { editionSlug: 'lepin-2026', runnerSlug: 'alice', contentType: 'image/png' },
       new Date(),

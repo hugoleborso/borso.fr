@@ -1,6 +1,6 @@
+import type { Database } from '../database/client';
 import { type GpxTrack, parseGpx } from '../helpers/gpx/gpx.core';
 import { computeSunriseSunset } from '../helpers/sun/sun.core';
-import type { Database } from '../database/client';
 import {
   deleteEdition,
   findEditionBySlug,
@@ -57,7 +57,10 @@ export interface CreateEditionInput {
   readonly gpxXml: string;
 }
 
-export async function createEdition(database: Database, input: CreateEditionInput): Promise<RaceEdition> {
+export async function createEdition(
+  database: Database,
+  input: CreateEditionInput,
+): Promise<RaceEdition> {
   if (input.startsAt.getTime() >= input.endsAt.getTime()) {
     throw new Error('startsAt must precede endsAt');
   }
@@ -95,7 +98,10 @@ export async function getEdition(database: Database, slug: string): Promise<Race
   return edition;
 }
 
-export async function getEditionOrNull(database: Database, slug: string): Promise<RaceEdition | null> {
+export async function getEditionOrNull(
+  database: Database,
+  slug: string,
+): Promise<RaceEdition | null> {
   return findEditionBySlug(database, slug);
 }
 
@@ -203,9 +209,8 @@ export async function replaceSetupEdition(
   }
   const existing = await getEdition(database, slug);
   if (existing.status !== 'setup') throw new EditionNotInSetupError(slug);
-  const newTrack = input.gpxXml === undefined || input.gpxXml.length === 0
-    ? null
-    : parseGpx(input.gpxXml);
+  const newTrack =
+    input.gpxXml === undefined || input.gpxXml.length === 0 ? null : parseGpx(input.gpxXml);
   // Sunrise/sunset depend on (a) the start coordinates and (b) the start
   // date. Re-compute whenever either changed — i.e. when the user uploaded
   // a new GPX OR shifted `startsAt`.
@@ -219,14 +224,15 @@ export async function replaceSetupEdition(
     sunriseAt,
     sunsetAt,
     intervalMinutes: input.intervalMinutes ?? existing.intervalMinutes,
-    gpx: newTrack === null
-      ? existing.gpx
-      : {
-          distanceMeters: newTrack.distanceMeters,
-          elevationGainMeters: newTrack.elevationGainMeters,
-          trackJson: trackJsonOf(newTrack),
-          startLatLng: newTrack.startLatLng,
-        },
+    gpx:
+      newTrack === null
+        ? existing.gpx
+        : {
+            distanceMeters: newTrack.distanceMeters,
+            elevationGainMeters: newTrack.elevationGainMeters,
+            trackJson: trackJsonOf(newTrack),
+            startLatLng: newTrack.startLatLng,
+          },
   };
   await updateEditionSetup(database, slug, replaced);
   return replaced;

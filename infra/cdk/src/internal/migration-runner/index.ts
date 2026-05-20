@@ -96,7 +96,10 @@ const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
 function makeIdempotent(statement: string): string {
   return statement
     .replace(/\bCREATE\s+TABLE(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE TABLE IF NOT EXISTS$1')
-    .replace(/\bCREATE\s+UNIQUE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE UNIQUE INDEX IF NOT EXISTS$1')
+    .replace(
+      /\bCREATE\s+UNIQUE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i,
+      'CREATE UNIQUE INDEX IF NOT EXISTS$1',
+    )
     .replace(/\bCREATE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE INDEX IF NOT EXISTS$1')
     .replace(/\bCREATE\s+SCHEMA(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE SCHEMA IF NOT EXISTS$1')
     .replace(/\bADD\s+COLUMN(\s+(?!IF\s+NOT\s+EXISTS))/i, 'ADD COLUMN IF NOT EXISTS$1');

@@ -12,13 +12,13 @@ import { Alarm, ComparisonOperator, TreatMissingData } from 'aws-cdk-lib/aws-clo
 import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
-import { ARecord, AaaaRecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import { AaaaRecord, ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { ApiGatewayv2DomainProperties } from 'aws-cdk-lib/aws-route53-targets';
 import { Construct } from 'constructs';
 import {
-  type Stage,
   assertDeployStage,
   lambdaFunctionName,
+  type Stage,
   validateAppSlug,
 } from '../internal/naming.js';
 import { applyStandardTags } from '../internal/tags.js';
@@ -135,7 +135,8 @@ export class LambdaApi extends Construct {
         // "buffer" is not supported`. The banner patches the shim with a
         // real `createRequire` so every Node built-in + any other CJS
         // transitive dep just works.
-        banner: 'import { createRequire } from \'module\'; const require = createRequire(import.meta.url);',
+        banner:
+          "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
       },
     });
 

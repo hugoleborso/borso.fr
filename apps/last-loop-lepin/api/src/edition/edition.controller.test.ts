@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { createApp } from '../app';
 import { adminSessionCookie, freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { createApp } from '../app';
 
 const editionEnvelopeSchema = z.object({
   edition: z.object({
@@ -36,13 +36,16 @@ describe('admin edition controller', () => {
     return adminSessionCookie(freshDatabase());
   }
 
-  async function postEdition(input: {
-    slug: string;
-    displayName: string;
-    startsAt: string;
-    endsAt: string;
-    gpxXml: string;
-  }, cookie: string) {
+  async function postEdition(
+    input: {
+      slug: string;
+      displayName: string;
+      startsAt: string;
+      endsAt: string;
+      gpxXml: string;
+    },
+    cookie: string,
+  ) {
     return app.request('/api/admin/editions', {
       method: 'POST',
       headers: { 'content-type': 'application/json', cookie },

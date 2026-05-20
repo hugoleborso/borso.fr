@@ -2,10 +2,10 @@ import { CfnOutput, Stack } from 'aws-cdk-lib';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import {
-  type Stage,
   assertDeployStage,
   previewApiHostname,
   previewHostname,
+  type Stage,
   validateAppSlug,
 } from '../internal/naming.js';
 import { applyStandardTags } from '../internal/tags.js';

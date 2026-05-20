@@ -1,11 +1,12 @@
-import {
-  type IDsqlCluster,
-  PhotosCdn,
-  PreviewableApp,
-  type Stage,
-} from '@borso/infra';
+import { type IDsqlCluster, PhotosCdn, PreviewableApp, type Stage } from '@borso/infra';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
-import { BlockPublicAccess, Bucket, BucketEncryption, HttpMethods, ObjectOwnership } from 'aws-cdk-lib/aws-s3';
+import {
+  BlockPublicAccess,
+  Bucket,
+  BucketEncryption,
+  HttpMethods,
+  ObjectOwnership,
+} from 'aws-cdk-lib/aws-s3';
 import type { Construct } from 'constructs';
 
 const APP_SLUG = 'last-loop-lepin';
@@ -29,7 +30,11 @@ export interface BuildAppStackProps {
  * hostname. Dev sets `ALLOWED_ORIGIN` locally (typically
  * `http://localhost:5173`).
  */
-function frontendOrigin(stage: Stage, domainName: string | undefined, prNumber: number | undefined): string {
+function frontendOrigin(
+  stage: Stage,
+  domainName: string | undefined,
+  prNumber: number | undefined,
+): string {
   if (stage === 'prod') {
     if (domainName === undefined) {
       throw new Error('frontendOrigin: domainName required for stage="prod".');

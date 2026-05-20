@@ -10,7 +10,7 @@
 import { randomBytes } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import { adminCredentialsTable, adminSessionsTable } from '../api/src/auth/auth.schema';
-import { getDatabase, type Database } from '../api/src/database/client';
+import { type Database, getDatabase } from '../api/src/database/client';
 
 const ALL_TABLES: readonly string[] = [
   'loop_punches',
@@ -41,7 +41,9 @@ export function freshDatabase(): Database {
 
 export async function truncateAllTables(database: Database): Promise<void> {
   await database.execute(
-    sql.raw(`TRUNCATE ${ALL_TABLES.map((name) => `"${name}"`).join(', ')} RESTART IDENTITY CASCADE`),
+    sql.raw(
+      `TRUNCATE ${ALL_TABLES.map((name) => `"${name}"`).join(', ')} RESTART IDENTITY CASCADE`,
+    ),
   );
 }
 

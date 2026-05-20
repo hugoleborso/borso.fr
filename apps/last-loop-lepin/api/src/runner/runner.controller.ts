@@ -1,15 +1,15 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { getDatabase } from '../database/client';
 import { requireAdminSession } from '../auth/auth.middleware';
+import { getDatabase } from '../database/client';
 import { createRunnerInputSchema } from './runner.schema';
 import {
-  RunnerAlreadyExistsError,
-  RunnerNotFoundError,
   createRunnerAsDto,
   getRunnerAsDto,
   listPunchesForRunner,
   listRunnersAsDto,
+  RunnerAlreadyExistsError,
+  RunnerNotFoundError,
 } from './runner.service';
 
 const runnerRouter = new Hono()
@@ -46,9 +46,10 @@ const adminRunnerRouter = new Hono()
       const runner = await createRunnerAsDto(getDatabase(), context.req.valid('json'));
       return context.json({ runner }, 201);
     } catch (error) {
-      if (error instanceof RunnerAlreadyExistsError) return context.json({ error: error.message }, 409);
+      if (error instanceof RunnerAlreadyExistsError)
+        return context.json({ error: error.message }, 409);
       throw error;
     }
   });
 
-export { runnerRouter, adminRunnerRouter };
+export { adminRunnerRouter, runnerRouter };

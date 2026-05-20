@@ -45,7 +45,9 @@ describe('initialsAvatar', () => {
   it('keeps the hue within [0, 360)', () => {
     const inputs = ['', 'a', 'longer name with several words', 'éàü', '!@#$%^&*()'];
     for (const input of inputs) {
-      const match = initialsAvatar(input).backgroundColor.match(/oklch\([0-9.]+ [0-9.]+ ([0-9.]+)\)/);
+      const match = initialsAvatar(input).backgroundColor.match(
+        /oklch\([0-9.]+ [0-9.]+ ([0-9.]+)\)/,
+      );
       expect(match).not.toBeNull();
       const hue = Number.parseFloat(match?.[1] ?? '');
       expect(hue).toBeGreaterThanOrEqual(0);

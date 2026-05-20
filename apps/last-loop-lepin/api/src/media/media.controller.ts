@@ -23,7 +23,8 @@ const mediaRouter = new Hono()
       });
     } catch (error) {
       if (error instanceof MediaConfigError) return context.json({ error: error.message }, 500);
-      if (error instanceof MediaContentTypeError) return context.json({ error: error.message }, 400);
+      if (error instanceof MediaContentTypeError)
+        return context.json({ error: error.message }, 400);
       throw error;
     }
   });

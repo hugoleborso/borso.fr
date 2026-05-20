@@ -4,11 +4,11 @@
  * applies the generated `.sql` files via the `DsqlSchema` construct.
  */
 
-export { editionsTable } from '../edition/edition.schema';
-export { runnersTable } from '../runner/runner.schema';
-export { loopPunchesTable, manualDnfsTable } from '../punch/punch.schema';
 export {
   adminCredentialsTable,
   adminSessionsTable,
   authAttemptsTable,
 } from '../auth/auth.schema';
+export { editionsTable } from '../edition/edition.schema';
+export { loopPunchesTable, manualDnfsTable } from '../punch/punch.schema';
+export { runnersTable } from '../runner/runner.schema';

@@ -10,7 +10,9 @@ describe('buildProfileGeometry', () => {
     // helper, but if a future call site forgets the guard, the SVG should
     // still be well-formed (no NaN coords).
     const geometry = buildProfileGeometry([], [], PROFILE_WIDTH, PROFILE_HEIGHT);
-    expect(geometry.areaPolygonPoints).toBe(`0,${PROFILE_HEIGHT} ${PROFILE_WIDTH},${PROFILE_HEIGHT}`);
+    expect(geometry.areaPolygonPoints).toBe(
+      `0,${PROFILE_HEIGHT} ${PROFILE_WIDTH},${PROFILE_HEIGHT}`,
+    );
     expect(geometry.linePolylinePoints).toBe('');
     expect(geometry.yAt(0)).toBe(PROFILE_HEIGHT / 2);
     expect(geometry.yAt(0.5)).toBe(PROFILE_HEIGHT / 2);
@@ -144,12 +146,7 @@ describe('buildProfileGeometry', () => {
     // the API boundary, but the helper is also called directly from the
     // unit test and the React shell). The zip truncates at the shorter
     // input; the rest of the elevations are dropped.
-    const geometry = buildProfileGeometry(
-      [100, 200, 300],
-      [0, 50],
-      PROFILE_WIDTH,
-      PROFILE_HEIGHT,
-    );
+    const geometry = buildProfileGeometry([100, 200, 300], [0, 50], PROFILE_WIDTH, PROFILE_HEIGHT);
     // Two samples retained → polyline has 2 vertices.
     expect(geometry.linePolylinePoints.split(' ')).toHaveLength(2);
   });

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import type { Palette } from './palettes.utils';
 import type { ColoredRect } from './painting.utils';
-import { useAnimation, type AnimationMode } from './use-animation';
+import type { Palette } from './palettes.utils';
+import { type AnimationMode, useAnimation } from './use-animation';
 
 const INKBLOOM_STAGGER_TOTAL_MS = 600;
 const INKBLOOM_RANDOM_JITTER_MS = 80;
@@ -50,7 +50,11 @@ type EditableSwatchProps = {
 
 export function EditableSwatch({ color, name, onColorChange }: EditableSwatchProps) {
   return (
-    <label className="swatch editable" style={{ background: color }} title={`Click to change ${name}`}>
+    <label
+      className="swatch editable"
+      style={{ background: color }}
+      title={`Click to change ${name}`}
+    >
       <span className="name">{name}</span>
       <input
         type="color"

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   buildCustomPalette,
   CUSTOM_DEFAULTS,
+  type CustomColors,
   isPaletteKey,
   PALETTES,
-  type CustomColors,
   type PaletteKey,
 } from './palettes.utils';
 

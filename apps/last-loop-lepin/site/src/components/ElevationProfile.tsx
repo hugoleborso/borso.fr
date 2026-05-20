@@ -75,10 +75,7 @@ export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps
   };
 
   return (
-    <div
-      className="card-body flush elevation-profile"
-      style={{ minHeight: PROFILE_MIN_HEIGHT_PX }}
-    >
+    <div className="card-body flush elevation-profile" style={{ minHeight: PROFILE_MIN_HEIGHT_PX }}>
       <svg
         role="img"
         aria-label="Profil de dénivelé de la boucle"

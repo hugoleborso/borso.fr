@@ -53,7 +53,10 @@ describe('nextStep — self-punch FSM', () => {
   });
 
   it('geo-out-of-zone carries the measured distance', () => {
-    const next = nextStep({ kind: 'awaiting-geo' }, { type: 'geo-out-of-zone', distanceMeters: 245 });
+    const next = nextStep(
+      { kind: 'awaiting-geo' },
+      { type: 'geo-out-of-zone', distanceMeters: 245 },
+    );
     expect(next).toEqual<SelfPunchState>({ kind: 'out-of-zone', distanceMeters: 245 });
   });
 
@@ -64,9 +67,11 @@ describe('nextStep — self-punch FSM', () => {
   });
 
   it('geo-unavailable also maps to permission-denied (same UX guidance)', () => {
-    expect(nextStep({ kind: 'awaiting-geo' }, { type: 'geo-unavailable' })).toEqual<SelfPunchState>({
-      kind: 'permission-denied',
-    });
+    expect(nextStep({ kind: 'awaiting-geo' }, { type: 'geo-unavailable' })).toEqual<SelfPunchState>(
+      {
+        kind: 'permission-denied',
+      },
+    );
   });
 
   it('geo-timeout → timeout', () => {
@@ -81,8 +86,10 @@ describe('nextStep — self-punch FSM', () => {
     ).toEqual<SelfPunchState>({ kind: 'success', validatedLoopIndex: 3 });
   });
 
-  it('server-out-of-zone → out-of-zone (no distance field — the server didn\'t echo it)', () => {
-    expect(nextStep({ kind: 'awaiting-geo' }, { type: 'server-out-of-zone' })).toEqual<SelfPunchState>({
+  it("server-out-of-zone → out-of-zone (no distance field — the server didn't echo it)", () => {
+    expect(
+      nextStep({ kind: 'awaiting-geo' }, { type: 'server-out-of-zone' }),
+    ).toEqual<SelfPunchState>({
       kind: 'out-of-zone',
     });
   });

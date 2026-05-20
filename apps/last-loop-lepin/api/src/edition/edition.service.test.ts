@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
 import {
+  createEdition,
   EditionAlreadyExistsError,
   EditionNotFoundError,
-  createEdition,
   getAllEditions,
   getEdition,
   transitionEditionStatus,

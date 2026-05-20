@@ -4,15 +4,21 @@ import { CorrectionPanel } from '../components/admin/CorrectionPanel';
 import { DnfCandidatesPanel } from '../components/admin/DnfCandidatesPanel';
 import { RunnerAdminPanel } from '../components/admin/RunnerAdminPanel';
 import { SetupPanel } from '../components/admin/SetupPanel';
-import { useResource, invalidateResource } from '../data/useResource';
+import { invalidateResource, useResource } from '../data/useResource';
 import { useStandings } from '../data/useStandingsPoll';
 import { initialsAvatar } from '../domain/initials.utils';
-import type { RankedRunnerDto, RaceEditionDto, RunnerDto } from '../domain/types';
+import type { RaceEditionDto, RankedRunnerDto, RunnerDto } from '../domain/types';
 import { recordAnalyticsEvent } from '../observability/sentry';
 
 const RACE_CACHE_KEY = 'edition:current';
 
-type LoginState = 'idle' | 'submitting' | 'authenticated' | 'denied' | 'rate-limited' | 'unknown-error';
+type LoginState =
+  | 'idle'
+  | 'submitting'
+  | 'authenticated'
+  | 'denied'
+  | 'rate-limited'
+  | 'unknown-error';
 
 function PinForm({ onAuthenticated }: { onAuthenticated: () => void }) {
   const [pin, setPin] = useState('');
@@ -48,7 +54,9 @@ function PinForm({ onAuthenticated }: { onAuthenticated: () => void }) {
       </div>
       <div className="card-body col">
         <div className="field">
-          <label className="field-label" htmlFor="pin">PIN</label>
+          <label className="field-label" htmlFor="pin">
+            PIN
+          </label>
           <input
             id="pin"
             type="password"
@@ -160,7 +168,8 @@ function PunchPanel({
     <div className="card">
       <div className="card-head">
         <h2 className="card-title">
-          Pointage · boucle <span className="mono">{String(currentLoopIndex).padStart(2, '0')}</span>
+          Pointage · boucle{' '}
+          <span className="mono">{String(currentLoopIndex).padStart(2, '0')}</span>
         </h2>
         <span className="muted mono">
           top horaire dans {minutesLeft} min · {inRace.length} en course
@@ -201,7 +210,10 @@ function PunchPanel({
                     </span>
                     <span className="punch-id">
                       <span className="punch-bib">
-                        #{entry.runner.bib === null ? '—' : String(entry.runner.bib).padStart(3, '0')}
+                        #
+                        {entry.runner.bib === null
+                          ? '—'
+                          : String(entry.runner.bib).padStart(3, '0')}
                       </span>
                       <span className="punch-name">{entry.runner.displayName}</span>
                     </span>
@@ -262,8 +274,8 @@ function FinishRacePrompt({
       <div className="admin-finish-banner__msg">
         <strong>Plus personne en course.</strong>
         <small>
-          {totalRunners} coureur{totalRunners > 1 ? 's' : ''} en DNF. La course est terminée
-          dans les faits.
+          {totalRunners} coureur{totalRunners > 1 ? 's' : ''} en DNF. La course est terminée dans
+          les faits.
         </small>
         {error !== null ? <div className="error-text">{error}</div> : null}
       </div>

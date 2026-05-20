@@ -8,10 +8,13 @@ import { isObject, resourcesOfType } from './helpers/template.js';
 
 function synth(opts?: { budgetEmail?: string }): Template {
   const app = new App();
-  app.node.setContext(`hosted-zone:account=123456789012:domainName=${HOSTED_ZONE_NAME}:region=eu-west-3`, {
-    Id: '/hostedzone/Z1FAKE',
-    Name: `${HOSTED_ZONE_NAME}.`,
-  });
+  app.node.setContext(
+    `hosted-zone:account=123456789012:domainName=${HOSTED_ZONE_NAME}:region=eu-west-3`,
+    {
+      Id: '/hostedzone/Z1FAKE',
+      Name: `${HOSTED_ZONE_NAME}.`,
+    },
+  );
   // Stub certificates — real ones live in the us-east-1 CertsStack.
   const certStack = new Stack(app, 'CertsStub', {
     env: { account: '123456789012', region: 'us-east-1' },
@@ -105,9 +108,7 @@ describe('SharedStack', () => {
           BlockPublicAcls: true,
         }),
         LifecycleConfiguration: Match.objectLike({
-          Rules: Match.arrayWith([
-            Match.objectLike({ ExpirationInDays: 60, Status: 'Enabled' }),
-          ]),
+          Rules: Match.arrayWith([Match.objectLike({ ExpirationInDays: 60, Status: 'Enabled' })]),
         }),
       });
     });
@@ -117,7 +118,9 @@ describe('SharedStack', () => {
       const [dist] = resourcesOfType(tpl, 'AWS::CloudFront::Distribution');
       const config = dist?.Properties?.DistributionConfig;
       const defaultBehavior = isObject(config) ? config.DefaultCacheBehavior : undefined;
-      const associations = isObject(defaultBehavior) ? defaultBehavior.FunctionAssociations : undefined;
+      const associations = isObject(defaultBehavior)
+        ? defaultBehavior.FunctionAssociations
+        : undefined;
       expect(associations).toBeDefined();
     });
 
@@ -176,7 +179,9 @@ describe('SharedStack', () => {
     });
 
     it('does NOT publish /borso/shared/dsql-cluster-* (clusters are now per-app)', () => {
-      const names = resourcesOfType(tpl, 'AWS::SSM::Parameter').map((param) => param.Properties?.Name);
+      const names = resourcesOfType(tpl, 'AWS::SSM::Parameter').map(
+        (param) => param.Properties?.Name,
+      );
       expect(names).not.toContain('/borso/shared/dsql-cluster-arn');
       expect(names).not.toContain('/borso/shared/dsql-cluster-endpoint');
     });
@@ -204,7 +209,9 @@ describe('SharedStack', () => {
     });
 
     it('does NOT publish /borso/shared/integ-role-arn (dropped)', () => {
-      const names = resourcesOfType(tpl, 'AWS::SSM::Parameter').map((param) => param.Properties?.Name);
+      const names = resourcesOfType(tpl, 'AWS::SSM::Parameter').map(
+        (param) => param.Properties?.Name,
+      );
       expect(names).not.toContain('/borso/shared/integ-role-arn');
     });
   });

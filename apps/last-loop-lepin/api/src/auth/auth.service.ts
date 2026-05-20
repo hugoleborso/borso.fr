@@ -8,8 +8,8 @@ import {
   findBucket,
   findValidSession,
   purgeExpiredSessions,
-  upsertBucket,
   type RateLimitBucket,
+  upsertBucket,
 } from './auth.repository';
 
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
@@ -39,11 +39,7 @@ function verifyPinAgainstHash(pin: string, hashedPin: string): boolean {
   return timingSafeEqual(candidateKey, expectedKey);
 }
 
-async function consumeRateLimit(
-  database: Database,
-  ipAddress: string,
-  now: Date,
-): Promise<void> {
+async function consumeRateLimit(database: Database, ipAddress: string, now: Date): Promise<void> {
   const existing = await findBucket(database, ipAddress);
   const windowStartedAt =
     existing !== null && now.getTime() - existing.windowStartedAt.getTime() < RATE_LIMIT_WINDOW_MS
@@ -85,7 +81,11 @@ export interface LoginResult {
  * Throws `AuthDeniedError('misconfigured')` if the operator hasn't seeded
  * the `admin_credentials` row yet.
  */
-export async function login(database: Database, input: LoginInput, now: Date): Promise<LoginResult> {
+export async function login(
+  database: Database,
+  input: LoginInput,
+  now: Date,
+): Promise<LoginResult> {
   const pinHash = await findAdminPinHash(database);
   if (pinHash === null) {
     throw new AuthDeniedError('misconfigured');

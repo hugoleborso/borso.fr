@@ -6,11 +6,11 @@ import { SideSelector } from '@/components/SideSelector';
 import { ToggleSlider } from '@/components/ToggleSlider';
 import { TopBar } from '@/components/TopBar';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { ModeLearnTree } from '@/modes/ModeLearnTree';
+import { ModePlay } from '@/modes/ModePlay';
 import { loadOpenings } from '@/openings/loadOpenings';
 import { ALL_KEY } from '@/openings/selectors.utils';
 import type { Opening, Variation } from '@/openings/types';
-import { ModeLearnTree } from '@/modes/ModeLearnTree';
-import { ModePlay } from '@/modes/ModePlay';
 import { type Mode, type TreeVisualizationMode, useAppState } from '@/state/useAppState';
 
 export default function App() {
@@ -80,8 +80,7 @@ export default function App() {
     mode === 'learn'
       ? 'Pick an opening + variation to drill its tree.'
       : 'Pick at least one opening, variation, or line to play.';
-  const sessionStartLabel =
-    mode === 'learn' ? 'Drill this variation' : 'Play within this scope';
+  const sessionStartLabel = mode === 'learn' ? 'Drill this variation' : 'Play within this scope';
 
   function handleSwitchToPlayWithVariation(opening: Opening, variation: Variation): void {
     setPlayScope({
@@ -106,121 +105,121 @@ export default function App() {
 
   return (
     <div className="app-shell">
-        <TopBar
-          mode={mode}
-          onModeChange={handleModeChange}
-          boardStyle={boardStyle}
-          onBoardStyleChange={setBoardStyle}
+      <TopBar
+        mode={mode}
+        onModeChange={handleModeChange}
+        boardStyle={boardStyle}
+        onBoardStyleChange={setBoardStyle}
+      />
+
+      {loadError && (
+        <ErrorPanel
+          message="The opening dataset failed to load. Try reloading the page."
+          onReload={handleReload}
         />
+      )}
 
-        {loadError && (
-          <ErrorPanel
-            message="The opening dataset failed to load. Try reloading the page."
-            onReload={handleReload}
+      {!loadError && view === 'select' && loading && <LoadingPanel />}
+
+      {!loadError && view === 'select' && !loading && (
+        <>
+          <div className="panel">
+            <SideSelector value={side} onChange={setSide} />
+            {mode === 'play' && (
+              <div className="controls-row" style={{ marginTop: '0.5rem' }}>
+                <ToggleSlider
+                  value={playAutoOpponent}
+                  onChange={setPlayAutoOpponent}
+                  leftLabel="You play both"
+                  rightLabel="Auto opponent"
+                  ariaLabel="Auto opponent toggle"
+                />
+              </div>
+            )}
+          </div>
+          <OpeningFlowSelector
+            openings={openings}
+            selection={selection}
+            onChange={setSelection}
+            boardStyle={boardStyle}
+            mode={mode}
+            playScope={playScope}
+            onPlayScopeChange={setPlayScope}
           />
-        )}
+          <div className="panel">
+            <button
+              type="button"
+              className="btn active"
+              onClick={() => setView('session')}
+              disabled={!sessionStartIsAllowed}
+            >
+              {sessionStartLabel}
+            </button>
+            {!sessionStartIsAllowed && (
+              <p style={{ marginTop: '0.5rem', opacity: 0.8 }}>{sessionStartHint}</p>
+            )}
+          </div>
+        </>
+      )}
 
-        {!loadError && view === 'select' && loading && <LoadingPanel />}
-
-        {!loadError && view === 'select' && !loading && (
-          <>
-            <div className="panel">
-              <SideSelector value={side} onChange={setSide} />
+      {!loadError && view === 'session' && (
+        <>
+          <div className="controls-row" style={{ justifyContent: 'space-between' }}>
+            <div className="controls-row">
+              <button type="button" className="btn" onClick={() => setView('select')}>
+                Change selection
+              </button>
+              <ToggleSlider
+                value={showMoves}
+                onChange={setShowMoves}
+                leftLabel="Hide moves"
+                rightLabel="Show moves"
+                ariaLabel="Show moves toggle"
+              />
+              {mode === 'learn' && (
+                <ToggleSlider
+                  value={effectiveTreeVisualization === 'buttons'}
+                  onChange={handleTreeVisualizationToggle}
+                  leftLabel="Arrows"
+                  rightLabel="Buttons"
+                  ariaLabel="Tree visualization mode"
+                />
+              )}
               {mode === 'play' && (
-                <div className="controls-row" style={{ marginTop: '0.5rem' }}>
-                  <ToggleSlider
-                    value={playAutoOpponent}
-                    onChange={setPlayAutoOpponent}
-                    leftLabel="You play both"
-                    rightLabel="Auto opponent"
-                    ariaLabel="Auto opponent toggle"
-                  />
-                </div>
+                <ToggleSlider
+                  value={playAutoOpponent}
+                  onChange={setPlayAutoOpponent}
+                  leftLabel="You play both"
+                  rightLabel="Auto opponent"
+                  ariaLabel="Auto opponent toggle"
+                />
               )}
             </div>
-            <OpeningFlowSelector
+          </div>
+          {loading ? (
+            <LoadingPanel />
+          ) : mode === 'learn' ? (
+            <ModeLearnTree
               openings={openings}
               selection={selection}
-              onChange={setSelection}
+              side={side}
               boardStyle={boardStyle}
-              mode={mode}
-              playScope={playScope}
-              onPlayScopeChange={setPlayScope}
+              treeVisualizationMode={treeVisualizationMode}
+              onSwitchToPlayWithVariation={handleSwitchToPlayWithVariation}
             />
-            <div className="panel">
-              <button
-                type="button"
-                className="btn active"
-                onClick={() => setView('session')}
-                disabled={!sessionStartIsAllowed}
-              >
-                {sessionStartLabel}
-              </button>
-              {!sessionStartIsAllowed && (
-                <p style={{ marginTop: '0.5rem', opacity: 0.8 }}>{sessionStartHint}</p>
-              )}
-            </div>
-          </>
-        )}
-
-        {!loadError && view === 'session' && (
-          <>
-            <div className="controls-row" style={{ justifyContent: 'space-between' }}>
-              <div className="controls-row">
-                <button type="button" className="btn" onClick={() => setView('select')}>
-                  Change selection
-                </button>
-                <ToggleSlider
-                  value={showMoves}
-                  onChange={setShowMoves}
-                  leftLabel="Hide moves"
-                  rightLabel="Show moves"
-                  ariaLabel="Show moves toggle"
-                />
-                {mode === 'learn' && (
-                  <ToggleSlider
-                    value={effectiveTreeVisualization === 'buttons'}
-                    onChange={handleTreeVisualizationToggle}
-                    leftLabel="Arrows"
-                    rightLabel="Buttons"
-                    ariaLabel="Tree visualization mode"
-                  />
-                )}
-                {mode === 'play' && (
-                  <ToggleSlider
-                    value={playAutoOpponent}
-                    onChange={setPlayAutoOpponent}
-                    leftLabel="You play both"
-                    rightLabel="Auto opponent"
-                    ariaLabel="Auto opponent toggle"
-                  />
-                )}
-              </div>
-            </div>
-            {loading ? (
-              <LoadingPanel />
-            ) : mode === 'learn' ? (
-              <ModeLearnTree
-                openings={openings}
-                selection={selection}
-                side={side}
-                boardStyle={boardStyle}
-                treeVisualizationMode={treeVisualizationMode}
-                onSwitchToPlayWithVariation={handleSwitchToPlayWithVariation}
-              />
-            ) : (
-              <ModePlay
-                openings={openings}
-                selection={selection}
-                side={side}
-                boardStyle={boardStyle}
-                autoOpponent={playAutoOpponent}
-                showMoves={showMoves}
-                playScope={playScope}
-              />
-            )}
-          </>
-        )}
+          ) : (
+            <ModePlay
+              openings={openings}
+              selection={selection}
+              side={side}
+              boardStyle={boardStyle}
+              autoOpponent={playAutoOpponent}
+              showMoves={showMoves}
+              playScope={playScope}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 }

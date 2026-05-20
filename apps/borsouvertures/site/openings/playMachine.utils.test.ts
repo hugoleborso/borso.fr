@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import {
-  ALL_SELECTION,
-  buildDriver,
-  ITALIAN_GAME,
-  ITALIAN_SCOPE,
-} from './playMachine.test-utils';
+import { ALL_SELECTION, buildDriver, ITALIAN_GAME, ITALIAN_SCOPE } from './playMachine.test-utils';
 import { createPlayMachine, type PlayMachineConfig } from './playMachine.utils';
 
 const BASE_CONFIG: PlayMachineConfig = {
@@ -76,7 +71,7 @@ describe('createPlayMachine', () => {
     expect(machine.getSnapshot().playedMovesUci).toEqual(['e2e4', 'e7e5']);
   });
 
-  it('plays White\'s first move when side is Black (B1)', () => {
+  it("plays White's first move when side is Black (B1)", () => {
     const driver = buildDriver();
     const machine = createPlayMachine(driver.options);
     machine.start({ ...BASE_CONFIG, side: 'black' });
@@ -93,7 +88,7 @@ describe('createPlayMachine', () => {
     expect(driver.pendingTimers).toHaveLength(0);
   });
 
-  it('rejects a play during the opponent\'s turn when autoOpponent is on', () => {
+  it("rejects a play during the opponent's turn when autoOpponent is on", () => {
     const driver = buildDriver();
     const machine = createPlayMachine(driver.options);
     machine.start(BASE_CONFIG);
@@ -138,7 +133,7 @@ describe('createPlayMachine', () => {
     expect(machine.getSnapshot().successOpen).toBe(true);
   });
 
-  it('marks successOpen when the opponent\'s reply ends a line (side=black)', () => {
+  it("marks successOpen when the opponent's reply ends a line (side=black)", () => {
     const driver = buildDriver();
     driver.rngQueue.push('e2e4');
     driver.rngQueue.push('g1f3');

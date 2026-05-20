@@ -101,7 +101,7 @@ export function projectDnfCandidates(
 
 /** Convenience: total hourly-top boundaries between `startsAt` and `endsAt`. */
 export function totalHourlyTops(edition: RaceEdition): number {
-  const totalMinutes = (edition.endsAt.getTime() - edition.startsAt.getTime()) / MILLISECONDS_PER_MINUTE;
+  const totalMinutes =
+    (edition.endsAt.getTime() - edition.startsAt.getTime()) / MILLISECONDS_PER_MINUTE;
   return Math.max(0, Math.floor(totalMinutes / edition.intervalMinutes));
 }
-

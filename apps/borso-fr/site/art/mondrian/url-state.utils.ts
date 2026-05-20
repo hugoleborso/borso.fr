@@ -25,7 +25,8 @@ export function readUrlState(search: string, defaults: { paletteKey: PaletteKey 
   const params = new URLSearchParams(search);
   const parsedSeed = parseSeedHex(params.get('seed'));
   const paletteParam = params.get('palette');
-  const paletteKey = paletteParam !== null && isPaletteKey(paletteParam) ? paletteParam : defaults.paletteKey;
+  const paletteKey =
+    paletteParam !== null && isPaletteKey(paletteParam) ? paletteParam : defaults.paletteKey;
   return {
     seed: parsedSeed ?? freshSeed(),
     paletteKey,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SunCalculationError, computeSunriseSunset } from './sun.core';
+import { computeSunriseSunset, SunCalculationError } from './sun.core';
 
 const LEPIN = { lat: 45.55, lng: 5.78 };
 const ARCTIC_NEAR_POLE = { lat: 78.0, lng: 15.0 };

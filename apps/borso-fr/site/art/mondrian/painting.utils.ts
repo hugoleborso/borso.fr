@@ -47,13 +47,11 @@ export function pickSplittableEntry(
   const weightedSplittables: WeightedSplittable[] = [];
   candidateRects.forEach((candidateRect, rectIndex) => {
     const isSplittable =
-      candidateRect.width > MIN_RECT_DIMENSION * 2 ||
-      candidateRect.height > MIN_RECT_DIMENSION * 2;
+      candidateRect.width > MIN_RECT_DIMENSION * 2 || candidateRect.height > MIN_RECT_DIMENSION * 2;
     if (!isSplittable) return;
     const longestSide = Math.max(candidateRect.width, candidateRect.height);
     const weight =
-      candidateRect.width * candidateRect.height *
-      (1 + AREA_WEIGHT_LARGE_RECT_BOOST * longestSide);
+      candidateRect.width * candidateRect.height * (1 + AREA_WEIGHT_LARGE_RECT_BOOST * longestSide);
     weightedSplittables.push({ rectIndex, rect: candidateRect, weight });
     totalWeight += weight;
   });
@@ -94,13 +92,7 @@ function chooseJitteredSplitFraction(
   return Math.max(lowerBound, Math.min(upperBound, jitteredFraction));
 }
 
-export function generateLayout({
-  seed,
-  complexity,
-}: {
-  seed: number;
-  complexity: number;
-}): Rect[] {
+export function generateLayout({ seed, complexity }: { seed: number; complexity: number }): Rect[] {
   const nextRandom = mulberry32(seed);
   const rects: Rect[] = [{ x: 0, y: 0, width: 1, height: 1, depth: 0, id: 0 }];
   const targetCount = Math.max(MIN_TARGET_RECT_COUNT, Math.round(complexity));
@@ -195,9 +187,10 @@ export function colorize(
       balance * NEUTRAL_BALANCE_PENALTY;
 
     const useNeutral = nextRandom() < neutralProbability;
-    const chosenFill = useNeutral && neutralFill !== undefined
-      ? neutralFill
-      : pickUniform(nonNeutralFills, nextRandom);
+    const chosenFill =
+      useNeutral && neutralFill !== undefined
+        ? neutralFill
+        : pickUniform(nonNeutralFills, nextRandom);
 
     if (chosenFill === null) {
       return { ...rectToColor, fill: palette.line, fillName: 'line' };

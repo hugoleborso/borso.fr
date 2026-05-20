@@ -1,5 +1,5 @@
+import { type ColoredRect, mulberry32 } from './painting.utils';
 import type { Palette } from './palettes.utils';
-import { mulberry32, type ColoredRect } from './painting.utils';
 
 const ADJECTIVES = [
   'quiet',

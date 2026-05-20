@@ -73,7 +73,10 @@ function HorsJourJ({
                   : 'Tracé à venir'}{' '}
                 · {Math.round(upcoming.gpx.elevationGainMeters)} m D+
               </span>
-              <Countdown targetEpochMs={new Date(upcoming.startsAt).getTime()} label="Départ dans" />
+              <Countdown
+                targetEpochMs={new Date(upcoming.startsAt).getTime()}
+                label="Départ dans"
+              />
             </>
           )}
         </div>
@@ -81,7 +84,9 @@ function HorsJourJ({
       <div className="card">
         <div className="card-head">
           <h2 className="card-title">Archives</h2>
-          <span className="muted mono">{archives.length} édition{archives.length === 1 ? '' : 's'}</span>
+          <span className="muted mono">
+            {archives.length} édition{archives.length === 1 ? '' : 's'}
+          </span>
         </div>
         <div className="card-body">
           {archives.length === 0 ? (
@@ -89,7 +94,10 @@ function HorsJourJ({
           ) : (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {archives.map((edition) => (
-                <li key={edition.slug} style={{ padding: '8px 0', borderBottom: '1px solid var(--line-soft)' }}>
+                <li
+                  key={edition.slug}
+                  style={{ padding: '8px 0', borderBottom: '1px solid var(--line-soft)' }}
+                >
                   <strong>{edition.displayName}</strong>
                   <span className="muted" style={{ marginLeft: 8 }}>
                     {formatRaceDate(edition.startsAt)}
@@ -144,10 +152,7 @@ export function SpectatorPage() {
       {isFinished ? (
         <div className="banner row" style={{ justifyContent: 'space-between' }}>
           <span>Course terminée — classement final affiché.</span>
-          <a
-            className="btn btn-sm"
-            href={`/api/standings/${encodeURIComponent(edition.slug)}/csv`}
-          >
+          <a className="btn btn-sm" href={`/api/standings/${encodeURIComponent(edition.slug)}/csv`}>
             Télécharger le CSV
           </a>
         </div>
@@ -168,7 +173,9 @@ export function SpectatorPage() {
           <div className="card-head">
             <h2 className="card-title">Tracé</h2>
             <span className="muted mono">
-              {standings === null ? '' : `${standings.ranked.filter((entry) => entry.status.kind === 'in-race').length} en course`}
+              {standings === null
+                ? ''
+                : `${standings.ranked.filter((entry) => entry.status.kind === 'in-race').length} en course`}
             </span>
           </div>
           <CourseMap edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
@@ -191,9 +198,7 @@ export function SpectatorPage() {
         <div className="card profile-card">
           <div className="card-head">
             <h2 className="card-title">Profil</h2>
-            <span className="muted mono">
-              {Math.round(edition.gpx.elevationGainMeters)} m D+
-            </span>
+            <span className="muted mono">{Math.round(edition.gpx.elevationGainMeters)} m D+</span>
           </div>
           <ElevationProfile edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
         </div>

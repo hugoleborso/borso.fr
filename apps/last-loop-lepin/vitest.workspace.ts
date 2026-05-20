@@ -31,11 +31,7 @@ export default defineWorkspace([
       coverage: {
         provider: 'v8',
         all: false,
-        include: [
-          'api/src/**/*.core.ts',
-          'api/src/**/*.utils.ts',
-          'site/src/**/*.utils.ts',
-        ],
+        include: ['api/src/**/*.core.ts', 'api/src/**/*.utils.ts', 'site/src/**/*.utils.ts'],
         thresholds: { perFile: true, ...COVERAGE_THRESHOLDS },
       },
     },

@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
-import { createSession } from './auth.repository';
 import { AUTH_COOKIE_NAME, requireAdminSession } from './auth.middleware';
+import { createSession } from './auth.repository';
 
 function buildGuardedApp() {
   const app = new Hono();
@@ -130,4 +130,3 @@ describe('auth.middleware', () => {
     expect(response.status).toBe(200);
   });
 });
-

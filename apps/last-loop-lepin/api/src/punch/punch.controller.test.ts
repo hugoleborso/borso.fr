@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { createApp } from '../app';
 import { adminSessionCookie, freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { makeEdition, makeRunner } from '../../../test/fixtures';
+import { createApp } from '../app';
 import { insertEdition } from '../edition/edition.repository';
 import { insertRunner } from '../runner/runner.repository';
-import { makeEdition, makeRunner } from '../../../test/fixtures';
 
 const punchResponseSchema = z.object({
   punch: z.object({

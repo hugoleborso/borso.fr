@@ -68,11 +68,8 @@ export function ModePlay({
 
   const completedLineLabel =
     snapshot.uniqueOpening && snapshot.uniqueVariation && snapshot.uniqueLine
-      ? (shortLineName(
-          snapshot.uniqueOpening,
-          snapshot.uniqueVariation,
-          snapshot.uniqueLine,
-        ) ?? snapshot.uniqueVariation.name)
+      ? (shortLineName(snapshot.uniqueOpening, snapshot.uniqueVariation, snapshot.uniqueLine) ??
+        snapshot.uniqueVariation.name)
       : null;
   const celebrationMessage = completedLineLabel
     ? `Line completed — ${completedLineLabel}!`
@@ -105,8 +102,7 @@ export function ModePlay({
         <div className="panel">
           <h3>Play within book</h3>
           <p>
-            Stay in-book by matching any candidate line. Request book moves if you go out of
-            book.
+            Stay in-book by matching any candidate line. Request book moves if you go out of book.
           </p>
           <div className="controls-row">
             <button type="button" className="btn" onClick={machine.reset}>
@@ -151,7 +147,6 @@ export function ModePlay({
           </div>
         </Modal>
       )}
-
     </div>
   );
 }

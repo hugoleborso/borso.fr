@@ -1,6 +1,6 @@
-import { Chessboard, defaultArrowOptions } from 'react-chessboard';
-import type { Arrow } from 'react-chessboard';
 import type { CSSProperties } from 'react';
+import type { Arrow } from 'react-chessboard';
+import { Chessboard, defaultArrowOptions } from 'react-chessboard';
 import type { Side } from '@/state/useAppState';
 import { getBoardAppearance } from '@/theme/boardAppearance';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';

@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { freshDatabase, seedAdminCredentials, truncateAllTables } from '../../../test/database-utils';
+import {
+  freshDatabase,
+  seedAdminCredentials,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import { findValidSession } from './auth.repository';
 import { AuthDeniedError, login, logout, verifySession } from './auth.service';
 
