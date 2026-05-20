@@ -1,0 +1,31 @@
+// Controllers (`*.controller.ts`) must only import domain code from
+// their own service file. The architecture is NestJS-style: the
+// controller dispatches HTTP requests to service methods and shapes
+// the response — no business logic, no `.filter()`/`.map()`/`.reduce()`
+// over domain data, no repository imports, no `.core.ts` imports, no
+// DTO-mapping utils. Anything a controller needs from another domain
+// must be re-exported through its own service so the dependency edge
+// is single and inspectable.
+//
+// The rule fires on any relative import whose source string matches
+// a forbidden suffix (`.repository`, `.core`, `.dto.utils`, `.types`,
+// `.s3`, helpers/, or a cross-domain `<x>.service`). Scoped to
+// `*.controller.ts` via Biome's `overrides` block in `biome.jsonc`.
+
+language js
+
+`import $_ from $source` where {
+  $source <: or {
+    r"['\"].*\.repository['\"]",
+    r"['\"].*\.core['\"]",
+    r"['\"].*\.dto\.utils['\"]",
+    r"['\"].*\.s3['\"]",
+    r"['\"]\.\.\/helpers\/",
+    r"['\"]\.\.\/[^/'\"]+\/[^/'\"]+\.service['\"]"
+  },
+  register_diagnostic(
+    span = $source,
+    message = "Controllers may only import from their own `<x>.service` / `<x>.schema`, from `../auth/auth.middleware`, or from third-party packages. Re-export anything else (domain types, error classes from other services, helper utils) through this domain's own service.",
+    severity = "error"
+  )
+}

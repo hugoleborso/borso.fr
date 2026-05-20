@@ -19,12 +19,6 @@ interface LoopPunchRow {
   readonly userAgent: string | null;
 }
 
-// `source` is `text` (nullable) at the DB level — DSQL would not let us
-// declare it NOT NULL post-creation (cf. punch.schema.ts comment). The
-// app-level invariant is the two-element union — every row is written by
-// a code path that picks either `'admin'` or `'self'`. Anything else
-// (including a stray NULL from a hypothetically broken writer or an
-// out-of-band INSERT) reads as the safer default `'admin'`.
 function narrowPunchSource(raw: string | null): PunchSource {
   return raw === 'self' ? 'self' : 'admin';
 }

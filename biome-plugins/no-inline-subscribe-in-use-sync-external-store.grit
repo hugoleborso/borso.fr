@@ -1,0 +1,37 @@
+// Forbid inline arrow functions as the `subscribe` argument to React's
+// `useSyncExternalStore`. The hook re-subscribes whenever `subscribe`'s
+// identity changes; passing a fresh arrow on every render causes a
+// cleanup-then-resubscribe storm. When the underlying store uses the
+// subscribe callback to lazily start polling (i.e. fires a first fetch
+// when listener count goes from 0 to 1), the storm becomes one extra
+// network request per parent re-render — which compounds with every
+// snapshot change.
+//
+// First observed in PR #23 (`useStandings` in apps/last-loop-lepin),
+// where the spectator page was firing ~14 req/s instead of the
+// intended ~0.5 req/s. After wrapping the subscribe arrow in
+// `useCallback`, traffic dropped 24×. See
+// docs/dantotsus/usesyncexternal-store-subscribe-must-be-stable.md.
+//
+// Allowed forms:
+//   useSyncExternalStore(stableRef, ...)
+//   useSyncExternalStore(useCallback(arrow, deps), ...)
+//
+// Forbidden form:
+//   useSyncExternalStore((listener) => …, ...)
+//   useSyncExternalStore(function(listener) { … }, ...)
+
+language js
+
+`useSyncExternalStore($subscribe, $rest)` as $call where {
+  $subscribe <: or {
+    `($_) => $_`,
+    `function($_) { $_ }`,
+    `function $_($_) { $_ }`,
+  },
+  register_diagnostic(
+    span = $subscribe,
+    message = "The `subscribe` argument to `useSyncExternalStore` must keep the same reference across renders, or React re-subscribes on every render. Wrap in `useCallback(...)` with the relevant deps, or hoist the function to module scope. See docs/dantotsus/usesyncexternal-store-subscribe-must-be-stable.md.",
+    severity = "error"
+  )
+}

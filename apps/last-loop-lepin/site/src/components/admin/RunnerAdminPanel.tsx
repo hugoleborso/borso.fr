@@ -38,6 +38,12 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
     if (file.size > MAX_PHOTO_BYTES) {
       throw new Error('Photo > 5 Mo — refusée côté client.');
     }
+    // `file.type` is `string` per the File DOM type; the API contract
+    // requires the literal union the back validates with zod. Narrow
+    // at the call site so a hostile File doesn't reach the network.
+    if (file.type !== 'image/jpeg' && file.type !== 'image/png' && file.type !== 'image/webp') {
+      throw new Error(`Type d'image refusé (${file.type || 'inconnu'}).`);
+    }
     const presign = await apiClient.adminPresignPhoto({
       editionSlug: edition.slug,
       runnerSlug: slug,

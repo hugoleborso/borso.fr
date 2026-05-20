@@ -144,6 +144,62 @@ For each surviving subject (i.e. not a `merge into` row):
 | **Reusable insight** (something the team should know but isn't really a defect) | We learned how something works; future contributors would benefit. | **Knowledge entry**. Knowledge is broad — anything genuinely useful. |
 | **No-op** | Friction was real but already eradicated by an upstream rule, or genuinely too small. | One-line reason inline in the table. Never a silent skip. |
 
+### 2c. Library-search pass — before writing custom anything
+
+For every subject classified as **real defect** or **design pivot**
+whose draft eradication is *"add a Biome plugin"*, *"add a hook"*,
+*"add a CI script"*, *"build a wrapper / a helper / a custom utility"*,
+or any other "we'll write X" — pause and run a library-search pass
+**before** opening the dantotsu file.
+
+The question to ask: *is there a battle-tested library that, if
+adopted, would make the bug class impossible by deleting our code
+that hosts the bug?* That's a **level-1** eradication (structural
+impossibility) instead of the **level-2** lint rule you were about
+to draft.
+
+The pass is mechanical:
+
+1. Name the *role* of the custom code you'd write. Not the bug — the
+   role. *"Subscribe to an external store and dedupe"* → data-fetching
+   library. *"Type a fetch surface with route inference"* → RPC
+   client. *"Parse XML to GeoJSON"* → geo library. *"Manage form state
+   with validation"* → form library.
+2. Search:
+   - `git grep -l '<topic>' node_modules/.modules.yaml` — is something
+     already installed that we forgot about?
+   - npm / web search for the role + the stack we're on (e.g. *"react
+     data fetching library 2026"*).
+   - Skim the top 2-3 hits' README for *"does this do X?"*.
+3. Evaluate against the context:
+   - Bundle weight (front-side only).
+   - Peer-dep constraints (React version, Node version).
+   - Maintenance signal (last release, open-issue trend).
+   - Surface fit — does the library map onto our domain or fight it?
+4. Decide:
+   - **Adopt** → the eradication is the migration, not the plugin.
+     Promote level from 2 to 1. The plugin can still ship as
+     defence-in-depth, but the *cause* of the bug class has to be
+     deleted.
+   - **Build custom** → document the trade-off in the dantotsu's
+     *Eradication* block: what library was considered, why it didn't
+     fit, what the cost-benefit decision was. Without that note, the
+     next kaizen re-discovers the same library.
+
+**Rule of thumb:** if **three** rows in the inventory touch the same
+*architectural layer* (data fetching, routing, form validation,
+i18n, …), the meta-pattern is *"we built our own where a library
+exists"*. Add an inventory row that says so, classify it as a
+real-defect / design-pivot with level-1 migration as the
+eradication, and merge the three original rows into it. **Reuse
+before reinvent** is the lean rule ; you can build custom *after*
+you've named the libraries you rejected and why.
+
+> *Mirrors [`docs/dantotsus/built-my-own-before-checking-the-library.md`](../../../docs/dantotsus/built-my-own-before-checking-the-library.md)
+> applied at kaizen time instead of implementation time. See also
+> [`docs/knowledge/audit-imported-deps-and-patterns-when-planning.md`](../../../docs/knowledge/audit-imported-deps-and-patterns-when-planning.md)
+> for the planning-stage analogue.*
+
 ### 3. Write the entries
 
 For each surviving subject:

@@ -83,6 +83,17 @@ export interface StaticSiteProps {
     /** CloudFront path pattern. Default: `/api/*`. */
     readonly pathPattern?: string;
   };
+  /**
+   * Enable SPA client-side routing fallback. When true, CloudFront serves
+   * `/index.html` with status 200 on any 404 from S3, so direct navigation
+   * to client-side routes (`/r/alice`, `/admin`, refresh on a deep link)
+   * loads the SPA bundle and the in-app router renders the right view —
+   * including a catch-all route that shows a 404 page if no client route
+   * matches. When false (default), CloudFront serves `/404.jpeg` with the
+   * original 404 status, suitable for multi-page static sites whose paths
+   * map one-to-one to S3 keys (e.g. borso-fr).
+   */
+  readonly spaFallback?: boolean;
 }
 
 /**
@@ -170,12 +181,27 @@ export class StaticSite extends Construct {
       certificate: cert,
       httpVersion: HttpVersion.HTTP2_AND_3,
       priceClass: PriceClass.PRICE_CLASS_100,
-      errorResponses: [
-        // Serve the JPEG directly as the 404 response body (no wrapping HTML).
-        // CloudFront returns the file as-is; S3 supplies the image/jpeg
-        // Content-Type. The browser renders it as a full-page image.
-        { httpStatus: 404, responsePagePath: '/404.jpeg', ttl: Duration.minutes(5) },
-      ],
+      errorResponses: props.spaFallback
+        ? [
+            // SPA fallback: rewrite any 404 to /index.html with status 200,
+            // so the React bundle loads and the in-app router decides
+            // whether to render a real route (/r/alice) or the catch-all
+            // 404 view. Serving the JPEG directly here would short-circuit
+            // the bundle and break direct navigation to SPA routes.
+            {
+              httpStatus: 404,
+              responsePagePath: '/index.html',
+              responseHttpStatus: 200,
+              ttl: Duration.minutes(5),
+            },
+          ]
+        : [
+            // Serve the JPEG directly as the 404 response body (no wrapping
+            // HTML). CloudFront returns the file as-is; S3 supplies the
+            // image/jpeg Content-Type. The browser renders it as a
+            // full-page image.
+            { httpStatus: 404, responsePagePath: '/404.jpeg', ttl: Duration.minutes(5) },
+          ],
     });
 
     if (props.api) {
@@ -201,8 +227,9 @@ export class StaticSite extends Construct {
     // for missing keys instead of 403. The default OAC policy only grants
     // s3:GetObject, which leaves S3 unable to disambiguate "not found" from
     // "forbidden" — so it returns 403 for both. With ListBucket added, S3
-    // can answer NoSuchKey and CloudFront's errorResponses 404 -> /404.jpeg
-    // mapping fires for genuinely-missing paths.
+    // can answer NoSuchKey and CloudFront's errorResponses entry above
+    // (/index.html for SPAs, /404.jpeg otherwise) fires for genuinely-missing
+    // paths.
     bucket.addToResourcePolicy(
       new PolicyStatement({
         actions: ['s3:ListBucket'],

@@ -26,3 +26,13 @@ if echo "$changed" | grep -q '^infra/shared/'; then
   echo "[pre-commit] infra/shared/ changed — running @borso/shared-infra test:coverage"
   pnpm --filter @borso/shared-infra test:coverage
 fi
+
+# DSQL compatibility check on staged migration SQL files. Cheap (~50 ms)
+# enough to be unconditional, but the find inside is no-op when no
+# migration is staged so unrelated work isn't slowed down. Rung-2
+# eradication of docs/dantotsus/dsql-alter-table-only-add-column.md —
+# the dangerous DDL forms can no longer land in a commit.
+if echo "$changed" | grep -q 'api/src/database/migrations/.*\.sql$'; then
+  echo "[pre-commit] migration SQL changed — running DSQL-compat check"
+  ./scripts/check-migration-sql-dsql-compat.sh
+fi

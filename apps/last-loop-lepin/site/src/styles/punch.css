@@ -125,18 +125,8 @@
   letter-spacing: 0.04em;
 }
 
-/* Self-punch modal — full-viewport overlay anchored to the spectator
- * page. The shell renders three siblings in `<SelfPunchModal>`: the
- * backdrop wrapper, a transparent button covering the backdrop (so a
- * click outside the panel dismisses), and the panel itself. CSS is the
- * only thing that turns the wrapper from in-flow content into an
- * overlay — without it the modal stacked below the spectator grid
- * (cf. 2026-05-15 preview screenshot).
- *
- * `position: fixed` + `inset: 0` plus a high `z-index` so it floats
- * above Leaflet (`leaflet-container` ships at z-index 400) and the
- * sticky correction banner. The panel itself recovers pointer events
- * because the dismiss button covers the rest of the backdrop. */
+/* `z-index: 1000` floats above Leaflet (z-index 400) and the sticky
+ * correction banner. */
 .self-punch-modal-backdrop {
   position: fixed;
   inset: 0;

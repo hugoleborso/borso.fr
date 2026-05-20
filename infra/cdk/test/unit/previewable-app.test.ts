@@ -59,6 +59,21 @@ describe('PreviewableApp (prod, full)', () => {
     stageTpl.resourceCountIs('AWS::CloudFormation::CustomResource', 1);
   });
 
+  it('wires SPA fallback on the static distribution (direct nav to /r/<slug> loads index.html)', () => {
+    stageTpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+      DistributionConfig: {
+        CustomErrorResponses: [
+          {
+            ErrorCode: 404,
+            ResponsePagePath: '/index.html',
+            ResponseCode: 200,
+            ErrorCachingMinTTL: 300,
+          },
+        ],
+      },
+    });
+  });
+
   it('emits Frontend, Api and Db outputs', () => {
     const outputs = stageTpl.toJSON().Outputs ?? {};
     const ids = Object.keys(outputs).join('|');

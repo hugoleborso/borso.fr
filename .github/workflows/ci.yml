@@ -51,6 +51,11 @@ jobs:
       # with the pre-commit hook) of
       # docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
       - run: pnpm exec biome lint
+      # DSQL-compat scan on every migration SQL file. Mirrors the
+      # pre-commit hook so a bypass via `git push --no-verify` still
+      # gets caught before merge. Rung-2 eradication (paired with the
+      # hook) of docs/dantotsus/dsql-alter-table-only-add-column.md.
+      - run: ./scripts/check-migration-sql-dsql-compat.sh
       - run: pnpm --filter @borso/infra test:coverage
       - run: pnpm --filter @borso/shared-infra test:coverage
       - run: pnpm -r build
