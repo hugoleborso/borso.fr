@@ -10,7 +10,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Hono } from 'hono';
 import { createApp } from '../app';
-import { loadAppConfig } from './app-config.repository';
+import { loadAppConfig } from './auth.repository';
 import { requireSharedPasswordSession } from './shared-password.middleware';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 

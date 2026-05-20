@@ -11,7 +11,7 @@
 import type { MiddlewareHandler } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { getDatabase } from '../database/client';
-import { loadAppConfig } from './app-config.repository';
+import { loadAppConfig } from './auth.repository';
 import { SESSION_COOKIE_NAME, verifyCookie } from './session-cookie.utils';
 
 export const requireSharedPasswordSession: MiddlewareHandler = async (context, next) => {
