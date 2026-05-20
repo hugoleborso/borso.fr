@@ -13,6 +13,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { z } from 'zod';
+import { Button } from '../../components/atoms/Button';
+import { Card } from '../../components/atoms/Card';
+import { Icon } from '../../components/atoms/Icon';
+import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { SetlistEditor } from '../setlists/SetlistEditor';
@@ -166,39 +170,64 @@ export function SessionDetailPage(): JSX.Element {
     }
   };
 
-  if (loading) return <p className="admin-page-loading">{t('common.loading')}</p>;
-  if (session === null) return <p className="admin-page-error">{error ?? 'not found'}</p>;
+  if (loading) {
+    return (
+      <p className="px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>
+    );
+  }
+  if (session === null) {
+    return (
+      <p className="px-9 py-7 text-danger text-sm" role="alert">
+        {error ?? 'not found'}
+      </p>
+    );
+  }
 
   const renderConcertReadView = (): JSX.Element => (
-    <>
-      <dl className="session-meta">
-        <dt>{t('sessions.venue')}</dt>
-        <dd>{session.venue ?? '—'}</dd>
-        <dt>{t('sessions.capacity')}</dt>
-        <dd>{session.capacity ?? '—'}</dd>
-        <dt>{t('sessions.gear')}</dt>
-        <dd className="session-meta-gear">{session.gear ?? '—'}</dd>
+    <Card className="flex flex-col gap-3">
+      <dl className="grid grid-cols-[140px_1fr] gap-y-2 gap-x-4 text-sm">
+        <dt className="text-[11px] tracking-wider uppercase text-ink-400 font-medium self-center">
+          {t('sessions.venue')}
+        </dt>
+        <dd className="text-ink-900">{session.venue ?? '—'}</dd>
+        <dt className="text-[11px] tracking-wider uppercase text-ink-400 font-medium self-center">
+          {t('sessions.capacity')}
+        </dt>
+        <dd className="text-ink-900 font-mono">{session.capacity ?? '—'}</dd>
+        <dt className="text-[11px] tracking-wider uppercase text-ink-400 font-medium self-center">
+          {t('sessions.gear')}
+        </dt>
+        <dd className="text-ink-700 whitespace-pre-line">{session.gear ?? '—'}</dd>
       </dl>
-      <button
-        type="button"
-        className="admin-page-form-submit"
-        onClick={() => setEditingConcert(true)}
-      >
-        {t('sessions.editConcertDetails')}
-      </button>
-    </>
+      <div>
+        <Button variant="default" onClick={() => setEditingConcert(true)}>
+          <Icon name="edit" size={14} />
+          {t('sessions.editConcertDetails')}
+        </Button>
+      </div>
+    </Card>
   );
 
   return (
-    <section className="session-detail-page">
-      <Link className="back-link" to="/sessions">
+    <section className="px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
+      <Link
+        to="/sessions"
+        className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900 transition-colors no-underline"
+      >
+        <Icon name="chevL" size={14} />
         {t('common.back')}
       </Link>
-      <h2 className="admin-page-title">
-        {t(session.kind === 'concert' ? 'sessions.kindConcert' : 'sessions.kindPractice')} —{' '}
-        {formatSessionDate(session.date, i18n.language)}
-      </h2>
-      {error !== null ? <p className="admin-page-error">{error}</p> : null}
+      <PageHeader
+        crumb={t(
+          session.kind === 'concert' ? 'sessions.kindConcert' : 'sessions.kindPractice',
+        )}
+        title={formatSessionDate(session.date, i18n.language)}
+      />
+      {error !== null ? (
+        <p className="text-danger text-sm" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       {session.kind === 'concert' ? (
         editingConcert ? (
@@ -219,13 +248,16 @@ export function SessionDetailPage(): JSX.Element {
           renderConcertReadView()
         )
       ) : (
-        <div className="session-practice-meta">
-          <label className="admin-page-form-label" htmlFor="practice-prepared-concert">
+        <Card className="flex flex-col gap-2">
+          <label
+            className="text-[11px] tracking-wider uppercase text-ink-400 font-medium"
+            htmlFor="practice-prepared-concert"
+          >
             {t('sessions.preparedConcert')}
           </label>
           <select
             id="practice-prepared-concert"
-            className="admin-page-form-input"
+            className="w-full bg-bg-elev border border-line text-ink-900 rounded-md px-3 py-2 text-[13px] outline-none focus:border-ink-700"
             value={session.preparedConcertId ?? ''}
             onChange={(event) => {
               const next = event.target.value.length === 0 ? null : event.target.value;
@@ -240,22 +272,30 @@ export function SessionDetailPage(): JSX.Element {
             ))}
           </select>
           {preparedConcert !== null ? (
-            <p className="session-practice-link">
+            <p className="text-sm text-ink-500 mt-1">
               {t('sessions.preparesConcert')}{' '}
-              <Link to={`/sessions/${preparedConcert.id}`}>
+              <Link
+                to={`/sessions/${preparedConcert.id}`}
+                className="text-accent hover:underline"
+              >
                 {formatSessionDate(preparedConcert.date, i18n.language)}
                 {preparedConcert.venue !== null ? ` — ${preparedConcert.venue}` : ''}
               </Link>
             </p>
           ) : null}
-        </div>
+        </Card>
       )}
 
-      <h3 className="admin-page-form-title">{t('sessions.setlist')}</h3>
+      <h3 className="font-display italic text-2xl text-ink-900 m-0 mt-4">
+        {t('sessions.setlist')}
+      </h3>
       {setlist === null ? (
-        <button type="button" className="admin-page-form-submit" onClick={() => void buildSetlist()}>
-          {t('sessions.buildSetlist')}
-        </button>
+        <div>
+          <Button variant="accent" onClick={() => void buildSetlist()}>
+            <Icon name="plus" size={14} />
+            {t('sessions.buildSetlist')}
+          </Button>
+        </div>
       ) : (
         <SetlistEditor setlistId={setlist.id} />
       )}

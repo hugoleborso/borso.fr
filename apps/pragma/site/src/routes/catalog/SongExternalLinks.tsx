@@ -8,6 +8,7 @@
 
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Card } from '../../components/atoms/Card';
 import { resolveEmbed } from '../../lib/embed.utils';
 
 export interface SongExternalLinkValue {
@@ -29,33 +30,43 @@ export function SongExternalLinks({ links, onRemove }: SongExternalLinksProps): 
   );
   if (embeds.length === 0) return null;
   return (
-    <section className="song-detail-links">
-      <h3 className="song-detail-section-title">{t('catalog.linksTitle')}</h3>
-      <ul className="song-detail-link-list">
+    <Card>
+      <h3 className="text-[11px] tracking-wider uppercase text-ink-400 font-medium m-0 mb-3">
+        {t('catalog.linksTitle')}
+      </h3>
+      <ul className="flex flex-col gap-2">
         {embeds.map(({ link, embed }, index) => (
           <li
             key={link.url}
-            className={`song-detail-link song-detail-link--${embed.kind}`}
+            className="relative bg-bg border border-line rounded-md p-2 flex items-start gap-2"
           >
-            {embed.kind === 'oembed' ? (
-              <iframe
-                src={embed.iframeSrc}
-                title={`${link.provider}-${link.url}`}
-                width={embed.width}
-                height={embed.height}
-                loading="lazy"
-                referrerPolicy="no-referrer"
-                allow="encrypted-media; autoplay; clipboard-write; picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
-              <a href={embed.href} target="_blank" rel="noreferrer noopener">
-                {embed.href}
-              </a>
-            )}
+            <div className="flex-1 min-w-0">
+              {embed.kind === 'oembed' ? (
+                <iframe
+                  src={embed.iframeSrc}
+                  title={`${link.provider}-${link.url}`}
+                  width={embed.width}
+                  height={embed.height}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  allow="encrypted-media; autoplay; clipboard-write; picture-in-picture"
+                  allowFullScreen
+                  className="rounded-md"
+                />
+              ) : (
+                <a
+                  href={embed.href}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-accent hover:underline break-all"
+                >
+                  {embed.href}
+                </a>
+              )}
+            </div>
             <button
               type="button"
-              className="song-detail-link-remove"
+              className="text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
               onClick={() => onRemove(index)}
               aria-label={t('common.delete')}
             >
@@ -64,6 +75,6 @@ export function SongExternalLinks({ links, onRemove }: SongExternalLinksProps): 
           </li>
         ))}
       </ul>
-    </section>
+    </Card>
   );
 }

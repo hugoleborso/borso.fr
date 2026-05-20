@@ -224,26 +224,39 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     }
   };
 
-  if (loading) return <p className="admin-page-loading">{t('common.loading')}</p>;
+  if (loading) {
+    return <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>;
+  }
 
   return (
-    <div className="setlist-editor">
-      {error !== null ? <p className="admin-page-error">{error}</p> : null}
-      <svg
-        className="energy-sparkline"
-        width={SPARKLINE_GEOMETRY.width}
-        height={SPARKLINE_GEOMETRY.height}
-        viewBox={`0 0 ${SPARKLINE_GEOMETRY.width} ${SPARKLINE_GEOMETRY.height}`}
-        aria-label={t('setlist.energy')}
-      >
-        <path
-          d={sparklinePath(energyValues, SPARKLINE_GEOMETRY)}
-          fill="none"
-          stroke="var(--accent)"
-          strokeWidth="2"
-        />
-      </svg>
-      <ul className="setlist-entries">
+    <div className="flex flex-col gap-4">
+      {error !== null ? (
+        <p className="text-danger text-sm" role="alert">
+          {error}
+        </p>
+      ) : null}
+      <div className="bg-bg-elev border border-line rounded-lg p-4">
+        <div className="text-[10.5px] font-mono uppercase tracking-wider text-ink-400 mb-2">
+          {t('setlist.energy')}
+        </div>
+        <svg
+          width={SPARKLINE_GEOMETRY.width}
+          height={SPARKLINE_GEOMETRY.height}
+          viewBox={`0 0 ${SPARKLINE_GEOMETRY.width} ${SPARKLINE_GEOMETRY.height}`}
+          aria-label={t('setlist.energy')}
+          className="w-full h-12"
+          preserveAspectRatio="none"
+        >
+          <path
+            d={sparklinePath(energyValues, SPARKLINE_GEOMETRY)}
+            fill="none"
+            stroke="var(--color-accent)"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+      <ul className="flex flex-col gap-2">
         {entries.map((entry, index) => {
           const song = songsById[entry.songId];
           const previousSongId =
@@ -272,14 +285,20 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
           );
         })}
       </ul>
-      <details className="setlist-add-song">
-        <summary>{t('setlist.addSong')}</summary>
-        <ul>
+      <details className="bg-bg-sunk border border-line rounded-md p-3">
+        <summary className="cursor-pointer text-sm text-ink-700 font-medium">
+          {t('setlist.addSong')}
+        </summary>
+        <ul className="flex flex-col gap-1 mt-3">
           {songs
             .toSorted((left, right) => left.title.localeCompare(right.title))
             .map((song) => (
               <li key={song.id}>
-                <button type="button" onClick={() => void addEntry(song.id)}>
+                <button
+                  type="button"
+                  onClick={() => void addEntry(song.id)}
+                  className="w-full text-left bg-transparent border-0 text-[13px] text-ink-700 hover:bg-bg-elev px-2 py-1 rounded-md cursor-pointer transition-colors"
+                >
                   + {song.title}
                 </button>
               </li>
