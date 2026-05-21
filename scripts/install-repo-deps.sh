@@ -107,4 +107,18 @@ if ! command -v agent-browser >/dev/null 2>&1; then
   fi
 fi
 
+# 7. /tmp/cdk.out staging dirs left by previous sessions can fill the
+# sandbox disk and break vitest with ENOSPC. CDK's AssetStaging copies
+# the asset tree under /tmp/cdk.out<random>/ and doesn't clean up on
+# process exit. Wipe them at SessionStart so a long-running sandbox
+# can't accrete tens of GBs. See
+# docs/knowledge/cdk-out-tmp-fills-the-sandbox-disk.md.
+find /tmp -maxdepth 1 -name 'cdk.out*' -type d -exec rm -rf {} + 2>/dev/null || true
+
+# 8. Branch-context check — flag when the current branch is fully merged
+# into origin/main, which usually means an orchestrator handoff to a
+# stale branch. See
+# docs/dantotsus/designated-branch-was-a-merged-pr-head.md.
+"$REPO_ROOT/scripts/check-branch-context.sh" || true
+
 log "done"

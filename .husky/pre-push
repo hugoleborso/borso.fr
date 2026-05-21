@@ -35,3 +35,19 @@ fi
 # docs/dantotsus/vite-non-module-script-tags-arent-bundled.md.
 echo "[pre-push] checking app HTML for non-module <script src> tags"
 scripts/check-non-module-scripts.sh
+
+# Detection nudge: agent-authored branches (claude/*) almost always
+# have an open PR with reviewer threads. Print a reminder so the
+# agent's next response addresses unresolved review threads BEFORE
+# treating "push succeeded" as the all-clear signal. Rung-4
+# eradication of
+# docs/dantotsus/pushed-without-reading-pr-review-comments.md.
+current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')
+case "$current_branch" in
+  claude/*)
+    printf '\n⚠️  [pre-push] pushing on %s.\n' "$current_branch" >&2
+    printf '   If this branch has an open PR, fetch and address any\n' >&2
+    printf '   unresolved review threads BEFORE relying on this push.\n' >&2
+    printf '   Use: mcp__github__pull_request_read method:get_review_comments\n\n' >&2
+    ;;
+esac

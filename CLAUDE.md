@@ -17,7 +17,7 @@ Anything else is a bug in the system. **Operational rule:** when a conversation 
 ## Tone & rigor
 
 - **No invented numbers.** If you don't know a price, latency, capacity, or throughput, say so — or pull it from `aws … get-…`, the AWS pricing pages, or Cost Explorer. Never round to a memorable figure and pass it off as known.
-- **Verify before asserting.** When a claim depends on the state of the repo or live AWS, check it. The branch you're on can be far behind `main`; fetch and confirm. Don't restate from memory — paste the relevant source.
+- **Verify before asserting — bind the claim to an artefact.** If your answer describes a specific file, function, line, or AWS resource, the artefact must have been Read / Grep'd / `aws … get-…`'d **this session** before you describe it. Citing `<path>:<line>` without that prior tool call is a fabrication, even if the narrative is otherwise correct. *"I think CloudFront returns X here"* without an open Read on the file is the failure mode; *"`infra/cdk/src/constructs/static-site.ts:173` returns X"* without a prior Read is worse, because the path lends false authority. The branch you're on can be far behind `main`; fetch and confirm. Don't restate from memory — paste the relevant source. See [`docs/dantotsus/lectured-without-reading-the-code.md`](./docs/dantotsus/lectured-without-reading-the-code.md) for the recurring failure shape.
 - **Verify destructive intent per resource.** Never bundle a `delete` of resource Y into a script aimed at fixing resource X without explicit per-resource confirmation. Each destructive line needs its own thumb-up; no hitchhiking on a related cleanup.
 - **No vague hand-waves.** If you don't know the exact console path or API surface, admit it and ask for a screenshot.
 - **No slang.** Relaxed but professional, between peers.
@@ -57,10 +57,10 @@ Priority order when in tension: (1) make the conversation worth the user's time;
 
 **Never `--no-verify`.** If a hook fails, fix the underlying problem and re-commit. Bypassing the hook silently lands broken code in main; in an AI-driven repo the gates are the safety net.
 
-- **SessionStart** → `scripts/install-repo-deps.sh` (rtk + pnpm deps; AWS CLI v2 installed conditionally when `AWS_ACCESS_KEY_ID` is set).
+- **SessionStart** → `scripts/install-repo-deps.sh` (rtk + pnpm deps; AWS CLI v2 installed conditionally when `AWS_ACCESS_KEY_ID` is set; sweeps `/tmp/cdk.out*` leftover dirs; runs `scripts/check-branch-context.sh` to flag a stale orchestrator-routed branch).
 - **PreToolUse(Bash)** → rtk rewrites commands for token savings.
 - **pre-commit** → if `infra/cdk/**` or `infra/shared/**` changed, runs the matching `test:coverage`.
-- **pre-push** → runs `pnpm exec knip` repo-wide. Push-time, not commit-time, so multi-commit stories aren't blocked mid-refactor.
+- **pre-push** → runs `pnpm exec knip`, `actionlint`, `scripts/check-non-module-scripts.sh`, and the pnpm-reserved-name workflow guard. On `claude/*` branches it also prints a reminder to fetch unresolved review threads via `mcp__github__pull_request_read get_review_comments` before treating the push as the all-clear signal.
 - **commit-msg** → commitlint.
 
 ## AWS access from a session
@@ -107,7 +107,12 @@ If a PR ships zero lessons, that's fine — open the follow-up PR with a note sa
 ## Deployments
 
 - **Preview deploys are automatic.** A preview stack is created/updated on every PR push, and torn down on PR close, by the GitHub Actions workflow.
-- **Prod deploys run from CI on push to `main`, gated by manual approval of the `prod` GitHub environment.** The workflow `.github/workflows/deploy.yml` does the work; Claude never runs `pnpm --filter ... run deploy` locally. **After a PR merges, Claude's deploy-related action is to remind the user to go approve the pending deploy in GitHub Actions** — once approved, the deploy is automatic. The reminder is not optional: a merged PR touching infra or app code sits in the approval queue until Hugo clicks Approve.
+- **Prod deploys run from CI on push to `main`, gated by manual approval of the `prod` GitHub environment.** The workflow `.github/workflows/deploy.yml` does the work; Claude never runs `pnpm --filter ... run deploy` locally.
+- **On every merge webhook (`Outcome: merged`), Claude surfaces TWO paired follow-ups in the same response — not one, not optional:**
+  1. *Approve the pending prod deploy* in GitHub Actions (the deploy sits in the queue until approved; a merged PR touching infra or app code blocks behind the approval).
+  2. *Propose `/after-task-dantotsus`* to capture lessons in a kaizen PR (per *Self-improvement loop* below).
+
+  The asymmetry where one follow-up fires but the other relies on memory is the failure mode this rule exists to prevent. If either step is genuinely a no-op (no infra/app changes for the deploy step; a trivial PR with no lessons for the kaizen step), say so explicitly in the same response — silence is not equivalent to *"no action needed"*. See [`docs/dantotsus/post-merge-deploy-and-kaizen-reminder.md`](./docs/dantotsus/post-merge-deploy-and-kaizen-reminder.md).
 - **Migration cutovers (alias takeovers, bucket renames, CDK construct rewrites) are higher-risk prod deploys.** They additionally require the operator to walk the migration runbook for the affected resource. CloudFront alias takeovers are gated by `scripts/preflight-cloudfront-aliases.sh`; see [`docs/knowledge/cloudfront-cname-uniqueness.md`](./docs/knowledge/cloudfront-cname-uniqueness.md).
 
 ## Don'ts
