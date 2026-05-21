@@ -193,6 +193,36 @@ keeps the two statements `ADD COLUMN source text` and `UPDATE … SET
 source = 'admin'` so a re-deploy on an existing cluster doesn't leave
 old rows visibly NULL on the read side either.
 
+## 11. Non-primary indexes must use `CREATE INDEX ASYNC`
+
+```
+unsupported mode. please use CREATE INDEX ASYNC
+```
+
+Aurora DSQL refuses vanilla `CREATE INDEX` / `CREATE UNIQUE INDEX` and
+demands the `ASYNC` keyword. Non-primary indexes are built
+asynchronously to keep schema changes online: `CREATE INDEX ASYNC`
+returns a `job_id` immediately and the build runs in the background,
+tracked in the `sys.jobs` system view. The AWS grammar is
+`CREATE [UNIQUE] INDEX ASYNC [IF NOT EXISTS] name ...` — `ASYNC` slots
+between `INDEX` and `IF NOT EXISTS`. See the [AWS docs page on
+asynchronous indexes](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html).
+
+drizzle-kit emits standard `CREATE INDEX` with no awareness of DSQL's
+requirement, the same way it emits `USING btree` (§5) and lacks
+`IF NOT EXISTS` (§4).
+
+**Adaptation:** the migration runner's `asyncifyIndex` rewrite in
+`infra/cdk/src/internal/migration-runner/index.ts` injects `ASYNC` at
+the position the AWS grammar demands. It composes with `makeIdempotent`
+(§4) and `stripUsingClause` (§5) so a single drizzle-kit-emitted
+`CREATE INDEX "foo" ON "t" USING btree ("col")` arrives at DSQL as
+`CREATE INDEX ASYNC IF NOT EXISTS "foo" ON "t" ("col")`. First observed
+on the preview deploy of PR #26 (`pragma-pr-26`) on 2026-05-21: the
+`setlist_entry_setlist_id_position_idx` and
+`transition_comment_ordered_pair` indexes in pragma's `0000_initial.sql`
+migration triggered the CFN rollback.
+
 ## Symptoms quick-table
 
 If you see this error… | …it's this divergence
@@ -207,6 +237,7 @@ If you see this error… | …it's this divergence
 - `not authorized to perform: dsql:DbConnectAdmin` → §8
 - `ALTER TABLE ADD COLUMN with constraint not supported` → §10
 - `unsupported ALTER TABLE ALTER COLUMN ... SET NOT NULL statement` → §10
+- `unsupported mode. please use CREATE INDEX ASYNC` → §11
 
 ## See also
 
