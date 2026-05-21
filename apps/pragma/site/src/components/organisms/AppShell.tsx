@@ -29,6 +29,7 @@ import {
   MEMBER_PALETTE,
   memberInitial,
 } from '../atoms/member-palette.utils';
+import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
 import { OfflineBanner } from '../molecules/OfflineBanner';
 import { useNavBadges } from './useNavBadges';
 
@@ -143,15 +144,20 @@ export function AppShell(): JSX.Element {
         ))}
       </div>
 
-      <div className="mt-auto flex items-center gap-2.5 p-2 rounded-md border border-line bg-bg-elev">
-        <Avatar
-          initials={memberInitial(t('shell.meName'))}
-          color={MEMBER_PALETTE.teal}
-          size="md"
-        />
-        <div className="min-w-0">
-          <div className="text-[13px] font-medium truncate">{t('shell.meName')}</div>
-          <div className="text-[10.5px] text-ink-500 truncate">{t('shell.meVersion')}</div>
+      <div className="mt-auto flex flex-col gap-2">
+        <div className="border-t border-line pt-2">
+          <LanguageSwitcher />
+        </div>
+        <div className="flex items-center gap-2.5 p-2 rounded-md border border-line bg-bg-elev">
+          <Avatar
+            initials={memberInitial(t('shell.meName'))}
+            color={MEMBER_PALETTE.teal}
+            size="md"
+          />
+          <div className="min-w-0">
+            <div className="text-[13px] font-medium truncate">{t('shell.meName')}</div>
+            <div className="text-[10.5px] text-ink-500 truncate">{t('shell.meVersion')}</div>
+          </div>
         </div>
       </div>
     </nav>

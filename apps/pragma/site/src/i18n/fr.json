@@ -11,7 +11,11 @@
     "instruments": "Instruments",
     "administrationSection": "Administration",
     "openMenu": "Ouvrir le menu",
-    "closeMenu": "Fermer le menu"
+    "closeMenu": "Fermer le menu",
+    "language": {
+      "fr": "FR",
+      "en": "EN"
+    }
   },
   "shell": {
     "meName": "Hugo",
