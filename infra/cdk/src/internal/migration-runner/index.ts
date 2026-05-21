@@ -134,12 +134,37 @@ function stripUsingClause(statement: string): string {
   return statement.replace(/\)\s+USING\s+\w+\s+/i, ') ').replace(/\bUSING\s+\w+\s+\(/i, '(');
 }
 
+/**
+ * Inject the `ASYNC` keyword into `CREATE [UNIQUE] INDEX` statements so
+ * Aurora DSQL accepts them. DSQL rejects vanilla `CREATE INDEX` with
+ * `unsupported mode. please use CREATE INDEX ASYNC` — non-primary indexes
+ * are built asynchronously to keep schema changes online, and the engine
+ * tracks the job in `sys.jobs`. drizzle-kit emits standard `CREATE INDEX`;
+ * this rewrite slots `ASYNC` into the exact position the AWS grammar
+ * demands: `CREATE [UNIQUE] INDEX ASYNC [IF NOT EXISTS] name ...`.
+ *
+ * Idempotent: statements that already contain `ASYNC` are passed through.
+ * Non-CREATE-INDEX statements are passed through.
+ *
+ * See docs/knowledge/dsql-postgres-compat-gaps.md §11.
+ */
+function asyncifyIndex(statement: string): string {
+  if (!/\bCREATE\s+(?:UNIQUE\s+)?INDEX\b/i.test(statement)) return statement;
+  const withoutAsync = statement
+    .replace(/\bINDEX\s+ASYNC\s+/i, 'INDEX ')
+    .replace(/\bIF\s+NOT\s+EXISTS\s+ASYNC\s+/i, 'IF NOT EXISTS ');
+  return withoutAsync.replace(
+    /\b(CREATE\s+(?:UNIQUE\s+)?INDEX)\s+(IF\s+NOT\s+EXISTS\s+)?/i,
+    '$1 ASYNC $2',
+  );
+}
+
 function splitStatements(sql: string): readonly string[] {
   return sql
     .split(STATEMENT_BREAKPOINT)
     .map((chunk) => chunk.trim())
     .filter((chunk) => chunk.length > 0)
-    .map((chunk) => stripUsingClause(makeIdempotent(chunk)));
+    .map((chunk) => asyncifyIndex(stripUsingClause(makeIdempotent(chunk))));
 }
 
 async function schemaExists(sql: postgres.Sql, schemaName: string): Promise<boolean> {
