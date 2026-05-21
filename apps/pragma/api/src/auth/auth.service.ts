@@ -3,10 +3,15 @@
  * hashing + the HMAC key generation around the repository, so the
  * controller carries only request/response shape and never imports
  * crypto or the DB client directly.
+ *
+ * Argon2id is provided by `hash-wasm` (pure WASM, no native bindings)
+ * to keep the Lambda bundle ESM-clean — see
+ * `docs/knowledge/lambda-esm-native-modules.md` for the trap that
+ * pushed us off the native `argon2` package.
  */
 
-import argon2 from 'argon2';
 import { randomBytes } from 'node:crypto';
+import { argon2Verify, argon2id } from 'hash-wasm';
 import type { Database } from '../database/client';
 import {
   type AppConfig,
@@ -16,6 +21,23 @@ import {
 } from './auth.repository';
 
 const HMAC_KEY_BYTES = 32;
+const ARGON2_SALT_BYTES = 16;
+const ARGON2_HASH_LENGTH = 32;
+const ARGON2_MEMORY_KIB = 65536;
+const ARGON2_ITERATIONS = 3;
+const ARGON2_PARALLELISM = 4;
+
+async function hashSharedPassword(password: string): Promise<string> {
+  return await argon2id({
+    password,
+    salt: randomBytes(ARGON2_SALT_BYTES),
+    iterations: ARGON2_ITERATIONS,
+    parallelism: ARGON2_PARALLELISM,
+    memorySize: ARGON2_MEMORY_KIB,
+    hashLength: ARGON2_HASH_LENGTH,
+    outputType: 'encoded',
+  });
+}
 
 export async function getAppConfig(database: Database): Promise<AppConfig | null> {
   return await loadAppConfig(database);
@@ -25,7 +47,7 @@ export async function verifyPassword(
   config: AppConfig,
   password: string,
 ): Promise<boolean> {
-  return await argon2.verify(config.passwordHash, password);
+  return await argon2Verify({ password, hash: config.passwordHash });
 }
 
 export type BootstrapResult = { kind: 'ok' } | { kind: 'already-bootstrapped' };
@@ -37,7 +59,7 @@ export async function bootstrapAuth(
 ): Promise<BootstrapResult> {
   const existing = await loadAppConfig(database);
   if (existing !== null) return { kind: 'already-bootstrapped' };
-  const hash = await argon2.hash(password, { type: argon2.argon2id });
+  const hash = await hashSharedPassword(password);
   const hmacKey = randomBytes(HMAC_KEY_BYTES);
   await insertInitialAppConfig(database, hash, hmacKey, now);
   return { kind: 'ok' };
@@ -52,7 +74,7 @@ export async function rotatePassword(
 ): Promise<RotateResult> {
   const existing = await loadAppConfig(database);
   if (existing === null) return { kind: 'not-bootstrapped' };
-  const hash = await argon2.hash(password, { type: argon2.argon2id });
+  const hash = await hashSharedPassword(password);
   const hmacKey = randomBytes(HMAC_KEY_BYTES);
   await updateAppConfig(database, hash, hmacKey, now);
   return { kind: 'ok' };
