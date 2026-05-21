@@ -84,6 +84,7 @@ Two failure modes to watch for:
 - [`biome-grit-jsx-matching.md`](./biome-grit-jsx-matching.md) — Grit plugins targeting JSX need `engine biome(1.0)` + `language js(jsx)` + the `JsxString()` node ; the JS-string templates from the docs match nothing on JSX attribute literals.
 - [`biome-formatter-trips-line-count-ceiling.md`](./biome-formatter-trips-line-count-ceiling.md) — a `biome check --write` pass can split JSX/ternaries enough to push an untouched file past `noExcessiveLinesPerFile` ; option set + escape hatch.
 - [`ts-narrowing-lost-in-function-declarations.md`](./ts-narrowing-lost-in-function-declarations.md) — TS preserves narrowing in arrow expressions but not in `function` declarations inside the same scope; convert helpers in `useEffect` to arrow form.
+- [`lambda-esm-native-modules.md`](./lambda-esm-native-modules.md) — ESM-bundled Lambdas crash at cold start on `__dirname is not defined`; the shared banner restores `require`, `__filename`, `__dirname`, and prefer pure-WASM (`hash-wasm`) over native modules (`argon2`, `bcrypt`).
 
 ### Validation tooling
 
