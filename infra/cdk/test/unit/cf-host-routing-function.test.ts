@@ -111,4 +111,83 @@ describe('HOST_ROUTING_FUNCTION_CODE', () => {
       }),
     ).toMatchObject({ uri: '/test-app/pr-7/.well-known/foo/index.html' });
   });
+
+  it('rewrites SPA deep routes for pragma to /<app>/pr-<n>/index.html so the React router takes over', () => {
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'pragma-pr-26.preview.borso.fr' } },
+          uri: '/login',
+        },
+      }),
+    ).toMatchObject({ uri: '/pragma/pr-26/index.html' });
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'pragma-pr-26.preview.borso.fr' } },
+          uri: '/sessions/abc/setlist',
+        },
+      }),
+    ).toMatchObject({ uri: '/pragma/pr-26/index.html' });
+  });
+
+  it('rewrites SPA root and trailing-slash URIs to the bundle index.html for pragma', () => {
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'pragma-pr-26.preview.borso.fr' } },
+          uri: '/',
+        },
+      }),
+    ).toMatchObject({ uri: '/pragma/pr-26/index.html' });
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'pragma-pr-26.preview.borso.fr' } },
+          uri: '/catalog/',
+        },
+      }),
+    ).toMatchObject({ uri: '/pragma/pr-26/index.html' });
+  });
+
+  it('passes SPA asset paths through to S3 with the app/pr-<n> prefix', () => {
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'pragma-pr-26.preview.borso.fr' } },
+          uri: '/assets/index-abc.js',
+        },
+      }),
+    ).toMatchObject({ uri: '/pragma/pr-26/assets/index-abc.js' });
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'last-loop-lepin-pr-12.preview.borso.fr' } },
+          uri: '/favicon.svg',
+        },
+      }),
+    ).toMatchObject({ uri: '/last-loop-lepin/pr-12/favicon.svg' });
+  });
+
+  it('keeps the multi-page directory-rewrite behavior for non-SPA apps (borso-fr)', () => {
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'borso-fr-pr-3.preview.borso.fr' } },
+          uri: '/art/mondrian',
+        },
+      }),
+    ).toMatchObject({ uri: '/borso-fr/pr-3/art/mondrian/index.html' });
+  });
+
+  it('routes the bp-integ-<spa-app> hostname with SPA fallback too', () => {
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'bp-integ-pragma-pr-26.preview.borso.fr' } },
+          uri: '/login',
+        },
+      }),
+    ).toMatchObject({ uri: '/bp-integ/pragma/pr-26/index.html' });
+  });
 });
