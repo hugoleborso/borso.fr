@@ -2,7 +2,7 @@
  * Tiny extractor: API songs ship the chord-chart variant under the
  * `chart` field; the catalog grid only needs the `kind` discriminant.
  * Extracting this resolves the round-5 regression where the page read
- * `chordChart?.kind` and every card therefore showed "pas d'accord"
+ * `chordChart?.kind` and every card therefore showed "pas de partition"
  * regardless of the actual chart attached.
  *
  * Pure, total — `null`/`undefined`/`{}` chart inputs collapse to

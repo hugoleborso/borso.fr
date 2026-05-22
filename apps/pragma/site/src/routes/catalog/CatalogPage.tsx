@@ -35,7 +35,7 @@ const songSchema = z.object({
   // The API returns the chord-chart variant under the `chart` field
   // (see apps/pragma/api/src/songs/songs.schema.ts) — the catalog page
   // mirrors that name. Renaming to `chordChart` here would leave every
-  // card showing "pas d'accord" because the field would always be
+  // card showing "pas de partition" because the field would always be
   // `undefined`.
   chart: z
     .object({
