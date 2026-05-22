@@ -43,7 +43,7 @@ export interface ApiRequestOptions {
   readonly signal?: AbortSignal;
 }
 
-export function resolveApiUrl(path: string): string {
+function resolveApiUrl(path: string): string {
   return API_BASE === '' ? path : `${API_BASE}${path}`;
 }
 
