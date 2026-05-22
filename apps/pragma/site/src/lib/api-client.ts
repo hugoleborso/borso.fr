@@ -7,8 +7,24 @@
  *    on non-2xx so React components can branch on `error.status` (e.g.
  *    redirect to /login on 401).
  *
- * The base URL is `''` at runtime (Vite proxies `/api` to the dev API).
+ * Base URL resolution:
+ *  - When `import.meta.env.VITE_API_BASE` is a non-empty string, every
+ *    `/api/...` path is rewritten to `<VITE_API_BASE><path>` so previews
+ *    hit the per-PR API hostname (`pragma-pr-<n>-api.preview.borso.fr`).
+ *    Preview frontends are served by the shared previews CloudFront,
+ *    which has no per-PR cache-behavior surface, so same-origin /api
+ *    isn't an option there — see docs/knowledge/preview-api-cross-origin.md.
+ *  - Otherwise the path is used as-is (relative), which covers:
+ *      · local `pnpm dev` — Vite proxies /api to localhost:3001.
+ *      · prod — the per-app CloudFront serves the bundle AND forwards
+ *        /api/* to the API origin same-origin (PreviewableApp wiring).
  */
+
+const RAW_API_BASE: unknown = import.meta.env.VITE_API_BASE;
+const API_BASE: string =
+  typeof RAW_API_BASE === 'string' && RAW_API_BASE.length > 0
+    ? RAW_API_BASE.replace(/\/$/, '')
+    : '';
 
 export class ApiError extends Error {
   override readonly name = 'ApiError';
@@ -27,6 +43,10 @@ export interface ApiRequestOptions {
   readonly signal?: AbortSignal;
 }
 
+export function resolveApiUrl(path: string): string {
+  return API_BASE === '' ? path : `${API_BASE}${path}`;
+}
+
 export async function apiRequest(
   path: string,
   options: ApiRequestOptions = {},
@@ -42,7 +62,7 @@ export async function apiRequest(
     init.body = JSON.stringify(options.body);
   }
   if (options.signal !== undefined) init.signal = options.signal;
-  const response = await fetch(path, init);
+  const response = await fetch(resolveApiUrl(path), init);
   const contentType = response.headers.get('content-type') ?? '';
   const body: unknown = contentType.includes('application/json')
     ? await response.json()
