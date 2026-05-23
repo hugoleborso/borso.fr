@@ -113,7 +113,17 @@
     "defaultLineup": "Lineup par défaut",
     "mastery": "Maîtrise",
     "playedRecently": "Joué récemment",
-    "backToCatalog": "Catalogue"
+    "backToCatalog": "Catalogue",
+    "uploadPrompt": "Dépose un fichier ou clique pour choisir",
+    "uploadHint": "PDF, PNG, JPEG, WebP ou HEIC — jusqu'à {{maxMb}} Mo",
+    "uploadInProgress": "Envoi en cours…",
+    "uploadCurrent": "Fichier en ligne",
+    "uploadFailed": "Échec de l'envoi. Réessaie.",
+    "uploadTooLarge": "Fichier trop lourd (max {{maxMb}} Mo).",
+    "uploadUnsupported": "Type de fichier non supporté.",
+    "searchSong": "Chercher un morceau",
+    "searchSongHint": "Tape un titre ou un interprète — résultats MusicBrainz",
+    "searchNoResults": "Aucun résultat."
   },
   "mastery": {
     "title": "Matrice de maîtrise",

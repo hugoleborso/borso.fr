@@ -84,6 +84,7 @@ const ICONS = {
     </>
   ),
   download: <path d="M12 4v12M6 12l6 6 6-6M4 20h16" />,
+  upload: <path d="M12 20V8M6 12l6-6 6 6M4 4h16" />,
   external: (
     <>
       <path d="M14 4h6v6" />

@@ -249,6 +249,7 @@ export function SongEditPage(): JSX.Element {
             tonalityStart={draft.tonalityStart}
             tonalityEnd={draft.tonalityEnd}
             baseEnergy={draft.baseEnergy}
+            {...(songId !== undefined && !isNew ? { songId } : {})}
             onChartKindChange={(kind) => setDraft((current) => ({ ...current, chartKind: kind }))}
             onChordproChange={onChordproChange}
             onPdfKeyChange={(value) => setDraft((current) => ({ ...current, pdfS3Key: value }))}

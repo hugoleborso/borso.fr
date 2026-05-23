@@ -113,7 +113,17 @@
     "defaultLineup": "Default lineup",
     "mastery": "Mastery",
     "playedRecently": "Played recently",
-    "backToCatalog": "Catalog"
+    "backToCatalog": "Catalog",
+    "uploadPrompt": "Drop a file or click to pick",
+    "uploadHint": "PDF, PNG, JPEG, WebP or HEIC up to {{maxMb}} MB",
+    "uploadInProgress": "Uploading…",
+    "uploadCurrent": "Uploaded",
+    "uploadFailed": "Upload failed. Please try again.",
+    "uploadTooLarge": "File too large (max {{maxMb}} MB).",
+    "uploadUnsupported": "Unsupported file type.",
+    "searchSong": "Search a song",
+    "searchSongHint": "Type a title or an artist — results from MusicBrainz",
+    "searchNoResults": "No results."
   },
   "mastery": {
     "title": "Mastery matrix",

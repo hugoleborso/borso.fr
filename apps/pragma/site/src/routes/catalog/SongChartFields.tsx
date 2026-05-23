@@ -4,6 +4,7 @@
  */
 
 import { useTranslation } from 'react-i18next';
+import { FileDrop } from '../../components/molecules/FileDrop';
 import { Input } from '../../components/atoms/Input';
 
 export type SongChartKind = 'none' | 'chordpro' | 'pdf' | 'image';
@@ -16,6 +17,7 @@ interface SongChartFieldsProps {
   readonly tonalityStart: string;
   readonly tonalityEnd: string;
   readonly baseEnergy: string;
+  readonly songId?: string;
   readonly onChartKindChange: (kind: SongChartKind) => void;
   readonly onChordproChange: (text: string) => void;
   readonly onPdfKeyChange: (key: string) => void;
@@ -116,21 +118,25 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
           />
         ) : null}
         {props.chartKind === 'pdf' ? (
-          <Input
-            type="text"
-            value={props.pdfS3Key}
-            onChange={(event) => props.onPdfKeyChange(event.target.value)}
-            placeholder="pdf s3 key"
+          <FileDrop
             className="mt-3"
+            songId={props.songId}
+            currentObjectKey={props.pdfS3Key}
+            onUploaded={(result) => {
+              if (result.kind === 'pdf') props.onPdfKeyChange(result.objectKey);
+              else props.onImageKeyChange(result.objectKey);
+            }}
           />
         ) : null}
         {props.chartKind === 'image' ? (
-          <Input
-            type="text"
-            value={props.imageS3Key}
-            onChange={(event) => props.onImageKeyChange(event.target.value)}
-            placeholder="image s3 key"
+          <FileDrop
             className="mt-3"
+            songId={props.songId}
+            currentObjectKey={props.imageS3Key}
+            onUploaded={(result) => {
+              if (result.kind === 'image') props.onImageKeyChange(result.objectKey);
+              else props.onPdfKeyChange(result.objectKey);
+            }}
           />
         ) : null}
       </fieldset>

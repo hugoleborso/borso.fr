@@ -1,0 +1,153 @@
+/**
+ * FileDrop — drop-zone + file-picker fallback for chord-chart uploads.
+ * Calls `/api/uploads/sign`, PUTs the file to the returned URL, then
+ * emits `{ kind, objectKey }` to the parent so the song form can stamp
+ * the chart variant. Validation lives in `file-drop.utils.ts`.
+ *
+ * The drag-state effect-free pattern: dragenter/dragleave drive a
+ * `useState` flag — event-handler-driven, no `useEffect`.
+ */
+
+import { useRef, useState, type DragEvent, type JSX } from 'react';
+import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
+import { Icon } from '../atoms/Icon';
+import { cn } from '../atoms/cn.utils';
+import { ApiError, apiRequest } from '../../lib/api-client';
+import {
+  FILE_DROP_ACCEPT_ATTRIBUTE,
+  FILE_DROP_MAX_BYTES,
+  type FileDropChartKind,
+  validateChartFile,
+} from './file-drop.utils';
+
+const presignResponseSchema = z.object({
+  uploadUrl: z.string().url(),
+  objectKey: z.string(),
+  expiresAt: z.string(),
+});
+
+export interface FileDropResult {
+  readonly kind: FileDropChartKind;
+  readonly objectKey: string;
+}
+
+export interface FileDropProps {
+  readonly songId?: string;
+  readonly currentObjectKey?: string;
+  readonly onUploaded: (result: FileDropResult) => void;
+  readonly className?: string;
+}
+
+export function FileDrop({
+  songId,
+  currentObjectKey,
+  onUploaded,
+  className,
+}: FileDropProps): JSX.Element {
+  const { t } = useTranslation();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFile = async (file: File): Promise<void> => {
+    setError(null);
+    const validated = validateChartFile(file);
+    if (!validated.ok) {
+      setError(
+        validated.reason === 'too-large'
+          ? t('catalog.uploadTooLarge', { maxMb: Math.round(FILE_DROP_MAX_BYTES / (1024 * 1024)) })
+          : t('catalog.uploadUnsupported'),
+      );
+      return;
+    }
+    setBusy(true);
+    try {
+      const signed = presignResponseSchema.parse(
+        await apiRequest('/api/uploads/sign', {
+          method: 'POST',
+          body: {
+            contentType: file.type,
+            contentLength: file.size,
+            ...(songId !== undefined ? { songId } : {}),
+          },
+        }),
+      );
+      const putResponse = await fetch(signed.uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+      if (!putResponse.ok) {
+        setError(t('catalog.uploadFailed'));
+        return;
+      }
+      onUploaded({ kind: validated.kind, objectKey: signed.objectKey });
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : t('catalog.uploadFailed'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onDragOver = (event: DragEvent<HTMLLabelElement>): void => {
+    event.preventDefault();
+    setDragOver(true);
+  };
+
+  const onDragLeave = (): void => setDragOver(false);
+
+  const onDrop = (event: DragEvent<HTMLLabelElement>): void => {
+    event.preventDefault();
+    setDragOver(false);
+    const dropped = event.dataTransfer.files[0];
+    if (dropped !== undefined) void handleFile(dropped);
+  };
+
+  return (
+    <div className={cn('flex flex-col gap-2', className)}>
+      <label
+        htmlFor="file-drop-input"
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        className={cn(
+          'flex flex-col items-center justify-center gap-2 px-6 py-8 rounded-md border-2 border-dashed cursor-pointer transition-colors',
+          dragOver
+            ? 'border-accent bg-accent/5'
+            : 'border-line text-ink-500 hover:border-ink-700 hover:text-ink-700',
+        )}
+      >
+        <Icon name="upload" size={20} />
+        <span className="text-sm font-medium">
+          {busy ? t('catalog.uploadInProgress') : t('catalog.uploadPrompt')}
+        </span>
+        <span className="text-xs text-ink-400">
+          {t('catalog.uploadHint', { maxMb: Math.round(FILE_DROP_MAX_BYTES / (1024 * 1024)) })}
+        </span>
+        <input
+          ref={inputRef}
+          id="file-drop-input"
+          type="file"
+          accept={FILE_DROP_ACCEPT_ATTRIBUTE}
+          className="hidden"
+          onChange={(event) => {
+            const picked = event.target.files?.[0];
+            if (picked !== undefined) void handleFile(picked);
+          }}
+        />
+      </label>
+      {currentObjectKey !== undefined && currentObjectKey.length > 0 ? (
+        <p className="text-xs text-ink-500 truncate">
+          {t('catalog.uploadCurrent')}: <span className="font-mono">{currentObjectKey}</span>
+        </p>
+      ) : null}
+      {error !== null ? (
+        <p className="text-xs text-danger" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
