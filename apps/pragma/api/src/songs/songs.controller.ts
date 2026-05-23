@@ -4,13 +4,23 @@
 
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { getDatabase } from '../database/client';
 import {
   songCreateInputSchema,
   songIdParamSchema,
   songUpdateInputSchema,
 } from './songs.schema';
-import { createSong, getSongById, getSongs, patchSong, removeSong } from './songs.service';
+import {
+  createSong,
+  getSongById,
+  getSongs,
+  patchSong,
+  removeSong,
+  searchExternal,
+} from './songs.service';
+
+const externalSearchQuerySchema = z.object({ q: z.string().min(1).max(256) });
 
 export function buildSongsRouter(): Hono {
   const router = new Hono();
@@ -18,6 +28,12 @@ export function buildSongsRouter(): Hono {
   router.get('/', async (context) => {
     const songs = await getSongs(getDatabase());
     return context.json({ songs });
+  });
+
+  router.get('/search', zValidator('query', externalSearchQuerySchema), async (context) => {
+    const { q } = context.req.valid('query');
+    const hits = await searchExternal(q);
+    return context.json({ hits });
   });
 
   router.get('/:id', zValidator('param', songIdParamSchema), async (context) => {

@@ -1,0 +1,60 @@
+{
+  "created": "2026-05-20T12:00:00.000Z",
+  "count": 3,
+  "offset": 0,
+  "recordings": [
+    {
+      "id": "fa28c7e7-a3ea-4f5f-9f5d-3a3f2c2b1a01",
+      "score": 100,
+      "title": "Get Lucky",
+      "length": 369000,
+      "video": null,
+      "artist-credit": [
+        {
+          "name": "Daft Punk",
+          "joinphrase": " feat. ",
+          "artist": {
+            "id": "056e4f3e-d505-4dad-8ec1-d04f521cbb56",
+            "name": "Daft Punk",
+            "sort-name": "Daft Punk"
+          }
+        },
+        { "name": "Pharrell Williams", "artist": { "id": "abc", "name": "Pharrell Williams", "sort-name": "Williams, Pharrell" } }
+      ],
+      "first-release-date": "2013-04-19",
+      "releases": []
+    },
+    {
+      "id": "11111111-2222-3333-4444-555555555555",
+      "score": 95,
+      "title": "Happy",
+      "length": 232000,
+      "video": null,
+      "artist-credit": [
+        {
+          "name": "Pharrell Williams",
+          "artist": {
+            "id": "abc",
+            "name": "Pharrell Williams",
+            "sort-name": "Williams, Pharrell"
+          }
+        }
+      ],
+      "first-release-date": "2013-11-21",
+      "releases": []
+    },
+    {
+      "id": "no-date-id",
+      "score": 70,
+      "title": "Untitled",
+      "length": null,
+      "video": null,
+      "artist-credit": [
+        {
+          "name": "Unknown Artist",
+          "artist": { "id": "u1", "name": "Unknown Artist", "sort-name": "Unknown Artist" }
+        }
+      ]
+    }
+  ]
+}

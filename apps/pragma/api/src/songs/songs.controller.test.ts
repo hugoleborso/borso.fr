@@ -4,10 +4,11 @@
  * delete that also removes the song's mastery overrides.
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import MUSICBRAINZ_FIXTURE from './__fixtures__/musicbrainz-sample.json';
 
 const songSchema = z.object({
   id: z.string().uuid(),
@@ -176,6 +177,67 @@ describe('songs controller (back-e2e)', () => {
       overridesEnvelope,
     );
     expect(overridesAfter.overrides).toHaveLength(0);
+  });
+
+  describe('external song search via MusicBrainz', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('requires auth', async () => {
+      const { app } = await buildAuthenticatedApp();
+      const response = await jsonRequest(app, '/api/songs/search?q=happy');
+      expect(response.status).toBe(401);
+    });
+
+    it('proxies a MusicBrainz lookup and returns the mapped hits', async () => {
+      const { app, cookieHeader } = await buildAuthenticatedApp();
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response(JSON.stringify(MUSICBRAINZ_FIXTURE), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+      const response = await jsonRequest(app, `/api/songs/search?q=happy-${Date.now()}`, {
+        cookieHeader,
+      });
+      expect(response.status).toBe(200);
+      const body = await readJson(
+        response,
+        z.object({
+          hits: z.array(
+            z.object({
+              mbid: z.string(),
+              title: z.string(),
+              artist: z.string(),
+              year: z.number().nullable(),
+            }),
+          ),
+        }),
+      );
+      expect(body.hits.length).toBeGreaterThan(0);
+      expect(body.hits[0]?.title).toBe('Get Lucky');
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      const calledUrl = String(fetchSpy.mock.calls[0]?.[0]);
+      expect(calledUrl).toContain('musicbrainz.org/ws/2/recording/');
+      const calledInit = fetchSpy.mock.calls[0]?.[1];
+      const headersRecord = calledInit?.headers;
+      const headersDictionary =
+        headersRecord instanceof Headers
+          ? Object.fromEntries(headersRecord.entries())
+          : (headersRecord ?? {});
+      const userAgentValue =
+        headersDictionary && typeof headersDictionary === 'object' && 'User-Agent' in headersDictionary
+          ? headersDictionary['User-Agent']
+          : undefined;
+      expect(userAgentValue).toContain('Pragma/');
+    });
+
+    it('rejects an empty query', async () => {
+      const { app, cookieHeader } = await buildAuthenticatedApp();
+      const response = await jsonRequest(app, '/api/songs/search?q=', { cookieHeader });
+      expect(response.status).toBe(400);
+    });
   });
 
   it('returns 404 on get / update / delete of a missing id', async () => {
