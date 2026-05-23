@@ -23,6 +23,7 @@ import { Icon } from '../../components/atoms/Icon';
 import { ChartKindIcon } from '../../components/molecules/ChartKindIcon';
 import { MemberChip } from '../../components/molecules/MemberChip';
 import { StatusChip } from '../../components/molecules/StatusChip';
+import { UploadedChartPreview } from '../../components/molecules/UploadedChartPreview';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { resolveEmbed } from '../../lib/embed.utils';
@@ -220,6 +221,18 @@ export function SongDetailPage(): JSX.Element {
               </div>
               <div className="p-4">
                 <ChordChartViewer source={song.chart.text} compact />
+              </div>
+            </Card>
+          ) : null}
+
+          {song.chart !== null && (song.chart.kind === 'pdf' || song.chart.kind === 'image') ? (
+            <Card variant="bare">
+              <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-line bg-bg-sunk">
+                <Icon name={song.chart.kind === 'pdf' ? 'pdf' : 'image'} size={14} className="text-ink-500" />
+                <span className="text-xs font-medium">{t('catalog.previewTitle')}</span>
+              </div>
+              <div className="p-4">
+                <UploadedChartPreview kind={song.chart.kind} objectKey={song.chart.s3Key} />
               </div>
             </Card>
           ) : null}

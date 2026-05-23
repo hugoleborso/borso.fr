@@ -19,6 +19,7 @@ import { Card } from '../../components/atoms/Card';
 import { Icon } from '../../components/atoms/Icon';
 import { Input } from '../../components/atoms/Input';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { SongSearch } from '../../components/molecules/SongSearch';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { ApiError, apiRequest } from '../../lib/api-client';
 import { deriveTonality } from '../../lib/tonality-bridge';
@@ -192,6 +193,14 @@ export function SongEditPage(): JSX.Element {
 
       <Card>
         <form onSubmit={submit} className="flex flex-col gap-2.5">
+          {isNew ? (
+            <SongSearch
+              onPick={(hit) =>
+                setDraft((current) => ({ ...current, title: hit.title, artist: hit.artist }))
+              }
+              className="mb-2"
+            />
+          ) : null}
           <label className={labelClass} htmlFor="song-title">
             {t('catalog.songTitle')}
           </label>
