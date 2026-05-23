@@ -1,12 +1,23 @@
 /**
- * Schema for the uploads bounded context. No DB table — uploads
- * mints presigned PUT URLs (or stub URLs in v1) and returns a
- * `{ s3Key, uploadUrl }` pair; the front-end keeps the key opaque.
+ * Zod input schemas for the uploads bounded context. The presigned-PUT
+ * endpoint enforces an allow-list of content types + a 10 MiB ceiling
+ * on the client-declared content-length. The signed-GET endpoint
+ * accepts an opaque object key the FE received from a previous sign.
  */
 
 import { z } from 'zod';
+import { ALLOWED_UPLOAD_CONTENT_TYPES, MAX_UPLOAD_BYTES } from './uploads.types';
 
-export const uploadRequestSchema = z.object({
-  contentType: z.string().min(1).max(128),
-  ext: z.string().min(1).max(8).regex(/^[a-zA-Z0-9]+$/),
+export const signUploadInputSchema = z.object({
+  contentType: z.enum(ALLOWED_UPLOAD_CONTENT_TYPES),
+  contentLength: z.number().int().positive().max(MAX_UPLOAD_BYTES),
+  contentSha256: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
+  songId: z.string().uuid().optional(),
+});
+
+export const signGetInputSchema = z.object({
+  objectKey: z.string().min(1).max(512),
 });

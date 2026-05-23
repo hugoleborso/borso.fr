@@ -1,20 +1,58 @@
 /**
- * Repository for the uploads bounded context. v1 mints stub keys
- * (no S3 yet — the CDK bucket is provisioned but the Lambda still
- * returns synthetic URLs). The repository exists so the controller
- * never imports `node:crypto` directly and the future swap to a real
- * presigner is a single-file change.
+ * Repository for the uploads bounded context. The only file that
+ * imports `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner`.
+ * Exposes two operations:
+ *  - `presignPutObject` — short-lived PUT URL pinned to a content type.
+ *  - `presignGetObject` — short-lived GET URL the FE renders the
+ *    uploaded chart from (no public bucket policy, no CloudFront).
  */
 
-import { randomBytes } from 'node:crypto';
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-export interface MintedUpload {
-  s3Key: string;
-  uploadUrl: string;
+let cachedClient: S3Client | null = null;
+
+function readEnv(name: string): string | undefined {
+  const value = process.env[name];
+  return value === undefined || value.length === 0 ? undefined : value;
 }
 
-export function mintStubUploadKey(prefix: string, ext: string): MintedUpload {
-  const random = randomBytes(16).toString('hex');
-  const s3Key = `${prefix}/${random}.${ext}`;
-  return { s3Key, uploadUrl: `s3://pragma-uploads-stub/${s3Key}` };
+function getClient(): S3Client {
+  if (cachedClient !== null) return cachedClient;
+  const region = readEnv('AWS_REGION') ?? 'eu-west-3';
+  cachedClient = new S3Client({ region });
+  return cachedClient;
+}
+
+export class UploadsConfigError extends Error {
+  override readonly name = 'UploadsConfigError';
+}
+
+export interface PresignPutParams {
+  readonly objectKey: string;
+  readonly contentType: string;
+  readonly expiresInSeconds: number;
+}
+
+export async function presignPutObject(params: PresignPutParams): Promise<string> {
+  const bucket = readEnv('UPLOADS_BUCKET');
+  if (bucket === undefined) throw new UploadsConfigError('UPLOADS_BUCKET not set');
+  const command = new PutObjectCommand({
+    Bucket: bucket,
+    Key: params.objectKey,
+    ContentType: params.contentType,
+  });
+  return await getSignedUrl(getClient(), command, { expiresIn: params.expiresInSeconds });
+}
+
+export interface PresignGetParams {
+  readonly objectKey: string;
+  readonly expiresInSeconds: number;
+}
+
+export async function presignGetObject(params: PresignGetParams): Promise<string> {
+  const bucket = readEnv('UPLOADS_BUCKET');
+  if (bucket === undefined) throw new UploadsConfigError('UPLOADS_BUCKET not set');
+  const command = new GetObjectCommand({ Bucket: bucket, Key: params.objectKey });
+  return await getSignedUrl(getClient(), command, { expiresIn: params.expiresInSeconds });
 }

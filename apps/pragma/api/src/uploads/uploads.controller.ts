@@ -1,24 +1,31 @@
 /**
- * Upload-URL stubs. Returns `{ s3Key, uploadUrl }` pairs the
- * front-end keeps opaque. Hono routing + Zod parsing only.
+ * Uploads endpoints — presigned PUT for new chart uploads, presigned
+ * GET for rendering existing charts. Both are gated by the shared
+ * session middleware (mounted in `app.ts`).
  */
 
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { uploadRequestSchema } from './uploads.schema';
-import { mintAvatarUpload, mintChordChartUpload } from './uploads.service';
+import { signGetInputSchema, signUploadInputSchema } from './uploads.schema';
+import { mintChartGetUrl, mintChartUpload } from './uploads.service';
 
 export function buildUploadsRouter(): Hono {
   const router = new Hono();
 
-  router.post('/chord-chart', zValidator('json', uploadRequestSchema), (context) => {
-    const { ext } = context.req.valid('json');
-    return context.json(mintChordChartUpload(ext));
+  router.post('/sign', zValidator('json', signUploadInputSchema), async (context) => {
+    const input = context.req.valid('json');
+    const result = await mintChartUpload({
+      contentType: input.contentType,
+      songId: input.songId,
+      now: new Date(),
+    });
+    return context.json(result);
   });
 
-  router.post('/avatar', zValidator('json', uploadRequestSchema), (context) => {
-    const { ext } = context.req.valid('json');
-    return context.json(mintAvatarUpload(ext));
+  router.post('/sign-get', zValidator('json', signGetInputSchema), async (context) => {
+    const input = context.req.valid('json');
+    const result = await mintChartGetUrl({ objectKey: input.objectKey, now: new Date() });
+    return context.json(result);
   });
 
   return router;

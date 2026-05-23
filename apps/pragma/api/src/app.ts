@@ -17,8 +17,8 @@
  *  - `*    /api/setlists`             — setlist entries + reorder, gated.
  *  - `*    /api/transition-comments`  — comments on ordered song pairs, gated.
  *  - `*    /api/bars`                 — CRM CRUD + stage transitions, gated.
- *  - `*    /api/uploads`              — chord chart variants + avatar URL
- *                                       endpoints (S3 stubs), gated.
+ *  - `*    /api/uploads`              — chord chart presigned PUT + GET
+ *                                       URLs, backed by S3, gated.
  *
  * Every gated router mounts `requireSharedPasswordSession` on its first
  * line, so no domain endpoint is callable without a valid session cookie.
