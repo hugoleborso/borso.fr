@@ -27,6 +27,7 @@ export default defineWorkspace([
         'cdk/test/**/*.test.ts',
         'site/src/**/*.utils.test.ts',
         'site/src/**/*.core.test.ts',
+        'site/src/**/*.test.tsx',
       ],
       coverage: {
         provider: 'v8',

@@ -4,8 +4,8 @@
  */
 
 import { useTranslation } from 'react-i18next';
-import { FileDrop } from '../../components/molecules/FileDrop';
 import { Input } from '../../components/atoms/Input';
+import { FileDrop } from '../../components/molecules/FileDrop';
 
 export type SongChartKind = 'none' | 'chordpro' | 'pdf' | 'image';
 
@@ -126,6 +126,7 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
               if (result.kind === 'pdf') props.onPdfKeyChange(result.objectKey);
               else props.onImageKeyChange(result.objectKey);
             }}
+            onRemoved={() => props.onPdfKeyChange('')}
           />
         ) : null}
         {props.chartKind === 'image' ? (
@@ -137,6 +138,7 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
               if (result.kind === 'image') props.onImageKeyChange(result.objectKey);
               else props.onPdfKeyChange(result.objectKey);
             }}
+            onRemoved={() => props.onImageKeyChange('')}
           />
         ) : null}
       </fieldset>

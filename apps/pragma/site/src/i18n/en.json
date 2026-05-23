@@ -199,5 +199,8 @@
     "newBar": "New bar",
     "staleBanner": "{{count}} bars haven't been touched in 60+ days — give them a poke.",
     "staleBadge": "Stale"
+  },
+  "fileDrop": {
+    "remove": "Remove"
   }
 }

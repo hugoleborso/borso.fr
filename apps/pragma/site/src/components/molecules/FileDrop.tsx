@@ -8,12 +8,12 @@
  * `useState` flag — event-handler-driven, no `useEffect`.
  */
 
-import { useRef, useState, type DragEvent, type JSX } from 'react';
+import { type DragEvent, type JSX, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
-import { Icon } from '../atoms/Icon';
-import { cn } from '../atoms/cn.utils';
 import { ApiError, apiRequest } from '../../lib/api-client';
+import { cn } from '../atoms/cn.utils';
+import { Icon } from '../atoms/Icon';
 import {
   FILE_DROP_ACCEPT_ATTRIBUTE,
   FILE_DROP_MAX_BYTES,
@@ -36,6 +36,7 @@ export interface FileDropProps {
   readonly songId?: string;
   readonly currentObjectKey?: string;
   readonly onUploaded: (result: FileDropResult) => void;
+  readonly onRemoved?: () => void;
   readonly className?: string;
 }
 
@@ -43,6 +44,7 @@ export function FileDrop({
   songId,
   currentObjectKey,
   onUploaded,
+  onRemoved,
   className,
 }: FileDropProps): JSX.Element {
   const { t } = useTranslation();
@@ -139,9 +141,23 @@ export function FileDrop({
         />
       </label>
       {currentObjectKey !== undefined && currentObjectKey.length > 0 ? (
-        <p className="text-xs text-ink-500 truncate">
-          {t('catalog.uploadCurrent')}: <span className="font-mono">{currentObjectKey}</span>
-        </p>
+        <div className="flex items-center gap-2 text-xs text-ink-500">
+          <span className="truncate">
+            {t('catalog.uploadCurrent')}: <span className="font-mono">{currentObjectKey}</span>
+          </span>
+          {onRemoved !== undefined ? (
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                onRemoved();
+              }}
+              className="text-ink-500 hover:text-accent text-sm underline-offset-2 hover:underline"
+            >
+              {t('fileDrop.remove')}
+            </button>
+          ) : null}
+        </div>
       ) : null}
       {error !== null ? (
         <p className="text-xs text-danger" role="alert">

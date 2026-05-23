@@ -199,5 +199,8 @@
     "newBar": "Nouveau bar",
     "staleBanner": "{{count}} bars n'ont pas été relancés depuis +60 jours — un petit coup de fil ?",
     "staleBadge": "À relancer"
+  },
+  "fileDrop": {
+    "remove": "Retirer"
   }
 }
