@@ -24,6 +24,8 @@ describe('mapMusicBrainzRecordings', () => {
       disambiguation: 'radio edit',
       tags: ['electronic', 'disco', 'funk', 'house', 'dance'],
       isrcs: ['USQX91300108', 'GBUM71302999', 'USQX91300109'],
+      tonality: null,
+      bpm: null,
     });
     expect(hits[1]).toEqual({
       mbid: '11111111-2222-3333-4444-555555555555',
@@ -37,6 +39,8 @@ describe('mapMusicBrainzRecordings', () => {
       disambiguation: null,
       tags: [],
       isrcs: ['USQ4E1300686'],
+      tonality: null,
+      bpm: null,
     });
   });
 

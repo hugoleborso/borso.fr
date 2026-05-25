@@ -27,6 +27,11 @@ export interface ExternalSongHit {
   readonly disambiguation: string | null;
   readonly tags: readonly string[];
   readonly isrcs: readonly string[];
+  // Filled by the GetSongBPM secondary lookup when the API key is set.
+  // `null` when the upstream returned no match or `GETSONGBPM_API_KEY`
+  // was empty at request time — both are graceful no-ops, never errors.
+  readonly tonality: string | null;
+  readonly bpm: number | null;
 }
 
 const TAGS_MAX = 5;
@@ -148,6 +153,8 @@ export function mapMusicBrainzRecordings(payload: unknown): ExternalSongHit[] {
           : null,
       tags: topTagNames(recording.tags),
       isrcs: (recording.isrcs ?? []).slice(0, ISRCS_MAX),
+      tonality: null,
+      bpm: null,
     });
   }
   return hits;
