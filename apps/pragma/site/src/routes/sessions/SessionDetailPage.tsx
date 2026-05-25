@@ -10,7 +10,7 @@
  */
 
 import type { JSX } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { z } from 'zod';
@@ -22,7 +22,7 @@ import { useSession, useSessionsList, useUpdateSession } from '../../lib/queries
 import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { SetlistEditor } from '../setlists/SetlistEditor';
-import { ConcertEditForm } from './ConcertEditForm';
+import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
 import { ConcertReadView } from './ConcertReadView';
 import { PracticeReadView } from './PracticeReadView';
 
@@ -45,10 +45,6 @@ export function SessionDetailPage(): JSX.Element {
   const createSetlist = useCreateSetlist();
 
   const [editingConcert, setEditingConcert] = useState(false);
-  const [venueDraft, setVenueDraft] = useState('');
-  const [capacityDraft, setCapacityDraft] = useState('');
-  const [gearDraft, setGearDraft] = useState('');
-  const [friendsDraft, setFriendsDraft] = useState<Record<string, number>>({});
   const [localError, setLocalError] = useState<string | null>(null);
 
   const session = sessionQuery.data?.session ?? null;
@@ -56,13 +52,15 @@ export function SessionDetailPage(): JSX.Element {
   const sessions = sessionsQuery.data?.sessions ?? [];
   const setlist = setlistQuery.data?.setlist ?? null;
 
-  useEffect(() => {
-    if (session === null) return;
-    setVenueDraft(session.venue ?? '');
-    setCapacityDraft(session.capacity === null ? '' : String(session.capacity));
-    setGearDraft(session.gear ?? '');
-    setFriendsDraft(parseFriendsCounts(session.friendsCountPerMember));
-  }, [session]);
+  const concertFormInitial = useMemo<ConcertEditFormPayload>(
+    () => ({
+      venue: session?.venue ?? '',
+      capacity: session?.capacity === null || session === null ? '' : String(session.capacity),
+      gear: session?.gear ?? '',
+      friends: session === null ? {} : parseFriendsCounts(session.friendsCountPerMember),
+    }),
+    [session],
+  );
 
   const upcomingConcerts = useMemo(() => {
     const now = Date.now();
@@ -91,17 +89,17 @@ export function SessionDetailPage(): JSX.Element {
     createSetlist.mutate({ sessionId });
   };
 
-  const saveConcertDetails = (): void => {
+  const saveConcertDetails = (payload: ConcertEditFormPayload): void => {
     if (session === null || session.kind !== 'concert') return;
-    const trimmedVenue = venueDraft.trim();
-    const trimmedCapacity = capacityDraft.trim();
+    const trimmedVenue = payload.venue.trim();
+    const trimmedCapacity = payload.capacity.trim();
     updateSession.mutate(
       {
         id: session.id,
         ...(trimmedVenue.length > 0 ? { venue: trimmedVenue } : {}),
         ...(trimmedCapacity.length > 0 ? { capacity: Number(trimmedCapacity) } : {}),
-        gear: gearDraft,
-        friendsCountPerMember: friendsDraft,
+        gear: payload.gear,
+        friendsCountPerMember: payload.friends,
       },
       {
         onSuccess: () => setEditingConcert(false),
@@ -202,15 +200,9 @@ export function SessionDetailPage(): JSX.Element {
       {isConcert ? (
         editingConcert ? (
           <ConcertEditForm
+            key={session.id}
             members={members}
-            venueDraft={venueDraft}
-            capacityDraft={capacityDraft}
-            gearDraft={gearDraft}
-            friendsDraft={friendsDraft}
-            onVenueChange={setVenueDraft}
-            onCapacityChange={setCapacityDraft}
-            onGearChange={setGearDraft}
-            onFriendsChange={setFriendsDraft}
+            initial={concertFormInitial}
             onSubmit={saveConcertDetails}
             onCancel={() => setEditingConcert(false)}
           />
