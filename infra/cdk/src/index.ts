@@ -9,7 +9,7 @@ export type { DsqlClusterProps, IDsqlCluster } from './constructs/dsql-cluster.j
 export { DsqlCluster, lookupDsqlCluster } from './constructs/dsql-cluster.js';
 export type { DsqlClusterStackProps } from './constructs/dsql-cluster-stack.js';
 export { DsqlClusterStack } from './constructs/dsql-cluster-stack.js';
-export type { DsqlSchemaProps } from './constructs/dsql-schema.js';
+export type { DsqlSchemaCloneFromConfig, DsqlSchemaProps } from './constructs/dsql-schema.js';
 export { DsqlSchema } from './constructs/dsql-schema.js';
 export type { LambdaApiProps } from './constructs/lambda-api.js';
 export { LambdaApi } from './constructs/lambda-api.js';

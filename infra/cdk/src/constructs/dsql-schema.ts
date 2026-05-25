@@ -49,6 +49,30 @@ function resolveRunnerEntry(): string {
 /* v8 ignore stop */
 
 /** @beta */
+export interface DsqlSchemaCloneFromConfig {
+  /**
+   * Source schema in the SAME cluster to clone structure + data from.
+   * Typical value: `'prod'` for preview/integ stacks. Same name as
+   * `schemaName` → the runner skips (no self-clone).
+   */
+  readonly sourceSchemaName: string;
+  /**
+   * Table names whose ROWS are skipped during the data step — typically
+   * runtime state (`admin_sessions`, `auth_attempts`) that shouldn't
+   * cross schema boundaries. Their structure is still copied so the
+   * application can write to the empty table after deploy.
+   */
+  readonly tableBlocklist?: readonly string[];
+  /**
+   * Map of `table → columns` whose values are replaced by `NULL` in the
+   * clone INSERT. Use this for any column carrying a reference to a
+   * stage-specific S3 object key, ARN, or URL — the preview's app code
+   * would otherwise dereference prod's bucket and get 403s or worse.
+   */
+  readonly columnsToNullify?: Readonly<Record<string, readonly string[]>>;
+}
+
+/** @beta */
 export interface DsqlSchemaProps {
   readonly app: string;
   readonly stage: Stage;
@@ -65,6 +89,14 @@ export interface DsqlSchemaProps {
    * owned by the app's prod stack and shared across stages.
    */
   readonly cluster: IDsqlCluster;
+  /**
+   * Optional Neon-branch-style clone: before applying migrations on
+   * this schema, copy structure + data from `sourceSchemaName` (same
+   * cluster). The runner skips when the source schema doesn't exist
+   * yet (first-ever deploy of an app) or matches the target. See
+   * `docs/knowledge/dsql-clone-from-prod.md` for the full contract.
+   */
+  readonly cloneFromSchema?: DsqlSchemaCloneFromConfig;
 }
 
 interface MigrationFile {
@@ -176,6 +208,7 @@ export class DsqlSchema extends Construct {
         schemaName: this.schemaName,
         migrations,
         migrationsDigest: digestMigrations(migrations),
+        ...(props.cloneFromSchema !== undefined ? { cloneFromSchema: props.cloneFromSchema } : {}),
       },
     });
 

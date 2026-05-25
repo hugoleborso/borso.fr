@@ -12,7 +12,11 @@ import { isObject, outputValues, resourcesOfType } from './helpers/template.js';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS = path.join(HERE, 'fixtures', 'migrations');
 
-function synth(props: { stage: 'prod' | 'preview' | 'integ'; prNumber?: number }) {
+function synth(props: {
+  stage: 'prod' | 'preview' | 'integ';
+  prNumber?: number;
+  cloneFromSchema?: { readonly sourceSchemaName: string };
+}) {
   const app = new App();
   const stack = new Stack(app, 'TestStack', {
     env: { account: '123456789012', region: 'eu-west-3' },
@@ -27,6 +31,7 @@ function synth(props: { stage: 'prod' | 'preview' | 'integ'; prNumber?: number }
     ...(props.prNumber !== undefined ? { prNumber: props.prNumber } : {}),
     migrationsPath: MIGRATIONS,
     cluster,
+    ...(props.cloneFromSchema !== undefined ? { cloneFromSchema: props.cloneFromSchema } : {}),
   });
   return Template.fromStack(stack);
 }
@@ -55,6 +60,22 @@ describe('DsqlSchema', () => {
     expect(customResource?.Properties?.migrations).toEqual([
       expect.objectContaining({ name: '0001_init.sql' }),
     ]);
+  });
+
+  it('forwards cloneFromSchema config to the custom resource properties when set', () => {
+    const tpl = synth({
+      stage: 'preview',
+      prNumber: 27,
+      cloneFromSchema: { sourceSchemaName: 'prod' },
+    });
+    const [customResource] = resourcesOfType(tpl, 'AWS::CloudFormation::CustomResource');
+    expect(customResource?.Properties?.cloneFromSchema).toEqual({ sourceSchemaName: 'prod' });
+  });
+
+  it('omits cloneFromSchema from the custom resource properties when not set (default)', () => {
+    const tpl = synth({ stage: 'preview', prNumber: 28 });
+    const [customResource] = resourcesOfType(tpl, 'AWS::CloudFormation::CustomResource');
+    expect(customResource?.Properties).not.toHaveProperty('cloneFromSchema');
   });
 
   it('emits a SchemaName output', () => {

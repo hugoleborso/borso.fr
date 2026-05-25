@@ -1,66 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-interface UnsafeCall {
-  readonly query: string;
-  readonly params?: readonly unknown[];
-}
-
-const state: {
-  unsafeCalls: UnsafeCall[];
-  taggedCalls: string[];
-  ended: number;
-  appliedMigrations: Set<string>;
-  /** Test hook: if set, the next `.unsafe()` call rejects with this error. */
-  rejectNextUnsafe: Error | null;
-} = {
-  unsafeCalls: [],
-  taggedCalls: [],
-  ended: 0,
-  appliedMigrations: new Set(),
-  rejectNextUnsafe: null,
-};
-
-/**
- * Minimal subset of the postgres.js `Sql<{}>` shape that the migration
- * runner actually touches at runtime. Declared here so the mock type can
- * be inferred via Object.assign — no `as Sql<...>` casts at the test
- * boundary, no need to satisfy the full library interface.
- */
-type SqlMock = ((
-  strings: TemplateStringsArray,
-  ...values: readonly unknown[]
-) => Promise<unknown[]>) & {
-  unsafe(query: string, params?: readonly unknown[]): Promise<unknown[]>;
-  end(opts: { readonly timeout: number }): Promise<void>;
-};
-
-function makeSql(): SqlMock {
-  const callable = (strings: TemplateStringsArray, ..._values: readonly unknown[]) => {
-    state.taggedCalls.push(strings.join('?'));
-    return Promise.resolve([]);
-  };
-  return Object.assign(callable, {
-    unsafe(query: string, params?: readonly unknown[]) {
-      if (state.rejectNextUnsafe !== null) {
-        const error = state.rejectNextUnsafe;
-        state.rejectNextUnsafe = null;
-        return Promise.reject(error);
-      }
-      state.unsafeCalls.push({ query, ...(params ? { params } : {}) });
-      if (/SELECT name FROM/i.test(query)) {
-        return Promise.resolve([...state.appliedMigrations].map((name) => ({ name })));
-      }
-      if (/INSERT INTO/.test(query) && params?.[0] !== undefined) {
-        state.appliedMigrations.add(String(params[0]));
-      }
-      return Promise.resolve([]);
-    },
-    end(_opts: { readonly timeout: number }) {
-      state.ended++;
-      return Promise.resolve();
-    },
-  });
-}
+import {
+  baseProps,
+  makeSql,
+  resetMigrationRunnerMockState,
+  state,
+} from './helpers/migration-runner-mock.js';
 
 vi.mock('postgres', () => ({
   default: vi.fn(() => makeSql()),
@@ -74,23 +18,8 @@ vi.mock('@aws-sdk/dsql-signer', () => ({
 
 const { handler } = await import('../../src/internal/migration-runner/index.js');
 
-const baseProps = {
-  ServiceToken: 'arn:fake',
-  clusterEndpoint: 'cluster.dsql.eu-west-3.on.aws',
-  region: 'eu-west-3',
-  schemaName: 'test_app',
-  migrations: [
-    { name: '0001_init.sql', sql: 'CREATE TABLE a (id INT);' },
-    { name: '0002_more.sql', sql: 'CREATE TABLE b (id INT);' },
-  ],
-};
-
 beforeEach(() => {
-  state.unsafeCalls = [];
-  state.taggedCalls = [];
-  state.ended = 0;
-  state.appliedMigrations = new Set();
-  state.rejectNextUnsafe = null;
+  resetMigrationRunnerMockState();
 });
 
 afterEach(() => {
