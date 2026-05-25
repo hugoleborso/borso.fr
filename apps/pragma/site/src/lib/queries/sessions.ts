@@ -4,7 +4,10 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
+
+type SessionsListShape = InferResponseType<typeof api.api.sessions.$get>;
 
 export const sessionKeys = {
   all: ['sessions'] as const,
@@ -66,6 +69,37 @@ export function useUpdateSession() {
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: sessionKeys.byId(variables.id) });
       void queryClient.invalidateQueries({ queryKey: sessionKeys.list() });
+    },
+  });
+}
+
+export function useDeleteSession() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id }: { id: string }) => {
+      const response = await api.api.sessions[':id'].$delete({ param: { id } });
+      if (!response.ok) throw new ApiError(response.status, `delete ${response.status}`, null);
+      return response.json();
+    },
+    onMutate: async ({ id }) => {
+      const key = sessionKeys.list();
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<SessionsListShape>(key);
+      queryClient.setQueryData<SessionsListShape>(key, (old) =>
+        old === undefined
+          ? old
+          : { ...old, sessions: old.sessions.filter((session) => session.id !== id) },
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(sessionKeys.list(), context.previous);
+      }
+    },
+    onSettled: (_data, _err, { id }) => {
+      void queryClient.invalidateQueries({ queryKey: sessionKeys.list() });
+      void queryClient.invalidateQueries({ queryKey: sessionKeys.byId(id) });
     },
   });
 }
