@@ -15,7 +15,11 @@ interface SongMusicBrainzPanelProps {
   readonly mbid: string | null;
   readonly tags: readonly string[];
   readonly isrcs: readonly string[];
+  readonly tonality: string | null;
+  readonly bpm: number | null;
 }
+
+const GETSONGBPM_ATTRIBUTION_URL = 'https://getsongbpm.com';
 
 const SECONDS_PER_MINUTE = 60;
 const SECONDS_LABEL_PAD = 2;
@@ -32,6 +36,8 @@ export function SongMusicBrainzPanel({
   mbid,
   tags,
   isrcs,
+  tonality,
+  bpm,
 }: SongMusicBrainzPanelProps): JSX.Element | null {
   const { t } = useTranslation();
   const hasContent =
@@ -39,8 +45,11 @@ export function SongMusicBrainzPanel({
     durationSeconds !== null ||
     mbid !== null ||
     tags.length > 0 ||
-    isrcs.length > 0;
+    isrcs.length > 0 ||
+    tonality !== null ||
+    bpm !== null;
   if (!hasContent) return null;
+  const showAudioFeaturesAttribution = tonality !== null || bpm !== null;
   const labelClass = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
   return (
     <section className="border border-line rounded-md p-3 bg-bg-sunk flex flex-col gap-2">
@@ -56,6 +65,18 @@ export function SongMusicBrainzPanel({
           <div>
             <dt className="text-ink-500">{t('catalog.duration')}</dt>
             <dd className="text-ink-900 font-mono">{formatDuration(durationSeconds)}</dd>
+          </div>
+        ) : null}
+        {tonality !== null ? (
+          <div>
+            <dt className="text-ink-500">{t('catalog.tonality')}</dt>
+            <dd className="text-ink-900 font-mono">{tonality}</dd>
+          </div>
+        ) : null}
+        {bpm !== null ? (
+          <div>
+            <dt className="text-ink-500">{t('catalog.bpm')}</dt>
+            <dd className="text-ink-900 font-mono">{t('catalog.bpmValue', { value: bpm })}</dd>
           </div>
         ) : null}
         {mbid !== null ? (
@@ -86,6 +107,18 @@ export function SongMusicBrainzPanel({
           </div>
         ) : null}
       </dl>
+      {showAudioFeaturesAttribution ? (
+        <p className="text-[10px] text-ink-400 mt-1">
+          <a
+            href={GETSONGBPM_ATTRIBUTION_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="text-ink-500 hover:text-ink-700 underline"
+          >
+            {t('catalog.audioFeaturesAttribution')}
+          </a>
+        </p>
+      ) : null}
     </section>
   );
 }

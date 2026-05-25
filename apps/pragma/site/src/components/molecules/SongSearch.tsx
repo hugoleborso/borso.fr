@@ -36,6 +36,8 @@ export interface ExternalSongHit {
   readonly disambiguation: string | null;
   readonly tags: readonly string[];
   readonly isrcs: readonly string[];
+  readonly tonality: string | null;
+  readonly bpm: number | null;
 }
 
 export interface SongSearchProps {
@@ -112,12 +114,14 @@ interface SongSearchHitRowProps {
 }
 
 function SongSearchHitRow({ hit, onPick }: SongSearchHitRowProps): JSX.Element {
+  const { t } = useTranslation();
   const visibleTags = hit.tags.slice(0, TAGS_DISPLAYED_MAX);
   const secondaryParts: string[] = [];
   if (hit.year !== null) secondaryParts.push(String(hit.year));
   if (hit.album !== null) secondaryParts.push(hit.album);
   if (hit.durationLabel !== null) secondaryParts.push(hit.durationLabel);
   const secondary = secondaryParts.join(' · ');
+  const hasAudioFeatures = hit.tonality !== null || hit.bpm !== null;
   return (
     <button
       type="button"
@@ -146,6 +150,20 @@ function SongSearchHitRow({ hit, onPick }: SongSearchHitRowProps): JSX.Element {
       </div>
       {hit.disambiguation !== null ? (
         <div className="text-[11px] text-ink-400 italic">{hit.disambiguation}</div>
+      ) : null}
+      {hasAudioFeatures ? (
+        <div className="flex gap-1 flex-wrap mt-0.5">
+          {hit.tonality !== null ? (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-bg border border-line text-ink-700 font-mono">
+              {hit.tonality}
+            </span>
+          ) : null}
+          {hit.bpm !== null ? (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-bg border border-line text-ink-700 font-mono">
+              {t('catalog.bpmValue', { value: hit.bpm })}
+            </span>
+          ) : null}
+        </div>
       ) : null}
     </button>
   );
