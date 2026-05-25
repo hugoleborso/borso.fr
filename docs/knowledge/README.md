@@ -63,7 +63,8 @@ Two failure modes to watch for:
 - [`askuserquestion-tool-requires-question-field.md`](./askuserquestion-tool-requires-question-field.md) — `AskUserQuestion` rejects calls that omit the `question` field per item; `header` alone is not enough.
 - [`claude-code-session-attachments-on-disk.md`](./claude-code-session-attachments-on-disk.md) — chat attachments live at `/root/.claude/uploads/<session>/...` (uploads) and inside `/root/.claude/projects/<workspace>/<session>.jsonl` (inlined base64 images); extractable without an explicit tool.
 - [`pr-body-from-cc-ui-skips-skill-sections.md`](./pr-body-from-cc-ui-skips-skill-sections.md) — PRs opened from the Claude Code UI auto-generate a body that omits `## Visual evidence` and `## Validation gaps`; retrofit via `mcp__github__update_pull_request` after open.
-- [`github-mcp-pr-body-sanitizer.md`](./github-mcp-pr-body-sanitizer.md) — `mcp__github__create_pull_request` / `update_pull_request` strip `<details>` blocks, wrap `![]()` image markdown in backticks, and strip pseudo-HTML tags inside inline code. Use raw `<img>` tags + drop `<tag>` inside backticks.
+- [`github-mcp-pr-body-sanitizer.md`](./github-mcp-pr-body-sanitizer.md) — _rewritten 2026-05-21_: the three previously-asserted patterns were not reproducible (PR #26 has working `<details>` and `![]()`). Entry now documents only what survives a round-trip verification, names PR #26 as the control sample, and ships the verification procedure operators run before adding any new claim.
+- [`cdk-out-tmp-fills-the-sandbox-disk.md`](./cdk-out-tmp-fills-the-sandbox-disk.md) — `vitest run` on `infra/cdk/` accretes `/tmp/cdk.out*` staging dirs (~24 MB each, 100s+ on a long-running sandbox), eventually exhausting `/tmp` and breaking the suite with `ENOSPC`. SessionStart now sweeps them; recovery + cause documented.
 
 ### Local dev / Postgres
 
