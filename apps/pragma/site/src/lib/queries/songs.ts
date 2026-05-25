@@ -3,9 +3,15 @@
  * query (`useSongSearch`) is the MusicBrainz proxy; the caller passes
  * a debounced query and the `enabled` flag flips on once the user
  * has typed at least one non-blank character.
+ *
+ * Every cache-touching mutation is optimistic (round 17c): the
+ * `onMutate` snapshot is rolled back in `onError`, and `onSettled`
+ * invalidates to reconcile with the server-issued row (replacing the
+ * temporary id on create, syncing server-defaulted fields on update).
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
 
 export const songKeys = {
@@ -14,6 +20,71 @@ export const songKeys = {
   byId: (id: string) => [...songKeys.all, 'byId', id] as const,
   search: (query: string) => [...songKeys.all, 'search', query] as const,
 };
+
+type SongsListResponse = InferResponseType<typeof api.api.songs.$get>;
+type SongByIdResponse = InferResponseType<(typeof api.api.songs)[':id']['$get']>;
+type SongRow = SongsListResponse['songs'][number];
+type SongCreateVariables = Parameters<typeof api.api.songs.$post>[0]['json'];
+type SongUpdateVariables = { id: string } & Parameters<
+  (typeof api.api.songs)[':id']['$put']
+>[0]['json'];
+
+const NEW_SONG_DEFAULTS: Pick<
+  SongRow,
+  | 'artist'
+  | 'links'
+  | 'chart'
+  | 'tonalityStart'
+  | 'tonalityEnd'
+  | 'defaultLineup'
+  | 'baseEnergy'
+  | 'mbid'
+  | 'album'
+  | 'durationSeconds'
+  | 'isrcs'
+  | 'tags'
+> = {
+  artist: '',
+  links: [],
+  chart: null,
+  tonalityStart: null,
+  tonalityEnd: null,
+  defaultLineup: {},
+  baseEnergy: null,
+  mbid: null,
+  album: null,
+  durationSeconds: null,
+  isrcs: [],
+  tags: [],
+};
+
+function normaliseLinks(links: SongCreateVariables['links']): SongRow['links'] {
+  if (links === undefined) return [];
+  return links.map((link) => ({
+    url: link.url,
+    provider: link.provider,
+    comment: link.comment ?? '',
+  }));
+}
+
+function buildOptimisticSong(id: string, input: SongCreateVariables): SongRow {
+  const createdAt = new Date().toISOString();
+  const { links: inputLinks, ...rest } = input;
+  return {
+    ...NEW_SONG_DEFAULTS,
+    ...rest,
+    links: normaliseLinks(inputLinks),
+    id,
+    createdAt,
+  };
+}
+
+function mergeSongUpdate(existing: SongRow, patch: Omit<SongUpdateVariables, 'id'>): SongRow {
+  const { links: patchLinks, ...rest } = patch;
+  const merged: SongRow = { ...existing, ...rest };
+  if (patchLinks !== undefined) merged.links = normaliseLinks(patchLinks);
+  return merged;
+}
 
 export function useSongsList() {
   return useQuery({
@@ -53,12 +124,28 @@ export function useSongSearch(query: string) {
 export function useCreateSong() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (variables: Parameters<typeof api.api.songs.$post>[0]['json']) => {
+    mutationFn: async (variables: SongCreateVariables) => {
       const response = await api.api.songs.$post({ json: variables });
       if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
       return response.json();
     },
-    onSuccess: () => {
+    onMutate: async (variables) => {
+      const listKey = songKeys.list();
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previousList = queryClient.getQueryData<SongsListResponse>(listKey);
+      const temporaryId = crypto.randomUUID();
+      queryClient.setQueryData<SongsListResponse>(listKey, (old) => {
+        if (old === undefined) return old;
+        return { songs: [buildOptimisticSong(temporaryId, variables), ...old.songs] };
+      });
+      return { previousList };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousList !== undefined) {
+        queryClient.setQueryData(songKeys.list(), context.previousList);
+      }
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: songKeys.all });
     },
   });
@@ -67,9 +154,7 @@ export function useCreateSong() {
 export function useUpdateSong() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (
-      variables: { id: string } & Parameters<typeof api.api.songs[':id']['$put']>[0]['json'],
-    ) => {
+    mutationFn: async (variables: SongUpdateVariables) => {
       const { id, ...rest } = variables;
       const response = await api.api.songs[':id'].$put({
         param: { id },
@@ -78,7 +163,38 @@ export function useUpdateSong() {
       if (!response.ok) throw new ApiError(response.status, `update ${response.status}`, null);
       return response.json();
     },
-    onSuccess: (_data, variables) => {
+    onMutate: async (variables) => {
+      const listKey = songKeys.list();
+      const byIdKey = songKeys.byId(variables.id);
+      await queryClient.cancelQueries({ queryKey: listKey });
+      await queryClient.cancelQueries({ queryKey: byIdKey });
+      const previousList = queryClient.getQueryData<SongsListResponse>(listKey);
+      const previousById = queryClient.getQueryData<SongByIdResponse>(byIdKey);
+      const { id, ...patch } = variables;
+      queryClient.setQueryData<SongsListResponse>(listKey, (old) => {
+        if (old === undefined) return old;
+        return {
+          songs: old.songs.map((song) =>
+            song.id === id ? mergeSongUpdate(song, patch) : song,
+          ),
+        };
+      });
+      queryClient.setQueryData<SongByIdResponse>(byIdKey, (old) => {
+        if (old === undefined) return old;
+        if (!('song' in old)) return old;
+        return { song: mergeSongUpdate(old.song, patch) };
+      });
+      return { previousList, previousById };
+    },
+    onError: (_err, variables, context) => {
+      if (context?.previousList !== undefined) {
+        queryClient.setQueryData(songKeys.list(), context.previousList);
+      }
+      if (context?.previousById !== undefined) {
+        queryClient.setQueryData(songKeys.byId(variables.id), context.previousById);
+      }
+    },
+    onSettled: (_data, _err, variables) => {
       void queryClient.invalidateQueries({ queryKey: songKeys.byId(variables.id) });
       void queryClient.invalidateQueries({ queryKey: songKeys.list() });
     },
@@ -93,7 +209,22 @@ export function useDeleteSong() {
       if (!response.ok) throw new ApiError(response.status, `delete ${response.status}`, null);
       return response.json();
     },
-    onSuccess: () => {
+    onMutate: async (variables) => {
+      const listKey = songKeys.list();
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previousList = queryClient.getQueryData<SongsListResponse>(listKey);
+      queryClient.setQueryData<SongsListResponse>(listKey, (old) => {
+        if (old === undefined) return old;
+        return { songs: old.songs.filter((song) => song.id !== variables.id) };
+      });
+      return { previousList };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousList !== undefined) {
+        queryClient.setQueryData(songKeys.list(), context.previousList);
+      }
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: songKeys.all });
     },
   });
