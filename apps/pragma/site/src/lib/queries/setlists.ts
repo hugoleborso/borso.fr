@@ -65,6 +65,13 @@ export function useSetlistEntries(setlistId: string, enabled = true) {
   });
 }
 
+/**
+ * `onMutate` intentionally absent: the caller awaits `mutateAsync(...)`
+ * to read the server-issued `setlist.id` before navigating to the
+ * editor, so a temp-id optimistic record would block on the entries
+ * fetch (404) until the real id arrives. The latency is bounded by the
+ * single round-trip; optimistic doesn't improve perceived UX here.
+ */
 export function useCreateSetlist() {
   const queryClient = useQueryClient();
   return useMutation({
