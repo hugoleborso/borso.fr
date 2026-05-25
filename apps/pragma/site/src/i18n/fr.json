@@ -156,7 +156,18 @@
     "buildSetlist": "Composer la setlist",
     "editConcertDetails": "Modifier les infos concert",
     "saveConcertDetails": "Enregistrer",
-    "selectMember": "Membre"
+    "selectMember": "Membre",
+    "create": {
+      "concertTitle": "Nouveau concert",
+      "practiceTitle": "Nouvelle répétition",
+      "date": "Date & heure",
+      "submit": "Créer"
+    },
+    "delete": {
+      "confirm": "Supprimer cette session ? Sa setlist (si elle existe) part avec.",
+      "button": "Supprimer",
+      "aria": "Supprimer la session"
+    }
   },
   "setlist": {
     "title": "Setlists",

@@ -156,7 +156,18 @@
     "buildSetlist": "Build setlist",
     "editConcertDetails": "Edit concert details",
     "saveConcertDetails": "Save",
-    "selectMember": "Member"
+    "selectMember": "Member",
+    "create": {
+      "concertTitle": "New concert",
+      "practiceTitle": "New practice",
+      "date": "Date & time",
+      "submit": "Create"
+    },
+    "delete": {
+      "confirm": "Delete this session? Its setlist (if any) goes with it.",
+      "button": "Delete",
+      "aria": "Delete session"
+    }
   },
   "setlist": {
     "title": "Setlists",
