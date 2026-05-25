@@ -13,10 +13,10 @@ import type { JSX } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '../../components/atoms/Badge';
-import { Chip } from '../../components/atoms/Chip';
 import { Icon } from '../../components/atoms/Icon';
 import { cn } from '../../components/atoms/cn.utils';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { BarsList, type BarsListRow } from '../../components/organisms/BarsList';
 import { ApiError } from '../../lib/api';
 import { useBarsList, useCreateBar, useDeleteBar, useUpdateBar } from '../../lib/queries/bars';
 import { formatCapacity } from '../../lib/formatters.utils';
@@ -83,6 +83,19 @@ export function BarsPage(): JSX.Element {
   const queryError =
     barsQuery.error instanceof ApiError ? barsQuery.error.message : null;
   const displayError = localError ?? queryError;
+
+  const listRows = useMemo<BarsListRow[]>(
+    () =>
+      sortedBars.map((bar) => ({
+        id: bar.id,
+        name: bar.name,
+        status: bar.status,
+        city: bar.city,
+        capacity: bar.capacity,
+        isStale: isBarStale(bar),
+      })),
+    [sortedBars, isBarStale],
+  );
 
   const handleFormSubmit = (
     id: string | null,
@@ -176,39 +189,15 @@ export function BarsPage(): JSX.Element {
 
       {view === 'list' ? (
         <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 items-start">
-          <ul className="flex flex-col gap-1.5">
-            {sortedBars.map((bar) => (
-              <li
-                key={bar.id}
-                className={cn(
-                  'flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors',
-                  isBarStale(bar) && 'border-warn/40',
-                )}
-              >
-                <button
-                  type="button"
-                  className="flex-1 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
-                  onClick={() => setFormInitial(initialFromBar(bar))}
-                >
-                  {bar.name}
-                </button>
-                <Chip tone="default">{t(BAR_STATUS_KEY[bar.status])}</Chip>
-                {isBarStale(bar) ? <Badge tone="warn">{t('bars.staleBadge')}</Badge> : null}
-                <span className="text-xs text-ink-500 hidden md:inline">{bar.city ?? ''}</span>
-                <span className="text-xs font-mono text-ink-400 hidden md:inline">
-                  {formatCapacity(bar.capacity)}
-                </span>
-                <button
-                  type="button"
-                  className="text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
-                  onClick={() => handleRemove(bar.id)}
-                  aria-label={t('common.delete')}
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
+          <BarsList
+            bars={listRows}
+            statusLabel={(status) => t(BAR_STATUS_KEY[status])}
+            onSelect={(id) => {
+              const bar = bars.find((entry) => entry.id === id);
+              if (bar !== undefined) setFormInitial(initialFromBar(bar));
+            }}
+            onRemove={handleRemove}
+          />
           <BarForm
             key={formInitial.id ?? 'new'}
             initial={formInitial}
