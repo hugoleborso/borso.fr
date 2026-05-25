@@ -2,16 +2,18 @@
  * Per-song edit + create page. URL `:songId === 'new'` triggers the
  * create flow; `/catalog/:songId/edit` loads the existing song and
  * edits it in place. The read-only `/catalog/:songId` route lives in
- * SongDetailPage.tsx (round-6 fix — the prototype's song detail is
- * a display, not a form).
+ * SongDetailPage.tsx.
  *
  * The form covers the spec's `Song` interface: title, artist, status,
- * tonality, base energy, external links (rendered via SongExternalLinks
- * + embed.utils), and the chord-chart variant.
+ * tonality, base energy, external links, and the chord-chart variant.
+ * Field state is owned by a TanStack Form instance; the form is
+ * keyed on song id so React mounts a fresh instance whenever a
+ * different song is loaded.
  */
 
+import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
@@ -37,6 +39,9 @@ import {
   songStatuses,
 } from './song-draft';
 
+const TITLE_MAX = 256;
+const ARTIST_MAX = 256;
+
 export function SongEditPage(): JSX.Element {
   const { t } = useTranslation();
   const { songId } = useParams<{ songId: string }>();
@@ -46,103 +51,138 @@ export function SongEditPage(): JSX.Element {
   const createSong = useCreateSong();
   const updateSong = useUpdateSong();
   const deleteSong = useDeleteSong();
-  const [draft, setDraft] = useState<SongDraftState>(BLANK_SONG_DRAFT);
   const [localError, setLocalError] = useState<string | null>(null);
   const [newLinkUrl, setNewLinkUrl] = useState('');
 
-  useEffect(() => {
-    if (isNew) return;
-    if (songQuery.data?.song === undefined) return;
+  const defaultValues = useMemo<SongDraftState>(() => {
+    if (isNew) return BLANK_SONG_DRAFT;
+    if (songQuery.data?.song === undefined) return BLANK_SONG_DRAFT;
     const parsed = singleSongSchema.safeParse({ song: songQuery.data.song });
-    if (!parsed.success) {
-      setLocalError('parse-error');
-      return;
-    }
-    setDraft(songFromApi(parsed.data.song));
+    if (!parsed.success) return BLANK_SONG_DRAFT;
+    return songFromApi(parsed.data.song);
   }, [isNew, songQuery.data]);
 
+  const formKey = isNew ? 'new' : `${songId}:${songQuery.data?.song?.id ?? 'loading'}`;
+
   const loading = !isNew && songQuery.isLoading;
-  const queryError =
-    songQuery.error instanceof ApiError ? songQuery.error.message : null;
-  const error = localError ?? queryError;
-
-  const onChordproChange = (text: string): void => {
-    setDraft((current) => {
-      const derived = deriveTonality(text);
-      const startCurrentlyEmpty = current.tonalityStart.length === 0;
-      const endCurrentlyEmpty = current.tonalityEnd.length === 0;
-      return {
-        ...current,
-        chordproText: text,
-        tonalityStart:
-          startCurrentlyEmpty && derived.start !== null ? derived.start : current.tonalityStart,
-        tonalityEnd:
-          endCurrentlyEmpty && derived.end !== null ? derived.end : current.tonalityEnd,
-      };
-    });
-  };
-
-  const addLink = (): void => {
-    const trimmed = newLinkUrl.trim();
-    if (trimmed.length === 0) return;
-    setDraft((current) => ({
-      ...current,
-      links: [...current.links, { url: trimmed, provider: detectProvider(trimmed), comment: '' }],
-    }));
-    setNewLinkUrl('');
-  };
-
-  const removeLink = (index: number): void => {
-    setDraft((current) => ({
-      ...current,
-      links: current.links.filter((_, currentIndex) => currentIndex !== index),
-    }));
-  };
-
-  const submit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-    const trimmed = draft.title.trim();
-    if (trimmed.length === 0) return;
-    const baseEnergyValue = draft.baseEnergy.trim().length === 0 ? null : Number(draft.baseEnergy);
-    const payload = {
-      title: trimmed,
-      artist: draft.artist.trim(),
-      status: draft.status,
-      tonalityStart: draft.tonalityStart.trim().length === 0 ? null : draft.tonalityStart.trim(),
-      tonalityEnd: draft.tonalityEnd.trim().length === 0 ? null : draft.tonalityEnd.trim(),
-      baseEnergy: baseEnergyValue,
-      chart: chartFromDraft(draft),
-      links: draft.links,
-    };
-    try {
-      if (isNew) {
-        const created = await createSong.mutateAsync(payload);
-        navigate(`/catalog/${created.song.id}`, { replace: true });
-      } else if (songId !== undefined) {
-        await updateSong.mutateAsync({ id: songId, ...payload });
-        navigate(`/catalog/${songId}`);
-      }
-    } catch (caught) {
-      setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
-  };
-
-  const remove = async (): Promise<void> => {
-    if (songId === undefined || isNew) return;
-    try {
-      await deleteSong.mutateAsync({ id: songId });
-      navigate('/catalog', { replace: true });
-    } catch (caught) {
-      setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
-  };
+  const queryError = songQuery.error instanceof ApiError ? songQuery.error.message : null;
 
   if (loading) {
     return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
 
+  return (
+    <SongEditPageForm
+      key={formKey}
+      isNew={isNew}
+      songId={songId}
+      defaultValues={defaultValues}
+      onSubmit={async (value) => {
+        const trimmed = value.title.trim();
+        if (trimmed.length === 0) return;
+        const baseEnergyValue =
+          value.baseEnergy.trim().length === 0 ? null : Number(value.baseEnergy);
+        const payload = {
+          title: trimmed,
+          artist: value.artist.trim(),
+          status: value.status,
+          tonalityStart:
+            value.tonalityStart.trim().length === 0 ? null : value.tonalityStart.trim(),
+          tonalityEnd: value.tonalityEnd.trim().length === 0 ? null : value.tonalityEnd.trim(),
+          baseEnergy: baseEnergyValue,
+          chart: chartFromDraft(value),
+          links: value.links,
+        };
+        try {
+          if (isNew) {
+            const created = await createSong.mutateAsync(payload);
+            navigate(`/catalog/${created.song.id}`, { replace: true });
+          } else if (songId !== undefined) {
+            await updateSong.mutateAsync({ id: songId, ...payload });
+            navigate(`/catalog/${songId}`);
+          }
+        } catch (caught) {
+          setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
+        }
+      }}
+      onDelete={async () => {
+        if (songId === undefined || isNew) return;
+        try {
+          await deleteSong.mutateAsync({ id: songId });
+          navigate('/catalog', { replace: true });
+        } catch (caught) {
+          setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
+        }
+      }}
+      newLinkUrl={newLinkUrl}
+      setNewLinkUrl={setNewLinkUrl}
+      error={localError ?? queryError}
+    />
+  );
+}
+
+interface SongEditPageFormProps {
+  readonly isNew: boolean;
+  readonly songId: string | undefined;
+  readonly defaultValues: SongDraftState;
+  readonly onSubmit: (value: SongDraftState) => Promise<void>;
+  readonly onDelete: () => Promise<void>;
+  readonly newLinkUrl: string;
+  readonly setNewLinkUrl: (value: string) => void;
+  readonly error: string | null;
+}
+
+function SongEditPageForm({
+  isNew,
+  songId,
+  defaultValues,
+  onSubmit,
+  onDelete,
+  newLinkUrl,
+  setNewLinkUrl,
+  error,
+}: SongEditPageFormProps): JSX.Element {
+  const { t } = useTranslation();
+  const form = useForm({
+    defaultValues,
+    onSubmit: async ({ value }) => {
+      await onSubmit(value);
+    },
+  });
+
+  const handleChordproChange = (text: string): void => {
+    form.setFieldValue('chordproText', text);
+    const derived = deriveTonality(text);
+    const currentStart = form.getFieldValue('tonalityStart');
+    const currentEnd = form.getFieldValue('tonalityEnd');
+    if (currentStart.length === 0 && derived.start !== null) {
+      form.setFieldValue('tonalityStart', derived.start);
+    }
+    if (currentEnd.length === 0 && derived.end !== null) {
+      form.setFieldValue('tonalityEnd', derived.end);
+    }
+  };
+
+  const addLink = (): void => {
+    const trimmed = newLinkUrl.trim();
+    if (trimmed.length === 0) return;
+    const current = form.getFieldValue('links');
+    form.setFieldValue('links', [
+      ...current,
+      { url: trimmed, provider: detectProvider(trimmed), comment: '' },
+    ]);
+    setNewLinkUrl('');
+  };
+
+  const removeLink = (index: number): void => {
+    const current = form.getFieldValue('links');
+    form.setFieldValue(
+      'links',
+      current.filter((_, currentIndex) => currentIndex !== index),
+    );
+  };
+
   const labelClass = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
-  const inputClass = '';
 
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
@@ -153,20 +193,24 @@ export function SongEditPage(): JSX.Element {
         <Icon name="chevL" size={14} />
         {t('catalog.backToCatalog')}
       </Link>
-      <PageHeader
-        crumb={draft.artist.length > 0 ? draft.artist : t('catalog.crumb')}
-        title={isNew ? t('catalog.newSong') : draft.title}
-        actions={
-          !isNew && songId !== undefined ? (
-            <Link to={`/catalog/${songId}/scene`}>
-              <Button variant="accent" type="button">
-                <Icon name="play" size={14} />
-                {t('catalog.openScene')}
-              </Button>
-            </Link>
-          ) : null
-        }
-      />
+      <form.Subscribe selector={(state) => [state.values.artist, state.values.title] as const}>
+        {([artistValue, titleValue]) => (
+          <PageHeader
+            crumb={artistValue.length > 0 ? artistValue : t('catalog.crumb')}
+            title={isNew ? t('catalog.newSong') : titleValue}
+            actions={
+              !isNew && songId !== undefined ? (
+                <Link to={`/catalog/${songId}/scene`}>
+                  <Button variant="accent" type="button">
+                    <Icon name="play" size={14} />
+                    {t('catalog.openScene')}
+                  </Button>
+                </Link>
+              ) : null
+            }
+          />
+        )}
+      </form.Subscribe>
 
       {error !== null ? (
         <p className="text-danger text-sm" role="alert">
@@ -174,102 +218,146 @@ export function SongEditPage(): JSX.Element {
         </p>
       ) : null}
 
-      {draft.chartKind === 'chordpro' && draft.chordproText.length > 0 ? (
-        <Card variant="bare">
-          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-line bg-bg-sunk">
-            <Icon name="text" size={14} className="text-ink-500" />
-            <span className="text-xs font-medium">{t('catalog.previewTitle')}</span>
-          </div>
-          <div className="p-4">
-            <ChordChartViewer source={draft.chordproText} compact />
-          </div>
-        </Card>
-      ) : null}
+      <form.Subscribe
+        selector={(state) => [state.values.chartKind, state.values.chordproText] as const}
+      >
+        {([chartKindValue, chordproValue]) =>
+          chartKindValue === 'chordpro' && chordproValue.length > 0 ? (
+            <Card variant="bare">
+              <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-line bg-bg-sunk">
+                <Icon name="text" size={14} className="text-ink-500" />
+                <span className="text-xs font-medium">{t('catalog.previewTitle')}</span>
+              </div>
+              <div className="p-4">
+                <ChordChartViewer source={chordproValue} compact />
+              </div>
+            </Card>
+          ) : null
+        }
+      </form.Subscribe>
 
-      <SongExternalLinks links={draft.links} onRemove={removeLink} />
+      <form.Field name="links">
+        {(field) => <SongExternalLinks links={field.state.value} onRemove={removeLink} />}
+      </form.Field>
 
       <Card>
-        <form onSubmit={submit} className="flex flex-col gap-2.5">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            void form.handleSubmit();
+          }}
+          className="flex flex-col gap-2.5"
+        >
           {isNew ? (
             <SongSearch
-              onPick={(hit) =>
-                setDraft((current) => ({ ...current, title: hit.title, artist: hit.artist }))
-              }
+              onPick={(hit) => {
+                form.setFieldValue('title', hit.title);
+                form.setFieldValue('artist', hit.artist);
+              }}
               className="mb-2"
             />
           ) : null}
           <label className={labelClass} htmlFor="song-title">
             {t('catalog.songTitle')}
           </label>
-          <Input
-            id="song-title"
-            type="text"
-            value={draft.title}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, title: event.target.value }))
-            }
-            required
-            maxLength={256}
-            className={inputClass}
-          />
+          <form.Field name="title">
+            {(field) => (
+              <Input
+                id="song-title"
+                type="text"
+                value={field.state.value}
+                onChange={(event) => field.handleChange(event.target.value)}
+                onBlur={field.handleBlur}
+                required
+                maxLength={TITLE_MAX}
+              />
+            )}
+          </form.Field>
 
           <label className={labelClass} htmlFor="song-artist">
             {t('catalog.artist')}
           </label>
-          <Input
-            id="song-artist"
-            type="text"
-            value={draft.artist}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, artist: event.target.value }))
-            }
-            maxLength={256}
-          />
+          <form.Field name="artist">
+            {(field) => (
+              <Input
+                id="song-artist"
+                type="text"
+                value={field.state.value}
+                onChange={(event) => field.handleChange(event.target.value)}
+                onBlur={field.handleBlur}
+                maxLength={ARTIST_MAX}
+              />
+            )}
+          </form.Field>
 
           <label className={labelClass} htmlFor="song-status">
             {t('catalog.status')}
           </label>
-          <select
-            id="song-status"
-            value={draft.status}
-            onChange={(event) => {
-              const parsed = z.enum(songStatuses).safeParse(event.target.value);
-              if (parsed.success) setDraft((current) => ({ ...current, status: parsed.data }));
-            }}
-            className="w-full bg-bg-elev border border-line text-ink-900 rounded-md px-3 py-2 text-[13px] outline-none focus:border-ink-700"
-          >
-            {songStatuses.map((status) => (
-              <option key={status} value={status}>
-                {t(
-                  `catalog.status${status.charAt(0).toUpperCase() + status.slice(1).replace('_r', 'R').replace('_', '')}`,
-                )}
-              </option>
-            ))}
-          </select>
+          <form.Field name="status">
+            {(field) => (
+              <select
+                id="song-status"
+                value={field.state.value}
+                onChange={(event) => {
+                  const parsed = z.enum(songStatuses).safeParse(event.target.value);
+                  if (parsed.success) field.handleChange(parsed.data);
+                }}
+                onBlur={field.handleBlur}
+                className="w-full bg-bg-elev border border-line text-ink-900 rounded-md px-3 py-2 text-[13px] outline-none focus:border-ink-700"
+              >
+                {songStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {t(
+                      `catalog.status${status.charAt(0).toUpperCase() + status.slice(1).replace('_r', 'R').replace('_', '')}`,
+                    )}
+                  </option>
+                ))}
+              </select>
+            )}
+          </form.Field>
 
-          <SongChartFields
-            chartKind={draft.chartKind}
-            chordproText={draft.chordproText}
-            pdfS3Key={draft.pdfS3Key}
-            imageS3Key={draft.imageS3Key}
-            tonalityStart={draft.tonalityStart}
-            tonalityEnd={draft.tonalityEnd}
-            baseEnergy={draft.baseEnergy}
-            {...(songId !== undefined && !isNew ? { songId } : {})}
-            onChartKindChange={(kind) => setDraft((current) => ({ ...current, chartKind: kind }))}
-            onChordproChange={onChordproChange}
-            onPdfKeyChange={(value) => setDraft((current) => ({ ...current, pdfS3Key: value }))}
-            onImageKeyChange={(value) => setDraft((current) => ({ ...current, imageS3Key: value }))}
-            onTonalityStartChange={(value) =>
-              setDraft((current) => ({ ...current, tonalityStart: value }))
+          <form.Subscribe
+            selector={(state) =>
+              [
+                state.values.chartKind,
+                state.values.chordproText,
+                state.values.pdfS3Key,
+                state.values.imageS3Key,
+                state.values.tonalityStart,
+                state.values.tonalityEnd,
+                state.values.baseEnergy,
+              ] as const
             }
-            onTonalityEndChange={(value) =>
-              setDraft((current) => ({ ...current, tonalityEnd: value }))
-            }
-            onBaseEnergyChange={(value) =>
-              setDraft((current) => ({ ...current, baseEnergy: value }))
-            }
-          />
+          >
+            {([
+              chartKindValue,
+              chordproValue,
+              pdfS3KeyValue,
+              imageS3KeyValue,
+              tonalityStartValue,
+              tonalityEndValue,
+              baseEnergyValue,
+            ]) => (
+              <SongChartFields
+                chartKind={chartKindValue}
+                chordproText={chordproValue}
+                pdfS3Key={pdfS3KeyValue}
+                imageS3Key={imageS3KeyValue}
+                tonalityStart={tonalityStartValue}
+                tonalityEnd={tonalityEndValue}
+                baseEnergy={baseEnergyValue}
+                {...(songId !== undefined && !isNew ? { songId } : {})}
+                onChartKindChange={(kind) => form.setFieldValue('chartKind', kind)}
+                onChordproChange={handleChordproChange}
+                onPdfKeyChange={(value) => form.setFieldValue('pdfS3Key', value)}
+                onImageKeyChange={(value) => form.setFieldValue('imageS3Key', value)}
+                onTonalityStartChange={(value) => form.setFieldValue('tonalityStart', value)}
+                onTonalityEndChange={(value) => form.setFieldValue('tonalityEnd', value)}
+                onBaseEnergyChange={(value) => form.setFieldValue('baseEnergy', value)}
+              />
+            )}
+          </form.Subscribe>
 
           <fieldset className="border border-line rounded-md p-3 mt-2">
             <legend className={`${labelClass} px-2`}>{t('catalog.linksTitle')}</legend>
@@ -288,11 +376,19 @@ export function SongEditPage(): JSX.Element {
           </fieldset>
 
           <div className="flex gap-2 mt-3">
-            <Button type="submit" variant="accent">
-              {t('common.save')}
-            </Button>
+            <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+              {([canSubmit, isSubmitting]) => (
+                <Button
+                  type="submit"
+                  variant="accent"
+                  disabled={!canSubmit || isSubmitting}
+                >
+                  {t('common.save')}
+                </Button>
+              )}
+            </form.Subscribe>
             {!isNew ? (
-              <Button type="button" variant="ghost" onClick={() => void remove()}>
+              <Button type="button" variant="ghost" onClick={() => void onDelete()}>
                 <Icon name="trash" size={14} />
                 {t('common.delete')}
               </Button>
