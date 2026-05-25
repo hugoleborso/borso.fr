@@ -5,7 +5,8 @@
   "plugins": [
     "../../biome-plugins/no-type-assertion-except-unknown.grit",
     "../../biome-plugins/no-inline-subscribe-in-use-sync-external-store.grit",
-    "../../biome-plugins/no-direct-api-fetch-in-site.grit"
+    "../../biome-plugins/no-direct-api-fetch-in-site.grit",
+    "../../biome-plugins/no-api-anchor-in-site.grit"
   ],
   "files": {
     "includes": [

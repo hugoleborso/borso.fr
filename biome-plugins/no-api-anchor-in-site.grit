@@ -1,0 +1,56 @@
+// Forbid bare `/api/...` URL literals appearing as a JSX attribute value
+// (`href="/api/foo"`, `action="/api/foo"`, etc.) in site/ code. Sibling
+// rule to `no-direct-api-fetch-in-site.grit` — same root cause, different
+// surface (direct-navigation targets rather than `fetch()` calls).
+//
+// Previews and prod live on different origins from the API: the front
+// sits on a static-site CloudFront distribution that serves only the
+// bundle; the API has its own custom domain
+// (`*-api.preview.borso.fr` / `api.borso.fr`). A bare `/api/...` literal
+// in a JSX `href` therefore opens the static-site CDN, which has no
+// `/api/*` behaviour and falls through to the SPA 404 page.
+//
+// First observed in PR #27, where the new "Stats par boucle (CSV)"
+// button and the pre-existing "Classement (CSV)" button both 404'd on
+// preview while the underlying endpoint returned 200. Symptoms + causal
+// chain in docs/dantotsus/api-anchor-must-use-api-url-on-preview.md.
+//
+// Implementation notes
+// --------------------
+// JSX attribute strings parse to a `JsxString` AST node, NOT to a normal
+// `JsLiteralExpression`. The template `"$_"` only matches the JS string
+// shape, so the `\`"/api/$_"\`` pattern used by the sibling fetch plugin
+// silently misses every JSX attribute. The right shape is to match
+// `JsxString()` directly, then filter the token's literal text with a
+// regex.
+//
+// The literal text of a `JsxString` includes the surrounding quotes —
+// e.g. for `<a href="/api/foo">`, `$s` literally equals `"/api/foo"`.
+// The regex therefore looks for the `/api/` substring INSIDE the quote
+// delimiters: `.*\"/api/.*` matches `"/api/foo"` and `'/api/foo'` after
+// substring search.
+//
+// `engine biome(1.0)` + `language js(jsx)` are required — without them
+// the JSX AST nodes are invisible to the pattern engine. Cf. biome's
+// own test fixtures crates/biome_grit_patterns/tests/specs/tsx/.
+//
+// Allowed:
+//   <a href={apiUrl('/api/foo')}>…</a>   // string is JS, not JSX
+//   <a href="https://…">…</a>            // explicit absolute URL
+//   <a href={someVariableUrl}>…</a>      // not a literal — out of scope
+//
+// Forbidden:
+//   <a href="/api/…">…</a>
+//   <a href='/api/…'>…</a>
+
+engine biome(1.0)
+language js(jsx)
+
+JsxString() as $s where {
+  $s <: r".*[\"']/api/.*",
+  register_diagnostic(
+    span = $s,
+    message = "Bare `/api/...` in a JSX attribute bypasses VITE_API_BASE and 404s on preview (cross-origin API hostname). Wrap with `apiUrl('/api/...')` from `api/client.ts` — eg `href={apiUrl('/api/foo')}`. See docs/dantotsus/api-anchor-must-use-api-url-on-preview.md.",
+    severity = "error"
+  )
+}

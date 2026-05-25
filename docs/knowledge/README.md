@@ -52,6 +52,8 @@ Two failure modes to watch for:
 - [`macos-bsd-vs-aws-cli-quirks.md`](./macos-bsd-vs-aws-cli-quirks.md) — BSD `date`, AWS CLI v2 list-parsing, `fileb://` for binary inputs.
 - [`commitlint-header-100-char-cap.md`](./commitlint-header-100-char-cap.md) — `header-max-length` is hard-capped at 100 chars regardless of scope-enum richness.
 - [`agent-browser-cli-quirks.md`](./agent-browser-cli-quirks.md) — `--executable-path` ignored once daemon runs; `screenshot` takes positional path, not `--output`; Chromium provisioning can fail behind proxies.
+- [`zsh-read-p-coprocess-quirk.md`](./zsh-read-p-coprocess-quirk.md) — `read -rsp "prompt: " var` is bash-only ; zsh reads `-p` as a coprocess flag and errors. Use `printf` + `stty -echo` + `read -r` for portable interactive prompts.
+- [`aws-dsql-cli-token-flag-name.md`](./aws-dsql-cli-token-flag-name.md) — `aws dsql generate-db-connect-admin-auth-token` wants `--hostname <endpoint>` ; the older `--identifier <cluster-id>` form is rejected.
 
 ### pnpm / package management
 
@@ -79,6 +81,8 @@ Two failure modes to watch for:
 
 - [`biome-stack-overflow-on-dist-binaries.md`](./biome-stack-overflow-on-dist-binaries.md) — Biome 2.x stack-overflows on woff/png binaries in `dist/`; turn on `vcs.useIgnoreFile`.
 - [`biome-ignore-must-be-single-line.md`](./biome-ignore-must-be-single-line.md) — Biome `lint:` suppression comments must be a single line directly above the diagnostic; multi-line forms silently no-op.
+- [`biome-grit-jsx-matching.md`](./biome-grit-jsx-matching.md) — Grit plugins targeting JSX need `engine biome(1.0)` + `language js(jsx)` + the `JsxString()` node ; the JS-string templates from the docs match nothing on JSX attribute literals.
+- [`biome-formatter-trips-line-count-ceiling.md`](./biome-formatter-trips-line-count-ceiling.md) — a `biome check --write` pass can split JSX/ternaries enough to push an untouched file past `noExcessiveLinesPerFile` ; option set + escape hatch.
 - [`ts-narrowing-lost-in-function-declarations.md`](./ts-narrowing-lost-in-function-declarations.md) — TS preserves narrowing in arrow expressions but not in `function` declarations inside the same scope; convert helpers in `useEffect` to arrow form.
 
 ### Validation tooling

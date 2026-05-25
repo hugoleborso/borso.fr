@@ -49,11 +49,12 @@ ENDPOINT=$(aws ssm get-parameter \
   --query 'Parameter.Value' \
   --output text)
 
-CLUSTER_ID="${ENDPOINT%%.*}"
-
-echo "+ aws dsql generate-db-connect-admin-auth-token --identifier ${CLUSTER_ID}"
+# Current AWS CLI v2 wants `--hostname <full-endpoint>`, not
+# `--identifier <cluster-id>`. See
+# docs/knowledge/aws-dsql-cli-token-flag-name.md.
+echo "+ aws dsql generate-db-connect-admin-auth-token --hostname ${ENDPOINT}"
 TOKEN=$(aws dsql generate-db-connect-admin-auth-token \
-  --identifier "${CLUSTER_ID}" \
+  --hostname "${ENDPOINT}" \
   --region "${REGION}" \
   --expires-in 3600 \
   --output text)
