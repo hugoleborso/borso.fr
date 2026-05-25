@@ -5,14 +5,15 @@
  *  - SearchBar + FilterPillGroup (status filter with counts),
  *  - CatalogGrid of SongCards (lineup chips, status chip, chart icon).
  *
- * Functional layer untouched: refresh-on-mount, Zod-validated payloads,
- * a "new song" link to /catalog/new.
+ * Data goes through TanStack Query — songs, members, instruments and
+ * mastery defaults each have their own cache key, so navigating away
+ * and back hits a warm cache and the page renders synchronously.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { JSX } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { z } from 'zod';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { FilterPillGroup } from '../../components/molecules/FilterPillGroup';
@@ -20,55 +21,15 @@ import { PageHeader } from '../../components/molecules/PageHeader';
 import { SearchBar } from '../../components/molecules/SearchBar';
 import { CatalogGrid } from '../../components/organisms/CatalogGrid';
 import type { SongCardProps } from '../../components/organisms/SongCard';
-import { ApiError, apiRequest } from '../../lib/api-client';
+import { ApiError } from '../../lib/api';
 import { meanMasteryForSong } from '../../lib/mastery-aggregate.utils';
+import { useInstrumentsList } from '../../lib/queries/instruments';
+import { useMasteryDefaults } from '../../lib/queries/mastery';
+import { useMembersList } from '../../lib/queries/members';
+import { useSongsList } from '../../lib/queries/songs';
 import { extractChartKind } from './chart-kind.utils';
 
-const songSchema = z.object({
-  id: z.string().uuid(),
-  title: z.string(),
-  artist: z.string(),
-  status: z.enum(['idea', 'wip', 'rehearsed', 'concert_ready']),
-  tonalityStart: z.string().nullable(),
-  tonalityEnd: z.string().nullable(),
-  baseEnergy: z.number().nullable(),
-  // The API returns the chord-chart variant under the `chart` field
-  // (see apps/pragma/api/src/songs/songs.schema.ts) — the catalog page
-  // mirrors that name. Renaming to `chordChart` here would leave every
-  // card showing "pas de partition" because the field would always be
-  // `undefined`.
-  chart: z
-    .object({
-      kind: z.enum(['chordpro', 'pdf', 'image']),
-    })
-    .passthrough()
-    .nullable()
-    .optional(),
-  defaultLineup: z.record(z.string(), z.string().nullable()).default({}),
-});
-const songListSchema = z.object({ songs: z.array(songSchema) });
-
-const memberSchema = z.object({
-  id: z.string().uuid(),
-  firstName: z.string(),
-  color: z.string(),
-});
-const memberListSchema = z.object({ members: z.array(memberSchema) });
-
-const instrumentSchema = z.object({ id: z.string().uuid(), name: z.string() });
-const instrumentListSchema = z.object({ instruments: z.array(instrumentSchema) });
-
-const masteryDefaultSchema = z.object({
-  memberId: z.string().uuid(),
-  instrumentId: z.string().uuid(),
-  score: z.number(),
-});
-const masteryDefaultListSchema = z.object({ defaults: z.array(masteryDefaultSchema) });
-
-type Song = z.infer<typeof songSchema>;
-type Member = z.infer<typeof memberSchema>;
-type Instrument = z.infer<typeof instrumentSchema>;
-type MasteryDefault = z.infer<typeof masteryDefaultSchema>;
+type Song = NonNullable<ReturnType<typeof useSongsList>['data']>['songs'][number];
 
 type StatusFilter = 'all' | 'concert_ready' | 'rehearsed' | 'wip' | 'idea';
 
@@ -100,39 +61,29 @@ function compactLineup(
 
 export function CatalogPage(): JSX.Element {
   const { t } = useTranslation();
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [instruments, setInstruments] = useState<Instrument[]>([]);
-  const [masteryDefaults, setMasteryDefaults] = useState<MasteryDefault[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const songsQuery = useSongsList();
+  const membersQuery = useMembersList();
+  const instrumentsQuery = useInstrumentsList();
+  const masteryQuery = useMasteryDefaults();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
-  const refresh = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const [songsBody, membersBody, instrumentsBody, masteryBody] = await Promise.all([
-        apiRequest('/api/songs'),
-        apiRequest('/api/members'),
-        apiRequest('/api/instruments'),
-        apiRequest('/api/mastery/defaults'),
-      ]);
-      setSongs(songListSchema.parse(songsBody).songs);
-      setMembers(memberListSchema.parse(membersBody).members);
-      setInstruments(instrumentListSchema.parse(instrumentsBody).instruments);
-      setMasteryDefaults(masteryDefaultListSchema.parse(masteryBody).defaults);
-      setError(null);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const firstError = songsQuery.error ?? membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error;
+  const errorMessage =
+    firstError instanceof ApiError ? firstError.message : firstError ? 'unknown-error' : null;
+  const loading =
+    songsQuery.isLoading || membersQuery.isLoading || instrumentsQuery.isLoading || masteryQuery.isLoading;
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const songs = useMemo(() => songsQuery.data?.songs ?? [], [songsQuery.data]);
+  const members = useMemo(() => membersQuery.data?.members ?? [], [membersQuery.data]);
+  const instruments = useMemo(
+    () => instrumentsQuery.data?.instruments ?? [],
+    [instrumentsQuery.data],
+  );
+  const masteryDefaults = useMemo(
+    () => masteryQuery.data?.defaults ?? [],
+    [masteryQuery.data],
+  );
 
   const sortedSongs = useMemo(
     () => songs.toSorted((left, right) => left.title.localeCompare(right.title)),
@@ -212,7 +163,7 @@ export function CatalogPage(): JSX.Element {
   });
 
   return (
-    <div className="px-9 py-7 pb-20 max-w-[1280px]">
+    <div className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
       <PageHeader
         crumb={t('catalog.crumb')}
         title={t('catalog.title')}
@@ -242,9 +193,9 @@ export function CatalogPage(): JSX.Element {
         <FilterPillGroup options={filterOptions} value={statusFilter} onChange={setStatusFilter} />
       </div>
 
-      {error !== null && (
+      {errorMessage !== null && (
         <p className="text-danger text-sm mb-4" role="alert">
-          {error}
+          {errorMessage}
         </p>
       )}
       {loading && <p className="text-ink-400 text-sm italic">{t('common.loading')}</p>}

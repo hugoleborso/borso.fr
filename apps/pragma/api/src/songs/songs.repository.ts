@@ -15,23 +15,32 @@ import { desc, eq } from 'drizzle-orm';
 import type { Database } from '../database/client';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
 import { setlistEntryTable } from '../setlists/setlists.schema';
+import { z } from 'zod';
 import {
   chordChartSchema,
   defaultLineupSchema,
+  SONG_STATUSES,
+  songExternalLinkSchema,
   songLinksRowSchema,
   songTable,
 } from './songs.schema';
+
+const songStatusSchema = z.enum(SONG_STATUSES);
+export type SongStatus = (typeof SONG_STATUSES)[number];
+export type SongLink = z.infer<typeof songExternalLinkSchema>;
+export type SongChart = z.infer<typeof chordChartSchema>;
+export type SongDefaultLineup = z.infer<typeof defaultLineupSchema>;
 
 export interface SongRow {
   id: string;
   title: string;
   artist: string;
-  status: string;
-  links: unknown;
-  chart: unknown;
+  status: SongStatus;
+  links: SongLink[];
+  chart: SongChart | null;
   tonalityStart: string | null;
   tonalityEnd: string | null;
-  defaultLineup: unknown;
+  defaultLineup: SongDefaultLineup;
   baseEnergy: number | null;
   createdAt: Date;
 }
@@ -39,12 +48,12 @@ export interface SongRow {
 export interface SongInsertShape {
   title: string;
   artist: string;
-  status: string;
-  links: unknown;
-  chart: unknown;
+  status: SongStatus;
+  links: SongLink[];
+  chart: SongChart | null;
   tonalityStart: string | null;
   tonalityEnd: string | null;
-  defaultLineup: unknown;
+  defaultLineup: SongDefaultLineup;
   baseEnergy: number | null;
 }
 
@@ -89,7 +98,7 @@ function rowToSong(row: SongRawRow): SongRow {
     id: row.id,
     title: row.title,
     artist: row.artist,
-    status: row.status,
+    status: songStatusSchema.parse(row.status),
     links: songLinksRowSchema.parse(linksRaw),
     chart: chartRaw === null ? null : chordChartSchema.parse(chartRaw),
     tonalityStart: row.tonalityStart,
