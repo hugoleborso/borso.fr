@@ -114,6 +114,24 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
     database: {
       migrationsPath: props.migrationsPath,
       cluster: props.cluster,
+      // Neon-branch-style clone: every non-prod schema starts as a copy
+      // of prod's data so the admin PIN (seeded once in prod) carries
+      // over, the editions + runners + punches are realistic for debug,
+      // and the operator doesn't have to re-seed each preview by hand.
+      // Skipped automatically for the prod stack (source === target) and
+      // for the very first app deploy (source doesn't exist yet).
+      // Runtime-state tables (sessions, rate-limit buckets) keep their
+      // structure but no rows; `runners.photo_key` is NULLed so the
+      // preview's CDN doesn't dereference prod's S3 bucket.
+      ...(props.stage !== 'prod'
+        ? {
+            cloneFromSchema: {
+              sourceSchemaName: 'prod',
+              tableBlocklist: ['admin_sessions', 'auth_attempts'],
+              columnsToNullify: { runners: ['photo_key'] },
+            },
+          }
+        : {}),
     },
   });
 
