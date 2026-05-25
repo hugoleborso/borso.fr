@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { apiClient } from '../api/client';
+import { apiClient, apiUrl } from '../api/client';
 import { CorrectionBanner } from '../components/CorrectionBanner';
 import { Countdown } from '../components/Countdown';
 import { CourseMap } from '../components/CourseMap';
@@ -152,7 +152,10 @@ export function SpectatorPage() {
       {isFinished ? (
         <div className="banner row" style={{ justifyContent: 'space-between' }}>
           <span>Course terminée — classement final affiché.</span>
-          <a className="btn btn-sm" href={`/api/standings/${encodeURIComponent(edition.slug)}/csv`}>
+          <a
+            className="btn btn-sm"
+            href={apiUrl(`/api/standings/${encodeURIComponent(edition.slug)}/csv`)}
+          >
             Télécharger le CSV
           </a>
         </div>

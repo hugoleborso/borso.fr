@@ -18,6 +18,18 @@ function readApiBase(): string {
 }
 const API_BASE = readApiBase();
 
+/**
+ * Origin to prepend on direct-navigation links (`<a href>`, file
+ * downloads). Empty string in prod (same-origin, `/api/*` is routed by
+ * CloudFront → API Gateway), the full preview API hostname on preview
+ * (cross-origin). Use `apiUrl('/api/foo')` rather than a bare
+ * `/api/foo` string for any anchor or window.location target that hits
+ * the API.
+ */
+export function apiUrl(pathname: string): string {
+  return `${API_BASE}${pathname}`;
+}
+
 const client = hc<AppType>(API_BASE === '' ? '/' : API_BASE, {
   init: { credentials: 'include' },
 });

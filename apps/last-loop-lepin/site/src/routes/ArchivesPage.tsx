@@ -1,4 +1,4 @@
-import { apiClient } from '../api/client';
+import { apiClient, apiUrl } from '../api/client';
 import { useResource } from '../data/useResource';
 import type { RaceEditionDto } from '../domain/types';
 
@@ -80,12 +80,15 @@ function ArchiveEntry({ edition }: { readonly edition: RaceEditionDto }) {
         )}
       </div>
       <div className="row" style={{ gap: 'var(--d-3)', marginTop: 'var(--d-2)' }}>
-        <a className="btn btn-sm" href={`/api/standings/${encodeURIComponent(edition.slug)}/csv`}>
+        <a
+          className="btn btn-sm"
+          href={apiUrl(`/api/standings/${encodeURIComponent(edition.slug)}/csv`)}
+        >
           Classement (CSV)
         </a>
         <a
           className="btn btn-sm"
-          href={`/api/standings/${encodeURIComponent(edition.slug)}/laps.csv`}
+          href={apiUrl(`/api/standings/${encodeURIComponent(edition.slug)}/laps.csv`)}
         >
           Stats par boucle (CSV)
         </a>
