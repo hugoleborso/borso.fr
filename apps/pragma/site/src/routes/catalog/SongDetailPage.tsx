@@ -13,10 +13,10 @@
  * pressing the Edit button navigates there.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { JSX } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
-import { z } from 'zod';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { Icon } from '../../components/atoms/Icon';
@@ -25,57 +25,13 @@ import { MemberChip } from '../../components/molecules/MemberChip';
 import { StatusChip } from '../../components/molecules/StatusChip';
 import { UploadedChartPreview } from '../../components/molecules/UploadedChartPreview';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
-import { ApiError, apiRequest } from '../../lib/api-client';
+import { ApiError } from '../../lib/api';
+import { useInstrumentsList } from '../../lib/queries/instruments';
+import { useMasteryDefaults } from '../../lib/queries/mastery';
+import { useMembersList } from '../../lib/queries/members';
+import { useSong } from '../../lib/queries/songs';
 import { resolveEmbed } from '../../lib/embed.utils';
 import { extractChartKind } from './chart-kind.utils';
-
-const linkSchema = z.object({
-  url: z.string(),
-  provider: z.enum(['spotify', 'deezer', 'youtube', 'other']),
-  comment: z.string().default(''),
-});
-
-const songSchema = z.object({
-  id: z.string().uuid(),
-  title: z.string(),
-  artist: z.string(),
-  status: z.enum(['idea', 'wip', 'rehearsed', 'concert_ready']),
-  tonalityStart: z.string().nullable(),
-  tonalityEnd: z.string().nullable(),
-  baseEnergy: z.number().nullable(),
-  links: z.array(linkSchema).default([]),
-  defaultLineup: z.record(z.string(), z.string().nullable()).default({}),
-  chart: z
-    .union([
-      z.object({ kind: z.literal('chordpro'), text: z.string() }),
-      z.object({ kind: z.literal('pdf'), s3Key: z.string() }),
-      z.object({ kind: z.literal('image'), s3Key: z.string() }),
-    ])
-    .nullable(),
-});
-const singleSongSchema = z.object({ song: songSchema });
-
-const memberSchema = z.object({
-  id: z.string().uuid(),
-  firstName: z.string(),
-  color: z.string(),
-});
-const memberListSchema = z.object({ members: z.array(memberSchema) });
-
-const instrumentSchema = z.object({ id: z.string().uuid(), name: z.string() });
-const instrumentListSchema = z.object({ instruments: z.array(instrumentSchema) });
-
-const masteryDefaultSchema = z.object({
-  memberId: z.string().uuid(),
-  instrumentId: z.string().uuid(),
-  score: z.number(),
-});
-const masteryDefaultListSchema = z.object({ defaults: z.array(masteryDefaultSchema) });
-
-type Song = z.infer<typeof songSchema>;
-type Member = z.infer<typeof memberSchema>;
-type Instrument = z.infer<typeof instrumentSchema>;
-type MasteryDefault = z.infer<typeof masteryDefaultSchema>;
 
 const MASTERY_BAR_COUNT = 10;
 const MAX_TONALITY_RENDER_LENGTH = 16;
@@ -89,38 +45,26 @@ function tonalityLabel(start: string | null, end: string | null): string | null 
 export function SongDetailPage(): JSX.Element {
   const { t } = useTranslation();
   const { songId } = useParams<{ songId: string }>();
-  const [song, setSong] = useState<Song | null>(null);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [instruments, setInstruments] = useState<Instrument[]>([]);
-  const [masteryDefaults, setMasteryDefaults] = useState<MasteryDefault[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const songQuery = useSong(songId ?? '', songId !== undefined);
+  const membersQuery = useMembersList();
+  const instrumentsQuery = useInstrumentsList();
+  const masteryQuery = useMasteryDefaults();
 
-  const load = useCallback(async (): Promise<void> => {
-    if (songId === undefined) return;
-    setLoading(true);
-    try {
-      const [songBody, membersBody, instrumentsBody, masteryBody] = await Promise.all([
-        apiRequest(`/api/songs/${songId}`).then((body) => singleSongSchema.parse(body)),
-        apiRequest('/api/members').then((body) => memberListSchema.parse(body)),
-        apiRequest('/api/instruments').then((body) => instrumentListSchema.parse(body)),
-        apiRequest('/api/mastery/defaults').then((body) => masteryDefaultListSchema.parse(body)),
-      ]);
-      setSong(songBody.song);
-      setMembers(membersBody.members);
-      setInstruments(instrumentsBody.instruments);
-      setMasteryDefaults(masteryBody.defaults);
-      setError(null);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    } finally {
-      setLoading(false);
-    }
-  }, [songId]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const song = songQuery.data?.song ?? null;
+  const members = membersQuery.data?.members ?? [];
+  const instruments = instrumentsQuery.data?.instruments ?? [];
+  const masteryDefaults = masteryQuery.data?.defaults ?? [];
+  const loading =
+    songQuery.isLoading ||
+    membersQuery.isLoading ||
+    instrumentsQuery.isLoading ||
+    masteryQuery.isLoading;
+  const error =
+    songQuery.error instanceof ApiError
+      ? songQuery.error.message
+      : (membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error) instanceof ApiError
+        ? 'load-failed'
+        : null;
 
   const masteryLookup = useMemo(() => {
     const lookup = new Map<string, number>();
@@ -131,13 +75,11 @@ export function SongDetailPage(): JSX.Element {
   }, [masteryDefaults]);
 
   if (loading) {
-    return (
-      <p className="px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>
-    );
+    return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
   if (song === null) {
     return (
-      <p className="px-9 py-7 text-danger text-sm" role="alert">
+      <p className="px-4 sm:px-9 py-7 text-danger text-sm" role="alert">
         {error ?? 'not-found'}
       </p>
     );
@@ -148,7 +90,7 @@ export function SongDetailPage(): JSX.Element {
   const labelClass = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
 
   return (
-    <section className="px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
+    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
       <Link
         to="/catalog"
         className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900 transition-colors no-underline"
@@ -162,7 +104,7 @@ export function SongDetailPage(): JSX.Element {
           <div className="text-[11px] tracking-wider uppercase text-ink-500 mb-1">
             {song.artist.length > 0 ? song.artist : t('catalog.crumb')}
           </div>
-          <h1 className="font-display italic text-[56px] leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 mb-2">
+          <h1 className="font-display italic text-[40px] sm:text-[56px] leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 mb-2">
             {song.title}
           </h1>
           <div className="flex items-center gap-2.5 text-[13px] text-ink-500 flex-wrap">

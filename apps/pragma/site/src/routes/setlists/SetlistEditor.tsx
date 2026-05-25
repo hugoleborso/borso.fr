@@ -5,25 +5,29 @@
  * energy sparkline sits ABOVE the list, derived from the per-entry
  * energy values.
  *
- * Reordering uses HTML5 drag-from-handle. The up/down arrow keyboard
- * fallback is dropped in round-6 because the prototype only ships
- * drag (and screen-reader operators have the dragHandle aria-label
- * + the button-with-focus to drive accessible reorder).
- *
- * Transition warnings are computed by `transition.core.ts` between
- * each consecutive pair; a warned pair carries a circular orange
- * marker in the SIDE GUTTER (left of the list, between the two
- * rows it warns about) — the prototype's `.sl-warning-gutter`. The
- * marker opens the TransitionCommentModal.
+ * Reordering uses HTML5 drag-from-handle. Transition warnings are
+ * computed by `transition.core.ts` between each consecutive pair; a
+ * warned pair carries a circular orange marker in the side gutter,
+ * which opens the TransitionCommentModal.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { evaluateTransition } from '@api/setlists/transition.core';
+import type { JSX } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
 import { EnergySparkline } from '../../components/molecules/EnergySparkline';
 import { Icon } from '../../components/atoms/Icon';
-import { ApiError, apiRequest } from '../../lib/api-client';
-import { evaluateTransition } from '@api/setlists/transition.core';
+import { ApiError } from '../../lib/api';
+import { useInstrumentsList } from '../../lib/queries/instruments';
+import { useMembersList } from '../../lib/queries/members';
+import { useSongsList } from '../../lib/queries/songs';
+import {
+  useAppendSetlistEntry,
+  useDeleteSetlistEntry,
+  useReorderSetlist,
+  useSetlistEntries,
+  useUpdateSetlistEntry,
+} from '../../lib/queries/setlists';
 import { SetlistEntryRow } from './SetlistEntryRow';
 import { TransitionCommentModal } from './TransitionCommentModal';
 import {
@@ -33,108 +37,47 @@ import {
   tonalityLabelFor,
 } from './setlist-editor.utils';
 
-const entrySchema = z.object({
-  id: z.string().uuid(),
-  setlistId: z.string().uuid(),
-  songId: z.string().uuid(),
-  position: z.number().int(),
-  lineupOverride: z.record(z.string(), z.string().nullable()).nullable(),
-  energy: z.number().int().nullable(),
-  keyOverride: z.string().nullable(),
-  capo: z.number().int().nullable(),
-  notes: z.string(),
-});
-const entryListSchema = z.object({ entries: z.array(entrySchema) });
-const singleEntrySchema = z.object({ entry: entrySchema });
-
-const songSchema = z.object({
-  id: z.string().uuid(),
-  title: z.string(),
-  artist: z.string(),
-  tonalityStart: z.string().nullable().optional(),
-  tonalityEnd: z.string().nullable().optional(),
-  defaultLineup: z.record(z.string(), z.string().nullable()),
-});
-const songListSchema = z.object({ songs: z.array(songSchema.passthrough()) });
-
-const instrumentSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  isHarmonic: z.boolean(),
-});
-const instrumentListSchema = z.object({ instruments: z.array(instrumentSchema) });
-
-const memberSchema = z.object({
-  id: z.string().uuid(),
-  firstName: z.string(),
-  color: z.string(),
-});
-const memberListSchema = z.object({ members: z.array(memberSchema) });
-
-type Entry = z.infer<typeof entrySchema>;
-type Song = z.infer<typeof songSchema>;
-type Instrument = z.infer<typeof instrumentSchema>;
-type Member = z.infer<typeof memberSchema>;
-
 interface SetlistEditorProps {
   readonly setlistId: string;
 }
 
+const ROW_HEIGHT_PX = 84;
+const ROW_GAP_PX = 8;
+const WARN_MARKER_OFFSET_PX = 12;
+
 export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [instruments, setInstruments] = useState<Instrument[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const entriesQuery = useSetlistEntries(setlistId);
+  const songsQuery = useSongsList();
+  const instrumentsQuery = useInstrumentsList();
+  const membersQuery = useMembersList();
+  const append = useAppendSetlistEntry();
+  const updateEntry = useUpdateSetlistEntry();
+  const removeEntry = useDeleteSetlistEntry();
+  const reorder = useReorderSetlist();
+
   const [transitionEditing, setTransitionEditing] = useState<
     { songAId: string; songBId: string } | null
   >(null);
   const [draggingEntryId, setDraggingEntryId] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const refresh = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const [entriesBody, songsBody, instrumentsBody, membersBody] = await Promise.all([
-        apiRequest(`/api/setlists/${setlistId}/entries`).then((body) =>
-          entryListSchema.parse(body),
-        ),
-        apiRequest('/api/songs').then((body) => songListSchema.parse(body)),
-        apiRequest('/api/instruments').then((body) => instrumentListSchema.parse(body)),
-        apiRequest('/api/members').then((body) => memberListSchema.parse(body)),
-      ]);
-      setEntries(entriesBody.entries);
-      const parsedSongs: Song[] = [];
-      for (const row of songsBody.songs) {
-        const parsed = songSchema.safeParse(row);
-        if (parsed.success) parsedSongs.push(parsed.data);
-      }
-      setSongs(parsedSongs);
-      setInstruments(instrumentsBody.instruments);
-      setMembers(membersBody.members);
-      setError(null);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    } finally {
-      setLoading(false);
-    }
-  }, [setlistId]);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const entries = entriesQuery.data?.entries ?? [];
+  const songs = songsQuery.data?.songs ?? [];
+  const instruments = instrumentsQuery.data?.instruments ?? [];
+  const members = membersQuery.data?.members ?? [];
 
   const songsById = useMemo(() => {
-    const out: Record<string, Song> = {};
+    const out: Record<string, (typeof songs)[number]> = {};
     for (const song of songs) out[song.id] = song;
     return out;
   }, [songs]);
 
-  const instruments_ = useMemo(() => instrumentHarmonicMap(instruments), [instruments]);
+  const instrumentHarmonic = useMemo(() => instrumentHarmonicMap(instruments), [instruments]);
 
   const lineupMembers = useMemo(
-    () => members.map((member) => ({ id: member.id, name: member.firstName, color: member.color })),
+    () =>
+      members.map((member) => ({ id: member.id, name: member.firstName, color: member.color })),
     [members],
   );
 
@@ -149,37 +92,25 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
       const verdict = evaluateTransition(
         lineupOf(left, songsById),
         lineupOf(right, songsById),
-        instruments_,
+        instrumentHarmonic,
       );
       out.push(verdict.kind);
     }
     return out;
-  }, [entries, songsById, instruments_]);
+  }, [entries, songsById, instrumentHarmonic]);
 
-  const addEntry = async (songId: string): Promise<void> => {
-    try {
-      const created = singleEntrySchema.parse(
-        await apiRequest(`/api/setlists/${setlistId}/entries`, {
-          method: 'POST',
-          body: { songId },
-        }),
-      );
-      setEntries((current) => [...current, created.entry]);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
+  const recordError = (error: Error): void =>
+    setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
+
+  const addEntry = (songId: string): void => {
+    append.mutate({ setlistId, songId }, { onError: recordError });
   };
 
-  const removeEntry = async (entryId: string): Promise<void> => {
-    try {
-      await apiRequest(`/api/setlists/${setlistId}/entries/${entryId}`, { method: 'DELETE' });
-      await refresh();
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
+  const handleRemove = (entryId: string): void => {
+    removeEntry.mutate({ setlistId, entryId }, { onError: recordError });
   };
 
-  const dropOnEntry = async (targetEntryId: string): Promise<void> => {
+  const dropOnEntry = (targetEntryId: string): void => {
     const draggedId = draggingEntryId;
     setDraggingEntryId(null);
     if (draggedId === null || draggedId === targetEntryId) return;
@@ -191,40 +122,26 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     const moved = next.splice(fromIndex, 1)[0];
     if (moved === undefined) return;
     next.splice(toIndex, 0, moved);
-    try {
-      await apiRequest(`/api/setlists/${setlistId}/reorder`, {
-        method: 'PUT',
-        body: { entryIds: next },
-      });
-      await refresh();
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
+    reorder.mutate({ setlistId, entryIds: next }, { onError: recordError });
   };
 
-  const updateEntry = async (entryId: string, patch: Record<string, unknown>): Promise<void> => {
-    try {
-      const updated = singleEntrySchema.parse(
-        await apiRequest(`/api/setlists/${setlistId}/entries/${entryId}`, {
-          method: 'PUT',
-          body: patch,
-        }),
-      );
-      setEntries((current) => current.map((row) => (row.id === entryId ? updated.entry : row)));
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
+  const handleUpdate = (entryId: string, patch: Record<string, unknown>): void => {
+    updateEntry.mutate({ setlistId, entryId, ...patch }, { onError: recordError });
   };
 
-  if (loading) {
+  if (entriesQuery.isLoading) {
     return <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
 
+  const queryError =
+    entriesQuery.error instanceof ApiError ? entriesQuery.error.message : null;
+  const displayError = localError ?? queryError;
+
   return (
     <div className="flex flex-col gap-4">
-      {error !== null ? (
+      {displayError !== null ? (
         <p className="text-danger text-sm" role="alert">
-          {error}
+          {displayError}
         </p>
       ) : null}
       <div className="bg-bg-elev border border-line rounded-lg p-4">
@@ -233,15 +150,9 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         </div>
         <EnergySparkline values={energyValues} height={80} />
       </div>
-      {/*
-        The list lives inside a relative wrapper so the absolute
-        warning gutter (left side, between consecutive entries) can
-        position itself by row index. Each warning marker sits at the
-        height of the gap between rows i and i+1.
-      */}
       <div className="relative">
         <div
-          className="absolute -left-6 top-0 bottom-0 w-5 pointer-events-none"
+          className="absolute -left-6 top-0 bottom-0 w-5 pointer-events-none lg:block hidden"
           aria-hidden="true"
         >
           {transitions.map((kind, gapIndex) => {
@@ -249,10 +160,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
             const leftEntry = entries[gapIndex];
             const rightEntry = entries[gapIndex + 1];
             if (leftEntry === undefined || rightEntry === undefined) return null;
-            // Each entry row is approximately 80px tall plus an 8px
-            // gap; the marker sits at the boundary between rows i
-            // and i+1, accounting for the wrapper's flex-gap.
-            const offsetPx = (gapIndex + 1) * (84 + 8) - 12;
+            const offsetPx = (gapIndex + 1) * (ROW_HEIGHT_PX + ROW_GAP_PX) - WARN_MARKER_OFFSET_PX;
             return (
               <button
                 // biome-ignore lint/suspicious/noArrayIndexKey: warnings are tied to a stable entry pair, the gap index is the natural key
@@ -277,28 +185,48 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
           {entries.map((entry, index) => {
             const song = songsById[entry.songId];
             const lineupRaw = lineupOf(entry, songsById);
+            const previousKind = transitions[index - 1];
             return (
-              <SetlistEntryRow
-                key={entry.id}
-                position={index + 1}
-                entryId={entry.id}
-                title={song?.title ?? entry.songId.slice(0, 8)}
-                artist={song?.artist ?? ''}
-                tonalityLabel={tonalityLabelFor(song)}
-                meanMastery={null}
-                keyOverride={entry.keyOverride}
-                capo={entry.capo}
-                energy={entry.energy}
-                notes={entry.notes}
-                currentSongId={entry.songId}
-                lineup={compactLineup(lineupRaw)}
-                members={lineupMembers}
-                instruments={instruments}
-                onUpdate={(id, patch) => void updateEntry(id, patch)}
-                onRemove={(id) => void removeEntry(id)}
-                onDragStart={(id) => setDraggingEntryId(id)}
-                onDropOn={(id) => void dropOnEntry(id)}
-              />
+              <li key={entry.id} className="flex flex-col gap-1">
+                {previousKind === 'warn' ? (
+                  <button
+                    type="button"
+                    className="lg:hidden inline-flex items-center gap-1.5 text-[11px] font-medium text-warn bg-warn-soft self-start px-2 py-1 rounded-md cursor-pointer border-0"
+                    aria-label={t('setlist.openTransitionComment')}
+                    onClick={() => {
+                      const leftEntry = entries[index - 1];
+                      if (leftEntry === undefined) return;
+                      setTransitionEditing({
+                        songAId: leftEntry.songId,
+                        songBId: entry.songId,
+                      });
+                    }}
+                  >
+                    <Icon name="warn" size={12} />
+                    {t('setlist.transitionWarn')}
+                  </button>
+                ) : null}
+                <SetlistEntryRow
+                  position={index + 1}
+                  entryId={entry.id}
+                  title={song?.title ?? entry.songId.slice(0, 8)}
+                  artist={song?.artist ?? ''}
+                  tonalityLabel={tonalityLabelFor(song)}
+                  meanMastery={null}
+                  keyOverride={entry.keyOverride}
+                  capo={entry.capo}
+                  energy={entry.energy}
+                  notes={entry.notes}
+                  currentSongId={entry.songId}
+                  lineup={compactLineup(lineupRaw)}
+                  members={lineupMembers}
+                  instruments={instruments}
+                  onUpdate={handleUpdate}
+                  onRemove={handleRemove}
+                  onDragStart={(id) => setDraggingEntryId(id)}
+                  onDropOn={dropOnEntry}
+                />
+              </li>
             );
           })}
         </ul>
@@ -314,7 +242,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
               <li key={song.id}>
                 <button
                   type="button"
-                  onClick={() => void addEntry(song.id)}
+                  onClick={() => addEntry(song.id)}
                   className="w-full text-left bg-transparent border-0 text-[13px] text-ink-700 hover:bg-bg-elev px-2 py-1 rounded-md cursor-pointer transition-colors"
                 >
                   + {song.title}

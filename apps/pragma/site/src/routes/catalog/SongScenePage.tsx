@@ -7,27 +7,13 @@
  * route).
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import { z } from 'zod';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
-import { ApiError, apiRequest } from '../../lib/api-client';
-
-const sceneSongSchema = z.object({
-  id: z.string().uuid(),
-  title: z.string(),
-  artist: z.string(),
-  chart: z
-    .union([
-      z.object({ kind: z.literal('chordpro'), text: z.string() }),
-      z.object({ kind: z.literal('pdf'), s3Key: z.string() }),
-      z.object({ kind: z.literal('image'), s3Key: z.string() }),
-    ])
-    .nullable(),
-});
-const sceneSchema = z.object({ song: sceneSongSchema });
-type SceneSong = z.infer<typeof sceneSongSchema>;
+import { ApiError } from '../../lib/api';
+import { useSong } from '../../lib/queries/songs';
 
 const FONT_SIZE_MIN_PX = 16;
 const FONT_SIZE_MAX_PX = 48;
@@ -38,29 +24,15 @@ export function SongScenePage(): JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { songId } = useParams<{ songId: string }>();
-  const [song, setSong] = useState<SceneSong | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const songQuery = useSong(songId ?? '', songId !== undefined);
   const [semitones, setSemitones] = useState(0);
   const [fontSize, setFontSize] = useState(FONT_SIZE_DEFAULT_PX);
 
-  const load = useCallback(async (): Promise<void> => {
-    if (songId === undefined) return;
-    try {
-      const body = sceneSchema.parse(await apiRequest(`/api/songs/${songId}`));
-      setSong(body.song);
-      setError(null);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
-  }, [songId]);
+  const song = songQuery.data?.song ?? null;
+  const error =
+    songQuery.error instanceof ApiError ? songQuery.error.message : null;
 
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  // ESC closes Mode Scène — the prototype's fullscreen takeover wires
-  // the same key (setlist.jsx line 443). Adding it here matches the
-  // muscle memory bandmates already have from the demo.
+  // ESC closes Mode Scène — wired here too so the keyboard shortcut works.
   useEffect(() => {
     const handleKey = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') return;

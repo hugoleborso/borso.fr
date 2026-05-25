@@ -10,7 +10,8 @@
  * + embed.utils), and the chord-chart variant.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
@@ -21,7 +22,8 @@ import { Input } from '../../components/atoms/Input';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SongSearch } from '../../components/molecules/SongSearch';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
-import { ApiError, apiRequest } from '../../lib/api-client';
+import { ApiError } from '../../lib/api';
+import { useCreateSong, useDeleteSong, useSong, useUpdateSong } from '../../lib/queries/songs';
 import { deriveTonality } from '../../lib/tonality-bridge';
 import { SongChartFields } from './SongChartFields';
 import { SongExternalLinks } from './SongExternalLinks';
@@ -39,31 +41,30 @@ export function SongEditPage(): JSX.Element {
   const { t } = useTranslation();
   const { songId } = useParams<{ songId: string }>();
   const navigate = useNavigate();
-  // `/catalog/new` mounts this page without a path param; the older
-  // `/catalog/new` slug ridden through `:songId` is still accepted.
   const isNew = songId === undefined || songId === 'new';
+  const songQuery = useSong(songId ?? '', !isNew);
+  const createSong = useCreateSong();
+  const updateSong = useUpdateSong();
+  const deleteSong = useDeleteSong();
   const [draft, setDraft] = useState<SongDraftState>(BLANK_SONG_DRAFT);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(!isNew);
+  const [localError, setLocalError] = useState<string | null>(null);
   const [newLinkUrl, setNewLinkUrl] = useState('');
 
-  const load = useCallback(async (): Promise<void> => {
-    if (isNew || songId === undefined) return;
-    setLoading(true);
-    try {
-      const body = singleSongSchema.parse(await apiRequest(`/api/songs/${songId}`));
-      setDraft(songFromApi(body.song));
-      setError(null);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    } finally {
-      setLoading(false);
-    }
-  }, [isNew, songId]);
-
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (isNew) return;
+    if (songQuery.data?.song === undefined) return;
+    const parsed = singleSongSchema.safeParse({ song: songQuery.data.song });
+    if (!parsed.success) {
+      setLocalError('parse-error');
+      return;
+    }
+    setDraft(songFromApi(parsed.data.song));
+  }, [isNew, songQuery.data]);
+
+  const loading = !isNew && songQuery.isLoading;
+  const queryError =
+    songQuery.error instanceof ApiError ? songQuery.error.message : null;
+  const error = localError ?? queryError;
 
   const onChordproChange = (text: string): void => {
     setDraft((current) => {
@@ -115,40 +116,36 @@ export function SongEditPage(): JSX.Element {
     };
     try {
       if (isNew) {
-        const created = singleSongSchema.parse(
-          await apiRequest('/api/songs', { method: 'POST', body: payload }),
-        );
+        const created = await createSong.mutateAsync(payload);
         navigate(`/catalog/${created.song.id}`, { replace: true });
-      } else {
-        await apiRequest(`/api/songs/${songId}`, { method: 'PUT', body: payload });
+      } else if (songId !== undefined) {
+        await updateSong.mutateAsync({ id: songId, ...payload });
         navigate(`/catalog/${songId}`);
       }
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
+      setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
     }
   };
 
   const remove = async (): Promise<void> => {
     if (songId === undefined || isNew) return;
     try {
-      await apiRequest(`/api/songs/${songId}`, { method: 'DELETE' });
+      await deleteSong.mutateAsync({ id: songId });
       navigate('/catalog', { replace: true });
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
+      setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
     }
   };
 
   if (loading) {
-    return (
-      <p className="px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>
-    );
+    return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
 
   const labelClass = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
   const inputClass = '';
 
   return (
-    <section className="px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
+    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
       <Link
         to="/catalog"
         className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900 transition-colors no-underline"

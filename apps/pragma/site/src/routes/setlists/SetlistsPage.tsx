@@ -1,82 +1,65 @@
 /**
- * Setlists index — lists every session that already carries a
+ * Setlists index — lists every concert session that already carries a
  * setlist. Tapping a row drills into the session detail, which mounts
  * the SetlistEditor for that setlist.
- *
- * The /setlists route exists so the sidebar has its prototype-fidelity
- * primary entry (catalog / sessions / setlists / bars); the editor
- * surface itself lives inside the session detail page.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
+import type { JSX } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { z } from 'zod';
 import { Icon } from '../../components/atoms/Icon';
 import { PageHeader } from '../../components/molecules/PageHeader';
-import { ApiError, apiRequest } from '../../lib/api-client';
+import { ApiError, api } from '../../lib/api';
+import { useSessionsList } from '../../lib/queries/sessions';
+import { setlistKeys } from '../../lib/queries/setlists';
 import { formatSessionDate } from '../../lib/formatters.utils';
-
-const sessionSchema = z.object({
-  id: z.string().uuid(),
-  kind: z.string(),
-  date: z.string(),
-  venue: z.string().nullable(),
-});
-const sessionListSchema = z.object({ sessions: z.array(sessionSchema) });
-
-const setlistSchema = z.object({ id: z.string().uuid(), sessionId: z.string().uuid() });
-const singleSetlistSchema = z.object({ setlist: setlistSchema });
-
-type Session = z.infer<typeof sessionSchema>;
-type Setlist = z.infer<typeof setlistSchema>;
-
-interface ConcertSetlist {
-  readonly session: Session;
-  readonly setlist: Setlist;
-}
 
 export function SetlistsPage(): JSX.Element {
   const { t, i18n } = useTranslation();
-  const [rows, setRows] = useState<ConcertSetlist[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const sessionsQuery = useSessionsList();
 
-  const refresh = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const sessionsBody = sessionListSchema.parse(await apiRequest('/api/sessions'));
-      const concerts = sessionsBody.sessions
-        .filter((entry) => entry.kind === 'concert')
-        .toSorted((left, right) => right.date.localeCompare(left.date));
+  const concerts = useMemo(() => {
+    const all = sessionsQuery.data?.sessions ?? [];
+    return all
+      .filter((entry) => entry.kind === 'concert')
+      .toSorted((left, right) => right.date.localeCompare(left.date));
+  }, [sessionsQuery.data]);
 
-      const collected: ConcertSetlist[] = [];
-      for (const session of concerts) {
-        try {
-          const setlistBody = singleSetlistSchema.parse(
-            await apiRequest(`/api/setlists/by-session/${session.id}`),
-          );
-          collected.push({ session, setlist: setlistBody.setlist });
-        } catch (caught) {
-          if (caught instanceof ApiError && caught.status === 404) continue;
-          throw caught;
-        }
-      }
-      setRows(collected);
-      setError(null);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const setlistQueries = useQueries({
+    queries: concerts.map((session) => ({
+      queryKey: setlistKeys.bySessionId(session.id),
+      queryFn: async () => {
+        const response = await api.api.setlists['by-session'][':sessionId'].$get({
+          param: { sessionId: session.id },
+        });
+        if (response.status === 404) return null;
+        if (!response.ok) throw new ApiError(response.status, `setlist ${response.status}`, null);
+        return response.json();
+      },
+    })),
+  });
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const rows = useMemo(
+    () =>
+      concerts
+        .map((session, index) => ({ session, payload: setlistQueries[index]?.data ?? null }))
+        .filter(
+          (entry): entry is { session: (typeof concerts)[number]; payload: NonNullable<typeof entry.payload> } =>
+            entry.payload !== null,
+        ),
+    [concerts, setlistQueries],
+  );
+
+  const loading = sessionsQuery.isLoading || setlistQueries.some((query) => query.isLoading);
+  const error =
+    sessionsQuery.error instanceof ApiError
+      ? sessionsQuery.error.message
+      : setlistQueries.find((q) => q.error instanceof ApiError)?.error?.message ?? null;
 
   return (
-    <section className="px-9 py-7 pb-20 max-w-[1280px]">
+    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
       <PageHeader
         crumb={t('nav.setlists')}
         title={t('setlist.title')}
@@ -88,16 +71,14 @@ export function SetlistsPage(): JSX.Element {
           {error}
         </p>
       ) : null}
-      {loading ? (
-        <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
-      ) : null}
+      {loading ? <p className="text-ink-400 italic text-sm">{t('common.loading')}</p> : null}
       {!loading && rows.length === 0 ? (
         <p className="text-ink-400 italic text-sm">{t('setlist.indexEmpty')}</p>
       ) : null}
 
       <ul className="flex flex-col gap-2">
-        {rows.map(({ session, setlist }) => (
-          <li key={setlist.id}>
+        {rows.map(({ session, payload }) => (
+          <li key={payload.setlist.id}>
             <Link
               to={`/sessions/${session.id}`}
               className="flex items-center gap-3 bg-bg-elev border border-line rounded-md px-4 py-3 hover:border-line-strong transition-colors"

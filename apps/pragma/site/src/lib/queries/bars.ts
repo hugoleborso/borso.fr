@@ -22,18 +22,6 @@ export function useBarsList() {
   });
 }
 
-export function useBar(id: string, enabled = true) {
-  return useQuery({
-    queryKey: barKeys.byId(id),
-    queryFn: async () => {
-      const response = await api.api.bars[':id'].$get({ param: { id } });
-      if (!response.ok) throw new ApiError(response.status, `bar ${response.status}`, null);
-      return response.json();
-    },
-    enabled,
-  });
-}
-
 export function useCreateBar() {
   const queryClient = useQueryClient();
   return useMutation({

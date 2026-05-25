@@ -20,7 +20,7 @@ import {
   chordChartSchema,
   defaultLineupSchema,
   SONG_STATUSES,
-  songExternalLinkSchema,
+  type songExternalLinkSchema,
   songLinksRowSchema,
   songTable,
 } from './songs.schema';

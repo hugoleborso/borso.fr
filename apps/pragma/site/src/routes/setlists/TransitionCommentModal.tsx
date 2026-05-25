@@ -4,19 +4,15 @@
  * flagged transition warning between two consecutive setlist entries.
  */
 
+import type { JSX } from 'react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
 import { Button } from '../../components/atoms/Button';
-import { ApiError, apiRequest } from '../../lib/api-client';
-
-const commentSchema = z.object({
-  songAId: z.string().uuid(),
-  songBId: z.string().uuid(),
-  comment: z.string(),
-  updatedAt: z.string(),
-});
-const singleCommentSchema = z.object({ comment: commentSchema });
+import { ApiError } from '../../lib/api';
+import {
+  useSaveTransitionComment,
+  useTransitionComment,
+} from '../../lib/queries/transitions';
 
 const COMMENT_MAX_LENGTH = 4_096;
 
@@ -32,46 +28,33 @@ export function TransitionCommentModal({
   onClose,
 }: TransitionCommentModalProps): JSX.Element {
   const { t } = useTranslation();
+  const existing = useTransitionComment(songAId, songBId);
+  const save = useSaveTransitionComment();
   const [draft, setDraft] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  // Effect synchronises with the server (external system): on mount,
-  // fetch the existing comment if any; the cleanup flag handles the
-  // race when the modal is unmounted before the fetch resolves.
   useEffect(() => {
-    let cancelled = false;
-    const load = async (): Promise<void> => {
-      try {
-        const body = singleCommentSchema.parse(
-          await apiRequest(`/api/transition-comments/${songAId}/${songBId}`),
-        );
-        if (!cancelled) setDraft(body.comment.comment);
-      } catch (caught) {
-        if (cancelled) return;
-        if (caught instanceof ApiError && caught.status === 404) setDraft('');
-        else setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [songAId, songBId]);
-
-  const save = async (): Promise<void> => {
-    try {
-      await apiRequest(`/api/transition-comments/${songAId}/${songBId}`, {
-        method: 'PUT',
-        body: { comment: draft },
-      });
-      onClose();
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
+    if (existing.data?.comment !== undefined) {
+      setDraft(existing.data.comment.comment);
+    } else if (existing.data === null) {
+      setDraft('');
     }
+  }, [existing.data]);
+
+  const handleSave = (): void => {
+    save.mutate(
+      { a: songAId, b: songBId, comment: draft },
+      {
+        onSuccess: onClose,
+        onError: (error) =>
+          setLocalError(error instanceof ApiError ? error.message : 'unknown-error'),
+      },
+    );
   };
+
+  const queryError =
+    existing.error instanceof ApiError ? existing.error.message : null;
+  const displayError = localError ?? queryError;
 
   return (
     <div
@@ -83,12 +66,12 @@ export function TransitionCommentModal({
         <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-4">
           {t('setlist.transitionCommentTitle')}
         </h3>
-        {error !== null ? (
+        {displayError !== null ? (
           <p className="text-danger text-sm mb-3" role="alert">
-            {error}
+            {displayError}
           </p>
         ) : null}
-        {loading ? (
+        {existing.isLoading ? (
           <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
         ) : (
           <textarea
@@ -103,7 +86,7 @@ export function TransitionCommentModal({
           <Button type="button" variant="ghost" onClick={onClose}>
             {t('common.cancel')}
           </Button>
-          <Button type="button" variant="accent" onClick={() => void save()}>
+          <Button type="button" variant="accent" onClick={handleSave} disabled={save.isPending}>
             {t('common.save')}
           </Button>
         </div>

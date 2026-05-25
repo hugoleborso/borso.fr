@@ -19,12 +19,3 @@ export function useSignChartUpload() {
   });
 }
 
-export function useSignChartGet() {
-  return useMutation({
-    mutationFn: async (variables: { objectKey: string }) => {
-      const response = await api.api.uploads['sign-get'].$post({ json: variables });
-      if (!response.ok) throw new ApiError(response.status, `sign-get ${response.status}`, null);
-      return response.json();
-    },
-  });
-}

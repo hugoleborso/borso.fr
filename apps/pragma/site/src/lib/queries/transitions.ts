@@ -12,17 +12,6 @@ export const transitionKeys = {
   byPair: (a: string, b: string) => [...transitionKeys.all, 'byPair', a, b] as const,
 };
 
-export function useTransitionComments() {
-  return useQuery({
-    queryKey: transitionKeys.list(),
-    queryFn: async () => {
-      const response = await api.api['transition-comments'].$get();
-      if (!response.ok) throw new ApiError(response.status, `transitions ${response.status}`, null);
-      return response.json();
-    },
-  });
-}
-
 export function useTransitionComment(a: string, b: string, enabled = true) {
   return useQuery({
     queryKey: transitionKeys.byPair(a, b),
@@ -58,21 +47,3 @@ export function useSaveTransitionComment() {
   });
 }
 
-export function useDeleteTransitionComment() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (variables: { a: string; b: string }) => {
-      const response = await api.api['transition-comments'][':a'][':b'].$delete({
-        param: { a: variables.a, b: variables.b },
-      });
-      if (!response.ok) throw new ApiError(response.status, `delete ${response.status}`, null);
-      return response.json();
-    },
-    onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({
-        queryKey: transitionKeys.byPair(variables.a, variables.b),
-      });
-      void queryClient.invalidateQueries({ queryKey: transitionKeys.list() });
-    },
-  });
-}

@@ -8,8 +8,11 @@
  */
 
 import { and, asc, eq } from 'drizzle-orm';
+import type { z } from 'zod';
 import type { Database } from '../database/client';
 import { lineupOverrideSchema, setlistEntryTable, setlistTable } from './setlists.schema';
+
+export type LineupOverride = z.infer<typeof lineupOverrideSchema>;
 
 export interface SetlistRow {
   id: string;
@@ -21,7 +24,7 @@ export interface SetlistEntryRow {
   setlistId: string;
   songId: string;
   position: number;
-  lineupOverride: unknown;
+  lineupOverride: LineupOverride | null;
   energy: number | null;
   keyOverride: string | null;
   capo: number | null;
@@ -33,7 +36,7 @@ export interface EntryInsertShape {
   songId: string;
   position: number;
   energy: number | null;
-  lineupOverride: unknown;
+  lineupOverride: LineupOverride | null;
   keyOverride: string | null;
   capo: number | null;
   notes: string;
@@ -67,7 +70,7 @@ function rowToEntry(row: SetlistEntryRawRow): SetlistEntryRow {
   // lineup_override is stored as JSON-encoded text. The `as unknown`
   // step is the JSON-parse escape hatch the repo allows; the row Zod
   // schema does the runtime validation.
-  let lineupOverride: unknown = null;
+  let lineupOverride: LineupOverride | null = null;
   if (row.lineupOverride !== null) {
     const lineupOverrideRaw: unknown = JSON.parse(row.lineupOverride);
     lineupOverride = lineupOverrideSchema.parse(lineupOverrideRaw);

@@ -36,9 +36,3 @@ export const api = hc<AppRouter>(API_BASE === '' ? '/' : API_BASE, {
   init: { credentials: 'include' },
 });
 
-export async function expectOk(response: Response): Promise<void> {
-  if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    throw new ApiError(response.status, `api ${response.status}`, body);
-  }
-}

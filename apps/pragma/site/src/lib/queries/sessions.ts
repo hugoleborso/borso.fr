@@ -70,16 +70,3 @@ export function useUpdateSession() {
   });
 }
 
-export function useDeleteSession() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (variables: { id: string }) => {
-      const response = await api.api.sessions[':id'].$delete({ param: { id: variables.id } });
-      if (!response.ok) throw new ApiError(response.status, `delete ${response.status}`, null);
-      return response.json();
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: sessionKeys.all });
-    },
-  });
-}
