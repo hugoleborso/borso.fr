@@ -11,8 +11,12 @@
  * `mastery-matrix.utils.ts` and rendered alongside the grid; both
  * update live as scores change.
  *
- * Mounted on /members per the spec (A07/A08 — the matrix lives ON the
- * members page, not on a dedicated /mastery route).
+ * The table layout is driven by `useReactTable` from
+ * `@tanstack/react-table`: a leading "member" column, N instrument
+ * columns built from the props, and a trailing "row average" column.
+ * The footer row carries the per-instrument column averages.
+ *
+ * Mounted on /members per the spec (A07/A08).
  *
  * The matrix reads scores from `useMasteryDefaults()` directly and
  * writes through `useSaveMasteryDefault` / `useDeleteMasteryDefault`.
@@ -22,6 +26,13 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  type ColumnDef,
+  type Row,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import type { JSX, MouseEvent, WheelEvent } from 'react';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -56,8 +67,12 @@ interface MasteryDefaultsResponse {
   defaults: { memberId: string; instrumentId: string; score: number }[];
 }
 
-const RIGHT_BUTTON = 2;
+interface MatrixRow {
+  readonly member: MasteryMatrixMember;
+}
+
 const DECIMALS = 1;
+const RIGHT_MOUSE_BUTTON = 2;
 
 function setCachedScore(
   previous: MasteryDefaultsResponse | undefined,
@@ -152,37 +167,81 @@ export function MasteryMatrix({
     [queryClient, remove, onError],
   );
 
-  const handleWheel = (
-    event: WheelEvent<HTMLInputElement>,
-    memberId: string,
-    instrumentId: string,
-    current: number,
-  ): void => {
-    event.preventDefault();
-    const delta = event.deltaY < 0 ? 1 : -1;
-    const next = clampScore(current + delta);
-    if (next === current) return;
-    writeScore(memberId, instrumentId, next);
-  };
+  const data = useMemo<MatrixRow[]>(
+    () => members.map((member) => ({ member })),
+    [members],
+  );
 
-  const handleContextMenu = (
-    event: MouseEvent<HTMLInputElement>,
-    memberId: string,
-    instrumentId: string,
-  ): void => {
-    event.preventDefault();
-    clearScore(memberId, instrumentId);
-  };
+  const columns = useMemo<ColumnDef<MatrixRow>[]>(() => {
+    const memberColumn: ColumnDef<MatrixRow> = {
+      id: 'member',
+      header: () => null,
+      cell: ({ row }) => (
+        <>
+          <span
+            className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-semibold mr-2 align-middle"
+            style={{
+              background: row.original.member.color,
+              color: readableForeground(row.original.member.color),
+            }}
+          >
+            {row.original.member.firstName.slice(0, 1).toUpperCase()}
+          </span>
+          <span className="align-middle text-ink-900">{row.original.member.firstName}</span>
+        </>
+      ),
+    };
+    const instrumentColumns: ColumnDef<MatrixRow>[] = instruments.map((instrument) => ({
+      id: `inst:${instrument.id}`,
+      header: () => instrument.name,
+      cell: ({ row }: { row: Row<MatrixRow> }) => {
+        const memberId = row.original.member.id;
+        const value = scores[cellKey(memberId, instrument.id)] ?? 0;
+        const onWheel = (event: WheelEvent<HTMLInputElement>): void => {
+          event.preventDefault();
+          const delta = event.deltaY < 0 ? 1 : -1;
+          const next = clampScore(value + delta);
+          if (next === value) return;
+          writeScore(memberId, instrument.id, next);
+        };
+        const onContextMenu = (event: MouseEvent<HTMLInputElement>): void => {
+          event.preventDefault();
+          clearScore(memberId, instrument.id);
+        };
+        return (
+          <input
+            type="number"
+            min={0}
+            max={10}
+            value={value}
+            aria-label={`${row.original.member.firstName} ${instrument.name}`}
+            onWheel={onWheel}
+            onContextMenu={onContextMenu}
+            onChange={(event) => {
+              const parsed = clampScore(Number(event.target.value));
+              writeScore(memberId, instrument.id, parsed);
+            }}
+            className="w-12 text-center bg-bg-elev border border-line rounded-sm text-xs py-1 outline-none focus:border-ink-700 font-mono"
+          />
+        );
+      },
+    }));
+    const averageColumn: ColumnDef<MatrixRow> = {
+      id: 'row-average',
+      header: () => t('members.rowAverage'),
+      cell: ({ row }) => {
+        const average = rowAverage(row.original.member.id, instrumentIds, scores);
+        return average === null ? '—' : average.toFixed(DECIMALS);
+      },
+    };
+    return [memberColumn, ...instrumentColumns, averageColumn];
+  }, [instruments, instrumentIds, scores, writeScore, clearScore, t]);
 
-  const handleAuxClick = (
-    event: MouseEvent<HTMLTableCellElement>,
-    memberId: string,
-    instrumentId: string,
-  ): void => {
-    if (event.button !== RIGHT_BUTTON) return;
-    event.preventDefault();
-    clearScore(memberId, instrumentId);
-  };
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   return (
     <section
@@ -200,71 +259,71 @@ export function MasteryMatrix({
       ) : (
         <table className="w-full border-collapse text-[12.5px]">
           <thead>
-            <tr>
-              <th />
-              {instruments.map((instrument) => (
-                <th
-                  key={instrument.id}
-                  className="text-center font-medium text-[10.5px] tracking-wider uppercase text-ink-500 px-2 py-3 border-b border-line align-bottom"
-                >
-                  {instrument.name}
-                </th>
-              ))}
-              <th className="text-right font-medium text-[10.5px] tracking-wider uppercase text-ink-500 px-4 py-3 border-b border-line">
-                {t('members.rowAverage')}
-              </th>
-            </tr>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header, headerIndex) => {
+                  const isLast = headerIndex === headerGroup.headers.length - 1;
+                  const isFirst = headerIndex === 0;
+                  const className = isFirst
+                    ? ''
+                    : isLast
+                      ? 'text-right font-medium text-[10.5px] tracking-wider uppercase text-ink-500 px-4 py-3 border-b border-line'
+                      : 'text-center font-medium text-[10.5px] tracking-wider uppercase text-ink-500 px-2 py-3 border-b border-line align-bottom';
+                  return (
+                    <th key={header.id} className={className}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  );
+                })}
+              </tr>
+            ))}
           </thead>
           <tbody>
-            {members.map((member) => {
-              const average = rowAverage(member.id, instrumentIds, scores);
-              return (
-                <tr key={member.id} className="hover:bg-[rgba(26,22,18,0.02)]">
-                  <th scope="row" className="text-left px-3 py-2 border-b border-line">
-                    <span
-                      className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-semibold mr-2 align-middle"
-                      style={{
-                        background: member.color,
-                        color: readableForeground(member.color),
-                      }}
-                    >
-                      {member.firstName.slice(0, 1).toUpperCase()}
-                    </span>
-                    <span className="align-middle text-ink-900">{member.firstName}</span>
-                  </th>
-                  {instruments.map((instrument) => {
-                    const value = scores[cellKey(member.id, instrument.id)] ?? 0;
+            {table.getRowModel().rows.map((row) => (
+              <tr key={row.id} className="hover:bg-[rgba(26,22,18,0.02)]">
+                {row.getVisibleCells().map((cell, cellIndex) => {
+                  const isFirst = cellIndex === 0;
+                  const isLast = cellIndex === row.getVisibleCells().length - 1;
+                  if (isFirst) {
+                    return (
+                      <th
+                        key={cell.id}
+                        scope="row"
+                        className="text-left px-3 py-2 border-b border-line"
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </th>
+                    );
+                  }
+                  if (isLast) {
                     return (
                       <td
-                        key={instrument.id}
-                        className="px-1 py-1 border-b border-line"
-                        onAuxClick={(event) => handleAuxClick(event, member.id, instrument.id)}
+                        key={cell.id}
+                        className="text-right px-4 py-1 border-b border-line font-mono text-ink-500"
                       >
-                        <input
-                          type="number"
-                          min={0}
-                          max={10}
-                          value={value}
-                          aria-label={`${member.firstName} ${instrument.name}`}
-                          onWheel={(event) => handleWheel(event, member.id, instrument.id, value)}
-                          onContextMenu={(event) =>
-                            handleContextMenu(event, member.id, instrument.id)
-                          }
-                          onChange={(event) => {
-                            const parsed = clampScore(Number(event.target.value));
-                            writeScore(member.id, instrument.id, parsed);
-                          }}
-                          className="w-12 text-center bg-bg-elev border border-line rounded-sm text-xs py-1 outline-none focus:border-ink-700 font-mono"
-                        />
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     );
-                  })}
-                  <td className="text-right px-4 py-1 border-b border-line font-mono text-ink-500">
-                    {average === null ? '—' : average.toFixed(DECIMALS)}
-                  </td>
-                </tr>
-              );
-            })}
+                  }
+                  const instrumentId = cell.column.id.replace('inst:', '');
+                  return (
+                    <td
+                      key={cell.id}
+                      className="px-1 py-1 border-b border-line"
+                      onAuxClick={(event) => {
+                        if (event.button !== RIGHT_MOUSE_BUTTON) return;
+                        event.preventDefault();
+                        clearScore(row.original.member.id, instrumentId);
+                      }}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
             <tr className="bg-bg-sunk">
               <th
                 scope="row"
