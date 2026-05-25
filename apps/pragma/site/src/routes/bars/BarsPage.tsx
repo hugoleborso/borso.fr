@@ -2,23 +2,23 @@
  * Bars CRM. Toggle between two views: list and kanban. The kanban
  * columns map 1:1 to the spec `BarStatus` enum
  * (`lead | contacted | booked | played | cold`); drag a card between
- * columns to update its `status` via `PUT /api/bars/:id`.
+ * columns to update its `status` via the bar-update mutation.
  *
  * HTML5 drag suffices for the kanban — the design bundle's "handle
  * pattern" applies to mobile setlist reorder, not the desktop kanban.
- * The stale-bar banner + per-row badge fire from `stale-bar.utils`
- * (closes A20).
+ * The stale-bar banner + per-row badge fire from `stale-bar.utils`.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { FormEvent, JSX } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
 import { Badge } from '../../components/atoms/Badge';
 import { Chip } from '../../components/atoms/Chip';
 import { Icon } from '../../components/atoms/Icon';
 import { cn } from '../../components/atoms/cn.utils';
 import { PageHeader } from '../../components/molecules/PageHeader';
-import { ApiError, apiRequest } from '../../lib/api-client';
+import { ApiError } from '../../lib/api';
+import { useBarsList, useCreateBar, useDeleteBar, useUpdateBar } from '../../lib/queries/bars';
 import { formatCapacity } from '../../lib/formatters.utils';
 import { countStale, isStale } from '../../lib/stale-bar.utils';
 import {
@@ -30,22 +30,7 @@ import {
   BarForm,
 } from './BarForm';
 
-const barSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  status: z.enum(BAR_STATUSES),
-  notes: z.string(),
-  lastInteractionAt: z.string().nullable(),
-  city: z.string().nullable(),
-  capacity: z.number().nullable(),
-  contactName: z.string().nullable(),
-  contactEmail: z.string().nullable(),
-  contactPhone: z.string().nullable(),
-});
-const listSchema = z.object({ bars: z.array(barSchema) });
-const singleSchema = z.object({ bar: barSchema });
-
-type Bar = z.infer<typeof barSchema>;
+type Bar = NonNullable<ReturnType<typeof useBarsList>['data']>['bars'][number];
 type View = 'list' | 'kanban';
 
 function fromBar(bar: Bar): BarDraftState {
@@ -62,7 +47,18 @@ function fromBar(bar: Bar): BarDraftState {
   };
 }
 
-function payloadFrom(draft: BarDraftState): Record<string, unknown> {
+interface BarUpdatePayload {
+  name: string;
+  status: BarStatus;
+  notes: string;
+  city: string | null;
+  capacity: number | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+}
+
+function payloadFrom(draft: BarDraftState): BarUpdatePayload {
   return {
     name: draft.name.trim(),
     status: draft.status,
@@ -78,28 +74,14 @@ function payloadFrom(draft: BarDraftState): Record<string, unknown> {
 export function BarsPage(): JSX.Element {
   const { t } = useTranslation();
   const [view, setView] = useState<View>('list');
-  const [bars, setBars] = useState<Bar[]>([]);
   const [draft, setDraft] = useState<BarDraftState>(BLANK_BAR_DRAFT);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const barsQuery = useBarsList();
+  const createBar = useCreateBar();
+  const updateBar = useUpdateBar();
+  const deleteBar = useDeleteBar();
 
-  const refresh = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const body = listSchema.parse(await apiRequest('/api/bars'));
-      setBars(body.bars);
-      setError(null);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
+  const bars = barsQuery.data?.bars ?? [];
   const sortedBars = useMemo(
     () => bars.toSorted((left, right) => left.name.localeCompare(right.name)),
     [bars],
@@ -121,53 +103,48 @@ export function BarsPage(): JSX.Element {
     return out;
   }, [sortedBars]);
 
-  const submit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const queryError =
+    barsQuery.error instanceof ApiError ? barsQuery.error.message : null;
+  const displayError = localError ?? queryError;
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     const payload = payloadFrom(draft);
-    if (typeof payload.name !== 'string' || payload.name.length === 0) return;
-    try {
-      if (draft.id === null) {
-        const created = singleSchema.parse(
-          await apiRequest('/api/bars', { method: 'POST', body: payload }),
-        );
-        setBars((current) => [...current, created.bar]);
-      } else {
-        const updated = singleSchema.parse(
-          await apiRequest(`/api/bars/${draft.id}`, { method: 'PUT', body: payload }),
-        );
-        setBars((current) =>
-          current.map((row) => (row.id === updated.bar.id ? updated.bar : row)),
-        );
-      }
-      setDraft(BLANK_BAR_DRAFT);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
-  };
-
-  const remove = async (id: string): Promise<void> => {
-    try {
-      await apiRequest(`/api/bars/${id}`, { method: 'DELETE' });
-      setBars((current) => current.filter((row) => row.id !== id));
-      if (draft.id === id) setDraft(BLANK_BAR_DRAFT);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
-  };
-
-  const dropOnColumn = async (status: BarStatus, draggedId: string): Promise<void> => {
-    try {
-      const updated = singleSchema.parse(
-        await apiRequest(`/api/bars/${draggedId}`, { method: 'PUT', body: { status } }),
+    if (payload.name.length === 0) return;
+    const onError = (error: Error): void =>
+      setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
+    if (draft.id === null) {
+      createBar.mutate(payload, {
+        onSuccess: () => setDraft(BLANK_BAR_DRAFT),
+        onError,
+      });
+    } else {
+      updateBar.mutate(
+        { id: draft.id, ...payload },
+        { onSuccess: () => setDraft(BLANK_BAR_DRAFT), onError },
       );
-      setBars((current) => current.map((row) => (row.id === updated.bar.id ? updated.bar : row)));
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
     }
+  };
+
+  const handleRemove = (id: string): void => {
+    deleteBar.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          if (draft.id === id) setDraft(BLANK_BAR_DRAFT);
+        },
+        onError: (error) =>
+          setLocalError(error instanceof ApiError ? error.message : 'unknown-error'),
+      },
+    );
+  };
+
+  const handleDropOnColumn = (status: BarStatus, draggedId: string): void => {
+    updateBar.mutate({ id: draggedId, status });
   };
 
   return (
-    <section className="px-9 py-7 pb-20 max-w-[1280px]">
+    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
       <PageHeader
         title={t('bars.title')}
         subtitle={t('bars.subtitle')}
@@ -201,12 +178,14 @@ export function BarsPage(): JSX.Element {
         }
       />
 
-      {error !== null ? (
+      {displayError !== null ? (
         <p className="text-danger text-sm mb-3" role="alert">
-          {error}
+          {displayError}
         </p>
       ) : null}
-      {loading ? <p className="text-ink-400 italic text-sm">{t('common.loading')}</p> : null}
+      {barsQuery.isLoading ? (
+        <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
+      ) : null}
       {staleCount > 0 ? (
         <div
           className="flex items-center gap-2 bg-warn-soft text-warn px-4 py-2.5 rounded-md text-sm mb-4"
@@ -236,9 +215,7 @@ export function BarsPage(): JSX.Element {
                   {bar.name}
                 </button>
                 <Chip tone="default">{t(BAR_STATUS_KEY[bar.status])}</Chip>
-                {isBarStale(bar) ? (
-                  <Badge tone="warn">{t('bars.staleBadge')}</Badge>
-                ) : null}
+                {isBarStale(bar) ? <Badge tone="warn">{t('bars.staleBadge')}</Badge> : null}
                 <span className="text-xs text-ink-500 hidden md:inline">{bar.city ?? ''}</span>
                 <span className="text-xs font-mono text-ink-400 hidden md:inline">
                   {formatCapacity(bar.capacity)}
@@ -246,7 +223,7 @@ export function BarsPage(): JSX.Element {
                 <button
                   type="button"
                   className="text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
-                  onClick={() => void remove(bar.id)}
+                  onClick={() => handleRemove(bar.id)}
                   aria-label={t('common.delete')}
                 >
                   ×
@@ -257,12 +234,12 @@ export function BarsPage(): JSX.Element {
           <BarForm
             draft={draft}
             onChange={setDraft}
-            onSubmit={submit}
+            onSubmit={handleSubmit}
             onCancel={() => setDraft(BLANK_BAR_DRAFT)}
           />
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5 min-w-[1100px]">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 overflow-x-auto">
           {BAR_STATUSES.map((status) => (
             <section
               key={status}
@@ -272,7 +249,7 @@ export function BarsPage(): JSX.Element {
               onDrop={(event) => {
                 event.preventDefault();
                 const draggedId = event.dataTransfer.getData('text/plain');
-                if (draggedId.length > 0) void dropOnColumn(status, draggedId);
+                if (draggedId.length > 0) handleDropOnColumn(status, draggedId);
               }}
             >
               <h3 className="font-medium text-[11px] tracking-wider uppercase text-ink-500 mx-1 mt-1 mb-1.5 flex items-center gap-2">
@@ -293,9 +270,7 @@ export function BarsPage(): JSX.Element {
                 >
                   <div className="flex items-center gap-2 text-[13.5px] font-medium text-ink-900 mb-1">
                     {bar.name}
-                    {isBarStale(bar) ? (
-                      <Badge tone="warn">{t('bars.staleBadge')}</Badge>
-                    ) : null}
+                    {isBarStale(bar) ? <Badge tone="warn">{t('bars.staleBadge')}</Badge> : null}
                   </div>
                   <div className="text-[10.5px] font-mono text-ink-400 tracking-wide">
                     {bar.city ?? ''} · {formatCapacity(bar.capacity)}

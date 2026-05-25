@@ -3,13 +3,31 @@
  */
 
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 import type { Database } from '../database/client';
-import { type BarStatus, barTable } from './bars.schema';
+import { BAR_STATUSES, type BarStatus, barTable } from './bars.schema';
+
+const barStatusSchema = z.enum(BAR_STATUSES);
+
+function toBarRow(row: {
+  id: string;
+  name: string;
+  status: string;
+  notes: string;
+  lastInteractionAt: Date | null;
+  city: string | null;
+  capacity: number | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+}): BarRow {
+  return { ...row, status: barStatusSchema.parse(row.status) };
+}
 
 export interface BarRow {
   id: string;
   name: string;
-  status: string;
+  status: BarStatus;
   notes: string;
   lastInteractionAt: Date | null;
   city: string | null;
@@ -45,12 +63,13 @@ export interface BarPersistedShape {
 }
 
 export async function listBars(database: Database): Promise<BarRow[]> {
-  return await database.select(PROJECTION).from(barTable);
+  const rows = await database.select(PROJECTION).from(barTable);
+  return rows.map(toBarRow);
 }
 
 export async function findBarById(database: Database, id: string): Promise<BarRow | null> {
   const rows = await database.select(PROJECTION).from(barTable).where(eq(barTable.id, id)).limit(1);
-  return rows[0] ?? null;
+  return rows[0] === undefined ? null : toBarRow(rows[0]);
 }
 
 export async function insertBar(database: Database, values: BarPersistedShape): Promise<BarRow> {
@@ -69,7 +88,7 @@ export async function insertBar(database: Database, values: BarPersistedShape): 
     })
     .returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
-  return row;
+  return toBarRow(row);
 }
 
 export async function updateBar(
@@ -82,7 +101,7 @@ export async function updateBar(
     .set(updates)
     .where(eq(barTable.id, id))
     .returning(PROJECTION);
-  return row ?? null;
+  return row === undefined ? null : toBarRow(row);
 }
 
 export async function deleteBar(database: Database, id: string): Promise<boolean> {
