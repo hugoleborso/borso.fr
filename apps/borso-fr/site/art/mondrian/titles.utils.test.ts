@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { PALETTES } from './palettes.utils';
 import { colorize, generateLayout } from './painting.utils';
+import { PALETTES } from './palettes.utils';
 import { buildTitle, dominantColorName, pickFromNonEmptyList } from './titles.utils';
 
 const TITLE_PATTERN = /^A (\w+) (\w+) in (\w+)$/;
@@ -71,12 +71,24 @@ describe('dominantColorName', () => {
       ],
     };
     const smallCobaltRect = {
-      x: 0, y: 0, width: 0.1, height: 0.1, depth: 0, id: 0,
-      fill: '#1e4fb6', fillName: 'Cobalt',
+      x: 0,
+      y: 0,
+      width: 0.1,
+      height: 0.1,
+      depth: 0,
+      id: 0,
+      fill: '#1e4fb6',
+      fillName: 'Cobalt',
     };
     const largeVermillionRect = {
-      x: 0.1, y: 0, width: 0.9, height: 1, depth: 0, id: 1,
-      fill: '#d8332a', fillName: 'Vermillion',
+      x: 0.1,
+      y: 0,
+      width: 0.9,
+      height: 1,
+      depth: 0,
+      id: 1,
+      fill: '#d8332a',
+      fillName: 'Vermillion',
     };
     expect(dominantColorName([smallCobaltRect, largeVermillionRect], palette)).toBe('Vermillion');
   });
@@ -92,12 +104,24 @@ describe('dominantColorName', () => {
       ],
     };
     const largeIvoryRect = {
-      x: 0, y: 0, width: 0.99, height: 1, depth: 0, id: 0,
-      fill: '#fafafa', fillName: 'Ivory',
+      x: 0,
+      y: 0,
+      width: 0.99,
+      height: 1,
+      depth: 0,
+      id: 0,
+      fill: '#fafafa',
+      fillName: 'Ivory',
     };
     const smallVermillionRect = {
-      x: 0.99, y: 0, width: 0.01, height: 1, depth: 0, id: 1,
-      fill: '#d8332a', fillName: 'Vermillion',
+      x: 0.99,
+      y: 0,
+      width: 0.01,
+      height: 1,
+      depth: 0,
+      id: 1,
+      fill: '#d8332a',
+      fillName: 'Vermillion',
     };
     expect(dominantColorName([largeIvoryRect, smallVermillionRect], palette)).toBe('Vermillion');
   });
@@ -113,12 +137,24 @@ describe('dominantColorName', () => {
       ],
     };
     const largeOnyxRect = {
-      x: 0, y: 0, width: 0.9, height: 1, depth: 0, id: 0,
-      fill: '#101010', fillName: 'Onyx',
+      x: 0,
+      y: 0,
+      width: 0.9,
+      height: 1,
+      depth: 0,
+      id: 0,
+      fill: '#101010',
+      fillName: 'Onyx',
     };
     const smallSaffronRect = {
-      x: 0.9, y: 0, width: 0.1, height: 1, depth: 0, id: 1,
-      fill: '#f5c518', fillName: 'Saffron',
+      x: 0.9,
+      y: 0,
+      width: 0.1,
+      height: 1,
+      depth: 0,
+      id: 1,
+      fill: '#f5c518',
+      fillName: 'Saffron',
     };
     expect(dominantColorName([largeOnyxRect, smallSaffronRect], palette)).toBe('Saffron');
   });
@@ -134,16 +170,34 @@ describe('dominantColorName', () => {
       ],
     };
     const cobaltA = {
-      x: 0, y: 0, width: 0.4, height: 0.5, depth: 0, id: 0,
-      fill: '#1e4fb6', fillName: 'Cobalt',
+      x: 0,
+      y: 0,
+      width: 0.4,
+      height: 0.5,
+      depth: 0,
+      id: 0,
+      fill: '#1e4fb6',
+      fillName: 'Cobalt',
     };
     const cobaltB = {
-      x: 0.4, y: 0, width: 0.4, height: 0.5, depth: 0, id: 1,
-      fill: '#1e4fb6', fillName: 'Cobalt',
+      x: 0.4,
+      y: 0,
+      width: 0.4,
+      height: 0.5,
+      depth: 0,
+      id: 1,
+      fill: '#1e4fb6',
+      fillName: 'Cobalt',
     };
     const vermillion = {
-      x: 0, y: 0.5, width: 0.6, height: 0.5, depth: 0, id: 2,
-      fill: '#d8332a', fillName: 'Vermillion',
+      x: 0,
+      y: 0.5,
+      width: 0.6,
+      height: 0.5,
+      depth: 0,
+      id: 2,
+      fill: '#d8332a',
+      fillName: 'Vermillion',
     };
     expect(dominantColorName([cobaltA, cobaltB, vermillion], palette)).toBe('Cobalt');
   });

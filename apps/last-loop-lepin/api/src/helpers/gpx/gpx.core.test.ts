@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  GpxParseError,
   buildPointElevations,
   buildPointTimeFractions,
+  GpxParseError,
   parseGpx,
   tryParseDate,
   tryParseFloat,

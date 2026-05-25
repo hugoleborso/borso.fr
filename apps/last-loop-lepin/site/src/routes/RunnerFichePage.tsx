@@ -50,9 +50,8 @@ export function RunnerFichePage({ editionSlug, runnerSlug }: RunnerFichePageProp
   const runnerState = useResource(`runner:${editionSlug}:${runnerSlug}`, () =>
     apiClient.getRunner(editionSlug, runnerSlug),
   );
-  const punchesState = useResource(
-    `runner-punches:${editionSlug}:${runnerSlug}`,
-    () => apiClient.listRunnerPunches(editionSlug, runnerSlug),
+  const punchesState = useResource(`runner-punches:${editionSlug}:${runnerSlug}`, () =>
+    apiClient.listRunnerPunches(editionSlug, runnerSlug),
   );
 
   if (runnerState.error !== null) {
@@ -101,14 +100,17 @@ export function RunnerFichePage({ editionSlug, runnerSlug }: RunnerFichePageProp
             <strong style={{ fontSize: 20 }}>{runner.displayName}</strong>
             {runner.bib !== null ? <span className="muted mono">Dossard #{runner.bib}</span> : null}
             {entry !== undefined ? (
-              <span className={`status-pill ${entry.status.kind === 'in-race' ? 'in-race' : 'dnf'}`}>
+              <span
+                className={`status-pill ${entry.status.kind === 'in-race' ? 'in-race' : 'dnf'}`}
+              >
                 {entry.status.kind === 'in-race'
                   ? `En course · boucle ${entry.status.lastLoop}`
                   : `DNF · boucle ${entry.status.outAtLoop}`}
               </span>
             ) : null}
             <span className="muted">
-              Rang actuel : {entry === undefined ? '—' : entry.rank === 'ex-aequo' ? 'ex-æquo' : entry.rank}
+              Rang actuel :{' '}
+              {entry === undefined ? '—' : entry.rank === 'ex-aequo' ? 'ex-æquo' : entry.rank}
             </span>
           </div>
         </div>
@@ -117,7 +119,9 @@ export function RunnerFichePage({ editionSlug, runnerSlug }: RunnerFichePageProp
       <div className="card">
         <div className="card-head">
           <h2 className="card-title">Historique des boucles</h2>
-          <span className="muted mono">{loopHistory.length} validée{loopHistory.length === 1 ? '' : 's'}</span>
+          <span className="muted mono">
+            {loopHistory.length} validée{loopHistory.length === 1 ? '' : 's'}
+          </span>
         </div>
         <div className="card-body flush">
           {loopHistory.length === 0 ? (

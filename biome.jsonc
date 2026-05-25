@@ -6,7 +6,11 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!docs"]
+    // drizzle-kit owns the JSON snapshot files under `migrations/meta` —
+    // reformatting them collapses arrays in ways that desynchronise from
+    // drizzle-kit's regeneration round-trip and break knip's resolution
+    // graph. Treat them as generated artefacts.
+    "includes": ["**", "!docs", "!**/migrations/meta"]
   },
   "linter": {
     "enabled": true,

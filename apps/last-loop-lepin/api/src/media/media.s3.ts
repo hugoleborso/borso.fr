@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { S3Client } from '@aws-sdk/client-s3';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const PRESIGN_EXPIRES_SECONDS = 5 * 60;
@@ -58,18 +57,20 @@ export async function createPresignedUpload(
   if (!ALLOWED_CONTENT_TYPES.has(input.contentType)) {
     throw new MediaContentTypeError(`unsupported content type: ${input.contentType}`);
   }
-  const extension = input.contentType === 'image/jpeg' ? 'jpg' : input.contentType.split('/')[1] ?? 'bin';
+  const extension =
+    input.contentType === 'image/jpeg' ? 'jpg' : (input.contentType.split('/')[1] ?? 'bin');
   const objectKey = `editions/${input.editionSlug}/runners/${input.runnerSlug}/${randomUUID()}.${extension}`;
   const command = new PutObjectCommand({
     Bucket: bucket,
     Key: objectKey,
     ContentType: input.contentType,
   });
-  const uploadUrl = await getSignedUrl(getClient(), command, { expiresIn: PRESIGN_EXPIRES_SECONDS });
+  const uploadUrl = await getSignedUrl(getClient(), command, {
+    expiresIn: PRESIGN_EXPIRES_SECONDS,
+  });
   return {
     uploadUrl,
     objectKey,
     expiresAt: new Date(now.getTime() + PRESIGN_EXPIRES_SECONDS * 1000),
   };
 }
-

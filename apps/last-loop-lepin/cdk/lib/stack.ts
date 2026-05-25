@@ -1,11 +1,12 @@
-import {
-  type IDsqlCluster,
-  PhotosCdn,
-  PreviewableApp,
-  type Stage,
-} from '@borso/infra';
+import { type IDsqlCluster, PhotosCdn, PreviewableApp, type Stage } from '@borso/infra';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
-import { BlockPublicAccess, Bucket, BucketEncryption, HttpMethods, ObjectOwnership } from 'aws-cdk-lib/aws-s3';
+import {
+  BlockPublicAccess,
+  Bucket,
+  BucketEncryption,
+  HttpMethods,
+  ObjectOwnership,
+} from 'aws-cdk-lib/aws-s3';
 import type { Construct } from 'constructs';
 
 const APP_SLUG = 'last-loop-lepin';
@@ -29,7 +30,11 @@ export interface BuildAppStackProps {
  * hostname. Dev sets `ALLOWED_ORIGIN` locally (typically
  * `http://localhost:5173`).
  */
-function frontendOrigin(stage: Stage, domainName: string | undefined, prNumber: number | undefined): string {
+function frontendOrigin(
+  stage: Stage,
+  domainName: string | undefined,
+  prNumber: number | undefined,
+): string {
   if (stage === 'prod') {
     if (domainName === undefined) {
       throw new Error('frontendOrigin: domainName required for stage="prod".');
@@ -109,6 +114,24 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
     database: {
       migrationsPath: props.migrationsPath,
       cluster: props.cluster,
+      // Neon-branch-style clone: every non-prod schema starts as a copy
+      // of prod's data so the admin PIN (seeded once in prod) carries
+      // over, the editions + runners + punches are realistic for debug,
+      // and the operator doesn't have to re-seed each preview by hand.
+      // Skipped automatically for the prod stack (source === target) and
+      // for the very first app deploy (source doesn't exist yet).
+      // Runtime-state tables (sessions, rate-limit buckets) keep their
+      // structure but no rows; `runners.photo_key` is NULLed so the
+      // preview's CDN doesn't dereference prod's S3 bucket.
+      ...(props.stage !== 'prod'
+        ? {
+            cloneFromSchema: {
+              sourceSchemaName: 'prod',
+              tableBlocklist: ['admin_sessions', 'auth_attempts'],
+              columnsToNullify: { runners: ['photo_key'] },
+            },
+          }
+        : {}),
     },
   });
 

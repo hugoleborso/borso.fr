@@ -73,7 +73,8 @@ function computeUtcHour(
   );
   const trueLongitudeRadians = trueLongitudeDegrees * DEGREES_TO_RADIANS;
 
-  const rightAscensionRaw = Math.atan(0.91764 * Math.tan(trueLongitudeRadians)) * RADIANS_TO_DEGREES;
+  const rightAscensionRaw =
+    Math.atan(0.91764 * Math.tan(trueLongitudeRadians)) * RADIANS_TO_DEGREES;
   const rightAscensionDegrees = normalizeDegrees(rightAscensionRaw);
   const trueLongitudeQuadrant =
     Math.floor(trueLongitudeDegrees / QUARTER_CIRCLE_DEGREES) * QUARTER_CIRCLE_DEGREES;

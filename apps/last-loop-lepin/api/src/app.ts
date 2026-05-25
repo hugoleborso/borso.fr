@@ -3,12 +3,12 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { testSeedRouter } from './__test/test-seed.controller';
 import { authRouter } from './auth/auth.controller';
-import { editionRouter, adminEditionRouter } from './edition/edition.controller';
+import { adminEditionRouter, editionRouter } from './edition/edition.controller';
 import { mediaRouter } from './media/media.controller';
 import { adminPunchRouter } from './punch/punch.controller';
 import { selfPunchRouter } from './punch/self-punch.controller';
 import { rankingRouter } from './ranking/ranking.controller';
-import { runnerRouter, adminRunnerRouter } from './runner/runner.controller';
+import { adminRunnerRouter, runnerRouter } from './runner/runner.controller';
 
 const TEST_SEED_FLAG = 'LASTLOOP_ALLOW_TEST_SEED';
 

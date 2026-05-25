@@ -63,7 +63,9 @@ export function Countdown({ targetEpochMs, label }: CountdownProps) {
       {label.length > 0 ? <small>{label}</small> : null}
       <div className="flap-row" role="img" aria-label={`${label} ${accessibleValue}`.trim()}>
         <FlapPair value={display.left} />
-        <span className="flap-colon" aria-hidden>:</span>
+        <span className="flap-colon" aria-hidden>
+          :
+        </span>
         <FlapPair value={display.right} />
       </div>
       <small className="flap-format mono" aria-hidden>

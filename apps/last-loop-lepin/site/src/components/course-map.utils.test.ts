@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { LatLngDto, RankedRunnerDto } from '../domain/types';
 import {
-  type Indexed,
-  type RaceTimingInputs,
   avatarHtmlWithPhoto,
   escapeHtml,
+  type Indexed,
   indexTrack,
   metersBetween,
   projectFraction,
   projectFractionTimeAware,
+  type RaceTimingInputs,
   runnerDistanceFraction,
   squaredDegrees,
 } from './course-map.utils';

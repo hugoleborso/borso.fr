@@ -3,6 +3,8 @@ import { ApiError, apiClient } from '../../api/client';
 import { invalidateResource } from '../../data/useResource';
 import type { RaceEditionDto } from '../../domain/types';
 import { CreateEditionForm } from './CreateEditionForm';
+import { EditionEditForm } from './EditionEditForm';
+import { LiveOrFinishedEditionCard } from './LiveOrFinishedEditionCard';
 import {
   defaultEndsAt,
   defaultStartsAt,
@@ -14,8 +16,6 @@ import {
 interface SetupPanelProps {
   readonly currentEdition: RaceEditionDto | null;
 }
-
-const EDITING_SLUG_KEY = 'setup-slug';
 
 export function SetupPanel({ currentEdition }: SetupPanelProps) {
   // Three rendering modes:
@@ -98,22 +98,15 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
         );
       } else {
         if (gpxXml === null) {
-          setError('Choisis un fichier GPX avant de créer l\'édition.');
+          setError("Choisis un fichier GPX avant de créer l'édition.");
           return;
         }
         await apiClient.adminCreateEdition({ slug, ...basePayload, gpxXml });
       }
-      setGpxFile(null);
       invalidateResource('edition:current');
       invalidateResource('editions:all');
     } catch (caught) {
-      if (caught instanceof ApiError && caught.status === 409) {
-        setError(
-          isEditing
-            ? "L'édition a démarré : modification verrouillée."
-            : 'Une édition avec ce slug existe déjà.',
-        );
-      } else if (caught instanceof ApiError && caught.status === 400) {
+      if (caught instanceof ApiError && caught.status === 400) {
         const summary = summariseZodError(caught.body);
         setError(
           summary === null
@@ -152,7 +145,11 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
 
   async function handleDelete(): Promise<void> {
     if (currentEdition === null) return;
-    if (!confirm(`Supprimer l'édition "${currentEdition.displayName}" ? Cette action est irréversible.`)) {
+    if (
+      !confirm(
+        `Supprimer l'édition "${currentEdition.displayName}" ? Cette action est irréversible.`,
+      )
+    ) {
       return;
     }
     setDeleting(true);
@@ -174,184 +171,42 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
 
   const readonlyCard =
     showReadonlyCard && currentEdition !== null ? (
-      <div className="card">
-        <div className="card-head">
-          <h2 className="card-title">
-            Édition {currentEdition.status === 'live' ? 'en cours' : 'précédente'}
-          </h2>
-          <span className="muted mono">
-            {currentEdition.displayName} · {currentEdition.status}
-          </span>
-        </div>
-        <div className="card-body col">
-          <div className="muted mono">
-            Distance : {(currentEdition.gpx.distanceMeters / 1000).toFixed(2)} km · D+{' '}
-            {Math.round(currentEdition.gpx.elevationGainMeters)} m
-          </div>
-          <div className="muted mono">
-            Lever : {new Date(currentEdition.sunriseAt).toLocaleTimeString('fr-FR')} · Coucher :{' '}
-            {new Date(currentEdition.sunsetAt).toLocaleTimeString('fr-FR')}
-          </div>
-          <div className="row" style={{ gap: 'var(--d-2)', flexWrap: 'wrap' }}>
-            {currentEdition.status === 'live' ? (
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => void handleTransition('finished')}
-                disabled={transitioning}
-              >
-                {transitioning ? 'Mise à jour…' : 'Terminer la course'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="btn"
-                onClick={() => void handleTransition('setup')}
-                disabled={transitioning}
-                title="Annule le 'finished' et permet de re-modifier l'édition. Conserve les coureurs et les pointages."
-              >
-                {transitioning ? 'Mise à jour…' : 'Réouvrir cette édition'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      <LiveOrFinishedEditionCard
+        edition={currentEdition}
+        transitioning={transitioning}
+        onTransition={(status) => void handleTransition(status)}
+      />
     ) : null;
 
   const formCard = (
-    <div className="card">
-      <div className="card-head">
-        <h2 className="card-title">
-          {isEditing
-            ? "Modifier l'édition"
-            : showReadonlyCard
-              ? 'Créer la prochaine édition'
-              : 'Créer une édition'}
-        </h2>
-        <span className="muted mono">
-          {isEditing
-            ? 'status: setup'
-            : showReadonlyCard
-              ? 'nouveau slug requis'
-              : 'configuration initiale'}
-        </span>
-      </div>
-      <form className="card-body col" onSubmit={(event) => void handleSubmit(event)}>
-        <div className="field">
-          <label className="field-label" htmlFor={EDITING_SLUG_KEY}>Slug</label>
-          <input
-            id={EDITING_SLUG_KEY}
-            className="input"
-            value={slug}
-            onChange={(event) => setSlug(event.target.value)}
-            required
-            minLength={3}
-            readOnly={isEditing}
-            disabled={isEditing}
-          />
-        </div>
-        <div className="field">
-          <label className="field-label" htmlFor="setup-name">Nom</label>
-          <input id="setup-name" className="input" value={displayName} onChange={(event) => setDisplayName(event.target.value)} required />
-        </div>
-        <div className="row" style={{ gap: 'var(--d-3)' }}>
-          <div className="field" style={{ flex: 1 }}>
-            <label className="field-label" htmlFor="setup-start">Début</label>
-            <input id="setup-start" type="datetime-local" className="input" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} required />
-          </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label className="field-label" htmlFor="setup-end">Fin</label>
-            <input id="setup-end" type="datetime-local" className="input" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} required />
-          </div>
-          <div className="field" style={{ flex: '0 0 140px' }}>
-            <label className="field-label" htmlFor="setup-interval">Boucle (min)</label>
-            <input
-              id="setup-interval"
-              type="number"
-              className="input"
-              value={intervalMinutes}
-              onChange={(event) => setIntervalMinutes(event.target.value)}
-              min={1}
-              max={240}
-              step={1}
-              required
-            />
-          </div>
-        </div>
-        {isEditing && currentEdition !== null ? (
-          <div className="muted mono" style={{ fontSize: 11 }}>
-            GPX actuel : {(currentEdition.gpx.distanceMeters / 1000).toFixed(2)} km · D+ {Math.round(currentEdition.gpx.elevationGainMeters)} m.
-            Choisir un nouveau fichier ci-dessous le remplace.
-          </div>
-        ) : null}
-        <div className="field">
-          <label className="field-label" htmlFor="setup-gpx">
-            GPX {isEditing ? '(nouveau tracé)' : '(fichier .gpx)'}
-          </label>
-          <input
-            id="setup-gpx"
-            type="file"
-            className="input"
-            // iOS Files filters by UTI and has no built-in entry for `.gpx`,
-            // so any `accept` value greys the file out on the picker. Skip
-            // the hint — server-side `parseGpx` rejects non-GPX content
-            // with a 400 anyway.
-            onChange={(event) => {
-              const file = event.target.files?.[0] ?? null;
-              setGpxFile(file);
-              setGpxReadError(null);
-            }}
-            required={!isEditing}
-          />
-          {gpxFile !== null ? (
-            <div className="muted mono" style={{ fontSize: 11 }}>
-              {gpxFile.name} ({(gpxFile.size / 1024).toFixed(1)} kB)
-            </div>
-          ) : null}
-          {gpxReadError !== null ? <div className="error-text">{gpxReadError}</div> : null}
-        </div>
-        <div className="muted mono" style={{ fontSize: 11 }}>
-          Sunrise / sunset sont calculés depuis le premier point du GPX et la date de départ.
-        </div>
-        {error !== null ? <div className="error-text">{error}</div> : null}
-        <div className="row" style={{ gap: 'var(--d-2)', flexWrap: 'wrap' }}>
-          <button
-            className="btn btn-primary"
-            type="submit"
-            disabled={submitting || deleting || transitioning}
-          >
-            {submitting
-              ? isEditing
-                ? 'Mise à jour…'
-                : 'Création…'
-              : isEditing
-                ? 'Remplacer le GPX / mettre à jour'
-                : "Créer l'édition"}
-          </button>
-          {isEditing ? (
-            <>
-              <button
-                className="btn btn-primary"
-                type="button"
-                onClick={() => void handleTransition('live')}
-                disabled={submitting || deleting || transitioning}
-                title="Passe l'édition en status live. Le classement devient visible côté spectateur et les pointages sont acceptés."
-              >
-                {transitioning ? 'Démarrage…' : '🏁 Démarrer la course'}
-              </button>
-              <button
-                className="btn btn-danger"
-                type="button"
-                onClick={() => void handleDelete()}
-                disabled={submitting || deleting || transitioning}
-              >
-                {deleting ? 'Suppression…' : "Supprimer l'édition"}
-              </button>
-            </>
-          ) : null}
-        </div>
-      </form>
-    </div>
+    <EditionEditForm
+      currentEdition={currentEdition}
+      isEditing={isEditing}
+      showReadonlyCard={showReadonlyCard}
+      slug={slug}
+      displayName={displayName}
+      startsAt={startsAt}
+      endsAt={endsAt}
+      intervalMinutes={intervalMinutes}
+      gpxFile={gpxFile}
+      gpxReadError={gpxReadError}
+      error={error}
+      submitting={submitting}
+      deleting={deleting}
+      transitioning={transitioning}
+      onSlugChange={setSlug}
+      onDisplayNameChange={setDisplayName}
+      onStartsAtChange={setStartsAt}
+      onEndsAtChange={setEndsAt}
+      onIntervalMinutesChange={setIntervalMinutes}
+      onGpxFileChange={(file) => {
+        setGpxFile(file);
+        setGpxReadError(null);
+      }}
+      onSubmit={(event) => void handleSubmit(event)}
+      onTransitionLive={() => void handleTransition('live')}
+      onDelete={() => void handleDelete()}
+    />
   );
 
   // Two independent surfaces, always rendered (one or both, never zero):
@@ -366,8 +221,7 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
   // We keep them as separate components so their input state never bleeds
   // across (previous bug: the "Créer" form was hidden as soon as a setup
   // edition existed, leaving the orga no path to register the next race).
-  const createTitle =
-    currentEdition === null ? 'Créer une édition' : 'Créer une nouvelle édition';
+  const createTitle = currentEdition === null ? 'Créer une édition' : 'Créer une nouvelle édition';
   const createHint = currentEdition === null ? 'configuration initiale' : 'slug différent';
   const createForm = (
     <CreateEditionForm

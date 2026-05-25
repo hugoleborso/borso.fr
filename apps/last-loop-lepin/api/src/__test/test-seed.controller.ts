@@ -92,12 +92,8 @@ async function clearEditionRows(): Promise<void> {
   // race-finished → race-down-to-one-survivor) leaves stale punches from the previous
   // run and the standings drift into nonsense (visual-validation #25).
   const database = getDatabase();
-  await database.execute(
-    sql`DELETE FROM loop_punches WHERE edition_slug = ${EDITION_SLUG}`,
-  );
-  await database.execute(
-    sql`DELETE FROM manual_dnfs WHERE edition_slug = ${EDITION_SLUG}`,
-  );
+  await database.execute(sql`DELETE FROM loop_punches WHERE edition_slug = ${EDITION_SLUG}`);
+  await database.execute(sql`DELETE FROM manual_dnfs WHERE edition_slug = ${EDITION_SLUG}`);
 }
 
 async function ensureEditionAndRunners(now: Date, window: EditionWindow): Promise<void> {
@@ -214,7 +210,11 @@ async function applyRaceFinished(now: Date): Promise<void> {
   const startsAt = new Date(endsAt.getTime() - 16 * HOUR_MS);
   await ensureEditionAndRunners(now, { startsAt, endsAt, status: 'finished' });
   for (let loopIndex = 1; loopIndex <= 5; loopIndex += 1) {
-    await ensurePunch('alice', loopIndex, new Date(startsAt.getTime() + (loopIndex - 0.05) * HOUR_MS));
+    await ensurePunch(
+      'alice',
+      loopIndex,
+      new Date(startsAt.getTime() + (loopIndex - 0.05) * HOUR_MS),
+    );
   }
   for (let loopIndex = 1; loopIndex <= 3; loopIndex += 1) {
     await ensurePunch('bob', loopIndex, new Date(startsAt.getTime() + (loopIndex - 0.1) * HOUR_MS));
@@ -225,8 +225,10 @@ async function applyRaceFinished(now: Date): Promise<void> {
   await ensureManualDnf('dan', 0, 'manual', new Date(startsAt.getTime() + 0.5 * HOUR_MS));
 }
 
-const testSeedRouter = new Hono()
-  .post('/seed', zValidator('query', fixtureSchema), async (context) => {
+const testSeedRouter = new Hono().post(
+  '/seed',
+  zValidator('query', fixtureSchema),
+  async (context) => {
     const { fixture } = context.req.valid('query');
     const now = new Date();
     if (fixture === 'race-down-to-one-survivor') await applyRaceDownToOneSurvivor(now);
@@ -235,6 +237,7 @@ const testSeedRouter = new Hono()
 
     const runners = await listRunnersForEdition(getDatabase(), EDITION_SLUG);
     return context.json({ fixture, edition: EDITION_SLUG, runners: runners.length });
-  });
+  },
+);
 
 export { testSeedRouter };

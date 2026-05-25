@@ -19,9 +19,7 @@ const INTERNAL_DIR = path.resolve(HERE, '../../src/internal');
 
 function readStripped(filePath: string): string {
   const source = fs.readFileSync(filePath, 'utf-8');
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, ' ')
-    .replace(/\/\/.*$/gm, ' ');
+  return source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/.*$/gm, ' ');
 }
 
 describe('eradication: no `bundling.nodeModules` in CDK constructs', () => {
@@ -51,9 +49,7 @@ describe('eradication: every app `destroy` script chains the same builds as `dep
     : [];
 
   it.each(appNames)('%s/package.json: destroy chains the build', (appName) => {
-    const pkg = JSON.parse(
-      fs.readFileSync(path.join(APPS_DIR, appName, 'package.json'), 'utf-8'),
-    );
+    const pkg = JSON.parse(fs.readFileSync(path.join(APPS_DIR, appName, 'package.json'), 'utf-8'));
     const destroy: string = pkg.scripts?.destroy ?? '';
     expect(destroy).toContain('pnpm --filter @borso/infra run build');
     expect(destroy).toContain('pnpm build');

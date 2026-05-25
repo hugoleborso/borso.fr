@@ -5,7 +5,7 @@ import { Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { DsqlClusterStack } from '../../src/constructs/dsql-cluster-stack.js';
 import { PreviewableApp } from '../../src/constructs/previewable-app.js';
-import { resourcesOfType } from './helpers/template.js';
+import { isObject, resourcesOfType } from './helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ENTRY = path.join(HERE, 'fixtures', 'handler.ts');
@@ -99,6 +99,41 @@ describe('PreviewableApp (preview with db)', () => {
     stageTpl.resourceCountIs('AWS::CloudFormation::CustomResource', 1);
     // …but no cluster (it lives in the cluster stack).
     stageTpl.resourceCountIs('AWS::DSQL::Cluster', 0);
+  });
+
+  it('forwards database.cloneFromSchema to the schema custom resource when set', () => {
+    const { clusterStack, stageStack } = bootstrap('S');
+    new PreviewableApp(stageStack, 'App', {
+      app: 'test-app',
+      stage: 'preview',
+      prNumber: 6,
+      frontend: { distPath: '.' },
+      database: {
+        migrationsPath: MIGRATIONS,
+        cluster: clusterStack.cluster,
+        cloneFromSchema: {
+          sourceSchemaName: 'prod',
+          tableBlocklist: ['admin_sessions'],
+          columnsToNullify: { runners: ['photo_key'] },
+        },
+      },
+    });
+    const customResources = Template.fromStack(stageStack).findResources(
+      'AWS::CloudFormation::CustomResource',
+    );
+    function getProperties(resource: unknown): Record<string, unknown> | null {
+      if (!isObject(resource)) return null;
+      const properties = resource.Properties;
+      return isObject(properties) ? properties : null;
+    }
+    const schemaCr = Object.values(customResources).find(
+      (cr) => getProperties(cr)?.schemaName === 'pr_6',
+    );
+    expect(getProperties(schemaCr)?.cloneFromSchema).toEqual({
+      sourceSchemaName: 'prod',
+      tableBlocklist: ['admin_sessions'],
+      columnsToNullify: { runners: ['photo_key'] },
+    });
   });
 });
 

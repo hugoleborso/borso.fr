@@ -84,11 +84,10 @@ export function getDatabase(): Database {
   if (cachedDatabase !== null) return cachedDatabase;
   const dsql = readDsqlConfig();
   const local = readLocalConfig();
-  const client = dsql !== null ? createDsqlClient(dsql) : local !== null ? createLocalClient(local) : null;
+  const client =
+    dsql !== null ? createDsqlClient(dsql) : local !== null ? createLocalClient(local) : null;
   if (client === null) {
-    throw new Error(
-      'Database not configured: set DSQL_ENDPOINT+DSQL_SCHEMA or DATABASE_URL.',
-    );
+    throw new Error('Database not configured: set DSQL_ENDPOINT+DSQL_SCHEMA or DATABASE_URL.');
   }
   cachedClient = client;
   cachedDatabase = drizzle(client, { schema });

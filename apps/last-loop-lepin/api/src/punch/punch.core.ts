@@ -96,4 +96,3 @@ export function lastLoopDurationMs(
   if (lastPunch === null) return null;
   return loopDurationMs(edition, lastPunch);
 }
-

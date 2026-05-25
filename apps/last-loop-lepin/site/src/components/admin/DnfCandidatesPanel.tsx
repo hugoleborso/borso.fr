@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { apiClient } from '../../api/client';
 import { invalidateResource } from '../../data/useResource';
 import { initialsAvatar } from '../../domain/initials.utils';
+import type { RaceEditionDto, RankedRunnerDto } from '../../domain/types';
 import { recordAnalyticsEvent } from '../../observability/sentry';
-import type { RankedRunnerDto, RaceEditionDto } from '../../domain/types';
 
 interface DnfCandidatesPanelProps {
   readonly edition: RaceEditionDto;
@@ -43,8 +43,7 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
   const inRace = ranked.filter((entry) => entry.status.kind === 'in-race');
 
   async function confirmDnf(entry: RankedRunnerDto): Promise<void> {
-    const outAtLoop =
-      entry.status.kind === 'dnf' ? entry.status.outAtLoop : entry.status.lastLoop;
+    const outAtLoop = entry.status.kind === 'dnf' ? entry.status.outAtLoop : entry.status.lastLoop;
     setBusySlug(entry.runner.slug);
     setError(null);
     try {
@@ -167,9 +166,9 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
         </div>
         <div className="card-body col">
           <div className="muted" style={{ fontSize: 12 }}>
-            Si on a pré-DNFé un coureur qui était en fait à temps, ou qu'on s'est trompé
-            sur un abandon volontaire — un clic suffit pour le faire repasser. Lui crédite
-            la boucle manquée avec un temps d'1 h (plafond) et retire le DNF.
+            Si on a pré-DNFé un coureur qui était en fait à temps, ou qu'on s'est trompé sur un
+            abandon volontaire — un clic suffit pour le faire repasser. Lui crédite la boucle
+            manquée avec un temps d'1 h (plafond) et retire le DNF.
           </div>
           {allDnfs.length === 0 ? (
             <div className="muted">Aucun DNF pour l'instant.</div>
@@ -212,8 +211,8 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
         </div>
         <div className="card-body col">
           <div className="muted" style={{ fontSize: 12 }}>
-            Pour un coureur qui jette l'éponge entre deux boucles. Marque DNF à la dernière
-            boucle bouclée et le retire du live.
+            Pour un coureur qui jette l'éponge entre deux boucles. Marque DNF à la dernière boucle
+            bouclée et le retire du live.
           </div>
           {inRace.length === 0 ? (
             <div className="muted">Personne en course.</div>
@@ -231,8 +230,7 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
                     <span className="runner-name">{entry.runner.displayName}</span>
                   </div>
                   <span className="loop-info">
-                    {entry.runner.bib === null ? '' : `#${entry.runner.bib} · `}dernière B
-                    {lastLoop}
+                    {entry.runner.bib === null ? '' : `#${entry.runner.bib} · `}dernière B{lastLoop}
                   </span>
                   <button
                     type="button"

@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { makeEdition, makeRunner } from '../../../test/fixtures';
 import { insertEdition } from '../edition/edition.repository';
 import { insertRunner } from '../runner/runner.repository';
-import { makeEdition, makeRunner } from '../../../test/fixtures';
 import { PunchConflictError } from './punch.repository';
 import {
-  PunchRejectedError,
   correctPunch,
+  PunchRejectedError,
   recordManualDnf,
   registerPunch,
   registerSelfPunch,

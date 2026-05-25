@@ -5,10 +5,13 @@ import { CertsStack, HOSTED_ZONE_NAME } from '../../lib/certs-stack.js';
 
 function synth(): Template {
   const app = new App();
-  app.node.setContext(`hosted-zone:account=123456789012:domainName=${HOSTED_ZONE_NAME}:region=us-east-1`, {
-    Id: '/hostedzone/Z1FAKE',
-    Name: `${HOSTED_ZONE_NAME}.`,
-  });
+  app.node.setContext(
+    `hosted-zone:account=123456789012:domainName=${HOSTED_ZONE_NAME}:region=us-east-1`,
+    {
+      Id: '/hostedzone/Z1FAKE',
+      Name: `${HOSTED_ZONE_NAME}.`,
+    },
+  );
   const stack = new CertsStack(app, 'C', {
     env: { account: '123456789012', region: 'us-east-1' },
   });

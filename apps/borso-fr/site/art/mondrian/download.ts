@@ -1,5 +1,5 @@
-import type { Palette } from './palettes.utils';
 import type { ColoredRect } from './painting.utils';
+import type { Palette } from './palettes.utils';
 import { seedToHex } from './url-state.utils';
 
 const PNG_EXPORT_SIZE_PX = 2000;

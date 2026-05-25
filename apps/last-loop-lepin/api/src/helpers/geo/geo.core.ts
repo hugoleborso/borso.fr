@@ -25,8 +25,7 @@ export function haversineMeters(from: LatLng, to: LatLng): number {
   const deltaLambda = (to.lng - from.lng) * DEGREES_TO_RADIANS;
 
   const haversineRoot =
-    Math.sin(deltaPhi / 2) ** 2 +
-    Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
+    Math.sin(deltaPhi / 2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
   const angularDistance = 2 * Math.atan2(Math.sqrt(haversineRoot), Math.sqrt(1 - haversineRoot));
   return EARTH_RADIUS_METERS * angularDistance;
 }

@@ -29,8 +29,13 @@ const FAKE_MIGRATIONS_DIR = path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 
 function synthAppStack(stage: 'prod' | 'preview'): Template {
   const app = new App();
   const env = { account: '123456789012', region: 'eu-west-3' };
-  const clusterStack = new DsqlClusterStack(app, 'last-loop-lepin-cluster', { app: 'last-loop-lepin', env });
-  const stack = new Stack(app, stage === 'prod' ? 'last-loop-lepin-prod' : 'last-loop-lepin-pr-1', { env });
+  const clusterStack = new DsqlClusterStack(app, 'last-loop-lepin-cluster', {
+    app: 'last-loop-lepin',
+    env,
+  });
+  const stack = new Stack(app, stage === 'prod' ? 'last-loop-lepin-prod' : 'last-loop-lepin-pr-1', {
+    env,
+  });
   buildLastLoopLepinAppStack({
     scope: stack,
     stage,

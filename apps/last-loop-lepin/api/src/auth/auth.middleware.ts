@@ -20,7 +20,10 @@ const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 function readAllowedOrigins(): readonly string[] | null {
   const raw = process.env.ALLOWED_ORIGIN;
   if (raw === undefined || raw.length === 0) return null;
-  return raw.split(',').map((origin) => origin.trim()).filter((origin) => origin.length > 0);
+  return raw
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
 }
 
 export const requireAdminSession: MiddlewareHandler = async (context, next) => {

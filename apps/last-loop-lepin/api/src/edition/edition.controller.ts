@@ -1,22 +1,22 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { getDatabase } from '../database/client';
 import { requireAdminSession } from '../auth/auth.middleware';
+import { getDatabase } from '../database/client';
 import { createEditionInputSchema, updateEditionInputSchema } from './edition.schema';
 import {
+  createEditionFromInput,
   EditionAlreadyExistsError,
   EditionNotFoundError,
   EditionNotInSetupError,
   GpxParseError,
-  SunCalculationError,
-  createEditionFromInput,
   getAllEditions,
   getCurrentEdition,
   getEdition,
   getEditionOrNull,
   removeSetupEdition,
   replaceEditionFromInput,
+  SunCalculationError,
   transitionEditionStatus,
 } from './edition.service';
 
@@ -53,9 +53,12 @@ const adminEditionRouter = new Hono()
       const edition = await createEditionFromInput(getDatabase(), context.req.valid('json'));
       return context.json({ edition }, 201);
     } catch (error) {
-      if (error instanceof EditionAlreadyExistsError) return context.json({ error: error.message }, 409);
-      if (error instanceof GpxParseError) return context.json({ error: 'gpx parse error', detail: error.message }, 400);
-      if (error instanceof SunCalculationError) return context.json({ error: 'sun calculation failed', detail: error.message }, 400);
+      if (error instanceof EditionAlreadyExistsError)
+        return context.json({ error: error.message }, 409);
+      if (error instanceof GpxParseError)
+        return context.json({ error: 'gpx parse error', detail: error.message }, 400);
+      if (error instanceof SunCalculationError)
+        return context.json({ error: 'sun calculation failed', detail: error.message }, 400);
       throw error;
     }
   })
@@ -69,9 +72,12 @@ const adminEditionRouter = new Hono()
       return context.json({ edition });
     } catch (error) {
       if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);
-      if (error instanceof EditionNotInSetupError) return context.json({ error: 'edition has already started; setup is locked' }, 409);
-      if (error instanceof GpxParseError) return context.json({ error: 'gpx parse error', detail: error.message }, 400);
-      if (error instanceof SunCalculationError) return context.json({ error: 'sun calculation failed', detail: error.message }, 400);
+      if (error instanceof EditionNotInSetupError)
+        return context.json({ error: 'edition has already started; setup is locked' }, 409);
+      if (error instanceof GpxParseError)
+        return context.json({ error: 'gpx parse error', detail: error.message }, 400);
+      if (error instanceof SunCalculationError)
+        return context.json({ error: 'sun calculation failed', detail: error.message }, 400);
       throw error;
     }
   })
@@ -81,7 +87,8 @@ const adminEditionRouter = new Hono()
       return context.json({ slug: context.req.param('slug'), deleted: true });
     } catch (error) {
       if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);
-      if (error instanceof EditionNotInSetupError) return context.json({ error: 'edition has already started; delete is locked' }, 409);
+      if (error instanceof EditionNotInSetupError)
+        return context.json({ error: 'edition has already started; delete is locked' }, 409);
       throw error;
     }
   })
@@ -97,4 +104,4 @@ const adminEditionRouter = new Hono()
     }
   });
 
-export { editionRouter, adminEditionRouter };
+export { adminEditionRouter, editionRouter };

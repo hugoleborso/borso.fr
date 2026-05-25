@@ -60,7 +60,8 @@ export function validateRunnerDraft(
   }
 
   if (draft.bib !== null) {
-    if (!Number.isInteger(draft.bib) || draft.bib <= 0) return { ok: false, reason: 'bib-not-positive' };
+    if (!Number.isInteger(draft.bib) || draft.bib <= 0)
+      return { ok: false, reason: 'bib-not-positive' };
     if (existingRoster.some((runner) => runner.bib === draft.bib)) {
       return { ok: false, reason: 'bib-already-taken' };
     }

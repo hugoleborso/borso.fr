@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LoopPunch, ManualDnf } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
-import type { RaceEdition } from './edition.types';
 import {
   isRaceEndReached,
   loopIndexAt,
@@ -9,6 +8,7 @@ import {
   projectDnfCandidates,
   totalHourlyTops,
 } from './edition.core';
+import type { RaceEdition } from './edition.types';
 
 const EDITION_2026: RaceEdition = {
   slug: 'lepin-2026',
@@ -64,9 +64,7 @@ describe('nextHourlyTop', () => {
 
   it('returns the next hourly boundary mid-race', () => {
     const midLoop3 = new Date('2026-09-19T08:35:00+02:00');
-    expect(nextHourlyTop(EDITION_2026, midLoop3)).toEqual(
-      new Date('2026-09-19T09:00:00+02:00'),
-    );
+    expect(nextHourlyTop(EDITION_2026, midLoop3)).toEqual(new Date('2026-09-19T09:00:00+02:00'));
   });
 
   it('returns null after endsAt', () => {
@@ -81,9 +79,7 @@ describe('nextHourlyTop', () => {
 
   it('returns the boundary itself when now lies exactly on it', () => {
     const onBoundary = new Date('2026-09-19T07:00:00+02:00');
-    expect(nextHourlyTop(EDITION_2026, onBoundary)).toEqual(
-      new Date('2026-09-19T08:00:00+02:00'),
-    );
+    expect(nextHourlyTop(EDITION_2026, onBoundary)).toEqual(new Date('2026-09-19T08:00:00+02:00'));
   });
 });
 
@@ -132,9 +128,7 @@ describe('projectDnfCandidates', () => {
 
   it('flags runners with no closed-loop punch at the top of loop 2', () => {
     const now = new Date('2026-09-19T07:01:00+02:00');
-    const punches: readonly LoopPunch[] = [
-      makePunch('alice', 1, '2026-09-19T06:55:00+02:00'),
-    ];
+    const punches: readonly LoopPunch[] = [makePunch('alice', 1, '2026-09-19T06:55:00+02:00')];
     const candidates = projectDnfCandidates(EDITION_2026, RUNNERS, punches, [], now);
     const slugs = candidates.map((entry) => entry.runner.slug);
     expect(slugs).toEqual(['bob', 'carla']);
@@ -143,9 +137,7 @@ describe('projectDnfCandidates', () => {
 
   it('does not flag runners already marked DNF manually', () => {
     const now = new Date('2026-09-19T07:01:00+02:00');
-    const punches: readonly LoopPunch[] = [
-      makePunch('alice', 1, '2026-09-19T06:55:00+02:00'),
-    ];
+    const punches: readonly LoopPunch[] = [makePunch('alice', 1, '2026-09-19T06:55:00+02:00')];
     const manualDnfs: readonly ManualDnf[] = [
       {
         editionSlug: 'lepin-2026',
@@ -170,9 +162,7 @@ describe('projectDnfCandidates', () => {
 
   it('treats a punch arriving within the tolerance window as valid', () => {
     const now = new Date('2026-09-19T07:01:00+02:00');
-    const punches: readonly LoopPunch[] = [
-      makePunch('alice', 1, '2026-09-19T07:00:25+02:00'),
-    ];
+    const punches: readonly LoopPunch[] = [makePunch('alice', 1, '2026-09-19T07:00:25+02:00')];
     const candidates = projectDnfCandidates(EDITION_2026, RUNNERS, punches, [], now);
     expect(candidates.map((entry) => entry.runner.slug)).toContain('alice');
   });

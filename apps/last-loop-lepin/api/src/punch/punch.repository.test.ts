@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { makeEdition, makePunch, makeRunner } from '../../../test/fixtures';
 import { insertEdition } from '../edition/edition.repository';
 import { insertRunner } from '../runner/runner.repository';
-import { makeEdition, makePunch, makeRunner } from '../../../test/fixtures';
 import {
   findActivePunchForLoop,
   findPunchById,

@@ -10,7 +10,10 @@ export interface RateLimitBucket {
   readonly windowStartedAt: Date;
 }
 
-export async function findBucket(database: Database, ipAddress: string): Promise<RateLimitBucket | null> {
+export async function findBucket(
+  database: Database,
+  ipAddress: string,
+): Promise<RateLimitBucket | null> {
   const rows = await database
     .select()
     .from(authAttemptsTable)

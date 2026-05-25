@@ -1,9 +1,12 @@
-import { hc } from 'hono/client';
 import type { AppType } from '@api/app';
+import { hc } from 'hono/client';
 
 export class ApiError extends Error {
   override readonly name = 'ApiError';
-  constructor(public readonly status: number, public readonly body: unknown) {
+  constructor(
+    public readonly status: number,
+    public readonly body: unknown,
+  ) {
     super(`API ${status}`);
   }
 }
@@ -14,6 +17,18 @@ function readApiBase(): string {
   return typeof raw === 'string' ? raw.replace(/\/$/, '') : '';
 }
 const API_BASE = readApiBase();
+
+/**
+ * Origin to prepend on direct-navigation links (`<a href>`, file
+ * downloads). Empty string in prod (same-origin, `/api/*` is routed by
+ * CloudFront → API Gateway), the full preview API hostname on preview
+ * (cross-origin). Use `apiUrl('/api/foo')` rather than a bare
+ * `/api/foo` string for any anchor or window.location target that hits
+ * the API.
+ */
+export function apiUrl(pathname: string): string {
+  return `${API_BASE}${pathname}`;
+}
 
 const client = hc<AppType>(API_BASE === '' ? '/' : API_BASE, {
   init: { credentials: 'include' },
@@ -83,7 +98,10 @@ export const apiClient = {
       gpxXml?: string;
     },
   ) => {
-    const response = await client.api.admin.editions[':slug'].$put({ param: { slug }, json: input });
+    const response = await client.api.admin.editions[':slug'].$put({
+      param: { slug },
+      json: input,
+    });
     if (!response.ok) throw new ApiError(response.status, await response.json().catch(() => null));
     return response.json();
   },
@@ -131,7 +149,11 @@ export const apiClient = {
     if (!response.ok) throw new ApiError(response.status, await response.json().catch(() => null));
     return response.json();
   },
-  adminCatchupPunch: async (input: { editionSlug: string; runnerSlug: string; loopIndex: number }) => {
+  adminCatchupPunch: async (input: {
+    editionSlug: string;
+    runnerSlug: string;
+    loopIndex: number;
+  }) => {
     const response = await client.api.admin.punches.catchup.$post({ json: input });
     if (!response.ok) throw new ApiError(response.status, await response.json().catch(() => null));
     return response.json();

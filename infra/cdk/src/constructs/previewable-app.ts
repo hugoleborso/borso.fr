@@ -2,15 +2,15 @@ import { CfnOutput, Stack } from 'aws-cdk-lib';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import {
-  type Stage,
   assertDeployStage,
   previewApiHostname,
   previewHostname,
+  type Stage,
   validateAppSlug,
 } from '../internal/naming.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { IDsqlCluster } from './dsql-cluster.js';
-import { DsqlSchema } from './dsql-schema.js';
+import { DsqlSchema, type DsqlSchemaCloneFromConfig } from './dsql-schema.js';
 import { LambdaApi } from './lambda-api.js';
 import { StaticSite } from './static-site.js';
 
@@ -59,6 +59,15 @@ export interface PreviewableAppProps {
   readonly database?: {
     readonly migrationsPath: string;
     readonly cluster: IDsqlCluster;
+    /**
+     * Neon-branch-style clone: before applying migrations on the
+     * per-stage schema, copy structure + data from another schema in
+     * the same cluster. See `DsqlSchemaCloneFromConfig` for the
+     * column-nullify and table-blocklist knobs. Skipped automatically
+     * when the source schema doesn't exist yet (first deploy of an
+     * app) or matches the target (prod cloning itself).
+     */
+    readonly cloneFromSchema?: DsqlSchemaCloneFromConfig;
   };
 }
 
@@ -106,6 +115,9 @@ export class PreviewableApp extends Construct {
         prNumber: props.prNumber,
         migrationsPath: props.database.migrationsPath,
         cluster: this.cluster,
+        ...(props.database.cloneFromSchema !== undefined
+          ? { cloneFromSchema: props.database.cloneFromSchema }
+          : {}),
       });
     }
 

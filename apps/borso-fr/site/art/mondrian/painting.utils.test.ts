@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { PALETTES } from './palettes.utils';
 import {
   colorize,
   generateLayout,
@@ -7,6 +6,7 @@ import {
   pickSplitFraction,
   pickSplittableEntry,
 } from './painting.utils';
+import { PALETTES } from './palettes.utils';
 
 describe('mulberry32', () => {
   it('is deterministic for a fixed seed', () => {
@@ -138,9 +138,11 @@ describe('generateLayout', () => {
         const secondRect = layout[secondIndex];
         if (!firstRect || !secondRect) continue;
         const overlapsHorizontally =
-          firstRect.x < secondRect.x + secondRect.width && secondRect.x < firstRect.x + firstRect.width;
+          firstRect.x < secondRect.x + secondRect.width &&
+          secondRect.x < firstRect.x + firstRect.width;
         const overlapsVertically =
-          firstRect.y < secondRect.y + secondRect.height && secondRect.y < firstRect.y + firstRect.height;
+          firstRect.y < secondRect.y + secondRect.height &&
+          secondRect.y < firstRect.y + firstRect.height;
         expect(overlapsHorizontally && overlapsVertically).toBe(false);
       }
     }
@@ -168,7 +170,11 @@ describe('generateLayout', () => {
   it('produces both vertical and horizontal splits across many seeds (covers vertical / horizontal branches)', () => {
     let sawVerticalSplit = false;
     let sawHorizontalSplit = false;
-    for (let seedIndex = 1; seedIndex < 30 && !(sawVerticalSplit && sawHorizontalSplit); seedIndex++) {
+    for (
+      let seedIndex = 1;
+      seedIndex < 30 && !(sawVerticalSplit && sawHorizontalSplit);
+      seedIndex++
+    ) {
       const layout = generateLayout({ seed: seedIndex, complexity: 22 });
       const xCoords = new Set(layout.map((generatedRect) => generatedRect.x));
       const yCoords = new Set(layout.map((generatedRect) => generatedRect.y));

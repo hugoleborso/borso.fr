@@ -7,10 +7,7 @@ import { Modal } from '@/components/Modal';
 import { MoveButtonList } from '@/components/MoveButtonList';
 import { useBoardSize } from '@/hooks/useBoardSize';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import {
-  createLearnTreeMachine,
-  type LearnTreeMachine,
-} from '@/openings/learnTreeMachine.utils';
+import { createLearnTreeMachine, type LearnTreeMachine } from '@/openings/learnTreeMachine.utils';
 import { ALL_KEY, findOpening, findVariation, type Selection } from '@/openings/selectors.utils';
 import type { Opening, Variation } from '@/openings/types';
 import { uciToArrow } from '@/openings/uciSquare.utils';
@@ -64,8 +61,7 @@ export function ModeLearnTree({
   }
 
   const showButtons =
-    treeVisualizationMode === 'buttons' ||
-    (treeVisualizationMode === null && isMobile);
+    treeVisualizationMode === 'buttons' || (treeVisualizationMode === null && isMobile);
 
   const arrows: Arrow[] =
     !showButtons && snapshot.showRevealedArrows
@@ -105,8 +101,8 @@ export function ModeLearnTree({
         <div className="panel">
           <h3>Drill: {variation.name}</h3>
           <p>
-            Play any book move. The opponent picks one of the book replies at random; the drill
-            ends when every line in this variation has been visited at least once.
+            Play any book move. The opponent picks one of the book replies at random; the drill ends
+            when every line in this variation has been visited at least once.
           </p>
           <div className="controls-row">
             <button type="button" className="btn" onClick={machine.reset}>

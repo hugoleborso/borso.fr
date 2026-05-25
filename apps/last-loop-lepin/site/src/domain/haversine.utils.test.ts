@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { haversineDistanceMeters } from './haversine.utils';
 
 const PARIS = { lat: 48.8566, lng: 2.3522 };
-const LYON = { lat: 45.7640, lng: 4.8357 };
+const LYON = { lat: 45.764, lng: 4.8357 };
 const PARIS_LYON_REFERENCE_METERS = 392_000;
 const PARIS_LYON_TOLERANCE_RATIO = 0.005;
 

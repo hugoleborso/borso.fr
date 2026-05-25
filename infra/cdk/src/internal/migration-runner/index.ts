@@ -1,6 +1,7 @@
 /**
  * DSQL migration runner. Invoked as a CloudFormation custom resource by the
- * `DsqlSchema` construct. Creates the schema, applies migrations idempotently,
+ * `DsqlSchema` construct. Creates the schema, optionally clones data from a
+ * source schema (the "Neon-branch" pattern), applies migrations idempotently,
  * and DROPs the schema CASCADE on stack delete.
  *
  * Untested against real DSQL — see docs/architecture.md for known caveats
@@ -8,20 +9,36 @@
  * here as forward-only.
  *
  * Custom resource event properties (set by the construct):
- *   - clusterEndpoint: DSQL cluster Postgres endpoint
- *   - region:          AWS region of the cluster
- *   - schemaName:      schema to manage
- *   - migrations:      [{ name: string, sql: string }] in apply order
+ *   - clusterEndpoint:  DSQL cluster Postgres endpoint
+ *   - region:           AWS region of the cluster
+ *   - schemaName:       schema to manage
+ *   - migrations:       [{ name: string, sql: string }] in apply order
+ *   - cloneFromSchema:  optional — clone data + applied-migrations state
+ *                       from another schema before applying the PR's
+ *                       remaining migrations. Skipped when undefined or
+ *                       when the source schema doesn't exist (first-ever
+ *                       deploy of an app).
  *
  * @internal
  */
 
 import { DsqlSigner } from '@aws-sdk/dsql-signer';
 import postgres from 'postgres';
+import {
+  buildCloneInsertSql,
+  buildCreateTableLikeSql,
+  isCloneableDataTable,
+} from './clone-from-schema.utils.js';
 
 interface Migration {
   readonly name: string;
   readonly sql: string;
+}
+
+interface CloneFromSchemaProps {
+  readonly sourceSchemaName: string;
+  readonly tableBlocklist?: readonly string[];
+  readonly columnsToNullify?: Readonly<Record<string, readonly string[]>>;
 }
 
 interface ResourceProps {
@@ -29,6 +46,7 @@ interface ResourceProps {
   readonly region: string;
   readonly schemaName: string;
   readonly migrations: readonly Migration[];
+  readonly cloneFromSchema?: CloneFromSchemaProps;
 }
 
 interface CfnEvent {
@@ -96,7 +114,10 @@ const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
 function makeIdempotent(statement: string): string {
   return statement
     .replace(/\bCREATE\s+TABLE(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE TABLE IF NOT EXISTS$1')
-    .replace(/\bCREATE\s+UNIQUE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE UNIQUE INDEX IF NOT EXISTS$1')
+    .replace(
+      /\bCREATE\s+UNIQUE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i,
+      'CREATE UNIQUE INDEX IF NOT EXISTS$1',
+    )
     .replace(/\bCREATE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE INDEX IF NOT EXISTS$1')
     .replace(/\bCREATE\s+SCHEMA(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE SCHEMA IF NOT EXISTS$1')
     .replace(/\bADD\s+COLUMN(\s+(?!IF\s+NOT\s+EXISTS))/i, 'ADD COLUMN IF NOT EXISTS$1');
@@ -119,6 +140,111 @@ function splitStatements(sql: string): readonly string[] {
     .map((chunk) => chunk.trim())
     .filter((chunk) => chunk.length > 0)
     .map((chunk) => stripUsingClause(makeIdempotent(chunk)));
+}
+
+async function schemaExists(sql: postgres.Sql, schemaName: string): Promise<boolean> {
+  const rows = await sql.unsafe<{ count: number }[]>(
+    `SELECT 1 AS count FROM information_schema.schemata WHERE schema_name = '${schemaName.replace(/'/g, "''")}'`,
+  );
+  return rows.length > 0;
+}
+
+async function listTablesInSchema(
+  sql: postgres.Sql,
+  schemaName: string,
+): Promise<readonly string[]> {
+  const rows = await sql.unsafe<{ table_name: string }[]>(
+    `SELECT table_name FROM information_schema.tables WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_type = 'BASE TABLE' ORDER BY table_name`,
+  );
+  return rows.map((row) => row.table_name);
+}
+
+async function listColumns(
+  sql: postgres.Sql,
+  schemaName: string,
+  tableName: string,
+): Promise<readonly string[]> {
+  const rows = await sql.unsafe<{ column_name: string }[]>(
+    `SELECT column_name FROM information_schema.columns WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_name = '${tableName.replace(/'/g, "''")}' ORDER BY ordinal_position`,
+  );
+  return rows.map((row) => row.column_name);
+}
+
+/**
+ * Clone the structure + data of every table in `sourceSchemaName` into
+ * `targetSchemaName`, in the spirit of Neon's branch databases. Implements
+ * the "clone then apply migrations" pattern: structure via
+ * `CREATE TABLE … LIKE … INCLUDING ALL`, data via `INSERT INTO …
+ * SELECT … ON CONFLICT DO NOTHING`, with caller-declared columns
+ * (e.g. S3 object keys) NULLed in the SELECT list to keep references
+ * to the prod bucket from leaking into preview app code.
+ *
+ * Idempotent: re-running after the first deploy hits `IF NOT EXISTS`
+ * on the structural step and `ON CONFLICT DO NOTHING` on the data step,
+ * so previously-cloned rows survive and any newly-added prod rows
+ * propagate.
+ *
+ * Constraints in mind:
+ * - DSQL caps a single DML transaction at 3,000 rows. Tables larger
+ *   than that need chunking, which v1 doesn't ship — the runner will
+ *   throw cleanly via DSQL's "row limit exceeded" error rather than
+ *   silently lose rows, and the comment here flags the gap.
+ * - DSQL forbids multi-DDL transactions; every CREATE/INSERT below
+ *   ships in its own `sql.unsafe()` round-trip.
+ */
+async function cloneFromSchema(
+  sql: postgres.Sql,
+  targetSchemaName: string,
+  config: CloneFromSchemaProps,
+): Promise<void> {
+  if (config.sourceSchemaName === targetSchemaName) return;
+  if (!(await schemaExists(sql, config.sourceSchemaName))) return;
+
+  const blocklist = config.tableBlocklist ?? [];
+  const nullifyMap = config.columnsToNullify ?? {};
+  const sourceTables = await listTablesInSchema(sql, config.sourceSchemaName);
+
+  // Structure first — for every prod table including session blocklisted
+  // ones, the target needs the empty shape so the application can write
+  // to it post-deploy. `_migrations` is already created by ensureSchema,
+  // so `CREATE TABLE IF NOT EXISTS` makes it a no-op there.
+  for (const table of sourceTables) {
+    await sql.unsafe(buildCreateTableLikeSql(config.sourceSchemaName, targetSchemaName, table));
+  }
+
+  // Data step — skip blocklisted (runtime state) tables, clone the rest.
+  for (const table of sourceTables) {
+    if (!isCloneableDataTable(table, blocklist)) continue;
+    const columns = await listColumns(sql, config.sourceSchemaName, table);
+    if (columns.length === 0) continue;
+    const nullifyColumns = nullifyMap[table] ?? [];
+    await sql.unsafe(
+      buildCloneInsertSql(
+        config.sourceSchemaName,
+        targetSchemaName,
+        table,
+        columns,
+        nullifyColumns,
+      ),
+    );
+  }
+
+  // `_migrations` is special: its rows ARE the applied-migrations
+  // marker that `applyMigrations` checks below. Copy them so the
+  // runner short-circuits every migration prod already ran on the
+  // cloned data, and only the PR's net-new migrations execute.
+  const migrationsColumns = await listColumns(sql, config.sourceSchemaName, '_migrations');
+  if (migrationsColumns.length > 0) {
+    await sql.unsafe(
+      buildCloneInsertSql(
+        config.sourceSchemaName,
+        targetSchemaName,
+        '_migrations',
+        migrationsColumns,
+        [],
+      ),
+    );
+  }
 }
 
 async function applyMigrations(
@@ -167,6 +293,9 @@ export async function handler(event: CfnEvent): Promise<CfnResponse> {
       await dropSchema(sql, props.schemaName);
     } else {
       await ensureSchema(sql, props.schemaName);
+      if (props.cloneFromSchema !== undefined) {
+        await cloneFromSchema(sql, props.schemaName, props.cloneFromSchema);
+      }
       await applyMigrations(sql, props.schemaName, props.migrations);
     }
   } finally {

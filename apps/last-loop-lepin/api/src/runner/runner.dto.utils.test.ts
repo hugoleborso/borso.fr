@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { Runner } from './runner.types';
 import { readPhotosCdnHost, toRunnerDto } from './runner.dto.utils';
+import type { Runner } from './runner.types';
 
 const SAMPLE_RUNNER: Runner = {
   editionSlug: 'lepin-2026',

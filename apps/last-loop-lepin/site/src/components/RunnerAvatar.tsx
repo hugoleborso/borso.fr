@@ -7,12 +7,9 @@
  * it without reaching for `useEffect` (CLAUDE.md "`useEffect` is a smell").
  */
 
-import { useState } from 'react';
 import * as Sentry from '@sentry/react';
-import {
-  type RunnerAvatarSurface,
-  buildRunnerAvatar,
-} from '../domain/runner-avatar.utils';
+import { useState } from 'react';
+import { buildRunnerAvatar, type RunnerAvatarSurface } from '../domain/runner-avatar.utils';
 
 interface RunnerAvatarProps {
   readonly runner: {

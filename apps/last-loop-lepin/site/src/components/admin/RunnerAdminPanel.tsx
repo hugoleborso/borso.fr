@@ -28,7 +28,11 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const ALLOWED_PHOTO_TYPES: ReadonlySet<string> = new Set(['image/jpeg', 'image/png', 'image/webp']);
+  const ALLOWED_PHOTO_TYPES: ReadonlySet<string> = new Set([
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+  ]);
   const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
   async function uploadPhoto(slug: string, file: File): Promise<string> {
@@ -104,7 +108,9 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
       <form className="card-body col" onSubmit={(event) => void handleSubmit(event)}>
         <div className="row" style={{ gap: 'var(--d-3)', flexWrap: 'wrap' }}>
           <div className="field" style={{ flex: 1, minWidth: 180 }}>
-            <label className="field-label" htmlFor="runner-name">Nom</label>
+            <label className="field-label" htmlFor="runner-name">
+              Nom
+            </label>
             <input
               id="runner-name"
               className="input"
@@ -115,7 +121,9 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
             />
           </div>
           <div className="field" style={{ width: 80 }}>
-            <label className="field-label" htmlFor="runner-bib">Dossard</label>
+            <label className="field-label" htmlFor="runner-bib">
+              Dossard
+            </label>
             <input
               id="runner-bib"
               type="number"
@@ -128,7 +136,9 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
             />
           </div>
           <div className="field" style={{ flex: 1, minWidth: 180 }}>
-            <label className="field-label" htmlFor="runner-photo">Photo (selfie ou upload)</label>
+            <label className="field-label" htmlFor="runner-photo">
+              Photo (selfie ou upload)
+            </label>
             <input
               id="runner-photo"
               type="file"

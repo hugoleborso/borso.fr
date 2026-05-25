@@ -74,9 +74,9 @@ describe('nextMovesAt', () => {
 
 describe('leafReachedAt', () => {
   it('returns the line whose UCI sequence equals the played moves', () => {
-    expect(
-      leafReachedAt(ITALIAN_MAIN, ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'])?.id,
-    ).toBe('two-knights');
+    expect(leafReachedAt(ITALIAN_MAIN, ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'])?.id).toBe(
+      'two-knights',
+    );
   });
 
   it('returns null when no line ends at this position', () => {
@@ -98,8 +98,8 @@ describe('isVariationCleared', () => {
   });
 
   it('returns true when every leaf has been visited', () => {
-    expect(
-      isVariationCleared(ITALIAN_MAIN, new Set(['classical', 'two-knights', 'evans'])),
-    ).toBe(true);
+    expect(isVariationCleared(ITALIAN_MAIN, new Set(['classical', 'two-knights', 'evans']))).toBe(
+      true,
+    );
   });
 });

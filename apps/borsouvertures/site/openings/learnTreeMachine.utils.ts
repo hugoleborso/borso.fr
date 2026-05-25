@@ -1,10 +1,6 @@
 import { Chess } from 'chess.js';
 import type { Side } from '@/state/persistedState.utils';
-import {
-  isVariationCleared,
-  leafReachedAt,
-  nextMovesAt,
-} from './bookTree.utils';
+import { isVariationCleared, leafReachedAt, nextMovesAt } from './bookTree.utils';
 import type { Variation } from './types';
 import { uciFromSquare, uciPromotion, uciToSquare } from './uciSquare.utils';
 
@@ -86,9 +82,7 @@ function defaultScheduleTimeout(callback: () => void, delayMs: number): void {
  * time and bail when the machine has moved on. This is the mitigation for B5
  * in the spec (stale setTimeout firing after a side / variation change).
  */
-export function createLearnTreeMachine(
-  options: LearnTreeMachineOptions = {},
-): LearnTreeMachine {
+export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): LearnTreeMachine {
   const opponentDelayMs = options.opponentDelayMs ?? DEFAULT_OPPONENT_DELAY_MS;
   const pickRandom = options.pickRandom ?? defaultPickRandom;
   const scheduleTimeout = options.scheduleTimeout ?? defaultScheduleTimeout;

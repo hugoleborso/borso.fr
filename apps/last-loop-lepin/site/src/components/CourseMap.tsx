@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
 import L from 'leaflet';
+import { useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import type { RaceEditionDto, RankedRunnerDto } from '../domain/types';
 import {
@@ -178,9 +178,14 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
       />
       <div
         className="muted mono"
-        style={{ padding: 'var(--d-3) var(--d-5)', fontSize: 12, borderTop: '1px solid var(--line-soft)' }}
+        style={{
+          padding: 'var(--d-3) var(--d-5)',
+          fontSize: 12,
+          borderTop: '1px solid var(--line-soft)',
+        }}
       >
-        {(edition.gpx.distanceMeters / 1000).toFixed(2)} km · {Math.round(edition.gpx.elevationGainMeters)} m D+
+        {(edition.gpx.distanceMeters / 1000).toFixed(2)} km ·{' '}
+        {Math.round(edition.gpx.elevationGainMeters)} m D+
       </div>
     </div>
   );

@@ -45,10 +45,7 @@ describe('polylineDistanceMeters', () => {
       { lat: 0, lng: 1 },
       { lat: 0, lng: 2 },
     ];
-    const expectedSegmentMeters = haversineMeters(
-      { lat: 0, lng: 0 },
-      { lat: 0, lng: 1 },
-    );
+    const expectedSegmentMeters = haversineMeters({ lat: 0, lng: 0 }, { lat: 0, lng: 1 });
     expect(polylineDistanceMeters(polyline)).toBeCloseTo(expectedSegmentMeters * 2, 1);
   });
 });

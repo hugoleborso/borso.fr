@@ -65,9 +65,7 @@ const EMPTY_FASTEST_LAP_SLUGS: ReadonlySet<string> = new Set();
 
 export function Leaderboard({ ranked, fastestLapSlugs, onChipSelect }: LeaderboardProps) {
   if (ranked.length === 0) {
-    return (
-      <div className="card-body muted">Aucun coureur inscrit pour l'instant.</div>
-    );
+    return <div className="card-body muted">Aucun coureur inscrit pour l'instant.</div>;
   }
   const decoratedSlugs = fastestLapSlugs ?? EMPTY_FASTEST_LAP_SLUGS;
   // CSS multi-column flow gives a Pinterest-style "masonry" layout

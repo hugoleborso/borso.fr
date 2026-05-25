@@ -123,7 +123,9 @@ describe('previewHostname / previewS3Prefix', () => {
   });
 
   it('s3 prefix mirrors hostname', () => {
-    expect(previewS3Prefix({ app: 'test-app', stage: 'preview', prNumber: 5 })).toBe('test-app/pr-5');
+    expect(previewS3Prefix({ app: 'test-app', stage: 'preview', prNumber: 5 })).toBe(
+      'test-app/pr-5',
+    );
     expect(previewS3Prefix({ app: 'test-app', stage: 'integ', prNumber: 5 })).toBe(
       'bp-integ/test-app/pr-5',
     );

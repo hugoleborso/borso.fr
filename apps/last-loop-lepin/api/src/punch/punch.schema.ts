@@ -29,9 +29,7 @@ export const loopPunchesTable = pgTable('loop_punches', {
   finishedAt: timestamp('finished_at', { withTimezone: true, mode: 'date' }).notNull(),
   correctedAt: timestamp('corrected_at', { withTimezone: true, mode: 'date' }),
   voidedAt: timestamp('voided_at', { withTimezone: true, mode: 'date' }),
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
-    .notNull()
-    .defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   // `source` stays nullable at the DB level — DSQL rejects ALTER TABLE
   // post-creation NOT NULL/DEFAULT (cf. docs/knowledge/dsql-postgres-compat-gaps.md §10).
   // The app-level narrow lives in `punch.repository.ts:narrowPunchSource`.
@@ -52,9 +50,7 @@ export const manualDnfsTable = pgTable(
     outAtLoop: integer('out_at_loop').notNull(),
     reason: text('reason').notNull(),
     decidedAt: timestamp('decided_at', { withTimezone: true, mode: 'date' }).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   },
   (table) => ({
     primary: primaryKey({ columns: [table.editionSlug, table.runnerSlug] }),

@@ -80,15 +80,24 @@ describe('auth.repository — admin sessions', () => {
 
   it('deleteSession removes the row', async () => {
     const now = new Date('2026-09-19T06:00:00+02:00');
-    await createSession(freshDatabase(), { id: 'sess-c', expiresAt: new Date(now.getTime() + 60_000) });
+    await createSession(freshDatabase(), {
+      id: 'sess-c',
+      expiresAt: new Date(now.getTime() + 60_000),
+    });
     await deleteSession(freshDatabase(), 'sess-c');
     expect(await findValidSession(freshDatabase(), 'sess-c', now)).toBeNull();
   });
 
   it('purgeExpiredSessions drops only the rows whose expires_at has passed', async () => {
     const now = new Date('2026-09-19T06:00:00+02:00');
-    await createSession(freshDatabase(), { id: 'sess-live', expiresAt: new Date(now.getTime() + 60_000) });
-    await createSession(freshDatabase(), { id: 'sess-dead', expiresAt: new Date(now.getTime() - 60_000) });
+    await createSession(freshDatabase(), {
+      id: 'sess-live',
+      expiresAt: new Date(now.getTime() + 60_000),
+    });
+    await createSession(freshDatabase(), {
+      id: 'sess-dead',
+      expiresAt: new Date(now.getTime() - 60_000),
+    });
     await purgeExpiredSessions(freshDatabase(), now);
     expect(await findValidSession(freshDatabase(), 'sess-live', now)).not.toBeNull();
     // Probe with `new Date(0)` so the expires_at filter doesn't itself hide the row.

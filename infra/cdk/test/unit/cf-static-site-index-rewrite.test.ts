@@ -60,7 +60,9 @@ describe('STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE', () => {
 
   it('passes through nested asset URIs with the dot in the last segment', () => {
     expect(
-      evaluateHandler({ request: { uri: '/assets/playfair-display-latin-400-normal-CFtfchNt.woff2' } }),
+      evaluateHandler({
+        request: { uri: '/assets/playfair-display-latin-400-normal-CFtfchNt.woff2' },
+      }),
     ).toStrictEqual({ uri: '/assets/playfair-display-latin-400-normal-CFtfchNt.woff2' });
   });
 });

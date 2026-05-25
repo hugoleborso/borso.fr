@@ -94,10 +94,7 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
     new PolicyStatement({
       effect: Effect.ALLOW,
       actions: cdkRoleIamActions,
-      resources: [
-        `arn:aws:iam::${account}:role/*-prod-*`,
-        `arn:aws:iam::${account}:role/cdk-*`,
-      ],
+      resources: [`arn:aws:iam::${account}:role/*-prod-*`, `arn:aws:iam::${account}:role/cdk-*`],
     }),
   );
   prod.addToPolicy(dsqlAppPolicy);
@@ -118,10 +115,7 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
     new PolicyStatement({
       effect: Effect.ALLOW,
       actions: cdkRoleIamActions,
-      resources: [
-        `arn:aws:iam::${account}:role/*-pr-*`,
-        `arn:aws:iam::${account}:role/cdk-*`,
-      ],
+      resources: [`arn:aws:iam::${account}:role/*-pr-*`, `arn:aws:iam::${account}:role/cdk-*`],
     }),
   );
   preview.addToPolicy(dsqlAppPolicy);

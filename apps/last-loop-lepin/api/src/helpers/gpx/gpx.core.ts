@@ -9,11 +9,7 @@
  * for a regex pass that fits in 40 lines.
  */
 
-import {
-  type LatLng,
-  polylineDistanceMeters,
-  smoothedElevationGainMeters,
-} from '../geo/geo.core';
+import { type LatLng, polylineDistanceMeters, smoothedElevationGainMeters } from '../geo/geo.core';
 
 export interface GpxTrack {
   readonly distanceMeters: number;

@@ -69,11 +69,7 @@ export function indexTrack(points: readonly LatLngDto[]): Indexed {
   return { points, cumulative, total: running };
 }
 
-function interpolateSegment(
-  start: LatLngDto,
-  end: LatLngDto,
-  localFraction: number,
-): LatLngDto {
+function interpolateSegment(start: LatLngDto, end: LatLngDto, localFraction: number): LatLngDto {
   return {
     lat: start.lat + (end.lat - start.lat) * localFraction,
     lng: start.lng + (end.lng - start.lng) * localFraction,
@@ -117,8 +113,7 @@ export function projectFraction(track: Indexed, fraction: number): LatLngDto {
     if (cumulativeDistance >= target) break;
   }
   const segmentLength = segmentEndMeters - segmentStartMeters;
-  const localFraction =
-    segmentLength === 0 ? 0 : (target - segmentStartMeters) / segmentLength;
+  const localFraction = segmentLength === 0 ? 0 : (target - segmentStartMeters) / segmentLength;
   return interpolateSegment(segmentStart, segmentEnd, localFraction);
 }
 
@@ -185,8 +180,7 @@ export function projectFractionTimeAware(
     return currentPoint;
   }
   const segmentSpan = currentFraction - previousFraction;
-  const localFraction =
-    segmentSpan === 0 ? 0 : (clamped - previousFraction) / segmentSpan;
+  const localFraction = segmentSpan === 0 ? 0 : (clamped - previousFraction) / segmentSpan;
   return interpolateSegment(previousPoint, currentPoint, localFraction);
 }
 
@@ -220,7 +214,11 @@ interface AvatarHtmlInput {
   readonly slug: string;
 }
 
-function initialsSpanHtml(input: AvatarHtmlInput, fallbackInitials: string, fallbackBg: string): string {
+function initialsSpanHtml(
+  input: AvatarHtmlInput,
+  fallbackInitials: string,
+  fallbackBg: string,
+): string {
   return `<span class="runner-avatar runner-avatar--initials map-avatar" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px;background:${escapeHtml(fallbackBg)}">${escapeHtml(fallbackInitials)}</span>`;
 }
 
@@ -242,7 +240,11 @@ export function avatarHtmlWithPhoto(input: AvatarHtmlInput): string {
   if (avatar.kind === 'initials') {
     return initialsSpanHtml(input, avatar.initials, avatar.backgroundColor);
   }
-  const fallbackHtml = initialsSpanHtml(input, avatar.fallback.initials, avatar.fallback.backgroundColor);
+  const fallbackHtml = initialsSpanHtml(
+    input,
+    avatar.fallback.initials,
+    avatar.fallback.backgroundColor,
+  );
   // `onerror` rewrites the wrapper's innerHTML to the initials span. The
   // wrapper itself sticks around (its size + class anchor the Leaflet icon
   // bounding box), so the swap is a contained DOM mutation that survives

@@ -1,7 +1,11 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import {
+  freshDatabase,
+  seedAdminCredentials,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import { createApp } from '../app';
-import { freshDatabase, seedAdminCredentials, truncateAllTables } from '../../../test/database-utils';
 import { findValidSession } from './auth.repository';
 
 const loginResponseSchema = z.object({ expiresAt: z.string() });

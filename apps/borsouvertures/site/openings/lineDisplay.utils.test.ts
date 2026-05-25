@@ -22,7 +22,11 @@ function lineWith(name: string): Line {
 describe('shortLineName', () => {
   it('strips both the opening prefix and the variation prefix from a colon-delimited line', () => {
     expect(
-      shortLineName(opening, variation, lineWith("Italian Game: Classical Variation, Greco's Attack")),
+      shortLineName(
+        opening,
+        variation,
+        lineWith("Italian Game: Classical Variation, Greco's Attack"),
+      ),
     ).toBe("Greco's Attack");
   });
 
@@ -46,9 +50,9 @@ describe('shortLineName', () => {
   });
 
   it('strips only the opening prefix when the variation prefix does not match', () => {
-    expect(
-      shortLineName(opening, variation, lineWith('Italian Game: Anti-Fried Liver')),
-    ).toBe('Anti-Fried Liver');
+    expect(shortLineName(opening, variation, lineWith('Italian Game: Anti-Fried Liver'))).toBe(
+      'Anti-Fried Liver',
+    );
   });
 
   it('returns the rest verbatim when only the opening prefix matches without a comma', () => {

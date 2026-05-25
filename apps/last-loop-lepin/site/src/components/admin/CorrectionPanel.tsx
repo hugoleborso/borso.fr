@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { apiClient } from '../../api/client';
 import { invalidateResource, useResource } from '../../data/useResource';
-import { recordAnalyticsEvent } from '../../observability/sentry';
 import type { RaceEditionDto, RunnerDto } from '../../domain/types';
+import { recordAnalyticsEvent } from '../../observability/sentry';
 
 interface CorrectionPanelProps {
   readonly edition: RaceEditionDto;
@@ -14,7 +14,9 @@ function formatHourMinute(iso: string): string {
 }
 
 export function CorrectionPanel({ edition }: CorrectionPanelProps) {
-  const rosterState = useResource(`runners:${edition.slug}`, () => apiClient.listRunners(edition.slug));
+  const rosterState = useResource(`runners:${edition.slug}`, () =>
+    apiClient.listRunners(edition.slug),
+  );
   const roster: readonly RunnerDto[] = rosterState.value?.runners ?? [];
 
   const [busyPunchId, setBusyPunchId] = useState<string | null>(null);
@@ -38,7 +40,9 @@ export function CorrectionPanel({ edition }: CorrectionPanelProps) {
               runner={runner}
               editionSlug={edition.slug}
               opened={openedRunner === runner.slug}
-              onToggle={() => setOpenedRunner((current) => (current === runner.slug ? null : runner.slug))}
+              onToggle={() =>
+                setOpenedRunner((current) => (current === runner.slug ? null : runner.slug))
+              }
               busyPunchId={busyPunchId}
               setBusyPunchId={setBusyPunchId}
               setError={setError}
@@ -102,12 +106,16 @@ function RunnerRow({
         style={{ justifyContent: 'space-between' }}
       >
         <span>{runner.displayName}</span>
-        <span className="muted mono">{punches.filter((punch) => punch.voidedAt === null).length} boucle(s)</span>
+        <span className="muted mono">
+          {punches.filter((punch) => punch.voidedAt === null).length} boucle(s)
+        </span>
       </button>
       {opened ? (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {punches.length === 0 ? (
-            <li className="muted" style={{ padding: '6px 0' }}>Aucun pointage.</li>
+            <li className="muted" style={{ padding: '6px 0' }}>
+              Aucun pointage.
+            </li>
           ) : (
             punches.map((punch) => (
               <li key={punch.id} className="leaderboard-row">

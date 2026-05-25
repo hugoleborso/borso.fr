@@ -16,12 +16,7 @@
  * is always populated.
  */
 
-import {
-  StaticSite,
-  requireAwsAccount,
-  requireDeployStage,
-  requirePrNumber,
-} from '@borso/infra';
+import { requireAwsAccount, requireDeployStage, requirePrNumber, StaticSite } from '@borso/infra';
 import { App, Stack } from 'aws-cdk-lib';
 
 const APP_SLUG = 'borso-fr';

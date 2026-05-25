@@ -48,7 +48,9 @@ describe('createApp — test-seed routing flag', () => {
   it('mounts /api/__test/seed (non-404) when the flag is "1"', async () => {
     process.env[TEST_SEED_FLAG] = '1';
     const app = createApp();
-    const response = await app.request('/api/__test/seed?fixture=race-down-to-one-survivor', { method: 'POST' });
+    const response = await app.request('/api/__test/seed?fixture=race-down-to-one-survivor', {
+      method: 'POST',
+    });
     expect(response.status).not.toBe(404);
   });
 
