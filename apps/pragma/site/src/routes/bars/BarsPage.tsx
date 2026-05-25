@@ -9,7 +9,7 @@
  * The stale-bar banner + per-row badge fire from `stale-bar.utils`.
  */
 
-import type { FormEvent, JSX } from 'react';
+import type { JSX } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '../../components/atoms/Badge';
@@ -24,8 +24,9 @@ import { countStale, isStale } from '../../lib/stale-bar.utils';
 import {
   BAR_STATUSES,
   BAR_STATUS_KEY,
-  BLANK_BAR_DRAFT,
-  type BarDraftState,
+  BLANK_BAR_FORM,
+  type BarFormInitial,
+  type BarFormSubmitPayload,
   type BarStatus,
   BarForm,
 } from './BarForm';
@@ -33,7 +34,7 @@ import {
 type Bar = NonNullable<ReturnType<typeof useBarsList>['data']>['bars'][number];
 type View = 'list' | 'kanban';
 
-function fromBar(bar: Bar): BarDraftState {
+function initialFromBar(bar: Bar): BarFormInitial {
   return {
     id: bar.id,
     name: bar.name,
@@ -47,34 +48,10 @@ function fromBar(bar: Bar): BarDraftState {
   };
 }
 
-interface BarUpdatePayload {
-  name: string;
-  status: BarStatus;
-  notes: string;
-  city: string | null;
-  capacity: number | null;
-  contactName: string | null;
-  contactEmail: string | null;
-  contactPhone: string | null;
-}
-
-function payloadFrom(draft: BarDraftState): BarUpdatePayload {
-  return {
-    name: draft.name.trim(),
-    status: draft.status,
-    notes: draft.notes,
-    city: draft.city.length === 0 ? null : draft.city,
-    capacity: draft.capacity.length === 0 ? null : Number(draft.capacity),
-    contactName: draft.contactName.length === 0 ? null : draft.contactName,
-    contactEmail: draft.contactEmail.length === 0 ? null : draft.contactEmail,
-    contactPhone: draft.contactPhone.length === 0 ? null : draft.contactPhone,
-  };
-}
-
 export function BarsPage(): JSX.Element {
   const { t } = useTranslation();
   const [view, setView] = useState<View>('list');
-  const [draft, setDraft] = useState<BarDraftState>(BLANK_BAR_DRAFT);
+  const [formInitial, setFormInitial] = useState<BarFormInitial>(BLANK_BAR_FORM);
   const [localError, setLocalError] = useState<string | null>(null);
   const barsQuery = useBarsList();
   const createBar = useCreateBar();
@@ -107,21 +84,22 @@ export function BarsPage(): JSX.Element {
     barsQuery.error instanceof ApiError ? barsQuery.error.message : null;
   const displayError = localError ?? queryError;
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
-    event.preventDefault();
-    const payload = payloadFrom(draft);
+  const handleFormSubmit = (
+    id: string | null,
+    payload: BarFormSubmitPayload,
+  ): void => {
     if (payload.name.length === 0) return;
     const onError = (error: Error): void =>
       setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
-    if (draft.id === null) {
+    if (id === null) {
       createBar.mutate(payload, {
-        onSuccess: () => setDraft(BLANK_BAR_DRAFT),
+        onSuccess: () => setFormInitial(BLANK_BAR_FORM),
         onError,
       });
     } else {
       updateBar.mutate(
-        { id: draft.id, ...payload },
-        { onSuccess: () => setDraft(BLANK_BAR_DRAFT), onError },
+        { id, ...payload },
+        { onSuccess: () => setFormInitial(BLANK_BAR_FORM), onError },
       );
     }
   };
@@ -131,7 +109,7 @@ export function BarsPage(): JSX.Element {
       { id },
       {
         onSuccess: () => {
-          if (draft.id === id) setDraft(BLANK_BAR_DRAFT);
+          if (formInitial.id === id) setFormInitial(BLANK_BAR_FORM);
         },
         onError: (error) =>
           setLocalError(error instanceof ApiError ? error.message : 'unknown-error'),
@@ -210,7 +188,7 @@ export function BarsPage(): JSX.Element {
                 <button
                   type="button"
                   className="flex-1 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
-                  onClick={() => setDraft(fromBar(bar))}
+                  onClick={() => setFormInitial(initialFromBar(bar))}
                 >
                   {bar.name}
                 </button>
@@ -232,10 +210,10 @@ export function BarsPage(): JSX.Element {
             ))}
           </ul>
           <BarForm
-            draft={draft}
-            onChange={setDraft}
-            onSubmit={handleSubmit}
-            onCancel={() => setDraft(BLANK_BAR_DRAFT)}
+            key={formInitial.id ?? 'new'}
+            initial={formInitial}
+            onSubmit={handleFormSubmit}
+            onCancel={() => setFormInitial(BLANK_BAR_FORM)}
           />
         </div>
       ) : (
@@ -266,7 +244,7 @@ export function BarsPage(): JSX.Element {
                   )}
                   draggable
                   onDragStart={(event) => event.dataTransfer.setData('text/plain', bar.id)}
-                  onClick={() => setDraft(fromBar(bar))}
+                  onClick={() => setFormInitial(initialFromBar(bar))}
                 >
                   <div className="flex items-center gap-2 text-[13.5px] font-medium text-ink-900 mb-1">
                     {bar.name}
