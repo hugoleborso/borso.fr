@@ -33,7 +33,8 @@ summary: |
   apply to mutation lifecycles. Flagged for visual-validation to confirm the UX claim
   (no flash on slider / drag / typing / delete / add) against a running app.
 
-  Final SHA: ecc11c0. 5 commits on top of base 6ae9327.
+  Final SHA: 0f48635 (post-rebase onto remote tip 25a5f80, which carried another agent's
+  sessions create + delete work). 5 feature commits + 1 verdict commit.
 artifacts:
   - apps/pragma/site/src/lib/queries/setlists.ts
   - apps/pragma/site/src/lib/queries/setlists.utils.ts
