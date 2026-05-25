@@ -123,6 +123,10 @@ Two failure modes to watch for:
 
 - [`race-end-signal-duality.md`](./race-end-signal-duality.md) — two end-of-race signals (`edition.status === 'finished'` admin intent, `standings.raceEnded` engine truth) and which call sites should consume which.
 
+### pragma app — vendor APIs
+
+- [`getsongbpm-integration.md`](./getsongbpm-integration.md) — GetSongBPM (secondary lookup after MusicBrainz) for song tonality + BPM. Free tier with signup, mandatory attribution link, 1 req/sec rate limit. Key lands in the `GETSONGBPM_API_KEY` GitHub repo secret → CDK synth → Lambda env. Empty key = graceful no-op (search returns MB-only hits with `tonality: null`, `bpm: null`).
+
 ### borsouvertures / chess libraries
 
 - [`chessjs-v1-throws-on-illegal-move.md`](./chessjs-v1-throws-on-illegal-move.md) — `chess.js` v1 throws on illegal moves; v0 returned `null`. Wrap every `chess.move` in `try`/`catch`.
