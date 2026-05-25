@@ -1,33 +1,33 @@
 /**
  * SongSearch — search-as-you-type input that proxies to MusicBrainz
- * via `/api/songs/search` and surfaces clickable result rows. The
- * caller (the New-Song form) is fed `{ title, artist, year }` on
- * pick — manual entry is never blocked.
+ * via `useSongSearch()` (TanStack Query). The caller (the New-Song
+ * form) is fed `{ title, artist, year }` on pick — manual entry is
+ * never blocked.
  *
- * Effect rationale: the molecule uses one `useEffect` to drive a
- * setTimeout-backed debounce. This matches CLAUDE.md's acceptable
- * pattern — synchronising React state with an external timer.
+ * The 1000ms debounce sits on the input via a `setTimeout` that
+ * forwards the trimmed query to `searchQuery` state — `useSongSearch`
+ * receives the debounced value, so the network call only fires once
+ * per typing pause. The debounce effect synchronises React state with
+ * an external timer; that's the canonical `useEffect` carve-out from
+ * CLAUDE.md.
  */
 
 import { useEffect, useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
-import { ApiError, apiRequest } from '../../lib/api-client';
+import { ApiError } from '../../lib/api';
+import { useSongSearch } from '../../lib/queries/songs';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 import { cn } from '../atoms/cn.utils';
 
 const DEBOUNCE_MS = 1000;
 
-const externalHitSchema = z.object({
-  mbid: z.string(),
-  title: z.string(),
-  artist: z.string(),
-  year: z.number().nullable(),
-});
-const externalSearchResponseSchema = z.object({ hits: z.array(externalHitSchema) });
-
-export type ExternalSongHit = z.infer<typeof externalHitSchema>;
+export interface ExternalSongHit {
+  readonly mbid: string;
+  readonly title: string;
+  readonly artist: string;
+  readonly year: number | null;
+}
 
 export interface SongSearchProps {
   readonly onPick: (hit: ExternalSongHit) => void;
@@ -37,43 +37,25 @@ export interface SongSearchProps {
 export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
-  const [hits, setHits] = useState<ExternalSongHit[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState('');
 
   useEffect(() => {
-    const trimmed = query.trim();
-    if (trimmed.length === 0) {
-      setHits([]);
-      setHasSearched(false);
-      return;
-    }
-    const controller = new AbortController();
     const timer = setTimeout(() => {
-      setLoading(true);
-      setError(null);
-      apiRequest(`/api/songs/search?q=${encodeURIComponent(trimmed)}`, {
-        signal: controller.signal,
-      })
-        .then((payload) => externalSearchResponseSchema.parse(payload))
-        .then((parsed) => {
-          setHits(parsed.hits);
-          setHasSearched(true);
-        })
-        .catch((caught: unknown) => {
-          if (caught instanceof DOMException && caught.name === 'AbortError') return;
-          setError(caught instanceof ApiError ? caught.message : 'search-failed');
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      setDebouncedQuery(query.trim());
     }, DEBOUNCE_MS);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
+    return () => clearTimeout(timer);
   }, [query]);
+
+  const search = useSongSearch(debouncedQuery);
+  const hits = search.data?.hits ?? [];
+  const loading = search.isFetching;
+  const error =
+    search.error instanceof ApiError
+      ? search.error.message
+      : search.error
+        ? 'search-failed'
+        : null;
+  const hasSearched = debouncedQuery.length > 0 && !loading && error === null;
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
@@ -119,7 +101,7 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
           ))}
         </ul>
       ) : null}
-      {!loading && hasSearched && hits.length === 0 && error === null ? (
+      {hasSearched && hits.length === 0 ? (
         <p className="text-xs text-ink-500 italic">{t('catalog.searchNoResults')}</p>
       ) : null}
     </div>

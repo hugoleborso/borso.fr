@@ -18,11 +18,15 @@ function fakeFile(type: string, size: number): File {
 describe('validateChartFile', () => {
   it('accepts application/pdf as the pdf kind', () => {
     const result = validateChartFile(fakeFile(ALLOWED_PDF_MIME, 1024));
-    expect(result).toEqual({ ok: true, kind: 'pdf' });
+    expect(result).toEqual({ ok: true, kind: 'pdf', contentType: ALLOWED_PDF_MIME });
   });
 
   it.each(ALLOWED_IMAGE_MIMES)('accepts %s as the image kind', (mime) => {
-    expect(validateChartFile(fakeFile(mime, 1024))).toEqual({ ok: true, kind: 'image' });
+    expect(validateChartFile(fakeFile(mime, 1024))).toEqual({
+      ok: true,
+      kind: 'image',
+      contentType: mime,
+    });
   });
 
   it('rejects an unsupported MIME', () => {

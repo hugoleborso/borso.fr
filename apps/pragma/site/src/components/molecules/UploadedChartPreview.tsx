@@ -2,18 +2,18 @@
  * UploadedChartPreview — renders a chart variant stored in S3 by asking
  * the API for a short-lived signed GET URL and feeding it to an
  * `<iframe>` (PDF) or `<img>` (image). The signed URL never reaches
- * the browser cache layer beyond its 5-min validity window.
+ * the browser cache layer beyond its 5-min validity window — we set
+ * the query's `gcTime` and `staleTime` shorter than the URL's actual
+ * expiry, so TanStack Query refetches before the URL goes stale.
  */
 
-import { useEffect, useState, type JSX } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
-import { ApiError, apiRequest } from '../../lib/api-client';
+import { ApiError, api } from '../../lib/api';
 
-const signedGetResponseSchema = z.object({
-  getUrl: z.string().url(),
-  expiresAt: z.string(),
-});
+const SIGNED_URL_STALE_MS = 4 * 60 * 1000;
+const SIGNED_URL_GC_MS = 5 * 60 * 1000;
 
 export interface UploadedChartPreviewProps {
   readonly kind: 'pdf' | 'image';
@@ -27,42 +27,31 @@ export function UploadedChartPreview({
   className,
 }: UploadedChartPreviewProps): JSX.Element {
   const { t } = useTranslation();
-  const [signedUrl, setSignedUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const signed = useQuery({
+    queryKey: ['uploads', 'sign-get', objectKey],
+    queryFn: async () => {
+      const response = await api.api.uploads['sign-get'].$post({ json: { objectKey } });
+      if (!response.ok) throw new ApiError(response.status, `sign-get ${response.status}`, null);
+      return response.json();
+    },
+    staleTime: SIGNED_URL_STALE_MS,
+    gcTime: SIGNED_URL_GC_MS,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-    setSignedUrl(null);
-    setError(null);
-    apiRequest('/api/uploads/sign-get', { method: 'POST', body: { objectKey } })
-      .then((payload) => signedGetResponseSchema.parse(payload))
-      .then((parsed) => {
-        if (cancelled) return;
-        setSignedUrl(parsed.getUrl);
-      })
-      .catch((caught: unknown) => {
-        if (cancelled) return;
-        setError(caught instanceof ApiError ? caught.message : 'sign-get-failed');
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [objectKey]);
-
-  if (error !== null) {
+  if (signed.error instanceof ApiError) {
     return (
       <p className="text-xs text-danger" role="alert">
-        {error}
+        {signed.error.message}
       </p>
     );
   }
-  if (signedUrl === null) {
+  if (signed.data === undefined) {
     return <p className="text-xs text-ink-400 italic">{t('common.loading')}</p>;
   }
   if (kind === 'pdf') {
     return (
       <iframe
-        src={signedUrl}
+        src={signed.data.getUrl}
         title={objectKey}
         className={`w-full h-[720px] border border-line rounded-md ${className ?? ''}`}
       />
@@ -70,7 +59,7 @@ export function UploadedChartPreview({
   }
   return (
     <img
-      src={signedUrl}
+      src={signed.data.getUrl}
       alt={objectKey}
       className={`max-w-full rounded-md border border-line ${className ?? ''}`}
     />

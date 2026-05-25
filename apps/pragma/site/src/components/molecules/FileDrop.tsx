@@ -10,8 +10,8 @@
 
 import { type DragEvent, type JSX, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
-import { ApiError, apiRequest } from '../../lib/api-client';
+import { ApiError } from '../../lib/api';
+import { useSignChartUpload } from '../../lib/queries/uploads';
 import { cn } from '../atoms/cn.utils';
 import { Icon } from '../atoms/Icon';
 import {
@@ -20,12 +20,6 @@ import {
   type FileDropChartKind,
   validateChartFile,
 } from './file-drop.utils';
-
-const presignResponseSchema = z.object({
-  uploadUrl: z.string().url(),
-  objectKey: z.string(),
-  expiresAt: z.string(),
-});
 
 export interface FileDropResult {
   readonly kind: FileDropChartKind;
@@ -49,9 +43,10 @@ export function FileDrop({
 }: FileDropProps): JSX.Element {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
+  const sign = useSignChartUpload();
   const [dragOver, setDragOver] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const busy = sign.isPending;
 
   const handleFile = async (file: File): Promise<void> => {
     setError(null);
@@ -64,18 +59,12 @@ export function FileDrop({
       );
       return;
     }
-    setBusy(true);
     try {
-      const signed = presignResponseSchema.parse(
-        await apiRequest('/api/uploads/sign', {
-          method: 'POST',
-          body: {
-            contentType: file.type,
-            contentLength: file.size,
-            ...(songId !== undefined ? { songId } : {}),
-          },
-        }),
-      );
+      const signed = await sign.mutateAsync({
+        contentType: validated.contentType,
+        contentLength: file.size,
+        ...(songId !== undefined ? { songId } : {}),
+      });
       const putResponse = await fetch(signed.uploadUrl, {
         method: 'PUT',
         body: file,
@@ -88,8 +77,6 @@ export function FileDrop({
       onUploaded({ kind: validated.kind, objectKey: signed.objectKey });
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : t('catalog.uploadFailed'));
-    } finally {
-      setBusy(false);
     }
   };
 

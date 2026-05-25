@@ -11,11 +11,17 @@
  * `createRoot` so no new tooling is added for a single component test.
  */
 
-import { act } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FileDrop } from './FileDrop';
 import '../../i18n/i18n';
+
+function withQueryClient(children: ReactNode): ReactNode {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -50,11 +56,13 @@ describe('FileDrop — Remove button', () => {
 
     act(() => {
       root.render(
-        <FileDrop
-          currentObjectKey="charts/abc.pdf"
-          onUploaded={onUploaded}
-          onRemoved={onRemoved}
-        />,
+        withQueryClient(
+          <FileDrop
+            currentObjectKey="charts/abc.pdf"
+            onUploaded={onUploaded}
+            onRemoved={onRemoved}
+          />,
+        ),
       );
     });
 
@@ -70,7 +78,11 @@ describe('FileDrop — Remove button', () => {
     expect(onUploaded).not.toHaveBeenCalled();
 
     act(() => {
-      root.render(<FileDrop currentObjectKey="" onUploaded={onUploaded} onRemoved={onRemoved} />);
+      root.render(
+        withQueryClient(
+          <FileDrop currentObjectKey="" onUploaded={onUploaded} onRemoved={onRemoved} />,
+        ),
+      );
     });
 
     expect(findRemoveButton(container)).toBeNull();
@@ -79,7 +91,11 @@ describe('FileDrop — Remove button', () => {
 
   it('omits the Remove button when no onRemoved handler is provided', () => {
     act(() => {
-      root.render(<FileDrop currentObjectKey="charts/abc.pdf" onUploaded={vi.fn()} />);
+      root.render(
+        withQueryClient(
+          <FileDrop currentObjectKey="charts/abc.pdf" onUploaded={vi.fn()} />,
+        ),
+      );
     });
     expect(findRemoveButton(container)).toBeNull();
   });

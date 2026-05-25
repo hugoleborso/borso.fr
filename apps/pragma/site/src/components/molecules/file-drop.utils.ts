@@ -15,16 +15,19 @@ export const ALLOWED_IMAGE_MIMES = [
 ] as const;
 
 export type FileDropChartKind = 'pdf' | 'image';
+export type AllowedUploadContentType = typeof ALLOWED_PDF_MIME | (typeof ALLOWED_IMAGE_MIMES)[number];
 
 export type FileValidationResult =
-  | { ok: true; kind: FileDropChartKind }
+  | { ok: true; kind: FileDropChartKind; contentType: AllowedUploadContentType }
   | { ok: false; reason: 'unsupported-type' | 'too-large' };
 
 export function validateChartFile(file: File): FileValidationResult {
   if (file.size > FILE_DROP_MAX_BYTES) return { ok: false, reason: 'too-large' };
-  if (file.type === ALLOWED_PDF_MIME) return { ok: true, kind: 'pdf' };
+  if (file.type === ALLOWED_PDF_MIME) {
+    return { ok: true, kind: 'pdf', contentType: ALLOWED_PDF_MIME };
+  }
   for (const mime of ALLOWED_IMAGE_MIMES) {
-    if (file.type === mime) return { ok: true, kind: 'image' };
+    if (file.type === mime) return { ok: true, kind: 'image', contentType: mime };
   }
   return { ok: false, reason: 'unsupported-type' };
 }
