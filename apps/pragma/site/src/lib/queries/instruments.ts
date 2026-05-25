@@ -1,17 +1,21 @@
 /**
  * Instruments feature queries / mutations. Pure CRUD over the
- * `/api/instruments` route. All write mutations invalidate the list
- * cache on success — no optimistic update path because the
- * instruments page is admin-only and infrequent.
+ * `/api/instruments` route. Mutations apply an optimistic update on
+ * `instrumentKeys.list()` (round 17c) so the admin form's create/edit/
+ * delete feels instant; `onSettled` invalidates to reconcile.
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
 
 export const instrumentKeys = {
   all: ['instruments'] as const,
   list: () => [...instrumentKeys.all, 'list'] as const,
 };
+
+type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;
+type InstrumentRow = InstrumentsListResponse['instruments'][number];
 
 async function listInstruments() {
   const response = await api.api.instruments.$get();
@@ -34,7 +38,24 @@ export function useCreateInstrument() {
       if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
       return response.json();
     },
-    onSuccess: () => {
+    onMutate: async (variables) => {
+      const listKey = instrumentKeys.list();
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previousList = queryClient.getQueryData<InstrumentsListResponse>(listKey);
+      const temporaryId = crypto.randomUUID();
+      const inserted: InstrumentRow = { id: temporaryId, ...variables };
+      queryClient.setQueryData<InstrumentsListResponse>(listKey, (old) => {
+        if (old === undefined) return old;
+        return { instruments: [...old.instruments, inserted] };
+      });
+      return { previousList };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousList !== undefined) {
+        queryClient.setQueryData(instrumentKeys.list(), context.previousList);
+      }
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: instrumentKeys.all });
     },
   });
@@ -52,7 +73,27 @@ export function useUpdateInstrument() {
       if (!response.ok) throw new ApiError(response.status, `update ${response.status}`, null);
       return response.json();
     },
-    onSuccess: () => {
+    onMutate: async (variables) => {
+      const listKey = instrumentKeys.list();
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previousList = queryClient.getQueryData<InstrumentsListResponse>(listKey);
+      const { id, ...patch } = variables;
+      queryClient.setQueryData<InstrumentsListResponse>(listKey, (old) => {
+        if (old === undefined) return old;
+        return {
+          instruments: old.instruments.map((instrument) =>
+            instrument.id === id ? { ...instrument, ...patch } : instrument,
+          ),
+        };
+      });
+      return { previousList };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousList !== undefined) {
+        queryClient.setQueryData(instrumentKeys.list(), context.previousList);
+      }
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: instrumentKeys.all });
     },
   });
@@ -68,7 +109,24 @@ export function useDeleteInstrument() {
       if (!response.ok) throw new ApiError(response.status, `delete ${response.status}`, null);
       return response.json();
     },
-    onSuccess: () => {
+    onMutate: async (variables) => {
+      const listKey = instrumentKeys.list();
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previousList = queryClient.getQueryData<InstrumentsListResponse>(listKey);
+      queryClient.setQueryData<InstrumentsListResponse>(listKey, (old) => {
+        if (old === undefined) return old;
+        return {
+          instruments: old.instruments.filter((instrument) => instrument.id !== variables.id),
+        };
+      });
+      return { previousList };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousList !== undefined) {
+        queryClient.setQueryData(instrumentKeys.list(), context.previousList);
+      }
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: instrumentKeys.all });
     },
   });
