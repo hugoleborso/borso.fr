@@ -1,0 +1,75 @@
+{
+  "search": [
+    {
+      "id": "abc123",
+      "song_title": "Get Lucky",
+      "artist": { "name": "Daft Punk" },
+      "tempo": "116",
+      "key_of": "F#m",
+      "time_sig": "4/4",
+      "duration": "6:09"
+    }
+  ],
+  "_variants": {
+    "longFormKey": {
+      "id": "long-001",
+      "song_title": "Imagine",
+      "artist": { "name": "John Lennon" },
+      "tempo": "76",
+      "key_of": "C major",
+      "time_sig": "4/4",
+      "duration": "3:03"
+    },
+    "majShortForm": {
+      "id": "maj-001",
+      "song_title": "Wonderwall",
+      "artist": { "name": "Oasis" },
+      "tempo": "87",
+      "key_of": "Fmaj",
+      "time_sig": "4/4",
+      "duration": "4:18"
+    },
+    "minorWord": {
+      "id": "min-001",
+      "song_title": "Smells Like Teen Spirit",
+      "artist": { "name": "Nirvana" },
+      "tempo": "117",
+      "key_of": "F minor",
+      "time_sig": "4/4",
+      "duration": "5:01"
+    },
+    "missingKey": {
+      "id": "miss-001",
+      "song_title": "Live Forever",
+      "artist": { "name": "Oasis" },
+      "tempo": "129",
+      "time_sig": "4/4",
+      "duration": "4:36"
+    },
+    "missingTempo": {
+      "id": "miss-002",
+      "song_title": "Don't Look Back in Anger",
+      "artist": { "name": "Oasis" },
+      "key_of": "C",
+      "time_sig": "4/4",
+      "duration": "4:48"
+    },
+    "missingDuration": {
+      "id": "miss-003",
+      "song_title": "Champagne Supernova",
+      "artist": { "name": "Oasis" },
+      "key_of": "A",
+      "tempo": "82",
+      "time_sig": "4/4"
+    },
+    "secondsOnlyDuration": {
+      "id": "miss-004",
+      "song_title": "Short One",
+      "artist": { "name": "Tester" },
+      "key_of": "G",
+      "tempo": "120",
+      "time_sig": "4/4",
+      "duration": "45"
+    }
+  }
+}
