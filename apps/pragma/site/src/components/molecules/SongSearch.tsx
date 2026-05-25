@@ -1,8 +1,9 @@
 /**
  * SongSearch — search-as-you-type input that proxies to MusicBrainz
  * via `useSongSearch()` (TanStack Query). The caller (the New-Song
- * form) is fed `{ title, artist, year }` on pick — manual entry is
- * never blocked.
+ * form) is fed the full `ExternalSongHit` on pick — title + artist
+ * pre-fill the form, the album / duration / tags / isrcs / mbid /
+ * disambiguation rows ride along for the persisted song record.
  *
  * The 1000ms debounce sits on the input via a `setTimeout` that
  * forwards the trimmed query to `searchQuery` state — `useSongSearch`
@@ -21,12 +22,20 @@ import { Input } from '../atoms/Input';
 import { cn } from '../atoms/cn.utils';
 
 const DEBOUNCE_MS = 1000;
+const TAGS_DISPLAYED_MAX = 3;
 
 export interface ExternalSongHit {
   readonly mbid: string;
   readonly title: string;
   readonly artist: string;
   readonly year: number | null;
+  readonly album: string | null;
+  readonly releaseId: string | null;
+  readonly durationSeconds: number | null;
+  readonly durationLabel: string | null;
+  readonly disambiguation: string | null;
+  readonly tags: readonly string[];
+  readonly isrcs: readonly string[];
 }
 
 export interface SongSearchProps {
@@ -82,21 +91,10 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
         </p>
       ) : null}
       {hits.length > 0 ? (
-        <ul className="flex flex-col gap-1 border border-line rounded-md p-1 bg-bg-elev max-h-64 overflow-y-auto">
+        <ul className="flex flex-col gap-1 border border-line rounded-md p-1 bg-bg-elev max-h-72 overflow-y-auto">
           {hits.map((hit) => (
             <li key={hit.mbid}>
-              <button
-                type="button"
-                onClick={() => onPick(hit)}
-                className="w-full text-left px-2 py-1.5 rounded text-sm text-ink-700 hover:bg-bg cursor-pointer"
-              >
-                <span className="font-medium text-ink-900">{hit.artist}</span>
-                <span className="text-ink-500"> — </span>
-                <span>{hit.title}</span>
-                {hit.year !== null ? (
-                  <span className="text-ink-400"> ({hit.year})</span>
-                ) : null}
-              </button>
+              <SongSearchHitRow hit={hit} onPick={onPick} />
             </li>
           ))}
         </ul>
@@ -105,5 +103,50 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
         <p className="text-xs text-ink-500 italic">{t('catalog.searchNoResults')}</p>
       ) : null}
     </div>
+  );
+}
+
+interface SongSearchHitRowProps {
+  readonly hit: ExternalSongHit;
+  readonly onPick: (hit: ExternalSongHit) => void;
+}
+
+function SongSearchHitRow({ hit, onPick }: SongSearchHitRowProps): JSX.Element {
+  const visibleTags = hit.tags.slice(0, TAGS_DISPLAYED_MAX);
+  const secondaryParts: string[] = [];
+  if (hit.year !== null) secondaryParts.push(String(hit.year));
+  if (hit.album !== null) secondaryParts.push(hit.album);
+  if (hit.durationLabel !== null) secondaryParts.push(hit.durationLabel);
+  const secondary = secondaryParts.join(' · ');
+  return (
+    <button
+      type="button"
+      onClick={() => onPick(hit)}
+      className="w-full text-left px-2 py-1.5 rounded text-sm text-ink-700 hover:bg-bg cursor-pointer flex flex-col gap-0.5"
+    >
+      <div className="flex items-baseline justify-between gap-2 flex-wrap">
+        <div className="min-w-0 flex-1">
+          <span className="font-medium text-ink-900">{hit.artist}</span>
+          <span className="text-ink-500"> — </span>
+          <span>{hit.title}</span>
+          {secondary.length > 0 ? <span className="text-ink-400"> ({secondary})</span> : null}
+        </div>
+        {visibleTags.length > 0 ? (
+          <div className="flex gap-1 flex-wrap shrink-0">
+            {visibleTags.map((tag) => (
+              <span
+                key={tag}
+                className="text-[10px] px-1.5 py-0.5 rounded bg-bg border border-line text-ink-500 uppercase tracking-wider"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      {hit.disambiguation !== null ? (
+        <div className="text-[11px] text-ink-400 italic">{hit.disambiguation}</div>
+      ) : null}
+    </button>
   );
 }

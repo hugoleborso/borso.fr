@@ -40,6 +40,11 @@ export const songSchema = z.object({
       z.object({ kind: z.literal('image'), s3Key: z.string() }),
     ])
     .nullable(),
+  mbid: z.string().nullable().default(null),
+  album: z.string().nullable().default(null),
+  durationSeconds: z.number().nullable().default(null),
+  isrcs: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
 });
 export const singleSongSchema = z.object({ song: songSchema });
 
@@ -58,6 +63,11 @@ export interface SongDraftState {
   pdfS3Key: string;
   imageS3Key: string;
   links: SongExternalLinkValue[];
+  mbid: string | null;
+  album: string;
+  durationSeconds: number | null;
+  isrcs: string[];
+  tags: string[];
 }
 
 export const BLANK_SONG_DRAFT: SongDraftState = {
@@ -72,6 +82,11 @@ export const BLANK_SONG_DRAFT: SongDraftState = {
   pdfS3Key: '',
   imageS3Key: '',
   links: [],
+  mbid: null,
+  album: '',
+  durationSeconds: null,
+  isrcs: [],
+  tags: [],
 };
 
 export function songFromApi(song: Song): SongDraftState {
@@ -87,6 +102,11 @@ export function songFromApi(song: Song): SongDraftState {
     pdfS3Key: song.chart !== null && song.chart.kind === 'pdf' ? song.chart.s3Key : '',
     imageS3Key: song.chart !== null && song.chart.kind === 'image' ? song.chart.s3Key : '',
     links: song.links,
+    mbid: song.mbid,
+    album: song.album ?? '',
+    durationSeconds: song.durationSeconds,
+    isrcs: song.isrcs,
+    tags: song.tags,
   };
 }
 
@@ -97,10 +117,76 @@ export function chartFromDraft(draft: SongDraftState): Song['chart'] {
   return { kind: 'image', s3Key: draft.imageS3Key };
 }
 
+export interface SongSavePayload {
+  readonly title: string;
+  readonly artist: string;
+  readonly status: SongStatus;
+  readonly tonalityStart: string | null;
+  readonly tonalityEnd: string | null;
+  readonly baseEnergy: number | null;
+  readonly chart: Song['chart'];
+  readonly links: SongExternalLinkValue[];
+  readonly mbid: string | null;
+  readonly album: string | null;
+  readonly durationSeconds: number | null;
+  readonly isrcs: string[];
+  readonly tags: string[];
+}
+
+export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null {
+  const titleTrimmed = draft.title.trim();
+  if (titleTrimmed.length === 0) return null;
+  const baseEnergyValue =
+    draft.baseEnergy.trim().length === 0 ? null : Number(draft.baseEnergy);
+  const albumTrimmed = draft.album.trim();
+  return {
+    title: titleTrimmed,
+    artist: draft.artist.trim(),
+    status: draft.status,
+    tonalityStart:
+      draft.tonalityStart.trim().length === 0 ? null : draft.tonalityStart.trim(),
+    tonalityEnd: draft.tonalityEnd.trim().length === 0 ? null : draft.tonalityEnd.trim(),
+    baseEnergy: baseEnergyValue,
+    chart: chartFromDraft(draft),
+    links: draft.links,
+    mbid: draft.mbid,
+    album: albumTrimmed.length === 0 ? null : albumTrimmed,
+    durationSeconds: draft.durationSeconds,
+    isrcs: draft.isrcs,
+    tags: draft.tags,
+  };
+}
+
 export function detectProvider(url: string): SongExternalLinkValue['provider'] {
   const lower = url.toLowerCase();
   if (lower.includes('spotify.com')) return 'spotify';
   if (lower.includes('deezer.com')) return 'deezer';
   if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
   return 'other';
+}
+
+export interface ExternalSongPick {
+  readonly mbid: string;
+  readonly title: string;
+  readonly artist: string;
+  readonly album: string | null;
+  readonly durationSeconds: number | null;
+  readonly isrcs: readonly string[];
+  readonly tags: readonly string[];
+}
+
+export function applyExternalPickToDraft(
+  draft: SongDraftState,
+  hit: ExternalSongPick,
+): SongDraftState {
+  return {
+    ...draft,
+    title: hit.title,
+    artist: hit.artist,
+    mbid: hit.mbid,
+    album: hit.album ?? '',
+    durationSeconds: hit.durationSeconds,
+    isrcs: [...hit.isrcs],
+    tags: [...hit.tags],
+  };
 }

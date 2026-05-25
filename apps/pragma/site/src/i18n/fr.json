@@ -123,7 +123,13 @@
     "uploadUnsupported": "Type de fichier non supporté.",
     "searchSong": "Chercher un morceau",
     "searchSongHint": "Tape un titre ou un interprète — résultats MusicBrainz",
-    "searchNoResults": "Aucun résultat."
+    "searchNoResults": "Aucun résultat.",
+    "musicBrainzMetadata": "Métadonnées MusicBrainz",
+    "album": "Album",
+    "duration": "Durée",
+    "mbid": "Identifiant MusicBrainz",
+    "isrcs": "ISRC",
+    "tags": "Tags"
   },
   "mastery": {
     "title": "Matrice de maîtrise",

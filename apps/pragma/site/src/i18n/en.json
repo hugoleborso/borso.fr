@@ -123,7 +123,13 @@
     "uploadUnsupported": "Unsupported file type.",
     "searchSong": "Search a song",
     "searchSongHint": "Type a title or an artist — results from MusicBrainz",
-    "searchNoResults": "No results."
+    "searchNoResults": "No results.",
+    "musicBrainzMetadata": "MusicBrainz metadata",
+    "album": "Album",
+    "duration": "Duration",
+    "mbid": "MusicBrainz ID",
+    "isrcs": "ISRCs",
+    "tags": "Tags"
   },
   "mastery": {
     "title": "Mastery matrix",
