@@ -4,8 +4,8 @@
  * (mastery_override + setlist_entry rows, because DSQL does not
  * enforce FK at write time).
  *
- * The three JSON blobs (`links`, `chart`, `default_lineup`) are stored
- * as TEXT (Aurora DSQL doesn't support jsonb — see
+ * The JSON blobs (`links`, `chart`, `default_lineup`, `isrcs`, `tags`)
+ * are stored as TEXT (Aurora DSQL doesn't support jsonb — see
  * docs/knowledge/dsql-postgres-compat-gaps.md §1). `rowToSong` is the
  * single parse-and-Zod-validate boundary; writes JSON.stringify on the
  * way in.
@@ -21,8 +21,10 @@ import {
   defaultLineupSchema,
   SONG_STATUSES,
   type songExternalLinkSchema,
+  songIsrcsRowSchema,
   songLinksRowSchema,
   songTable,
+  songTagsRowSchema,
 } from './songs.schema';
 
 const songStatusSchema = z.enum(SONG_STATUSES);
@@ -42,6 +44,11 @@ export interface SongRow {
   tonalityEnd: string | null;
   defaultLineup: SongDefaultLineup;
   baseEnergy: number | null;
+  mbid: string | null;
+  album: string | null;
+  durationSeconds: number | null;
+  isrcs: string[];
+  tags: string[];
   createdAt: Date;
 }
 
@@ -55,6 +62,11 @@ export interface SongInsertShape {
   tonalityEnd: string | null;
   defaultLineup: SongDefaultLineup;
   baseEnergy: number | null;
+  mbid: string | null;
+  album: string | null;
+  durationSeconds: number | null;
+  isrcs: string[];
+  tags: string[];
 }
 
 export type SongPersistedShape = Partial<SongInsertShape>;
@@ -70,6 +82,11 @@ interface SongRawRow {
   tonalityEnd: string | null;
   defaultLineup: string;
   baseEnergy: number | null;
+  mbid: string | null;
+  album: string | null;
+  durationSeconds: number | null;
+  isrcs: string | null;
+  tags: string | null;
   createdAt: Date;
 }
 
@@ -84,11 +101,25 @@ const PROJECTION = {
   tonalityEnd: songTable.tonalityEnd,
   defaultLineup: songTable.defaultLineup,
   baseEnergy: songTable.baseEnergy,
+  mbid: songTable.mbid,
+  album: songTable.album,
+  durationSeconds: songTable.durationSeconds,
+  isrcs: songTable.isrcs,
+  tags: songTable.tags,
   createdAt: songTable.createdAt,
 } as const;
 
+function parseJsonArrayColumn<T>(
+  raw: string | null,
+  schema: z.ZodSchema<T[]>,
+): T[] {
+  if (raw === null) return [];
+  const parsed: unknown = JSON.parse(raw);
+  return schema.parse(parsed);
+}
+
 function rowToSong(row: SongRawRow): SongRow {
-  // The three JSON blobs are stored as TEXT because Aurora DSQL doesn't
+  // The JSON blobs are stored as TEXT because Aurora DSQL doesn't
   // support jsonb. The `as unknown` step is the JSON-parse escape hatch
   // the repo allows; Zod schemas do the runtime validation.
   const linksRaw: unknown = JSON.parse(row.links);
@@ -105,6 +136,11 @@ function rowToSong(row: SongRawRow): SongRow {
     tonalityEnd: row.tonalityEnd,
     defaultLineup: defaultLineupSchema.parse(defaultLineupRaw),
     baseEnergy: row.baseEnergy,
+    mbid: row.mbid,
+    album: row.album,
+    durationSeconds: row.durationSeconds,
+    isrcs: parseJsonArrayColumn(row.isrcs, songIsrcsRowSchema),
+    tags: parseJsonArrayColumn(row.tags, songTagsRowSchema),
     createdAt: row.createdAt,
   };
 }
@@ -123,6 +159,11 @@ function encodeInsert(values: SongInsertShape): SongInsertEncoded {
     tonalityEnd: values.tonalityEnd,
     defaultLineup: JSON.stringify(values.defaultLineup ?? {}),
     baseEnergy: values.baseEnergy,
+    mbid: values.mbid,
+    album: values.album,
+    durationSeconds: values.durationSeconds,
+    isrcs: JSON.stringify(values.isrcs ?? []),
+    tags: JSON.stringify(values.tags ?? []),
   };
 }
 
@@ -140,6 +181,11 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   if ('tonalityEnd' in updates) encoded.tonalityEnd = updates.tonalityEnd;
   if ('defaultLineup' in updates) encoded.defaultLineup = JSON.stringify(updates.defaultLineup ?? {});
   if ('baseEnergy' in updates) encoded.baseEnergy = updates.baseEnergy;
+  if ('mbid' in updates) encoded.mbid = updates.mbid;
+  if ('album' in updates) encoded.album = updates.album;
+  if ('durationSeconds' in updates) encoded.durationSeconds = updates.durationSeconds;
+  if ('isrcs' in updates) encoded.isrcs = JSON.stringify(updates.isrcs ?? []);
+  if ('tags' in updates) encoded.tags = JSON.stringify(updates.tags ?? []);
   return encoded;
 }
 

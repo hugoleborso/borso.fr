@@ -26,6 +26,11 @@ const songSchema = z.object({
   tonalityEnd: z.string().nullable(),
   defaultLineup: z.unknown(),
   baseEnergy: z.number().nullable(),
+  mbid: z.string().nullable(),
+  album: z.string().nullable(),
+  durationSeconds: z.number().nullable(),
+  isrcs: z.array(z.string()),
+  tags: z.array(z.string()),
   createdAt: z.string(),
 });
 const singleEnvelope = z.object({ song: songSchema });
@@ -211,15 +216,29 @@ describe('songs controller (back-e2e)', () => {
               title: z.string(),
               artist: z.string(),
               year: z.number().nullable(),
+              album: z.string().nullable(),
+              releaseId: z.string().nullable(),
+              durationSeconds: z.number().nullable(),
+              durationLabel: z.string().nullable(),
+              disambiguation: z.string().nullable(),
+              tags: z.array(z.string()),
+              isrcs: z.array(z.string()),
             }),
           ),
         }),
       );
       expect(body.hits.length).toBeGreaterThan(0);
-      expect(body.hits[0]?.title).toBe('Get Lucky');
+      const firstHit = body.hits[0];
+      expect(firstHit?.title).toBe('Get Lucky');
+      expect(firstHit?.album).toBe('Random Access Memories');
+      expect(firstHit?.durationLabel).toBe('6:09');
+      expect(firstHit?.tags).toEqual(['electronic', 'disco', 'funk', 'house', 'dance']);
+      expect(firstHit?.isrcs).toEqual(['USQX91300108', 'GBUM71302999', 'USQX91300109']);
+      expect(firstHit?.disambiguation).toBe('radio edit');
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       const calledUrl = String(fetchSpy.mock.calls[0]?.[0]);
       expect(calledUrl).toContain('musicbrainz.org/ws/2/recording/');
+      expect(calledUrl).toContain('inc=tags+releases+isrcs');
       const calledInit = fetchSpy.mock.calls[0]?.[1];
       const headersRecord = calledInit?.headers;
       const headersDictionary =
