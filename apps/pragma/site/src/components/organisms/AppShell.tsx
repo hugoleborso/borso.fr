@@ -18,6 +18,7 @@
  * external-system carve-outs from CLAUDE.md "useEffect is a smell".
  */
 
+import type { ParseKeys } from 'i18next';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
@@ -35,7 +36,7 @@ import { useNavBadges } from './useNavBadges';
 
 interface NavItem {
   to: string;
-  labelKey: string;
+  labelKey: ParseKeys;
   icon: IconName;
 }
 

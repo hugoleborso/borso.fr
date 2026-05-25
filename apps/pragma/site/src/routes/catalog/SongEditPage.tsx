@@ -31,6 +31,7 @@ import { SongChartFields } from './SongChartFields';
 import { SongExternalLinks } from './SongExternalLinks';
 import {
   BLANK_SONG_DRAFT,
+  SONG_STATUS_LABEL_KEY,
   chartFromDraft,
   detectProvider,
   type SongDraftState,
@@ -308,9 +309,7 @@ function SongEditPageForm({
               >
                 {songStatuses.map((status) => (
                   <option key={status} value={status}>
-                    {t(
-                      `catalog.status${status.charAt(0).toUpperCase() + status.slice(1).replace('_r', 'R').replace('_', '')}`,
-                    )}
+                    {t(SONG_STATUS_LABEL_KEY[status])}
                   </option>
                 ))}
               </select>

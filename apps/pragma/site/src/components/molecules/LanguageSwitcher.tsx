@@ -11,10 +11,10 @@ import { SUPPORTED_LOCALES, type SupportedLocale } from '../../i18n/i18n.utils';
 import { writePersistedLocale } from '../../i18n/locale-storage.utils';
 import { cn } from '../atoms/cn.utils';
 
-const LOCALE_LABEL_KEY: Readonly<Record<SupportedLocale, string>> = {
+const LOCALE_LABEL_KEY = {
   fr: 'nav.language.fr',
   en: 'nav.language.en',
-};
+} as const satisfies Readonly<Record<SupportedLocale, string>>;
 
 function getBrowserStorage(): Storage | undefined {
   if (typeof window === 'undefined') return undefined;

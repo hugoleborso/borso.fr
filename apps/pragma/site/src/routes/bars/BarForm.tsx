@@ -20,13 +20,13 @@ import { Input } from '../../components/atoms/Input';
 export const BAR_STATUSES = ['lead', 'contacted', 'booked', 'played', 'cold'] as const;
 export type BarStatus = (typeof BAR_STATUSES)[number];
 
-export const BAR_STATUS_KEY: Record<BarStatus, string> = {
+export const BAR_STATUS_KEY = {
   lead: 'bars.statusLead',
   contacted: 'bars.statusContacted',
   booked: 'bars.statusBooked',
   played: 'bars.statusPlayed',
   cold: 'bars.statusCold',
-};
+} as const satisfies Record<BarStatus, string>;
 
 const BAR_NAME_MAX = 256;
 const BAR_NOTES_MAX = 4_096;

@@ -203,7 +203,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
                     }}
                   >
                     <Icon name="warn" size={12} />
-                    {t('setlist.transitionWarn')}
+                    {t('setlist.transitionWarning')}
                   </button>
                 ) : null}
                 <SetlistEntryRow

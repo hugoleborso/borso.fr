@@ -11,6 +11,13 @@ import type { SongExternalLinkValue } from './SongExternalLinks';
 export const songStatuses = ['idea', 'wip', 'rehearsed', 'concert_ready'] as const;
 export const linkProviders = ['spotify', 'deezer', 'youtube', 'other'] as const;
 
+export const SONG_STATUS_LABEL_KEY = {
+  idea: 'catalog.statusIdea',
+  wip: 'catalog.statusWip',
+  rehearsed: 'catalog.statusRehearsed',
+  concert_ready: 'catalog.statusConcertReady',
+} as const satisfies Record<(typeof songStatuses)[number], string>;
+
 export const linkSchema = z.object({
   url: z.string(),
   provider: z.enum(linkProviders),
