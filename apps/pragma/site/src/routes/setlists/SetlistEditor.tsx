@@ -103,7 +103,10 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
 
   const addEntry = (songId: string): void => {
-    append.mutate({ setlistId, songId }, { onError: recordError });
+    append.mutate(
+      { setlistId, songId, optimisticId: crypto.randomUUID() },
+      { onError: recordError },
+    );
   };
 
   const handleRemove = (entryId: string): void => {

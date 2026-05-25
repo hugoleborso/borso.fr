@@ -13,6 +13,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 import {
   type EntriesCache,
+  appendOptimisticEntry,
   applyEntryPatch,
   removeEntryById,
   reorderEntriesByIds,
@@ -84,11 +85,11 @@ export function useAppendSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (
-      variables: { setlistId: string } & Parameters<
+      variables: { setlistId: string; optimisticId: string } & Parameters<
         typeof api.api.setlists[':id']['entries']['$post']
       >[0]['json'],
     ) => {
-      const { setlistId, ...rest } = variables;
+      const { setlistId, optimisticId: _optimisticId, ...rest } = variables;
       const response = await api.api.setlists[':id'].entries.$post({
         param: { id: setlistId },
         json: rest,
@@ -96,7 +97,35 @@ export function useAppendSetlistEntry() {
       if (!response.ok) throw new ApiError(response.status, `append ${response.status}`, null);
       return response.json();
     },
-    onSuccess: (_data, variables) => {
+    onMutate: async (variables): Promise<OptimisticContext> => {
+      const key = setlistKeys.entriesOf(variables.setlistId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = snapshotEntries(queryClient, variables.setlistId);
+      if (previous !== undefined) {
+        queryClient.setQueryData<EntriesCache>(
+          key,
+          appendOptimisticEntry(previous, {
+            id: variables.optimisticId,
+            songId: variables.songId,
+            energy: variables.energy,
+            keyOverride: variables.keyOverride,
+            capo: variables.capo,
+            notes: variables.notes,
+            lineupOverride: variables.lineupOverride,
+          }),
+        );
+      }
+      return { previous };
+    },
+    onError: (_error, variables, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData<EntriesCache>(
+          setlistKeys.entriesOf(variables.setlistId),
+          context.previous,
+        );
+      }
+    },
+    onSettled: (_data, _error, variables) => {
       void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });
     },
   });
