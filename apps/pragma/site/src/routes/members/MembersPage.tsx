@@ -8,171 +8,109 @@
  * at render time.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useForm } from '@tanstack/react-form';
+import type { JSX } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { Input } from '../../components/atoms/Input';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { MasteryMatrix } from '../../components/organisms/MasteryMatrix';
-import { ApiError, apiRequest } from '../../lib/api-client';
-import { cellKey } from '../../lib/mastery-matrix.utils';
+import { ApiError } from '../../lib/api';
+import { useInstrumentsList } from '../../lib/queries/instruments';
+import {
+  useAssignMemberInstruments,
+  useCreateMember,
+  useDeleteMember,
+  useMembersList,
+  useUpdateMember,
+} from '../../lib/queries/members';
+import { useMemberInstruments } from '../../lib/queries/members';
 import { readableForeground } from '../../lib/member-color.utils';
 
-const memberSchema = z.object({
-  id: z.string().uuid(),
-  firstName: z.string(),
-  color: z.string(),
-  avatarS3Key: z.string().nullable(),
-});
-const memberListSchema = z.object({ members: z.array(memberSchema) });
-const singleMemberSchema = z.object({ member: memberSchema });
-
-const instrumentSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  isHarmonic: z.boolean(),
-});
-const instrumentListSchema = z.object({ instruments: z.array(instrumentSchema) });
-
-const masteryDefaultSchema = z.object({
-  memberId: z.string().uuid(),
-  instrumentId: z.string().uuid(),
-  score: z.number().int().min(0).max(10),
-});
-const masteryDefaultListSchema = z.object({ defaults: z.array(masteryDefaultSchema) });
-
-type Member = z.infer<typeof memberSchema>;
-type Instrument = z.infer<typeof instrumentSchema>;
-
-interface DraftState {
-  id: string | null;
+interface Selection {
+  id: string;
   firstName: string;
   color: string;
 }
 
-const BLANK_DRAFT: DraftState = { id: null, firstName: '', color: '#2d5fa0' };
+const DEFAULT_COLOR = '#2d5fa0';
 
 export function MembersPage(): JSX.Element {
   const { t } = useTranslation();
-  const [members, setMembers] = useState<Member[]>([]);
-  const [instruments, setInstruments] = useState<Instrument[]>([]);
-  const [assignedByMember, setAssignedByMember] = useState<Record<string, string[]>>({});
-  const [draft, setDraft] = useState<DraftState>(BLANK_DRAFT);
-  const [masteryScores, setMasteryScores] = useState<Record<string, number>>({});
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const membersQuery = useMembersList();
+  const instrumentsQuery = useInstrumentsList();
+  const createMember = useCreateMember();
+  const updateMember = useUpdateMember();
+  const deleteMember = useDeleteMember();
+  const assignInstruments = useAssignMemberInstruments();
+  const [selected, setSelected] = useState<Selection | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const selectedInstruments = useMemberInstruments(selected?.id ?? '', selected !== null);
 
-  const refresh = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const [membersBody, instrumentsBody, masteryBody] = await Promise.all([
-        apiRequest('/api/members').then((body) => memberListSchema.parse(body)),
-        apiRequest('/api/instruments').then((body) => instrumentListSchema.parse(body)),
-        apiRequest('/api/mastery/defaults').then((body) => masteryDefaultListSchema.parse(body)),
-      ]);
-      setMembers(membersBody.members);
-      setInstruments(instrumentsBody.instruments);
-      const nextScores: Record<string, number> = {};
-      for (const row of masteryBody.defaults) {
-        nextScores[cellKey(row.memberId, row.instrumentId)] = row.score;
+  const members = membersQuery.data?.members ?? [];
+  const instruments = instrumentsQuery.data?.instruments ?? [];
+
+  const form = useForm({
+    defaultValues: { firstName: '', color: DEFAULT_COLOR },
+    onSubmit: async ({ value }) => {
+      const trimmed = value.firstName.trim();
+      if (trimmed.length === 0) return;
+      try {
+        if (selected === null) {
+          await createMember.mutateAsync({ firstName: trimmed, color: value.color });
+        } else {
+          await updateMember.mutateAsync({
+            id: selected.id,
+            firstName: trimmed,
+            color: value.color,
+          });
+        }
+        setSelected(null);
+        form.reset();
+      } catch (caught) {
+        setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
       }
-      setMasteryScores(nextScores);
-      const assignments: Record<string, string[]> = {};
-      await Promise.all(
-        membersBody.members.map(async (member) => {
-          const body = instrumentListSchema.parse(
-            await apiRequest(`/api/members/${member.id}/instruments`),
-          );
-          assignments[member.id] = body.instruments.map((row) => row.id);
-        }),
-      );
-      setAssignedByMember(assignments);
-      setError(null);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+  });
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    form.setFieldValue('firstName', selected?.firstName ?? '');
+    form.setFieldValue('color', selected?.color ?? DEFAULT_COLOR);
+  }, [selected, form]);
 
   const sortedMembers = useMemo(
     () => members.toSorted((left, right) => left.firstName.localeCompare(right.firstName)),
     [members],
   );
 
-  const submit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-    const trimmed = draft.firstName.trim();
-    if (trimmed.length === 0) return;
-    try {
-      if (draft.id === null) {
-        const created = singleMemberSchema.parse(
-          await apiRequest('/api/members', {
-            method: 'POST',
-            body: { firstName: trimmed, color: draft.color },
-          }),
-        );
-        setMembers((current) => [...current, created.member]);
-      } else {
-        const updated = singleMemberSchema.parse(
-          await apiRequest(`/api/members/${draft.id}`, {
-            method: 'PUT',
-            body: { firstName: trimmed, color: draft.color },
-          }),
-        );
-        setMembers((current) =>
-          current.map((row) => (row.id === updated.member.id ? updated.member : row)),
-        );
-      }
-      setDraft(BLANK_DRAFT);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
-  };
+  const assignedIds = selectedInstruments.data?.instruments.map((row) => row.id) ?? [];
 
-  const remove = async (id: string): Promise<void> => {
-    try {
-      await apiRequest(`/api/members/${id}`, { method: 'DELETE' });
-      setMembers((current) => current.filter((row) => row.id !== id));
-      if (draft.id === id) setDraft(BLANK_DRAFT);
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
-  };
+  const firstError =
+    localError ??
+    (membersQuery.error instanceof ApiError ? membersQuery.error.message : null) ??
+    (instrumentsQuery.error instanceof ApiError ? instrumentsQuery.error.message : null);
 
-  const toggleInstrument = async (memberId: string, instrumentId: string): Promise<void> => {
-    const current = assignedByMember[memberId] ?? [];
-    const nextSet = current.includes(instrumentId)
-      ? current.filter((id) => id !== instrumentId)
-      : [...current, instrumentId];
-    try {
-      await apiRequest(`/api/members/${memberId}/instruments`, {
-        method: 'PUT',
-        body: { instrumentIds: nextSet },
-      });
-      setAssignedByMember((existing) => ({ ...existing, [memberId]: nextSet }));
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'unknown-error');
-    }
+  const toggleInstrument = (instrumentId: string): void => {
+    if (selected === null) return;
+    const next = assignedIds.includes(instrumentId)
+      ? assignedIds.filter((id) => id !== instrumentId)
+      : [...assignedIds, instrumentId];
+    assignInstruments.mutate({ memberId: selected.id, instrumentIds: next });
   };
 
   return (
-    <section className="px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-6">
+    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-6">
       <PageHeader title={t('members.title')} subtitle={t('members.subtitle')} />
-      {error !== null ? (
+      {firstError !== null ? (
         <p className="text-danger text-sm" role="alert">
-          {error}
+          {firstError}
         </p>
       ) : null}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 items-start">
         <ul className="flex flex-col gap-1.5" aria-label={t('members.title')}>
-          {loading ? (
+          {membersQuery.isLoading ? (
             <li className="text-ink-400 italic text-sm">{t('common.loading')}</li>
           ) : null}
           {sortedMembers.map((member) => (
@@ -191,7 +129,7 @@ export function MembersPage(): JSX.Element {
                 type="button"
                 className="flex-1 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
                 onClick={() =>
-                  setDraft({
+                  setSelected({
                     id: member.id,
                     firstName: member.firstName,
                     color: member.color,
@@ -203,7 +141,13 @@ export function MembersPage(): JSX.Element {
               <button
                 type="button"
                 className="text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
-                onClick={() => void remove(member.id)}
+                onClick={() => {
+                  deleteMember.mutate({ id: member.id });
+                  if (selected?.id === member.id) {
+                    setSelected(null);
+                    form.reset();
+                  }
+                }}
                 aria-label={t('common.delete')}
               >
                 ×
@@ -213,42 +157,55 @@ export function MembersPage(): JSX.Element {
         </ul>
         <Card>
           <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-3">
-            {draft.id === null ? t('members.newTitle') : t('members.editTitle')}
+            {selected === null ? t('members.newTitle') : t('members.editTitle')}
           </h3>
-          <form onSubmit={submit} className="flex flex-col gap-2.5">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void form.handleSubmit();
+            }}
+            className="flex flex-col gap-2.5"
+          >
             <label
               className="text-[11px] tracking-wider uppercase text-ink-400 font-medium"
               htmlFor="member-first-name"
             >
               {t('members.firstName')}
             </label>
-            <Input
-              id="member-first-name"
-              type="text"
-              value={draft.firstName}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, firstName: event.target.value }))
-              }
-              required
-              minLength={1}
-              maxLength={64}
-            />
+            <form.Field name="firstName">
+              {(field) => (
+                <Input
+                  id="member-first-name"
+                  type="text"
+                  value={field.state.value}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  onBlur={field.handleBlur}
+                  required
+                  minLength={1}
+                  maxLength={64}
+                />
+              )}
+            </form.Field>
             <label
               className="text-[11px] tracking-wider uppercase text-ink-400 font-medium"
               htmlFor="member-color"
             >
               {t('members.color')}
             </label>
-            <input
-              id="member-color"
-              type="color"
-              value={draft.color}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, color: event.target.value }))
-              }
-              className="w-full h-10 rounded-md bg-bg-elev border border-line cursor-pointer"
-            />
-            {draft.id !== null ? (
+            <form.Field name="color">
+              {(field) => (
+                <input
+                  id="member-color"
+                  type="color"
+                  value={field.state.value}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  onBlur={field.handleBlur}
+                  className="w-full h-10 rounded-md bg-bg-elev border border-line cursor-pointer"
+                />
+              )}
+            </form.Field>
+            {selected !== null ? (
               <fieldset className="border border-line rounded-md p-3 mt-2">
                 <legend className="text-[11px] tracking-wider uppercase text-ink-400 px-2">
                   {t('members.instrumentsAssigned')}
@@ -260,9 +217,7 @@ export function MembersPage(): JSX.Element {
                   {instruments
                     .toSorted((left, right) => left.name.localeCompare(right.name))
                     .map((instrument) => {
-                      const assigned = (assignedByMember[draft.id ?? ''] ?? []).includes(
-                        instrument.id,
-                      );
+                      const assigned = assignedIds.includes(instrument.id);
                       return (
                         <label
                           key={instrument.id}
@@ -271,11 +226,7 @@ export function MembersPage(): JSX.Element {
                           <input
                             type="checkbox"
                             checked={assigned}
-                            onChange={() => {
-                              if (draft.id !== null) {
-                                void toggleInstrument(draft.id, instrument.id);
-                              }
-                            }}
+                            onChange={() => toggleInstrument(instrument.id)}
                           />
                           {instrument.name}
                         </label>
@@ -285,11 +236,26 @@ export function MembersPage(): JSX.Element {
               </fieldset>
             ) : null}
             <div className="flex gap-2 mt-2">
-              <Button type="submit" variant="accent">
-                {t('common.save')}
-              </Button>
-              {draft.id !== null ? (
-                <Button type="button" variant="ghost" onClick={() => setDraft(BLANK_DRAFT)}>
+              <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+                {([canSubmit, isSubmitting]) => (
+                  <Button
+                    type="submit"
+                    variant="accent"
+                    disabled={!canSubmit || isSubmitting}
+                  >
+                    {t('common.save')}
+                  </Button>
+                )}
+              </form.Subscribe>
+              {selected !== null ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setSelected(null);
+                    form.reset();
+                  }}
+                >
                   {t('common.cancel')}
                 </Button>
               ) : null}
@@ -300,9 +266,7 @@ export function MembersPage(): JSX.Element {
       <MasteryMatrix
         members={sortedMembers}
         instruments={instruments.toSorted((left, right) => left.name.localeCompare(right.name))}
-        scores={masteryScores}
-        onScoresChange={setMasteryScores}
-        onError={setError}
+        onError={setLocalError}
       />
     </section>
   );
