@@ -11,7 +11,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
-import { type EntriesCache, applyEntryPatch } from './setlists.utils';
+import { type EntriesCache, applyEntryPatch, removeEntryById } from './setlists.utils';
 
 interface OptimisticContext {
   readonly previous: EntriesCache | undefined;
@@ -147,7 +147,27 @@ export function useDeleteSetlistEntry() {
       if (!response.ok) throw new ApiError(response.status, `delete ${response.status}`, null);
       return response.json();
     },
-    onSuccess: (_data, variables) => {
+    onMutate: async (variables): Promise<OptimisticContext> => {
+      const key = setlistKeys.entriesOf(variables.setlistId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = snapshotEntries(queryClient, variables.setlistId);
+      if (previous !== undefined) {
+        queryClient.setQueryData<EntriesCache>(
+          key,
+          removeEntryById(previous, variables.entryId),
+        );
+      }
+      return { previous };
+    },
+    onError: (_error, variables, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData<EntriesCache>(
+          setlistKeys.entriesOf(variables.setlistId),
+          context.previous,
+        );
+      }
+    },
+    onSettled: (_data, _error, variables) => {
       void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });
     },
   });
