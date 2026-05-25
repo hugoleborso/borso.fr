@@ -129,11 +129,7 @@
     "duration": "Durée",
     "mbid": "Identifiant MusicBrainz",
     "isrcs": "ISRC",
-    "tags": "Tags",
-    "tonality": "Tonalité",
-    "bpm": "BPM",
-    "bpmValue": "{{value}} BPM",
-    "audioFeaturesAttribution": "Tonalité / BPM via GetSongBPM"
+    "tags": "Tags"
   },
   "mastery": {
     "title": "Matrice de maîtrise",

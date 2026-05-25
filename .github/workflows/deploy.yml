@@ -83,12 +83,6 @@ jobs:
       # Front reads this at build time (Sentry tagging + gating non-prod-only
       # affordances like the test-fixture panel in admin).
       VITE_STAGE: prod
-      # Optional secondary-lookup key for the song search proxy
-      # (pragma app). Read at synth time by the CDK app; injected into
-      # the API Lambda's environment. When the secret is absent the var
-      # is empty and the Lambda gracefully no-ops the lookup. See
-      # docs/knowledge/getsongbpm-integration.md.
-      GETSONGBPM_API_KEY: ${{ secrets.GETSONGBPM_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

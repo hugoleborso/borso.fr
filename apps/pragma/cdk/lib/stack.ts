@@ -71,14 +71,6 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
   const allowSeedFlag: Record<string, string> =
     props.stage === 'prod' ? {} : { PRAGMA_ALLOW_TEST_SEED: '1' };
 
-  // Optional secondary lookup key for the song search proxy. When the
-  // var is empty (no GitHub repo secret configured, or the key is
-  // unset in the deploy environment), the Lambda gracefully no-ops the
-  // GetSongBPM enrichment and the search returns MusicBrainz-only hits
-  // with `tonality: null` + `bpm: null`. See
-  // docs/knowledge/getsongbpm-integration.md.
-  const getSongBpmApiKey = process.env.GETSONGBPM_API_KEY ?? '';
-
   const previewableApp = new PreviewableApp(props.scope, 'App', {
     app: APP_SLUG,
     stage: props.stage,
@@ -89,7 +81,6 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
       entry: props.apiEntry,
       environment: {
         UPLOADS_BUCKET: uploadsBucket.bucketName,
-        GETSONGBPM_API_KEY: getSongBpmApiKey,
         ...allowSeedFlag,
       },
     },

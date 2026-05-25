@@ -168,28 +168,16 @@ export function SongEditForm({
                 state.values.mbid,
                 state.values.tags,
                 state.values.isrcs,
-                state.values.tonalityStart,
-                state.values.bpm,
               ] as const
             }
           >
-            {([
-              albumValue,
-              durationValue,
-              mbidValue,
-              tagsValue,
-              isrcsValue,
-              tonalityValue,
-              bpmValue,
-            ]) => (
+            {([albumValue, durationValue, mbidValue, tagsValue, isrcsValue]) => (
               <SongMusicBrainzPanel
                 album={albumValue}
                 durationSeconds={durationValue}
                 mbid={mbidValue}
                 tags={tagsValue}
                 isrcs={isrcsValue}
-                tonality={tonalityValue.length === 0 ? null : tonalityValue}
-                bpm={bpmValue}
               />
             )}
           </form.Subscribe>

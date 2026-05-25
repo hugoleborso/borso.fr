@@ -45,7 +45,6 @@ export const songSchema = z.object({
   durationSeconds: z.number().nullable().default(null),
   isrcs: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
-  bpm: z.number().nullable().default(null),
 });
 export const singleSongSchema = z.object({ song: songSchema });
 
@@ -69,7 +68,6 @@ export interface SongDraftState {
   durationSeconds: number | null;
   isrcs: string[];
   tags: string[];
-  bpm: number | null;
 }
 
 export const BLANK_SONG_DRAFT: SongDraftState = {
@@ -89,7 +87,6 @@ export const BLANK_SONG_DRAFT: SongDraftState = {
   durationSeconds: null,
   isrcs: [],
   tags: [],
-  bpm: null,
 };
 
 export function songFromApi(song: Song): SongDraftState {
@@ -110,7 +107,6 @@ export function songFromApi(song: Song): SongDraftState {
     durationSeconds: song.durationSeconds,
     isrcs: song.isrcs,
     tags: song.tags,
-    bpm: song.bpm,
   };
 }
 
@@ -135,7 +131,6 @@ export interface SongSavePayload {
   readonly durationSeconds: number | null;
   readonly isrcs: string[];
   readonly tags: string[];
-  readonly bpm: number | null;
 }
 
 export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null {
@@ -159,7 +154,6 @@ export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null 
     durationSeconds: draft.durationSeconds,
     isrcs: draft.isrcs,
     tags: draft.tags,
-    bpm: draft.bpm,
   };
 }
 
@@ -179,22 +173,12 @@ export interface ExternalSongPick {
   readonly durationSeconds: number | null;
   readonly isrcs: readonly string[];
   readonly tags: readonly string[];
-  readonly tonality: string | null;
-  readonly bpm: number | null;
 }
 
 export function applyExternalPickToDraft(
   draft: SongDraftState,
   hit: ExternalSongPick,
 ): SongDraftState {
-  // GetSongBPM-sourced tonality fills `tonalityStart` only when the
-  // user hasn't already entered one (manual edit wins over enrichment);
-  // ChordPro derivation has the same defer-to-user-input rule (see
-  // handleChordproChange in SongEditForm.tsx).
-  const tonalityStart =
-    draft.tonalityStart.length === 0 && hit.tonality !== null
-      ? hit.tonality
-      : draft.tonalityStart;
   return {
     ...draft,
     title: hit.title,
@@ -204,7 +188,5 @@ export function applyExternalPickToDraft(
     durationSeconds: hit.durationSeconds,
     isrcs: [...hit.isrcs],
     tags: [...hit.tags],
-    tonalityStart,
-    bpm: hit.bpm,
   };
 }
