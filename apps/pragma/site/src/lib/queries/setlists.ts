@@ -1,10 +1,28 @@
 /**
  * Setlist feature queries / mutations. The setlist is loaded by
  * `sessionId`; entries hang off the setlist's `id`.
+ *
+ * Every entry-level mutation is optimistic: `onMutate` snapshots the
+ * `{ entries }` cache, applies a pure transform from
+ * `setlists.utils.ts`, returns the snapshot as `context.previous`;
+ * `onError` rolls back; `onSettled` invalidates so the server-issued
+ * shape replaces the optimistic projection.
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
+import { type EntriesCache, applyEntryPatch } from './setlists.utils';
+
+interface OptimisticContext {
+  readonly previous: EntriesCache | undefined;
+}
+
+function snapshotEntries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  setlistId: string,
+): EntriesCache | undefined {
+  return queryClient.getQueryData<EntriesCache>(setlistKeys.entriesOf(setlistId));
+}
 
 export const setlistKeys = {
   all: ['setlists'] as const,
@@ -95,7 +113,25 @@ export function useUpdateSetlistEntry() {
       if (!response.ok) throw new ApiError(response.status, `update ${response.status}`, null);
       return response.json();
     },
-    onSuccess: (_data, variables) => {
+    onMutate: async (variables): Promise<OptimisticContext> => {
+      const key = setlistKeys.entriesOf(variables.setlistId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = snapshotEntries(queryClient, variables.setlistId);
+      if (previous !== undefined) {
+        const { setlistId: _setlistId, entryId, ...patch } = variables;
+        queryClient.setQueryData<EntriesCache>(key, applyEntryPatch(previous, entryId, patch));
+      }
+      return { previous };
+    },
+    onError: (_error, variables, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData<EntriesCache>(
+          setlistKeys.entriesOf(variables.setlistId),
+          context.previous,
+        );
+      }
+    },
+    onSettled: (_data, _error, variables) => {
       void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });
     },
   });
