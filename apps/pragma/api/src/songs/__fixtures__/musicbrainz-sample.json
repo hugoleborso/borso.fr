@@ -9,6 +9,7 @@
       "title": "Get Lucky",
       "length": 369000,
       "video": null,
+      "disambiguation": "radio edit",
       "artist-credit": [
         {
           "name": "Daft Punk",
@@ -22,7 +23,28 @@
         { "name": "Pharrell Williams", "artist": { "id": "abc", "name": "Pharrell Williams", "sort-name": "Williams, Pharrell" } }
       ],
       "first-release-date": "2013-04-19",
-      "releases": []
+      "releases": [
+        {
+          "id": "release-rad-001",
+          "title": "Random Access Memories",
+          "date": "2013-05-17"
+        },
+        {
+          "id": "release-rad-002",
+          "title": "Random Access Memories (Deluxe)",
+          "date": "2013-05-17"
+        }
+      ],
+      "isrcs": ["USQX91300108", "GBUM71302999", "USQX91300109", "USQX91300110"],
+      "tags": [
+        { "name": "electronic", "count": 8 },
+        { "name": "disco", "count": 6 },
+        { "name": "funk", "count": 5 },
+        { "name": "house", "count": 3 },
+        { "name": "dance", "count": 2 },
+        { "name": "pop", "count": 1 },
+        { "name": "noise", "count": 0 }
+      ]
     },
     {
       "id": "11111111-2222-3333-4444-555555555555",
@@ -41,7 +63,14 @@
         }
       ],
       "first-release-date": "2013-11-21",
-      "releases": []
+      "releases": [
+        {
+          "id": "release-girl-001",
+          "title": "G I R L",
+          "date": "2014-03-03"
+        }
+      ],
+      "isrcs": ["USQ4E1300686"]
     },
     {
       "id": "no-date-id",

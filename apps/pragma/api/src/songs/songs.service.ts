@@ -35,6 +35,11 @@ function valuesFromCreate(input: SongCreateInput): SongInsertShape {
     tonalityEnd: input.tonalityEnd,
     defaultLineup: input.defaultLineup,
     baseEnergy: input.baseEnergy,
+    mbid: input.mbid,
+    album: input.album,
+    durationSeconds: input.durationSeconds,
+    isrcs: input.isrcs,
+    tags: input.tags,
   };
 }
 
@@ -124,7 +129,7 @@ export async function searchExternal(
   if (cached !== undefined) return cached.value;
   await waitForRateSlot(state, now);
   state.lastCallAt = now();
-  const url = `${MUSICBRAINZ_BASE_URL}?query=${encodeURIComponent(trimmed)}&fmt=json&limit=${EXTERNAL_SEARCH_LIMIT}`;
+  const url = `${MUSICBRAINZ_BASE_URL}?query=${encodeURIComponent(trimmed)}&fmt=json&limit=${EXTERNAL_SEARCH_LIMIT}&inc=tags+releases+isrcs`;
   const response = await fetcher(url, {
     headers: { 'User-Agent': MUSICBRAINZ_USER_AGENT, Accept: 'application/json' },
   });
