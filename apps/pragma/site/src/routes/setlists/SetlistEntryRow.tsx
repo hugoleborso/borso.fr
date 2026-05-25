@@ -7,26 +7,41 @@
  *  - song title (font-display italic) + submeta (artist · tonality ·
  *    mastery) + member-chip lineup,
  *  - energy slider (1-10) + numeric tag,
- *  - actions menu (currently just a delete button; key/capo/notes
- *    are surfaced via the existing `details` accordion below the
- *    row when needed).
+ *  - actions menu (delete button + a "more" toggle that reveals an
+ *    inline editor for keyOverride / capo / notes).
  *
- * Round-6 change vs round-5: the inline key/capo/notes form rows are
- * gone; the row now leads with the editorial display per the
- * prototype. The "more" affordance toggles the inline editor for
- * key/capo/notes when the operator needs it.
+ * Each row owns a small `useForm` instance — the parent
+ * (`SetlistEditor`) doesn't centralise per-row state. Field changes
+ * propagate to the parent via `onUpdate` after `field.handleChange`,
+ * so the live-edit semantics (per-keystroke mutation) are preserved
+ * without an effect.
  */
 
+import { useForm } from '@tanstack/react-form';
+import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 import { Icon } from '../../components/atoms/Icon';
 import { type LineupMember, MemberLineup } from '../../components/molecules/MemberLineup';
 import { cn } from '../../components/atoms/cn.utils';
 
 const ENERGY_MIN = 1;
 const ENERGY_MAX = 10;
+const ENERGY_DEFAULT = 5;
 const CAPO_MIN = 0;
 const CAPO_MAX = 11;
+const KEY_OVERRIDE_MAX = 16;
+const NOTES_MAX = 1_024;
+
+const setlistEntryFormSchema = z.object({
+  keyOverride: z.string().max(KEY_OVERRIDE_MAX),
+  capo: z.string().regex(/^(\d+)?$/u),
+  notes: z.string().max(NOTES_MAX),
+  energy: z.number().int().min(ENERGY_MIN).max(ENERGY_MAX),
+});
+
+type SetlistEntryFormValues = z.infer<typeof setlistEntryFormSchema>;
 
 export interface SetlistEntryRowProps {
   readonly position: number;
@@ -51,7 +66,8 @@ export interface SetlistEntryRowProps {
 
 const FIELD_CLASS =
   'w-full bg-bg-elev border border-line rounded-md px-2 py-1 text-[13px] font-mono text-ink-900 outline-none focus:border-ink-700';
-const LABEL_CLASS = 'flex flex-col gap-1 text-[10.5px] tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS =
+  'flex flex-col gap-1 text-[10.5px] tracking-wider uppercase text-ink-400 font-medium';
 
 function masteryColor(score: number | null): string {
   if (score === null) return 'var(--color-ink-400)';
@@ -63,6 +79,17 @@ function masteryColor(score: number | null): string {
 export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
   const [moreOpen, setMoreOpen] = useState<boolean>(false);
+  const defaultValues: SetlistEntryFormValues = {
+    keyOverride: props.keyOverride ?? '',
+    capo: props.capo === null ? '' : String(props.capo),
+    notes: props.notes,
+    energy: props.energy ?? ENERGY_DEFAULT,
+  };
+  const form = useForm({
+    defaultValues,
+    validators: { onChange: setlistEntryFormSchema },
+    onSubmit: () => {},
+  });
   return (
     <li
       className={cn(
@@ -125,64 +152,96 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         </div>
         {moreOpen ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3">
-            <label className={LABEL_CLASS}>
-              {t('setlist.keyOverride')}
-              <input
-                type="text"
-                value={props.keyOverride ?? ''}
-                onChange={(event) =>
-                  props.onUpdate(props.entryId, {
-                    keyOverride: event.target.value.length === 0 ? null : event.target.value,
-                  })
-                }
-                className={FIELD_CLASS}
-              />
-            </label>
-            <label className={LABEL_CLASS}>
-              {t('setlist.capo')}
-              <input
-                type="number"
-                min={CAPO_MIN}
-                max={CAPO_MAX}
-                value={props.capo ?? ''}
-                onChange={(event) =>
-                  props.onUpdate(props.entryId, {
-                    capo: event.target.value === '' ? null : Number(event.target.value),
-                  })
-                }
-                className={FIELD_CLASS}
-              />
-            </label>
-            <label className={LABEL_CLASS}>
-              {t('setlist.notes')}
-              <input
-                type="text"
-                value={props.notes}
-                onChange={(event) =>
-                  props.onUpdate(props.entryId, { notes: event.target.value })
-                }
-                className={FIELD_CLASS}
-              />
-            </label>
+            <form.Field name="keyOverride">
+              {(field) => (
+                <label className={LABEL_CLASS}>
+                  {t('setlist.keyOverride')}
+                  <input
+                    type="text"
+                    value={field.state.value}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      field.handleChange(next);
+                      props.onUpdate(props.entryId, {
+                        keyOverride: next.length === 0 ? null : next,
+                      });
+                    }}
+                    onBlur={field.handleBlur}
+                    maxLength={KEY_OVERRIDE_MAX}
+                    className={FIELD_CLASS}
+                  />
+                </label>
+              )}
+            </form.Field>
+            <form.Field name="capo">
+              {(field) => (
+                <label className={LABEL_CLASS}>
+                  {t('setlist.capo')}
+                  <input
+                    type="number"
+                    min={CAPO_MIN}
+                    max={CAPO_MAX}
+                    value={field.state.value}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      field.handleChange(next);
+                      props.onUpdate(props.entryId, {
+                        capo: next === '' ? null : Number(next),
+                      });
+                    }}
+                    onBlur={field.handleBlur}
+                    className={FIELD_CLASS}
+                  />
+                </label>
+              )}
+            </form.Field>
+            <form.Field name="notes">
+              {(field) => (
+                <label className={LABEL_CLASS}>
+                  {t('setlist.notes')}
+                  <input
+                    type="text"
+                    value={field.state.value}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      field.handleChange(next);
+                      props.onUpdate(props.entryId, { notes: next });
+                    }}
+                    onBlur={field.handleBlur}
+                    maxLength={NOTES_MAX}
+                    className={FIELD_CLASS}
+                  />
+                </label>
+              )}
+            </form.Field>
           </div>
         ) : null}
       </div>
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[11px] uppercase tracking-wider text-ink-500 min-w-[22px] text-center">
-          {props.energy ?? '—'}
-        </span>
-        <input
-          type="range"
-          min={ENERGY_MIN}
-          max={ENERGY_MAX}
-          value={props.energy ?? 5}
-          onChange={(event) =>
-            props.onUpdate(props.entryId, { energy: Number(event.target.value) })
-          }
-          aria-label={t('setlist.energy')}
-          className="w-22 accent-accent"
-          style={{ width: 88 }}
-        />
+        <form.Field name="energy">
+          {(field) => (
+            <>
+              <span className="font-mono text-[11px] uppercase tracking-wider text-ink-500 min-w-[22px] text-center">
+                {field.state.meta.isDirty || props.energy !== null ? field.state.value : '—'}
+              </span>
+              <input
+                type="range"
+                min={ENERGY_MIN}
+                max={ENERGY_MAX}
+                value={field.state.value}
+                onChange={(event) => {
+                  const next = Number(event.target.value);
+                  field.handleChange(next);
+                  props.onUpdate(props.entryId, { energy: next });
+                }}
+                onBlur={field.handleBlur}
+                aria-label={t('setlist.energy')}
+                className="w-22 accent-accent"
+                style={{ width: 88 }}
+              />
+            </>
+          )}
+        </form.Field>
       </div>
       <div className="flex flex-col gap-1">
         <button
