@@ -12,6 +12,9 @@
 # id=1 via `psql` over a freshly-issued DSQL admin token under the
 # `borso-admin` SSO profile.
 #
+# Portable across bash + zsh: the silent prompt uses `stty -echo` (not
+# `read -rsp` which zsh interprets as a coprocess prompt).
+#
 # After this runs, redeploy any in-flight preview to propagate (or wait for
 # the next CFN update event on its DsqlSchema custom resource).
 set -euo pipefail
@@ -34,10 +37,17 @@ if ! aws sts get-caller-identity --profile "${PROFILE}" --region "${REGION}" >/d
   aws sso login --profile "${PROFILE}"
 fi
 
-# Read the PIN silently — no echo, no shell history, no argv.
-read -rsp "Admin PIN: " PIN
+# Silent PIN read. `read -rsp` works in bash but zsh treats `-p` as
+# coprocess-only, so the prompt is printed separately and `stty -echo`
+# disables terminal echo around the read.
+printf 'Admin PIN: '
+stty -echo
+trap 'stty echo' EXIT INT TERM
+IFS= read -r PIN
+stty echo
+trap - EXIT INT TERM
 echo
-if [[ -z "${PIN}" ]]; then
+if [ -z "${PIN}" ]; then
   echo "error: empty PIN, aborting." >&2
   exit 1
 fi
@@ -62,24 +72,30 @@ ENDPOINT=$(aws ssm get-parameter \
   --region "${REGION}" \
   --query 'Parameter.Value' \
   --output text)
-CLUSTER_ID="${ENDPOINT%%.*}"
 
-echo "+ aws dsql generate-db-connect-admin-auth-token --identifier ${CLUSTER_ID}"
+# AWS CLI's `aws dsql generate-db-connect-admin-auth-token` wants the full
+# endpoint via `--hostname`, not the bare cluster id. (Earlier docs / older
+# helper scripts mention `--identifier`; the public CLI ships `--hostname`.)
+echo "+ aws dsql generate-db-connect-admin-auth-token --hostname ${ENDPOINT}"
 TOKEN=$(aws dsql generate-db-connect-admin-auth-token \
   --profile "${PROFILE}" \
-  --identifier "${CLUSTER_ID}" \
+  --hostname "${ENDPOINT}" \
   --region "${REGION}" \
   --expires-in 60 \
   --output text)
+if [ -z "${TOKEN}" ]; then
+  echo "error: empty DSQL admin token — check AWS CLI output above." >&2
+  exit 1
+fi
 
-echo "+ psql UPSERT prod.admin_credentials (id=1)"
+echo "+ psql UPSERT ${SCHEMA}.admin_credentials (id=1)"
 PGPASSWORD="${TOKEN}" PGOPTIONS="--search_path=${SCHEMA},public" \
   psql "host=${ENDPOINT} port=5432 user=admin dbname=postgres sslmode=require" \
        -v ON_ERROR_STOP=1 \
        -c "INSERT INTO admin_credentials (id, scrypt_hash, updated_at)
-           VALUES (1, '${HASH}', now())
-           ON CONFLICT (id) DO UPDATE
-             SET scrypt_hash = EXCLUDED.scrypt_hash, updated_at = now();" \
+             VALUES (1, '${HASH}', now())
+             ON CONFLICT (id) DO UPDATE
+               SET scrypt_hash = EXCLUDED.scrypt_hash, updated_at = now();" \
        -c "SELECT id, left(scrypt_hash, 14) || '…' AS hash_prefix, updated_at
              FROM admin_credentials;"
 unset TOKEN HASH
