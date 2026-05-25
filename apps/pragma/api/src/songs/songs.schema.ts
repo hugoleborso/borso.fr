@@ -46,6 +46,11 @@ export const songTable = pgTable('song', {
   isrcs: text('isrcs'),
   // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
   tags: text('tags'),
+  // GetSongBPM enrichment — tempo (rounded BPM). Tonality from
+  // GetSongBPM lands in `tonalityStart` above (same field the
+  // ChordPro derivation fills); the integration doc lives at
+  // docs/knowledge/getsongbpm-integration.md.
+  bpm: integer('bpm'),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 });
 
@@ -69,6 +74,8 @@ const SONG_ISRCS_MAX = 8;
 const SONG_TAG_MAX = 64;
 const SONG_TAGS_MAX = 16;
 const SONG_DURATION_MAX_SECONDS = 24 * 60 * 60;
+const SONG_BPM_MIN = 1;
+const SONG_BPM_MAX = 500;
 
 const songBaseSchema = z.object({
   title: z.string().trim().min(1).max(256),
@@ -91,6 +98,7 @@ const songBaseSchema = z.object({
     .default(null),
   isrcs: z.array(z.string().max(SONG_ISRC_MAX)).max(SONG_ISRCS_MAX).default([]),
   tags: z.array(z.string().max(SONG_TAG_MAX)).max(SONG_TAGS_MAX).default([]),
+  bpm: z.number().int().min(SONG_BPM_MIN).max(SONG_BPM_MAX).nullable().default(null),
 });
 
 export const songCreateInputSchema = songBaseSchema;

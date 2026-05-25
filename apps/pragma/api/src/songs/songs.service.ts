@@ -40,6 +40,7 @@ function valuesFromCreate(input: SongCreateInput): SongInsertShape {
     durationSeconds: input.durationSeconds,
     isrcs: input.isrcs,
     tags: input.tags,
+    bpm: input.bpm,
   };
 }
 

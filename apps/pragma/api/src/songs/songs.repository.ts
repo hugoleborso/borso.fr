@@ -49,6 +49,7 @@ export interface SongRow {
   durationSeconds: number | null;
   isrcs: string[];
   tags: string[];
+  bpm: number | null;
   createdAt: Date;
 }
 
@@ -67,6 +68,7 @@ export interface SongInsertShape {
   durationSeconds: number | null;
   isrcs: string[];
   tags: string[];
+  bpm: number | null;
 }
 
 export type SongPersistedShape = Partial<SongInsertShape>;
@@ -87,6 +89,7 @@ interface SongRawRow {
   durationSeconds: number | null;
   isrcs: string | null;
   tags: string | null;
+  bpm: number | null;
   createdAt: Date;
 }
 
@@ -106,6 +109,7 @@ const PROJECTION = {
   durationSeconds: songTable.durationSeconds,
   isrcs: songTable.isrcs,
   tags: songTable.tags,
+  bpm: songTable.bpm,
   createdAt: songTable.createdAt,
 } as const;
 
@@ -141,6 +145,7 @@ function rowToSong(row: SongRawRow): SongRow {
     durationSeconds: row.durationSeconds,
     isrcs: parseJsonArrayColumn(row.isrcs, songIsrcsRowSchema),
     tags: parseJsonArrayColumn(row.tags, songTagsRowSchema),
+    bpm: row.bpm,
     createdAt: row.createdAt,
   };
 }
@@ -164,6 +169,7 @@ function encodeInsert(values: SongInsertShape): SongInsertEncoded {
     durationSeconds: values.durationSeconds,
     isrcs: JSON.stringify(values.isrcs ?? []),
     tags: JSON.stringify(values.tags ?? []),
+    bpm: values.bpm,
   };
 }
 
@@ -186,6 +192,7 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   if ('durationSeconds' in updates) encoded.durationSeconds = updates.durationSeconds;
   if ('isrcs' in updates) encoded.isrcs = JSON.stringify(updates.isrcs ?? []);
   if ('tags' in updates) encoded.tags = JSON.stringify(updates.tags ?? []);
+  if ('bpm' in updates) encoded.bpm = updates.bpm;
   return encoded;
 }
 
