@@ -20,15 +20,19 @@
  *  - `*    /api/uploads`              — chord chart presigned PUT + GET
  *                                       URLs, backed by S3, gated.
  *
- * Every gated router mounts `requireSharedPasswordSession` on its first
- * line, so no domain endpoint is callable without a valid session cookie.
+ * Every gated controller starts its chain with
+ * `.use('*', requireSharedPasswordSession)`, so no domain endpoint is
+ * callable without a valid session cookie. Doing the gating inside the
+ * controller chain (instead of via a `mountGated` wrapper) keeps the
+ * chained Hono type — and therefore the RPC inference — intact end to
+ * end. `AppRouter` (the inferred return type of `buildAppRouter`) is
+ * what the FE consumes via `hc<AppRouter>(baseUrl)`.
  */
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
-import { requireSharedPasswordSession } from './auth/shared-password.middleware';
 import { buildBarsRouter } from './bars/bars.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
@@ -43,46 +47,29 @@ export interface CreateAppOptions {
   readonly auth?: BuildAuthRouterOptions;
 }
 
-function mountGated(parent: Hono, path: string, child: Hono): void {
-  const gated = new Hono();
-  gated.use('*', requireSharedPasswordSession);
-  gated.route('/', child);
-  parent.route(path, gated);
+function buildAppRouter(options: CreateAppOptions = {}) {
+  const { publicRouter, bootstrapRouter, rotateRouter } = buildAuthRouter(options.auth ?? {});
+  return new Hono()
+    .use('*', logger())
+    .use('*', cors())
+    .get('/api/health', (context) => context.json({ ok: true }))
+    .route('/api/auth', publicRouter)
+    .route('/api/admin', bootstrapRouter)
+    .route('/api/admin', rotateRouter)
+    .route('/api/instruments', buildInstrumentsRouter())
+    .route('/api/members', buildMembersRouter())
+    .route('/api/songs', buildSongsRouter())
+    .route('/api/mastery', buildMasteryRouter())
+    .route('/api/sessions', buildSessionsRouter())
+    .route('/api/offline-manifest', buildOfflineManifestRouter())
+    .route('/api/setlists', buildSetlistsRouter())
+    .route('/api/transition-comments', buildTransitionCommentsRouter())
+    .route('/api/bars', buildBarsRouter())
+    .route('/api/uploads', buildUploadsRouter());
 }
 
+export type AppRouter = ReturnType<typeof buildAppRouter>;
+
 export function createApp(options: CreateAppOptions = {}): Hono {
-  const app = new Hono();
-  app.use('*', logger());
-  app.use('*', cors());
-
-  app.get('/api/health', (context) => context.json({ ok: true }));
-
-  const { publicRouter, bootstrapRouter, rotateRouter } = buildAuthRouter(
-    options.auth ?? {},
-  );
-  app.route('/api/auth', publicRouter);
-
-  // Two distinct routers share the `/api/admin` prefix on purpose:
-  // - `bootstrapRouter` (set-password) MUST stay ungated — it is the
-  //   first-deploy seed and is protected by the row-absent guard.
-  // - `rotateRouter` (rotate-password) carries the session middleware
-  //   on the router itself, so an authenticated cookie is required.
-  // Mounting them as one router was the original bug (validation
-  // 2026-05-19-2111, row A09): a single ungated mount made the rotate
-  // endpoint publicly callable, allowing anyone to lock the band out.
-  app.route('/api/admin', bootstrapRouter);
-  app.route('/api/admin', rotateRouter);
-
-  mountGated(app, '/api/instruments', buildInstrumentsRouter());
-  mountGated(app, '/api/members', buildMembersRouter());
-  mountGated(app, '/api/songs', buildSongsRouter());
-  mountGated(app, '/api/mastery', buildMasteryRouter());
-  mountGated(app, '/api/sessions', buildSessionsRouter());
-  mountGated(app, '/api/offline-manifest', buildOfflineManifestRouter());
-  mountGated(app, '/api/setlists', buildSetlistsRouter());
-  mountGated(app, '/api/transition-comments', buildTransitionCommentsRouter());
-  mountGated(app, '/api/bars', buildBarsRouter());
-  mountGated(app, '/api/uploads', buildUploadsRouter());
-
-  return app;
+  return buildAppRouter(options);
 }

@@ -16,10 +16,10 @@
  * accidentally putting the rotate handler on an ungated router.
  */
 
+import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { setCookie } from 'hono/cookie';
 import { z } from 'zod';
-import { zValidator } from '@hono/zod-validator';
 import { getDatabase } from '../database/client';
 import { bootstrapAuth, getAppConfig, rotatePassword, verifyPassword } from './auth.service';
 import { hashIp, readClientIp } from './ip-hash.utils';
@@ -45,46 +45,44 @@ export interface BuildAuthRouterOptions {
   readonly clock?: () => Date;
 }
 
-export function buildAuthRouter(options: BuildAuthRouterOptions = {}): {
-  publicRouter: Hono;
-  bootstrapRouter: Hono;
-  rotateRouter: Hono;
-} {
+export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
   const bucketStore = options.bucketStore ?? createBucketStore();
   const clock = options.clock ?? (() => new Date());
 
-  const publicRouter = new Hono();
-  publicRouter.post('/login', zValidator('json', credentialsSchema), async (context) => {
-    const ipHash = hashIp(readClientIp(context.req.header('x-forwarded-for')));
-    const now = clock();
-    const updatedBucket = recordAttempt(bucketStore.read(ipHash), now.getTime());
-    bucketStore.write(ipHash, updatedBucket);
-    if (isRateLimited(updatedBucket)) {
-      return context.json({ error: 'rate-limited' }, 429);
-    }
-    const config = await getAppConfig(getDatabase());
-    if (config === null) {
-      return context.json({ error: 'auth-not-bootstrapped' }, 503);
-    }
-    const { password } = context.req.valid('json');
-    const passwordOk = await verifyPassword(config, password);
-    if (!passwordOk) {
-      return context.json({ error: 'invalid-password' }, 401);
-    }
-    bucketStore.clear(ipHash);
-    const cookie = buildCookie(config.hmacKey, now.getTime());
-    setCookie(context, SESSION_COOKIE_NAME, cookie, {
-      httpOnly: true,
-      secure: process.env.STAGE !== 'dev',
-      sameSite: 'Strict',
-      maxAge: SESSION_COOKIE_MAX_AGE_S,
-      path: '/',
-    });
-    return context.json({ expiresAt: new Date(now.getTime() + SESSION_TTL_MS).toISOString() });
-  });
+  const publicRouter = new Hono().post(
+    '/login',
+    zValidator('json', credentialsSchema),
+    async (context) => {
+      const ipHash = hashIp(readClientIp(context.req.header('x-forwarded-for')));
+      const now = clock();
+      const updatedBucket = recordAttempt(bucketStore.read(ipHash), now.getTime());
+      bucketStore.write(ipHash, updatedBucket);
+      if (isRateLimited(updatedBucket)) {
+        return context.json({ error: 'rate-limited' }, 429);
+      }
+      const config = await getAppConfig(getDatabase());
+      if (config === null) {
+        return context.json({ error: 'auth-not-bootstrapped' }, 503);
+      }
+      const { password } = context.req.valid('json');
+      const passwordOk = await verifyPassword(config, password);
+      if (!passwordOk) {
+        return context.json({ error: 'invalid-password' }, 401);
+      }
+      bucketStore.clear(ipHash);
+      const cookie = buildCookie(config.hmacKey, now.getTime());
+      setCookie(context, SESSION_COOKIE_NAME, cookie, {
+        httpOnly: true,
+        secure: process.env.STAGE !== 'dev',
+        sameSite: 'Strict',
+        maxAge: SESSION_COOKIE_MAX_AGE_S,
+        path: '/',
+      });
+      return context.json({ expiresAt: new Date(now.getTime() + SESSION_TTL_MS).toISOString() });
+    },
+  );
 
-  const bootstrapRouter = new Hono();
-  bootstrapRouter.post(
+  const bootstrapRouter = new Hono().post(
     '/set-password',
     zValidator('json', credentialsSchema),
     async (context) => {
@@ -97,23 +95,20 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}): {
     },
   );
 
-  const rotateRouter = new Hono();
-  // The session middleware is applied here, on the rotate-only router,
-  // so the bootstrap route can stay ungated while every rotate call is
-  // forced through cookie verification.
-  rotateRouter.use('*', requireSharedPasswordSession);
-  rotateRouter.post(
-    '/rotate-password',
-    zValidator('json', credentialsSchema),
-    async (context) => {
-      const { password } = context.req.valid('json');
-      const result = await rotatePassword(getDatabase(), password, clock());
-      if (result.kind === 'not-bootstrapped') {
-        return context.json({ error: 'auth-not-bootstrapped' }, 503);
-      }
-      return context.json({ ok: true });
-    },
-  );
+  const rotateRouter = new Hono()
+    .use('*', requireSharedPasswordSession)
+    .post(
+      '/rotate-password',
+      zValidator('json', credentialsSchema),
+      async (context) => {
+        const { password } = context.req.valid('json');
+        const result = await rotatePassword(getDatabase(), password, clock());
+        if (result.kind === 'not-bootstrapped') {
+          return context.json({ error: 'auth-not-bootstrapped' }, 503);
+        }
+        return context.json({ ok: true });
+      },
+    );
 
   return { publicRouter, bootstrapRouter, rotateRouter };
 }
