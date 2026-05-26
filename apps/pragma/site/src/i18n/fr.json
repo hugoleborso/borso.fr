@@ -184,7 +184,10 @@
     "energy": "Énergie",
     "transitionWarning": "Transition à risque",
     "openTransitionComment": "Voir / commenter la transition",
-    "transitionCommentTitle": "Commentaire de transition"
+    "transitionCommentTitle": "Commentaire de transition",
+    "missingSessionId": "Identifiant de session manquant.",
+    "noSetlistYet": "Aucune setlist créée pour cette session.",
+    "createForSession": "Créer une setlist"
   },
   "scene": {
     "title": "Mode Scène",

@@ -184,7 +184,10 @@
     "energy": "Energy",
     "transitionWarning": "Risky transition",
     "openTransitionComment": "View / comment the transition",
-    "transitionCommentTitle": "Transition comment"
+    "transitionCommentTitle": "Transition comment",
+    "missingSessionId": "Missing session id.",
+    "noSetlistYet": "No setlist created for this session yet.",
+    "createForSession": "Create a setlist"
   },
   "scene": {
     "title": "Scene Mode",
