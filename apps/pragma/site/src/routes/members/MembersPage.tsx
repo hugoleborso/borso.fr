@@ -18,16 +18,16 @@ import { Input } from '../../components/atoms/Input';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { MasteryMatrix } from '../../components/organisms/MasteryMatrix';
 import { ApiError } from '../../lib/api';
+import { readableForeground } from '../../lib/member-color.utils';
 import { useInstrumentsList } from '../../lib/queries/instruments';
 import {
   useAssignMemberInstruments,
   useCreateMember,
   useDeleteMember,
+  useMemberInstruments,
   useMembersList,
   useUpdateMember,
 } from '../../lib/queries/members';
-import { useMemberInstruments } from '../../lib/queries/members';
-import { readableForeground } from '../../lib/member-color.utils';
 
 interface Selection {
   id: string;
@@ -238,11 +238,7 @@ export function MembersPage(): JSX.Element {
             <div className="flex gap-2 mt-2">
               <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
                 {([canSubmit, isSubmitting]) => (
-                  <Button
-                    type="submit"
-                    variant="accent"
-                    disabled={!canSubmit || isSubmitting}
-                  >
+                  <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
                     {t('common.save')}
                   </Button>
                 )}

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  MASTERY_SCORE_MAX,
-  MASTERY_SCORE_MIN,
   cellKey,
   clampScore,
   columnAverage,
+  MASTERY_SCORE_MAX,
+  MASTERY_SCORE_MIN,
   rowAverage,
 } from './mastery-matrix.utils';
 

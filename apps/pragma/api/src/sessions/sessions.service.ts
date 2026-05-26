@@ -2,18 +2,18 @@
  * Service layer for sessions.
  */
 
+import type { z } from 'zod';
 import type { Database } from '../database/client';
 import {
-  type SessionInsertShape,
-  type SessionRow,
   deleteSessionWithCascade,
   findSessionById,
   insertSession,
   listSessions,
+  type SessionInsertShape,
+  type SessionRow,
   updateSession,
 } from './sessions.repository';
 import type { sessionCreateSchema, sessionUpdateSchema } from './sessions.schema';
-import type { z } from 'zod';
 
 type SessionCreateInput = z.infer<typeof sessionCreateSchema>;
 type SessionUpdateInput = z.infer<typeof sessionUpdateSchema>;

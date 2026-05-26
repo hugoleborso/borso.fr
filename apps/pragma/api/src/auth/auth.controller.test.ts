@@ -7,12 +7,12 @@
  *  - middleware: 401 without cookie, 200 with fresh cookie
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
 import type { Hono } from 'hono';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 import { loadAppConfig } from './auth.repository';
 import { requireSharedPasswordSession } from './shared-password.middleware';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 
 const ANY_HOST = 'http://localhost';
 const VALID_PASSWORD = 'correct-horse-battery';

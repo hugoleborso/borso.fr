@@ -13,7 +13,7 @@
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { type ReactNode, act } from 'react';
+import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
 declare global {
@@ -68,9 +68,7 @@ export function stubFetch(handler: (request: Request) => Promise<Response>): Fet
       input instanceof Request
         ? input
         : new Request(
-            typeof input === 'string' && input.startsWith('/')
-              ? `${STUB_BASE_URL}${input}`
-              : input,
+            typeof input === 'string' && input.startsWith('/') ? `${STUB_BASE_URL}${input}` : input,
             init,
           );
     calls.push(absolute);

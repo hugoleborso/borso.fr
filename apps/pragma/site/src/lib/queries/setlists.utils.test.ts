@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-  type EntriesCache,
-  type MinimalSetlistEntry,
   appendOptimisticEntry,
   applyEntryPatch,
+  type EntriesCache,
+  type MinimalSetlistEntry,
   removeEntryById,
   reorderEntriesByIds,
 } from './setlists.utils';

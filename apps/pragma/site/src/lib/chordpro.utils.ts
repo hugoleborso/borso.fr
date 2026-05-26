@@ -99,8 +99,34 @@ export function readTitle(lines: readonly ChordProLine[]): string | null {
  * intact. Returns the original chord unchanged if it can't be parsed
  * as a known root.
  */
-const NOTES_SHARP: readonly string[] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const NOTES_FLAT: readonly string[] = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+const NOTES_SHARP: readonly string[] = [
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
+];
+const NOTES_FLAT: readonly string[] = [
+  'C',
+  'Db',
+  'D',
+  'Eb',
+  'E',
+  'F',
+  'Gb',
+  'G',
+  'Ab',
+  'A',
+  'Bb',
+  'B',
+];
 const NOTES_IN_OCTAVE = 12;
 const ROOT_PATTERN = /^([A-G])([#b]?)(.*)$/;
 
@@ -115,7 +141,8 @@ export function transposeChord(chord: string, semitones: number): string {
   // Flats: convert via the flat table first, then re-emit in the
   // sharp convention (the parser is forgiving on input, normalised on
   // output).
-  const rootIndex = accidental === 'b' ? NOTES_FLAT.indexOf(flatKey) : NOTES_SHARP.indexOf(sharpKey);
+  const rootIndex =
+    accidental === 'b' ? NOTES_FLAT.indexOf(flatKey) : NOTES_SHARP.indexOf(sharpKey);
   if (rootIndex === -1) return chord;
   const next = (((rootIndex + semitones) % NOTES_IN_OCTAVE) + NOTES_IN_OCTAVE) % NOTES_IN_OCTAVE;
   return `${NOTES_SHARP[next]}${suffix}`;

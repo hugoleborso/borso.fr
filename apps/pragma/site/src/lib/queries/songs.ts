@@ -174,9 +174,7 @@ export function useUpdateSong() {
       queryClient.setQueryData<SongsListResponse>(listKey, (old) => {
         if (old === undefined) return old;
         return {
-          songs: old.songs.map((song) =>
-            song.id === id ? mergeSongUpdate(song, patch) : song,
-          ),
+          songs: old.songs.map((song) => (song.id === id ? mergeSongUpdate(song, patch) : song)),
         };
       });
       queryClient.setQueryData<SongByIdResponse>(byIdKey, (old) => {

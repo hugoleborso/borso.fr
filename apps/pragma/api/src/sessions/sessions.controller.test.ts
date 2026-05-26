@@ -112,7 +112,9 @@ describe('sessions controller (back-e2e)', () => {
       body: { title: 'X', status: 'idea' },
       cookieHeader,
     });
-    const songId = (await readJson(songCreate, z.object({ song: z.object({ id: z.string().uuid() }) }))).song.id;
+    const songId = (
+      await readJson(songCreate, z.object({ song: z.object({ id: z.string().uuid() }) }))
+    ).song.id;
 
     const sessionCreate = await jsonRequest(app, '/api/sessions', {
       method: 'POST',

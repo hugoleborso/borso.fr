@@ -12,10 +12,10 @@ import { useForm } from '@tanstack/react-form';
 import { type JSX, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
-import { Button } from '../atoms/Button';
-import { Input } from '../atoms/Input';
 import { ApiError } from '../../lib/api';
 import { useCreateSession } from '../../lib/queries/sessions';
+import { Button } from '../atoms/Button';
+import { Input } from '../atoms/Input';
 import {
   dateTimeLocalToIso,
   defaultDateTimeLocal,
@@ -128,7 +128,13 @@ export function CreateSessionDialog({
         <h2 className="font-display italic text-xl text-ink-900 m-0">
           {t(kind === 'concert' ? 'sessions.create.concertTitle' : 'sessions.create.practiceTitle')}
         </h2>
-        <Button type="button" variant="ghost" size="sm" onClick={onClose} aria-label={t('common.cancel')}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          aria-label={t('common.cancel')}
+        >
           ×
         </Button>
       </div>

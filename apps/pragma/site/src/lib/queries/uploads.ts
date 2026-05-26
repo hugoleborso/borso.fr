@@ -9,13 +9,10 @@ import { ApiError, api } from '../api';
 
 export function useSignChartUpload() {
   return useMutation({
-    mutationFn: async (
-      variables: Parameters<typeof api.api.uploads.sign.$post>[0]['json'],
-    ) => {
+    mutationFn: async (variables: Parameters<typeof api.api.uploads.sign.$post>[0]['json']) => {
       const response = await api.api.uploads.sign.$post({ json: variables });
       if (!response.ok) throw new ApiError(response.status, `sign ${response.status}`, null);
       return response.json();
     },
   });
 }
-

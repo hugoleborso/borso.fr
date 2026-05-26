@@ -12,9 +12,9 @@ import { Link } from 'react-router-dom';
 import { Icon } from '../../components/atoms/Icon';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError, api } from '../../lib/api';
+import { formatSessionDate } from '../../lib/formatters.utils';
 import { useSessionsList } from '../../lib/queries/sessions';
 import { setlistKeys } from '../../lib/queries/setlists';
-import { formatSessionDate } from '../../lib/formatters.utils';
 
 export function SetlistsPage(): JSX.Element {
   const { t, i18n } = useTranslation();
@@ -46,8 +46,12 @@ export function SetlistsPage(): JSX.Element {
       concerts
         .map((session, index) => ({ session, payload: setlistQueries[index]?.data ?? null }))
         .filter(
-          (entry): entry is { session: (typeof concerts)[number]; payload: NonNullable<typeof entry.payload> } =>
-            entry.payload !== null,
+          (
+            entry,
+          ): entry is {
+            session: (typeof concerts)[number];
+            payload: NonNullable<typeof entry.payload>;
+          } => entry.payload !== null,
         ),
     [concerts, setlistQueries],
   );
@@ -56,7 +60,7 @@ export function SetlistsPage(): JSX.Element {
   const error =
     sessionsQuery.error instanceof ApiError
       ? sessionsQuery.error.message
-      : setlistQueries.find((q) => q.error instanceof ApiError)?.error?.message ?? null;
+      : (setlistQueries.find((q) => q.error instanceof ApiError)?.error?.message ?? null);
 
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">

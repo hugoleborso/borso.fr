@@ -28,14 +28,9 @@ export function MemberChip({
 }: MemberChipProps): JSX.Element {
   const color = paletteColorFromHex(memberColor);
   return (
-    <span
-      className={cn('inline-flex items-center gap-1.5', className)}
-      title={title ?? memberName}
-    >
+    <span className={cn('inline-flex items-center gap-1.5', className)} title={title ?? memberName}>
       <Avatar initials={memberInitial(memberName)} color={color} size={size} />
-      {withName && (
-        <span className="text-[11px] font-medium text-ink-700">{memberName}</span>
-      )}
+      {withName && <span className="text-[11px] font-medium text-ink-700">{memberName}</span>}
     </span>
   );
 }

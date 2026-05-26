@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-  RATE_LIMIT_MAX_ATTEMPTS,
-  RATE_LIMIT_WINDOW_MS,
   createBucketStore,
   isRateLimited,
+  RATE_LIMIT_MAX_ATTEMPTS,
+  RATE_LIMIT_WINDOW_MS,
   recordAttempt,
 } from './rate-limit.utils';
 

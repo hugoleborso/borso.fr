@@ -20,7 +20,10 @@
             "sort-name": "Daft Punk"
           }
         },
-        { "name": "Pharrell Williams", "artist": { "id": "abc", "name": "Pharrell Williams", "sort-name": "Williams, Pharrell" } }
+        {
+          "name": "Pharrell Williams",
+          "artist": { "id": "abc", "name": "Pharrell Williams", "sort-name": "Williams, Pharrell" }
+        }
       ],
       "first-release-date": "2013-04-19",
       "releases": [

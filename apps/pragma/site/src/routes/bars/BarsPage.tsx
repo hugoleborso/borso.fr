@@ -13,22 +13,22 @@ import type { JSX } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '../../components/atoms/Badge';
-import { Icon } from '../../components/atoms/Icon';
 import { cn } from '../../components/atoms/cn.utils';
+import { Icon } from '../../components/atoms/Icon';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { BarsList, type BarsListRow } from '../../components/organisms/BarsList';
 import { ApiError } from '../../lib/api';
-import { useBarsList, useCreateBar, useDeleteBar, useUpdateBar } from '../../lib/queries/bars';
 import { formatCapacity } from '../../lib/formatters.utils';
+import { useBarsList, useCreateBar, useDeleteBar, useUpdateBar } from '../../lib/queries/bars';
 import { countStale, isStale } from '../../lib/stale-bar.utils';
 import {
-  BAR_STATUSES,
   BAR_STATUS_KEY,
-  BLANK_BAR_FORM,
+  BAR_STATUSES,
+  BarForm,
   type BarFormInitial,
   type BarFormSubmitPayload,
   type BarStatus,
-  BarForm,
+  BLANK_BAR_FORM,
 } from './BarForm';
 
 type Bar = NonNullable<ReturnType<typeof useBarsList>['data']>['bars'][number];
@@ -80,8 +80,7 @@ export function BarsPage(): JSX.Element {
     return out;
   }, [sortedBars]);
 
-  const queryError =
-    barsQuery.error instanceof ApiError ? barsQuery.error.message : null;
+  const queryError = barsQuery.error instanceof ApiError ? barsQuery.error.message : null;
   const displayError = localError ?? queryError;
 
   const listRows = useMemo<BarsListRow[]>(
@@ -97,10 +96,7 @@ export function BarsPage(): JSX.Element {
     [sortedBars, isBarStale],
   );
 
-  const handleFormSubmit = (
-    id: string | null,
-    payload: BarFormSubmitPayload,
-  ): void => {
+  const handleFormSubmit = (id: string | null, payload: BarFormSubmitPayload): void => {
     if (payload.name.length === 0) return;
     const onError = (error: Error): void =>
       setLocalError(error instanceof ApiError ? error.message : 'unknown-error');

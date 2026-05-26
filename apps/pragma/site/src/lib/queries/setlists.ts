@@ -12,9 +12,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 import {
-  type EntriesCache,
   appendOptimisticEntry,
   applyEntryPatch,
+  type EntriesCache,
   removeEntryById,
   reorderEntriesByIds,
 } from './setlists.utils';
@@ -93,7 +93,7 @@ export function useAppendSetlistEntry() {
   return useMutation({
     mutationFn: async (
       variables: { setlistId: string; optimisticId: string } & Parameters<
-        typeof api.api.setlists[':id']['entries']['$post']
+        (typeof api.api.setlists)[':id']['entries']['$post']
       >[0]['json'],
     ) => {
       const { setlistId, optimisticId: _optimisticId, ...rest } = variables;
@@ -143,7 +143,7 @@ export function useUpdateSetlistEntry() {
   return useMutation({
     mutationFn: async (
       variables: { setlistId: string; entryId: string } & Parameters<
-        typeof api.api.setlists[':id']['entries'][':entryId']['$put']
+        (typeof api.api.setlists)[':id']['entries'][':entryId']['$put']
       >[0]['json'],
     ) => {
       const { setlistId, entryId, ...rest } = variables;
@@ -193,10 +193,7 @@ export function useDeleteSetlistEntry() {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = snapshotEntries(queryClient, variables.setlistId);
       if (previous !== undefined) {
-        queryClient.setQueryData<EntriesCache>(
-          key,
-          removeEntryById(previous, variables.entryId),
-        );
+        queryClient.setQueryData<EntriesCache>(key, removeEntryById(previous, variables.entryId));
       }
       return { previous };
     },

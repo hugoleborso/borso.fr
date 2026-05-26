@@ -26,15 +26,21 @@ interface ProbeProps<Mutate> {
   sink: (mutate: Mutate) => void;
 }
 
-function ProbeCreate({ sink }: ProbeProps<ReturnType<typeof useCreateInstrument>['mutateAsync']>): null {
+function ProbeCreate({
+  sink,
+}: ProbeProps<ReturnType<typeof useCreateInstrument>['mutateAsync']>): null {
   sink(useCreateInstrument().mutateAsync);
   return null;
 }
-function ProbeUpdate({ sink }: ProbeProps<ReturnType<typeof useUpdateInstrument>['mutateAsync']>): null {
+function ProbeUpdate({
+  sink,
+}: ProbeProps<ReturnType<typeof useUpdateInstrument>['mutateAsync']>): null {
   sink(useUpdateInstrument().mutateAsync);
   return null;
 }
-function ProbeDelete({ sink }: ProbeProps<ReturnType<typeof useDeleteInstrument>['mutateAsync']>): null {
+function ProbeDelete({
+  sink,
+}: ProbeProps<ReturnType<typeof useDeleteInstrument>['mutateAsync']>): null {
   sink(useDeleteInstrument().mutateAsync);
   return null;
 }
@@ -91,12 +97,12 @@ describe('instruments mutations — optimistic updates', () => {
     send({ id: 'instr-a', name: 'Acoustic Guitar' }).catch(() => undefined);
     await flushMicrotasks();
     expect(
-      queryClient
-        .getQueryData<OptimisticListShape>(instrumentKeys.list())
-        ?.instruments[0]?.name,
+      queryClient.getQueryData<OptimisticListShape>(instrumentKeys.list())?.instruments[0]?.name,
     ).toBe('Acoustic Guitar');
 
-    pending.resolve(jsonResponse({ instrument: { ...SEED.instruments[0], name: 'Acoustic Guitar' } }));
+    pending.resolve(
+      jsonResponse({ instrument: { ...SEED.instruments[0], name: 'Acoustic Guitar' } }),
+    );
     await flushMicrotasks();
     tree.unmount();
   });

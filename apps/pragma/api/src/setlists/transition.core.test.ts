@@ -28,11 +28,7 @@ describe('evaluateTransition', () => {
   });
 
   it('treats null instruments as not held', () => {
-    const result = evaluateTransition(
-      { hugo: 'guitar' },
-      { hugo: null },
-      INSTRUMENTS,
-    );
+    const result = evaluateTransition({ hugo: 'guitar' }, { hugo: null }, INSTRUMENTS);
     expect(result).toEqual({ kind: 'warn', missingHarmonicMembers: ['hugo'] });
   });
 
@@ -42,11 +38,7 @@ describe('evaluateTransition', () => {
   });
 
   it('warns when only non-harmonic instruments are kept', () => {
-    const result = evaluateTransition(
-      { hugo: 'drums' },
-      { hugo: 'drums' },
-      INSTRUMENTS,
-    );
+    const result = evaluateTransition({ hugo: 'drums' }, { hugo: 'drums' }, INSTRUMENTS);
     expect(result).toEqual({ kind: 'warn', missingHarmonicMembers: [] });
   });
 

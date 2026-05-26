@@ -71,20 +71,19 @@ describe('instruments controller (back-e2e)', () => {
     const listed = await readJson(listResponse, instrumentListEnvelope);
     expect(listed.instruments.map((row) => row.name)).toEqual(['Drums', 'Guitar']);
 
-    const updateResponse = await jsonRequest(
-      app,
-      `/api/instruments/${created.instrument.id}`,
-      { method: 'PUT', body: { name: 'Bass', isHarmonic: true }, cookieHeader },
-    );
+    const updateResponse = await jsonRequest(app, `/api/instruments/${created.instrument.id}`, {
+      method: 'PUT',
+      body: { name: 'Bass', isHarmonic: true },
+      cookieHeader,
+    });
     expect(updateResponse.status).toBe(200);
     const updated = await readJson(updateResponse, singleInstrumentEnvelope);
     expect(updated.instrument.name).toBe('Bass');
 
-    const deleteResponse = await jsonRequest(
-      app,
-      `/api/instruments/${created.instrument.id}`,
-      { method: 'DELETE', cookieHeader },
-    );
+    const deleteResponse = await jsonRequest(app, `/api/instruments/${created.instrument.id}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
     expect(deleteResponse.status).toBe(200);
 
     const afterDelete = await jsonRequest(app, '/api/instruments', { cookieHeader });

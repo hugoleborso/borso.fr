@@ -7,7 +7,7 @@
  */
 
 import { cva, type VariantProps } from 'class-variance-authority';
-import { forwardRef, type ButtonHTMLAttributes } from 'react';
+import { type ButtonHTMLAttributes, forwardRef } from 'react';
 import { cn } from './cn.utils';
 
 export const buttonVariants = cva(
@@ -17,16 +17,13 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'bg-bg-elev border border-line-strong text-ink-900 hover:bg-bg',
-        primary:
-          'bg-ink-900 border border-ink-900 text-bg-elev hover:bg-ink-700',
+        default: 'bg-bg-elev border border-line-strong text-ink-900 hover:bg-bg',
+        primary: 'bg-ink-900 border border-ink-900 text-bg-elev hover:bg-ink-700',
         accent:
           'bg-accent border border-accent text-bg-elev hover:bg-accent-ink hover:border-accent-ink',
         ghost:
           'bg-transparent border border-transparent text-ink-900 hover:bg-[rgba(26,22,18,0.05)]',
-        danger:
-          'bg-danger border border-danger text-bg-elev hover:opacity-90',
+        danger: 'bg-danger border border-danger text-bg-elev hover:opacity-90',
       },
       size: {
         sm: 'px-2 py-1 text-xs',
@@ -40,9 +37,7 @@ export const buttonVariants = cva(
 
 export type ButtonVariantProps = VariantProps<typeof buttonVariants>;
 
-export interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
-    ButtonVariantProps {}
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, ButtonVariantProps {}
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, type = 'button', ...rest }, ref) => (

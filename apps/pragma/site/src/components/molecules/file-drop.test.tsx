@@ -92,9 +92,7 @@ describe('FileDrop — Remove button', () => {
   it('omits the Remove button when no onRemoved handler is provided', () => {
     act(() => {
       root.render(
-        withQueryClient(
-          <FileDrop currentObjectKey="charts/abc.pdf" onUploaded={vi.fn()} />,
-        ),
+        withQueryClient(<FileDrop currentObjectKey="charts/abc.pdf" onUploaded={vi.fn()} />),
       );
     });
     expect(findRemoveButton(container)).toBeNull();

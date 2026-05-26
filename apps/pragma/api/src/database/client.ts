@@ -78,4 +78,3 @@ export function getDatabase(): Database {
   cachedDatabase = drizzle(client, { schema });
   return cachedDatabase;
 }
-

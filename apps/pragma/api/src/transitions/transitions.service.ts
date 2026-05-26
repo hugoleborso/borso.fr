@@ -4,16 +4,14 @@
 
 import type { Database } from '../database/client';
 import {
-  type TransitionCommentRow,
   deleteTransitionComment,
   findTransitionComment,
   listTransitionComments,
+  type TransitionCommentRow,
   upsertTransitionComment,
 } from './transitions.repository';
 
-export async function getTransitionComments(
-  database: Database,
-): Promise<TransitionCommentRow[]> {
+export async function getTransitionComments(database: Database): Promise<TransitionCommentRow[]> {
   return await listTransitionComments(database);
 }
 

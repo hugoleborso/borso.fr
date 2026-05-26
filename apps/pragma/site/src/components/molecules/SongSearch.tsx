@@ -13,13 +13,13 @@
  * CLAUDE.md.
  */
 
-import { useEffect, useState, type JSX } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api';
 import { useSongSearch } from '../../lib/queries/songs';
+import { cn } from '../atoms/cn.utils';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
-import { cn } from '../atoms/cn.utils';
 
 const DEBOUNCE_MS = 1000;
 const TAGS_DISPLAYED_MAX = 3;
@@ -59,11 +59,7 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
   const hits = search.data?.hits ?? [];
   const loading = search.isFetching;
   const error =
-    search.error instanceof ApiError
-      ? search.error.message
-      : search.error
-        ? 'search-failed'
-        : null;
+    search.error instanceof ApiError ? search.error.message : search.error ? 'search-failed' : null;
   const hasSearched = debouncedQuery.length > 0 && !loading && error === null;
 
   return (
@@ -82,9 +78,7 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
         />
       </div>
       <p className="text-xs text-ink-400">{t('catalog.searchSongHint')}</p>
-      {loading ? (
-        <p className="text-xs text-ink-500 italic">{t('common.loading')}</p>
-      ) : null}
+      {loading ? <p className="text-xs text-ink-500 italic">{t('common.loading')}</p> : null}
       {error !== null ? (
         <p className="text-xs text-danger" role="alert">
           {error}

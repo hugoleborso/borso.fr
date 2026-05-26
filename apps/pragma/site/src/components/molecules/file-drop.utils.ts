@@ -7,15 +7,12 @@
 export const FILE_DROP_MAX_BYTES = 10 * 1024 * 1024;
 
 export const ALLOWED_PDF_MIME = 'application/pdf';
-export const ALLOWED_IMAGE_MIMES = [
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-  'image/heic',
-] as const;
+export const ALLOWED_IMAGE_MIMES = ['image/png', 'image/jpeg', 'image/webp', 'image/heic'] as const;
 
 export type FileDropChartKind = 'pdf' | 'image';
-export type AllowedUploadContentType = typeof ALLOWED_PDF_MIME | (typeof ALLOWED_IMAGE_MIMES)[number];
+export type AllowedUploadContentType =
+  | typeof ALLOWED_PDF_MIME
+  | (typeof ALLOWED_IMAGE_MIMES)[number];
 
 export type FileValidationResult =
   | { ok: true; kind: FileDropChartKind; contentType: AllowedUploadContentType }

@@ -74,8 +74,7 @@ export function InstrumentsPage(): JSX.Element {
   };
 
   const instruments = list.data?.instruments ?? [];
-  const lastError: unknown =
-    list.error ?? create.error ?? update.error ?? remove.error ?? null;
+  const lastError: unknown = list.error ?? create.error ?? update.error ?? remove.error ?? null;
   const errorMessage =
     lastError instanceof ApiError ? lastError.message : lastError ? 'unknown-error' : null;
 
@@ -171,11 +170,7 @@ export function InstrumentsPage(): JSX.Element {
             <div className="flex gap-2 mt-2">
               <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
                 {([canSubmit, isSubmitting]) => (
-                  <Button
-                    type="submit"
-                    variant="accent"
-                    disabled={!canSubmit || isSubmitting}
-                  >
+                  <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
                     {t('common.save')}
                   </Button>
                 )}

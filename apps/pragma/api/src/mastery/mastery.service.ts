@@ -4,12 +4,12 @@
 
 import type { Database } from '../database/client';
 import {
-  type MasteryDefaultRow,
-  type MasteryOverrideRow,
   deleteMasteryDefault,
   deleteMasteryOverride,
   listMasteryDefaults,
   listMasteryOverridesForSong,
+  type MasteryDefaultRow,
+  type MasteryOverrideRow,
   upsertMasteryDefault,
   upsertMasteryOverride,
 } from './mastery.repository';

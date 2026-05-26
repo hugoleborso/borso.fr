@@ -69,13 +69,15 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== SHELL_CACHE && key !== DATA_CACHE)
-          .map((key) => caches.delete(key)),
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== SHELL_CACHE && key !== DATA_CACHE)
+            .map((key) => caches.delete(key)),
+        ),
       ),
-    ),
   );
   self.clients.claim();
 });
@@ -106,9 +108,7 @@ self.addEventListener('fetch', (event) => {
 
   // Application shell: cache-first, fall back to network.
   if (request.mode === 'navigate' || SHELL_ASSETS.includes(url.pathname)) {
-    event.respondWith(
-      caches.match(request).then((cached) => cached ?? fetch(request)),
-    );
+    event.respondWith(caches.match(request).then((cached) => cached ?? fetch(request)));
     return;
   }
 

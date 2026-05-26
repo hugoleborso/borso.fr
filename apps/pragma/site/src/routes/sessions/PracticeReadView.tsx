@@ -56,10 +56,7 @@ export function PracticeReadView({
       {preparedConcert !== null ? (
         <p className="text-sm text-ink-500 mt-2">
           {t('sessions.preparesConcert')}{' '}
-          <Link
-            to={`/sessions/${preparedConcert.id}`}
-            className="text-accent hover:underline"
-          >
+          <Link to={`/sessions/${preparedConcert.id}`} className="text-accent hover:underline">
             {formatSessionDate(preparedConcert.date, language)}
             {preparedConcert.venue !== null ? ` — ${preparedConcert.venue}` : ''}
           </Link>

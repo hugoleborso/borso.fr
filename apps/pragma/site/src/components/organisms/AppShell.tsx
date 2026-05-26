@@ -24,12 +24,9 @@ import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Avatar } from '../atoms/Avatar';
 import { Badge } from '../atoms/Badge';
-import { Icon, type IconName } from '../atoms/Icon';
 import { cn } from '../atoms/cn.utils';
-import {
-  MEMBER_PALETTE,
-  memberInitial,
-} from '../atoms/member-palette.utils';
+import { Icon, type IconName } from '../atoms/Icon';
+import { MEMBER_PALETTE, memberInitial } from '../atoms/member-palette.utils';
 import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
 import { OfflineBanner } from '../molecules/OfflineBanner';
 import { useNavBadges } from './useNavBadges';
@@ -219,9 +216,7 @@ function SidebarLink({ item, label, badge, isActive, onClick }: SidebarLinkProps
       className={cn(
         'flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13.5px] border border-transparent',
         'hover:bg-[rgba(26,22,18,0.04)] transition-colors',
-        isActive
-          ? 'bg-bg-elev text-ink-900 border-line'
-          : 'text-ink-700',
+        isActive ? 'bg-bg-elev text-ink-900 border-line' : 'text-ink-700',
       )}
     >
       <Icon name={item.icon} size={16} className="opacity-85" />

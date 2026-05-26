@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES, detectInitialLocale, flattenKeys } from './i18n.utils';
+import { DEFAULT_LOCALE, detectInitialLocale, flattenKeys, SUPPORTED_LOCALES } from './i18n.utils';
 
 describe('i18n.utils', () => {
   describe('constants', () => {

@@ -18,8 +18,7 @@ export const chipVariants = cva(
         solid: 'bg-ink-900 text-bg border-ink-900',
         idea: 'bg-bg-sunk text-ink-500 border-line',
         wip: 'bg-status-wip-bg text-status-wip-fg border-status-wip-border',
-        rehearsed:
-          'bg-status-rehearsed-bg text-status-rehearsed-fg border-status-rehearsed-border',
+        rehearsed: 'bg-status-rehearsed-bg text-status-rehearsed-fg border-status-rehearsed-border',
         concert_ready: 'bg-ink-900 text-bg border-ink-900',
       },
     },
@@ -31,9 +30,7 @@ export type ChipVariantProps = VariantProps<typeof chipVariants>;
 
 export interface ChipProps extends HTMLAttributes<HTMLSpanElement>, ChipVariantProps {}
 
-export const Chip = forwardRef<HTMLSpanElement, ChipProps>(
-  ({ className, tone, ...rest }, ref) => (
-    <span ref={ref} className={cn(chipVariants({ tone }), className)} {...rest} />
-  ),
-);
+export const Chip = forwardRef<HTMLSpanElement, ChipProps>(({ className, tone, ...rest }, ref) => (
+  <span ref={ref} className={cn(chipVariants({ tone }), className)} {...rest} />
+));
 Chip.displayName = 'Chip';

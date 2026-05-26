@@ -23,7 +23,9 @@ interface OptimisticDefaultsShape {
 interface ProbeProps<Mutate> {
   sink: (mutate: Mutate) => void;
 }
-function ProbeSave({ sink }: ProbeProps<ReturnType<typeof useSaveMasteryDefault>['mutateAsync']>): null {
+function ProbeSave({
+  sink,
+}: ProbeProps<ReturnType<typeof useSaveMasteryDefault>['mutateAsync']>): null {
   sink(useSaveMasteryDefault().mutateAsync);
   return null;
 }

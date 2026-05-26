@@ -133,14 +133,14 @@ function encodeUpdate(updates: Record<string, unknown>): SessionUpdateEncoded {
 }
 
 export async function listSessions(database: Database): Promise<SessionRow[]> {
-  const rows = await database.select(PROJECTION).from(sessionTable).orderBy(desc(sessionTable.date));
+  const rows = await database
+    .select(PROJECTION)
+    .from(sessionTable)
+    .orderBy(desc(sessionTable.date));
   return rows.map((row) => rowToSession(row));
 }
 
-export async function findSessionById(
-  database: Database,
-  id: string,
-): Promise<SessionRow | null> {
+export async function findSessionById(database: Database, id: string): Promise<SessionRow | null> {
   const rows = await database
     .select(PROJECTION)
     .from(sessionTable)
@@ -175,10 +175,7 @@ export async function updateSession(
   return row === undefined ? null : rowToSession(row);
 }
 
-export async function deleteSessionWithCascade(
-  database: Database,
-  id: string,
-): Promise<boolean> {
+export async function deleteSessionWithCascade(database: Database, id: string): Promise<boolean> {
   const setlists = await database
     .select({ id: setlistTable.id })
     .from(setlistTable)

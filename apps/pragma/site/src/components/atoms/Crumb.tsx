@@ -10,16 +10,14 @@ import { cn } from './cn.utils';
 
 export type CrumbProps = HTMLAttributes<HTMLDivElement>;
 
-export const Crumb = forwardRef<HTMLDivElement, CrumbProps>(
-  ({ className, ...rest }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        'font-sans font-medium text-[10.5px] tracking-[0.16em] uppercase text-ink-400',
-        className,
-      )}
-      {...rest}
-    />
-  ),
-);
+export const Crumb = forwardRef<HTMLDivElement, CrumbProps>(({ className, ...rest }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      'font-sans font-medium text-[10.5px] tracking-[0.16em] uppercase text-ink-400',
+      className,
+    )}
+    {...rest}
+  />
+));
 Crumb.displayName = 'Crumb';

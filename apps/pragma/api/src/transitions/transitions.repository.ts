@@ -20,9 +20,7 @@ const PROJECTION = {
   updatedAt: transitionCommentTable.updatedAt,
 } as const;
 
-export async function listTransitionComments(
-  database: Database,
-): Promise<TransitionCommentRow[]> {
+export async function listTransitionComments(database: Database): Promise<TransitionCommentRow[]> {
   return await database.select(PROJECTION).from(transitionCommentTable);
 }
 

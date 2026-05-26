@@ -96,7 +96,9 @@ describe('songs mutations — optimistic updates', () => {
     expect(midflight?.songs).toHaveLength(2);
     expect(midflight?.songs[0]?.title).toBe('Brand New');
 
-    pending.resolve(jsonResponse({ song: { ...SEED_LIST.songs[0], id: 'srv', title: 'Brand New' } }, 201));
+    pending.resolve(
+      jsonResponse({ song: { ...SEED_LIST.songs[0], id: 'srv', title: 'Brand New' } }, 201),
+    );
     await flushMicrotasks();
     tree.unmount();
   });

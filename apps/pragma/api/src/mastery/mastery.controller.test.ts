@@ -150,11 +150,10 @@ describe('mastery controller (back-e2e)', () => {
       body: { memberId, instrumentId, score: 5 },
       cookieHeader,
     });
-    const remove = await jsonRequest(
-      app,
-      `/api/mastery/defaults/${memberId}/${instrumentId}`,
-      { method: 'DELETE', cookieHeader },
-    );
+    const remove = await jsonRequest(app, `/api/mastery/defaults/${memberId}/${instrumentId}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
     expect(remove.status).toBe(200);
     const after = await readJson(
       await jsonRequest(app, '/api/mastery/defaults', { cookieHeader }),
@@ -166,11 +165,10 @@ describe('mastery controller (back-e2e)', () => {
   it('returns 404 on delete of a missing default / override', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const missing = '11111111-1111-1111-1111-111111111111';
-    const removeDefault = await jsonRequest(
-      app,
-      `/api/mastery/defaults/${missing}/${missing}`,
-      { method: 'DELETE', cookieHeader },
-    );
+    const removeDefault = await jsonRequest(app, `/api/mastery/defaults/${missing}/${missing}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
     const removeOverride = await jsonRequest(
       app,
       `/api/mastery/overrides/${missing}/${missing}/${missing}`,

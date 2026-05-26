@@ -22,9 +22,9 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+import { cn } from '../../components/atoms/cn.utils';
 import { Icon } from '../../components/atoms/Icon';
 import { type LineupMember, MemberLineup } from '../../components/molecules/MemberLineup';
-import { cn } from '../../components/atoms/cn.utils';
 
 const ENERGY_MIN = 1;
 const ENERGY_MAX = 10;

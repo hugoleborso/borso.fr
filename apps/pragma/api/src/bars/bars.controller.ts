@@ -7,11 +7,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
 import { getDatabase } from '../database/client';
-import {
-  barCreateSchema,
-  barIdParamSchema,
-  barUpdateSchema,
-} from './bars.schema';
+import { barCreateSchema, barIdParamSchema, barUpdateSchema } from './bars.schema';
 import { createBar, getBarById, getBarsSortedByName, patchBar, removeBar } from './bars.service';
 
 export function buildBarsRouter() {

@@ -8,14 +8,14 @@
 import type { Database } from '../database/client';
 import { pickNextPaletteHex } from './member-palette.utils';
 import {
-  type MemberInstrumentRow,
-  type MemberRow,
   deleteMemberWithLinks,
   findMemberById,
   insertMember,
   instrumentsExist,
   listInstrumentsForMember,
   listMembers,
+  type MemberInstrumentRow,
+  type MemberRow,
   replaceMemberInstruments,
   updateMember,
 } from './members.repository';

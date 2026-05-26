@@ -29,9 +29,7 @@ export function applyEntryPatch<TEntry extends MinimalSetlistEntry>(
   patch: Partial<TEntry>,
 ): EntriesCache<TEntry> {
   return {
-    entries: cache.entries.map((entry) =>
-      entry.id === entryId ? { ...entry, ...patch } : entry,
-    ),
+    entries: cache.entries.map((entry) => (entry.id === entryId ? { ...entry, ...patch } : entry)),
   };
 }
 

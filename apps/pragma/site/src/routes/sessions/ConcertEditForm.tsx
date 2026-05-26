@@ -120,9 +120,7 @@ export function ConcertEditForm({
           )}
         </form.Field>
         <fieldset className="border border-line rounded-md p-3 mt-2">
-          <legend className={`${LABEL_CLASS} px-2`}>
-            {t('sessions.friendsCountPerMember')}
-          </legend>
+          <legend className={`${LABEL_CLASS} px-2`}>{t('sessions.friendsCountPerMember')}</legend>
           <form.Field name="friends">
             {(friendsField) => (
               <>
@@ -138,9 +136,7 @@ export function ConcertEditForm({
                       >
                         {member.firstName.slice(0, 1).toUpperCase()}
                       </span>
-                      <span className="flex-1 text-[13px] text-ink-700">
-                        {member.firstName}
-                      </span>
+                      <span className="flex-1 text-[13px] text-ink-700">{member.firstName}</span>
                       <input
                         type="number"
                         min={0}

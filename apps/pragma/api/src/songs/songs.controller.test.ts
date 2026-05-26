@@ -147,7 +147,9 @@ describe('songs controller (back-e2e)', () => {
       body: { firstName: 'Hugo', color: '#abc' },
       cookieHeader,
     });
-    const memberId = (await readJson(memberRes, z.object({ member: z.object({ id: z.string().uuid() }) }))).member.id;
+    const memberId = (
+      await readJson(memberRes, z.object({ member: z.object({ id: z.string().uuid() }) }))
+    ).member.id;
     const instrumentRes = await jsonRequest(app, '/api/instruments', {
       method: 'POST',
       body: { name: 'Voice', isHarmonic: false },
@@ -246,7 +248,9 @@ describe('songs controller (back-e2e)', () => {
           ? Object.fromEntries(headersRecord.entries())
           : (headersRecord ?? {});
       const userAgentValue =
-        headersDictionary && typeof headersDictionary === 'object' && 'User-Agent' in headersDictionary
+        headersDictionary &&
+        typeof headersDictionary === 'object' &&
+        'User-Agent' in headersDictionary
           ? headersDictionary['User-Agent']
           : undefined;
       expect(userAgentValue).toContain('Pragma/');

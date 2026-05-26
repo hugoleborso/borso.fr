@@ -4,21 +4,21 @@
  * the "create setlist for a session" once-per-session guard.
  */
 
+import type { z } from 'zod';
 import type { Database } from '../database/client';
 import {
-  type SetlistEntryRow,
-  type SetlistRow,
   deleteEntry,
   findSetlistBySession,
   insertEntry,
   insertSetlist,
   listEntries,
   listEntryIds,
+  type SetlistEntryRow,
+  type SetlistRow,
   setEntryPosition,
   updateEntry,
 } from './setlists.repository';
 import type { setlistEntryCreateSchema } from './setlists.schema';
-import type { z } from 'zod';
 
 type EntryCreateInput = z.infer<typeof setlistEntryCreateSchema>;
 

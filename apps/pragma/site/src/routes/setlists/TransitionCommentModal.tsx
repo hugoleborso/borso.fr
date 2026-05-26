@@ -9,10 +9,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/atoms/Button';
 import { ApiError } from '../../lib/api';
-import {
-  useSaveTransitionComment,
-  useTransitionComment,
-} from '../../lib/queries/transitions';
+import { useSaveTransitionComment, useTransitionComment } from '../../lib/queries/transitions';
 
 const COMMENT_MAX_LENGTH = 4_096;
 
@@ -52,8 +49,7 @@ export function TransitionCommentModal({
     );
   };
 
-  const queryError =
-    existing.error instanceof ApiError ? existing.error.message : null;
+  const queryError = existing.error instanceof ApiError ? existing.error.message : null;
   const displayError = localError ?? queryError;
 
   return (

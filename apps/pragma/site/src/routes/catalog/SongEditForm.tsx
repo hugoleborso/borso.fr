@@ -7,8 +7,8 @@
 
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
@@ -23,9 +23,9 @@ import { SongExternalLinks } from './SongExternalLinks';
 import { SongLinkAdder } from './SongLinkAdder';
 import { SongMusicBrainzPanel } from './SongMusicBrainzPanel';
 import {
-  SONG_STATUS_LABEL_KEY,
   applyExternalPickToDraft,
   detectProvider,
+  SONG_STATUS_LABEL_KEY,
   type SongDraftState,
   songStatuses,
 } from './song-draft';

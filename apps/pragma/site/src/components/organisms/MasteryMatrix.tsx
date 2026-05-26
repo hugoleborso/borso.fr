@@ -28,9 +28,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import {
   type ColumnDef,
-  type Row,
   flexRender,
   getCoreRowModel,
+  type Row,
   useReactTable,
 } from '@tanstack/react-table';
 import type { JSX, MouseEvent, WheelEvent } from 'react';
@@ -100,11 +100,7 @@ function deleteCachedScore(
   };
 }
 
-export function MasteryMatrix({
-  members,
-  instruments,
-  onError,
-}: MasteryMatrixProps): JSX.Element {
+export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixProps): JSX.Element {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const defaults = useMasteryDefaults();
@@ -167,10 +163,7 @@ export function MasteryMatrix({
     [queryClient, remove, onError],
   );
 
-  const data = useMemo<MatrixRow[]>(
-    () => members.map((member) => ({ member })),
-    [members],
-  );
+  const data = useMemo<MatrixRow[]>(() => members.map((member) => ({ member })), [members]);
 
   const columns = useMemo<ColumnDef<MatrixRow>[]>(() => {
     const memberColumn: ColumnDef<MatrixRow> = {
@@ -334,10 +327,7 @@ export function MasteryMatrix({
               {instruments.map((instrument) => {
                 const average = columnAverage(instrument.id, memberIds, scores);
                 return (
-                  <td
-                    key={instrument.id}
-                    className="text-center px-1 py-3 font-mono text-ink-500"
-                  >
+                  <td key={instrument.id} className="text-center px-1 py-3 font-mono text-ink-500">
                     {average === null ? '—' : average.toFixed(DECIMALS)}
                   </td>
                 );

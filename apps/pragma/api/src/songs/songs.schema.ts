@@ -82,13 +82,7 @@ const songBaseSchema = z.object({
   baseEnergy: z.number().int().min(ENERGY_MIN).max(ENERGY_MAX).nullable().default(null),
   mbid: z.string().max(SONG_STRING_FIELD_MAX).nullable().default(null),
   album: z.string().max(SONG_STRING_FIELD_MAX).nullable().default(null),
-  durationSeconds: z
-    .number()
-    .int()
-    .min(0)
-    .max(SONG_DURATION_MAX_SECONDS)
-    .nullable()
-    .default(null),
+  durationSeconds: z.number().int().min(0).max(SONG_DURATION_MAX_SECONDS).nullable().default(null),
   isrcs: z.array(z.string().max(SONG_ISRC_MAX)).max(SONG_ISRCS_MAX).default([]),
   tags: z.array(z.string().max(SONG_TAG_MAX)).max(SONG_TAGS_MAX).default([]),
 });

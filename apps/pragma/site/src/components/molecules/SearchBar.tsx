@@ -6,9 +6,9 @@
  */
 
 import type { ChangeEvent } from 'react';
+import { cn } from '../atoms/cn.utils';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
-import { cn } from '../atoms/cn.utils';
 
 export interface SearchBarProps {
   value: string;

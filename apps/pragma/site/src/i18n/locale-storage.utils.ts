@@ -6,7 +6,7 @@
  * stand-in.
  */
 
-import { type SupportedLocale, SUPPORTED_LOCALES } from './i18n.utils';
+import { SUPPORTED_LOCALES, type SupportedLocale } from './i18n.utils';
 
 export const LOCALE_STORAGE_KEY = 'pragma.locale';
 

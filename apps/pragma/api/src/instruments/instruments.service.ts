@@ -8,8 +8,8 @@
 
 import type { Database } from '../database/client';
 import {
-  type InstrumentRow,
   deleteInstrument,
+  type InstrumentRow,
   insertInstrument,
   listInstruments,
   updateInstrument,

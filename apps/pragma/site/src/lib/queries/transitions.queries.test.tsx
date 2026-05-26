@@ -7,7 +7,6 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { transitionKeys, useSaveTransitionComment } from './transitions';
 import {
   createIsolatedQueryClient,
   deferred,
@@ -16,6 +15,7 @@ import {
   mountWithClient,
   stubFetch,
 } from './test-helpers';
+import { transitionKeys, useSaveTransitionComment } from './transitions';
 
 interface OptimisticPairCache {
   comment: { songAId: string; songBId: string; comment: string; updatedAt: string };

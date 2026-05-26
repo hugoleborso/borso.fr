@@ -28,10 +28,7 @@ export function FilterPillGroup<TValue extends string>({
 }: FilterPillGroupProps<TValue>): JSX.Element {
   return (
     <div
-      className={cn(
-        'inline-flex gap-1 p-[3px] bg-bg-sunk rounded-lg',
-        className,
-      )}
+      className={cn('inline-flex gap-1 p-[3px] bg-bg-sunk rounded-lg', className)}
       role="tablist"
     >
       {options.map((option) => {

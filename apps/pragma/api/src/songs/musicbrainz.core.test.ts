@@ -97,10 +97,7 @@ describe('mapMusicBrainzRecordings', () => {
         {
           id: 'x',
           title: 'T',
-          tags: [
-            { name: 'kept', count: 2 },
-            { name: 'dropped' },
-          ],
+          tags: [{ name: 'kept', count: 2 }, { name: 'dropped' }],
         },
       ],
     });

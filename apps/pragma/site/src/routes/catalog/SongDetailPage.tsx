@@ -26,11 +26,11 @@ import { StatusChip } from '../../components/molecules/StatusChip';
 import { UploadedChartPreview } from '../../components/molecules/UploadedChartPreview';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { ApiError } from '../../lib/api';
+import { resolveEmbed } from '../../lib/embed.utils';
 import { useInstrumentsList } from '../../lib/queries/instruments';
 import { useMasteryDefaults } from '../../lib/queries/mastery';
 import { useMembersList } from '../../lib/queries/members';
 import { useSong } from '../../lib/queries/songs';
-import { resolveEmbed } from '../../lib/embed.utils';
 import { extractChartKind } from './chart-kind.utils';
 
 const MASTERY_BAR_COUNT = 10;
@@ -170,7 +170,11 @@ export function SongDetailPage(): JSX.Element {
           {song.chart !== null && (song.chart.kind === 'pdf' || song.chart.kind === 'image') ? (
             <Card variant="bare">
               <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-line bg-bg-sunk">
-                <Icon name={song.chart.kind === 'pdf' ? 'pdf' : 'image'} size={14} className="text-ink-500" />
+                <Icon
+                  name={song.chart.kind === 'pdf' ? 'pdf' : 'image'}
+                  size={14}
+                  className="text-ink-500"
+                />
                 <span className="text-xs font-medium">{t('catalog.previewTitle')}</span>
               </div>
               <div className="p-4">
@@ -261,9 +265,10 @@ export function SongDetailPage(): JSX.Element {
               {Object.entries(song.defaultLineup).map(([memberId, instrumentId]) => {
                 const member = members.find((candidate) => candidate.id === memberId);
                 if (member === undefined) return null;
-                const score = instrumentId === null
-                  ? null
-                  : masteryLookup.get(`${memberId}::${instrumentId}`) ?? null;
+                const score =
+                  instrumentId === null
+                    ? null
+                    : (masteryLookup.get(`${memberId}::${instrumentId}`) ?? null);
                 return (
                   <div key={memberId} className="flex items-center gap-2.5">
                     <MemberChip memberName={member.firstName} memberColor={member.color} />
@@ -276,7 +281,9 @@ export function SongDetailPage(): JSX.Element {
                           className="w-1.5 h-3.5 rounded-[1px]"
                           style={{
                             background:
-                              score !== null && barIndex < score ? member.color : 'var(--color-bg-sunk)',
+                              score !== null && barIndex < score
+                                ? member.color
+                                : 'var(--color-bg-sunk)',
                             opacity: score !== null && barIndex < score ? 0.85 : 1,
                           }}
                         />

@@ -12,10 +12,10 @@
  */
 
 import { desc, eq } from 'drizzle-orm';
+import { z } from 'zod';
 import type { Database } from '../database/client';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
 import { setlistEntryTable } from '../setlists/setlists.schema';
-import { z } from 'zod';
 import {
   chordChartSchema,
   defaultLineupSchema,
@@ -109,10 +109,7 @@ const PROJECTION = {
   createdAt: songTable.createdAt,
 } as const;
 
-function parseJsonArrayColumn<T>(
-  raw: string | null,
-  schema: z.ZodSchema<T[]>,
-): T[] {
+function parseJsonArrayColumn<T>(raw: string | null, schema: z.ZodSchema<T[]>): T[] {
   if (raw === null) return [];
   const parsed: unknown = JSON.parse(raw);
   return schema.parse(parsed);
@@ -154,7 +151,8 @@ function encodeInsert(values: SongInsertShape): SongInsertEncoded {
     artist: values.artist,
     status: values.status,
     links: JSON.stringify(values.links ?? []),
-    chart: values.chart === null || values.chart === undefined ? null : JSON.stringify(values.chart),
+    chart:
+      values.chart === null || values.chart === undefined ? null : JSON.stringify(values.chart),
     tonalityStart: values.tonalityStart,
     tonalityEnd: values.tonalityEnd,
     defaultLineup: JSON.stringify(values.defaultLineup ?? {}),
@@ -179,7 +177,8 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   }
   if ('tonalityStart' in updates) encoded.tonalityStart = updates.tonalityStart;
   if ('tonalityEnd' in updates) encoded.tonalityEnd = updates.tonalityEnd;
-  if ('defaultLineup' in updates) encoded.defaultLineup = JSON.stringify(updates.defaultLineup ?? {});
+  if ('defaultLineup' in updates)
+    encoded.defaultLineup = JSON.stringify(updates.defaultLineup ?? {});
   if ('baseEnergy' in updates) encoded.baseEnergy = updates.baseEnergy;
   if ('mbid' in updates) encoded.mbid = updates.mbid;
   if ('album' in updates) encoded.album = updates.album;

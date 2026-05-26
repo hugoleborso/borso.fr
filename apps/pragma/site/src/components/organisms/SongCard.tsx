@@ -9,11 +9,11 @@
  */
 
 import { Link } from 'react-router-dom';
-import { ChartKindIcon, type ChartKind } from '../molecules/ChartKindIcon';
+import { type ChartKind, ChartKindIcon } from '../molecules/ChartKindIcon';
 import { EnergyBadge } from '../molecules/EnergyBadge';
 import { MasteryBadge } from '../molecules/MasteryBadge';
 import { type LineupInstrument, type LineupMember, MemberLineup } from '../molecules/MemberLineup';
-import { StatusChip, type SongStatus } from '../molecules/StatusChip';
+import { type SongStatus, StatusChip } from '../molecules/StatusChip';
 
 export interface SongCardProps {
   id: string;
@@ -76,11 +76,7 @@ export function SongCard({
         <EnergyBadge value={baseEnergy} />
         <MasteryBadge value={meanMastery} />
         <span className="flex-1" />
-        <MemberLineup
-          lineup={defaultLineup}
-          members={members}
-          instruments={instruments}
-        />
+        <MemberLineup lineup={defaultLineup} members={members} instruments={instruments} />
       </div>
     </Link>
   );

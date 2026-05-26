@@ -17,11 +17,7 @@
  * seeding.
  */
 
-import {
-  type IDsqlCluster,
-  PreviewableApp,
-  type Stage,
-} from '@borso/infra';
+import { type IDsqlCluster, PreviewableApp, type Stage } from '@borso/infra';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import {
   BlockPublicAccess,

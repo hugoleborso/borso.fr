@@ -15,9 +15,7 @@ export function RequireSession(): JSX.Element {
 
   if (probe.isLoading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center text-ink-400 text-sm">
-        …
-      </div>
+      <div className="h-screen w-full flex items-center justify-center text-ink-400 text-sm">…</div>
     );
   }
   if (probe.data?.authenticated === false) {

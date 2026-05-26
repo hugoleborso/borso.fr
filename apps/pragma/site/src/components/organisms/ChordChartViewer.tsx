@@ -32,10 +32,7 @@ export function ChordChartViewer({
   const fontSize = compact ? 'text-[13px] leading-[1.7]' : 'text-[18px] leading-[2]';
   return (
     <div
-      className={cn(
-        'font-mono text-ink-700 whitespace-pre rounded-md overflow-x-auto',
-        fontSize,
-      )}
+      className={cn('font-mono text-ink-700 whitespace-pre rounded-md overflow-x-auto', fontSize)}
     >
       {transposed.map((line, index) => {
         const key = `chord-line-${index}`;

@@ -14,8 +14,8 @@ import { Icon } from '../../components/atoms/Icon';
 import { CreateSessionDialog } from '../../components/molecules/CreateSessionDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api';
-import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions';
 import { formatSessionDate } from '../../lib/formatters.utils';
+import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions';
 
 export function SessionsPage(): JSX.Element {
   const { t, i18n } = useTranslation();

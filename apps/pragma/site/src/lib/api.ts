@@ -35,4 +35,3 @@ export class ApiError extends Error {
 export const api = hc<AppRouter>(API_BASE === '' ? '/' : API_BASE, {
   init: { credentials: 'include' },
 });
-

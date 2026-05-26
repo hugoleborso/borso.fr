@@ -85,7 +85,7 @@ export function Login(): JSX.Element {
             validators={{
               onChange: ({ value }) => {
                 const result = passwordSchema.shape.password.safeParse(value);
-                return result.success ? undefined : result.error.issues[0]?.message ?? 'invalid';
+                return result.success ? undefined : (result.error.issues[0]?.message ?? 'invalid');
               },
             }}
           >

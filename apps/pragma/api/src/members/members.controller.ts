@@ -52,15 +52,11 @@ export function buildMembersRouter() {
       if (!ok) return context.json({ error: 'not-found' }, 404);
       return context.json({ id, deleted: true });
     })
-    .get(
-      '/:id/instruments',
-      zValidator('param', memberIdParamSchema),
-      async (context) => {
-        const { id } = context.req.valid('param');
-        const instruments = await getMemberInstruments(getDatabase(), id);
-        return context.json({ instruments });
-      },
-    )
+    .get('/:id/instruments', zValidator('param', memberIdParamSchema), async (context) => {
+      const { id } = context.req.valid('param');
+      const instruments = await getMemberInstruments(getDatabase(), id);
+      return context.json({ instruments });
+    })
     .put(
       '/:id/instruments',
       zValidator('param', memberIdParamSchema),

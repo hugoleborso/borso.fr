@@ -97,15 +97,15 @@ describe('bars mutations — optimistic updates', () => {
 
     send({ id: 'bar-a', status: 'booked' }).catch(() => undefined);
     await flushMicrotasks();
-    expect(
-      queryClient.getQueryData<OptimisticListShape>(barKeys.list())?.bars[0]?.status,
-    ).toBe('booked');
+    expect(queryClient.getQueryData<OptimisticListShape>(barKeys.list())?.bars[0]?.status).toBe(
+      'booked',
+    );
 
     pending.resolve(jsonResponse({ error: 'boom' }, 500));
     await flushMicrotasks();
-    expect(
-      queryClient.getQueryData<OptimisticListShape>(barKeys.list())?.bars[0]?.status,
-    ).toBe('lead');
+    expect(queryClient.getQueryData<OptimisticListShape>(barKeys.list())?.bars[0]?.status).toBe(
+      'lead',
+    );
     tree.unmount();
   });
 

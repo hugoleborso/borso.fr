@@ -8,10 +8,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
 import { getDatabase } from '../database/client';
-import {
-  transitionCommentBodySchema,
-  transitionPairParamSchema,
-} from './transitions.schema';
+import { transitionCommentBodySchema, transitionPairParamSchema } from './transitions.schema';
 import {
   getTransitionComment,
   getTransitionComments,

@@ -52,13 +52,7 @@ function parseHexTriplet(hex: string): readonly [number, number, number] | null 
  * back to `coral` when the hex doesn't parse so the UI never renders
  * an avatar without a color.
  */
-const PALETTE_KEYS: readonly MemberPaletteKey[] = [
-  'coral',
-  'teal',
-  'mustard',
-  'plum',
-  'sage',
-];
+const PALETTE_KEYS: readonly MemberPaletteKey[] = ['coral', 'teal', 'mustard', 'plum', 'sage'];
 
 export function paletteKeyFromHex(hex: string): MemberPaletteKey {
   const rgb = parseHexTriplet(hex);
@@ -67,8 +61,7 @@ export function paletteKeyFromHex(hex: string): MemberPaletteKey {
   let bestDistance = Number.POSITIVE_INFINITY;
   for (const candidate of PALETTE_KEYS) {
     const [paletteR, paletteG, paletteB] = PALETTE_RGB[candidate];
-    const distance =
-      (paletteR - rgb[0]) ** 2 + (paletteG - rgb[1]) ** 2 + (paletteB - rgb[2]) ** 2;
+    const distance = (paletteR - rgb[0]) ** 2 + (paletteG - rgb[1]) ** 2 + (paletteB - rgb[2]) ** 2;
     if (distance < bestDistance) {
       bestDistance = distance;
       bestKey = candidate;

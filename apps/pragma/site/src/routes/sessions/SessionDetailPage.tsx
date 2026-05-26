@@ -17,10 +17,10 @@ import { z } from 'zod';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { ApiError } from '../../lib/api';
+import { formatSessionDate } from '../../lib/formatters.utils';
 import { useMembersList } from '../../lib/queries/members';
 import { useSession, useSessionsList, useUpdateSession } from '../../lib/queries/sessions';
 import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists';
-import { formatSessionDate } from '../../lib/formatters.utils';
 import { SetlistEditor } from '../setlists/SetlistEditor';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
 import { ConcertReadView } from './ConcertReadView';
@@ -114,14 +114,12 @@ export function SessionDetailPage(): JSX.Element {
     updateSession.mutate({ id: session.id, preparedConcertId: concertId });
   };
 
-  const loading =
-    sessionQuery.isLoading || membersQuery.isLoading || sessionsQuery.isLoading;
+  const loading = sessionQuery.isLoading || membersQuery.isLoading || sessionsQuery.isLoading;
 
   if (loading) {
     return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
-  const queryError =
-    sessionQuery.error instanceof ApiError ? sessionQuery.error.message : null;
+  const queryError = sessionQuery.error instanceof ApiError ? sessionQuery.error.message : null;
   if (session === null) {
     return (
       <p className="px-4 sm:px-9 py-7 text-danger text-sm" role="alert">
@@ -132,7 +130,7 @@ export function SessionDetailPage(): JSX.Element {
 
   const isConcert = session.kind === 'concert';
   const formattedDate = formatSessionDate(session.date, i18n.language);
-  const titleText = isConcert ? session.venue ?? formattedDate : t('sessions.kindPractice');
+  const titleText = isConcert ? (session.venue ?? formattedDate) : t('sessions.kindPractice');
   const displayError = localError ?? queryError;
 
   return (

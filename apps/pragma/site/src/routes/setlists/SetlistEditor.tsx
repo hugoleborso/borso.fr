@@ -15,12 +15,11 @@ import { evaluateTransition } from '@api/setlists/transition.core';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EnergySparkline } from '../../components/molecules/EnergySparkline';
 import { Icon } from '../../components/atoms/Icon';
+import { EnergySparkline } from '../../components/molecules/EnergySparkline';
 import { ApiError } from '../../lib/api';
 import { useInstrumentsList } from '../../lib/queries/instruments';
 import { useMembersList } from '../../lib/queries/members';
-import { useSongsList } from '../../lib/queries/songs';
 import {
   useAppendSetlistEntry,
   useDeleteSetlistEntry,
@@ -28,14 +27,15 @@ import {
   useSetlistEntries,
   useUpdateSetlistEntry,
 } from '../../lib/queries/setlists';
+import { useSongsList } from '../../lib/queries/songs';
 import { SetlistEntryRow } from './SetlistEntryRow';
-import { TransitionCommentModal } from './TransitionCommentModal';
 import {
   compactLineup,
   instrumentHarmonicMap,
   lineupOf,
   tonalityLabelFor,
 } from './setlist-editor.utils';
+import { TransitionCommentModal } from './TransitionCommentModal';
 
 interface SetlistEditorProps {
   readonly setlistId: string;
@@ -56,9 +56,10 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const removeEntry = useDeleteSetlistEntry();
   const reorder = useReorderSetlist();
 
-  const [transitionEditing, setTransitionEditing] = useState<
-    { songAId: string; songBId: string } | null
-  >(null);
+  const [transitionEditing, setTransitionEditing] = useState<{
+    songAId: string;
+    songBId: string;
+  } | null>(null);
   const [draggingEntryId, setDraggingEntryId] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -76,8 +77,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const instrumentHarmonic = useMemo(() => instrumentHarmonicMap(instruments), [instruments]);
 
   const lineupMembers = useMemo(
-    () =>
-      members.map((member) => ({ id: member.id, name: member.firstName, color: member.color })),
+    () => members.map((member) => ({ id: member.id, name: member.firstName, color: member.color })),
     [members],
   );
 
@@ -136,8 +136,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     return <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
 
-  const queryError =
-    entriesQuery.error instanceof ApiError ? entriesQuery.error.message : null;
+  const queryError = entriesQuery.error instanceof ApiError ? entriesQuery.error.message : null;
   const displayError = localError ?? queryError;
 
   return (

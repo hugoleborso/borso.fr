@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { UNKNOWN_IP_PLACEHOLDER, hashIp, readClientIp } from './ip-hash.utils';
+import { hashIp, readClientIp, UNKNOWN_IP_PLACEHOLDER } from './ip-hash.utils';
 
 describe('ip-hash.utils', () => {
   describe('readClientIp', () => {

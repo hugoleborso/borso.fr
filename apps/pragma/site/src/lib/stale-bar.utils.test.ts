@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STALE_BAR_DEFAULT_THRESHOLD_DAYS, countStale, isStale } from './stale-bar.utils';
+import { countStale, isStale, STALE_BAR_DEFAULT_THRESHOLD_DAYS } from './stale-bar.utils';
 
 const NOW = new Date('2026-05-20T00:00:00.000Z');
 const DAY_MS = 24 * 60 * 60 * 1000;

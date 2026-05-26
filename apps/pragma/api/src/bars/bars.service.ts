@@ -5,6 +5,7 @@
  * persisted shape; the controller never sees Drizzle.
  */
 
+import type { z } from 'zod';
 import type { Database } from '../database/client';
 import {
   type BarPersistedShape,
@@ -16,7 +17,6 @@ import {
   updateBar,
 } from './bars.repository';
 import type { barCreateSchema, barUpdateSchema } from './bars.schema';
-import type { z } from 'zod';
 
 type BarCreateInput = z.infer<typeof barCreateSchema>;
 type BarUpdateInput = z.infer<typeof barUpdateSchema>;

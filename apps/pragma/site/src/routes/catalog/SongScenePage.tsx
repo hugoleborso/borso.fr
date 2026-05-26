@@ -29,8 +29,7 @@ export function SongScenePage(): JSX.Element {
   const [fontSize, setFontSize] = useState(FONT_SIZE_DEFAULT_PX);
 
   const song = songQuery.data?.song ?? null;
-  const error =
-    songQuery.error instanceof ApiError ? songQuery.error.message : null;
+  const error = songQuery.error instanceof ApiError ? songQuery.error.message : null;
 
   // ESC closes Mode Scène — wired here too so the keyboard shortcut works.
   useEffect(() => {
@@ -59,9 +58,7 @@ export function SongScenePage(): JSX.Element {
     );
   }
   if (song === null) {
-    return (
-      <p className="px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>
-    );
+    return <p className="px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
 
   const hasChordpro = song.chart !== null && song.chart.kind === 'chordpro';

@@ -42,14 +42,11 @@ function matchesSearch(song: Song, query: string): boolean {
   if (query === '') return true;
   const normalized = query.toLowerCase();
   return (
-    song.title.toLowerCase().includes(normalized) ||
-    song.artist.toLowerCase().includes(normalized)
+    song.title.toLowerCase().includes(normalized) || song.artist.toLowerCase().includes(normalized)
   );
 }
 
-function compactLineup(
-  lineup: Record<string, string | null>,
-): Record<string, string> {
+function compactLineup(lineup: Record<string, string | null>): Record<string, string> {
   const result: Record<string, string> = {};
   for (const [memberId, instrumentId] of Object.entries(lineup)) {
     if (instrumentId !== null && instrumentId !== '') {
@@ -68,11 +65,15 @@ export function CatalogPage(): JSX.Element {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
-  const firstError = songsQuery.error ?? membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error;
+  const firstError =
+    songsQuery.error ?? membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error;
   const errorMessage =
     firstError instanceof ApiError ? firstError.message : firstError ? 'unknown-error' : null;
   const loading =
-    songsQuery.isLoading || membersQuery.isLoading || instrumentsQuery.isLoading || masteryQuery.isLoading;
+    songsQuery.isLoading ||
+    membersQuery.isLoading ||
+    instrumentsQuery.isLoading ||
+    masteryQuery.isLoading;
 
   const songs = useMemo(() => songsQuery.data?.songs ?? [], [songsQuery.data]);
   const members = useMemo(() => membersQuery.data?.members ?? [], [membersQuery.data]);
@@ -80,10 +81,7 @@ export function CatalogPage(): JSX.Element {
     () => instrumentsQuery.data?.instruments ?? [],
     [instrumentsQuery.data],
   );
-  const masteryDefaults = useMemo(
-    () => masteryQuery.data?.defaults ?? [],
-    [masteryQuery.data],
-  );
+  const masteryDefaults = useMemo(() => masteryQuery.data?.defaults ?? [], [masteryQuery.data]);
 
   const sortedSongs = useMemo(
     () => songs.toSorted((left, right) => left.title.localeCompare(right.title)),

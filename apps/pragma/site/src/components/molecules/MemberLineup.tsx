@@ -25,11 +25,7 @@ export interface MemberLineupProps {
   instruments: readonly LineupInstrument[];
 }
 
-export function MemberLineup({
-  lineup,
-  members,
-  instruments,
-}: MemberLineupProps): JSX.Element {
+export function MemberLineup({ lineup, members, instruments }: MemberLineupProps): JSX.Element {
   return (
     <span className="inline-flex gap-1 flex-wrap">
       {Object.entries(lineup).map(([memberId, instrumentId]) => {

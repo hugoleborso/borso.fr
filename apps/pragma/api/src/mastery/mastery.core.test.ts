@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   type DefaultMap,
-  type OverrideMap,
   effective,
   isRedundantOverride,
   meanForSong,
+  type OverrideMap,
 } from './mastery.core';
 
 const DEFAULTS: DefaultMap = {
@@ -24,30 +24,52 @@ const OVERRIDES: OverrideMap = {
 describe('mastery.core', () => {
   describe('effective', () => {
     it('returns the override when present', () => {
-      expect(effective(DEFAULTS, OVERRIDES, { memberId: 'hugo', instrumentId: 'guitar', songId: 'songA' })).toBe(6);
+      expect(
+        effective(DEFAULTS, OVERRIDES, {
+          memberId: 'hugo',
+          instrumentId: 'guitar',
+          songId: 'songA',
+        }),
+      ).toBe(6);
     });
 
     it('falls back to the default when no override exists', () => {
       expect(
-        effective(DEFAULTS, OVERRIDES, { memberId: 'hugo', instrumentId: 'guitar', songId: 'songB' }),
+        effective(DEFAULTS, OVERRIDES, {
+          memberId: 'hugo',
+          instrumentId: 'guitar',
+          songId: 'songB',
+        }),
       ).toBe(8);
     });
 
     it('treats override=0 as a real value (not falsy)', () => {
       expect(
-        effective(DEFAULTS, OVERRIDES, { memberId: 'hugo', instrumentId: 'piano', songId: 'songB' }),
+        effective(DEFAULTS, OVERRIDES, {
+          memberId: 'hugo',
+          instrumentId: 'piano',
+          songId: 'songB',
+        }),
       ).toBe(0);
     });
 
     it('returns null when neither override nor default exist', () => {
       expect(
-        effective(DEFAULTS, OVERRIDES, { memberId: 'gui', instrumentId: 'guitar', songId: 'songA' }),
+        effective(DEFAULTS, OVERRIDES, {
+          memberId: 'gui',
+          instrumentId: 'guitar',
+          songId: 'songA',
+        }),
       ).toBeNull();
     });
 
     it('returns null when the song has no overrides at all', () => {
       expect(
-        effective(DEFAULTS, OVERRIDES, { memberId: 'unknown', instrumentId: 'guitar', songId: 'songZ' }),
+        effective(DEFAULTS, OVERRIDES, {
+          memberId: 'unknown',
+          instrumentId: 'guitar',
+          songId: 'songZ',
+        }),
       ).toBeNull();
     });
   });

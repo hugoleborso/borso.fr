@@ -7,19 +7,19 @@
  * for a warm instance.
  */
 
+import type { z } from 'zod';
 import type { Database } from '../database/client';
 import { type ExternalSongHit, mapMusicBrainzRecordings } from './musicbrainz.core';
 import {
-  type SongInsertShape,
-  type SongRow,
   deleteSongWithCascade,
   findSongById,
   insertSong,
   listSongsNewestFirst,
+  type SongInsertShape,
+  type SongRow,
   updateSong,
 } from './songs.repository';
 import type { songCreateInputSchema, songUpdateInputSchema } from './songs.schema';
-import type { z } from 'zod';
 
 type SongCreateInput = z.infer<typeof songCreateInputSchema>;
 type SongUpdateInput = z.infer<typeof songUpdateInputSchema>;

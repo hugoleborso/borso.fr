@@ -136,15 +136,13 @@ export interface SongSavePayload {
 export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null {
   const titleTrimmed = draft.title.trim();
   if (titleTrimmed.length === 0) return null;
-  const baseEnergyValue =
-    draft.baseEnergy.trim().length === 0 ? null : Number(draft.baseEnergy);
+  const baseEnergyValue = draft.baseEnergy.trim().length === 0 ? null : Number(draft.baseEnergy);
   const albumTrimmed = draft.album.trim();
   return {
     title: titleTrimmed,
     artist: draft.artist.trim(),
     status: draft.status,
-    tonalityStart:
-      draft.tonalityStart.trim().length === 0 ? null : draft.tonalityStart.trim(),
+    tonalityStart: draft.tonalityStart.trim().length === 0 ? null : draft.tonalityStart.trim(),
     tonalityEnd: draft.tonalityEnd.trim().length === 0 ? null : draft.tonalityEnd.trim(),
     baseEnergy: baseEnergyValue,
     chart: chartFromDraft(draft),

@@ -42,7 +42,9 @@ export function pickNextSession(
   sessions: readonly OfflineManifestSession[],
   now: Date,
 ): OfflineManifestSession | null {
-  const futureSessions = sessions.filter((session) => new Date(session.date).getTime() > now.getTime());
+  const futureSessions = sessions.filter(
+    (session) => new Date(session.date).getTime() > now.getTime(),
+  );
   if (futureSessions.length === 0) return null;
   const sorted = [...futureSessions].sort((left, right) => {
     const dateDelta = new Date(left.date).getTime() - new Date(right.date).getTime();

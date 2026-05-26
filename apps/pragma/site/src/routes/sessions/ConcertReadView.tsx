@@ -76,8 +76,7 @@ export function ConcertReadView({
             <div className="mt-3.5 pt-3.5 border-t border-line flex justify-between text-[12.5px]">
               <span className="text-ink-500">{t('sessions.capacity')}</span>
               <span className="font-mono">
-                {Math.round((friendsTotal / capacity) * 100)}% · {friendsTotal}/
-                {capacity}
+                {Math.round((friendsTotal / capacity) * 100)}% · {friendsTotal}/{capacity}
               </span>
             </div>
           ) : null}

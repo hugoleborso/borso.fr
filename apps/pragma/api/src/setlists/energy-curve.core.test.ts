@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   BASELINE_ENERGY,
+  isValidEnergy,
   MAX_ENERGY,
   MIN_ENERGY,
-  isValidEnergy,
   peakIndex,
   smoothedSeries,
 } from './energy-curve.core';

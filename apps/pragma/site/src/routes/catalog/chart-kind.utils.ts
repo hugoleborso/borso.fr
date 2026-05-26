@@ -17,9 +17,7 @@ interface ChartLike {
   readonly kind?: unknown;
 }
 
-export function extractChartKind(
-  chart: ChartLike | null | undefined,
-): ChartKindTag {
+export function extractChartKind(chart: ChartLike | null | undefined): ChartKindTag {
   if (chart === null || chart === undefined) return null;
   const candidate = chart.kind;
   for (const known of CHART_KINDS) {

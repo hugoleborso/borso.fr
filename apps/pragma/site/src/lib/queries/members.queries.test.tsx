@@ -33,15 +33,21 @@ interface OptimisticRoster {
 interface ProbeProps<Mutate> {
   sink: (mutate: Mutate) => void;
 }
-function ProbeCreate({ sink }: ProbeProps<ReturnType<typeof useCreateMember>['mutateAsync']>): null {
+function ProbeCreate({
+  sink,
+}: ProbeProps<ReturnType<typeof useCreateMember>['mutateAsync']>): null {
   sink(useCreateMember().mutateAsync);
   return null;
 }
-function ProbeUpdate({ sink }: ProbeProps<ReturnType<typeof useUpdateMember>['mutateAsync']>): null {
+function ProbeUpdate({
+  sink,
+}: ProbeProps<ReturnType<typeof useUpdateMember>['mutateAsync']>): null {
   sink(useUpdateMember().mutateAsync);
   return null;
 }
-function ProbeDelete({ sink }: ProbeProps<ReturnType<typeof useDeleteMember>['mutateAsync']>): null {
+function ProbeDelete({
+  sink,
+}: ProbeProps<ReturnType<typeof useDeleteMember>['mutateAsync']>): null {
   sink(useDeleteMember().mutateAsync);
   return null;
 }
@@ -159,9 +165,7 @@ describe('members mutations — optimistic updates', () => {
 
     send({ memberId: 'mem-a', instrumentIds: ['instr-a', 'instr-b'] }).catch(() => undefined);
     await flushMicrotasks();
-    const midflight = queryClient.getQueryData<OptimisticRoster>(
-      memberKeys.instrumentsOf('mem-a'),
-    );
+    const midflight = queryClient.getQueryData<OptimisticRoster>(memberKeys.instrumentsOf('mem-a'));
     expect(midflight?.instruments.map((i) => i.id)).toEqual(['instr-a', 'instr-b']);
 
     pending.resolve(jsonResponse({ id: 'mem-a', instrumentIds: ['instr-a', 'instr-b'] }));

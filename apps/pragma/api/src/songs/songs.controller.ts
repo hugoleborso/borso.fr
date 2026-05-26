@@ -7,11 +7,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
 import { getDatabase } from '../database/client';
-import {
-  songCreateInputSchema,
-  songIdParamSchema,
-  songUpdateInputSchema,
-} from './songs.schema';
+import { songCreateInputSchema, songIdParamSchema, songUpdateInputSchema } from './songs.schema';
 import {
   createSong,
   getSongById,

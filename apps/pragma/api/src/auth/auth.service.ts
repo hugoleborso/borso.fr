@@ -11,7 +11,7 @@
  */
 
 import { randomBytes } from 'node:crypto';
-import { argon2Verify, argon2id } from 'hash-wasm';
+import { argon2id, argon2Verify } from 'hash-wasm';
 import type { Database } from '../database/client';
 import {
   type AppConfig,
@@ -43,10 +43,7 @@ export async function getAppConfig(database: Database): Promise<AppConfig | null
   return await loadAppConfig(database);
 }
 
-export async function verifyPassword(
-  config: AppConfig,
-  password: string,
-): Promise<boolean> {
+export async function verifyPassword(config: AppConfig, password: string): Promise<boolean> {
   return await argon2Verify({ password, hash: config.passwordHash });
 }
 

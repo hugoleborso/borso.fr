@@ -14,10 +14,10 @@
 
 import {
   type ColumnDef,
-  type SortingState,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import type { JSX } from 'react';
@@ -26,8 +26,8 @@ import { useTranslation } from 'react-i18next';
 import { formatCapacity } from '../../lib/formatters.utils';
 import { Badge } from '../atoms/Badge';
 import { Chip } from '../atoms/Chip';
-import { Icon } from '../atoms/Icon';
 import { cn } from '../atoms/cn.utils';
+import { Icon } from '../atoms/Icon';
 
 export interface BarsListRow {
   readonly id: string;
@@ -45,12 +45,7 @@ interface BarsListProps {
   readonly onRemove: (id: string) => void;
 }
 
-export function BarsList({
-  bars,
-  statusLabel,
-  onSelect,
-  onRemove,
-}: BarsListProps): JSX.Element {
+export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProps): JSX.Element {
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
 
@@ -92,9 +87,7 @@ export function BarsList({
         id: 'city',
         accessorKey: 'city',
         header: () => t('bars.city'),
-        cell: ({ row }) => (
-          <span className="text-xs text-ink-500">{row.original.city ?? ''}</span>
-        ),
+        cell: ({ row }) => <span className="text-xs text-ink-500">{row.original.city ?? ''}</span>,
         enableSorting: true,
       },
       {
@@ -179,15 +172,11 @@ export function BarsList({
         >
           {row.getVisibleCells().map((cell) => {
             const isName = cell.column.id === 'name';
-            const isHiddenOnMobile =
-              cell.column.id === 'city' || cell.column.id === 'capacity';
+            const isHiddenOnMobile = cell.column.id === 'city' || cell.column.id === 'capacity';
             return (
               <span
                 key={cell.id}
-                className={cn(
-                  isName && 'flex-1',
-                  isHiddenOnMobile && 'hidden md:inline',
-                )}
+                className={cn(isName && 'flex-1', isHiddenOnMobile && 'hidden md:inline')}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </span>

@@ -8,11 +8,7 @@ import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
 import { getDatabase } from '../database/client';
 import { getSongs } from '../songs/songs.service';
-import {
-  sessionCreateSchema,
-  sessionIdParamSchema,
-  sessionUpdateSchema,
-} from './sessions.schema';
+import { sessionCreateSchema, sessionIdParamSchema, sessionUpdateSchema } from './sessions.schema';
 import {
   buildNextSessionOfflineManifest,
   createSession,
@@ -23,14 +19,12 @@ import {
 } from './sessions.service';
 
 export function buildOfflineManifestRouter() {
-  return new Hono()
-    .use('*', requireSharedPasswordSession)
-    .get('/', async (context) => {
-      const database = getDatabase();
-      const [sessions, songs] = await Promise.all([getSessions(database), getSongs(database)]);
-      const manifest = buildNextSessionOfflineManifest(sessions, songs, new Date());
-      return context.json(manifest);
-    });
+  return new Hono().use('*', requireSharedPasswordSession).get('/', async (context) => {
+    const database = getDatabase();
+    const [sessions, songs] = await Promise.all([getSessions(database), getSongs(database)]);
+    const manifest = buildNextSessionOfflineManifest(sessions, songs, new Date());
+    return context.json(manifest);
+  });
 }
 
 export function buildSessionsRouter() {

@@ -57,7 +57,11 @@ export function useMemberInstruments(memberId: string, enabled = true) {
 export function useCreateMember() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (variables: { firstName: string; color: string; avatarS3Key?: string | null }) => {
+    mutationFn: async (variables: {
+      firstName: string;
+      color: string;
+      avatarS3Key?: string | null;
+    }) => {
       const response = await api.api.members.$post({ json: variables });
       if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
       return response.json();
@@ -185,7 +189,9 @@ export function useAssignMemberInstruments() {
       queryClient.setQueryData<MemberInstrumentsResponse>(rosterKey, (old) => {
         if (old === undefined) return old;
         if (allInstruments === undefined) {
-          return { instruments: old.instruments.filter((i) => variables.instrumentIds.includes(i.id)) };
+          return {
+            instruments: old.instruments.filter((i) => variables.instrumentIds.includes(i.id)),
+          };
         }
         const byId = new Map(allInstruments.instruments.map((i) => [i.id, i]));
         const nextInstruments = variables.instrumentIds.flatMap((id) => {

@@ -7,7 +7,7 @@
  */
 
 import { cva, type VariantProps } from 'class-variance-authority';
-import { forwardRef, type CSSProperties, type HTMLAttributes } from 'react';
+import { type CSSProperties, forwardRef, type HTMLAttributes } from 'react';
 import { cn } from './cn.utils';
 
 export const avatarVariants = cva(

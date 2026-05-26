@@ -110,7 +110,8 @@ function encodeEntryInsert(values: EntryInsertShape): EntryInsertEncoded {
 function encodeEntryUpdate(updates: Record<string, unknown>): EntryUpdateEncoded {
   const encoded: EntryUpdateEncoded = {};
   if ('songId' in updates && typeof updates.songId === 'string') encoded.songId = updates.songId;
-  if ('position' in updates && typeof updates.position === 'number') encoded.position = updates.position;
+  if ('position' in updates && typeof updates.position === 'number')
+    encoded.position = updates.position;
   if ('energy' in updates) {
     const value = updates.energy;
     encoded.energy = value === null || typeof value === 'number' ? value : null;

@@ -7,17 +7,17 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/organisms/AppShell';
 import { RequireSession } from './components/organisms/RequireSession';
-import { Login } from './routes/Login';
-import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
-import { MembersPage } from './routes/members/MembersPage';
+import { BarsPage } from './routes/bars/BarsPage';
 import { CatalogPage } from './routes/catalog/CatalogPage';
 import { SongDetailPage } from './routes/catalog/SongDetailPage';
 import { SongEditPage } from './routes/catalog/SongEditPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
-import { SessionsPage } from './routes/sessions/SessionsPage';
+import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
+import { Login } from './routes/Login';
+import { MembersPage } from './routes/members/MembersPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
+import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SetlistsPage } from './routes/setlists/SetlistsPage';
-import { BarsPage } from './routes/bars/BarsPage';
 
 export function App(): JSX.Element {
   return (

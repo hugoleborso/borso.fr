@@ -57,11 +57,13 @@ export function useCreateSession() {
         id: tempId,
         kind: variables.kind,
         date: variables.date,
-        preparedConcertId: variables.kind === 'practice' ? variables.preparedConcertId ?? null : null,
+        preparedConcertId:
+          variables.kind === 'practice' ? (variables.preparedConcertId ?? null) : null,
         venue: variables.kind === 'concert' ? variables.venue : null,
         capacity: variables.kind === 'concert' ? variables.capacity : null,
-        gear: variables.kind === 'concert' ? variables.gear ?? null : null,
-        friendsCountPerMember: variables.kind === 'concert' ? variables.friendsCountPerMember ?? {} : null,
+        gear: variables.kind === 'concert' ? (variables.gear ?? null) : null,
+        friendsCountPerMember:
+          variables.kind === 'concert' ? (variables.friendsCountPerMember ?? {}) : null,
       };
       queryClient.setQueryData<SessionsListShape>(key, (old) =>
         old === undefined ? old : { ...old, sessions: [...old.sessions, optimistic] },
@@ -83,7 +85,7 @@ export function useUpdateSession() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (
-      variables: { id: string } & Parameters<typeof api.api.sessions[':id']['$put']>[0]['json'],
+      variables: { id: string } & Parameters<(typeof api.api.sessions)[':id']['$put']>[0]['json'],
     ) => {
       const { id, ...rest } = variables;
       const response = await api.api.sessions[':id'].$put({
@@ -153,4 +155,3 @@ export function useDeleteSession() {
     },
   });
 }
-

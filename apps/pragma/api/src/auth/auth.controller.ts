@@ -29,7 +29,7 @@ import {
   isRateLimited,
   recordAttempt,
 } from './rate-limit.utils';
-import { SESSION_COOKIE_NAME, SESSION_TTL_MS, buildCookie } from './session-cookie.utils';
+import { buildCookie, SESSION_COOKIE_NAME, SESSION_TTL_MS } from './session-cookie.utils';
 import { requireSharedPasswordSession } from './shared-password.middleware';
 
 const PASSWORD_MIN_LENGTH = 8;
@@ -97,18 +97,14 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
 
   const rotateRouter = new Hono()
     .use('*', requireSharedPasswordSession)
-    .post(
-      '/rotate-password',
-      zValidator('json', credentialsSchema),
-      async (context) => {
-        const { password } = context.req.valid('json');
-        const result = await rotatePassword(getDatabase(), password, clock());
-        if (result.kind === 'not-bootstrapped') {
-          return context.json({ error: 'auth-not-bootstrapped' }, 503);
-        }
-        return context.json({ ok: true });
-      },
-    );
+    .post('/rotate-password', zValidator('json', credentialsSchema), async (context) => {
+      const { password } = context.req.valid('json');
+      const result = await rotatePassword(getDatabase(), password, clock());
+      if (result.kind === 'not-bootstrapped') {
+        return context.json({ error: 'auth-not-bootstrapped' }, 503);
+      }
+      return context.json({ ok: true });
+    });
 
   return { publicRouter, bootstrapRouter, rotateRouter };
 }

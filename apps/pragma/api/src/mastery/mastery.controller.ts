@@ -46,15 +46,11 @@ export function buildMasteryRouter() {
         return context.json({ memberId, instrumentId, deleted: true });
       },
     )
-    .get(
-      '/overrides/:songId',
-      zValidator('param', masterySongIdParamSchema),
-      async (context) => {
-        const { songId } = context.req.valid('param');
-        const overrides = await getMasteryOverridesForSong(getDatabase(), songId);
-        return context.json({ overrides });
-      },
-    )
+    .get('/overrides/:songId', zValidator('param', masterySongIdParamSchema), async (context) => {
+      const { songId } = context.req.valid('param');
+      const overrides = await getMasteryOverridesForSong(getDatabase(), songId);
+      return context.json({ overrides });
+    })
     .put('/overrides', zValidator('json', masteryOverrideRowSchema), async (context) => {
       const row = context.req.valid('json');
       await saveMasteryOverride(getDatabase(), row);
