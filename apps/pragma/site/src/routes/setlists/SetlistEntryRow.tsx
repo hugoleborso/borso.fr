@@ -61,6 +61,7 @@ export interface SetlistEntryRowProps {
   readonly keyOverride: string | null;
   readonly capo: number | null;
   readonly energy: number | null;
+  readonly baseEnergy: number | null;
   readonly notes: string;
   readonly currentSongId: string;
   readonly lineup: Readonly<Record<string, string>>;
@@ -94,7 +95,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     keyOverride: props.keyOverride ?? '',
     capo: props.capo === null ? '' : String(props.capo),
     notes: props.notes,
-    energy: props.energy ?? ENERGY_DEFAULT,
+    energy: props.energy ?? props.baseEnergy ?? ENERGY_DEFAULT,
   };
   const form = useForm({
     defaultValues,
@@ -105,7 +106,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn('flex flex-col gap-1', isDragging && 'relative z-10 opacity-40')}
+      className={cn('flex flex-col gap-1', isDragging && 'opacity-40')}
     >
       {props.showTransitionWarningBefore ? (
         <button
@@ -118,12 +119,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           {t('setlist.transitionWarning')}
         </button>
       ) : null}
-      <div
-        className={cn(
-          'grid grid-cols-[32px_auto_1fr_auto_auto] items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-3 transition-colors hover:border-line-strong',
-          isDragging && 'border-line-strong shadow-[0_8px_24px_rgba(0,0,0,0.18)]',
-        )}
-      >
+      <div className="grid grid-cols-[32px_auto_1fr_auto_auto] items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-3 transition-colors hover:border-line-strong">
         <span className="font-mono text-[11px] text-ink-400 text-right">
           {String(props.position).padStart(2, '0')}
         </span>
@@ -241,7 +237,9 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             {(field) => (
               <>
                 <span className="font-mono text-[11px] uppercase tracking-wider text-ink-500 min-w-[22px] text-center">
-                  {field.state.meta.isDirty || props.energy !== null ? field.state.value : '—'}
+                  {field.state.meta.isDirty || props.energy !== null || props.baseEnergy !== null
+                    ? field.state.value
+                    : '—'}
                 </span>
                 <input
                   type="range"
@@ -283,5 +281,36 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         </div>
       </div>
     </li>
+  );
+}
+
+export interface SetlistEntryDragPreviewProps {
+  readonly position: number;
+  readonly title: string;
+  readonly artist: string;
+}
+
+/**
+ * The solid card that rides the pointer inside dnd-kit's `DragOverlay`
+ * while a row is being dragged. The in-list row dims to a ghost
+ * placeholder at the live insertion slot; this is the piece the
+ * operator actually carries, so it stays fully opaque and lifted.
+ */
+export function SetlistEntryDragPreview(props: SetlistEntryDragPreviewProps): JSX.Element {
+  return (
+    <div className="grid grid-cols-[32px_auto_1fr] items-center gap-3 bg-bg-elev border border-line-strong rounded-md px-3 py-3 shadow-[0_12px_32px_rgba(0,0,0,0.28)] cursor-grabbing">
+      <span className="font-mono text-[11px] text-ink-400 text-right">
+        {String(props.position).padStart(2, '0')}
+      </span>
+      <span className="flex items-center justify-center w-6 h-6 text-ink-500">
+        <Icon name="drag" size={16} />
+      </span>
+      <div className="min-w-0">
+        <div className="font-display italic text-[20px] leading-tight text-ink-900 truncate">
+          {props.title}
+        </div>
+        <div className="text-[11.5px] text-ink-500 mt-0.5 truncate">{props.artist}</div>
+      </div>
+    </div>
   );
 }

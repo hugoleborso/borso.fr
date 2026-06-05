@@ -19,6 +19,8 @@ import {
   closestCenter,
   DndContext,
   type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -46,7 +48,7 @@ import {
   useUpdateSetlistEntry,
 } from '../../lib/queries/setlists';
 import { useSongsList } from '../../lib/queries/songs';
-import { SetlistEntryRow } from './SetlistEntryRow';
+import { SetlistEntryDragPreview, SetlistEntryRow } from './SetlistEntryRow';
 import {
   compactLineup,
   instrumentHarmonicMap,
@@ -81,6 +83,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     songBId: string;
   } | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -107,7 +110,10 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     [members],
   );
 
-  const energyValues = useMemo(() => entries.map((entry) => entry.energy), [entries]);
+  const energyValues = useMemo(
+    () => entries.map((entry) => entry.energy ?? songsById[entry.songId]?.baseEnergy ?? null),
+    [entries, songsById],
+  );
 
   const transitions = useMemo(() => {
     const out: ('safe' | 'warn')[] = [];
@@ -145,7 +151,12 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     removeEntry.mutate({ setlistId, entryId }, { onError: recordError });
   };
 
+  const handleDragStart = (event: DragStartEvent): void => {
+    setActiveEntryId(String(event.active.id));
+  };
+
   const handleDragEnd = (event: DragEndEvent): void => {
+    setActiveEntryId(null);
     const { active, over } = event;
     if (over === null || active.id === over.id) return;
     const ordered = entries.map((entry) => entry.id);
@@ -211,7 +222,13 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
             );
           })}
         </div>
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragCancel={() => setActiveEntryId(null)}
+        >
           <SortableContext
             items={entries.map((entry) => entry.id)}
             strategy={verticalListSortingStrategy}
@@ -233,6 +250,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
                     keyOverride={entry.keyOverride}
                     capo={entry.capo}
                     energy={entry.energy}
+                    baseEnergy={song?.baseEnergy ?? null}
                     notes={entry.notes}
                     currentSongId={entry.songId}
                     lineup={compactLineup(lineupRaw)}
@@ -254,6 +272,24 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
               })}
             </ul>
           </SortableContext>
+          <DragOverlay>
+            {activeEntryId !== null
+              ? (() => {
+                  const activeIndex = entries.findIndex((entry) => entry.id === activeEntryId);
+                  if (activeIndex === -1) return null;
+                  const activeEntry = entries[activeIndex];
+                  if (activeEntry === undefined) return null;
+                  const activeSong = songsById[activeEntry.songId];
+                  return (
+                    <SetlistEntryDragPreview
+                      position={activeIndex + 1}
+                      title={activeSong?.title ?? activeEntry.songId.slice(0, 8)}
+                      artist={activeSong?.artist ?? ''}
+                    />
+                  );
+                })()
+              : null}
+          </DragOverlay>
         </DndContext>
       </div>
       <details className="bg-bg-sunk border border-line rounded-md p-3">
