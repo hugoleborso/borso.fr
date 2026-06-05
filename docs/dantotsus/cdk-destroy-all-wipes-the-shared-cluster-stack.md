@@ -4,8 +4,8 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: "#26"
-fix-pr: "#27"
-fix-commits: [<kaizen-destroy-scope-pragma>, <kaizen-destroy-scope-lastloop>]
+fix-pr: "#30"
+fix-commits: [b35a066, 3a5c9f6]
 eradication-level: 2
 time-to-detect: days
 tags: [cdk, cloudformation, dsql, deploy, github-actions, last-loop-lepin]
@@ -90,7 +90,7 @@ includes the shared, stateful, cross-stage DSQL cluster.
 
 **Type:** DevX check (level 2 — scoped command + fail-fast guard)
 
-**Reference:** [PR #27](https://github.com/hugoleborso/borso.fr/pull/27) · commits on the kaizen branch (`fix(pragma)`, `fix(last-loop-lepin)`)
+**Reference:** [PR #30](https://github.com/hugoleborso/borso.fr/pull/30) · commits on the kaizen branch (`fix(pragma)`, `fix(last-loop-lepin)`)
 
 **The actual fix:**
 

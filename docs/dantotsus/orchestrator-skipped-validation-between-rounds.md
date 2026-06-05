@@ -4,8 +4,8 @@ introduced-at: implementation
 detected-at: review
 severity: high
 related-pr: "#26"
-fix-pr: "#27"
-fix-commits: [<kaizen-orchestrator-standard>]
+fix-pr: "#30"
+fix-commits: [0618e8b]
 eradication-level: 2
 tags: [orchestrator, skill, state-machine, technical-validation, self-improvement-loop]
 ---
@@ -71,7 +71,7 @@ the implementer's own `done` is not evidence.
 
 **Type:** DevX check (level 2 — state-machine precondition in the orchestrator standard)
 
-**Reference:** [PR #27](https://github.com/hugoleborso/borso.fr/pull/27) · commit `docs(meta): orchestrator must validate every implement round`
+**Reference:** [PR #30](https://github.com/hugoleborso/borso.fr/pull/30) · commit `docs(meta): orchestrator must validate every implement round`
 
 **The actual fix:** added to `.claude/skills/tech-lead-orchestrator/standard.md`
 a hard precondition on the `implement → validate/ship` transition —

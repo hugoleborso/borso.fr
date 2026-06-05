@@ -4,8 +4,8 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: "#26"
-fix-pr: "#27"
-fix-commits: [<kaizen-ddl-lint-jsonb>]
+fix-pr: "#30"
+fix-commits: [8776ee2]
 eradication-level: 2
 tags: [dsql, postgres, drizzle, ddl, deploy]
 ---
@@ -71,7 +71,7 @@ DDL lint, and it had a `jsonb`-shaped hole.
 
 **Type:** DevX check (level 2 — pre-commit + CI lint rule)
 
-**Reference:** [PR #27](https://github.com/hugoleborso/borso.fr/pull/27) · commit `fix(ci): DSQL DDL lint flags jsonb columns`
+**Reference:** [PR #30](https://github.com/hugoleborso/borso.fr/pull/30) · commit `fix(ci): DSQL DDL lint flags jsonb columns`
 
 **The actual fix:**
 

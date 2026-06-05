@@ -4,8 +4,8 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: "#26"
-fix-pr: "#27"
-fix-commits: [<kaizen-orchestrator-standard>]
+fix-pr: "#30"
+fix-commits: [0618e8b]
 eradication-level: 2
 tags: [orchestrator, skill, adr, conception-pivot]
 ---
@@ -74,7 +74,7 @@ surface and ADR-triggering changes are the human's.
 
 **Type:** DevX check (level 2 — enumerated decision boundary in the orchestrator standard)
 
-**Reference:** [PR #27](https://github.com/hugoleborso/borso.fr/pull/27) · commit `docs(meta): orchestrator decision-boundary + ADR-trigger stop list`
+**Reference:** [PR #30](https://github.com/hugoleborso/borso.fr/pull/30) · commit `docs(meta): orchestrator decision-boundary + ADR-trigger stop list`
 
 **The actual fix:** extended `.claude/skills/tech-lead-orchestrator/standard.md`'s
 *Decisions stay with the orchestrator* section with a **NOT
