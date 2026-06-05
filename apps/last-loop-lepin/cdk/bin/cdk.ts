@@ -13,7 +13,7 @@
  *     DsqlSchema via PreviewableApp.
  *
  * The test-seed endpoint (`/api/__test/seed`) is mounted only when the
- * Lambda's `LASTLOOP_ALLOW_TEST_SEED` env var is set to `'1'`. The stack
+ * Lambda's `ALLOW_TEST_SEED` env var is set to `'1'`. The stack
  * sets that flag for stage !== 'prod' only; `stack.test.ts` asserts the
  * env var is absent from the prod template.
  */

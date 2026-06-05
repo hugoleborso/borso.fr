@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently -k -n db,api,site -c blue,magenta,green 'pnpm dev:db' 'pnpm dev:api' 'pnpm dev:site'",
     "dev:db": "./dev-db.sh",
-    "dev:api": "DATABASE_URL=$(../../scripts/local-postgres.sh start last-loop-lepin) STAGE=dev LASTLOOP_ALLOW_TEST_SEED=1 ALLOWED_ORIGIN=http://localhost:5173 PHOTOS_BUCKET=dev-bucket tsx watch api/src/main.dev.ts",
+    "dev:api": "DATABASE_URL=$(../../scripts/local-postgres.sh start last-loop-lepin) STAGE=dev ALLOW_TEST_SEED=1 ALLOWED_ORIGIN=http://localhost:5173 PHOTOS_BUCKET=dev-bucket tsx watch api/src/main.dev.ts",
     "dev:site": "vite",
     "db:local:start": "../../scripts/local-postgres.sh start last-loop-lepin",
     "db:local:stop": "../../scripts/local-postgres.sh stop last-loop-lepin",

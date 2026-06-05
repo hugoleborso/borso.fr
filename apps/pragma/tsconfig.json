@@ -14,10 +14,9 @@
     "jsx": "react-jsx",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "types": ["vite/client", "node"],
-    "baseUrl": ".",
     "paths": {
-      "@site/*": ["site/src/*"],
-      "@api/*": ["api/src/*"]
+      "@site/*": ["./site/src/*"],
+      "@api/*": ["./api/src/*"]
     }
   },
   "include": [

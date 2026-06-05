@@ -48,8 +48,10 @@ function frontendOrigin(
  * Composes the StaticSite + LambdaApi + DsqlSchema for the app, plus the
  * S3 bucket the admin uploads runner photos to.
  *
- * The `LASTLOOP_ALLOW_TEST_SEED` env var is set on the Lambda for every
- * deploy stage EXCEPT `prod` — verified by `stack.test.ts`.
+ * The `ALLOW_TEST_SEED` env var that mounts the `__test/` routes is set
+ * on the Lambda for every deploy stage EXCEPT `prod` by `PreviewableApp`
+ * itself — the construct owns the prod-exclusion, so this stack no
+ * longer wires it. Verified by `PreviewableApp`'s own unit test.
  *
  * Admin auth lives entirely in the DB (`admin_credentials` for the PIN
  * scrypt hash, `admin_sessions` for the session-cookie state). Replaces
@@ -93,9 +95,6 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
     hostname: photosCdnHostname,
   });
 
-  const allowSeedFlag: Record<string, string> =
-    props.stage === 'prod' ? {} : { LASTLOOP_ALLOW_TEST_SEED: '1' };
-
   const previewableApp = new PreviewableApp(props.scope, 'App', {
     app: APP_SLUG,
     stage: props.stage,
@@ -108,7 +107,6 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
         PHOTOS_BUCKET: photosBucket.bucketName,
         PHOTOS_CDN_HOST: photosCdn.hostname,
         ALLOWED_ORIGIN: frontendOrigin(props.stage, props.domainName, props.prNumber),
-        ...allowSeedFlag,
       },
     },
     database: {

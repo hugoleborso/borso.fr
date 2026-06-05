@@ -11,10 +11,9 @@
  * carries no `AWS::SecretsManager::Secret` resources — the test
  * `stack.test.ts` asserts that.
  *
- * Test-seed flag: `PRAGMA_ALLOW_TEST_SEED=1` is mirrored from the
- * last-loop-lepin pattern but currently unused (no /__test routes on
- * the API yet); kept as a documented hook for future preview-only
- * seeding.
+ * Test-seed flag: `ALLOW_TEST_SEED=1` is injected on non-prod API
+ * Lambdas by `PreviewableApp` itself, not here — the construct owns the
+ * prod-exclusion. The API reads it to mount `/api/__test/seed`.
  */
 
 import { type IDsqlCluster, PreviewableApp, type Stage } from '@borso/infra';
@@ -64,9 +63,6 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
     ],
   });
 
-  const allowSeedFlag: Record<string, string> =
-    props.stage === 'prod' ? {} : { PRAGMA_ALLOW_TEST_SEED: '1' };
-
   const previewableApp = new PreviewableApp(props.scope, 'App', {
     app: APP_SLUG,
     stage: props.stage,
@@ -77,7 +73,6 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
       entry: props.apiEntry,
       environment: {
         UPLOADS_BUCKET: uploadsBucket.bucketName,
-        ...allowSeedFlag,
       },
     },
     database: {
