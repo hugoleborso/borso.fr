@@ -1,0 +1,84 @@
+/**
+ * Transition-comment queries / mutations. Comments are keyed on
+ * ordered pairs `(songA, songB)`.
+ *
+ * The save mutation is optimistic (round 17c) — the pair cache is
+ * replaced with the new comment before the server replies, so the
+ * setlist editor's inline comment field commits instantly. `onSettled`
+ * reconciles, and `onError` rolls back to whatever the cache held
+ * before (null when this was a first-time comment).
+ */
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { InferResponseType } from 'hono/client';
+import { ApiError, api } from '../api';
+
+export const transitionKeys = {
+  all: ['transition-comments'] as const,
+  list: () => [...transitionKeys.all, 'list'] as const,
+  byPair: (a: string, b: string) => [...transitionKeys.all, 'byPair', a, b] as const,
+};
+
+type TransitionPairOk = Extract<
+  InferResponseType<(typeof api.api)['transition-comments'][':a'][':b']['$get']>,
+  { comment: unknown }
+>;
+type TransitionPairCache = TransitionPairOk | null;
+
+export function useTransitionComment(a: string, b: string, enabled = true) {
+  return useQuery({
+    queryKey: transitionKeys.byPair(a, b),
+    queryFn: async () => {
+      const response = await api.api['transition-comments'][':a'][':b'].$get({
+        param: { a, b },
+      });
+      if (response.status === 404) return null;
+      if (!response.ok) throw new ApiError(response.status, `transition ${response.status}`, null);
+      return response.json();
+    },
+    enabled,
+  });
+}
+
+export function useSaveTransitionComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (variables: { a: string; b: string; comment: string }) => {
+      const response = await api.api['transition-comments'][':a'][':b'].$put({
+        param: { a: variables.a, b: variables.b },
+        json: { comment: variables.comment },
+      });
+      if (!response.ok) throw new ApiError(response.status, `save ${response.status}`, null);
+      return response.json();
+    },
+    onMutate: async (variables) => {
+      const pairKey = transitionKeys.byPair(variables.a, variables.b);
+      await queryClient.cancelQueries({ queryKey: pairKey });
+      const previousPair = queryClient.getQueryData<TransitionPairCache>(pairKey);
+      const optimistic: TransitionPairOk = {
+        comment: {
+          songAId: variables.a,
+          songBId: variables.b,
+          comment: variables.comment,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+      queryClient.setQueryData<TransitionPairCache>(pairKey, optimistic);
+      return { previousPair };
+    },
+    onError: (_err, variables, context) => {
+      if (context !== undefined) {
+        queryClient.setQueryData(
+          transitionKeys.byPair(variables.a, variables.b),
+          context.previousPair,
+        );
+      }
+    },
+    onSettled: (_data, _err, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: transitionKeys.byPair(variables.a, variables.b),
+      });
+      void queryClient.invalidateQueries({ queryKey: transitionKeys.list() });
+    },
+  });
+}

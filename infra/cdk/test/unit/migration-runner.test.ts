@@ -122,6 +122,80 @@ describe('migration-runner handler', () => {
     expect(requeried).not.toMatch(/ADD COLUMN IF NOT EXISTS IF NOT EXISTS/);
   });
 
+  it('Create: rewrites CREATE INDEX to CREATE INDEX ASYNC so Aurora DSQL accepts non-primary indexes', async () => {
+    // DSQL §11: vanilla `CREATE INDEX` is rejected with
+    // `unsupported mode. please use CREATE INDEX ASYNC`. drizzle-kit emits
+    // standard CREATE INDEX; the runner injects `ASYNC` in the exact spot
+    // the AWS grammar demands (between INDEX and IF NOT EXISTS).
+    await handler({
+      RequestType: 'Create',
+      ResourceProperties: {
+        ...baseProps,
+        migrations: [
+          {
+            name: '0001_indexes.sql',
+            sql: 'CREATE INDEX foo_idx ON foo (col);\n--> statement-breakpoint\nCREATE UNIQUE INDEX bar_idx ON bar (col_a, col_b);',
+          },
+        ],
+      },
+    });
+    const queries = state.unsafeCalls.map((c) => c.query);
+    expect(
+      queries.some((q) => /CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON foo \(col\)/.test(q)),
+    ).toBe(true);
+    expect(
+      queries.some((q) =>
+        /CREATE UNIQUE INDEX ASYNC IF NOT EXISTS bar_idx ON bar \(col_a, col_b\)/.test(q),
+      ),
+    ).toBe(true);
+  });
+
+  it('Create: composes asyncifyIndex with stripUsingClause so USING btree + ASYNC ship together', async () => {
+    // drizzle-kit emits `CREATE INDEX foo ON t USING btree (col)`; the
+    // runner must drop the USING clause (§5) AND inject ASYNC (§11) in the
+    // same pass.
+    await handler({
+      RequestType: 'Create',
+      ResourceProperties: {
+        ...baseProps,
+        migrations: [
+          {
+            name: '0001_btree.sql',
+            sql: 'CREATE INDEX foo_idx ON t USING btree (col);',
+          },
+        ],
+      },
+    });
+    const queries = state.unsafeCalls.map((c) => c.query);
+    expect(
+      queries.some((q) => /CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON t \(col\)/.test(q)),
+    ).toBe(true);
+    expect(queries.some((q) => /USING\s+btree/i.test(q))).toBe(false);
+  });
+
+  it('Create: never doubles up ASYNC when the input already contains it', async () => {
+    // The pipeline normalizes to `CREATE [UNIQUE] INDEX ASYNC [IF NOT EXISTS]`
+    // regardless of whether the input arrived with ASYNC already in place.
+    // No `ASYNC ASYNC` or `ASYNC IF NOT EXISTS ASYNC` is ever emitted.
+    await handler({
+      RequestType: 'Create',
+      ResourceProperties: {
+        ...baseProps,
+        migrations: [
+          {
+            name: '0001_already.sql',
+            sql: 'CREATE INDEX ASYNC foo_idx ON foo (col);\n--> statement-breakpoint\nCREATE UNIQUE INDEX ASYNC bar_idx ON bar (col);',
+          },
+        ],
+      },
+    });
+    const queries = state.unsafeCalls.map((c) => c.query).join('\n');
+    expect(queries).not.toMatch(/ASYNC\s+ASYNC/i);
+    expect(queries).not.toMatch(/ASYNC\s+IF\s+NOT\s+EXISTS\s+ASYNC/i);
+    expect(queries).toMatch(/CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON foo \(col\)/);
+    expect(queries).toMatch(/CREATE UNIQUE INDEX ASYNC IF NOT EXISTS bar_idx ON bar \(col\)/);
+  });
+
   it('releases the advisory lock even on inner failure', async () => {
     // Arm the shared mock to reject the very next `.unsafe()` call.
     // `.end()` still bumps `state.ended` so the test confirms the

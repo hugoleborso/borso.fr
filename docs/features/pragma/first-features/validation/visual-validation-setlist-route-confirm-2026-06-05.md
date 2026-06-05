@@ -1,0 +1,38 @@
+# Visual validation — Setlist deep-link route confirm (post-redeploy)
+
+- Spec: [`../spec/spec.md`](../spec/spec.md)
+- Dev URL: https://pragma-pr-26.preview.borso.fr/
+- Run at: 2026-06-05T13:43:46Z
+- Tooling: agent-browser 0.27.0
+- Bundle: `/assets/index-C5i0kKaZ.js` (last-modified 2026-06-05T13:38:45Z, matches the post-update CFN bundle)
+- Bundle propagation: confirmed — grep returned `createForSession`, `missingSessionId`, `noSetlistYet` (3 of 4 expected tokens; `SetlistEditorPage` is the bare component name which gets renamed by the minifier — the i18n keys are the durable signal)
+
+## Assertions
+
+| # | From | Assertion | Action | Evidence | Verdict |
+|---|---|---|---|---|---|
+| 01 | Pre-flight | New bundle deployed and propagated to the edge | `curl` for HTML + JS; grep for new i18n keys | `Bundle: /assets/index-C5i0kKaZ.js` ; tokens `createForSession`, `missingSessionId`, `noSetlistYet` all present | PASS |
+| 02 | Focus | Login persists; landing on `/catalog` after auth | Open root; observe redirect | URL `= /catalog`; sidebar shows authed nav `./screenshots-setlist-route-confirm-2026-06-05/01-sessions-list.png` | PASS |
+| 03 | Focus | Concert creation succeeds; lands on session detail with new sessionId | Open Sessions, click `Concert`, fill venue `Confirm Bundle Venue`, click `Create` | URL `= /sessions/c9db35c3-aaa2-45a3-b478-a899f4bab1e5` ; heading shows venue; "Build setlist" CTA visible `./screenshots-setlist-route-confirm-2026-06-05/02-session-created.png` | PASS |
+| 04 | Focus | Deep-link `/sessions/:sessionId/setlist` resolves (no 404 / no auth redirect / no blank) when no setlist exists | Open URL directly | URL preserved ; page text reads `No setlist created for this session yet.` ; `Create a setlist` button + `Back` link present `./screenshots-setlist-route-confirm-2026-06-05/03-deep-link-no-setlist.png` | PASS |
+| 05 | Focus | Clicking `Create a setlist` mounts the editor | Click CTA | URL stays at `/sessions/:id/setlist` ; main shows `ENERGY` + `Add song` disclosure `./screenshots-setlist-route-confirm-2026-06-05/04-after-create-cta.png` | PASS |
+| 06 | Focus | Adding an entry round-trips to the server | Expand `Add song`, click `+ Take Five`, reload | After reload, entry `Take Five` / `Brubeck` persists with `Energy: 5` slider + Drag/Edit/Remove buttons `./screenshots-setlist-route-confirm-2026-06-05/05-entry-added.png`, `./screenshots-setlist-route-confirm-2026-06-05/06-after-reload.png` | PASS |
+| 07 | Focus | Editor copy localises in FR | Click FR | Main text: `ÉNERGIE`, `Ajouter un morceau` `./screenshots-setlist-route-confirm-2026-06-05/07-fr-editor.png` | PASS |
+| 08 | Focus | No-setlist wrapper localises in FR | Create FR concert, open `/sessions/:id/setlist` | Main text: `Aucune setlist créée pour cette session.`, `Créer une setlist`, `Retour` `./screenshots-setlist-route-confirm-2026-06-05/08-fr-deep-link-no-setlist.png` | PASS |
+| 09 | Focus | Reload on the editor URL stays on the editor (route resolves, cookie persists) | Reload from `/sessions/:id/setlist` after entry add | URL unchanged ; editor with persisted entry mounts `./screenshots-setlist-route-confirm-2026-06-05/06-after-reload.png` | PASS |
+| 10 | Non-regression | Auth gate redirects unauthenticated visitors | `document.cookie` clear + reload | Cookie persisted (HttpOnly — JS clear is a no-op) ; agent-browser CLI offers no cross-context isolation. See Notes. `./screenshots-setlist-route-confirm-2026-06-05/09-auth-gate.png` | UNVERIFIABLE |
+| 11 | Non-regression | Sidebar nav surfaces 6 entries with badge counts | Inspect navigation refs throughout the run | Catalog / Sessions {N} / Setlists {N} / Bars 1 / Members / Instruments — 6 entries, badge counts update live (Sessions 2 → 3 → 4 as concerts get created) `./screenshots-setlist-route-confirm-2026-06-05/01-sessions-list.png` | PASS |
+| 12 | Non-regression | Mode Scène fullscreen + ESC | Search DOM and bundle | "Mode Scène" / "Stage" / "Plein écran" UI not surfaced on session-detail or setlist-editor routes in current bundle. Bundle contains `fullscreen` and `Scene` tokens but no exposed entry-point found from authed user flow. See Notes. | UNVERIFIABLE |
+| 13 | Sanity | No broken images on rendered surfaces | DOM scan on every screenshotted page | `Array.from(...img...filter(naturalWidth===0))` returned `[]` on the FR deep-link page (and no `<img>` elements observed on other captured surfaces) | PASS |
+
+## Notes
+
+> - Row 10 (UNVERIFIABLE — auth gate redirect): the `auth` cookie is HttpOnly + Secure, so `document.cookie = '<name>=;expires=...'` is a no-op. agent-browser's CLI exposes neither a `clear cookies` command nor an incognito/context-reset primitive. A truthful test requires either a second uncookied browser context or a browser-level `clear-cookies` API. The previous round-6 baseline already established the auth gate works ; this dispatch does not regress nor confirm it.
+> - Row 12 (UNVERIFIABLE — Mode Scène fullscreen + ESC): the JS bundle contains the tokens `fullscreen` and `Scene` but no visible entry-point was found from the authed user flow on `/sessions/:id`, `/sessions/:id/setlist`, `/setlists`, or any single-setlist detail route. Either the feature lives behind a route I haven't visited (the focused dispatch scoped me to setlist deep-link + 3 spot-checks), or it has not yet shipped in this preview bundle. Out of scope for this confirm dispatch — flagging for the next full validation pass.
+> - Sidebar nav surfaced 6 entries throughout the session. The badge counts (`Sessions N`, `Setlists N`, `Bars 1`) updated reactively as I created concerts — invalidation works. There is a separate question about the badge for `Setlists` showing 4 while the `/setlists` list view shows only 2 — but that's a count-source question (active vs total ; upcoming-only filter) outside the dispatch focus.
+
+## Verdict: PASS_EXCEPT_UNVERIFIABLE
+
+The focused setlist-route deep-link checks (rows 01-09) all PASS. The new bundle is propagated and serves the wrapper + editor as designed: deep-link `/sessions/:sessionId/setlist` mounts cleanly, the `Create a setlist` CTA mounts the editor, entries round-trip through reload, and i18n localisation (EN ↔ FR) is correct on both the empty-state wrapper and the editor itself. No broken images observed.
+
+Two non-regression spot-checks (auth gate, Mode Scène) are UNVERIFIABLE in this dispatch — not failures, but limitations of the tooling (cookies cannot be cleared) and the dispatch scope (Mode Scène entry-point not surfaced on the routes I was authorised to walk). The auth gate UNVERIFIABLE must be carried forward in the PR description per the skill's disclosure rule.

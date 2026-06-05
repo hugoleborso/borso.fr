@@ -29,6 +29,13 @@ The skill assembles the PR body from two upstream loops, never re-deriving conte
 5. **`docs/dantotsus/*.md`** — entries created since the base ref. Listed under a *Dantotsus uncovered* block at level 2.
 6. **The diff** (`git diff origin/main...HEAD --stat` + `git log origin/main..HEAD`) — drives the *What changed* table at level 2.
 
+**Orchestration loop** (only when `/tech-lead-orchestrator` drove the work — detected by the presence of `docs/features/<app>/<slug>/runs/<run-id>/`):
+7. **`docs/features/<app>/<slug>/runs/<run-id>/state.json`** — final stage, retry counters, validator verdicts. Drives the level-1 counter line.
+8. **`docs/features/<app>/<slug>/runs/<run-id>/journal.md.jsonl`** — chronological event log. Drives the Mermaid flowchart's node + edge order, including which retries were triggered by which FAIL verdicts.
+9. **`docs/features/<app>/<slug>/runs/<run-id>/agents/*.md`** — per-agent verdict YAMLs. Drives the per-agent table (one row per dispatched sub-agent: round, agent, output summary, verdict, commits authored).
+
+When the run directory is absent, the *Orchestration trace* section is skipped entirely — silence is information.
+
 **Hard rule — architecture choices come only from ADRs.** If the diff makes a non-trivial design decision that has no ADR, the skill flags it in *Known gaps* and recommends running `/adr` before opening the PR. It never paraphrases the diff into the *Architecture choices* section: a sloppy ADR is fixable; a fabricated rationale rots silently.
 
 Missing sources collapse: no empty `<details>` shells, no stubs. The absence of a section is itself information (no architectural decisions taken, no Dantotsus surfaced, etc.).
@@ -41,6 +48,7 @@ Missing sources collapse: no empty `<details>` shells, no stubs. The absence of 
 2. **Resolve the spec / plan / validation paths.** From the slug, find `docs/features/<app>/<slug>/{spec,plan,validation}/`. The `<app>` segment is inferred from the touched files in the diff (the workspace under `apps/<app>/` with the largest delta).
 3. **Confirm validation freshness.** If the latest visual-validation or technical-validation report is older than the most recent commit, surface a warning and ask whether to re-run (user can decline — the warning is then disclosed in the PR body).
 4. **Read every input source.** Parse the spec's Why + Q.O.D. The plan's table. Each ADR. Each validation report.
+4a. **Compute the orchestration trace (only if `runs/<run-id>/` exists).** Walk `journal.md.jsonl` chronologically to build the Mermaid edge list. Read each `agents/*.md` verdict YAML's front-matter to build the per-agent table. Count from `state.json`: implementation rounds = `retries.implement + 1`; validation rounds = `retries.validate + 1`; defects caught = number of `*_validation_completed` events with `status: FAIL` in the journal; kaizen items queued = lines under `## Items found during this session` in the gitignored `KAIZEN.md` (if absent, 0).
 5. **Render the body.** Feed everything through `template.md`. The skill never invents content — every level-1 line is sourced verbatim or near-verbatim from spec / plan / ADR / validation reports.
 6. **Show the draft body to the user.** Print it. The user can edit or approve. **The skill does not call `gh pr create` until the user says so explicitly.**
 7. **Generate the screenshot URL block.** Once the user approves, the skill SHA-pins the screenshot URLs (`git rev-parse HEAD`) and rewrites the body's screenshot section in place.

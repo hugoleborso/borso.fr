@@ -36,6 +36,24 @@
         "test/**/*.ts"
       ]
     },
+    "apps/pragma": {
+      "entry": [
+        "cdk/bin/cdk.ts",
+        "api/src/main.ts",
+        "api/src/**/*.test.ts",
+        "site/src/**/*.utils.test.ts",
+        "site/src/**/*.core.test.ts",
+        "test/**/*.ts"
+      ],
+      "project": [
+        "cdk/**/*.ts",
+        "site/src/**/*.ts",
+        "site/src/**/*.tsx",
+        "api/src/**/*.ts",
+        "test/**/*.ts"
+      ],
+      "ignoreDependencies": ["@aws-sdk/client-s3", "@borso/infra", "tailwindcss"]
+    },
     "infra/cdk": {
       "entry": [
         "src/index.ts",

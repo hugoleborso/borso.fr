@@ -43,6 +43,18 @@ Playwright would have worked for this skill, but agent-browser is *shaped* for L
 
 Pulled from the spec, in this order:
 
+0. **Design-bundle fidelity (when `docs/features/<app>/<slug>/spec/design-bundle/` exists).** Before any spec assertion is checked, the validator walks every `.jsx` file under `design-bundle/project/src/screens/` and confirms the implementation re-creates it pixel-perfectly. The design bundle's README is explicit on the contract: *"recreate them pixel-perfectly in whatever technology makes sense for the target codebase."* Token-level checks (accent colour, body bg) are necessary but NOT sufficient — design fidelity is a separate axis. For each screen file, the validator:
+  - Opens the prototype in agent-browser (the bundle ships HTML + a babel-standalone-rendered React tree — load `Pragma.html` from `design-bundle/project/`).
+  - Opens the matching implementation route in the running dev server.
+  - Captures both screenshots into `validation/screenshots-<ts>/comparisons/<screen>-{design,impl}.png`.
+  - Produces one row per screen with these PASS criteria, ALL of which must hold:
+    - **Typography stack matches.** If the prototype uses `var(--t-display)` (Instrument Serif) for h1, the implementation does too. If it uses `var(--t-mono)` for tag pills, the implementation does too. Eyeball-test the page; computed `font-family` on the matching node confirms.
+    - **Layout structure matches.** Sidebar / topbar / breadcrumb / page header / actions row / filter pills / search bar / content grid — every structural region in the prototype is present in the implementation, in the same order, with comparable spacing.
+    - **Affordances match.** Filter pills with counts. Status chips. Chart-kind icons. Member chip lineup. Drag handles. Sparklines. If the prototype shows it, the implementation has it.
+    - **Palette tokens match.** Not just the accent and bg — every named CSS variable in `design-bundle/project/src/styles.css` (`--bg-elev`, `--bg-sunk`, `--ink-900`, `--ink-700`, ..., member palette `--m-<name>`, `--accent-soft`, `--warn`, ...) is declared in the implementation's `design-tokens.css` and referenced where the prototype references it.
+    - **Microcopy matches.** Subtitles, breadcrumbs, button labels, empty states, hint banners — verbatim from the prototype (allowing for i18n key indirection).
+  - A FAIL row names every divergence concretely ("filter pills absent on `/catalog`", "Instrument Serif not loaded — computed font-family on h1 is `system-ui`", "member chips replaced by plain text on song cards").
+  - The prototype itself is the source of truth — when the prototype and the spec disagree on a visible detail, the validator flags the conflict in *Validation gaps* but defers to the prototype for the row's verdict.
 1. **Result** — every visible artefact named in the Result section. Typography, layout, copy, colours, spacing.
 2. **Use cases / edge cases — happy path** — each numbered step, in order, with a concrete browser action.
 3. **Use cases / edge cases — edge cases** — narrow viewport, reduced motion, dark-mode preference, slow network, large input, empty input.

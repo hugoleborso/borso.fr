@@ -48,12 +48,48 @@ function handler(event) {
   var app = prMatch[1];
   var pr = prMatch[2];
 
-  // Rewrite directory-style requests to /<dir>/index.html so nested folders
-  // (e.g. /art/mondrian -> /art/mondrian/index.html) work the same as the
-  // root does. Heuristic: if the last path segment after the rightmost '/'
-  // contains no '.', treat as directory; otherwise pass through (preserves
-  // /style.css, /img/photo.jpg, etc).
+  // Apps whose preview is a single-page app (React bundle + client-side
+  // routes). Direct nav to a deep route like /login or /catalog must
+  // resolve to the SPA's index.html so the in-app router renders the
+  // right view. Multi-page apps (borso-fr, borsouvertures) instead want
+  // /art/mondrian to map to /art/mondrian/index.html in S3.
+  //
+  // The CloudFront Function has no S3 awareness, so this list is the
+  // only way to disambiguate the two intents. Keep it in sync with the
+  // `spaFallback: true` callers of StaticSite in PreviewableApp — every
+  // PreviewableApp consumer is an SPA by construction.
+  var SPA_APPS = ['last-loop-lepin', 'pragma'];
+  var isSpaApp = false;
+  for (var spaAppIndex = 0; spaAppIndex < SPA_APPS.length; spaAppIndex++) {
+    if (SPA_APPS[spaAppIndex] === app) {
+      isSpaApp = true;
+      break;
+    }
+  }
+
   var uri = request.uri;
+
+  if (isSpaApp) {
+    // SPA fallback: any path without a file extension on its last
+    // segment is a client-side route — rewrite to the bundle's root
+    // index.html so the React router takes over. Asset paths
+    // (/assets/foo.js, /favicon.svg, /icon-512.png) keep their extension
+    // and pass through to S3 unchanged.
+    var lastSlashSpa = uri.lastIndexOf('/');
+    var lastDotSpa = uri.lastIndexOf('.');
+    if (uri === '' || uri === '/' || lastDotSpa < lastSlashSpa) {
+      request.uri = '/' + prefix + app + '/pr-' + pr + '/index.html';
+    } else {
+      request.uri = '/' + prefix + app + '/pr-' + pr + uri;
+    }
+    return request;
+  }
+
+  // Multi-page mode: rewrite directory-style requests to /<dir>/index.html
+  // so nested folders (e.g. /art/mondrian -> /art/mondrian/index.html) work
+  // the same as the root does. Heuristic: if the last path segment after
+  // the rightmost '/' contains no '.', treat as directory; otherwise pass
+  // through (preserves /style.css, /img/photo.jpg, etc).
   if (uri === '' || uri.charAt(uri.length - 1) === '/') {
     uri = uri + 'index.html';
   } else {

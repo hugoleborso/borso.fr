@@ -1,0 +1,20 @@
+{
+  "runId": "2026-05-19-1937-pragma",
+  "feature": { "app": "pragma", "slug": "first-features" },
+  "pilotedByTechLead": true,
+  "stage": "implement",
+  "retries": { "implement": 7, "validate": 5 },
+  "retryPolicy": "progress-based",
+  "adrIndex": [4],
+  "implementationSha": "8f9c507",
+  "lastTechnicalValidation": "PASS",
+  "lastVisualValidation": "PASS",
+  "draftPR": "https://github.com/hugoleborso/borso.fr/pull/26",
+  "openBlockers": [
+    "DSQL doesn't support jsonb — 6 columns across songs/setlists/sessions schemas need migration to text + JSON.stringify/parse + Zod-validate. Preview deploy CFN-FAIL on `AppDbSchemaE757C77A` with `datatype jsonb not supported`. Stack pragma-pr-26 stuck ROLLBACK_COMPLETE since 2026-05-20T10:40Z. preflight-preview-recovery.sh will auto-clean on next deploy."
+  ],
+  "deliveryShape": "monolithic",
+  "specChecksum": "1e8c3e5ea12d94b6ded1ad45bc8c9eaf8962fb5286cfa4867496b8f51d7df65f",
+  "startedAt": "2026-05-19T19:37:16.000Z",
+  "updatedAt": "2026-05-20T20:30:00.000Z"
+}
