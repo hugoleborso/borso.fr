@@ -39,6 +39,18 @@ while IFS= read -r -d '' file; do
   # is line-by-line: drops anything from `--` to end-of-line.
   stripped=$(sed -e 's|--.*$||' "$file")
 
+  # jsonb column type — anywhere (CREATE TABLE column list or ADD COLUMN).
+  # DSQL has no jsonb backing; CREATE TABLE fails at deploy with
+  # "datatype jsonb not supported" (compat-gaps §1). The canonical
+  # adaptation is a `text` column with JSON.stringify at insert +
+  # JSON.parse + zod-validate at read. The local Postgres under
+  # `pnpm dev` accepts jsonb silently, so this is the only gate that
+  # catches it before CFN. Word-boundary match so `text` / `json`
+  # column names containing the substring don't false-positive.
+  if echo "$stripped" | grep -qE -i '\bjsonb\b'; then
+    violations+=("$file: jsonb is not supported by DSQL — use \`text\` and JSON.stringify at insert / JSON.parse + zod-validate at read (compat-gaps §1; reference: apps/last-loop-lepin/api/src/edition/edition.{schema,repository}.ts)")
+  fi
+
   # ADD COLUMN ... NOT NULL  (with or without DEFAULT)
   if echo "$stripped" | grep -qE -i 'ADD[[:space:]]+COLUMN[[:space:]]+[^,;]*NOT[[:space:]]+NULL'; then
     violations+=("$file: ADD COLUMN ... NOT NULL is rejected by DSQL — drop the constraint, do a separate UPDATE backfill, and rely on app-level invariants for nullability")
