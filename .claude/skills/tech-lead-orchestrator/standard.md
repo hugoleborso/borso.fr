@@ -3,6 +3,37 @@
 The contract this skill is held to. `/technical-validation` reads this when
 reviewing a tech-lead-orchestrator change.
 
+## Substrate boundary — Skill (chat) vs Workflow (script)
+
+Per [ADR-0005](../../../docs/adr/0005-dynamic-workflows-for-orchestration.md),
+the pipeline runs on two substrates depending on whether the stage needs
+human input:
+
+- **Skill in chat (this file's body)** owns `spec` + `adrs` — both are
+  human-bound (perspective sweeps, AskUserQuestion, ratification,
+  decision-support walk). Workflows cannot pause for mid-run human input,
+  so these stages stay in the chat session.
+- **Dynamic Workflow at `.claude/workflows/feature-pipeline.js`** owns
+  `plan → implement → validate → ship`, dispatched via
+  `/feature-pipeline <spec-path>` once the human has ratified the spec
+  and all candidate ADRs. The workflow invokes the existing
+  `/technical-conception`, `/implementation`, `/technical-validation`,
+  `/visual-validation`, `/open-pr` skills as subagents — it does not
+  reimplement them. The skill standards (`.claude/skills/<skill>/standard.md`)
+  remain the durable contract; the workflow is the runtime substrate.
+- **Exit-and-resume** is the mid-workflow ADR-trigger handoff: if the
+  workflow detects an ADR-qualifying decision during `implement`, it
+  exits with `outcome: needs-human-adr-ratification`, the human runs
+  `/adr` in chat, then re-launches `/feature-pipeline` — the script
+  reads `state.json` and resumes from the stage where it stopped.
+
+The stage diagram below is the union of both substrates; the *transition*
+column names where each row lives. See
+[`.claude/commands/feature-pipeline.md`](../../commands/feature-pipeline.md)
+for the workflow's stage-by-stage contract and
+[`docs/knowledge/dynamic-workflow-feature-pipeline.md`](../../../docs/knowledge/dynamic-workflow-feature-pipeline.md)
+for the operator runbook.
+
 ## Stage diagram
 
 The 8 stages are: `spec`, `adrs`, `plan`, `implement`, `validate`,
