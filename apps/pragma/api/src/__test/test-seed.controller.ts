@@ -11,9 +11,17 @@
  * `energy: null` on purpose so the editor exercises the baseEnergy
  * display fallback; the energy curve still varies because each song
  * carries its own `baseEnergy`.
+ *
+ * It also bootstraps the admin password to `SEED_ADMIN_PASSWORD` if no
+ * credentials exist yet, so a freshly-deployed preview is loginable
+ * from the single seed call — the response echoes the password and
+ * whether it was created or already present. Auth lives in `app_config`
+ * (ADR-0004), which the domain wipe deliberately leaves untouched, so
+ * re-seeding never rotates an existing password.
  */
 
 import { Hono } from 'hono';
+import { bootstrapAuth } from '../auth/auth.service';
 import { barTable } from '../bars/bars.schema';
 import type { Database } from '../database/client';
 import { getDatabase } from '../database/client';
@@ -33,6 +41,7 @@ import { transitionCommentTable } from '../transitions/transitions.schema';
 const CONCERT_DAYS_FROM_NOW = 7;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const CONCERT_CAPACITY = 120;
+const SEED_ADMIN_PASSWORD = 'pragma-preview';
 
 interface SeedInstrument {
   readonly name: string;
@@ -133,10 +142,14 @@ interface SeedSummary {
   readonly members: number;
   readonly songs: number;
   readonly setlistEntries: number;
+  readonly adminPassword: string;
+  readonly adminCredentials: 'created' | 'already-set';
 }
 
 async function applyFixture(database: Database, now: Date): Promise<SeedSummary> {
   await clearDomainTables(database);
+
+  const bootstrap = await bootstrapAuth(database, SEED_ADMIN_PASSWORD, now);
 
   const instrumentIdByName = new Map<string, string>();
   for (const seed of SEED_INSTRUMENTS) {
@@ -194,6 +207,8 @@ async function applyFixture(database: Database, now: Date): Promise<SeedSummary>
     members: SEED_MEMBERS.length,
     songs: SEED_SONGS.length,
     setlistEntries: songIds.length,
+    adminPassword: SEED_ADMIN_PASSWORD,
+    adminCredentials: bootstrap.kind === 'ok' ? 'created' : 'already-set',
   };
 }
 

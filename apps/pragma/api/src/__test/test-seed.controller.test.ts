@@ -16,16 +16,27 @@ import { findSetlistBySession, listEntries } from '../setlists/setlists.reposito
 import { listSongsNewestFirst } from '../songs/songs.repository';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
+const SEED_ADMIN_PASSWORD = 'pragma-preview';
 
 const summarySchema = z.object({
   instruments: z.number(),
   members: z.number(),
   songs: z.number(),
   setlistEntries: z.number(),
+  adminPassword: z.string(),
+  adminCredentials: z.enum(['created', 'already-set']),
 });
 
 async function postSeed(): Promise<Response> {
   return createApp().request('/api/__test/seed', { method: 'POST' });
+}
+
+async function postLogin(password: string): Promise<Response> {
+  return createApp().request('/api/auth/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
 }
 
 describe('__test/test-seed.controller (back-e2e)', () => {
@@ -48,7 +59,14 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     const response = await postSeed();
     expect(response.status).toBe(200);
     const summary = summarySchema.parse(await response.json());
-    expect(summary).toEqual({ instruments: 5, members: 4, songs: 6, setlistEntries: 6 });
+    expect(summary).toEqual({
+      instruments: 5,
+      members: 4,
+      songs: 6,
+      setlistEntries: 6,
+      adminPassword: SEED_ADMIN_PASSWORD,
+      adminCredentials: 'created',
+    });
 
     const database = testDatabase();
     expect((await listInstruments(database)).length).toBe(5);
@@ -69,6 +87,12 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     const entries = await listEntries(database, setlist.id);
     expect(entries.length).toBe(6);
     expect(entries.every((entry) => entry.energy === null)).toBe(true);
+  });
+
+  it('bootstraps the admin password so the seeded preview is loginable', async () => {
+    await postSeed();
+    const loginResponse = await postLogin(SEED_ADMIN_PASSWORD);
+    expect(loginResponse.status).toBe(200);
   });
 
   it('is idempotent — re-seeding replaces rather than appends', async () => {
