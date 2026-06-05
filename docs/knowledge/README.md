@@ -101,6 +101,9 @@ Two failure modes to watch for:
 ### Skills & orchestration
 
 - [`tech-lead-orchestrator.md`](./tech-lead-orchestrator.md) — operator notes for `/tech-lead-orchestrator`: artefact layout under `runs/<run-id>/`, how to read `journal.md.jsonl`, common debugging recipes (double auto-chain, unparseable verdict, spec mutation, hook failure), dogfooding expectations.
+- [`orchestrator-dispatch-hygiene.md`](./orchestrator-dispatch-hygiene.md) — sub-agent dispatch knobs: pin `model: 'opus'` on implementation rounds; `isolation: "worktree"` for ≥4-commit rounds (and verify it took); escalate on lack-of-progress not a retry count; briefs say `biome check` not `biome lint`; verdict claims about routing/auth name the stage.
+- [`fresh-prod-bootstrap-503.md`](./fresh-prod-bootstrap-503.md) — a freshly-deployed pragma prod returns `503 auth-not-bootstrapped` on every API route until you `POST /api/admin/set-password` once; `read -rsp` keeps the secret off-screen; in prod the API is same-origin (no `-api` subdomain).
+- [`ultimate-guitar-scraping-cgu.md`](./ultimate-guitar-scraping-cgu.md) — UG's CGU §2.6 forbids scraping; sanctioned chord-chart import is manual paste / file upload / OCR-assist, and metadata enrichment goes through MusicBrainz.
 
 ### Browser / forms
 

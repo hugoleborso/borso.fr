@@ -54,6 +54,14 @@ reality before any conclusions.
 
 Sources to walk in order, capturing each friction event as one row:
 
+- **`KAIZEN.md` (primary input).** If the task maintained a root-level
+  `KAIZEN.md` scratch file (gitignored; per CLAUDE.md's *Self-improvement
+  loop*), read it first — each bullet is a friction event already
+  captured in real time, problem-only. Map every bullet to an inventory
+  row. Many will resolve to `no-op: already eradicated by <existing
+  entry>` once cross-checked against the corpus — that cross-check is the
+  point. **`rm KAIZEN.md` once the kaizen PR is open** (it's local-only
+  scratch, not committed).
 - **Conversation transcript.** Every interrupt-and-redirect from
   the user (*"wait, you missed X"*, *"NO, do Y"*, *"why did you
   assume Z"*, *"that doesn't work, try …"*, *"there was a lot more

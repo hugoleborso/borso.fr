@@ -14,7 +14,7 @@ constrain it. Transitions:
 | spec | adrs | `spec.md` present (or `/specification` returns `done`). Spec checksum recorded. Spec carries enough tech surface (Q.O.D. + Changes / Types) to surface architectural choices. |
 | adrs | plan | Every ADR-qualifying candidate from the spec has been ratified by the human (tech-lead validation via `AskUserQuestion`) and the confirmed ones have been written via `/adr` (piloted mode). ADR numbers are in `state.adrIndex`. If no candidates, transition immediately. |
 | plan | implement | `/technical-conception` returns `done` with `plan.md` next to spec. The plan references every ADR in `state.adrIndex`. |
-| implement | validate | `/implementation` returns `done` with a `next: { kind: 'validate' }` hint. |
+| implement | validate | `/implementation` returns `done` with a `next: { kind: 'validate' }` hint. **The validate stage is never skipped.** A runtime smoke-test (`curl`, "the Lambda boots", "routes return non-5xx") is NOT a substitute for `/technical-validation` — booting ≠ correct, and the implementer's own `done` is not independent evidence. Dispatch `/technical-validation` on the current SHA every round, including mid-PR fix rounds. See [`docs/dantotsus/orchestrator-skipped-validation-between-rounds.md`](../../../docs/dantotsus/orchestrator-skipped-validation-between-rounds.md). |
 | validate | arbitrate | At least one validator returned a verdict. |
 | arbitrate | implement | `verdictKind` maps to action `fix`. `retries.implement++`. |
 | arbitrate | plan | `verdictKind` maps to action `replan`. Scope flagged in the replan verdict. |
@@ -114,18 +114,69 @@ every feature has an ADR-qualifying choice.
 
 ## Retry policy
 
-- Cap: `MAX_RETRIES = 3`. Override via the `TECH_LEAD_MAX_RETRIES`
-  environment variable when invoking the orchestrator (e.g. in tests).
-- Lookup table from `verdictKind` + current retry count to next action:
+**Escalate on lack of progress, not on a retry count.** A round that
+closes 6 of 10 blockers is *progress* and chains into the next round;
+a hard "cap of 3" framing causes premature "last retry before
+escalation" surfacing (observed in run `2026-05-19-1937-pragma`). The
+`retries.*` counters are tracked for visibility and never auto-escalate
+at a small integer.
 
-| `retries.implement` ≥ `MAX_RETRIES` | `verdictKind` | Action |
-|---|---|---|
-| yes | (any) | `escalate` |
-| no | `pass` | (degenerate — orchestrator should have transitioned to `ship`) |
-| no | `fail-spec` | `escalate` immediately |
-| no | `crash` | `escalate` immediately |
-| no | `fail-plan` | `replan` |
-| no | `fail-local` | `fix` |
+- Soft budget: `MAX_RETRIES = 10` (override via `TECH_LEAD_MAX_RETRIES`).
+  Hitting it is a signal to step back, not an automatic terminal state.
+- Escalate immediately, regardless of count, only when:
+  - **stuck loop** — a round closes 0 blockers, or
+  - **net-negative regression** — a round introduces strictly more new
+    FAILs than it closes, or
+  - **product ambiguity** — the FAIL needs a human product decision
+    (see *Decision boundary* below), or
+  - `verdictKind` is `fail-spec` / `crash` (unrecoverable by retry).
+- Lookup table from `verdictKind` to next action (progress permitting):
+
+| `verdictKind` | Action |
+|---|---|
+| `pass` | (degenerate — orchestrator should have transitioned to `ship`) |
+| `fail-spec` | `escalate` immediately |
+| `crash` | `escalate` immediately |
+| `fail-plan` | `replan` |
+| `fail-local` | `fix` (if the round made progress) / `escalate` (stuck loop) |
+
+## Decision boundary — what the orchestrator decides vs surfaces
+
+Once the human has ratified the spec, the orchestrator drives to
+"PR opens with visual evidence" **without** per-FAIL-row checkpoints.
+It does NOT surface execution mechanics (fix ordering, retry vs
+escalate, scope of a fix round, partial-deferral arbitration) — deciding
+those *is* the job.
+
+It MUST stop and surface — via `AskUserQuestion` — for **product +
+ADR-trigger** decisions, which are the human's:
+
+- a new third-party dependency or external service;
+- secret / credential management (new repo secret, new env var holding a secret);
+- a new obligation to a third party visible in prod (attribution link, telemetry);
+- schema columns or data model motivated by an external service;
+- any feature scope **beyond the ratified spec** — a casual wish in
+  chat ("would be cool if…") is *not* a ratification.
+
+Matching any of the four ADR triggers (above) is a mandatory
+stop-and-surface regardless of orchestrator confidence. The two failure
+modes this guards against — too-timid (surfacing mechanics) and
+over-eager (deciding product) — both bit run `2026-05-19-1937-pragma`;
+see [`docs/dantotsus/orchestrator-agency-overcorrected-on-product-decisions.md`](../../../docs/dantotsus/orchestrator-agency-overcorrected-on-product-decisions.md).
+
+## Sub-agent dispatch hygiene
+
+- **Implementation dispatches pass `model: 'opus'` explicitly** — never
+  rely on an implicit "inherits from parent" default for the
+  highest-capability stage.
+- **Rounds ≥ ~4 commits or ~20 files default to `isolation: "worktree"`**
+  (verify with `git worktree list` right after dispatch; if the flag was
+  dropped, fall back to one round at a time).
+- **Dispatch briefs name `biome check`, not `biome lint`** (the
+  pre-commit hook runs the composite check; the lint sub-rule misses
+  formatter + organize-imports drift).
+
+Full rationale: [`docs/knowledge/orchestrator-dispatch-hygiene.md`](../../../docs/knowledge/orchestrator-dispatch-hygiene.md).
 
 A question verdict (`status: question`) does **not** consume a retry —
 the orchestrator surfaces the question to the human via

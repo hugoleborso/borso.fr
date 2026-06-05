@@ -69,7 +69,9 @@ Every behavioural assertion the spec makes lives somewhere the autonomous valida
 
 ### Commit small, push only after gates
 
-Conventional-commit, small focused units. Push only after typecheck, biome, knip, build, `/visual-validation` (UI work), `/technical-validation` (always) all pass. Hooks must not be bypassed; their failures are the gate.
+Conventional-commit, small focused units. Push only after typecheck, `biome check` (the composite gate the pre-commit hook runs — **not** `biome lint`, which skips the formatter + organize-imports rules and lets drift accumulate invisibly across rounds — see [`docs/dantotsus/biome-formatter-was-not-gated.md`](../../../docs/dantotsus/biome-formatter-was-not-gated.md)), knip, build, `/visual-validation` (UI work), `/technical-validation` (always) all pass. Hooks must not be bypassed; their failures are the gate.
+
+When the verdict asserts a **routing or auth property that differs by stage** (e.g. "same-origin `/api`"), name the stage(s) where it holds — *"same-origin in prod, cross-origin via `VITE_API_BASE` in preview by design"* — never a bare yes/no. A stageless claim gets inherited verbatim by the next validator and flagged as a FAIL that is actually by-design. Cf. [`docs/knowledge/preview-api-cross-origin.md`](../../../docs/knowledge/preview-api-cross-origin.md).
 
 ## Procedure
 
