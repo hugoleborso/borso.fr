@@ -23,6 +23,8 @@
   },
   "auth": {
     "passwordLabel": "Shared password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "submit": "Enter",
     "rateLimited": "Too many attempts — try again in a few minutes.",
     "invalidPassword": "Wrong password.",
