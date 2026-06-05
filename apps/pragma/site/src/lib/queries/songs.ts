@@ -13,6 +13,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
+import { isLastPendingMutation } from './optimistic.utils';
 
 export const songKeys = {
   all: ['songs'] as const,
@@ -124,6 +125,7 @@ export function useSongSearch(query: string) {
 export function useCreateSong() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: songKeys.all,
     mutationFn: async (variables: SongCreateVariables) => {
       const response = await api.api.songs.$post({ json: variables });
       if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
@@ -146,6 +148,7 @@ export function useCreateSong() {
       }
     },
     onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: songKeys.all }))) return;
       void queryClient.invalidateQueries({ queryKey: songKeys.all });
     },
   });
@@ -154,6 +157,7 @@ export function useCreateSong() {
 export function useUpdateSong() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: songKeys.all,
     mutationFn: async (variables: SongUpdateVariables) => {
       const { id, ...rest } = variables;
       const response = await api.api.songs[':id'].$put({
@@ -193,6 +197,7 @@ export function useUpdateSong() {
       }
     },
     onSettled: (_data, _err, variables) => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: songKeys.all }))) return;
       void queryClient.invalidateQueries({ queryKey: songKeys.byId(variables.id) });
       void queryClient.invalidateQueries({ queryKey: songKeys.list() });
     },
@@ -202,6 +207,7 @@ export function useUpdateSong() {
 export function useDeleteSong() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: songKeys.all,
     mutationFn: async (variables: { id: string }) => {
       const response = await api.api.songs[':id'].$delete({ param: { id: variables.id } });
       if (!response.ok) throw new ApiError(response.status, `delete ${response.status}`, null);
@@ -223,6 +229,7 @@ export function useDeleteSong() {
       }
     },
     onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: songKeys.all }))) return;
       void queryClient.invalidateQueries({ queryKey: songKeys.all });
     },
   });

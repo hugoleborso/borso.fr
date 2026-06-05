@@ -41,10 +41,10 @@ export function EnergySparkline({
         </linearGradient>
       </defs>
       <path d={closingPath} fill="url(#pragma-sparkline-grad)" />
-      <path d={path} stroke={accent} strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <path d={path} stroke={accent} strokeWidth="2.4" fill="none" strokeLinecap="round" />
       {points.map(([x, y], index) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: sparkline points are a stable visual sequence, index is the index
-        <circle key={index} cx={x} cy={y} r="2.5" fill={accent} />
+        <circle key={index} cx={x} cy={y} r="3.5" fill={accent} />
       ))}
     </svg>
   );

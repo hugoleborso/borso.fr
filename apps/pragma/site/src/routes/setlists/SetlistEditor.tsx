@@ -5,13 +5,31 @@
  * energy sparkline sits ABOVE the list, derived from the per-entry
  * energy values.
  *
- * Reordering uses HTML5 drag-from-handle. Transition warnings are
+ * Reordering uses dnd-kit's sortable list: the list is a `DndContext`
+ * wrapping a `SortableContext`, each row is a sortable node grabbed by
+ * its handle, and the drop is committed in `onDragEnd` via the
+ * optimistic `useReorderSetlist` mutation. Transition warnings are
  * computed by `transition.core.ts` between each consecutive pair; a
  * warned pair carries a circular orange marker in the side gutter,
  * which opens the TransitionCommentModal.
  */
 
 import { evaluateTransition } from '@api/setlists/transition.core';
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -44,6 +62,8 @@ interface SetlistEditorProps {
 const ROW_HEIGHT_PX = 84;
 const ROW_GAP_PX = 8;
 const WARN_MARKER_OFFSET_PX = 12;
+const ENERGY_SPARKLINE_HEIGHT_PX = 160;
+const DRAG_ACTIVATION_DISTANCE_PX = 6;
 
 export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
@@ -60,8 +80,14 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     songAId: string;
     songBId: string;
   } | null>(null);
-  const [draggingEntryId, setDraggingEntryId] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE_PX },
+    }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const entries = entriesQuery.data?.entries ?? [];
   const songs = songsQuery.data?.songs ?? [];
@@ -103,8 +129,14 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
 
   const addEntry = (songId: string): void => {
+    const song = songsById[songId];
     append.mutate(
-      { setlistId, songId, optimisticId: crypto.randomUUID() },
+      {
+        setlistId,
+        songId,
+        energy: song?.baseEnergy ?? null,
+        optimisticId: crypto.randomUUID(),
+      },
       { onError: recordError },
     );
   };
@@ -113,18 +145,14 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     removeEntry.mutate({ setlistId, entryId }, { onError: recordError });
   };
 
-  const dropOnEntry = (targetEntryId: string): void => {
-    const draggedId = draggingEntryId;
-    setDraggingEntryId(null);
-    if (draggedId === null || draggedId === targetEntryId) return;
+  const handleDragEnd = (event: DragEndEvent): void => {
+    const { active, over } = event;
+    if (over === null || active.id === over.id) return;
     const ordered = entries.map((entry) => entry.id);
-    const fromIndex = ordered.indexOf(draggedId);
-    const toIndex = ordered.indexOf(targetEntryId);
+    const fromIndex = ordered.indexOf(String(active.id));
+    const toIndex = ordered.indexOf(String(over.id));
     if (fromIndex === -1 || toIndex === -1) return;
-    const next = [...ordered];
-    const moved = next.splice(fromIndex, 1)[0];
-    if (moved === undefined) return;
-    next.splice(toIndex, 0, moved);
+    const next = arrayMove(ordered, fromIndex, toIndex);
     reorder.mutate({ setlistId, entryIds: next }, { onError: recordError });
   };
 
@@ -150,7 +178,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         <div className="text-[10.5px] font-mono uppercase tracking-wider text-ink-400 mb-2">
           {t('setlist.energy')}
         </div>
-        <EnergySparkline values={energyValues} height={80} />
+        <EnergySparkline values={energyValues} height={ENERGY_SPARKLINE_HEIGHT_PX} />
       </div>
       <div className="relative">
         <div
@@ -183,19 +211,37 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
             );
           })}
         </div>
-        <ul className="flex flex-col gap-2">
-          {entries.map((entry, index) => {
-            const song = songsById[entry.songId];
-            const lineupRaw = lineupOf(entry, songsById);
-            const previousKind = transitions[index - 1];
-            return (
-              <li key={entry.id} className="flex flex-col gap-1">
-                {previousKind === 'warn' ? (
-                  <button
-                    type="button"
-                    className="lg:hidden inline-flex items-center gap-1.5 text-[11px] font-medium text-warn bg-warn-soft self-start px-2 py-1 rounded-md cursor-pointer border-0"
-                    aria-label={t('setlist.openTransitionComment')}
-                    onClick={() => {
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext
+            items={entries.map((entry) => entry.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <ul className="flex flex-col gap-2">
+              {entries.map((entry, index) => {
+                const song = songsById[entry.songId];
+                const lineupRaw = lineupOf(entry, songsById);
+                const previousKind = transitions[index - 1];
+                return (
+                  <SetlistEntryRow
+                    key={entry.id}
+                    position={index + 1}
+                    entryId={entry.id}
+                    title={song?.title ?? entry.songId.slice(0, 8)}
+                    artist={song?.artist ?? ''}
+                    tonalityLabel={tonalityLabelFor(song)}
+                    meanMastery={null}
+                    keyOverride={entry.keyOverride}
+                    capo={entry.capo}
+                    energy={entry.energy}
+                    notes={entry.notes}
+                    currentSongId={entry.songId}
+                    lineup={compactLineup(lineupRaw)}
+                    members={lineupMembers}
+                    instruments={instruments}
+                    showTransitionWarningBefore={previousKind === 'warn'}
+                    onUpdate={handleUpdate}
+                    onRemove={handleRemove}
+                    onOpenTransitionBefore={() => {
                       const leftEntry = entries[index - 1];
                       if (leftEntry === undefined) return;
                       setTransitionEditing({
@@ -203,35 +249,12 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
                         songBId: entry.songId,
                       });
                     }}
-                  >
-                    <Icon name="warn" size={12} />
-                    {t('setlist.transitionWarning')}
-                  </button>
-                ) : null}
-                <SetlistEntryRow
-                  position={index + 1}
-                  entryId={entry.id}
-                  title={song?.title ?? entry.songId.slice(0, 8)}
-                  artist={song?.artist ?? ''}
-                  tonalityLabel={tonalityLabelFor(song)}
-                  meanMastery={null}
-                  keyOverride={entry.keyOverride}
-                  capo={entry.capo}
-                  energy={entry.energy}
-                  notes={entry.notes}
-                  currentSongId={entry.songId}
-                  lineup={compactLineup(lineupRaw)}
-                  members={lineupMembers}
-                  instruments={instruments}
-                  onUpdate={handleUpdate}
-                  onRemove={handleRemove}
-                  onDragStart={(id) => setDraggingEntryId(id)}
-                  onDropOn={dropOnEntry}
-                />
-              </li>
-            );
-          })}
-        </ul>
+                  />
+                );
+              })}
+            </ul>
+          </SortableContext>
+        </DndContext>
       </div>
       <details className="bg-bg-sunk border border-line rounded-md p-3">
         <summary className="cursor-pointer text-sm text-ink-700 font-medium">

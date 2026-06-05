@@ -12,6 +12,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
 import { instrumentKeys } from './instruments';
+import { isLastPendingMutation } from './optimistic.utils';
 
 type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;
 
@@ -57,6 +58,7 @@ export function useMemberInstruments(memberId: string, enabled = true) {
 export function useCreateMember() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: memberKeys.all,
     mutationFn: async (variables: {
       firstName: string;
       color: string;
@@ -89,6 +91,7 @@ export function useCreateMember() {
       }
     },
     onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: memberKeys.all }))) return;
       void queryClient.invalidateQueries({ queryKey: memberKeys.all });
     },
   });
@@ -97,6 +100,7 @@ export function useCreateMember() {
 export function useUpdateMember() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: memberKeys.all,
     mutationFn: async (variables: {
       id: string;
       firstName?: string;
@@ -132,6 +136,7 @@ export function useUpdateMember() {
       }
     },
     onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: memberKeys.all }))) return;
       void queryClient.invalidateQueries({ queryKey: memberKeys.all });
     },
   });
@@ -140,6 +145,7 @@ export function useUpdateMember() {
 export function useDeleteMember() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: memberKeys.all,
     mutationFn: async (variables: { id: string }) => {
       const response = await api.api.members[':id'].$delete({
         param: { id: variables.id },
@@ -163,6 +169,7 @@ export function useDeleteMember() {
       }
     },
     onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: memberKeys.all }))) return;
       void queryClient.invalidateQueries({ queryKey: memberKeys.all });
     },
   });
@@ -171,6 +178,7 @@ export function useDeleteMember() {
 export function useAssignMemberInstruments() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: memberKeys.all,
     mutationFn: async (variables: { memberId: string; instrumentIds: string[] }) => {
       const response = await api.api.members[':id'].instruments.$put({
         param: { id: variables.memberId },
@@ -211,6 +219,7 @@ export function useAssignMemberInstruments() {
       }
     },
     onSettled: (_data, _err, variables) => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: memberKeys.all }))) return;
       void queryClient.invalidateQueries({
         queryKey: memberKeys.instrumentsOf(variables.memberId),
       });

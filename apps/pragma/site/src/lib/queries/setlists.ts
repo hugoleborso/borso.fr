@@ -5,12 +5,16 @@
  * Every entry-level mutation is optimistic: `onMutate` snapshots the
  * `{ entries }` cache, applies a pure transform from
  * `setlists.utils.ts`, returns the snapshot as `context.previous`;
- * `onError` rolls back; `onSettled` invalidates so the server-issued
- * shape replaces the optimistic projection.
+ * `onError` rolls back. `onSettled` reconciles with the server, but
+ * only once the entry-mutation family has drained (see
+ * `optimistic.utils.ts`) — otherwise a refetch from an early tick
+ * (energy-slider drag, rapid reorder) lands after a later optimistic
+ * write and snaps it back.
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
+import { isLastPendingMutation } from './optimistic.utils';
 import {
   appendOptimisticEntry,
   applyEntryPatch,
@@ -35,6 +39,8 @@ export const setlistKeys = {
   bySessionId: (sessionId: string) => [...setlistKeys.all, 'bySession', sessionId] as const,
   entriesOf: (setlistId: string) => [...setlistKeys.all, 'entries', setlistId] as const,
 };
+
+const ENTRY_MUTATION_KEY = [...setlistKeys.all, 'entry-mutation'] as const;
 
 export function useSetlistBySession(sessionId: string, enabled = true) {
   return useQuery({
@@ -91,6 +97,7 @@ export function useCreateSetlist() {
 export function useAppendSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ENTRY_MUTATION_KEY,
     mutationFn: async (
       variables: { setlistId: string; optimisticId: string } & Parameters<
         (typeof api.api.setlists)[':id']['entries']['$post']
@@ -133,6 +140,9 @@ export function useAppendSetlistEntry() {
       }
     },
     onSettled: (_data, _error, variables) => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: ENTRY_MUTATION_KEY }))) {
+        return;
+      }
       void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });
     },
   });
@@ -141,6 +151,7 @@ export function useAppendSetlistEntry() {
 export function useUpdateSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ENTRY_MUTATION_KEY,
     mutationFn: async (
       variables: { setlistId: string; entryId: string } & Parameters<
         (typeof api.api.setlists)[':id']['entries'][':entryId']['$put']
@@ -173,6 +184,9 @@ export function useUpdateSetlistEntry() {
       }
     },
     onSettled: (_data, _error, variables) => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: ENTRY_MUTATION_KEY }))) {
+        return;
+      }
       void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });
     },
   });
@@ -181,6 +195,7 @@ export function useUpdateSetlistEntry() {
 export function useDeleteSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ENTRY_MUTATION_KEY,
     mutationFn: async (variables: { setlistId: string; entryId: string }) => {
       const response = await api.api.setlists[':id'].entries[':entryId'].$delete({
         param: { id: variables.setlistId, entryId: variables.entryId },
@@ -206,6 +221,9 @@ export function useDeleteSetlistEntry() {
       }
     },
     onSettled: (_data, _error, variables) => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: ENTRY_MUTATION_KEY }))) {
+        return;
+      }
       void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });
     },
   });
@@ -214,6 +232,7 @@ export function useDeleteSetlistEntry() {
 export function useReorderSetlist() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ENTRY_MUTATION_KEY,
     mutationFn: async (variables: { setlistId: string; entryIds: string[] }) => {
       const response = await api.api.setlists[':id'].reorder.$put({
         param: { id: variables.setlistId },
@@ -243,6 +262,9 @@ export function useReorderSetlist() {
       }
     },
     onSettled: (_data, _error, variables) => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: ENTRY_MUTATION_KEY }))) {
+        return;
+      }
       void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });
     },
   });

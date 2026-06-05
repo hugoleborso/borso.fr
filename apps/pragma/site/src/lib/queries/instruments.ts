@@ -8,6 +8,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
+import { isLastPendingMutation } from './optimistic.utils';
 
 export const instrumentKeys = {
   all: ['instruments'] as const,
@@ -33,6 +34,7 @@ export function useInstrumentsList() {
 export function useCreateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: instrumentKeys.all,
     mutationFn: async (variables: { name: string; isHarmonic: boolean }) => {
       const response = await api.api.instruments.$post({ json: variables });
       if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
@@ -56,6 +58,8 @@ export function useCreateInstrument() {
       }
     },
     onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: instrumentKeys.all })))
+        return;
       void queryClient.invalidateQueries({ queryKey: instrumentKeys.all });
     },
   });
@@ -64,6 +68,7 @@ export function useCreateInstrument() {
 export function useUpdateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: instrumentKeys.all,
     mutationFn: async (variables: { id: string; name?: string; isHarmonic?: boolean }) => {
       const { id, ...rest } = variables;
       const response = await api.api.instruments[':id'].$put({
@@ -94,6 +99,8 @@ export function useUpdateInstrument() {
       }
     },
     onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: instrumentKeys.all })))
+        return;
       void queryClient.invalidateQueries({ queryKey: instrumentKeys.all });
     },
   });
@@ -102,6 +109,7 @@ export function useUpdateInstrument() {
 export function useDeleteInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: instrumentKeys.all,
     mutationFn: async (variables: { id: string }) => {
       const response = await api.api.instruments[':id'].$delete({
         param: { id: variables.id },
@@ -127,6 +135,8 @@ export function useDeleteInstrument() {
       }
     },
     onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: instrumentKeys.all })))
+        return;
       void queryClient.invalidateQueries({ queryKey: instrumentKeys.all });
     },
   });

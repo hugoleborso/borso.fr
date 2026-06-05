@@ -12,6 +12,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
+import { isLastPendingMutation } from './optimistic.utils';
 
 export const transitionKeys = {
   all: ['transition-comments'] as const,
@@ -43,6 +44,7 @@ export function useTransitionComment(a: string, b: string, enabled = true) {
 export function useSaveTransitionComment() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: transitionKeys.all,
     mutationFn: async (variables: { a: string; b: string; comment: string }) => {
       const response = await api.api['transition-comments'][':a'][':b'].$put({
         param: { a: variables.a, b: variables.b },
@@ -75,6 +77,9 @@ export function useSaveTransitionComment() {
       }
     },
     onSettled: (_data, _err, variables) => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: transitionKeys.all }))) {
+        return;
+      }
       void queryClient.invalidateQueries({
         queryKey: transitionKeys.byPair(variables.a, variables.b),
       });
