@@ -23,7 +23,7 @@
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
-    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy --all --force"
+    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"last-loop-lepin-pr-${PR_NUMBER:?PR_NUMBER env var required — destroy targets the per-PR app stack only, never the shared last-loop-lepin-cluster stack}\" --force"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.726.0",
