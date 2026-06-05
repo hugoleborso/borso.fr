@@ -22,7 +22,8 @@ import {
   DragOverlay,
   type DragStartEvent,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -66,6 +67,8 @@ const ROW_GAP_PX = 8;
 const WARN_MARKER_OFFSET_PX = 12;
 const ENERGY_SPARKLINE_HEIGHT_PX = 160;
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
+const DRAG_TOUCH_DELAY_MS = 200;
+const DRAG_TOUCH_TOLERANCE_PX = 8;
 
 export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
@@ -86,8 +89,11 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE_PX },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: DRAG_TOUCH_DELAY_MS, tolerance: DRAG_TOUCH_TOLERANCE_PX },
     }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
