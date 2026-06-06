@@ -11,10 +11,12 @@
  * carries no `AWS::SecretsManager::Secret` resources — the test
  * `stack.test.ts` asserts that.
  *
- * Test-seed flag: `PRAGMA_ALLOW_TEST_SEED=1` is mirrored from the
- * last-loop-lepin pattern but currently unused (no /__test routes on
- * the API yet); kept as a documented hook for future preview-only
- * seeding.
+ * Test-seed flag: `PRAGMA_ALLOW_TEST_SEED=1` is mounted on every
+ * non-prod stage; the API reads it in `createApp` and mounts the
+ * `__test/test-seed.controller` (POST `/api/__test/seed?fixture=…`) only
+ * when the value is exactly `'1'`. Prod never sees the flag (asserted
+ * in `stack.test.ts`), so the route is structurally unreachable there
+ * even if the controller code shipped.
  */
 
 import { type IDsqlCluster, PreviewableApp, type Stage } from '@borso/infra';

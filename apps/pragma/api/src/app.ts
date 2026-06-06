@@ -32,6 +32,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { testSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildBarsRouter } from './bars/bars.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
@@ -42,6 +43,8 @@ import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
 import { buildTransitionCommentsRouter } from './transitions/transition-comments.controller';
 import { buildUploadsRouter } from './uploads/uploads.controller';
+
+const TEST_SEED_FLAG = 'PRAGMA_ALLOW_TEST_SEED';
 
 export interface CreateAppOptions {
   readonly auth?: BuildAuthRouterOptions;
@@ -71,5 +74,9 @@ function buildAppRouter(options: CreateAppOptions = {}) {
 export type AppRouter = ReturnType<typeof buildAppRouter>;
 
 export function createApp(options: CreateAppOptions = {}): Hono {
-  return buildAppRouter(options);
+  const app = buildAppRouter(options);
+  if (process.env[TEST_SEED_FLAG] === '1') {
+    app.route('/api/__test', testSeedRouter);
+  }
+  return app;
 }
