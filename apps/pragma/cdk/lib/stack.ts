@@ -11,12 +11,9 @@
  * carries no `AWS::SecretsManager::Secret` resources — the test
  * `stack.test.ts` asserts that.
  *
- * Test-seed flag: `PRAGMA_ALLOW_TEST_SEED=1` is mounted on every
- * non-prod stage; the API reads it in `createApp` and mounts the
- * `__test/test-seed.controller` (POST `/api/__test/seed?fixture=…`) only
- * when the value is exactly `'1'`. Prod never sees the flag (asserted
- * in `stack.test.ts`), so the route is structurally unreachable there
- * even if the controller code shipped.
+ * Test-seed flag: `ALLOW_TEST_SEED=1` is injected on non-prod API
+ * Lambdas by `PreviewableApp` itself, not here — the construct owns the
+ * prod-exclusion. The API reads it to mount `/api/__test/seed`.
  */
 
 import { type IDsqlCluster, PreviewableApp, type Stage } from '@borso/infra';
@@ -66,9 +63,6 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
     ],
   });
 
-  const allowSeedFlag: Record<string, string> =
-    props.stage === 'prod' ? {} : { PRAGMA_ALLOW_TEST_SEED: '1' };
-
   const previewableApp = new PreviewableApp(props.scope, 'App', {
     app: APP_SLUG,
     stage: props.stage,
@@ -79,7 +73,6 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
       entry: props.apiEntry,
       environment: {
         UPLOADS_BUCKET: uploadsBucket.bucketName,
-        ...allowSeedFlag,
       },
     },
     database: {

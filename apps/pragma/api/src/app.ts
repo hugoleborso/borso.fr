@@ -27,6 +27,11 @@
  * chained Hono type — and therefore the RPC inference — intact end to
  * end. `AppRouter` (the inferred return type of `buildAppRouter`) is
  * what the FE consumes via `hc<AppRouter>(baseUrl)`.
+ *
+ * `POST /api/__test/seed` is mounted by `createApp` only when
+ * `ALLOW_TEST_SEED === '1'` (set by `PreviewableApp` on non-prod
+ * Lambdas, never prod). It sits outside `AppRouter` on purpose — the FE
+ * never calls it, so it stays out of the RPC type.
  */
 
 import { Hono } from 'hono';
@@ -43,8 +48,6 @@ import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
 import { buildTransitionCommentsRouter } from './transitions/transition-comments.controller';
 import { buildUploadsRouter } from './uploads/uploads.controller';
-
-const TEST_SEED_FLAG = 'PRAGMA_ALLOW_TEST_SEED';
 
 export interface CreateAppOptions {
   readonly auth?: BuildAuthRouterOptions;
@@ -72,6 +75,8 @@ function buildAppRouter(options: CreateAppOptions = {}) {
 }
 
 export type AppRouter = ReturnType<typeof buildAppRouter>;
+
+const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 
 export function createApp(options: CreateAppOptions = {}): Hono {
   const app = buildAppRouter(options);

@@ -10,8 +10,8 @@
  *    blocks all public access, and exposes the GET/PUT CORS pair the
  *    front-end relies on.
  * 3. The API Lambda receives `UPLOADS_BUCKET` as an env var on every
- *    stage and `PRAGMA_ALLOW_TEST_SEED='1'` only on non-prod stages
- *    (mirrors the last-loop-lepin pattern).
+ *    stage and `ALLOW_TEST_SEED='1'` only on non-prod stages (the flag
+ *    is injected by `PreviewableApp`, shared across every app).
  * 4. The prod stack carries the `pragma.borso.fr` CloudFront alias.
  */
 
@@ -120,11 +120,11 @@ describe('pragma app stack', () => {
   it('mounts the test-seed flag only on non-prod stacks', () => {
     const prodFunctions = synthAppStack('prod').findResources('AWS::Lambda::Function');
     for (const fn of Object.values(prodFunctions)) {
-      expect(readEnvVars(fn)).not.toHaveProperty('PRAGMA_ALLOW_TEST_SEED');
+      expect(readEnvVars(fn)).not.toHaveProperty('ALLOW_TEST_SEED');
     }
     const previewFunctions = synthAppStack('preview').findResources('AWS::Lambda::Function');
     const flagged = Object.values(previewFunctions).filter(
-      (fn) => 'PRAGMA_ALLOW_TEST_SEED' in readEnvVars(fn),
+      (fn) => 'ALLOW_TEST_SEED' in readEnvVars(fn),
     );
     expect(flagged.length).toBeGreaterThan(0);
   });

@@ -16,6 +16,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '../components/atoms/Button';
 import { Card } from '../components/atoms/Card';
+import { Icon } from '../components/atoms/Icon';
 import { Input } from '../components/atoms/Input';
 import { ApiError } from '../lib/api';
 import { useLogin } from '../lib/queries/auth';
@@ -36,6 +37,7 @@ export function Login(): JSX.Element {
   const location = useLocation();
   const login = useLogin();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
 
   const form = useForm({
     defaultValues: { password: '' },
@@ -90,16 +92,28 @@ export function Login(): JSX.Element {
             }}
           >
             {(field) => (
-              <Input
-                id="login-password"
-                type="password"
-                value={field.state.value}
-                onChange={(event) => field.handleChange(event.target.value)}
-                onBlur={field.handleBlur}
-                autoComplete="current-password"
-                required
-                minLength={8}
-              />
+              <div className="relative">
+                <Input
+                  id="login-password"
+                  type={passwordVisible ? 'text' : 'password'}
+                  value={field.state.value}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  onBlur={field.handleBlur}
+                  autoComplete="current-password"
+                  required
+                  minLength={8}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPasswordVisible((visible) => !visible)}
+                  aria-label={passwordVisible ? t('auth.hidePassword') : t('auth.showPassword')}
+                  aria-pressed={passwordVisible}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-400 hover:text-ink-700 bg-transparent border-0 cursor-pointer"
+                >
+                  <Icon name={passwordVisible ? 'eyeOff' : 'eye'} size={18} />
+                </button>
+              </div>
             )}
           </form.Field>
           <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>

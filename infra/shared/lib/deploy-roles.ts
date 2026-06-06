@@ -87,7 +87,8 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
       subject: { kind: 'environment', environment: 'prod' },
     }),
     maxSessionDuration: Duration.hours(1),
-    description: 'Used by deploy.yml to deploy prod app stacks. Gated by GitHub prod environment.',
+    description:
+      'Used by deploy.yml to deploy prod app stacks. The prod GitHub environment scopes this trust; the merge to main is the gate, not a reviewer rule.',
   });
   prod.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess'));
   prod.addToPolicy(

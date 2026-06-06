@@ -5,17 +5,25 @@
  * energy sparkline sits ABOVE the list, derived from the per-entry
  * energy values.
  *
- * Reordering uses HTML5 drag-from-handle. Transition warnings are
+ * Reordering uses dnd-kit's sortable list (see `SetlistEntriesList`):
+ * the list is a `DndContext` wrapping a `SortableContext`, each row is
+ * a sortable node grabbed by its handle, and the drop is committed via
+ * the optimistic `useReorderSetlist` mutation. Transition warnings are
  * computed by `transition.core.ts` between each consecutive pair; a
- * warned pair carries a circular orange marker in the side gutter,
- * which opens the TransitionCommentModal.
+ * warned pair carries a circular orange marker in the side gutter
+ * (`WarnMarkerGutter`), which opens the TransitionCommentModal.
+ *
+ * Above the list, a sticky `<MemberFilterPills>` row lets the operator
+ * narrow the view to a single member's perspective. When a member is
+ * selected, `filterEntriesForMember` keeps only entries where that
+ * member plays an instrument; each visible row receives a
+ * `prominentMemberInstrument` chip describing what they play here.
  */
 
 import { evaluateTransition } from '@api/setlists/transition.core';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon } from '../../components/atoms/Icon';
 import { EnergySparkline } from '../../components/molecules/EnergySparkline';
 import { MemberFilterPills } from '../../components/molecules/MemberFilterPills';
 import { ApiError } from '../../lib/api';
@@ -29,43 +37,18 @@ import {
   useUpdateSetlistEntry,
 } from '../../lib/queries/setlists';
 import { useSongsList } from '../../lib/queries/songs';
-import { SetlistEntryRow } from './SetlistEntryRow';
-import {
-  compactLineup,
-  findOrphanMemberIds,
-  instrumentHarmonicMap,
-  lineupOf,
-  prominentMemberInstrumentFor,
-  tonalityLabelFor,
-} from './setlist-editor.utils';
+import { SetlistEntriesList } from './SetlistEntriesList';
+import { SetlistSongPicker } from './SetlistSongPicker';
+import { instrumentHarmonicMap, lineupOf } from './setlist-editor.utils';
 import { filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
+import { WarnMarkerGutter } from './WarnMarkerGutter';
 
 interface SetlistEditorProps {
   readonly setlistId: string;
 }
 
-const ROW_HEIGHT_PX = 84;
-const ROW_GAP_PX = 8;
-const WARN_MARKER_OFFSET_PX = 12;
-
-// Detection floor for R1 (orphan member id in a stored lineup after a
-// missed cascade-scrub). Will become a Sentry breadcrumb once the
-// observability baseline lands; the Set keeps the warn fire-once per
-// orphan so logs stay readable. See docs/features/pragma/lineup-editor.
-const warnedOrphanMemberIds = new Set<string>();
-
-function warnIfOrphanMemberIds(
-  resolvedLineup: Readonly<Record<string, string | null>>,
-  knownMemberIds: ReadonlySet<string>,
-  songId: string,
-): void {
-  for (const orphanMemberId of findOrphanMemberIds(resolvedLineup, knownMemberIds)) {
-    if (warnedOrphanMemberIds.has(orphanMemberId)) continue;
-    warnedOrphanMemberIds.add(orphanMemberId);
-    console.warn({ surface: 'lineup-resolver', orphanMemberId, songId });
-  }
-}
+const ENERGY_SPARKLINE_HEIGHT_PX = 160;
 
 export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
@@ -82,7 +65,6 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     songAId: string;
     songBId: string;
   } | null>(null);
-  const [draggingEntryId, setDraggingEntryId] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
@@ -104,7 +86,10 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     [members],
   );
 
-  const energyValues = useMemo(() => entries.map((entry) => entry.energy), [entries]);
+  const energyValues = useMemo(
+    () => entries.map((entry) => entry.energy ?? songsById[entry.songId]?.baseEnergy ?? null),
+    [entries, songsById],
+  );
 
   const transitions = useMemo(() => {
     const out: ('safe' | 'warn')[] = [];
@@ -142,8 +127,14 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
 
   const addEntry = (songId: string): void => {
+    const song = songsById[songId];
     append.mutate(
-      { setlistId, songId, optimisticId: crypto.randomUUID() },
+      {
+        setlistId,
+        songId,
+        energy: song?.baseEnergy ?? null,
+        optimisticId: crypto.randomUUID(),
+      },
       { onError: recordError },
     );
   };
@@ -152,19 +143,8 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     removeEntry.mutate({ setlistId, entryId }, { onError: recordError });
   };
 
-  const dropOnEntry = (targetEntryId: string): void => {
-    const draggedId = draggingEntryId;
-    setDraggingEntryId(null);
-    if (draggedId === null || draggedId === targetEntryId) return;
-    const ordered = entries.map((entry) => entry.id);
-    const fromIndex = ordered.indexOf(draggedId);
-    const toIndex = ordered.indexOf(targetEntryId);
-    if (fromIndex === -1 || toIndex === -1) return;
-    const next = [...ordered];
-    const moved = next.splice(fromIndex, 1)[0];
-    if (moved === undefined) return;
-    next.splice(toIndex, 0, moved);
-    reorder.mutate({ setlistId, entryIds: next }, { onError: recordError });
+  const handleReorder = (orderedEntryIds: readonly string[]): void => {
+    reorder.mutate({ setlistId, entryIds: [...orderedEntryIds] }, { onError: recordError });
   };
 
   const handleUpdate = (entryId: string, patch: Record<string, unknown>): void => {
@@ -198,129 +178,40 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         <div className="text-[10.5px] font-mono uppercase tracking-wider text-ink-400 mb-2">
           {t('setlist.energy')}
         </div>
-        <EnergySparkline values={energyValues} height={80} />
+        <EnergySparkline values={energyValues} height={ENERGY_SPARKLINE_HEIGHT_PX} />
       </div>
       {inFilteredMode && visibleEntries.length === 0 ? (
         <p className="text-ink-500 italic text-sm py-6 text-center">{t('lineup.emptyForMember')}</p>
       ) : (
         <div className="relative">
           {!inFilteredMode ? (
-            <div
-              className="absolute -left-6 top-0 bottom-0 w-5 pointer-events-none lg:block hidden"
-              aria-hidden="true"
-            >
-              {transitions.map((kind, gapIndex) => {
-                if (kind !== 'warn') return null;
-                const leftEntry = entries[gapIndex];
-                const rightEntry = entries[gapIndex + 1];
-                if (leftEntry === undefined || rightEntry === undefined) return null;
-                const offsetPx =
-                  (gapIndex + 1) * (ROW_HEIGHT_PX + ROW_GAP_PX) - WARN_MARKER_OFFSET_PX;
-                return (
-                  <button
-                    // biome-ignore lint/suspicious/noArrayIndexKey: warnings are tied to a stable entry pair, the gap index is the natural key
-                    key={`gap-${gapIndex}`}
-                    type="button"
-                    className="pointer-events-auto absolute left-0 w-5 h-5 rounded-full bg-warn text-bg-elev font-bold text-[11px] inline-flex items-center justify-center cursor-pointer border-0 shadow-[0_2px_6px_rgba(184,132,26,0.4)] hover:opacity-90"
-                    style={{ top: offsetPx }}
-                    aria-label={t('setlist.openTransitionComment')}
-                    onClick={() =>
-                      setTransitionEditing({
-                        songAId: leftEntry.songId,
-                        songBId: rightEntry.songId,
-                      })
-                    }
-                  >
-                    <Icon name="warn" size={12} />
-                  </button>
-                );
-              })}
-            </div>
+            <WarnMarkerGutter
+              transitions={transitions}
+              entries={entries}
+              onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
+            />
           ) : null}
-          <ul className="flex flex-col gap-2">
-            {visibleEntries.map((entry, visibleIndex) => {
-              const song = songsById[entry.songId];
-              const lineupRaw = lineupOf(entry, songsById);
-              warnIfOrphanMemberIds(lineupRaw, knownMemberIds, entry.songId);
-              const fullIndex = entries.indexOf(entry);
-              const previousKind = inFilteredMode ? undefined : transitions[fullIndex - 1];
-              const prominentInstrumentId = filtered.instrumentByEntryId[entry.id];
-              const prominent = prominentMemberInstrumentFor(
-                prominentInstrumentId,
-                selectedMemberId,
-                membersById,
-                instrumentsById,
-              );
-              return (
-                <li key={entry.id} className="flex flex-col gap-1">
-                  {previousKind === 'warn' ? (
-                    <button
-                      type="button"
-                      className="lg:hidden inline-flex items-center gap-1.5 text-[11px] font-medium text-warn bg-warn-soft self-start px-2 py-1 rounded-md cursor-pointer border-0"
-                      aria-label={t('setlist.openTransitionComment')}
-                      onClick={() => {
-                        const leftEntry = entries[fullIndex - 1];
-                        if (leftEntry === undefined) return;
-                        setTransitionEditing({
-                          songAId: leftEntry.songId,
-                          songBId: entry.songId,
-                        });
-                      }}
-                    >
-                      <Icon name="warn" size={12} />
-                      {t('setlist.transitionWarning')}
-                    </button>
-                  ) : null}
-                  <SetlistEntryRow
-                    position={inFilteredMode ? visibleIndex + 1 : fullIndex + 1}
-                    entryId={entry.id}
-                    title={song?.title ?? entry.songId.slice(0, 8)}
-                    artist={song?.artist ?? ''}
-                    tonalityLabel={tonalityLabelFor(song)}
-                    meanMastery={null}
-                    keyOverride={entry.keyOverride}
-                    capo={entry.capo}
-                    energy={entry.energy}
-                    notes={entry.notes}
-                    currentSongId={entry.songId}
-                    lineup={compactLineup(lineupRaw)}
-                    resolvedLineupForEdit={lineupRaw}
-                    songDefaultLineup={song?.defaultLineup ?? {}}
-                    hasOverride={entry.lineupOverride !== null}
-                    members={lineupMembers}
-                    instruments={instruments}
-                    prominentMemberInstrument={prominent}
-                    onUpdate={handleUpdate}
-                    onRemove={handleRemove}
-                    onDragStart={(id) => setDraggingEntryId(id)}
-                    onDropOn={dropOnEntry}
-                  />
-                </li>
-              );
-            })}
-          </ul>
+          <SetlistEntriesList
+            entries={entries}
+            visibleEntries={visibleEntries}
+            songsById={songsById}
+            transitions={transitions}
+            inFilteredMode={inFilteredMode}
+            selectedMemberId={selectedMemberId}
+            filteredInstrumentByEntryId={filtered.instrumentByEntryId}
+            lineupMembers={lineupMembers}
+            instruments={instruments}
+            membersById={membersById}
+            instrumentsById={instrumentsById}
+            knownMemberIds={knownMemberIds}
+            onReorder={handleReorder}
+            onUpdate={handleUpdate}
+            onRemove={handleRemove}
+            onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
+          />
         </div>
       )}
-      <details className="bg-bg-sunk border border-line rounded-md p-3">
-        <summary className="cursor-pointer text-sm text-ink-700 font-medium">
-          {t('setlist.addSong')}
-        </summary>
-        <ul className="flex flex-col gap-1 mt-3">
-          {songs
-            .toSorted((left, right) => left.title.localeCompare(right.title))
-            .map((song) => (
-              <li key={song.id}>
-                <button
-                  type="button"
-                  onClick={() => addEntry(song.id)}
-                  className="w-full text-left bg-transparent border-0 text-[13px] text-ink-700 hover:bg-bg-elev px-2 py-1 rounded-md cursor-pointer transition-colors"
-                >
-                  + {song.title}
-                </button>
-              </li>
-            ))}
-        </ul>
-      </details>
+      <SetlistSongPicker songs={songs} onPick={addEntry} />
       {transitionEditing !== null ? (
         <TransitionCommentModal
           songAId={transitionEditing.songAId}

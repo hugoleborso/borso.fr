@@ -1,6 +1,6 @@
 /**
  * App-routing audit. The single security-critical assertion:
- * `__test/` endpoints are mounted only when PRAGMA_ALLOW_TEST_SEED='1'.
+ * `__test/` endpoints are mounted only when ALLOW_TEST_SEED='1'.
  *
  * The CDK template test (`cdk/test/stack.test.ts`) covers the deploy-time
  * side (prod stack never sets the env var); this test covers the runtime
@@ -11,7 +11,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from './app';
 
-const TEST_SEED_FLAG = 'PRAGMA_ALLOW_TEST_SEED';
+const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 
 describe('createApp — test-seed routing flag', () => {
   const originalFlag = process.env[TEST_SEED_FLAG];

@@ -3,7 +3,7 @@
  *
  * CDK synth audit. Two assertions matter most:
  *
- * 1. The Lambda's env vars include `LASTLOOP_ALLOW_TEST_SEED='1'` on
+ * 1. The Lambda's env vars include `ALLOW_TEST_SEED='1'` on
  *    preview stacks and DO NOT include it on the prod stack. The
  *    `/api/__test/seed` endpoint is mounted only when that flag is
  *    set — leaving it on in prod would expose seeding to the public.
@@ -67,12 +67,12 @@ describe('last-loop-lepin app stack', () => {
 
     const prodFunctions = prodTemplate.findResources('AWS::Lambda::Function');
     for (const fn of Object.values(prodFunctions)) {
-      expect(readEnvVars(fn)).not.toHaveProperty('LASTLOOP_ALLOW_TEST_SEED');
+      expect(readEnvVars(fn)).not.toHaveProperty('ALLOW_TEST_SEED');
     }
 
     const previewFunctions = previewTemplate.findResources('AWS::Lambda::Function');
     const flaggedFunctions = Object.values(previewFunctions).filter(
-      (fn) => 'LASTLOOP_ALLOW_TEST_SEED' in readEnvVars(fn),
+      (fn) => 'ALLOW_TEST_SEED' in readEnvVars(fn),
     );
     expect(flaggedFunctions.length).toBeGreaterThan(0);
   });

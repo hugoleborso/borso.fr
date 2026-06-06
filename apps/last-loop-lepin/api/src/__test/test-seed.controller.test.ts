@@ -2,7 +2,7 @@
  * Test-seed controller. The skill-of-the-controller is to insert known
  * fixtures so the visual-validation flow can hit deterministic states
  * without driving the whole admin UI. The security guard (only mount
- * when LASTLOOP_ALLOW_TEST_SEED='1') is asserted in `../app.test.ts`.
+ * when ALLOW_TEST_SEED='1') is asserted in `../app.test.ts`.
  */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -11,7 +11,7 @@ import { createApp } from '../app';
 import { findEditionBySlug } from '../edition/edition.repository';
 import { listRunnersForEdition } from '../runner/runner.repository';
 
-const TEST_SEED_FLAG = 'LASTLOOP_ALLOW_TEST_SEED';
+const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 
 describe('__test/test-seed.controller', () => {
   const originalFlag = process.env[TEST_SEED_FLAG];

@@ -1,151 +1,120 @@
 /**
  * Test-only seeding endpoint. Mounted by `app.ts` ONLY when
- * `PRAGMA_ALLOW_TEST_SEED === '1'`. CDK never sets that flag on the
- * prod stack (asserted in `cdk/lib/stack.test.ts`).
+ * `ALLOW_TEST_SEED === '1'` — a flag `PreviewableApp` injects on every
+ * non-prod API Lambda and never on prod, so this route is structurally
+ * unreachable in production.
  *
- * One fixture per `?fixture=` value. `basic-band` lays down a small but
- * complete world — 4 members, 3 instruments, 6 songs across the 4
- * statuses, 2 sessions (1 upcoming concert + 1 past practice), and a
- * setlist on the concert with 4 entries — enough for a reviewer to
- * exercise every screen. Calls are idempotent: the controller wipes
- * domain tables first (auth tables stay so the existing session cookie
- * keeps working), then re-inserts.
+ * `POST /api/__test/seed` wipes the domain tables and writes one
+ * coherent fixture: a handful of instruments, members with instrument
+ * rosters, songs carrying varied `baseEnergy`, and a concert session
+ * whose setlist references those songs. Setlist entries are seeded with
+ * `energy: null` on purpose so the editor exercises the baseEnergy
+ * display fallback; the energy curve still varies because each song
+ * carries its own `baseEnergy`.
  *
- * Wipe order goes children → parents because Aurora DSQL does not
- * enforce FK at write time and `TRUNCATE … CASCADE` is a test-harness
- * tool, not a Lambda one.
+ * It also bootstraps the admin password to `SEED_ADMIN_PASSWORD` if no
+ * credentials exist yet, so a freshly-deployed preview is loginable
+ * from the single seed call — the response echoes the password and
+ * whether it was created or already present. Auth lives in `app_config`
+ * (ADR-0004), which the domain wipe deliberately leaves untouched, so
+ * re-seeding never rotates an existing password.
  */
 
-import { zValidator } from '@hono/zod-validator';
-import { sql } from 'drizzle-orm';
 import { Hono } from 'hono';
-import { z } from 'zod';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
-import { type Database, getDatabase } from '../database/client';
+import { bootstrapAuth } from '../auth/auth.service';
+import { barTable } from '../bars/bars.schema';
+import type { Database } from '../database/client';
+import { getDatabase } from '../database/client';
 import { insertInstrument } from '../instruments/instruments.repository';
+import { instrumentTable } from '../instruments/instruments.schema';
+import { masteryDefaultTable, masteryOverrideTable } from '../mastery/mastery.schema';
 import { insertMember, replaceMemberInstruments } from '../members/members.repository';
-import {
-  type ConcertInsertShape,
-  insertSession,
-  type PracticeInsertShape,
-} from '../sessions/sessions.repository';
+import { memberInstrumentTable, memberTable } from '../members/members.schema';
+import { insertSession } from '../sessions/sessions.repository';
+import { sessionTable } from '../sessions/sessions.schema';
 import { insertEntry, insertSetlist } from '../setlists/setlists.repository';
-import { insertSong, type SongInsertShape, type SongStatus } from '../songs/songs.repository';
+import { setlistEntryTable, setlistTable } from '../setlists/setlists.schema';
+import { insertSong, type SongInsertShape } from '../songs/songs.repository';
+import { songTable } from '../songs/songs.schema';
+import { transitionCommentTable } from '../transitions/transitions.schema';
 
-const FIXTURE_BASIC_BAND = 'basic-band';
-const DAYS = 24 * 60 * 60 * 1000;
+const CONCERT_DAYS_FROM_NOW = 7;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const CONCERT_CAPACITY = 120;
+const SEED_ADMIN_PASSWORD = 'pragma-preview';
 
-const WIPE_ORDER_CHILDREN_FIRST: readonly string[] = [
-  'transition_comment',
-  'setlist_entry',
-  'setlist',
-  'session',
-  'mastery_override',
-  'mastery_default',
-  'bar',
-  'song',
-  'member_instrument',
-  'instrument',
-  'member',
-];
-
-const fixtureSchema = z.object({
-  fixture: z.enum([FIXTURE_BASIC_BAND]),
-});
-
-interface MemberSeed {
-  firstName: string;
-  color: string;
-  plays: ('guitar' | 'bass' | 'drums')[];
+interface SeedInstrument {
+  readonly name: string;
+  readonly isHarmonic: boolean;
 }
 
-const MEMBER_SEEDS: readonly MemberSeed[] = [
-  { firstName: 'Hugo', color: '#e85d75', plays: ['guitar'] },
-  { firstName: 'Pauline', color: '#5db0e8', plays: ['bass'] },
-  { firstName: 'Adrien', color: '#7be85d', plays: ['drums'] },
-  { firstName: 'Camille', color: '#e8c75d', plays: ['guitar', 'bass'] },
+const SEED_INSTRUMENTS: readonly SeedInstrument[] = [
+  { name: 'Guitar', isHarmonic: true },
+  { name: 'Keys', isHarmonic: true },
+  { name: 'Bass', isHarmonic: false },
+  { name: 'Drums', isHarmonic: false },
+  { name: 'Vocals', isHarmonic: false },
 ];
 
-interface SongSeed {
-  title: string;
-  artist: string;
-  status: SongStatus;
-  tonalityStart: string | null;
-  baseEnergy: number | null;
+interface SeedMember {
+  readonly firstName: string;
+  readonly color: string;
+  readonly instrumentNames: readonly string[];
 }
 
-const SONG_SEEDS: readonly SongSeed[] = [
+const SEED_MEMBERS: readonly SeedMember[] = [
+  { firstName: 'Alice', color: '#e0533a', instrumentNames: ['Guitar', 'Vocals'] },
+  { firstName: 'Bob', color: '#2f8f6b', instrumentNames: ['Bass'] },
+  { firstName: 'Carla', color: '#3a6ee0', instrumentNames: ['Keys', 'Vocals'] },
+  { firstName: 'Dan', color: '#b8841a', instrumentNames: ['Drums'] },
+];
+
+interface SeedSong {
+  readonly title: string;
+  readonly artist: string;
+  readonly status: SongInsertShape['status'];
+  readonly tonalityStart: string | null;
+  readonly baseEnergy: number;
+}
+
+const SEED_SONGS: readonly SeedSong[] = [
   {
-    title: 'Wake Me Up',
-    artist: 'Avicii',
+    title: 'Slow Burn',
+    artist: 'The Embers',
     status: 'concert_ready',
-    tonalityStart: 'Bm',
-    baseEnergy: 8,
-  },
-  { title: 'Africa', artist: 'Toto', status: 'concert_ready', tonalityStart: 'F#m', baseEnergy: 7 },
-  { title: 'Take On Me', artist: 'a-ha', status: 'rehearsed', tonalityStart: 'A', baseEnergy: 9 },
-  {
-    title: "Don't Stop Believin'",
-    artist: 'Journey',
-    status: 'rehearsed',
-    tonalityStart: 'E',
-    baseEnergy: 9,
+    tonalityStart: 'Am',
+    baseEnergy: 3,
   },
   {
-    title: 'Mr. Brightside',
-    artist: 'The Killers',
-    status: 'wip',
-    tonalityStart: 'D♭',
-    baseEnergy: 8,
+    title: 'Midnight Drive',
+    artist: 'Nova Reef',
+    status: 'concert_ready',
+    tonalityStart: 'C',
+    baseEnergy: 6,
   },
-  { title: 'Hey Ya!', artist: 'OutKast', status: 'idea', tonalityStart: 'G', baseEnergy: 7 },
+  { title: 'Lightning', artist: 'Volt', status: 'rehearsed', tonalityStart: 'E', baseEnergy: 9 },
+  {
+    title: 'Afterglow',
+    artist: 'Nova Reef',
+    status: 'concert_ready',
+    tonalityStart: 'G',
+    baseEnergy: 5,
+  },
+  { title: 'Runaway Sun', artist: 'The Embers', status: 'wip', tonalityStart: 'D', baseEnergy: 8 },
+  { title: 'Last Call', artist: 'Volt', status: 'rehearsed', tonalityStart: 'F', baseEnergy: 4 },
 ];
 
-async function wipeDomain(database: Database): Promise<void> {
-  for (const tableName of WIPE_ORDER_CHILDREN_FIRST) {
-    await database.execute(sql.raw(`DELETE FROM "${tableName}"`));
-  }
-}
-
-interface SeededInstruments {
-  guitar: string;
-  bass: string;
-  drums: string;
-}
-
-async function seedInstruments(database: Database): Promise<SeededInstruments> {
-  const guitar = await insertInstrument(database, { name: 'Guitare', isHarmonic: true });
-  const bass = await insertInstrument(database, { name: 'Basse', isHarmonic: true });
-  const drums = await insertInstrument(database, { name: 'Batterie', isHarmonic: false });
-  return { guitar: guitar.id, bass: bass.id, drums: drums.id };
-}
-
-async function seedMembers(database: Database, instruments: SeededInstruments): Promise<string[]> {
-  const memberIds: string[] = [];
-  for (const seed of MEMBER_SEEDS) {
-    const member = await insertMember(database, {
-      firstName: seed.firstName,
-      color: seed.color,
-      avatarS3Key: null,
-    });
-    const instrumentIds = seed.plays.map((slug) => instruments[slug]);
-    await replaceMemberInstruments(database, member.id, instrumentIds);
-    memberIds.push(member.id);
-  }
-  return memberIds;
-}
-
-function toSongInsert(seed: SongSeed): SongInsertShape {
+function buildSongInsert(song: SeedSong): SongInsertShape {
   return {
-    title: seed.title,
-    artist: seed.artist,
-    status: seed.status,
+    title: song.title,
+    artist: song.artist,
+    status: song.status,
     links: [],
     chart: null,
-    tonalityStart: seed.tonalityStart,
+    tonalityStart: song.tonalityStart,
     tonalityEnd: null,
     defaultLineup: {},
-    baseEnergy: seed.baseEnergy,
+    baseEnergy: song.baseEnergy,
     mbid: null,
     album: null,
     durationSeconds: null,
@@ -154,53 +123,77 @@ function toSongInsert(seed: SongSeed): SongInsertShape {
   };
 }
 
-async function seedSongs(database: Database): Promise<string[]> {
-  const ids: string[] = [];
-  for (const seed of SONG_SEEDS) {
-    const song = await insertSong(database, toSongInsert(seed));
-    ids.push(song.id);
+async function clearDomainTables(database: Database): Promise<void> {
+  await database.delete(setlistEntryTable);
+  await database.delete(setlistTable);
+  await database.delete(sessionTable);
+  await database.delete(memberInstrumentTable);
+  await database.delete(masteryOverrideTable);
+  await database.delete(masteryDefaultTable);
+  await database.delete(transitionCommentTable);
+  await database.delete(barTable);
+  await database.delete(songTable);
+  await database.delete(memberTable);
+  await database.delete(instrumentTable);
+}
+
+interface SeedSummary {
+  readonly instruments: number;
+  readonly members: number;
+  readonly songs: number;
+  readonly setlistEntries: number;
+  readonly adminPassword: string;
+  readonly adminCredentials: 'created' | 'already-set';
+}
+
+async function applyFixture(database: Database, now: Date): Promise<SeedSummary> {
+  await clearDomainTables(database);
+
+  const bootstrap = await bootstrapAuth(database, SEED_ADMIN_PASSWORD, now);
+
+  const instrumentIdByName = new Map<string, string>();
+  for (const seed of SEED_INSTRUMENTS) {
+    const row = await insertInstrument(database, seed);
+    instrumentIdByName.set(seed.name, row.id);
   }
-  return ids;
-}
 
-interface SeededSessions {
-  concertId: string;
-  practiceId: string;
-}
+  for (const seed of SEED_MEMBERS) {
+    const member = await insertMember(database, {
+      firstName: seed.firstName,
+      color: seed.color,
+      avatarS3Key: null,
+    });
+    const instrumentIds = seed.instrumentNames.flatMap((name) => {
+      const id = instrumentIdByName.get(name);
+      return id === undefined ? [] : [id];
+    });
+    await replaceMemberInstruments(database, member.id, instrumentIds);
+  }
 
-async function seedSessions(database: Database, now: Date): Promise<SeededSessions> {
-  const concertDate = new Date(now.getTime() + 14 * DAYS);
-  const practiceDate = new Date(now.getTime() - 7 * DAYS);
-  const concertSeed: ConcertInsertShape = {
+  const songIds: string[] = [];
+  for (const seed of SEED_SONGS) {
+    const row = await insertSong(database, buildSongInsert(seed));
+    songIds.push(row.id);
+  }
+
+  const concertDate = new Date(now.getTime() + CONCERT_DAYS_FROM_NOW * MS_PER_DAY);
+  const concert = await insertSession(database, {
     kind: 'concert',
     date: concertDate,
-    venue: 'Les Disquaires',
-    capacity: 80,
-    gear: 'Sono maison + retours',
+    venue: 'Le Petit Bain',
+    capacity: CONCERT_CAPACITY,
+    gear: 'Full backline provided',
     friendsCountPerMember: {},
-  };
-  const practiceSeed: PracticeInsertShape = {
-    kind: 'practice',
-    date: practiceDate,
-    preparedConcertId: null,
-  };
-  const concert = await insertSession(database, concertSeed);
-  const practice = await insertSession(database, practiceSeed);
-  return { concertId: concert.id, practiceId: practice.id };
-}
+  });
 
-async function seedSetlist(
-  database: Database,
-  sessionId: string,
-  songIds: readonly string[],
-): Promise<number> {
-  const setlist = await insertSetlist(database, sessionId);
-  const concertReadyAndRehearsed = songIds.slice(0, 4);
-  for (const [index, songId] of concertReadyAndRehearsed.entries()) {
+  const setlist = await insertSetlist(database, concert.id);
+  for (let position = 0; position < songIds.length; position += 1) {
+    const songId = songIds[position];
+    if (songId === undefined) continue;
     await insertEntry(database, {
       setlistId: setlist.id,
       songId,
-      position: index,
+      position,
       energy: null,
       lineupOverride: null,
       keyOverride: null,
@@ -208,41 +201,20 @@ async function seedSetlist(
       notes: '',
     });
   }
-  return concertReadyAndRehearsed.length;
-}
 
-async function applyBasicBand(
-  database: Database,
-  now: Date,
-): Promise<{
-  members: number;
-  instruments: number;
-  songs: number;
-  sessions: number;
-  setlistEntries: number;
-}> {
-  const instruments = await seedInstruments(database);
-  const memberIds = await seedMembers(database, instruments);
-  const songIds = await seedSongs(database);
-  const { concertId } = await seedSessions(database, now);
-  const setlistEntries = await seedSetlist(database, concertId, songIds);
   return {
-    members: memberIds.length,
-    instruments: 3,
-    songs: songIds.length,
-    sessions: 2,
-    setlistEntries,
+    instruments: SEED_INSTRUMENTS.length,
+    members: SEED_MEMBERS.length,
+    songs: SEED_SONGS.length,
+    setlistEntries: songIds.length,
+    adminPassword: SEED_ADMIN_PASSWORD,
+    adminCredentials: bootstrap.kind === 'ok' ? 'created' : 'already-set',
   };
 }
 
-const testSeedRouter = new Hono()
-  .use('*', requireSharedPasswordSession)
-  .post('/seed', zValidator('query', fixtureSchema), async (context) => {
-    const { fixture } = context.req.valid('query');
-    const database = getDatabase();
-    await wipeDomain(database);
-    const counts = await applyBasicBand(database, new Date());
-    return context.json({ fixture, ...counts });
-  });
+const testSeedRouter = new Hono().post('/seed', async (context) => {
+  const summary = await applyFixture(getDatabase(), new Date());
+  return context.json(summary);
+});
 
 export { testSeedRouter };

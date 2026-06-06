@@ -11,6 +11,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
+import { isLastPendingMutation } from './optimistic.utils';
 
 export const masteryKeys = {
   all: ['mastery'] as const,
@@ -47,6 +48,7 @@ export function useMasteryDefaults() {
 export function useSaveMasteryDefault() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: masteryKeys.all,
     mutationFn: async (variables: { memberId: string; instrumentId: string; score: number }) => {
       const response = await api.api.mastery.defaults.$put({ json: variables });
       if (!response.ok) throw new ApiError(response.status, `save ${response.status}`, null);
@@ -68,6 +70,7 @@ export function useSaveMasteryDefault() {
       }
     },
     onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: masteryKeys.all }))) return;
       void queryClient.invalidateQueries({ queryKey: masteryKeys.defaults() });
     },
   });
@@ -76,6 +79,7 @@ export function useSaveMasteryDefault() {
 export function useDeleteMasteryDefault() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: masteryKeys.all,
     mutationFn: async (variables: { memberId: string; instrumentId: string }) => {
       const response = await api.api.mastery.defaults[':memberId'][':instrumentId'].$delete({
         param: variables,
@@ -104,6 +108,7 @@ export function useDeleteMasteryDefault() {
       }
     },
     onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: masteryKeys.all }))) return;
       void queryClient.invalidateQueries({ queryKey: masteryKeys.defaults() });
     },
   });
