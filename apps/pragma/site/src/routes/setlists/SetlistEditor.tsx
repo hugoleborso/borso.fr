@@ -17,6 +17,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../components/atoms/Icon';
 import { EnergySparkline } from '../../components/molecules/EnergySparkline';
+import { MemberFilterPills } from '../../components/molecules/MemberFilterPills';
 import { ApiError } from '../../lib/api';
 import { useInstrumentsList } from '../../lib/queries/instruments';
 import { useMembersList } from '../../lib/queries/members';
@@ -31,10 +32,13 @@ import { useSongsList } from '../../lib/queries/songs';
 import { SetlistEntryRow } from './SetlistEntryRow';
 import {
   compactLineup,
+  findOrphanMemberIds,
   instrumentHarmonicMap,
   lineupOf,
+  prominentMemberInstrumentFor,
   tonalityLabelFor,
 } from './setlist-editor.utils';
+import { filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
 
 interface SetlistEditorProps {
@@ -44,6 +48,24 @@ interface SetlistEditorProps {
 const ROW_HEIGHT_PX = 84;
 const ROW_GAP_PX = 8;
 const WARN_MARKER_OFFSET_PX = 12;
+
+// Detection floor for R1 (orphan member id in a stored lineup after a
+// missed cascade-scrub). Will become a Sentry breadcrumb once the
+// observability baseline lands; the Set keeps the warn fire-once per
+// orphan so logs stay readable. See docs/features/pragma/lineup-editor.
+const warnedOrphanMemberIds = new Set<string>();
+
+function warnIfOrphanMemberIds(
+  resolvedLineup: Readonly<Record<string, string | null>>,
+  knownMemberIds: ReadonlySet<string>,
+  songId: string,
+): void {
+  for (const orphanMemberId of findOrphanMemberIds(resolvedLineup, knownMemberIds)) {
+    if (warnedOrphanMemberIds.has(orphanMemberId)) continue;
+    warnedOrphanMemberIds.add(orphanMemberId);
+    console.warn({ surface: 'lineup-resolver', orphanMemberId, songId });
+  }
+}
 
 export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
@@ -62,6 +84,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   } | null>(null);
   const [draggingEntryId, setDraggingEntryId] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
   const entries = entriesQuery.data?.entries ?? [];
   const songs = songsQuery.data?.songs ?? [];
@@ -98,6 +121,22 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     }
     return out;
   }, [entries, songsById, instrumentHarmonic]);
+
+  const filtered = useMemo(
+    () => filterEntriesForMember(entries, songsById, selectedMemberId),
+    [entries, songsById, selectedMemberId],
+  );
+  const instrumentsById = useMemo(() => {
+    const out: Record<string, (typeof instruments)[number]> = {};
+    for (const instrument of instruments) out[instrument.id] = instrument;
+    return out;
+  }, [instruments]);
+  const membersById = useMemo(() => {
+    const out: Record<string, (typeof members)[number]> = {};
+    for (const member of members) out[member.id] = member;
+    return out;
+  }, [members]);
+  const knownMemberIds = useMemo(() => new Set(members.map((member) => member.id)), [members]);
 
   const recordError = (error: Error): void =>
     setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
@@ -139,6 +178,9 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const queryError = entriesQuery.error instanceof ApiError ? entriesQuery.error.message : null;
   const displayError = localError ?? queryError;
 
+  const inFilteredMode = selectedMemberId !== null;
+  const visibleEntries = filtered.visibleEntries;
+
   return (
     <div className="flex flex-col gap-4">
       {displayError !== null ? (
@@ -146,93 +188,118 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
           {displayError}
         </p>
       ) : null}
+      <MemberFilterPills
+        members={lineupMembers}
+        selectedMemberId={selectedMemberId}
+        onChange={setSelectedMemberId}
+        className="sticky top-0 z-10 bg-bg -mx-4 sm:-mx-9 px-4 sm:px-9"
+      />
       <div className="bg-bg-elev border border-line rounded-lg p-4">
         <div className="text-[10.5px] font-mono uppercase tracking-wider text-ink-400 mb-2">
           {t('setlist.energy')}
         </div>
         <EnergySparkline values={energyValues} height={80} />
       </div>
-      <div className="relative">
-        <div
-          className="absolute -left-6 top-0 bottom-0 w-5 pointer-events-none lg:block hidden"
-          aria-hidden="true"
-        >
-          {transitions.map((kind, gapIndex) => {
-            if (kind !== 'warn') return null;
-            const leftEntry = entries[gapIndex];
-            const rightEntry = entries[gapIndex + 1];
-            if (leftEntry === undefined || rightEntry === undefined) return null;
-            const offsetPx = (gapIndex + 1) * (ROW_HEIGHT_PX + ROW_GAP_PX) - WARN_MARKER_OFFSET_PX;
-            return (
-              <button
-                // biome-ignore lint/suspicious/noArrayIndexKey: warnings are tied to a stable entry pair, the gap index is the natural key
-                key={`gap-${gapIndex}`}
-                type="button"
-                className="pointer-events-auto absolute left-0 w-5 h-5 rounded-full bg-warn text-bg-elev font-bold text-[11px] inline-flex items-center justify-center cursor-pointer border-0 shadow-[0_2px_6px_rgba(184,132,26,0.4)] hover:opacity-90"
-                style={{ top: offsetPx }}
-                aria-label={t('setlist.openTransitionComment')}
-                onClick={() =>
-                  setTransitionEditing({
-                    songAId: leftEntry.songId,
-                    songBId: rightEntry.songId,
-                  })
-                }
-              >
-                <Icon name="warn" size={12} />
-              </button>
-            );
-          })}
-        </div>
-        <ul className="flex flex-col gap-2">
-          {entries.map((entry, index) => {
-            const song = songsById[entry.songId];
-            const lineupRaw = lineupOf(entry, songsById);
-            const previousKind = transitions[index - 1];
-            return (
-              <li key={entry.id} className="flex flex-col gap-1">
-                {previousKind === 'warn' ? (
+      {inFilteredMode && visibleEntries.length === 0 ? (
+        <p className="text-ink-500 italic text-sm py-6 text-center">{t('lineup.emptyForMember')}</p>
+      ) : (
+        <div className="relative">
+          {!inFilteredMode ? (
+            <div
+              className="absolute -left-6 top-0 bottom-0 w-5 pointer-events-none lg:block hidden"
+              aria-hidden="true"
+            >
+              {transitions.map((kind, gapIndex) => {
+                if (kind !== 'warn') return null;
+                const leftEntry = entries[gapIndex];
+                const rightEntry = entries[gapIndex + 1];
+                if (leftEntry === undefined || rightEntry === undefined) return null;
+                const offsetPx =
+                  (gapIndex + 1) * (ROW_HEIGHT_PX + ROW_GAP_PX) - WARN_MARKER_OFFSET_PX;
+                return (
                   <button
+                    // biome-ignore lint/suspicious/noArrayIndexKey: warnings are tied to a stable entry pair, the gap index is the natural key
+                    key={`gap-${gapIndex}`}
                     type="button"
-                    className="lg:hidden inline-flex items-center gap-1.5 text-[11px] font-medium text-warn bg-warn-soft self-start px-2 py-1 rounded-md cursor-pointer border-0"
+                    className="pointer-events-auto absolute left-0 w-5 h-5 rounded-full bg-warn text-bg-elev font-bold text-[11px] inline-flex items-center justify-center cursor-pointer border-0 shadow-[0_2px_6px_rgba(184,132,26,0.4)] hover:opacity-90"
+                    style={{ top: offsetPx }}
                     aria-label={t('setlist.openTransitionComment')}
-                    onClick={() => {
-                      const leftEntry = entries[index - 1];
-                      if (leftEntry === undefined) return;
+                    onClick={() =>
                       setTransitionEditing({
                         songAId: leftEntry.songId,
-                        songBId: entry.songId,
-                      });
-                    }}
+                        songBId: rightEntry.songId,
+                      })
+                    }
                   >
                     <Icon name="warn" size={12} />
-                    {t('setlist.transitionWarning')}
                   </button>
-                ) : null}
-                <SetlistEntryRow
-                  position={index + 1}
-                  entryId={entry.id}
-                  title={song?.title ?? entry.songId.slice(0, 8)}
-                  artist={song?.artist ?? ''}
-                  tonalityLabel={tonalityLabelFor(song)}
-                  meanMastery={null}
-                  keyOverride={entry.keyOverride}
-                  capo={entry.capo}
-                  energy={entry.energy}
-                  notes={entry.notes}
-                  currentSongId={entry.songId}
-                  lineup={compactLineup(lineupRaw)}
-                  members={lineupMembers}
-                  instruments={instruments}
-                  onUpdate={handleUpdate}
-                  onRemove={handleRemove}
-                  onDragStart={(id) => setDraggingEntryId(id)}
-                  onDropOn={dropOnEntry}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+                );
+              })}
+            </div>
+          ) : null}
+          <ul className="flex flex-col gap-2">
+            {visibleEntries.map((entry, visibleIndex) => {
+              const song = songsById[entry.songId];
+              const lineupRaw = lineupOf(entry, songsById);
+              warnIfOrphanMemberIds(lineupRaw, knownMemberIds, entry.songId);
+              const fullIndex = entries.indexOf(entry);
+              const previousKind = inFilteredMode ? undefined : transitions[fullIndex - 1];
+              const prominentInstrumentId = filtered.instrumentByEntryId[entry.id];
+              const prominent = prominentMemberInstrumentFor(
+                prominentInstrumentId,
+                selectedMemberId,
+                membersById,
+                instrumentsById,
+              );
+              return (
+                <li key={entry.id} className="flex flex-col gap-1">
+                  {previousKind === 'warn' ? (
+                    <button
+                      type="button"
+                      className="lg:hidden inline-flex items-center gap-1.5 text-[11px] font-medium text-warn bg-warn-soft self-start px-2 py-1 rounded-md cursor-pointer border-0"
+                      aria-label={t('setlist.openTransitionComment')}
+                      onClick={() => {
+                        const leftEntry = entries[fullIndex - 1];
+                        if (leftEntry === undefined) return;
+                        setTransitionEditing({
+                          songAId: leftEntry.songId,
+                          songBId: entry.songId,
+                        });
+                      }}
+                    >
+                      <Icon name="warn" size={12} />
+                      {t('setlist.transitionWarning')}
+                    </button>
+                  ) : null}
+                  <SetlistEntryRow
+                    position={inFilteredMode ? visibleIndex + 1 : fullIndex + 1}
+                    entryId={entry.id}
+                    title={song?.title ?? entry.songId.slice(0, 8)}
+                    artist={song?.artist ?? ''}
+                    tonalityLabel={tonalityLabelFor(song)}
+                    meanMastery={null}
+                    keyOverride={entry.keyOverride}
+                    capo={entry.capo}
+                    energy={entry.energy}
+                    notes={entry.notes}
+                    currentSongId={entry.songId}
+                    lineup={compactLineup(lineupRaw)}
+                    resolvedLineupForEdit={lineupRaw}
+                    hasOverride={entry.lineupOverride !== null}
+                    members={lineupMembers}
+                    instruments={instruments}
+                    prominentMemberInstrument={prominent}
+                    onUpdate={handleUpdate}
+                    onRemove={handleRemove}
+                    onDragStart={(id) => setDraggingEntryId(id)}
+                    onDropOn={dropOnEntry}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
       <details className="bg-bg-sunk border border-line rounded-md p-3">
         <summary className="cursor-pointer text-sm text-ink-700 font-medium">
           {t('setlist.addSong')}
