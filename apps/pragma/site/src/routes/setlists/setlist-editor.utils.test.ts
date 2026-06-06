@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   compactLineup,
   findOrphanMemberIds,
+  formatSetlistOrder,
   instrumentHarmonicMap,
   lineupOf,
   prominentMemberInstrumentFor,
@@ -121,6 +122,65 @@ describe('findOrphanMemberIds', () => {
 
   it('returns an empty list when the lineup is empty', () => {
     expect(findOrphanMemberIds({}, new Set(['m1']))).toEqual([]);
+  });
+});
+
+describe('formatSetlistOrder', () => {
+  const songsById = {
+    s1: {
+      id: 's1',
+      title: 'Wagon Wheel',
+      artist: 'Old Crow',
+      defaultLineup: {},
+      tonalityStart: 'A',
+    },
+    s2: {
+      id: 's2',
+      title: 'Ramble',
+      artist: 'The Band',
+      defaultLineup: {},
+      tonalityStart: 'C',
+      tonalityEnd: 'G',
+    },
+    s3: { id: 's3', title: 'Untuned', artist: 'Nobody', defaultLineup: {}, tonalityStart: null },
+  };
+
+  it('returns an empty string for an empty setlist', () => {
+    expect(formatSetlistOrder([], songsById)).toBe('');
+  });
+
+  it('numbers each entry and appends the song tonality label', () => {
+    expect(
+      formatSetlistOrder(
+        [
+          { songId: 's1', keyOverride: null },
+          { songId: 's2', keyOverride: null },
+        ],
+        songsById,
+      ),
+    ).toBe('1. Wagon Wheel — Old Crow (A)\n2. Ramble — The Band (C → G)');
+  });
+
+  it('prefers the entry key override over the song tonality', () => {
+    expect(formatSetlistOrder([{ songId: 's1', keyOverride: 'D' }], songsById)).toBe(
+      '1. Wagon Wheel — Old Crow (D)',
+    );
+  });
+
+  it('omits the key suffix when neither override nor tonality is set', () => {
+    expect(formatSetlistOrder([{ songId: 's3', keyOverride: null }], songsById)).toBe(
+      '1. Untuned — Nobody',
+    );
+  });
+
+  it('omits the key suffix when the override is an empty string', () => {
+    expect(formatSetlistOrder([{ songId: 's3', keyOverride: '' }], songsById)).toBe(
+      '1. Untuned — Nobody',
+    );
+  });
+
+  it('renders a placeholder for a missing song id', () => {
+    expect(formatSetlistOrder([{ songId: 'gone', keyOverride: null }], songsById)).toBe('1. ?');
   });
 });
 

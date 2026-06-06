@@ -189,7 +189,9 @@
     "transitionCommentTitle": "Commentaire de transition",
     "missingSessionId": "Identifiant de session manquant.",
     "noSetlistYet": "Aucune setlist créée pour cette session.",
-    "createForSession": "Créer une setlist"
+    "createForSession": "Créer une setlist",
+    "copyOrder": "Copier l'ordre",
+    "orderCopied": "Copié !"
   },
   "scene": {
     "title": "Mode Scène",

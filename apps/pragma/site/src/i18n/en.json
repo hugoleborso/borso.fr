@@ -189,7 +189,9 @@
     "transitionCommentTitle": "Transition comment",
     "missingSessionId": "Missing session id.",
     "noSetlistYet": "No setlist created for this session yet.",
-    "createForSession": "Create a setlist"
+    "createForSession": "Create a setlist",
+    "copyOrder": "Copy order",
+    "orderCopied": "Copied!"
   },
   "scene": {
     "title": "Scene Mode",
