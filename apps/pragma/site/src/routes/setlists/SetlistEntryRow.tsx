@@ -8,8 +8,8 @@
  *  - song title (font-display italic) + submeta (artist · tonality ·
  *    mastery) + member-chip lineup,
  *  - energy slider (1-10) + numeric tag,
- *  - actions menu (delete button + a "more" toggle that reveals an
- *    inline editor for keyOverride / capo / notes).
+ *  - actions menu (Lineup button + delete + a "more" toggle that
+ *    reveals an inline editor for keyOverride / capo / notes).
  *
  * Each row owns a small `useForm` instance — the parent
  * (`SetlistEditor`) doesn't centralise per-row state. Field changes
@@ -21,17 +21,30 @@
  * (optional transition warning + card) is what reorders. While the row
  * is the one being dragged it dims into a placeholder so the operator
  * can read the gap opening between the other cards.
+ *
+ * The `Lineup` button opens the `<LineupEditor surface='setlist-entry'>`
+ * modal; saving the modal calls `onUpdate(entryId, { lineupOverride })`.
+ * When the entry carries a non-null override, a small `lineup.override`
+ * badge sits above the title. In single-member filter mode, the parent
+ * passes a `prominentMemberInstrument` chip that hoists the filtered
+ * member's instrument above the title.
  */
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { cn } from '../../components/atoms/cn.utils';
 import { Icon } from '../../components/atoms/Icon';
+import {
+  LineupEditor,
+  type LineupEditorInstrument,
+  type LineupRecord,
+} from '../../components/molecules/LineupEditor';
+import { MemberChip } from '../../components/molecules/MemberChip';
 import { type LineupMember, MemberLineup } from '../../components/molecules/MemberLineup';
 
 const ENERGY_MIN = 1;
@@ -51,6 +64,12 @@ const setlistEntryFormSchema = z.object({
 
 type SetlistEntryFormValues = z.infer<typeof setlistEntryFormSchema>;
 
+export interface ProminentMemberInstrument {
+  readonly memberName: string;
+  readonly memberColor: string;
+  readonly instrumentName: string;
+}
+
 export interface SetlistEntryRowProps {
   readonly position: number;
   readonly entryId: string;
@@ -65,8 +84,12 @@ export interface SetlistEntryRowProps {
   readonly notes: string;
   readonly currentSongId: string;
   readonly lineup: Readonly<Record<string, string>>;
+  readonly resolvedLineupForEdit: LineupRecord;
+  readonly songDefaultLineup: LineupRecord;
+  readonly hasOverride: boolean;
   readonly members: readonly LineupMember[];
-  readonly instruments: readonly { id: string; name: string }[];
+  readonly instruments: readonly LineupEditorInstrument[];
+  readonly prominentMemberInstrument: ProminentMemberInstrument | null;
   readonly showTransitionWarningBefore: boolean;
   readonly onUpdate: (entryId: string, patch: Record<string, unknown>) => void;
   readonly onRemove: (entryId: string) => void;
@@ -88,9 +111,15 @@ function masteryColor(score: number | null): string {
 export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
   const [moreOpen, setMoreOpen] = useState<boolean>(false);
+  const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: props.entryId,
   });
+  const lineupEditorMembers = useMemo(
+    () =>
+      props.members.map((member) => ({ id: member.id, name: member.name, color: member.color })),
+    [props.members],
+  );
   const defaultValues: SetlistEntryFormValues = {
     keyOverride: props.keyOverride ?? '',
     capo: props.capo === null ? '' : String(props.capo),
@@ -102,6 +131,9 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     validators: { onChange: setlistEntryFormSchema },
     onSubmit: () => {},
   });
+  const handleSaveLineup = (lineup: LineupRecord | null, wasReset: boolean): void => {
+    props.onUpdate(props.entryId, { lineupOverride: wasReset ? null : lineup });
+  };
   return (
     <li
       ref={setNodeRef}
@@ -133,6 +165,25 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           <Icon name="drag" size={16} />
         </button>
         <div className="min-w-0">
+          {props.prominentMemberInstrument !== null ? (
+            <div className="flex items-center gap-2 mb-1">
+              <MemberChip
+                memberName={props.prominentMemberInstrument.memberName}
+                memberColor={props.prominentMemberInstrument.memberColor}
+                size="sm"
+              />
+              <span className="text-xs font-mono uppercase tracking-wider text-ink-700 bg-bg-sunk px-2 py-0.5 rounded">
+                {props.prominentMemberInstrument.instrumentName}
+              </span>
+            </div>
+          ) : null}
+          {props.hasOverride ? (
+            <div className="mb-1">
+              <span className="inline-block whitespace-nowrap text-[10px] uppercase tracking-wider text-accent bg-accent-soft px-1.5 py-0.5 rounded font-medium">
+                {t('lineup.override')}
+              </span>
+            </div>
+          ) : null}
           <div className="font-display italic text-[20px] leading-tight text-ink-900 truncate">
             {props.title}
           </div>
@@ -263,6 +314,14 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         <div className="flex flex-col gap-1">
           <button
             type="button"
+            onClick={() => setLineupEditorOpen(true)}
+            aria-label={t('lineup.edit')}
+            className="px-2 h-7 inline-flex items-center justify-center text-[11px] text-ink-500 hover:text-ink-900 cursor-pointer bg-transparent border border-line rounded-md"
+          >
+            {t('lineup.edit')}
+          </button>
+          <button
+            type="button"
             onClick={() => setMoreOpen((current) => !current)}
             aria-label={t('common.edit')}
             aria-expanded={moreOpen}
@@ -280,6 +339,16 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           </button>
         </div>
       </div>
+      <LineupEditor
+        open={lineupEditorOpen}
+        surface="setlist-entry"
+        members={lineupEditorMembers}
+        instruments={props.instruments}
+        currentLineup={props.resolvedLineupForEdit}
+        defaultLineup={props.songDefaultLineup}
+        onSave={handleSaveLineup}
+        onClose={() => setLineupEditorOpen(false)}
+      />
     </li>
   );
 }

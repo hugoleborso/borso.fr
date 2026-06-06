@@ -62,3 +62,52 @@ export function compactLineup(
   }
   return result;
 }
+
+export interface ProminentMemberInstrumentResolution {
+  readonly memberName: string;
+  readonly memberColor: string;
+  readonly instrumentName: string;
+}
+
+interface NameableMember {
+  readonly firstName: string;
+  readonly color: string;
+}
+
+interface NameableInstrument {
+  readonly name: string;
+}
+
+/**
+ * Returns member ids that appear in a resolved lineup but are not in
+ * the supplied set of known member ids — the symptom of a missed
+ * cascade-scrub (R1 in the lineup-editor plan). Pure so the caller
+ * owns when and how to surface the warning.
+ */
+export function findOrphanMemberIds(
+  lineup: Readonly<Record<string, string | null>>,
+  knownMemberIds: ReadonlySet<string>,
+): string[] {
+  const orphans: string[] = [];
+  for (const memberId of Object.keys(lineup)) {
+    if (!knownMemberIds.has(memberId)) orphans.push(memberId);
+  }
+  return orphans;
+}
+
+export function prominentMemberInstrumentFor(
+  instrumentId: string | undefined,
+  selectedMemberId: string | null,
+  membersById: Readonly<Record<string, NameableMember>>,
+  instrumentsById: Readonly<Record<string, NameableInstrument>>,
+): ProminentMemberInstrumentResolution | null {
+  if (instrumentId === undefined || selectedMemberId === null) return null;
+  const member = membersById[selectedMemberId];
+  const instrument = instrumentsById[instrumentId];
+  if (member === undefined || instrument === undefined) return null;
+  return {
+    memberName: member.firstName,
+    memberColor: member.color,
+    instrumentName: instrument.name,
+  };
+}

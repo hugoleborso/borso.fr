@@ -224,5 +224,23 @@
   },
   "fileDrop": {
     "remove": "Retirer"
+  },
+  "lineup": {
+    "edit": "Lineup",
+    "editDefault": "Modifier le lineup par défaut",
+    "modal": {
+      "title": {
+        "song": "Lineup par défaut",
+        "setlistEntry": "Lineup pour ce morceau"
+      }
+    },
+    "notPlaying": "— ne joue pas —",
+    "resetToDefault": "Revenir au défaut du morceau",
+    "override": "Override",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "allMembers": "Tous les membres",
+    "emptyForMember": "Rien à jouer ce soir.",
+    "filterByMember": "Filtrer par membre"
   }
 }

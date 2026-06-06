@@ -224,5 +224,23 @@
   },
   "fileDrop": {
     "remove": "Remove"
+  },
+  "lineup": {
+    "edit": "Lineup",
+    "editDefault": "Edit default lineup",
+    "modal": {
+      "title": {
+        "song": "Default lineup",
+        "setlistEntry": "Lineup for this entry"
+      }
+    },
+    "notPlaying": "— not playing —",
+    "resetToDefault": "Reset to song default",
+    "override": "Override",
+    "save": "Save",
+    "cancel": "Cancel",
+    "allMembers": "All members",
+    "emptyForMember": "Nothing to play tonight.",
+    "filterByMember": "Filter by member"
   }
 }

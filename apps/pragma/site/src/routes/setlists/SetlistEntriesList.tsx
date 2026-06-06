@@ -1,0 +1,186 @@
+/**
+ * dnd-kit sortable list of setlist entries, plus the drag overlay
+ * preview. Lives in its own file so `SetlistEditor.tsx` stays under
+ * the `noExcessiveLinesPerFile` cap. The parent owns the data,
+ * mutations, and the modal state — this component composes the
+ * derived row props (resolved lineup, prominent member chip in
+ * single-member mode, override badge, transition-warning hint) and
+ * emits intent through the supplied callbacks.
+ */
+
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import type { JSX } from 'react';
+import { useState } from 'react';
+import type { LineupEditorInstrument } from '../../components/molecules/LineupEditor';
+import type { LineupMember } from '../../components/molecules/MemberLineup';
+import { warnIfOrphanMemberIds } from './orphan-member-warn';
+import { SetlistEntryDragPreview, SetlistEntryRow } from './SetlistEntryRow';
+import {
+  compactLineup,
+  lineupOf,
+  prominentMemberInstrumentFor,
+  type SetlistEditorEntry,
+  type SetlistEditorSong,
+  tonalityLabelFor,
+} from './setlist-editor.utils';
+
+const DRAG_ACTIVATION_DISTANCE_PX = 6;
+const DRAG_TOUCH_DELAY_MS = 200;
+const DRAG_TOUCH_TOLERANCE_PX = 8;
+
+interface ListEntry extends SetlistEditorEntry {
+  readonly id: string;
+  readonly keyOverride: string | null;
+  readonly capo: number | null;
+  readonly energy: number | null;
+  readonly notes: string;
+}
+
+export interface SetlistEntriesListProps {
+  readonly entries: readonly ListEntry[];
+  readonly visibleEntries: readonly ListEntry[];
+  readonly songsById: Readonly<Record<string, SetlistEditorSong & { baseEnergy: number | null }>>;
+  readonly transitions: readonly ('safe' | 'warn')[];
+  readonly inFilteredMode: boolean;
+  readonly selectedMemberId: string | null;
+  readonly filteredInstrumentByEntryId: Readonly<Record<string, string | undefined>>;
+  readonly lineupMembers: readonly LineupMember[];
+  readonly instruments: readonly LineupEditorInstrument[];
+  readonly membersById: Readonly<Record<string, { firstName: string; color: string }>>;
+  readonly instrumentsById: Readonly<Record<string, { name: string }>>;
+  readonly knownMemberIds: ReadonlySet<string>;
+  readonly onReorder: (orderedEntryIds: readonly string[]) => void;
+  readonly onUpdate: (entryId: string, patch: Record<string, unknown>) => void;
+  readonly onRemove: (entryId: string) => void;
+  readonly onOpenTransition: (leftSongId: string, rightSongId: string) => void;
+}
+
+export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element {
+  const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE_PX },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: DRAG_TOUCH_DELAY_MS, tolerance: DRAG_TOUCH_TOLERANCE_PX },
+    }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent): void => {
+    setActiveEntryId(null);
+    const { active, over } = event;
+    if (over === null || active.id === over.id) return;
+    const ordered = props.entries.map((entry) => entry.id);
+    const fromIndex = ordered.indexOf(String(active.id));
+    const toIndex = ordered.indexOf(String(over.id));
+    if (fromIndex === -1 || toIndex === -1) return;
+    const next = [...ordered];
+    const [moved] = next.splice(fromIndex, 1);
+    if (moved === undefined) return;
+    next.splice(toIndex, 0, moved);
+    props.onReorder(next);
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={(event: DragStartEvent) => setActiveEntryId(String(event.active.id))}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveEntryId(null)}
+    >
+      <SortableContext
+        items={props.visibleEntries.map((entry) => entry.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <ul className="flex flex-col gap-2">
+          {props.visibleEntries.map((entry, visibleIndex) => {
+            const song = props.songsById[entry.songId];
+            const lineupRaw = lineupOf(entry, props.songsById);
+            warnIfOrphanMemberIds(lineupRaw, props.knownMemberIds, entry.songId);
+            const fullIndex = props.entries.indexOf(entry);
+            const previousKind = props.inFilteredMode
+              ? undefined
+              : props.transitions[fullIndex - 1];
+            const prominent = prominentMemberInstrumentFor(
+              props.filteredInstrumentByEntryId[entry.id],
+              props.selectedMemberId,
+              props.membersById,
+              props.instrumentsById,
+            );
+            return (
+              <SetlistEntryRow
+                key={entry.id}
+                position={props.inFilteredMode ? visibleIndex + 1 : fullIndex + 1}
+                entryId={entry.id}
+                title={song?.title ?? entry.songId.slice(0, 8)}
+                artist={song?.artist ?? ''}
+                tonalityLabel={tonalityLabelFor(song)}
+                meanMastery={null}
+                keyOverride={entry.keyOverride}
+                capo={entry.capo}
+                energy={entry.energy}
+                baseEnergy={song?.baseEnergy ?? null}
+                notes={entry.notes}
+                currentSongId={entry.songId}
+                lineup={compactLineup(lineupRaw)}
+                resolvedLineupForEdit={lineupRaw}
+                songDefaultLineup={song?.defaultLineup ?? {}}
+                hasOverride={entry.lineupOverride !== null}
+                members={props.lineupMembers}
+                instruments={props.instruments}
+                prominentMemberInstrument={prominent}
+                showTransitionWarningBefore={previousKind === 'warn'}
+                onUpdate={props.onUpdate}
+                onRemove={props.onRemove}
+                onOpenTransitionBefore={() => {
+                  const leftEntry = props.entries[fullIndex - 1];
+                  if (leftEntry === undefined) return;
+                  props.onOpenTransition(leftEntry.songId, entry.songId);
+                }}
+              />
+            );
+          })}
+        </ul>
+      </SortableContext>
+      <DragOverlay dropAnimation={null}>
+        {activeEntryId !== null ? renderDragPreview(props, activeEntryId) : null}
+      </DragOverlay>
+    </DndContext>
+  );
+}
+
+function renderDragPreview(
+  props: SetlistEntriesListProps,
+  activeEntryId: string,
+): JSX.Element | null {
+  const activeIndex = props.entries.findIndex((entry) => entry.id === activeEntryId);
+  if (activeIndex === -1) return null;
+  const activeEntry = props.entries[activeIndex];
+  if (activeEntry === undefined) return null;
+  const activeSong = props.songsById[activeEntry.songId];
+  return (
+    <SetlistEntryDragPreview
+      position={activeIndex + 1}
+      title={activeSong?.title ?? activeEntry.songId.slice(0, 8)}
+      artist={activeSong?.artist ?? ''}
+    />
+  );
+}

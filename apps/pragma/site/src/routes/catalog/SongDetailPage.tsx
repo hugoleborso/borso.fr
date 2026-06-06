@@ -14,13 +14,14 @@
  */
 
 import type { JSX } from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { Icon } from '../../components/atoms/Icon';
 import { ChartKindIcon } from '../../components/molecules/ChartKindIcon';
+import { LineupEditor, type LineupRecord } from '../../components/molecules/LineupEditor';
 import { MemberChip } from '../../components/molecules/MemberChip';
 import { StatusChip } from '../../components/molecules/StatusChip';
 import { UploadedChartPreview } from '../../components/molecules/UploadedChartPreview';
@@ -30,7 +31,7 @@ import { resolveEmbed } from '../../lib/embed.utils';
 import { useInstrumentsList } from '../../lib/queries/instruments';
 import { useMasteryDefaults } from '../../lib/queries/mastery';
 import { useMembersList } from '../../lib/queries/members';
-import { useSong } from '../../lib/queries/songs';
+import { useSong, useUpdateSong } from '../../lib/queries/songs';
 import { extractChartKind } from './chart-kind.utils';
 
 const MASTERY_BAR_COUNT = 10;
@@ -49,6 +50,8 @@ export function SongDetailPage(): JSX.Element {
   const membersQuery = useMembersList();
   const instrumentsQuery = useInstrumentsList();
   const masteryQuery = useMasteryDefaults();
+  const updateSong = useUpdateSong();
+  const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
 
   const song = songQuery.data?.song ?? null;
   const members = membersQuery.data?.members ?? [];
@@ -73,6 +76,20 @@ export function SongDetailPage(): JSX.Element {
     }
     return lookup;
   }, [masteryDefaults]);
+
+  const lineupEditorMembers = useMemo(
+    () => members.map((member) => ({ id: member.id, name: member.firstName, color: member.color })),
+    [members],
+  );
+  const lineupEditorInstruments = useMemo(
+    () => instruments.map((instrument) => ({ id: instrument.id, name: instrument.name })),
+    [instruments],
+  );
+
+  const handleSaveSongLineup = (lineup: LineupRecord | null): void => {
+    if (song === null) return;
+    updateSong.mutate({ id: song.id, defaultLineup: lineup ?? {} });
+  };
 
   if (loading) {
     return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
@@ -231,7 +248,18 @@ export function SongDetailPage(): JSX.Element {
 
         <aside className="flex flex-col gap-4">
           <Card>
-            <div className={`${labelClass} mb-2.5`}>{t('catalog.defaultLineup')}</div>
+            <div className={`${labelClass} mb-2.5 flex items-center justify-between gap-2`}>
+              <span>{t('catalog.defaultLineup')}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setLineupEditorOpen(true)}
+              >
+                <Icon name="edit" size={12} />
+                {t('lineup.editDefault')}
+              </Button>
+            </div>
             <div className="flex flex-col gap-1.5">
               {Object.entries(song.defaultLineup).length === 0 ? (
                 <span className="text-xs text-ink-400 italic">—</span>
@@ -306,6 +334,15 @@ export function SongDetailPage(): JSX.Element {
           ) : null}
         </aside>
       </div>
+      <LineupEditor
+        open={lineupEditorOpen}
+        surface="song"
+        members={lineupEditorMembers}
+        instruments={lineupEditorInstruments}
+        currentLineup={song.defaultLineup}
+        onSave={(lineup) => handleSaveSongLineup(lineup)}
+        onClose={() => setLineupEditorOpen(false)}
+      />
     </section>
   );
 }

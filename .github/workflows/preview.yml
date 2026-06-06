@@ -137,6 +137,35 @@ jobs:
       - name: Preflight recovery
         run: ./scripts/preflight-preview-recovery.sh "${{ matrix.app }}" "$PR_NUMBER"
       - run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
+      # Auto-seed the preview so it lands loginable + populated. The
+      # `__test/seed` endpoint is mounted by PreviewableApp on every
+      # non-prod API Lambda (see infra/cdk/src/constructs/previewable-app.ts;
+      # commit a232c58); it wipes domain tables and writes a coherent
+      # fixture + bootstraps the admin password on first call. Apps
+      # without /api/__test (front-end-only sites) short-circuit at the
+      # DNS layer and we silently skip. Prod never sees this — the flag
+      # is structurally absent there, asserted by infra unit tests.
+      - name: Auto-seed preview (non-prod fixture)
+        shell: bash
+        env:
+          SEED_URL: ${{ env.VITE_API_BASE }}/api/__test/seed
+        run: |
+          set -uo pipefail
+          status=$(curl -sS --max-time 30 -o /tmp/seed-response.txt -w "%{http_code}" -X POST "$SEED_URL" 2>/dev/null || echo "000")
+          case "$status" in
+            200|201)
+              echo "[seed] $SEED_URL -> $status :: $(cat /tmp/seed-response.txt)"
+              ;;
+            404)
+              echo "[seed] $SEED_URL -> 404 (no test-seed endpoint mounted; skipping)"
+              ;;
+            000)
+              echo "[seed] $SEED_URL unreachable (front-end-only app or DNS not yet propagated; skipping)"
+              ;;
+            *)
+              echo "::warning::[seed] $SEED_URL -> $status (preview deployed but seed failed): $(cat /tmp/seed-response.txt 2>/dev/null || echo '<no response body>')"
+              ;;
+          esac
       - id: meta
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
