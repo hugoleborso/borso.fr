@@ -102,14 +102,6 @@ Skim the indexes before starting non-trivial CDK / CloudFront / S3 / GitHub Acti
 
 When a PR uncovers a new trap, run the [`/dantotsu`](.claude/skills/dantotsu/SKILL.md) skill — it walks the seven Dantotsu steps and produces an entry under `docs/dantotsus/` with the eradication shipped in code. When you face a non-trivial architectural trade-off, run [`/adr`](./.claude/skills/adr/SKILL.md) *before* picking — it forces you to define criteria before options, name alternatives, and acknowledge two negative consequences of the chosen path. The Self-improvement loop rule below pulls this together.
 
-## Feature pipeline — two substrates
-
-The orchestrator pipeline (`spec → adrs → plan → implement → validate → ship`) runs on **two complementary substrates** per [ADR-0005](./docs/adr/0005-dynamic-workflows-for-orchestration.md):
-
-- **Chat-bound Skills** own the human stages — `/specification` for `spec`, `/adr` (piloted mode) for `adrs`. Both need `AskUserQuestion` and ratification; Dynamic Workflows can't pause for human input, so these stay in chat.
-- **Dynamic Workflow** at `.claude/workflows/feature-pipeline.js` owns the deterministic stages — `plan → implement → validate → ship`. Launched via `/feature-pipeline <spec-path>`; the workflow invokes `/technical-conception`, `/implementation`, `/technical-validation`, `/visual-validation`, `/open-pr` as subagents (it does not reimplement them — the skill standards are the durable contract). See [`.claude/commands/feature-pipeline.md`](./.claude/commands/feature-pipeline.md) for the stage-by-stage contract and [`docs/knowledge/dynamic-workflow-feature-pipeline.md`](./docs/knowledge/dynamic-workflow-feature-pipeline.md) for the operator runbook.
-- **Exit-and-resume** is the mid-workflow ADR-trigger handoff: if a workflow round surfaces an ADR trigger (new third-party dep, new secret, attribution-in-prod-UI, schema column driven by an external service, or scope beyond the ratified spec), the workflow exits with `outcome: needs-human-adr-ratification`; the operator runs `/adr` in chat, commits the ADR, then re-launches `/feature-pipeline` — the script reads `state.json` and resumes where it stopped.
-
 ## Self-improvement loop
 
 **After every PR you ship merges or closes, open a follow-up PR with the lessons from that PR captured into your own config** — this file (CLAUDE.md), per-app rules, hooks, biome overrides, knip ignores, skills, whatever fits the lesson. Even small ones: a new gotcha, a clarified convention, a removed footgun. The loop is the system that keeps an AI-driven repo improving instead of regressing.
