@@ -78,6 +78,33 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
     database: {
       migrationsPath: props.migrationsPath,
       cluster: props.cluster,
+      // Neon-branch-style clone: every non-prod schema starts as a copy
+      // of prod so the admin password (seeded once in prod via ADR-0004's
+      // app_config row) carries over, members + songs + sessions + setlists
+      // are realistic for debug, and the operator doesn't have to re-seed
+      // each preview by hand. Skipped automatically by the construct for
+      // prod (source === target) and for the very first app deploy
+      // (source doesn't exist yet — falls back to migrate-from-empty).
+      // - `auth_attempt` blocklisted so the preview starts with a clean
+      //   rate-limit window; `app_config` is intentionally NOT in the
+      //   blocklist (we WANT prod's password to come over).
+      // - `member.avatar_s3_key` + `song.chart` are nullified because
+      //   they reference prod's `pragma-uploads` bucket; preview's
+      //   bucket is `pragma-preview-uploads-<pr>` and the keys don't
+      //   exist there — without nullify the preview's chord-chart PDFs
+      //   + avatars would 403.
+      ...(props.stage !== 'prod'
+        ? {
+            cloneFromSchema: {
+              sourceSchemaName: 'prod',
+              tableBlocklist: ['auth_attempt'],
+              columnsToNullify: {
+                member: ['avatar_s3_key'],
+                song: ['chart'],
+              },
+            },
+          }
+        : {}),
     },
   });
 
