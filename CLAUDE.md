@@ -118,12 +118,12 @@ If a PR ships zero lessons, that's fine — open the follow-up PR with a note sa
 ## Deployments
 
 - **Preview deploys are automatic.** A preview stack is created/updated on every PR push, and torn down on PR close, by the GitHub Actions workflow.
-- **Prod deploys run from CI on push to `main`, gated by manual approval of the `prod` GitHub environment.** The workflow `.github/workflows/deploy.yml` does the work; Claude never runs `pnpm --filter ... run deploy` locally.
+- **Prod app deploys run from CI on push to `main` automatically — no manual approval.** Since only the human can merge to `main` (Claude cannot), the merge *is* the gate; the `prod` GitHub environment is kept solely to scope the OIDC subject `ProdDeployRole` trusts and carries no reviewer rule. **`infra/shared` changes are the exception:** they deploy through the `prod-shared` environment, which still requires a reviewer. The workflow `.github/workflows/deploy.yml` does the work; Claude never runs `pnpm --filter ... run deploy` locally.
 - **On every merge webhook (`Outcome: merged`), Claude surfaces TWO paired follow-ups in the same response — not one, not optional:**
-  1. *Approve the pending prod deploy* in GitHub Actions (the deploy sits in the queue until approved; a merged PR touching infra or app code blocks behind the approval).
+  1. *Approve the pending shared-infra deploy* in GitHub Actions — **only when the merged diff touched `infra/shared/**`** (that deploy waits in the `prod-shared` queue until approved). For app and `infra/cdk` changes, prod deploys automatically, so this step is a no-op — say so explicitly.
   2. *Propose `/after-task-dantotsus`* to capture lessons in a kaizen PR (per *Self-improvement loop* below).
 
-  The asymmetry where one follow-up fires but the other relies on memory is the failure mode this rule exists to prevent. If either step is genuinely a no-op (no infra/app changes for the deploy step; a trivial PR with no lessons for the kaizen step), say so explicitly in the same response — silence is not equivalent to *"no action needed"*. See [`docs/dantotsus/post-merge-deploy-and-kaizen-reminder.md`](./docs/dantotsus/post-merge-deploy-and-kaizen-reminder.md).
+  The asymmetry where one follow-up fires but the other relies on memory is the failure mode this rule exists to prevent. If either step is genuinely a no-op (no `infra/shared` changes for the deploy step; a trivial PR with no lessons for the kaizen step), say so explicitly in the same response — silence is not equivalent to *"no action needed"*. See [`docs/dantotsus/post-merge-deploy-and-kaizen-reminder.md`](./docs/dantotsus/post-merge-deploy-and-kaizen-reminder.md).
 - **Migration cutovers (alias takeovers, bucket renames, CDK construct rewrites) are higher-risk prod deploys.** They additionally require the operator to walk the migration runbook for the affected resource. CloudFront alias takeovers are gated by `scripts/preflight-cloudfront-aliases.sh`; see [`docs/knowledge/cloudfront-cname-uniqueness.md`](./docs/knowledge/cloudfront-cname-uniqueness.md).
 
 ## Don'ts
@@ -132,4 +132,4 @@ If a PR ships zero lessons, that's fine — open the follow-up PR with a note sa
 - Don't `import`/`export` in `infra/cdk/src/internal/cf-host-routing-function.code.js` — it's CloudFront Function source, read at synth time as a string and shipped to the edge runtime.
 - Don't add an app without updating `.github/path-filters.yml` and the commitlint scope-enum. (Docs-only slugs like `meta` don't need `.github/path-filters.yml` — they aren't workspaces.)
 - Don't `--no-verify`. Ever. Fix the hook failure instead.
-- Don't forget the post-merge reminder: when a PR touching infra or app code merges, ping the user to approve the pending deploy in GitHub Actions — see *Deployments* above.
+- Don't forget the post-merge reminder: when a PR touching `infra/shared/**` merges, ping the user to approve the pending `prod-shared` deploy in GitHub Actions — see *Deployments* above. App and `infra/cdk` deploys now run automatically (no approval).

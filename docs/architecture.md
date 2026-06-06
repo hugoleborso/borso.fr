@@ -68,7 +68,7 @@ Cost alarms fire at $5 / $20 / $50 monthly thresholds (80% of each); USD because
 
 ## Where this differs from a typical AWS setup
 
-- **No multi-account.** One account; environments are gated by GitHub Environment reviewers, not separate AWS accounts.
+- **No multi-account.** One account; isolation comes from per-stage stacks and scoped deploy roles, not separate AWS accounts. The merge to `main` is the prod gate (only Hugo can merge); the `prod-shared` environment additionally keeps a GitHub reviewer rule for shared-infra changes.
 - **DSQL not RDS.** Aurora DSQL is Postgres-wire-compatible, scales to zero, has a usable free tier. Trade-off: no FKs, optimistic concurrency, retryable transactions.
 - **Single-Lambda-per-API.** Each `LambdaApi` is one Lambda doing its own routing (Hono-style). Simpler ops than fan-out HTTP API → many Lambdas.
 - **Preview frontends share one bucket+CDN.** Per-PR CloudFront distributions would be expensive; instead the shared `*.preview.borso.fr` distribution host-routes by Host header to S3 prefixes via a CloudFront Function.

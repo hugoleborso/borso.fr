@@ -144,8 +144,9 @@ are computed post-hoc.
 7. **ship.** All verdicts PASS. `git add -A docs/features/<app>/<slug>/runs/`
    (keep aborted runs in history per decision Q-RUN-COMMIT), then commit
    the implementation diff with a `feat(<app>): <feature title>` message,
-   push, and remind Hugo to approve the pending prod deploy in GitHub
-   Actions.
+   and push. Prod app deploys run automatically on merge — only remind Hugo
+   to approve a pending deploy if the diff touched `infra/shared/**` (the
+   `prod-shared` environment still requires a reviewer).
 
 ### Sub-agent contract
 
@@ -225,8 +226,9 @@ escalation message.
    push.
 5. **Append `run_completed`** with the final stage, the ADR count, the
    total retries.
-6. **Tell Hugo** to approve the pending prod deploy in GitHub Actions
-   (CLAUDE.md *Deployments* rule).
+6. **If the diff touched `infra/shared/**`,** tell Hugo to approve the
+   pending `prod-shared` deploy in GitHub Actions (CLAUDE.md *Deployments*
+   rule). Prod app deploys run automatically — no reminder needed.
 
 ## Failure modes to avoid
 
