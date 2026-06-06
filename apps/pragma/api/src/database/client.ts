@@ -17,6 +17,14 @@ const DSQL_DATABASE = 'postgres';
 type DrizzleClient = ReturnType<typeof drizzle<typeof schema>>;
 export type Database = DrizzleClient;
 
+/**
+ * Either the long-lived database client or a transaction handle —
+ * both expose the same Drizzle query API, so repositories that need
+ * to operate inside or outside a transaction accept this widened
+ * type instead of `Database`.
+ */
+export type DatabaseExecutor = Parameters<Parameters<Database['transaction']>[0]>[0] | Database;
+
 interface DatabaseConfig {
   readonly endpoint: string;
   readonly schemaName: string;

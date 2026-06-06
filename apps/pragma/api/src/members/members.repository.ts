@@ -5,9 +5,12 @@
  * instruments".
  */
 
-import { eq, inArray } from 'drizzle-orm';
-import type { Database } from '../database/client';
+import { eq, inArray, isNotNull } from 'drizzle-orm';
+import type { Database, DatabaseExecutor } from '../database/client';
 import { instrumentTable } from '../instruments/instruments.schema';
+import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.schema';
+import { defaultLineupSchema, songTable } from '../songs/songs.schema';
+import { scrubMemberFromLineup } from './lineup-scrub.core';
 import { memberInstrumentTable, memberTable } from './members.schema';
 
 export interface MemberRow {
@@ -72,12 +75,53 @@ export async function updateMember(
 }
 
 export async function deleteMemberWithLinks(database: Database, id: string): Promise<boolean> {
-  await database.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, id));
-  const deleted = await database
-    .delete(memberTable)
-    .where(eq(memberTable.id, id))
-    .returning({ id: memberTable.id });
-  return deleted.length > 0;
+  return await database.transaction(async (tx) => {
+    await scrubMemberFromSongDefaults(tx, id);
+    await scrubMemberFromSetlistOverrides(tx, id);
+    await tx.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, id));
+    const deleted = await tx
+      .delete(memberTable)
+      .where(eq(memberTable.id, id))
+      .returning({ id: memberTable.id });
+    return deleted.length > 0;
+  });
+}
+
+async function scrubMemberFromSongDefaults(tx: DatabaseExecutor, memberId: string): Promise<void> {
+  const songs = await tx
+    .select({ id: songTable.id, defaultLineup: songTable.defaultLineup })
+    .from(songTable);
+  for (const songRow of songs) {
+    const lineupRaw: unknown = JSON.parse(songRow.defaultLineup);
+    const lineup = defaultLineupSchema.parse(lineupRaw);
+    if (!(memberId in lineup)) continue;
+    const scrubbed = scrubMemberFromLineup(lineup, memberId);
+    await tx
+      .update(songTable)
+      .set({ defaultLineup: JSON.stringify(scrubbed) })
+      .where(eq(songTable.id, songRow.id));
+  }
+}
+
+async function scrubMemberFromSetlistOverrides(
+  tx: DatabaseExecutor,
+  memberId: string,
+): Promise<void> {
+  const entries = await tx
+    .select({ id: setlistEntryTable.id, lineupOverride: setlistEntryTable.lineupOverride })
+    .from(setlistEntryTable)
+    .where(isNotNull(setlistEntryTable.lineupOverride));
+  for (const entryRow of entries) {
+    if (entryRow.lineupOverride === null) continue;
+    const lineupRaw: unknown = JSON.parse(entryRow.lineupOverride);
+    const lineup = lineupOverrideSchema.parse(lineupRaw);
+    if (!(memberId in lineup)) continue;
+    const scrubbed = scrubMemberFromLineup(lineup, memberId);
+    await tx
+      .update(setlistEntryTable)
+      .set({ lineupOverride: JSON.stringify(scrubbed) })
+      .where(eq(setlistEntryTable.id, entryRow.id));
+  }
 }
 
 export async function listInstrumentsForMember(

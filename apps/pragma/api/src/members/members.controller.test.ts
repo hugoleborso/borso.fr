@@ -192,4 +192,106 @@ describe('members controller (back-e2e)', () => {
     );
     expect(response.status).toBe(404);
   });
+
+  it('scrubs the member from every song default lineup and setlist entry override on delete', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+
+    const targetMemberId = (
+      await readJson(
+        await jsonRequest(app, '/api/members', {
+          method: 'POST',
+          body: { firstName: 'Pauline', color: '#7a8f5a' },
+          cookieHeader,
+        }),
+        singleMemberEnvelope,
+      )
+    ).member.id;
+    const keepMemberId = (
+      await readJson(
+        await jsonRequest(app, '/api/members', {
+          method: 'POST',
+          body: { firstName: 'Hugo', color: '#d96f5a' },
+          cookieHeader,
+        }),
+        singleMemberEnvelope,
+      )
+    ).member.id;
+
+    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', true);
+    const bassId = await createInstrument(app, cookieHeader, 'Bass', true);
+
+    const songRes = await jsonRequest(app, '/api/songs', {
+      method: 'POST',
+      body: {
+        title: 'Cascade Test',
+        status: 'idea',
+        defaultLineup: { [targetMemberId]: bassId, [keepMemberId]: guitarId },
+      },
+      cookieHeader,
+    });
+    const songId = (
+      await readJson(songRes, z.object({ song: z.object({ id: z.string().uuid() }) }))
+    ).song.id;
+
+    const sessionRes = await jsonRequest(app, '/api/sessions', {
+      method: 'POST',
+      body: { kind: 'practice', date: '2026-09-08T19:00:00Z' },
+      cookieHeader,
+    });
+    const sessionId = (
+      await readJson(sessionRes, z.object({ session: z.object({ id: z.string().uuid() }) }))
+    ).session.id;
+
+    const setlistRes = await jsonRequest(app, '/api/setlists', {
+      method: 'POST',
+      body: { sessionId },
+      cookieHeader,
+    });
+    const setlistId = (
+      await readJson(setlistRes, z.object({ setlist: z.object({ id: z.string().uuid() }) }))
+    ).setlist.id;
+
+    const entryRes = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+      method: 'POST',
+      body: {
+        songId,
+        lineupOverride: { [targetMemberId]: guitarId, [keepMemberId]: bassId },
+      },
+      cookieHeader,
+    });
+    const entryId = (
+      await readJson(entryRes, z.object({ entry: z.object({ id: z.string().uuid() }) }))
+    ).entry.id;
+
+    const deletion = await jsonRequest(app, `/api/members/${targetMemberId}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
+    expect(deletion.status).toBe(200);
+
+    const songAfter = await readJson(
+      await jsonRequest(app, `/api/songs/${songId}`, { cookieHeader }),
+      z.object({
+        song: z.object({
+          id: z.string().uuid(),
+          defaultLineup: z.record(z.string(), z.string().nullable()),
+        }),
+      }),
+    );
+    expect(songAfter.song.defaultLineup).toEqual({ [keepMemberId]: guitarId });
+
+    const entriesAfter = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
+      z.object({
+        entries: z.array(
+          z.object({
+            id: z.string().uuid(),
+            lineupOverride: z.record(z.string(), z.string().nullable()).nullable(),
+          }),
+        ),
+      }),
+    );
+    const updatedEntry = entriesAfter.entries.find((row) => row.id === entryId);
+    expect(updatedEntry?.lineupOverride).toEqual({ [keepMemberId]: bassId });
+  });
 });
