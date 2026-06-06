@@ -24,6 +24,8 @@ import { evaluateTransition } from '@api/setlists/transition.core';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '../../components/atoms/Button';
+import { Icon } from '../../components/atoms/Icon';
 import { EnergySparkline } from '../../components/molecules/EnergySparkline';
 import { MemberFilterPills } from '../../components/molecules/MemberFilterPills';
 import { ApiError } from '../../lib/api';
@@ -39,7 +41,7 @@ import {
 import { useSongsList } from '../../lib/queries/songs';
 import { SetlistEntriesList } from './SetlistEntriesList';
 import { SetlistSongPicker } from './SetlistSongPicker';
-import { instrumentHarmonicMap, lineupOf } from './setlist-editor.utils';
+import { formatSetlistOrder, instrumentHarmonicMap, lineupOf } from './setlist-editor.utils';
 import { filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
 import { WarnMarkerGutter } from './WarnMarkerGutter';
@@ -49,6 +51,7 @@ interface SetlistEditorProps {
 }
 
 const ENERGY_SPARKLINE_HEIGHT_PX = 160;
+const COPIED_FEEDBACK_MS = 2000;
 
 export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
@@ -67,6 +70,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   } | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [orderCopied, setOrderCopied] = useState(false);
 
   const entries = entriesQuery.data?.entries ?? [];
   const songs = songsQuery.data?.songs ?? [];
@@ -151,6 +155,16 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     updateEntry.mutate({ setlistId, entryId, ...patch }, { onError: recordError });
   };
 
+  const handleCopyOrder = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(formatSetlistOrder(entries, songsById));
+      setOrderCopied(true);
+      window.setTimeout(() => setOrderCopied(false), COPIED_FEEDBACK_MS);
+    } catch {
+      setLocalError('clipboard-error');
+    }
+  };
+
   if (entriesQuery.isLoading) {
     return <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
@@ -175,8 +189,19 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         className="sticky top-0 z-10 bg-bg -mx-4 sm:-mx-9 px-4 sm:px-9"
       />
       <div className="bg-bg-elev border border-line rounded-lg p-4">
-        <div className="text-[10.5px] font-mono uppercase tracking-wider text-ink-400 mb-2">
-          {t('setlist.energy')}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="text-[10.5px] font-mono uppercase tracking-wider text-ink-400">
+            {t('setlist.energy')}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void handleCopyOrder()}
+            disabled={entries.length === 0}
+          >
+            <Icon name={orderCopied ? 'check' : 'text'} size={14} />
+            {orderCopied ? t('setlist.orderCopied') : t('setlist.copyOrder')}
+          </Button>
         </div>
         <EnergySparkline values={energyValues} height={ENERGY_SPARKLINE_HEIGHT_PX} />
       </div>
