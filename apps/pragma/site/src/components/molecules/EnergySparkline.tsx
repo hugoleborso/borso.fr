@@ -4,17 +4,18 @@
  * any session-card summary. The smoothing logic itself lives in
  * the sibling `*.utils.ts` so it's covered at 100%.
  *
- * The SVG is rendered at its measured pixel width (viewBox === layout
- * box, 1:1) rather than a fixed viewBox stretched to 100%. Stretching
- * a fixed viewBox with `preserveAspectRatio="none"` squashed the point
- * markers into ovals on wide (desktop) layouts — the horizontal scale
- * far exceeds the vertical one. Measuring keeps the scale uniform, so
- * the dots stay round. The width is tracked via a `ResizeObserver`
- * owned by the container's ref callback (created on attach, disconnected
- * on detach) — no effect needed.
+ * The curve + gradient fill live in an SVG that stretches to the full
+ * container width (`preserveAspectRatio="none"`) — stretching a smooth
+ * path horizontally is exactly what a responsive sparkline wants, and
+ * `vector-effect="non-scaling-stroke"` keeps the line a uniform width.
+ * The point markers are NOT drawn in that SVG: a stretched viewBox
+ * squashes `<circle>` into ovals on wide layouts. They're rendered as
+ * CSS-positioned round dots over the SVG instead — `left` as a percentage
+ * straight from the data and `top` in pixels (the vertical axis is 1:1,
+ * height is fixed), so they stay perfectly round at any width with no
+ * measuring.
  */
 
-import { useCallback, useRef, useState } from 'react';
 import { buildSparklinePath } from './energy-sparkline.utils';
 
 export interface EnergySparklineProps {
@@ -23,9 +24,9 @@ export interface EnergySparklineProps {
   accent?: string;
 }
 
-const FALLBACK_WIDTH = 360;
+const VIEWBOX_WIDTH = 360;
 const DEFAULT_HEIGHT = 64;
-const POINT_RADIUS = 3;
+const POINT_DIAMETER_PX = 6;
 const LINE_WIDTH = 2;
 
 export function EnergySparkline({
@@ -33,30 +34,16 @@ export function EnergySparkline({
   height = DEFAULT_HEIGHT,
   accent = 'var(--color-accent)',
 }: EnergySparklineProps): JSX.Element | null {
-  const [measuredWidth, setMeasuredWidth] = useState<number>(0);
-  const observerRef = useRef<ResizeObserver | null>(null);
-  const containerRef = useCallback((node: HTMLDivElement | null) => {
-    observerRef.current?.disconnect();
-    observerRef.current = null;
-    if (node === null) return;
-    const observer = new ResizeObserver((entries) => {
-      const width = entries[0]?.contentRect.width;
-      if (width !== undefined && width > 0) setMeasuredWidth(width);
-    });
-    observer.observe(node);
-    observerRef.current = observer;
-  }, []);
-
   if (values.length === 0) return null;
-  const width = measuredWidth > 0 ? measuredWidth : FALLBACK_WIDTH;
-  const { path, points } = buildSparklinePath(values, width, height);
-  const closingPath = `${path} L ${width} ${height} L 0 ${height} Z`;
+  const { path, points } = buildSparklinePath(values, VIEWBOX_WIDTH, height);
+  const closingPath = `${path} L ${VIEWBOX_WIDTH} ${height} L 0 ${height} Z`;
   return (
-    <div ref={containerRef} className="w-full">
+    <div className="relative w-full" style={{ height }}>
       <svg
         width="100%"
         height={height}
-        viewBox={`0 0 ${width} ${height}`}
+        viewBox={`0 0 ${VIEWBOX_WIDTH} ${height}`}
+        preserveAspectRatio="none"
         aria-hidden="true"
         className="block"
       >
@@ -74,12 +61,23 @@ export function EnergySparkline({
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
         />
-        {points.map(([x, y], index) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: sparkline points are a stable visual sequence, index is the index
-          <circle key={index} cx={x} cy={y} r={POINT_RADIUS} fill={accent} />
-        ))}
       </svg>
+      {points.map(([x, y], index) => (
+        <span
+          // biome-ignore lint/suspicious/noArrayIndexKey: sparkline points are a stable visual sequence, index is the index
+          key={index}
+          className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            left: `${(x / VIEWBOX_WIDTH) * 100}%`,
+            top: y,
+            width: POINT_DIAMETER_PX,
+            height: POINT_DIAMETER_PX,
+            backgroundColor: accent,
+          }}
+        />
+      ))}
     </div>
   );
 }
