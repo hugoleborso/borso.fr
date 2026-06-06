@@ -285,6 +285,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
                     currentSongId={entry.songId}
                     lineup={compactLineup(lineupRaw)}
                     resolvedLineupForEdit={lineupRaw}
+                    songDefaultLineup={song?.defaultLineup ?? {}}
                     hasOverride={entry.lineupOverride !== null}
                     members={lineupMembers}
                     instruments={instruments}

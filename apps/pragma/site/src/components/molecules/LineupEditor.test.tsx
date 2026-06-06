@@ -27,7 +27,6 @@ const GUITAR: LineupEditorInstrument = { id: 'guitar-id', name: 'Guitar' };
 const BASS: LineupEditorInstrument = { id: 'bass-id', name: 'Bass' };
 const DRUMS: LineupEditorInstrument = { id: 'drums-id', name: 'Drums' };
 
-const SAVE_BUTTON_TEXT_EN = 'Save';
 const RESET_BUTTON_TEXT_EN = 'Reset to song default';
 const CANCEL_BUTTON_TEXT_EN = 'Cancel';
 
@@ -154,7 +153,7 @@ describe('LineupEditor', () => {
     expect(optionValues).toEqual(['', GUITAR.id, BASS.id, DRUMS.id]);
   });
 
-  it('passes the edited lineup to onSave and closes the modal', async () => {
+  it('passes the edited lineup to onSave (wasReset=false) and closes the modal', async () => {
     const onSave = vi.fn();
     const onClose = vi.fn();
     renderEditor(
@@ -178,7 +177,7 @@ describe('LineupEditor', () => {
       const form = container.querySelector('form');
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
-    expect(onSave).toHaveBeenCalledWith({ [HUGO.id]: GUITAR.id });
+    expect(onSave).toHaveBeenCalledWith({ [HUGO.id]: GUITAR.id }, false);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -205,11 +204,11 @@ describe('LineupEditor', () => {
       const form = container.querySelector('form');
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
-    expect(onSave).toHaveBeenCalledWith(null);
+    expect(onSave).toHaveBeenCalledWith(null, false);
   });
 
-  it('shows the Reset button on the setlist-entry surface and calls onReset + onClose when clicked', () => {
-    const onReset = vi.fn();
+  it('reverts the form to defaultLineup on Reset, keeps the dialog open, then on Save fires onSave(default, true)', async () => {
+    const onSave = vi.fn();
     const onClose = vi.fn();
     renderEditor(
       root,
@@ -217,21 +216,31 @@ describe('LineupEditor', () => {
         open
         surface="setlist-entry"
         members={[HUGO]}
-        instruments={[GUITAR]}
-        currentLineup={{ [HUGO.id]: GUITAR.id }}
-        onSave={vi.fn()}
-        onReset={onReset}
+        instruments={[GUITAR, BASS]}
+        currentLineup={{ [HUGO.id]: BASS.id }}
+        defaultLineup={{ [HUGO.id]: GUITAR.id }}
+        onSave={onSave}
         onClose={onClose}
       />,
     );
+    expect(findInstrumentSelectFor(container, HUGO.id).value).toBe(BASS.id);
     const resetButton = findButtonByText(container, RESET_BUTTON_TEXT_EN);
     expect(resetButton).not.toBeNull();
-    act(() => resetButton?.click());
-    expect(onReset).toHaveBeenCalledTimes(1);
-    expect(onClose).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      resetButton?.click();
+    });
+    expect(onSave).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(findInstrumentSelectFor(container, HUGO.id).value).toBe(GUITAR.id);
+    expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(true);
+    await act(async () => {
+      const form = container.querySelector('form');
+      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    expect(onSave).toHaveBeenCalledWith({ [HUGO.id]: GUITAR.id }, true);
   });
 
-  it('omits the Reset button on the song surface', () => {
+  it('omits the Reset button when defaultLineup is not supplied (song surface)', () => {
     renderEditor(
       root,
       <LineupEditor
@@ -266,29 +275,5 @@ describe('LineupEditor', () => {
     act(() => cancelButton?.click());
     expect(onSave).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it('handles a Save click without invoking onReset even when supplied', async () => {
-    const onSave = vi.fn();
-    const onReset = vi.fn();
-    renderEditor(
-      root,
-      <LineupEditor
-        open
-        surface="setlist-entry"
-        members={[HUGO]}
-        instruments={[GUITAR]}
-        currentLineup={{ [HUGO.id]: GUITAR.id }}
-        onSave={onSave}
-        onReset={onReset}
-        onClose={vi.fn()}
-      />,
-    );
-    const saveButton = findButtonByText(container, SAVE_BUTTON_TEXT_EN);
-    await act(async () => {
-      saveButton?.click();
-    });
-    expect(onSave).toHaveBeenCalledTimes(1);
-    expect(onReset).not.toHaveBeenCalled();
   });
 });

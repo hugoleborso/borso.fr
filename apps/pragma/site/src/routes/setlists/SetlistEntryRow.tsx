@@ -69,6 +69,7 @@ export interface SetlistEntryRowProps {
   readonly currentSongId: string;
   readonly lineup: Readonly<Record<string, string>>;
   readonly resolvedLineupForEdit: LineupRecord;
+  readonly songDefaultLineup: LineupRecord;
   readonly hasOverride: boolean;
   readonly members: readonly LineupMember[];
   readonly instruments: readonly LineupEditorInstrument[];
@@ -111,11 +112,8 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     validators: { onChange: setlistEntryFormSchema },
     onSubmit: () => {},
   });
-  const handleSaveLineup = (lineup: LineupRecord | null): void => {
-    props.onUpdate(props.entryId, { lineupOverride: lineup });
-  };
-  const handleResetLineup = (): void => {
-    props.onUpdate(props.entryId, { lineupOverride: null });
+  const handleSaveLineup = (lineup: LineupRecord | null, wasReset: boolean): void => {
+    props.onUpdate(props.entryId, { lineupOverride: wasReset ? null : lineup });
   };
   return (
     <li
@@ -157,13 +155,15 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             </span>
           </div>
         ) : null}
-        <div className="font-display italic text-[20px] leading-tight text-ink-900 truncate flex items-center gap-2 flex-wrap">
-          <span className="truncate">{props.title}</span>
-          {props.hasOverride ? (
-            <span className="text-[10px] uppercase tracking-wider text-accent bg-accent-soft px-1.5 py-0.5 rounded font-medium not-italic">
+        {props.hasOverride ? (
+          <div className="mb-1">
+            <span className="inline-block whitespace-nowrap text-[10px] uppercase tracking-wider text-accent bg-accent-soft px-1.5 py-0.5 rounded font-medium">
               {t('lineup.override')}
             </span>
-          ) : null}
+          </div>
+        ) : null}
+        <div className="font-display italic text-[20px] leading-tight text-ink-900 truncate">
+          {props.title}
         </div>
         <div className="flex items-center gap-2 text-[11.5px] text-ink-500 mt-0.5 flex-wrap">
           <span>{props.artist}</span>
@@ -320,8 +320,8 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         members={lineupEditorMembers}
         instruments={props.instruments}
         currentLineup={props.resolvedLineupForEdit}
+        defaultLineup={props.songDefaultLineup}
         onSave={handleSaveLineup}
-        onReset={handleResetLineup}
         onClose={() => setLineupEditorOpen(false)}
       />
     </li>

@@ -340,7 +340,7 @@ export function SongDetailPage(): JSX.Element {
         members={lineupEditorMembers}
         instruments={lineupEditorInstruments}
         currentLineup={song.defaultLineup}
-        onSave={handleSaveSongLineup}
+        onSave={(lineup) => handleSaveSongLineup(lineup)}
         onClose={() => setLineupEditorOpen(false)}
       />
     </section>

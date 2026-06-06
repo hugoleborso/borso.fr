@@ -8,11 +8,13 @@
  * `null` so the BE never persists `{}` — the override-vs-default
  * badge is binary on non-null.
  *
- * On Reset (only present when `onReset` is supplied — i.e. the
- * setlist-entry surface), the form returns to the supplied
- * `defaultLineup` values without saving, then a single Save click
- * clears the override (the parent wires `onReset` to write a
- * `lineupOverride: null` patch and closes the modal).
+ * On Reset to default (button only present when `defaultLineup` is
+ * supplied — i.e. the setlist-entry surface), the form values revert
+ * to `defaultLineup` and the modal stays open so the operator can
+ * review. A subsequent Save click invokes `onSave(lineup, true)` so
+ * the parent persists `lineupOverride: null`. Without a prior Reset,
+ * Save calls `onSave(lineup, false)` and the parent persists the form
+ * values verbatim.
  */
 
 import { useForm } from '@tanstack/react-form';
@@ -42,8 +44,8 @@ export interface LineupEditorProps {
   readonly members: readonly LineupEditorMember[];
   readonly instruments: readonly LineupEditorInstrument[];
   readonly currentLineup: LineupRecord;
-  readonly onSave: (lineup: LineupRecord | null) => void;
-  readonly onReset?: () => void;
+  readonly defaultLineup?: LineupRecord;
+  readonly onSave: (lineup: LineupRecord | null, wasReset: boolean) => void;
   readonly onClose: () => void;
 }
 
@@ -86,16 +88,17 @@ function LineupEditorContent({
   members,
   instruments,
   currentLineup,
+  defaultLineup,
   onSave,
-  onReset,
   onClose,
 }: LineupEditorProps): JSX.Element {
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const wasResetRef = useRef<boolean>(false);
   const form = useForm({
     defaultValues: lineupToFormValues(currentLineup, members),
     onSubmit: ({ value }) => {
-      onSave(formValuesToLineup(value));
+      onSave(formValuesToLineup(value), wasResetRef.current);
       onClose();
     },
   });
@@ -106,9 +109,12 @@ function LineupEditorContent({
   }, []);
 
   const handleResetToDefault = (): void => {
-    if (onReset === undefined) return;
-    onReset();
-    onClose();
+    if (defaultLineup === undefined) return;
+    wasResetRef.current = true;
+    const nextValues = lineupToFormValues(defaultLineup, members);
+    for (const [memberId, value] of Object.entries(nextValues)) {
+      form.setFieldValue(memberId, value);
+    }
   };
 
   const modalTitle =
@@ -175,7 +181,7 @@ function LineupEditorContent({
           ))}
         </ul>
         <div className="flex flex-wrap gap-2 mt-2 justify-between">
-          {onReset !== undefined ? (
+          {defaultLineup !== undefined ? (
             <Button type="button" variant="ghost" onClick={handleResetToDefault}>
               {t('lineup.resetToDefault')}
             </Button>
