@@ -6,6 +6,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
+import { isLastPendingMutation } from './optimistic.utils';
 
 type SessionsListShape = InferResponseType<typeof api.api.sessions.$get>;
 
@@ -43,6 +44,7 @@ type SessionRow = SessionsListShape['sessions'][number];
 export function useCreateSession() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: sessionKeys.all,
     mutationFn: async (variables: Parameters<typeof api.api.sessions.$post>[0]['json']) => {
       const response = await api.api.sessions.$post({ json: variables });
       if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
@@ -76,6 +78,7 @@ export function useCreateSession() {
       }
     },
     onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: sessionKeys.all }))) return;
       void queryClient.invalidateQueries({ queryKey: sessionKeys.all });
     },
   });
@@ -84,6 +87,7 @@ export function useCreateSession() {
 export function useUpdateSession() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: sessionKeys.all,
     mutationFn: async (
       variables: { id: string } & Parameters<(typeof api.api.sessions)[':id']['$put']>[0]['json'],
     ) => {
@@ -119,6 +123,7 @@ export function useUpdateSession() {
       }
     },
     onSettled: (_data, _err, variables) => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: sessionKeys.all }))) return;
       void queryClient.invalidateQueries({ queryKey: sessionKeys.byId(variables.id) });
       void queryClient.invalidateQueries({ queryKey: sessionKeys.list() });
     },
@@ -128,6 +133,7 @@ export function useUpdateSession() {
 export function useDeleteSession() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: sessionKeys.all,
     mutationFn: async ({ id }: { id: string }) => {
       const response = await api.api.sessions[':id'].$delete({ param: { id } });
       if (!response.ok) throw new ApiError(response.status, `delete ${response.status}`, null);
@@ -150,6 +156,7 @@ export function useDeleteSession() {
       }
     },
     onSettled: (_data, _err, { id }) => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: sessionKeys.all }))) return;
       void queryClient.invalidateQueries({ queryKey: sessionKeys.list() });
       void queryClient.invalidateQueries({ queryKey: sessionKeys.byId(id) });
     },

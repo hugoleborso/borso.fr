@@ -20,6 +20,17 @@ const SHARED_SSM = {
   certPreviewRegionalArn: '/borso/shared/cert-preview-borso-fr-regional-arn',
 } as const;
 
+/**
+ * Env var the construct sets to `'1'` on every non-prod API Lambda. Apps
+ * that ship a `/api/__test/seed` route read it to mount the route only
+ * when seeding is allowed; prod never receives it, so the route is
+ * structurally unreachable in production regardless of app code. Owning
+ * the flag here — rather than re-deriving a per-app `<APP>_ALLOW_TEST_SEED`
+ * ternary in each stack — is the single point that guarantees the
+ * prod-exclusion across every app.
+ */
+const ALLOW_TEST_SEED_ENV_VAR = 'ALLOW_TEST_SEED';
+
 /** @beta */
 export interface PreviewableAppProps {
   readonly app: string;
@@ -148,7 +159,10 @@ export class PreviewableApp extends Construct {
         }),
         memoryMb: props.api.memoryMb,
         timeoutSeconds: props.api.timeoutSeconds,
-        environment: props.api.environment,
+        environment: {
+          ...(props.stage === 'prod' ? {} : { [ALLOW_TEST_SEED_ENV_VAR]: '1' }),
+          ...props.api.environment,
+        },
         dsqlSchema: this.database,
       });
     }

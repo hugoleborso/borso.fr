@@ -10,7 +10,7 @@ import { selfPunchRouter } from './punch/self-punch.controller';
 import { rankingRouter } from './ranking/ranking.controller';
 import { adminRunnerRouter, runnerRouter } from './runner/runner.controller';
 
-const TEST_SEED_FLAG = 'LASTLOOP_ALLOW_TEST_SEED';
+const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 
 function buildAppRouter() {
   return new Hono()

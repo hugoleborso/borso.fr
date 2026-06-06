@@ -11,6 +11,16 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ENTRY = path.join(HERE, 'fixtures', 'handler.ts');
 const MIGRATIONS = path.join(HERE, 'fixtures', 'migrations');
 
+function lambdaHasTestSeedFlag(resource: unknown): boolean {
+  if (!isObject(resource)) return false;
+  const properties = resource.Properties;
+  if (!isObject(properties)) return false;
+  const environment = properties.Environment;
+  if (!isObject(environment)) return false;
+  const variables = environment.Variables;
+  return isObject(variables) && variables.ALLOW_TEST_SEED === '1';
+}
+
 const ENV = { account: '123456789012', region: 'eu-west-3' };
 
 interface Stacks {
@@ -80,6 +90,11 @@ describe('PreviewableApp (prod, full)', () => {
     expect(ids).toMatch(/FrontendUrl/);
     expect(ids).toMatch(/ApiUrl/);
     expect(ids).toMatch(/DbSchema/);
+  });
+
+  it('never sets ALLOW_TEST_SEED on a prod Lambda', () => {
+    const lambdas = resourcesOfType(stageTpl, 'AWS::Lambda::Function');
+    expect(lambdas.some(lambdaHasTestSeedFlag)).toBe(false);
   });
 });
 
@@ -182,6 +197,11 @@ describe('PreviewableApp (preview with api → custom domain)', () => {
         AllowOrigins: ['https://test-app-pr-12.preview.borso.fr'],
       },
     });
+  });
+
+  it('injects ALLOW_TEST_SEED=1 on the non-prod API Lambda', () => {
+    const lambdas = resourcesOfType(stageTpl, 'AWS::Lambda::Function');
+    expect(lambdas.some(lambdaHasTestSeedFlag)).toBe(true);
   });
 });
 

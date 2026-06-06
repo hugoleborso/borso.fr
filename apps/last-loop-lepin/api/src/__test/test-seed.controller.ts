@@ -1,6 +1,6 @@
 /**
  * Test-only seeding endpoints. Mounted by `app.ts` ONLY when
- * `LASTLOOP_ALLOW_TEST_SEED === '1'`. CDK never sets that flag on the
+ * `ALLOW_TEST_SEED === '1'`. CDK never sets that flag on the
  * prod stack (asserted in `cdk/lib/stack.test.ts`).
  *
  * Timestamps are computed relative to `new Date()` so the seeded

@@ -1,15 +1,19 @@
 /**
- * Auth feature queries / mutations. The login mutation does not
- * invalidate any caches on success — the caller redirects to the
- * originating page, so a stale cache isn't observable.
+ * Auth feature queries / mutations.
  *
  * `useSessionProbe()` reuses the gated `/api/instruments` endpoint as
  * a session probe (the API does not yet expose `/api/auth/me`).
  * Caches forever (`staleTime: Infinity`) — the route guard only needs
  * to know "is the cookie valid right now?" at the moment of mount.
+ *
+ * Because that probe never refetches, `useLogin` MUST flip the cached
+ * session to authenticated on success: the user reached /login by the
+ * guard caching `{ authenticated: false }`, and without overwriting it
+ * the post-login redirect lands on the guard, reads the stale `false`,
+ * and bounces straight back to /login.
  */
 
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 
 export const authKeys = {
@@ -17,7 +21,11 @@ export const authKeys = {
   session: () => [...authKeys.all, 'session'] as const,
 };
 
-async function probeSession(): Promise<{ authenticated: boolean }> {
+export interface SessionProbeResult {
+  readonly authenticated: boolean;
+}
+
+async function probeSession(): Promise<SessionProbeResult> {
   const response = await api.api.instruments.$get();
   if (response.ok) return { authenticated: true };
   if (response.status === 401) return { authenticated: false };
@@ -43,7 +51,11 @@ async function postLogin(password: string) {
 }
 
 export function useLogin() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (variables: { password: string }) => postLogin(variables.password),
+    onSuccess: () => {
+      queryClient.setQueryData<SessionProbeResult>(authKeys.session(), { authenticated: true });
+    },
   });
 }
