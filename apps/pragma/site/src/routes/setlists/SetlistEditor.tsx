@@ -278,7 +278,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
               })}
             </ul>
           </SortableContext>
-          <DragOverlay>
+          <DragOverlay dropAnimation={null}>
             {activeEntryId !== null
               ? (() => {
                   const activeIndex = entries.findIndex((entry) => entry.id === activeEntryId);
