@@ -1,6 +1,8 @@
 # Production deploys. Trusts repo:hugoleborso/borso.fr:environment:prod
-# via ProdDeployRole. The `prod` GitHub environment requires Hugo's
-# manual approval before the deploy job actually runs.
+# via ProdDeployRole. The `prod` GitHub environment is kept ONLY to scope
+# the OIDC subject the role trusts — it carries no reviewer rule, so the
+# deploy job runs automatically. The gate is the merge to main: only the
+# human can merge (Claude cannot), so an approval click here is redundant.
 #
 # Triggers on every push to main. paths-filter detects which apps
 # changed in the latest commit; if infra/cdk changed, every app
@@ -70,7 +72,7 @@ jobs:
     needs: detect
     if: needs.detect.outputs.apps != '[]'
     runs-on: ubuntu-latest
-    environment: prod # gated by manual approval
+    environment: prod # scopes the OIDC subject ProdDeployRole trusts; no reviewer gate
     strategy:
       fail-fast: false
       matrix:

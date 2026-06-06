@@ -36,14 +36,13 @@ push to main                                       merge fails / rolled back
    │                                                          (revert + push)
    1. paths-filter detects changed apps
    2. matrix per app, max-parallel: 1
-   3. **wait for prod environment approval (Hugo)**
-   4. assume ProdDeployRole via OIDC
-   5. cdk deploy <app>-prod
+   3. assume ProdDeployRole via OIDC
+   4. cdk deploy <app>-prod
 ```
 
-**Trust pattern.** `ProdDeployRole` trusts `repo:hugoleborso/borso.fr:environment:prod`. The GitHub `prod` environment requires Hugo as a reviewer — workflow blocks until manual approval.
+**Trust pattern.** `ProdDeployRole` trusts `repo:hugoleborso/borso.fr:environment:prod`. The GitHub `prod` environment is kept only to scope that OIDC subject — it carries no reviewer rule, so the workflow runs automatically on push to `main`. The gate is the merge: only Hugo can merge to `main` (Claude cannot), which makes an approval click here redundant. (Shared-infra deploys via `prod-shared` still require a reviewer — see below.)
 
-**Permissions.** PowerUserAccess + IAM scoped to `*-prod-*` and `cdk-*` + DSQL cluster lifecycle (Create/Delete/Update/Tag/DbConnect/DbConnectAdmin on `*`). No AdministratorAccess; the approval gate is the security layer for power, not the role.
+**Permissions.** PowerUserAccess + IAM scoped to `*-prod-*` and `cdk-*` + DSQL cluster lifecycle (Create/Delete/Update/Tag/DbConnect/DbConnectAdmin on `*`). No AdministratorAccess; the merge gate (only Hugo can merge to `main`) is the security layer for power, not the role.
 
 ## Shared-infra deploy flow
 
