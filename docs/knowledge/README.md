@@ -76,6 +76,7 @@ Two failure modes to watch for:
 
 - [`dsql-postgres-compat-gaps.md`](./dsql-postgres-compat-gaps.md) — catalogue of DSQL's divergences from Postgres (no jsonb, no FKs, no multi-DDL tx, no partial indexes, no advisory locks, no `USING <method>` on CREATE INDEX, retries need `IF NOT EXISTS`, only `admin` user, IAM is per-cluster).
 - [`dsql-serverless-pricing-vs-aurora.md`](./dsql-serverless-pricing-vs-aurora.md) — DSQL bills per DPU + per GB-month, not per cluster; idle clusters cost ~nothing. The "one-cluster-per-app" choice is about latency + quotas + ordering, not cost.
+- [`dsql-strong-consistency-is-per-connection.md`](./dsql-strong-consistency-is-per-connection.md) — read-after-write is consistent within a connection, not across them; a `PUT` then an immediate `GET` on a different Lambda/connection can read the pre-commit snapshot. A warm-connection `curl` loop won't reproduce it; reconcile from the mutation response, not a blind refetch.
 
 ### Build / lint tooling
 
@@ -117,7 +118,9 @@ Two failure modes to watch for:
 ### Frontend / React
 
 - [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](./rolled-our-own-data-fetching-instead-of-tanstack-query.md) — the cost of writing custom `useStandingsPoll` / `useResource` hooks instead of TanStack Query: each new bug found in our hooks (the PR #23 polling storm) would've been a library author's problem already. Migration sketch when the data layer needs to grow.
-- [`svg-preserveaspectratio-distorts-non-uniform.md`](./svg-preserveaspectratio-distorts-non-uniform.md) — `preserveAspectRatio="none"` distorts circles into ellipses when the container aspect ≠ viewBox aspect. Default (`xMidYMid meet`) preserves and letterboxes.
+- [`svg-preserveaspectratio-distorts-non-uniform.md`](./svg-preserveaspectratio-distorts-non-uniform.md) — `preserveAspectRatio="none"` distorts circles into ellipses when the container aspect ≠ viewBox aspect. Default (`xMidYMid meet`) preserves and letterboxes. Now enforced in pragma by the `no-circle-in-non-uniform-svg.grit` Biome plugin (see [`../dantotsus/circle-went-oval-in-a-stretched-svg-again.md`](../dantotsus/circle-went-oval-in-a-stretched-svg-again.md)).
+- [`dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](./dnd-kit-pointersensor-loses-touch-to-page-scroll.md) — a single `PointerSensor` loses touch-drag to native page scroll on phones; split into `MouseSensor` (6px distance) + `TouchSensor` (200ms delay) + `KeyboardSensor`, and `touch-none` on the handle.
+- [`debug-client-state-reverts-in-the-browser-first.md`](./debug-client-state-reverts-in-the-browser-first.md) — when the server is right but the UI reverts, reproduce in a real browser and diff the write's request body against the next read's response *before* theorizing; don't ship a fix you never watched fail then pass.
 
 ### last-loop-lepin app domain
 
