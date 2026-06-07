@@ -47,6 +47,15 @@ fi
 log "running pnpm install"
 pnpm install --frozen-lockfile
 
+# 3b. Build @borso/infra so a fresh session's `pnpm -r typecheck` (and any
+# per-app `typecheck`) can resolve the `@borso/infra` types its cdk/ imports.
+# CI builds this before `pnpm -r typecheck` (.github/workflows/ci.yml); a
+# Claude session that runs an app typecheck without it fails on
+# "Cannot find module '@borso/infra'". Mirrors CI's first build step.
+# Non-fatal: a build hiccup must not brick session start.
+log "building @borso/infra (its dist is consumed by app cdk typechecks)"
+pnpm --filter @borso/infra build || log "WARNING: @borso/infra build failed; run 'pnpm --filter @borso/infra run build' before typecheck"
+
 # 4. AWS CLI v2 — only if the session has AWS creds configured (cloud sessions).
 # Local sessions without AWS_ACCESS_KEY_ID set don't pay this install cost.
 if [ -n "${AWS_ACCESS_KEY_ID:-}" ] && ! command -v aws >/dev/null 2>&1; then
