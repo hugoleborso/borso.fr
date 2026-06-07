@@ -25,6 +25,18 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/posttool-biome-write.sh",
+            "statusMessage": "Formatting with Biome"
+          }
+        ]
+      }
     ]
   }
 }
