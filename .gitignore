@@ -23,3 +23,7 @@ coverage/
 # Per-session kaizen scratch file. Maintained during a task, consumed by
 # /after-task-dantotsus once the work merges. Local-only by design.
 KAIZEN.md
+
+# foglamp codebase-scan payload + lock. The lock holds the scan's edit
+# token (a secret), so the whole directory stays out of git.
+.foglamp/
