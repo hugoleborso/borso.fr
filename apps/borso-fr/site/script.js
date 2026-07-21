@@ -9,6 +9,9 @@ const LABEL_CLOSE_MENU = 'Fermer le menu';
 const burger = document.getElementById('burger');
 const menu = document.getElementById('menu');
 const menuItems = menu.querySelectorAll('li');
+const dateRequestTrigger = document.getElementById('date-request-trigger');
+const dateRequestDialog = document.getElementById('date-request-dialog');
+const dateRequestClose = document.getElementById('date-request-close');
 
 let menuOpen = false;
 
@@ -33,9 +36,23 @@ burger.addEventListener('click', () => {
 });
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && menuOpen) {
+  if (event.key === 'Escape' && menuOpen && !dateRequestDialog.open) {
     menuOpen = false;
     applyMenuState();
+  }
+});
+
+dateRequestTrigger.addEventListener('click', () => {
+  dateRequestDialog.showModal();
+});
+
+dateRequestClose.addEventListener('click', () => {
+  dateRequestDialog.close();
+});
+
+dateRequestDialog.addEventListener('click', (event) => {
+  if (event.target === dateRequestDialog) {
+    dateRequestDialog.close();
   }
 });
 

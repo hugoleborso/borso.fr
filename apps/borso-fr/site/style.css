@@ -146,7 +146,8 @@ body.menu-open .stage {
   opacity: 1;
   transform: none;
 }
-.menu a {
+.menu a,
+.menu .menu-link--deprecated {
   font-family: var(--font-mono);
   font-size: clamp(15px, 1.4vw, 18px);
   letter-spacing: 0.02em;
@@ -159,6 +160,15 @@ body.menu-open .stage {
   transition: color 0.25s;
 }
 .menu a:hover { color: var(--fg); }
+.menu .menu-link--deprecated {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: line-through;
+}
+.menu .menu-link--deprecated:hover { color: var(--fg); }
 .menu a::after {
   content: "";
   position: absolute;
@@ -170,6 +180,47 @@ body.menu-open .stage {
   transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .menu a:hover::after { width: 100%; }
+
+.date-request-dialog {
+  margin: auto;
+  max-width: min(30rem, calc(100vw - 48px));
+  padding: 36px 32px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid rgba(245, 245, 240, 0.2);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  text-align: center;
+}
+.date-request-dialog::backdrop {
+  background: rgba(5, 7, 13, 0.65);
+  backdrop-filter: blur(12px);
+}
+.date-request-dialog p {
+  font-size: clamp(15px, 1.4vw, 18px);
+  letter-spacing: 0.02em;
+  line-height: 1.7;
+}
+.date-request-close {
+  margin-top: 28px;
+  padding: 10px 24px;
+  background: transparent;
+  color: var(--fg-dim);
+  border: 1px solid rgba(245, 245, 240, 0.3);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.25s, border-color 0.25s, background 0.25s;
+}
+.date-request-close:hover {
+  color: var(--fg);
+  border-color: var(--fg);
+  background: rgba(245, 245, 240, 0.08);
+}
 
 @media (max-width: 640px) {
   .menu {
@@ -184,7 +235,8 @@ body.menu-open .stage {
   }
   .menu.is-open { opacity: 1; }
   .menu ul { align-items: center; text-align: center; gap: 24px; }
-  .menu a { font-size: 22px; }
+  .menu a,
+  .menu .menu-link--deprecated { font-size: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
