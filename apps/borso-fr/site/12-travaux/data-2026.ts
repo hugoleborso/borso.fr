@@ -109,8 +109,8 @@ export const Y2026: Year = {
         {
           t: 'Finir la Montecristo',
           kind: 'oneshot',
-          status: 'todo',
-          note: 'Objectif subsidiaire : sub-1h30. 5 km de nage en eau libre à Marseille, avec Salomé.',
+          status: 'done',
+          note: '5 km de nage en eau libre à Marseille, avec Salomé. Le cou complètement KO en sortant.',
         },
       ],
     },
@@ -118,8 +118,13 @@ export const Y2026: Year = {
       m: 7,
       name: 'Juillet',
       challenges: [
-        { t: 'Sub-1h30 au semi', kind: 'oneshot', status: 'todo' },
-        { t: 'Participer aux championnats de France de Catan', kind: 'oneshot', status: 'todo' },
+        {
+          t: 'Sub-1h30 au semi',
+          kind: 'oneshot',
+          status: 'doing',
+          note: 'Premier essai début juillet : explosé, coup de chaud. Deuxième tentative fin juillet.',
+        },
+        { t: 'Participer aux championnats de France de Catan', kind: 'oneshot', status: 'doing' },
       ],
     },
     {
