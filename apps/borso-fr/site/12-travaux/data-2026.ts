@@ -98,19 +98,25 @@ export const Y2026: Year = {
       m: 5,
       name: 'Mai',
       challenges: [
-        { t: 'Organiser une Backyard et y participer', kind: 'oneshot', status: 'doing' },
+        {
+          t: 'Organiser une Backyard et y participer',
+          kind: 'oneshot',
+          status: 'done',
+          proofs: [{ type: 'link', v: 'https://strava.app.link/P6Onm5asZ4b', label: 'Strava' }],
+        },
       ],
     },
     {
       m: 6,
       name: 'Juin',
       challenges: [
-        { t: '1 poème / jour à une personne différente', kind: 'daily', status: 'todo' },
+        { t: '1 poème / jour à une personne différente', kind: 'daily', status: 'failed' },
         {
           t: 'Finir la Montecristo',
           kind: 'oneshot',
-          status: 'todo',
-          note: 'Objectif subsidiaire : sub-1h30. 5 km de nage en eau libre à Marseille, avec Salomé.',
+          status: 'done',
+          note: '5 km de nage en eau libre à Marseille, avec Salomé. Le cou complètement KO en sortant.',
+          proofs: [{ type: 'link', v: 'https://strava.app.link/S8TeY3CsZ4b', label: 'Strava' }],
         },
       ],
     },
@@ -118,8 +124,13 @@ export const Y2026: Year = {
       m: 7,
       name: 'Juillet',
       challenges: [
-        { t: 'Sub-1h30 au semi', kind: 'oneshot', status: 'todo' },
-        { t: 'Participer aux championnats de France de Catan', kind: 'oneshot', status: 'todo' },
+        {
+          t: 'Sub-1h35 au semi',
+          kind: 'oneshot',
+          status: 'doing',
+          note: 'Premier essai début juillet : explosé, coup de chaud. Objectif révisé de 1h30 à 1h35 pour la deuxième tentative fin juillet.',
+        },
+        { t: 'Participer aux championnats de France de Catan', kind: 'oneshot', status: 'doing' },
       ],
     },
     {
