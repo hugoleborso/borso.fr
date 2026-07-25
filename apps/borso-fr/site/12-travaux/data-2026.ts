@@ -125,10 +125,10 @@ export const Y2026: Year = {
       name: 'Juillet',
       challenges: [
         {
-          t: 'Sub-1h35 au semi',
+          t: 'Battre mon record au semi',
           kind: 'oneshot',
-          status: 'doing',
-          note: 'Premier essai début juillet : explosé, coup de chaud. Objectif révisé de 1h30 à 1h35 pour la deuxième tentative fin juillet.',
+          status: 'done',
+          note: 'Premier essai début juillet : explosé, coup de chaud. Record battu à la deuxième tentative.',
         },
         { t: 'Participer aux championnats de France de Catan', kind: 'oneshot', status: 'doing' },
       ],
