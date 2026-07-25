@@ -127,7 +127,7 @@ export const Y2026: Year = {
         {
           t: 'Battre mon record au semi',
           kind: 'oneshot',
-          status: 'done',
+          status: 'partial',
           note: 'Premier essai début juillet : explosé, coup de chaud. Record battu à la deuxième tentative.',
         },
         { t: 'Participer aux championnats de France de Catan', kind: 'oneshot', status: 'doing' },
