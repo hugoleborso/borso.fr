@@ -30,6 +30,7 @@ export default defineWorkspace([
         'site/src/**/*.core.test.ts',
         'site/src/**/*.test.tsx',
       ],
+      globalSetup: ['../../scripts/vitest-cdk-outdir-teardown.js'],
       coverage: {
         provider: 'v8',
         all: false,
