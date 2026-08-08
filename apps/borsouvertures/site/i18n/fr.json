@@ -1,0 +1,142 @@
+{
+  "common": {
+    "action": {
+      "back": "Retour",
+      "close": "Fermer",
+      "load-more": "Voir plus",
+      "reload": "Recharger"
+    },
+    "value": {
+      "none": "—"
+    }
+  },
+  "top-bar": {
+    "brand": "Borsouvertures",
+    "mode": {
+      "aria-label": "Changer de mode",
+      "learn": "Apprendre",
+      "play": "Jouer"
+    },
+    "board-style": {
+      "label": "Style d'échiquier :"
+    },
+    "language": {
+      "aria-label": "Langue de l'interface",
+      "english": "EN",
+      "french": "FR"
+    }
+  },
+  "loading": {
+    "openings": "Chargement des ouvertures…"
+  },
+  "load-failure": {
+    "title": "Impossible de charger les ouvertures",
+    "message": "Le jeu de données des ouvertures n'a pas pu être chargé. Rechargez la page."
+  },
+  "selection": {
+    "side": {
+      "aria-label": "Choisir la couleur",
+      "label": "S'entraîner avec :",
+      "white": "Blancs",
+      "black": "Noirs"
+    },
+    "auto-opponent": {
+      "aria-label": "Adversaire automatique",
+      "off": "Vous jouez les deux",
+      "on": "Adversaire automatique"
+    },
+    "start": {
+      "learn": "Travailler cette variante",
+      "play": "Jouer dans ce périmètre"
+    },
+    "hint": {
+      "learn": "Choisissez une ouverture et une variante pour travailler son arbre.",
+      "play": "Choisissez au moins une ouverture, une variante ou une ligne pour jouer."
+    },
+    "openings": {
+      "title": "Ouvertures",
+      "all": "Toutes les ouvertures",
+      "family-count": "{{total}} familles",
+      "variation-count": "{{total}} variantes"
+    },
+    "variations": {
+      "title": "Variantes",
+      "all": "Toutes les variantes",
+      "total-count": "{{total}} au total",
+      "line-count": "{{total}} lignes"
+    },
+    "lines": {
+      "title": "Lignes",
+      "all": "Toutes les lignes",
+      "total-count": "{{total}} lignes",
+      "eco": "ECO {{eco}}"
+    }
+  },
+  "session": {
+    "change-selection": "Changer la sélection",
+    "show-moves": {
+      "aria-label": "Afficher les coups",
+      "off": "Masquer les coups",
+      "on": "Afficher les coups"
+    },
+    "tree-visualization": {
+      "aria-label": "Mode de visualisation de l'arbre",
+      "arrows": "Flèches",
+      "buttons": "Boutons"
+    }
+  },
+  "learn": {
+    "pick-prompt": "Choisissez une ouverture et une variante pour travailler son arbre.",
+    "title": "Travail : {{variation}}",
+    "description": "Jouez n'importe quel coup du répertoire. L'adversaire répond au hasard parmi les réponses du répertoire ; la séance s'arrête quand chaque ligne de cette variante a été visitée au moins une fois.",
+    "reset": "Recommencer la séance",
+    "arrows": {
+      "hide": "Masquer les flèches",
+      "reveal": "Afficher les flèches"
+    },
+    "cleared": {
+      "message": "Variante terminée — chaque ligne a été visitée au moins une fois",
+      "play-scope": "Passer en mode Jouer avec ce périmètre",
+      "drill-again": "Recommencer"
+    },
+    "lines-visited": {
+      "label": "Lignes visitées",
+      "value": "{{visited}} / {{total}}"
+    },
+    "out-of-book": {
+      "title": "Hors répertoire",
+      "message": "Ce coup n'appartient pas à cette variante. Essayez l'un des coups du répertoire affichés.",
+      "try-again": "Réessayer",
+      "reveal": "Afficher les coups du répertoire"
+    }
+  },
+  "play": {
+    "title": "Jouer dans le répertoire",
+    "description": "Restez dans le répertoire en suivant l'une des lignes candidates. Demandez les coups du répertoire si vous en sortez.",
+    "reset": "Nouvelle partie",
+    "undo": "Annuler",
+    "completed": {
+      "named": "Ligne terminée — {{line}} !",
+      "generic": "Ligne terminée !",
+      "play-again": "Rejouer",
+      "dismiss": "Fermer"
+    },
+    "out-of-book": {
+      "title": "Hors répertoire",
+      "try-again": "Réessayer",
+      "show-moves": "Afficher les coups du répertoire"
+    },
+    "status": {
+      "in-book": "Dans le répertoire",
+      "out-of-book": "Hors répertoire",
+      "matches": "Correspondances : {{total}}",
+      "opening": "Ouverture",
+      "variation": "Variante",
+      "line": "Ligne",
+      "next-moves": {
+        "label": "Coups possibles",
+        "available": "Flèches affichées sur demande"
+      }
+    }
+  }
+}

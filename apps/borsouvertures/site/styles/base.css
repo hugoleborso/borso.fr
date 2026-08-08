@@ -107,7 +107,10 @@ select {
   align-items: center;
 }
 
+/* Coarse pointers need a 44 pixel target, which the padding alone does not
+   reach on a phone. */
 .select {
+  min-height: 44px;
   padding: 0.4rem 0.6rem;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -116,6 +119,7 @@ select {
 }
 
 .btn {
+  min-height: 44px;
   padding: 0.5rem 0.9rem;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.15);

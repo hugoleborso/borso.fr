@@ -6,9 +6,12 @@ worker that caches the openings dataset.
 
 ## Layout
 
-- `site/` — source. React app (`main.tsx` → `App.tsx`), components, hooks, openings book engine,
-  board theming, Zustand store. Pure helpers live in `*.utils.ts` siblings and ship at 100% test
-  coverage (see `CLAUDE.md` → Clean code).
+- `site/` — source. React app (`main.tsx` → `routes/OpeningTrainerRoute.tsx`). Components are
+  split into `components/atoms`, `components/molecules` and `components/organisms` by what each
+  one imports; `i18n/` holds the English and French catalogues; `lib/` holds the viewport and
+  pagination hooks; `openings/` holds the book engine and the session machines; `state/` holds
+  the persisted application store. Pure helpers live in `*.utils.ts` and `*.core.ts` siblings and
+  ship at 100% test coverage (see `docs/standards/`).
 - `site/public/` — static assets served at the site root: `openings.json` (the bundled book),
   PWA icons, favicon, the 404 image used by CloudFront error responses.
 - `bin/app.ts` — CDK entry point. Builds a `StaticSite` from `@borso/infra`.

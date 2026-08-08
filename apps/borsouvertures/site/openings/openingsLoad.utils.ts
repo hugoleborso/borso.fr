@@ -1,0 +1,19 @@
+import type { Opening } from './types';
+
+export type OpeningsLoadStatus = 'loaded' | 'failed';
+
+export interface OpeningsLoad {
+  status: OpeningsLoadStatus;
+  openings: Opening[];
+}
+
+export type OpeningsLoadOutcome = { ok: true; openings: Opening[] } | { ok: false; error: Error };
+
+/**
+ * Flatten the tagged result of the loader into the shape the screens read, so
+ * no component has to narrow a discriminated union to find the openings.
+ */
+export function selectOpeningsLoad(outcome: OpeningsLoadOutcome): OpeningsLoad {
+  if (outcome.ok) return { status: 'loaded', openings: outcome.openings };
+  return { status: 'failed', openings: [] };
+}
