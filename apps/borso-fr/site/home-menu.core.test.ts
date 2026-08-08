@@ -38,11 +38,11 @@ describe('isMenuOpenAfterKey', () => {
 
 describe('selectBurgerLabelKey', () => {
   it('offers to close an open menu', () => {
-    expect(selectBurgerLabelKey(true)).toBe('home.menu.close-label');
+    expect(selectBurgerLabelKey(true)).toBe('close-label');
   });
 
   it('offers to open a closed menu', () => {
-    expect(selectBurgerLabelKey(false)).toBe('home.menu.open-label');
+    expect(selectBurgerLabelKey(false)).toBe('open-label');
   });
 });
 

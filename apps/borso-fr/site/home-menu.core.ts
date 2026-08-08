@@ -1,5 +1,3 @@
-import type { TranslationKey } from './i18n/i18n.utils';
-
 const MENU_STAGGER_BASE_MS = 80;
 const MENU_STAGGER_STEP_MS = 60;
 const NO_TRANSITION_DELAY = '0ms';
@@ -26,12 +24,15 @@ export function isMenuOpenAfterKey(
   return false;
 }
 
-const BURGER_LABEL_KEY: Readonly<Record<`${boolean}`, TranslationKey>> = {
-  true: 'home.menu.close-label',
-  false: 'home.menu.open-label',
+/** The entry under `home.menu` in the catalogue that names the burger's action. */
+export type BurgerLabelKey = 'open-label' | 'close-label';
+
+const BURGER_LABEL_KEY: Readonly<Record<`${boolean}`, BurgerLabelKey>> = {
+  true: 'close-label',
+  false: 'open-label',
 };
 
-export function selectBurgerLabelKey(isMenuOpen: boolean): TranslationKey {
+export function selectBurgerLabelKey(isMenuOpen: boolean): BurgerLabelKey {
   return BURGER_LABEL_KEY[`${isMenuOpen}`];
 }
 
