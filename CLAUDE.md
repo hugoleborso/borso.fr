@@ -4,6 +4,10 @@ One developer. pnpm workspaces. Node 22. AWS eu-west-3 (+ us-east-1 for ACM).
 
 For any "how does X actually work" question, [`docs/`](./docs/) is the source of truth.
 
+**Code rules live in [`docs/standards/`](./docs/standards/README.md), not here.** Thirteen numbered documents, each stating a rule, its reason, an example, and the ESLint rule / test gate / hook that enforces it. The [`/code-standards`](./.claude/skills/code-standards/SKILL.md) skill routes you to the ones that apply to your change. Starting something new rather than changing something existing? [`docs/blueprints/`](./docs/blueprints/README.md) instead. The *Conventions* and *Clean code* sections below are a summary; where the two disagree, `docs/standards/` wins.
+
+**Prose in this repo follows [`/plain-writing`](./.claude/skills/plain-writing/SKILL.md)** — installed in-repo, applied by default to docs, commit bodies, and PR descriptions. New skills follow [`/writing-great-skills`](./.claude/skills/writing-great-skills/SKILL.md).
+
 ## North star
 
 The human's time on this repo is for *interesting* conversations with the AI. Three things qualify:
