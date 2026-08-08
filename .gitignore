@@ -23,3 +23,6 @@ coverage/
 # Per-session kaizen scratch file. Maintained during a task, consumed by
 # /after-task-dantotsus once the work merges. Local-only by design.
 KAIZEN.md
+
+# Working file for the current refactoring branch (see the PR description).
+REFACTORING-BRIEF.md
