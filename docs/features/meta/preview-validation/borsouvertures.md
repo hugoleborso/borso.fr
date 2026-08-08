@@ -376,3 +376,298 @@ not measured.
 Only three viewport widths were measured, 375, 393 and 1280. Nothing between 393
 and 1280 was checked, so the width at which the tree mode flips between
 `Buttons` and `Arrows` is not known, only that it is somewhere in that range.
+
+# Regression check at `f88e1d0`
+
+2026-08-08. Re-run of the walkthrough above against
+`https://borsouvertures-pr-40.preview.borso.fr`, looking for regressions
+introduced since the validation recorded in the previous sections.
+
+## Verdict
+
+**No regressions found.** Every functional check that passed before passes
+again, and none of the three changes broke anything that was working.
+
+**Defect 1 is closed.** The `lang` attribute now follows the language toggle in
+both directions.
+
+The other five defects all still reproduce, unchanged: the plural rule, the
+thirty-two unnamed ARIA buttons, the missing `main` landmark and level one
+heading, the board square that ignores a click or a tap, and the 404 favicon.
+
+The preview was confirmed to be serving the new code before anything was
+measured. `https://borsouvertures-pr-40.preview.borso.fr/` served
+`assets/index-Do7mtLcu.js` with a `last-modified` of 2026-08-08 19:57, and
+`grep -c languageChanged` on that bundle returns 1, so the `i18n.ts`
+subscription that change 1 adds is in the shipped code.
+
+## Change 1, the `lang` attribute now follows the EN/FR toggle
+
+Closed. This was defect 1 of the baseline, and it no longer reproduces.
+
+On a fresh load with `localStorage` cleared, `document.documentElement.lang`
+reads `en`, which is the English fallback this app is meant to land on. The
+toggle was then pressed six times, reading the attribute after each press:
+
+| Press | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| `document.documentElement.lang` | `fr` | `en` | `fr` | `en` | `fr` | `en` |
+
+It alternates cleanly and is still tracking on the sixth switch, so the
+subscription is not being dropped or double-registered.
+
+Two further checks. With the interface in French the attribute reads `fr` while
+`document.body.innerText` begins
+`Borsouvertures | Apprendre | Jouer | Style d'échiquier : …`, so the attribute
+and the rendered catalogue agree. `localStorage` holds
+`{"borsouvertures.language":"fr"}`, and after a reload with that value stored
+the attribute is `fr` on the first paint, so the initial-language path sets it
+too rather than only the change event.
+
+The same six-press check was repeated through touch on the phone viewport, and
+produced the same alternation, `fr en fr en fr en`.
+
+Evidence `borsouvertures/regress-01-landing-fr-lang-fr.png`.
+
+## Change 2, `isSquare` is a plain predicate and `Selection` ids are simpler
+
+No regression. The board was driven hard, with the console and the page-error
+log read after every group of actions. Nothing threw, and nothing was logged at
+any level.
+
+`toSquare` is reached from `uciFromSquare` and `uciToSquare`, which are called
+by `learnTreeMachine.utils.ts`, `playMachine.utils.ts`, `moveNotation.utils.ts`
+and `uciToArrow`. The user drag path reaches them through `BoardView.tsx`, which
+builds the UCI with `buildDroppedUci(sourceSquare, targetSquare)` and gates it on
+`selectBoardDropDecision`, so a drop off the board arrives as a `null` target and
+is discarded before any parse happens.
+
+What was driven, all of it with an empty console and an empty error log
+afterwards:
+
+- **Legal moves.** `e2e4` put `wP` on `e4` and the opponent answered `e7e5`.
+  `g1f3` put `wN` on `f3` and the opponent answered `Nc6`. Board state was read
+  back from the `data-piece` attributes each time, not from a screenshot.
+- **A line played to its end.** Continuing from there, `f1c4`, `e1g1`, `d2d4`,
+  `f3d4`, `c1g5`, `f2f4`, `f4e5`, `b1c3`, each read out of the arrow overlay's
+  `bors-board-arrowhead-<n>-<from>-<to>` marker id. The counter moved from
+  `Lines visited 0 / 10` to `1 / 10`. Evidence
+  `borsouvertures/regress-02-drill-line-complete.png`.
+- **An illegal move.** `a1` to `a5`, a rook through its own pawn. Rejected, no
+  piece appeared on `a5`, no dialog, no log entry.
+- **A legal move that is out of book.** `a2a3`. The board refused it and the
+  panel opened the out-of-book dialog reading
+  `That move isn't in this variation. Try one of the book moves shown.` with
+  `Try again` and `Reveal book moves`. This is the intended path, and it is the
+  one that most nearly exercises a bad square string.
+- **A drag starting from an empty square.** `e4` to `e5` with `e4` empty.
+  Nothing happened.
+- **A drag ending on the same square it started on.** `e2` to `e2`, which builds
+  the UCI `e2e2`. Nothing happened.
+- **Five drops outside the board.** A piece was picked up and released at
+  viewport points `(20, 60)`, `(1270, 990)`, `(12, 890)`, `(400, 100)` and
+  `(740, 500)`, all outside the 700 by 700 board container that sits at
+  `(24, 178)`. The piece stayed on its origin square every time.
+- **Clicks that are not drags.** An empty square, an occupied square, and the
+  page background at `(10, 10)`. Nothing moved and nothing was logged.
+- **A burst of ten drags** issued back to back with no wait between them.
+- **The same abuse through touch**, at 375 by 667 with `pointer: coarse`,
+  `hover: none` and `maxTouchPoints: 5`. A touch drag from `e2` to `e4` moved the
+  pawn and drew the reply, a touch drag from `g1` released at `(5, 5)` left the
+  knight in place, and a tap on the `Nf3` move button played it.
+- **Play mode**, which the baseline did not exercise at all and which uses the
+  same UCI helpers through `playMachine.utils.ts`. Three book moves narrowed the
+  match count from `347` to `7` to `2` to `1`. `Undo` and `Reset game` both
+  worked, and an out-of-book move opened the same dialog. Evidence
+  `borsouvertures/regress-05-play-mode.png`.
+- **Drilling as Black.** `e7e5`, `b8c6`, `f8c5`, reaching `1 / 10`. Evidence
+  `borsouvertures/regress-04-drill-as-black.png`.
+
+## Change 3, `require-array-sort-compare` replaced the unicorn rule
+
+No behaviour change, and no user-visible surface at all.
+
+The two sorts are `listTranslationKeys` in
+`apps/borsouvertures/site/i18n/i18n.utils.ts` and the three calls in
+`i18n-parity.core.ts`. Both now sort with `compareTranslationKeys`, which wraps
+`localeCompare`. Neither is reachable from the interface: they exist to let the
+parity gate compare the English and French key lists. `grep -c localeCompare` on
+the shipped bundle returns 0, so this code is tree-shaken out of the deployed
+app entirely and cannot have changed what a user sees.
+
+The user-visible lists were checked anyway, and are ordered exactly as before.
+The fifteen openings appear in the same sequence in English and in French, with
+the same counts: Modern Defense 27, English Opening 33, Pirc Defense 10,
+Scandinavian Defense 23, Caro-Kann Defense 44, Sicilian Defense 88, French
+Defense 45, Vienna Game 21, Scotch Game 34, Four Knights Game 8, Italian Game 19,
+Ruy Lopez 36, Queen's Gambit 67, Catalan Opening 5, Nimzo-Indian Defense 17. The
+Italian Game still expands to 19 variations in the same order, and Giuoco Piano
+still lists 10 line cards.
+
+## The baseline, re-confirmed
+
+**Every toggle toggles.** Learn and Play moves `aria-pressed` from `false` to
+`true` and switches the screen. White and Black moves to `true` and flips the
+board: `a8` moved from `(83, 237)` to `(665, 819)` and `h1` moved the other way,
+so rank 1 sits at the top, and White had already played `e4` before the first
+user move. EN and FR is covered above. `Show moves` moves between `false` and
+`true`. The tree mode toggle moves between `false` and `true` on click and still
+reads `true` on its own at 375 pixels, where it offers move buttons instead of
+arrows. Playing a move by tapping one of those buttons works. Evidence
+`borsouvertures/regress-03-buttons-mode.png`.
+
+**The four board styles are unchanged**, measured as the computed background of
+`a8` over `b8`, and identical to the values the baseline recorded: Chess.com
+`rgb(217, 215, 201)` over `rgb(107, 143, 65)`, Lichess `rgb(240, 217, 181)` over
+`rgb(181, 136, 99)`, Nord Blue `rgb(236, 239, 244)` over `rgb(76, 86, 106)`, Sand
+`rgb(243, 233, 220)` over `rgb(194, 168, 120)`.
+
+**Both catalogues are complete.** A walk of every text node matching
+`^[a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z0-9_]+)+$` returned only the literal
+`Chess.com`, which is a board style name, in all of these states: landing,
+opening expanded, variation selected with lines listed, drill board, and play
+session, in both languages. No English string survives in the French page and no
+French string appears in the English page, checked with a word list covering the
+selector columns, the play-mode scope cards and every drill control. The
+`aria-label` attributes still translate, `Toggle mode`, `Board style:`,
+`Interface language`, `Choose side` against `Changer de mode`,
+`Style d'échiquier :`, `Langue de l'interface`, `Choisir la couleur`, and inside
+the drill `Show moves toggle` and `Tree visualization mode` against
+`Afficher les coups` and `Mode de visualisation de l'arbre`.
+
+**An opening expands and a variation loads onto the board.** Selecting
+`Italian Game` filled the Variations column with 19 entries, selecting
+`Giuoco Piano` filled the Lines column with 10 cards and enabled
+`Drill this variation`, and pressing it opened the drill on the start position.
+
+**A real sequence of moves plays through the drill to completion.** Two full
+drills were played, described under change 2 above, plus a third on
+`Italian Game` `Main Line`, which has exactly one line. That third drill was
+played to `1 / 1`, and reaching it revealed the completion state the baseline
+had not observed: the panel shows
+`Variation cleared — every line visited at least once` with two new controls,
+`Drill again` and `Switch to Play with this scope`. Evidence
+`borsouvertures/regress-09-variation-cleared.png`.
+
+**No console message of any level.** `agent-browser console` and
+`agent-browser errors` were read after every group of actions through the whole
+session and returned empty every time, including a final sweep over a fresh
+load that switched language twice, expanded an opening, flipped sides, entered
+and left Play mode and changed the board style. The touch pass listened on
+`Runtime.consoleAPICalled`, `Log.entryAdded` and `Runtime.exceptionThrown`
+directly over the protocol and recorded no event.
+
+**No horizontal overflow.** Each cell is
+`document.documentElement.scrollWidth` over `clientWidth`.
+
+| State | 375 | 393 | 1280 |
+|---|---|---|---|
+| Landing | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
+| Opening expanded | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
+| Variation selected | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
+| Drill board | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
+| Play mode | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
+
+**The two fixes from the earlier mobile viewport audit still hold.** On a fresh
+landing at 1280 the decorative mini boards are still 15 `inert` and
+`aria-hidden` subtrees holding 480 of the 500 elements matching the focusable
+selector, leaving 20 real tab stops; with an opening and a variation expanded the
+figures are 1408 of 1457, leaving 49. Control heights at 375 are all at or above
+44: mode toggle 171 by 44, board style select 129 by 44, language toggle 133 by
+44, side toggle 182 by 44, `Drill this variation` 173 by 44, opening cards 321 by
+163. Evidence `borsouvertures/regress-07-landing-375.png`.
+
+**Contrast is unchanged.** Measured against the alpha composited background as
+before, the lowest sampled ratio is again 6.06 to 1 for the active accent
+`rgb(164, 125, 255)` on the composited `rgb(21, 21, 21)`, rising to 6.52 to 1
+where the composite is `rgb(11, 11, 11)`. The brand title and the panel headings
+sit at 16.79 to 1 and the board style select at 17.89 to 1.
+
+## The six baseline defects, one by one
+
+| # | Defect | Status at `f88e1d0` |
+|---|---|---|
+| 1 | `document.documentElement.lang` stays `en` in French | **Closed** |
+| 2 | Counts of one render as `1 lines` and `1 lignes` | Still reproduces |
+| 3 | 32 draggable pieces are ARIA buttons with no name | Still reproduces |
+| 4 | No `main` landmark and no level one heading | Still reproduces |
+| 5 | Clicking or tapping a board square does nothing | Still reproduces |
+| 6 | `/favicon.ico` returns 404 | Still reproduces |
+
+**Defect 1.** Closed, see change 1 above.
+
+**Defect 2.** Unchanged. Expanding `Italian Game` gives `Main Line1 lines`,
+`Anti-Fried Liver Defense1 lines`, `Blackburne-Kostić Gambit1 lines`,
+`Deutz Gambit1 lines` and seven more reading `1 lines`, eleven of the nineteen.
+French gives `1 lignes` on the same eleven. Evidence
+`borsouvertures/regress-06-plural-1-lines.png`.
+
+**Defect 3.** Unchanged. `agent-browser a11y` on the drill board reports
+`[serious] aria-command-name: ARIA commands must have an accessible name
+(32 nodes)`, the same count on the same
+`div[role="button"][aria-roledescription="draggable"]` wrappers.
+
+**Defect 4.** Unchanged. The same axe-core run reports the same three moderate
+violations, `landmark-one-main` on `html`, `page-has-heading-one` on `html`, and
+`region` on 18 nodes. `color-contrast` is still incomplete for 34 nodes, and the
+manual measurement above resolves them.
+
+**Defect 5.** Unchanged, on both input methods. With a mouse, clicking
+`#bors-board-square-e2` and then `#bors-board-square-e4` left the board
+identical, the square's `box-shadow` stayed `none` and its `background-color`
+stayed at the palette value. Through touch at 375, tapping the centre of `e2` and
+then `e4` also left the board identical, with `document.activeElement` staying
+`BODY`. One small difference from the baseline, which is a detail rather than a
+change in behaviour: after a mouse click on an occupied square
+`document.activeElement` is now the draggable `DIV` rather than `BODY`. Nothing
+visible follows from it, there is still no selection highlight and no move, so
+the defect stands as written.
+
+**Defect 6.** Unchanged. `curl` returns 404 for
+`https://borsouvertures-pr-40.preview.borso.fr/favicon.ico`, and it is the only
+non-200 entry in the session's network log. `/openings.json`,
+`/manifest.webmanifest` and `/pwa-192x192.png` all return 200.
+
+## Observations that are not regressions
+
+**`Reset drill` clears the visited counter.** Pressing it on a 10-line variation
+returns the board to the start position and the counter from `3 / 10` to
+`0 / 10`. This matches `start()` in `learnTreeMachine.utils.ts`, which assigns
+`visitedLeafIds = EMPTY_VISITED`, and it matches the control's French label
+`Recommencer la séance`, so it reads as the intended restart rather than a fault.
+It is recorded here because the baseline listed the drill's completion behaviour
+as unchecked, and anyone reading that gap should know the counter does not carry
+across a reset.
+
+**A drilled branch can dead-end before the variation is cleared.** On
+`Giuoco Piano` one run reached `1 / 10` and then had no book move left, with only
+`Reset drill`, `Reveal arrows` and `Change selection` offered. A second run on the
+same variation played ten consecutive book moves and reached `3 / 10` without
+dead-ending. So progress does accumulate across several lines inside one session,
+and whether a session can reach `10 / 10` depends on which replies the random
+opponent picks. This was not measured against the baseline and is not attributable
+to any of the three changes.
+
+## What could not be checked
+
+`10 / 10` on a ten-line variation was not reached. The completion state itself
+was reached and is described above, on the single-line `Main Line`, so the
+cleared banner and its two controls are confirmed to exist and to render.
+
+Argent's own `gesture-tap` was not usable, exactly as the baseline and the
+knowledge document record. Touch was driven as `Input.dispatchTouchEvent` pairs
+over a protocol connection held beside argent on `chromium-cdp-9224`, with
+`Emulation.setDeviceMetricsOverride` at 375 by 667 and
+`Emulation.setTouchEmulationEnabled` at five touch points. The page reported
+`pointer: coarse` true, `hover: none` true and `maxTouchPoints` 5.
+
+No real device was involved, so the four gaps the baseline named remain: the
+software keyboard, iOS Safari and Android Chrome scroll behaviour, touch event
+ordering under a real compositor, and rendering at a real device pixel ratio.
+
+One harness note for the next run, since it cost time here and is not a fault in
+the page. A drag only registers if the mouse moves in several steps and the
+target square is inside the viewport. Two intermediate points were not enough,
+eight were; and at a viewport height of 633 the lower half of the board sits
+below the fold, so `mouse move` never reaches those squares. Driving the drill at
+1280 by 1000 removed both problems.
