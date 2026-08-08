@@ -9,22 +9,25 @@
  * `POST /api/admin/rotate-password`) invalidates every existing cookie.
  * See ADR-0004.
  *
- * Pure module — `crypto` is the only side-effect-free dependency. The
+ * Pure module — `crypto` and `zod` are its only dependencies. The
  * caller passes `now` so callers stay testable; `verifyCookie` rejects
  * expired tokens deterministically.
  */
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { z } from 'zod';
 
 export const SESSION_COOKIE_NAME = 'pragma_session';
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const COOKIE_SEPARATOR = '.';
 
-export interface SessionPayload {
-  issuedAt: number;
-  expiresAt: number;
-}
+const sessionPayloadSchema = z.object({
+  issuedAt: z.number(),
+  expiresAt: z.number(),
+});
+
+export type SessionPayload = z.infer<typeof sessionPayloadSchema>;
 
 export type VerifyResult =
   | { ok: true; payload: SessionPayload }
@@ -48,29 +51,17 @@ export function buildCookie(hmacKey: Buffer, nowMillis: number): string {
     issuedAt: nowMillis,
     expiresAt: nowMillis + SESSION_TTL_MS,
   };
-  const payloadEncoded = toBase64Url(Buffer.from(JSON.stringify(payload), 'utf8'));
+  const payloadEncoded = toBase64Url(Buffer.from(JSON.stringify(payload)));
   const signature = sign(payloadEncoded, hmacKey);
   return `${payloadEncoded}${COOKIE_SEPARATOR}${signature}`;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
 function parseJsonPayload(raw: string): SessionPayload | null {
-  let parsed: unknown;
   try {
-    parsed = JSON.parse(raw);
+    return sessionPayloadSchema.parse(JSON.parse(raw));
   } catch {
     return null;
   }
-  if (!isRecord(parsed)) return null;
-  const issuedAt = parsed.issuedAt;
-  const expiresAt = parsed.expiresAt;
-  if (typeof issuedAt !== 'number' || typeof expiresAt !== 'number') {
-    return null;
-  }
-  return { issuedAt, expiresAt };
 }
 
 export function verifyCookie(

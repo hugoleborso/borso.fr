@@ -50,6 +50,13 @@ describe('session-cookie.utils', () => {
     expect(result).toEqual({ ok: false, reason: 'bad-signature' });
   });
 
+  it('rejects a signature whose byte length differs from the expected one', () => {
+    const cookie = buildCookie(HMAC_KEY, NOW);
+    const [payloadEncoded] = cookie.split('.');
+    const result = verifyCookie(`${payloadEncoded ?? ''}.AA`, HMAC_KEY, NOW);
+    expect(result).toEqual({ ok: false, reason: 'bad-signature' });
+  });
+
   it('rejects a cookie with a tampered payload', () => {
     const cookie = buildCookie(HMAC_KEY, NOW);
     const [, signature] = cookie.split('.');
