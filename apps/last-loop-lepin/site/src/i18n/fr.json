@@ -122,7 +122,7 @@
     "sign-in-failed": "Connexion impossible. Réessayez.",
     "no-active-edition": "Aucune édition active. Ouvre l'onglet Setup pour en créer une.",
     "tab": {
-      "setup": "Setup",
+      "setup": "Configuration",
       "runners": "Coureurs",
       "punch": "Pointage",
       "did-not-finish": "DNF",
@@ -163,7 +163,7 @@
       "edit-title": "Modifier l'édition",
       "create-title": "Créer une édition",
       "create-another-title": "Créer une nouvelle édition",
-      "hint-editing": "status: setup",
+      "hint-editing": "statut\u00a0: setup",
       "hint-initial": "configuration initiale",
       "hint-different-slug": "slug différent",
       "slug": "Slug",

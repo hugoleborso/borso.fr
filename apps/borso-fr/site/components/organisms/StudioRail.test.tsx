@@ -62,8 +62,8 @@ describe('StudioRail', () => {
 
   it('names every slider so it can be reached by label', () => {
     renderRail();
-    expect(screen.getByLabelText('Complexity')).toBeDefined();
-    expect(screen.getByLabelText('Line weight')).toBeDefined();
-    expect(screen.getByLabelText('Color balance')).toBeDefined();
+    expect(screen.getByLabelText('Complexité')).toBeDefined();
+    expect(screen.getByLabelText('Épaisseur du trait')).toBeDefined();
+    expect(screen.getByLabelText('Équilibre des couleurs')).toBeDefined();
   });
 });

@@ -27,11 +27,12 @@ const DEFAULT_COMPLEXITY = 22;
 const DEFAULT_LINE_WEIGHT = 6;
 const DEFAULT_BALANCE = 0.5;
 
-const TODAY_LABEL = new Date().toLocaleDateString('en-US', {
+const TODAY = new Date();
+const TODAY_LABEL_FORMAT: Intl.DateTimeFormatOptions = {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
-});
+};
 
 function onPaletteKeyChange(nextPaletteKey: PaletteKey): void {
   applyPaperTheme(nextPaletteKey);
@@ -39,7 +40,7 @@ function onPaletteKeyChange(nextPaletteKey: PaletteKey): void {
 }
 
 export function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isReducedMotion = useIsReducedMotion();
   const { seed, paletteKey } = useCompositionState();
 
@@ -110,7 +111,7 @@ export function App() {
         title={title}
         paletteLabel={t(selectPaletteLabelKey(paletteKey))}
         fieldCount={fieldCount}
-        todayLabel={TODAY_LABEL}
+        todayLabel={TODAY.toLocaleDateString(i18n.language, TODAY_LABEL_FORMAT)}
         rectangles={rectangles}
         palette={palette}
         lineWeight={lineWeight}

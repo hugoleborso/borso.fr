@@ -290,16 +290,16 @@
     }
   },
   "mondrian": {
-    "brandmark": "Borso’s Atelier · Est. 1999",
+    "brandmark": "Atelier Borso · Depuis 1999",
     "title": "Mondrian",
-    "generator-tag": "— Generator —",
-    "subtitle-before-de-stijl": "A studio for composing in the manner of",
+    "generator-tag": "— Générateur —",
+    "subtitle-before-de-stijl": "Un atelier pour composer à la manière de",
     "subtitle-de-stijl": "De Stijl",
-    "subtitle-after-de-stijl": ": rectangles, primary colors, and the deliberate quiet between them.",
+    "subtitle-after-de-stijl": "\u00a0: des rectangles, des couleurs primaires, et le silence bien choisi qui les sépare.",
     "rail": {
-      "label": "Studio controls",
-      "open": "Studio",
-      "close": "Close"
+      "label": "Commandes de l'atelier",
+      "open": "Atelier",
+      "close": "Fermer"
     },
     "section": {
       "composition": "Composition",
@@ -307,61 +307,61 @@
       "animation": "Animation"
     },
     "field": {
-      "complexity": "Complexity",
-      "complexity-value": "{{count}} fields",
-      "line-weight": "Line weight",
+      "complexity": "Complexité",
+      "complexity-value": "{{count}} champs",
+      "line-weight": "Épaisseur du trait",
       "line-weight-value": "{{weight}} px",
-      "colour-balance": "Color balance",
+      "colour-balance": "Équilibre des couleurs",
       "colour-balance-value": "{{percentage}}%"
     },
     "palette": {
       "legend": "Palette",
       "classic": "Classique",
-      "muted": "Muted",
+      "muted": "Sourde",
       "nocturne": "Nocturne",
-      "garden": "Garden",
-      "custom": "Custom"
+      "garden": "Jardin",
+      "custom": "Libre"
     },
     "custom-colour": {
-      "colour-one": "Color 1",
-      "colour-two": "Color 2",
-      "colour-three": "Color 3",
-      "paper": "Paper",
-      "ink": "Ink"
+      "colour-one": "Couleur 1",
+      "colour-two": "Couleur 2",
+      "colour-three": "Couleur 3",
+      "paper": "Papier",
+      "ink": "Encre"
     },
     "swatch": {
-      "change": "Click to change {{name}}",
-      "edit": "Edit {{name}}"
+      "change": "Cliquer pour changer {{name}}",
+      "edit": "Modifier {{name}}"
     },
     "animation": {
-      "legend": "Animation mode",
-      "still": "Still",
-      "drift": "Drift",
-      "breathe": "Breathe",
+      "legend": "Mode d'animation",
+      "still": "Fixe",
+      "drift": "Dérive",
+      "breathe": "Souffle",
       "cascade": "Cascade"
     },
     "action": {
-      "compose": "Compose",
-      "download": "Download"
+      "compose": "Composer",
+      "download": "Télécharger"
     },
     "credit": {
-      "heading": "Studio note",
-      "body": "Each composition is generated from a single seed.",
-      "hint-fine": "Press space to compose anew",
-      "hint-coarse": "Tap the painting to compose anew",
-      "tail-before-cascade": ". Hold a palette to sit with it; switch to",
+      "heading": "Note d'atelier",
+      "body": "Chaque composition naît d'une seule graine.",
+      "hint-fine": "Appuyez sur espace pour en composer une autre",
+      "hint-coarse": "Touchez le tableau pour en composer un autre",
+      "tail-before-cascade": ". Restez sur une palette pour l'habiter\u00a0; passez en",
       "tail-cascade": "Cascade",
-      "tail-after-cascade": "to let the room rearrange itself."
+      "tail-after-cascade": "pour laisser la pièce se réorganiser toute seule."
     },
     "stage": {
       "work-number": "Composition · {{number}}",
-      "meta": "{{count}} fields · {{date}}",
-      "seed": "Seed · {{seed}}",
-      "hint-fine-before": "Press",
-      "hint-fine-key": "space",
-      "hint-fine-after": "to compose",
-      "hint-coarse": "Tap the painting to compose",
-      "frame-label": "Composition. Click to recompose."
+      "meta": "{{count}} champs · {{date}}",
+      "seed": "Graine · {{seed}}",
+      "hint-fine-before": "Appuyez sur",
+      "hint-fine-key": "espace",
+      "hint-fine-after": "pour composer",
+      "hint-coarse": "Touchez le tableau pour composer",
+      "frame-label": "Composition. Cliquer pour recomposer."
     }
   }
 }
