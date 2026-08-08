@@ -80,6 +80,9 @@ match and the cache applies.
 The cost is hashing every file on every run, which is small next to building a
 TypeScript program per workspace.
 
+Measured on the first run with it, at `a0347ea`: the lint step went from 68 s to
+3 s, and the `build` job from 183 s to 139 s.
+
 ## Eradication
 
 **Level 1 — structural.** The flag is on every ESLint invocation in the

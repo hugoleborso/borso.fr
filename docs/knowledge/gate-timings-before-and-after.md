@@ -18,7 +18,7 @@ Biome did linting and formatting in one binary. It is now ESLint plus Prettier.
 | Check | Biome, before | ESLint and Prettier, after |
 |-------|---------------|----------------------------|
 | Lint the repository, cold | 3.5 s | 80.7 s |
-| Lint the repository, warm cache | not applicable | 3.2 s |
+| Lint the repository, warm cache | not applicable | 3.2 s locally, 3 s in CI |
 | Format check, cold | included in the 3.5 s | 20.4 s |
 | Format check, warm cache | not applicable | 6.6 s |
 | Lint three staged files, warm | not applicable | 2.9 s |
@@ -70,11 +70,12 @@ The first run on this branch, at commit `14fc404`, with no cache to restore:
 | `commitlint` | 27 s |
 | `detect` | 30 s |
 
-So CI went from a 97 s median to about 180 s on a cold-cache run, which is
-roughly 85% slower. The job now also does three things it did not do before,
-which are checking formatting separately, running the custom rule tests, and
-saving the caches. That run carried 390 rule tests; the suite has since grown to
-444, so the job is a little slower than the figure above.
+So a cold-cache run is about 180 s against a 97 s median, which is roughly 85%
+slower. A warm run is 139 s; the section below explains why that took a bug fix
+to reach. The job now also does three things it did not do before, which are
+checking formatting separately, running the custom rule tests, and saving the
+caches. That run carried 390 rule tests; the suite has since grown to 444, so
+the job is a little slower than the figure above.
 
 CI persists `.eslintcache` and the Prettier cache, keyed on the lockfile,
 `eslint.config.js` and `.prettierrc.json`. Three `build` runs on this branch:
@@ -110,9 +111,21 @@ new mtime, so the restored cache matched nothing. Every invocation now passes
 `--cache-strategy content`, which hashes contents instead. See
 [`docs/dantotsus/eslint-cache-useless-on-a-fresh-checkout.md`](../dantotsus/eslint-cache-useless-on-a-fresh-checkout.md).
 
-The figures above are what the job cost before that fix, so treat 180 s as the
-worst case rather than the current cost. This document will carry the corrected
-number once two runs have gone through with the content strategy in place.
+The first run with the content strategy, at `a0347ea`, restoring a cache written
+in the new format:
+
+| Step | Before the fix | After |
+|------|---------------:|------:|
+| `pnpm exec eslint .` | 68 s | 3 s |
+| `build` job total | 183 s | 139 s |
+
+That is the honest after figure. CI went from a 97 s median before the migration
+to 139 s warm, which is about 43% slower, not the 85% the cold runs suggested.
+The remaining gap is real work the old job did not do: a separate formatting
+check, 444 rule tests, and a typecheck that grew with the 68 new pure files.
+
+A commit that touches `pnpm-lock.yaml`, `eslint.config.js` or `.prettierrc.json`
+still pays the cold price, because those three files are the cache key.
 
 ## Test suites
 
