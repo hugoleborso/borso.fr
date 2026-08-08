@@ -51,6 +51,7 @@ Two failure modes to watch for:
 
 - [`macos-bsd-vs-aws-cli-quirks.md`](./macos-bsd-vs-aws-cli-quirks.md) — BSD `date`, AWS CLI v2 list-parsing, `fileb://` for binary inputs.
 - [`commitlint-header-100-char-cap.md`](./commitlint-header-100-char-cap.md) — `header-max-length` is hard-capped at 100 chars regardless of scope-enum richness.
+- [`gate-timings-before-and-after.md`](./gate-timings-before-and-after.md) — what every gate costs, measured: ESLint is 23x slower than biome cold and identical warm; CI went from a 97 s median to ~180 s cache-cold; test suites roughly doubled.
 - [`agentic-device-testing.md`](./agentic-device-testing.md) — `@swmansion/argent` drives real iOS Simulators / Android emulators / TVs; why a 375 px Chromium resize is not a phone test; what the web sandbox cannot run (no `/dev/kvm`, no Xcode).
 - [`agent-browser-cli-quirks.md`](./agent-browser-cli-quirks.md) — `--executable-path` ignored once daemon runs; `screenshot` takes positional path, not `--output`; Chromium provisioning can fail behind proxies.
 - [`zsh-read-p-coprocess-quirk.md`](./zsh-read-p-coprocess-quirk.md) — `read -rsp "prompt: " var` is bash-only ; zsh reads `-p` as a coprocess flag and errors. Use `printf` + `stty -echo` + `read -r` for portable interactive prompts.
