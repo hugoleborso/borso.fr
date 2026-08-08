@@ -1,14 +1,11 @@
 import type english from './en.json';
 
-export type SupportedLanguage = 'en' | 'fr';
-
-export const SUPPORTED_LANGUAGES: readonly SupportedLanguage[] = ['fr', 'en'];
-
 /**
- * The copy on this site is written in French first, so a visitor whose browser
- * asks for neither French nor English still reads the source language.
+ * The only language this site renders. There is no switcher and no browser
+ * negotiation: borso.fr is French, and `en.json` exists as the reference
+ * catalogue the parity test compares against rather than as a second edition.
  */
-export const DEFAULT_LANGUAGE: SupportedLanguage = 'fr';
+export const DEFAULT_LANGUAGE = 'fr';
 
 export type CatalogueValue = string | CatalogueTree;
 export interface CatalogueTree {
@@ -27,36 +24,6 @@ type DottedLeafPaths<Tree> = {
  * content key a typecheck failure instead of a raw key rendered on the page.
  */
 export type TranslationKey = DottedLeafPaths<typeof english>;
-
-export function isSupportedLanguage(candidate: string): candidate is SupportedLanguage {
-  return SUPPORTED_LANGUAGES.some((supported) => supported === candidate);
-}
-
-const LANGUAGE_TAG_SEPARATOR = '-';
-
-export function readLanguageFamily(languageTag: string): string {
-  const lowercased = languageTag.toLowerCase();
-  const separatorIndex = lowercased.indexOf(LANGUAGE_TAG_SEPARATOR);
-  if (separatorIndex === -1) return lowercased;
-  return lowercased.slice(0, separatorIndex);
-}
-
-/**
- * The saved choice wins, then the first browser language we support, then the
- * default. Both inputs are arguments so the decision stays testable without a
- * browser.
- */
-export function selectInitialLanguage(
-  savedLanguage: string | null,
-  browserLanguages: readonly string[],
-): SupportedLanguage {
-  if (savedLanguage !== null && isSupportedLanguage(savedLanguage)) return savedLanguage;
-  for (const browserLanguage of browserLanguages) {
-    const family = readLanguageFamily(browserLanguage);
-    if (isSupportedLanguage(family)) return family;
-  }
-  return DEFAULT_LANGUAGE;
-}
 
 const KEY_PATH_SEPARATOR = '.';
 
