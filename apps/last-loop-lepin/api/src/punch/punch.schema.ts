@@ -52,9 +52,7 @@ export const manualDidNotFinishesTable = pgTable(
     decidedAt: timestamp('decided_at', { withTimezone: true, mode: 'date' }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   },
-  (table) => ({
-    primary: primaryKey({ columns: [table.editionSlug, table.runnerSlug] }),
-  }),
+  (table) => [primaryKey({ columns: [table.editionSlug, table.runnerSlug] })],
 );
 
 export const createPunchInputSchema = z.object({

@@ -1,5 +1,6 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { Database } from '../database/client';
+import type { AuthDenialReason } from './auth.core';
 import {
   type AdminSession,
   createSession,
@@ -13,6 +14,7 @@ import {
 } from './auth.repository';
 
 export { getDatabase } from '../database/client';
+export { httpStatusForAuthDenial } from './auth.core';
 
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_ATTEMPTS = 5;
@@ -23,7 +25,7 @@ const SESSION_ID_BYTES = 32;
 
 export class AuthDeniedError extends Error {
   override readonly name = 'AuthDeniedError';
-  constructor(public readonly reason: 'rate-limited' | 'invalid-pin' | 'misconfigured') {
+  constructor(public readonly reason: AuthDenialReason) {
     super(`auth denied: ${reason}`);
   }
 }

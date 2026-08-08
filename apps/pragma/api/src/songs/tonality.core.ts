@@ -75,7 +75,7 @@ export function deriveTonality(chordProSource: string): {
   for (const line of lines) {
     const chords = chordsOnLine(line);
     if (chords.length === 0) continue;
-    if (start === null) start = chords[0] ?? null;
+    start ??= chords[0] ?? null;
     const last = chords[chords.length - 1];
     if (last !== undefined) end = last;
   }

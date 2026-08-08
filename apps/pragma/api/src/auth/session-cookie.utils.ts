@@ -92,9 +92,10 @@ export function verifyCookie(
   const expectedSignature = sign(payloadEncoded, hmacKey);
   const expectedBytes = fromBase64Url(expectedSignature);
   const providedBytes = fromBase64Url(signatureEncoded);
+  if (expectedBytes === null || providedBytes === null) {
+    return { ok: false, reason: 'bad-signature' };
+  }
   if (
-    expectedBytes === null ||
-    providedBytes === null ||
     expectedBytes.length !== providedBytes.length ||
     !timingSafeEqual(expectedBytes, providedBytes)
   ) {

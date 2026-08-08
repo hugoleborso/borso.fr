@@ -152,3 +152,19 @@ export function mapMusicBrainzRecordings(payload: unknown): ExternalSongHit[] {
   }
   return hits;
 }
+
+export interface ExternalSearchCacheEntry {
+  readonly value: ExternalSongHit[];
+  readonly expiresAt: number;
+}
+
+/**
+ * The keys of a search cache whose entries have reached their expiry, so the
+ * caller can drop them without iterating a map it is mutating.
+ */
+export function expiredSearchCacheKeys(
+  cache: ReadonlyMap<string, ExternalSearchCacheEntry>,
+  now: number,
+): readonly string[] {
+  return [...cache].filter(([, entry]) => entry.expiresAt <= now).map(([cacheKey]) => cacheKey);
+}

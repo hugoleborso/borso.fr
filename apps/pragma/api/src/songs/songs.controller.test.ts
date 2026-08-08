@@ -241,7 +241,8 @@ describe('songs controller (back-e2e)', () => {
       expect(firstHit?.isrcs).toEqual(['USQX91300108', 'GBUM71302999', 'USQX91300109']);
       expect(firstHit?.disambiguation).toBe('radio edit');
       expect(fetchSpy).toHaveBeenCalledTimes(1);
-      const calledUrl = String(fetchSpy.mock.calls[0]?.[0]);
+      const calledInput = fetchSpy.mock.calls[0]?.[0];
+      const calledUrl = calledInput instanceof Request ? calledInput.url : String(calledInput);
       expect(calledUrl).toContain('musicbrainz.org/ws/2/recording/');
       expect(calledUrl).toContain('inc=tags+releases+isrcs');
       const calledInit = fetchSpy.mock.calls[0]?.[1];

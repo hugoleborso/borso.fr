@@ -8,7 +8,12 @@
  */
 
 import type { z } from 'zod';
-import { type ExternalSongHit, mapMusicBrainzRecordings } from './musicbrainz.core';
+import {
+  type ExternalSearchCacheEntry,
+  expiredSearchCacheKeys,
+  type ExternalSongHit,
+  mapMusicBrainzRecordings,
+} from './musicbrainz.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteSongWithCascade,
@@ -77,13 +82,8 @@ const EXTERNAL_SEARCH_LIMIT = 10;
 
 export type ExternalFetcher = (url: string, init: RequestInit) => Promise<Response>;
 
-interface CacheEntry {
-  readonly value: ExternalSongHit[];
-  readonly expiresAt: number;
-}
-
 interface ExternalSearchState {
-  readonly cache: Map<string, CacheEntry>;
+  readonly cache: Map<string, ExternalSearchCacheEntry>;
   lastCallAt: number;
 }
 
@@ -93,8 +93,8 @@ const externalSearchState: ExternalSearchState = {
 };
 
 function evictExpired(state: ExternalSearchState, now: number): void {
-  for (const [key, entry] of state.cache) {
-    if (entry.expiresAt <= now) state.cache.delete(key);
+  for (const cacheKey of expiredSearchCacheKeys(state.cache, now)) {
+    state.cache.delete(cacheKey);
   }
 }
 

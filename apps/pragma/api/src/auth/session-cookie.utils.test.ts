@@ -22,11 +22,10 @@ describe('session-cookie.utils', () => {
   it('round-trips a freshly built cookie', () => {
     const cookie = buildCookie(HMAC_KEY, NOW);
     const result = verifyCookie(cookie, HMAC_KEY, NOW);
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.payload.issuedAt).toBe(NOW);
-      expect(result.payload.expiresAt).toBe(NOW + SESSION_TTL_MS);
-    }
+    expect(result).toEqual({
+      ok: true,
+      payload: { issuedAt: NOW, expiresAt: NOW + SESSION_TTL_MS },
+    });
   });
 
   it('rejects a cookie missing the separator', () => {

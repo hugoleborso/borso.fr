@@ -5,6 +5,7 @@
  */
 
 import type { Hono } from 'hono';
+import type { z } from 'zod';
 import { createApp } from '../api/src/app';
 
 export const TEST_HOST = 'http://localhost';
@@ -61,10 +62,9 @@ export async function jsonRequest(
  * no-type-assertion plugin bans the cast, and parsing through Zod
  * doubles as a runtime check that the controller honors its contract.
  */
-import type { z } from 'zod';
-export async function readJson<Schema extends z.ZodTypeAny>(
+export async function readJson<Output>(
   response: Response,
-  schema: Schema,
-): Promise<z.infer<Schema>> {
+  schema: z.ZodType<Output>,
+): Promise<Output> {
   return schema.parse(await response.json());
 }

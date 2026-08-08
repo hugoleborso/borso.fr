@@ -11,6 +11,7 @@ import { rankingRouter } from './ranking/ranking.controller';
 import { adminRunnerRouter, runnerRouter } from './runner/runner.controller';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
+const TEST_SEED_FLAG_ON = '1';
 
 function buildAppRouter() {
   return new Hono()
@@ -32,7 +33,8 @@ export type AppType = ReturnType<typeof buildAppRouter>;
 
 export function createApp(): Hono {
   const app = buildAppRouter();
-  if (process.env[TEST_SEED_FLAG] === '1') {
+  const isTestSeedEnabled = process.env[TEST_SEED_FLAG] === TEST_SEED_FLAG_ON;
+  if (isTestSeedEnabled) {
     app.route('/api/__test', testSeedRouter);
   }
   return app;

@@ -84,7 +84,7 @@ export function makeSql(): SqlMock {
         state.rejectNextUnsafe = null;
         return Promise.reject(error);
       }
-      state.unsafeCalls.push({ query, ...(params ? { params } : {}) });
+      state.unsafeCalls.push({ query, ...(params === undefined ? {} : { params }) });
       const schemaExistsMatch = /information_schema\.schemata WHERE schema_name = '([^']+)'/i.exec(
         query,
       );
@@ -113,8 +113,9 @@ export function makeSql(): SqlMock {
       if (/SELECT name FROM/i.test(query)) {
         return Promise.resolve([...state.appliedMigrations].map((name) => ({ name })));
       }
-      if (query.includes('INSERT INTO') && params?.[0] !== undefined) {
-        state.appliedMigrations.add(String(params[0]));
+      const insertedMigrationName = params?.[0];
+      if (query.includes('INSERT INTO') && typeof insertedMigrationName === 'string') {
+        state.appliedMigrations.add(insertedMigrationName);
       }
       return Promise.resolve([]);
     },

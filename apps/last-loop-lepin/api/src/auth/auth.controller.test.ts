@@ -37,7 +37,7 @@ describe('admin auth controller', () => {
   });
 
   afterEach(() => {
-    process.env.ALLOWED_ORIGIN = ALLOWED_ORIGIN ?? originalOrigin;
+    process.env.ALLOWED_ORIGIN = ALLOWED_ORIGIN;
   });
 
   afterAll(() => {

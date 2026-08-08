@@ -109,6 +109,16 @@ export default tseslint.config(
       },
     },
     rules: {
+      // The type-aware counterpart of `unicorn/require-array-sort-compare`,
+      // which is purely syntactic and so cannot tell a numeric sort from a
+      // string one. Every finding the unicorn rule produced here was a
+      // `string[]`, where the default lexicographic order is the intended
+      // one; adding `localeCompare` to satisfy it would have changed
+      // migration file ordering, because that collation gives `-` and `_`
+      // variable weight. This version defaults to `ignoreStringArrays: true`
+      // and still catches the defect that matters, a bare `.sort()` on
+      // `number[]`.
+      '@typescript-eslint/require-array-sort-compare': 'error',
       // Type-aware rules that need a setting to stay useful rather than noisy.
       // A number or a boolean inside a template literal is unambiguous, and
       // rejecting it produces `String(count)` calls that read worse.
@@ -306,7 +316,6 @@ export default tseslint.config(
       'unicorn/consistent-function-scoping': 'error',
 
       // Defect classes rather than preferences.
-      'unicorn/require-array-sort-compare': 'error',
       'unicorn/error-message': 'error',
       'unicorn/throw-new-error': 'error',
       'unicorn/prefer-type-error': 'error',

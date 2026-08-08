@@ -6,7 +6,11 @@
 
 import { describe, expect, it } from 'vitest';
 import FIXTURE from './__fixtures__/musicbrainz-sample.json';
-import { mapMusicBrainzRecordings } from './musicbrainz.core';
+import {
+  type ExternalSearchCacheEntry,
+  expiredSearchCacheKeys,
+  mapMusicBrainzRecordings,
+} from './musicbrainz.core';
 
 describe('mapMusicBrainzRecordings', () => {
   it('projects every recording onto the ExternalSongHit shape', () => {
@@ -189,5 +193,35 @@ describe('mapMusicBrainzRecordings', () => {
       recordings: [{ id: 'x', title: 'T', 'first-release-date': 'unknown' }],
     });
     expect(hits[0]?.year).toBe(null);
+  });
+});
+
+const NOW = 1_700_000_000_000;
+
+function entryExpiringAt(expiresAt: number): ExternalSearchCacheEntry {
+  return { value: [], expiresAt };
+}
+
+describe('expiredSearchCacheKeys', () => {
+  it('answers an empty list for an empty cache', () => {
+    expect(expiredSearchCacheKeys(new Map(), NOW)).toEqual([]);
+  });
+
+  it('keeps an entry whose expiry is still ahead', () => {
+    const cache = new Map([['daft punk', entryExpiringAt(NOW + 1)]]);
+    expect(expiredSearchCacheKeys(cache, NOW)).toEqual([]);
+  });
+
+  it('expires an entry the moment its expiry is reached, not one tick later', () => {
+    const cache = new Map([['daft punk', entryExpiringAt(NOW)]]);
+    expect(expiredSearchCacheKeys(cache, NOW)).toEqual(['daft punk']);
+  });
+
+  it('answers only the expired keys of a mixed cache', () => {
+    const cache = new Map([
+      ['stale', entryExpiringAt(NOW - 1)],
+      ['fresh', entryExpiringAt(NOW + 1)],
+    ]);
+    expect(expiredSearchCacheKeys(cache, NOW)).toEqual(['stale']);
   });
 });

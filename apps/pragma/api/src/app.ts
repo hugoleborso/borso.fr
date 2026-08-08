@@ -77,10 +77,12 @@ function buildAppRouter(options: CreateAppOptions = {}) {
 export type AppRouter = ReturnType<typeof buildAppRouter>;
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
+const TEST_SEED_FLAG_ON = '1';
 
 export function createApp(options: CreateAppOptions = {}): Hono {
   const app = buildAppRouter(options);
-  if (process.env[TEST_SEED_FLAG] === '1') {
+  const isTestSeedEnabled = process.env[TEST_SEED_FLAG] === TEST_SEED_FLAG_ON;
+  if (isTestSeedEnabled) {
     app.route('/api/__test', testSeedRouter);
   }
   return app;

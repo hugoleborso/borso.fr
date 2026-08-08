@@ -1,13 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { ALLOWED_PHOTO_CONTENT_TYPES, fileExtensionForContentType } from './media.core';
 
 const PRESIGN_EXPIRES_SECONDS = 5 * 60;
-const ALLOWED_CONTENT_TYPES: ReadonlySet<string> = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-]);
 
 let cachedClient: S3Client | null = null;
 
@@ -54,11 +50,10 @@ export async function createPresignedUpload(
 ): Promise<PresignedUpload> {
   const bucket = readEnv('PHOTOS_BUCKET');
   if (bucket === undefined) throw new MediaConfigError('PHOTOS_BUCKET not set');
-  if (!ALLOWED_CONTENT_TYPES.has(input.contentType)) {
+  if (!ALLOWED_PHOTO_CONTENT_TYPES.has(input.contentType)) {
     throw new MediaContentTypeError(`unsupported content type: ${input.contentType}`);
   }
-  const extension =
-    input.contentType === 'image/jpeg' ? 'jpg' : (input.contentType.split('/')[1] ?? 'bin');
+  const extension = fileExtensionForContentType(input.contentType);
   const objectKey = `editions/${input.editionSlug}/runners/${input.runnerSlug}/${randomUUID()}.${extension}`;
   const command = new PutObjectCommand({
     Bucket: bucket,

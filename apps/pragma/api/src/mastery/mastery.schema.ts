@@ -18,9 +18,7 @@ export const masteryDefaultTable = pgTable(
     instrumentId: uuid('instrument_id').notNull(),
     score: integer('score').notNull(),
   },
-  (table) => ({
-    primary: primaryKey({ columns: [table.memberId, table.instrumentId] }),
-  }),
+  (table) => [primaryKey({ columns: [table.memberId, table.instrumentId] })],
 );
 
 export const masteryOverrideTable = pgTable(
@@ -31,9 +29,7 @@ export const masteryOverrideTable = pgTable(
     songId: uuid('song_id').notNull(),
     score: integer('score').notNull(),
   },
-  (table) => ({
-    primary: primaryKey({ columns: [table.memberId, table.instrumentId, table.songId] }),
-  }),
+  (table) => [primaryKey({ columns: [table.memberId, table.instrumentId, table.songId] })],
 );
 
 const scoreSchema = z.number().int().min(SCORE_MIN).max(SCORE_MAX);

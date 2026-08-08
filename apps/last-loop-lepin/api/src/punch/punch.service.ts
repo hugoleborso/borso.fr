@@ -42,6 +42,30 @@ export interface RegisterPunchInput {
 }
 
 /**
+ * The error a rejected punch attempt should throw. `already-punched-this-loop`
+ * is the one reason the caller can be told *which* punch is in the way, so it
+ * costs a repository read the other reasons do not need.
+ */
+async function buildPunchRejectionError(
+  database: Database,
+  edition: RaceEdition,
+  input: RegisterPunchInput,
+  reason: PunchRejectReason,
+  now: Date,
+): Promise<PunchConflictError | PunchRejectedError> {
+  if (reason !== 'already-punched-this-loop') return new PunchRejectedError(reason);
+  const conflictLoop = Math.max(1, loopIndexAt(edition, now));
+  const existing = await findActivePunchForLoop(
+    database,
+    input.editionSlug,
+    input.runnerSlug,
+    conflictLoop,
+  );
+  if (existing !== null) return new PunchConflictError(existing);
+  return new PunchRejectedError(reason);
+}
+
+/**
  * @Blueprint service-orchestration
  * @BlueprintName Service Orchestration
  * @BlueprintUsage Use for a workflow that reads, decides, then writes. The service is the only impure layer allowed to be interesting.
@@ -58,17 +82,7 @@ export async function registerPunch(
 
   const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
   if (!validation.ok) {
-    if (validation.reason === 'already-punched-this-loop') {
-      const conflictLoop = Math.max(1, loopIndexAt(edition, now));
-      const existing = await findActivePunchForLoop(
-        database,
-        input.editionSlug,
-        input.runnerSlug,
-        conflictLoop,
-      );
-      if (existing !== null) throw new PunchConflictError(existing);
-    }
-    throw new PunchRejectedError(validation.reason);
+    throw await buildPunchRejectionError(database, edition, input, validation.reason, now);
   }
 
   const punch: LoopPunch = {
@@ -125,17 +139,7 @@ export async function registerSelfPunch(
 
   const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
   if (!validation.ok) {
-    if (validation.reason === 'already-punched-this-loop') {
-      const conflictLoop = Math.max(1, loopIndexAt(edition, now));
-      const existing = await findActivePunchForLoop(
-        database,
-        input.editionSlug,
-        input.runnerSlug,
-        conflictLoop,
-      );
-      if (existing !== null) throw new PunchConflictError(existing);
-    }
-    throw new PunchRejectedError(validation.reason);
+    throw await buildPunchRejectionError(database, edition, input, validation.reason, now);
   }
 
   const punch: LoopPunch = {
