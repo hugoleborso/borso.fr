@@ -27,8 +27,9 @@ interface ChordProChartLike extends ChartLike {
  * the detail page used to spell out, and it narrows the text for the viewer.
  */
 export function selectChordProText(chart: ChordProChartLike | null | undefined): string | null {
+  if (chart === null || chart === undefined) return null;
   if (extractChartKind(chart) !== 'chordpro') return null;
-  const { text } = chart ?? {};
+  const { text } = chart;
   if (typeof text !== 'string') return null;
   return text;
 }

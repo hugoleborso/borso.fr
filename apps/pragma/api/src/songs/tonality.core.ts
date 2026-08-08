@@ -19,8 +19,10 @@
  * Pure function over a string. No I/O, no `now`.
  */
 
-const CHORD_REGEX = /^([A-G][#b]?)(maj7|min7|m7|maj|min|m|sus2|sus4|sus|dim|aug|7|6|9|11|13)?/;
-const BRACKETED_CHORD_REGEX = /\[([^\]]*)\]/g;
+const CHORD_ROOT_REGEX = /^[A-G][#b]?/;
+const CHORD_QUALITY_REGEX = /^(?:maj7|min7|m7|maj|min|m|sus2|sus4|sus|dim|aug|7|6|9|11|13)/;
+const BRACKETED_CHORD_REGEX = /\[[^\]]*\]/g;
+const BRACKET_DELIMITER_LENGTH = 1;
 
 export interface ChordTonality {
   root: string;
@@ -28,15 +30,11 @@ export interface ChordTonality {
 }
 
 function parseChord(rawChord: string): ChordTonality | null {
-  const beforeSlash = rawChord.split('/')[0] ?? rawChord;
-  const match = CHORD_REGEX.exec(beforeSlash);
-  if (match === null) return null;
-  const root = match[1];
-  if (root === undefined) return null;
-  const quality = match[2] ?? '';
-  // Ensure we consumed something meaningful — the regex never matches
-  // an empty root because it anchors `[A-G]`.
-  return { root, quality };
+  const rootMatch = CHORD_ROOT_REGEX.exec(rawChord);
+  if (rootMatch === null) return null;
+  const root = rootMatch[0];
+  const qualityMatch = CHORD_QUALITY_REGEX.exec(rawChord.slice(root.length));
+  return { root, quality: qualityMatch === null ? '' : qualityMatch[0] };
 }
 
 function chordsOnLine(line: string): readonly ChordTonality[] {
@@ -44,7 +42,7 @@ function chordsOnLine(line: string): readonly ChordTonality[] {
   if (bracketedMatches.length > 0) {
     const chords: ChordTonality[] = [];
     for (const match of bracketedMatches) {
-      const inner = match[1] ?? '';
+      const inner = match[0].slice(BRACKET_DELIMITER_LENGTH, -BRACKET_DELIMITER_LENGTH);
       const parsed = parseChord(inner);
       if (parsed !== null) chords.push(parsed);
     }
@@ -73,11 +71,10 @@ export function deriveTonality(chordProSource: string): {
   let start: ChordTonality | null = null;
   let end: ChordTonality | null = null;
   for (const line of lines) {
-    const chords = chordsOnLine(line);
-    if (chords.length === 0) continue;
-    start ??= chords[0] ?? null;
-    const last = chords[chords.length - 1];
-    if (last !== undefined) end = last;
+    for (const chord of chordsOnLine(line)) {
+      start ??= chord;
+      end = chord;
+    }
   }
   return {
     start: start === null ? null : formatChord(start),

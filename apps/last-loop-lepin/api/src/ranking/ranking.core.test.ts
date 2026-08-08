@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { RaceEdition } from '../edition/edition.types';
 import type { LoopPunch, ManualDidNotFinish } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
-import { computeStandings } from './ranking.core';
+import { computeStandings, formatStandingsAsCsv, mostRecentCorrectionAt } from './ranking.core';
+import type { Standings } from './ranking.types';
 
 const EDITION: RaceEdition = {
   slug: 'lepin-2026',
@@ -285,5 +286,134 @@ describe('computeStandings', () => {
     ];
     const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
     expect(standings.fastestLap).toEqual([{ runnerSlug: 'bob', durationMs: 42 * 60_000 }]);
+  });
+});
+
+function amendedPunch(
+  runnerSlug: string,
+  loopIndex: number,
+  amendments: { correctedAtIso?: string; voidedAtIso?: string },
+): LoopPunch {
+  return {
+    ...punch(runnerSlug, loopIndex, '2026-09-19T06:55:00+02:00'),
+    correctedAt:
+      amendments.correctedAtIso === undefined ? null : new Date(amendments.correctedAtIso),
+    voidedAt: amendments.voidedAtIso === undefined ? null : new Date(amendments.voidedAtIso),
+  };
+}
+
+describe('mostRecentCorrectionAt', () => {
+  it('returns null when no punch has been corrected or voided', () => {
+    const untouched = [
+      punch('alice', 1, '2026-09-19T06:55:00+02:00'),
+      punch('bob', 1, '2026-09-19T06:58:00+02:00'),
+    ];
+    expect(mostRecentCorrectionAt(untouched)).toBeNull();
+  });
+
+  it('returns null for an empty punch list', () => {
+    expect(mostRecentCorrectionAt([])).toBeNull();
+  });
+
+  it('returns the latest instant across corrections and voids, whatever the punch order', () => {
+    // The spectator page shows "results amended at …", so the answer has
+    // to be the most recent amendment of any kind, not the last one the
+    // list happens to mention.
+    const punches = [
+      amendedPunch('alice', 1, { correctedAtIso: '2026-09-19T07:00:00+02:00' }),
+      amendedPunch('bob', 1, { voidedAtIso: '2026-09-19T09:00:00+02:00' }),
+      amendedPunch('carla', 1, { correctedAtIso: '2026-09-19T08:00:00+02:00' }),
+      punch('alice', 2, '2026-09-19T07:55:00+02:00'),
+    ];
+    expect(mostRecentCorrectionAt(punches)).toEqual(new Date('2026-09-19T09:00:00+02:00'));
+  });
+
+  it('takes the later of the two instants when one punch was both corrected and voided', () => {
+    const punches = [
+      amendedPunch('alice', 1, {
+        correctedAtIso: '2026-09-19T07:00:00+02:00',
+        voidedAtIso: '2026-09-19T07:30:00+02:00',
+      }),
+    ];
+    expect(mostRecentCorrectionAt(punches)).toEqual(new Date('2026-09-19T07:30:00+02:00'));
+  });
+});
+
+const CSV_HEADER =
+  'rank,bib,runner_slug,display_name,status,out_at_loop,last_loop,last_finished_at';
+
+function standingsOf(ranked: Standings['ranked']): Standings {
+  return {
+    editionSlug: 'lepin-2026',
+    computedAt: new Date('2026-09-19T22:30:00+02:00'),
+    raceEnded: true,
+    ranked,
+    fastestLap: [],
+  };
+}
+
+describe('formatStandingsAsCsv', () => {
+  it('writes the header even when nobody is ranked', () => {
+    expect(formatStandingsAsCsv(standingsOf([]))).toBe(`${CSV_HEADER}\n\n`);
+  });
+
+  it('fills last_loop for an in-race runner and out_at_loop for a DNF, never both', () => {
+    const csv = formatStandingsAsCsv(
+      standingsOf([
+        {
+          runner: {
+            editionSlug: 'lepin-2026',
+            slug: 'alice',
+            displayName: 'Alice',
+            photoKey: null,
+            bib: 1,
+          },
+          rank: 1,
+          status: { kind: 'in-race', lastLoop: 16 },
+          lastLoopDurationMs: 55 * 60_000,
+          lastFinishedAt: new Date('2026-09-19T21:50:00Z'),
+        },
+        {
+          runner: {
+            editionSlug: 'lepin-2026',
+            slug: 'bob',
+            displayName: 'Bob',
+            photoKey: null,
+            bib: 2,
+          },
+          rank: 2,
+          status: { kind: 'dnf', outAtLoop: 9, reason: 'late' },
+          lastLoopDurationMs: null,
+          lastFinishedAt: new Date('2026-09-19T14:52:00Z'),
+        },
+      ]),
+    );
+    expect(csv.split('\n')).toEqual([
+      CSV_HEADER,
+      '1,1,alice,"Alice",in-race,,16,2026-09-19T21:50:00.000Z',
+      '2,2,bob,"Bob",dnf,9,,2026-09-19T14:52:00.000Z',
+      '',
+    ]);
+  });
+
+  it('spells an ex-aequo rank out, leaves a missing bib and a missing finish time empty, and doubles quotes in a name', () => {
+    const csv = formatStandingsAsCsv(
+      standingsOf([
+        {
+          runner: {
+            editionSlug: 'lepin-2026',
+            slug: 'bob',
+            displayName: 'Bob "Le Vieux", Coureur',
+            photoKey: null,
+            bib: null,
+          },
+          rank: 'ex-aequo',
+          status: { kind: 'dnf', outAtLoop: 0, reason: 'manual' },
+          lastLoopDurationMs: null,
+          lastFinishedAt: null,
+        },
+      ]),
+    );
+    expect(csv.split('\n')[1]).toBe('ex-aequo,,bob,"Bob ""Le Vieux"", Coureur",dnf,0,,');
   });
 });

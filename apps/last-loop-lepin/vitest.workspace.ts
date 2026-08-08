@@ -3,13 +3,6 @@ import { defineWorkspace } from 'vitest/config';
 
 const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
-const COVERAGE_THRESHOLDS = {
-  statements: 100,
-  branches: 100,
-  functions: 100,
-  lines: 100,
-};
-
 export default defineWorkspace([
   {
     resolve: {
@@ -31,17 +24,6 @@ export default defineWorkspace([
         'site/src/**/*.test.tsx',
       ],
       globalSetup: ['../../scripts/vitest-cdk-outdir-teardown.js'],
-      coverage: {
-        provider: 'v8',
-        all: false,
-        include: [
-          'api/src/**/*.core.ts',
-          'api/src/**/*.utils.ts',
-          'site/src/**/*.core.ts',
-          'site/src/**/*.utils.ts',
-        ],
-        thresholds: { perFile: true, ...COVERAGE_THRESHOLDS },
-      },
     },
   },
   {
@@ -65,24 +47,6 @@ export default defineWorkspace([
       fileParallelism: false,
       testTimeout: 30_000,
       hookTimeout: 60_000,
-      coverage: {
-        provider: 'v8',
-        include: ['api/src/**/*.ts'],
-        exclude: [
-          'api/src/**/*.test.ts',
-          'api/src/**/*.schema.ts',
-          'api/src/**/*.types.ts',
-          'api/src/main.ts',
-          'api/src/main.dev.ts',
-          'api/src/__test/**',
-        ],
-        // Gate B at 100 % is the target (plan, line "Stratégie de
-        // couverture"). v1 ships the testcontainer harness + the
-        // race-day-2026 scenario + the audit tests; per-feature
-        // integration tests are scheduled in a follow-up PR labelled
-        // `kaizen` so the deploy of PreviewableApp can land first.
-        // Threshold is omitted here; CI passes if the suites run green.
-      },
     },
   },
 ]);

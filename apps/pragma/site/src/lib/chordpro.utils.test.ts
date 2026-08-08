@@ -134,6 +134,16 @@ describe('transposeChord', () => {
   it('handles negative semitone wrap', () => {
     expect(transposeChord('C', -2)).toBe('A#');
   });
+
+  it('leaves an enharmonic spelling absent from the twelve-tone tables untouched', () => {
+    // Cb and Fb are B and E respelled; E# and B# are F and C respelled.
+    // Neither table lists them, so the chord comes back as written
+    // rather than silently landing a semitone away.
+    expect(transposeChord('Cb', 1)).toBe('Cb');
+    expect(transposeChord('Fbm7', 3)).toBe('Fbm7');
+    expect(transposeChord('E#', 1)).toBe('E#');
+    expect(transposeChord('B#sus4', 2)).toBe('B#sus4');
+  });
 });
 
 describe('transposeLines', () => {

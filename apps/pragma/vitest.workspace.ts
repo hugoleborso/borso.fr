@@ -3,13 +3,6 @@ import { defineWorkspace } from 'vitest/config';
 
 const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
-const COVERAGE_THRESHOLDS = {
-  statements: 100,
-  branches: 100,
-  functions: 100,
-  lines: 100,
-};
-
 export default defineWorkspace([
   {
     resolve: {
@@ -30,17 +23,6 @@ export default defineWorkspace([
         'site/src/**/*.test.tsx',
       ],
       globalSetup: ['../../scripts/vitest-cdk-outdir-teardown.js'],
-      coverage: {
-        provider: 'v8',
-        all: false,
-        include: [
-          'api/src/**/*.core.ts',
-          'api/src/**/*.utils.ts',
-          'site/src/**/*.utils.ts',
-          'site/src/**/*.core.ts',
-        ],
-        thresholds: { perFile: true, ...COVERAGE_THRESHOLDS },
-      },
     },
   },
   {

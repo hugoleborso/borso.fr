@@ -34,12 +34,8 @@ function toBase64Url(bytes: Buffer): string {
   return bytes.toString('base64url');
 }
 
-function fromBase64Url(value: string): Buffer | null {
-  try {
-    return Buffer.from(value, 'base64url');
-  } catch {
-    return null;
-  }
+function fromBase64Url(value: string): Buffer {
+  return Buffer.from(value, 'base64url');
 }
 
 function sign(payloadEncoded: string, hmacKey: Buffer): string {
@@ -92,18 +88,13 @@ export function verifyCookie(
   const expectedSignature = sign(payloadEncoded, hmacKey);
   const expectedBytes = fromBase64Url(expectedSignature);
   const providedBytes = fromBase64Url(signatureEncoded);
-  if (expectedBytes === null || providedBytes === null) {
-    return { ok: false, reason: 'bad-signature' };
-  }
   if (
     expectedBytes.length !== providedBytes.length ||
     !timingSafeEqual(expectedBytes, providedBytes)
   ) {
     return { ok: false, reason: 'bad-signature' };
   }
-  const payloadBytes = fromBase64Url(payloadEncoded);
-  if (payloadBytes === null) return { ok: false, reason: 'malformed' };
-  const payload = parseJsonPayload(payloadBytes.toString('utf8'));
+  const payload = parseJsonPayload(fromBase64Url(payloadEncoded).toString('utf8'));
   if (payload === null) return { ok: false, reason: 'malformed' };
   if (nowMillis >= payload.expiresAt) return { ok: false, reason: 'expired' };
   return { ok: true, payload };

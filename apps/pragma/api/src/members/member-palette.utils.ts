@@ -17,14 +17,16 @@ export const MEMBER_PALETTE = [
 
 /**
  * Picks the palette hex for the n-th member (0-indexed). Wraps via
- * modulo so the function is total — never throws on large indices.
+ * modulo, so any whole number lands on a slot however large it is.
+ * A member index that is not a whole number has no slot and throws.
  */
 export function pickPaletteHex(memberIndex: number): string {
-  const length = MEMBER_PALETTE.length;
-  const wrapped = ((memberIndex % length) + length) % length;
-  const slot = MEMBER_PALETTE[wrapped];
-  // `wrapped` is bounded to [0, length) so the lookup is always defined.
-  if (slot === undefined) throw new Error('unreachable: palette index out of bounds');
+  const paletteSize = MEMBER_PALETTE.length;
+  const slotIndex = ((memberIndex % paletteSize) + paletteSize) % paletteSize;
+  const slot = MEMBER_PALETTE[slotIndex];
+  if (slot === undefined) {
+    throw new Error(`pickPaletteHex expects a whole member index, received ${memberIndex}`);
+  }
   return slot.hex;
 }
 

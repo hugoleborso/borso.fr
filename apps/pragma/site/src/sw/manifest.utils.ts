@@ -38,20 +38,25 @@ export interface OfflineManifest {
  * tie-break by id ascending so callers get a deterministic answer
  * even if two sessions land at the same instant.
  */
+function isEarlierThan(
+  candidate: OfflineManifestSession,
+  incumbent: OfflineManifestSession,
+): boolean {
+  const dateDelta = new Date(candidate.date).getTime() - new Date(incumbent.date).getTime();
+  if (dateDelta !== 0) return dateDelta < 0;
+  return candidate.id.localeCompare(incumbent.id) < 0;
+}
+
 export function pickNextSession(
   sessions: readonly OfflineManifestSession[],
   now: Date,
 ): OfflineManifestSession | null {
-  const futureSessions = sessions.filter(
-    (session) => new Date(session.date).getTime() > now.getTime(),
-  );
-  if (futureSessions.length === 0) return null;
-  const sorted = [...futureSessions].sort((left, right) => {
-    const dateDelta = new Date(left.date).getTime() - new Date(right.date).getTime();
-    if (dateDelta !== 0) return dateDelta;
-    return left.id.localeCompare(right.id);
-  });
-  return sorted[0] ?? null;
+  let nextSession: OfflineManifestSession | null = null;
+  for (const session of sessions) {
+    if (new Date(session.date).getTime() <= now.getTime()) continue;
+    if (nextSession === null || isEarlierThan(session, nextSession)) nextSession = session;
+  }
+  return nextSession;
 }
 
 export function buildOfflineManifest(input: OfflineManifestInput): OfflineManifest {

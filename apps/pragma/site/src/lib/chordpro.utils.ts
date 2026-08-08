@@ -46,19 +46,26 @@ export interface BlankLine {
 
 export type ChordProLine = DirectiveLine | ChordLine | PlainLine | BlankLine;
 
-const CHORD_PATTERN = /\[([^\]]+)\]/g;
-const DIRECTIVE_PATTERN = /^\{([a-zA-Z_]+)(?::\s*(.+))?\}$/;
+const CHORD_PATTERN = /\[[^\]]+\]/g;
+const DIRECTIVE_PATTERN = /^\{[a-zA-Z_]+(?::\s*.+)?\}$/;
+const DELIMITER_LENGTH = 1;
+const DIRECTIVE_VALUE_SEPARATOR = ':';
+
+function parseDirective(braced: string): DirectiveLine {
+  const body = braced.slice(DELIMITER_LENGTH, -DELIMITER_LENGTH);
+  const separatorIndex = body.indexOf(DIRECTIVE_VALUE_SEPARATOR);
+  if (separatorIndex === -1) return { kind: 'directive', name: body, value: '' };
+  return {
+    kind: 'directive',
+    name: body.slice(0, separatorIndex),
+    value: body.slice(separatorIndex + DELIMITER_LENGTH).trimStart(),
+  };
+}
 
 export function parseChordProLine(line: string): ChordProLine {
   if (line.trim().length === 0) return { kind: 'blank' };
-  const directive = DIRECTIVE_PATTERN.exec(line.trim());
-  if (directive !== null) {
-    return {
-      kind: 'directive',
-      name: directive[1] ?? '',
-      value: directive[2] ?? '',
-    };
-  }
+  const trimmed = line.trim();
+  if (DIRECTIVE_PATTERN.test(trimmed)) return parseDirective(trimmed);
   if (!line.includes('[')) return { kind: 'plain-line', text: line };
   const tokens: LineToken[] = [];
   let cursor = 0;
@@ -68,7 +75,7 @@ export function parseChordProLine(line: string): ChordProLine {
   while (match !== null) {
     const before = line.slice(cursor, match.index);
     if (before.length > 0) tokens.push({ kind: 'lyric', text: before });
-    tokens.push({ kind: 'chord', chord: match[1] ?? '' });
+    tokens.push({ kind: 'chord', chord: match[0].slice(DELIMITER_LENGTH, -DELIMITER_LENGTH) });
     cursor = match.index + match[0].length;
     match = CHORD_PATTERN.exec(line);
   }
@@ -135,21 +142,18 @@ const NOTES_FLAT: readonly string[] = [
   'B',
 ];
 const NOTES_IN_OCTAVE = 12;
-const ROOT_PATTERN = /^([A-G])([#b]?)(.*)$/;
+const ROOT_PATTERN = /^[A-G][#b]?/;
+const FLAT_SIGN = 'b';
 
 export function transposeChord(chord: string, semitones: number): string {
-  const match = ROOT_PATTERN.exec(chord);
-  if (match === null) return chord;
-  const letter = match[1] ?? '';
-  const accidental = match[2] ?? '';
-  const suffix = match[3] ?? '';
-  const sharpKey = accidental === 'b' ? letter : `${letter}${accidental}`;
-  const flatKey = `${letter}b`;
+  const rootMatch = ROOT_PATTERN.exec(chord);
+  if (rootMatch === null) return chord;
+  const root = rootMatch[0];
+  const suffix = chord.slice(root.length);
   // Flats: convert via the flat table first, then re-emit in the
   // sharp convention (the parser is forgiving on input, normalised on
   // output).
-  const rootIndex =
-    accidental === 'b' ? NOTES_FLAT.indexOf(flatKey) : NOTES_SHARP.indexOf(sharpKey);
+  const rootIndex = root.endsWith(FLAT_SIGN) ? NOTES_FLAT.indexOf(root) : NOTES_SHARP.indexOf(root);
   if (rootIndex === -1) return chord;
   const next = (((rootIndex + semitones) % NOTES_IN_OCTAVE) + NOTES_IN_OCTAVE) % NOTES_IN_OCTAVE;
   return `${NOTES_SHARP[next]}${suffix}`;

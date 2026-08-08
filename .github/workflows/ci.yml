@@ -104,6 +104,23 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      # A second instance rather than a second database on the first: the two
+      # apps apply their own migration sets and each truncates its own table
+      # list, so sharing one database would leave each app's teardown blind to
+      # the other's tables.
+      pragma-postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pragma
+          POSTGRES_PASSWORD: pragma
+          POSTGRES_DB: pragma
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U pragma"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       DATABASE_URL: postgres://lastloop:lastloop@localhost:5432/lastloop
     steps:
@@ -126,6 +143,13 @@ jobs:
       # without Docker — irrelevant here.
       - run: pnpm --filter @borso-app/last-loop-lepin run test:core
       - run: pnpm --filter @borso-app/last-loop-lepin exec vitest run --project back-e2e
+      # pragma ran in no job at all until this line existed. Its 609 tests and
+      # the 100 % per-file coverage gate on its pure files were never a gate on
+      # a pull request, only something a developer might run locally.
+      - run: pnpm --filter @borso-app/pragma run test:core
+      - run: pnpm --filter @borso-app/pragma exec vitest run --project back-e2e
+        env:
+          DATABASE_URL: postgres://pragma:pragma@localhost:5433/pragma
 
   commitlint:
     if: github.event_name == 'pull_request'

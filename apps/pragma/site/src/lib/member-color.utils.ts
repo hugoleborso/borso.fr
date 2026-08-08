@@ -15,8 +15,9 @@
  * sync with `styles/design-tokens.css` (`--ink` / `--surface`).
  */
 
-const HEX_PATTERN = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+const HEX_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const HEX_RADIX = 16;
+const HASH_PREFIX_LENGTH = 1;
 const SHORT_HEX_LENGTH = 3;
 const BYTE_MAX = 255;
 const SRGB_THRESHOLD = 0.03928;
@@ -39,9 +40,9 @@ export interface Rgb {
 }
 
 export function parseHex(hex: string): Rgb | null {
-  const match = HEX_PATTERN.exec(hex.trim());
-  if (match === null) return null;
-  const raw = match[1] ?? '';
+  const trimmed = hex.trim();
+  if (!HEX_PATTERN.test(trimmed)) return null;
+  const raw = trimmed.slice(HASH_PREFIX_LENGTH);
   const normalised =
     raw.length === SHORT_HEX_LENGTH
       ? raw

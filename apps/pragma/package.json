@@ -16,7 +16,7 @@
     "preview": "vite preview",
     "lint": "cd ../.. && eslint apps/pragma --cache --cache-location node_modules/.cache/eslint",
     "typecheck": "tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit",
-    "test:core": "pnpm --filter @borso/infra run build && vitest run --project core",
+    "test:core": "pnpm --filter @borso/infra run build && vitest run --project core --coverage",
     "test": "DATABASE_URL=$(../../scripts/local-postgres.sh start pragma) vitest run --project back-e2e",
     "test:coverage": "pnpm --filter @borso/infra run build && DATABASE_URL=$(../../scripts/local-postgres.sh start pragma) vitest run --coverage",
     "db:generate": "drizzle-kit generate",
