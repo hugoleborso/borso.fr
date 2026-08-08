@@ -11,7 +11,6 @@
 // runtime 2.0; ES5 syntax (var + string concat) on purpose, since the
 // runtime has historically been stricter than the docs imply.
 
-// biome-ignore lint/correctness/noUnusedVariables: CloudFront Functions runtime requires the entry point be named exactly `handler`. This file is read as a string at synth time, not imported.
 function handler(event) {
   var request = event.request;
   var uri = request.uri;

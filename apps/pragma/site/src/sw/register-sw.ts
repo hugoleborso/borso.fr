@@ -14,7 +14,7 @@ export function registerServiceWorker(): void {
   if (typeof navigator === 'undefined') return;
   if (!('serviceWorker' in navigator)) return;
   if (import.meta.env.DEV) return;
-  navigator.serviceWorker.register(SERVICE_WORKER_URL).catch((error) => {
+  navigator.serviceWorker.register(SERVICE_WORKER_URL).catch((error: unknown) => {
     console.warn('service worker registration failed', error);
   });
 }

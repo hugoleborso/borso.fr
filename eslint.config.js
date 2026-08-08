@@ -445,6 +445,11 @@ export default tseslint.config(
       'no-inner-declarations': 'off',
       'unicorn/prefer-string-replace-all': 'off',
       'unicorn/prefer-optional-catch-binding': 'off',
+      // `handler` looks unused because nothing in this repository calls it.
+      // The CloudFront Functions runtime does, by that exact name, after the
+      // file is read as a string at synth time and shipped to the edge. There
+      // is no import to make the reference visible.
+      'no-unused-vars': ['error', { varsIgnorePattern: '^handler$' }],
     },
   },
 
