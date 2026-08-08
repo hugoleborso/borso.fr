@@ -62,7 +62,7 @@ export function SongEditForm({
     },
   });
 
-  const handleChordproChange = (text: string): void => {
+  const applyChordproText = (text: string): void => {
     form.setFieldValue('chordproText', text);
     const derived = deriveTonality(text);
     const currentStart = form.getFieldValue('tonalityStart');
@@ -263,7 +263,7 @@ export function SongEditForm({
                 baseEnergy={chart[6]}
                 {...(songId !== undefined && !isNew ? { songId } : {})}
                 onChartKindChange={(kind) => form.setFieldValue('chartKind', kind)}
-                onChordproChange={handleChordproChange}
+                onChordproChange={applyChordproText}
                 onPdfKeyChange={(value) => form.setFieldValue('pdfS3Key', value)}
                 onImageKeyChange={(value) => form.setFieldValue('imageS3Key', value)}
                 onTonalityStartChange={(value) => form.setFieldValue('tonalityStart', value)}

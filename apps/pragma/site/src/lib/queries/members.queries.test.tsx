@@ -84,7 +84,10 @@ describe('members mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useCreateMember>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeCreate sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeCreate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useCreateMember>['mutateAsync'] = dispatch;
 
@@ -109,7 +112,10 @@ describe('members mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useUpdateMember>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeUpdate sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeUpdate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useUpdateMember>['mutateAsync'] = dispatch;
 
@@ -131,7 +137,10 @@ describe('members mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useDeleteMember>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeDelete sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeDelete sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useDeleteMember>['mutateAsync'] = dispatch;
 
@@ -159,14 +168,20 @@ describe('members mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useAssignMemberInstruments>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeAssign sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeAssign sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useAssignMemberInstruments>['mutateAsync'] = dispatch;
 
     send({ memberId: 'mem-a', instrumentIds: ['instr-a', 'instr-b'] }).catch(() => undefined);
     await flushMicrotasks();
     const midflight = queryClient.getQueryData<OptimisticRoster>(memberKeys.instrumentsOf('mem-a'));
-    expect(midflight?.instruments.map((i) => i.id)).toEqual(['instr-a', 'instr-b']);
+    expect(midflight?.instruments.map((instrument) => instrument.id)).toEqual([
+      'instr-a',
+      'instr-b',
+    ]);
 
     pending.resolve(jsonResponse({ id: 'mem-a', instrumentIds: ['instr-a', 'instr-b'] }));
     await flushMicrotasks();

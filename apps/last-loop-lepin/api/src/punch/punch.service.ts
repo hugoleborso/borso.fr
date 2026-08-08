@@ -15,6 +15,7 @@ import {
   findPunchById,
   insertManualDidNotFinish,
   insertPunch,
+  listManualDidNotFinishesForEdition,
   listPunchesForEdition,
   markPunchCorrected,
   markPunchVoided,
@@ -197,6 +198,13 @@ export async function getPunchesForEdition(
   editionSlug: string,
 ): Promise<readonly LoopPunch[]> {
   return listPunchesForEdition(database, editionSlug);
+}
+
+export async function listManualDidNotFinishes(
+  database: Database,
+  editionSlug: string,
+): Promise<readonly ManualDidNotFinish[]> {
+  return listManualDidNotFinishesForEdition(database, editionSlug);
 }
 
 export interface CatchupPunchInput {

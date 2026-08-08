@@ -39,7 +39,10 @@ describe('useLogin — session cache reconciliation', () => {
     queryClient.setQueryData(authKeys.session(), { authenticated: false });
 
     let dispatch: ReturnType<typeof useLogin>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeLogin sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeLogin sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     await flushMicrotasks();
     if (dispatch === null) throw new Error('login mutate not captured');
     const send: ReturnType<typeof useLogin>['mutateAsync'] = dispatch;

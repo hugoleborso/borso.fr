@@ -4,7 +4,7 @@
  */
 
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { cn } from './cn.utils';
+import { composeClassName } from './class-name.utils';
 import { type InputVariantProps, inputVariants } from './input.variants';
 
 export interface InputProps
@@ -12,7 +12,7 @@ export interface InputProps
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, size, ...rest }, ref) => (
-    <input ref={ref} className={cn(inputVariants({ size }), className)} {...rest} />
+    <input ref={ref} className={composeClassName(inputVariants({ size }), className)} {...rest} />
   ),
 );
 Input.displayName = 'Input';

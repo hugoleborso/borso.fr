@@ -23,6 +23,6 @@ export function readClientIp(headerValue: string | undefined): string {
   return trimmed.length === 0 ? UNKNOWN_IP_PLACEHOLDER : trimmed;
 }
 
-export function hashIp(ip: string): string {
-  return createHash('sha256').update(ip).digest('hex');
+export function hashIp(ipAddress: string): string {
+  return createHash('sha256').update(ipAddress).digest('hex');
 }

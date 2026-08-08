@@ -2,7 +2,6 @@ import * as Sentry from '@sentry/react';
 import L from 'leaflet';
 import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import 'leaflet/dist/leaflet.css';
 import { formatElevationMetres, formatKilometres } from '../../lib/formatters.utils';
 import { listPresent } from '../../lib/optional.utils';
 import type { RaceEditionDto, RankedRunnerDto } from '../../lib/race.types';

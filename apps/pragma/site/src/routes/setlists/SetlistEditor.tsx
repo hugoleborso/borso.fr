@@ -147,19 +147,19 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     );
   };
 
-  const handleRemove = (entryId: string): void => {
+  const removeSetlistEntry = (entryId: string): void => {
     removeEntry.mutate({ setlistId, entryId }, { onError: recordError });
   };
 
-  const handleReorder = (orderedEntryIds: readonly string[]): void => {
+  const reorderSetlistEntries = (orderedEntryIds: readonly string[]): void => {
     reorder.mutate({ setlistId, entryIds: [...orderedEntryIds] }, { onError: recordError });
   };
 
-  const handleUpdate = (entryId: string, patch: Record<string, unknown>): void => {
+  const updateSetlistEntry = (entryId: string, patch: Record<string, unknown>): void => {
     updateEntry.mutate({ setlistId, entryId, ...patch }, { onError: recordError });
   };
 
-  const handleCopyOrder = async (): Promise<void> => {
+  const copyOrderToClipboard = async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(formatSetlistOrder(entries, songsById));
       setOrderCopied(true);
@@ -200,7 +200,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => void handleCopyOrder()}
+            onClick={() => void copyOrderToClipboard()}
             disabled={entries.length === 0}
           >
             <Icon name={orderCopied ? 'check' : 'text'} size={14} />
@@ -233,9 +233,9 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
             membersById={membersById}
             instrumentsById={instrumentsById}
             knownMemberIds={knownMemberIds}
-            onReorder={handleReorder}
-            onUpdate={handleUpdate}
-            onRemove={handleRemove}
+            onReorder={reorderSetlistEntries}
+            onUpdate={updateSetlistEntry}
+            onRemove={removeSetlistEntry}
             onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
           />
         </div>

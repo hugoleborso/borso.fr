@@ -49,10 +49,10 @@ export function parseHex(hex: string): Rgb | null {
           .map((character) => character + character)
           .join('')
       : raw;
-  const r = Number.parseInt(normalised.slice(0, 2), HEX_RADIX);
-  const g = Number.parseInt(normalised.slice(2, 4), HEX_RADIX);
-  const b = Number.parseInt(normalised.slice(4, 6), HEX_RADIX);
-  return { r, g, b };
+  const red = Number.parseInt(normalised.slice(0, 2), HEX_RADIX);
+  const green = Number.parseInt(normalised.slice(2, 4), HEX_RADIX);
+  const blue = Number.parseInt(normalised.slice(4, 6), HEX_RADIX);
+  return { r: red, g: green, b: blue };
 }
 
 function srgbChannel(byte: number): number {

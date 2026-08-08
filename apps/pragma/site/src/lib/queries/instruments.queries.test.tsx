@@ -65,7 +65,10 @@ describe('instruments mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useCreateInstrument>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeCreate sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeCreate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useCreateInstrument>['mutateAsync'] = dispatch;
 
@@ -90,7 +93,10 @@ describe('instruments mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useUpdateInstrument>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeUpdate sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeUpdate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useUpdateInstrument>['mutateAsync'] = dispatch;
 
@@ -114,7 +120,10 @@ describe('instruments mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useDeleteInstrument>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeDelete sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeDelete sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useDeleteInstrument>['mutateAsync'] = dispatch;
 

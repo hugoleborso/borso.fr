@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Galaxy } from './components/organisms/Galaxy';
+import './components/organisms/Galaxy.css';
 
 // Frozen params from the Claude Design chat — Hugo's tuning of the
 // react-bits Galaxy. Tweaks panel is intentionally out of scope; see

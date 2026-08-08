@@ -142,28 +142,31 @@ describe('songs controller (back-e2e)', () => {
 
   it('cascades the mastery overrides on song delete', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
-    const memberRes = await jsonRequest(app, '/api/members', {
+    const memberResponse = await jsonRequest(app, '/api/members', {
       method: 'POST',
       body: { firstName: 'Hugo', color: '#abc' },
       cookieHeader,
     });
     const memberId = (
-      await readJson(memberRes, z.object({ member: z.object({ id: z.string().uuid() }) }))
+      await readJson(memberResponse, z.object({ member: z.object({ id: z.string().uuid() }) }))
     ).member.id;
-    const instrumentRes = await jsonRequest(app, '/api/instruments', {
+    const instrumentResponse = await jsonRequest(app, '/api/instruments', {
       method: 'POST',
       body: { name: 'Voice', isHarmonic: false },
       cookieHeader,
     });
     const instrumentId = (
-      await readJson(instrumentRes, z.object({ instrument: z.object({ id: z.string().uuid() }) }))
+      await readJson(
+        instrumentResponse,
+        z.object({ instrument: z.object({ id: z.string().uuid() }) }),
+      )
     ).instrument.id;
-    const songRes = await jsonRequest(app, '/api/songs', {
+    const songResponse = await jsonRequest(app, '/api/songs', {
       method: 'POST',
       body: { title: 'X', status: 'idea' },
       cookieHeader,
     });
-    const songId = (await readJson(songRes, singleEnvelope)).song.id;
+    const songId = (await readJson(songResponse, singleEnvelope)).song.id;
 
     await jsonRequest(app, '/api/mastery/overrides', {
       method: 'PUT',

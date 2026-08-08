@@ -20,7 +20,7 @@ import { isSiteFile } from './site-paths.js';
  *
  * What this deliberately allows:
  *
- * - A call expression, e.g. `clsx(…)`, `cn(…)`, and `buttonVariants({…})`,
+ * - A call expression, e.g. `clsx(…)`, `composeClassName(…)`, and `buttonVariants({…})`,
  *   which are the sanctioned forms. An interpolation written inside one of
  *   them, e.g. clsx(`bg-${colour}`), is invisible to the scanner for the same
  *   reason and is not caught here, because following a value into a call is

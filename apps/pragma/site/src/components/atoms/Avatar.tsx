@@ -6,7 +6,7 @@
 
 import { type CSSProperties, forwardRef, type HTMLAttributes } from 'react';
 import { type AvatarVariantProps, avatarVariants } from './avatar.variants';
-import { cn } from './cn.utils';
+import { composeClassName } from './class-name.utils';
 
 export interface AvatarProps extends HTMLAttributes<HTMLSpanElement>, AvatarVariantProps {
   /** Initials (one or two letters) drawn in the circle. */
@@ -21,7 +21,7 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(
     return (
       <span
         ref={ref}
-        className={cn(avatarVariants({ size }), className)}
+        className={composeClassName(avatarVariants({ size }), className)}
         style={composed}
         {...rest}
       >

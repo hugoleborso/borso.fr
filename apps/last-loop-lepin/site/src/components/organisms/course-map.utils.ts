@@ -20,14 +20,14 @@ const ORIGIN: LatLngDto = { lat: 0, lng: 0 };
  * box for Lépin's loop is small enough that floating-point cancellation
  * isn't a concern here.
  */
-export function metersBetween(a: LatLngDto, b: LatLngDto): number {
-  const latRadiansA = (a.lat * Math.PI) / DEGREES_PER_HALF_TURN;
-  const latRadiansB = (b.lat * Math.PI) / DEGREES_PER_HALF_TURN;
-  const deltaLat = ((b.lat - a.lat) * Math.PI) / DEGREES_PER_HALF_TURN;
-  const deltaLng = ((b.lng - a.lng) * Math.PI) / DEGREES_PER_HALF_TURN;
+export function metersBetween(origin: LatLngDto, destination: LatLngDto): number {
+  const originLatRadians = (origin.lat * Math.PI) / DEGREES_PER_HALF_TURN;
+  const destinationLatRadians = (destination.lat * Math.PI) / DEGREES_PER_HALF_TURN;
+  const deltaLat = ((destination.lat - origin.lat) * Math.PI) / DEGREES_PER_HALF_TURN;
+  const deltaLng = ((destination.lng - origin.lng) * Math.PI) / DEGREES_PER_HALF_TURN;
   const haversine =
     Math.sin(deltaLat / 2) ** 2 +
-    Math.cos(latRadiansA) * Math.cos(latRadiansB) * Math.sin(deltaLng / 2) ** 2;
+    Math.cos(originLatRadians) * Math.cos(destinationLatRadians) * Math.sin(deltaLng / 2) ** 2;
   return 2 * EARTH_RADIUS_METERS * Math.asin(Math.min(1, Math.sqrt(haversine)));
 }
 

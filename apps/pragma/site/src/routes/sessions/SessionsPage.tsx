@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
+import { composeClassName } from '../../components/atoms/class-name.utils';
 import { CreateSessionDialog } from '../../components/molecules/CreateSessionDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api';
@@ -79,9 +80,10 @@ export function SessionsPage(): JSX.Element {
           return (
             <li key={session.id} className="relative py-2">
               <span
-                className={`absolute -left-7 top-3.5 w-2.5 h-2.5 rounded-full ${
-                  isConcert ? 'bg-accent border-2 border-accent' : 'bg-bg border-2 border-ink-700'
-                }`}
+                className={composeClassName(
+                  'absolute -left-7 top-3.5 w-2.5 h-2.5 rounded-full',
+                  isConcert ? 'bg-accent border-2 border-accent' : 'bg-bg border-2 border-ink-700',
+                )}
                 aria-hidden="true"
               />
               <div className="relative">

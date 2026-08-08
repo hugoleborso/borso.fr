@@ -110,7 +110,12 @@ export function useUpdateSession() {
       queryClient.setQueryData<SessionsListShape>(listKey, (old) =>
         old === undefined
           ? old
-          : { ...old, sessions: old.sessions.map((s) => (s.id === id ? { ...s, ...patch } : s)) },
+          : {
+              ...old,
+              sessions: old.sessions.map((session) =>
+                session.id === id ? { ...session, ...patch } : session,
+              ),
+            },
       );
       return { previousList, previousById };
     },

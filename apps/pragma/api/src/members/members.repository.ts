@@ -81,11 +81,11 @@ export async function updateMember(
 
 export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome> {
   const database = getDatabase();
-  return await database.transaction(async (tx) => {
-    await scrubMemberFromSongDefaults(tx, id);
-    await scrubMemberFromSetlistOverrides(tx, id);
-    await tx.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, id));
-    const deleted = await tx
+  return await database.transaction(async (transaction) => {
+    await scrubMemberFromSongDefaults(transaction, id);
+    await scrubMemberFromSetlistOverrides(transaction, id);
+    await transaction.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, id));
+    const deleted = await transaction
       .delete(memberTable)
       .where(eq(memberTable.id, id))
       .returning({ id: memberTable.id });
@@ -93,8 +93,11 @@ export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome
   });
 }
 
-async function scrubMemberFromSongDefaults(tx: DatabaseExecutor, memberId: string): Promise<void> {
-  const songs = await tx
+async function scrubMemberFromSongDefaults(
+  transaction: DatabaseExecutor,
+  memberId: string,
+): Promise<void> {
+  const songs = await transaction
     .select({ id: songTable.id, defaultLineup: songTable.defaultLineup })
     .from(songTable);
   for (const songRow of songs) {
@@ -102,7 +105,7 @@ async function scrubMemberFromSongDefaults(tx: DatabaseExecutor, memberId: strin
     const lineup = defaultLineupSchema.parse(lineupRaw);
     if (!(memberId in lineup)) continue;
     const scrubbed = scrubMemberFromLineup(lineup, memberId);
-    await tx
+    await transaction
       .update(songTable)
       .set({ defaultLineup: JSON.stringify(scrubbed) })
       .where(eq(songTable.id, songRow.id));
@@ -110,10 +113,10 @@ async function scrubMemberFromSongDefaults(tx: DatabaseExecutor, memberId: strin
 }
 
 async function scrubMemberFromSetlistOverrides(
-  tx: DatabaseExecutor,
+  transaction: DatabaseExecutor,
   memberId: string,
 ): Promise<void> {
-  const entries = await tx
+  const entries = await transaction
     .select({ id: setlistEntryTable.id, lineupOverride: setlistEntryTable.lineupOverride })
     .from(setlistEntryTable)
     .where(isNotNull(setlistEntryTable.lineupOverride));
@@ -123,7 +126,7 @@ async function scrubMemberFromSetlistOverrides(
     const lineup = lineupOverrideSchema.parse(lineupRaw);
     if (!(memberId in lineup)) continue;
     const scrubbed = scrubMemberFromLineup(lineup, memberId);
-    await tx
+    await transaction
       .update(setlistEntryTable)
       .set({ lineupOverride: JSON.stringify(scrubbed) })
       .where(eq(setlistEntryTable.id, entryRow.id));

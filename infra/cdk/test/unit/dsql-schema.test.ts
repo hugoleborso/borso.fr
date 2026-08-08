@@ -120,20 +120,20 @@ describe('DsqlSchema', () => {
 });
 
 describe('DsqlSchema (migrations directory edge cases)', () => {
-  let tmp: string;
+  let temporaryDirectory: string;
 
   beforeAll(() => {
-    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'borso-migrations-'));
+    temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'borso-migrations-'));
     // valid migrations
-    fs.writeFileSync(path.join(tmp, '0001_init.sql'), 'CREATE TABLE x (id INT);');
-    fs.writeFileSync(path.join(tmp, '0002_more.sql'), 'CREATE TABLE y (id INT);');
+    fs.writeFileSync(path.join(temporaryDirectory, '0001_init.sql'), 'CREATE TABLE x (id INT);');
+    fs.writeFileSync(path.join(temporaryDirectory, '0002_more.sql'), 'CREATE TABLE y (id INT);');
     // junk that should be ignored
-    fs.writeFileSync(path.join(tmp, 'README.md'), 'noise');
-    fs.writeFileSync(path.join(tmp, 'not-a-migration.sql'), 'noise');
+    fs.writeFileSync(path.join(temporaryDirectory, 'README.md'), 'noise');
+    fs.writeFileSync(path.join(temporaryDirectory, 'not-a-migration.sql'), 'noise');
   });
 
   afterAll(() => {
-    fs.rmSync(tmp, { recursive: true, force: true });
+    fs.rmSync(temporaryDirectory, { recursive: true, force: true });
   });
 
   it('reads only files matching the migration pattern, in order', () => {
@@ -145,7 +145,7 @@ describe('DsqlSchema (migrations directory edge cases)', () => {
     new DsqlSchema(stack, 'Db', {
       app: 'test-app',
       stage: 'prod',
-      migrationsPath: tmp,
+      migrationsPath: temporaryDirectory,
       cluster,
     });
     const tpl = Template.fromStack(stack);

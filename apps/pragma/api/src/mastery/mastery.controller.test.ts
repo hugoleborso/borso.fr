@@ -42,25 +42,25 @@ async function seedTriple(
   app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
   cookieHeader: string,
 ): Promise<{ memberId: string; instrumentId: string; songId: string }> {
-  const memberRes = await jsonRequest(app, '/api/members', {
+  const memberResponse = await jsonRequest(app, '/api/members', {
     method: 'POST',
     body: { firstName: 'Hugo', color: '#abc' },
     cookieHeader,
   });
-  const instrumentRes = await jsonRequest(app, '/api/instruments', {
+  const instrumentResponse = await jsonRequest(app, '/api/instruments', {
     method: 'POST',
     body: { name: 'Voice', isHarmonic: false },
     cookieHeader,
   });
-  const songRes = await jsonRequest(app, '/api/songs', {
+  const songResponse = await jsonRequest(app, '/api/songs', {
     method: 'POST',
     body: { title: 'X', status: 'idea' },
     cookieHeader,
   });
   return {
-    memberId: (await readJson(memberRes, memberEnvelope)).member.id,
-    instrumentId: (await readJson(instrumentRes, instrumentEnvelope)).instrument.id,
-    songId: (await readJson(songRes, songEnvelope)).song.id,
+    memberId: (await readJson(memberResponse, memberEnvelope)).member.id,
+    instrumentId: (await readJson(instrumentResponse, instrumentEnvelope)).instrument.id,
+    songId: (await readJson(songResponse, songEnvelope)).song.id,
   };
 }
 

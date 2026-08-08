@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api';
 import { debounce } from '../../lib/debounce.utils';
 import { useSongSearch } from '../../lib/queries/songs';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 
@@ -63,7 +63,7 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
   const hasSearched = debouncedQuery.length > 0 && !isLoading && error === null;
 
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
+    <div className={composeClassName('flex flex-col gap-2', className)}>
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none">
           <Icon name="search" />

@@ -33,10 +33,10 @@ async function bootstrap(app: Hono, password: string): Promise<Response> {
   });
 }
 
-async function login(app: Hono, password: string, ip = '203.0.113.1'): Promise<Response> {
+async function login(app: Hono, password: string, ipAddress = '203.0.113.1'): Promise<Response> {
   return app.request(`${ANY_HOST}/api/auth/login`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': ipAddress },
     body: JSON.stringify({ password }),
   });
 }
@@ -88,12 +88,12 @@ describe('shared-password auth controller (back-e2e)', () => {
   it('rate-limits after 5 attempts in 15 min on the same ip', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrap(app, VALID_PASSWORD);
-    const ip = '198.51.100.42';
+    const ipAddress = '198.51.100.42';
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const response = await login(app, WRONG_PASSWORD, ip);
+      const response = await login(app, WRONG_PASSWORD, ipAddress);
       expect(response.status).toBe(401);
     }
-    const blocked = await login(app, WRONG_PASSWORD, ip);
+    const blocked = await login(app, WRONG_PASSWORD, ipAddress);
     expect(blocked.status).toBe(429);
   });
 

@@ -84,7 +84,10 @@ describe('songs mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useCreateSong>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeCreate sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeCreate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('probe never reported a mutate handle');
     const send: ReturnType<typeof useCreateSong>['mutateAsync'] = dispatch;
 
@@ -110,7 +113,10 @@ describe('songs mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useCreateSong>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeCreate sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeCreate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('probe never reported a mutate handle');
     const send: ReturnType<typeof useCreateSong>['mutateAsync'] = dispatch;
 
@@ -134,7 +140,10 @@ describe('songs mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useUpdateSong>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeUpdate sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeUpdate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('probe never reported a mutate handle');
     const send: ReturnType<typeof useUpdateSong>['mutateAsync'] = dispatch;
 
@@ -156,7 +165,10 @@ describe('songs mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useDeleteSong>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeDelete sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeDelete sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('probe never reported a mutate handle');
     const send: ReturnType<typeof useDeleteSong>['mutateAsync'] = dispatch;
 

@@ -119,12 +119,12 @@ describe('pragma app stack', () => {
 
   it('mounts the test-seed flag only on non-prod stacks', () => {
     const prodFunctions = synthAppStack('prod').findResources('AWS::Lambda::Function');
-    for (const fn of Object.values(prodFunctions)) {
-      expect(readEnvVars(fn)).not.toHaveProperty('ALLOW_TEST_SEED');
+    for (const lambdaFunction of Object.values(prodFunctions)) {
+      expect(readEnvVars(lambdaFunction)).not.toHaveProperty('ALLOW_TEST_SEED');
     }
     const previewFunctions = synthAppStack('preview').findResources('AWS::Lambda::Function');
     const flagged = Object.values(previewFunctions).filter(
-      (fn) => 'ALLOW_TEST_SEED' in readEnvVars(fn),
+      (lambdaFunction) => 'ALLOW_TEST_SEED' in readEnvVars(lambdaFunction),
     );
     expect(flagged.length).toBeGreaterThan(0);
   });
@@ -133,11 +133,11 @@ describe('pragma app stack', () => {
     for (const stage of ['prod', 'preview'] as const) {
       const template = synthAppStack(stage);
       const functions = template.findResources('AWS::Lambda::Function');
-      const apiFn = Object.entries(functions).find(([logicalId]) =>
+      const apiFunction = Object.entries(functions).find(([logicalId]) =>
         logicalId.includes('AppApiFn'),
       )?.[1];
-      expect(apiFn, `api function not found in ${stage} template`).toBeDefined();
-      const variables = apiFn === undefined ? {} : readEnvVars(apiFn);
+      expect(apiFunction, `api function not found in ${stage} template`).toBeDefined();
+      const variables = apiFunction === undefined ? {} : readEnvVars(apiFunction);
       expect(variables).toHaveProperty('UPLOADS_BUCKET');
     }
   });

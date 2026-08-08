@@ -4,7 +4,7 @@
  * discrimination here means no component repeats it.
  */
 
-import type { RunnerStatusDto } from './race.types';
+import type { RankedRunnerDto, RunnerStatusDto } from './race.types';
 
 export type RunnerStatusKind = 'in-race' | 'out';
 
@@ -20,4 +20,9 @@ export function selectRunnerStatusLoop(status: RunnerStatusDto): number {
 /** Why a runner is out, defaulting to the automatic reason for one still in. */
 export function selectRunnerOutReason(status: RunnerStatusDto): 'late' | 'manual' {
   return status.kind === 'dnf' ? status.reason : 'late';
+}
+
+/** How many runners are still in the race, which several screens show as a count. */
+export function countRunnersInRace(ranked: readonly RankedRunnerDto[]): number {
+  return ranked.filter((entry) => entry.status.kind === 'in-race').length;
 }

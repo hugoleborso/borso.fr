@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Avatar } from '../atoms/Avatar';
 import { Badge } from '../atoms/Badge';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Icon, type IconName } from '../atoms/Icon';
 import { MEMBER_PALETTE, memberInitial } from '../atoms/member-palette.utils';
 import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
@@ -56,7 +56,7 @@ export function AppShell(): JSX.Element {
 
   const renderSidebar = (variant: 'desktop' | 'mobile'): JSX.Element => (
     <nav
-      className={cn(
+      className={composeClassName(
         'px-3.5 py-4 flex flex-col gap-3.5 bg-bg-sunk',
         variant === 'desktop'
           ? 'w-[232px] min-w-[232px] border-r border-line h-full'
@@ -170,7 +170,7 @@ function SidebarLink({ item, label, badge, isActive, onClick }: SidebarLinkProps
     <NavLink
       to={item.to}
       onClick={onClick}
-      className={cn(
+      className={composeClassName(
         'flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13.5px] border border-transparent',
         'hover:bg-[rgba(26,22,18,0.04)] transition-colors',
         isActive ? 'bg-bg-elev text-ink-900 border-line' : 'text-ink-700',

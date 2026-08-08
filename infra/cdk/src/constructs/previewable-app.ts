@@ -232,7 +232,7 @@ function resolveAllowedOrigins(props: {
  */
 function resolveApiCustomDomain(
   scope: Construct,
-  ctx: { readonly app: string; readonly stage: Stage; readonly prNumber?: number },
+  context: { readonly app: string; readonly stage: Stage; readonly prNumber?: number },
   apiOptions: { readonly customDomainHostname?: string },
 ):
   | {
@@ -242,8 +242,8 @@ function resolveApiCustomDomain(
       readonly hostedZoneName: string;
     }
   | undefined {
-  if (ctx.stage === 'prod') return undefined;
-  const hostname = apiOptions.customDomainHostname ?? previewApiHostname(ctx);
+  if (context.stage === 'prod') return undefined;
+  const hostname = apiOptions.customDomainHostname ?? previewApiHostname(context);
   return {
     hostname,
     certificateArn: StringParameter.valueForStringParameter(

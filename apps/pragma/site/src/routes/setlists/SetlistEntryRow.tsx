@@ -37,7 +37,7 @@ import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
-import { cn } from '../../components/atoms/cn.utils';
+import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
 import {
   LineupEditor,
@@ -125,14 +125,14 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     validators: { onChange: setlistEntryFormSchema },
     onSubmit: () => {},
   });
-  const handleSaveLineup = (lineup: LineupRecord | null, wasReset: boolean): void => {
+  const saveLineupOverride = (lineup: LineupRecord | null, wasReset: boolean): void => {
     props.onUpdate(props.entryId, { lineupOverride: wasReset ? null : lineup });
   };
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn('flex flex-col gap-1', isDragging && 'opacity-40')}
+      className={composeClassName('flex flex-col gap-1', isDragging && 'opacity-40')}
     >
       {props.showTransitionWarningBefore ? (
         <button
@@ -340,7 +340,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         instruments={props.instruments}
         currentLineup={props.resolvedLineupForEdit}
         defaultLineup={props.songDefaultLineup}
-        onSave={handleSaveLineup}
+        onSave={saveLineupOverride}
         onClose={() => setLineupEditorOpen(false)}
       />
     </li>

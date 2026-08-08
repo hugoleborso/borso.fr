@@ -2,8 +2,7 @@ export { EditionNotFoundError } from '../edition/edition.service';
 
 import type { Database } from '../database/client';
 import { getEdition } from '../edition/edition.service';
-import { listManualDidNotFinishesForEdition } from '../punch/punch.repository';
-import { getPunchesForEdition } from '../punch/punch.service';
+import { getPunchesForEdition, listManualDidNotFinishes } from '../punch/punch.service';
 import type { RunnerDto } from '../runner/runner.dto.utils';
 import { toRunnerDto } from '../runner/runner.dto.utils';
 import { readPhotosCdnHost } from '../runner/runner.environment';
@@ -32,7 +31,7 @@ export async function computeStandingsForEdition(
   const [runners, punches, manualDidNotFinishes] = await Promise.all([
     listRunners(database, editionSlug),
     getPunchesForEdition(database, editionSlug),
-    listManualDidNotFinishesForEdition(database, editionSlug),
+    listManualDidNotFinishes(database, editionSlug),
   ]);
   return computeStandings(edition, runners, punches, manualDidNotFinishes, now);
 }

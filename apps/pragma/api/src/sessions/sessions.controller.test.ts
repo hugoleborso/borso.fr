@@ -150,7 +150,7 @@ describe('sessions controller (back-e2e)', () => {
     expect(afterDelete.status).toBe(404);
     // The orphaned entries query is best-effort: we re-create the
     // setlist for the same session and expect zero entries inherited.
-    const newSessionRes = await jsonRequest(app, '/api/sessions', {
+    const newSessionResponse = await jsonRequest(app, '/api/sessions', {
       method: 'POST',
       body: {
         kind: 'practice',
@@ -158,13 +158,13 @@ describe('sessions controller (back-e2e)', () => {
       },
       cookieHeader,
     });
-    const newSessionId = (await readJson(newSessionRes, singleEnvelope)).session.id;
-    const newSetlistRes = await jsonRequest(app, '/api/setlists', {
+    const newSessionId = (await readJson(newSessionResponse, singleEnvelope)).session.id;
+    const newSetlistResponse = await jsonRequest(app, '/api/setlists', {
       method: 'POST',
       body: { sessionId: newSessionId },
       cookieHeader,
     });
-    const newSetlistId = (await readJson(newSetlistRes, setlistEnvelope)).setlist.id;
+    const newSetlistId = (await readJson(newSetlistResponse, setlistEnvelope)).setlist.id;
     const entries = await readJson(
       await jsonRequest(app, `/api/setlists/${newSetlistId}/entries`, { cookieHeader }),
       entriesEnvelope,

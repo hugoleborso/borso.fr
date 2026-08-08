@@ -2,8 +2,9 @@
 
 ## Rule
 
-Every branch in this codebase sits inside a pure function, and every pure
-function sits in a file named `<something>.core.ts` or `<something>.utils.ts`.
+Every business decision in this codebase sits inside a pure function, and every
+pure function sits in a file named `<something>.core.ts` or
+`<something>.utils.ts`.
 
 The two halves are one idea, which is that you decide in pure code and act in
 impure code.
@@ -15,7 +16,7 @@ values, without a mock, a fixture database, a fake timer, or a rendered
 component. Exhaustive testing therefore becomes cheap, and cheap tests are the
 tests people actually write.
 
-The second effect is larger. When every condition has to move into a pure
+The second effect is larger. When every decision has to move into a pure
 function, the impure code left behind reads inputs, calls one decision
 function, and applies the result, so a reviewer can check it by eye.
 
@@ -49,7 +50,7 @@ export function isRaceOver(edition: Edition, now: Date): boolean {
 Passing `now` explicitly removes the need for `vi.setSystemTime()`, and it
 turns "what happens one millisecond before the cutoff" into a one line test.
 
-## Every condition moves
+## Every decision moves
 
 People push back on the rule below more than any other, so here it is with real
 code.
@@ -131,7 +132,7 @@ formatter, a parser, a palette builder, or a URL composer.
 
 ```
 site/src/lib/formatters.utils.ts
-site/src/components/atoms/cn.utils.ts
+site/src/components/atoms/class-name.utils.ts
 api/src/helpers/geo/haversine.utils.ts
 ```
 

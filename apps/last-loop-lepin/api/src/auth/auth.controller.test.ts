@@ -47,10 +47,10 @@ describe('admin auth controller', () => {
     await seedAdminCredentials(testDatabase());
   });
 
-  async function login(pin: string, ip = '127.0.0.1') {
+  async function login(pin: string, ipAddress = '127.0.0.1') {
     return createApp().request('/api/admin/auth/login', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
+      headers: { 'content-type': 'application/json', 'x-forwarded-for': ipAddress },
       body: JSON.stringify({ pin }),
     });
   }
@@ -83,25 +83,25 @@ describe('admin auth controller', () => {
   });
 
   it('returns 429 once the rate-limit window is full', async () => {
-    const ip = '198.51.100.42';
+    const ipAddress = '198.51.100.42';
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const intermediate = await login('totallywrong', ip);
+      const intermediate = await login('totallywrong', ipAddress);
       expect(intermediate.status).toBe(401);
     }
-    const blocked = await login('totallywrong', ip);
+    const blocked = await login('totallywrong', ipAddress);
     expect(blocked.status).toBe(429);
     const body = errorResponseSchema.parse(await blocked.json());
     expect(body.reason).toBe('rate-limited');
   });
 
   it('resets the rate-limit window after a successful login', async () => {
-    const ip = '198.51.100.43';
+    const ipAddress = '198.51.100.43';
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      await login('totallywrong', ip);
+      await login('totallywrong', ipAddress);
     }
-    const success = await login('lastloop', ip);
+    const success = await login('lastloop', ipAddress);
     expect(success.status).toBe(200);
-    const nextAttempt = await login('totallywrong', ip);
+    const nextAttempt = await login('totallywrong', ipAddress);
     expect(nextAttempt.status).toBe(401);
   });
 

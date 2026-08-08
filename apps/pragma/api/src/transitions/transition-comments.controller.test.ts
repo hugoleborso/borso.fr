@@ -23,19 +23,19 @@ async function seedTwoSongs(
   app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
   cookieHeader: string,
 ): Promise<{ songAId: string; songBId: string }> {
-  const a = await jsonRequest(app, '/api/songs', {
+  const songAResponse = await jsonRequest(app, '/api/songs', {
     method: 'POST',
     body: { title: 'A', status: 'idea' },
     cookieHeader,
   });
-  const b = await jsonRequest(app, '/api/songs', {
+  const songBResponse = await jsonRequest(app, '/api/songs', {
     method: 'POST',
     body: { title: 'B', status: 'idea' },
     cookieHeader,
   });
   return {
-    songAId: (await readJson(a, songEnvelope)).song.id,
-    songBId: (await readJson(b, songEnvelope)).song.id,
+    songAId: (await readJson(songAResponse, songEnvelope)).song.id,
+    songBId: (await readJson(songBResponse, songEnvelope)).song.id,
   };
 }
 

@@ -27,39 +27,46 @@ export async function listTransitionComments(): Promise<TransitionCommentRow[]> 
 }
 
 export async function findTransitionComment(
-  a: string,
-  b: string,
+  songAId: string,
+  songBId: string,
 ): Promise<TransitionCommentRow | null> {
   const database = getDatabase();
   const rows = await database
     .select(PROJECTION)
     .from(transitionCommentTable)
-    .where(and(eq(transitionCommentTable.songAId, a), eq(transitionCommentTable.songBId, b)))
+    .where(
+      and(eq(transitionCommentTable.songAId, songAId), eq(transitionCommentTable.songBId, songBId)),
+    )
     .limit(1);
   return rows[0] ?? null;
 }
 
 export async function upsertTransitionComment(
-  a: string,
-  b: string,
+  songAId: string,
+  songBId: string,
   comment: string,
   now: Date,
 ): Promise<void> {
   const database = getDatabase();
   await database
     .insert(transitionCommentTable)
-    .values({ songAId: a, songBId: b, comment })
+    .values({ songAId, songBId, comment })
     .onConflictDoUpdate({
       target: [transitionCommentTable.songAId, transitionCommentTable.songBId],
       set: { comment, updatedAt: now },
     });
 }
 
-export async function deleteTransitionComment(a: string, b: string): Promise<DeletionOutcome> {
+export async function deleteTransitionComment(
+  songAId: string,
+  songBId: string,
+): Promise<DeletionOutcome> {
   const database = getDatabase();
   const deleted = await database
     .delete(transitionCommentTable)
-    .where(and(eq(transitionCommentTable.songAId, a), eq(transitionCommentTable.songBId, b)))
+    .where(
+      and(eq(transitionCommentTable.songAId, songAId), eq(transitionCommentTable.songBId, songBId)),
+    )
     .returning({ id: transitionCommentTable.id });
   return selectDeletionOutcome(deleted.length);
 }

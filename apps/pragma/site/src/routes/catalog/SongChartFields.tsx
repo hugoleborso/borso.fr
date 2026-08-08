@@ -5,6 +5,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { Input } from '../../components/atoms/Input';
+import { composeClassName } from '../../components/atoms/class-name.utils';
 import { FileDrop } from '../../components/molecules/FileDrop';
 
 export type SongChartKind = 'none' | 'chordpro' | 'pdf' | 'image';
@@ -69,7 +70,7 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
       />
 
       <fieldset className="border border-line rounded-md p-3 mt-2">
-        <legend className={`${LABEL_CLASS} px-2`}>{t('catalog.chordChart')}</legend>
+        <legend className={composeClassName(LABEL_CLASS, 'px-2')}>{t('catalog.chordChart')}</legend>
         <div className="flex flex-wrap gap-3">
           <label className={RADIO_LABEL_CLASS}>
             <input

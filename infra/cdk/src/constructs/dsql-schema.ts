@@ -113,8 +113,8 @@ function readMigrations(dir: string): readonly MigrationFile[] {
   }
   const entries = fs.readdirSync(absDir);
   const files = entries
-    .filter((f) => MIGRATION_FILE_PATTERN.test(f))
-    .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
+    .filter((fileName) => MIGRATION_FILE_PATTERN.test(fileName))
+    .sort((left, right) => left.localeCompare(right, 'en', { numeric: true }));
   return files.map((name) => ({
     name,
     sql: fs.readFileSync(path.join(absDir, name), 'utf8'),

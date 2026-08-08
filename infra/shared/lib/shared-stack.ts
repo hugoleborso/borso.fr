@@ -76,7 +76,7 @@ export class SharedStack extends Stack {
       lifecycleRules: [{ id: 'expire-previews', prefix: '', expiration: Duration.days(60) }],
     });
 
-    const routingFn = new CfFunction(this, 'HostRouter', {
+    const routingFunction = new CfFunction(this, 'HostRouter', {
       code: FunctionCode.fromInline(HOST_ROUTING_FUNCTION_CODE),
       runtime: FunctionRuntime.JS_2_0,
       comment: 'Maps preview hostnames to S3 prefixes',
@@ -88,7 +88,7 @@ export class SharedStack extends Stack {
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         compress: true,
         functionAssociations: [
-          { function: routingFn, eventType: FunctionEventType.VIEWER_REQUEST },
+          { function: routingFunction, eventType: FunctionEventType.VIEWER_REQUEST },
         ],
       },
       domainNames: [PREVIEWS_DOMAIN],

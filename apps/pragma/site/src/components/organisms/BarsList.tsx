@@ -26,7 +26,7 @@ import { useTranslation } from 'react-i18next';
 import { formatCapacity } from '../../lib/formatters.utils';
 import { Badge } from '../atoms/Badge';
 import { Chip } from '../atoms/Chip';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 
 export interface BarsListRow {
@@ -137,7 +137,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         {table.getHeaderGroups()[0]?.headers.map((header, index) => {
           const sortDirection = header.column.getIsSorted();
           const canSort = header.column.getCanSort();
-          const className = cn(
+          const className = composeClassName(
             index === 0 && 'flex-1',
             (header.column.id === 'city' || header.column.id === 'capacity') && 'hidden md:inline',
             canSort && 'cursor-pointer select-none',
@@ -148,7 +148,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
               type="button"
               onClick={header.column.getToggleSortingHandler()}
               disabled={!canSort}
-              className={cn(
+              className={composeClassName(
                 className,
                 'bg-transparent border-0 text-[10.5px] tracking-wider uppercase text-ink-500 font-medium p-0 text-left',
               )}
@@ -166,7 +166,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
       {table.getRowModel().rows.map((row) => (
         <li
           key={row.id}
-          className={cn(
+          className={composeClassName(
             'flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors',
             row.original.isStale && 'border-warn/40',
           )}
@@ -177,7 +177,10 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
             return (
               <span
                 key={cell.id}
-                className={cn(isName && 'flex-1', isHiddenOnMobile && 'hidden md:inline')}
+                className={composeClassName(
+                  isName && 'flex-1',
+                  isHiddenOnMobile && 'hidden md:inline',
+                )}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </span>

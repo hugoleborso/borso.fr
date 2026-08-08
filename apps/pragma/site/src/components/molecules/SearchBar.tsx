@@ -5,8 +5,7 @@
  * don't repeat the same six-line snippet.
  */
 
-import type { ChangeEvent } from 'react';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 
@@ -23,18 +22,15 @@ export function SearchBar({
   placeholder,
   className,
 }: SearchBarProps): JSX.Element {
-  const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    onChange(event.target.value);
-  };
   return (
-    <div className={cn('relative flex-1 max-w-[380px] min-w-[260px]', className)}>
+    <div className={composeClassName('relative flex-1 max-w-[380px] min-w-[260px]', className)}>
       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none">
         <Icon name="search" />
       </span>
       <Input
         type="search"
         value={value}
-        onChange={handleChange}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         className="pl-9"
       />

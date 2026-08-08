@@ -16,7 +16,6 @@ import {
 import { CorrectionPanel } from '../components/organisms/CorrectionPanel';
 import { DidNotFinishPanel } from '../components/organisms/DidNotFinishPanel';
 import { FinishRacePrompt } from '../components/organisms/FinishRacePrompt';
-import { countRunnersInRace } from '../components/organisms/punch-panel.core';
 import { PunchPanel } from '../components/organisms/PunchPanel';
 import { RunnerAdminPanel } from '../components/organisms/RunnerAdminPanel';
 import { SetupPanel } from '../components/organisms/SetupPanel';
@@ -24,6 +23,7 @@ import { listPresent } from '../lib/optional.utils';
 import { useCurrentEdition } from '../lib/queries/editions';
 import { useStandings } from '../lib/queries/standings';
 import type { RaceEditionDto, RankedRunnerDto } from '../lib/race.types';
+import { countRunnersInRace } from '../lib/runner-status.utils';
 
 const NAV_STYLE = { marginLeft: 0 } as const;
 const EMPTY_RANKED: readonly RankedRunnerDto[] = [];

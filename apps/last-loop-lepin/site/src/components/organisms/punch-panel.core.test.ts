@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { RankedRunnerDto } from '../../lib/race.types';
 import {
   composePunchTileClassName,
-  countRunnersInRace,
   EMPTY_PUNCH_OVERLAY,
   listPunchTiles,
   projectPunchLoopClock,
@@ -156,16 +155,5 @@ describe('composePunchTileClassName', () => {
 
   it('adds both modifiers when both hold', () => {
     expect(composePunchTileClassName(true, true)).toBe('punch-tile punched late');
-  });
-});
-
-describe('countRunnersInRace', () => {
-  it('counts nobody in an empty field', () => {
-    expect(countRunnersInRace([])).toBe(0);
-  });
-
-  it('counts only the runners still going', () => {
-    const out = buildRunner('dan', { status: { kind: 'dnf', outAtLoop: 1, reason: 'late' } });
-    expect(countRunnersInRace([buildRunner('alice'), out])).toBe(1);
   });
 });

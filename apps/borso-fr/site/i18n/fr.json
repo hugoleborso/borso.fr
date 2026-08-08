@@ -13,6 +13,10 @@
       "october": "Octobre",
       "november": "Novembre",
       "december": "Décembre"
+    },
+    "brand": {
+      "name": "borso",
+      "domain": "fr"
     }
   },
   "home": {

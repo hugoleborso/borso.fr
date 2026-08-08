@@ -16,16 +16,23 @@ export async function getTransitionComments(): Promise<TransitionCommentRow[]> {
 }
 
 export async function getTransitionComment(
-  a: string,
-  b: string,
+  songAId: string,
+  songBId: string,
 ): Promise<TransitionCommentRow | null> {
-  return await findTransitionComment(a, b);
+  return await findTransitionComment(songAId, songBId);
 }
 
-export async function saveTransitionComment(a: string, b: string, comment: string): Promise<void> {
-  await upsertTransitionComment(a, b, comment, new Date());
+export async function saveTransitionComment(
+  songAId: string,
+  songBId: string,
+  comment: string,
+): Promise<void> {
+  await upsertTransitionComment(songAId, songBId, comment, new Date());
 }
 
-export async function removeTransitionComment(a: string, b: string): Promise<DeletionOutcome> {
-  return await deleteTransitionComment(a, b);
+export async function removeTransitionComment(
+  songAId: string,
+  songBId: string,
+): Promise<DeletionOutcome> {
+  return await deleteTransitionComment(songAId, songBId);
 }

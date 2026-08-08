@@ -133,10 +133,6 @@ export default tseslint.config(
       'borso/no-inline-subscribe-in-use-sync-external-store': 'error',
       'borso/no-controller-imports-outside-service': 'error',
 
-      // The two halves of docs/standards/02-purity-and-core-files.md. A branch
-      // belongs in a pure function, and a pure function belongs in a file the
-      // coverage and mutation gates cover.
-
       // Ported from biome's `noExcessiveLinesPerFile`, which skips blank lines
       // and comment lines. Counting them here instead would fail twelve files
       // that biome passed, which would be a new rule rather than a port.
@@ -176,6 +172,69 @@ export default tseslint.config(
       'borso/conditions-live-in-pure-functions': 'error',
       'borso/pure-functions-live-in-core-files': 'error',
       'borso/no-impure-calls-in-core-files': 'error',
+    },
+  },
+
+  // Back end rules from standards 04 and 11. Scoped to `api/src`, because a
+  // controller, a repository and a raw SQL tag only mean something there.
+  {
+    files: ['apps/*/api/src/**/*.ts'],
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/no-array-methods-in-controllers': 'error',
+      'borso/no-cross-slice-repository-imports': 'error',
+      'borso/no-database-client-outside-repository': 'error',
+      'borso/no-raw-sql-outside-migrations': 'error',
+    },
+  },
+
+  // Front end rules from standards 05, 06, 07, 08 and 09.
+  {
+    files: SITE_FILES,
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/no-use-effect': 'error',
+      'borso/no-server-state-in-use-state': 'error',
+      'borso/atomic-design-import-direction': 'error',
+      'borso/no-flat-components-folder': 'error',
+      'borso/no-query-hooks-outside-organisms': 'error',
+      'borso/no-component-css-imports': 'error',
+      'borso/no-literal-jsx-text': 'error',
+      'borso/no-dynamic-translation-keys': 'error',
+    },
+  },
+
+  // Only pragma uses Tailwind. The rule's reason is that Tailwind's scanner
+  // never sees a class assembled at runtime, and that does not hold for the
+  // three applications shipping plain CSS, where a concatenated class name
+  // works correctly. Widen this as another application adopts Tailwind.
+  {
+    files: ['apps/pragma/site/**/*.{ts,tsx}'],
+    plugins: { borso: borsoPlugin },
+    rules: { 'borso/no-string-concatenated-class-names': 'error' },
+  },
+
+  // Naming and testing rules from standards 01 and 10, across all application
+  // and infrastructure code.
+  {
+    files: ['apps/**/*.{ts,tsx}', 'infra/**/*.ts'],
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/no-abbreviated-identifier': 'error',
+      'borso/function-names-are-verb-phrases': 'error',
+      'borso/no-french-identifiers': 'error',
+      'borso/test-file-has-sibling-source': 'error',
+    },
+  },
+
+  // `piece` in the chess application is the English chess term rather than the
+  // French *pièce*, e.g. `onPieceDrop` and `isPromotionPiece`. The application
+  // drops the word rather than the repository dropping the rule.
+  {
+    files: ['apps/borsouvertures/**/*.{ts,tsx}'],
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/no-french-identifiers': ['error', { allowedWords: ['piece'] }],
     },
   },
 

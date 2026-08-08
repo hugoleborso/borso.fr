@@ -59,7 +59,7 @@ describe('migration-runner handler — cloneFromSchema (Neon-branch pattern)', (
         },
       },
     });
-    const queries = state.unsafeCalls.map((c) => c.query).join('\n');
+    const queries = state.unsafeCalls.map((call) => call.query).join('\n');
 
     // Structure for every prod table (including the blocklisted one) so
     // the app can write to the empty admin_sessions table post-deploy.
@@ -93,7 +93,7 @@ describe('migration-runner handler — cloneFromSchema (Neon-branch pattern)', (
         cloneFromSchema: { sourceSchemaName: 'prod' },
       },
     });
-    const queries = state.unsafeCalls.map((c) => c.query).join('\n');
+    const queries = state.unsafeCalls.map((call) => call.query).join('\n');
     // Falls back to the normal applyMigrations flow.
     expect(queries).toMatch(/CREATE SCHEMA IF NOT EXISTS "pr_27"/);
     expect(queries).not.toMatch(/LIKE "prod"/);
@@ -115,7 +115,7 @@ describe('migration-runner handler — cloneFromSchema (Neon-branch pattern)', (
         cloneFromSchema: { sourceSchemaName: 'prod' },
       },
     });
-    const queries = state.unsafeCalls.map((c) => c.query).join('\n');
+    const queries = state.unsafeCalls.map((call) => call.query).join('\n');
     expect(queries).not.toMatch(/LIKE "prod"/);
     expect(queries).not.toMatch(/SELECT .+ FROM "prod"\.".+"/);
   });
@@ -136,7 +136,7 @@ describe('migration-runner handler — cloneFromSchema (Neon-branch pattern)', (
         cloneFromSchema: { sourceSchemaName: 'prod' },
       },
     });
-    const queries = state.unsafeCalls.map((c) => c.query).join('\n');
+    const queries = state.unsafeCalls.map((call) => call.query).join('\n');
     expect(queries).toMatch(/CREATE TABLE IF NOT EXISTS "pr_27"\."editions"/);
     expect(queries).not.toMatch(/INSERT INTO "pr_27"\."editions"/);
   });

@@ -12,7 +12,7 @@ import { type DragEvent, type JSX, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api';
 import { useSignChartUpload } from '../../lib/queries/uploads';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import {
   FILE_DROP_ACCEPT_ATTRIBUTE,
@@ -48,7 +48,7 @@ export function FileDrop({
   const [error, setError] = useState<string | null>(null);
   const isBusy = sign.isPending;
 
-  const handleFile = async (file: File): Promise<void> => {
+  const uploadChartFile = async (file: File): Promise<void> => {
     setError(null);
     const validated = validateChartFile(file);
     if (!validated.ok) {
@@ -91,17 +91,17 @@ export function FileDrop({
     event.preventDefault();
     setDragOver(false);
     const dropped = event.dataTransfer.files[0];
-    if (dropped !== undefined) void handleFile(dropped);
+    if (dropped !== undefined) void uploadChartFile(dropped);
   };
 
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
+    <div className={composeClassName('flex flex-col gap-2', className)}>
       <label
         htmlFor="file-drop-input"
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        className={cn(
+        className={composeClassName(
           'flex flex-col items-center justify-center gap-2 px-6 py-8 rounded-md border-2 border-dashed cursor-pointer transition-colors',
           dragOver
             ? 'border-accent bg-accent/5'
@@ -123,7 +123,7 @@ export function FileDrop({
           className="hidden"
           onChange={(event) => {
             const picked = event.target.files?.[0];
-            if (picked !== undefined) void handleFile(picked);
+            if (picked !== undefined) void uploadChartFile(picked);
           }}
         />
       </label>

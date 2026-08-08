@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { formatBibNumber, formatLoopIndex, formatPace } from '../../lib/formatters.utils';
 import { useRegisterPunch } from '../../lib/queries/punches';
 import type { RaceEditionDto, RankedRunnerDto, RunnerDto } from '../../lib/race.types';
+import { countRunnersInRace } from '../../lib/runner-status.utils';
 import { initialsAvatar } from '../../lib/initials.utils';
 import { recordAnalyticsEvent } from '../../observability/sentry';
 import { Card, CardBody } from '../atoms/Card';
@@ -13,7 +14,6 @@ import { CardHeader } from '../molecules/CardHeader';
 import { type AdminErrorMessage, selectPunchError } from './admin-errors.core';
 import {
   composePunchTileClassName,
-  countRunnersInRace,
   EMPTY_PUNCH_OVERLAY,
   listPunchTiles,
   projectPunchLoopClock,

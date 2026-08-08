@@ -48,7 +48,7 @@ export function SongEditPage(): JSX.Element {
   const isLoading = !isNew && songQuery.isLoading;
   const queryError = songQuery.error instanceof ApiError ? songQuery.error.message : null;
 
-  const handleSubmit = async (value: SongDraftState): Promise<void> => {
+  const saveSong = async (value: SongDraftState): Promise<void> => {
     const payload = payloadFromDraft(value);
     if (payload === null) return;
     try {
@@ -64,7 +64,7 @@ export function SongEditPage(): JSX.Element {
     }
   };
 
-  const handleDelete = async (): Promise<void> => {
+  const removeSong = async (): Promise<void> => {
     if (songId === undefined || isNew) return;
     try {
       await deleteSong.mutateAsync({ id: songId });
@@ -84,8 +84,8 @@ export function SongEditPage(): JSX.Element {
       isNew={isNew}
       songId={songId}
       defaultValues={defaultValues}
-      onSubmit={handleSubmit}
-      onDelete={handleDelete}
+      onSubmit={saveSong}
+      onDelete={removeSong}
       newLinkUrl={newLinkUrl}
       setNewLinkUrl={setNewLinkUrl}
       error={localError ?? queryError}

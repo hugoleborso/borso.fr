@@ -14,7 +14,7 @@
 
 import { useMemo } from 'react';
 import { parseChordPro, transposeLines } from '../../lib/chordpro.utils';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 
 interface ChordChartViewerProps {
   readonly source: string;
@@ -32,7 +32,10 @@ export function ChordChartViewer({
   const fontSize = compact ? 'text-[13px] leading-[1.7]' : 'text-[18px] leading-[2]';
   return (
     <div
-      className={cn('font-mono text-ink-700 whitespace-pre rounded-md overflow-x-auto', fontSize)}
+      className={composeClassName(
+        'font-mono text-ink-700 whitespace-pre rounded-md overflow-x-auto',
+        fontSize,
+      )}
     >
       {transposed.map((line, index) => {
         const key = `chord-line-${index}`;

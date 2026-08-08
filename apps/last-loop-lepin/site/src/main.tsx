@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import 'leaflet/dist/leaflet.css';
 import { App } from './App';
 import './i18n/i18n';
 import { initSentry } from './observability/sentry';

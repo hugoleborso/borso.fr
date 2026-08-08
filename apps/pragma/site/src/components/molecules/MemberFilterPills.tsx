@@ -8,7 +8,7 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 import { MemberChip } from './MemberChip';
 
 export interface FilterPillMember {
@@ -39,7 +39,7 @@ export function MemberFilterPills({
   const isAllActive = selectedMemberId === null;
   return (
     <div
-      className={cn('flex gap-2 overflow-x-auto whitespace-nowrap py-2', className)}
+      className={composeClassName('flex gap-2 overflow-x-auto whitespace-nowrap py-2', className)}
       role="tablist"
       aria-label={t('lineup.filterByMember')}
     >
@@ -48,7 +48,10 @@ export function MemberFilterPills({
         role="tab"
         aria-selected={isAllActive}
         onClick={() => onChange(null)}
-        className={cn(PILL_BASE_CLASS, isAllActive ? PILL_ACTIVE_CLASS : PILL_INACTIVE_CLASS)}
+        className={composeClassName(
+          PILL_BASE_CLASS,
+          isAllActive ? PILL_ACTIVE_CLASS : PILL_INACTIVE_CLASS,
+        )}
       >
         {t('lineup.allMembers')}
       </button>
@@ -61,7 +64,10 @@ export function MemberFilterPills({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(member.id)}
-            className={cn(PILL_BASE_CLASS, isActive ? PILL_ACTIVE_CLASS : PILL_INACTIVE_CLASS)}
+            className={composeClassName(
+              PILL_BASE_CLASS,
+              isActive ? PILL_ACTIVE_CLASS : PILL_INACTIVE_CLASS,
+            )}
           >
             <MemberChip memberName={member.name} memberColor={member.color} size="sm" />
             <span>{member.name}</span>

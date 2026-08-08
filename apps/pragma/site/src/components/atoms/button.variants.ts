@@ -9,7 +9,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
  * @Blueprint atom-variant
  * @BlueprintName Atom With Variant Table
  * @BlueprintUsage Use for a user interface primitive with more than two visual variants.
- * @BlueprintDescription Declares the variants as one cva table in a sibling `.variants.ts` module, so a reviewer reads every combination in a single typed object and the component file exports nothing but the component. The atom composes classes through cn rather than string concatenation, which Tailwind cannot see through, and it imports no other component.
+ * @BlueprintDescription Declares the variants as one cva table in a sibling `.variants.ts` module, so a reviewer reads every combination in a single typed object and the component file exports nothing but the component. The atom composes classes through composeClassName rather than string concatenation, which Tailwind cannot see through, and it imports no other component.
  */
 export const buttonVariants = cva(
   'inline-flex items-center justify-center gap-1.5 rounded-md font-medium ' +

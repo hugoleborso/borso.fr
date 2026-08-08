@@ -26,7 +26,7 @@ import { listPresent } from '../lib/optional.utils';
 import { useCurrentEdition, useEditionList } from '../lib/queries/editions';
 import { useStandings } from '../lib/queries/standings';
 import type { RankedRunnerDto } from '../lib/race.types';
-import { countRunnersInRace } from '../components/organisms/punch-panel.core';
+import { countRunnersInRace } from '../lib/runner-status.utils';
 
 const BANNER_STYLE = { justifyContent: 'space-between' } as const;
 const EMPTY_RANKED: readonly RankedRunnerDto[] = [];

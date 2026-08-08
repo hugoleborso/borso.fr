@@ -60,7 +60,7 @@ export function SetlistsPage(): JSX.Element {
   const error =
     sessionsQuery.error instanceof ApiError
       ? sessionsQuery.error.message
-      : (setlistQueries.find((q) => q.error instanceof ApiError)?.error?.message ?? null);
+      : (setlistQueries.find((query) => query.error instanceof ApiError)?.error?.message ?? null);
 
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">

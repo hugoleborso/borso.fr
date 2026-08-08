@@ -45,7 +45,9 @@ export function LaboursMasthead({
             minHeight: TOUCH_TARGET_MINIMUM_PX,
           }}
         >
-          borso<span style={{ color: ACCENT }}>.</span>fr
+          {t('common.brand.name')}
+          <span style={{ color: ACCENT }}>.</span>
+          {t('common.brand.domain')}
         </a>
         <div style={{ display: 'flex', gap: 0 }}>
           {availableYears.map((candidateYear) => {

@@ -165,8 +165,10 @@ export function computeStandings(
 
       const updatedRanked =
         isTied && accumulator.previous !== null
-          ? accumulator.ranked.map((entry, idx) =>
-              idx === accumulator.previous?.index ? { ...entry, rank: 'ex-aequo' as const } : entry,
+          ? accumulator.ranked.map((entry, index) =>
+              index === accumulator.previous?.index
+                ? { ...entry, rank: 'ex-aequo' as const }
+                : entry,
             )
           : accumulator.ranked;
 

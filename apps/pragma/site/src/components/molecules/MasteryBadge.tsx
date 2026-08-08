@@ -6,7 +6,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { Badge } from '../atoms/Badge';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 
 export interface MasteryBadgeProps {
   value: number | null | undefined;
@@ -19,7 +19,7 @@ export function MasteryBadge({ value, className }: MasteryBadgeProps): JSX.Eleme
   const { t } = useTranslation();
   const display = value === null || value === undefined ? '—' : value.toFixed(DECIMAL_PLACES);
   return (
-    <Badge tone="mono" className={cn('px-1.5', className)}>
+    <Badge tone="mono" className={composeClassName('px-1.5', className)}>
       <span className="text-ink-700">{t('catalog.masteryBadge')}</span>
       <span className="text-ink-900">{display}</span>
     </Badge>

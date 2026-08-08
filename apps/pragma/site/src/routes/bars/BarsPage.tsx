@@ -13,7 +13,7 @@ import type { JSX } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '../../components/atoms/Badge';
-import { cn } from '../../components/atoms/cn.utils';
+import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { BarsList, type BarsListRow } from '../../components/organisms/BarsList';
@@ -139,7 +139,7 @@ export function BarsPage(): JSX.Element {
             <button
               type="button"
               onClick={() => setView('list')}
-              className={cn(
+              className={composeClassName(
                 'px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors',
                 VIEW_TOGGLE_CLASS[selectToggleState(view, 'list')],
               )}
@@ -149,7 +149,7 @@ export function BarsPage(): JSX.Element {
             <button
               type="button"
               onClick={() => setView('kanban')}
-              className={cn(
+              className={composeClassName(
                 'px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors',
                 VIEW_TOGGLE_CLASS[selectToggleState(view, 'kanban')],
               )}
@@ -214,7 +214,7 @@ export function BarsPage(): JSX.Element {
                 <button
                   key={bar.id}
                   type="button"
-                  className={cn(
+                  className={composeClassName(
                     'block w-full text-left bg-bg-elev border border-line rounded-md px-3 py-2.5 cursor-grab hover:border-line-strong transition-colors',
                     KANBAN_CARD_TONE[isBarStale(bar) ? 'stale' : 'fresh'],
                   )}

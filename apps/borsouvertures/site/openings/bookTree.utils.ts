@@ -61,7 +61,7 @@ export function isVariationCleared(
   return true;
 }
 
-function sequencesEqual(a: readonly string[], b: readonly string[]): boolean {
-  if (a.length !== b.length) return false;
-  return a.every((value, index) => value === b[index]);
+function sequencesEqual(left: readonly string[], right: readonly string[]): boolean {
+  if (left.length !== right.length) return false;
+  return left.every((value, index) => value === right[index]);
 }

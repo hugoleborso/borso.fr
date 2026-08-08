@@ -25,11 +25,11 @@ function readClientIp(headerValue: string | undefined): string {
  */
 const authRouter = new Hono()
   .post('/login', zValidator('json', loginInputSchema), async (context) => {
-    const ip = readClientIp(context.req.header('x-forwarded-for'));
+    const ipAddress = readClientIp(context.req.header('x-forwarded-for'));
     try {
       const result = await login(
         getDatabase(),
-        { pin: context.req.valid('json').pin, ipAddress: ip },
+        { pin: context.req.valid('json').pin, ipAddress },
         new Date(),
       );
       setCookie(context, AUTH_COOKIE_NAME, result.sessionId, {

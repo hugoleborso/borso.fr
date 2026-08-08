@@ -1,17 +1,12 @@
 {
   "apps/borso-fr/bin/app.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 4
+      "count": 2
     }
   },
   "apps/borso-fr/scripts/screenshot.mjs": {
     "no-console": {
       "count": 1
-    }
-  },
-  "apps/borso-fr/site/art/mondrian/download.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
     }
   },
   "apps/borso-fr/site/art/mondrian/painting.utils.test.ts": {
@@ -31,12 +26,12 @@
   },
   "apps/borsouvertures/bin/app.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 4
+      "count": 2
     }
   },
   "apps/borsouvertures/scripts/build-openings.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 6
+      "count": 2
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 2
@@ -45,19 +40,9 @@
       "count": 1
     }
   },
-  "apps/borsouvertures/site/main.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
   "apps/borsouvertures/site/openings/bookTree.utils.ts": {
     "unicorn/consistent-boolean-name": {
       "count": 1
-    }
-  },
-  "apps/borsouvertures/site/openings/loadOpenings.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 4
     }
   },
   "apps/borsouvertures/site/openings/playMachine.utils.ts": {
@@ -111,7 +96,7 @@
   },
   "apps/last-loop-lepin/api/src/auth/auth.controller.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 5
+      "count": 1
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
@@ -119,13 +104,10 @@
   },
   "apps/last-loop-lepin/api/src/auth/auth.middleware.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 6
+      "count": 1
     }
   },
   "apps/last-loop-lepin/api/src/auth/auth.service.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 5
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
     },
@@ -134,9 +116,6 @@
     }
   },
   "apps/last-loop-lepin/api/src/database/client.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 6
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 3
     },
@@ -155,9 +134,6 @@
     }
   },
   "apps/last-loop-lepin/api/src/edition/edition.repository.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
     }
@@ -173,9 +149,6 @@
     }
   },
   "apps/last-loop-lepin/api/src/edition/edition.service.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 10
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 3
     }
@@ -202,7 +175,7 @@
   },
   "apps/last-loop-lepin/api/src/media/media.s3.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 3
+      "count": 1
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
@@ -222,9 +195,6 @@
     }
   },
   "apps/last-loop-lepin/api/src/punch/punch.repository.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
     }
@@ -236,7 +206,7 @@
   },
   "apps/last-loop-lepin/api/src/punch/punch.service.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 5
+      "count": 2
     }
   },
   "apps/last-loop-lepin/api/src/ranking/fastest-lap.core.test.ts": {
@@ -272,11 +242,6 @@
       "count": 2
     }
   },
-  "apps/last-loop-lepin/api/src/runner/runner.environment.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
   "apps/last-loop-lepin/api/src/runner/runner.repository.test.ts": {
     "unicorn/require-array-sort-compare": {
       "count": 1
@@ -289,12 +254,12 @@
   },
   "apps/last-loop-lepin/cdk/bin/cdk.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 4
+      "count": 1
     }
   },
   "apps/last-loop-lepin/cdk/lib/stack.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 9
+      "count": 3
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 2
@@ -306,9 +271,6 @@
     }
   },
   "apps/last-loop-lepin/site/src/clock-store.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
     },
@@ -317,9 +279,6 @@
     }
   },
   "apps/last-loop-lepin/site/src/observability/sentry.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 2
     }
@@ -335,9 +294,6 @@
     }
   },
   "apps/last-loop-lepin/test/setup-postgres.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    },
     "unicorn/no-top-level-assignment-in-function": {
       "count": 1
     },
@@ -360,16 +316,6 @@
       "count": 1
     }
   },
-  "apps/pragma/api/src/auth/auth.repository.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
-  "apps/pragma/api/src/auth/auth.service.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
   "apps/pragma/api/src/auth/session-cookie.utils.test.ts": {
     "unicorn/consistent-function-scoping": {
       "count": 1
@@ -383,48 +329,22 @@
       "count": 1
     }
   },
-  "apps/pragma/api/src/auth/shared-password.middleware.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
-    }
-  },
   "apps/pragma/api/src/bars/bars.core.ts": {
     "@typescript-eslint/no-unnecessary-type-parameters": {
       "count": 1
     }
   },
-  "apps/pragma/api/src/bars/bars.repository.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
   "apps/pragma/api/src/bars/bars.service.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 13
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 2
     }
   },
   "apps/pragma/api/src/database/client.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 6
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 3
     },
     "unicorn/no-top-level-assignment-in-function": {
       "count": 1
-    }
-  },
-  "apps/pragma/api/src/instruments/instruments.controller.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
-  "apps/pragma/api/src/instruments/instruments.service.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
     }
   },
   "apps/pragma/api/src/main.dev.ts": {
@@ -437,36 +357,20 @@
       "count": 2
     }
   },
-  "apps/pragma/api/src/members/members.repository.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 5
-    }
-  },
   "apps/pragma/api/src/members/members.schema.ts": {
     "@typescript-eslint/no-deprecated": {
       "count": 1
-    }
-  },
-  "apps/pragma/api/src/members/members.service.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 8
     }
   },
   "apps/pragma/api/src/sessions/sessions.repository.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 16
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 3
     }
   },
   "apps/pragma/api/src/sessions/sessions.service.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 9
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 2
     }
@@ -475,16 +379,8 @@
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 14
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 3
-    }
-  },
-  "apps/pragma/api/src/setlists/setlists.service.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 8
     }
   },
   "apps/pragma/api/src/setlists/transition.core.ts": {
@@ -504,16 +400,13 @@
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 5
     },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 21
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 4
     }
   },
   "apps/pragma/api/src/songs/songs.service.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 7
+      "count": 1
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
@@ -535,9 +428,6 @@
     }
   },
   "apps/pragma/api/src/uploads/uploads.repository.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
     },
@@ -547,19 +437,11 @@
   },
   "apps/pragma/cdk/bin/cdk.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    }
-  },
-  "apps/pragma/cdk/lib/stack.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 5
-    },
-    "borso/pure-functions-live-in-core-files": {
       "count": 1
     }
   },
-  "apps/pragma/site/src/components/molecules/ChartKindIcon.tsx": {
-    "borso/conditions-live-in-pure-functions": {
+  "apps/pragma/cdk/lib/stack.ts": {
+    "borso/pure-functions-live-in-core-files": {
       "count": 1
     }
   },
@@ -568,27 +450,12 @@
       "count": 2
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 17
-    }
-  },
-  "apps/pragma/site/src/components/molecules/EnergySparkline.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
+      "count": 2
     }
   },
   "apps/pragma/site/src/components/molecules/FileDrop.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 13
-    }
-  },
-  "apps/pragma/site/src/components/molecules/FilterPillGroup.tsx": {
-    "borso/conditions-live-in-pure-functions": {
       "count": 1
-    }
-  },
-  "apps/pragma/site/src/components/molecules/LanguageSwitcher.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
     }
   },
   "apps/pragma/site/src/components/molecules/LineupEditor.test.tsx": {
@@ -597,16 +464,6 @@
     },
     "@typescript-eslint/require-await": {
       "count": 6
-    }
-  },
-  "apps/pragma/site/src/components/molecules/LineupEditor.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    }
-  },
-  "apps/pragma/site/src/components/molecules/MasteryBadge.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
     }
   },
   "apps/pragma/site/src/components/molecules/MemberChip.tsx": {
@@ -619,32 +476,7 @@
       "count": 1
     }
   },
-  "apps/pragma/site/src/components/molecules/MemberFilterPills.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
-  "apps/pragma/site/src/components/molecules/MemberLineup.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
-  "apps/pragma/site/src/components/molecules/OfflineBanner.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
-  "apps/pragma/site/src/components/molecules/PageHeader.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 6
-    }
-  },
   "apps/pragma/site/src/components/molecules/SongSearch.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 13
-    }
-  },
-  "apps/pragma/site/src/components/molecules/UploadedChartPreview.tsx": {
     "borso/conditions-live-in-pure-functions": {
       "count": 3
     }
@@ -659,30 +491,25 @@
   },
   "apps/pragma/site/src/components/organisms/AppShell.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 7
+      "count": 3
     }
   },
   "apps/pragma/site/src/components/organisms/BarsList.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 12
+      "count": 5
     }
   },
   "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 7
+      "count": 2
     }
   },
   "apps/pragma/site/src/components/organisms/MasteryMatrix.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 16
+      "count": 2
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 2
-    }
-  },
-  "apps/pragma/site/src/components/organisms/SongCard.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
     }
   },
   "apps/pragma/site/src/components/organisms/useNavBadges.ts": {
@@ -695,19 +522,9 @@
       "count": 2
     }
   },
-  "apps/pragma/site/src/i18n/i18n.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
   "apps/pragma/site/src/i18n/i18n.utils.ts": {
     "unicorn/require-array-sort-compare": {
       "count": 1
-    }
-  },
-  "apps/pragma/site/src/lib/api.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
     }
   },
   "apps/pragma/site/src/lib/queries/auth.queries.test.tsx": {
@@ -720,7 +537,7 @@
   },
   "apps/pragma/site/src/lib/queries/auth.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 2
+      "count": 1
     }
   },
   "apps/pragma/site/src/lib/queries/bars.queries.test.tsx": {
@@ -733,7 +550,7 @@
       "count": 1
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 10
+      "count": 1
     }
   },
   "apps/pragma/site/src/lib/queries/instruments.queries.test.tsx": {
@@ -746,7 +563,7 @@
       "count": 1
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 10
+      "count": 1
     }
   },
   "apps/pragma/site/src/lib/queries/mastery.queries.test.tsx": {
@@ -759,7 +576,7 @@
       "count": 1
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 8
+      "count": 2
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
@@ -775,7 +592,7 @@
       "count": 1
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 15
+      "count": 1
     }
   },
   "apps/pragma/site/src/lib/queries/sessions.ts": {
@@ -783,7 +600,7 @@
       "count": 1
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 16
+      "count": 4
     }
   },
   "apps/pragma/site/src/lib/queries/setlists.ts": {
@@ -792,9 +609,6 @@
     },
     "@typescript-eslint/no-unused-vars": {
       "count": 2
-    },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 12
     }
   },
   "apps/pragma/site/src/lib/queries/songs.queries.test.tsx": {
@@ -807,16 +621,13 @@
       "count": 1
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 15
+      "count": 1
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 2
     }
   },
   "apps/pragma/site/src/lib/queries/test-helpers.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    },
     "unicorn/consistent-function-scoping": {
       "count": 1
     }
@@ -824,11 +635,6 @@
   "apps/pragma/site/src/lib/queries/transitions.queries.test.tsx": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 2
-    }
-  },
-  "apps/pragma/site/src/lib/queries/transitions.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
     }
   },
   "apps/pragma/site/src/lib/stale-bar.utils.ts": {
@@ -841,22 +647,17 @@
       "count": 1
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 10
-    }
-  },
-  "apps/pragma/site/src/routes/bars/BarForm.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
+      "count": 4
     }
   },
   "apps/pragma/site/src/routes/bars/BarsPage.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 9
+      "count": 4
     }
   },
   "apps/pragma/site/src/routes/catalog/CatalogPage.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 8
+      "count": 1
     }
   },
   "apps/pragma/site/src/routes/catalog/SongChartFields.tsx": {
@@ -864,14 +665,9 @@
       "count": 5
     }
   },
-  "apps/pragma/site/src/routes/catalog/SongChordPreview.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
   "apps/pragma/site/src/routes/catalog/SongDetailPage.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 31
+      "count": 4
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
@@ -882,7 +678,7 @@
   },
   "apps/pragma/site/src/routes/catalog/SongEditForm.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 13
+      "count": 3
     }
   },
   "apps/pragma/site/src/routes/catalog/SongEditPage.tsx": {
@@ -893,47 +689,27 @@
       "count": 2
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 12
+      "count": 2
     }
   },
   "apps/pragma/site/src/routes/catalog/SongExternalLinks.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
-  "apps/pragma/site/src/routes/catalog/SongMusicBrainzPanel.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 6
-    }
-  },
-  "apps/pragma/site/src/routes/catalog/SongScenePage.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 4
+      "count": 1
     }
   },
   "apps/pragma/site/src/routes/instruments/InstrumentsPage.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 11
+      "count": 2
     }
   },
   "apps/pragma/site/src/routes/members/MembersPage.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 5
-    }
-  },
-  "apps/pragma/site/src/routes/sessions/ConcertEditForm.tsx": {
     "borso/conditions-live-in-pure-functions": {
       "count": 1
     }
   },
   "apps/pragma/site/src/routes/sessions/ConcertReadView.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 5
-    }
-  },
-  "apps/pragma/site/src/routes/sessions/PracticeReadView.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
+      "count": 2
     }
   },
   "apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx": {
@@ -941,7 +717,7 @@
       "count": 3
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 26
+      "count": 9
     },
     "react-hooks/purity": {
       "count": 1
@@ -952,22 +728,17 @@
       "count": 1
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 10
+      "count": 1
     }
   },
   "apps/pragma/site/src/routes/setlists/SetlistEditor.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 11
-    }
-  },
-  "apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 5
+      "count": 3
     }
   },
   "apps/pragma/site/src/routes/setlists/SetlistEntriesList.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 9
+      "count": 1
     }
   },
   "apps/pragma/site/src/routes/setlists/SetlistEntryRow.tsx": {
@@ -975,7 +746,7 @@
       "count": 1
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 14
+      "count": 6
     },
     "max-lines": {
       "count": 1
@@ -983,17 +754,12 @@
   },
   "apps/pragma/site/src/routes/setlists/SetlistsPage.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 6
+      "count": 1
     }
   },
   "apps/pragma/site/src/routes/setlists/TransitionCommentModal.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    }
-  },
-  "apps/pragma/site/src/routes/setlists/WarnMarkerGutter.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
+      "count": 1
     }
   },
   "apps/pragma/site/src/routes/setlists/orphan-member-warn.ts": {
@@ -1004,17 +770,11 @@
   "apps/pragma/site/src/sw/register-sw.ts": {
     "@typescript-eslint/use-unknown-in-catch-callback-variable": {
       "count": 1
-    },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
     }
   },
   "apps/pragma/test/auth-utils.ts": {
     "@typescript-eslint/no-unsafe-return": {
       "count": 1
-    },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
@@ -1025,32 +785,19 @@
       "count": 1
     }
   },
-  "infra/cdk/src/constructs/dsql-cluster-stack.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
   "infra/cdk/src/constructs/dsql-schema.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 2
     }
   },
   "infra/cdk/src/constructs/lambda-api.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 6
-    }
-  },
-  "infra/cdk/src/constructs/photos-cdn.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
+      "count": 5
     }
   },
   "infra/cdk/src/constructs/previewable-app.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 10
+      "count": 4
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 2
@@ -1058,7 +805,7 @@
   },
   "infra/cdk/src/constructs/static-site.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 4
+      "count": 2
     }
   },
   "infra/cdk/src/internal/cf-host-routing-function.code.js": {
@@ -1078,7 +825,7 @@
   },
   "infra/cdk/src/internal/migration-runner/index.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 9
+      "count": 3
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
@@ -1089,23 +836,20 @@
   },
   "infra/cdk/src/internal/naming.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 8
+      "count": 4
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 10
     }
   },
   "infra/cdk/src/internal/oidc.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
     }
   },
   "infra/cdk/src/internal/tags.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 2
+      "count": 1
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
@@ -1139,7 +883,7 @@
       "count": 2
     },
     "borso/conditions-live-in-pure-functions": {
-      "count": 8
+      "count": 3
     },
     "borso/pure-functions-live-in-core-files": {
       "count": 1
@@ -1149,9 +893,6 @@
     }
   },
   "infra/cdk/test/unit/helpers/template.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    },
     "borso/pure-functions-live-in-core-files": {
       "count": 4
     }

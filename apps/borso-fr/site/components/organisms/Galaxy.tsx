@@ -14,7 +14,6 @@ import { Color, Mesh, type OGLRenderingContext, Program, Renderer, Triangle } fr
 import { useEffect, useRef } from 'react';
 import { easeTowards, selectStarClock } from './galaxy-clock.core';
 import { FRAGMENT_SHADER, VERTEX_SHADER } from './galaxy-shaders';
-import './Galaxy.css';
 
 const POINTER_INACTIVE = 0;
 const POINTER_ACTIVE = 1;
@@ -45,17 +44,19 @@ interface GalaxyUniforms {
   uTransparent: Uniform<boolean>;
 }
 
-function enableAlphaBlending(gl: OGLRenderingContext): void {
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-  gl.clearColor(0, 0, 0, 0);
+function enableAlphaBlending(renderingContext: OGLRenderingContext): void {
+  renderingContext.enable(renderingContext.BLEND);
+  renderingContext.blendFunc(renderingContext.SRC_ALPHA, renderingContext.ONE_MINUS_SRC_ALPHA);
+  renderingContext.clearColor(0, 0, 0, 0);
 }
 
-function paintOpaqueBackground(gl: OGLRenderingContext): void {
-  gl.clearColor(0, 0, 0, 1);
+function paintOpaqueBackground(renderingContext: OGLRenderingContext): void {
+  renderingContext.clearColor(0, 0, 0, 1);
 }
 
-const CONFIGURE_CANVAS: Readonly<Record<`${boolean}`, (gl: OGLRenderingContext) => void>> = {
+const CONFIGURE_CANVAS: Readonly<
+  Record<`${boolean}`, (renderingContext: OGLRenderingContext) => void>
+> = {
   true: enableAlphaBlending,
   false: paintOpaqueBackground,
 };
@@ -143,14 +144,18 @@ export function Galaxy({
     if (container === null) throw new Error('The Galaxy container was never mounted');
 
     const renderer = new Renderer({ alpha: isTransparent, premultipliedAlpha: false });
-    const gl = renderer.gl;
-    CONFIGURE_CANVAS[`${isTransparent}`](gl);
+    const renderingContext = renderer.gl;
+    CONFIGURE_CANVAS[`${isTransparent}`](renderingContext);
 
-    const geometry = new Triangle(gl);
+    const geometry = new Triangle(renderingContext);
     const uniforms: GalaxyUniforms = {
       uTime: { value: 0 },
       uResolution: {
-        value: new Color(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height),
+        value: new Color(
+          renderingContext.canvas.width,
+          renderingContext.canvas.height,
+          renderingContext.canvas.width / renderingContext.canvas.height,
+        ),
       },
       uFocal: { value: new Float32Array(focal) },
       uRotation: { value: new Float32Array(rotation) },
@@ -169,7 +174,7 @@ export function Galaxy({
       uAutoCenterRepulsion: { value: autoCenterRepulsion },
       uTransparent: { value: isTransparent },
     };
-    const program = new Program(gl, {
+    const program = new Program(renderingContext, {
       vertex: VERTEX_SHADER,
       fragment: FRAGMENT_SHADER,
       uniforms,
@@ -178,15 +183,15 @@ export function Galaxy({
     const resize = () => {
       renderer.setSize(container.offsetWidth, container.offsetHeight);
       uniforms.uResolution.value = new Color(
-        gl.canvas.width,
-        gl.canvas.height,
-        gl.canvas.width / gl.canvas.height,
+        renderingContext.canvas.width,
+        renderingContext.canvas.height,
+        renderingContext.canvas.width / renderingContext.canvas.height,
       );
     };
     window.addEventListener('resize', resize, false);
     resize();
 
-    const mesh = new Mesh(gl, { geometry, program });
+    const mesh = new Mesh(renderingContext, { geometry, program });
     const frame = { handle: 0 };
 
     const update = (timestamp: number) => {
@@ -212,7 +217,7 @@ export function Galaxy({
       renderer.render({ scene: mesh });
     };
     frame.handle = requestAnimationFrame(update);
-    container.appendChild(gl.canvas);
+    container.appendChild(renderingContext.canvas);
 
     const detachPointer = ATTACH_POINTER[`${isMouseInteractive}`](container, {
       onPointerMove: (event) => {
@@ -232,8 +237,8 @@ export function Galaxy({
       cancelAnimationFrame(frame.handle);
       window.removeEventListener('resize', resize);
       detachPointer();
-      container.removeChild(gl.canvas);
-      gl.getExtension('WEBGL_lose_context')?.loseContext();
+      container.removeChild(renderingContext.canvas);
+      renderingContext.getExtension('WEBGL_lose_context')?.loseContext();
     };
   }, [
     focal,

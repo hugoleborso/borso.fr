@@ -15,16 +15,16 @@ export interface ParityDiff {
   readonly missingInFr: readonly string[];
 }
 
-export function diffCatalogs(en: CatalogTree, fr: CatalogTree): ParityDiff {
-  const enKeys = new Set(flattenKeys(en));
-  const frKeys = new Set(flattenKeys(fr));
+export function diffCatalogs(english: CatalogTree, french: CatalogTree): ParityDiff {
+  const englishKeys = new Set(flattenKeys(english));
+  const frenchKeys = new Set(flattenKeys(french));
   const missingInEn: string[] = [];
   const missingInFr: string[] = [];
-  for (const key of frKeys) {
-    if (!enKeys.has(key)) missingInEn.push(key);
+  for (const key of frenchKeys) {
+    if (!englishKeys.has(key)) missingInEn.push(key);
   }
-  for (const key of enKeys) {
-    if (!frKeys.has(key)) missingInFr.push(key);
+  for (const key of englishKeys) {
+    if (!frenchKeys.has(key)) missingInFr.push(key);
   }
   return {
     missingInEn: missingInEn.toSorted(),

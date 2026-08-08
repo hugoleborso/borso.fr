@@ -37,8 +37,8 @@ export class GpxParseError extends Error {
 }
 
 const TRKPT_TAG_PATTERN = /<trkpt\b[\s\S]*?(?:\/>|<\/trkpt>)/g;
-const LAT_ATTR_PATTERN = /\blat\s*=\s*"([^"]+)"/;
-const LON_ATTR_PATTERN = /\blon\s*=\s*"([^"]+)"/;
+const LATITUDE_ATTRIBUTE_PATTERN = /\blat\s*=\s*"([^"]+)"/;
+const LONGITUDE_ATTRIBUTE_PATTERN = /\blon\s*=\s*"([^"]+)"/;
 const ELE_PATTERN = /<ele>\s*([-\d.eE+]+)\s*<\/ele>/;
 const TIME_PATTERN = /<time>\s*([^<]+?)\s*<\/time>/;
 
@@ -81,8 +81,8 @@ function extractTrackPoints(xml: string): readonly RawPoint[] {
   // streaming iterator over `<trkpt>` elements. The returned string is
   // discarded — only the side-effect of pushing into `collected` matters.
   xml.replace(TRKPT_TAG_PATTERN, (fullMatch) => {
-    const latMatch = LAT_ATTR_PATTERN.exec(fullMatch);
-    const lonMatch = LON_ATTR_PATTERN.exec(fullMatch);
+    const latMatch = LATITUDE_ATTRIBUTE_PATTERN.exec(fullMatch);
+    const lonMatch = LONGITUDE_ATTRIBUTE_PATTERN.exec(fullMatch);
     if (latMatch === null || lonMatch === null) return fullMatch;
     const lat = tryParseFloat(latMatch[1]);
     const lng = tryParseFloat(lonMatch[1]);

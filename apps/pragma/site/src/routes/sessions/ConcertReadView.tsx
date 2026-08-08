@@ -7,6 +7,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/atoms/Card';
+import { composeClassName } from '../../components/atoms/class-name.utils';
 import { MemberChip } from '../../components/molecules/MemberChip';
 
 export interface ConcertReadViewMember {
@@ -82,7 +83,7 @@ export function ConcertReadView({
           ) : null}
         </Card>
         <Card>
-          <div className={`${LABEL_CLASS} mb-2.5`}>{t('sessions.gear')}</div>
+          <div className={composeClassName(LABEL_CLASS, 'mb-2.5')}>{t('sessions.gear')}</div>
           <div className="text-[13px] text-ink-700 whitespace-pre-line font-mono">
             {gear === null || gear.length === 0 ? '—' : gear}
           </div>
@@ -90,7 +91,7 @@ export function ConcertReadView({
       </div>
       <aside className="flex flex-col gap-4">
         <Card variant="sunk">
-          <div className={`${LABEL_CLASS} mb-1.5`}>{t('sessions.venue')}</div>
+          <div className={composeClassName(LABEL_CLASS, 'mb-1.5')}>{t('sessions.venue')}</div>
           <div className="font-display italic text-2xl text-ink-900 leading-tight">
             {venue ?? '—'}
           </div>

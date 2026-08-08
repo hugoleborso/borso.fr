@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
+import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
 import { ChartKindIcon } from '../../components/molecules/ChartKindIcon';
 import { LineupEditor, type LineupRecord } from '../../components/molecules/LineupEditor';
@@ -32,6 +33,7 @@ import { useInstrumentsList } from '../../lib/queries/instruments';
 import { useMasteryDefaults } from '../../lib/queries/mastery';
 import { useMembersList } from '../../lib/queries/members';
 import { useSong, useUpdateSong } from '../../lib/queries/songs';
+import { useSignedChartUrl } from '../../lib/queries/uploads';
 import { extractChartKind } from './chart-kind.utils';
 
 const MASTERY_BAR_COUNT = 10;
@@ -55,6 +57,10 @@ export function SongDetailPage(): JSX.Element {
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
 
   const song = songQuery.data?.song ?? null;
+  const chart = song?.chart ?? null;
+  const uploadedChart =
+    chart !== null && (chart.kind === 'pdf' || chart.kind === 'image') ? chart : null;
+  const signedChartUrlQuery = useSignedChartUrl(uploadedChart?.s3Key ?? null);
   const members = useMemo(() => membersQuery.data?.members ?? NO_ROWS, [membersQuery.data]);
   const instruments = useMemo(
     () => instrumentsQuery.data?.instruments ?? NO_ROWS,
@@ -93,7 +99,7 @@ export function SongDetailPage(): JSX.Element {
     [instruments],
   );
 
-  const handleSaveSongLineup = (lineup: LineupRecord | null): void => {
+  const saveSongLineup = (lineup: LineupRecord | null): void => {
     if (song === null) return;
     updateSong.mutate({ id: song.id, defaultLineup: lineup ?? {} });
   };
@@ -191,25 +197,36 @@ export function SongDetailPage(): JSX.Element {
             </Card>
           ) : null}
 
-          {song.chart !== null && (song.chart.kind === 'pdf' || song.chart.kind === 'image') ? (
+          {uploadedChart === null ? null : (
             <Card variant="bare">
               <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-line bg-bg-sunk">
                 <Icon
-                  name={song.chart.kind === 'pdf' ? 'pdf' : 'image'}
+                  name={uploadedChart.kind === 'pdf' ? 'pdf' : 'image'}
                   size={14}
                   className="text-ink-500"
                 />
                 <span className="text-xs font-medium">{t('catalog.previewTitle')}</span>
               </div>
               <div className="p-4">
-                <UploadedChartPreview kind={song.chart.kind} objectKey={song.chart.s3Key} />
+                <UploadedChartPreview
+                  kind={uploadedChart.kind}
+                  objectKey={uploadedChart.s3Key}
+                  previewUrl={signedChartUrlQuery.data?.getUrl ?? null}
+                  errorMessage={
+                    signedChartUrlQuery.error instanceof ApiError
+                      ? signedChartUrlQuery.error.message
+                      : null
+                  }
+                />
               </div>
             </Card>
-          ) : null}
+          )}
 
           {song.links.length > 0 ? (
             <Card>
-              <div className={`${labelClass} mb-2.5`}>{t('catalog.linksTitle')}</div>
+              <div className={composeClassName(labelClass, 'mb-2.5')}>
+                {t('catalog.linksTitle')}
+              </div>
               <ul className="flex flex-col gap-2">
                 {song.links.map((link) => {
                   const embed = resolveEmbed(link.url);
@@ -255,7 +272,12 @@ export function SongDetailPage(): JSX.Element {
 
         <aside className="flex flex-col gap-4">
           <Card>
-            <div className={`${labelClass} mb-2.5 flex items-center justify-between gap-2`}>
+            <div
+              className={composeClassName(
+                labelClass,
+                'mb-2.5 flex items-center justify-between gap-2',
+              )}
+            >
               <span>{t('catalog.defaultLineup')}</span>
               <Button
                 type="button"
@@ -292,7 +314,7 @@ export function SongDetailPage(): JSX.Element {
           </Card>
 
           <Card>
-            <div className={`${labelClass} mb-2.5`}>{t('catalog.mastery')}</div>
+            <div className={composeClassName(labelClass, 'mb-2.5')}>{t('catalog.mastery')}</div>
             <div className="flex flex-col gap-2">
               {Object.entries(song.defaultLineup).length === 0 ? (
                 <span className="text-xs text-ink-400 italic">—</span>
@@ -335,7 +357,9 @@ export function SongDetailPage(): JSX.Element {
 
           {song.baseEnergy === null ? null : (
             <Card variant="flat" className="bg-bg-sunk border-0">
-              <div className={`${labelClass} mb-1.5`}>{t('catalog.baseEnergy')}</div>
+              <div className={composeClassName(labelClass, 'mb-1.5')}>
+                {t('catalog.baseEnergy')}
+              </div>
               <div className="font-mono text-[14px] text-ink-700">{song.baseEnergy}/10</div>
             </Card>
           )}
@@ -347,7 +371,7 @@ export function SongDetailPage(): JSX.Element {
         members={lineupEditorMembers}
         instruments={lineupEditorInstruments}
         currentLineup={song.defaultLineup}
-        onSave={(lineup) => handleSaveSongLineup(lineup)}
+        onSave={(lineup) => saveSongLineup(lineup)}
         onClose={() => setLineupEditorOpen(false)}
       />
     </section>

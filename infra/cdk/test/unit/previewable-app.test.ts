@@ -141,10 +141,10 @@ describe('PreviewableApp (preview with db)', () => {
       const properties = resource.Properties;
       return isObject(properties) ? properties : null;
     }
-    const schemaCr = Object.values(customResources).find(
-      (cr) => getProperties(cr)?.schemaName === 'pr_6',
+    const schemaCustomResource = Object.values(customResources).find(
+      (customResource) => getProperties(customResource)?.schemaName === 'pr_6',
     );
-    expect(getProperties(schemaCr)?.cloneFromSchema).toEqual({
+    expect(getProperties(schemaCustomResource)?.cloneFromSchema).toEqual({
       sourceSchemaName: 'prod',
       tableBlocklist: ['admin_sessions'],
       columnsToNullify: { runners: ['photo_key'] },

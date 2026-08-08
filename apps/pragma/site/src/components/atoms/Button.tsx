@@ -5,7 +5,7 @@
 
 import { type ButtonHTMLAttributes, forwardRef } from 'react';
 import { type ButtonVariantProps, buttonVariants } from './button.variants';
-import { cn } from './cn.utils';
+import { composeClassName } from './class-name.utils';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, ButtonVariantProps {}
 
@@ -14,7 +14,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     <button
       ref={ref}
       type={type}
-      className={cn(buttonVariants({ variant, size }), className)}
+      className={composeClassName(buttonVariants({ variant, size }), className)}
       {...rest}
     />
   ),

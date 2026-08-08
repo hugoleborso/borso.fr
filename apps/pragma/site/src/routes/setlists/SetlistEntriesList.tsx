@@ -83,7 +83,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const handleDragEnd = (event: DragEndEvent): void => {
+  const commitDragReorder = (event: DragEndEvent): void => {
     setActiveEntryId(null);
     const { active, over } = event;
     if (over === null || active.id === over.id) return;
@@ -103,7 +103,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={(event: DragStartEvent) => setActiveEntryId(String(event.active.id))}
-      onDragEnd={handleDragEnd}
+      onDragEnd={commitDragReorder}
       onDragCancel={() => setActiveEntryId(null)}
     >
       <SortableContext

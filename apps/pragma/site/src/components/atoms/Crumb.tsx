@@ -6,14 +6,14 @@
  */
 
 import { forwardRef, type HTMLAttributes } from 'react';
-import { cn } from './cn.utils';
+import { composeClassName } from './class-name.utils';
 
 export type CrumbProps = HTMLAttributes<HTMLDivElement>;
 
 export const Crumb = forwardRef<HTMLDivElement, CrumbProps>(({ className, ...rest }, ref) => (
   <div
     ref={ref}
-    className={cn(
+    className={composeClassName(
       'font-sans font-medium text-[10.5px] tracking-[0.16em] uppercase text-ink-400',
       className,
     )}

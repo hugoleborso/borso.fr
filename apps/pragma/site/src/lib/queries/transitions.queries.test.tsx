@@ -47,7 +47,10 @@ describe('transitions mutation — optimistic update', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useSaveTransitionComment>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeSave sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeSave sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useSaveTransitionComment>['mutateAsync'] = dispatch;
 
@@ -72,7 +75,10 @@ describe('transitions mutation — optimistic update', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useSaveTransitionComment>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeSave sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeSave sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useSaveTransitionComment>['mutateAsync'] = dispatch;
 

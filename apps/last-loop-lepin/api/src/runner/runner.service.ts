@@ -1,5 +1,5 @@
 import type { Database } from '../database/client';
-import { listPunchesForEdition } from '../punch/punch.repository';
+import { getPunchesForEdition } from '../punch/punch.service';
 import type { LoopPunch } from '../punch/punch.types';
 import { type RunnerDto, toRunnerDto } from './runner.dto.utils';
 import { readPhotosCdnHost } from './runner.environment';
@@ -92,7 +92,7 @@ export async function listPunchesForRunner(
   editionSlug: string,
   runnerSlug: string,
 ): Promise<readonly LoopPunch[]> {
-  const allPunches = await listPunchesForEdition(database, editionSlug);
+  const allPunches = await getPunchesForEdition(database, editionSlug);
   return allPunches
     .filter((punch) => punch.runnerSlug === runnerSlug)
     .toSorted((left, right) => left.loopIndex - right.loopIndex);

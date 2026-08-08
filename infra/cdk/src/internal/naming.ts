@@ -68,16 +68,16 @@ function previewSuffix(prNumber: number | undefined): string {
  *   preview -> "<app>-pr-<n>"
  *   integ   -> "bp-integ-pr-<n>-<app>"
  */
-export function stackName(ctx: NameContext): string {
-  validateAppSlug(ctx.app);
-  assertDeployStage(ctx.stage);
-  switch (ctx.stage) {
+export function stackName(context: NameContext): string {
+  validateAppSlug(context.app);
+  assertDeployStage(context.stage);
+  switch (context.stage) {
     case 'prod':
-      return `${ctx.app}-prod`;
+      return `${context.app}-prod`;
     case 'preview':
-      return `${ctx.app}-${previewSuffix(ctx.prNumber)}`;
+      return `${context.app}-${previewSuffix(context.prNumber)}`;
     case 'integ':
-      return `${INTEG_STACK_PREFIX}-${previewSuffix(ctx.prNumber)}-${ctx.app}`;
+      return `${INTEG_STACK_PREFIX}-${previewSuffix(context.prNumber)}-${context.app}`;
   }
 }
 
@@ -88,20 +88,20 @@ export function stackName(ctx: NameContext): string {
  * literal `<app>-<stage>` ever did collide on first deploy, rename and
  * redeploy is the one-time fix.
  */
-export function bucketName(ctx: NameContext): string {
-  validateAppSlug(ctx.app);
-  assertDeployStage(ctx.stage);
-  const stagePart = ctx.stage === 'prod' ? 'prod' : previewSuffix(ctx.prNumber);
-  const integPrefix = ctx.stage === 'integ' ? `${INTEG_STACK_PREFIX}-` : '';
-  return `${integPrefix}${ctx.app}-${stagePart}`;
+export function bucketName(context: NameContext): string {
+  validateAppSlug(context.app);
+  assertDeployStage(context.stage);
+  const stagePart = context.stage === 'prod' ? 'prod' : previewSuffix(context.prNumber);
+  const integPrefix = context.stage === 'integ' ? `${INTEG_STACK_PREFIX}-` : '';
+  return `${integPrefix}${context.app}-${stagePart}`;
 }
 
-export function lambdaFunctionName(ctx: NameContext, handler: string): string {
-  validateAppSlug(ctx.app);
+export function lambdaFunctionName(context: NameContext, handler: string): string {
+  validateAppSlug(context.app);
   validateAppSlug(handler);
-  assertDeployStage(ctx.stage);
-  const stagePart = ctx.stage === 'prod' ? 'prod' : previewSuffix(ctx.prNumber);
-  return `${ctx.app}-${stagePart}-${handler}`;
+  assertDeployStage(context.stage);
+  const stagePart = context.stage === 'prod' ? 'prod' : previewSuffix(context.prNumber);
+  return `${context.app}-${stagePart}-${handler}`;
 }
 
 /**
@@ -129,23 +129,23 @@ export function dsqlClusterSsmPaths(app: string): {
  *   preview -> "pr_<n>"
  *   integ   -> "integ_<n>"
  */
-export function dsqlSchemaName(ctx: NameContext): string {
-  validateAppSlug(ctx.app);
-  assertDeployStage(ctx.stage);
-  switch (ctx.stage) {
+export function dsqlSchemaName(context: NameContext): string {
+  validateAppSlug(context.app);
+  assertDeployStage(context.stage);
+  switch (context.stage) {
     case 'prod':
       return 'prod';
     case 'preview': {
-      if (ctx.prNumber === undefined) {
+      if (context.prNumber === undefined) {
         throw new Error('preview stage requires prNumber.');
       }
-      return `pr_${ctx.prNumber}`;
+      return `pr_${context.prNumber}`;
     }
     case 'integ': {
-      if (ctx.prNumber === undefined) {
+      if (context.prNumber === undefined) {
         throw new Error('integ stage requires prNumber.');
       }
-      return `integ_${ctx.prNumber}`;
+      return `integ_${context.prNumber}`;
     }
   }
 }
@@ -153,15 +153,15 @@ export function dsqlSchemaName(ctx: NameContext): string {
 /**
  * Hostname used for preview/integ frontends — both share *.preview.borso.fr.
  */
-export function previewHostname(ctx: NameContext): string {
-  validateAppSlug(ctx.app);
-  assertDeployStage(ctx.stage);
-  if (ctx.stage === 'prod') {
+export function previewHostname(context: NameContext): string {
+  validateAppSlug(context.app);
+  assertDeployStage(context.stage);
+  if (context.stage === 'prod') {
     throw new Error('previewHostname() is not for prod stage.');
   }
-  const suffix = previewSuffix(ctx.prNumber);
-  const integPrefix = ctx.stage === 'integ' ? `${INTEG_STACK_PREFIX}-` : '';
-  return `${integPrefix}${ctx.app}-${suffix}.${PREVIEW_PARENT_DOMAIN}`;
+  const suffix = previewSuffix(context.prNumber);
+  const integPrefix = context.stage === 'integ' ? `${INTEG_STACK_PREFIX}-` : '';
+  return `${integPrefix}${context.app}-${suffix}.${PREVIEW_PARENT_DOMAIN}`;
 }
 
 /**
@@ -170,15 +170,15 @@ export function previewHostname(ctx: NameContext): string {
  * `*.preview.borso.fr` covers both. The frontend points at this hostname
  * via the build-time `VITE_API_BASE` env var.
  */
-export function previewApiHostname(ctx: NameContext): string {
-  validateAppSlug(ctx.app);
-  assertDeployStage(ctx.stage);
-  if (ctx.stage === 'prod') {
+export function previewApiHostname(context: NameContext): string {
+  validateAppSlug(context.app);
+  assertDeployStage(context.stage);
+  if (context.stage === 'prod') {
     throw new Error('previewApiHostname() is not for prod stage.');
   }
-  const suffix = previewSuffix(ctx.prNumber);
-  const integPrefix = ctx.stage === 'integ' ? `${INTEG_STACK_PREFIX}-` : '';
-  return `${integPrefix}${ctx.app}-${suffix}-api.${PREVIEW_PARENT_DOMAIN}`;
+  const suffix = previewSuffix(context.prNumber);
+  const integPrefix = context.stage === 'integ' ? `${INTEG_STACK_PREFIX}-` : '';
+  return `${integPrefix}${context.app}-${suffix}-api.${PREVIEW_PARENT_DOMAIN}`;
 }
 
 /**
@@ -186,12 +186,12 @@ export function previewApiHostname(ctx: NameContext): string {
  * Mirrors the previewHostname() convention so changes here ripple to
  * cf-host-routing-function.ts.
  */
-export function previewS3Prefix(ctx: NameContext): string {
-  validateAppSlug(ctx.app);
-  assertDeployStage(ctx.stage);
-  if (ctx.stage === 'prod') {
+export function previewS3Prefix(context: NameContext): string {
+  validateAppSlug(context.app);
+  assertDeployStage(context.stage);
+  if (context.stage === 'prod') {
     throw new Error('previewS3Prefix() is not for prod stage.');
   }
-  const integPrefix = ctx.stage === 'integ' ? `${INTEG_STACK_PREFIX}/` : '';
-  return `${integPrefix}${ctx.app}/${previewSuffix(ctx.prNumber)}`;
+  const integPrefix = context.stage === 'integ' ? `${INTEG_STACK_PREFIX}/` : '';
+  return `${integPrefix}${context.app}/${previewSuffix(context.prNumber)}`;
 }

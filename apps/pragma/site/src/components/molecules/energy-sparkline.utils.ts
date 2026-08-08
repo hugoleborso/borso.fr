@@ -32,9 +32,9 @@ export function buildSparklinePath(
   const lastIndex = values.length - 1;
   const points = values.map((rawValue, index): [number, number] => {
     const value = rawValue ?? ENERGY_FALLBACK;
-    const x = lastIndex === 0 ? width / 2 : (index / lastIndex) * width;
-    const y = height - VERTICAL_PADDING - (value / ENERGY_MAX) * usableHeight;
-    return [x, y];
+    const xCoordinate = lastIndex === 0 ? width / 2 : (index / lastIndex) * width;
+    const yCoordinate = height - VERTICAL_PADDING - (value / ENERGY_MAX) * usableHeight;
+    return [xCoordinate, yCoordinate];
   });
   const pathSegments = points.map((point, index) => {
     if (index === 0) return `M ${point[0]} ${point[1]}`;

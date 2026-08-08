@@ -220,7 +220,7 @@ describe('members controller (back-e2e)', () => {
     const guitarId = await createInstrument(app, cookieHeader, 'Guitar', true);
     const bassId = await createInstrument(app, cookieHeader, 'Bass', true);
 
-    const songRes = await jsonRequest(app, '/api/songs', {
+    const songResponse = await jsonRequest(app, '/api/songs', {
       method: 'POST',
       body: {
         title: 'Cascade Test',
@@ -230,28 +230,28 @@ describe('members controller (back-e2e)', () => {
       cookieHeader,
     });
     const songId = (
-      await readJson(songRes, z.object({ song: z.object({ id: z.string().uuid() }) }))
+      await readJson(songResponse, z.object({ song: z.object({ id: z.string().uuid() }) }))
     ).song.id;
 
-    const sessionRes = await jsonRequest(app, '/api/sessions', {
+    const sessionResponse = await jsonRequest(app, '/api/sessions', {
       method: 'POST',
       body: { kind: 'practice', date: '2026-09-08T19:00:00Z' },
       cookieHeader,
     });
     const sessionId = (
-      await readJson(sessionRes, z.object({ session: z.object({ id: z.string().uuid() }) }))
+      await readJson(sessionResponse, z.object({ session: z.object({ id: z.string().uuid() }) }))
     ).session.id;
 
-    const setlistRes = await jsonRequest(app, '/api/setlists', {
+    const setlistResponse = await jsonRequest(app, '/api/setlists', {
       method: 'POST',
       body: { sessionId },
       cookieHeader,
     });
     const setlistId = (
-      await readJson(setlistRes, z.object({ setlist: z.object({ id: z.string().uuid() }) }))
+      await readJson(setlistResponse, z.object({ setlist: z.object({ id: z.string().uuid() }) }))
     ).setlist.id;
 
-    const entryRes = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+    const entryResponse = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
       method: 'POST',
       body: {
         songId,
@@ -260,7 +260,7 @@ describe('members controller (back-e2e)', () => {
       cookieHeader,
     });
     const entryId = (
-      await readJson(entryRes, z.object({ entry: z.object({ id: z.string().uuid() }) }))
+      await readJson(entryResponse, z.object({ entry: z.object({ id: z.string().uuid() }) }))
     ).entry.id;
 
     const deletion = await jsonRequest(app, `/api/members/${targetMemberId}`, {

@@ -26,8 +26,8 @@ describe('validateAppSlug', () => {
 });
 
 describe('assertDeployStage', () => {
-  it.each(['prod', 'preview', 'integ'] as const)('passes %s through', (s) => {
-    expect(() => assertDeployStage(s)).not.toThrow();
+  it.each(['prod', 'preview', 'integ'] as const)('passes %s through', (stage) => {
+    expect(() => assertDeployStage(stage)).not.toThrow();
   });
 
   it('rejects "dev"', () => {

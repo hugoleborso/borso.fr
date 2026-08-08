@@ -59,7 +59,10 @@ describe('mastery default mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeSave sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeSave sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] = dispatch;
 
@@ -83,7 +86,10 @@ describe('mastery default mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeSave sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeSave sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] = dispatch;
 
@@ -105,7 +111,10 @@ describe('mastery default mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeSave sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeSave sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] = dispatch;
 
@@ -127,7 +136,10 @@ describe('mastery default mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useDeleteMasteryDefault>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeDelete sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeDelete sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useDeleteMasteryDefault>['mutateAsync'] = dispatch;
 

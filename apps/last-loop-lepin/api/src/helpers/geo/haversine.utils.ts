@@ -23,15 +23,17 @@ export interface LatLng {
  * Great-circle distance between two `LatLng` points, in metres.
  * Returns 0 for coincident points; symmetric in its arguments.
  */
-export function haversineDistanceMeters(from: LatLng, to: LatLng): number {
-  const fromLatRadians = from.lat * DEGREES_TO_RADIANS;
-  const toLatRadians = to.lat * DEGREES_TO_RADIANS;
-  const deltaLatRadians = (to.lat - from.lat) * DEGREES_TO_RADIANS;
-  const deltaLngRadians = (to.lng - from.lng) * DEGREES_TO_RADIANS;
+export function haversineDistanceMeters(origin: LatLng, destination: LatLng): number {
+  const originLatRadians = origin.lat * DEGREES_TO_RADIANS;
+  const destinationLatRadians = destination.lat * DEGREES_TO_RADIANS;
+  const deltaLatRadians = (destination.lat - origin.lat) * DEGREES_TO_RADIANS;
+  const deltaLngRadians = (destination.lng - origin.lng) * DEGREES_TO_RADIANS;
 
   const haversineRoot =
     Math.sin(deltaLatRadians / 2) ** 2 +
-    Math.cos(fromLatRadians) * Math.cos(toLatRadians) * Math.sin(deltaLngRadians / 2) ** 2;
+    Math.cos(originLatRadians) *
+      Math.cos(destinationLatRadians) *
+      Math.sin(deltaLngRadians / 2) ** 2;
   const angularDistance = 2 * Math.atan2(Math.sqrt(haversineRoot), Math.sqrt(1 - haversineRoot));
   return EARTH_RADIUS_METERS * angularDistance;
 }

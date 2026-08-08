@@ -110,8 +110,3 @@ export function composePunchTileClassName(isPunched: boolean, isLate: boolean): 
   const lateModifier = isLate ? ' late' : '';
   return `punch-tile${punchedModifier}${lateModifier}`;
 }
-
-/** How many runners are still in the race, which the panel shows as a count. */
-export function countRunnersInRace(ranked: readonly RankedRunnerDto[]): number {
-  return ranked.filter((entry) => entry.status.kind === 'in-race').length;
-}

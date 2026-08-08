@@ -9,7 +9,7 @@
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LOCALES, type SupportedLocale } from '../../i18n/i18n.utils';
 import { writePersistedLocale } from '../../i18n/locale-storage.utils';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 
 const LOCALE_LABEL_KEY = {
   fr: 'nav.language.fr',
@@ -25,7 +25,7 @@ export function LanguageSwitcher(): JSX.Element {
   const { t, i18n } = useTranslation();
   const activeLocale = SUPPORTED_LOCALES.find((locale) => locale === i18n.language) ?? 'fr';
 
-  const handleSelect = (locale: SupportedLocale): void => {
+  const selectLocale = (locale: SupportedLocale): void => {
     if (locale === activeLocale) return;
     void i18n.changeLanguage(locale);
     writePersistedLocale(getBrowserStorage(), locale);
@@ -39,9 +39,9 @@ export function LanguageSwitcher(): JSX.Element {
           <button
             key={locale}
             type="button"
-            onClick={() => handleSelect(locale)}
+            onClick={() => selectLocale(locale)}
             aria-pressed={isActive}
-            className={cn(
+            className={composeClassName(
               'px-2.5 py-1 rounded-full text-[11px] font-medium uppercase tracking-[0.08em] border transition-colors cursor-pointer',
               isActive
                 ? 'border-accent text-accent bg-bg-elev'

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { RunnerStatusDto } from './race.types';
+import type { RankedRunnerDto, RunnerStatusDto } from './race.types';
 import {
+  countRunnersInRace,
   selectRunnerOutReason,
   selectRunnerStatusKind,
   selectRunnerStatusLoop,
@@ -9,6 +10,23 @@ import {
 const IN_RACE: RunnerStatusDto = { kind: 'in-race', lastLoop: 4 };
 const OUT_LATE: RunnerStatusDto = { kind: 'dnf', outAtLoop: 2, reason: 'late' };
 const OUT_MANUAL: RunnerStatusDto = { kind: 'dnf', outAtLoop: 3, reason: 'manual' };
+
+function buildRankedRunner(slug: string, status: RunnerStatusDto): RankedRunnerDto {
+  return {
+    runner: {
+      editionSlug: 'lepin-2026',
+      slug,
+      displayName: slug,
+      photoKey: null,
+      photoUrl: null,
+      bib: 1,
+    },
+    rank: 1,
+    status,
+    lastLoopDurationMs: null,
+    lastFinishedAt: null,
+  };
+}
 
 describe('selectRunnerStatusKind', () => {
   it('reports a running runner as in race', () => {
@@ -37,5 +55,16 @@ describe('selectRunnerOutReason', () => {
 
   it('returns the automatic reason for a runner still going', () => {
     expect(selectRunnerOutReason(IN_RACE)).toBe('late');
+  });
+});
+
+describe('countRunnersInRace', () => {
+  it('counts nobody in an empty field', () => {
+    expect(countRunnersInRace([])).toBe(0);
+  });
+
+  it('counts only the runners still going', () => {
+    const field = [buildRankedRunner('alice', IN_RACE), buildRankedRunner('dan', OUT_LATE)];
+    expect(countRunnersInRace(field)).toBe(1);
   });
 });

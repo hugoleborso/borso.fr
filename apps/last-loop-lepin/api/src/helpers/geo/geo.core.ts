@@ -18,11 +18,11 @@ export interface LatLng {
  * Great-circle distance between two `LatLng` points, in metres.
  * Returns 0 for coincident points; symmetric in its arguments.
  */
-export function haversineMeters(from: LatLng, to: LatLng): number {
-  const phi1 = from.lat * DEGREES_TO_RADIANS;
-  const phi2 = to.lat * DEGREES_TO_RADIANS;
-  const deltaPhi = (to.lat - from.lat) * DEGREES_TO_RADIANS;
-  const deltaLambda = (to.lng - from.lng) * DEGREES_TO_RADIANS;
+export function haversineMeters(origin: LatLng, destination: LatLng): number {
+  const phi1 = origin.lat * DEGREES_TO_RADIANS;
+  const phi2 = destination.lat * DEGREES_TO_RADIANS;
+  const deltaPhi = (destination.lat - origin.lat) * DEGREES_TO_RADIANS;
+  const deltaLambda = (destination.lng - origin.lng) * DEGREES_TO_RADIANS;
 
   const haversineRoot =
     Math.sin(deltaPhi / 2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;

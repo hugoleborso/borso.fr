@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { RankedRunnerDto } from '../../lib/race.types';
-import { countRunnersInRace } from '../organisms/punch-panel.core';
+import { countRunnersInRace } from '../../lib/runner-status.utils';
 
 interface InRaceCounterProps {
   readonly ranked: readonly RankedRunnerDto[];

@@ -199,10 +199,14 @@ export function useAssignMemberInstruments() {
         if (old === undefined) return old;
         if (allInstruments === undefined) {
           return {
-            instruments: old.instruments.filter((i) => variables.instrumentIds.includes(i.id)),
+            instruments: old.instruments.filter((instrument) =>
+              variables.instrumentIds.includes(instrument.id),
+            ),
           };
         }
-        const byId = new Map(allInstruments.instruments.map((i) => [i.id, i]));
+        const byId = new Map(
+          allInstruments.instruments.map((instrument) => [instrument.id, instrument]),
+        );
         const nextInstruments = variables.instrumentIds.flatMap((id) => {
           const instrument = byId.get(id);
           return instrument === undefined ? [] : [instrument];

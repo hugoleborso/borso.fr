@@ -70,7 +70,10 @@ describe('bars mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useUpdateBar>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeUpdate sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeUpdate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useUpdateBar>['mutateAsync'] = dispatch;
 
@@ -91,7 +94,10 @@ describe('bars mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useUpdateBar>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeUpdate sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeUpdate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useUpdateBar>['mutateAsync'] = dispatch;
 
@@ -116,7 +122,10 @@ describe('bars mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useCreateBar>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeCreate sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeCreate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useCreateBar>['mutateAsync'] = dispatch;
 
@@ -137,7 +146,10 @@ describe('bars mutations — optimistic updates', () => {
     stub = stubFetch(() => pending.promise);
 
     let dispatch: ReturnType<typeof useDeleteBar>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeDelete sink={(m) => (dispatch = m)} />);
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeDelete sink={(mutateAsync) => (dispatch = mutateAsync)} />,
+    );
     if (dispatch === null) throw new Error('no mutate');
     const send: ReturnType<typeof useDeleteBar>['mutateAsync'] = dispatch;
 
