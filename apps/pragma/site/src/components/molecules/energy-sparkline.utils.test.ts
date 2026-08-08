@@ -29,6 +29,18 @@ describe('buildSparklinePath', () => {
     expect(geometry.path).toContain(' T 100 ');
   });
 
+  it('spaces three values evenly and joins them through their midpoints', () => {
+    const geometry = buildSparklinePath([2, 8, 5], 100, 50);
+    expect(geometry.points).toEqual([
+      [0, 36.4],
+      [50, 13.599999999999998],
+      [100, 25],
+    ]);
+    expect(geometry.path).toBe(
+      'M 0 36.4 Q 0 36.4 25 25 T 50 13.599999999999998 Q 50 13.599999999999998 75 19.299999999999997 T 100 25',
+    );
+  });
+
   it('uses the energy midpoint when a value is null or undefined', () => {
     const geometry = buildSparklinePath([null, undefined], 80, 40);
     const lows = geometry.points.map((point) => point[1]);

@@ -27,6 +27,19 @@ describe('tonalityLabelFor', () => {
     ).toBe(null);
   });
 
+  it('returns null when only the end tonality is known', () => {
+    expect(
+      tonalityLabelFor({
+        id: 's1',
+        title: 't',
+        artist: 'a',
+        defaultLineup: {},
+        tonalityStart: null,
+        tonalityEnd: 'G',
+      }),
+    ).toBe(null);
+  });
+
   it('returns the start tonality alone when the end matches', () => {
     expect(
       tonalityLabelFor({
@@ -209,6 +222,16 @@ describe('prominentMemberInstrumentFor', () => {
 
   it('returns null when no member is selected', () => {
     expect(prominentMemberInstrumentFor('i1', null, members, instruments)).toBe(null);
+  });
+
+  it('returns null with no member selected, even against a member keyed "null"', () => {
+    const keyedByNullText = { null: { firstName: 'Hugo', color: '#abc' } };
+    expect(prominentMemberInstrumentFor('i1', null, keyedByNullText, instruments)).toBe(null);
+  });
+
+  it('returns null with no instrument id, even against an instrument keyed "undefined"', () => {
+    const keyedByUndefinedText = { undefined: { name: 'Guitar' } };
+    expect(prominentMemberInstrumentFor(undefined, 'm1', members, keyedByUndefinedText)).toBe(null);
   });
 
   it('returns null when the member id cannot be resolved', () => {

@@ -15,11 +15,11 @@ const NOT_BOOTSTRAPPED_STATUS = 503;
 
 export const UNKNOWN_LOGIN_ERROR_KEY: ParseKeys = 'auth.unknownError';
 
-const LOGIN_ERROR_KEY_BY_STATUS: Readonly<Record<number, ParseKeys>> = {
-  [TOO_MANY_ATTEMPTS_STATUS]: 'auth.rateLimited',
-  [WRONG_PASSWORD_STATUS]: 'auth.invalidPassword',
-  [NOT_BOOTSTRAPPED_STATUS]: 'auth.notBootstrapped',
-};
+const LOGIN_ERROR_KEY_BY_STATUS: ReadonlyMap<number | null, ParseKeys> = new Map([
+  [TOO_MANY_ATTEMPTS_STATUS, 'auth.rateLimited'],
+  [WRONG_PASSWORD_STATUS, 'auth.invalidPassword'],
+  [NOT_BOOTSTRAPPED_STATUS, 'auth.notBootstrapped'],
+]);
 
 /**
  * `null` stands for a failure the API did not answer at all, e.g. the network
@@ -27,8 +27,7 @@ const LOGIN_ERROR_KEY_BY_STATUS: Readonly<Record<number, ParseKeys>> = {
  * for.
  */
 export function selectLoginErrorMessageKey(status: number | null): ParseKeys {
-  if (status === null) return UNKNOWN_LOGIN_ERROR_KEY;
-  return LOGIN_ERROR_KEY_BY_STATUS[status] ?? UNKNOWN_LOGIN_ERROR_KEY;
+  return LOGIN_ERROR_KEY_BY_STATUS.get(status) ?? UNKNOWN_LOGIN_ERROR_KEY;
 }
 
 const locationStateSchema = z.object({ from: z.string().min(1) }).partial();

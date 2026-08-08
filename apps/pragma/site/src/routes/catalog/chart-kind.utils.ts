@@ -21,14 +21,17 @@ interface ChordProChartLike extends ChartLike {
   readonly text?: unknown;
 }
 
+function isChordProChart(chart: ChordProChartLike | null | undefined): chart is ChordProChartLike {
+  return extractChartKind(chart) === 'chordpro';
+}
+
 /**
  * The ChordPro source to render, or `null` when the song carries a chart of
  * another kind or none at all. One reading replaces the three-way conjunction
  * the detail page used to spell out, and it narrows the text for the viewer.
  */
 export function selectChordProText(chart: ChordProChartLike | null | undefined): string | null {
-  if (chart === null || chart === undefined) return null;
-  if (extractChartKind(chart) !== 'chordpro') return null;
+  if (!isChordProChart(chart)) return null;
   const { text } = chart;
   if (typeof text !== 'string') return null;
   return text;

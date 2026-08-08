@@ -37,7 +37,8 @@ const PALETTE_RGB: Record<MemberPaletteKey, readonly [number, number, number]> =
   sage: [0x6e, 0x8a, 0x48],
 };
 
-function parseHexTriplet(hex: string): readonly [number, number, number] | null {
+/** The three channel bytes of a `#rrggbb` string, or `null` when it is not one. */
+export function parseHexTriplet(hex: string): readonly [number, number, number] | null {
   const trimmed = hex.trim();
   if (!HEX_PATTERN.test(trimmed)) return null;
   const body = trimmed.slice(HASH_PREFIX_LENGTH);

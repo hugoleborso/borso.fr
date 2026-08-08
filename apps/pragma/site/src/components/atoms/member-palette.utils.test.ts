@@ -4,7 +4,24 @@ import {
   memberInitial,
   paletteColorFromHex,
   paletteKeyFromHex,
+  parseHexTriplet,
 } from './member-palette.utils';
+
+describe('parseHexTriplet', () => {
+  it('reads the three channel bytes of a six-digit hex', () => {
+    expect(parseHexTriplet('#c4583a')).toEqual([0xc4, 0x58, 0x3a]);
+  });
+
+  it('ignores surrounding whitespace', () => {
+    expect(parseHexTriplet('  #c4583a  ')).toEqual([0xc4, 0x58, 0x3a]);
+  });
+
+  it('answers null on anything that is not a six-digit hex', () => {
+    expect(parseHexTriplet('not-a-hex')).toBeNull();
+    expect(parseHexTriplet('#abc')).toBeNull();
+    expect(parseHexTriplet('')).toBeNull();
+  });
+});
 
 describe('paletteKeyFromHex', () => {
   it('returns the exact key when the hex matches a canonical hue', () => {
@@ -19,6 +36,14 @@ describe('paletteKeyFromHex', () => {
     expect(paletteKeyFromHex('#d96f5a')).toBe('coral');
     expect(paletteKeyFromHex('#3f8e8a')).toBe('teal');
     expect(paletteKeyFromHex('#7a8f5a')).toBe('sage');
+  });
+
+  it('ignores whitespace around the hex', () => {
+    expect(paletteKeyFromHex('  #6e8a48  ')).toBe('sage');
+  });
+
+  it('keeps the first of two equidistant hues', () => {
+    expect(paletteKeyFromHex('#a75055')).toBe('coral');
   });
 
   it('accepts uppercase hex', () => {

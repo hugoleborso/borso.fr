@@ -33,8 +33,10 @@ export const MASTERY_BAR_COUNT = 10;
  * Whether the nth bar of a ten-bar mastery meter is filled. An unknown score
  * fills nothing, which is how the meter shows "never rated".
  */
+const NO_BARS_FILLED = 0;
+
 export function isMasteryBarFilled(masteryScore: number | null, barIndex: number): boolean {
-  return masteryScore !== null && barIndex < masteryScore;
+  return barIndex < (masteryScore ?? NO_BARS_FILLED);
 }
 
 export function buildMasteryKey(memberId: string, instrumentId: string): string {

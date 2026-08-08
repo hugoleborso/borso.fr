@@ -7,7 +7,6 @@
 import {
   type BarFormInitial,
   type BarFormSubmitPayload,
-  BAR_STATUSES,
   type BarStatus,
   buildBarFormInitial,
 } from './bar-form.core';
@@ -63,15 +62,8 @@ export function buildKanbanCardsByStatus(
   barsByStatus: Readonly<Record<BarStatus, readonly BarRow[]>>,
   isBarStale: (bar: BarRow) => boolean,
 ): Record<BarStatus, KanbanCard[]> {
-  const cards: Record<BarStatus, KanbanCard[]> = {
-    lead: [],
-    contacted: [],
-    booked: [],
-    played: [],
-    cold: [],
-  };
-  for (const status of BAR_STATUSES) {
-    cards[status] = barsByStatus[status].map((bar) => ({
+  const toCards = (bars: readonly BarRow[]): KanbanCard[] =>
+    bars.map((bar) => ({
       id: bar.id,
       name: bar.name,
       city: bar.city,
@@ -79,8 +71,13 @@ export function buildKanbanCardsByStatus(
       contactName: bar.contactName,
       isStale: isBarStale(bar),
     }));
-  }
-  return cards;
+  return {
+    lead: toCards(barsByStatus.lead),
+    contacted: toCards(barsByStatus.contacted),
+    booked: toCards(barsByStatus.booked),
+    played: toCards(barsByStatus.played),
+    cold: toCards(barsByStatus.cold),
+  };
 }
 
 export function sortBarsByName(bars: readonly BarRow[]): BarRow[] {

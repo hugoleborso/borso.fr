@@ -16,6 +16,10 @@ describe('selectChordproText', () => {
     expect(selectChordproText({ kind: 'pdf' })).toBeNull();
   });
 
+  it('returns null for a chart of another kind that does carry text', () => {
+    expect(selectChordproText({ kind: 'pdf', text: '[C]Hello' })).toBeNull();
+  });
+
   it('returns null when the song carries no chart', () => {
     expect(selectChordproText(null)).toBeNull();
     expect(selectChordproText(undefined)).toBeNull();

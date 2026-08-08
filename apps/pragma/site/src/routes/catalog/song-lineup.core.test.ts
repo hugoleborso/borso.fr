@@ -39,6 +39,25 @@ describe('isMasteryBarFilled', () => {
 });
 
 describe('buildSongLineupRows', () => {
+  it('reads a sitting-out member as unrated, not as playing an instrument keyed "null"', () => {
+    const rows = buildSongLineupRows(
+      { ana: null },
+      MEMBERS,
+      INSTRUMENTS,
+      new Map([['ana::null', 9]]),
+    );
+
+    expect(rows).toStrictEqual([
+      {
+        memberId: 'ana',
+        memberName: 'Ana',
+        memberColor: '#111111',
+        instrumentName: null,
+        masteryScore: null,
+      },
+    ]);
+  });
+
   it('resolves the member, the instrument and the mastery score', () => {
     const rows = buildSongLineupRows(
       { ana: 'guitar' },

@@ -25,9 +25,6 @@ export function buildSparklinePath(
   width: number,
   height: number,
 ): SparklineGeometry {
-  if (values.length === 0) {
-    return { path: '', points: [] };
-  }
   const usableHeight = height - VERTICAL_PADDING * 2;
   const lastIndex = values.length - 1;
   const points = values.map((rawValue, index): [number, number] => {

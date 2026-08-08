@@ -82,6 +82,12 @@ describe('listIdenticalValueKeys', () => {
     expect(listIdenticalValueKeys(english, french)).toEqual(['page.copied', 'page.kept']);
   });
 
+  it('ignores an English subtree the French catalog does not carry at all', () => {
+    const english = { page: { copied: 'Chord chart' }, kept: 'Capo' };
+    const french = { kept: 'Capo' };
+    expect(listIdenticalValueKeys(english, french)).toEqual(['kept']);
+  });
+
   it('ignores a key the French catalog translates, and one it does not carry at all', () => {
     const english = { translated: 'Chord chart', orphan: 'Save' };
     const french = { translated: "Grille d'accords" };

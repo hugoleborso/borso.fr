@@ -24,7 +24,6 @@ export function countSongsWithStatus(
 
 export function isMatchingSearch(song: CatalogSong, query: string): boolean {
   const normalised = query.trim().toLowerCase();
-  if (normalised === '') return true;
   return (
     song.title.toLowerCase().includes(normalised) || song.artist.toLowerCase().includes(normalised)
   );

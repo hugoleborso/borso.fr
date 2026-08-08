@@ -41,6 +41,11 @@ describe('validateChartFile', () => {
     expect(result).toEqual({ ok: false, reason: 'unsupported-type' });
   });
 
+  it('accepts a file sitting exactly on the ceiling', () => {
+    const result = validateChartFile(fakeFile(ALLOWED_PDF_MIME, FILE_DROP_MAX_BYTES));
+    expect(result).toEqual({ ok: true, kind: 'pdf', contentType: ALLOWED_PDF_MIME });
+  });
+
   it('rejects files over the 10 MiB ceiling', () => {
     const result = validateChartFile(fakeFile(ALLOWED_PDF_MIME, FILE_DROP_MAX_BYTES + 1));
     expect(result).toEqual({ ok: false, reason: 'too-large' });

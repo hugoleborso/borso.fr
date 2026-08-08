@@ -33,10 +33,6 @@ export function flattenKeys(tree: CatalogTree, prefix = ''): readonly string[] {
 
 export function detectInitialLocale(navigatorLanguage: string | undefined): SupportedLocale {
   if (navigatorLanguage === undefined) return DEFAULT_LOCALE;
-  const lowercased = navigatorLanguage.toLowerCase();
-  const dashIndex = lowercased.indexOf('-');
-  const family = dashIndex === -1 ? lowercased : lowercased.slice(0, dashIndex);
-  if (family === 'fr') return 'fr';
-  if (family === 'en') return 'en';
-  return DEFAULT_LOCALE;
+  const [family] = navigatorLanguage.toLowerCase().split('-');
+  return SUPPORTED_LOCALES.find((locale) => locale === family) ?? DEFAULT_LOCALE;
 }

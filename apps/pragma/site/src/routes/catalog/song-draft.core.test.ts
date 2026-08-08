@@ -166,6 +166,17 @@ describe('payloadFromDraft', () => {
     });
   });
 
+  it('reads whitespace-only optional fields as blank', () => {
+    expect(
+      payloadFromDraft({
+        ...filled,
+        tonalityStart: '   ',
+        tonalityEnd: '   ',
+        baseEnergy: '   ',
+      }),
+    ).toMatchObject({ tonalityStart: null, tonalityEnd: null, baseEnergy: null });
+  });
+
   it('maps every blank optional field to null', () => {
     expect(payloadFromDraft({ ...BLANK_SONG_DRAFT, title: 'X' })).toMatchObject({
       tonalityStart: null,

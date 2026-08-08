@@ -16,6 +16,14 @@ describe('pickNextSession', () => {
     expect(pickNextSession(sessions, NOW)).toBeNull();
   });
 
+  it('drops a session whose date cannot be parsed rather than letting it win', () => {
+    const sessions = [
+      { id: 'broken', date: 'not-a-date' },
+      { id: 'soon', date: '2026-05-25T00:00:00.000Z' },
+    ];
+    expect(pickNextSession(sessions, NOW)?.id).toBe('soon');
+  });
+
   it('picks the soonest future session', () => {
     const sessions = [
       { id: 'far', date: '2026-12-01T00:00:00.000Z' },

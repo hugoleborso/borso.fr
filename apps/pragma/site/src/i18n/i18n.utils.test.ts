@@ -47,6 +47,11 @@ describe('i18n.utils', () => {
       expect(detectInitialLocale('en-GB')).toBe('en');
     });
 
+    it('accepts a bare language tag with no region', () => {
+      expect(detectInitialLocale('en')).toBe('en');
+      expect(detectInitialLocale('fr')).toBe('fr');
+    });
+
     it('falls back to the default for an unsupported language', () => {
       expect(detectInitialLocale('de-DE')).toBe('fr');
     });
