@@ -117,6 +117,16 @@ describe('mastery.core', () => {
       ).toBe(false);
     });
 
+    it('returns false when the song carries overrides for other members and no default exists', () => {
+      expect(
+        isRedundantOverride(DEFAULTS, OVERRIDES, {
+          memberId: 'gui',
+          instrumentId: 'guitar',
+          songId: 'songA',
+        }),
+      ).toBe(false);
+    });
+
     it('returns false when override and default differ', () => {
       expect(
         isRedundantOverride(DEFAULTS, OVERRIDES, {

@@ -19,6 +19,8 @@
  * Pure functions over plain objects. No I/O.
  */
 
+import { instrumentedMembers } from '../helpers/lineup/instrumented-members.core';
+
 export type MemberId = string;
 export type InstrumentId = string;
 export type SongId = string;
@@ -54,8 +56,7 @@ export function meanForSong(
   lineup: Lineup,
 ): number | null {
   const scores: number[] = [];
-  for (const [memberId, instrumentId] of Object.entries(lineup)) {
-    if (instrumentId === null) continue;
+  for (const [memberId, instrumentId] of instrumentedMembers(lineup)) {
     const score = effective(defaults, overrides, { memberId, instrumentId, songId });
     if (score === null) continue;
     scores.push(score);
@@ -73,5 +74,5 @@ export function isRedundantOverride(
   const override = overrides[query.songId]?.[query.memberId]?.[query.instrumentId];
   if (override === undefined) return false;
   const fallback = defaults[query.memberId]?.[query.instrumentId];
-  return fallback !== undefined && fallback === override;
+  return fallback === override;
 }

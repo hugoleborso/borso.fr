@@ -40,23 +40,21 @@ function parseChord(rawChord: string): ChordTonality | null {
 function chordsOnLine(line: string): readonly ChordTonality[] {
   const bracketedMatches = [...line.matchAll(BRACKETED_CHORD_REGEX)];
   if (bracketedMatches.length > 0) {
-    const chords: ChordTonality[] = [];
+    const bracketedChords: ChordTonality[] = [];
     for (const match of bracketedMatches) {
       const inner = match[0].slice(BRACKET_DELIMITER_LENGTH, -BRACKET_DELIMITER_LENGTH);
       const parsed = parseChord(inner);
-      if (parsed !== null) chords.push(parsed);
+      if (parsed !== null) bracketedChords.push(parsed);
     }
-    return chords;
+    return bracketedChords;
   }
-  const tokens = line
-    .trim()
-    .split(/\s+/)
-    .filter((token) => token.length > 0);
-  if (tokens.length === 0) return [];
-  const chords = tokens.map(parseChord);
-  // Treat the line as a chord-only line iff EVERY token parses.
-  if (chords.some((chord) => chord === null)) return [];
-  return chords.filter((chord): chord is ChordTonality => chord !== null);
+  const chordOnlyLine: ChordTonality[] = [];
+  for (const token of line.trim().split(/\s+/)) {
+    const parsed = parseChord(token);
+    if (parsed === null) return [];
+    chordOnlyLine.push(parsed);
+  }
+  return chordOnlyLine;
 }
 
 function formatChord(chord: ChordTonality): string {

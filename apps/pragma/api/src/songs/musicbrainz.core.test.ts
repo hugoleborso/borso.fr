@@ -55,6 +55,14 @@ describe('mapMusicBrainzRecordings', () => {
     expect(hits[2]?.durationLabel).toBe(null);
   });
 
+  it('returns null duration when the length field is absent altogether', () => {
+    const hits = mapMusicBrainzRecordings({
+      recordings: [{ id: 'x', title: 'T' }],
+    });
+    expect(hits[0]?.durationSeconds).toBe(null);
+    expect(hits[0]?.durationLabel).toBe(null);
+  });
+
   it('returns null album / release when releases is missing or empty', () => {
     const hits = mapMusicBrainzRecordings(FIXTURE);
     expect(hits[2]?.album).toBe(null);
@@ -93,6 +101,23 @@ describe('mapMusicBrainzRecordings', () => {
       recordings: [{ id: 'x', title: 'T' }],
     });
     expect(hits[0]?.tags).toEqual([]);
+  });
+
+  it('sorts tags by descending count and keeps a tag whose count is exactly the minimum', () => {
+    const hits = mapMusicBrainzRecordings({
+      recordings: [
+        {
+          id: 'x',
+          title: 'T',
+          tags: [
+            { name: 'least', count: 1 },
+            { name: 'most', count: 9 },
+            { name: 'middle', count: 4 },
+          ],
+        },
+      ],
+    });
+    expect(hits[0]?.tags).toEqual(['most', 'middle', 'least']);
   });
 
   it('treats a missing tag count as zero (drops it from the top list)', () => {
@@ -175,6 +200,29 @@ describe('mapMusicBrainzRecordings', () => {
       ],
     });
     expect(hits[0]?.artist).toBe('');
+  });
+
+  it('falls back to an empty artist when the credit entry carries no artist object at all', () => {
+    const hits = mapMusicBrainzRecordings({
+      recordings: [{ id: 'x', title: 'T', 'artist-credit': [{ joinphrase: ' & ' }] }],
+    });
+    expect(hits[0]?.artist).toBe('&');
+  });
+
+  it('trims the whitespace a leading and a trailing join phrase leave behind', () => {
+    const hits = mapMusicBrainzRecordings({
+      recordings: [
+        {
+          id: 'x',
+          title: 'T',
+          'artist-credit': [
+            { artist: {}, joinphrase: ' & ' },
+            { name: 'B', joinphrase: ' ' },
+          ],
+        },
+      ],
+    });
+    expect(hits[0]?.artist).toBe('& B');
   });
 
   it('returns an empty artist when artist-credit is missing or empty', () => {

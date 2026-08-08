@@ -4,6 +4,13 @@ import { buildNextSessionOfflineManifest } from './offline-manifest.core';
 const NOW = new Date('2026-03-01T12:00:00.000Z');
 
 describe('buildNextSessionOfflineManifest', () => {
+  it('treats a session starting exactly now as past, not upcoming', () => {
+    const now = new Date('2025-06-01T20:00:00Z');
+    const manifest = buildNextSessionOfflineManifest([{ id: 'a', date: now }], [], now);
+    expect(manifest.nextSessionUrl).toBeNull();
+    expect(manifest.nextSetlistUrl).toBeNull();
+  });
+
   it('lists a detail url per song and points at the next future session', () => {
     const manifest = buildNextSessionOfflineManifest(
       [
