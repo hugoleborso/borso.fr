@@ -38,11 +38,17 @@ const opening: Opening = {
   variations: [otherVariation, mainVariation],
 };
 
+function fenAfter(movesSan: string[]): string {
+  const chess = new Chess();
+  for (const san of movesSan) chess.move(san);
+  return chess.fen();
+}
+
 describe('buildOpeningPreview', () => {
   it('uses the main-line variation when present', () => {
     const preview = buildOpeningPreview(opening);
     expect(preview.openingId).toBe('opening');
-    expect(preview.fen).not.toBe(new Chess().fen());
+    expect(preview.fen).toBe(fenAfter(e4Line.movesSan.slice(0, 6)));
   });
 
   it('falls back to the first variation when no main-line is found', () => {
@@ -52,6 +58,7 @@ describe('buildOpeningPreview', () => {
     };
     const preview = buildOpeningPreview(noMain);
     expect(preview.openingId).toBe('opening');
+    expect(preview.fen).toBe(fenAfter(sideLine.movesSan));
   });
 
   it('returns the starting position when the opening is empty', () => {
@@ -101,16 +108,14 @@ describe('buildLinePreview', () => {
     expect(preview.fen).toBe(reference.fen());
   });
 
-  it('stops applying SAN moves when an entry is invalid', () => {
+  it('stops at the first invalid SAN move instead of skipping it', () => {
     const broken: Line = {
       id: 'broken',
       name: 'Broken',
       eco: 'Z00',
-      movesSan: ['e4', 'totally-bogus'],
-      movesUci: ['e2e4', 'zzzz'],
+      movesSan: ['e4', 'totally-bogus', 'e5'],
+      movesUci: ['e2e4', 'zzzz', 'e7e5'],
     };
-    const reference = new Chess();
-    reference.move('e4');
-    expect(buildLinePreview(opening, mainVariation, broken).fen).toBe(reference.fen());
+    expect(buildLinePreview(opening, mainVariation, broken).fen).toBe(fenAfter(['e4']));
   });
 });

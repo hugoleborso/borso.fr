@@ -26,8 +26,9 @@ export const NO_DRILL_TARGET: LearnDrillTarget = {
 
 export function findLearnDrillTarget(openings: Opening[], selection: Selection): LearnDrillTarget {
   const opening = findOpening(openings, selection.openingId);
+  if (opening === undefined) return NO_DRILL_TARGET;
   const variation = findVariation(opening, selection.variationId);
-  if (opening === undefined || variation === undefined) return NO_DRILL_TARGET;
+  if (variation === undefined) return NO_DRILL_TARGET;
   return { opening, variation };
 }
 

@@ -98,6 +98,17 @@ describe('buildOpeningFlowLists in learn mode', () => {
     expect(lists.panelLineEntries).toEqual([]);
   });
 
+  it('counts only the picked opening once one is picked', () => {
+    const selection: Selection = {
+      openingId: 'italian',
+      variationId: ALL_KEY,
+      lineId: ALL_KEY,
+    };
+    const lists = buildOpeningFlowLists('learn', OPENINGS, selection, EMPTY_PLAY_SCOPE);
+    expect(listVariationIds(lists.variationEntries)).toEqual(['classical', 'two-knights']);
+    expect(listLineIds(lists.lineEntries)).toEqual(['greco', 'center', 'fried-liver']);
+  });
+
   it('shows the lines of the picked variation', () => {
     const selection: Selection = {
       openingId: 'italian',
@@ -117,5 +128,17 @@ describe('buildOpeningFlowLists in learn mode', () => {
     };
     const lists = buildOpeningFlowLists('learn', OPENINGS, selection, scope);
     expect(listLineIds(lists.panelLineEntries)).toEqual(['greco', 'center']);
+    expect(listVariationIds(lists.variationEntries)).toEqual(['classical', 'two-knights']);
+    expect(listLineIds(lists.lineEntries)).toEqual(['greco', 'center', 'fried-liver']);
+  });
+
+  it('shows no lines when the picked variation belongs to another opening', () => {
+    const selection: Selection = {
+      openingId: 'italian',
+      variationId: 'berlin',
+      lineId: ALL_KEY,
+    };
+    const lists = buildOpeningFlowLists('learn', OPENINGS, selection, EMPTY_PLAY_SCOPE);
+    expect(lists.panelLineEntries).toEqual([]);
   });
 });

@@ -35,32 +35,33 @@ export interface PersistedState {
 
 /**
  * Read a localStorage payload back into a typed {@link PersistedState}. Returns
- * `null` for any failure mode — missing key, JSON syntax error, shape drift,
- * unknown enum value. The caller falls back to the initial state.
+ * `null` for any failure mode — JSON syntax error, shape drift, unknown enum
+ * value. The caller falls back to the initial state, and owns the separate
+ * "nothing was ever stored" case.
  *
  * Schema bumps drop the previous payload silently: a stored
  * `borsouvertures.v0` blob will never be read because the namespace key
  * changed, and any in-place migration logic would cost more than the data is
  * worth for a clan-only app.
  */
-export function parsePersistedState(raw: string | null): PersistedState | null {
-  if (raw === null) return null;
-  let parsed: unknown;
+export function parsePersistedState(raw: string): PersistedState | null {
+  let record: Record<string, unknown>;
   try {
-    parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
+    if (!isPlainRecord(parsed)) return null;
+    record = parsed;
   } catch {
     return null;
   }
-  if (!isPlainRecord(parsed)) return null;
 
-  const mode = parseMode(parsed.mode);
-  const side = parseSide(parsed.side);
-  const boardStyle = parseBoardStyle(parsed.boardStyle);
-  const selection = parseSelection(parsed.selection);
-  const view = parseView(parsed.view);
-  const playAutoOpponent = parseBoolean(parsed.playAutoOpponent);
-  const playScope = parsePlayScope(parsed.playScope);
-  const treeVisualizationMode = parseTreeVisualizationMode(parsed.treeVisualizationMode);
+  const mode = parseMode(record.mode);
+  const side = parseSide(record.side);
+  const boardStyle = parseBoardStyle(record.boardStyle);
+  const selection = parseSelection(record.selection);
+  const view = parseView(record.view);
+  const playAutoOpponent = parseBoolean(record.playAutoOpponent);
+  const playScope = parsePlayScope(record.playScope);
+  const treeVisualizationMode = parseTreeVisualizationMode(record.treeVisualizationMode);
 
   if (
     mode === null ||
@@ -105,7 +106,7 @@ function parseSide(value: unknown): Side | null {
 }
 
 function parseBoardStyle(value: unknown): BoardThemeId | null {
-  return typeof value === 'string' && isBoardThemeId(value) ? value : null;
+  return isBoardThemeId(value) ? value : null;
 }
 
 function parseView(value: unknown): View | null {

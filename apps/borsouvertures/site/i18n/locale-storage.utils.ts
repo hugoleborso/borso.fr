@@ -15,9 +15,7 @@ export interface LanguageStorage {
 export function readSavedLanguage(storage: LanguageStorage | undefined): SupportedLanguage | null {
   if (storage === undefined) return null;
   const saved = storage.getItem(LANGUAGE_STORAGE_KEY);
-  if (saved === null) return null;
-  if (!isSupportedLanguage(saved)) return null;
-  return saved;
+  return isSupportedLanguage(saved) ? saved : null;
 }
 
 export function writeSavedLanguage(

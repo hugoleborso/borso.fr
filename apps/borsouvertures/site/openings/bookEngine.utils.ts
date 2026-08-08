@@ -7,7 +7,7 @@ interface BookCandidate {
   line: Line;
 }
 
-interface BookState {
+export interface BookState {
   inBook: boolean;
   candidates: BookCandidate[];
   possibleNextMovesUci: string[];

@@ -1,5 +1,5 @@
 import type { Mode, PlayScope } from '@/state/persistedState.utils';
-import { findOpening, findVariation, type Selection } from './selectors.utils';
+import { findOpening, type Selection } from './selectors.utils';
 import type { Line, Opening, Variation } from './types';
 
 export interface VariationEntry {
@@ -76,24 +76,24 @@ function listPanelVariationEntries(
   return listVariationEntries([selectedOpening]);
 }
 
+/**
+ * The learner's line column reads the variation out of the list the variation
+ * column is already showing, rather than re-deriving the opening/variation
+ * pair. The panel list is empty until an opening is picked, so one lookup
+ * answers both "is an opening picked" and "is one of its variations picked".
+ */
 function listPanelLineEntries(
   mode: Mode,
   lineEntries: LineEntry[],
-  selectedOpening: Opening | undefined,
-  selectedVariation: Variation | undefined,
+  panelVariationEntries: VariationEntry[],
+  selectedVariationId: string | null,
 ): LineEntry[] {
   if (mode === 'play') return lineEntries;
-  if (selectedOpening === undefined || selectedVariation === undefined) return [];
-  return listLineEntries([{ opening: selectedOpening, variation: selectedVariation }]);
-}
-
-function findSelectedOpening(
-  mode: Mode,
-  openings: Opening[],
-  selection: Selection,
-): Opening | undefined {
-  if (mode === 'play') return undefined;
-  return findOpening(openings, selection.openingId);
+  const selectedEntry = panelVariationEntries.find(
+    (entry) => entry.variation.id === selectedVariationId,
+  );
+  if (selectedEntry === undefined) return [];
+  return listLineEntries([selectedEntry]);
 }
 
 export function buildOpeningFlowLists(
@@ -102,18 +102,23 @@ export function buildOpeningFlowLists(
   selection: Selection,
   scope: PlayScope,
 ): OpeningFlowLists {
-  const selectedOpening = findSelectedOpening(mode, openings, selection);
-  const selectedVariation = findVariation(selectedOpening, selection.variationId);
+  const selectedOpening = findOpening(openings, selection.openingId);
 
   const variationEntries = listVariationEntries(
     listOpeningsForVariations(mode, openings, scope, selectedOpening),
   );
   const lineEntries = listLineEntries(listVariationsForLines(mode, variationEntries, scope));
+  const panelVariationEntries = listPanelVariationEntries(mode, variationEntries, selectedOpening);
 
   return {
     variationEntries,
     lineEntries,
-    panelVariationEntries: listPanelVariationEntries(mode, variationEntries, selectedOpening),
-    panelLineEntries: listPanelLineEntries(mode, lineEntries, selectedOpening, selectedVariation),
+    panelVariationEntries,
+    panelLineEntries: listPanelLineEntries(
+      mode,
+      lineEntries,
+      panelVariationEntries,
+      selection.variationId,
+    ),
   };
 }

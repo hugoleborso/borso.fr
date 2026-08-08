@@ -61,6 +61,18 @@ describe('toggleOpeningInPlayScope', () => {
   it('removes an opening that is already in the scope', () => {
     expect(toggleOpeningInPlayScope(SCOPE, 'italian').openingIds).toEqual([]);
   });
+
+  it('removes only the toggled opening and keeps its siblings', () => {
+    const scope: PlayScope = {
+      openingIds: ['italian', 'ruy-lopez', 'sicilian'],
+      variationIds: [],
+      lineIds: [],
+    };
+    expect(toggleOpeningInPlayScope(scope, 'ruy-lopez').openingIds).toEqual([
+      'italian',
+      'sicilian',
+    ]);
+  });
 });
 
 describe('toggleVariationInPlayScope', () => {

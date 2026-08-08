@@ -20,11 +20,18 @@ const VALID_STATE: PersistedState = {
   treeVisualizationMode: 'buttons',
 };
 
-describe('parsePersistedState', () => {
-  it('returns null for a missing localStorage entry', () => {
-    expect(parsePersistedState(null)).toBeNull();
-  });
+const OTHER_VALID_STATE: PersistedState = {
+  mode: 'learn',
+  side: 'white',
+  boardStyle: 'lichess',
+  selection: { openingId: null, variationId: null, lineId: null },
+  view: 'select',
+  playAutoOpponent: true,
+  playScope: { openingIds: [], variationIds: [], lineIds: [] },
+  treeVisualizationMode: null,
+};
 
+describe('parsePersistedState', () => {
   it('returns null for malformed JSON', () => {
     expect(parsePersistedState('{not json')).toBeNull();
   });
@@ -38,6 +45,11 @@ describe('parsePersistedState', () => {
   it('round-trips a valid state', () => {
     const raw = stringifyPersistedState(VALID_STATE);
     expect(parsePersistedState(raw)).toEqual(VALID_STATE);
+  });
+
+  it('round-trips the other value of every enum field', () => {
+    const raw = stringifyPersistedState(OTHER_VALID_STATE);
+    expect(parsePersistedState(raw)).toEqual(OTHER_VALID_STATE);
   });
 
   it('rejects an unknown mode value', () => {
@@ -75,6 +87,11 @@ describe('parsePersistedState', () => {
     expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
   });
 
+  it('rejects a null selection', () => {
+    const corrupted: Record<string, unknown> = { ...VALID_STATE, selection: null };
+    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
+  });
+
   it('rejects a selection with a numeric id field', () => {
     const corrupted: Record<string, unknown> = {
       ...VALID_STATE,
@@ -93,6 +110,19 @@ describe('parsePersistedState', () => {
 
   it('rejects a non-object playScope', () => {
     const corrupted: Record<string, unknown> = { ...VALID_STATE, playScope: 'all' };
+    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
+  });
+
+  it('rejects a null playScope', () => {
+    const corrupted: Record<string, unknown> = { ...VALID_STATE, playScope: null };
+    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
+  });
+
+  it('rejects a playScope whose variationIds alone is not an array', () => {
+    const corrupted: Record<string, unknown> = {
+      ...VALID_STATE,
+      playScope: { openingIds: [], variationIds: 'main', lineIds: [] },
+    };
     expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
   });
 

@@ -50,7 +50,7 @@ export function getBoardTheme(id: BoardThemeId): BoardTheme {
   return boardThemesById[id];
 }
 
-export function isBoardThemeId(value: string): value is BoardThemeId {
+export function isBoardThemeId(value: unknown): value is BoardThemeId {
   return value === 'lichess' || value === 'chesscom' || value === 'nord' || value === 'sand';
 }
 

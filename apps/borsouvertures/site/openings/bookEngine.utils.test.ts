@@ -98,6 +98,19 @@ describe('gatherCandidates', () => {
     expect(candidates[0]?.line.id).toBe('classical');
   });
 
+  it('treats an empty level of the play scope as no filter at that level', () => {
+    const candidates = gatherCandidates([italianMain], allSelection, {
+      openingIds: [],
+      variationIds: [],
+      lineIds: [],
+    });
+    expect(candidates.map((candidate) => candidate.line.id)).toEqual([
+      'classical',
+      'two-knights',
+      'evans',
+    ]);
+  });
+
   it('returns nothing when play scope excludes every opening', () => {
     const candidates = gatherCandidates([italianMain, sicilian], allSelection, {
       openingIds: ['nonexistent'],

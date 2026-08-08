@@ -13,6 +13,9 @@ export interface CatalogueParityDifference {
  * The keys each catalogue is missing relative to the other. The sibling test
  * fails when either list is non-empty, so an English string added without its
  * French counterpart never merges.
+ *
+ * Both lists come out sorted, because {@link listTranslationKeys} sorts and a
+ * `Set` then a `filter` both preserve the order they were given.
  */
 export function diffCatalogues(
   english: TranslationCatalogue,
@@ -20,11 +23,9 @@ export function diffCatalogues(
 ): CatalogueParityDifference {
   const englishKeys = new Set(listTranslationKeys(english));
   const frenchKeys = new Set(listTranslationKeys(french));
-  const missingInEnglish = [...frenchKeys].filter((key) => !englishKeys.has(key));
-  const missingInFrench = [...englishKeys].filter((key) => !frenchKeys.has(key));
   return {
-    missingInEnglish: missingInEnglish.sort(compareTranslationKeys),
-    missingInFrench: missingInFrench.sort(compareTranslationKeys),
+    missingInEnglish: [...frenchKeys].filter((key) => !englishKeys.has(key)),
+    missingInFrench: [...englishKeys].filter((key) => !frenchKeys.has(key)),
   };
 }
 

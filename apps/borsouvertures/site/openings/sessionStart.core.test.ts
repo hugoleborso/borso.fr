@@ -88,6 +88,16 @@ describe('isSessionStartAllowed', () => {
     ).toBe(true);
   });
 
+  it('refuses to start a learn session on a selection the play rule would accept', () => {
+    const openingOnly: Selection = {
+      openingId: 'italian',
+      variationId: ALL_KEY,
+      lineId: ALL_KEY,
+    };
+    expect(isSessionStartAllowed('learn', openingOnly, EMPTY_PLAY_SCOPE)).toBe(false);
+    expect(isSessionStartAllowed('play', openingOnly, EMPTY_PLAY_SCOPE)).toBe(true);
+  });
+
   it('applies the play rule in play mode', () => {
     expect(isSessionStartAllowed('play', NOTHING_SELECTED, EMPTY_PLAY_SCOPE)).toBe(false);
     expect(

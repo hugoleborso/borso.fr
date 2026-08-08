@@ -58,4 +58,14 @@ describe('shortLineName', () => {
   it('returns the rest verbatim when only the opening prefix matches without a comma', () => {
     expect(shortLineName(opening, variation, lineWith('Italian Game: Greco'))).toBe('Greco');
   });
+
+  it('trims the whitespace the dataset leaves around the distinctive suffix', () => {
+    expect(
+      shortLineName(
+        opening,
+        variation,
+        lineWith("Italian Game: Classical Variation, Greco's Attack  "),
+      ),
+    ).toBe("Greco's Attack");
+  });
 });

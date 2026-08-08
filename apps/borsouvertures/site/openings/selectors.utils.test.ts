@@ -30,6 +30,33 @@ const opening: Opening = {
   variations: [variation],
 };
 
+/**
+ * A dataset entry whose own id collides with the {@link ALL_KEY} sentinel. The
+ * sentinel means "every entry at this level", so it must never resolve to this
+ * decoy — which is what makes the sentinel check in each finder load-bearing
+ * rather than a shortcut around a lookup that would miss anyway.
+ */
+const decoyLineNamedAll: Line = {
+  id: ALL_KEY,
+  name: 'Decoy',
+  eco: 'C99',
+  movesSan: [],
+  movesUci: [],
+};
+
+const decoyVariationNamedAll: Variation = {
+  id: ALL_KEY,
+  name: 'Decoy',
+  lines: [decoyLineNamedAll],
+};
+
+const decoyOpeningNamedAll: Opening = {
+  id: ALL_KEY,
+  name: 'Decoy',
+  ecoCodes: [],
+  variations: [decoyVariationNamedAll],
+};
+
 describe('findOpening', () => {
   it('returns undefined when id is missing', () => {
     expect(findOpening([opening], null)).toBeUndefined();
@@ -38,6 +65,10 @@ describe('findOpening', () => {
 
   it('returns undefined for the ALL sentinel', () => {
     expect(findOpening([opening], ALL_KEY)).toBeUndefined();
+  });
+
+  it('does not resolve the ALL sentinel to an opening whose own id is "all"', () => {
+    expect(findOpening([decoyOpeningNamedAll, opening], ALL_KEY)).toBeUndefined();
   });
 
   it('finds the opening by id', () => {
@@ -50,14 +81,17 @@ describe('findOpening', () => {
 });
 
 describe('findVariation', () => {
-  it('returns undefined when opening or id is missing', () => {
-    expect(findVariation(undefined, 'main')).toBeUndefined();
+  it('returns undefined when id is missing', () => {
     expect(findVariation(opening, null)).toBeUndefined();
     expect(findVariation(opening, undefined)).toBeUndefined();
   });
 
   it('returns undefined for the ALL sentinel', () => {
     expect(findVariation(opening, ALL_KEY)).toBeUndefined();
+  });
+
+  it('does not resolve the ALL sentinel to a variation whose own id is "all"', () => {
+    expect(findVariation(decoyOpeningNamedAll, ALL_KEY)).toBeUndefined();
   });
 
   it('finds the variation by id', () => {
@@ -70,14 +104,17 @@ describe('findVariation', () => {
 });
 
 describe('findLine', () => {
-  it('returns undefined when variation or id is missing', () => {
-    expect(findLine(undefined, 'main-line')).toBeUndefined();
+  it('returns undefined when id is missing', () => {
     expect(findLine(variation, null)).toBeUndefined();
     expect(findLine(variation, undefined)).toBeUndefined();
   });
 
   it('returns undefined for the ALL sentinel', () => {
     expect(findLine(variation, ALL_KEY)).toBeUndefined();
+  });
+
+  it('does not resolve the ALL sentinel to a line whose own id is "all"', () => {
+    expect(findLine(decoyVariationNamedAll, ALL_KEY)).toBeUndefined();
   });
 
   it('finds the line by id', () => {

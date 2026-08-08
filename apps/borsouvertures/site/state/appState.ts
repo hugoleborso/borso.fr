@@ -32,7 +32,9 @@ const INITIAL_STATE: AppState = {
 
 function readInitialState(): AppState {
   try {
-    return parsePersistedState(window.localStorage.getItem(STORAGE_KEY)) ?? INITIAL_STATE;
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw === null) return INITIAL_STATE;
+    return parsePersistedState(raw) ?? INITIAL_STATE;
   } catch {
     // localStorage is unavailable in private mode and over quota, and the
     // application is fully usable without it, so persistence degrades silently.

@@ -39,6 +39,16 @@ describe('findLearnDrillTarget', () => {
     ).toBe(NO_DRILL_TARGET);
   });
 
+  it('returns the placeholder when the opening does not exist, whatever the variation names', () => {
+    expect(
+      findLearnDrillTarget(OPENINGS, {
+        openingId: 'sicilian',
+        variationId: 'classical',
+        lineId: ALL_KEY,
+      }),
+    ).toBe(NO_DRILL_TARGET);
+  });
+
   it('returns the placeholder when the variation does not exist', () => {
     expect(
       findLearnDrillTarget(OPENINGS, {

@@ -34,7 +34,7 @@ export function listTranslationKeys(
   return keys.sort(compareTranslationKeys);
 }
 
-export function isSupportedLanguage(candidate: string): candidate is SupportedLanguage {
+export function isSupportedLanguage(candidate: unknown): candidate is SupportedLanguage {
   return SUPPORTED_LANGUAGES.some((supported) => supported === candidate);
 }
 
@@ -56,10 +56,9 @@ export function selectInitialLanguage(
   savedLanguage: string | null,
   browserLanguages: readonly string[],
 ): SupportedLanguage {
-  if (savedLanguage !== null && isSupportedLanguage(savedLanguage)) return savedLanguage;
+  if (isSupportedLanguage(savedLanguage)) return savedLanguage;
   const matched = browserLanguages
     .map((languageTag) => readLanguageFamily(languageTag))
-    .find((family) => isSupportedLanguage(family));
-  if (matched !== undefined && isSupportedLanguage(matched)) return matched;
-  return FALLBACK_LANGUAGE;
+    .find((family): family is SupportedLanguage => isSupportedLanguage(family));
+  return matched ?? FALLBACK_LANGUAGE;
 }
