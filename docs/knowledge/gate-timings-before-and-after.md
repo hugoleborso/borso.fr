@@ -72,8 +72,9 @@ The first run on this branch, at commit `14fc404`, with no cache to restore:
 
 So CI went from a 97 s median to about 180 s on a cold-cache run, which is
 roughly 85% slower. The job now also does three things it did not do before,
-which are checking formatting separately, running the 390 custom rule tests, and
-saving the caches.
+which are checking formatting separately, running the custom rule tests, and
+saving the caches. That run carried 390 rule tests; the suite has since grown to
+444, so the job is a little slower than the figure above.
 
 CI persists `.eslintcache` and the Prettier cache, keyed on the lockfile and the
 two config files. A run that restores them should land far closer to the old
@@ -92,10 +93,10 @@ which ships a sibling test at full coverage.
 | `pragma` core | 408 tests, 40.3 s | 538 tests, 49.5 s |
 | `last-loop-lepin` core | 310 tests, 24.5 s | 630 tests, 38.4 s |
 | `last-loop-lepin` back end end-to-end | not separately timed | 321 tests |
-| Custom ESLint rule tests | did not exist | 390 tests, 12.2 s |
+| Custom ESLint rule tests | did not exist | 444 tests, 13.0 s |
 | `knip` | 2.5 s | 2.7 s |
 
-Total application tests went from 979 to 1712, plus 390 rule tests.
+Total application tests went from 979 to 1712, plus 444 rule tests.
 
 The two front-end-only suites grew the most in relative terms, from about 2 s to
 about 13 s. Most of that is the jsdom environment, which those apps barely used
