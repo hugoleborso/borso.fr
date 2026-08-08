@@ -13,6 +13,7 @@
 
 const PURE_FILE_PATTERN = /\.(core|utils)\.tsx?$/;
 const TEST_FILE_PATTERN = /\.(test|spec|test-utils)\.[jt]sx?$/;
+const TEST_HARNESS_FOLDER_PATTERN = /(^|\/)test\//;
 const CONTROLLER_FILE_PATTERN = /\.controller\.ts$/;
 
 /** Globals a pure function may not read. */
@@ -43,6 +44,19 @@ export function isPureFile(filename) {
 
 export function isTestFile(filename) {
   return TEST_FILE_PATTERN.test(filename);
+}
+
+/**
+ * A test, or a file in the harness that runs the tests.
+ *
+ * `apps/<app>/test/` holds `setup-postgres.ts` and `database-utils.ts`, which
+ * start the cluster and truncate tables between suites. They are not named
+ * `.test.ts`, and the root `eslint.config.js` already counts `test/**` as test
+ * code for the Vitest plugin, so the three architecture rules that exempt
+ * tests use this wider question rather than the file name alone.
+ */
+export function isTestPath(filename) {
+  return TEST_FILE_PATTERN.test(filename) || TEST_HARNESS_FOLDER_PATTERN.test(filename);
 }
 
 export function isControllerFile(filename) {
