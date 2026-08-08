@@ -448,3 +448,440 @@ there is no key drift and no duplicate in-page request.
   pushing to PR 40. Every persistence claim above was re-verified through `curl`
   after the second re-seed, but a validation run against a quiet preview would be
   more trustworthy.
+
+---
+
+# Regression check at `f88e1d0`
+
+Run on 2026-08-08, roughly 20:00 to 21:00 UTC. Baseline for comparison is the
+report above, taken at `cebe107`.
+
+## Verdict
+
+**No regressions found.** All four changes behave the way the change
+description says they do, and every baseline behaviour that was re-checked still
+holds. The four defects the baseline recorded are unchanged except for one,
+which is now fixed.
+
+Two problems were found that are **not** attributable to these four commits, and
+that the baseline could not have seen. Both are written up at the end so they
+are not mistaken for regressions.
+
+## How this run drove the preview
+
+`agent-browser` on a single session named `pragma-regress` did the functional
+walk. `argent`'s browser on `chromium-cdp-9225` did the phone pass, driven
+through a direct CDP session that held `Emulation.setDeviceMetricsOverride` and
+`Emulation.setTouchEmulationEnabled` open for the whole pass, because those
+overrides are dropped when the client disconnects. That session measured
+`(pointer: coarse)` true, `(hover: none)` true and `navigator.maxTouchPoints` 5
+at 375 by 667. Taps and drags used `Input.dispatchTouchEvent`, per the recipe;
+`gesture-tap` was not attempted.
+
+`curl` against `https://pragma-pr-40-api.preview.borso.fr` did every
+authoritative check. The site origin was never used for an API assertion.
+
+## The database was re-seeded at least five times during this run
+
+This is the trap the brief warned about, and it fired repeatedly rather than
+once. The fixture was rewritten at `19:57:59`, at `20:31:10`, and at least three
+more times between `20:35` and `20:50`. Each re-seed truncates first and mints
+new UUIDs for every song, session, setlist, member and instrument.
+
+It produced two false alarms that were chased down and dismissed:
+
+- **Apparent 404s on every by-id route.** A route sweep showed
+  `GET /api/songs/:id` and `GET /api/sessions/:id` returning 404 twice per load
+  on the song detail, edit, scene and session detail routes, using ids that had
+  been valid minutes earlier. Re-fetching the id list and immediately calling
+  `by-id` returned 200 on all six songs, three times each. The endpoint is
+  healthy; the ids had been wiped between fetching and using them. A repeat
+  sweep with just-fetched ids showed zero 4xx and zero 5xx on every route.
+- **An empty `/setlists` page.** One load rendered
+  `No setlist created yet` while the sidebar badge read `Setlists 1`. A reload a
+  few seconds later listed `Le Petit Bain` correctly. This was a read landing
+  between the truncate and the insert of a re-seed.
+
+Every write recorded below was verified with `curl` at the moment it was made,
+against the ids that were current at that moment. All of the test data was later
+destroyed by a re-seed, which is why the preview now holds only the seed fixture.
+
+The sandbox proxy also reset the connection on a handful of `curl` calls, with
+`Recv failure: Connection reset by peer`. Each one succeeded on retry, and the
+two cases that first appeared as a reset were re-run ten times each and returned
+401 every time. They were transport noise, not server behaviour.
+
+## Change 1, `<html lang>` follows the language switcher
+
+**Status: works, and it fixes baseline defect 5.**
+
+One correction to the brief's expectation. `document.documentElement.lang` is
+`en` on load in this browser, not `fr`, and the interface renders in English.
+That is correct behaviour rather than a fault: the app follows the detected
+language, and this Chromium reports English. The attribute matches whatever
+language is actually being rendered, which is the point of the change.
+
+What was checked:
+
+- On a cold load of `/login`, `lang` is `en` and the page reads
+  `Shared password` and `Enter`.
+- Twelve switches driven through the CLI, alternating `FR` and `EN` with a pause
+  after each. Every one tracked: `lang` became `fr` with the navigation reading
+  `Catalogue`, and `en` with it reading `Catalog`, and `aria-pressed` followed
+  the active button each time.
+- Twenty more switches in a single in-page loop with 150 ms between each. The
+  sequence read `fr:fr en:en` twenty times with no drift and no missed update.
+- A first attempt at this burst clicked twenty times synchronously with no pause
+  and produced `fr,en,en,en,…`. That is the test reading the attribute before
+  React and i18next settle, not a defect, and it is recorded here so the next
+  validator does not mistake it for one.
+- The attribute is also correct on load, not only after a switch. Touring eleven
+  routes in French, every one reported `lang` as `fr` after a full page reload,
+  and twelve routes in English reported `en`.
+- On the second, independent browser used for the phone pass, a cold load
+  reported `lang` as `en`.
+
+On the subscription leaking: **this could not be measured directly.** i18next is
+not exposed on `window`, so the listener count is not observable from the page.
+The indirect evidence is that after roughly thirty-two switches and around fifty
+route loads, the attribute still tracked correctly, `agent-browser console` and
+`agent-browser errors` were both empty, and the JS heap read 18 MB before the
+twenty-switch burst and 13 MB after it. Nothing degraded, but the claim rests on
+behaviour rather than on a listener count.
+
+## Change 2, the deleted branches in `session-cookie.utils.ts`
+
+**Status: no crash found. Every corrupt cookie was rejected cleanly.**
+
+This was the priority check. A valid login first, to have a known-good cookie as
+a control, then thirty-five deliberately corrupt cookie values against
+`/api/bars`, then six of those shapes against seven authenticated endpoints.
+
+Everything the app answered was a 401 with a JSON body naming the reason. There
+was **no 500 and no empty response** at any point. Representative results:
+
+| Cookie value | Result |
+|---|---|
+| valid cookie (control) | 200 |
+| empty value | 401 `malformed` |
+| a single `.` | 401 `malformed` |
+| payload with no separator | 401 `malformed` |
+| payload with empty signature | 401 `malformed` |
+| empty payload with signature | 401 `malformed` |
+| `!!!!` and `****` as payload and signature | 401 `bad-signature` |
+| truncated payload | 401 `bad-signature` |
+| truncated signature | 401 `bad-signature` |
+| right-length signature, wrong bytes | 401 `bad-signature` |
+| standard base64 `+` and `/` alphabet | 401 `bad-signature` |
+| `%zz.%zz` and other bad percent escapes | 401 `bad-signature` |
+| `%E0%A4` truncated UTF-8 escape | 401 `bad-signature` |
+| a quoted value | 200 (quotes stripped by the cookie parser) |
+| `' OR 1=1--` | 401 `bad-signature` |
+| `../../etc/passwd` | 401 `malformed` |
+| six dot-separated segments | 401 `bad-signature` |
+| 8 KB of `A` as the payload | 401 `bad-signature` |
+| base64 of `not json at all` as payload | 401 `bad-signature` |
+| base64 of `{"expiresAt":1e999}` as payload | 401 `bad-signature` |
+
+Three results came from in front of the application and are recorded so they are
+not misread. Emoji and Cyrillic cookie values were rejected by API Gateway with
+`400 Invalid request`. A 32 KB cookie was rejected by the proxy with a 400
+header-too-large page. Accented Latin characters and a JSON-shaped value made
+Hono's cookie parser return nothing at all, so the middleware answered
+`401 session-required`. None of these reach the code under test, and none is a
+crash.
+
+The same six shapes against `/api/bars`, `/api/songs`, `/api/members`,
+`/api/instruments`, `/api/sessions`, `/api/mastery/defaults` and `/api/setlists`
+returned 401 in all forty-two cases.
+
+Malformed login bodies were also checked, since they share the route: an empty
+body, `{`, `null`, `[]`, `{"password":null}`, `{"password":123}`,
+`{"password":""}` and `{"nope":1}` all returned 400. A wrong password returned
+401 with `{"error":"invalid-password"}`.
+
+**One limit on this check, stated plainly.** The removed try/catch wrapped
+`Buffer.from(value, 'base64url')`, and that decode is reachable from outside,
+which is what the table above exercises. The three removed null guards sit
+*after* the signature comparison. Reaching them requires a payload whose HMAC
+verifies, which requires the key in `pragma.app_config.hmac_key`. That key was
+not available to this run, so **the post-signature path was not exercised
+against the live API.** Reading the deployed source's local counterpart, the
+`parseJsonPayload` try/catch around `JSON.parse` is still present, and
+`timingSafeEqual` is still guarded by an explicit length comparison, which is the
+call that would otherwise throw on a length mismatch.
+
+One incidental observation, pre-existing and not a regression: the signature
+comparison tolerates base64 padding, so appending `==` to a valid signature still
+verifies. Base64url decoding ignores the padding, so several distinct strings
+verify against one signature. It does not let an attacker forge anything, since
+the payload is signed literally.
+
+## Change 3, `transposeChord` edge cases and the embed fallback
+
+**Status: both behave exactly as described.**
+
+The seed fixture gives every song `chart: null` and no links, so both had to be
+created first. A ChordPro chart was written through the song edit form and
+confirmed in the database through `curl`:
+
+```
+[C]Normal [G]line [Am]here
+[Cb]Flat-C [Fb]Flat-F [E#]Sharp-E [B#]Sharp-B
+[Bb]Bflat [F#]Fsharp [Dm7]minor7 [C/E]slash
+```
+
+Driving the transpose buttons in scene mode:
+
+| Transpose | Line 1 | Line 2 | Line 3 |
+|---|---|---|---|
+| `+0` | `[C] [G] [Am]` | `[Cb] [Fb] [E#] [B#]` | `[Bb] [F#] [Dm7] [C/E]` |
+| `+1` | `[C#] [G#] [A#m]` | `[Cb] [Fb] [E#] [B#]` | `[B] [G] [D#m7] [C#/E]` |
+| `+2` | `[D] [A] [Bm]` | `[Cb] [Fb] [E#] [B#]` | `[C] [G#] [Em7] [D/E]` |
+| `-1` | `[B] [F#] [G#m]` | `[Cb] [Fb] [E#] [B#]` | `[A] [F] [C#m7] [B/E]` |
+
+`Cb`, `Fb`, `E#` and `B#` are left untouched at every step, which is the stated
+behaviour. Everything else transposes correctly, flats are re-emitted in the
+sharp convention, and returning to `+0` restored the original line exactly.
+
+One observation, pre-existing and outside the scope of this change: a slash chord
+transposes only its root. `C/E` becomes `C#/E` and then `D/E`, because the bass
+note lives in the suffix, which is carried through verbatim. It is consistent
+rather than crashing, so it is recorded as an observation rather than a defect.
+
+For the embed fallback, four links were added to the same song and confirmed in
+the database. On the song detail page:
+
+| Link | Rendered as |
+|---|---|
+| `youtube.com/playlist?list=PLabcdef123456` | plain `<a>`, no iframe |
+| `youtube.com/@nova-reef` | plain `<a>`, no iframe |
+| `youtube.com/watch?v=dQw4w9WgXcQ` | iframe to `youtube.com/embed/dQw4w9WgXcQ` |
+| `open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT` | iframe to `open.spotify.com/embed/track/…` |
+
+The playlist and the channel fall back to a plain link, exactly as described. No
+blank panel, no console error. Evidence: `pragma/regress-song-detail-embeds-1280.png`.
+
+## Change 4, the two files split for `max-lines`
+
+**Status: no dropped props on either screen.**
+
+**`SongDetailSidebar`.** The sidebar renders and its data is genuinely per song,
+not hard-coded. Base energy read `9/10`, `3/10`, `8/10` and `6/10` on Lightning,
+Slow Burn, Runaway Sun and Midnight Drive, matching `baseEnergy` of 9, 3, 8 and 6
+in the API for those songs, and the tonality and status lines matched too. With
+the seed fixture the default lineup and mastery panels show a dash, which is
+correct, because the fixture ships an empty lineup for every song.
+
+To prove the panels are live rather than dead, a default lineup was written
+through the modal. The modal listed all four members and all five instruments,
+saving persisted the assignment to the database, reopening the modal pre-filled
+the saved values, and after a reload the sidebar rendered `Alice GUITAR`,
+`Bob BASS`, `Carla KEYS`, `Dan DRUMS` with a matching mastery row per member.
+Evidence: `pragma/regress-song-detail-sidebar-1280.png` and
+`pragma/regress-song-detail-embeds-1280.png`.
+
+**`SetlistEntryDragPreview` and the inline editor.** Both render.
+
+The drag preview appears while a drag is in flight. With a keyboard drag held
+open, the dragged song's title was present twice in the page, once in the list and
+once in the floating preview, and the preview is visible in
+`pragma/regress-setlist-drag-preview-1280.png` as an elevated card above the row
+it was lifted from.
+
+The inline editor opens with `KEY (OVERRIDE)`, `CAPO` and `NOTES`, all three of
+which are real and all three of which persist. Writing `F#`, `3` and
+`regression-check-note` and reading the entries endpoint through `curl` returned
+`key=F#`, `capo=3`, `notes='regression-check-note'` on position 0 and untouched
+values on the other five entries.
+
+## Baseline behaviours re-confirmed
+
+**Login.** A wrong password returns 401 from `POST /api/auth/login` and the page
+renders a `role="alert"` element reading `Wrong password.`, with the form still
+usable. The correct password lands on `/catalog`. A logged-out visit to
+`/catalog` redirects to `/login` and issues **zero** API requests, which is the
+baseline's defect 14 fix still holding.
+
+**Every route loads with real data, and no 4xx or 5xx on the normal path.** All
+thirteen routes were swept while reading `responseStatus` from Resource Timing.
+With ids fetched immediately before the sweep, every API call returned 200. The
+earlier 404s are explained under the re-seed section above.
+
+**A write persists across a reload.** A bar created through the form was
+confirmed through `curl` as `Regress Check Bar | Regressville | 142 | lead`, and
+after a full page reload the name, city and capacity were all still rendered,
+with zero failed API calls on that load. The chart, the links, the default
+lineup and the three setlist entry fields were each separately confirmed through
+`curl` as well.
+
+**The setlist reorder does not revert, and issues no follow-up `GET`.** Checked
+twice, on two different input paths.
+
+- Keyboard sensor, at 1280. Focusing the drag handle and pressing Space,
+  ArrowDown, Space moved Slow Burn below Midnight Drive. The page issued exactly
+  one call, `PUT /api/setlists/:id/reorder`, and **no** `GET .../entries`. The UI
+  order and the database order were polled together four times over about twenty
+  seconds and agreed on every poll, with no revert and no further calls.
+- Touch drag, at 375 by 667 with a coarse pointer, on the second browser. Dragging
+  the first handle down the list moved Slow Burn to the end. Again exactly one
+  `PUT .../reorder` and no follow-up `GET`. The order held at eight seconds, and
+  the database read back
+  `Midnight Drive, Lightning, Afterglow, Runaway Sun, Last Call, Slow Burn`,
+  matching the UI exactly.
+
+The countermeasure in
+[`docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md`](../../../dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md)
+is intact on this path.
+
+**The sortable bars table.** Working, with a three-state cycle. This one needs a
+correction to an earlier reading in this run: clicking the text `Capacity` with a
+text locator hits the form's field label, not the table header, and produces no
+change, which briefly looked like a dead control. Targeting the header button
+inside the `ul[aria-label="Bars"]` shows it works. With two bars, AA at capacity
+300 and ZZ at capacity 77:
+
+| Action | Header state | Row order |
+|---|---|---|
+| start | capacity descending | AA (300), ZZ (77) |
+| click Capacity | capacity ascending | ZZ (77), AA (300) |
+| click Capacity | no sort | AA, ZZ |
+| click Name | name ascending | AA, ZZ |
+| click Name | name descending | ZZ, AA |
+| click Name | no sort | AA, ZZ |
+
+The rows genuinely move and the arrow indicator tracks the direction.
+
+**Catalog search and filters.** The search box narrowed six songs to one on
+`Midnight`. The `Concert-ready` tab showed exactly the three concert-ready songs.
+The tab counts read 6, 3, 2, 1 and 0.
+
+**No raw i18n key on any route in either language.** Eleven routes were scanned
+in French and twelve in English for anything shaped like a translation key. Every
+scan returned nothing. French headings rendered as `Catalogue`,
+`Nouveau titre`, `Membres`.
+
+**No console error anywhere.** `agent-browser console` and `agent-browser errors`
+were cleared and re-read after each of the heaviest routes, including the song
+detail page carrying two live iframes, scene mode, the setlist, members and bars.
+Every read was empty. There is nothing to quote because nothing was logged.
+
+**No horizontal overflow at 375, 393 and 1280.** All thirteen routes at all three
+widths reported a scroll width equal to the client width. The phone pass measured
+375 over 375 on the setlist route independently.
+
+| Route | 375 | 393 | 1280 |
+|---|---|---|---|
+| `/login` | pass | pass | pass |
+| `/catalog` | pass | pass | pass |
+| `/catalog/new` | pass | pass | pass |
+| `/catalog/:songId` | pass | pass | pass |
+| `/catalog/:songId/edit` | pass | pass | pass |
+| `/catalog/:songId/scene` | pass | pass | pass |
+| `/sessions` | pass | pass | pass |
+| `/sessions/:id` | pass | pass | pass |
+| `/sessions/:id/setlist` | pass | pass | pass |
+| `/setlists` | pass | pass | pass |
+| `/bars` | pass | pass | pass |
+| `/members` | pass | pass | pass |
+| `/instruments` | pass | pass | pass |
+
+## The baseline's defects, re-checked
+
+| Baseline defect | Status now |
+|---|---|
+| 1, `/favicon.ico` returns 404 | **Still present.** Two 404s on a cold load, seen in Resource Timing before login. |
+| 2, touch targets below 44 pixels | **Not re-measured this run.** No claim either way. |
+| 3, the banner reads `1 bars` | **Still present**, in both languages. With exactly one bar the English banner read `1 bars haven't been touched in 60+ days — give them a poke.` and the French read `1 bars n'ont pas été relancés depuis +60 jours — un petit coup de fil ?`. |
+| 4, the create form keeps its values after a save | **Still present.** After a successful 201 the name, city and capacity fields still held `Regress Check Bar`, `Regressville` and `142`. Evidence: `pragma/regress-bars-form-not-reset-1280.png`. |
+| 5, `<html lang>` hard-coded to `fr` | **Fixed.** This is change 1 above. |
+
+## Two findings that are not regressions
+
+Both are recorded because they are real, and both are explicitly marked as not
+attributable to the four commits under test.
+
+### The song update write does not converge in the UI until a reload
+
+**Not attributable to change 4.** The extracted sidebar receives and renders its
+props correctly, as shown above. The problem is in the query layer, and the
+baseline never drove this flow, so there is no evidence it is new.
+
+Saving a default lineup writes correctly but the panel keeps showing the old
+value, for as long as the page stays open. Captured with a response spy on the
+mutation:
+
+- `PUT /api/songs/:id` returned 200, and its body carried the **complete new**
+  lineup including the member just added.
+- The follow-up `GET /api/songs/:id` returned the **pre-write** lineup, without
+  that member.
+- `curl` from outside the browser, three times in a row, returned the new lineup
+  including the member. The write was committed.
+- The panel rendered the stale `GET` and still showed the old lineup fifteen
+  seconds later. A reload showed the correct value immediately.
+
+This is the same shape as the reorder dantotsu. The reorder path follows the
+countermeasure and reconciles from its own mutation response, which is why it
+passes. The song update path invalidates and refetches instead, and the refetch
+is served a pre-commit snapshot, which is exactly what CLAUDE.md's rule about not
+blind-refetching a write whose result the client already holds is meant to
+prevent. Evidence: `pragma/regress-song-detail-lineup-stale-1280.png`.
+
+### Scene mode lyrics are close to unreadable
+
+**Not attributable to any of the four changes**, and invisible to the baseline,
+because no song in the seed fixture has a chart, so the baseline could not render
+this screen with content.
+
+Scene mode is the full-screen performance view, on a near-black background. The
+chart container overrides the dialog's light text colour with a dark ink token.
+Measured on the live page:
+
+| Element | Colour | Background | Contrast |
+|---|---|---|---|
+| lyric text | `rgb(61, 52, 42)` | `rgb(13, 10, 7)` | **1.62 to 1** |
+| chord text | `rgb(45, 95, 160)` | `rgb(13, 10, 7)` | **3.06 to 1** |
+
+WCAG AA asks for 4.5 to 1 for text this size. The lyrics at 1.62 to 1 are barely
+distinguishable from the background, which matters more than usual because this
+screen exists to be read on stage. The same chart renders with good contrast on
+the song detail page, so the problem is specific to the dark scene dialog.
+Evidence: `pragma/regress-scene-mode-contrast-1280.png`.
+
+## What could not be checked, and why
+
+- **The post-signature branches in `session-cookie.utils.ts`**, as explained
+  under change 2. Reaching them needs the HMAC key.
+- **i18next listener accumulation**, as explained under change 1. i18next is not
+  reachable from the page, so the leak question was answered behaviourally rather
+  than by counting subscribers.
+- **Touch target sizes**, the baseline's defect 2. Not re-measured.
+- **MusicBrainz lookup, file uploads and offline behaviour.** Not exercised, for
+  the same reasons the baseline gives.
+- **A quiet database.** The fixture was rebuilt at least five times during this
+  run. Every claim above was tied to a `curl` read taken at the time, but a run
+  against a preview nobody is deploying to would be more trustworthy.
+
+## Data left behind
+
+None that survived. Three bars, a ChordPro chart, four external links, a
+four-member default lineup, and key, capo and notes on one setlist entry were
+created during this run, and every one of them was destroyed by a later re-seed.
+The bars list and the song list were both re-checked at the end and hold only the
+seed fixture. The one change still standing at the end of the run was the setlist
+order from the touch drag, which the next re-seed will reset.
+
+## Screenshots
+
+All in `pragma/`, prefixed `regress-`.
+
+| File | Shows |
+|---|---|
+| `regress-song-detail-embeds-1280.png` | the sidebar with a full lineup, the playlist and channel links falling back to plain links, and the watch URL as an iframe |
+| `regress-song-detail-sidebar-1280.png` | the extracted sidebar rendering lineup and mastery after a reload |
+| `regress-song-detail-lineup-stale-1280.png` | the panel still showing the pre-write lineup after a successful save |
+| `regress-scene-mode-contrast-1280.png` | scene mode at transpose `-1`, with `Cb`, `Fb`, `E#`, `B#` untouched, and the low-contrast lyrics |
+| `regress-setlist-drag-preview-1280.png` | the drag preview floating above its row, with the inline editor holding its written values |
+| `regress-bars-form-not-reset-1280.png` | the create form still holding its values after a successful save |
+| `regress-catalog-375.png` | the catalog at 375 |
+| `regress-members-375.png` | members at 375 |
