@@ -110,12 +110,21 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
       // Runtime-state tables (sessions, rate-limit buckets) keep their
       // structure but no rows; `runners.photo_key` is NULLed so the
       // preview's CDN doesn't dereference prod's S3 bucket.
+      //
+      // `admin_credentials` is blocked because a preview is a public URL and
+      // must not hold production's PIN hash. ADR-0004 moved the PIN out of a
+      // stage-shared Secrets Manager entry into a per-schema row precisely so
+      // each stage would carry its own; cloning the row from prod put the
+      // sharing back by another route. Consequence: a fresh preview has no
+      // admin PIN and the admin area is unreachable until someone seeds the
+      // row, which is the intended per-stage behaviour rather than a
+      // regression.
       ...(isProduction
         ? {}
         : {
             cloneFromSchema: {
               sourceSchemaName: 'prod',
-              tableBlocklist: ['admin_sessions', 'auth_attempts'],
+              tableBlocklist: ['admin_credentials', 'admin_sessions', 'auth_attempts'],
               columnsToNullify: { runners: ['photo_key'] },
             },
           }),

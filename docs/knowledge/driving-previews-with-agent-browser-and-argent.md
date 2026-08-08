@@ -108,6 +108,45 @@ its tabs. It then fails in a way that wastes time — `Page.navigate`,
 
 Give each tool its own browser.
 
+## `gesture-tap` does not work on this Chromium
+
+Two validation runs hit it independently. Every `argent run gesture-tap` returns
+
+```
+CDP request Input.dispatchMouseEvent timed out
+```
+
+One run reproduced it with no emulation session attached at all, so it is not
+the shared-browser hazard above. Scrolling and `describe` keep working; only the
+input dispatch wedges.
+
+Drive touch through CDP directly instead. `Input.dispatchTouchEvent` worked
+first time and every time:
+
+```js
+await send('Input.dispatchTouchEvent', {
+  type: 'touchStart',
+  touchPoints: [{ x, y, radiusX: 1, radiusY: 1, force: 1 }],
+});
+await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+```
+
+One related trap: `Emulation.setEmitTouchEventsForMouse` wedges the input
+pipeline the same way, and stays wedged after the client disconnects until the
+page navigates away and back. It is not needed —
+`Emulation.setDeviceMetricsOverride` plus `setTouchEmulationEnabled` already
+gives `pointer: coarse`, `hover: none` and `maxTouchPoints: 5`, which is the
+whole phone profile.
+
+## WebGL is slow enough to change what you can measure
+
+SwiftShader renders the `borso-fr` galaxy at 1 to 2 frames per second. That is a
+sandbox artefact, not a defect in the page, but it makes interaction on that
+route unreliable: one run saw five of six taps time out there while the same
+taps through Playwright were fine. When a check fails only on a WebGL-heavy
+page, suspect the renderer before the code, and say which tool confirmed the
+behaviour.
+
 ## What argent cannot do here
 
 There is no tool for viewport size, device pixel ratio, or pointer type on a
