@@ -71,7 +71,7 @@ export function VariationsPanel({
         <SelectorCard
           key={`${entry.opening.id}-${entry.variation.id}`}
           label={entry.variation.name}
-          meta={t('selection.variations.line-count', { total: entry.variation.lines.length })}
+          meta={t('selection.variations.line-count', { count: entry.variation.lines.length })}
           isActive={isVariationActive(mode, entry.variation.id, selection, playScope)}
           onSelect={() => pickVariation(entry)}
           board={

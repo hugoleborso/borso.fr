@@ -51,7 +51,7 @@ export function LinesPanel({ mode, lists, selection, playScope, boardStyle }: Op
     <SelectorPanel title={t('selection.lines.title')}>
       <AllLinesCard
         label={t('selection.lines.all')}
-        meta={t('selection.lines.total-count', { total: lists.lineEntries.length })}
+        meta={t('selection.lines.total-count', { count: lists.lineEntries.length })}
         isActive={playScope.lineIds.length === 0}
         onSelect={() => setPlayScope(clearLinesFromPlayScope(playScope))}
       />

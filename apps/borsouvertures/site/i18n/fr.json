@@ -56,19 +56,23 @@
     "openings": {
       "title": "Ouvertures",
       "all": "Toutes les ouvertures",
-      "family-count": "{{total}} familles",
-      "variation-count": "{{total}} variantes"
+      "family-count_one": "{{count}} famille",
+      "family-count_other": "{{count}} familles",
+      "variation-count_one": "{{count}} variante",
+      "variation-count_other": "{{count}} variantes"
     },
     "variations": {
       "title": "Variantes",
       "all": "Toutes les variantes",
       "total-count": "{{total}} au total",
-      "line-count": "{{total}} lignes"
+      "line-count_one": "{{count}} ligne",
+      "line-count_other": "{{count}} lignes"
     },
     "lines": {
       "title": "Lignes",
       "all": "Toutes les lignes",
-      "total-count": "{{total}} lignes",
+      "total-count_one": "{{count}} ligne",
+      "total-count_other": "{{count}} lignes",
       "eco": "ECO {{eco}}"
     }
   },
