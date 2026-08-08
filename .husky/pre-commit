@@ -26,7 +26,7 @@ changed=$(git diff --cached --name-only --diff-filter=ACMR)
 staged_lintable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs)$' || true)
 if [ -n "$staged_lintable" ]; then
   echo "[pre-commit] running eslint on staged files"
-  echo "$staged_lintable" | xargs pnpm exec eslint --no-warn-ignored --cache --cache-location .eslintcache
+  echo "$staged_lintable" | xargs pnpm exec eslint --no-warn-ignored --cache --cache-strategy content --cache-location .eslintcache
 fi
 
 staged_formattable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html)$' || true)

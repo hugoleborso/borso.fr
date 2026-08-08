@@ -76,10 +76,43 @@ which are checking formatting separately, running the custom rule tests, and
 saving the caches. That run carried 390 rule tests; the suite has since grown to
 444, so the job is a little slower than the figure above.
 
-CI persists `.eslintcache` and the Prettier cache, keyed on the lockfile and the
-two config files. A run that restores them should land far closer to the old
-median, and that number is not in this document yet because it needs a second
-run on the same cache key.
+CI persists `.eslintcache` and the Prettier cache, keyed on the lockfile,
+`eslint.config.js` and `.prettierrc.json`. Three `build` runs on this branch:
+
+| Commit | Config changed in that commit? | `build` |
+|--------|-------------------------------|---------|
+| `14fc404` | first run on the branch, nothing to restore | 177 s |
+| `02dde0c` | yes, `eslint.config.js` | 206 s |
+| `7893b1e` | no, a docs-only commit | 183 s |
+
+The cache did not help, and the reason turned out to be a defect rather than a
+property of the job. The per-step breakdown of the `7893b1e` run, which restored
+a cache written by the previous run:
+
+| Step | Duration |
+|------|---------:|
+| set up job, checkout, node, pnpm | 14 s |
+| `pnpm install --frozen-lockfile` | 4 s |
+| `pnpm --filter @borso/infra build` | 4 s |
+| `pnpm -r typecheck` | 34 s |
+| restore `.eslintcache` | 1 s |
+| `pnpm exec eslint .` | 68 s |
+| `pnpm exec prettier --check .` | 4 s |
+| `pnpm run test:eslint-rules` | 12 s |
+| `@borso/infra test:coverage` | 21 s |
+| `@borso/shared-infra test:coverage` | 3 s |
+| `pnpm -r build` | 11 s |
+| `pnpm exec knip` | 2 s |
+
+68 s on a restored cache, against 3.2 s warm on the sandbox. ESLint's `--cache`
+compares mtime and size by default, and `actions/checkout` gives every file a
+new mtime, so the restored cache matched nothing. Every invocation now passes
+`--cache-strategy content`, which hashes contents instead. See
+[`docs/dantotsus/eslint-cache-useless-on-a-fresh-checkout.md`](../dantotsus/eslint-cache-useless-on-a-fresh-checkout.md).
+
+The figures above are what the job cost before that fix, so treat 180 s as the
+worst case rather than the current cost. This document will carry the corrected
+number once two runs have gone through with the content strategy in place.
 
 ## Test suites
 
@@ -120,7 +153,7 @@ time SKIP_MUTATION_GATE=1 bash .husky/pre-push
 # Compare `created_at` with `updated_at` on each run.
 ```
 
-## One measurement that is not in this document
+## One measurement that should not be trusted
 
 The pre-commit hook was measured at 96.7 s at one point during the refactor,
 which is roughly thirty times the honest figure. Four agents were rewriting the

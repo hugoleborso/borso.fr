@@ -51,9 +51,12 @@ jobs:
       # ESLint here is type-aware, which means it builds a TypeScript program
       # for every workspace before it can run a single rule. A cold run takes
       # about 80 s on this repository against about 3 s for the biome run it
-      # replaced, and a warm cache brings it back to about 3 s. Persisting the
-      # cache keyed on the lockfile and the config is what keeps the job in
-      # the same range as before the migration.
+      # replaced, so the cache is what keeps the job affordable.
+      # --cache-strategy content is not optional on a CI runner. ESLint's
+      # default strategy is metadata, meaning mtime and size, and a fresh
+      # checkout gives every file a new mtime, so a restored cache matches
+      # nothing. Measured on this repository: the metadata strategy left the
+      # lint step at 68 s on a restored cache.
       - uses: actions/cache@v4
         with:
           path: |
@@ -63,7 +66,7 @@ jobs:
           restore-keys: |
             lint-cache-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.js', '.prettierrc.json') }}-
             lint-cache-
-      - run: pnpm exec eslint . --cache --cache-location .eslintcache
+      - run: pnpm exec eslint . --cache --cache-strategy content --cache-location .eslintcache
       # Formatter drift is part of the gate. A commit made with hooks
       # skipped, or from an editor that is not on prettier, fails here.
       - run: pnpm exec prettier --check . --cache

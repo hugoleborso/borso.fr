@@ -8,9 +8,9 @@
   },
   "scripts": {
     "prepare": "husky",
-    "lint": "eslint . --cache --cache-location .eslintcache",
+    "lint": "eslint . --cache --cache-strategy content --cache-location .eslintcache",
     "knip": "knip",
-    "lint:fix": "eslint . --cache --cache-location .eslintcache --fix",
+    "lint:fix": "eslint . --cache --cache-strategy content --cache-location .eslintcache --fix",
     "format": "prettier --write . --cache",
     "format:check": "prettier --check . --cache",
     "test:eslint-rules": "vitest run"
