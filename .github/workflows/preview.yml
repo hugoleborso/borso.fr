@@ -140,41 +140,45 @@ jobs:
       # Auto-seed the preview so it lands populated. The `__test/seed`
       # endpoint is mounted by PreviewableApp on every non-prod API Lambda
       # (see infra/cdk/src/constructs/previewable-app.ts; commit a232c58);
-      # it wipes domain tables and writes a coherent fixture. Apps without
-      # /api/__test (front-end-only sites) short-circuit at the DNS layer
-      # and we silently skip. Prod never sees this — the flag is
-      # structurally absent there, asserted by infra unit tests.
+      # it wipes domain tables and writes a coherent fixture. Prod never
+      # sees this — the flag is structurally absent there, asserted by
+      # infra unit tests.
+      #
+      # Whether an app has an API is read from the repository rather than
+      # from a list here, so adding a full-stack app seeds it and adding a
+      # front-end-only one skips it, with nothing to remember. The previous
+      # version inferred it from the HTTP status and got it wrong: the
+      # comment claimed front-end-only apps "short-circuit at the DNS
+      # layer", but `*.preview.borso.fr` is a wildcard, so the API hostname
+      # resolves and CloudFront answers a status like any other host.
       #
       # `last-loop-lepin` validates a `fixture` QUERY parameter and rejects
       # a call without one, so this step posted a bare URL and took a 400 on
       # every preview deploy since the endpoint was written. It failed as a
       # `::warning::`, which is a line nobody reads in a green run. Found by
-      # the preview validation, not by the workflow.
-      #
-      # `pragma` takes no parameter, so an empty query string is correct for
-      # it and for any future app that seeds one way.
+      # the preview validation, not by the workflow. `pragma` takes no
+      # parameter, so an empty query string is right for it.
       - name: Auto-seed preview (non-prod fixture)
         shell: bash
         env:
+          APP: ${{ matrix.app }}
           SEED_URL: ${{ env.VITE_API_BASE }}/api/__test/seed
           SEED_QUERY: ${{ matrix.app == 'last-loop-lepin' && '?fixture=race-down-to-one-survivor' || '' }}
         run: |
           set -uo pipefail
+          if [ ! -d "apps/${APP}/api" ]; then
+            echo "[seed] ${APP} is front-end only (no apps/${APP}/api); nothing to seed"
+            exit 0
+          fi
           status=$(curl -sS --max-time 30 -o /tmp/seed-response.txt -w "%{http_code}" -X POST "${SEED_URL}${SEED_QUERY}" 2>/dev/null || echo "000")
           case "$status" in
             200|201)
               echo "[seed] ${SEED_URL}${SEED_QUERY} -> $status :: $(cat /tmp/seed-response.txt)"
               ;;
-            404)
-              echo "[seed] $SEED_URL -> 404 (no test-seed endpoint mounted; skipping)"
-              ;;
-            000)
-              echo "[seed] $SEED_URL unreachable (front-end-only app or DNS not yet propagated; skipping)"
-              ;;
             *)
-              # A seed that answers with the wrong status is a broken preview,
-              # not a cosmetic problem. Fail the job rather than warn, because
-              # the warning is what let this sit unnoticed.
+              # This app has an API, so a seed that does not answer 200 is a
+              # broken preview rather than a cosmetic problem. Fail rather
+              # than warn, because warning is what let the 400 sit unnoticed.
               echo "::error::[seed] ${SEED_URL}${SEED_QUERY} -> $status (preview deployed but seed failed): $(cat /tmp/seed-response.txt 2>/dev/null || echo '<no response body>')"
               exit 1
               ;;
