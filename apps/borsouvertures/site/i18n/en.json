@@ -89,6 +89,22 @@
       "buttons": "Buttons"
     }
   },
+  "board": {
+    "piece": {
+      "white-pawn": "white pawn on {{square}}",
+      "white-knight": "white knight on {{square}}",
+      "white-bishop": "white bishop on {{square}}",
+      "white-rook": "white rook on {{square}}",
+      "white-queen": "white queen on {{square}}",
+      "white-king": "white king on {{square}}",
+      "black-pawn": "black pawn on {{square}}",
+      "black-knight": "black knight on {{square}}",
+      "black-bishop": "black bishop on {{square}}",
+      "black-rook": "black rook on {{square}}",
+      "black-queen": "black queen on {{square}}",
+      "black-king": "black king on {{square}}"
+    }
+  },
   "learn": {
     "pick-prompt": "Pick an opening + variation to drill its tree.",
     "title": "Drill: {{variation}}",

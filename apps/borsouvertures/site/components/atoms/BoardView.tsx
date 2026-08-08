@@ -1,4 +1,5 @@
-import type { CSSProperties } from 'react';
+import { type CSSProperties, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Arrow } from 'react-chessboard';
 import { Chessboard, defaultArrowOptions } from 'react-chessboard';
 import type { Side } from '@/state/persistedState.utils';
@@ -9,6 +10,7 @@ import {
   buildDroppedUci,
   selectBoardDropDecision,
 } from './boardDrop.utils';
+import { buildNamedPieces } from './boardPieces';
 
 const BOARD_BORDER_RADIUS = '12px';
 const BOARD_SHADOW = '0 10px 30px rgba(0,0,0,0.4)';
@@ -43,13 +45,16 @@ export function BoardView({
   boardStyleId,
   boardWidth,
 }: BoardViewProps) {
+  const { t } = useTranslation();
   const { theme } = getBoardAppearance(boardStyleId);
+  const namedPieces = useMemo(() => buildNamedPieces(t), [t]);
   return (
     <div className="panel board-container" style={{ width: `${boardWidth}px` }}>
       <Chessboard
         options={{
           id: 'bors-board',
           position: fen,
+          pieces: namedPieces,
           boardOrientation: orientation,
           darkSquareStyle: { backgroundColor: theme.dark },
           lightSquareStyle: { backgroundColor: theme.light },

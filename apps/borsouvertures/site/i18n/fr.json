@@ -89,6 +89,22 @@
       "buttons": "Boutons"
     }
   },
+  "board": {
+    "piece": {
+      "white-pawn": "pion blanc en {{square}}",
+      "white-knight": "cavalier blanc en {{square}}",
+      "white-bishop": "fou blanc en {{square}}",
+      "white-rook": "tour blanche en {{square}}",
+      "white-queen": "dame blanche en {{square}}",
+      "white-king": "roi blanc en {{square}}",
+      "black-pawn": "pion noir en {{square}}",
+      "black-knight": "cavalier noir en {{square}}",
+      "black-bishop": "fou noir en {{square}}",
+      "black-rook": "tour noire en {{square}}",
+      "black-queen": "dame noire en {{square}}",
+      "black-king": "roi noir en {{square}}"
+    }
+  },
   "learn": {
     "pick-prompt": "Choisissez une ouverture et une variante pour travailler son arbre.",
     "title": "Travail : {{variation}}",
