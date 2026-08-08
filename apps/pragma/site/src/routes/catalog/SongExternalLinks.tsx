@@ -66,7 +66,7 @@ export function SongExternalLinks({ links, onRemove }: SongExternalLinksProps): 
             </div>
             <button
               type="button"
-              className="text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
+              className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
               onClick={() => onRemove(index)}
               aria-label={t('common.delete')}
             >

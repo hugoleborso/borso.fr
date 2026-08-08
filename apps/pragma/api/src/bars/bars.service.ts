@@ -6,7 +6,7 @@
  */
 
 import type { z } from 'zod';
-import type { Database } from '../database/client';
+import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   type BarPersistedShape,
   type BarRow,
@@ -52,31 +52,30 @@ function valuesFromUpdate(input: BarUpdateInput): BarPersistedShape {
   return out;
 }
 
-export async function getBarsSortedByName(database: Database): Promise<BarRow[]> {
-  const rows = await listBars(database);
+export async function getBarsSortedByName(): Promise<BarRow[]> {
+  const rows = await listBars();
   return rows.toSorted((left, right) => left.name.localeCompare(right.name));
 }
 
-export async function getBarById(database: Database, id: string): Promise<BarRow | null> {
-  return await findBarById(database, id);
+export async function getBarById(id: string): Promise<BarRow | null> {
+  return await findBarById(id);
 }
 
-export async function createBar(database: Database, input: BarCreateInput): Promise<BarRow> {
-  return await insertBar(database, valuesFromCreate(input));
+export async function createBar(input: BarCreateInput): Promise<BarRow> {
+  return await insertBar(valuesFromCreate(input));
 }
 
 export async function patchBar(
-  database: Database,
   id: string,
   input: BarUpdateInput,
 ): Promise<{ kind: 'ok'; bar: BarRow } | { kind: 'empty' } | { kind: 'not-found' }> {
   const updates = valuesFromUpdate(input);
   if (Object.keys(updates).length === 0) return { kind: 'empty' };
-  const bar = await updateBar(database, id, updates);
+  const bar = await updateBar(id, updates);
   if (bar === null) return { kind: 'not-found' };
   return { kind: 'ok', bar };
 }
 
-export async function removeBar(database: Database, id: string): Promise<boolean> {
-  return await deleteBar(database, id);
+export async function removeBar(id: string): Promise<DeletionOutcome> {
+  return await deleteBar(id);
 }

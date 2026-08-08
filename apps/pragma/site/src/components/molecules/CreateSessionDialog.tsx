@@ -5,14 +5,16 @@
  * concerts additionally need a non-empty venue. The molecule owns its
  * own form state via `useForm`; the parent supplies the kind, open
  * state, and the `onCreated` callback that fires once the mutation
- * resolves.
+ * resolves. The parent renders the dialog only while it should be
+ * open, so the dialog opens itself the moment React attaches it.
  */
 
 import { useForm } from '@tanstack/react-form';
-import { type JSX, useEffect, useMemo, useRef } from 'react';
+import { type JSX, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { ApiError } from '../../lib/api';
+import { openDialogOnAttach } from '../../lib/modal-dialog';
 import { useCreateSession } from '../../lib/queries/sessions';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
@@ -35,7 +37,6 @@ interface ExistingConcert {
 
 interface CreateSessionDialogProps {
   readonly kind: 'concert' | 'practice';
-  readonly open: boolean;
   readonly onClose: () => void;
   readonly onCreated: (sessionId: string) => void;
   readonly existingConcerts?: readonly ExistingConcert[];
@@ -55,13 +56,11 @@ const practiceFormSchema = z.object({
 
 export function CreateSessionDialog({
   kind,
-  open,
   onClose,
   onCreated,
   existingConcerts = [],
-}: CreateSessionDialogProps): JSX.Element | null {
+}: CreateSessionDialogProps): JSX.Element {
   const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const createSession = useCreateSession();
 
   const initialDateLocal = useMemo(() => defaultDateTimeLocal(new Date()), []);
@@ -69,13 +68,6 @@ export function CreateSessionDialog({
     () => filterFutureConcerts(existingConcerts, new Date()),
     [existingConcerts],
   );
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog === null) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
 
   const concertForm = useForm({
     defaultValues: { dateLocal: initialDateLocal, venue: '', capacity: '0', gear: '' },
@@ -120,7 +112,7 @@ export function CreateSessionDialog({
 
   return (
     <dialog
-      ref={dialogRef}
+      ref={openDialogOnAttach}
       onClose={onClose}
       className="m-auto w-[calc(100vw-2rem)] sm:w-[28rem] max-w-[28rem] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
     >

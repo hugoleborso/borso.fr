@@ -4,7 +4,8 @@
 
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
-import type { Database } from '../database/client';
+import { getDatabase } from '../database/client';
+import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { BAR_STATUSES, type BarStatus, barTable } from './bars.schema';
 
 const barStatusSchema = z.enum(BAR_STATUSES);
@@ -62,17 +63,20 @@ export interface BarPersistedShape {
   contactPhone?: string | null;
 }
 
-export async function listBars(database: Database): Promise<BarRow[]> {
+export async function listBars(): Promise<BarRow[]> {
+  const database = getDatabase();
   const rows = await database.select(PROJECTION).from(barTable);
   return rows.map(toBarRow);
 }
 
-export async function findBarById(database: Database, id: string): Promise<BarRow | null> {
+export async function findBarById(id: string): Promise<BarRow | null> {
+  const database = getDatabase();
   const rows = await database.select(PROJECTION).from(barTable).where(eq(barTable.id, id)).limit(1);
   return rows[0] === undefined ? null : toBarRow(rows[0]);
 }
 
-export async function insertBar(database: Database, values: BarPersistedShape): Promise<BarRow> {
+export async function insertBar(values: BarPersistedShape): Promise<BarRow> {
+  const database = getDatabase();
   const [row] = await database
     .insert(barTable)
     .values({
@@ -91,11 +95,8 @@ export async function insertBar(database: Database, values: BarPersistedShape): 
   return toBarRow(row);
 }
 
-export async function updateBar(
-  database: Database,
-  id: string,
-  updates: BarPersistedShape,
-): Promise<BarRow | null> {
+export async function updateBar(id: string, updates: BarPersistedShape): Promise<BarRow | null> {
+  const database = getDatabase();
   const [row] = await database
     .update(barTable)
     .set(updates)
@@ -104,10 +105,11 @@ export async function updateBar(
   return row === undefined ? null : toBarRow(row);
 }
 
-export async function deleteBar(database: Database, id: string): Promise<boolean> {
+export async function deleteBar(id: string): Promise<DeletionOutcome> {
+  const database = getDatabase();
   const deleted = await database
     .delete(barTable)
     .where(eq(barTable.id, id))
     .returning({ id: barTable.id });
-  return deleted.length > 0;
+  return selectDeletionOutcome(deleted.length);
 }

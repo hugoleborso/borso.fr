@@ -22,7 +22,7 @@ import {
   type SongDraftState,
   singleSongSchema,
   songFromApi,
-} from './song-draft';
+} from './song-draft.core';
 
 export function SongEditPage(): JSX.Element {
   const { t } = useTranslation();

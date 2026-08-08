@@ -6,7 +6,7 @@
  */
 
 import { eq } from 'drizzle-orm';
-import type { Database } from '../database/client';
+import { getDatabase } from '../database/client';
 import { appConfigTable } from './auth.schema';
 
 export interface AppConfig {
@@ -17,7 +17,8 @@ export interface AppConfig {
 
 const SINGLETON_ID = 1;
 
-export async function loadAppConfig(database: Database): Promise<AppConfig | null> {
+export async function loadAppConfig(): Promise<AppConfig | null> {
+  const database = getDatabase();
   const rows = await database
     .select({
       passwordHash: appConfigTable.passwordHash,
@@ -33,11 +34,11 @@ export async function loadAppConfig(database: Database): Promise<AppConfig | nul
 }
 
 export async function insertInitialAppConfig(
-  database: Database,
   passwordHash: string,
   hmacKey: Buffer,
   now: Date,
 ): Promise<void> {
+  const database = getDatabase();
   await database.insert(appConfigTable).values({
     id: SINGLETON_ID,
     passwordHash,
@@ -47,11 +48,11 @@ export async function insertInitialAppConfig(
 }
 
 export async function updateAppConfig(
-  database: Database,
   passwordHash: string,
   hmacKey: Buffer,
   now: Date,
 ): Promise<void> {
+  const database = getDatabase();
   await database
     .update(appConfigTable)
     .set({ passwordHash, hmacKey, rotatedAt: now })

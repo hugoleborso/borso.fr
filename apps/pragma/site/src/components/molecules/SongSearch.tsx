@@ -5,17 +5,15 @@
  * pre-fill the form, the album / duration / tags / isrcs / mbid /
  * disambiguation rows ride along for the persisted song record.
  *
- * The 1000ms debounce sits on the input via a `setTimeout` that
- * forwards the trimmed query to `searchQuery` state — `useSongSearch`
- * receives the debounced value, so the network call only fires once
- * per typing pause. The debounce effect synchronises React state with
- * an external timer; that's the canonical `useEffect` carve-out from
- * CLAUDE.md.
+ * The 1000ms debounce runs in the change handler, through the shared
+ * `debounce` primitive, so the network call fires once per typing
+ * pause and no effect watches the input value.
  */
 
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api';
+import { debounce } from '../../lib/debounce.utils';
 import { useSongSearch } from '../../lib/queries/songs';
 import { cn } from '../atoms/cn.utils';
 import { Icon } from '../atoms/Icon';
@@ -47,13 +45,15 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const publishDebouncedQuery = useMemo(
+    () => debounce((nextQuery: string) => setDebouncedQuery(nextQuery), DEBOUNCE_MS),
+    [],
+  );
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(query.trim());
-    }, DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [query]);
+  const changeQuery = (nextQuery: string): void => {
+    setQuery(nextQuery);
+    publishDebouncedQuery(nextQuery.trim());
+  };
 
   const search = useSongSearch(debouncedQuery);
   const hits = search.data?.hits ?? [];
@@ -71,7 +71,7 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
         <Input
           type="search"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => changeQuery(event.target.value)}
           placeholder={t('catalog.searchSong')}
           className="pl-9"
           aria-label={t('catalog.searchSong')}

@@ -13,7 +13,6 @@ import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
-import { z } from 'zod';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { ApiError } from '../../lib/api';
@@ -24,15 +23,10 @@ import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlist
 import { SetlistEditor } from '../setlists/SetlistEditor';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
 import { ConcertReadView } from './ConcertReadView';
+import { parseFriendsCounts } from './friends-count.core';
 import { PracticeReadView } from './PracticeReadView';
 
-const friendsCountShape = z.record(z.string().uuid(), z.number());
-
-function parseFriendsCounts(raw: unknown): Record<string, number> {
-  const parsed = friendsCountShape.safeParse(raw);
-  if (!parsed.success) return {};
-  return parsed.data;
-}
+const NO_ROWS: readonly never[] = [];
 
 export function SessionDetailPage(): JSX.Element {
   const { t, i18n } = useTranslation();
@@ -48,8 +42,8 @@ export function SessionDetailPage(): JSX.Element {
   const [localError, setLocalError] = useState<string | null>(null);
 
   const session = sessionQuery.data?.session ?? null;
-  const members = membersQuery.data?.members ?? [];
-  const sessions = sessionsQuery.data?.sessions ?? [];
+  const members = membersQuery.data?.members ?? NO_ROWS;
+  const sessions = useMemo(() => sessionsQuery.data?.sessions ?? NO_ROWS, [sessionsQuery.data]);
   const setlist = setlistQuery.data?.setlist ?? null;
 
   const concertFormInitial = useMemo<ConcertEditFormPayload>(

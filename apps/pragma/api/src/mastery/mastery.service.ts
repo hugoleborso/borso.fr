@@ -2,7 +2,7 @@
  * Service layer for mastery.
  */
 
-import type { Database } from '../database/client';
+import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteMasteryDefault,
   deleteMasteryOverride,
@@ -14,44 +14,33 @@ import {
   upsertMasteryOverride,
 } from './mastery.repository';
 
-export async function getMasteryDefaults(database: Database): Promise<MasteryDefaultRow[]> {
-  return await listMasteryDefaults(database);
+export async function getMasteryDefaults(): Promise<MasteryDefaultRow[]> {
+  return await listMasteryDefaults();
 }
 
-export async function saveMasteryDefault(
-  database: Database,
-  row: MasteryDefaultRow,
-): Promise<void> {
-  await upsertMasteryDefault(database, row);
+export async function saveMasteryDefault(row: MasteryDefaultRow): Promise<void> {
+  await upsertMasteryDefault(row);
 }
 
 export async function removeMasteryDefault(
-  database: Database,
   memberId: string,
   instrumentId: string,
-): Promise<boolean> {
-  return await deleteMasteryDefault(database, memberId, instrumentId);
+): Promise<DeletionOutcome> {
+  return await deleteMasteryDefault(memberId, instrumentId);
 }
 
-export async function getMasteryOverridesForSong(
-  database: Database,
-  songId: string,
-): Promise<MasteryOverrideRow[]> {
-  return await listMasteryOverridesForSong(database, songId);
+export async function getMasteryOverridesForSong(songId: string): Promise<MasteryOverrideRow[]> {
+  return await listMasteryOverridesForSong(songId);
 }
 
-export async function saveMasteryOverride(
-  database: Database,
-  row: MasteryOverrideRow,
-): Promise<void> {
-  await upsertMasteryOverride(database, row);
+export async function saveMasteryOverride(row: MasteryOverrideRow): Promise<void> {
+  await upsertMasteryOverride(row);
 }
 
 export async function removeMasteryOverride(
-  database: Database,
   memberId: string,
   instrumentId: string,
   songId: string,
-): Promise<boolean> {
-  return await deleteMasteryOverride(database, memberId, instrumentId, songId);
+): Promise<DeletionOutcome> {
+  return await deleteMasteryOverride(memberId, instrumentId, songId);
 }

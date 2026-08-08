@@ -9,7 +9,8 @@
  */
 
 import { desc, eq, inArray } from 'drizzle-orm';
-import type { Database } from '../database/client';
+import { getDatabase } from '../database/client';
+import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { setlistEntryTable, setlistTable } from '../setlists/setlists.schema';
 import { friendsCountSchema, sessionTable } from './sessions.schema';
 
@@ -132,7 +133,8 @@ function encodeUpdate(updates: Record<string, unknown>): SessionUpdateEncoded {
   return encoded;
 }
 
-export async function listSessions(database: Database): Promise<SessionRow[]> {
+export async function listSessions(): Promise<SessionRow[]> {
+  const database = getDatabase();
   const rows = await database
     .select(PROJECTION)
     .from(sessionTable)
@@ -140,7 +142,8 @@ export async function listSessions(database: Database): Promise<SessionRow[]> {
   return rows.map((row) => rowToSession(row));
 }
 
-export async function findSessionById(database: Database, id: string): Promise<SessionRow | null> {
+export async function findSessionById(id: string): Promise<SessionRow | null> {
+  const database = getDatabase();
   const rows = await database
     .select(PROJECTION)
     .from(sessionTable)
@@ -150,10 +153,8 @@ export async function findSessionById(database: Database, id: string): Promise<S
   return row === undefined ? null : rowToSession(row);
 }
 
-export async function insertSession(
-  database: Database,
-  values: SessionInsertShape,
-): Promise<SessionRow> {
+export async function insertSession(values: SessionInsertShape): Promise<SessionRow> {
+  const database = getDatabase();
   const [row] = await database
     .insert(sessionTable)
     .values(encodeInsert(values))
@@ -163,10 +164,10 @@ export async function insertSession(
 }
 
 export async function updateSession(
-  database: Database,
   id: string,
   updates: Record<string, unknown>,
 ): Promise<SessionRow | null> {
+  const database = getDatabase();
   const [row] = await database
     .update(sessionTable)
     .set(encodeUpdate(updates))
@@ -175,7 +176,8 @@ export async function updateSession(
   return row === undefined ? null : rowToSession(row);
 }
 
-export async function deleteSessionWithCascade(database: Database, id: string): Promise<boolean> {
+export async function deleteSessionWithCascade(id: string): Promise<DeletionOutcome> {
+  const database = getDatabase();
   const setlists = await database
     .select({ id: setlistTable.id })
     .from(setlistTable)
@@ -191,5 +193,5 @@ export async function deleteSessionWithCascade(database: Database, id: string): 
     .delete(sessionTable)
     .where(eq(sessionTable.id, id))
     .returning({ id: sessionTable.id });
-  return deleted.length > 0;
+  return selectDeletionOutcome(deleted.length);
 }

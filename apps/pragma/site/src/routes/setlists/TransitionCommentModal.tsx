@@ -2,10 +2,14 @@
  * Modal that reads + writes a transition comment for the ordered pair
  * (songA → songB). Used by `SetlistEditor` when the user clicks on a
  * flagged transition warning between two consecutive setlist entries.
+ *
+ * The textarea shows the stored comment until the operator types, and
+ * the typed value from then on, so the loaded comment is derived during
+ * render rather than copied into state by an effect.
  */
 
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/atoms/Button';
 import { ApiError } from '../../lib/api';
@@ -27,18 +31,12 @@ export function TransitionCommentModal({
   const { t } = useTranslation();
   const existing = useTransitionComment(songAId, songBId);
   const save = useSaveTransitionComment();
-  const [draft, setDraft] = useState('');
+  const [editedDraft, setEditedDraft] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (existing.data?.comment !== undefined) {
-      setDraft(existing.data.comment.comment);
-    } else if (existing.data === null) {
-      setDraft('');
-    }
-  }, [existing.data]);
+  const draft = editedDraft ?? existing.data?.comment.comment ?? '';
 
-  const handleSave = (): void => {
+  const saveComment = (): void => {
     save.mutate(
       { a: songAId, b: songBId, comment: draft },
       {
@@ -72,7 +70,7 @@ export function TransitionCommentModal({
         ) : (
           <textarea
             value={draft}
-            onChange={(event) => setDraft(event.target.value)}
+            onChange={(event) => setEditedDraft(event.target.value)}
             rows={6}
             maxLength={COMMENT_MAX_LENGTH}
             className="w-full bg-bg border border-line rounded-md px-3 py-2 text-xs font-mono text-ink-700 outline-none focus:border-ink-700 resize-y"
@@ -82,7 +80,7 @@ export function TransitionCommentModal({
           <Button type="button" variant="ghost" onClick={onClose}>
             {t('common.cancel')}
           </Button>
-          <Button type="button" variant="accent" onClick={handleSave} disabled={save.isPending}>
+          <Button type="button" variant="accent" onClick={saveComment} disabled={save.isPending}>
             {t('common.save')}
           </Button>
         </div>

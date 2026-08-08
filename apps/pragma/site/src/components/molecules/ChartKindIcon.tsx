@@ -1,7 +1,7 @@
 /**
  * ChartKindIcon — the chart-format marker on a song card (the
  * prototype's top-right corner: text icon for ChordPro, pdf icon
- * for PDF, image icon for image, "pas de partition" pill when nothing).
+ * for PDF, image icon for image, "no chart" pill when nothing).
  */
 
 import { useTranslation } from 'react-i18next';

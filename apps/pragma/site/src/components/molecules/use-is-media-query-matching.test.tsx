@@ -1,5 +1,5 @@
 /**
- * Tests for `useMediaQuery`. jsdom does not implement a real matchMedia
+ * Tests for `useIsMediaQueryMatching`. jsdom does not implement a real matchMedia
  * — we stub `window.matchMedia` per test to drive the hook through the
  * three states it can be in (matches, doesn't, then flips on change
  * event).
@@ -8,7 +8,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { BREAKPOINT_LG, BREAKPOINT_MD, useMediaQuery } from './useMediaQuery';
+import { BREAKPOINT_LG, BREAKPOINT_MD, useIsMediaQueryMatching } from './useIsMediaQueryMatching';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -30,10 +30,10 @@ function setMatchMedia(list: FakeMediaQueryList): void {
   });
 }
 
-function makeFakeMediaQuery(initial: boolean): FakeMediaQueryList {
+function makeFakeMediaQuery(isInitiallyMatching: boolean): FakeMediaQueryList {
   const listeners = new Set<() => void>();
   const list: FakeMediaQueryList = {
-    matches: initial,
+    matches: isInitiallyMatching,
     addEventListener: (_event, listener) => {
       listeners.add(listener);
     },
@@ -47,13 +47,13 @@ function makeFakeMediaQuery(initial: boolean): FakeMediaQueryList {
   return list;
 }
 
-function Probe({ query, sink }: { query: string; sink: (value: boolean) => void }): null {
-  const isValue = useMediaQuery(query);
+function Probe({ query, sink }: { query: string; sink: (isMatching: boolean) => void }): null {
+  const isValue = useIsMediaQueryMatching(query);
   sink(isValue);
   return null;
 }
 
-describe('useMediaQuery', () => {
+describe('useIsMediaQueryMatching', () => {
   let container: HTMLDivElement;
   let root: Root;
   let originalMatchMedia: PropertyDescriptor | undefined;
@@ -78,7 +78,9 @@ describe('useMediaQuery', () => {
     setMatchMedia(list);
     let isLast = false;
     act(() => {
-      root.render(<Probe query="(min-width: 768px)" sink={(value) => (isLast = value)} />);
+      root.render(
+        <Probe query="(min-width: 768px)" sink={(isMatching) => (isLast = isMatching)} />,
+      );
     });
     expect(isLast).toBe(true);
   });
@@ -88,7 +90,9 @@ describe('useMediaQuery', () => {
     setMatchMedia(list);
     let isLast = true;
     act(() => {
-      root.render(<Probe query="(min-width: 1024px)" sink={(value) => (isLast = value)} />);
+      root.render(
+        <Probe query="(min-width: 1024px)" sink={(isMatching) => (isLast = isMatching)} />,
+      );
     });
     expect(isLast).toBe(false);
   });
@@ -98,7 +102,9 @@ describe('useMediaQuery', () => {
     setMatchMedia(list);
     let isLast = true;
     act(() => {
-      root.render(<Probe query="(min-width: 768px)" sink={(value) => (isLast = value)} />);
+      root.render(
+        <Probe query="(min-width: 768px)" sink={(isMatching) => (isLast = isMatching)} />,
+      );
     });
     expect(isLast).toBe(false);
 

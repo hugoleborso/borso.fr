@@ -26,7 +26,7 @@ type TransitionPairOk = Extract<
 >;
 type TransitionPairCache = TransitionPairOk | null;
 
-export function useTransitionComment(a: string, b: string, enabled = true) {
+export function useTransitionComment(a: string, b: string, isEnabled = true) {
   return useQuery({
     queryKey: transitionKeys.byPair(a, b),
     queryFn: async () => {
@@ -37,7 +37,7 @@ export function useTransitionComment(a: string, b: string, enabled = true) {
       if (!response.ok) throw new ApiError(response.status, `transition ${response.status}`, null);
       return response.json();
     },
-    enabled,
+    enabled: isEnabled,
   });
 }
 

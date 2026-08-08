@@ -28,7 +28,7 @@ import {
   SONG_STATUS_LABEL_KEY,
   type SongDraftState,
   songStatuses,
-} from './song-draft';
+} from './song-draft.core';
 
 const TITLE_MAX = 256;
 const ARTIST_MAX = 256;

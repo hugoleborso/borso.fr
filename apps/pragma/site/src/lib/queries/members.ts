@@ -40,7 +40,7 @@ export function useMembersList() {
   });
 }
 
-export function useMemberInstruments(memberId: string, enabled = true) {
+export function useMemberInstruments(memberId: string, isEnabled = true) {
   return useQuery({
     queryKey: memberKeys.instrumentsOf(memberId),
     queryFn: async () => {
@@ -52,7 +52,7 @@ export function useMemberInstruments(memberId: string, enabled = true) {
       }
       return response.json();
     },
-    enabled,
+    enabled: isEnabled,
   });
 }
 

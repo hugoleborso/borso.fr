@@ -6,12 +6,10 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
-import { getDatabase } from '../database/client';
-import { getSongs } from '../songs/songs.service';
 import { sessionCreateSchema, sessionIdParamSchema, sessionUpdateSchema } from './sessions.schema';
 import {
-  buildNextSessionOfflineManifest,
   createSession,
+  getNextSessionOfflineManifest,
   getSessionById,
   getSessions,
   patchSession,
@@ -20,9 +18,7 @@ import {
 
 export function buildOfflineManifestRouter() {
   return new Hono().use('*', requireSharedPasswordSession).get('/', async (context) => {
-    const database = getDatabase();
-    const [sessions, songs] = await Promise.all([getSessions(database), getSongs(database)]);
-    const manifest = buildNextSessionOfflineManifest(sessions, songs, new Date());
+    const manifest = await getNextSessionOfflineManifest(new Date());
     return context.json(manifest);
   });
 }
@@ -31,18 +27,18 @@ export function buildSessionsRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)
     .get('/', async (context) => {
-      const sessions = await getSessions(getDatabase());
+      const sessions = await getSessions();
       return context.json({ sessions });
     })
     .get('/:id', zValidator('param', sessionIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const session = await getSessionById(getDatabase(), id);
+      const session = await getSessionById(id);
       if (session === null) return context.json({ error: 'not-found' }, 404);
       return context.json({ session });
     })
     .post('/', zValidator('json', sessionCreateSchema), async (context) => {
       const input = context.req.valid('json');
-      const session = await createSession(getDatabase(), input);
+      const session = await createSession(input);
       return context.json({ session }, 201);
     })
     .put(
@@ -52,7 +48,7 @@ export function buildSessionsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const result = await patchSession(getDatabase(), id, input);
+        const result = await patchSession(id, input);
         if (result.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
         if (result.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
         return context.json({ session: result.session });
@@ -60,8 +56,8 @@ export function buildSessionsRouter() {
     )
     .delete('/:id', zValidator('param', sessionIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const isOk = await removeSession(getDatabase(), id);
-      if (!isOk) return context.json({ error: 'not-found' }, 404);
+      const outcome = await removeSession(id);
+      if (outcome === 'not-found') return context.json({ error: 'not-found' }, 404);
       return context.json({ id, deleted: true });
     });
 }

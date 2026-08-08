@@ -51,6 +51,7 @@ interface SetlistEditorProps {
 }
 
 const ENERGY_SPARKLINE_HEIGHT_PX = 160;
+const NO_ROWS: readonly never[] = [];
 const COPIED_FEEDBACK_MS = 2000;
 
 export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
@@ -72,10 +73,13 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [orderCopied, setOrderCopied] = useState(false);
 
-  const entries = entriesQuery.data?.entries ?? [];
-  const songs = songsQuery.data?.songs ?? [];
-  const instruments = instrumentsQuery.data?.instruments ?? [];
-  const members = membersQuery.data?.members ?? [];
+  const entries = useMemo(() => entriesQuery.data?.entries ?? NO_ROWS, [entriesQuery.data]);
+  const songs = useMemo(() => songsQuery.data?.songs ?? NO_ROWS, [songsQuery.data]);
+  const instruments = useMemo(
+    () => instrumentsQuery.data?.instruments ?? NO_ROWS,
+    [instrumentsQuery.data],
+  );
+  const members = useMemo(() => membersQuery.data?.members ?? NO_ROWS, [membersQuery.data]);
 
   const songsById = useMemo(() => {
     const out: Record<string, (typeof songs)[number]> = {};

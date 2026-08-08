@@ -3,7 +3,8 @@
  */
 
 import { and, eq } from 'drizzle-orm';
-import type { Database } from '../database/client';
+import { getDatabase } from '../database/client';
+import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { masteryDefaultTable, masteryOverrideTable } from './mastery.schema';
 
 export interface MasteryDefaultRow {
@@ -19,7 +20,8 @@ export interface MasteryOverrideRow {
   score: number;
 }
 
-export async function listMasteryDefaults(database: Database): Promise<MasteryDefaultRow[]> {
+export async function listMasteryDefaults(): Promise<MasteryDefaultRow[]> {
+  const database = getDatabase();
   return await database
     .select({
       memberId: masteryDefaultTable.memberId,
@@ -29,10 +31,8 @@ export async function listMasteryDefaults(database: Database): Promise<MasteryDe
     .from(masteryDefaultTable);
 }
 
-export async function upsertMasteryDefault(
-  database: Database,
-  row: MasteryDefaultRow,
-): Promise<void> {
+export async function upsertMasteryDefault(row: MasteryDefaultRow): Promise<void> {
+  const database = getDatabase();
   await database
     .insert(masteryDefaultTable)
     .values(row)
@@ -43,10 +43,10 @@ export async function upsertMasteryDefault(
 }
 
 export async function deleteMasteryDefault(
-  database: Database,
   memberId: string,
   instrumentId: string,
-): Promise<boolean> {
+): Promise<DeletionOutcome> {
+  const database = getDatabase();
   const deleted = await database
     .delete(masteryDefaultTable)
     .where(
@@ -56,13 +56,11 @@ export async function deleteMasteryDefault(
       ),
     )
     .returning({ memberId: masteryDefaultTable.memberId });
-  return deleted.length > 0;
+  return selectDeletionOutcome(deleted.length);
 }
 
-export async function listMasteryOverridesForSong(
-  database: Database,
-  songId: string,
-): Promise<MasteryOverrideRow[]> {
+export async function listMasteryOverridesForSong(songId: string): Promise<MasteryOverrideRow[]> {
+  const database = getDatabase();
   return await database
     .select({
       memberId: masteryOverrideTable.memberId,
@@ -74,10 +72,8 @@ export async function listMasteryOverridesForSong(
     .where(eq(masteryOverrideTable.songId, songId));
 }
 
-export async function upsertMasteryOverride(
-  database: Database,
-  row: MasteryOverrideRow,
-): Promise<void> {
+export async function upsertMasteryOverride(row: MasteryOverrideRow): Promise<void> {
+  const database = getDatabase();
   await database
     .insert(masteryOverrideTable)
     .values(row)
@@ -92,11 +88,11 @@ export async function upsertMasteryOverride(
 }
 
 export async function deleteMasteryOverride(
-  database: Database,
   memberId: string,
   instrumentId: string,
   songId: string,
-): Promise<boolean> {
+): Promise<DeletionOutcome> {
+  const database = getDatabase();
   const deleted = await database
     .delete(masteryOverrideTable)
     .where(
@@ -107,5 +103,5 @@ export async function deleteMasteryOverride(
       ),
     )
     .returning({ memberId: masteryOverrideTable.memberId });
-  return deleted.length > 0;
+  return selectDeletionOutcome(deleted.length);
 }

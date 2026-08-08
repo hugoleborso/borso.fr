@@ -21,36 +21,43 @@ import { ApiError } from '../../lib/api';
 import { formatCapacity } from '../../lib/formatters.utils';
 import { useBarsList, useCreateBar, useDeleteBar, useUpdateBar } from '../../lib/queries/bars';
 import { countStale, isStale } from '../../lib/stale-bar.utils';
+import { BarForm } from './BarForm';
 import {
   BAR_STATUS_KEY,
   BAR_STATUSES,
-  BarForm,
   type BarFormInitial,
   type BarFormSubmitPayload,
   type BarStatus,
   BLANK_BAR_FORM,
-} from './BarForm';
+} from './bar-form.core';
+import {
+  applyBarWriteIntent,
+  type BarRow,
+  type BarsView,
+  groupBarsByStatus,
+  selectBarWriteIntent,
+  selectDragDropIntent,
+  selectFormAfterDeletion,
+  selectFormForBar,
+  selectToggleState,
+  sortBarsByName,
+} from './bars-page.core';
 
-type Bar = NonNullable<ReturnType<typeof useBarsList>['data']>['bars'][number];
-type View = 'list' | 'kanban';
+const NO_BARS: readonly BarRow[] = [];
 
-function initialFromBar(bar: Bar): BarFormInitial {
-  return {
-    id: bar.id,
-    name: bar.name,
-    status: bar.status,
-    notes: bar.notes,
-    city: bar.city ?? '',
-    capacity: bar.capacity === null ? '' : String(bar.capacity),
-    contactName: bar.contactName ?? '',
-    contactEmail: bar.contactEmail ?? '',
-    contactPhone: bar.contactPhone ?? '',
-  };
-}
+const VIEW_TOGGLE_CLASS = {
+  active: 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]',
+  inactive: 'bg-transparent text-ink-500 hover:text-ink-700',
+} as const;
+
+const KANBAN_CARD_TONE = {
+  stale: 'border-warn/40',
+  fresh: '',
+} as const;
 
 export function BarsPage(): JSX.Element {
   const { t } = useTranslation();
-  const [view, setView] = useState<View>('list');
+  const [view, setView] = useState<BarsView>('list');
   const [formInitial, setFormInitial] = useState<BarFormInitial>(BLANK_BAR_FORM);
   const [localError, setLocalError] = useState<string | null>(null);
   const barsQuery = useBarsList();
@@ -58,27 +65,14 @@ export function BarsPage(): JSX.Element {
   const updateBar = useUpdateBar();
   const deleteBar = useDeleteBar();
 
-  const bars = barsQuery.data?.bars ?? [];
-  const sortedBars = useMemo(
-    () => bars.toSorted((left, right) => left.name.localeCompare(right.name)),
-    [bars],
-  );
+  const bars = useMemo<readonly BarRow[]>(() => barsQuery.data?.bars ?? NO_BARS, [barsQuery.data]);
+  const sortedBars = useMemo(() => sortBarsByName(bars), [bars]);
 
   const now = useMemo(() => new Date(), []);
   const staleCount = useMemo(() => countStale(bars, now), [bars, now]);
-  const isBarStale = useCallback((bar: Bar): boolean => isStale(bar, now), [now]);
+  const isBarStale = useCallback((bar: BarRow): boolean => isStale(bar, now), [now]);
 
-  const grouped = useMemo(() => {
-    const out: Record<BarStatus, Bar[]> = {
-      lead: [],
-      contacted: [],
-      booked: [],
-      played: [],
-      cold: [],
-    };
-    for (const bar of sortedBars) out[bar.status].push(bar);
-    return out;
-  }, [sortedBars]);
+  const grouped = useMemo(() => groupBarsByStatus(sortedBars), [sortedBars]);
 
   const queryError = barsQuery.error instanceof ApiError ? barsQuery.error.message : null;
   const displayError = localError ?? queryError;
@@ -96,38 +90,43 @@ export function BarsPage(): JSX.Element {
     [sortedBars, isBarStale],
   );
 
-  const handleFormSubmit = (id: string | null, payload: BarFormSubmitPayload): void => {
-    if (payload.name.length === 0) return;
-    const onError = (error: Error): void =>
-      setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
-    if (id === null) {
-      createBar.mutate(payload, {
-        onSuccess: () => setFormInitial(BLANK_BAR_FORM),
-        onError,
-      });
-    } else {
-      updateBar.mutate(
-        { id, ...payload },
-        { onSuccess: () => setFormInitial(BLANK_BAR_FORM), onError },
-      );
-    }
+  const reportError = (error: Error): void => {
+    setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
   };
 
-  const handleRemove = (id: string): void => {
+  const saveBar = (id: string | null, payload: BarFormSubmitPayload): void => {
+    const mutationOptions = {
+      onSuccess: () => setFormInitial(BLANK_BAR_FORM),
+      onError: reportError,
+    };
+    applyBarWriteIntent(selectBarWriteIntent(id, payload), {
+      skip: (): void => undefined,
+      create: (input) => createBar.mutate(input, mutationOptions),
+      update: (input) => updateBar.mutate(input, mutationOptions),
+    });
+  };
+
+  const removeBar = (barId: string): void => {
     deleteBar.mutate(
-      { id },
+      { id: barId },
       {
-        onSuccess: () => {
-          if (formInitial.id === id) setFormInitial(BLANK_BAR_FORM);
-        },
-        onError: (error) =>
-          setLocalError(error instanceof ApiError ? error.message : 'unknown-error'),
+        onSuccess: () =>
+          setFormInitial((current) => selectFormAfterDeletion(current, barId, BLANK_BAR_FORM)),
+        onError: reportError,
       },
     );
   };
 
-  const handleDropOnColumn = (status: BarStatus, draggedId: string): void => {
-    updateBar.mutate({ id: draggedId, status });
+  const selectBar = (barId: string): void => {
+    setFormInitial((current) => selectFormForBar(bars, barId, current));
+  };
+
+  const moveBarToStatus = (status: BarStatus, draggedId: string): void => {
+    const dropByIntent = {
+      ignore: (): void => undefined,
+      move: (): void => updateBar.mutate({ id: draggedId, status }),
+    } as const;
+    dropByIntent[selectDragDropIntent(draggedId)]();
   };
 
   return (
@@ -142,9 +141,7 @@ export function BarsPage(): JSX.Element {
               onClick={() => setView('list')}
               className={cn(
                 'px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors',
-                view === 'list'
-                  ? 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]'
-                  : 'bg-transparent text-ink-500 hover:text-ink-700',
+                VIEW_TOGGLE_CLASS[selectToggleState(view, 'list')],
               )}
             >
               {t('bars.viewList')}
@@ -154,9 +151,7 @@ export function BarsPage(): JSX.Element {
               onClick={() => setView('kanban')}
               className={cn(
                 'px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors',
-                view === 'kanban'
-                  ? 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]'
-                  : 'bg-transparent text-ink-500 hover:text-ink-700',
+                VIEW_TOGGLE_CLASS[selectToggleState(view, 'kanban')],
               )}
             >
               {t('bars.viewKanban')}
@@ -188,16 +183,13 @@ export function BarsPage(): JSX.Element {
           <BarsList
             bars={listRows}
             statusLabel={(status) => t(BAR_STATUS_KEY[status])}
-            onSelect={(id) => {
-              const bar = bars.find((entry) => entry.id === id);
-              if (bar !== undefined) setFormInitial(initialFromBar(bar));
-            }}
-            onRemove={handleRemove}
+            onSelect={selectBar}
+            onRemove={removeBar}
           />
           <BarForm
             key={formInitial.id ?? 'new'}
             initial={formInitial}
-            onSubmit={handleFormSubmit}
+            onSubmit={saveBar}
             onCancel={() => setFormInitial(BLANK_BAR_FORM)}
           />
         </div>
@@ -211,8 +203,7 @@ export function BarsPage(): JSX.Element {
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
-                const draggedId = event.dataTransfer.getData('text/plain');
-                if (draggedId.length > 0) handleDropOnColumn(status, draggedId);
+                moveBarToStatus(status, event.dataTransfer.getData('text/plain'));
               }}
             >
               <h3 className="font-medium text-[11px] tracking-wider uppercase text-ink-500 mx-1 mt-1 mb-1.5 flex items-center gap-2">
@@ -225,11 +216,11 @@ export function BarsPage(): JSX.Element {
                   type="button"
                   className={cn(
                     'block w-full text-left bg-bg-elev border border-line rounded-md px-3 py-2.5 cursor-grab hover:border-line-strong transition-colors',
-                    isBarStale(bar) && 'border-warn/40',
+                    KANBAN_CARD_TONE[isBarStale(bar) ? 'stale' : 'fresh'],
                   )}
                   draggable
                   onDragStart={(event) => event.dataTransfer.setData('text/plain', bar.id)}
-                  onClick={() => setFormInitial(initialFromBar(bar))}
+                  onClick={() => selectBar(bar.id)}
                 >
                   <div className="flex items-center gap-2 text-[13.5px] font-medium text-ink-900 mb-1">
                     {bar.name}

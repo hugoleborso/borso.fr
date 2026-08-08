@@ -13,7 +13,8 @@
 
 import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
-import type { Database } from '../database/client';
+import { getDatabase } from '../database/client';
+import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
 import { setlistEntryTable } from '../setlists/setlists.schema';
 import {
@@ -188,12 +189,14 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   return encoded;
 }
 
-export async function listSongsNewestFirst(database: Database): Promise<SongRow[]> {
+export async function listSongsNewestFirst(): Promise<SongRow[]> {
+  const database = getDatabase();
   const rows = await database.select(PROJECTION).from(songTable).orderBy(desc(songTable.createdAt));
   return rows.map((row) => rowToSong(row));
 }
 
-export async function findSongById(database: Database, id: string): Promise<SongRow | null> {
+export async function findSongById(id: string): Promise<SongRow | null> {
+  const database = getDatabase();
   const rows = await database
     .select(PROJECTION)
     .from(songTable)
@@ -203,17 +206,15 @@ export async function findSongById(database: Database, id: string): Promise<Song
   return row === undefined ? null : rowToSong(row);
 }
 
-export async function insertSong(database: Database, values: SongInsertShape): Promise<SongRow> {
+export async function insertSong(values: SongInsertShape): Promise<SongRow> {
+  const database = getDatabase();
   const [row] = await database.insert(songTable).values(encodeInsert(values)).returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
   return rowToSong(row);
 }
 
-export async function updateSong(
-  database: Database,
-  id: string,
-  updates: SongPersistedShape,
-): Promise<SongRow | null> {
+export async function updateSong(id: string, updates: SongPersistedShape): Promise<SongRow | null> {
+  const database = getDatabase();
   const [row] = await database
     .update(songTable)
     .set(encodeUpdate(updates))
@@ -222,7 +223,8 @@ export async function updateSong(
   return row === undefined ? null : rowToSong(row);
 }
 
-export async function deleteSongWithCascade(database: Database, id: string): Promise<boolean> {
+export async function deleteSongWithCascade(id: string): Promise<DeletionOutcome> {
+  const database = getDatabase();
   // DSQL ignores FK constraints at write time; cascade the dependent
   // tables ourselves before removing the song row.
   await database.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
@@ -231,5 +233,5 @@ export async function deleteSongWithCascade(database: Database, id: string): Pro
     .delete(songTable)
     .where(eq(songTable.id, id))
     .returning({ id: songTable.id });
-  return deleted.length > 0;
+  return selectDeletionOutcome(deleted.length);
 }

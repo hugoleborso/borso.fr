@@ -8,7 +8,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
-import { getDatabase } from '../database/client';
 import {
   createInstrumentSchema,
   instrumentIdParamSchema,
@@ -25,12 +24,12 @@ export function buildInstrumentsRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)
     .get('/', async (context) => {
-      const instruments = await getInstrumentsSorted(getDatabase());
+      const instruments = await getInstrumentsSorted();
       return context.json({ instruments });
     })
     .post('/', zValidator('json', createInstrumentSchema), async (context) => {
       const input = context.req.valid('json');
-      const instrument = await createInstrument(getDatabase(), input);
+      const instrument = await createInstrument(input);
       return context.json({ instrument }, 201);
     })
     .put(
@@ -40,7 +39,7 @@ export function buildInstrumentsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const instrument = await patchInstrument(getDatabase(), id, input);
+        const instrument = await patchInstrument(id, input);
         if (instrument === null) {
           const isOnlyEmpty = Object.keys(input).length === 0;
           if (isOnlyEmpty) return context.json({ error: 'empty-update' }, 400);
@@ -51,8 +50,8 @@ export function buildInstrumentsRouter() {
     )
     .delete('/:id', zValidator('param', instrumentIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const isOk = await removeInstrument(getDatabase(), id);
-      if (!isOk) return context.json({ error: 'not-found' }, 404);
+      const outcome = await removeInstrument(id);
+      if (outcome === 'not-found') return context.json({ error: 'not-found' }, 404);
       return context.json({ id, deleted: true });
     });
 }

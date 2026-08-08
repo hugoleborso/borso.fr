@@ -10,12 +10,11 @@
 
 import type { MiddlewareHandler } from 'hono';
 import { getCookie } from 'hono/cookie';
-import { getDatabase } from '../database/client';
-import { loadAppConfig } from './auth.repository';
+import { getAppConfig } from './auth.service';
 import { SESSION_COOKIE_NAME, verifyCookie } from './session-cookie.utils';
 
 export const requireSharedPasswordSession: MiddlewareHandler = async (context, next) => {
-  const config = await loadAppConfig(getDatabase());
+  const config = await getAppConfig();
   if (config === null) {
     return context.json({ error: 'auth-not-bootstrapped' }, 503);
   }

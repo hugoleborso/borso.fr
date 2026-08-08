@@ -45,6 +45,7 @@ import {
   type LineupRecord,
 } from '../../components/molecules/LineupEditor';
 import { MemberChip } from '../../components/molecules/MemberChip';
+import { selectMasteryColor } from './mastery-color.core';
 import { type LineupMember, MemberLineup } from '../../components/molecules/MemberLineup';
 
 const ENERGY_MIN = 1;
@@ -100,13 +101,6 @@ const FIELD_CLASS =
   'w-full bg-bg-elev border border-line rounded-md px-2 py-1 text-[13px] font-mono text-ink-900 outline-none focus:border-ink-700';
 const LABEL_CLASS =
   'flex flex-col gap-1 text-[10.5px] tracking-wider uppercase text-ink-400 font-medium';
-
-function masteryColor(score: number | null): string {
-  if (score === null) return 'var(--color-ink-400)';
-  if (score >= 7) return 'var(--color-good)';
-  if (score >= 5) return 'var(--color-warn)';
-  return 'var(--color-danger)';
-}
 
 export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
@@ -202,7 +196,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                 <span className="text-ink-300">·</span>
                 <span
                   className="font-mono inline-flex items-center gap-1 text-[10.5px]"
-                  style={{ color: masteryColor(props.meanMastery) }}
+                  style={{ color: selectMasteryColor(props.meanMastery) }}
                 >
                   <Icon name="star" size={11} />
                   {props.meanMastery.toFixed(1)}

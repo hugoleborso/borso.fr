@@ -1,6 +1,6 @@
 /**
  * Crumb atom — the uppercase, letter-spaced label the prototype
- * uses above page titles ("RÉPERTOIRE", "SETLIST · LES DISQUAIRES").
+ * uses above page titles, e.g. the catalog crumb and the setlist crumb.
  * Plain `<div>` with editorial typography — no semantic landmark
  * because in the prototype it precedes the H1 and isn't a link.
  */

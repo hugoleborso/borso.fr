@@ -8,8 +8,8 @@
  */
 
 import type { z } from 'zod';
-import type { Database } from '../database/client';
 import { type ExternalSongHit, mapMusicBrainzRecordings } from './musicbrainz.core';
+import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteSongWithCascade,
   findSongById,
@@ -43,31 +43,30 @@ function valuesFromCreate(input: SongCreateInput): SongInsertShape {
   };
 }
 
-export async function getSongs(database: Database): Promise<SongRow[]> {
-  return await listSongsNewestFirst(database);
+export async function getSongs(): Promise<SongRow[]> {
+  return await listSongsNewestFirst();
 }
 
-export async function getSongById(database: Database, id: string): Promise<SongRow | null> {
-  return await findSongById(database, id);
+export async function getSongById(id: string): Promise<SongRow | null> {
+  return await findSongById(id);
 }
 
-export async function createSong(database: Database, input: SongCreateInput): Promise<SongRow> {
-  return await insertSong(database, valuesFromCreate(input));
+export async function createSong(input: SongCreateInput): Promise<SongRow> {
+  return await insertSong(valuesFromCreate(input));
 }
 
 export async function patchSong(
-  database: Database,
   id: string,
   input: SongUpdateInput,
 ): Promise<{ kind: 'ok'; song: SongRow } | { kind: 'empty' } | { kind: 'not-found' }> {
   if (Object.keys(input).length === 0) return { kind: 'empty' };
-  const song = await updateSong(database, id, input);
+  const song = await updateSong(id, input);
   if (song === null) return { kind: 'not-found' };
   return { kind: 'ok', song };
 }
 
-export async function removeSong(database: Database, id: string): Promise<boolean> {
-  return await deleteSongWithCascade(database, id);
+export async function removeSong(id: string): Promise<DeletionOutcome> {
+  return await deleteSongWithCascade(id);
 }
 
 const MUSICBRAINZ_BASE_URL = 'https://musicbrainz.org/ws/2/recording/';

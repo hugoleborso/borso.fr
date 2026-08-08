@@ -3,7 +3,8 @@
  */
 
 import { and, eq } from 'drizzle-orm';
-import type { Database } from '../database/client';
+import { getDatabase } from '../database/client';
+import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { transitionCommentTable } from './transitions.schema';
 
 export interface TransitionCommentRow {
@@ -20,15 +21,16 @@ const PROJECTION = {
   updatedAt: transitionCommentTable.updatedAt,
 } as const;
 
-export async function listTransitionComments(database: Database): Promise<TransitionCommentRow[]> {
+export async function listTransitionComments(): Promise<TransitionCommentRow[]> {
+  const database = getDatabase();
   return await database.select(PROJECTION).from(transitionCommentTable);
 }
 
 export async function findTransitionComment(
-  database: Database,
   a: string,
   b: string,
 ): Promise<TransitionCommentRow | null> {
+  const database = getDatabase();
   const rows = await database
     .select(PROJECTION)
     .from(transitionCommentTable)
@@ -38,12 +40,12 @@ export async function findTransitionComment(
 }
 
 export async function upsertTransitionComment(
-  database: Database,
   a: string,
   b: string,
   comment: string,
   now: Date,
 ): Promise<void> {
+  const database = getDatabase();
   await database
     .insert(transitionCommentTable)
     .values({ songAId: a, songBId: b, comment })
@@ -53,14 +55,11 @@ export async function upsertTransitionComment(
     });
 }
 
-export async function deleteTransitionComment(
-  database: Database,
-  a: string,
-  b: string,
-): Promise<boolean> {
+export async function deleteTransitionComment(a: string, b: string): Promise<DeletionOutcome> {
+  const database = getDatabase();
   const deleted = await database
     .delete(transitionCommentTable)
     .where(and(eq(transitionCommentTable.songAId, a), eq(transitionCommentTable.songBId, b)))
     .returning({ id: transitionCommentTable.id });
-  return deleted.length > 0;
+  return selectDeletionOutcome(deleted.length);
 }

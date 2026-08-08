@@ -1,27 +1,11 @@
 /**
- * Card atom — paper-elevated surface with the editorial radius +
- * border. Mirrors `.card` from the prototype. `flat` variant drops
- * the border / background so a `Card` can be a layout-only wrapper
- * when the visual emphasis lives elsewhere.
+ * Card atom — paper-elevated surface with the editorial radius and
+ * border. Mirrors `.card` from the prototype.
  */
 
-import { cva, type VariantProps } from 'class-variance-authority';
 import { forwardRef, type HTMLAttributes } from 'react';
+import { type CardVariantProps, cardVariants } from './card.variants';
 import { cn } from './cn.utils';
-
-export const cardVariants = cva('rounded-lg', {
-  variants: {
-    variant: {
-      default: 'bg-bg-elev border border-line p-4',
-      flat: 'bg-transparent p-4',
-      sunk: 'bg-bg-sunk border-0 p-4',
-      bare: 'bg-bg-elev border border-line overflow-hidden',
-    },
-  },
-  defaultVariants: { variant: 'default' },
-});
-
-export type CardVariantProps = VariantProps<typeof cardVariants>;
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement>, CardVariantProps {}
 

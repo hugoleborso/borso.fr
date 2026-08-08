@@ -110,7 +110,7 @@ export function InstrumentsPage(): JSX.Element {
                 </Badge>
                 <button
                   type="button"
-                  className="text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
+                  className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
                   onClick={() => {
                     remove.mutate({ id: row.id });
                     if (selected?.id === row.id) clearSelection();

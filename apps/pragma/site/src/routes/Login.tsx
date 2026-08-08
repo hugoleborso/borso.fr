@@ -20,16 +20,9 @@ import { Icon } from '../components/atoms/Icon';
 import { Input } from '../components/atoms/Input';
 import { ApiError } from '../lib/api';
 import { useLogin } from '../lib/queries/auth';
-
-const locationStateSchema = z.object({ from: z.string().min(1) }).partial();
+import { selectPostLoginPath } from './login.core';
 
 const passwordSchema = z.object({ password: z.string().min(8).max(256) });
-
-function readFromState(state: unknown): string {
-  const parsed = locationStateSchema.safeParse(state);
-  if (!parsed.success) return '/catalog';
-  return parsed.data.from ?? '/catalog';
-}
 
 export function Login(): JSX.Element {
   const { t } = useTranslation();
@@ -45,7 +38,7 @@ export function Login(): JSX.Element {
       setServerError(null);
       try {
         await login.mutateAsync({ password: value.password });
-        navigate(readFromState(location.state), { replace: true });
+        navigate(selectPostLoginPath(location.state), { replace: true });
       } catch (error) {
         if (error instanceof ApiError) {
           if (error.status === 429) setServerError(t('auth.rateLimited'));
@@ -109,7 +102,7 @@ export function Login(): JSX.Element {
                   onClick={() => setPasswordVisible((visible) => !visible)}
                   aria-label={passwordVisible ? t('auth.hidePassword') : t('auth.showPassword')}
                   aria-pressed={passwordVisible}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-400 hover:text-ink-700 bg-transparent border-0 cursor-pointer"
+                  className="absolute inset-y-0 right-0 w-11 min-h-11 flex items-center justify-center text-ink-400 hover:text-ink-700 bg-transparent border-0 cursor-pointer"
                 >
                   <Icon name={passwordVisible ? 'eyeOff' : 'eye'} size={18} />
                 </button>

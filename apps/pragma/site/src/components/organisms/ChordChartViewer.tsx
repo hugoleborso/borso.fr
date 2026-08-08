@@ -5,10 +5,10 @@
  *
  * The viewer is used in two surfaces:
  *  - inline preview on `/catalog/:songId` (compact, no controls);
- *  - Mode Scène (`/catalog/:songId/scene`) — fullscreen, transpose
+ *  - the stage view (`/catalog/:songId/scene`) — fullscreen, transpose
  *    controls, large font, swipe-between-songs when in setlist mode.
  *
- * The transposition state lives in the parent (the Mode Scène page
+ * The transposition state lives in the parent (the stage view page
  * owns the slider; the inline preview pins semitones to 0).
  */
 

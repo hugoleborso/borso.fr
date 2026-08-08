@@ -104,7 +104,7 @@ export function useSongsList() {
   });
 }
 
-export function useSong(id: string, enabled = true) {
+export function useSong(id: string, isEnabled = true) {
   return useQuery({
     queryKey: songKeys.byId(id),
     queryFn: async () => {
@@ -112,7 +112,7 @@ export function useSong(id: string, enabled = true) {
       if (!response.ok) throw new ApiError(response.status, `song ${response.status}`, null);
       return response.json();
     },
-    enabled,
+    enabled: isEnabled,
   });
 }
 

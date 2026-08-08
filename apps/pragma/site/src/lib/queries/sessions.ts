@@ -27,7 +27,7 @@ export function useSessionsList() {
   });
 }
 
-export function useSession(id: string, enabled = true) {
+export function useSession(id: string, isEnabled = true) {
   return useQuery({
     queryKey: sessionKeys.byId(id),
     queryFn: async () => {
@@ -35,7 +35,7 @@ export function useSession(id: string, enabled = true) {
       if (!response.ok) throw new ApiError(response.status, `session ${response.status}`, null);
       return response.json();
     },
-    enabled,
+    enabled: isEnabled,
   });
 }
 

@@ -1,18 +1,18 @@
 /**
- * OfflineBanner — top-of-shell "lecture seule" notice with a pulsing
- * dot. The molecule is purely presentational; the offline-detection
- * effect lives in the AppShell organism so it owns the state.
+ * OfflineBanner — top-of-shell read-only notice with a pulsing dot.
+ * The molecule is purely presentational; the AppShell organism reads
+ * the browser's online status and decides when to show it.
  */
 
 import { useTranslation } from 'react-i18next';
 
 export interface OfflineBannerProps {
-  visible: boolean;
+  readonly isVisible: boolean;
 }
 
-export function OfflineBanner({ visible }: OfflineBannerProps): JSX.Element | null {
+export function OfflineBanner({ isVisible }: OfflineBannerProps): JSX.Element | null {
   const { t } = useTranslation();
-  if (!visible) return null;
+  if (!isVisible) return null;
   return (
     <div
       role="status"

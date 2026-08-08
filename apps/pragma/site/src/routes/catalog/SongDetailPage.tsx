@@ -3,10 +3,10 @@
  * (design-bundle/project/src/screens/catalog.jsx lines 141-260):
  *  - header carries the status chip, chart-kind badge, title, artist
  *    + tonality + status meta, and right-side actions (Edit / Mode
- *    scène),
+ *    stage view),
  *  - left column: chord-chart preview card + external-links card
  *    (oEmbed iframes via SongExternalLinks),
- *  - right aside: lineup-par-défaut card (member chip + instrument
+ *  - right aside: default-lineup card (member chip + instrument
  *    tag), mastery card (ten coloured bars per member, score x/10).
  *
  * The edit form lives in SongEditPage.tsx at /catalog/:songId/edit;
@@ -35,6 +35,7 @@ import { useSong, useUpdateSong } from '../../lib/queries/songs';
 import { extractChartKind } from './chart-kind.utils';
 
 const MASTERY_BAR_COUNT = 10;
+const NO_ROWS: readonly never[] = [];
 const MAX_TONALITY_RENDER_LENGTH = 16;
 
 function tonalityLabel(start: string | null, end: string | null): string | null {
@@ -54,9 +55,15 @@ export function SongDetailPage(): JSX.Element {
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
 
   const song = songQuery.data?.song ?? null;
-  const members = membersQuery.data?.members ?? [];
-  const instruments = instrumentsQuery.data?.instruments ?? [];
-  const masteryDefaults = masteryQuery.data?.defaults ?? [];
+  const members = useMemo(() => membersQuery.data?.members ?? NO_ROWS, [membersQuery.data]);
+  const instruments = useMemo(
+    () => instrumentsQuery.data?.instruments ?? NO_ROWS,
+    [instrumentsQuery.data],
+  );
+  const masteryDefaults = useMemo(
+    () => masteryQuery.data?.defaults ?? NO_ROWS,
+    [masteryQuery.data],
+  );
   const isLoading =
     songQuery.isLoading ||
     membersQuery.isLoading ||

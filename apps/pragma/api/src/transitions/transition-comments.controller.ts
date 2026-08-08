@@ -7,7 +7,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
-import { getDatabase } from '../database/client';
 import { transitionCommentBodySchema, transitionPairParamSchema } from './transitions.schema';
 import {
   getTransitionComment,
@@ -20,12 +19,12 @@ export function buildTransitionCommentsRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)
     .get('/', async (context) => {
-      const comments = await getTransitionComments(getDatabase());
+      const comments = await getTransitionComments();
       return context.json({ comments });
     })
     .get('/:a/:b', zValidator('param', transitionPairParamSchema), async (context) => {
       const { a, b } = context.req.valid('param');
-      const comment = await getTransitionComment(getDatabase(), a, b);
+      const comment = await getTransitionComment(a, b);
       if (comment === null) return context.json({ error: 'not-found' }, 404);
       return context.json({ comment });
     })
@@ -36,14 +35,14 @@ export function buildTransitionCommentsRouter() {
       async (context) => {
         const { a, b } = context.req.valid('param');
         const { comment } = context.req.valid('json');
-        await saveTransitionComment(getDatabase(), a, b, comment);
+        await saveTransitionComment(a, b, comment);
         return context.json({ songAId: a, songBId: b, comment });
       },
     )
     .delete('/:a/:b', zValidator('param', transitionPairParamSchema), async (context) => {
       const { a, b } = context.req.valid('param');
-      const isOk = await removeTransitionComment(getDatabase(), a, b);
-      if (!isOk) return context.json({ error: 'not-found' }, 404);
+      const outcome = await removeTransitionComment(a, b);
+      if (outcome === 'not-found') return context.json({ error: 'not-found' }, 404);
       return context.json({ songAId: a, songBId: b, deleted: true });
     });
 }

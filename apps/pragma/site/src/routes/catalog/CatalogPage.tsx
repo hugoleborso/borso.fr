@@ -1,7 +1,7 @@
 /**
  * Catalog list page. Renders the editorial catalog from the design
  * bundle:
- *  - Crumb "Répertoire" + serif H1 + dense subtitle,
+ *  - catalog crumb + serif H1 + dense subtitle,
  *  - SearchBar + FilterPillGroup (status filter with counts),
  *  - CatalogGrid of SongCards (lineup chips, status chip, chart icon).
  *
@@ -27,34 +27,14 @@ import { useInstrumentsList } from '../../lib/queries/instruments';
 import { useMasteryDefaults } from '../../lib/queries/mastery';
 import { useMembersList } from '../../lib/queries/members';
 import { useSongsList } from '../../lib/queries/songs';
+import {
+  type CatalogStatusFilter,
+  compactLineup,
+  countSongsWithStatus,
+  selectVisibleSongs,
+  sortSongsByTitle,
+} from './catalog-page.core';
 import { extractChartKind } from './chart-kind.utils';
-
-type Song = NonNullable<ReturnType<typeof useSongsList>['data']>['songs'][number];
-
-type StatusFilter = 'all' | 'concert_ready' | 'rehearsed' | 'wip' | 'idea';
-
-function countByStatus(songs: readonly Song[], status: StatusFilter): number {
-  if (status === 'all') return songs.length;
-  return songs.filter((song) => song.status === status).length;
-}
-
-function matchesSearch(song: Song, query: string): boolean {
-  if (query === '') return true;
-  const normalized = query.toLowerCase();
-  return (
-    song.title.toLowerCase().includes(normalized) || song.artist.toLowerCase().includes(normalized)
-  );
-}
-
-function compactLineup(lineup: Record<string, string | null>): Record<string, string> {
-  const result: Record<string, string> = {};
-  for (const [memberId, instrumentId] of Object.entries(lineup)) {
-    if (instrumentId !== null && instrumentId !== '') {
-      result[memberId] = instrumentId;
-    }
-  }
-  return result;
-}
 
 export function CatalogPage(): JSX.Element {
   const { t } = useTranslation();
@@ -63,7 +43,7 @@ export function CatalogPage(): JSX.Element {
   const instrumentsQuery = useInstrumentsList();
   const masteryQuery = useMasteryDefaults();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<CatalogStatusFilter>('all');
 
   const firstError =
     songsQuery.error ?? membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error;
@@ -83,42 +63,39 @@ export function CatalogPage(): JSX.Element {
   );
   const masteryDefaults = useMemo(() => masteryQuery.data?.defaults ?? [], [masteryQuery.data]);
 
-  const sortedSongs = useMemo(
-    () => songs.toSorted((left, right) => left.title.localeCompare(right.title)),
-    [songs],
-  );
+  const sortedSongs = useMemo(() => sortSongsByTitle(songs), [songs]);
 
   const filteredSongs = useMemo(
-    () =>
-      sortedSongs.filter(
-        (song) =>
-          (statusFilter === 'all' || song.status === statusFilter) && matchesSearch(song, search),
-      ),
+    () => selectVisibleSongs(sortedSongs, statusFilter, search),
     [sortedSongs, statusFilter, search],
   );
 
   const filterOptions = useMemo(
     () => [
-      { value: 'all' as const, label: t('catalog.filterAll'), count: countByStatus(songs, 'all') },
+      {
+        value: 'all' as const,
+        label: t('catalog.filterAll'),
+        count: countSongsWithStatus(songs, 'all'),
+      },
       {
         value: 'concert_ready' as const,
         label: t('catalog.filterConcertReady'),
-        count: countByStatus(songs, 'concert_ready'),
+        count: countSongsWithStatus(songs, 'concert_ready'),
       },
       {
         value: 'rehearsed' as const,
         label: t('catalog.filterRehearsed'),
-        count: countByStatus(songs, 'rehearsed'),
+        count: countSongsWithStatus(songs, 'rehearsed'),
       },
       {
         value: 'wip' as const,
         label: t('catalog.filterWip'),
-        count: countByStatus(songs, 'wip'),
+        count: countSongsWithStatus(songs, 'wip'),
       },
       {
         value: 'idea' as const,
         label: t('catalog.filterIdea'),
-        count: countByStatus(songs, 'idea'),
+        count: countSongsWithStatus(songs, 'idea'),
       },
     ],
     [songs, t],
@@ -153,7 +130,7 @@ export function CatalogPage(): JSX.Element {
     [filteredSongs, lineupMembers, instruments, masteryDefaults],
   );
 
-  const readyCount = countByStatus(songs, 'concert_ready');
+  const readyCount = countSongsWithStatus(songs, 'concert_ready');
   const subtitle = t('catalog.subtitle', {
     count: songs.length,
     total: songs.length,

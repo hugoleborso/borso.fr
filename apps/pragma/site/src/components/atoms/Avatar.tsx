@@ -1,30 +1,12 @@
 /**
- * Avatar atom — member initial in a coloured circle. The colour is
- * driven by an inline `--mc` custom property so the atom can stay
- * Tailwind-only and the caller picks the member token (e.g.
- * `color-member-coral`). Sizes mirror the prototype's `.mchip` /
- * `.mchip.lg` / `.mchip.xl`.
+ * Avatar atom — member initial in a coloured circle. The caller passes
+ * the member colour, so the atom stays Tailwind-only and knows nothing
+ * about the palette.
  */
 
-import { cva, type VariantProps } from 'class-variance-authority';
 import { type CSSProperties, forwardRef, type HTMLAttributes } from 'react';
+import { type AvatarVariantProps, avatarVariants } from './avatar.variants';
 import { cn } from './cn.utils';
-
-export const avatarVariants = cva(
-  'inline-flex items-center justify-center rounded-full flex-shrink-0 font-semibold text-bg-elev tracking-wide',
-  {
-    variants: {
-      size: {
-        sm: 'w-[22px] h-[22px] text-[10.5px]',
-        md: 'w-7 h-7 text-xs',
-        lg: 'w-10 h-10 text-sm',
-      },
-    },
-    defaultVariants: { size: 'sm' },
-  },
-);
-
-export type AvatarVariantProps = VariantProps<typeof avatarVariants>;
 
 export interface AvatarProps extends HTMLAttributes<HTMLSpanElement>, AvatarVariantProps {
   /** Initials (one or two letters) drawn in the circle. */

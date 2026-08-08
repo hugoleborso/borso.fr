@@ -6,7 +6,7 @@
  * affordance backed by `useDeleteSession` with optimistic removal.
  */
 
-import { type JSX, useEffect, useRef, useState } from 'react';
+import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
@@ -15,6 +15,7 @@ import { CreateSessionDialog } from '../../components/molecules/CreateSessionDia
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api';
 import { formatSessionDate } from '../../lib/formatters.utils';
+import { openDialogOnAttach } from '../../lib/modal-dialog';
 import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions';
 
 export function SessionsPage(): JSX.Element {
@@ -25,15 +26,6 @@ export function SessionsPage(): JSX.Element {
 
   const [creating, setCreating] = useState<'concert' | 'practice' | null>(null);
   const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
-  const confirmDialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = confirmDialogRef.current;
-    if (dialog === null) return;
-    const isWantsOpen = pendingDeletion !== null;
-    if (isWantsOpen && !dialog.open) dialog.showModal();
-    if (!isWantsOpen && dialog.open) dialog.close();
-  }, [pendingDeletion]);
 
   const sessions = sessionsQuery.data?.sessions ?? [];
   const concerts = sessions.filter((session) => session.kind === 'concert');
@@ -44,9 +36,8 @@ export function SessionsPage(): JSX.Element {
         ? deleteSession.error.message
         : null;
 
-  const confirmDelete = (): void => {
-    if (pendingDeletion === null) return;
-    deleteSession.mutate({ id: pendingDeletion });
+  const confirmDelete = (sessionId: string): void => {
+    deleteSession.mutate({ id: sessionId });
     setPendingDeletion(null);
   };
 
@@ -117,7 +108,7 @@ export function SessionsPage(): JSX.Element {
                     setPendingDeletion(session.id);
                   }}
                   aria-label={t('sessions.delete.aria')}
-                  className="absolute top-1/2 -translate-y-1/2 right-3 inline-flex items-center justify-center w-8 h-8 rounded-md text-ink-400 hover:text-danger hover:bg-bg transition-colors cursor-pointer"
+                  className="absolute top-1/2 -translate-y-1/2 right-3 inline-flex items-center justify-center w-11 h-11 rounded-md text-ink-400 hover:text-danger hover:bg-bg transition-colors cursor-pointer"
                 >
                   <Icon name="trash" size={16} />
                 </button>
@@ -130,7 +121,6 @@ export function SessionsPage(): JSX.Element {
       {creating === null ? null : (
         <CreateSessionDialog
           kind={creating}
-          open={creating !== null}
           onClose={() => setCreating(null)}
           onCreated={(sessionId) => navigate(`/sessions/${sessionId}`)}
           existingConcerts={concerts.map((concert) => ({
@@ -141,23 +131,25 @@ export function SessionsPage(): JSX.Element {
         />
       )}
 
-      <dialog
-        ref={confirmDialogRef}
-        onClose={() => setPendingDeletion(null)}
-        className="m-auto w-[calc(100vw-2rem)] sm:w-[26rem] max-w-[26rem] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
-      >
-        <div className="p-4 flex flex-col gap-3">
-          <p className="text-[13px] text-ink-700 m-0">{t('sessions.delete.confirm')}</p>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setPendingDeletion(null)}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="button" variant="danger" onClick={confirmDelete}>
-              {t('sessions.delete.button')}
-            </Button>
+      {pendingDeletion === null ? null : (
+        <dialog
+          ref={openDialogOnAttach}
+          onClose={() => setPendingDeletion(null)}
+          className="m-auto w-[calc(100vw-2rem)] sm:w-[26rem] max-w-[26rem] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
+        >
+          <div className="p-4 flex flex-col gap-3">
+            <p className="text-[13px] text-ink-700 m-0">{t('sessions.delete.confirm')}</p>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => setPendingDeletion(null)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="button" variant="danger" onClick={() => confirmDelete(pendingDeletion)}>
+                {t('sessions.delete.button')}
+              </Button>
+            </div>
           </div>
-        </div>
-      </dialog>
+        </dialog>
+      )}
     </section>
   );
 }
