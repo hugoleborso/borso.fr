@@ -53,9 +53,15 @@ export function selectCompletionRatio(score: Score): number {
   return score.completed / score.total;
 }
 
-/** A half point keeps its decimal, a whole one drops it. */
+/**
+ * A half point keeps its decimal, a whole one drops it, and the separator is
+ * the comma French writes. The locale is named rather than left to the browser
+ * because the page around this figure hard-codes `196,9 km`, and one number
+ * reading `4.5` beside another reading `196,9` is the inconsistency this
+ * avoids.
+ */
 export function formatScore(value: number): string {
-  return String(Number(value.toFixed(SINGLE_DECIMAL)));
+  return Number(value.toFixed(SINGLE_DECIMAL)).toLocaleString('fr-FR');
 }
 
 function countChallenges(edition: Edition, isCounted: (challenge: Challenge) => boolean): number {

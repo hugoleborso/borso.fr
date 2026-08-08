@@ -97,8 +97,12 @@ describe('formatScore', () => {
     expect(formatScore(4)).toBe('4');
   });
 
-  it('writes a half with a single decimal', () => {
-    expect(formatScore(4.5)).toBe('4.5');
+  it('writes a half with a comma, which is the separator French uses', () => {
+    expect(formatScore(4.5)).toBe('4,5');
+  });
+
+  it('rounds to a single decimal rather than carrying the rest', () => {
+    expect(formatScore(4.06)).toBe('4,1');
   });
 });
 

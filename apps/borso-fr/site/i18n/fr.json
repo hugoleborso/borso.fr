@@ -59,9 +59,10 @@
     },
     "featured": {
       "label": "Mois en focus · {{month}}/{{year}}",
-      "score": "{{completed}} sur {{total}} aboutis",
+      "score_one": "{{completed}} sur {{total}} abouti",
+      "score_other": "{{completed}} sur {{total}} aboutis",
       "cover-alt": "Couverture {{month}}",
-      "note": "« {{note}} »"
+      "note": "« {{note}} »"
     },
     "footer": {
       "credit": "borso.fr · les 12 travaux"
@@ -105,7 +106,7 @@
         "january": {
           "daily-sport": {
             "title": "Sport tous les jours",
-            "note": "Un blocage de dos au milieu du mois m'a coupé la série ; j'ai rattrapé des jours en février."
+            "note": "Un blocage de dos au milieu du mois m'a coupé la série ; j'ai rattrapé des jours en février."
           },
           "volleyball-spike": {
             "title": "Smasher correctement au volley"
@@ -118,7 +119,7 @@
           },
           "fourteen-books": {
             "title": "14 livres dans le mois",
-            "note": "7 livres lus : Barjavel, Gogol, Benzine, Roux, da Empoli, Henn."
+            "note": "7 livres lus : Barjavel, Gogol, Benzine, Roux, da Empoli, Henn."
           }
         },
         "march": {
@@ -173,7 +174,7 @@
         "october": {
           "free-diving": {
             "title": "20 m en apnée",
-            "note": "10 m en fosse (max autorisé) ; 50 m en dynamique à côté. Génial — et plus facile que prévu."
+            "note": "10 m en fosse (max autorisé) ; 50 m en dynamique à côté. Génial — et plus facile que prévu."
           }
         },
         "november": {
@@ -205,7 +206,7 @@
         "february": {
           "early-nights": {
             "title": "Au lit à 23h, extinction 23h30 (6j/7)",
-            "note": "3 semaines sur 4. Sacrés changements de vie ; sympa de se lever sans réveil."
+            "note": "3 semaines sur 4. Sacrés changements de vie ; sympa de se lever sans réveil."
           },
           "pragma-dates": {
             "title": "Trouver et organiser 2 dates pour Pragma",
@@ -231,7 +232,7 @@
         "april": {
           "metro-lines": {
             "title": "Courir toutes les lignes de métro dans l'ordre en 1 mois",
-            "note": "Dernière ligne : la 14."
+            "note": "Dernière ligne : la 14."
           }
         },
         "may": {
@@ -251,7 +252,7 @@
         "july": {
           "half-marathon": {
             "title": "Sub-1h35 au semi",
-            "note": "Premier essai début juillet : explosé, coup de chaud. Objectif révisé de 1h30 à 1h35 pour la deuxième tentative fin juillet."
+            "note": "Premier essai début juillet : explosé, coup de chaud. Objectif révisé de 1h30 à 1h35 pour la deuxième tentative fin juillet."
           },
           "catan-championship": {
             "title": "Participer aux championnats de France de Catan"
@@ -295,7 +296,7 @@
     "generator-tag": "— Générateur —",
     "subtitle-before-de-stijl": "Un atelier pour composer à la manière de",
     "subtitle-de-stijl": "De Stijl",
-    "subtitle-after-de-stijl": "\u00a0: des rectangles, des couleurs primaires, et le silence bien choisi qui les sépare.",
+    "subtitle-after-de-stijl": " : des rectangles, des couleurs primaires, et le silence bien choisi qui les sépare.",
     "rail": {
       "label": "Commandes de l'atelier",
       "open": "Atelier",
@@ -349,7 +350,7 @@
       "body": "Chaque composition naît d'une seule graine.",
       "hint-fine": "Appuyez sur espace pour en composer une autre",
       "hint-coarse": "Touchez le tableau pour en composer un autre",
-      "tail-before-cascade": ". Restez sur une palette pour l'habiter\u00a0; passez en",
+      "tail-before-cascade": ". Restez sur une palette pour l'habiter ; passez en",
       "tail-cascade": "Cascade",
       "tail-after-cascade": "pour laisser la pièce se réorganiser toute seule."
     },

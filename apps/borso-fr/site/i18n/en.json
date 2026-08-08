@@ -59,7 +59,8 @@
     },
     "featured": {
       "label": "Month in focus · {{month}}/{{year}}",
-      "score": "{{completed}} of {{total}} completed",
+      "score_one": "{{completed}} of {{total}} completed",
+      "score_other": "{{completed}} of {{total}} completed",
       "cover-alt": "Cover {{month}}",
       "note": "“{{note}}”"
     },

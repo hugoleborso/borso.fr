@@ -78,6 +78,7 @@ export function FeaturedMonth({ month, year }: FeaturedMonthProps) {
           </div>
           <div style={{ fontFamily: SANS_FAMILY, fontSize: 13, color: MUTED }}>
             {t('twelve-labours.featured.score', {
+              count: score.completed,
               completed: formatScore(score.completed),
               total: score.total,
             })}
