@@ -1,10 +1,29 @@
 set -e
 
-# Dead-code detection across the workspace.
-# Runs only at push time so multi-commit branches with intermediate
-# unused-export states aren't blocked mid-story.
+# Pre-push holds the checks that need the whole branch in view, or that cost
+# real time. The cheap per-commit invariants live in .husky/pre-commit.
+
+# Dead-code detection across the workspace. Push time rather than commit time,
+# because a multi-commit branch legitimately passes through intermediate states
+# where an export is written before its caller exists.
 echo "[pre-push] running knip"
 pnpm exec knip
+
+# Full coverage suites for the infra packages, including their 100% thresholds.
+# Moved here from pre-commit: a CDK snapshot suite takes about 25 s, which is
+# too slow to sit on every commit, and nothing about it needs to run more often
+# than once per push.
+changed_since_main=$(git diff --name-only "$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)" HEAD)
+
+if echo "$changed_since_main" | grep -q '^infra/cdk/'; then
+  echo "[pre-push] infra/cdk/ changed — running @borso/infra test:coverage"
+  pnpm --filter @borso/infra test:coverage
+fi
+
+if echo "$changed_since_main" | grep -q '^infra/shared/'; then
+  echo "[pre-push] infra/shared/ changed — running @borso/shared-infra test:coverage"
+  pnpm --filter @borso/shared-infra test:coverage
+fi
 
 # Mutation testing on the pure files of every workspace whose `*.core.ts` or
 # `*.utils.ts` files changed on this branch. Coverage says a line ran; a
@@ -26,23 +45,10 @@ if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
   fi
 fi
 
-# Reject any workflow YAML invoking `pnpm --filter <pkg> <reserved-name>`
-# without `run`. `deploy`, `destroy`, `install`, `update`, `sync`, `fetch`,
-# `publish` are pnpm built-in commands; without `run` they shadow the
-# package's scripts.* entry and silently do the wrong thing. Rung-2
-# eradication of docs/dantotsus/pnpm-reserved-script-names.md.
-echo "[pre-push] checking workflows for pnpm reserved-name shadowing"
-PNPM_RESERVED_REGEX='pnpm[[:space:]]+--filter[[:space:]]+("[^"]+"|[^[:space:]]+)[[:space:]]+(deploy|destroy|install|update|sync|fetch|publish)([[:space:]]|$)'
-if grep -nrE "$PNPM_RESERVED_REGEX" .github/workflows/ >&2; then
-  echo "[pre-push] ERROR: above lines invoke a pnpm built-in instead of a package script." >&2
-  echo "[pre-push] Use 'pnpm --filter <pkg> run <name>' to force script lookup." >&2
-  exit 1
-fi
-
-# Workflow lint — catches paths-filter base misuses, deprecated action
-# versions, shell-quoting bugs in `run:` blocks, etc. Rung-2 eradication
-# of docs/dantotsus/paths-filter-base-head1-on-push.md and a generic net
-# for the next workflow trap.
+# Workflow lint. Catches paths-filter base misuses, deprecated action versions,
+# and shell-quoting bugs in `run:` blocks. Stays on push because it needs a
+# binary that is not always installed. Rung-2 eradication of
+# docs/dantotsus/paths-filter-base-head1-on-push.md.
 if command -v actionlint >/dev/null 2>&1; then
   echo "[pre-push] running actionlint"
   actionlint
@@ -50,17 +56,10 @@ else
   echo "[pre-push] WARN: actionlint not installed — skipping. Install via the SessionStart hook (.claude/hooks/session-start.sh)." >&2
 fi
 
-# Reject non-module <script src> tags in app HTML; they ship un-bundled
-# and 404 in production preview / prod builds. Rung-2 eradication of
-# docs/dantotsus/vite-non-module-script-tags-arent-bundled.md.
-echo "[pre-push] checking app HTML for non-module <script src> tags"
-scripts/check-non-module-scripts.sh
-
-# Detection nudge: agent-authored branches (claude/*) almost always
-# have an open PR with reviewer threads. Print a reminder so the
-# agent's next response addresses unresolved review threads BEFORE
-# treating "push succeeded" as the all-clear signal. Rung-4
-# eradication of
+# Detection nudge: agent-authored branches almost always have an open pull
+# request with reviewer threads. Print a reminder so the agent's next response
+# addresses unresolved threads before treating "push succeeded" as the
+# all-clear. Rung-4 eradication of
 # docs/dantotsus/pushed-without-reading-pr-review-comments.md.
 current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')
 case "$current_branch" in
