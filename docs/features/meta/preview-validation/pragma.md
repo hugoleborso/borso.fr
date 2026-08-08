@@ -87,7 +87,7 @@ exceeds the client width, which is the page body scrolling sideways.
 
 | Route | 375 | 393 | 1280 |
 |---|---|---|---|
-| `/login` | 375 / 375 pass | 375 / 375 pass (measured at 375) | 1280 / 1280 pass |
+| `/login` | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
 | `/catalog` | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
 | `/catalog/:songId` | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
 | `/catalog/:songId/edit` | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
@@ -98,7 +98,7 @@ exceeds the client width, which is the page body scrolling sideways.
 | `/sessions/:id/setlist` | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
 | `/setlists` | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
 | `/bars` list view | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
-| `/bars` kanban view | 375 / 375 pass | not measured | 1280 / 1280 pass |
+| `/bars` kanban view | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
 | `/members` | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
 | `/instruments` | 375 / 375 pass | 393 / 393 pass | 1280 / 1280 pass |
 
@@ -438,7 +438,6 @@ there is no key drift and no duplicate in-page request.
   rendered `Risky transition` markers against setlist entries. Whether the
   underlying `/api/transitions` rules are correct was not assessed, because that
   needs a known-good expected result rather than a smoke check.
-- **393 pixels on the bars kanban.** Measured at 375 and 1280 only.
 - **Offline behaviour.** The app registers a service worker with a shell cache
   and a data cache. Offline mode was not exercised.
 - **Real phones.** There is no `/dev/kvm`, no Android SDK and no macOS in this
