@@ -28,8 +28,8 @@ export function CreateEditionForm({
 }: CreateEditionFormProps) {
   const [slug, setSlug] = useState(suggestedSlug);
   const [displayName, setDisplayName] = useState(suggestedDisplayName);
-  const [startsAt, setStartsAt] = useState(defaultStartsAt());
-  const [endsAt, setEndsAt] = useState(defaultEndsAt());
+  const [startsAt, setStartsAt] = useState(defaultStartsAt(new Date()));
+  const [endsAt, setEndsAt] = useState(defaultEndsAt(new Date()));
   const [intervalMinutes, setIntervalMinutes] = useState('60');
   const [gpxFile, setGpxFile] = useState<File | null>(null);
   const [gpxReadError, setGpxReadError] = useState<string | null>(null);

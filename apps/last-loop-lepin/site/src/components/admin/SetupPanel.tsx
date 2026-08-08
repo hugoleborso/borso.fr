@@ -37,12 +37,12 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
   const [startsAt, setStartsAt] = useState(
     isEditing && currentEdition !== null
       ? isoLocal(new Date(currentEdition.startsAt))
-      : defaultStartsAt(),
+      : defaultStartsAt(new Date()),
   );
   const [endsAt, setEndsAt] = useState(
     isEditing && currentEdition !== null
       ? isoLocal(new Date(currentEdition.endsAt))
-      : defaultEndsAt(),
+      : defaultEndsAt(new Date()),
   );
   const [intervalMinutes, setIntervalMinutes] = useState(
     String(isEditing && currentEdition !== null ? currentEdition.intervalMinutes : 60),

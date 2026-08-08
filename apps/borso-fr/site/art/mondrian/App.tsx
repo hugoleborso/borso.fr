@@ -65,7 +65,11 @@ export function App() {
   const isReducedMotion = usePrefersReducedMotion();
 
   const initialUrlState = useMemo(
-    () => readUrlState(window.location.search, { paletteKey: 'classic' }),
+    () =>
+      readUrlState(window.location.search, {
+        paletteKey: 'classic',
+        fallbackSeed: freshSeed(Math.random()),
+      }),
     [],
   );
 
@@ -98,7 +102,7 @@ export function App() {
   useEffect(() => {
     if (animationMode !== 'cascade') return;
     const intervalHandle = window.setInterval(() => {
-      const nextSeed = freshSeed();
+      const nextSeed = freshSeed(Math.random());
       setSeed(nextSeed);
       window.history.replaceState(
         { seed: nextSeed, paletteKey },
@@ -110,7 +114,7 @@ export function App() {
   }, [animationMode, paletteKey]);
 
   const compose = useCallback(() => {
-    const nextSeed = freshSeed();
+    const nextSeed = freshSeed(Math.random());
     setSeed(nextSeed);
     window.history.pushState(
       { seed: nextSeed, paletteKey },
@@ -144,7 +148,10 @@ export function App() {
 
   useEffect(() => {
     const onPopState = () => {
-      const restored = readUrlState(window.location.search, { paletteKey: 'classic' });
+      const restored = readUrlState(window.location.search, {
+        paletteKey: 'classic',
+        fallbackSeed: freshSeed(Math.random()),
+      });
       setSeed(restored.seed);
       setPaletteKey(restored.paletteKey);
     };

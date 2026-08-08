@@ -30,14 +30,12 @@ describe('defaultStartsAt / defaultEndsAt', () => {
     expect(defaultEndsAt(reference)).toBe('2026-05-14T22:00');
   });
 
-  it('uses now() as default when no argument', () => {
-    const value = defaultStartsAt();
-    expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T06:00$/);
+  it('pins the start time to 06:00 on whatever day the caller passes', () => {
+    expect(defaultStartsAt(new Date(2026, 0, 1, 23, 59))).toBe('2026-01-01T06:00');
   });
 
-  it('endsAt uses now() as default when no argument', () => {
-    const value = defaultEndsAt();
-    expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T22:00$/);
+  it('pins the end time to 22:00 on whatever day the caller passes', () => {
+    expect(defaultEndsAt(new Date(2026, 11, 31, 0, 1))).toBe('2026-12-31T22:00');
   });
 });
 

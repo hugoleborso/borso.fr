@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { buildSearch, freshSeed, readUrlState, seedToHex } from './url-state.utils';
 
+const FALLBACK_SEED = 0x0000002a;
+
 describe('seedToHex', () => {
   it('produces an 8-char uppercase hex string', () => {
     expect(seedToHex(0)).toBe('00000000');
@@ -15,44 +17,62 @@ describe('seedToHex', () => {
 
 describe('readUrlState', () => {
   it('returns a fresh seed and the default palette when the search is empty', () => {
-    const state = readUrlState('', { paletteKey: 'classic' });
+    const state = readUrlState('', { paletteKey: 'classic', fallbackSeed: FALLBACK_SEED });
     expect(state.paletteKey).toBe('classic');
     expect(Number.isFinite(state.seed)).toBe(true);
     expect(state.seed).toBeGreaterThanOrEqual(0);
   });
 
   it('parses a valid ?seed=&palette= query', () => {
-    const state = readUrlState('?seed=DEADBEEF&palette=nocturne', { paletteKey: 'classic' });
+    const state = readUrlState('?seed=DEADBEEF&palette=nocturne', {
+      paletteKey: 'classic',
+      fallbackSeed: FALLBACK_SEED,
+    });
     expect(state.seed).toBe(0xdeadbeef);
     expect(state.paletteKey).toBe('nocturne');
   });
 
   it('falls back to a fresh seed when the seed is invalid hex', () => {
-    const state = readUrlState('?seed=ZZZZ&palette=muted', { paletteKey: 'classic' });
+    const state = readUrlState('?seed=ZZZZ&palette=muted', {
+      paletteKey: 'classic',
+      fallbackSeed: FALLBACK_SEED,
+    });
     expect(state.seed).not.toBe(Number.NaN);
     expect(Number.isFinite(state.seed)).toBe(true);
     expect(state.paletteKey).toBe('muted');
   });
 
-  it('falls back to a fresh seed when the seed is too long', () => {
-    const state = readUrlState('?seed=DEADBEEF1', { paletteKey: 'classic' });
-    expect(Number.isFinite(state.seed)).toBe(true);
+  it("falls back to the caller's seed when the seed in the URL is too long", () => {
+    const state = readUrlState('?seed=DEADBEEF1', {
+      paletteKey: 'classic',
+      fallbackSeed: FALLBACK_SEED,
+    });
+    expect(state.seed).toBe(FALLBACK_SEED);
   });
 
   it('falls back to the default palette when the palette is invalid', () => {
-    const state = readUrlState('?seed=00000001&palette=fluorescent', { paletteKey: 'classic' });
+    const state = readUrlState('?seed=00000001&palette=fluorescent', {
+      paletteKey: 'classic',
+      fallbackSeed: FALLBACK_SEED,
+    });
     expect(state.seed).toBe(1);
     expect(state.paletteKey).toBe('classic');
   });
 
-  it('falls back to a fresh seed when ?seed is missing', () => {
-    const state = readUrlState('?palette=garden', { paletteKey: 'classic' });
-    expect(Number.isFinite(state.seed)).toBe(true);
+  it("falls back to the caller's seed when the URL carries no seed", () => {
+    const state = readUrlState('?palette=garden', {
+      paletteKey: 'classic',
+      fallbackSeed: FALLBACK_SEED,
+    });
+    expect(state.seed).toBe(FALLBACK_SEED);
     expect(state.paletteKey).toBe('garden');
   });
 
   it('accepts custom as a palette key', () => {
-    const state = readUrlState('?palette=custom', { paletteKey: 'classic' });
+    const state = readUrlState('?palette=custom', {
+      paletteKey: 'classic',
+      fallbackSeed: FALLBACK_SEED,
+    });
     expect(state.paletteKey).toBe('custom');
   });
 });
@@ -61,7 +81,7 @@ describe('buildSearch', () => {
   it('round-trips through readUrlState for valid inputs', () => {
     const search = buildSearch({ seed: 0xdeadbeef, paletteKey: 'nocturne' });
     expect(search).toBe('?seed=DEADBEEF&palette=nocturne');
-    const restored = readUrlState(search, { paletteKey: 'classic' });
+    const restored = readUrlState(search, { paletteKey: 'classic', fallbackSeed: FALLBACK_SEED });
     expect(restored).toStrictEqual({ seed: 0xdeadbeef, paletteKey: 'nocturne' });
   });
 
@@ -72,18 +92,24 @@ describe('buildSearch', () => {
 });
 
 describe('freshSeed', () => {
-  it('returns a finite non-negative integer in the 32-bit range', () => {
-    for (let iteration = 0; iteration < 100; iteration++) {
-      const seed = freshSeed();
+  it('maps 0 to the lowest seed', () => {
+    expect(freshSeed(0)).toBe(0);
+  });
+
+  it('maps the largest value below 1 to the highest seed', () => {
+    expect(freshSeed(1 - Number.EPSILON)).toBe(0xffffffff);
+  });
+
+  it('returns a finite integer inside the 32-bit range for any unit interval value', () => {
+    for (let step = 0; step <= 100; step++) {
+      const seed = freshSeed(step / 101);
       expect(Number.isInteger(seed)).toBe(true);
       expect(seed).toBeGreaterThanOrEqual(0);
       expect(seed).toBeLessThanOrEqual(0xffffffff);
     }
   });
 
-  it('rarely returns the same value twice in a short window', () => {
-    const seeds = new Set<number>();
-    for (let iteration = 0; iteration < 100; iteration++) seeds.add(freshSeed());
-    expect(seeds.size).toBeGreaterThan(95);
+  it('is monotonic, so a larger unit interval never yields a smaller seed', () => {
+    expect(freshSeed(0.25)).toBeLessThan(freshSeed(0.75));
   });
 });

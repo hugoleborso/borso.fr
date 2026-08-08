@@ -4,6 +4,7 @@ import { computeBookState, type PlayScopeFilter } from './bookEngine.utils';
 import type { Selection } from './selectors.utils';
 import type { Line, Opening, Variation } from './types';
 import { uciFromSquare, uciPromotion, uciToSquare } from './uciSquare.utils';
+import { pickRandomCandidate, scheduleTimeoutCallback } from './machineEffects';
 
 export interface PlayMachineConfig {
   openings: Opening[];
@@ -73,14 +74,6 @@ const INITIAL_SNAPSHOT: PlayMachineSnapshot = {
   autoOpponent: true,
 };
 
-function defaultPickRandom(candidates: readonly string[]): string | undefined {
-  return candidates[Math.floor(Math.random() * candidates.length)];
-}
-
-function defaultScheduleTimeout(callback: () => void, delayMs: number): void {
-  setTimeout(callback, delayMs);
-}
-
 /**
  * Play-mode state machine. Owns one chess.js engine + the played-move history
  * + a generation counter for stale-setTimeout protection (spec B5). Components
@@ -94,8 +87,8 @@ function defaultScheduleTimeout(callback: () => void, delayMs: number): void {
  */
 export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine {
   const opponentDelayMs = options.opponentDelayMs ?? DEFAULT_OPPONENT_DELAY_MS;
-  const pickRandom = options.pickRandom ?? defaultPickRandom;
-  const scheduleTimeout = options.scheduleTimeout ?? defaultScheduleTimeout;
+  const pickRandom = options.pickRandom ?? pickRandomCandidate;
+  const scheduleTimeout = options.scheduleTimeout ?? scheduleTimeoutCallback;
 
   let chess = new Chess();
   let config: PlayMachineConfig | null = null;

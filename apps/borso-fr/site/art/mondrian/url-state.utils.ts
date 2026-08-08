@@ -10,8 +10,12 @@ const SEED_RADIX = 16;
 const MAX_SEED = 0xffffffff;
 const SEED_HEX_PATTERN = /^[0-9a-fA-F]{1,8}$/;
 
-export function freshSeed(): number {
-  return Math.floor(Math.random() * (MAX_SEED + 1));
+/**
+ * Randomness is an argument, so the seed picker stays pure and stays under the
+ * coverage and mutation gates. Callers pass `Math.random()`.
+ */
+export function freshSeed(randomUnitInterval: number): number {
+  return Math.floor(randomUnitInterval * (MAX_SEED + 1));
 }
 
 export function seedToHex(seed: number): string {
@@ -24,14 +28,17 @@ function parseSeedHex(input: string | null): number | null {
   return Number.parseInt(input, SEED_RADIX) >>> 0;
 }
 
-export function readUrlState(search: string, defaults: { paletteKey: PaletteKey }): UrlState {
+export function readUrlState(
+  search: string,
+  defaults: { paletteKey: PaletteKey; fallbackSeed: number },
+): UrlState {
   const params = new URLSearchParams(search);
   const parsedSeed = parseSeedHex(params.get('seed'));
   const paletteParam = params.get('palette');
   const paletteKey =
     paletteParam !== null && isPaletteKey(paletteParam) ? paletteParam : defaults.paletteKey;
   return {
-    seed: parsedSeed ?? freshSeed(),
+    seed: parsedSeed ?? defaults.fallbackSeed,
     paletteKey,
   };
 }

@@ -126,6 +126,13 @@ export default tseslint.config(
       'borso/no-inline-subscribe-in-use-sync-external-store': 'error',
       'borso/no-controller-imports-outside-service': 'error',
 
+      // The two halves of docs/standards/02-purity-and-core-files.md. A branch
+      // belongs in a pure function, and a pure function belongs in a file the
+      // coverage and mutation gates cover.
+      'borso/conditions-live-in-pure-functions': 'error',
+      'borso/pure-functions-live-in-core-files': 'error',
+      'borso/no-impure-calls-in-core-files': 'error',
+
       // Ported from biome's `noExcessiveLinesPerFile`, which skips blank lines
       // and comment lines. Counting them here instead would fail twelve files
       // that biome passed, which would be a new rule rather than a port.

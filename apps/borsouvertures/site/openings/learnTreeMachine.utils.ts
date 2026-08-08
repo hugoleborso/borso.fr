@@ -3,6 +3,7 @@ import type { Side } from '@/state/persistedState.utils';
 import { isVariationCleared, leafReachedAt, nextMovesAt } from './bookTree.utils';
 import type { Variation } from './types';
 import { uciFromSquare, uciPromotion, uciToSquare } from './uciSquare.utils';
+import { pickRandomCandidate, scheduleTimeoutCallback } from './machineEffects';
 
 interface LearnTreeSnapshot {
   variationId: string | null;
@@ -60,14 +61,6 @@ const INITIAL_SNAPSHOT: LearnTreeSnapshot = {
   showRevealedArrows: false,
 };
 
-function defaultPickRandom(candidates: readonly string[]): string | undefined {
-  return candidates[Math.floor(Math.random() * candidates.length)];
-}
-
-function defaultScheduleTimeout(callback: () => void, delayMs: number): void {
-  setTimeout(callback, delayMs);
-}
-
 /**
  * Creates a Learn-tree state machine instance. The machine owns one
  * {@link Chess} engine, the played-move history, and the visited-leaves set.
@@ -81,8 +74,8 @@ function defaultScheduleTimeout(callback: () => void, delayMs: number): void {
  */
 export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): LearnTreeMachine {
   const opponentDelayMs = options.opponentDelayMs ?? DEFAULT_OPPONENT_DELAY_MS;
-  const pickRandom = options.pickRandom ?? defaultPickRandom;
-  const scheduleTimeout = options.scheduleTimeout ?? defaultScheduleTimeout;
+  const pickRandom = options.pickRandom ?? pickRandomCandidate;
+  const scheduleTimeout = options.scheduleTimeout ?? scheduleTimeoutCallback;
 
   let chess = new Chess();
   let variation: Variation | null = null;
@@ -148,7 +141,7 @@ export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): L
       if (myGeneration !== generation) return;
       const candidates = nextMovesAt(currentVariation, playedMovesUci);
       const choice = pickRandom(candidates);
-      // Empty candidates → defaultPickRandom returns `candidates[0]`, which is
+      // Empty candidates → pickRandomCandidate returns `candidates[0]`, which is
       // `undefined` per `noUncheckedIndexedAccess`. Tests can also inject a
       // picker that returns `undefined` to assert this path.
       if (!choice) return;

@@ -5,13 +5,13 @@ export function isoLocal(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export function defaultStartsAt(now: Date = new Date()): string {
+export function defaultStartsAt(now: Date): string {
   const cursor = new Date(now);
   cursor.setHours(6, 0, 0, 0);
   return isoLocal(cursor);
 }
 
-export function defaultEndsAt(now: Date = new Date()): string {
+export function defaultEndsAt(now: Date): string {
   const cursor = new Date(now);
   cursor.setHours(22, 0, 0, 0);
   return isoLocal(cursor);

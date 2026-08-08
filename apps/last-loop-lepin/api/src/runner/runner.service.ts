@@ -1,7 +1,8 @@
 import type { Database } from '../database/client';
 import { listPunchesForEdition } from '../punch/punch.repository';
 import type { LoopPunch } from '../punch/punch.types';
-import { type RunnerDto, readPhotosCdnHost, toRunnerDto } from './runner.dto.utils';
+import { type RunnerDto, toRunnerDto } from './runner.dto.utils';
+import { readPhotosCdnHost } from './runner.environment';
 import { findRunner, insertRunner, listRunnersForEdition } from './runner.repository';
 import type { Runner } from './runner.types';
 

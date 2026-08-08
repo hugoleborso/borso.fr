@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { readPhotosCdnHost, toRunnerDto } from './runner.dto.utils';
+import { toRunnerDto } from './runner.dto.utils';
 import type { Runner } from './runner.types';
 
 const SAMPLE_RUNNER: Runner = {
@@ -44,36 +44,5 @@ describe('toRunnerDto', () => {
       'photos-cdn.borso.fr',
     );
     expect(dto.photoUrl).toBe('https://photos-cdn.borso.fr/lepin-2026/borso/x.jpg');
-  });
-});
-
-describe('readPhotosCdnHost', () => {
-  let saved: string | undefined;
-
-  beforeEach(() => {
-    saved = process.env.PHOTOS_CDN_HOST;
-  });
-
-  afterEach(() => {
-    if (saved === undefined) {
-      delete process.env.PHOTOS_CDN_HOST;
-    } else {
-      process.env.PHOTOS_CDN_HOST = saved;
-    }
-  });
-
-  it('returns the env var when set to a non-empty string', () => {
-    process.env.PHOTOS_CDN_HOST = 'photos-cdn.borso.fr';
-    expect(readPhotosCdnHost()).toBe('photos-cdn.borso.fr');
-  });
-
-  it('returns undefined when the env var is missing', () => {
-    delete process.env.PHOTOS_CDN_HOST;
-    expect(readPhotosCdnHost()).toBeUndefined();
-  });
-
-  it('returns undefined when the env var is set to the empty string', () => {
-    process.env.PHOTOS_CDN_HOST = '';
-    expect(readPhotosCdnHost()).toBeUndefined();
   });
 });
