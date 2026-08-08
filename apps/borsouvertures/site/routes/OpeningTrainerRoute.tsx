@@ -7,9 +7,11 @@ export function OpeningTrainerRoute() {
   return (
     <div className="app-shell">
       <TopBar />
-      <Suspense fallback={<OpeningsLoadingPanel />}>
-        <TrainerScreens />
-      </Suspense>
+      <main className="app-main">
+        <Suspense fallback={<OpeningsLoadingPanel />}>
+          <TrainerScreens />
+        </Suspense>
+      </main>
     </div>
   );
 }

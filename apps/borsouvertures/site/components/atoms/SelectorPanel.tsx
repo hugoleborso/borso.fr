@@ -9,7 +9,7 @@ export function SelectorPanel({ title, children }: SelectorPanelProps) {
   return (
     <div className="panel selector-panel">
       <div className="panel-header">
-        <h3 style={{ margin: 0 }}>{title}</h3>
+        <h2 style={{ margin: 0 }}>{title}</h2>
       </div>
       <div className="selector-list">{children}</div>
     </div>

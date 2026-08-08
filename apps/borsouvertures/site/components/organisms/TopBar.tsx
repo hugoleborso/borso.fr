@@ -10,7 +10,7 @@ export function TopBar() {
   return (
     <header className="panel controls-row topbar">
       <div className="topbar-left">
-        <div className="brand-title">{t('top-bar.brand')}</div>
+        <h1 className="brand-title">{t('top-bar.brand')}</h1>
         <ModeToggle mode={mode} />
       </div>
       <div className="controls-row">

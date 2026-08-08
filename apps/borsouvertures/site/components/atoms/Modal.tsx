@@ -23,7 +23,7 @@ export function Modal({ title, closeLabel, children, onClose }: ModalProps) {
     <dialog ref={openAsModalDialog} className="modal-dialog" aria-label={title} onClose={onClose}>
       <div className="modal">
         <div className="controls-row" style={{ justifyContent: 'space-between' }}>
-          <h3>{title}</h3>
+          <h2>{title}</h2>
           <button type="button" className="btn" aria-label={closeLabel} onClick={onClose}>
             ×
           </button>

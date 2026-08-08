@@ -22,7 +22,7 @@ export function LearnDrillPanel({ variationName, areArrowsRevealed }: LearnDrill
   const { t } = useTranslation();
   return (
     <div className="panel">
-      <h3>{t('learn.title', { variation: variationName })}</h3>
+      <h2>{t('learn.title', { variation: variationName })}</h2>
       <p>{t('learn.description')}</p>
       <div className="controls-row">
         <Button label={t('learn.reset')} onActivate={learnTreeMachine.reset} />

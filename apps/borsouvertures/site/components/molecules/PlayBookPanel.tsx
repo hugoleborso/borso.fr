@@ -10,7 +10,7 @@ export function PlayBookPanel({ isUndoAllowed }: PlayBookPanelProps) {
   const { t } = useTranslation();
   return (
     <div className="panel">
-      <h3>{t('play.title')}</h3>
+      <h2>{t('play.title')}</h2>
       <p>{t('play.description')}</p>
       <div className="controls-row">
         <Button label={t('play.reset')} onActivate={playMachine.reset} />
