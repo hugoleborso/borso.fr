@@ -21,7 +21,7 @@ measuring rather than by reading.
 
 | Gate | What it looked like | What it did |
 |------|---------------------|-------------|
-| Per-file 100% coverage on pure files | A coverage table printed on every run | Thresholds sat inside a `vitest.workspace.ts` project entry, which Vitest 4 ignores. Nothing was asserted. |
+| Per-file 100% coverage on pure files | A coverage table printed on every run | Thresholds sat inside a `vitest.workspace.ts` project entry, which Vitest ignores. Nothing was asserted. |
 | The same gate, in CI | `test:core` passing | The script never passed `--coverage`. |
 | Mutation testing at zero survivors | A task reporting `exit code 0` | The command was piped through `tail`, so the shell reported the pager's status. Stryker had exited 1. |
 | Preview auto-seed | A green deploy | `last-loop-lepin` requires a `fixture` query parameter. The step posted without one, took a 400, and emitted a `::warning::`. |
@@ -34,7 +34,7 @@ A fifth belongs with them: `apps/pragma` appeared in no CI workflow at all. Its
 Each has its own mechanism, and they are worth reading together because the
 mechanisms differ and the shape does not.
 
-1. **Configuration in a place the tool does not read.** Vitest 4 takes
+1. **Configuration in a place the tool does not read.** Vitest takes
    `coverage` from the root config only. A block inside a project entry is
    accepted, ignored, and warned about nowhere.
 2. **A flag on the wrong script.** `--coverage` was on `test:coverage`, which
@@ -104,7 +104,7 @@ would have caught all four.
 
 Three specific traps, all live in this repository:
 
-- In Vitest 4, `coverage` is root-config-only. A `coverage` key inside a project
+- `coverage` is root-config-only. A `coverage` key inside a project
   entry is silently inert.
 - Piping a command through `tail`, `head` or `grep` replaces its exit code. Use
   `set -o pipefail`, or redirect to a file and read the file.

@@ -32,7 +32,7 @@ With it armed, ten pragma files failed immediately, including
 Two independent faults, either of which alone was enough.
 
 1. **The `coverage` block sat where Vitest never looks.** Both apps declared it
-   inside a project entry of `vitest.workspace.ts`. Vitest 4 reads `coverage`
+   inside a project entry of `vitest.workspace.ts`. Vitest reads `coverage`
    from the **root** config only; a block inside a project is accepted, ignored,
    and reported nowhere. There is no warning, no deprecation notice, and the run
    prints a coverage table, so the output looks exactly like a gate that passed.
@@ -123,7 +123,7 @@ Before trusting a gate, break something and watch it fail. A configuration that
 reads correctly, a report that prints numbers, and a documented promise are
 three kinds of evidence that all look like enforcement and none of which is.
 
-The specific trap: in Vitest 4, `coverage` is root-config-only. Any `coverage`
+The specific trap: `coverage` is root-config-only. Any `coverage`
 key inside a project entry of a workspace or a `projects` array is silently
 inert. There is exactly one coverage configuration per Vitest run, shared by
 every project in it.
