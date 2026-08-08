@@ -205,6 +205,18 @@
   background: var(--ink);
   color: var(--paper);
 }
+/*
+ * The sliders and swatches above carry their 44px touch floor unconditionally
+ * because they are already at least that tall on a mouse. A segment is not:
+ * it is 39px tall and as little as 44px wide at 1280, so raising it everywhere
+ * would turn the palette row square and push an already-scrolling rail further
+ * down. The floor is therefore only spent where a finger needs it.
+ */
+@media (hover: none) {
+  .seg {
+    min-height: 44px;
+  }
+}
 
 .btn-row {
   display: grid;
