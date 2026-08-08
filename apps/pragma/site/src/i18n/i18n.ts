@@ -36,4 +36,19 @@ void i18next.use(initReactI18next).init({
   returnNull: false,
 });
 
+/**
+ * The `lang` attribute is what a screen reader picks a voice from and what a
+ * browser offers to translate against, so it has to follow the active language
+ * rather than sit at whatever the entry HTML was authored in. i18next emits
+ * `languageChanged` on every switch, which is a subscription this module owns
+ * for the life of the page — no component needs an effect for it.
+ */
+function applyDocumentLanguage(language: string): void {
+  if (typeof document === 'undefined') return;
+  document.documentElement.lang = language;
+}
+
+applyDocumentLanguage(i18next.language);
+i18next.on('languageChanged', applyDocumentLanguage);
+
 export { i18next };
