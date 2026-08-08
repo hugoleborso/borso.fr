@@ -52,10 +52,14 @@ No:
 | [0002](./0002-vendor-react-bits-galaxy-shader.md) | Vendor the react-bits Galaxy WebGL shader instead of installing it | superseded by [0003](./0003-react-bits-galaxy-as-react-component.md) | 2026-05-14 |
 | [0003](./0003-react-bits-galaxy-as-react-component.md) | Mount the react-bits Galaxy as a React component on top of `ogl` | accepted | 2026-05-14 |
 | [0004](./0004-pragma-shared-password-auth.md) | Shared-password auth for the pragma band ERP | proposed | 2026-05-19 |
+| [0005](./0005-dynamic-workflows-for-orchestration.md) | Dynamic Workflows for the tech-lead orchestration pipeline | accepted | 2026-06-05 |
+| [0006](./0006-cascade-on-delete-via-json-blob-scrub.md) | Cascade-on-delete via JSON-blob scrub (DSQL no-FK substitute) | accepted | 2026-06-06 |
+| [0007](./0007-eslint-with-type-aware-rules-replaces-biome.md) | ESLint with type-aware rules replaces Biome | accepted | 2026-08-08 |
+| [0008](./0008-purity-enforced-structurally.md) | Purity is enforced by file location, not by review | accepted | 2026-08-08 |
 
 ### Data layer
 
-_(no entries yet)_
+- 0006 — cascade-on-delete via JSON-blob scrub, the substitute for foreign keys DSQL does not enforce.
 
 ### App architecture
 
@@ -73,6 +77,9 @@ _(no entries yet)_
 ### Tooling / DevX
 
 - 0001 — `/tech-lead-orchestrator` replaces the linear skill auto-chain.
+- 0005 — Dynamic Workflows as the orchestration substrate (supersedes 0001's runtime, not its intent).
+- 0007 — ESLint with type-aware rules replaces Biome; the cost is a 23× slower cold lint, the benefit is every rule the standards name.
+- 0008 — purity enforced by file location through three custom rules, with "condition" narrowed to mean a decision.
 
 ## How `/open-pr` uses ADRs
 
