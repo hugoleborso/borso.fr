@@ -13,7 +13,7 @@
  */
 
 import { useMemo } from 'react';
-import { parseChordPro, transposeLines } from '../../lib/chordpro.utils';
+import { isTitleDirective, parseChordPro, transposeLines } from '../../lib/chordpro.utils';
 import { composeClassName } from '../atoms/class-name.utils';
 
 interface ChordChartViewerProps {
@@ -40,17 +40,14 @@ export function ChordChartViewer({
       {transposed.map((line, index) => {
         const key = `chord-line-${index}`;
         if (line.kind === 'blank') return <div key={key} className="h-4" />;
+        if (line.kind === 'directive' && isTitleDirective(line.name)) {
+          return (
+            <h3 key={key} className="font-display italic text-2xl text-ink-900 m-0 mb-2 not-prose">
+              {line.value}
+            </h3>
+          );
+        }
         if (line.kind === 'directive') {
-          if (line.name === 'title' || line.name === 't') {
-            return (
-              <h3
-                key={key}
-                className="font-display italic text-2xl text-ink-900 m-0 mb-2 not-prose"
-              >
-                {line.value}
-              </h3>
-            );
-          }
           return (
             <p key={key} className="text-ink-500 italic text-xs m-0">
               {line.value}

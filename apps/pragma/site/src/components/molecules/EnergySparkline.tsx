@@ -64,10 +64,9 @@ export function EnergySparkline({
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      {points.map(([x, y], index) => (
+      {points.map(([x, y], pointIndex) => (
         <span
-          // biome-ignore lint/suspicious/noArrayIndexKey: sparkline points are a stable visual sequence, index is the index
-          key={index}
+          key={`point-${pointIndex}`}
           className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
             left: `${(x / VIEWBOX_WIDTH) * 100}%`,

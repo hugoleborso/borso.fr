@@ -12,8 +12,9 @@
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { ApiError } from '../../lib/api';
+import { useNavigateTo } from '../../lib/navigation';
 import { useCreateSong, useDeleteSong, useSong, useUpdateSong } from '../../lib/queries/songs';
 import { SongEditForm } from './SongEditForm';
 import {
@@ -27,7 +28,7 @@ import {
 export function SongEditPage(): JSX.Element {
   const { t } = useTranslation();
   const { songId } = useParams<{ songId: string }>();
-  const navigate = useNavigate();
+  const navigateTo = useNavigateTo();
   const isNew = songId === undefined || songId === 'new';
   const songQuery = useSong(songId ?? '', !isNew);
   const createSong = useCreateSong();
@@ -54,10 +55,10 @@ export function SongEditPage(): JSX.Element {
     try {
       if (isNew) {
         const created = await createSong.mutateAsync(payload);
-        navigate(`/catalog/${created.song.id}`, { replace: true });
+        navigateTo(`/catalog/${created.song.id}`, { replace: true });
       } else {
         await updateSong.mutateAsync({ id: songId, ...payload });
-        navigate(`/catalog/${songId}`);
+        navigateTo(`/catalog/${songId}`);
       }
     } catch (error) {
       setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
@@ -68,7 +69,7 @@ export function SongEditPage(): JSX.Element {
     if (songId === undefined || isNew) return;
     try {
       await deleteSong.mutateAsync({ id: songId });
-      navigate('/catalog', { replace: true });
+      navigateTo('/catalog', { replace: true });
     } catch (error) {
       setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
     }

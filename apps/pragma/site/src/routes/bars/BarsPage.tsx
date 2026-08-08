@@ -12,13 +12,13 @@
 import type { JSX } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Badge } from '../../components/atoms/Badge';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { BarsKanban } from '../../components/organisms/BarsKanban';
 import { BarsList, type BarsListRow } from '../../components/organisms/BarsList';
 import { ApiError } from '../../lib/api';
-import { formatCapacity } from '../../lib/formatters.utils';
+import { isPositiveCount } from '../../lib/counts.utils';
 import { useBarsList, useCreateBar, useDeleteBar, useUpdateBar } from '../../lib/queries/bars';
 import { countStale, isStale } from '../../lib/stale-bar.utils';
 import { BarForm } from './BarForm';
@@ -34,6 +34,7 @@ import {
   applyBarWriteIntent,
   type BarRow,
   type BarsView,
+  buildKanbanCardsByStatus,
   groupBarsByStatus,
   selectBarWriteIntent,
   selectDragDropIntent,
@@ -48,11 +49,6 @@ const NO_BARS: readonly BarRow[] = [];
 const VIEW_TOGGLE_CLASS = {
   active: 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]',
   inactive: 'bg-transparent text-ink-500 hover:text-ink-700',
-} as const;
-
-const KANBAN_CARD_TONE = {
-  stale: 'border-warn/40',
-  fresh: '',
 } as const;
 
 export function BarsPage(): JSX.Element {
@@ -70,9 +66,14 @@ export function BarsPage(): JSX.Element {
 
   const now = useMemo(() => new Date(), []);
   const staleCount = useMemo(() => countStale(bars, now), [bars, now]);
+  const hasStaleBars = isPositiveCount(staleCount);
   const isBarStale = useCallback((bar: BarRow): boolean => isStale(bar, now), [now]);
 
   const grouped = useMemo(() => groupBarsByStatus(sortedBars), [sortedBars]);
+  const kanbanCardsByStatus = useMemo(
+    () => buildKanbanCardsByStatus(grouped, isBarStale),
+    [grouped, isBarStale],
+  );
 
   const queryError = barsQuery.error instanceof ApiError ? barsQuery.error.message : null;
   const displayError = localError ?? queryError;
@@ -129,6 +130,34 @@ export function BarsPage(): JSX.Element {
     dropByIntent[selectDragDropIntent(draggedId)]();
   };
 
+  const panelByView: Readonly<Record<BarsView, JSX.Element>> = {
+    list: (
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 items-start">
+        <BarsList
+          bars={listRows}
+          statusLabel={(status) => t(BAR_STATUS_KEY[status])}
+          onSelect={selectBar}
+          onRemove={removeBar}
+        />
+        <BarForm
+          key={formInitial.id ?? 'new'}
+          initial={formInitial}
+          onSubmit={saveBar}
+          onCancel={() => setFormInitial(BLANK_BAR_FORM)}
+        />
+      </div>
+    ),
+    kanban: (
+      <BarsKanban
+        statuses={BAR_STATUSES}
+        cardsByStatus={kanbanCardsByStatus}
+        statusLabel={(status) => t(BAR_STATUS_KEY[status])}
+        onSelect={selectBar}
+        onMoveToStatus={moveBarToStatus}
+      />
+    ),
+  };
+
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
       <PageHeader
@@ -168,7 +197,7 @@ export function BarsPage(): JSX.Element {
       {barsQuery.isLoading ? (
         <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
       ) : null}
-      {staleCount > 0 ? (
+      {hasStaleBars ? (
         <div
           className="flex items-center gap-2 bg-warn-soft text-warn px-4 py-2.5 rounded-md text-sm mb-4"
           role="alert"
@@ -178,66 +207,7 @@ export function BarsPage(): JSX.Element {
         </div>
       ) : null}
 
-      {view === 'list' ? (
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 items-start">
-          <BarsList
-            bars={listRows}
-            statusLabel={(status) => t(BAR_STATUS_KEY[status])}
-            onSelect={selectBar}
-            onRemove={removeBar}
-          />
-          <BarForm
-            key={formInitial.id ?? 'new'}
-            initial={formInitial}
-            onSubmit={saveBar}
-            onCancel={() => setFormInitial(BLANK_BAR_FORM)}
-          />
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 overflow-x-auto">
-          {BAR_STATUSES.map((status) => (
-            <section
-              key={status}
-              className="bg-bg-sunk rounded-lg p-3 min-h-[480px] flex flex-col gap-2"
-              aria-label={t(BAR_STATUS_KEY[status])}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                event.preventDefault();
-                moveBarToStatus(status, event.dataTransfer.getData('text/plain'));
-              }}
-            >
-              <h3 className="font-medium text-[11px] tracking-wider uppercase text-ink-500 mx-1 mt-1 mb-1.5 flex items-center gap-2">
-                {t(BAR_STATUS_KEY[status])}
-                <span className="font-mono text-ink-400">{grouped[status].length}</span>
-              </h3>
-              {grouped[status].map((bar) => (
-                <button
-                  key={bar.id}
-                  type="button"
-                  className={composeClassName(
-                    'block w-full text-left bg-bg-elev border border-line rounded-md px-3 py-2.5 cursor-grab hover:border-line-strong transition-colors',
-                    KANBAN_CARD_TONE[isBarStale(bar) ? 'stale' : 'fresh'],
-                  )}
-                  draggable
-                  onDragStart={(event) => event.dataTransfer.setData('text/plain', bar.id)}
-                  onClick={() => selectBar(bar.id)}
-                >
-                  <div className="flex items-center gap-2 text-[13.5px] font-medium text-ink-900 mb-1">
-                    {bar.name}
-                    {isBarStale(bar) ? <Badge tone="warn">{t('bars.staleBadge')}</Badge> : null}
-                  </div>
-                  <div className="text-[10.5px] font-mono text-ink-400 tracking-wide">
-                    {bar.city ?? ''} · {formatCapacity(bar.capacity)}
-                  </div>
-                  {bar.contactName === null ? null : (
-                    <div className="text-[11.5px] text-ink-500 mt-1.5">{bar.contactName}</div>
-                  )}
-                </button>
-              ))}
-            </section>
-          ))}
-        </div>
-      )}
+      {panelByView[view]}
     </section>
   );
 }

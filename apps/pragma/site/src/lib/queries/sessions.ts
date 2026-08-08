@@ -6,7 +6,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
-import { isLastPendingMutation } from './optimistic.utils';
+import { buildOptimisticSession } from './optimistic-session.core';
+import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 
 type SessionsListShape = InferResponseType<typeof api.api.sessions.$get>;
 
@@ -39,8 +40,6 @@ export function useSession(id: string, isEnabled = true) {
   });
 }
 
-type SessionRow = SessionsListShape['sessions'][number];
-
 export function useCreateSession() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -55,19 +54,7 @@ export function useCreateSession() {
       const key = sessionKeys.list();
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<SessionsListShape>(key);
-      const tempId = crypto.randomUUID();
-      const optimistic: SessionRow = {
-        id: tempId,
-        kind: variables.kind,
-        date: variables.date,
-        preparedConcertId:
-          variables.kind === 'practice' ? (variables.preparedConcertId ?? null) : null,
-        venue: variables.kind === 'concert' ? variables.venue : null,
-        capacity: variables.kind === 'concert' ? variables.capacity : null,
-        gear: variables.kind === 'concert' ? (variables.gear ?? null) : null,
-        friendsCountPerMember:
-          variables.kind === 'concert' ? (variables.friendsCountPerMember ?? {}) : null,
-      };
+      const optimistic = buildOptimisticSession(crypto.randomUUID(), variables);
       queryClient.setQueryData<SessionsListShape>(key, (old) =>
         old === undefined ? old : { ...old, sessions: [...old.sessions, optimistic] },
       );
@@ -113,9 +100,10 @@ export function useUpdateSession() {
           ? old
           : {
               ...old,
-              sessions: old.sessions.map((session) =>
-                session.id === id ? { ...session, ...patch } : session,
-              ),
+              sessions: replaceEntityById(old.sessions, id, (session) => ({
+                ...session,
+                ...patch,
+              })),
             },
       );
       return { previousList, previousById };

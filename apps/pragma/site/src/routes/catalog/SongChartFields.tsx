@@ -109,40 +109,58 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
             {t('catalog.chartImage')}
           </label>
         </div>
-        {props.chartKind === 'chordpro' ? (
-          <textarea
-            value={props.chordproText}
-            onChange={(event) => props.onChordproChange(event.target.value)}
-            className="w-full bg-bg border border-line rounded-md px-3 py-2 mt-3 text-[13px] font-mono text-ink-700 outline-none focus:border-ink-700 resize-y"
-            rows={10}
-            maxLength={64_000}
-          />
-        ) : null}
-        {props.chartKind === 'pdf' ? (
-          <FileDrop
-            className="mt-3"
-            songId={props.songId}
-            currentObjectKey={props.pdfS3Key}
-            onUploaded={(result) => {
-              if (result.kind === 'pdf') props.onPdfKeyChange(result.objectKey);
-              else props.onImageKeyChange(result.objectKey);
-            }}
-            onRemoved={() => props.onPdfKeyChange('')}
-          />
-        ) : null}
-        {props.chartKind === 'image' ? (
-          <FileDrop
-            className="mt-3"
-            songId={props.songId}
-            currentObjectKey={props.imageS3Key}
-            onUploaded={(result) => {
-              if (result.kind === 'image') props.onImageKeyChange(result.objectKey);
-              else props.onPdfKeyChange(result.objectKey);
-            }}
-            onRemoved={() => props.onImageKeyChange('')}
-          />
-        ) : null}
+        <SongChartEditor {...props} />
       </fieldset>
     </>
   );
+}
+
+const CHORDPRO_MAX_LENGTH = 64_000;
+const CHORDPRO_ROWS = 10;
+
+/**
+ * The editor the selected chart variant needs, or nothing when the song
+ * carries no chart. One guard per variant, so the fieldset above holds no
+ * condition of its own.
+ */
+function SongChartEditor(props: SongChartFieldsProps): JSX.Element | null {
+  const keySetterByUploadKind = {
+    pdf: props.onPdfKeyChange,
+    image: props.onImageKeyChange,
+  } as const;
+
+  if (props.chartKind === 'chordpro') {
+    return (
+      <textarea
+        value={props.chordproText}
+        onChange={(event) => props.onChordproChange(event.target.value)}
+        className="w-full bg-bg border border-line rounded-md px-3 py-2 mt-3 text-[13px] font-mono text-ink-700 outline-none focus:border-ink-700 resize-y"
+        rows={CHORDPRO_ROWS}
+        maxLength={CHORDPRO_MAX_LENGTH}
+      />
+    );
+  }
+  if (props.chartKind === 'pdf') {
+    return (
+      <FileDrop
+        className="mt-3"
+        songId={props.songId}
+        currentObjectKey={props.pdfS3Key}
+        onUploaded={(result) => keySetterByUploadKind[result.kind](result.objectKey)}
+        onRemoved={() => props.onPdfKeyChange('')}
+      />
+    );
+  }
+  if (props.chartKind === 'image') {
+    return (
+      <FileDrop
+        className="mt-3"
+        songId={props.songId}
+        currentObjectKey={props.imageS3Key}
+        onUploaded={(result) => keySetterByUploadKind[result.kind](result.objectKey)}
+        onRemoved={() => props.onImageKeyChange('')}
+      />
+    );
+  }
+  return null;
 }

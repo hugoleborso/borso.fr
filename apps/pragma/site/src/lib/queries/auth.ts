@@ -35,11 +35,9 @@ const UNAUTHORISED_STATUS = 401;
 
 async function probeSession(): Promise<SessionProbeResult> {
   const response = await api.api.instruments.$get();
-  if (response.status === UNAUTHORISED_STATUS) {
-    forgetSessionMarker();
-    return { authenticated: false };
-  }
-  return { authenticated: true };
+  if (response.status !== UNAUTHORISED_STATUS) return { authenticated: true };
+  forgetSessionMarker();
+  return { authenticated: false };
 }
 
 export function useSessionProbe(isEnabled: boolean) {

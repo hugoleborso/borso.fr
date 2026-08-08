@@ -96,3 +96,11 @@ export function isCloneableDataTable(table: string, blocklist: readonly string[]
   if (table === '_migrations') return false;
   return !blocklist.includes(table);
 }
+
+/** The tables whose rows the clone copies, so the caller loops rather than skips. */
+export function selectCloneableDataTables(
+  tables: readonly string[],
+  blocklist: readonly string[],
+): string[] {
+  return tables.filter((table) => isCloneableDataTable(table, blocklist));
+}

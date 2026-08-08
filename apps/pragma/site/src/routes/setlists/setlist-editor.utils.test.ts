@@ -6,6 +6,7 @@ import {
   instrumentHarmonicMap,
   lineupOf,
   prominentMemberInstrumentFor,
+  selectUnwarnedMemberIds,
   tonalityLabelFor,
 } from './setlist-editor.utils';
 
@@ -122,6 +123,20 @@ describe('findOrphanMemberIds', () => {
 
   it('returns an empty list when the lineup is empty', () => {
     expect(findOrphanMemberIds({}, new Set(['m1']))).toEqual([]);
+  });
+});
+
+describe('selectUnwarnedMemberIds', () => {
+  it('keeps the orphans nobody has been told about', () => {
+    expect(selectUnwarnedMemberIds(['mGhost', 'mOther'], new Set(['mGhost']))).toEqual(['mOther']);
+  });
+
+  it('drops every orphan once they have all been reported', () => {
+    expect(selectUnwarnedMemberIds(['mGhost'], new Set(['mGhost']))).toEqual([]);
+  });
+
+  it('leaves an empty list empty', () => {
+    expect(selectUnwarnedMemberIds([], new Set())).toEqual([]);
   });
 });
 

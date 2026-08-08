@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isTitleDirective,
   parseChordPro,
   parseChordProLine,
   readTitle,
@@ -64,6 +65,18 @@ describe('parseChordPro', () => {
     expect(lines[0]?.kind).toBe('directive');
     expect(lines[1]?.kind).toBe('chord-line');
     expect(lines[2]?.kind).toBe('blank');
+  });
+});
+
+describe('isTitleDirective', () => {
+  it('accepts both spellings of the title directive', () => {
+    expect(isTitleDirective('title')).toBe(true);
+    expect(isTitleDirective('t')).toBe(true);
+  });
+
+  it('rejects every other directive', () => {
+    expect(isTitleDirective('comment')).toBe(false);
+    expect(isTitleDirective('')).toBe(false);
   });
 });
 

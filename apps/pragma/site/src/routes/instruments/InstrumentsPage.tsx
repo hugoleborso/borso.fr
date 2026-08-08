@@ -25,6 +25,7 @@ import {
   useInstrumentsList,
   useUpdateInstrument,
 } from '../../lib/queries/instruments';
+import { selectInstrumentDeletionEffect } from './instruments-page.core';
 
 interface SelectedInstrument {
   id: string;
@@ -73,6 +74,16 @@ export function InstrumentsPage(): JSX.Element {
     form.reset();
   };
 
+  const applyDeletionEffect = {
+    'keep-form': (): void => undefined,
+    'clear-form': clearSelection,
+  } as const;
+
+  const removeInstrument = (instrumentId: string): void => {
+    remove.mutate({ id: instrumentId });
+    applyDeletionEffect[selectInstrumentDeletionEffect(selected?.id ?? null, instrumentId)]();
+  };
+
   const instruments = list.data?.instruments ?? [];
   const lastError: unknown = list.error ?? create.error ?? update.error ?? remove.error ?? null;
   const errorMessage =
@@ -111,10 +122,7 @@ export function InstrumentsPage(): JSX.Element {
                 <button
                   type="button"
                   className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
-                  onClick={() => {
-                    remove.mutate({ id: row.id });
-                    if (selected?.id === row.id) clearSelection();
-                  }}
+                  onClick={() => removeInstrument(row.id)}
                   aria-label={t('common.delete')}
                 >
                   ×

@@ -8,7 +8,7 @@
 
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { composeClassName } from '../../components/atoms/class-name.utils';
@@ -17,11 +17,12 @@ import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { openDialogOnAttach } from '../../lib/modal-dialog';
+import { useNavigateTo } from '../../lib/navigation';
 import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions';
 
 export function SessionsPage(): JSX.Element {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
+  const navigateTo = useNavigateTo();
   const sessionsQuery = useSessionsList();
   const deleteSession = useDeleteSession();
 
@@ -124,7 +125,7 @@ export function SessionsPage(): JSX.Element {
         <CreateSessionDialog
           kind={creating}
           onClose={() => setCreating(null)}
-          onCreated={(sessionId) => navigate(`/sessions/${sessionId}`)}
+          onCreated={(sessionId) => navigateTo(`/sessions/${sessionId}`)}
           existingConcerts={concerts.map((concert) => ({
             id: concert.id,
             date: concert.date,

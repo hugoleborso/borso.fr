@@ -81,12 +81,19 @@ export function parseChordPro(source: string): readonly ChordProLine[] {
   return source.split(/\r?\n/).map(parseChordProLine);
 }
 
+const TITLE_DIRECTIVE_NAMES = new Set(['title', 't']);
+
+/** ChordPro spells the title directive both in full and abbreviated. */
+export function isTitleDirective(directiveName: string): boolean {
+  return TITLE_DIRECTIVE_NAMES.has(directiveName);
+}
+
 /**
  * Returns the title declared via `{title: ...}` or `{t: ...}` if any.
  */
 export function readTitle(lines: readonly ChordProLine[]): string | null {
   for (const line of lines) {
-    if (line.kind === 'directive' && (line.name === 'title' || line.name === 't')) {
+    if (line.kind === 'directive' && isTitleDirective(line.name)) {
       return line.value;
     }
   }

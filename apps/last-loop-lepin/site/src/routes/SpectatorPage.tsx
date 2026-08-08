@@ -1,18 +1,17 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CorrectionBanner } from '../components/molecules/CorrectionBanner';
-import { Countdown } from '../components/molecules/Countdown';
 import { InRaceCounter } from '../components/molecules/InRaceCounter';
 import { CourseMap } from '../components/organisms/CourseMap';
 import { ElevationProfile } from '../components/organisms/ElevationProfile';
 import { Leaderboard } from '../components/organisms/Leaderboard';
+import { NextLoopCountdown } from '../components/organisms/NextLoopCountdown';
 import { SelfPunchModal } from '../components/organisms/SelfPunchModal';
 import {
   collectFastestLapSlugs,
   isRaceOver,
   isShowingAnnouncement,
   listFinishedEditions,
-  projectNextLoopBoundaryMs,
   readCorrectionInstant,
   selectRacingEdition,
 } from '../components/organisms/spectator.core';
@@ -82,10 +81,7 @@ export function SpectatorPage() {
                 hint={<span className="muted mono">{raceEdition.displayName}</span>}
               />
               <CardBody modifier="col">
-                <Countdown
-                  targetEpochMs={projectNextLoopBoundaryMs(raceEdition, Date.now())}
-                  label=""
-                />
+                <NextLoopCountdown edition={raceEdition} label="" />
                 <InRaceCounter ranked={ranked} />
               </CardBody>
             </Card>

@@ -8,7 +8,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
-import { isLastPendingMutation } from './optimistic.utils';
+import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 
 export const instrumentKeys = {
   all: ['instruments'] as const,
@@ -87,9 +87,10 @@ export function useUpdateInstrument() {
       queryClient.setQueryData<InstrumentsListResponse>(listKey, (old) => {
         if (old === undefined) return old;
         return {
-          instruments: old.instruments.map((instrument) =>
-            instrument.id === id ? { ...instrument, ...patch } : instrument,
-          ),
+          instruments: replaceEntityById(old.instruments, id, (instrument) => ({
+            ...instrument,
+            ...patch,
+          })),
         };
       });
       return { previousList };

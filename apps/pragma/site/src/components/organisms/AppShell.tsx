@@ -19,6 +19,7 @@ import { Avatar } from '../atoms/Avatar';
 import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon, type IconName } from '../atoms/Icon';
+import { isPositiveCount } from '../../lib/counts.utils';
 import { MEMBER_PALETTE, memberInitial } from '../atoms/member-palette.utils';
 import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
 import { OfflineBanner } from '../molecules/OfflineBanner';
@@ -166,6 +167,7 @@ interface SidebarLinkProps {
 }
 
 function SidebarLink({ item, label, badge, isActive, onClick }: SidebarLinkProps): JSX.Element {
+  const isBadgeShown = isPositiveCount(badge);
   return (
     <NavLink
       to={item.to}
@@ -178,7 +180,7 @@ function SidebarLink({ item, label, badge, isActive, onClick }: SidebarLinkProps
     >
       <Icon name={item.icon} size={16} className="opacity-85" />
       <span className="flex-1">{label}</span>
-      {badge !== undefined && badge > 0 ? (
+      {isBadgeShown ? (
         <Badge tone="default" size="sm">
           {badge}
         </Badge>

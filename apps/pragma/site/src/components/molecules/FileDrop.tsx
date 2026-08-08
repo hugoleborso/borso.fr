@@ -16,8 +16,9 @@ import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import {
   FILE_DROP_ACCEPT_ATTRIBUTE,
-  FILE_DROP_MAX_BYTES,
+  FILE_DROP_MAX_MEBIBYTES,
   type FileDropChartKind,
+  selectRejectionMessageKey,
   validateChartFile,
 } from './file-drop.utils';
 
@@ -52,11 +53,7 @@ export function FileDrop({
     setError(null);
     const validated = validateChartFile(file);
     if (!validated.ok) {
-      setError(
-        validated.reason === 'too-large'
-          ? t('catalog.uploadTooLarge', { maxMb: Math.round(FILE_DROP_MAX_BYTES / (1024 * 1024)) })
-          : t('catalog.uploadUnsupported'),
-      );
+      setError(t(selectRejectionMessageKey(validated.reason), { maxMb: FILE_DROP_MAX_MEBIBYTES }));
       return;
     }
     try {
@@ -113,7 +110,7 @@ export function FileDrop({
           {isBusy ? t('catalog.uploadInProgress') : t('catalog.uploadPrompt')}
         </span>
         <span className="text-xs text-ink-400">
-          {t('catalog.uploadHint', { maxMb: Math.round(FILE_DROP_MAX_BYTES / (1024 * 1024)) })}
+          {t('catalog.uploadHint', { maxMb: FILE_DROP_MAX_MEBIBYTES })}
         </span>
         <input
           ref={inputRef}

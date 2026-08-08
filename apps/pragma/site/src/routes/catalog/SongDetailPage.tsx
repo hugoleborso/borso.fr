@@ -23,10 +23,11 @@ import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
 import { ChartKindIcon } from '../../components/molecules/ChartKindIcon';
 import { LineupEditor, type LineupRecord } from '../../components/molecules/LineupEditor';
-import { MemberChip } from '../../components/molecules/MemberChip';
+import { SongEmbed } from '../../components/molecules/SongEmbed';
 import { StatusChip } from '../../components/molecules/StatusChip';
 import { UploadedChartPreview } from '../../components/molecules/UploadedChartPreview';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
+import { SongDetailSidebar } from '../../components/organisms/SongDetailSidebar';
 import { ApiError } from '../../lib/api';
 import { resolveEmbed } from '../../lib/embed.utils';
 import { useInstrumentsList } from '../../lib/queries/instruments';
@@ -34,10 +35,10 @@ import { useMasteryDefaults } from '../../lib/queries/mastery';
 import { useMembersList } from '../../lib/queries/members';
 import { useSong, useUpdateSong } from '../../lib/queries/songs';
 import { useSignedChartUrl } from '../../lib/queries/uploads';
-import { extractChartKind } from './chart-kind.utils';
+import { extractChartKind, selectChordProText } from './chart-kind.utils';
+import { buildMasteryKey, buildSongLineupRows } from './song-lineup.core';
 import { buildTonalityLabel } from './tonality-label.utils';
 
-const MASTERY_BAR_COUNT = 10;
 const NO_ROWS: readonly never[] = [];
 const MAX_TONALITY_RENDER_LENGTH = 16;
 
@@ -80,10 +81,15 @@ export function SongDetailPage(): JSX.Element {
   const masteryLookup = useMemo(() => {
     const lookup = new Map<string, number>();
     for (const row of masteryDefaults) {
-      lookup.set(`${row.memberId}::${row.instrumentId}`, row.score);
+      lookup.set(buildMasteryKey(row.memberId, row.instrumentId), row.score);
     }
     return lookup;
   }, [masteryDefaults]);
+
+  const lineupRows = useMemo(
+    () => buildSongLineupRows(song?.defaultLineup ?? {}, members, instruments, masteryLookup),
+    [song, members, instruments, masteryLookup],
+  );
 
   const lineupEditorMembers = useMemo(
     () => members.map((member) => ({ id: member.id, name: member.firstName, color: member.color })),
@@ -111,6 +117,7 @@ export function SongDetailPage(): JSX.Element {
   }
 
   const chartKind = extractChartKind(song.chart ?? null);
+  const chordProText = selectChordProText(song.chart ?? null);
   const tonality = buildTonalityLabel(song.tonalityStart, song.tonalityEnd);
   const labelClass = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
 
@@ -172,7 +179,7 @@ export function SongDetailPage(): JSX.Element {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
         <div className="flex flex-col gap-4 min-w-0">
-          {chartKind === 'chordpro' && song.chart !== null && song.chart.kind === 'chordpro' ? (
+          {chordProText === null ? null : (
             <Card variant="bare">
               <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-line bg-bg-sunk">
                 <Icon name="text" size={14} className="text-ink-500" />
@@ -187,10 +194,10 @@ export function SongDetailPage(): JSX.Element {
                 </Link>
               </div>
               <div className="p-4">
-                <ChordChartViewer source={song.chart.text} compact />
+                <ChordChartViewer source={chordProText} compact />
               </div>
             </Card>
-          ) : null}
+          )}
 
           {uploadedChart === null ? null : (
             <Card variant="bare">
@@ -231,28 +238,11 @@ export function SongDetailPage(): JSX.Element {
                       className="bg-bg border border-line rounded-md p-2 flex items-start gap-2"
                     >
                       <div className="flex-1 min-w-0">
-                        {embed.kind === 'oembed' ? (
-                          <iframe
-                            src={embed.iframeSrc}
-                            title={`${link.provider}-${link.url}`}
-                            width={embed.width}
-                            height={embed.height}
-                            loading="lazy"
-                            referrerPolicy="no-referrer"
-                            allow="encrypted-media; autoplay; clipboard-write; picture-in-picture"
-                            allowFullScreen
-                            className="rounded-md max-w-full"
-                          />
-                        ) : (
-                          <a
-                            href={embed.href}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                            className="text-accent hover:underline break-all"
-                          >
-                            {embed.href}
-                          </a>
-                        )}
+                        <SongEmbed
+                          embed={embed}
+                          title={`${link.provider}-${link.url}`}
+                          iframeClassName="rounded-md max-w-full"
+                        />
                         {link.comment.length > 0 ? (
                           <div className="text-[11px] text-ink-500 mt-1">{link.comment}</div>
                         ) : null}
@@ -265,100 +255,11 @@ export function SongDetailPage(): JSX.Element {
           ) : null}
         </div>
 
-        <aside className="flex flex-col gap-4">
-          <Card>
-            <div
-              className={composeClassName(
-                labelClass,
-                'mb-2.5 flex items-center justify-between gap-2',
-              )}
-            >
-              <span>{t('catalog.defaultLineup')}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setLineupEditorOpen(true)}
-              >
-                <Icon name="edit" size={12} />
-                {t('lineup.editDefault')}
-              </Button>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              {Object.entries(song.defaultLineup).length === 0 ? (
-                <span className="text-xs text-ink-400 italic">—</span>
-              ) : null}
-              {Object.entries(song.defaultLineup).map(([memberId, instrumentId]) => {
-                const member = members.find((candidate) => candidate.id === memberId);
-                if (member === undefined) return null;
-                const instrument = instruments.find((candidate) => candidate.id === instrumentId);
-                return (
-                  <div
-                    key={memberId}
-                    className="flex items-center gap-2.5 py-1.5 border-b border-dashed border-line last:border-b-0"
-                  >
-                    <MemberChip memberName={member.firstName} memberColor={member.color} />
-                    <span className="text-[12.5px] text-ink-900 flex-1">{member.firstName}</span>
-                    <span className="font-mono text-[10.5px] uppercase tracking-wider text-ink-500">
-                      {instrument?.name ?? '—'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-
-          <Card>
-            <div className={composeClassName(labelClass, 'mb-2.5')}>{t('catalog.mastery')}</div>
-            <div className="flex flex-col gap-2">
-              {Object.entries(song.defaultLineup).length === 0 ? (
-                <span className="text-xs text-ink-400 italic">—</span>
-              ) : null}
-              {Object.entries(song.defaultLineup).map(([memberId, instrumentId]) => {
-                const member = members.find((candidate) => candidate.id === memberId);
-                if (member === undefined) return null;
-                const score =
-                  instrumentId === null
-                    ? null
-                    : (masteryLookup.get(`${memberId}::${instrumentId}`) ?? null);
-                return (
-                  <div key={memberId} className="flex items-center gap-2.5">
-                    <MemberChip memberName={member.firstName} memberColor={member.color} />
-                    <span className="text-[12.5px] flex-1 text-ink-900">{member.firstName}</span>
-                    <div className="flex gap-px">
-                      {Array.from({ length: MASTERY_BAR_COUNT }).map((_, barIndex) => (
-                        <span
-                          // biome-ignore lint/suspicious/noArrayIndexKey: mastery bars are a stable visual sequence
-                          key={barIndex}
-                          className="w-1.5 h-3.5 rounded-[1px]"
-                          style={{
-                            background:
-                              score !== null && barIndex < score
-                                ? member.color
-                                : 'var(--color-bg-sunk)',
-                            opacity: score !== null && barIndex < score ? 0.85 : 1,
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <span className="font-mono text-[11px] text-ink-400 min-w-[24px] text-right">
-                      {score === null ? '—' : `${score}/10`}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-
-          {song.baseEnergy === null ? null : (
-            <Card variant="flat" className="bg-bg-sunk border-0">
-              <div className={composeClassName(labelClass, 'mb-1.5')}>
-                {t('catalog.baseEnergy')}
-              </div>
-              <div className="font-mono text-[14px] text-ink-700">{song.baseEnergy}/10</div>
-            </Card>
-          )}
-        </aside>
+        <SongDetailSidebar
+          lineupRows={lineupRows}
+          baseEnergy={song.baseEnergy}
+          onEditDefaultLineup={() => setLineupEditorOpen(true)}
+        />
       </div>
       <LineupEditor
         open={lineupEditorOpen}

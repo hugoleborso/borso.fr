@@ -3,6 +3,7 @@ import {
   buildCloneInsertSql,
   buildCreateTableLikeSql,
   isCloneableDataTable,
+  selectCloneableDataTables,
 } from './clone-from-schema.utils.js';
 
 describe('buildCreateTableLikeSql', () => {
@@ -117,6 +118,28 @@ describe('buildCloneInsertSql', () => {
     expect(() => buildCloneInsertSql('prod', 'pr_27"; --', 'runners', ['slug'], [])).toThrow(
       /Invalid/,
     );
+  });
+});
+
+describe('selectCloneableDataTables', () => {
+  it('drops the marker table and everything blocklisted', () => {
+    expect(
+      selectCloneableDataTables(
+        ['_migrations', 'admin_sessions', 'editions', 'runners'],
+        ['admin_sessions'],
+      ),
+    ).toStrictEqual(['editions', 'runners']);
+  });
+
+  it('keeps every data table when nothing is blocklisted', () => {
+    expect(selectCloneableDataTables(['editions', 'runners'], [])).toStrictEqual([
+      'editions',
+      'runners',
+    ]);
+  });
+
+  it('leaves an empty schema empty', () => {
+    expect(selectCloneableDataTables([], ['admin_sessions'])).toStrictEqual([]);
   });
 });
 

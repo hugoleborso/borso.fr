@@ -13,7 +13,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
-import { isLastPendingMutation } from './optimistic.utils';
+import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 
 export const songKeys = {
   all: ['songs'] as const,
@@ -185,7 +185,7 @@ export function useUpdateSong() {
       queryClient.setQueryData<SongsListResponse>(listKey, (old) => {
         if (old === undefined) return old;
         return {
-          songs: old.songs.map((song) => (song.id === id ? mergeSongUpdate(song, patch) : song)),
+          songs: replaceEntityById(old.songs, id, (song) => mergeSongUpdate(song, patch)),
         };
       });
       queryClient.setQueryData<SongByIdResponse>(byIdKey, (old) => {

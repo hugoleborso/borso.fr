@@ -12,7 +12,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
 import { instrumentKeys } from './instruments';
-import { isLastPendingMutation } from './optimistic.utils';
+import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 
 type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;
 
@@ -125,9 +125,7 @@ export function useUpdateMember() {
       queryClient.setQueryData<MembersListResponse>(listKey, (old) => {
         if (old === undefined) return old;
         return {
-          members: old.members.map((member) =>
-            member.id === id ? { ...member, ...patch } : member,
-          ),
+          members: replaceEntityById(old.members, id, (member) => ({ ...member, ...patch })),
         };
       });
       return { previousList };

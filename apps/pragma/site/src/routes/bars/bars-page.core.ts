@@ -7,6 +7,7 @@
 import {
   type BarFormInitial,
   type BarFormSubmitPayload,
+  BAR_STATUSES,
   type BarStatus,
   buildBarFormInitial,
 } from './bar-form.core';
@@ -42,6 +43,44 @@ export function groupBarsByStatus(bars: readonly BarRow[]): Record<BarStatus, Ba
   };
   for (const bar of bars) grouped[bar.status].push(bar);
   return grouped;
+}
+
+export interface KanbanCard {
+  readonly id: string;
+  readonly name: string;
+  readonly city: string | null;
+  readonly capacity: number | null;
+  readonly contactName: string | null;
+  readonly isStale: boolean;
+}
+
+/**
+ * The kanban board reads a bar as a card, and staleness is the only field it
+ * derives rather than copies. Projecting here keeps the board free of the
+ * clock the staleness check needs.
+ */
+export function buildKanbanCardsByStatus(
+  barsByStatus: Readonly<Record<BarStatus, readonly BarRow[]>>,
+  isBarStale: (bar: BarRow) => boolean,
+): Record<BarStatus, KanbanCard[]> {
+  const cards: Record<BarStatus, KanbanCard[]> = {
+    lead: [],
+    contacted: [],
+    booked: [],
+    played: [],
+    cold: [],
+  };
+  for (const status of BAR_STATUSES) {
+    cards[status] = barsByStatus[status].map((bar) => ({
+      id: bar.id,
+      name: bar.name,
+      city: bar.city,
+      capacity: bar.capacity,
+      contactName: bar.contactName,
+      isStale: isBarStale(bar),
+    }));
+  }
+  return cards;
 }
 
 export function sortBarsByName(bars: readonly BarRow[]): BarRow[] {

@@ -11,7 +11,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
-import { isLastPendingMutation } from './optimistic.utils';
+import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 
 export const barKeys = {
   all: ['bars'] as const,
@@ -118,7 +118,7 @@ export function useUpdateBar() {
       queryClient.setQueryData<BarsListResponse>(listKey, (old) => {
         if (old === undefined) return old;
         return {
-          bars: old.bars.map((bar) => (bar.id === id ? { ...bar, ...patch } : bar)),
+          bars: replaceEntityById(old.bars, id, (bar) => ({ ...bar, ...patch })),
         };
       });
       return { previousList };

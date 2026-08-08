@@ -69,16 +69,16 @@ export class DsqlCluster extends Construct implements IDsqlCluster {
       },
     });
     const stack = Stack.of(this);
-    this.clusterArn = Fn.sub(
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: CFN intrinsic, not JS template
-      'arn:aws:dsql:${AWS::Region}:${AWS::AccountId}:cluster/${ClusterId}',
-      { ClusterId: cluster.ref },
-    );
-    this.clusterEndpoint = Fn.sub(
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: CFN intrinsic, not JS template
-      '${ClusterId}.dsql.${AWS::Region}.on.aws',
-      { ClusterId: cluster.ref },
-    );
+    // The `${...}` placeholders below are CloudFormation intrinsics that
+    // CloudFormation resolves at deploy time, so both strings are single
+    // quoted on purpose: a JavaScript template literal would substitute them
+    // here and ship a broken ARN.
+    this.clusterArn = Fn.sub('arn:aws:dsql:${AWS::Region}:${AWS::AccountId}:cluster/${ClusterId}', {
+      ClusterId: cluster.ref,
+    });
+    this.clusterEndpoint = Fn.sub('${ClusterId}.dsql.${AWS::Region}.on.aws', {
+      ClusterId: cluster.ref,
+    });
 
     const ssm = dsqlClusterSsmPaths(props.app);
     new StringParameter(this, 'ArnParam', {

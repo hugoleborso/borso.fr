@@ -8,6 +8,10 @@ import {
   type Stage,
   validateAppSlug,
 } from '../internal/naming.utils.js';
+import {
+  selectSameOriginApiDomainName,
+  selectTestSeedEnvironment,
+} from '../internal/stage-wiring.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { IDsqlCluster } from './dsql-cluster.js';
 import { DsqlSchema, type DsqlSchemaCloneFromConfig } from './dsql-schema.js';
@@ -19,17 +23,6 @@ const SHARED_SSM = {
   hostedZoneName: '/borso/shared/hosted-zone-name',
   certPreviewRegionalArn: '/borso/shared/cert-preview-borso-fr-regional-arn',
 } as const;
-
-/**
- * Env var the construct sets to `'1'` on every non-prod API Lambda. Apps
- * that ship a `/api/__test/seed` route read it to mount the route only
- * when seeding is allowed; prod never receives it, so the route is
- * structurally unreachable in production regardless of app code. Owning
- * the flag here — rather than re-deriving a per-app `<APP>_ALLOW_TEST_SEED`
- * ternary in each stack — is the single point that guarantees the
- * prod-exclusion across every app.
- */
-const ALLOW_TEST_SEED_ENV_VAR = 'ALLOW_TEST_SEED';
 
 /** @beta */
 export interface PreviewableAppProps {
@@ -160,12 +153,17 @@ export class PreviewableApp extends Construct {
         memoryMb: props.api.memoryMb,
         timeoutSeconds: props.api.timeoutSeconds,
         environment: {
-          ...(props.stage === 'prod' ? {} : { [ALLOW_TEST_SEED_ENV_VAR]: '1' }),
+          ...selectTestSeedEnvironment(props.stage),
           ...props.api.environment,
         },
         dsqlSchema: this.database,
       });
     }
+
+    const sameOriginApiDomainName =
+      this.api === undefined
+        ? undefined
+        : selectSameOriginApiDomainName(props.stage, apiHttpHostname(this.api));
 
     this.site = new StaticSite(this, 'Site', {
       app: props.app,
@@ -178,18 +176,9 @@ export class PreviewableApp extends Construct {
       // physical S3 keys, so direct nav / refresh on those paths must
       // resolve to the React bundle, not the catch-all JPEG.
       spaFallback: true,
-      // Prod: wire same-origin `/api/*` through the dedicated CloudFront
-      // distribution so the frontend can call its own API without CORS.
-      // Preview/integ keep cross-origin via a build-time `VITE_API_BASE`
-      // — the shared previews distribution is host-routed per PR, no
-      // surface to add per-PR cache behaviors.
-      ...(this.api && props.stage === 'prod'
-        ? {
-            api: {
-              domainName: apiHttpHostname(this.api),
-            },
-          }
-        : {}),
+      ...(sameOriginApiDomainName === undefined
+        ? {}
+        : { api: { domainName: sameOriginApiDomainName } }),
     });
 
     new CfnOutput(this, 'FrontendUrl', { value: this.site.url });

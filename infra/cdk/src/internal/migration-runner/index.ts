@@ -27,8 +27,9 @@ import postgres from 'postgres';
 import {
   buildCloneInsertSql,
   buildCreateTableLikeSql,
-  isCloneableDataTable,
+  selectCloneableDataTables,
 } from './clone-from-schema.utils.js';
+import { selectPendingMigrations } from './pending-migrations.utils.js';
 import { splitStatements } from './statement-rewrites.utils.js';
 
 interface Migration {
@@ -163,9 +164,9 @@ async function cloneFromSchema(
     await sql.unsafe(buildCreateTableLikeSql(config.sourceSchemaName, targetSchemaName, table));
   }
 
-  // Data step — skip blocklisted (runtime state) tables, clone the rest.
-  for (const table of sourceTables) {
-    if (!isCloneableDataTable(table, blocklist)) continue;
+  // Data step — blocklisted (runtime state) tables keep their shape and lose
+  // their rows.
+  for (const table of selectCloneableDataTables(sourceTables, blocklist)) {
     const columns = await listColumns(sql, config.sourceSchemaName, table);
     if (columns.length === 0) continue;
     const nullifyColumns = nullifyMap[table] ?? [];
@@ -206,9 +207,8 @@ async function applyMigrations(
   const applied = await sql.unsafe<{ name: string }[]>(
     `SELECT name FROM "${schemaName}"._migrations`,
   );
-  const appliedSet = new Set(applied.map((row) => row.name));
-  for (const m of migrations) {
-    if (appliedSet.has(m.name)) continue;
+  const appliedNames = new Set(applied.map((row) => row.name));
+  for (const migration of selectPendingMigrations(migrations, appliedNames)) {
     await sql.unsafe(`SET search_path TO "${schemaName}"`);
     // Aurora DSQL rejects multiple DDL statements in one transaction
     // ("multiple ddl statements not supported in a transaction"), and
@@ -216,7 +216,7 @@ async function applyMigrations(
     // / CREATE INDEX / ALTER TABLE block in a single tx. Drizzle-kit
     // separates statements with `--> statement-breakpoint`; we run each
     // fragment in its own round-trip so DSQL sees one DDL per tx.
-    for (const statement of splitStatements(m.sql)) {
+    for (const statement of splitStatements(migration.sql)) {
       await sql.unsafe(statement);
     }
     // `ON CONFLICT DO NOTHING` is the only concurrency guard we get on
@@ -225,7 +225,7 @@ async function applyMigrations(
     // duplicate INSERT would otherwise throw and fail the deploy.
     await sql.unsafe(
       `INSERT INTO "${schemaName}"._migrations(name) VALUES ($1) ON CONFLICT (name) DO NOTHING`,
-      [m.name],
+      [migration.name],
     );
   }
 }
@@ -234,21 +234,27 @@ async function dropSchema(sql: postgres.Sql, schemaName: string): Promise<void> 
   await sql.unsafe(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`);
 }
 
+async function provisionSchema(sql: postgres.Sql, props: ResourceProps): Promise<void> {
+  await ensureSchema(sql, props.schemaName);
+  if (props.cloneFromSchema !== undefined) {
+    await cloneFromSchema(sql, props.schemaName, props.cloneFromSchema);
+  }
+  await applyMigrations(sql, props.schemaName, props.migrations);
+}
+
 export async function handler(event: CfnEvent): Promise<CfnResponse> {
   const props = event.ResourceProperties;
   const physicalId = event.PhysicalResourceId ?? `dsql-schema:${props.schemaName}`;
 
+  const applyByRequestType = {
+    Create: async (sql: postgres.Sql) => provisionSchema(sql, props),
+    Update: async (sql: postgres.Sql) => provisionSchema(sql, props),
+    Delete: async (sql: postgres.Sql) => dropSchema(sql, props.schemaName),
+  } as const;
+
   const sql = await connect(props);
   try {
-    if (event.RequestType === 'Delete') {
-      await dropSchema(sql, props.schemaName);
-    } else {
-      await ensureSchema(sql, props.schemaName);
-      if (props.cloneFromSchema !== undefined) {
-        await cloneFromSchema(sql, props.schemaName, props.cloneFromSchema);
-      }
-      await applyMigrations(sql, props.schemaName, props.migrations);
-    }
+    await applyByRequestType[event.RequestType](sql);
   } finally {
     await sql.end({ timeout: 5 });
   }

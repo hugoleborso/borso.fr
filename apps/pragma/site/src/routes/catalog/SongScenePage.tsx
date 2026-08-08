@@ -12,10 +12,11 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { ApiError } from '../../lib/api';
 import { openDialogOnAttach } from '../../lib/modal-dialog';
+import { useNavigateTo } from '../../lib/navigation';
 import { useSong } from '../../lib/queries/songs';
 import {
   clampSceneFontSize,
@@ -30,7 +31,7 @@ const SCENE_BUTTON_CLASS =
 
 export function SongScenePage(): JSX.Element {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigateTo = useNavigateTo();
   const { songId } = useParams<{ songId: string }>();
   const songQuery = useSong(songId ?? '', songId !== undefined);
   const [semitones, setSemitones] = useState(0);
@@ -52,7 +53,7 @@ export function SongScenePage(): JSX.Element {
 
   const chordproText = selectChordproText(song.chart);
   const leaveScene = (): void => {
-    void navigate(`/catalog/${song.id}`);
+    navigateTo(`/catalog/${song.id}`);
   };
   const stepFontSize = (deltaPx: number): void => {
     setFontSizePx((current) => clampSceneFontSize(current + deltaPx));

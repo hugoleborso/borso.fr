@@ -11,7 +11,7 @@
  * Will become a Sentry breadcrumb once the observability baseline lands.
  */
 
-import { findOrphanMemberIds } from './setlist-editor.utils';
+import { findOrphanMemberIds, selectUnwarnedMemberIds } from './setlist-editor.utils';
 
 const warnedOrphanMemberIds = new Set<string>();
 
@@ -20,8 +20,8 @@ export function warnIfOrphanMemberIds(
   knownMemberIds: ReadonlySet<string>,
   songId: string,
 ): void {
-  for (const orphanMemberId of findOrphanMemberIds(resolvedLineup, knownMemberIds)) {
-    if (warnedOrphanMemberIds.has(orphanMemberId)) continue;
+  const orphanMemberIds = findOrphanMemberIds(resolvedLineup, knownMemberIds);
+  for (const orphanMemberId of selectUnwarnedMemberIds(orphanMemberIds, warnedOrphanMemberIds)) {
     warnedOrphanMemberIds.add(orphanMemberId);
     console.warn({ surface: 'lineup-resolver', orphanMemberId, songId });
   }

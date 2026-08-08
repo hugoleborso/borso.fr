@@ -10,12 +10,15 @@
  */
 
 import type { JSX } from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
+import { getCurrentTime, readServerTime, subscribeClock } from '../../clock-store';
 import { ApiError } from '../../lib/api';
+import { isPositiveCount } from '../../lib/counts.utils';
+import { selectUpcomingConcerts } from '../../lib/upcoming-concerts.core';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useMembersList } from '../../lib/queries/members';
 import { useSession, useSessionsList, useUpdateSession } from '../../lib/queries/sessions';
@@ -38,6 +41,7 @@ export function SessionDetailPage(): JSX.Element {
   const updateSession = useUpdateSession();
   const createSetlist = useCreateSetlist();
 
+  const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
   const [editingConcert, setEditingConcert] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -56,16 +60,15 @@ export function SessionDetailPage(): JSX.Element {
     [session],
   );
 
-  const upcomingConcerts = useMemo(() => {
-    const now = Date.now();
-    return sessions.filter(
-      (entry) => entry.kind === 'concert' && new Date(entry.date).getTime() > now,
-    );
-  }, [sessions]);
+  const upcomingConcerts = useMemo(
+    () => selectUpcomingConcerts(sessions, nowEpochMs),
+    [sessions, nowEpochMs],
+  );
 
   const preparedConcert = useMemo(() => {
-    if (session === null || session.preparedConcertId === null) return null;
-    return upcomingConcerts.find((entry) => entry.id === session.preparedConcertId) ?? null;
+    const preparedConcertId = session?.preparedConcertId ?? null;
+    if (preparedConcertId === null) return null;
+    return upcomingConcerts.find((entry) => entry.id === preparedConcertId) ?? null;
   }, [session, upcomingConcerts]);
 
   const friendsCounts = useMemo(
@@ -84,7 +87,7 @@ export function SessionDetailPage(): JSX.Element {
   };
 
   const saveConcertDetails = (payload: ConcertEditFormPayload): void => {
-    if (session === null || session.kind !== 'concert') return;
+    if (session?.kind !== 'concert') return;
     const trimmedVenue = payload.venue.trim();
     const trimmedCapacity = payload.capacity.trim();
     updateSession.mutate(
@@ -104,7 +107,7 @@ export function SessionDetailPage(): JSX.Element {
   };
 
   const setPreparedConcert = (concertId: string | null): void => {
-    if (session === null || session.kind !== 'practice') return;
+    if (session?.kind !== 'practice') return;
     updateSession.mutate({ id: session.id, preparedConcertId: concertId });
   };
 
@@ -123,6 +126,7 @@ export function SessionDetailPage(): JSX.Element {
   }
 
   const isConcert = session.kind === 'concert';
+  const hasGuests = isPositiveCount(friendsTotal);
   const formattedDate = formatSessionDate(session.date, i18n.language);
   const titleText = isConcert ? (session.venue ?? formattedDate) : t('sessions.kindPractice');
   const displayError = localError ?? queryError;
@@ -155,7 +159,7 @@ export function SessionDetailPage(): JSX.Element {
                 </span>
               </>
             ) : null}
-            {isConcert && friendsTotal > 0 ? (
+            {isConcert && hasGuests ? (
               <>
                 <span className="text-ink-300">·</span>
                 <span>

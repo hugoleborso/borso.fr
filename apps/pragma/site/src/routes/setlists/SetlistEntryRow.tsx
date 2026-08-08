@@ -12,10 +12,11 @@
  *    reveals an inline editor for keyOverride / capo / notes).
  *
  * Each row owns a small `useForm` instance — the parent
- * (`SetlistEditor`) doesn't centralise per-row state. Field changes
- * propagate to the parent via `onUpdate` after `field.handleChange`,
- * so the live-edit semantics (per-keystroke mutation) are preserved
- * without an effect.
+ * (`SetlistEditor`) doesn't centralise per-row state. The form is never
+ * submitted: it exists for field state and Zod validation, and every change
+ * reaches the parent through `onUpdate` from inside `field.handleChange`, so
+ * the live-edit semantics (per-keystroke mutation) are preserved without an
+ * effect. There is no `onSubmit` and no submit button anywhere in the row.
  *
  * The list item itself is the dnd-kit sortable node, so the whole row
  * (optional transition warning + card) is what reorders. While the row
@@ -32,11 +33,9 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
 import {
@@ -45,25 +44,17 @@ import {
   type LineupRecord,
 } from '../../components/molecules/LineupEditor';
 import { MemberChip } from '../../components/molecules/MemberChip';
+import { SetlistEntryDetailsFields } from '../../components/molecules/SetlistEntryDetailsFields';
+import {
+  ENERGY_MAX,
+  ENERGY_MIN,
+  type SetlistEntryFormValues,
+  useSetlistEntryForm,
+} from '../../components/molecules/setlist-entry-form';
 import { selectMasteryColor } from './mastery-color.core';
 import { type LineupMember, MemberLineup } from '../../components/molecules/MemberLineup';
 
-const ENERGY_MIN = 1;
-const ENERGY_MAX = 10;
 const ENERGY_DEFAULT = 5;
-const CAPO_MIN = 0;
-const CAPO_MAX = 11;
-const KEY_OVERRIDE_MAX = 16;
-const NOTES_MAX = 1_024;
-
-const setlistEntryFormSchema = z.object({
-  keyOverride: z.string().max(KEY_OVERRIDE_MAX),
-  capo: z.string().regex(/^(\d+)?$/u),
-  notes: z.string().max(NOTES_MAX),
-  energy: z.number().int().min(ENERGY_MIN).max(ENERGY_MAX),
-});
-
-type SetlistEntryFormValues = z.infer<typeof setlistEntryFormSchema>;
 
 export interface ProminentMemberInstrument {
   readonly memberName: string;
@@ -97,11 +88,6 @@ export interface SetlistEntryRowProps {
   readonly onOpenTransitionBefore: () => void;
 }
 
-const FIELD_CLASS =
-  'w-full bg-bg-elev border border-line rounded-md px-2 py-1 text-[13px] font-mono text-ink-900 outline-none focus:border-ink-700';
-const LABEL_CLASS =
-  'flex flex-col gap-1 text-[10.5px] tracking-wider uppercase text-ink-400 font-medium';
-
 export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
   const [moreOpen, setMoreOpen] = useState<boolean>(false);
@@ -120,11 +106,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     notes: props.notes,
     energy: props.energy ?? props.baseEnergy ?? ENERGY_DEFAULT,
   };
-  const form = useForm({
-    defaultValues,
-    validators: { onChange: setlistEntryFormSchema },
-    onSubmit: () => {},
-  });
+  const form = useSetlistEntryForm(defaultValues);
   const saveLineupOverride = (lineup: LineupRecord | null, wasReset: boolean): void => {
     props.onUpdate(props.entryId, { lineupOverride: wasReset ? null : lineup });
   };
@@ -211,70 +193,10 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             />
           </div>
           {moreOpen ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3">
-              <form.Field name="keyOverride">
-                {(field) => (
-                  <label className={LABEL_CLASS}>
-                    {t('setlist.keyOverride')}
-                    <input
-                      type="text"
-                      value={field.state.value}
-                      onChange={(event) => {
-                        const next = event.target.value;
-                        field.handleChange(next);
-                        props.onUpdate(props.entryId, {
-                          keyOverride: next.length === 0 ? null : next,
-                        });
-                      }}
-                      onBlur={field.handleBlur}
-                      maxLength={KEY_OVERRIDE_MAX}
-                      className={FIELD_CLASS}
-                    />
-                  </label>
-                )}
-              </form.Field>
-              <form.Field name="capo">
-                {(field) => (
-                  <label className={LABEL_CLASS}>
-                    {t('setlist.capo')}
-                    <input
-                      type="number"
-                      min={CAPO_MIN}
-                      max={CAPO_MAX}
-                      value={field.state.value}
-                      onChange={(event) => {
-                        const next = event.target.value;
-                        field.handleChange(next);
-                        props.onUpdate(props.entryId, {
-                          capo: next === '' ? null : Number(next),
-                        });
-                      }}
-                      onBlur={field.handleBlur}
-                      className={FIELD_CLASS}
-                    />
-                  </label>
-                )}
-              </form.Field>
-              <form.Field name="notes">
-                {(field) => (
-                  <label className={LABEL_CLASS}>
-                    {t('setlist.notes')}
-                    <input
-                      type="text"
-                      value={field.state.value}
-                      onChange={(event) => {
-                        const next = event.target.value;
-                        field.handleChange(next);
-                        props.onUpdate(props.entryId, { notes: next });
-                      }}
-                      onBlur={field.handleBlur}
-                      maxLength={NOTES_MAX}
-                      className={FIELD_CLASS}
-                    />
-                  </label>
-                )}
-              </form.Field>
-            </div>
+            <SetlistEntryDetailsFields
+              form={form}
+              onPatch={(patch) => props.onUpdate(props.entryId, patch)}
+            />
           ) : null}
         </div>
         <div className="flex items-center gap-2">
@@ -344,36 +266,5 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         onClose={() => setLineupEditorOpen(false)}
       />
     </li>
-  );
-}
-
-export interface SetlistEntryDragPreviewProps {
-  readonly position: number;
-  readonly title: string;
-  readonly artist: string;
-}
-
-/**
- * The solid card that rides the pointer inside dnd-kit's `DragOverlay`
- * while a row is being dragged. The in-list row dims to a ghost
- * placeholder at the live insertion slot; this is the piece the
- * operator actually carries, so it stays fully opaque and lifted.
- */
-export function SetlistEntryDragPreview(props: SetlistEntryDragPreviewProps): JSX.Element {
-  return (
-    <div className="grid grid-cols-[32px_auto_1fr] items-center gap-3 bg-bg-elev border border-line-strong rounded-md px-3 py-3 shadow-[0_12px_32px_rgba(0,0,0,0.28)] cursor-grabbing">
-      <span className="font-mono text-[11px] text-ink-400 text-right">
-        {String(props.position).padStart(2, '0')}
-      </span>
-      <span className="flex items-center justify-center w-6 h-6 text-ink-500">
-        <Icon name="drag" size={16} />
-      </span>
-      <div className="min-w-0">
-        <div className="font-display italic text-[20px] leading-tight text-ink-900 truncate">
-          {props.title}
-        </div>
-        <div className="text-[11.5px] text-ink-500 mt-0.5 truncate">{props.artist}</div>
-      </div>
-    </div>
   );
 }

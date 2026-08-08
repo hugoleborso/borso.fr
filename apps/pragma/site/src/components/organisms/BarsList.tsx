@@ -29,6 +29,13 @@ import { Chip } from '../atoms/Chip';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 
+const MOBILE_HIDDEN_COLUMN_IDS = new Set(['city', 'capacity']);
+
+const SORT_ARROW_ROTATION_BY_DIRECTION = {
+  asc: '-rotate-90',
+  desc: 'rotate-90',
+} as const;
+
 export interface BarsListRow {
   readonly id: string;
   readonly name: string;
@@ -139,7 +146,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
           const canSort = header.column.getCanSort();
           const className = composeClassName(
             index === 0 && 'flex-1',
-            (header.column.id === 'city' || header.column.id === 'capacity') && 'hidden md:inline',
+            MOBILE_HIDDEN_COLUMN_IDS.has(header.column.id) && 'hidden md:inline',
             canSort && 'cursor-pointer select-none',
           );
           return (
@@ -154,10 +161,15 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
               )}
             >
               {flexRender(header.column.columnDef.header, header.getContext())}
-              {sortDirection === 'asc' ? (
-                <Icon name="chevR" size={10} className="inline-block ml-1 -rotate-90" />
-              ) : sortDirection === 'desc' ? (
-                <Icon name="chevR" size={10} className="inline-block ml-1 rotate-90" />
+              {sortDirection ? (
+                <Icon
+                  name="chevR"
+                  size={10}
+                  className={composeClassName(
+                    'inline-block ml-1',
+                    SORT_ARROW_ROTATION_BY_DIRECTION[sortDirection],
+                  )}
+                />
               ) : null}
             </button>
           );
@@ -173,7 +185,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         >
           {row.getVisibleCells().map((cell) => {
             const isName = cell.column.id === 'name';
-            const isHiddenOnMobile = cell.column.id === 'city' || cell.column.id === 'capacity';
+            const isHiddenOnMobile = MOBILE_HIDDEN_COLUMN_IDS.has(cell.column.id);
             return (
               <span
                 key={cell.id}

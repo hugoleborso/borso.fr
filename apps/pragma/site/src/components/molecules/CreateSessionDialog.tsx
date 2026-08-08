@@ -110,6 +110,182 @@ export function CreateSessionDialog({
 
   const submitError = createSession.error instanceof ApiError ? createSession.error.message : null;
 
+  const formByKind: Readonly<Record<CreateSessionDialogProps['kind'], JSX.Element>> = {
+    concert: (
+      <form
+        className="flex flex-col gap-2.5 p-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void concertForm.handleSubmit();
+        }}
+      >
+        <label className={LABEL_CLASS} htmlFor="create-session-date-concert">
+          {t('sessions.create.date')}
+        </label>
+        <concertForm.Field name="dateLocal">
+          {(field) => (
+            <Input
+              id="create-session-date-concert"
+              type="datetime-local"
+              value={field.state.value}
+              onChange={(event) => field.handleChange(event.target.value)}
+              onBlur={field.handleBlur}
+              required
+            />
+          )}
+        </concertForm.Field>
+        <label className={LABEL_CLASS} htmlFor="create-session-venue">
+          {t('sessions.venue')}
+        </label>
+        <concertForm.Field name="venue">
+          {(field) => (
+            <Input
+              id="create-session-venue"
+              type="text"
+              value={field.state.value}
+              onChange={(event) => field.handleChange(event.target.value)}
+              onBlur={field.handleBlur}
+              maxLength={VENUE_MAX}
+              required
+            />
+          )}
+        </concertForm.Field>
+        <label className={LABEL_CLASS} htmlFor="create-session-capacity">
+          {t('sessions.capacity')}
+        </label>
+        <concertForm.Field name="capacity">
+          {(field) => (
+            <Input
+              id="create-session-capacity"
+              type="number"
+              min={0}
+              max={CAPACITY_MAX}
+              value={field.state.value}
+              onChange={(event) => field.handleChange(event.target.value)}
+              onBlur={field.handleBlur}
+            />
+          )}
+        </concertForm.Field>
+        <label className={LABEL_CLASS} htmlFor="create-session-gear">
+          {t('sessions.gear')}
+        </label>
+        <concertForm.Field name="gear">
+          {(field) => (
+            <textarea
+              id="create-session-gear"
+              value={field.state.value}
+              onChange={(event) => field.handleChange(event.target.value)}
+              onBlur={field.handleBlur}
+              className="w-full bg-bg-elev border border-line rounded-md px-3 py-2 text-xs font-mono text-ink-700 outline-none focus:border-ink-700 resize-y"
+              rows={3}
+              maxLength={GEAR_MAX}
+            />
+          )}
+        </concertForm.Field>
+        {submitError === null ? null : (
+          <p className="text-danger text-sm" role="alert">
+            {submitError}
+          </p>
+        )}
+        <div className="flex gap-2 mt-2 justify-end">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            {t('common.cancel')}
+          </Button>
+          <concertForm.Subscribe
+            selector={(state) => [state.canSubmit, state.isSubmitting] as const}
+          >
+            {([canSubmit, isSubmitting]) => (
+              <Button
+                type="submit"
+                variant="accent"
+                disabled={!canSubmit || isSubmitting || createSession.isPending}
+              >
+                {createSession.isPending || isSubmitting
+                  ? t('common.loading')
+                  : t('sessions.create.submit')}
+              </Button>
+            )}
+          </concertForm.Subscribe>
+        </div>
+      </form>
+    ),
+    practice: (
+      <form
+        className="flex flex-col gap-2.5 p-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void practiceForm.handleSubmit();
+        }}
+      >
+        <label className={LABEL_CLASS} htmlFor="create-session-date-practice">
+          {t('sessions.create.date')}
+        </label>
+        <practiceForm.Field name="dateLocal">
+          {(field) => (
+            <Input
+              id="create-session-date-practice"
+              type="datetime-local"
+              value={field.state.value}
+              onChange={(event) => field.handleChange(event.target.value)}
+              onBlur={field.handleBlur}
+              required
+            />
+          )}
+        </practiceForm.Field>
+        <label className={LABEL_CLASS} htmlFor="create-session-prepared">
+          {t('sessions.preparedConcert')}
+        </label>
+        <practiceForm.Field name="preparedConcertId">
+          {(field) => (
+            <select
+              id="create-session-prepared"
+              value={field.state.value ?? ''}
+              onChange={(event) =>
+                field.handleChange(event.target.value === '' ? null : event.target.value)
+              }
+              onBlur={field.handleBlur}
+              className="w-full rounded-md bg-bg-elev border border-line text-ink-900 outline-none focus:border-ink-700 px-3 py-2 text-[13px]"
+            >
+              <option value="">{t('sessions.noPreparedConcert')}</option>
+              {futureConcerts.map((concert) => (
+                <option key={concert.id} value={concert.id}>
+                  {concert.venue ?? '—'} — {new Date(concert.date).toLocaleString()}
+                </option>
+              ))}
+            </select>
+          )}
+        </practiceForm.Field>
+        {submitError === null ? null : (
+          <p className="text-danger text-sm" role="alert">
+            {submitError}
+          </p>
+        )}
+        <div className="flex gap-2 mt-2 justify-end">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            {t('common.cancel')}
+          </Button>
+          <practiceForm.Subscribe
+            selector={(state) => [state.canSubmit, state.isSubmitting] as const}
+          >
+            {([canSubmit, isSubmitting]) => (
+              <Button
+                type="submit"
+                variant="accent"
+                disabled={!canSubmit || isSubmitting || createSession.isPending}
+              >
+                {createSession.isPending || isSubmitting
+                  ? t('common.loading')
+                  : t('sessions.create.submit')}
+              </Button>
+            )}
+          </practiceForm.Subscribe>
+        </div>
+      </form>
+    ),
+  };
+
   return (
     <dialog
       ref={openDialogOnAttach}
@@ -130,174 +306,7 @@ export function CreateSessionDialog({
           ×
         </Button>
       </div>
-      {kind === 'concert' ? (
-        <form
-          className="flex flex-col gap-2.5 p-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            void concertForm.handleSubmit();
-          }}
-        >
-          <label className={LABEL_CLASS} htmlFor="create-session-date-concert">
-            {t('sessions.create.date')}
-          </label>
-          <concertForm.Field name="dateLocal">
-            {(field) => (
-              <Input
-                id="create-session-date-concert"
-                type="datetime-local"
-                value={field.state.value}
-                onChange={(event) => field.handleChange(event.target.value)}
-                onBlur={field.handleBlur}
-                required
-              />
-            )}
-          </concertForm.Field>
-          <label className={LABEL_CLASS} htmlFor="create-session-venue">
-            {t('sessions.venue')}
-          </label>
-          <concertForm.Field name="venue">
-            {(field) => (
-              <Input
-                id="create-session-venue"
-                type="text"
-                value={field.state.value}
-                onChange={(event) => field.handleChange(event.target.value)}
-                onBlur={field.handleBlur}
-                maxLength={VENUE_MAX}
-                required
-              />
-            )}
-          </concertForm.Field>
-          <label className={LABEL_CLASS} htmlFor="create-session-capacity">
-            {t('sessions.capacity')}
-          </label>
-          <concertForm.Field name="capacity">
-            {(field) => (
-              <Input
-                id="create-session-capacity"
-                type="number"
-                min={0}
-                max={CAPACITY_MAX}
-                value={field.state.value}
-                onChange={(event) => field.handleChange(event.target.value)}
-                onBlur={field.handleBlur}
-              />
-            )}
-          </concertForm.Field>
-          <label className={LABEL_CLASS} htmlFor="create-session-gear">
-            {t('sessions.gear')}
-          </label>
-          <concertForm.Field name="gear">
-            {(field) => (
-              <textarea
-                id="create-session-gear"
-                value={field.state.value}
-                onChange={(event) => field.handleChange(event.target.value)}
-                onBlur={field.handleBlur}
-                className="w-full bg-bg-elev border border-line rounded-md px-3 py-2 text-xs font-mono text-ink-700 outline-none focus:border-ink-700 resize-y"
-                rows={3}
-                maxLength={GEAR_MAX}
-              />
-            )}
-          </concertForm.Field>
-          {submitError === null ? null : (
-            <p className="text-danger text-sm" role="alert">
-              {submitError}
-            </p>
-          )}
-          <div className="flex gap-2 mt-2 justify-end">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              {t('common.cancel')}
-            </Button>
-            <concertForm.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-              {([canSubmit, isSubmitting]) => (
-                <Button
-                  type="submit"
-                  variant="accent"
-                  disabled={!canSubmit || isSubmitting || createSession.isPending}
-                >
-                  {createSession.isPending || isSubmitting
-                    ? t('common.loading')
-                    : t('sessions.create.submit')}
-                </Button>
-              )}
-            </concertForm.Subscribe>
-          </div>
-        </form>
-      ) : (
-        <form
-          className="flex flex-col gap-2.5 p-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            void practiceForm.handleSubmit();
-          }}
-        >
-          <label className={LABEL_CLASS} htmlFor="create-session-date-practice">
-            {t('sessions.create.date')}
-          </label>
-          <practiceForm.Field name="dateLocal">
-            {(field) => (
-              <Input
-                id="create-session-date-practice"
-                type="datetime-local"
-                value={field.state.value}
-                onChange={(event) => field.handleChange(event.target.value)}
-                onBlur={field.handleBlur}
-                required
-              />
-            )}
-          </practiceForm.Field>
-          <label className={LABEL_CLASS} htmlFor="create-session-prepared">
-            {t('sessions.preparedConcert')}
-          </label>
-          <practiceForm.Field name="preparedConcertId">
-            {(field) => (
-              <select
-                id="create-session-prepared"
-                value={field.state.value ?? ''}
-                onChange={(event) =>
-                  field.handleChange(event.target.value === '' ? null : event.target.value)
-                }
-                onBlur={field.handleBlur}
-                className="w-full rounded-md bg-bg-elev border border-line text-ink-900 outline-none focus:border-ink-700 px-3 py-2 text-[13px]"
-              >
-                <option value="">{t('sessions.noPreparedConcert')}</option>
-                {futureConcerts.map((concert) => (
-                  <option key={concert.id} value={concert.id}>
-                    {concert.venue ?? '—'} — {new Date(concert.date).toLocaleString()}
-                  </option>
-                ))}
-              </select>
-            )}
-          </practiceForm.Field>
-          {submitError === null ? null : (
-            <p className="text-danger text-sm" role="alert">
-              {submitError}
-            </p>
-          )}
-          <div className="flex gap-2 mt-2 justify-end">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              {t('common.cancel')}
-            </Button>
-            <practiceForm.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-              {([canSubmit, isSubmitting]) => (
-                <Button
-                  type="submit"
-                  variant="accent"
-                  disabled={!canSubmit || isSubmitting || createSession.isPending}
-                >
-                  {createSession.isPending || isSubmitting
-                    ? t('common.loading')
-                    : t('sessions.create.submit')}
-                </Button>
-              )}
-            </practiceForm.Subscribe>
-          </div>
-        </form>
-      )}
+      {formByKind[kind]}
     </dialog>
   );
 }

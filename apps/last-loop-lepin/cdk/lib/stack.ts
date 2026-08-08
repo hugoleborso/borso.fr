@@ -1,6 +1,7 @@
 import {
   frontendOrigin,
   type IDsqlCluster,
+  isProductionStage,
   PhotosCdn,
   PreviewableApp,
   type Stage,
@@ -68,10 +69,10 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
   // `docs/features/last-loop-lepin/runner-photos-everywhere`. The
   // `PHOTOS_CDN_HOST` env var flows into the API Lambda so the runner
   // DTO mapper can compose `photoUrl` server-side.
-  const photosCdnHostname =
-    props.stage === 'prod'
-      ? PHOTOS_CDN_PROD_HOSTNAME
-      : `${APP_SLUG}-pr-${props.prNumber ?? 0}-photos.preview.borso.fr`;
+  const isProduction = isProductionStage(props.stage);
+  const photosCdnHostname = isProduction
+    ? PHOTOS_CDN_PROD_HOSTNAME
+    : `${APP_SLUG}-pr-${props.prNumber ?? 0}-photos.preview.borso.fr`;
   const photosCdn = new PhotosCdn(props.scope, 'PhotosCdn', {
     app: APP_SLUG,
     stage: props.stage,
@@ -109,7 +110,7 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
       // Runtime-state tables (sessions, rate-limit buckets) keep their
       // structure but no rows; `runners.photo_key` is NULLed so the
       // preview's CDN doesn't dereference prod's S3 bucket.
-      ...(props.stage === 'prod'
+      ...(isProduction
         ? {}
         : {
             cloneFromSchema: {

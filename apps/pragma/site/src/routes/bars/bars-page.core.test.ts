@@ -3,6 +3,7 @@ import { BLANK_BAR_FORM } from './bar-form.core';
 import {
   applyBarWriteIntent,
   type BarRow,
+  buildKanbanCardsByStatus,
   groupBarsByStatus,
   selectBarWriteIntent,
   selectDragDropIntent,
@@ -59,6 +60,42 @@ describe('groupBarsByStatus', () => {
     expect(grouped.contacted).toEqual([]);
     expect(grouped.played).toEqual([]);
     expect(grouped.cold).toEqual([]);
+  });
+});
+
+describe('buildKanbanCardsByStatus', () => {
+  const grouped = groupBarsByStatus([
+    buildBar({ id: 'fresh-bar', name: 'Le Zinc', city: 'Lyon', capacity: 90 }),
+    buildBar({ id: 'stale-bar', name: 'Le Klub', status: 'booked', contactName: 'Ana' }),
+  ]);
+
+  it('projects each bar into the fields the board shows', () => {
+    const cards = buildKanbanCardsByStatus(grouped, () => false);
+
+    expect(cards.lead).toStrictEqual([
+      {
+        id: 'fresh-bar',
+        name: 'Le Zinc',
+        city: 'Lyon',
+        capacity: 90,
+        contactName: null,
+        isStale: false,
+      },
+    ]);
+  });
+
+  it('derives staleness through the caller, which owns the clock', () => {
+    const cards = buildKanbanCardsByStatus(grouped, (bar) => bar.id === 'stale-bar');
+
+    expect(cards.booked[0]?.isStale).toBe(true);
+    expect(cards.lead[0]?.isStale).toBe(false);
+  });
+
+  it('gives every status a column, including the empty ones', () => {
+    const cards = buildKanbanCardsByStatus(grouped, () => false);
+
+    expect(Object.keys(cards)).toStrictEqual(['lead', 'contacted', 'booked', 'played', 'cold']);
+    expect(cards.cold).toStrictEqual([]);
   });
 });
 

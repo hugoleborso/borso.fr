@@ -30,7 +30,8 @@ import { useState } from 'react';
 import type { LineupEditorInstrument } from '../../components/molecules/LineupEditor';
 import type { LineupMember } from '../../components/molecules/MemberLineup';
 import { warnIfOrphanMemberIds } from './orphan-member-warn';
-import { SetlistEntryDragPreview, SetlistEntryRow } from './SetlistEntryRow';
+import { SetlistEntryDragPreview } from '../../components/molecules/SetlistEntryDragPreview';
+import { SetlistEntryRow } from './SetlistEntryRow';
 import {
   compactLineup,
   lineupOf,

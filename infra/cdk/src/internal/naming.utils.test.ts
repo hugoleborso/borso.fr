@@ -5,6 +5,7 @@ import {
   dsqlSchemaName,
   lambdaFunctionName,
   frontendOrigin,
+  isProductionStage,
   previewApiHostname,
   previewHostname,
   previewS3Prefix,
@@ -23,6 +24,18 @@ describe('validateAppSlug', () => {
 
   it('rejects slugs over 32 chars', () => {
     expect(() => validateAppSlug('a'.repeat(33))).toThrow();
+  });
+});
+
+describe('isProductionStage', () => {
+  it('accepts the one long-lived environment', () => {
+    expect(isProductionStage('prod')).toBe(true);
+  });
+
+  it('rejects every disposable environment, and the app-code marker', () => {
+    expect(isProductionStage('preview')).toBe(false);
+    expect(isProductionStage('integ')).toBe(false);
+    expect(isProductionStage('dev')).toBe(false);
   });
 });
 

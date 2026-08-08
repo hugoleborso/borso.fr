@@ -36,6 +36,18 @@ export function validateAppSlug(slug: string): void {
 }
 
 /**
+ * Whether a stage is the one long-lived environment.
+ *
+ * Every construct that branches on the stage is asking this rather than
+ * naming a stage: prod gets its own bucket, its own distribution and no test
+ * seed, while preview and integ share the preview infrastructure and differ
+ * from each other in naming only.
+ */
+export function isProductionStage(stage: Stage): boolean {
+  return stage === 'prod';
+}
+
+/**
  * Throws if `stage` is `'dev'`. Acts as a TypeScript assertion so callers
  * see `stage` narrowed to {@link DeployStage}.
  */

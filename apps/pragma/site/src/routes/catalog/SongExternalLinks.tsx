@@ -9,6 +9,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/atoms/Card';
+import { SongEmbed } from '../../components/molecules/SongEmbed';
 import { resolveEmbed } from '../../lib/embed.utils';
 
 export interface SongExternalLinkValue {
@@ -41,28 +42,7 @@ export function SongExternalLinks({ links, onRemove }: SongExternalLinksProps): 
             className="relative bg-bg border border-line rounded-md p-2 flex items-start gap-2"
           >
             <div className="flex-1 min-w-0">
-              {embed.kind === 'oembed' ? (
-                <iframe
-                  src={embed.iframeSrc}
-                  title={`${link.provider}-${link.url}`}
-                  width={embed.width}
-                  height={embed.height}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                  allow="encrypted-media; autoplay; clipboard-write; picture-in-picture"
-                  allowFullScreen
-                  className="rounded-md"
-                />
-              ) : (
-                <a
-                  href={embed.href}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="text-accent hover:underline break-all"
-                >
-                  {embed.href}
-                </a>
-              )}
+              <SongEmbed embed={embed} title={`${link.provider}-${link.url}`} />
             </div>
             <button
               type="button"
