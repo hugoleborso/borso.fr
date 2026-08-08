@@ -11,7 +11,7 @@ export interface Palette {
 
 export type PaletteKey = 'classic' | 'muted' | 'nocturne' | 'garden' | 'custom';
 
-const PALETTE_KEYS: ReadonlySet<string> = new Set([
+const PALETTE_KEYS: ReadonlySet<unknown> = new Set([
   'classic',
   'muted',
   'nocturne',
@@ -101,7 +101,11 @@ export function buildCustomPalette(customColors: CustomColors): Palette {
   };
 }
 
-export function isPaletteKey(value: string): value is PaletteKey {
+/**
+ * Takes `unknown` because it guards a query-string value, which is a string or
+ * nothing at all. A caller that checked for null first would be checking twice.
+ */
+export function isPaletteKey(value: unknown): value is PaletteKey {
   return PALETTE_KEYS.has(value);
 }
 

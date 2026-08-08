@@ -126,13 +126,13 @@ describe('dominantColorName', () => {
     expect(dominantColorName([largeIvoryRect, smallVermillionRect], palette)).toBe('Vermillion');
   });
 
-  it('skips the line colour even when it is dominant', () => {
+  it('skips the line colour even when it is dominant, whatever case its hex is written in', () => {
     const palette = {
       label: 'Lined',
       bg: '#ffffff',
-      line: '#101010',
+      line: '#1A1714',
       fills: [
-        { name: 'Onyx', hex: '#101010' },
+        { name: 'Onyx', hex: '#1a1714' },
         { name: 'Saffron', hex: '#f5c518' },
       ],
     };
@@ -143,7 +143,7 @@ describe('dominantColorName', () => {
       height: 1,
       depth: 0,
       id: 0,
-      fill: '#101010',
+      fill: '#1a1714',
       fillName: 'Onyx',
     };
     const smallSaffronRect = {
@@ -200,6 +200,39 @@ describe('dominantColorName', () => {
       fillName: 'Vermillion',
     };
     expect(dominantColorName([cobaltA, cobaltB, vermillion], palette)).toBe('Cobalt');
+  });
+
+  it('keeps the colour seen first when two colours cover the same area', () => {
+    const palette = {
+      label: 'Tied',
+      bg: '#ffffff',
+      line: '#000000',
+      fills: [
+        { name: 'Cobalt', hex: '#1e4fb6' },
+        { name: 'Vermillion', hex: '#d8332a' },
+      ],
+    };
+    const leftVermillionRect = {
+      x: 0,
+      y: 0,
+      width: 0.5,
+      height: 1,
+      depth: 0,
+      id: 0,
+      fill: '#d8332a',
+      fillName: 'Vermillion',
+    };
+    const rightCobaltRect = {
+      x: 0.5,
+      y: 0,
+      width: 0.5,
+      height: 1,
+      depth: 0,
+      id: 1,
+      fill: '#1e4fb6',
+      fillName: 'Cobalt',
+    };
+    expect(dominantColorName([leftVermillionRect, rightCobaltRect], palette)).toBe('Vermillion');
   });
 
   it('falls back to the first palette fill when no non-neutral rects exist', () => {

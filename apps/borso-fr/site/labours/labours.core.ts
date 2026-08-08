@@ -14,7 +14,6 @@ const PARTIAL_WEIGHT = 0.5;
 const FIRST_MONTH_NUMBER = 1;
 const MONTH_NUMBER_OFFSET_FROM_INDEX = 1;
 const MIDDLE_DOT_SEPARATOR = ' · ';
-const WHOLE_NUMBER_REMAINDER = 0;
 const SINGLE_DECIMAL = 1;
 const MINIMUM_PHOTOS_FOR_IMPLICIT_COVER = 2;
 const ONE_COVER = 1;
@@ -54,9 +53,9 @@ export function selectCompletionRatio(score: Score): number {
   return score.completed / score.total;
 }
 
+/** A half point keeps its decimal, a whole one drops it. */
 export function formatScore(value: number): string {
-  if (value % 1 === WHOLE_NUMBER_REMAINDER) return String(value);
-  return value.toFixed(SINGLE_DECIMAL);
+  return String(Number(value.toFixed(SINGLE_DECIMAL)));
 }
 
 function countChallenges(edition: Edition, isCounted: (challenge: Challenge) => boolean): number {
@@ -115,8 +114,8 @@ export function selectFeaturedMonth(edition: Edition, monthNumber: number): Mont
  */
 export function listMonthCoverImages(month: Month): readonly string[] {
   if (month.coverImage !== undefined) return [month.coverImage];
-  const photos = month.challenges.flatMap((challenge) =>
-    (challenge.proofs ?? []).filter((proof) => proof.type === 'photo'),
+  const photos = month.challenges.flatMap(
+    (challenge) => challenge.proofs?.filter((proof) => proof.type === 'photo') ?? [],
   );
   if (photos.length < MINIMUM_PHOTOS_FOR_IMPLICIT_COVER) return [];
   return photos.slice(0, ONE_COVER).map((photo) => photo.value);

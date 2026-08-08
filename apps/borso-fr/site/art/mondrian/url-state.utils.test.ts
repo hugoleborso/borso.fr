@@ -1,7 +1,37 @@
 import { describe, expect, it } from 'vitest';
-import { buildSearch, freshSeed, readUrlState, seedToHex } from './url-state.utils';
+import { buildSearch, freshSeed, isSeedHex, readUrlState, seedToHex } from './url-state.utils';
 
 const FALLBACK_SEED = 0x0000002a;
+
+describe('isSeedHex', () => {
+  it('accepts a single hex digit', () => {
+    expect(isSeedHex('a')).toBe(true);
+  });
+
+  it('accepts the eight digits a full 32-bit seed needs', () => {
+    expect(isSeedHex('DEADBEEF')).toBe(true);
+  });
+
+  it('rejects a ninth digit, which no 32-bit seed can use', () => {
+    expect(isSeedHex('DEADBEEF1')).toBe(false);
+  });
+
+  it('rejects digits outside the hexadecimal alphabet', () => {
+    expect(isSeedHex('ZZZZ')).toBe(false);
+  });
+
+  it('rejects an empty value', () => {
+    expect(isSeedHex('')).toBe(false);
+  });
+
+  it('rejects hex digits preceded by anything else', () => {
+    expect(isSeedHex('zz12')).toBe(false);
+  });
+
+  it('rejects hex digits followed by anything else', () => {
+    expect(isSeedHex('12zz')).toBe(false);
+  });
+});
 
 describe('seedToHex', () => {
   it('produces an 8-char uppercase hex string', () => {
@@ -32,14 +62,21 @@ describe('readUrlState', () => {
     expect(state.paletteKey).toBe('nocturne');
   });
 
-  it('falls back to a fresh seed when the seed is invalid hex', () => {
+  it("falls back to the caller's seed when the seed is invalid hex", () => {
     const state = readUrlState('?seed=ZZZZ&palette=muted', {
       paletteKey: 'classic',
       fallbackSeed: FALLBACK_SEED,
     });
-    expect(state.seed).not.toBe(Number.NaN);
-    expect(Number.isFinite(state.seed)).toBe(true);
+    expect(state.seed).toBe(FALLBACK_SEED);
     expect(state.paletteKey).toBe('muted');
+  });
+
+  it("falls back to the caller's seed when the seed in the URL is empty", () => {
+    const state = readUrlState('?seed=&palette=muted', {
+      paletteKey: 'classic',
+      fallbackSeed: FALLBACK_SEED,
+    });
+    expect(state.seed).toBe(FALLBACK_SEED);
   });
 
   it("falls back to the caller's seed when the seed in the URL is too long", () => {

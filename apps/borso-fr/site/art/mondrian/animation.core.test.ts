@@ -77,6 +77,20 @@ describe('selectInkbloomAnimation', () => {
 });
 
 describe('selectInkbloomDelayMs', () => {
+  it('adds the rectangle jitter to the delay its position earns', () => {
+    const threeTenthsOfTheStagger = 180;
+    const jitterOfIdentifierSeven = 19;
+    expect(selectInkbloomDelayMs(3, 10, 7, false)).toBe(
+      threeTenthsOfTheStagger + jitterOfIdentifierSeven,
+    );
+  });
+
+  it('wraps the jitter back round once an identifier runs past the spread', () => {
+    const halfOfTheStagger = 300;
+    const jitterOfIdentifierThree = 31;
+    expect(selectInkbloomDelayMs(5, 10, 3, false)).toBe(halfOfTheStagger + jitterOfIdentifierThree);
+  });
+
   it('staggers later rectangles more than earlier ones', () => {
     const first = selectInkbloomDelayMs(0, 10, 0, false);
     const last = selectInkbloomDelayMs(9, 10, 0, false);

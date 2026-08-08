@@ -165,8 +165,8 @@ describe('selectCurrentMonthNumber', () => {
 });
 
 describe('selectDefaultYear', () => {
-  it('picks the last year on offer', () => {
-    expect(selectDefaultYear([2025, 2026], 2030)).toBe(2026);
+  it('picks the most recent edition, not the second one', () => {
+    expect(selectDefaultYear([2024, 2025, 2026], 2030)).toBe(2026);
   });
 
   it('falls back when no year is on offer', () => {
@@ -234,6 +234,15 @@ describe('listMonthCoverImages', () => {
       challenges: [challenge({ proofs: [photo('/media/one.jpg')] })],
     };
     expect(listMonthCoverImages(withOnePhoto)).toEqual([]);
+  });
+
+  it('lends nothing when no challenge of the month carries a proof at all', () => {
+    const withoutProofs: Month = {
+      monthNumber: 1,
+      nameKey: 'common.month.january',
+      challenges: [challenge(), challenge()],
+    };
+    expect(listMonthCoverImages(withoutProofs)).toEqual([]);
   });
 
   it('ignores proofs that are not photos', () => {

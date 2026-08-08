@@ -76,6 +76,11 @@ describe('listIdenticalValueKeys', () => {
     expect(listIdenticalValueKeys(englishCatalogue, frenchCatalogue)).toEqual([]);
   });
 
+  it('ignores a branch the French catalogue does not carry at all', () => {
+    const englishCatalogue = { branch: { leaf: 'Ink' } };
+    expect(listIdenticalValueKeys(englishCatalogue, {})).toEqual([]);
+  });
+
   it('ignores a branch the French catalogue flattened into a string', () => {
     const englishCatalogue = { branch: { leaf: 'Ink' } };
     const frenchCatalogue = { branch: 'Encre' };
