@@ -5,6 +5,7 @@ import {
   type CustomColors,
   isPaletteKey,
   listDistinctFills,
+  type Palette,
   PALETTES,
   type PaletteKey,
   selectPalette,
@@ -24,7 +25,7 @@ describe('PALETTES', () => {
     for (const paletteKey of presetKeys) {
       for (const fill of PALETTES[paletteKey].fills) {
         expect(fill.hex).toMatch(/^#[0-9a-f]{6}$/);
-        expect(fill.name.length).toBeGreaterThan(0);
+        expect(fill.nameKey.length).toBeGreaterThan(0);
       }
     }
   });
@@ -50,13 +51,13 @@ describe('buildCustomPalette', () => {
       '#fafafa',
       '#111111',
     ]);
-    expect(palette.fills.map((fill) => fill.name)).toStrictEqual([
-      'Color 1',
-      'Color 2',
-      'Color 3',
-      'Paper',
-      'Paper',
-      'Ink',
+    expect(palette.fills.map((fill) => fill.nameKey)).toStrictEqual([
+      'mondrian.custom-colour.colour-one',
+      'mondrian.custom-colour.colour-two',
+      'mondrian.custom-colour.colour-three',
+      'mondrian.custom-colour.paper',
+      'mondrian.custom-colour.paper',
+      'mondrian.custom-colour.ink',
     ]);
   });
 
@@ -102,12 +103,12 @@ describe('listDistinctFills', () => {
   });
 
   it('keeps every fill when they are already distinct', () => {
-    const palette = {
+    const palette: Palette = {
       bg: '#000000',
       line: '#ffffff',
       fills: [
-        { name: 'One', hex: '#111111' },
-        { name: 'Two', hex: '#222222' },
+        { nameKey: 'mondrian.colour.moss', hex: '#111111' },
+        { nameKey: 'mondrian.colour.plum', hex: '#222222' },
       ],
     };
     expect(listDistinctFills(palette)).toHaveLength(2);

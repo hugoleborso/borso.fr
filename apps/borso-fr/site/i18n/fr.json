@@ -330,6 +330,82 @@
       "paper": "Papier",
       "ink": "Encre"
     },
+    "colour": {
+      "vermillion": "Vermillon",
+      "cobalt": "Cobalt",
+      "saffron": "Safran",
+      "ivory": "Ivoire",
+      "onyx": "Onyx",
+      "terracotta": "Terre cuite",
+      "slate": "Ardoise",
+      "ochre": "Ocre",
+      "bone": "Craie",
+      "espresso": "Moka",
+      "ember": "Braise",
+      "indigo": "Indigo",
+      "citrine": "Citrine",
+      "pearl": "Nacre",
+      "ink": "Encre",
+      "moss": "Mousse",
+      "plum": "Prune",
+      "goldenrod": "Bouton-d'or",
+      "linen": "Lin",
+      "charcoal": "Fusain",
+      "unnamed": "Couleur"
+    },
+    "artwork-title": {
+      "sentence": "{{subject}} en {{colour}}",
+      "subject": {
+        "study": "Une étude {{adjective}}",
+        "song": "Un chant {{adjective}}",
+        "gesture": "Un geste {{adjective}}",
+        "conversation": "Une conversation {{adjective}}",
+        "breath": "Un souffle {{adjective}}",
+        "argument": "Une dispute {{adjective}}"
+      },
+      "adjective": {
+        "quiet": {
+          "masculine": "tranquille",
+          "feminine": "tranquille"
+        },
+        "restless": {
+          "masculine": "inquiet",
+          "feminine": "inquiète"
+        },
+        "bright": {
+          "masculine": "lumineux",
+          "feminine": "lumineuse"
+        },
+        "hushed": {
+          "masculine": "feutré",
+          "feminine": "feutrée"
+        },
+        "slow": {
+          "masculine": "lent",
+          "feminine": "lente"
+        },
+        "sudden": {
+          "masculine": "soudain",
+          "feminine": "soudaine"
+        },
+        "careful": {
+          "masculine": "attentif",
+          "feminine": "attentive"
+        },
+        "generous": {
+          "masculine": "généreux",
+          "feminine": "généreuse"
+        },
+        "brief": {
+          "masculine": "bref",
+          "feminine": "brève"
+        },
+        "patient": {
+          "masculine": "patient",
+          "feminine": "patiente"
+        }
+      }
+    },
     "swatch": {
       "change": "Cliquer pour changer {{name}}",
       "edit": "Modifier {{name}}"

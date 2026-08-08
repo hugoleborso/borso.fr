@@ -61,7 +61,10 @@ export function App() {
     () => colorize(layout, { seed, palette, balance }),
     [layout, palette, seed, balance],
   );
-  const title = useMemo(() => buildTitle(seed, rectangles, palette), [seed, rectangles, palette]);
+  const title = useMemo(
+    () => buildTitle(seed, rectangles, palette, t),
+    [seed, rectangles, palette, t],
+  );
 
   const onAnimationModeChange = (nextMode: AnimationMode) => {
     setAnimationMode(nextMode);

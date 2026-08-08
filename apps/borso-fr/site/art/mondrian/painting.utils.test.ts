@@ -15,7 +15,7 @@ import {
   splitPaletteFills,
   splitRect,
 } from './painting.utils';
-import { PALETTES } from './palettes.utils';
+import { type Palette, PALETTES } from './palettes.utils';
 
 const drawLow = (): number => 0.001;
 const drawHigh = (): number => 0.999;
@@ -465,13 +465,13 @@ describe('isNeutralDraw', () => {
 describe('splitPaletteFills', () => {
   it('holds back the first fill matching the paper and keeps the repeat as a colour', () => {
     expect(splitPaletteFills(PALETTES.classic)).toStrictEqual({
-      neutralFill: { name: 'Ivory', hex: '#fafafa' },
+      neutralFill: { nameKey: 'mondrian.colour.ivory', hex: '#fafafa' },
       nonNeutralFills: [
-        { name: 'Vermillion', hex: '#d8332a' },
-        { name: 'Cobalt', hex: '#1e4fb6' },
-        { name: 'Saffron', hex: '#f5c518' },
-        { name: 'Ivory', hex: '#fafafa' },
-        { name: 'Onyx', hex: '#1a1714' },
+        { nameKey: 'mondrian.colour.vermillion', hex: '#d8332a' },
+        { nameKey: 'mondrian.colour.cobalt', hex: '#1e4fb6' },
+        { nameKey: 'mondrian.colour.saffron', hex: '#f5c518' },
+        { nameKey: 'mondrian.colour.ivory', hex: '#fafafa' },
+        { nameKey: 'mondrian.colour.onyx', hex: '#1a1714' },
       ],
     });
   });
@@ -482,13 +482,13 @@ describe('splitPaletteFills', () => {
         bg: '#FAFAFA',
         line: '#000000',
         fills: [
-          { name: 'Vermillion', hex: '#d8332a' },
-          { name: 'Ivory', hex: '#fafafa' },
+          { nameKey: 'mondrian.colour.vermillion', hex: '#d8332a' },
+          { nameKey: 'mondrian.colour.ivory', hex: '#fafafa' },
         ],
       }),
     ).toStrictEqual({
-      neutralFill: { name: 'Ivory', hex: '#fafafa' },
-      nonNeutralFills: [{ name: 'Vermillion', hex: '#d8332a' }],
+      neutralFill: { nameKey: 'mondrian.colour.ivory', hex: '#fafafa' },
+      nonNeutralFills: [{ nameKey: 'mondrian.colour.vermillion', hex: '#d8332a' }],
     });
   });
 
@@ -498,13 +498,13 @@ describe('splitPaletteFills', () => {
         bg: '#fafafa',
         line: '#000000',
         fills: [
-          { name: 'Ivory', hex: '#fafafa' },
-          { name: 'Vermillion', hex: '#d8332a' },
+          { nameKey: 'mondrian.colour.ivory', hex: '#fafafa' },
+          { nameKey: 'mondrian.colour.vermillion', hex: '#d8332a' },
         ],
       }),
     ).toStrictEqual({
-      neutralFill: { name: 'Ivory', hex: '#fafafa' },
-      nonNeutralFills: [{ name: 'Vermillion', hex: '#d8332a' }],
+      neutralFill: { nameKey: 'mondrian.colour.ivory', hex: '#fafafa' },
+      nonNeutralFills: [{ nameKey: 'mondrian.colour.vermillion', hex: '#d8332a' }],
     });
   });
 
@@ -513,11 +513,11 @@ describe('splitPaletteFills', () => {
       splitPaletteFills({
         bg: '#ffffff',
         line: '#000000',
-        fills: [{ name: 'Vermillion', hex: '#d8332a' }],
+        fills: [{ nameKey: 'mondrian.colour.vermillion', hex: '#d8332a' }],
       }),
     ).toStrictEqual({
       neutralFill: undefined,
-      nonNeutralFills: [{ name: 'Vermillion', hex: '#d8332a' }],
+      nonNeutralFills: [{ nameKey: 'mondrian.colour.vermillion', hex: '#d8332a' }],
     });
   });
 });
@@ -551,29 +551,29 @@ describe('colorize', () => {
       palette: PALETTES.classic,
       balance: 0.5,
     });
-    expect(coloredRects.map((coloredRect) => coloredRect.fillName)).toStrictEqual([
-      'Ivory',
-      'Vermillion',
-      'Ivory',
-      'Cobalt',
-      'Ivory',
-      'Ivory',
-      'Ivory',
-      'Ivory',
-      'Saffron',
-      'Ivory',
-      'Ivory',
-      'Saffron',
-      'Onyx',
-      'Ivory',
-      'Ivory',
-      'Ivory',
-      'Ivory',
-      'Cobalt',
-      'Ivory',
-      'Ivory',
-      'Ivory',
-      'Ivory',
+    expect(coloredRects.map((coloredRect) => coloredRect.fillNameKey)).toStrictEqual([
+      'mondrian.colour.ivory',
+      'mondrian.colour.vermillion',
+      'mondrian.colour.ivory',
+      'mondrian.colour.cobalt',
+      'mondrian.colour.ivory',
+      'mondrian.colour.ivory',
+      'mondrian.colour.ivory',
+      'mondrian.colour.ivory',
+      'mondrian.colour.saffron',
+      'mondrian.colour.ivory',
+      'mondrian.colour.ivory',
+      'mondrian.colour.saffron',
+      'mondrian.colour.onyx',
+      'mondrian.colour.ivory',
+      'mondrian.colour.ivory',
+      'mondrian.colour.ivory',
+      'mondrian.colour.ivory',
+      'mondrian.colour.cobalt',
+      'mondrian.colour.ivory',
+      'mondrian.colour.ivory',
+      'mondrian.colour.ivory',
+      'mondrian.colour.ivory',
     ]);
   });
 
@@ -586,7 +586,7 @@ describe('colorize', () => {
     expect(coloredRects).toHaveLength(sampleLayout.length);
     for (const [rectIndex, coloredRect] of coloredRects.entries()) {
       expect(coloredRect.fill).toMatch(/^#[0-9a-f]{6}$/i);
-      expect(coloredRect.fillName.length).toBeGreaterThan(0);
+      expect(coloredRect.fillNameKey.length).toBeGreaterThan(0);
       expect(sampleLayout[rectIndex]).toMatchObject({
         x: coloredRect.x,
         y: coloredRect.y,
@@ -598,13 +598,13 @@ describe('colorize', () => {
   });
 
   it('draws only from the colours when the palette carries nothing the colour of the paper', () => {
-    const paletteWithoutNeutral = {
+    const paletteWithoutNeutral: Palette = {
       bg: '#ffffff',
       line: '#000000',
       fills: [
-        { name: 'Vermillion', hex: '#d8332a' },
-        { name: 'Cobalt', hex: '#1e4fb6' },
-        { name: 'Saffron', hex: '#f5c518' },
+        { nameKey: 'mondrian.colour.vermillion', hex: '#d8332a' },
+        { nameKey: 'mondrian.colour.cobalt', hex: '#1e4fb6' },
+        { nameKey: 'mondrian.colour.saffron', hex: '#f5c518' },
       ],
     };
     const coloredRects = colorize(generateLayout({ seed: SAMPLE_SEED, complexity: 8 }), {
@@ -612,15 +612,15 @@ describe('colorize', () => {
       palette: paletteWithoutNeutral,
       balance: 0.5,
     });
-    expect(coloredRects.map((coloredRect) => coloredRect.fillName)).toStrictEqual([
-      'Cobalt',
-      'Cobalt',
-      'Vermillion',
-      'Vermillion',
-      'Vermillion',
-      'Cobalt',
-      'Vermillion',
-      'Cobalt',
+    expect(coloredRects.map((coloredRect) => coloredRect.fillNameKey)).toStrictEqual([
+      'mondrian.colour.cobalt',
+      'mondrian.colour.cobalt',
+      'mondrian.colour.vermillion',
+      'mondrian.colour.vermillion',
+      'mondrian.colour.vermillion',
+      'mondrian.colour.cobalt',
+      'mondrian.colour.vermillion',
+      'mondrian.colour.cobalt',
     ]);
   });
 
@@ -668,22 +668,24 @@ describe('colorize', () => {
     });
     for (const coloredRect of coloredRects) {
       expect(coloredRect.fill).toBe('#ff00ff');
-      expect(coloredRect.fillName).toBe('line');
+      expect(coloredRect.fillNameKey).toBe('mondrian.colour.ink');
     }
   });
 
   it('uses the neutral fill when the palette has only neutrals', () => {
-    const neutralOnlyPalette = {
+    const neutralOnlyPalette: Palette = {
       bg: '#fafafa',
       line: '#000000',
-      fills: [{ name: 'Ivory', hex: '#fafafa' }],
+      fills: [{ nameKey: 'mondrian.colour.ivory', hex: '#fafafa' }],
     };
     const coloredRects = colorize(sampleLayout, {
       seed: SAMPLE_SEED,
       palette: neutralOnlyPalette,
       balance: 0,
     });
-    const usedFillNames = new Set(coloredRects.map((coloredRect) => coloredRect.fillName));
-    expect(usedFillNames).toStrictEqual(new Set(['Ivory', 'line']));
+    const usedFillNameKeys = new Set(coloredRects.map((coloredRect) => coloredRect.fillNameKey));
+    expect(usedFillNameKeys).toStrictEqual(
+      new Set(['mondrian.colour.ivory', 'mondrian.colour.ink']),
+    );
   });
 });

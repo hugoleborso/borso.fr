@@ -14,6 +14,11 @@ const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = [
   'common.brand.name', // the brand, lowercase in both
   'home.menu.art', // same word, same spelling
   'mondrian.animation.cascade', // same word, same spelling
+  'mondrian.artwork-title.adjective.patient.masculine', // same word, same spelling
+  'mondrian.colour.citrine', // the gemstone, same spelling
+  'mondrian.colour.cobalt', // the metal, same spelling
+  'mondrian.colour.indigo', // the dye, same spelling
+  'mondrian.colour.onyx', // the gemstone, same spelling
   'mondrian.credit.tail-cascade', // names the "Cascade" mode above
   'mondrian.field.colour-balance-value', // "{{percentage}}%" — a percent sign
   'mondrian.field.line-weight-value', // "{{weight}} px" — an SI-style unit symbol

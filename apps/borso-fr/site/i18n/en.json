@@ -330,6 +330,82 @@
       "paper": "Paper",
       "ink": "Ink"
     },
+    "colour": {
+      "vermillion": "Vermillion",
+      "cobalt": "Cobalt",
+      "saffron": "Saffron",
+      "ivory": "Ivory",
+      "onyx": "Onyx",
+      "terracotta": "Terracotta",
+      "slate": "Slate",
+      "ochre": "Ochre",
+      "bone": "Bone",
+      "espresso": "Espresso",
+      "ember": "Ember",
+      "indigo": "Indigo",
+      "citrine": "Citrine",
+      "pearl": "Pearl",
+      "ink": "Ink",
+      "moss": "Moss",
+      "plum": "Plum",
+      "goldenrod": "Goldenrod",
+      "linen": "Linen",
+      "charcoal": "Charcoal",
+      "unnamed": "Color"
+    },
+    "artwork-title": {
+      "sentence": "{{subject}} in {{colour}}",
+      "subject": {
+        "study": "A {{adjective}} study",
+        "song": "A {{adjective}} song",
+        "gesture": "A {{adjective}} gesture",
+        "conversation": "A {{adjective}} conversation",
+        "breath": "A {{adjective}} breath",
+        "argument": "A {{adjective}} argument"
+      },
+      "adjective": {
+        "quiet": {
+          "masculine": "quiet",
+          "feminine": "quiet"
+        },
+        "restless": {
+          "masculine": "restless",
+          "feminine": "restless"
+        },
+        "bright": {
+          "masculine": "bright",
+          "feminine": "bright"
+        },
+        "hushed": {
+          "masculine": "hushed",
+          "feminine": "hushed"
+        },
+        "slow": {
+          "masculine": "slow",
+          "feminine": "slow"
+        },
+        "sudden": {
+          "masculine": "sudden",
+          "feminine": "sudden"
+        },
+        "careful": {
+          "masculine": "careful",
+          "feminine": "careful"
+        },
+        "generous": {
+          "masculine": "generous",
+          "feminine": "generous"
+        },
+        "brief": {
+          "masculine": "brief",
+          "feminine": "brief"
+        },
+        "patient": {
+          "masculine": "patient",
+          "feminine": "patient"
+        }
+      }
+    },
     "swatch": {
       "change": "Click to change {{name}}",
       "edit": "Edit {{name}}"

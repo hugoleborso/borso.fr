@@ -1,5 +1,7 @@
+import type { TranslationKey } from '../../i18n/i18n.utils';
+
 export interface PaletteFill {
-  name: string;
+  nameKey: TranslationKey;
   hex: string;
 }
 
@@ -24,48 +26,48 @@ export const PALETTES: Record<Exclude<PaletteKey, 'custom'>, Palette> = {
     bg: '#fafafa',
     line: '#1a1714',
     fills: [
-      { name: 'Vermillion', hex: '#d8332a' },
-      { name: 'Cobalt', hex: '#1e4fb6' },
-      { name: 'Saffron', hex: '#f5c518' },
-      { name: 'Ivory', hex: '#fafafa' },
-      { name: 'Ivory', hex: '#fafafa' },
-      { name: 'Onyx', hex: '#1a1714' },
+      { nameKey: 'mondrian.colour.vermillion', hex: '#d8332a' },
+      { nameKey: 'mondrian.colour.cobalt', hex: '#1e4fb6' },
+      { nameKey: 'mondrian.colour.saffron', hex: '#f5c518' },
+      { nameKey: 'mondrian.colour.ivory', hex: '#fafafa' },
+      { nameKey: 'mondrian.colour.ivory', hex: '#fafafa' },
+      { nameKey: 'mondrian.colour.onyx', hex: '#1a1714' },
     ],
   },
   muted: {
     bg: '#efe6d4',
     line: '#2c2620',
     fills: [
-      { name: 'Terracotta', hex: '#b85b46' },
-      { name: 'Slate', hex: '#4a6b80' },
-      { name: 'Ochre', hex: '#d8a23a' },
-      { name: 'Bone', hex: '#efe6d4' },
-      { name: 'Bone', hex: '#efe6d4' },
-      { name: 'Espresso', hex: '#2c2620' },
+      { nameKey: 'mondrian.colour.terracotta', hex: '#b85b46' },
+      { nameKey: 'mondrian.colour.slate', hex: '#4a6b80' },
+      { nameKey: 'mondrian.colour.ochre', hex: '#d8a23a' },
+      { nameKey: 'mondrian.colour.bone', hex: '#efe6d4' },
+      { nameKey: 'mondrian.colour.bone', hex: '#efe6d4' },
+      { nameKey: 'mondrian.colour.espresso', hex: '#2c2620' },
     ],
   },
   nocturne: {
     bg: '#1a1714',
     line: '#f0e8d6',
     fills: [
-      { name: 'Ember', hex: '#e85a3c' },
-      { name: 'Indigo', hex: '#3a5fc8' },
-      { name: 'Citrine', hex: '#e8c84a' },
-      { name: 'Pearl', hex: '#e8e0cc' },
-      { name: 'Ink', hex: '#1a1714' },
-      { name: 'Ink', hex: '#1a1714' },
+      { nameKey: 'mondrian.colour.ember', hex: '#e85a3c' },
+      { nameKey: 'mondrian.colour.indigo', hex: '#3a5fc8' },
+      { nameKey: 'mondrian.colour.citrine', hex: '#e8c84a' },
+      { nameKey: 'mondrian.colour.pearl', hex: '#e8e0cc' },
+      { nameKey: 'mondrian.colour.ink', hex: '#1a1714' },
+      { nameKey: 'mondrian.colour.ink', hex: '#1a1714' },
     ],
   },
   garden: {
     bg: '#f4ede0',
     line: '#1c2a22',
     fills: [
-      { name: 'Moss', hex: '#5a7548' },
-      { name: 'Plum', hex: '#7c3a5e' },
-      { name: 'Goldenrod', hex: '#d4a02e' },
-      { name: 'Linen', hex: '#f4ede0' },
-      { name: 'Linen', hex: '#f4ede0' },
-      { name: 'Charcoal', hex: '#1c2a22' },
+      { nameKey: 'mondrian.colour.moss', hex: '#5a7548' },
+      { nameKey: 'mondrian.colour.plum', hex: '#7c3a5e' },
+      { nameKey: 'mondrian.colour.goldenrod', hex: '#d4a02e' },
+      { nameKey: 'mondrian.colour.linen', hex: '#f4ede0' },
+      { nameKey: 'mondrian.colour.linen', hex: '#f4ede0' },
+      { nameKey: 'mondrian.colour.charcoal', hex: '#1c2a22' },
     ],
   },
 };
@@ -91,12 +93,12 @@ export function buildCustomPalette(customColors: CustomColors): Palette {
     bg: customColors.customPaper,
     line: customColors.customInk,
     fills: [
-      { name: 'Color 1', hex: customColors.customColor1 },
-      { name: 'Color 2', hex: customColors.customColor2 },
-      { name: 'Color 3', hex: customColors.customColor3 },
-      { name: 'Paper', hex: customColors.customPaper },
-      { name: 'Paper', hex: customColors.customPaper },
-      { name: 'Ink', hex: customColors.customInk },
+      { nameKey: 'mondrian.custom-colour.colour-one', hex: customColors.customColor1 },
+      { nameKey: 'mondrian.custom-colour.colour-two', hex: customColors.customColor2 },
+      { nameKey: 'mondrian.custom-colour.colour-three', hex: customColors.customColor3 },
+      { nameKey: 'mondrian.custom-colour.paper', hex: customColors.customPaper },
+      { nameKey: 'mondrian.custom-colour.paper', hex: customColors.customPaper },
+      { nameKey: 'mondrian.custom-colour.ink', hex: customColors.customInk },
     ],
   };
 }

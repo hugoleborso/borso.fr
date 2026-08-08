@@ -1,3 +1,4 @@
+import type { TranslationKey } from '../../i18n/i18n.utils';
 import type { Palette, PaletteFill } from './palettes.utils';
 
 interface Rect {
@@ -11,7 +12,7 @@ interface Rect {
 
 export type ColoredRect = Rect & {
   fill: string;
-  fillName: string;
+  fillNameKey: TranslationKey;
 };
 
 const MULBERRY32_INCREMENT = 0x6d2b79f5;
@@ -255,7 +256,7 @@ export function splitPaletteFills(palette: Palette): PaletteSplit {
   };
 }
 
-const LINE_FILL_NAME = 'line';
+const LINE_FILL_NAME_KEY: TranslationKey = 'mondrian.colour.ink';
 
 export function colorize(
   layout: readonly Rect[],
@@ -273,9 +274,9 @@ export function colorize(
         : pickUniform(nonNeutralFills, nextRandom);
 
     if (chosenFill === null) {
-      return { ...rectToColor, fill: palette.line, fillName: LINE_FILL_NAME };
+      return { ...rectToColor, fill: palette.line, fillNameKey: LINE_FILL_NAME_KEY };
     }
-    return { ...rectToColor, fill: chosenFill.hex, fillName: chosenFill.name };
+    return { ...rectToColor, fill: chosenFill.hex, fillNameKey: chosenFill.nameKey };
   });
 }
 
