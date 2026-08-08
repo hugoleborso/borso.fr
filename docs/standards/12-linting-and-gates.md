@@ -84,36 +84,75 @@ Six of the rules above came across from the Biome grit plugins, which are
 the grit versions had to infer the file's role from its import paths, so they
 misfire less.
 
-## The suppressions inventory
+## Exceptions live next to the line, never in a list
 
-`eslint-suppressions.json` at the repository root holds every violation that
-existed when a rule was turned on. ESLint reads the file, so a suppressed
-violation does not fail the build, and a new violation of the same rule in the
-same file does.
+An exception to a rule is a claim about one line of code. It is written on that
+line, in a comment, with the reason:
 
-The file exists so a rule can be set to error on the day it is written, rather
-than waiting until every old violation is fixed. Every entry is a line of debt
-with a rule name and a count, so you can see what is left and pick something
-off.
-
-To see what is outstanding:
-
-```bash
-pnpm exec eslint . --no-warn-ignored   # green, because suppressions apply
-node -e "const s=require('./eslint-suppressions.json');
-  const byRule={};
-  for (const file of Object.values(s))
-    for (const [rule, entry] of Object.entries(file))
-      byRule[rule] = (byRule[rule] ?? 0) + entry.count;
-  console.log(byRule);"
+```ts
+// eslint-disable-next-line borso/no-use-effect -- synchronises React with the ogl WebGL renderer, which owns its own canvas, resize listener and animation frame lifecycle
+useEffect(() => { … });
 ```
 
-After fixing some of them, run `pnpm exec eslint . --prune-suppressions` to
-drop the entries that are no longer needed, and commit the smaller file.
+Three settings make the shape hold, and all three are in `eslint.config.js`:
 
-Never add to the file by hand, and never run `--suppress-all` to make a new
-violation go away. The file grows only when a new rule is switched on, and a
-commit that grows it without adding a rule is a commit that hid a defect.
+| Setting | What it rejects |
+|---------|-----------------|
+| `eslint-comments/require-description` | a disable with no `-- <reason>` |
+| `linterOptions.reportUnusedDisableDirectives` | a disable that no longer suppresses anything |
+| `eslint-comments/no-unlimited-disable` | a blanket `/* eslint-disable */` for a file |
+
+The second one is the important one. When the underlying violation is fixed, the
+comment becomes an error, so the excuse cannot outlive the problem. Nothing has
+to be swept.
+
+### What a reason has to be
+
+A claim a reviewer can check, about this line. Write what is true about the
+code.
+
+```ts
+// Good.
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- drizzle's callback form of pgTable cannot express a composite primary key, which DSQL requires here
+
+// Bad. None of these is checkable.
+// eslint-disable-next-line some/rule -- pre-existing
+// eslint-disable-next-line some/rule -- will fix later
+// eslint-disable-next-line some/rule -- this is fine
+```
+
+If the honest reason is that the fix is out of scope, say so and say what the
+fix is: `-- splitting this controller needs the media domain extracted first,
+which is a separate change`.
+
+### Reach for a disable third, not first
+
+1. **Fix the code.** This is the outcome for most findings.
+2. **Scope the rule in `eslint.config.js`** if its stated reason does not hold
+   for a whole class of file, with a comment saying why. `no-dynamic-delete`
+   fires only on `delete process.env[NAME]` in tests, and `process.env` is not
+   ours to redesign, so it is off for test files rather than disabled at
+   fourteen call sites.
+3. **Then a disable comment.** One line, one reason.
+
+A disable that repeats itself across many files is a scoping decision wearing a
+disguise. Move it to the config.
+
+### What this replaced
+
+Until this branch, the repository carried `eslint-suppressions.json`, a
+path-keyed file holding every violation that existed when a rule was turned on.
+It let a rule ship at `error` on the day it was written, which was the point,
+and 1,631 entries went in on day one.
+
+It was removed because it carried no reasons. An entry could be deliberate or it
+could be debt and the file could not tell you which, so nobody read it and it
+went stale in silence. The counts also flattered the code: two thirds of the
+final inventory turned out to be a rule misfiring rather than a defect, and the
+file made that indistinguishable from real debt.
+
+The blueprint for the replacement shape is annotated at
+`apps/borso-fr/site/components/organisms/Galaxy.tsx`.
 
 ## The gates, in the order they run
 

@@ -138,6 +138,12 @@ export function Galaxy({
   const targetPointerActivity = useRef(POINTER_INACTIVE);
   const smoothPointerActivity = useRef(POINTER_INACTIVE);
 
+  /**
+   * @Blueprint lint-exception
+   * @BlueprintName Rule Exception With A Written Reason
+   * @BlueprintUsage Use whenever a rule has to be turned off for one line, after fixing the code and after scoping the rule in eslint.config.js have both been ruled out.
+   * @BlueprintDescription Writes the exception on the line it excuses, as `eslint-disable-next-line <rule> -- <reason>`, so a reviewer reads the claim and the code together. The reason names the external system this effect synchronises with, which is the specific thing the rule asks about, rather than asserting that the line is acceptable. `eslint-comments/require-description` rejects the comment without a reason and `reportUnusedDisableDirectives` rejects it once the violation is gone, so the excuse cannot outlive the problem and no separate inventory has to be swept. A disable that repeats across files is a scoping decision in disguise and belongs in eslint.config.js instead.
+   */
   // eslint-disable-next-line borso/no-use-effect -- synchronises React with the ogl WebGL renderer, which owns its own canvas, resize listener and animation frame lifecycle
   useEffect(() => {
     const container = containerRef.current;

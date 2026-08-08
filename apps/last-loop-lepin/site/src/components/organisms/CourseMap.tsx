@@ -97,6 +97,7 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
     [points, startLat, startLng, startMarkerTitle],
   );
 
+  // @FollowsBlueprint lint-exception
   // eslint-disable-next-line borso/no-use-effect -- Leaflet owns the map instance lifecycle, so each standings tick has to be pushed into its layer group by hand.
   useEffect(() => {
     for (const layer of listPresent(runnerLayerRef.current)) {

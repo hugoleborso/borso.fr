@@ -114,6 +114,7 @@ export function useAnimation(
   const canvasNodeRef = useRef<HTMLDivElement | null>(null);
   const transform = selectCanvasTransform(mode, isReducedMotion);
 
+  // @FollowsBlueprint lint-exception
   // eslint-disable-next-line borso/no-use-effect -- synchronises the canvas with the browser's requestAnimationFrame loop, which owns its own lifecycle
   useEffect(
     () => START_BY_ANIMATED[`${isTransformAnimated(transform)}`](canvasNodeRef, transform),

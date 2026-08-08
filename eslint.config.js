@@ -67,6 +67,24 @@ export default tseslint.config(
   js.configs.recommended,
   eslintComments.recommended,
 
+  // An exception to a rule is a claim about this line, so it has to be written
+  // down next to it and it has to stop applying once it stops being true.
+  // `require-description` rejects a bare `eslint-disable`, and
+  // `reportUnusedDisableDirectives` rejects one that no longer suppresses
+  // anything, so a fixed violation cannot leave its excuse behind. Together
+  // they are what replaced `eslint-suppressions.json`, a path-keyed file that
+  // carried no reasons and went stale in silence. See
+  // docs/standards/12-linting-and-gates.md.
+  {
+    linterOptions: { reportUnusedDisableDirectives: 'error' },
+    rules: {
+      '@eslint-community/eslint-comments/require-description': [
+        'error',
+        { ignore: ['eslint-enable'] },
+      ],
+    },
+  },
+
   // Type-aware linting for every TypeScript file in a workspace. The
   // `projectService` resolves each file through the nearest tsconfig, which is
   // what makes `no-unnecessary-condition` and the `no-unsafe-*` family work.
@@ -159,7 +177,14 @@ export default tseslint.config(
       'import-x/no-self-import': 'error',
       'import-x/no-duplicates': 'error',
       'no-console': ['error', { allow: ['warn', 'error'] }],
-      'no-param-reassign': ['error', { props: true }],
+      // The rule guards against mutating an object the caller still owns. A DOM
+      // node handed to a `querySelectorAll(...).forEach` callback has no such
+      // caller, and writing `element.style.transform` is the whole of a
+      // canvas animation, so parameters named for what they are are exempt.
+      'no-param-reassign': [
+        'error',
+        { props: true, ignorePropertyModificationsForRegex: ['Element$', 'Node$'] },
+      ],
       eqeqeq: ['error', 'always', { null: 'ignore' }],
       'prefer-const': 'error',
       'object-shorthand': 'error',
