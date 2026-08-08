@@ -31,13 +31,20 @@ read the rest.
 ## How a standard differs from a blueprint
 
 A standard tells you what the code has to look like, so breaking one fails a
-gate.
+gate. A blueprint is the canonical example of that rule, marked in place on real
+code in this repository with a `@Blueprint` JSDoc block.
 
-A blueprint tells you how to build a new thing from nothing, so it gives the
-folder layout, the dependency list, and the first files to write. The
-blueprints are in [`docs/blueprints`](../blueprints/README.md), and they follow
-the shape of
-[theodo-group/theodo-blueprints](https://github.com/theodo-group/theodo-blueprints).
+So the standard is the rule and the blueprint is the working instance of it.
+Read the standard to learn what is required, and open the blueprint to see the
+shape to copy. When the two disagree, the standard wins and the blueprint is
+stale.
+
+Every blueprint is listed in
+[`.claude/skills/blueprint/blueprint-index.md`](../../.claude/skills/blueprint/blueprint-index.md),
+along with how many places carry a `// @FollowsBlueprint` marker pointing at it,
+so the index shows which patterns have actually been adopted rather than which
+ones we intended. The [`/blueprint`](../../.claude/skills/blueprint/SKILL.md)
+skill creates, indexes, and validates them.
 
 ## How a standard differs from a dantotsu
 

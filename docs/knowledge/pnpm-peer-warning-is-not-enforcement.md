@@ -26,7 +26,7 @@ every `<Chessboard>` crashed inside its React error boundary because
 the v5 implementation calls `React.use(ChessboardContext)`, and the
 `use()` hook only exists in React 19.
 
-The `Done in 8.3s` was misleading; the install was _not_ done in a
+The `Done in 8.3s` was misleading; the install was *not* done in a
 useful sense.
 
 ## Detection
@@ -45,7 +45,7 @@ Two signals to take seriously:
 - **Pin to the latest minor that supports the peer you have.** If the
   upgrade isn't worth a peer-major bump, find the last library version
   whose peerDependencies still accept your peer. `npm view <pkg>@<v>
-peerDependencies` shows the requirement per version.
+  peerDependencies` shows the requirement per version.
 - **Make the peer bump explicit.** If the upgrade is wanted, bump both
   the dep and its peer in the same commit (React + react-chessboard +
   `@types/react` + `@types/react-dom`). Don't ship just the dep bump.

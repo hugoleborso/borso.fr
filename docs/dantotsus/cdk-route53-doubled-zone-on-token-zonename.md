@@ -19,7 +19,7 @@ After the API custom-domain wiring landed, hitting
 `https://last-loop-lepin-pr-12-api.preview.borso.fr/api/...` did NOT
 reach API Gateway. Response headers showed `server: CloudFront`,
 `x-cache: FunctionGeneratedResponse from cloudfront` — the request was
-being served by the _shared previews_ CloudFront distribution (the
+being served by the *shared previews* CloudFront distribution (the
 wildcard `*.preview.borso.fr` ALIAS), not by the API Gateway custom
 domain. CloudWatch's API log group stayed empty.
 
@@ -65,10 +65,10 @@ intended hostname; the wildcard caught the lookup.
    it for existing prod records because those were created before this
    pattern existed.
 
-**Root cause:** _I thought CDK's "endsWith zone" auto-FQDN logic
+**Root cause:** *I thought CDK's "endsWith zone" auto-FQDN logic
 worked on the resolved value at deploy time. Actually it runs at
 synth time on the literal token, fails the suffix check, and emits a
-template that asks CFN to concatenate token + already-FQDN name._ If
+template that asks CFN to concatenate token + already-FQDN name.* If
 I had known that, every `recordName` would have been a trailing-dot
 FQDN from day one.
 
@@ -80,11 +80,11 @@ FQDN from day one.
   record names.
 - **Functional validation locally:** the CFN template inspected at
   synth time shows the Fn::Join intrinsic — `Name: { "Fn::Join": ["",
-[ "last-loop-lepin-pr-12-api.preview.borso.fr.", { "Ref": "Ssm…" },
-"." ]] }` — but I didn't read the synthesised template; the structure
+  [ "last-loop-lepin-pr-12-api.preview.borso.fr.", { "Ref": "Ssm…" },
+  "." ]] }` — but I didn't read the synthesised template; the structure
   is opaque without running it through CFN.
 - **CI (tests / build):** infra unit tests assert on `DomainName:
-'last-loop-lepin-pr-12-api.preview.borso.fr'` at the APIGW level,
+  'last-loop-lepin-pr-12-api.preview.borso.fr'` at the APIGW level,
   not on the Route 53 record's final assembled name. The token form is
   the same regardless.
 - **Code review:** same session shipped both sides, didn't read the
@@ -93,7 +93,9 @@ FQDN from day one.
 ## Countermeasure
 
 `infra/cdk/src/constructs/lambda-api.ts` — every `recordName` is now
-constructed as `\`${hostname}.\``(trailing dot = FQDN sentinel) so`determineFullyQualifiedDomainName`short-circuits regardless of how`zoneName` resolves at synth.
+constructed as `\`${hostname}.\`` (trailing dot = FQDN sentinel) so
+`determineFullyQualifiedDomainName` short-circuits regardless of how
+`zoneName` resolves at synth.
 
 ## Eradication (mandatory — code-level)
 

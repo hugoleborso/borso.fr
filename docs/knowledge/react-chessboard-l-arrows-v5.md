@@ -44,7 +44,7 @@ v5 is a meaningful refactor, not a drop-in:
 - **`<ChessboardDnDProvider>` is gone** — v5 manages DnD internally.
   Remove the wrapper.
 - **`CustomSquareStyles` type** removed. Use `Record<string,
-React.CSSProperties>` for `squareStyles`.
+  React.CSSProperties>` for `squareStyles`.
 - **`Square` type widened to `string`** — keep a local brand if you
   want compile-time narrowness (the runtime regex guard is the actual
   gate anyway).
@@ -57,7 +57,7 @@ React.CSSProperties>` for `squareStyles`.
 Critical caveat: the entire v5 line (5.0 → at least 5.10) has
 `peerDependencies: { react: '^19.0.0', 'react-dom': '^19.0.0' }`. The
 library internally uses `React.use(ChessboardContext)`, which is a
-React-19-only hook. `pnpm install` will _complete_ against React 18
+React-19-only hook. `pnpm install` will *complete* against React 18
 (only emitting a peer warning — see
 [`pnpm-peer-warning-is-not-enforcement.md`](./pnpm-peer-warning-is-not-enforcement.md))
 but every `<Chessboard>` then crashes its React error boundary at

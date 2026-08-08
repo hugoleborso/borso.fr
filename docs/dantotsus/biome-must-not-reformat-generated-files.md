@@ -43,10 +43,10 @@ green.
    `biome.jsonc` didn't exclude `**/migrations/meta` — biome treats
    `*.json` like any other source file by default.
 
-**Root cause:** _thought biome would only touch hand-written files,
+**Root cause:** *thought biome would only touch hand-written files,
 actually drizzle-kit-generated JSONs were in scope and biome
 happily reformatted them, breaking the downstream tool that relied
-on the exact layout drizzle produces._
+on the exact layout drizzle produces.*
 
 ## Detection failure causes
 

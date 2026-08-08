@@ -15,19 +15,19 @@ The Borso clan (audience: the few of us, no public surface) wants to **grow a sm
 repertoire** by learning new variations and then drilling them until they can play them
 flawlessly. Lichess Studies and Chess.com book mode work, but they require login, surface ads, and
 break offline; the imported borsouvertures app removes that friction but in its current shape only
-drills _single lines_, which doesn't match how someone actually adds a variation to their
-repertoire (a variation is a _tree_ of book moves, not a single sequence).
+drills *single lines*, which doesn't match how someone actually adds a variation to their
+repertoire (a variation is a *tree* of book moves, not a single sequence).
 
-**Output metric (lagging, real-world, _not_ asserted by `/visual-validation`):** clan members
+**Output metric (lagging, real-world, *not* asserted by `/visual-validation`):** clan members
 have added a new variation to their personal repertoire after a single ~15-minute session.
-Measured out-of-band by self-report — _"yes, I can play this now"_ — when Hugo asks at family
+Measured out-of-band by self-report — *"yes, I can play this now"* — when Hugo asks at family
 dinner. Quarterly check, no instrumentation.
 
 **Input metric (leading, machine-observable, asserted by `/visual-validation`):** in a single
 browser session the validator can (a) pick any variation in the dataset, (b) drill the
-Learn-tree until the _Variation cleared_ banner appears, (c) tap _Switch to Play with this
-scope_, (d) play every leaf line of that variation in Play mode without the app ever surfacing
-an _Out-of-book_ state. PASS on this assertion is the merge gate.
+Learn-tree until the *Variation cleared* banner appears, (c) tap *Switch to Play with this
+scope*, (d) play every leaf line of that variation in Play mode without the app ever surfacing
+an *Out-of-book* state. PASS on this assertion is the merge gate.
 
 (See [`docs/knowledge/input-vs-output-metrics.md`](../../../../knowledge/input-vs-output-metrics.md)
 for the framing — visual-validation drives input metrics only; the output metric is a proxy
@@ -40,10 +40,10 @@ ads + login screen + slow chessboard, gives up.
 
 The visible result for v1 is a **Learn-as-tree** view inside the existing app shell:
 
-- Picking a _variation_ (not a specific line) in the selector enters a "tree drill": the board
+- Picking a *variation* (not a specific line) in the selector enters a "tree drill": the board
   shows the position at the variation's entry point, the panel shows every book move that exists
   in any line under this variation at the current ply, the user picks one, and the opponent
-  random-picks one of _its_ book replies. The drill ends when the user has been down each book
+  random-picks one of *its* book replies. The drill ends when the user has been down each book
   branch at least once.
 - Optional commentary panel reads from `site/openings/commentary/<opening-id>.yml` (sidecar). If
   the file is absent the panel is hidden — no empty-state ceremony.
@@ -101,18 +101,18 @@ Error cases:
 
 ## Questions, options, decisions
 
-1. **Mode primacy.** Decided: _Learn first, Play after_. Both modes are first-class. Play stays in
+1. **Mode primacy.** Decided: *Learn first, Play after*. Both modes are first-class. Play stays in
    the codebase; bugs that block multi-select scope are fixed in this iteration, deeper Play
    redesign is a later spec.
-2. **Variation shape.** Decided: _tree explorer with random-picking opponent_. Rejected single-line
+2. **Variation shape.** Decided: *tree explorer with random-picking opponent*. Rejected single-line
    drill (current), one-step-deeper drill (too close to today), pure spaced-repetition (deferred —
    needs persistence we don't have yet).
-3. **Commentary.** Decided: _sidecar YAML files at `site/openings/commentary/<opening-id>.yml`_,
+3. **Commentary.** Decided: *sidecar YAML files at `site/openings/commentary/<opening-id>.yml`*,
    panel hidden if absent. Not gated on data availability. Stretch slot — ship without it if
    unwritten. Background research:
    - The current source (`lichess-org/chess-openings`) ships move-sequences only. No commentary.
    - Off-the-shelf annotated datasets (`ecrucru/pgn-openings`, PGNMentor, Lumbras) are either
-     license-incompatible (AGPL) or annotate _games_, not opening theory.
+     license-incompatible (AGPL) or annotate *games*, not opening theory.
    - **Lichess Studies API** does carry comments (`/api/study/{id}.pgn?comments=true&variations=true`),
      and user-generated content is CC-BY-SA — redistributable with attribution. v1 ships a
      **stretch importer** at `scripts/import-lichess-study.ts` that takes a curated allow-list
@@ -123,39 +123,38 @@ Error cases:
      fragile and per-page attribution complicates the repo's commit story.
 4. **Spaced repetition.** Out of scope for v1 (needs per-position persistence; clan-only audience
    doesn't justify the storage / sync complexity yet). Re-spec later.
-5. **Persistence between sessions.** Decided: _localStorage on the device_. The store keeps the
+5. **Persistence between sessions.** Decided: *localStorage on the device*. The store keeps the
    last selection (opening / variation / side / theme / `treeVisualizationMode`). Survives
    reload, doesn't sync across devices. No DSQL, no auth. Schema: `borsouvertures.v1`
    namespace; future schema bumps key as `borsouvertures.v2` and the v1 entry is dropped — no
    in-place migration logic for a clan-only app.
 
-   _Visited-leaves are intentionally **not** persisted._ Each Learn-tree drill is one
+   *Visited-leaves are intentionally **not** persisted.* Each Learn-tree drill is one
    training session — reloading the page or switching variation starts a fresh drill, even if
    the previous one wasn't cleared. Persisting partial-drill state would force a cross-tab
    sync question this iteration explicitly defers. If a clan member asks for "resume drill,"
    re-spec it.
-
 6. **Auth / shareable links / leaderboards.** Out of scope. Clan-only. Anyone with the URL can
    use it; that's the whole story.
-7. **Device weighting.** Decided: _mobile-first_. Hugo's primary surface is iPhone on the couch.
+7. **Device weighting.** Decided: *mobile-first*. Hugo's primary surface is iPhone on the couch.
    Visual-validation runs against a 380×800 viewport in addition to the desktop viewport; tap
    targets are sized for thumbs (≥44 px); the tree-of-moves UI must be reachable without
    pinch-zoom. The existing `useIsMobile` breakpoint at 900 px stands.
-8. **Tree visualization.** Decided: _both shapes, with a user toggle_. The board overlays
+8. **Tree visualization.** Decided: *both shapes, with a user toggle*. The board overlays
    colored arrows for every distinct book move at the current ply (today's `showMoves` arrows,
    re-purposed), AND a labelled list of move buttons appears in the panel below the board
    (`7. Bb5  Ruy Lopez`, `7. Bc4  Italian`). Mobile defaults to the button list (arrows pile up
    on a small board); desktop defaults to arrows. The toggle lives in the in-session controls
    row, persists to localStorage.
-9. **Race-condition fix shape (B5).** Decided: _external state machine_. Pull the opponent-move
+9. **Race-condition fix shape (B5).** Decided: *external state machine*. Pull the opponent-move
    loop out of the React components into a small machine in
    `site/openings/learnTreeMachine.utils.ts` (and a sibling `playMachine.utils.ts` for Play). The
    machine carries a generation counter; stale `setTimeout` callbacks check the generation and
    bail. Components subscribe via `useSyncExternalStore`. The machine is tested directly by
    vitest with no DOM, gated at 100% coverage. This also kills the `// biome-ignore
-useExhaustiveDependencies` suppressions inside the modes — they exist today only because the
+   useExhaustiveDependencies` suppressions inside the modes — they exist today only because the
    loop is component-local.
-10. **Variation-cleared celebration.** Decided: _inline banner above the board_, not a modal.
+10. **Variation-cleared celebration.** Decided: *inline banner above the board*, not a modal.
     The banner reads `Variation cleared — every line visited at least once`, with two affordances:
     a primary `Switch to Play with this scope` button and a secondary `Drill again` link that
     resets the visited-leaves set. No modal interruption; the user can keep playing the line if
@@ -166,15 +165,15 @@ useExhaustiveDependencies` suppressions inside the modes — they exist today on
 These are observed in the just-merged port. Each row is a defect the v1 spec must address (fix
 or explicitly defer with rationale).
 
-| #      | Symptom                                                                                                                                                                                                                                                                                                    | Mode | Fix in v1?                                                                           |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------ |
-| B1     | Picking Black, opponent doesn't auto-play White's first move                                                                                                                                                                                                                                               | Play | Yes (parity with Learn)                                                              |
-| B2     | "Show Book Moves" arrows wiped on first piece-touch even before move                                                                                                                                                                                                                                       | Play | Yes                                                                                  |
-| ~~B3~~ | ~~Multi-select drift~~ — demoted from bug list. The back-fill keeps `gatherCandidates`'s AND-filtered scope coherent with what the pills show; without it, scoping a line under opening A then a line under opening B would silently exclude one of them. Tracked as a UX clarity follow-up, not a v1 fix. | —    | No                                                                                   |
-| B4     | Empty scope (everything deselected) still renders board + accepts moves                                                                                                                                                                                                                                    | Play | Yes (block Start, surface "pick something")                                          |
-| B5     | setTimeout from previous line/side fires after a switch                                                                                                                                                                                                                                                    | Both | Yes — Q9 external state machine + generation counter                                 |
-| B6     | Reset / Undo: book arrows go stale after the user requests them and then resets                                                                                                                                                                                                                            | Play | Yes — the state machine derives arrows from current ply; `manualArrows` flag deleted |
-| B7     | Selector visible before openings.json arrives (no skeleton)                                                                                                                                                                                                                                                | Both | Yes (gate selector behind `loading`)                                                 |
+| # | Symptom                                                                 | Mode  | Fix in v1? |
+| - | ----------------------------------------------------------------------- | ----- | ---------- |
+| B1 | Picking Black, opponent doesn't auto-play White's first move            | Play  | Yes (parity with Learn) |
+| B2 | "Show Book Moves" arrows wiped on first piece-touch even before move    | Play  | Yes |
+| ~~B3~~ | ~~Multi-select drift~~ — demoted from bug list. The back-fill keeps `gatherCandidates`'s AND-filtered scope coherent with what the pills show; without it, scoping a line under opening A then a line under opening B would silently exclude one of them. Tracked as a UX clarity follow-up, not a v1 fix. | — | No |
+| B4 | Empty scope (everything deselected) still renders board + accepts moves  | Play  | Yes (block Start, surface "pick something") |
+| B5 | setTimeout from previous line/side fires after a switch                  | Both  | Yes — Q9 external state machine + generation counter |
+| B6 | Reset / Undo: book arrows go stale after the user requests them and then resets | Play | Yes — the state machine derives arrows from current ply; `manualArrows` flag deleted |
+| B7 | Selector visible before openings.json arrives (no skeleton)              | Both  | Yes (gate selector behind `loading`) |
 
 ## Changes
 
@@ -239,10 +238,10 @@ or explicitly defer with rationale).
 **Input metrics** (the leading behaviours we expect a clan member to perform; CI-gated via
 visual-validation, not via runtime telemetry):
 
-- _Variation drilled to completion_ — every leaf in the chosen variation visited in a single
+- *Variation drilled to completion* — every leaf in the chosen variation visited in a single
   Learn-tree session.
-- _Switch-to-Play tap_ — banner CTA pressed within the same session.
-- _Play scope reaches every leaf without OOB_ — every leaf playable in Play mode without an
+- *Switch-to-Play tap* — banner CTA pressed within the same session.
+- *Play scope reaches every leaf without OOB* — every leaf playable in Play mode without an
   out-of-book event.
 
 These are NOT instrumented as runtime events. Five users; the visual-validator proves the
@@ -251,7 +250,7 @@ we re-spec to add real telemetry.
 
 **Output metric** (lagging, out-of-band, manual): Hugo asks at family dinner whether the
 person can now play that variation. Quarterly review of "did the Learn-tree drill actually
-land?" If the answer trends to "no", the _input metrics still pass but the output stalls_ —
+land?" If the answer trends to "no", the *input metrics still pass but the output stalls* —
 that's the signal to re-spec the Learn flow (e.g. add spaced repetition).
 
 ### Zero-defect strategy

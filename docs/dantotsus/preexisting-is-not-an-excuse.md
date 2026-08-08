@@ -24,13 +24,13 @@ The package may have incorrect main/module/exports specified in
 its package.json.
 ```
 
-Reflex was to qualify the failure as _preexisting_ (i.e. "not
+Reflex was to qualify the failure as *preexisting* (i.e. "not
 introduced by my diff") and proceed. The user pushed back hard
 in all caps :
 
 > "NO ISSUE IS PRE EXISTING. CD ensures it is not the case. Write"
 
-CI ran the same gate in `.github/workflows/ci.yml` and _did_
+CI ran the same gate in `.github/workflows/ci.yml` and *did*
 green-light it — but only because CI explicitly sequenced
 `pnpm --filter @borso/infra build` before `test:core`. Locally,
 nothing primed `infra/cdk/dist/`, so the import resolved to
@@ -48,13 +48,13 @@ nothing and the test errored.
 3. **Why?** The agent saw a red local test, didn't connect it
    to the workspace-build step CI was doing, and labelled it
    "preexisting" — moving past it. The behavioural failure mode
-   is broader than this one PR : _"a failure I didn't introduce
-   isn't mine to fix"_.
+   is broader than this one PR : *"a failure I didn't introduce
+   isn't mine to fix"*.
 
-**Root cause:** _thought local test failures with no obvious link
+**Root cause:** *thought local test failures with no obvious link
 to the diff are out of scope, actually any failing gate ON the
 branch IS in scope — CI runs the same gate and will block the
-PR, or worse a future regression slips in mislabelled as inert._
+PR, or worse a future regression slips in mislabelled as inert.*
 
 ## Detection failure causes
 
@@ -70,7 +70,7 @@ PR, or worse a future regression slips in mislabelled as inert._
 
 Two parallel eradications :
 
-1. Add a hard rule to CLAUDE.md under _Tone & rigor_ :
+1. Add a hard rule to CLAUDE.md under *Tone & rigor* :
    > "Preexisting" is not an excuse. If a test fails, a build
    > breaks, a linter shouts — fix it, regardless of who
    > introduced it or when. … Investigate, then either fix the
@@ -80,7 +80,7 @@ Two parallel eradications :
    > qualify a failure as "preexisting" and move on.
 2. Apply the rule immediately to the specific harness gap that
    caused this failure — add `pnpm --filter @borso/infra run
-build &&` to `test:core` (and `test:coverage`) in
+   build &&` to `test:core` (and `test:coverage`) in
    `apps/last-loop-lepin/package.json` so the local gate is
    self-contained.
 
@@ -122,4 +122,4 @@ test of the rule.
 
 ## See also
 
-- [`CLAUDE.md`](../../CLAUDE.md) — _Tone & rigor_ section.
+- [`CLAUDE.md`](../../CLAUDE.md) — *Tone & rigor* section.

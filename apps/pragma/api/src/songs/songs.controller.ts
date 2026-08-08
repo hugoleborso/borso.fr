@@ -19,6 +19,12 @@ import {
 
 const externalSearchQuerySchema = z.object({ q: z.string().min(1).max(256) });
 
+/**
+ * @Blueprint controller-dispatch
+ * @BlueprintName Controller Dispatch
+ * @BlueprintUsage Use for every Hono route. Validate input, call one service method, shape the response.
+ * @BlueprintDescription Builds the song routes. Each handler runs zValidator on the request, calls a single songs.service function, and returns context.json with a status code. No business condition, and no map, filter, or reduce over domain data.
+ */
 export function buildSongsRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)

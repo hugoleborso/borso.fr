@@ -37,6 +37,12 @@ export interface RegisterPunchInput {
   readonly runnerSlug: string;
 }
 
+/**
+ * @Blueprint service-orchestration
+ * @BlueprintName Service Orchestration
+ * @BlueprintUsage Use for a workflow that reads, decides, then writes. The service is the only impure layer allowed to be interesting.
+ * @BlueprintDescription Reads the edition and the runner's existing punches through the repository, hands them to a pure decision function in punch.core.ts, throws a named domain error when the decision rejects, and writes through the repository. The branches live in the core file, so the service reads as a sequence of steps.
+ */
 export async function registerPunch(
   database: Database,
   input: RegisterPunchInput,

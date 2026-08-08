@@ -2,7 +2,7 @@
 
 Operator observation that triggered this:
 
-> _« apiClient was not tanstackQuery ??? »_ — post-merge PR #23 review.
+> *« apiClient was not tanstackQuery ??? »* — post-merge PR #23 review.
 
 The previous data layer was two hand-rolled hooks
 (`useStandingsPoll.ts`, `useResource.ts`) over `useSyncExternalStore`

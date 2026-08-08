@@ -35,7 +35,7 @@ compounded: every PR, every push, every pre-commit hook.
    `NodejsFunction`-using tests, that's multiple bundles.
 3. **Why does each bundle take ~10–25 s?**
    The construct's `bundling.nodeModules: ['postgres',
-'@aws-sdk/dsql-signer']` instructs esbuild to install those
+   '@aws-sdk/dsql-signer']` instructs esbuild to install those
    packages into a fresh tmp directory before bundling.
 4. **Why does CDK install them fresh every time?**
    `nodeModules`'s contract is "install these into the bundle's
@@ -46,7 +46,7 @@ compounded: every PR, every push, every pre-commit hook.
    without questioning each field. Both packages are pure JS with no
    native bindings, so esbuild can bundle them inline directly from
    the workspace's `node_modules/`. `nodeModules` is for packages
-   esbuild _can't_ bundle (native deps); it was the wrong tool here.
+   esbuild *can't* bundle (native deps); it was the wrong tool here.
 
 **Root cause:** we thought `bundling.nodeModules` was the standard way
 to declare "include these packages in my Lambda bundle". It's

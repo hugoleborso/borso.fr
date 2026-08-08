@@ -5,9 +5,9 @@ description: Draft a feature specification that surfaces misalignments, confront
 
 # Specification skill
 
-The specification is **not a description of what to build**. It is a working document used to surface misalignments, confront PM/tech perspectives, and reveal inconsistencies _before_ implementation. Treating it as a hand-off document is the failure mode this skill exists to prevent.
+The specification is **not a description of what to build**. It is a working document used to surface misalignments, confront PM/tech perspectives, and reveal inconsistencies *before* implementation. Treating it as a hand-off document is the failure mode this skill exists to prevent.
 
-The canonical standard this skill enforces lives at [`standard.md`](./standard.md) (in this skill's folder). When the standard and this SKILL.md disagree, the standard wins — open `standard.md` and re-read it before drafting. Edit `standard.md` when the underlying standard evolves; edit this file when the _enforcement_ of it evolves.
+The canonical standard this skill enforces lives at [`standard.md`](./standard.md) (in this skill's folder). When the standard and this SKILL.md disagree, the standard wins — open `standard.md` and re-read it before drafting. Edit `standard.md` when the underlying standard evolves; edit this file when the *enforcement* of it evolves.
 
 ## How this phase works
 
@@ -78,36 +78,30 @@ Section names match the canonical template kept locally at [`template.md`](./tem
 Remove the line once that perspective has been covered. -->
 
 ## Why
-
 - Business / customer / user value, in one paragraph.
 - One measurable objective: revenue / quality / lead time / productivity. A wish-list of four objectives means none of them.
-- Link any field observation (Gemba) that validates the _problem_ exists, not just that the solution is wanted.
+- Link any field observation (Gemba) that validates the *problem* exists, not just that the solution is wanted.
 
 ## Result
-
 - The final, visible result: Figma / wireframes / API endpoints / dashboard / before-and-after screens.
 - "No visible result" is a red flag — name it.
 
 ## Use cases / edge cases
-
 - Visual first: BPMN, sequence diagram, or domain model. Plain text only when a visual is genuinely overkill.
 - Numbered happy path + bulleted edge cases + bulleted error cases. If a case is not listed here, it does not exist for this iteration.
 
 ## Questions, Options and Decisions
-
 - Each hard point: the question, 2–3 options with trade-offs, and the decision taken (with date). ADR-equivalent. Keep resolved decisions — future-you needs the reasoning.
 - Link out to full ADRs / blueprints / POCs when they exist; do not duplicate.
 - Include what is explicitly **out of scope**.
 
 ## Changes
-
 - **Types / domain model** (DDD): entities, value objects, relationships, shared vocabulary.
 - **Database changes**: migrations, new columns, indexes.
 - **Files to change**: backend + frontend, each path called out, marked NEW / UPDATE. Pure helpers go in `*.utils.ts` (see CLAUDE.md "Clean code") so the test runner can enforce 100% coverage on them.
-- **Test strategy**: the autonomous validation pipeline that gives confidence the feature ships without defects. Manual sweeps are forbidden — the spec is approved when `/visual-validation` and `/technical-validation` can both pass against it without a human clicking through anything. See the template's _Test strategy_ section for the shape.
+- **Test strategy**: the autonomous validation pipeline that gives confidence the feature ships without defects. Manual sweeps are forbidden — the spec is approved when `/visual-validation` and `/technical-validation` can both pass against it without a human clicking through anything. See the template's *Test strategy* section for the shape.
 
 ## Production strategy
-
 - **Analytics**: named events, p50/p75/p90 thresholds where relevant, success criteria.
 - **Zero-defect strategy**: named error classes, when they fire, alerting thresholds (e.g. Sentry tags + N occurrences in M minutes).
 ```
@@ -118,21 +112,21 @@ For tone and depth, mirror the worked example at [`worked-example.md`](./worked-
 
 Walk the user through these 13 steps, in order. Do not skip ahead — each step exists because the next one is unsafe without it.
 
-| #   | Step                                         | Section                | Why this step exists                                                                                                 |
-| --- | -------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| 1   | Work _back_ from the solution to the problem | Why                    | Stakeholders arrive with a solution. Reverse-engineering the problem is faster than asking for it cold.              |
-| 2   | Observe the work in the field (Gemba)        | Why                    | Prevents a solution in search of a problem. Watch the current behaviour with all its constraints before changing it. |
-| 3   | Clarify the expected value                   | Why / Result           | One measurable objective. Refuse a wish-list.                                                                        |
-| 4   | Map the target behaviour                     | Use cases / edge cases | End-to-end happy path so inconsistencies are visible at a glance.                                                    |
-| 5   | Conduct research (external + internal)       | Why                    | Industry standards + repo `docs/` + any internal blueprint material the user can share. Reduces test-and-learn.      |
-| 6   | Collect use cases                            | Use cases / edge cases | Normal + edge + error. Anything missing here will break in production.                                               |
-| 7   | Define the business model                    | Changes                | Entities, relationships, shared vocabulary (DDD). Stabilises business/tech terminology.                              |
-| 8   | Identify data sources                        | Changes                | Verify required data actually exists before designing around it.                                                     |
-| 9   | Define the interface                         | Result                 | Mockups, screens, before/after. Forces a visible result.                                                             |
-| 10  | Make component choices                       | Changes / Q.O.D.       | 2–3 alternatives, justified pick. Avoids premature constraints.                                                      |
-| 11  | Identify key implementation points           | Changes / Q.O.D.       | Sequence, risks, critical dependencies.                                                                              |
-| 12  | Identify inconsistencies in the spec         | Q.O.D.                 | Re-read the whole document looking for problem/solution misalignment. This is the step the skill exists for.         |
-| 13  | Identify how to iterate in production        | Production strategy    | Analytics + alerting. The real feature is the one used in production.                                                |
+| # | Step | Section | Why this step exists |
+| --- | --- | --- | --- |
+| 1 | Work *back* from the solution to the problem | Why | Stakeholders arrive with a solution. Reverse-engineering the problem is faster than asking for it cold. |
+| 2 | Observe the work in the field (Gemba) | Why | Prevents a solution in search of a problem. Watch the current behaviour with all its constraints before changing it. |
+| 3 | Clarify the expected value | Why / Result | One measurable objective. Refuse a wish-list. |
+| 4 | Map the target behaviour | Use cases / edge cases | End-to-end happy path so inconsistencies are visible at a glance. |
+| 5 | Conduct research (external + internal) | Why | Industry standards + repo `docs/` + any internal blueprint material the user can share. Reduces test-and-learn. |
+| 6 | Collect use cases | Use cases / edge cases | Normal + edge + error. Anything missing here will break in production. |
+| 7 | Define the business model | Changes | Entities, relationships, shared vocabulary (DDD). Stabilises business/tech terminology. |
+| 8 | Identify data sources | Changes | Verify required data actually exists before designing around it. |
+| 9 | Define the interface | Result | Mockups, screens, before/after. Forces a visible result. |
+| 10 | Make component choices | Changes / Q.O.D. | 2–3 alternatives, justified pick. Avoids premature constraints. |
+| 11 | Identify key implementation points | Changes / Q.O.D. | Sequence, risks, critical dependencies. |
+| 12 | Identify inconsistencies in the spec | Q.O.D. | Re-read the whole document looking for problem/solution misalignment. This is the step the skill exists for. |
+| 13 | Identify how to iterate in production | Production strategy | Analytics + alerting. The real feature is the one used in production. |
 
 After the draft is written, **do step 12 explicitly**: re-read the spec with the user and call out misalignments. This is non-negotiable — skipping it converts the spec into a hand-off document, which is the failure mode the standard exists to prevent.
 
@@ -141,20 +135,20 @@ After the draft is written, **do step 12 explicitly**: re-read the spec with the
 These are the common mistakes the standard names. Push back on them in real time when you see them.
 
 - **"PM does discovery, tech-lead does the tech part."** The spec is the place where every perspective confronts the others. Do not partition. If a perspective has not been challenged in this conversation, flag the spec with the matching `> ⚠️ Missing <perspective> discussion` blockquote and refuse to call it ready.
-- **"I'm writing this because the team asked for it."** Bureaucratic specs hide reasoning. If the _why_ of a section is not in the section, delete the section or fix it.
-- **"My vision only."** Ask the user what they have _not_ considered. Pull from `docs/` and any internal blueprint / mental-model reference the user can hand over before inventing.
+- **"I'm writing this because the team asked for it."** Bureaucratic specs hide reasoning. If the *why* of a section is not in the section, delete the section or fix it.
+- **"My vision only."** Ask the user what they have *not* considered. Pull from `docs/` and any internal blueprint / mental-model reference the user can hand over before inventing.
 - **"Forgot to link the ADR / Figma / blueprint / BPMN."** Three months from now, missing links force archaeology. Always link.
 - **"The spec is too long."** Iteration becomes impossible. Cut. Two pages of prose is the soft ceiling.
 - **"Adoption is someone else's problem."** Without analytics + alerting, the spec is incomplete. Step 13 is not optional.
-- **"I'll click around to check it."** Manual sweeps are forbidden as the test strategy. The spec is approved when a future Claude session running `/visual-validation` and `/technical-validation` can clear it autonomously, with no human-in-the-loop verification. If the _Test strategy_ section says "manual" for anything other than a post-deploy smoke check, push back and split the assertion into a unit test (`*.utils.ts`) or a visual-validation row.
+- **"I'll click around to check it."** Manual sweeps are forbidden as the test strategy. The spec is approved when a future Claude session running `/visual-validation` and `/technical-validation` can clear it autonomously, with no human-in-the-loop verification. If the *Test strategy* section says "manual" for anything other than a post-deploy smoke check, push back and split the assertion into a unit test (`*.utils.ts`) or a visual-validation row.
 - **"Frontend-only apps don't need tests."** False. Pure helpers go in `*.utils.ts` and ship at 100% coverage regardless of whether the app has a backend, regardless of whether the app has a Sentry connection, regardless of how small the app is. Utilities are tested precisely because they are the cheapest things to cover. See CLAUDE.md "Clean code".
 
 ## Repo-specific notes
 
 - Specs live at `docs/features/<app>/<slug>/spec/spec.md`. Create `spec/`, `plan/`, and `validation/` as siblings under each feature folder.
 - The `<app>` segment is the workspace slug (`borso-fr`, `borsouvertures`, `infra`). The commitlint scope is `<app>` directly — no further prefix on the slug.
-- Architectural decisions that survive past the spec belong in their own ADR under `docs/adr/` — reference them from the spec's _Questions / Options / Decisions_ section, do not duplicate.
-- For infra changes (`infra/cdk/**`, `infra/shared/**`), the _Changes_ section must call out the test-coverage impact — those packages are coverage-gated.
+- Architectural decisions that survive past the spec belong in their own ADR under `docs/adr/` — reference them from the spec's *Questions / Options / Decisions* section, do not duplicate.
+- For infra changes (`infra/cdk/**`, `infra/shared/**`), the *Changes* section must call out the test-coverage impact — those packages are coverage-gated.
 
 ## What comes next
 

@@ -17,8 +17,8 @@ tags: [react, performance, observability]
 ## Symptom
 
 Live retransmission on the preview deploy. Operator complaint
-verbatim: _« Le front envoie ENORMENENT de requetes au back,
-beaucoup trop. »_ CloudWatch on the preview API Lambda showed
+verbatim: *« Le front envoie ENORMENENT de requetes au back,
+beaucoup trop. »* CloudWatch on the preview API Lambda showed
 ~4 100 invocations per 5-min bin (≈ 14 req/s), holding steady across
 35 minutes of activity — instead of the intended ~150 per 5-min bin
 (≈ 0.5 req/s) implied by the 2 s `setInterval` polling `/api/standings`.
@@ -28,36 +28,36 @@ to the expected baseline.
 ## Root-cause chain
 
 1. **Why was the page firing many more requests than the 2 s timer
-   permits?** Because something _outside_ the timer was also calling
+   permits?** Because something *outside* the timer was also calling
    `fetchOnce`.
 2. **Why was something outside the timer calling `fetchOnce`?** The
-   `subscribe` callback fed to `useSyncExternalStore` does _two
-   things_: it adds the listener AND, when the cache's `intervalId`
+   `subscribe` callback fed to `useSyncExternalStore` does *two
+   things*: it adds the listener AND, when the cache's `intervalId`
    is `null`, it lazily kicks off the first fetch and starts the
    interval. That lazy start fires once per subscription.
 3. **Why were there many subscriptions?** Each consumer render passed
-   a _fresh arrow function_ as the `subscribe` argument. React's
+   a *fresh arrow function* as the `subscribe` argument. React's
    semantics: when the subscribe identity changes, the previous
    subscription is torn down (cleanup), then the new one is set up.
 4. **Why did the cleanup leave the cache in a state where the next
    subscribe would re-fetch?** The cleanup removed the listener; the
    listener set went to size 0; the lazy-start guard cleared
-   `intervalId` back to `null`. So the _very next_ subscribe saw
+   `intervalId` back to `null`. So the *very next* subscribe saw
    `intervalId === null` and immediately fired a fresh `fetchOnce`
    plus a fresh `setInterval`.
 5. **Why does the consumer re-render so often?** It re-renders on
-   _every_ snapshot change (which is `notify`-triggered after each
+   *every* snapshot change (which is `notify`-triggered after each
    `fetchOnce` resolves) — so we had a tight loop: fetch → snapshot
    change → re-render → cleanup-then-resubscribe → fresh fetch →
    snapshot change → re-render → … In practice the loop ran limited
    by network latency, not by React's render speed, hence the
    ~14 req/s ceiling.
 
-**Root cause:** _thought `useSyncExternalStore`'s subscribe callback
+**Root cause:** *thought `useSyncExternalStore`'s subscribe callback
 behaved like `useEffect` deps and was effectively memoised across
 renders; actually it is re-subscribed any time its function identity
 changes, so a fresh arrow on every render is a full cleanup-resubscribe
-cycle._
+cycle.*
 
 If the developer had known that, they would have wrapped the arrow in
 `useCallback` from the start — the very first version of the hook
@@ -72,7 +72,7 @@ would have polled at the intended cadence.
 - **Linter / static analysis:** Biome (recommended ruleset) doesn't
   ship a rule for this. ESLint's `react-hooks/exhaustive-deps` would
   flag a missing `useCallback` dep, but the codebase uses Biome, not
-  ESLint, and even ESLint doesn't flag the _raw subscribe argument_
+  ESLint, and even ESLint doesn't flag the *raw subscribe argument*
   shape.
 - **Functional validation locally:** `pnpm run test:core` (289 tests
   passing) doesn't measure request counts. `pnpm test` (back-e2e)
@@ -107,7 +107,7 @@ cadence matches the 2 s `POLL_INTERVAL_MS`.
 
 **The actual fix:** two layers.
 
-_Layer 1 — the cause was removed._ `useStandingsPoll.ts` and
+*Layer 1 — the cause was removed.* `useStandingsPoll.ts` and
 `useResource.ts` no longer call `useSyncExternalStore` at all. The
 hand-rolled cache + listener set + lazy-start guard is gone ; both
 hooks now wrap `useQuery` from `@tanstack/react-query`, which owns
@@ -116,8 +116,8 @@ the original bug can't be expressed — there is no developer-written
 subscribe arrow to be unstable. See the companion knowledge entry
 [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](../knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
 
-_Layer 2 — anyone who reaches for `useSyncExternalStore` directly in
-the future gets a lint error if they pass an inline arrow._ The
+*Layer 2 — anyone who reaches for `useSyncExternalStore` directly in
+the future gets a lint error if they pass an inline arrow.* The
 Biome Grit plugin [`no-inline-subscribe-in-use-sync-external-store.grit`](../../biome-plugins/no-inline-subscribe-in-use-sync-external-store.grit)
 fires on any literal arrow or function expression in that position.
 Registered in `apps/last-loop-lepin/biome.jsonc`. The current three
@@ -127,4 +127,4 @@ direct call sites (`Countdown.tsx`, `CorrectionBanner.tsx`,
 ## See also
 
 - [`docs/dantotsus/built-my-own-before-checking-the-library.md`](./built-my-own-before-checking-the-library.md) — the broader pattern of rolling our own data-fetching primitives instead of reaching for a battle-tested library (TanStack Query); cross-linked from the knowledge entry on the same topic shipped in this kaizen PR.
-- [React docs — `useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore) — _"If you pass a different subscribe function between re-renders, React will re-subscribe to the store using the newly passed subscribe function."_
+- [React docs — `useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore) — *"If you pass a different subscribe function between re-renders, React will re-subscribe to the store using the newly passed subscribe function."*

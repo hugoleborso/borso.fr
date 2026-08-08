@@ -15,7 +15,8 @@
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
-    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy --all --force"
+    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy --all --force",
+    "test:mutation": "stryker run"
   },
   "dependencies": {
     "@borso/infra": "workspace:*",
@@ -26,6 +27,8 @@
     "workbox-window": "^7.4.0"
   },
   "devDependencies": {
+    "@stryker-mutator/core": "9.6.1",
+    "@stryker-mutator/vitest-runner": "9.6.1",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

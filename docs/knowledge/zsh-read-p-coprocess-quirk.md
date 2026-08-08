@@ -1,6 +1,6 @@
 # `read -rsp "prompt: " var` works in bash, fails in zsh
 
-zsh's `read` reserves `-p <fd>` for _coprocess input_, not for
+zsh's `read` reserves `-p <fd>` for *coprocess input*, not for
 prompting. The same `read -rsp "Admin PIN: " PIN` line that runs
 silently in bash errors in zsh with :
 

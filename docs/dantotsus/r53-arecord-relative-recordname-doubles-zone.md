@@ -36,11 +36,11 @@ gets matched to whichever distribution declared `borso.fr` in its `Aliases`,
 regardless of which `d*.cloudfront.net` the R53 alias points at. The CDK
 distribution `E25779EK6PTEZ2` had declared the alias, so it served the
 traffic; the operator-created `A borso.fr. → d2kjwt…` record pointing at the
-_other_ (alias-less) distribution `E80907R476ZAJ` was a misleading label
+*other* (alias-less) distribution `E80907R476ZAJ` was a misleading label
 that happened to land on a CloudFront edge IP that worked anyway. Hidden
 double-failure: the phantom CDK records `borso.fr.borso.fr.` were inert
 (nobody queries that name), and the wrong-target manual record was masked
-by SNI routing. The system _looked_ correct from the only observable that
+by SNI routing. The system *looked* correct from the only observable that
 mattered to a user — `curl https://borso.fr` returned 200 — while the R53
 layer was a mess of dangling claims that would re-bite on any reorg.
 
@@ -68,7 +68,7 @@ manual records doing the real work.
 4. **Why did the operator never notice the phantom record?**
    The user-facing observable (`curl https://borso.fr → 200`) stayed
    healthy thanks to CloudFront's SNI-based routing: the CDK distribution
-   _did_ declare `borso.fr` in its Aliases, so any HTTPS request with
+   *did* declare `borso.fr` in its Aliases, so any HTTPS request with
    `SNI=borso.fr` was routed to it by the edge — regardless of the
    `d*.cloudfront.net` hostname encoded in the R53 alias target. The
    phantom `borso.fr.borso.fr.` records nobody queries; the misleading
@@ -78,7 +78,7 @@ manual records doing the real work.
 
 5. **Why did the cost audit, not the functional test, catch it?**
    Because the symptom of the bug isn't a user-visible failure — it's a
-   _resource graveyard_. The manual distribution + cert + WAF +
+   *resource graveyard*. The manual distribution + cert + WAF +
    subscription kept billing for serving an alias that CloudFront SNI
    routing was already handing to the CDK distribution next door.
    Functional tests had no reason to alarm; only the bill (and the
@@ -89,8 +89,8 @@ would produce the apex record `borso.fr.`; actually CDK's `ARecord` treats
 the value as relative and silently double-suffixes the zone, producing a
 phantom record that resolves nothing.
 
-Validate with the standard's check: _if I had known recordName-without-dot
-is relative-to-zone, would I have written correct code on the first try?_
+Validate with the standard's check: *if I had known recordName-without-dot
+is relative-to-zone, would I have written correct code on the first try?*
 Yes — I'd have passed `${props.domainName}.` or omitted `recordName` for
 the apex case.
 
@@ -141,14 +141,14 @@ previously-untested R53 surface)
 
 Three unit tests in `infra/cdk/test/unit/static-site.test.ts`:
 
-1. _Prod apex_ — synth a `StaticSite` with `domainName: 'borso.fr'`,
+1. *Prod apex* — synth a `StaticSite` with `domainName: 'borso.fr'`,
    assert both `AWS::Route53::RecordSet` resources have `Name: 'borso.fr.'`,
    and assert the synthesised template JSON does NOT contain the substring
    `borso.fr.borso.fr` anywhere.
-2. _Prod subdomain_ — same shape with `domainName: 'borsouvertures.borso.fr'`,
+2. *Prod subdomain* — same shape with `domainName: 'borsouvertures.borso.fr'`,
    asserting `Name: 'borsouvertures.borso.fr.'` and absence of
    `borsouvertures.borso.fr.borso.fr`.
-3. _Trailing-dot idempotence_ — caller passes `'borso.fr.'` (already
+3. *Trailing-dot idempotence* — caller passes `'borso.fr.'` (already
    absolute), assert `Name: 'borso.fr.'` (single dot) and absence of
    `borso.fr..` (double dot).
 
@@ -209,7 +209,7 @@ no per-app change needed. `apps/borso-fr/bin/app.ts` already passes
 ## See also
 
 - [`cloudfront-cname-must-be-released-before-redeploy.md`](./cloudfront-cname-must-be-released-before-redeploy.md)
-  — the _other_ reason a CDK prod deploy can land in a broken state when
+  — the *other* reason a CDK prod deploy can land in a broken state when
   reconciling with manually-created resources.
 - [`cdk-failed-deploy-leaves-retained-buckets-orphaned.md`](./cdk-failed-deploy-leaves-retained-buckets-orphaned.md)
   — the `borsouvertures-prod` orphan bucket left after the May 12 attempt

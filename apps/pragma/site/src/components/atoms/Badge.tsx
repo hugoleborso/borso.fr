@@ -9,6 +9,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { forwardRef, type HTMLAttributes } from 'react';
 import { cn } from './cn.utils';
 
+// @FollowsBlueprint atom-variant
 export const badgeVariants = cva(
   'inline-flex items-center gap-1 rounded-full font-medium leading-none whitespace-nowrap',
   {

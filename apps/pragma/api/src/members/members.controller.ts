@@ -21,6 +21,7 @@ import {
   removeMember,
 } from './members.service';
 
+// @FollowsBlueprint controller-dispatch
 export function buildMembersRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)

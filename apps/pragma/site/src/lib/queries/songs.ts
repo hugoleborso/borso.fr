@@ -87,6 +87,12 @@ function mergeSongUpdate(existing: SongRow, patch: Omit<SongUpdateVariables, 'id
   return merged;
 }
 
+/**
+ * @Blueprint query-module
+ * @BlueprintName Query Module
+ * @BlueprintUsage Use for every call from a front end to its own API. One module per domain, holding the key factory and the hooks.
+ * @BlueprintDescription Declares the song query keys in one typed factory so no caller invents a key, and wraps each call in useQuery or useMutation over the Hono client, so the request and response types come from the API router type rather than a hand-written fetcher. Mutations reconcile from the mutation response and roll back in onError.
+ */
 export function useSongsList() {
   return useQuery({
     queryKey: songKeys.list(),

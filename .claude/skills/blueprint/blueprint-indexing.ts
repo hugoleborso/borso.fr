@@ -1,0 +1,269 @@
+#!/usr/bin/env tsx
+/**
+ * Index every blueprint annotation in the repository.
+ *
+ * Usage:
+ *   pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts
+ *
+ * Scans the source directories for `@Blueprint` JSDoc annotations, extracts the
+ * identifier, name, usage, and description, counts the `@FollowsBlueprint`
+ * references pointing at each one, and writes `blueprint-index.md`.
+ *
+ * Adapted from the `blueprint` skill in pernod-ricard-rgm/pr-aquila-ap-v2.
+ */
+
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {
+  type BlueprintProject,
+  extractFollowsBlueprint,
+  inferApplication,
+  inferLayer,
+  inferProject,
+} from './blueprint-utils.js';
+
+const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
+const REPOSITORY_ROOT = path.resolve(scriptDirectory, '../../..');
+const SCAN_DIRECTORIES = [path.join(REPOSITORY_ROOT, 'apps'), path.join(REPOSITORY_ROOT, 'infra')];
+const OUTPUT_FILE = path.join(scriptDirectory, 'blueprint-index.md');
+const SKIPPED_DIRECTORY_NAMES = new Set([
+  'node_modules',
+  'dist',
+  'cdk.out',
+  'coverage',
+  '.stryker-tmp',
+]);
+const SOURCE_EXTENSIONS = ['.ts', '.tsx'];
+
+const BLUEPRINT_ID_PATTERN = /@Blueprint\s+(\S+)/;
+const BLUEPRINT_NAME_PATTERN = /@BlueprintName\s+(.+)/;
+const BLUEPRINT_USAGE_PATTERN = /@BlueprintUsage\s+(.+)/;
+const BLUEPRINT_DESCRIPTION_PATTERN = /@BlueprintDescription\s+(.+)/;
+const ANNOTATION_SEARCH_RADIUS_LINES = 5;
+
+interface Blueprint {
+  readonly id: string;
+  readonly name: string;
+  readonly usage: string;
+  readonly description: string;
+  readonly filePath: string;
+  readonly lineNumber: number;
+  readonly layer: string;
+  readonly project: BlueprintProject;
+  readonly application: string;
+}
+
+interface FollowerReference {
+  readonly blueprintId: string;
+  readonly filePath: string;
+  readonly lineNumber: number;
+}
+
+function listSourceFiles(directory: string): string[] {
+  const files: string[] = [];
+  function walk(currentDirectory: string): void {
+    for (const entry of fs.readdirSync(currentDirectory, { withFileTypes: true })) {
+      const fullPath = path.join(currentDirectory, entry.name);
+      if (entry.isDirectory()) {
+        if (!SKIPPED_DIRECTORY_NAMES.has(entry.name)) {
+          walk(fullPath);
+        }
+      } else if (SOURCE_EXTENSIONS.some((extension) => entry.name.endsWith(extension))) {
+        files.push(fullPath);
+      }
+    }
+  }
+  walk(directory);
+  return files;
+}
+
+function readTagWithinBlock(
+  lines: readonly string[],
+  centreIndex: number,
+  pattern: RegExp,
+): string {
+  const firstIndex = Math.max(0, centreIndex - ANNOTATION_SEARCH_RADIUS_LINES);
+  const lastIndex = Math.min(lines.length, centreIndex + ANNOTATION_SEARCH_RADIUS_LINES);
+  let found = '';
+  for (let index = firstIndex; index < lastIndex; index++) {
+    const match = pattern.exec(lines[index]);
+    if (match !== null) {
+      found = match[1].trim();
+    }
+  }
+  return found;
+}
+
+function extractBlueprints(absolutePath: string): Blueprint[] {
+  const lines = fs.readFileSync(absolutePath, 'utf8').split('\n');
+  const relativePath = path.relative(REPOSITORY_ROOT, absolutePath);
+  const blueprints: Blueprint[] = [];
+
+  for (const [index, line] of lines.entries()) {
+    const idMatch = BLUEPRINT_ID_PATTERN.exec(line);
+    if (idMatch === null) {
+      continue;
+    }
+    const id = idMatch[1];
+    const name = readTagWithinBlock(lines, index, BLUEPRINT_NAME_PATTERN);
+    blueprints.push({
+      id,
+      name: name === '' ? id : name,
+      usage: readTagWithinBlock(lines, index, BLUEPRINT_USAGE_PATTERN),
+      description: readTagWithinBlock(lines, index, BLUEPRINT_DESCRIPTION_PATTERN),
+      filePath: relativePath,
+      lineNumber: index + 1,
+      layer: inferLayer(relativePath),
+      project: inferProject(relativePath),
+      application: inferApplication(relativePath),
+    });
+  }
+  return blueprints;
+}
+
+function extractFollowers(absolutePath: string): FollowerReference[] {
+  const content = fs.readFileSync(absolutePath, 'utf8');
+  const relativePath = path.relative(REPOSITORY_ROOT, absolutePath);
+  return extractFollowsBlueprint(content).map((entry) => ({
+    blueprintId: entry.blueprintId,
+    filePath: relativePath,
+    lineNumber: entry.lineNumber,
+  }));
+}
+
+function countFollowersByBlueprintId(followers: readonly FollowerReference[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const follower of followers) {
+    counts.set(follower.blueprintId, (counts.get(follower.blueprintId) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function toIndexRow(blueprint: Blueprint, followerCount: number): string {
+  const fileName = path.basename(blueprint.filePath);
+  const linkTarget = path.relative(scriptDirectory, path.join(REPOSITORY_ROOT, blueprint.filePath));
+  const location = `[${fileName}:L${blueprint.lineNumber}](${linkTarget}#L${blueprint.lineNumber})`;
+  return [
+    blueprint.id,
+    blueprint.application,
+    blueprint.project,
+    blueprint.layer,
+    blueprint.name,
+    blueprint.usage,
+    blueprint.description,
+    String(followerCount),
+    location,
+  ]
+    .map((cell) => ` ${cell} `)
+    .join('|')
+    .replace(/^/, '|')
+    .concat('|');
+}
+
+function generateMarkdown(
+  blueprints: readonly Blueprint[],
+  followers: readonly FollowerReference[],
+): string {
+  const followerCounts = countFollowersByBlueprintId(followers);
+  const knownIds = new Set(blueprints.map((blueprint) => blueprint.id));
+  const orphanedFollowers = followers.filter((follower) => !knownIds.has(follower.blueprintId));
+
+  const rows = [...blueprints]
+    .sort((first, second) => first.id.localeCompare(second.id))
+    .map((blueprint) => toIndexRow(blueprint, followerCounts.get(blueprint.id) ?? 0))
+    .join('\n');
+
+  const orphanedSection =
+    orphanedFollowers.length === 0
+      ? 'None.'
+      : orphanedFollowers
+          .map(
+            (follower) =>
+              `- \`${follower.blueprintId}\` referenced at \`${follower.filePath}:${follower.lineNumber}\` matches no \`@Blueprint\`.`,
+          )
+          .join('\n');
+
+  return `# Blueprint index
+
+Auto-generated by \`.claude/skills/blueprint/blueprint-indexing.ts\`. Do not edit
+by hand. Run \`/blueprint index\` after adding or changing an annotation.
+
+A blueprint is a canonical example that already lives in this repository, marked
+in place with a \`@Blueprint\` JSDoc block. Code that follows one of them carries
+a \`// @FollowsBlueprint <id>\` comment, and the follower count below shows how
+widely each pattern has actually been adopted.
+
+The rules a blueprint demonstrates are written down in
+[\`docs/standards/\`](../../../docs/standards/README.md). The standard states the
+rule, and the blueprint is the working example of it.
+
+## Layer reference
+
+Layer is inferred from the file path. Use the table to find the nearest
+blueprint when the code you are writing has none of its own.
+
+### Back end, \`apps/<slug>/api/src/\`
+
+| Layer | File pattern | Holds |
+|-------|--------------|-------|
+| controller | \`*.controller.ts\` | Hono routes, no logic |
+| service | \`*.service.ts\` | Orchestration, input and output |
+| repository | \`*.repository.ts\` | Drizzle queries only |
+| schema | \`*.schema.ts\` | Drizzle tables and Zod input schemas |
+| core | \`*.core.ts\` | Pure domain rules, fully covered |
+| middleware | \`*.middleware.ts\` | Hono middleware |
+| environment | \`*.environment.ts\` | Environment reads kept out of pure files |
+| database | \`database/**\` | Client and migrations |
+
+### Front end, \`apps/<slug>/site/\`
+
+| Layer | File pattern | Holds |
+|-------|--------------|-------|
+| atom | \`components/atoms/**\` | Primitives with no component children |
+| molecule | \`components/molecules/**\` | A few atoms, one responsibility |
+| organism | \`components/organisms/**\` | A screen region owning interface state |
+| route | \`routes/**\` | Routing concerns, composing organisms |
+| query | \`lib/queries/**\` | TanStack Query keys and hooks |
+| i18n | \`i18n/**\` | Translation catalogues and setup |
+| utils | \`*.utils.ts\` | Pure cross-cutting helpers, fully covered |
+
+### Infrastructure, \`infra/\`
+
+| Layer | File pattern | Holds |
+|-------|--------------|-------|
+| construct | \`src/constructs/**\` | Reusable CDK constructs |
+
+## Blueprints
+
+| ID | App | Project | Layer | Name | Usage | Description | Followers | Location |
+|----|-----|---------|-------|------|-------|-------------|-----------|----------|
+${rows}
+
+## Orphaned followers
+
+${orphanedSection}
+`;
+}
+
+function main(): void {
+  const sourceFiles = SCAN_DIRECTORIES.flatMap((directory) =>
+    fs.existsSync(directory) ? listSourceFiles(directory) : [],
+  );
+  process.stdout.write(`Scanned ${sourceFiles.length} source files.\n`);
+
+  const blueprints = sourceFiles.flatMap((file) => extractBlueprints(file));
+  const followers = sourceFiles.flatMap((file) => extractFollowers(file));
+
+  process.stdout.write(
+    `Found ${blueprints.length} blueprint(s) and ${followers.length} follower(s).\n`,
+  );
+  for (const blueprint of blueprints) {
+    process.stdout.write(`  ${blueprint.id}: ${blueprint.name}\n`);
+  }
+
+  fs.writeFileSync(OUTPUT_FILE, generateMarkdown(blueprints, followers), 'utf8');
+  process.stdout.write(`Wrote ${path.relative(REPOSITORY_ROOT, OUTPUT_FILE)}\n`);
+}
+
+main();

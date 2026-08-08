@@ -10,16 +10,16 @@ This skill implements the **Dantotsu standard** kept verbatim at
 captures the spirit (intent, typical mistakes, key challenges,
 reframes) that this checklist alone can't.
 
-> **The intent:** _Inspire every developer to care about quality by
+> **The intent:** *Inspire every developer to care about quality by
 > fostering a deep understanding of their system — from business
-> modeling to the lines of code they write every day._
+> modeling to the lines of code they write every day.*
 
 A Dantotsu is a Lean exercise where a developer (with a coach, or
 this skill in coach role) deeply investigates ONE defect to:
 
 1. Understand it from the user's perspective.
 2. Trace the causal chain through the system.
-3. Find the _misconception_ — the technical or business
+3. Find the *misconception* — the technical or business
    misunderstanding — that made the bad code feel right.
 4. Find why the defect wasn't caught earlier.
 5. Produce a minimal countermeasure that addresses the misconception,
@@ -85,19 +85,19 @@ Include 5–20 lines of context, not more.
 The faulty line exists because the developer believed something
 that wasn't true. Find that belief.
 
-**Frame:** _"The developer thought \_**, but actually \_**."_
+**Frame:** *"The developer thought ___, but actually ___."*
 
-**Validate:** _"If the developer had known the 'actually' part,
-would they have written correct code on the first try?"_ → Yes ⇒
+**Validate:** *"If the developer had known the 'actually' part,
+would they have written correct code on the first try?"* → Yes ⇒
 root cause found. No ⇒ keep digging.
 
 Push past shallow stops:
 
-| Shallow                         | Push to                                                                                                                  |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| "I wasn't paying attention."    | Why was the code shaped such that "not paying attention" would break it?                                                 |
-| "I forgot to do X."             | Why was X required? Could the API design make X mandatory by construction?                                               |
-| "Lack of knowledge of iframes." | _Specifically what_ did they think was true? ("I thought `origin` was the URL; it's actually scheme + hostname + port.") |
+| Shallow | Push to |
+| --- | --- |
+| "I wasn't paying attention." | Why was the code shaped such that "not paying attention" would break it? |
+| "I forgot to do X." | Why was X required? Could the API design make X mandatory by construction? |
+| "Lack of knowledge of iframes." | *Specifically what* did they think was true? ("I thought `origin` was the URL; it's actually scheme + hostname + port.") |
 
 Look especially at **business-modelling misunderstandings**, not
 just technical ones — the deepest defects come from misunderstanding
@@ -117,7 +117,7 @@ but didn't, name the specific reason. Walk these in firing order:
 - Staging monitoring
 - Production monitoring / alerting
 
-Avoid "there was no test" as a terminal answer — push to _why_ there
+Avoid "there was no test" as a terminal answer — push to *why* there
 was no test or why the test didn't cover the path.
 
 ### 5. Countermeasure
@@ -155,7 +155,7 @@ top is best):
    an integration test that exercises the previously-untested path.
    Catches the next instance after it ships, before users see it.
 5. **Knowledge entry.** A new file under `docs/knowledge/` — only
-   if 1–4 are genuinely impossible. Knowledge alone is _not enough_
+   if 1–4 are genuinely impossible. Knowledge alone is *not enough*
    for a Dantotsu; pure-knowledge subjects belong in
    `docs/knowledge/` directly, not in `docs/dantotsus/`.
 
@@ -205,26 +205,26 @@ Without that link the dantotsu doesn't qualify.
 
 (Full list at [`standard.md` §Typical mistakes](./standard.md#typical-mistakes).)
 
-| Mistake                                      | Consequence                                          |
-| -------------------------------------------- | ---------------------------------------------------- |
-| Stop at "filling the form"                   | Bureaucratic; developer thinks it's a waste of time. |
-| Accept "it was just a careless mistake"      | No learning. Same defect class recurs.               |
-| User-story name as title                     | Lesson doesn't spread beyond the original team.      |
-| Frame technically, not from the user         | Developer doesn't connect their code to user value.  |
-| Investigate only the local bug               | Latent siblings stay in the codebase.                |
-| Vague root cause ("lack of knowledge of X")  | Doesn't bind to day-to-day code.                     |
-| **Skip eradication or defer to a follow-up** | Loop dies. The defect class survives.                |
-| Lots of unnecessary context                  | Verbose entries don't get re-read.                   |
-| Facilitate like a courtroom                  | Developer avoids future sessions.                    |
+| Mistake | Consequence |
+| --- | --- |
+| Stop at "filling the form" | Bureaucratic; developer thinks it's a waste of time. |
+| Accept "it was just a careless mistake" | No learning. Same defect class recurs. |
+| User-story name as title | Lesson doesn't spread beyond the original team. |
+| Frame technically, not from the user | Developer doesn't connect their code to user value. |
+| Investigate only the local bug | Latent siblings stay in the codebase. |
+| Vague root cause ("lack of knowledge of X") | Doesn't bind to day-to-day code. |
+| **Skip eradication or defer to a follow-up** | Loop dies. The defect class survives. |
+| Lots of unnecessary context | Verbose entries don't get re-read. |
+| Facilitate like a courtroom | Developer avoids future sessions. |
 
 ## Reframes — read these before facilitating
 
-| Misconception                             | Reframe                                                                                      |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| The developer should do this alone.       | The original reasoning is the thing under examination. Bring a second pair of eyes.          |
-| We're producing Dantotsu sheets.          | We're sparking conversations about defects to surface tacit knowledge.                       |
-| A good Dantotsu fills every field.        | A good Dantotsu deepens the developer's mental model AND ships an eradication.               |
-| I do this when there's a major prod bug.  | Maintain a regular rhythm to raise the level of play.                                        |
+| Misconception | Reframe |
+| --- | --- |
+| The developer should do this alone. | The original reasoning is the thing under examination. Bring a second pair of eyes. |
+| We're producing Dantotsu sheets. | We're sparking conversations about defects to surface tacit knowledge. |
+| A good Dantotsu fills every field. | A good Dantotsu deepens the developer's mental model AND ships an eradication. |
+| I do this when there's a major prod bug. | Maintain a regular rhythm to raise the level of play. |
 | Mastery = knowing every framework tidbit. | Mastery is the quality of mental models about business, system structure, and failure modes. |
 
 (Full list at [`standard.md` §Reframes](./standard.md#reframes).)

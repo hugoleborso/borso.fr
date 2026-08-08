@@ -123,4 +123,4 @@ Write the mobile layout first, and then opt into the desktop layout with `lg:`.
   `useQuery` and `useMutation` in `atoms/` and `molecules/`.
 - The agentic browser check, which drives every screen at 375 pixels and at
   1280 pixels and fails on a broken layout. See
-  [`docs/blueprints/agentic-browser-testing.md`](../blueprints/agentic-browser-testing.md).
+  [`docs/knowledge/agentic-device-testing.md`](../knowledge/agentic-device-testing.md).

@@ -114,9 +114,6 @@
     }
   },
   "apps/borso-fr/site/script.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 5
-    },
     "no-param-reassign": {
       "count": 1
     },
@@ -1687,94 +1684,6 @@
       "count": 1
     }
   },
-  "eslint-rules/conditions-live-in-pure-functions.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 9
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 5
-    }
-  },
-  "eslint-rules/impurity.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 5
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 6
-    }
-  },
-  "eslint-rules/no-api-anchor-in-site.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    }
-  },
-  "eslint-rules/no-circle-in-non-uniform-svg.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 4
-    }
-  },
-  "eslint-rules/no-controller-imports-outside-service.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    }
-  },
-  "eslint-rules/no-direct-api-fetch-in-site.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
-    }
-  },
-  "eslint-rules/no-impure-calls-in-core-files.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 9
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
-    }
-  },
-  "eslint-rules/no-inline-subscribe-in-use-sync-external-store.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    }
-  },
-  "eslint-rules/no-type-assertion-except-unknown.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
-    }
-  },
-  "eslint-rules/pure-functions-live-in-core-files.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 17
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 5
-    }
-  },
-  "eslint-rules/rule-tester.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    }
-  },
   "infra/cdk/src/constructs/dsql-cluster-stack.ts": {
     "borso/conditions-live-in-pure-functions": {
       "count": 1
@@ -1812,23 +1721,11 @@
     }
   },
   "infra/cdk/src/internal/cf-host-routing-function.code.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 9
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    },
     "no-unused-vars": {
       "count": 1
     }
   },
   "infra/cdk/src/internal/cf-static-site-index-rewrite.code.js": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    },
     "no-unused-vars": {
       "count": 1
     }

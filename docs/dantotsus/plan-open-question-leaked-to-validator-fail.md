@@ -16,7 +16,7 @@ tags: [spec, plan, implementation, validators]
 ## Symptom
 
 The `/technical-conception` plan for the borsouvertures learn-by-tree
-feature had this row in its _Open questions / unknowns_ section:
+feature had this row in its *Open questions / unknowns* section:
 
 > **Visited-leaves persistence scope.** Spec says "the set of leaves
 > visited per variation during the current drill." Plan reads this as:
@@ -31,10 +31,10 @@ state, not persisted).
 
 The technical-validator FAIL'd on that exact row:
 
-> **A17 / D18** — _Q5 persistence lists "the set of leaves visited per
+> **A17 / D18** — *Q5 persistence lists "the set of leaves visited per
 > variation during the current drill" as part of persisted state. The
 > machine resets `visitedLeafIds = EMPTY_VISITED` on `start`, and
-> `useAppState` doesn't round-trip them. Lost on reload._
+> `useAppState` doesn't round-trip them. Lost on reload.*
 
 Resolution required walking back up the chain: amend the spec to
 explicitly say "visited-leaves are intentionally **not** persisted,"
@@ -51,15 +51,15 @@ then re-run the validator. Round-trip cost: ~1 hour, ~3 commits.
 3. **Why did I run `/implementation` with the question still open?**
    Because nothing structurally stopped me. The `/implementation` skill
    walks the plan top-down; it doesn't validate that the plan's
-   _Open questions / unknowns_ section is empty.
+   *Open questions / unknowns* section is empty.
 4. **Why is that a load-bearing gap?**
    Because every open question is a place where the implementer picks an
    interpretation and ships it, and the validator (rightly) doesn't trust
-   the implementer's pick over the spec. The defect is _predictable_ the
+   the implementer's pick over the spec. The defect is *predictable* the
    moment the plan ships with non-empty open questions.
 
-**Root cause:** _thought_ "I can resolve plan-open-questions during
-implementation"; _actually_ an unresolved open question in the plan is
+**Root cause:** *thought* "I can resolve plan-open-questions during
+implementation"; *actually* an unresolved open question in the plan is
 a guaranteed validator FAIL waiting to happen — either the spec has to
 move to match the code, or the code has to move to match the spec, and
 the round trip is most expensive after `/implementation` has built on
@@ -72,7 +72,7 @@ top of one interpretation.
   step-12 inconsistency sweep should have caught the wording, but the
   wording read fluent enough to miss.
 - **`/technical-conception`:** Did the right thing — flagged the
-  ambiguity in _Open questions / unknowns_. The flag was the early
+  ambiguity in *Open questions / unknowns*. The flag was the early
   warning; nothing acted on it.
 - **`/implementation`:** No precondition that the plan's open-questions
   section is empty. The walk proceeded with the implementer picking an
@@ -139,5 +139,5 @@ non-empty open-questions section.
 ## See also
 
 - [`docs/dantotsus/built-my-own-before-checking-the-library.md`](./built-my-own-before-checking-the-library.md) —
-  the _other_ implementation-pacing defect from the same PR.
+  the *other* implementation-pacing defect from the same PR.
 - The visited-leaves spec amendment in PR #8 (commit `56687de`).

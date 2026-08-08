@@ -1,7 +1,7 @@
 # Third-party image CDNs break PWAs — and often break online too
 
 A PWA that fetches sprites / icons / fonts from a third-party CDN
-loses its offline guarantee, and frequently fails _online_ too because
+loses its offline guarantee, and frequently fails *online* too because
 many CDNs block hotlinking with a 403 / refused-CORS response.
 
 ## How it bit us

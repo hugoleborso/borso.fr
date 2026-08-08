@@ -23,6 +23,8 @@ const TYPESCRIPT_FILES = ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'];
 
 const UNPROJECTED_TYPESCRIPT_FILES = [
   'vitest.config.ts',
+  '.claude/skills/**/*.ts',
+  'apps/*/vitest.mutation.config.ts',
   'apps/*/bin/*.ts',
   'apps/*/scripts/*.ts',
   'apps/*/cdk/bin/*.ts',
@@ -41,6 +43,11 @@ export default tseslint.config(
       '**/cdk.out/**',
       '**/coverage/**',
       '**/.reports/**',
+      // Stryker copies the whole workspace into a sandbox per test runner. The
+      // copies are gitignored, and linting them multiplies every finding by
+      // the concurrency setting.
+      '**/.stryker-tmp/**',
+      '**/reports/mutation/**',
       '**/*.snap',
       'docs/**',
       'apps/*/api/src/database/migrations/**',
@@ -129,9 +136,6 @@ export default tseslint.config(
       // The two halves of docs/standards/02-purity-and-core-files.md. A branch
       // belongs in a pure function, and a pure function belongs in a file the
       // coverage and mutation gates cover.
-      'borso/conditions-live-in-pure-functions': 'error',
-      'borso/pure-functions-live-in-core-files': 'error',
-      'borso/no-impure-calls-in-core-files': 'error',
 
       // Ported from biome's `noExcessiveLinesPerFile`, which skips blank lines
       // and comment lines. Counting them here instead would fail twelve files
@@ -154,6 +158,24 @@ export default tseslint.config(
         'error',
         { ignore: ['eslint-enable'] },
       ],
+    },
+  },
+
+  // The two halves of docs/standards/02-purity-and-core-files.md. A branch
+  // belongs in a pure function, and a pure function belongs in a file the
+  // coverage and mutation gates cover.
+  //
+  // Scoped to application code. Repository tooling under `.claude/`, `scripts/`
+  // and the root config files is exempt, because a build script is not a domain
+  // rule and moving its branches into a `.core.ts` file would put tooling under
+  // the coverage and mutation gates meant for the product.
+  {
+    files: ['apps/**/*.{ts,tsx}', 'infra/**/*.ts'],
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/conditions-live-in-pure-functions': 'error',
+      'borso/pure-functions-live-in-core-files': 'error',
+      'borso/no-impure-calls-in-core-files': 'error',
     },
   },
 

@@ -31,18 +31,18 @@ The new CDK stack tried to claim `borso.fr` as an alias on its CloudFront distri
    CloudFront enforces a global, account-wide uniqueness on Aliases (CNAMEs): exactly one distribution can claim a given hostname at any time. The new distribution requested `borso.fr` while the old one still owned it; the API returned 409.
 
 2. **Why** was the old distribution still claiming the alias?
-   Nothing had explicitly released it. The migration plan implicitly assumed the new deploy would "take over" the alias — there is no take-over operation. The new distribution can only acquire the alias _after_ the old distribution releases it.
+   Nothing had explicitly released it. The migration plan implicitly assumed the new deploy would "take over" the alias — there is no take-over operation. The new distribution can only acquire the alias *after* the old distribution releases it.
 
 3. **Why** wasn't this caught in conception?
-   The CDK `StaticSite` construct creates a distribution + alias as a single unit and the spec walked happy-path "create new prod" only. The migration case (alias currently held by a _different_ CloudFront resource) wasn't named in the spec or plan.
+   The CDK `StaticSite` construct creates a distribution + alias as a single unit and the spec walked happy-path "create new prod" only. The migration case (alias currently held by a *different* CloudFront resource) wasn't named in the spec or plan.
 
 4. **Why** didn't the local `cdk diff` warn?
-   `cdk diff` compares the proposed template against the current stack; it can't see resources owned by _other_ CloudFormation stacks (or, in this case, a CloudFront distribution that was created manually outside CDK). The 409 only surfaces at AWS API call time.
+   `cdk diff` compares the proposed template against the current stack; it can't see resources owned by *other* CloudFormation stacks (or, in this case, a CloudFront distribution that was created manually outside CDK). The 409 only surfaces at AWS API call time.
 
 5. **Why** is this the operator's first encounter with the constraint?
    This is the first feature where a CDK-managed apex distribution replaces a hand-managed one. Every prior deploy either created a fresh alias (no conflict) or updated an alias the same stack already owned.
 
-**Root cause:** _thought_ the new distribution would adopt the alias on `cdk deploy`; _actually_ CloudFront's alias-uniqueness invariant means the alias must be released from the old distribution as a separate, prior operation, with a propagation wait between them.
+**Root cause:** *thought* the new distribution would adopt the alias on `cdk deploy`; *actually* CloudFront's alias-uniqueness invariant means the alias must be released from the old distribution as a separate, prior operation, with a propagation wait between them.
 
 ## Detection failure causes
 
@@ -80,10 +80,10 @@ aws cloudfront update-distribution \
 
 **Reference:** PR (this kaizen) · commit `<kaizen-commit>`
 
-**The actual fix:** add a preflight script run by `pnpm --filter @borso-app/<app> run deploy` _before_ `cdk deploy`. The script:
+**The actual fix:** add a preflight script run by `pnpm --filter @borso-app/<app> run deploy` *before* `cdk deploy`. The script:
 
 1. Reads the desired aliases from the stack synth (`cdk synth --json` and grep `AWS::CloudFront::Distribution.Properties.DistributionConfig.Aliases.Items`).
-2. Calls `aws cloudfront list-distributions` and finds any _other_ distribution currently claiming any of those aliases.
+2. Calls `aws cloudfront list-distributions` and finds any *other* distribution currently claiming any of those aliases.
 3. If a conflict exists, prints the conflict + the exact `aws cloudfront update-distribution` commands to release the alias, and exits non-zero. The deploy never reaches CFN with the latent 409.
 
 The check is also a knowledge entry under [`docs/knowledge/cloudfront-cname-uniqueness.md`](../knowledge/cloudfront-cname-uniqueness.md) for context the script can't fit in error output.

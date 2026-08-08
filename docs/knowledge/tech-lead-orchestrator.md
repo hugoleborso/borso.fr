@@ -29,20 +29,20 @@ runs stay in the tree.
 
 `journal.md.jsonl` is the source of truth for any post-mortem. Each line
 is a JSON object — see
-[`standard.md` _Journal event schema_](../../.claude/skills/tech-lead-orchestrator/standard.md#journal-event-schema)
+[`standard.md` *Journal event schema*](../../.claude/skills/tech-lead-orchestrator/standard.md#journal-event-schema)
 for the full list. The dominant events:
 
-| kind                                                       | what it means                                                         | where to look next                                                                     |
-| ---------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `run_started`                                              | A run began.                                                          | `state.json` for the feature slug + run-id.                                            |
-| `stage_changed`                                            | Transition between stages.                                            | The verdict in `agents/<previous-stage-agent>-*.md`.                                   |
-| `adr_written`                                              | `/adr` (piloted mode) shipped an ADR.                                 | `docs/adr/NNNN-<slug>.md`.                                                             |
-| `escalation`                                               | Run handed back to the human. The `reason` field tells you why.       | `errors.log`, the offending verdict body.                                              |
-| `human_message_received` (`category: correction`)          | The human had to correct the AI. **Dantotsu candidate.**              | The diff right before the message; the agent that needed correcting.                   |
-| `human_message_received` (`category: guidance` / `answer`) | Interesting conversation. Not a defect signal.                        | Nothing — productive engagement.                                                       |
-| `context_growth`                                           | The orchestrator's cumulative `bytesRead` crossed a log-scale palier. | Trajectory in the journal; if it doubles fast, the orchestrator is absorbing too much. |
-| `visual_validation_skipped`                                | Feature had no UI surface; `/visual-validation` was not invoked.      | Nothing — expected for `meta` features.                                                |
-| `run_completed`                                            | Final stage reached.                                                  | `state.json#stage` is `ship` (good) or `escalated` (bad).                              |
+| kind | what it means | where to look next |
+|---|---|---|
+| `run_started` | A run began. | `state.json` for the feature slug + run-id. |
+| `stage_changed` | Transition between stages. | The verdict in `agents/<previous-stage-agent>-*.md`. |
+| `adr_written` | `/adr` (piloted mode) shipped an ADR. | `docs/adr/NNNN-<slug>.md`. |
+| `escalation` | Run handed back to the human. The `reason` field tells you why. | `errors.log`, the offending verdict body. |
+| `human_message_received` (`category: correction`) | The human had to correct the AI. **Dantotsu candidate.** | The diff right before the message; the agent that needed correcting. |
+| `human_message_received` (`category: guidance` / `answer`) | Interesting conversation. Not a defect signal. | Nothing — productive engagement. |
+| `context_growth` | The orchestrator's cumulative `bytesRead` crossed a log-scale palier. | Trajectory in the journal; if it doubles fast, the orchestrator is absorbing too much. |
+| `visual_validation_skipped` | Feature had no UI surface; `/visual-validation` was not invoked. | Nothing — expected for `meta` features. |
+| `run_completed` | Final stage reached. | `state.json#stage` is `ship` (good) or `escalated` (bad). |
 
 ## Aggregating metrics
 
@@ -84,7 +84,7 @@ Read the trends across runs:
 
 ## Debugging recipes
 
-### Symptom: orchestrator ran the auto-chain _twice_
+### Symptom: orchestrator ran the auto-chain *twice*
 
 Probably the conditional check in `/specification` or `/technical-conception`
 did not see `state.json#pilotedByTechLead`. Verify:
@@ -120,7 +120,7 @@ The orchestrator treats this as a `fail-local` verdict and re-enters
 the arbitrate stage with `retries.implement++`. If the hook keeps
 failing, the orchestrator will eventually escalate (cap = 3 by
 default, override via `TECH_LEAD_MAX_RETRIES`). **Never** invoke the
-orchestrator with `--no-verify` semantics — CLAUDE.md _Hooks_ rule.
+orchestrator with `--no-verify` semantics — CLAUDE.md *Hooks* rule.
 
 ## Dogfooding
 

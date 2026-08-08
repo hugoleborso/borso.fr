@@ -162,13 +162,13 @@ You'll paste them into GitHub in the next step.
 
 In `hugoleborso/borso.fr` → **Settings → Secrets and variables → Actions → Variables**:
 
-| Variable                  | Value                                       | Where it comes from                                  |
-| ------------------------- | ------------------------------------------- | ---------------------------------------------------- |
-| `AWS_REGION`              | `eu-west-3`                                 | constant                                             |
-| `AWS_ACCOUNT_ID`          | your 12-digit account id                    | step 6's `$CDK_DEFAULT_ACCOUNT`                      |
-| `PROD_DEPLOY_ROLE_ARN`    | `arn:aws:iam::…:role/ProdDeployRole`        | step 8                                               |
-| `PREVIEW_DEPLOY_ROLE_ARN` | `arn:aws:iam::…:role/PreviewDeployRole`     | step 8                                               |
-| `SHARED_DEPLOY_ROLE_ARN`  | `arn:aws:iam::…:role/SharedInfraDeployRole` | step 8 (reserved for a future shared-infra workflow) |
+| Variable | Value | Where it comes from |
+| --- | --- | --- |
+| `AWS_REGION` | `eu-west-3` | constant |
+| `AWS_ACCOUNT_ID` | your 12-digit account id | step 6's `$CDK_DEFAULT_ACCOUNT` |
+| `PROD_DEPLOY_ROLE_ARN` | `arn:aws:iam::…:role/ProdDeployRole` | step 8 |
+| `PREVIEW_DEPLOY_ROLE_ARN` | `arn:aws:iam::…:role/PreviewDeployRole` | step 8 |
+| `SHARED_DEPLOY_ROLE_ARN` | `arn:aws:iam::…:role/SharedInfraDeployRole` | step 8 (reserved for a future shared-infra workflow) |
 
 These are **Variables**, not Secrets — the role ARNs aren't sensitive (the trust policy gates who can assume).
 
@@ -228,12 +228,12 @@ Copy the `AccessKeyId` and `SecretAccessKey` from the response. Store them somew
 
 In claude.ai/code, navigate to the project's environment configuration UI and set these variables:
 
-| Var                     | Value                                |
-| ----------------------- | ------------------------------------ |
-| `AWS_ACCESS_KEY_ID`     | from step 12.2                       |
-| `AWS_SECRET_ACCESS_KEY` | from step 12.2                       |
-| `AWS_REGION`            | `eu-west-3`                          |
-| `AWS_ACCOUNT_ID`        | from step 6's `$CDK_DEFAULT_ACCOUNT` |
+| Var | Value |
+| --- | --- |
+| `AWS_ACCESS_KEY_ID` | from step 12.2 |
+| `AWS_SECRET_ACCESS_KEY` | from step 12.2 |
+| `AWS_REGION` | `eu-west-3` |
+| `AWS_ACCOUNT_ID` | from step 6's `$CDK_DEFAULT_ACCOUNT` |
 
 These get exported into every cloud session for the project. The repo's `scripts/install-repo-deps.sh` (run by the SessionStart hook) detects `AWS_ACCESS_KEY_ID` and conditionally installs the AWS CLI v2 — local sessions without these vars set don't pay that install cost.
 
@@ -252,25 +252,25 @@ These get exported into every cloud session for the project. The repo's `scripts
 
 ### Published by the shared stack (`/borso/shared/*`)
 
-| Parameter                                    | Value                                           | Read by                                                                                     |
-| -------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `/borso/shared/oidc-provider-arn`            | OIDC provider ARN                               | `infra/cdk` constructs (StaticSite optional deploy role — currently unused in the monorepo) |
-| `/borso/shared/hosted-zone-id`               | Z…id of `borso.fr` zone                         | `StaticSite` (prod alias records)                                                           |
-| `/borso/shared/hosted-zone-name`             | `borso.fr`                                      | `StaticSite` (prod alias records)                                                           |
-| `/borso/shared/cert-borso-fr-arn`            | wildcard cert (us-east-1)                       | `StaticSite` (prod distribution)                                                            |
-| `/borso/shared/cert-preview-borso-fr-arn`    | preview wildcard cert                           | `infra/shared` (the previews CDN itself)                                                    |
-| `/borso/shared/previews-bucket-name`         | shared previews bucket                          | `StaticSite` (preview/integ uploads)                                                        |
-| `/borso/shared/previews-distribution-id`     | shared previews CDN id                          | `StaticSite` (issues invalidation on every preview redeploy)                                |
-| `/borso/shared/previews-distribution-domain` | shared previews CDN domain (`d…cloudfront.net`) | `StaticSite` (paired with the id above to construct an `IDistribution`)                     |
-| `/borso/shared/prod-deploy-role-arn`         | `ProdDeployRole`                                | step 9 (GitHub Variable)                                                                    |
-| `/borso/shared/preview-deploy-role-arn`      | `PreviewDeployRole`                             | step 9                                                                                      |
-| `/borso/shared/shared-deploy-role-arn`       | `SharedInfraDeployRole`                         | step 9 (reserved)                                                                           |
+| Parameter | Value | Read by |
+| --- | --- | --- |
+| `/borso/shared/oidc-provider-arn` | OIDC provider ARN | `infra/cdk` constructs (StaticSite optional deploy role — currently unused in the monorepo) |
+| `/borso/shared/hosted-zone-id` | Z…id of `borso.fr` zone | `StaticSite` (prod alias records) |
+| `/borso/shared/hosted-zone-name` | `borso.fr` | `StaticSite` (prod alias records) |
+| `/borso/shared/cert-borso-fr-arn` | wildcard cert (us-east-1) | `StaticSite` (prod distribution) |
+| `/borso/shared/cert-preview-borso-fr-arn` | preview wildcard cert | `infra/shared` (the previews CDN itself) |
+| `/borso/shared/previews-bucket-name` | shared previews bucket | `StaticSite` (preview/integ uploads) |
+| `/borso/shared/previews-distribution-id` | shared previews CDN id | `StaticSite` (issues invalidation on every preview redeploy) |
+| `/borso/shared/previews-distribution-domain` | shared previews CDN domain (`d…cloudfront.net`) | `StaticSite` (paired with the id above to construct an `IDistribution`) |
+| `/borso/shared/prod-deploy-role-arn` | `ProdDeployRole` | step 9 (GitHub Variable) |
+| `/borso/shared/preview-deploy-role-arn` | `PreviewDeployRole` | step 9 |
+| `/borso/shared/shared-deploy-role-arn` | `SharedInfraDeployRole` | step 9 (reserved) |
 
 ### Published by each app's prod stack (`/borso/<app>/*`)
 
 Created on first prod deploy of an app. Preview/integ stacks of the same app read these to share the cluster.
 
-| Parameter                            | Value                         | Read by                                                                 |
-| ------------------------------------ | ----------------------------- | ----------------------------------------------------------------------- |
-| `/borso/<app>/dsql-cluster-arn`      | per-app DSQL cluster ARN      | `DsqlSchema` + Lambda IAM grants in preview/integ stacks                |
+| Parameter | Value | Read by |
+| --- | --- | --- |
+| `/borso/<app>/dsql-cluster-arn` | per-app DSQL cluster ARN | `DsqlSchema` + Lambda IAM grants in preview/integ stacks |
 | `/borso/<app>/dsql-cluster-endpoint` | per-app DSQL cluster endpoint | `DsqlSchema` migration runner + `LambdaApi` env in preview/integ stacks |

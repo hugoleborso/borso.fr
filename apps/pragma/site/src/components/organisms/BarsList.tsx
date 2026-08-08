@@ -45,6 +45,7 @@ interface BarsListProps {
   readonly onRemove: (id: string) => void;
 }
 
+// @FollowsBlueprint organism-table
 export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProps): JSX.Element {
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);

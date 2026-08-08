@@ -10,7 +10,7 @@ session crashes mid-flight with:
 > An image in the conversation exceeds the dimension limit for many-image
 > requests (2000px). Start a new session with fewer images.
 
-The crash happens _inside the validator's session_, not at agent-browser. The
+The crash happens *inside the validator's session*, not at agent-browser. The
 screenshots that landed before the crash are committed to disk; the report is
 not. This means a perfectly green validation run can show up to the operator
 as a no-report failure — and re-running would crash again unless the agent is

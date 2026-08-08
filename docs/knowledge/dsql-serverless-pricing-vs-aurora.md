@@ -13,7 +13,7 @@ that way.
 Two meters:
 
 - **DPU (Distributed Processing Unit)** consumed while queries are
-  _executing_. Pay per actual compute time, not for the cluster
+  *executing*. Pay per actual compute time, not for the cluster
   sitting idle.
 - **Storage per GB-month** of data at rest.
 
@@ -35,7 +35,7 @@ not cost** as I initially wrote it. The actual reasons:
    would chew through that envelope for no operational benefit.
 3. **Cross-stack reference simplicity.** `IDsqlCluster` passes
    directly between CDK stacks via CFN intrinsics, so `cdk deploy
---all` orders the cluster stack before the app stack. Per-stage
+   --all` orders the cluster stack before the app stack. Per-stage
    clusters would re-introduce the
    [`dsql-first-deploy-must-be-prod`](../dantotsus/dsql-first-deploy-must-be-prod.md)
    class of bug.

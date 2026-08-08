@@ -44,8 +44,9 @@ JsxAttribute
         └── value_token: JSX_STRING_LITERAL "\"/api/foo\""
 ```
 
-The grit template `\`"/api/$_"\``matches a JS`string`AST node
-(the kind that lives inside`fetch('/api/foo')`or`const x = '/api/foo'`). `JsxString` is a different node ; the
+The grit template `\`"/api/$_"\`` matches a JS `string` AST node
+(the kind that lives inside `fetch('/api/foo')` or
+`const x = '/api/foo'`). `JsxString` is a different node ; the
 template never matches.
 
 The right shape :
@@ -58,7 +59,7 @@ JsxString() as $s where {
 ```
 
 `$s` bound to the whole `JsxString` literally equals `"/api/foo"`
-_including the surrounding quotes_, so the regex looks for the
+*including the surrounding quotes*, so the regex looks for the
 quote-then-slash sequence ; the same regex handles single-quoted
 JSX strings.
 

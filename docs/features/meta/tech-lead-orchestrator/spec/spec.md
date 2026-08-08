@@ -4,8 +4,8 @@
 >
 > **(1) Skills are markdown-only.** Hugo a corrigé une erreur
 > structurelle : les skills ne sont **pas** des workspaces pnpm. Les
-> sections _Changes / Types_, _Changes / Files to change_, _Test
-> strategy_ / unit tests + scenario test, ainsi que les mentions de
+> sections *Changes / Types*, *Changes / Files to change*, *Test
+> strategy* / unit tests + scenario test, ainsi que les mentions de
 > `pnpm tech-lead:metrics` doivent être lues à travers ce filtre : aucun
 > fichier `*.utils.ts`, `package.json`, `vitest.config.ts` ou test
 > runner ne ship dans `.claude/skills/`. Les primitives décrites en
@@ -16,14 +16,14 @@
 >
 > **(2) ADRs come BEFORE the plan, with human tech-lead validation.**
 > Hugo a corrigé l'ordre des stages : `spec → adrs → plan → implement →
-validate → arbitrate → ship`. Les ADRs contraignent le plan, pas
+> validate → arbitrate → ship`. Les ADRs contraignent le plan, pas
 > l'inverse. La détection des choix ADR-qualifiants se fait depuis la
 > spec (Q.O.D. + Changes / Types) — c'est pour cela que la spec doit
 > être suffisamment détaillée techniquement. Avant d'invoquer
 > `/adr-writer`, l'orchestrateur surface sa liste de candidats à Hugo
 > via `AskUserQuestion` (un question par candidat : Write ADR / Skip /
 > Merge with existing) — Hugo agit comme tech-lead pour ratifier ou
-> rejeter. Le diagramme de la _Q.O.D. — Use cases / edge cases_ ci-
+> rejeter. Le diagramme de la *Q.O.D. — Use cases / edge cases* ci-
 > dessous reste valide mais l'ordre des nœuds `Spec → Plan → ADRgate`
 > doit être lu comme `Spec → ADRgate → Plan`.
 >
@@ -37,7 +37,7 @@ validate → arbitrate → ship`. Les ADRs contraignent le plan, pas
 - [x] **Client / business** — confirmé en conversation : le "client" est Hugo (solo dev), valeur = temps humain par feature ↓ via confiance ↑.
 - [x] **Product** — invocation, output metric, positionnement vs auto-chain existant et UX humain validés via `AskUserQuestion`.
 - [x] **Tech-lead** — confronté dans Q.O.D. ci-dessous : risques de context blow-up, loop runaway, ADR-spam, spec drift.
-- [x] **Developer** — fichiers, contrats sous-agents, hooks de retry énumérés dans _Changes_ ; test strategy nommée explicitement vu la nature meta du livrable.
+- [x] **Developer** — fichiers, contrats sous-agents, hooks de retry énumérés dans *Changes* ; test strategy nommée explicitement vu la nature meta du livrable.
 - [x] **Designer** — pas d'UI ; l'UX = ce qui s'affiche dans le terminal + ce qui persiste sur disque ; confirmé : status concis + tout en fichiers.
 
 ## Why
@@ -63,13 +63,13 @@ Une commande terminal :
 
 déclenche, sans surveillance continue :
 
-1. Une session de specification (le human reste impliqué, c'est le point où il _donne la direction_).
+1. Une session de specification (le human reste impliqué, c'est le point où il *donne la direction*).
 2. La rédaction d'un `plan.md` complet.
 3. La rédaction d'un ou plusieurs ADRs sous `docs/adr/NNNN-<slug>.md` à chaque choix d'archi qualifiant (cf. seuil ADR plus bas).
 4. Une boucle implementation → validations (technical + visual en parallèle) → arbitrage → retry, bornée.
-5. Un commit + push sur la branche, et un rappel à Hugo d'approuver le déploiement prod (cf. CLAUDE.md _Deployments_).
+5. Un commit + push sur la branche, et un rappel à Hugo d'approuver le déploiement prod (cf. CLAUDE.md *Deployments*).
 
-Artefacts visibles, _tous persistés sur disque_ :
+Artefacts visibles, *tous persistés sur disque* :
 
 ```
 docs/features/<app>/<slug>/
@@ -113,7 +113,6 @@ flowchart TD
 ```
 
 **Happy path numéroté :**
-
 1. Human invoque le skill avec une description.
 2. Tech lead détecte qu'il n'y a pas de `spec.md` → délègue à `/specification`.
 3. `/specification` interroge le human, produit `spec.md`, toutes perspectives cochées.
@@ -126,14 +125,12 @@ flowchart TD
 10. Tech lead commit, push, rappelle à Hugo d'approuver le deploy prod.
 
 **Edge cases :**
-
 - Spec déjà existante (re-run sur la même feature) : tech lead reprend au step 4.
 - Sous-agent renvoie une question structurée au lieu de "done" : tech lead lit, décide, écrit potentiellement un ADR, relance.
 - Plusieurs ADRs nécessaires : générés séquentiellement, numérotés `NNNN`, liés depuis le plan.
 - Tech lead détecte un pattern qui existe déjà (recherche `docs/knowledge`, `docs/adr`, code) : ADR systématique pour tracer "réutilise X" ou "réinvente parce que Y".
 
 **Error cases :**
-
 - Validation FAIL avec verdict ambigu (ni clairement local, ni clairement plan) → tech lead consulte `plan.md`, choisit l'option la moins coûteuse en premier (fix local), incrémente le compteur.
 - Compteur retry > `MAX_RETRIES` (cf. Q.O.D.) → escalation forcée.
 - Verdict de validation suggère un trou dans `spec.md` → tech lead **n'écrit pas** dans `spec.md`. Il escalade avec une proposition de modification que le human accepte ou refuse.
@@ -143,25 +140,24 @@ flowchart TD
 
 ## Questions, Options and Decisions
 
-| Question                                            | Options                                                                                                                              | Decision (2026-05-12)                                                                                                                                                                                                                                                                                                                              |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Où vit le tech lead dans le pipeline ?              | (a) Remplace l'auto-chain (b) S'insère entre conception et implem (c) Agent résident en parallèle                                    | **(a) Remplace l'auto-chain.** `/specification` ne chaîne plus à `/technical-conception` automatiquement ; c'est le tech lead qui décide. Mise à jour requise dans `.claude/skills/specification/SKILL.md` _Auto-chain_ section.                                                                                                                   |
-| Comment le sous-agent interroge le tech lead ?      | (a) Sous-agent termine sa run avec une question structurée (b) Outil `ask-tech-lead` interne (c) Sous-agent escalade direct au human | **(a)** Le sous-agent termine sa run. Contrat : sortie JSON dans son rapport final (`status: "done"                                                                                                                                                                                                                                                | "question" | "blocked"` + payload). Plus simple à tracer, pas de session imbriquée. |
-| Quand écrire un ADR ?                               | Triggers ADR                                                                                                                         | **4 triggers, OR** : (1) choix entre ≥ 2 alternatives sérieuses ; (2) impact cross-cutting (≥ 2 apps ou modules) ; (3) divergence avec une convention (CLAUDE.md, ADR existant, docs/knowledge) ; (4) feature qui semble standard / déjà exister ailleurs (ADR justifie "réutilise" ou "réinvente parce que").                                     |
-| Comment détecter (4) "déjà existe" ?                | (a) Recherche `docs/` + code repo (b) + web search (c) Skill `/pattern-scout` dédié                                                  | **(a)** Recherche locale d'abord. Web search seulement si la décision touche un standard industrie clair (ex. cache invalidation, tenant isolation). `/pattern-scout` hors-scope.                                                                                                                                                                  |
-| Split du travail en parallèle ?                     | (a) Toujours séquentiel (b) Parallèle quand plan le permet (c) Cas-par-cas                                                           | **Séquentiel par défaut, parallèle uniquement si chantiers vraiment indépendants** (ex. doc + code de support). Le faux exemple "back + front" est rejeté : front a besoin des types du back. Les validations technical + visual restent en parallèle (post-implem, lectures seules).                                                              |
-| Arbitrage retry ?                                   | Options de fix                                                                                                                       | **3 options ouvertes au tech lead, dans cet ordre de coût croissant** : (a) fix local par l'implementer ; (b) replan partiel via `/technical-conception` sur la sous-section ; (c) escalation au human avec proposition de modification spec — jamais d'écriture dans `spec.md` sans accord humain. **Toujours re-lire le plan avant d'arbitrer.** |
-| `MAX_RETRIES` ?                                     | 2 / 3 / 5                                                                                                                            | **3** retries sur le couple implem+validation. Configurable via variable d'env `TECH_LEAD_MAX_RETRIES` (override pour scénarios de test).                                                                                                                                                                                                          |
-| ADR-writer dans le même PR ?                        | Spec séparée vs même PR                                                                                                              | **Même PR, même spec** (cette spec couvre `/tech-lead-orchestrator` _et_ `/adr-writer`). Section _Changes_ liste les deux.                                                                                                                                                                                                                         |
-| `<app>` slug pour ce méta-livrable ?                | `infra` / nouveau `meta` / `tooling`                                                                                                 | **`meta`.** Nouveau slug, déclenche une mise à jour dans CLAUDE.md (_Conventions / Layout_), `commitlint.config.js` (`scope-enum`), et **pas** dans `.github/path-filters.yml` (pas un workspace deployable — ce n'est qu'un slug docs).                                                                                                           |
-| `/specification` doit-il continuer son auto-chain ? | Oui / Non / Conditionnel                                                                                                             | **Conditionnel** : si invoqué dans une session pilotée par `/tech-lead-orchestrator` (détectable via une variable de contexte ou un fichier `runs/<run-id>/state.json`), le auto-chain est désactivé. Sinon, comportement actuel préservé pour qu'on puisse encore lancer `/specification` seul.                                                   |
-| Sortie du sous-agent : format ?                     | Markdown libre / JSON / fichier de verdict                                                                                           | **Fichier de verdict typé sur disque** sous `runs/<run-id>/agents/<agent-name>-<step>.md` avec un front-matter YAML (`status:`, `next:`, `payload:`). Le tech lead parse le front-matter, ignore le corps sauf si statut `question` / `blocked`.                                                                                                   |
-| Comment le tech lead borne son propre contexte ?    | Re-charger en boucle / Garder tout / Résumer                                                                                         | **Le tech lead n'absorbe jamais les corps de verdicts entiers** : il lit le front-matter et un résumé ≤ 200 mots produit par le sous-agent. Les corps restent sur disque et sont relus à la demande. Évite le context blow-up nommé en _risque tech-lead_.                                                                                         |
+| Question | Options | Decision (2026-05-12) |
+| --- | --- | --- |
+| Où vit le tech lead dans le pipeline ? | (a) Remplace l'auto-chain (b) S'insère entre conception et implem (c) Agent résident en parallèle | **(a) Remplace l'auto-chain.** `/specification` ne chaîne plus à `/technical-conception` automatiquement ; c'est le tech lead qui décide. Mise à jour requise dans `.claude/skills/specification/SKILL.md` *Auto-chain* section. |
+| Comment le sous-agent interroge le tech lead ? | (a) Sous-agent termine sa run avec une question structurée (b) Outil `ask-tech-lead` interne (c) Sous-agent escalade direct au human | **(a)** Le sous-agent termine sa run. Contrat : sortie JSON dans son rapport final (`status: "done" | "question" | "blocked"` + payload). Plus simple à tracer, pas de session imbriquée. |
+| Quand écrire un ADR ? | Triggers ADR | **4 triggers, OR** : (1) choix entre ≥ 2 alternatives sérieuses ; (2) impact cross-cutting (≥ 2 apps ou modules) ; (3) divergence avec une convention (CLAUDE.md, ADR existant, docs/knowledge) ; (4) feature qui semble standard / déjà exister ailleurs (ADR justifie "réutilise" ou "réinvente parce que"). |
+| Comment détecter (4) "déjà existe" ? | (a) Recherche `docs/` + code repo (b) + web search (c) Skill `/pattern-scout` dédié | **(a)** Recherche locale d'abord. Web search seulement si la décision touche un standard industrie clair (ex. cache invalidation, tenant isolation). `/pattern-scout` hors-scope. |
+| Split du travail en parallèle ? | (a) Toujours séquentiel (b) Parallèle quand plan le permet (c) Cas-par-cas | **Séquentiel par défaut, parallèle uniquement si chantiers vraiment indépendants** (ex. doc + code de support). Le faux exemple "back + front" est rejeté : front a besoin des types du back. Les validations technical + visual restent en parallèle (post-implem, lectures seules). |
+| Arbitrage retry ? | Options de fix | **3 options ouvertes au tech lead, dans cet ordre de coût croissant** : (a) fix local par l'implementer ; (b) replan partiel via `/technical-conception` sur la sous-section ; (c) escalation au human avec proposition de modification spec — jamais d'écriture dans `spec.md` sans accord humain. **Toujours re-lire le plan avant d'arbitrer.** |
+| `MAX_RETRIES` ? | 2 / 3 / 5 | **3** retries sur le couple implem+validation. Configurable via variable d'env `TECH_LEAD_MAX_RETRIES` (override pour scénarios de test). |
+| ADR-writer dans le même PR ? | Spec séparée vs même PR | **Même PR, même spec** (cette spec couvre `/tech-lead-orchestrator` *et* `/adr-writer`). Section *Changes* liste les deux. |
+| `<app>` slug pour ce méta-livrable ? | `infra` / nouveau `meta` / `tooling` | **`meta`.** Nouveau slug, déclenche une mise à jour dans CLAUDE.md (*Conventions / Layout*), `commitlint.config.js` (`scope-enum`), et **pas** dans `.github/path-filters.yml` (pas un workspace deployable — ce n'est qu'un slug docs). |
+| `/specification` doit-il continuer son auto-chain ? | Oui / Non / Conditionnel | **Conditionnel** : si invoqué dans une session pilotée par `/tech-lead-orchestrator` (détectable via une variable de contexte ou un fichier `runs/<run-id>/state.json`), le auto-chain est désactivé. Sinon, comportement actuel préservé pour qu'on puisse encore lancer `/specification` seul. |
+| Sortie du sous-agent : format ? | Markdown libre / JSON / fichier de verdict | **Fichier de verdict typé sur disque** sous `runs/<run-id>/agents/<agent-name>-<step>.md` avec un front-matter YAML (`status:`, `next:`, `payload:`). Le tech lead parse le front-matter, ignore le corps sauf si statut `question` / `blocked`. |
+| Comment le tech lead borne son propre contexte ? | Re-charger en boucle / Garder tout / Résumer | **Le tech lead n'absorbe jamais les corps de verdicts entiers** : il lit le front-matter et un résumé ≤ 200 mots produit par le sous-agent. Les corps restent sur disque et sont relus à la demande. Évite le context blow-up nommé en *risque tech-lead*. |
 
 **Out of scope :**
-
 - Sessions multi-utilisateurs / handoff entre humans (solo dev).
-- Reprise par `/tech-lead-orchestrator --resume` après crash de session — _option intéressante_, gardée pour un second tour (l'état disque le permet déjà ; ce qui manque c'est le code de reprise).
+- Reprise par `/tech-lead-orchestrator --resume` après crash de session — *option intéressante*, gardée pour un second tour (l'état disque le permet déjà ; ce qui manque c'est le code de reprise).
 - Web search proactive pour benchmark de patterns externes (couvert seulement par le trigger ADR (4) ciblé).
 - `/pattern-scout`, un skill dédié à la détection "ça existe déjà ailleurs".
 - Parallélisme implementer multi-worktrees.
@@ -174,38 +170,31 @@ flowchart TD
 // Contrat retourné par un sous-agent (implementer / validator / adr-writer).
 // Persisté en YAML front-matter dans runs/<run-id>/agents/<agent>-<step>.md.
 type SubAgentVerdict = {
-  status: 'done' | 'question' | 'blocked' | 'failed';
-  summary: string; // <= 200 words, lu par le tech lead
-  next?:
-    // hint pour le tech lead
-    | { kind: 'validate' }
-    | { kind: 'answer-needed'; question: string; options?: string[] }
-    | { kind: 'replan'; scope: string }
-    | { kind: 'escalate'; reason: string };
-  artifacts: string[]; // chemins relatifs des fichiers produits
+  status: "done" | "question" | "blocked" | "failed";
+  summary: string;             // <= 200 words, lu par le tech lead
+  next?:                       // hint pour le tech lead
+    | { kind: "validate" }
+    | { kind: "answer-needed"; question: string; options?: string[] }
+    | { kind: "replan"; scope: string }
+    | { kind: "escalate"; reason: string };
+  artifacts: string[];         // chemins relatifs des fichiers produits
 };
 
 // État persisté par le tech lead.
 type OrchestratorState = {
   runId: string;
   feature: { app: string; slug: string };
-  stage: 'spec' | 'plan' | 'adrs' | 'implement' | 'validate' | 'arbitrate' | 'ship' | 'escalated';
+  stage: "spec" | "plan" | "adrs" | "implement" | "validate" | "arbitrate" | "ship" | "escalated";
   retries: { implement: number; validate: number };
-  adrIndex: number[]; // numéros d'ADRs créés pour ce run
-  startedAt: string;
-  updatedAt: string;
+  adrIndex: number[];          // numéros d'ADRs créés pour ce run
+  startedAt: string; updatedAt: string;
 };
 
 // ADR — format minimal, aligné sur les standards (Context / Decision / Consequences).
 type AdrFile = {
-  number: number;
-  slug: string;
-  status: 'proposed' | 'accepted' | 'superseded';
-  context: string;
-  decision: string;
-  consequences: string;
-  supersedes?: number[];
-  supersededBy?: number;
+  number: number; slug: string; status: "proposed" | "accepted" | "superseded";
+  context: string; decision: string; consequences: string;
+  supersedes?: number[]; supersededBy?: number;
 };
 ```
 
@@ -261,7 +250,7 @@ Pas de changement `.github/path-filters.yml` : `meta` n'est pas un workspace dep
 - **Scenario test end-to-end (fixture-driven)** — un test runner spawn le skill `/tech-lead-orchestrator` sur une feature fixture pré-construite (`tests/fixtures/feature-toy/`) avec une spec minimale, une plan attendue, et assert : (a) `spec.md` / `plan.md` / au moins 1 ADR créés ; (b) sous-agents stubbed retournent `status: done` → tech lead atteint stage `ship` ; (c) sous-agent stubbed retourne `status: question` → tech lead arbitrer et relance ; (d) `MAX_RETRIES` dépassé → stage `escalated`. Ce test couvre la boucle, pas le LLM lui-même.
 - **`/technical-validation`** — lit cette spec + plan.md + diff, vérifie correctness-vs-spec, 100% coverage sur les utils, et que les fichiers de SKILL.md respectent le standard (présence des sections obligatoires, liens vers skills composés).
 - **`/visual-validation`** — **non applicable** pour un skill sans UI. Call out explicite : le verdict `visual-validation` produit un PASS_EXCEPT_UNVERIFIABLE motivé "no UI surface".
-- **Dogfooding loop (post-merge, pas un gate de merge)** — la PR de ce skill merge dès que scenario tests + 100% utils + `/technical-validation` passent. Le _vrai_ test produit se fait **sur la PR suivante** : Hugo lance `/tech-lead-orchestrator` sur une vraie petite feature, et `/after-task-dantotsus` capture systématiquement tout écart entre artefact produit et artefact attendu sous forme de Dantotsu, qui revient en PR `kaizen` patcher le skill. C'est la Self-improvement loop CLAUDE.md appliquée au skill lui-même, **pas un manual sweep dans le test strategy de _cette_ PR**.
+- **Dogfooding loop (post-merge, pas un gate de merge)** — la PR de ce skill merge dès que scenario tests + 100% utils + `/technical-validation` passent. Le *vrai* test produit se fait **sur la PR suivante** : Hugo lance `/tech-lead-orchestrator` sur une vraie petite feature, et `/after-task-dantotsus` capture systématiquement tout écart entre artefact produit et artefact attendu sous forme de Dantotsu, qui revient en PR `kaizen` patcher le skill. C'est la Self-improvement loop CLAUDE.md appliquée au skill lui-même, **pas un manual sweep dans le test strategy de *cette* PR**.
 - **Coverage gate `infra/cdk/**`** : intacte, ce PR n'y touche pas.
 
 ## Production strategy
@@ -269,7 +258,6 @@ Pas de changement `.github/path-filters.yml` : `meta` n'est pas un workspace dep
 ### Analytics
 
 **Input metrics (instrumentés dans `journal.md` de chaque run) :**
-
 - Événement `tech_lead_run_started` (feature slug, app, spec déjà présente ou non).
 - Événement `tech_lead_stage_changed` (stage avant/après, retries courants).
 - Événement `tech_lead_adr_written` (numéro ADR, trigger qui l'a déclenché parmi les 4).
@@ -286,7 +274,6 @@ Pas de changement `.github/path-filters.yml` : `meta` n'est pas un workspace dep
 Pas d'événement remoté vers un SaaS — `journal.md` reste sur disque ; un script `pnpm tech-lead:metrics` calcule les agrégats à la demande.
 
 **Output metric (lagging, out-of-band) :**
-
 - **Temps humain par feature.** Revue mensuelle par Hugo : pour chaque PR fermée le mois écoulé, estimer le temps actif passé en supervision (relectures, arbitrages manuels, replans). Pas d'instrumentation automatique — la métrique est self-reportée, comparée entre cohortes "via tech-lead" vs "manuel". Si la cohorte tech-lead ne dépasse pas la cohorte manuelle après 3 itérations, la décision (a) (Remplace l'auto-chain) est remise en cause.
 
 ### Zero-defect strategy
@@ -295,5 +282,5 @@ Pas d'événement remoté vers un SaaS — `journal.md` reste sur disque ; un sc
 - **`OrchestratorRetryExhaustedError`** — atteinte du `MAX_RETRIES`. Surface : message d'escalation au human avec proposition de modification spec (jamais d'écriture spec.md sans accord).
 - **`OrchestratorSpecMutationAttemptedError`** — un sous-agent (typiquement implementer) a écrit dans `spec.md`. Détection : checksum de `spec.md` au début / à chaque retour de sous-agent. Surface : escalation immédiate, revert du fichier, mention dans le journal.
 - **`OrchestratorAdrConflictError`** — `/adr-writer` détecte qu'un ADR existant entre en conflit. Surface : escalation au human.
-- **`OrchestratorHookFailure`** — pre-commit ou pre-push échoue. Surface : traité comme un verdict de validation FAIL, jamais `--no-verify` (rappel CLAUDE.md _Hooks_).
-- Alerting : pas de Sentry pour un skill local. Les erreurs ci-dessus écrivent dans `runs/<run-id>/errors.log` et sortent en stderr. Le human est notifié _par l'arrêt visible du tech lead dans le terminal_ — c'est l'alerte.
+- **`OrchestratorHookFailure`** — pre-commit ou pre-push échoue. Surface : traité comme un verdict de validation FAIL, jamais `--no-verify` (rappel CLAUDE.md *Hooks*).
+- Alerting : pas de Sentry pour un skill local. Les erreurs ci-dessus écrivent dans `runs/<run-id>/errors.log` et sortent en stderr. Le human est notifié *par l'arrêt visible du tech lead dans le terminal* — c'est l'alerte.

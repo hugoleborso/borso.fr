@@ -18,3 +18,8 @@ apps/borsouvertures/site/public/openings.json
 .claude/skills/plain-writing/SKILL.md
 .claude/skills/plain-writing/LICENSE
 .claude/skills/writing-great-skills/references/
+
+# Prettier rewrites `*emphasis*` to `_emphasis_` and pads every table cell, and
+# neither behaviour can be switched off. Running it over this repository's
+# markdown produced 236 files of pure churn, so markdown is formatted by hand.
+**/*.md

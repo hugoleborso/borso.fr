@@ -23,7 +23,8 @@
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
-    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"last-loop-lepin-pr-${PR_NUMBER:?PR_NUMBER env var required — destroy targets the per-PR app stack only, never the shared last-loop-lepin-cluster stack}\" --force"
+    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"last-loop-lepin-pr-${PR_NUMBER:?PR_NUMBER env var required — destroy targets the per-PR app stack only, never the shared last-loop-lepin-cluster stack}\" --force",
+    "test:mutation": "stryker run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.726.0",
@@ -43,6 +44,8 @@
   },
   "devDependencies": {
     "@hono/node-server": "^1.13.7",
+    "@stryker-mutator/core": "9.6.1",
+    "@stryker-mutator/vitest-runner": "9.6.1",
     "@testcontainers/postgresql": "^10.16.0",
     "@types/leaflet": "1.9.21",
     "@types/node": "^22.10.5",

@@ -100,6 +100,12 @@ function deleteCachedScore(
   };
 }
 
+/**
+ * @Blueprint organism-table
+ * @BlueprintName Organism With Headless Table
+ * @BlueprintUsage Use for a screen region showing tabular data with sorting or filtering.
+ * @BlueprintDescription Composes molecules and atoms into a screen region, owns the interface state, and drives the grid through the headless useReactTable rather than a hand-rolled table with manual sort state. An organism is the lowest level allowed to call a query hook.
+ */
 export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixProps): JSX.Element {
   const { t } = useTranslation();
   const queryClient = useQueryClient();

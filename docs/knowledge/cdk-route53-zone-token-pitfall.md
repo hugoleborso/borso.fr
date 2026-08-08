@@ -20,10 +20,10 @@ step 3, emitting:
 ```yaml
 Name:
   Fn::Join:
-    - ''
-    - - '<your hostname>.'
-      - { Ref: 'SsmParameterValueborso.../HostedZoneName' }
-      - '.'
+    - ""
+    - - "<your hostname>."
+      - { Ref: "SsmParameterValueborso.../HostedZoneName" }
+      - "."
 ```
 
 At deploy time CFN resolves that to `<your hostname>.borso.fr` and
@@ -39,7 +39,7 @@ trailing-dot your `recordName`:
 ```ts
 new ARecord(this, 'Alias', {
   zone,
-  recordName: `${hostname}.`, // ← trailing dot wins, every time
+  recordName: `${hostname}.`,          // ← trailing dot wins, every time
   target: aliasTarget,
 });
 ```

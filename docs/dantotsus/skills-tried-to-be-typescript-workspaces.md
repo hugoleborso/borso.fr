@@ -28,61 +28,59 @@ instructions an LLM follows. There's nothing to import; there's no
 runtime to run tests against. The TypeScript was inert ceremony — the
 LLM doesn't execute it. Hugo surfaced it mid-implementation:
 
-> _skills are markdown-only — abandon TS scaffolding._
+> *skills are markdown-only — abandon TS scaffolding.*
 
 Commit `959b1e7` drops everything: `src/`, `tests/`, `bin/`, the two
 workspace `package.json` / `tsconfig.json` / `biome.jsonc` /
 `vitest.config.ts` files, the `pnpm-workspace.yaml` glob, the two
 knip workspace entries, the root `tech-lead:metrics` script. SKILL.md
-
-- standard.md + the verdict-contract / template files become the
-  _entire_ skill.
++ standard.md + the verdict-contract / template files become the
+*entire* skill.
 
 ## Root-cause chain
 
 1. **Why** scaffold a TS workspace for a skill?
    Because every other code unit in the repo is a TS workspace, the
    reflex was to mirror the pattern. State-machine derivation,
-   verdict-kind lookup, retry-action mapping all _look_ like things
+   verdict-kind lookup, retry-action mapping all *look* like things
    you'd write as `*.utils.ts` with 100 % coverage tests — that's
-   the repo's _Clean code_ rule for pure helpers.
+   the repo's *Clean code* rule for pure helpers.
 
 2. **Why** does that reflex misfire for skills?
    Because the runtime is the LLM, not Node. The "state machine" of
    the orchestrator is a markdown table the LLM reads and follows;
    the "verdict-kind derivation" is a 5-row lookup table in prose.
-   A `verdictKind.ts` with `verdictKind.test.ts` doesn't _run_ —
+   A `verdictKind.ts` with `verdictKind.test.ts` doesn't *run* —
    the LLM never imports it. It's documentation in the wrong
    format.
 
 3. **Why** wasn't this clear at conception?
-   CLAUDE.md's _Layout_ section said:
-
+   CLAUDE.md's *Layout* section said:
    > `.claude/skills/<slug>/` — skills. Promote to a pnpm workspace
    > when there is testable code.
-   > That bullet was the seed of the misconception. It _implied_
-   > there is "testable code" in skills. There isn't — the skill is
-   > the prose; the LLM is the executor. The bullet shouldn't exist.
+   That bullet was the seed of the misconception. It *implied*
+   there is "testable code" in skills. There isn't — the skill is
+   the prose; the LLM is the executor. The bullet shouldn't exist.
 
 4. **Why** did it take "mid-implementation" to surface?
-   Because the scaffolding _looked right_ to a TypeScript-shaped
+   Because the scaffolding *looked right* to a TypeScript-shaped
    audit. The PR's `/technical-validation` pass on the orchestrator
    spec was green — 100 % coverage, biome clean, knip clean. The
-   defect was at the level of the _category_ the code belonged to,
+   defect was at the level of the *category* the code belonged to,
    not the code itself.
 
-**Root cause:** _thought_ "if there's a state machine, there's
-testable utils, therefore there's a workspace"; _actually_ skills
+**Root cause:** *thought* "if there's a state machine, there's
+testable utils, therefore there's a workspace"; *actually* skills
 are markdown documents an LLM reads, and any state machine in a
 skill is also a markdown document (a table, a lookup, a procedure)
 — never a TypeScript module. The CLAUDE.md hint to "promote to a
-pnpm workspace" was _what_ made the wrong category feel right.
+pnpm workspace" was *what* made the wrong category feel right.
 
 ## Detection failure causes
 
 - **Typing / linter / CI:** the scaffolded TypeScript was correct
   TypeScript. Every gate passed. The defect wasn't in the code's
-  _shape_; it was in the code's _category_.
+  *shape*; it was in the code's *category*.
 - **`/technical-conception`:** the plan called out `*.utils.ts` at
   100 % coverage because that's CLAUDE.md's standing rule for
   pure helpers. The rule fires unconditionally; it can't see that
@@ -90,7 +88,7 @@ pnpm workspace" was _what_ made the wrong category feel right.
 - **`/technical-validation`:** identical — the validator checked
   what the plan asked for. The plan was wrong about the category.
 - **`/visual-validation`:** N/A — no UI.
-- **Code review:** Hugo caught it. The standard _Layout_ bullet was
+- **Code review:** Hugo caught it. The standard *Layout* bullet was
   the seed, and reading it triggered "wait, why are we promoting
   skills to workspaces, they have no executor".
 
@@ -108,7 +106,7 @@ Commit `959b1e7` does the structural removal:
 - Drop the two skill workspaces from `knip.json`.
 - Drop `tech-lead:metrics` from root `package.json` (replaced by
   a `jq` one-liner in `docs/knowledge/tech-lead-orchestrator.md`).
-- Update CLAUDE.md _Layout_: skills are **markdown-only**; the
+- Update CLAUDE.md *Layout*: skills are **markdown-only**; the
   "promote to a workspace" bullet is gone.
 
 ## Eradication (mandatory — code-level)

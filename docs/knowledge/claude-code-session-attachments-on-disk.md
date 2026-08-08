@@ -2,7 +2,7 @@
 
 ## Symptom
 
-User attaches a JPEG, PNG, or video file in chat. The agent — looking at the harness's tool surface — sees no `read_attachment` or equivalent and replies "I can only see a preview of your image; please commit the binary yourself." User pushes back: _"non TU commit ces fichiers toi-même"_.
+User attaches a JPEG, PNG, or video file in chat. The agent — looking at the harness's tool surface — sees no `read_attachment` or equivalent and replies "I can only see a preview of your image; please commit the binary yourself." User pushes back: *"non TU commit ces fichiers toi-même"*.
 
 During PR #11 this happened multiple times: photos for `/12-travaux`, a métro video, and design exports were all delivered as chat attachments. Each one needed to land in `apps/borso-fr/site/public/media/12-travaux/` for the carousel to render.
 
@@ -68,7 +68,7 @@ Pillow isn't required — the base64 decode gives the original bytes (JPEG, PNG,
 ## Gotchas
 
 - **Extension ≠ format.** `media_type` is the source of truth. A `image/png` decoded into a `.jpg` filename serves fine but lies to the next reader. Verify with `file` if unsure.
-- **Order is chronological, not semantic.** If the user sent four images in one message and labelled them _"the first two are X, the last two are Y"_, the array order matches that labelling. Iterating `images[-4:]` after the user's message gives you the right four.
+- **Order is chronological, not semantic.** If the user sent four images in one message and labelled them *"the first two are X, the last two are Y"*, the array order matches that labelling. Iterating `images[-4:]` after the user's message gives you the right four.
 - **The transcript file grows fast** (~370 KB / image at JPEG). Don't `cat` it in a Bash tool call — that will overflow the agent's context. Slice with `python3`, `jq` against a stream, or filter by `"image/" in line` before parsing.
 - **Attachments don't survive the session.** When the project / session ends, the JSONL stays for a while but is not durable. Commit the binaries the first time the user gives them; don't expect to recover them later.
 

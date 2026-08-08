@@ -11,7 +11,7 @@ screen disagrees.
 PR #31 had two of these (a setlist reorder reverting, an energy bar
 distorting). Both cost extra round-trips because the first fixes were
 **theorised from reading the code** and shipped without watching the
-bug happen. The user had to come back with _"ça ne marche pas"_ before
+bug happen. The user had to come back with *"ça ne marche pas"* before
 the real cause surfaced.
 
 ## The discipline
@@ -23,8 +23,8 @@ browser and capture the failing signal before writing a fix**:
    directly — see [`agent-browser-cli-quirks.md`](./agent-browser-cli-quirks.md))
    — log in, get to the surface, perform the exact gesture.
 2. Instrument the network: patch `window.fetch` to log the request body
-   and the response body of the relevant calls. Compare _what the write
-   sent_ against _what the next read returned_. In PR #31 this is what
+   and the response body of the relevant calls. Compare *what the write
+   sent* against *what the next read returned*. In PR #31 this is what
    exposed the truth — the reorder `PUT` sent `[…, b16f]`, the refetch
    `GET` returned `[b16f, …]`: a stale read, not a frontend logic bug.
 3. Read the DOM order/state immediately after the action **and again a

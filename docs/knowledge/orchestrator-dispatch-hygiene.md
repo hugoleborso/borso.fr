@@ -20,7 +20,7 @@ transcript and confirm the model.
 
 ## `isolation: "worktree"` for any round ≥ ~4 commits or ≥ ~20 files
 
-A long multi-commit round dispatched _without_ worktree isolation edits
+A long multi-commit round dispatched *without* worktree isolation edits
 the main working tree. Symptoms: the stop hook fires every turn
 flagging in-flight WIP as uncommitted, and the orchestrator can't safely
 commit it (the sub-agent races on its own `git add`). Worktree-isolated
@@ -36,8 +36,8 @@ round at a time so the WIP-in-main only trips the stop hook once.
 ## Escalate on lack of progress, not on a retry count
 
 A hard "cap of 3 retries" framing causes premature "this is the last
-retry before escalation" surfacing. The real failure signal is _lack of
-progress_: a round that closes 6 of 10 blockers is progress and should
+retry before escalation" surfacing. The real failure signal is *lack of
+progress*: a round that closes 6 of 10 blockers is progress and should
 chain into the next round. Escalate only on a stuck loop (a round closes
 0 blockers), a net-negative regression (more new FAILs than closed), or
 genuine product ambiguity. Track the retry counter for visibility; don't
@@ -56,7 +56,7 @@ Briefs and pre-flight gate lists must name `biome check`.
 
 "same-origin /api: YES" is ambiguous when the property differs by stage
 (prod same-origin, preview cross-origin). A verdict that asserts a
-routing or auth property must name _where_ it holds — otherwise a later
+routing or auth property must name *where* it holds — otherwise a later
 validator inherits the bare yes/no and flags a FAIL that's actually
 by-design. See [`preview-api-cross-origin.md`](./preview-api-cross-origin.md).
 

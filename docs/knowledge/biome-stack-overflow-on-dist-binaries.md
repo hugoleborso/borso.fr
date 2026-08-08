@@ -13,7 +13,7 @@ fatal runtime error: stack overflow, aborting
 
 Biome 2.x walks the workspace tree to find files to lint. It does not honour `.gitignore` by default; instead it has its own `files.includes` / `files.excludes` config. When the build had populated `apps/borso-fr/dist/assets/` with woff / woff2 font binaries (≈40 files, plus PNGs from the family pages), Biome attempted to read each file to determine its type. The Rust parser's stack frame for one of those binaries blew the per-thread stack limit — exact file unclear because the crash happens before Biome reports which file it was on.
 
-The workspace's per-app Biome config (`apps/borso-fr/biome.jsonc`) had `"includes": ["bin/**", "site/**"]`, which _does_ exclude `dist/`. But the _root_ `biome.jsonc` had no `files.includes`, and the root config was the one being applied at the moment the crash hit.
+The workspace's per-app Biome config (`apps/borso-fr/biome.jsonc`) had `"includes": ["bin/**", "site/**"]`, which *does* exclude `dist/`. But the *root* `biome.jsonc` had no `files.includes`, and the root config was the one being applied at the moment the crash hit.
 
 ## The fix
 
@@ -36,7 +36,7 @@ With `useIgnoreFile: true`, Biome reads `.gitignore` (which has `dist/`) and ski
 ## Why `vcs.useIgnoreFile` should always be on for this repo
 
 - Every workspace builds into a `dist/` (already gitignored).
-- The screenshot folder under `docs/features/<app>/<slug>/validation/` is _not_ gitignored (we want screenshots committed) but contains PNGs Biome doesn't need to read — the gitignore rule lets us add per-folder ignores there if it ever becomes a problem.
+- The screenshot folder under `docs/features/<app>/<slug>/validation/` is *not* gitignored (we want screenshots committed) but contains PNGs Biome doesn't need to read — the gitignore rule lets us add per-folder ignores there if it ever becomes a problem.
 - `cdk.out/`, `coverage/`, and the workspace `node_modules/` are all listed in `.gitignore` and shouldn't be linted.
 
 The setting is the safest way to keep Biome's working set aligned with the repo's source tree.

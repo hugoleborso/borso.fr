@@ -46,15 +46,15 @@ This is the right tool when:
 
 ## Rule of thumb
 
-> If you're answering _"is **this one thing** fixed?"_, use
-> `agent-browser`. If you're answering _"is the **whole feature**
-> shipped per spec?"_, invoke `/visual-validation`.
+> If you're answering *"is **this one thing** fixed?"*, use
+> `agent-browser`. If you're answering *"is the **whole feature**
+> shipped per spec?"*, invoke `/visual-validation`.
 
 ## Origin
 
-Hugo flagged this verbatim during PR #12: _"When you are doing just
+Hugo flagged this verbatim during PR #12: *"When you are doing just
 one fix, you should just simply use agent browser to validate this
-fix"_. The session was spawning the full `visual-validator` agent
+fix"*. The session was spawning the full `visual-validator` agent
 for a CSS one-liner (avatar chips not being circles), which the
 operator could see as wasteful given the size of the fix vs the cost
 of the skill.
@@ -64,4 +64,4 @@ of the skill.
 - [`agent-browser-cli-quirks.md`](./agent-browser-cli-quirks.md) —
   daemon / executable-path notes when running locally.
 - `.claude/skills/visual-validation/SKILL.md` — the full skill's
-  brief, for when you _do_ need the heavy gate.
+  brief, for when you *do* need the heavy gate.

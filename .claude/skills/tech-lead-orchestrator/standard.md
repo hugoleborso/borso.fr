@@ -27,7 +27,7 @@ human input:
   `/adr` in chat, then re-launches `/feature-pipeline` — the script
   reads `state.json` and resumes from the stage where it stopped.
 
-The stage diagram below is the union of both substrates; the _transition_
+The stage diagram below is the union of both substrates; the *transition*
 column names where each row lives. See
 [`.claude/commands/feature-pipeline.md`](../../commands/feature-pipeline.md)
 for the workflow's stage-by-stage contract and
@@ -40,18 +40,18 @@ The 8 stages are: `spec`, `adrs`, `plan`, `implement`, `validate`,
 `arbitrate`, `ship`, `escalated`. **ADRs come before the plan** — they
 constrain it. Transitions:
 
-| From      | To        | When                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| spec      | adrs      | `spec.md` present (or `/specification` returns `done`). Spec checksum recorded. Spec carries enough tech surface (Q.O.D. + Changes / Types) to surface architectural choices.                                                                                                                                                                                                                                                                                                                                                                                                        |
-| adrs      | plan      | Every ADR-qualifying candidate from the spec has been ratified by the human (tech-lead validation via `AskUserQuestion`) and the confirmed ones have been written via `/adr` (piloted mode). ADR numbers are in `state.adrIndex`. If no candidates, transition immediately.                                                                                                                                                                                                                                                                                                          |
-| plan      | implement | `/technical-conception` returns `done` with `plan.md` next to spec. The plan references every ADR in `state.adrIndex`.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| implement | validate  | `/implementation` returns `done` with a `next: { kind: 'validate' }` hint. **The validate stage is never skipped.** A runtime smoke-test (`curl`, "the Lambda boots", "routes return non-5xx") is NOT a substitute for `/technical-validation` — booting ≠ correct, and the implementer's own `done` is not independent evidence. Dispatch `/technical-validation` on the current SHA every round, including mid-PR fix rounds. See [`docs/dantotsus/orchestrator-skipped-validation-between-rounds.md`](../../../docs/dantotsus/orchestrator-skipped-validation-between-rounds.md). |
-| validate  | arbitrate | At least one validator returned a verdict.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| arbitrate | implement | `verdictKind` maps to action `fix`. `retries.implement++`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| arbitrate | plan      | `verdictKind` maps to action `replan`. Scope flagged in the replan verdict.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| arbitrate | escalated | `verdictKind` maps to action `escalate`. Terminal.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| arbitrate | ship      | All verdicts PASS.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ship      | (end)     | Push successful, deploy reminder issued, **PR description updated to reflect what the run actually shipped** (see _PR description maintenance_ below).                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| From | To | When |
+|---|---|---|
+| spec | adrs | `spec.md` present (or `/specification` returns `done`). Spec checksum recorded. Spec carries enough tech surface (Q.O.D. + Changes / Types) to surface architectural choices. |
+| adrs | plan | Every ADR-qualifying candidate from the spec has been ratified by the human (tech-lead validation via `AskUserQuestion`) and the confirmed ones have been written via `/adr` (piloted mode). ADR numbers are in `state.adrIndex`. If no candidates, transition immediately. |
+| plan | implement | `/technical-conception` returns `done` with `plan.md` next to spec. The plan references every ADR in `state.adrIndex`. |
+| implement | validate | `/implementation` returns `done` with a `next: { kind: 'validate' }` hint. **The validate stage is never skipped.** A runtime smoke-test (`curl`, "the Lambda boots", "routes return non-5xx") is NOT a substitute for `/technical-validation` — booting ≠ correct, and the implementer's own `done` is not independent evidence. Dispatch `/technical-validation` on the current SHA every round, including mid-PR fix rounds. See [`docs/dantotsus/orchestrator-skipped-validation-between-rounds.md`](../../../docs/dantotsus/orchestrator-skipped-validation-between-rounds.md). |
+| validate | arbitrate | At least one validator returned a verdict. |
+| arbitrate | implement | `verdictKind` maps to action `fix`. `retries.implement++`. |
+| arbitrate | plan | `verdictKind` maps to action `replan`. Scope flagged in the replan verdict. |
+| arbitrate | escalated | `verdictKind` maps to action `escalate`. Terminal. |
+| arbitrate | ship | All verdicts PASS. |
+| ship | (end) | Push successful, deploy reminder issued, **PR description updated to reflect what the run actually shipped** (see *PR description maintenance* below). |
 
 The spec is the source of truth for ADR-qualifying choices. If the
 spec is thin on tech surface — no Q.O.D., no Types section, no
@@ -64,16 +64,16 @@ poison the audit trail.
 
 ```jsonc
 {
-  "runId": "2026-05-13-1530-abc", // timestamp + random suffix
+  "runId": "2026-05-13-1530-abc",         // timestamp + random suffix
   "feature": { "app": "meta", "slug": "tech-lead-orchestrator" },
   "pilotedByTechLead": true,
-  "stage": "spec", // current stage from the diagram above
+  "stage": "spec",                         // current stage from the diagram above
   "retries": { "implement": 0, "validate": 0 },
-  "adrIndex": [1, 2], // numbers of ADRs created this run
-  "bytesRead": 0, // cumulative, for context-growth events
-  "specChecksum": null, // SHA-256 hex of spec.md once recorded
+  "adrIndex": [1, 2],                      // numbers of ADRs created this run
+  "bytesRead": 0,                          // cumulative, for context-growth events
+  "specChecksum": null,                    // SHA-256 hex of spec.md once recorded
   "startedAt": "2026-05-13T15:30:00.000Z",
-  "updatedAt": "2026-05-13T15:32:00.000Z",
+  "updatedAt": "2026-05-13T15:32:00.000Z"
 }
 ```
 
@@ -98,14 +98,14 @@ contract. The orchestrator's promise:
 
 Compose the `verdictKind` from the verdict's `status` + `next`:
 
-| Verdict `status` | Verdict `next.kind` | `verdictKind`                                                    |
-| ---------------- | ------------------- | ---------------------------------------------------------------- |
-| `done`           | (any)               | `pass`                                                           |
-| `failed`         | omitted or absent   | `fail-local`                                                     |
-| `failed`         | `replan`            | `fail-plan`                                                      |
-| `failed`         | `escalate`          | `fail-spec`                                                      |
-| `blocked`        | `escalate`          | `fail-spec` (if reason mentions spec) / `crash` (otherwise)      |
-| `question`       | `answer-needed`     | (re-prompt the sub-agent after human answers; no retry consumed) |
+| Verdict `status` | Verdict `next.kind` | `verdictKind` |
+|---|---|---|
+| `done` | (any) | `pass` |
+| `failed` | omitted or absent | `fail-local` |
+| `failed` | `replan` | `fail-plan` |
+| `failed` | `escalate` | `fail-spec` |
+| `blocked` | `escalate` | `fail-spec` (if reason mentions spec) / `crash` (otherwise) |
+| `question` | `answer-needed` | (re-prompt the sub-agent after human answers; no retry consumed) |
 
 ## ADR triggers (4, OR)
 
@@ -129,9 +129,9 @@ The orchestrator's judgment on which candidates qualify is a **draft**.
 Before invoking `/adr` (piloted mode), surface the candidate list to Hugo via
 `AskUserQuestion`, one question per candidate, with options:
 
-- _Write ADR (Recommended)_ — confirm, proceed to `/adr` (piloted mode).
-- _Skip — not really architectural_ — drop the candidate, no ADR.
-- _Merge with ADR &lt;NNNN&gt;_ — fold into an existing ADR (the
+- *Write ADR (Recommended)* — confirm, proceed to `/adr` (piloted mode).
+- *Skip — not really architectural* — drop the candidate, no ADR.
+- *Merge with ADR &lt;NNNN&gt;* — fold into an existing ADR (the
   orchestrator records the link, no new ADR written).
 
 The human's answers are `guidance` / `answer` messages, not
@@ -146,7 +146,7 @@ every feature has an ADR-qualifying choice.
 ## Retry policy
 
 **Escalate on lack of progress, not on a retry count.** A round that
-closes 6 of 10 blockers is _progress_ and chains into the next round;
+closes 6 of 10 blockers is *progress* and chains into the next round;
 a hard "cap of 3" framing causes premature "last retry before
 escalation" surfacing (observed in run `2026-05-19-1937-pragma`). The
 `retries.*` counters are tracked for visibility and never auto-escalate
@@ -159,17 +159,17 @@ at a small integer.
   - **net-negative regression** — a round introduces strictly more new
     FAILs than it closes, or
   - **product ambiguity** — the FAIL needs a human product decision
-    (see _Decision boundary_ below), or
+    (see *Decision boundary* below), or
   - `verdictKind` is `fail-spec` / `crash` (unrecoverable by retry).
 - Lookup table from `verdictKind` to next action (progress permitting):
 
-| `verdictKind` | Action                                                         |
-| ------------- | -------------------------------------------------------------- |
-| `pass`        | (degenerate — orchestrator should have transitioned to `ship`) |
-| `fail-spec`   | `escalate` immediately                                         |
-| `crash`       | `escalate` immediately                                         |
-| `fail-plan`   | `replan`                                                       |
-| `fail-local`  | `fix` (if the round made progress) / `escalate` (stuck loop)   |
+| `verdictKind` | Action |
+|---|---|
+| `pass` | (degenerate — orchestrator should have transitioned to `ship`) |
+| `fail-spec` | `escalate` immediately |
+| `crash` | `escalate` immediately |
+| `fail-plan` | `replan` |
+| `fail-local` | `fix` (if the round made progress) / `escalate` (stuck loop) |
 
 ## Decision boundary — what the orchestrator decides vs surfaces
 
@@ -177,7 +177,7 @@ Once the human has ratified the spec, the orchestrator drives to
 "PR opens with visual evidence" **without** per-FAIL-row checkpoints.
 It does NOT surface execution mechanics (fix ordering, retry vs
 escalate, scope of a fix round, partial-deferral arbitration) — deciding
-those _is_ the job.
+those *is* the job.
 
 It MUST stop and surface — via `AskUserQuestion` — for **product +
 ADR-trigger** decisions, which are the human's:
@@ -187,7 +187,7 @@ ADR-trigger** decisions, which are the human's:
 - a new obligation to a third party visible in prod (attribution link, telemetry);
 - schema columns or data model motivated by an external service;
 - any feature scope **beyond the ratified spec** — a casual wish in
-  chat ("would be cool if…") is _not_ a ratification.
+  chat ("would be cool if…") is *not* a ratification.
 
 Matching any of the four ADR triggers (above) is a mandatory
 stop-and-surface regardless of orchestrator confidence. The two failure
@@ -263,16 +263,16 @@ A feature with no UI surface skips `/visual-validation` silently
 Every line carries `kind`, `runId`, and `at` (ISO timestamp). The
 kinds and their extra fields:
 
-| `kind`                      | Extra fields                                      |
-| --------------------------- | ------------------------------------------------- |
-| `run_started`               | `app`, `slug`                                     |
-| `stage_changed`             | `from`, `to`                                      |
-| `adr_written`               | `number`, `trigger` (one of the 4 trigger names)  |
-| `escalation`                | `reason`, `stage`, `retries`                      |
-| `human_message_received`    | `category` ∈ {`guidance`, `correction`, `answer`} |
-| `context_growth`            | `bytes` (the milestone value crossed)             |
-| `visual_validation_skipped` | `reason`                                          |
-| `run_completed`             | `finalStage`                                      |
+| `kind` | Extra fields |
+|---|---|
+| `run_started` | `app`, `slug` |
+| `stage_changed` | `from`, `to` |
+| `adr_written` | `number`, `trigger` (one of the 4 trigger names) |
+| `escalation` | `reason`, `stage`, `retries` |
+| `human_message_received` | `category` ∈ {`guidance`, `correction`, `answer`} |
+| `context_growth` | `bytes` (the milestone value crossed) |
+| `visual_validation_skipped` | `reason` |
+| `run_completed` | `finalStage` |
 
 Aggregation recipes live in
 [`docs/knowledge/tech-lead-orchestrator.md`](../../../docs/knowledge/tech-lead-orchestrator.md).
@@ -311,7 +311,7 @@ Check `mcp__github__list_pull_requests state=open` for a PR whose
 
 1. **Title** — rewrite to reflect what now lands. Conventional-commit
    format with the dominant scope (`feat(borso-fr): galaxy WebGL apex
-landing + dantotsu sweep`, not the original scope-of-day).
+   landing + dantotsu sweep`, not the original scope-of-day).
 2. **Body** — at minimum these sections, in order:
    - `## Summary` — one paragraph + 3–5 bullets naming what the PR ships
      vs. what it was originally intended to ship. Reference ADRs by

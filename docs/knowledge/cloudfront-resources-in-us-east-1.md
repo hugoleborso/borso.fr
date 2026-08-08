@@ -60,7 +60,7 @@ distribution.
 - **Operator pattern:** always pass `--region us-east-1` when
   running:
   - `aws cloudfront list-functions / describe-function /
-get-function / test-function`
+    get-function / test-function`
   - `aws logs tail /aws/cloudfront/function/<name>`
   - `aws cloudwatch get-metric-statistics --namespace AWS/CloudFront`
     (use `Region=Global` for the dimension, but call the API in

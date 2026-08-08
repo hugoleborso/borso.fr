@@ -20,7 +20,7 @@ For the rest of this doc, replace `<slug>` with your app's slug (e.g. `notes`, `
 apps/<slug>/
 ├── package.json              # @borso-app/<slug>
 ├── tsconfig.json
-├── eslint.config.js
+├── biome.jsonc
 ├── commitlint.config.js
 ├── cdk.json                  # {"app": "tsx bin/app.ts"}
 ├── README.md
@@ -46,7 +46,7 @@ apps/<slug>/
     "dev:site": "python3 -m http.server --directory site 5173",
     "dev:api": "tsx watch api/index.ts",
     "build": "rm -rf dist && cp -R site dist",
-    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint",
+    "lint": "biome lint",
     "typecheck": "tsc --noEmit",
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
@@ -93,10 +93,11 @@ const APP_SLUG = '<slug>';
 const PROD_DOMAIN = '<slug>.borso.fr'; // or apex / a custom domain
 const REGION = 'eu-west-3';
 
-const stage = requireDeployStage(); // throws on STAGE=dev
+const stage = requireDeployStage();                  // throws on STAGE=dev
 const prNumber = stage === 'prod' ? undefined : requirePrNumber();
 const account = requireAwsAccount();
-const stageStackId = stage === 'prod' ? `${APP_SLUG}-prod` : `${APP_SLUG}-pr-${prNumber}`;
+const stageStackId =
+  stage === 'prod' ? `${APP_SLUG}-prod` : `${APP_SLUG}-pr-${prNumber}`;
 
 const app = new App();
 
@@ -128,7 +129,7 @@ new PreviewableApp(stageStack, 'App', {
   },
   database: {
     migrationsPath: path.resolve('./db/migrations'),
-    cluster: clusterStack.cluster, // cross-stack ref; CDK orders the deploys
+    cluster: clusterStack.cluster,  // cross-stack ref; CDK orders the deploys
   },
 });
 ```

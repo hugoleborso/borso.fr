@@ -2,7 +2,7 @@
 
 ## Preview deploy flow
 
-Triggered by every PR touching `apps/<slug>/**` or `infra/cdk/**` (the latter redeploys _every_ app's preview, since constructs are the contract).
+Triggered by every PR touching `apps/<slug>/**` or `infra/cdk/**` (the latter redeploys *every* app's preview, since constructs are the contract).
 
 ```
 PR opened                                                               PR closed
@@ -71,11 +71,11 @@ Out of scope for Phase 4 — the plan reserves the `prod-shared` GitHub environm
 
 Three CFN-defined budgets, all at 80% of their monthly threshold:
 
-| Budget      | Triggers email at | What it usually means                                                                 |
-| ----------- | ----------------- | ------------------------------------------------------------------------------------- |
-| $5 / month  | $4 spent          | Higher than usual idle. Open Cost Explorer, group by service.                         |
-| $20 / month | $16 spent         | Something is genuinely costing money. Check S3 bytes, CloudFront requests, DSQL DPUs. |
-| $50 / month | $40 spent         | An app deploy went wrong (e.g. forgot reserved concurrency). Investigate immediately. |
+| Budget | Triggers email at | What it usually means |
+| --- | --- | --- |
+| $5 / month | $4 spent | Higher than usual idle. Open Cost Explorer, group by service. |
+| $20 / month | $16 spent | Something is genuinely costing money. Check S3 bytes, CloudFront requests, DSQL DPUs. |
+| $50 / month | $40 spent | An app deploy went wrong (e.g. forgot reserved concurrency). Investigate immediately. |
 
 **Subscriber.** Just `BORSO_BUDGET_EMAIL`. No SNS fan-out — one mailbox, easy to act on.
 
@@ -85,17 +85,17 @@ Three CFN-defined budgets, all at 80% of their monthly threshold:
 
 ## Resource lifecycles
 
-| Resource                   | Created when                               | Destroyed when                          | Notes                                                                                                          |
-| -------------------------- | ------------------------------------------ | --------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| CertsStack (ACM wildcards) | First `pnpm shared:deploy`                 | Manually, never in normal ops           | DNS-validated; safe to leave.                                                                                  |
-| SharedStack                | First `pnpm shared:deploy`                 | Manually, never in normal ops           | OIDC, previews bucket+CDN, deploy roles.                                                                       |
-| Previews bucket            | First `pnpm shared:deploy`                 | Never; `RemovalPolicy.RETAIN`           | 60-day lifecycle rule on objects expires orphaned PR uploads.                                                  |
-| `<app>-prod` stack         | First merge to `main` after the app exists | Manually (`cdk destroy`)                | The bucket inside has `RemovalPolicy.RETAIN` — its content survives stack delete. Owns the app's DSQL cluster. |
-| DSQL cluster (per-app)     | First prod deploy of the app               | Never (deletion-protected at AWS level) | One per app. Shared by every stage of that app via SSM lookup.                                                 |
-| `<app>-pr-<n>` stack       | PR opened                                  | PR closed                               | Re-created on each `synchronize` event if changed. Looks up the app's cluster via SSM.                         |
-| DSQL schema (preview)      | `<app>-pr-<n>` stack create                | `<app>-pr-<n>` stack delete             | `DROP SCHEMA … CASCADE` in the migration runner.                                                               |
-| DSQL schema (prod)         | First prod deploy                          | Manually                                | Migrations are forward-only.                                                                                   |
-| Lambda CloudWatch logs     | First Lambda invocation                    | After 7 days (configured retention)     | Per-app and per-stage.                                                                                         |
+| Resource | Created when | Destroyed when | Notes |
+| --- | --- | --- | --- |
+| CertsStack (ACM wildcards) | First `pnpm shared:deploy` | Manually, never in normal ops | DNS-validated; safe to leave. |
+| SharedStack | First `pnpm shared:deploy` | Manually, never in normal ops | OIDC, previews bucket+CDN, deploy roles. |
+| Previews bucket | First `pnpm shared:deploy` | Never; `RemovalPolicy.RETAIN` | 60-day lifecycle rule on objects expires orphaned PR uploads. |
+| `<app>-prod` stack | First merge to `main` after the app exists | Manually (`cdk destroy`) | The bucket inside has `RemovalPolicy.RETAIN` — its content survives stack delete. Owns the app's DSQL cluster. |
+| DSQL cluster (per-app) | First prod deploy of the app | Never (deletion-protected at AWS level) | One per app. Shared by every stage of that app via SSM lookup. |
+| `<app>-pr-<n>` stack | PR opened | PR closed | Re-created on each `synchronize` event if changed. Looks up the app's cluster via SSM. |
+| DSQL schema (preview) | `<app>-pr-<n>` stack create | `<app>-pr-<n>` stack delete | `DROP SCHEMA … CASCADE` in the migration runner. |
+| DSQL schema (prod) | First prod deploy | Manually | Migrations are forward-only. |
+| Lambda CloudWatch logs | First Lambda invocation | After 7 days (configured retention) | Per-app and per-stage. |
 
 ## Safety nets
 

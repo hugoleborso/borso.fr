@@ -6,6 +6,8 @@ _Started 2026-05-12 00:45 UTC_
 
 ## User
 
+
+
 ## Assistant
 
 _[tool: questions_v2]_
@@ -13,7 +15,6 @@ _[tool: questions_v2]_
 ## User
 
 Questions answered:
-
 - scope: Admin page (PIN + punch UI), Runner fiche /r/<slug>, Setup d'édition (GPX upload, sunrise/sunset), Hors-jour-J home page, Spectator page (live race view), All of them as a clickable prototype
 - language: Bilingual (FR primary, EN labels)
 - aesthetic: Explore a few options
@@ -33,7 +34,6 @@ _[tool: update_todos]_
 _[tool: copy_starter_component]_
 
 I'll build this as one clickable prototype with all surfaces wired together, race-phase scrubber + palette + density as Tweaks. Three conservative dashboard directions:
-
 1. **Scoreboard** — broadcast/sports vibe, monospace numerals, dark + vivid accents
 2. **Topographic** — cartographic, warm paper, forest-green ink, contour motifs
 3. **Telemetry** — cool slate dashboard (think Linear/Cloudflare), single accent
@@ -159,3 +159,4 @@ _[tool: update_todos]_
 _[tool: snip]_
 
 Done — prototype is live at `index.html`.
+

@@ -14,7 +14,7 @@ while in status UPDATE_ROLLBACK_IN_PROGRESS
 ```
 
 CFN refuses destructive operations while the stack is in any
-`*_IN_PROGRESS` state. The rollback has to _complete_ (either as
+`*_IN_PROGRESS` state. The rollback has to *complete* (either as
 `*_ROLLBACK_COMPLETE` or `*_ROLLBACK_FAILED`) before you can act.
 
 ## Recovery dance
@@ -71,14 +71,14 @@ takes 5-10 minutes to teardown even when everything else is fast.
 
 On PR #23 the operator had typed `delete-stack` while the stack was
 still rolling back. The command returned the validation error.
-_Several minutes later_, after the rollback finished, a fresh CI
+*Several minutes later*, after the rollback finished, a fresh CI
 build had retriggered the deploy and was creating a new stack
 instance — exactly the moment the operator's queued (or re-run)
 delete-stack command finally executed. Result: CI's `cdk deploy`
-reported _"Stack deploy failed (the stack disappeared while we were
-deploying it)"_.
+reported *"Stack deploy failed (the stack disappeared while we were
+deploying it)"*.
 
-When in doubt, _cancel the running CI workflow first_, then
+When in doubt, *cancel the running CI workflow first*, then
 delete-stack, then push a new commit to retrigger CI on a clean
 slate. The cleanup-orphans workflow only fires for closed PRs, so an
 open PR's deploy can re-fire any time.
@@ -86,10 +86,9 @@ open PR's deploy can re-fire any time.
 ## When CFN state diverges from reality
 
 A separate trap on PR #23: the S3 bucket (`autoDeleteObjects: true`
-
-- multiple rollback cycles) disappeared from S3 while CFN's state
-  still thought it existed. The next `UPDATE` failed on the
-  BucketPolicy resource with _"The specified bucket does not exist"_.
++ multiple rollback cycles) disappeared from S3 while CFN's state
+still thought it existed. The next `UPDATE` failed on the
+BucketPolicy resource with *"The specified bucket does not exist"*.
 
 Manual recovery (one-shot, when it strikes):
 
@@ -122,5 +121,5 @@ for the next infra-touch PR).
 
 ## See also
 
-- [`docs/dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md`](../dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md) — sibling: stack delete _succeeds_ but a `RETAIN`-policy bucket survives, an orphan to clean up. Same family of CFN-vs-reality drift.
+- [`docs/dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md`](../dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md) — sibling: stack delete *succeeds* but a `RETAIN`-policy bucket survives, an orphan to clean up. Same family of CFN-vs-reality drift.
 - [`docs/knowledge/retrigger-ci-with-empty-commit.md`](./retrigger-ci-with-empty-commit.md) — companion knowledge entry on the empty-commit retrigger technique used during PR #23.

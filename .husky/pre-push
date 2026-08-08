@@ -6,6 +6,26 @@ set -e
 echo "[pre-push] running knip"
 pnpm exec knip
 
+# Mutation testing on the pure files of every workspace whose `*.core.ts` or
+# `*.utils.ts` files changed on this branch. Coverage says a line ran; a
+# surviving mutant says no assertion noticed a change to it, which is the
+# signal docs/standards/10-testing.md actually asks for.
+#
+# Scoped to changed workspaces because a full run over all four applications
+# takes tens of minutes. Set SKIP_MUTATION_GATE=1 for a work-in-progress push,
+# and never for a push you intend to merge.
+if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
+  base_ref=$(git merge-base HEAD origin/main 2>/dev/null || echo '')
+  if [ -n "$base_ref" ]; then
+    changed_pure_files=$(git diff --name-only "$base_ref" HEAD -- 'apps/*/**/*.core.ts' 'apps/*/**/*.utils.ts')
+    changed_apps=$(echo "$changed_pure_files" | sed -n 's|^apps/\([^/]*\)/.*|\1|p' | sort -u)
+    for app in $changed_apps; do
+      echo "[pre-push] pure files changed in $app — running mutation tests"
+      pnpm --filter "@borso-app/$app" run test:mutation
+    done
+  fi
+fi
+
 # Reject any workflow YAML invoking `pnpm --filter <pkg> <reserved-name>`
 # without `run`. `deploy`, `destroy`, `install`, `update`, `sync`, `fetch`,
 # `publish` are pnpm built-in commands; without `run` they shadow the

@@ -57,7 +57,7 @@ request reaching `POST /api/admin/rotate-password` traverses
 `requireSharedPasswordSession` first; the new back-e2e directly observes this
 by sending the request without a cookie and asserting both the 401 status and
 that the DB row was not modified. The bootstrap route lives on a distinct
-router that does _not_ apply the middleware — preserving the ADR-0004 contract
+router that does *not* apply the middleware — preserving the ADR-0004 contract
 ("the row-absent check is the bootstrap gate").
 
 ## Kaizen observations
@@ -71,7 +71,7 @@ router that does _not_ apply the middleware — preserving the ADR-0004 contract
   should dispatch a `/dantotsu` follow-up to either ship that rule or land
   a knowledge entry pointing at the trap.
 - **The validator's row D20 was right to flag the missing test.** Pairing
-  every authenticated mutation endpoint with _both_ a positive (200 with
+  every authenticated mutation endpoint with *both* a positive (200 with
   cookie) and a negative (401 without cookie) assertion in the plan's
   self-check column would have prevented the bug from shipping. Worth
   tightening in `/technical-conception`'s standard.

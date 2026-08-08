@@ -9,7 +9,7 @@ The repo runs an auto-chain of skills: `/specification → /technical-conception
 → /implementation → /technical-validation → /visual-validation`. Each skill
 hands off to the next via `Skill` calls inscribed in its SKILL.md.
 
-In practice, the chain works for the _happy path only_. When validation
+In practice, the chain works for the *happy path only*. When validation
 fails, when the implementer hits an architectural choice it doesn't know
 how to make, when the plan has a flaw mid-implementation, when the
 implementer asks the human a question that's really an architecture
@@ -75,7 +75,7 @@ same outcome without a permanent process.
 What this makes easier:
 
 - A feature run does not require the human to supervise every transition.
-  The human's involvement narrows to _direction_ (spec) and _arbitrage_
+  The human's involvement narrows to *direction* (spec) and *arbitrage*
   (escalations).
 - Every architectural choice now has a forcing function for an ADR via
   the four triggers + `/adr-writer`. Traceability stops being optional.

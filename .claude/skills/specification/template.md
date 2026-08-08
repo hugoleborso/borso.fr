@@ -12,7 +12,7 @@ The block-quoted prompt under each heading is guidance for the author; delete it
 
 ## Perspectives confronted
 
-> _Hard gate: every checkbox below must be ticked **and** carry a one-line justification before any other section is drafted. A box may be ticked only after the user has answered at least one `AskUserQuestion` from that perspective, OR has explicitly confirmed (also via `AskUserQuestion`) that the perspective is degenerate for this feature. Silent self-reported "N/A" is the failure mode this gate is built to prevent._
+> *Hard gate: every checkbox below must be ticked **and** carry a one-line justification before any other section is drafted. A box may be ticked only after the user has answered at least one `AskUserQuestion` from that perspective, OR has explicitly confirmed (also via `AskUserQuestion`) that the perspective is degenerate for this feature. Silent self-reported "N/A" is the failure mode this gate is built to prevent.*
 
 - [ ] **Client / business** — <one-line: what was confirmed; or "user confirmed degenerate because <reason>">
 - [ ] **Product** — <one-line>
@@ -26,16 +26,16 @@ Use only when the user knowingly defers the perspective for a follow-up; never a
 
 ## Why
 
-> _Describe what is requested. Describe how it contributes to the business or user value. Level 2: relate it to your product's critical performances._
+> *Describe what is requested. Describe how it contributes to the business or user value. Level 2: relate it to your product's critical performances.*
 
 - The user / business / customer value, in one paragraph.
-- **Output metric** (lagging, the end-state we care about): one measurable objective — revenue / quality / lead time / productivity / adoption / learning. A wish-list of four objectives means none of them. Output metrics are _not_ asserted by `/visual-validation`.
+- **Output metric** (lagging, the end-state we care about): one measurable objective — revenue / quality / lead time / productivity / adoption / learning. A wish-list of four objectives means none of them. Output metrics are *not* asserted by `/visual-validation`.
 - **Input metric(s)** (leading, controllable, observable): the behaviour(s) that — when consistently executed — produce the output metric. Each is a named flow or numeric threshold that a future Claude session can drive via `/visual-validation` or measure via analytics. See [`input-vs-output-metrics`](../../../../.claude/skills/specification/standard.md#input-vs-output-metrics-amazon-flywheel) for the framing.
 - Any field observation (Gemba) that validates the **problem** exists, not just that the solution is wanted.
 
 ## Result
 
-> _Include the final result: Figma / proof-of-concept / wireframes / API endpoints / CSV dashboard._
+> *Include the final result: Figma / proof-of-concept / wireframes / API endpoints / CSV dashboard.*
 
 - The final, visible result. Embed mockups, screenshots, or before/after diagrams inline.
 - For backend-only features, show the endpoint shape or the dashboard row that did not exist before.
@@ -43,7 +43,7 @@ Use only when the user knowingly defers the perspective for a follow-up; never a
 
 ## Use cases / edge cases
 
-> _Use a visual interface to explain how the feature will work: BPMN / sequence diagram / domain modelling (DDD) / database changes._
+> *Use a visual interface to explain how the feature will work: BPMN / sequence diagram / domain modelling (DDD) / database changes.*
 
 - **Visual first.** BPMN / sequence diagram / domain model. Plain text only when a visual is genuinely overkill.
 - Numbered happy path.
@@ -53,11 +53,11 @@ Use only when the user knowingly defers the perspective for a follow-up; never a
 
 ## Questions, Options and Decisions
 
-> _List the hard points you need to solve. This part is needed to help your team understand your way of crafting the feature. Empower your reflection with LLM. Include ADRs, POCs, blueprints considered as support, and what has been put out of scope._
+> *List the hard points you need to solve. This part is needed to help your team understand your way of crafting the feature. Empower your reflection with LLM. Include ADRs, POCs, blueprints considered as support, and what has been put out of scope.*
 
 | Question | Options | Decision (date) |
-| -------- | ------- | --------------- |
-|          |         |                 |
+| --- | --- | --- |
+|  |  |  |
 
 - One row per hard point. Keep resolved decisions — future-you will need the reasoning.
 - Reference full ADRs (`docs/adr/`) and blueprints rather than duplicating their contents.
@@ -65,22 +65,19 @@ Use only when the user knowingly defers the perspective for a follow-up; never a
 
 ## Changes
 
-> _Show types you need to create/update (DDD). Show database changes. Include the architectural schema and files to change (use LLM for challenging). Show the test strategy that will give you 100% confidence the feature is working without defects._
+> *Show types you need to create/update (DDD). Show database changes. Include the architectural schema and files to change (use LLM for challenging). Show the test strategy that will give you 100% confidence the feature is working without defects.*
 
 ### Types / domain model
-
 ```ts
 // New value objects, entities, request/response shapes.
 ```
 
 ### Database changes
-
 ```sql
 -- Migrations, new columns, indexes.
 ```
 
 ### Files to change
-
 ```
 src/.../New.ts                       // NEW
 src/.../Existing.ts                  // UPDATE: <what>
@@ -88,34 +85,31 @@ src/.../Existing.ts                  // UPDATE: <what>
 
 ### Test strategy
 
-> _The validation pipeline must be **autonomous** — a future Claude session running `/visual-validation` and `/technical-validation` should be able to clear the spec without a human-in-the-loop manual sweep. "I'll click around to check it" is **not** a valid test strategy. List the autonomous pieces below; each pure helper goes through unit tests, each behavioural use case goes through `/visual-validation`, the diff goes through `/technical-validation`._
+> *The validation pipeline must be **autonomous** — a future Claude session running `/visual-validation` and `/technical-validation` should be able to clear the spec without a human-in-the-loop manual sweep. "I'll click around to check it" is **not** a valid test strategy. List the autonomous pieces below; each pure helper goes through unit tests, each behavioural use case goes through `/visual-validation`, the diff goes through `/technical-validation`.*
 
 - **Unit tests on pure utilities.** Every file matching `**/*.utils.ts` ships at 100% coverage (statement / branch / function / line). List the new utility files this feature introduces, and any pure helpers extracted from existing modules.
-- **Visual validation.** Every numbered happy-path step and every edge / error case under _Use cases / edge cases_ is asserted by the `/visual-validation` agent driving the running app via agent-browser. The agent reads this section to build its assertion list, so phrasing matters. _Visual-validation drives **input metrics only.** Output metrics named in the Why are **not** in scope for this gate — call this out explicitly so a green visual-validation run is not mistaken for proof that the output metric has moved._
+- **Visual validation.** Every numbered happy-path step and every edge / error case under *Use cases / edge cases* is asserted by the `/visual-validation` agent driving the running app via agent-browser. The agent reads this section to build its assertion list, so phrasing matters. *Visual-validation drives **input metrics only.** Output metrics named in the Why are **not** in scope for this gate — call this out explicitly so a green visual-validation run is not mistaken for proof that the output metric has moved.*
 - **Technical validation.** `/technical-validation` runs after the implementation lands: lint + knip + typecheck + build + the unit-test runner above, plus a per-Q.O.D. correctness pass on the diff.
 - **Coverage gates already in place** stay in place: `infra/cdk/**` and `infra/shared/**` are 100% line-coverage gated and any change here must restate the impact.
-- **Manual sweeps are not allowed as the test strategy.** They are at most a _belt_ on top of the automated suspenders, called out under "Production strategy → Manual smoke after deploy" if relevant.
+- **Manual sweeps are not allowed as the test strategy.** They are at most a *belt* on top of the automated suspenders, called out under "Production strategy → Manual smoke after deploy" if relevant.
 
 ## Production strategy
 
-> _Include what analytics you will add and the key metrics to consider to make the feature a success. Include error cases you manage and how it reflects in your alerting system._
+> *Include what analytics you will add and the key metrics to consider to make the feature a success. Include error cases you manage and how it reflects in your alerting system.*
 
 ### Analytics
 
-> _Split into input metrics (leading, controllable, instrumented in code) and output metrics (lagging, real-world, measured out-of-band). The input metrics are the ones CI / dashboards alert on; the output metrics are the ones a human reviews monthly to confirm the input metrics are still the right proxy._
+> *Split into input metrics (leading, controllable, instrumented in code) and output metrics (lagging, real-world, measured out-of-band). The input metrics are the ones CI / dashboards alert on; the output metrics are the ones a human reviews monthly to confirm the input metrics are still the right proxy.*
 
 **Input metrics** (driven by named events, gated by thresholds):
-
 - Named events (e.g. `feature_action_completed`).
 - Metrics + thresholds (p50 / p75 / p90 where relevant).
 - Success criteria, ideally over a rolling window.
 
 **Output metric(s)** (lagging, measured out-of-band — **not** an automated CI gate):
-
-- Define how the team will check, monthly or per-quarter, whether the input metrics are still the right proxy for the output metric. _e.g. "monthly NPS survey", "self-report from the clan", "month-over-month retention cohort"._
+- Define how the team will check, monthly or per-quarter, whether the input metrics are still the right proxy for the output metric. *e.g. "monthly NPS survey", "self-report from the clan", "month-over-month retention cohort".*
 - If you cannot articulate how the output metric will be measured at all, the spec is hiding behind an unmeasurable goal — sharpen it or change it.
 
 ### Zero-defect strategy
-
 - Named error classes, when each one fires, where it surfaces (Sentry tags, log fields).
-- Alerting thresholds (e.g. _N occurrences in M minutes in production_).
+- Alerting thresholds (e.g. *N occurrences in M minutes in production*).

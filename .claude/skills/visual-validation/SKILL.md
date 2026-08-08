@@ -5,7 +5,7 @@ description: Dispatch the dedicated `visual-validator` agent to open the impleme
 
 # Visual-validation skill
 
-A spec is a list of assertions about what the user will see and how the app will behave. A visual validation **opens the app and checks each assertion**, one by one, in a real browser, by clicking, typing, resizing, navigating. It is the only gate that catches _"the code compiles and the types check, but the feature doesn't actually work"_ — the most common failure mode of LLM-shipped UI code.
+A spec is a list of assertions about what the user will see and how the app will behave. A visual validation **opens the app and checks each assertion**, one by one, in a real browser, by clicking, typing, resizing, navigating. It is the only gate that catches *"the code compiles and the types check, but the feature doesn't actually work"* — the most common failure mode of LLM-shipped UI code.
 
 The canonical standard this skill enforces lives at [`standard.md`](./standard.md).
 
@@ -23,7 +23,7 @@ Agent({
 })
 ```
 
-The brief carries the spec path, dev URL, report path, and evidence directory — and _nothing else_. It does not summarise the implementation, list known gotchas, or hint at what to look for.
+The brief carries the spec path, dev URL, report path, and evidence directory — and *nothing else*. It does not summarise the implementation, list known gotchas, or hint at what to look for.
 
 ## Tooling: agent-browser
 
@@ -41,13 +41,11 @@ The skill (this file, running in the main session) does not install agent-browse
 ## When to invoke
 
 Invoke when:
-
 - A feature has shipped to a local dev server (or a preview URL) and `spec.md` is present at `docs/features/<app>/<slug>/spec/spec.md`.
 - The user asks for `/visual-validation`, "validate the spec", "check it works".
 - The `/technical-conception` plan reaches gate 5 (UI work).
 
 Do **not** invoke when:
-
 - There is no spec at the expected path.
 - The feature is purely backend / infra (no visible result).
 - The dev server isn't running and the workspace has no `dev` script.
@@ -68,7 +66,7 @@ Do **not** invoke when:
 5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths and the dev URL. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path.
 6. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — the next move is to fix the implementation, not to ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule. Do **not** summarise — the user reads the report.
 7. **Stop the dev server** if the skill spawned it. Leave it running if the operator started it.
-8. **Stage the report and evidence for commit.** They live under `docs/features/<app>/<slug>/validation/` which is _not_ gitignored — the screenshots are part of the report and must be committed alongside it.
+8. **Stage the report and evidence for commit.** They live under `docs/features/<app>/<slug>/validation/` which is *not* gitignored — the screenshots are part of the report and must be committed alongside it.
 
 ## Deliverable
 
@@ -80,7 +78,6 @@ Two artefacts at `docs/features/<app>/<slug>/validation/`:
 Both are committed. Do not gitignore them. Validation evidence rots and gets contested without a permanent record.
 
 The skill's textual return to the user is one of:
-
 - `Verdict: PASS — see <report_path>` — mergeable.
 - `Verdict: PASS_EXCEPT_UNVERIFIABLE (N unverifiable) — see <report_path>` — mergeable with PR disclosure (see below).
 - `Verdict: FAIL (N failing) — see <report_path>` — **not mergeable**, fix the implementation and re-run.
@@ -133,7 +130,7 @@ The output is markdown ready to paste. Suggested PR-body shape:
 
 <!-- output of the generator above -->
 
-## Validation gaps <!-- only on PASS_EXCEPT_UNVERIFIABLE -->
+## Validation gaps   <!-- only on PASS_EXCEPT_UNVERIFIABLE -->
 
 - Row 35: <verbatim assertion> — <one-line reason> — see [visual-validation-<ts>.md](docs/features/<app>/<slug>/validation/visual-validation-<ts>.md).
 ```
@@ -147,7 +144,7 @@ If the screenshot set is large (>5 PNGs), wrap the lower-priority breakpoints in
 - **Dispatching `general-purpose` instead of `visual-validator`.** A generic agent has none of the dedicated agent's structural rules — it can ask the user questions, drift into implementation reasoning, etc.
 - **Flaky-animation pseudo-failures.** Animations driving rAF produce different pixels every frame. The agent waits for `networkidle` plus a 600 ms settle before screenshotting; deterministic seeds (e.g. `?seed=DEADBEEF`) when the spec supports them.
 - **"Looks right" without evidence.** Every PASS must reference a captured screenshot or a deterministic check (selector found, attribute equal, URL matches). "Looks right" alone is not a PASS.
-- **PASS on DOM presence without checking rendered pixels.** The most insidious failure mode: the `<img>` tag is in the DOM, the parent component rendered, the layout is right — and the user sees broken alt-text where icons / sprites / glyphs should be (CDN 403, hotlink block, missing asset). The standard's _Pixel-content checks_ section is mandatory per screenshot, not a recommendation. The brief template in `template.md` carries the canonical broken-image-scan `eval` so the agent runs it as a first-class step of every row that captured a screenshot.
+- **PASS on DOM presence without checking rendered pixels.** The most insidious failure mode: the `<img>` tag is in the DOM, the parent component rendered, the layout is right — and the user sees broken alt-text where icons / sprites / glyphs should be (CDN 403, hotlink block, missing asset). The standard's *Pixel-content checks* section is mandatory per screenshot, not a recommendation. The brief template in `template.md` carries the canonical broken-image-scan `eval` so the agent runs it as a first-class step of every row that captured a screenshot.
 - **Validating against the implementation, not the spec.** The agent reads the spec to know what to check. If a feature exists in code but isn't claimed in the spec, it isn't validated. If a claim is in the spec but missing from the code, that's a FAIL — never "the implementer probably meant…".
 - **Skipping edge cases because they're hard.** The validator must resize, emulate dark mode, emulate touch device, emulate reduced motion. These are exactly the cases users hit; they're not optional.
 - **Treating UNVERIFIABLE as PASS.** PASS_EXCEPT_UNVERIFIABLE is its own verdict — same as PASS for mergeability if and only if the operator copies the UNVERIFIABLE rows into the PR description.
@@ -163,7 +160,7 @@ If the screenshot set is large (>5 PNGs), wrap the lower-priority breakpoints in
 
 ## Verdict émis (when piloted by `/tech-lead-orchestrator`)
 
-When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"pilotedByTechLead": true`, the skill writes an additional verdict file at `runs/<run-id>/agents/visual-validator-<step>.md` per [`.claude/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md). Mapping from PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL to the YAML front-matter mirrors `/technical-validation`'s _Verdict émis_ table.
+When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"pilotedByTechLead": true`, the skill writes an additional verdict file at `runs/<run-id>/agents/visual-validator-<step>.md` per [`.claude/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md). Mapping from PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL to the YAML front-matter mirrors `/technical-validation`'s *Verdict émis* table.
 
 **No UI surface.** When the feature has no visible UI, `/visual-validation` should not be invoked at all. The orchestrator owns the skip (decision Q-VIS-VAL): it emits a `tech_lead_visual_validation_skipped` journal event and does not call this skill. No verdict file is written.
 

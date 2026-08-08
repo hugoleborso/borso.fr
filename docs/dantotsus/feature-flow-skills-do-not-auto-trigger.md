@@ -17,14 +17,14 @@ tags: [skills, harness, workflow]
 
 Across PR #6 the user had to nudge the agent to invoke each skill in the chain at the right moment:
 
-| When                                | What didn't happen by itself                                                                                                            |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Spec finished, planning phase       | Agent did not invoke `/technical-conception`. User said "now create the [plan]".                                                        |
-| Plan finished, implementation       | Agent did not invoke `/implementation`. User said "Using /implementation yes".                                                          |
-| Implementation finished, validation | `/visual-validation` and `/technical-validation` were invoked manually each round.                                                      |
-| PR merged                           | `/after-task-dantotsus` did not auto-trigger. User said "You should auto start the use of the tool /after-task-dantotsus. You did not." |
+| When | What didn't happen by itself |
+| --- | --- |
+| Spec finished, planning phase | Agent did not invoke `/technical-conception`. User said "now create the [plan]". |
+| Plan finished, implementation | Agent did not invoke `/implementation`. User said "Using /implementation yes". |
+| Implementation finished, validation | `/visual-validation` and `/technical-validation` were invoked manually each round. |
+| PR merged | `/after-task-dantotsus` did not auto-trigger. User said "You should auto start the use of the tool /after-task-dantotsus. You did not." |
 
-The chain `/specification → /technical-conception → /implementation → /visual-validation → /technical-validation → /after-task-dantotsus` is documented end-to-end in CLAUDE.md and in each skill's own SKILL.md, but each transition relies on the agent _remembering_ the next step at the right moment. Across a long session, that memory fails.
+The chain `/specification → /technical-conception → /implementation → /visual-validation → /technical-validation → /after-task-dantotsus` is documented end-to-end in CLAUDE.md and in each skill's own SKILL.md, but each transition relies on the agent *remembering* the next step at the right moment. Across a long session, that memory fails.
 
 ## Root-cause chain
 
@@ -38,12 +38,12 @@ The chain `/specification → /technical-conception → /implementation → /vis
    At each transition the agent has just finished a long stretch of work. It exits the current skill into the main session, sees the user's last message (often "looks good"), and treats that as a natural stop. The follow-up skill is one slot of working memory away; absent a hard prompt, it doesn't fire.
 
 4. **Why** is `/after-task-dantotsus` the most-skipped of all?
-   Because the trigger is _external_ — a PR merge happens on GitHub, often after the agent's session has effectively wound down. The agent isn't watching for the merge; the user is.
+   Because the trigger is *external* — a PR merge happens on GitHub, often after the agent's session has effectively wound down. The agent isn't watching for the merge; the user is.
 
 5. **Why** is this category recurring, not one-off?
    The skill chain is now six skills long. Each transition is a probability-of-skip; the cumulative probability of skipping at least one is high.
 
-**Root cause:** _thought_ documenting the skill chain in cross-references is enough; _actually_ skills do not chain themselves and the agent's working memory is unreliable across long sessions, so transitions need a harness-level mechanism that doesn't depend on the agent remembering.
+**Root cause:** *thought* documenting the skill chain in cross-references is enough; *actually* skills do not chain themselves and the agent's working memory is unreliable across long sessions, so transitions need a harness-level mechanism that doesn't depend on the agent remembering.
 
 ## Detection failure causes
 
@@ -66,7 +66,7 @@ The user explicitly invoked each skill at each transition during PR #6. The agen
 
 **The actual fix:** add a Stop-hook (`.claude/hooks/stop-skill-chain-reminder.sh`) that fires every time the agent finishes its turn. The hook inspects the recent transcript for the last `Skill` tool invocation; if the previous skill was one of the feature-flow skills (`specification`, `technical-conception`, `implementation`, `visual-validation`, `technical-validation`), the hook prints a single-line reminder of the next skill in the chain and which condition must hold to invoke it. The hook output is surfaced to the agent on the next turn, so the chain progresses without the user having to type the next slash command.
 
-For the merge-time transition (`/after-task-dantotsus`), a complementary GitHub webhook handler — already on the harness when `subscribe_pr_activity` is active — fires on `pull_request.closed` with `merged: true`. The hook turns that webhook event into a Stop-hook reminder: _"PR #N merged. Next: invoke /after-task-dantotsus."_
+For the merge-time transition (`/after-task-dantotsus`), a complementary GitHub webhook handler — already on the harness when `subscribe_pr_activity` is active — fires on `pull_request.closed` with `merged: true`. The hook turns that webhook event into a Stop-hook reminder: *"PR #N merged. Next: invoke /after-task-dantotsus."*
 
 ```bash
 # .claude/hooks/stop-skill-chain-reminder.sh — invoked by the harness on Stop event
@@ -84,4 +84,4 @@ Both reminders are non-blocking — they do not auto-invoke the next skill. The 
 ## See also
 
 - [`.claude/skills/after-task-dantotsus/SKILL.md`](../../.claude/skills/after-task-dantotsus/SKILL.md) — the skill that should auto-trigger on merge; this dantotsu eradicates the trigger gap.
-- CLAUDE.md _Self-improvement loop_ section — names the kaizen-PR-on-merge contract that this dantotsu makes operational.
+- CLAUDE.md *Self-improvement loop* section — names the kaizen-PR-on-merge contract that this dantotsu makes operational.

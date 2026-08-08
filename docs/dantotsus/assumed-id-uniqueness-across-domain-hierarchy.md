@@ -16,12 +16,12 @@ tags: [react, identifiers, domain-model, borsouvertures]
 ## Symptom
 
 The "Switch to Play with this scope" button in Learn-tree should carry the
-_drilled_ opening + variation into Play mode. The visual-validator caught
+*drilled* opening + variation into Play mode. The visual-validator caught
 the wrong opening in the resulting scope:
 
-> **Row #12** — Scope shown was _"Modern Defense / Main Line / Modern
-> Defense"_ rather than the drilled _"Italian Game / Main Line /
-> Italian Game C50"_. Switch happened; scope-mapping correctness is
+> **Row #12** — Scope shown was *"Modern Defense / Main Line / Modern
+> Defense"* rather than the drilled *"Italian Game / Main Line /
+> Italian Game C50"*. Switch happened; scope-mapping correctness is
 > questionable.
 
 The handler did:
@@ -40,7 +40,7 @@ function handleSwitchToPlayWithVariation(variation: Variation): void {
 }
 ```
 
-`openings.find(...)` returns the _first_ opening whose variations contain a
+`openings.find(...)` returns the *first* opening whose variations contain a
 variation with the given ID. Many openings have a variation named `main`
 (slug: `main`). The first one in the dataset's iteration order is "Modern
 Defense", not "Italian Game" — so the user who drilled Italian Game's
@@ -66,8 +66,8 @@ Main Line saw the Play view configured against Modern Defense.
    single-opening (`italianMain` / `sicilian`); the cross-opening collision
    scenario was never asserted. The visual-validator caught it instead.
 
-**Root cause:** _thought_ `Variation.id` was a primary key; _actually_
-it's a _child_ key — only unique within its parent opening. The handler
+**Root cause:** *thought* `Variation.id` was a primary key; *actually*
+it's a *child* key — only unique within its parent opening. The handler
 was structurally permitted to write the wrong relationship because the
 function signature didn't require both halves of the (opening, variation)
 pair.
@@ -87,7 +87,7 @@ pair.
 ## Countermeasure
 
 `handleSwitchToPlayWithVariation` was changed in commit `6833755` to take
-_both_ the opening and the variation as parameters, and to write both IDs
+*both* the opening and the variation as parameters, and to write both IDs
 directly without a lookup:
 
 ```diff
@@ -112,9 +112,8 @@ directly without a lookup:
 ```
 
 `ModeLearnTree` resolves both via `findOpening(openings, selection.openingId)`
-
-- `findVariation(opening, selection.variationId)` (which already has the
-  parent in scope) and passes both forward.
++ `findVariation(opening, selection.variationId)` (which already has the
+parent in scope) and passes both forward.
 
 ## Eradication (mandatory — code-level)
 
@@ -130,14 +129,13 @@ identities; the bug is structurally impossible to reintroduce without
 changing the signature again.
 
 **Sibling defects swept:**
-
 - The same `openings.find((o) => o.variations.some((v) => v.id === …))`
   pattern is not used anywhere else in the codebase (verified via grep
   in PR #9, this kaizen PR's prep step).
 - A pre-emptive check added in `bookEngine.utils.test.ts` covers the
   cross-opening-collision case using a fixture where two openings share
   a variation slug, asserting `gatherCandidates` resolves correctly.
-  _(Shipped in this kaizen PR.)_
+  *(Shipped in this kaizen PR.)*
 
 ## See also
 

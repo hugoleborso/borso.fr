@@ -13,19 +13,19 @@ reference.
 
 ## Typical mistakes
 
-| Mistake                                                                                                                                                                         | Consequences                                                                                                                                                          |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Letting a developer write a Dantotsu without reviewing it with them                                                                                                             | The developer won't be able to spot their own misconceptions and will likely stop doing the exercise, as they won't get much out of it                                |
-| Stopping at just filling out the "Dantotsu form"                                                                                                                                | Developers will feel it's a waste of time and, to avoid hurting the tech lead's feelings, will say they don't have time for future sessions                           |
-| "It was just a careless mistake"                                                                                                                                                | Dantotsu becomes a bureaucratic activity documenting flaws, which kills the motivation to become a better engineer, in addition to overlooking improvement potential. |
-| Using the user story name as the title or a title which doesn't spark curiosity                                                                                                 | The piece is only read by the developer and the tech lead, so the learning doesn't spread beyond the team                                                             |
-| Presenting the issue from a technical rather than a user perspective                                                                                                            | The developer doesn't focus on the value their code brings to the end user                                                                                            |
-| Investigating only a local bug without checking for similar cases in the codebase                                                                                               | Bugs aren't prevented from happening again elsewhere                                                                                                                  |
-| Limiting the analysis to purely technical aspects (when we should look especially at business misunderstandings)                                                                | The developer doesn't improve their business modeling skills and will likely introduce similar defects again                                                          |
-| Describing the cause as simply "the code that should have been written"                                                                                                         | This doesn't build awareness of defect patterns and stays superficial — just replacing one line with another.                                                         |
-| Describing the cause in overly broad terms (e.g., "Lack of knowledge about iFrame communications" instead of "I thought origin was a URL, but it's a scheme + hostname + port") | Overly vague knowledge gaps don't help the developer connect the dots between what they don't know and the code they write every day.                                 |
-| Including lots of unnecessary context                                                                                                                                           | If it's poorly written, it's poorly understood. Allowing wordy explanations misses the opportunity for clarity and sharp thinking.                                    |
-| Facilitating Dantotsu like a courtroom where the developer must justify their mistake                                                                                           | Developers will prefer to avoid these sessions                                                                                                                        |
+| Mistake | Consequences |
+| --- | --- |
+| Letting a developer write a Dantotsu without reviewing it with them | The developer won't be able to spot their own misconceptions and will likely stop doing the exercise, as they won't get much out of it |
+| Stopping at just filling out the "Dantotsu form" | Developers will feel it's a waste of time and, to avoid hurting the tech lead's feelings, will say they don't have time for future sessions |
+| "It was just a careless mistake" | Dantotsu becomes a bureaucratic activity documenting flaws, which kills the motivation to become a better engineer, in addition to overlooking improvement potential. |
+| Using the user story name as the title or a title which doesn't spark curiosity | The piece is only read by the developer and the tech lead, so the learning doesn't spread beyond the team |
+| Presenting the issue from a technical rather than a user perspective | The developer doesn't focus on the value their code brings to the end user |
+| Investigating only a local bug without checking for similar cases in the codebase | Bugs aren't prevented from happening again elsewhere |
+| Limiting the analysis to purely technical aspects (when we should look especially at business misunderstandings) | The developer doesn't improve their business modeling skills and will likely introduce similar defects again |
+| Describing the cause as simply "the code that should have been written" | This doesn't build awareness of defect patterns and stays superficial — just replacing one line with another. |
+| Describing the cause in overly broad terms (e.g., "Lack of knowledge about iFrame communications" instead of "I thought origin was a URL, but it's a scheme + hostname + port") | Overly vague knowledge gaps don't help the developer connect the dots between what they don't know and the code they write every day. |
+| Including lots of unnecessary context | If it's poorly written, it's poorly understood. Allowing wordy explanations misses the opportunity for clarity and sharp thinking. |
+| Facilitating Dantotsu like a courtroom where the developer must justify their mistake | Developers will prefer to avoid these sessions |
 
 ## Key challenges
 
@@ -43,7 +43,6 @@ to run a root cause analysis.
 Before each session, choose a specific defect to work on.
 
 At the beginning, pick a **simple defect**:
-
 - The gap is obvious
 - The developer who introduced the defect is available
 - You have the full setup to reproduce the issue and dig into it
@@ -61,7 +60,6 @@ Add a visual that shows both the problematic situation and the
 expected normal outcome.
 
 Some tips:
-
 - Take a screenshot (cmd+shift+4) and annotate the difference vs.
   the expected behavior
 - If the bug has already been fixed, you can reproduce it by
@@ -106,21 +104,20 @@ You can include intermediary lines of code if they help understanding
 This is the technical or business misconception that led the
 developer to write the faulty code.
 
-To find it, try to fill in the blanks: _"The developer thought \_**,
-but actually \_**"_
+To find it, try to fill in the blanks: *"The developer thought ___,
+but actually ___"*
 
 To validate it's the right root cause, try to answer this question
-honestly: _"If the developer had known this, would they have written
-correct code on the first try?"_
+honestly: *"If the developer had known this, would they have written
+correct code on the first try?"*
 
-A common mistake is stopping at _"I wasn't paying attention"_ (e.g.
-_"I forgot the `name` field"_) → **there's no learning there**.
+A common mistake is stopping at *"I wasn't paying attention"* (e.g.
+*"I forgot the `name` field"*) → **there's no learning there**.
 
 Instead, dig deeper:
-
 - "When you wrote this line, what did you think was going to happen?"
 - "How do you make sure this kind of thing doesn't happen again?"
-  _(...imagine you're flying a plane)_
+  *(...imagine you're flying a plane)*
 - "What makes this code error-prone or fragile?"
 - "Can we connect this to a known gesture or mental model from the
   Theodo Academy?"
@@ -134,7 +131,6 @@ It is a failure in an error detection system, and the reason why
 that failure occurred.
 
 Look at the following stages:
-
 - Typing
 - Linter
 - Functional validation (locally)
@@ -144,7 +140,6 @@ Look at the following stages:
 - Monitoring (staging and production)
 
 ⚠️ Common traps to avoid:
-
 - "There was no test": true, but not very insightful — most defects
   that happen were not tested
 - "There was no manual check": same logic, but even worse — manual
@@ -157,7 +152,6 @@ functionality. It confirms the developer fully understood the
 problem.
 
 A good countermeasure:
-
 - Cleans up the code
 - Simplifies things
 - Makes future work easier
@@ -174,7 +168,6 @@ detected earlier by addressing root causes of occurrence and
 detection failure causes.
 
 **Examples:**
-
 - Change the code pattern so the mistake is no longer possible
 - Configure the linter to catch this type of issue
 - Train the team again on the correct pattern and reasoning
@@ -195,10 +188,10 @@ categories.
 
 ## Reframes
 
-| Misconception                                                           | Reframe                                                                                                                                                                |
-| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The developer should be able to do their Dantotsu alone                 | The point of Dantotsu is to uncover reasoning errors. By definition, the developer who caused the defect doesn't have the knowledge to solve it correctly on their own |
-| We're producing "Dantotsu sheets" to document quality issues            | The goal is to spark conversations about defects to share tacit knowledge and build expertise                                                                          |
-| A good Dantotsu means filling in all fields and following the checklist | A good Dantotsu means the developer has deepened their understanding of the system                                                                                     |
-| I do a Dantotsu when there's a major bug in production                  | I maintain a regular Dantotsu rhythm to raise the level of play and build a culture of technical excellence                                                            |
-| An expert is someone who knows all the tidbits of a language/framework  | A developer's mastery lies in the quality of their mental models on business modeling, system structure and failure modes                                              |
+| Misconception | Reframe |
+| --- | --- |
+| The developer should be able to do their Dantotsu alone | The point of Dantotsu is to uncover reasoning errors. By definition, the developer who caused the defect doesn't have the knowledge to solve it correctly on their own |
+| We're producing "Dantotsu sheets" to document quality issues | The goal is to spark conversations about defects to share tacit knowledge and build expertise |
+| A good Dantotsu means filling in all fields and following the checklist | A good Dantotsu means the developer has deepened their understanding of the system |
+| I do a Dantotsu when there's a major bug in production | I maintain a regular Dantotsu rhythm to raise the level of play and build a culture of technical excellence |
+| An expert is someone who knows all the tidbits of a language/framework | A developer's mastery lies in the quality of their mental models on business modeling, system structure and failure modes |

@@ -5,27 +5,25 @@ description: Execute the engineering plan in `plan.md`, enforcing the repo's cle
 
 # Implementation skill
 
-The implementation phase **executes the plan**. The spec said _what_; the plan said _where and how_; the implementation lays down code, tests, and the assets that make the gates pass. It is the only phase that produces a diff.
+The implementation phase **executes the plan**. The spec said *what*; the plan said *where and how*; the implementation lays down code, tests, and the assets that make the gates pass. It is the only phase that produces a diff.
 
 The canonical standard lives at [`standard.md`](./standard.md). Read it before starting.
 
 ## When to invoke
 
 Invoke when:
-
 - A plan exists at `docs/features/<app>/<slug>/plan/plan.md` and is current.
 - The spec at `docs/features/<app>/<slug>/spec/spec.md` carries no `> ⚠️ Missing …` flag.
 - The user signals "go": `/implementation`, "ship it", "write the code", "let's do it now".
 
 Do **not** invoke when:
-
 - The plan is missing — run `/technical-conception` first.
 - The spec is flagged — close the missing-perspective discussion before code.
 - The work is a one-line fix or a mechanical refactor — direct edit, no ceremony.
 
 ## Composability with technical sub-skills
 
-The plan's _Inventory the technical surface_ step (from `/technical-conception`) lists which sub-skills apply. Before writing code that touches one of those surfaces, **invoke that sub-skill** via the `Skill` tool to get domain-specific guidance:
+The plan's *Inventory the technical surface* step (from `/technical-conception`) lists which sub-skills apply. Before writing code that touches one of those surfaces, **invoke that sub-skill** via the `Skill` tool to get domain-specific guidance:
 
 - `/vite` — multi-page, plugin order, asset handling, env vars.
 - `/three-js` — scene / camera / loop conventions, ref handling, perf.
@@ -33,21 +31,20 @@ The plan's _Inventory the technical surface_ step (from `/technical-conception`)
 - `/database` — migration conventions, `dsql` rules, schema-vs-data separation.
 - (any other skill the plan named).
 
-If a needed sub-skill doesn't exist, write the slice yourself and add a one-line `Missing technical skill: /<name>` row to the plan's _Missing technical skills_ section so the loop catches it.
+If a needed sub-skill doesn't exist, write the slice yourself and add a one-line `Missing technical skill: /<name>` row to the plan's *Missing technical skills* section so the loop catches it.
 
 The seed library for these sub-skills is patterns.dev (<https://www.patterns.dev/ai/skills/>) — copy a relevant skill in, then rewrite to the repo's conventions before adding to `.claude/skills/`.
 
 ## Load-bearing rules (enforced as you write)
 
-These come from CLAUDE.md and the plan; restated here so they fire at _write_ time, not at _review_ time. A defect that slips past these here is a defect `/technical-validation` will catch — but the cost of fixing late is much higher than the cost of writing it correctly first.
+These come from CLAUDE.md and the plan; restated here so they fire at *write* time, not at *review* time. A defect that slips past these here is a defect `/technical-validation` will catch — but the cost of fixing late is much higher than the cost of writing it correctly first.
 
 ### 1. Pure helpers go in `*.utils.ts` at 100% coverage
 
 Repo rule (CLAUDE.md "Clean code"): any file whose contents are deterministic, side-effect-free functions (RNG, parsers, formatters, transformers, palette/title/url builders, etc.) is named `<thing>.utils.ts` and ships at 100% statement / branch / function / line coverage in the workspace's test runner.
 
 The rule has no exemption for:
-
-- "Too small to test" — utilities are _cheaper_ to test precisely because they are small.
+- "Too small to test" — utilities are *cheaper* to test precisely because they are small.
 - "Frontend-only app" — Vitest is two dependencies (`vitest`, `@vitest/coverage-v8`) and a 5-line `vitest.config.ts`.
 - "We'll add tests later" — later never comes; ship them with the helper.
 
@@ -77,14 +74,14 @@ Live as you write, not as you review:
   2. **Event handlers** — do the work in `onClick` / `onChange` / etc., not in an effect that watches the resulting state.
   3. **CSS** — media queries, animations, transitions, hover/focus pseudo-classes. If the only thing your effect drives is text content or a class flip on a media query, CSS does it without re-renders. (See the `useCoarsePointer` removal in commit history for the canonical example.)
   4. **`useSyncExternalStore`** — for third-party stores or browser APIs that already expose subscribe/unsubscribe, this is the React-team-recommended escape hatch.
-     Reach for `useEffect` only when you genuinely need to synchronise React state with an external system — focus management after a real user action, `addEventListener` for global keyboard shortcuts, an interval/observer that owns its own lifecycle, a `replaceState` reflecting initial state into the URL once on mount. If you're updating React state inside an effect that watched another piece of React state, you've almost certainly recreated `useMemo`. See [_You Might Not Need an Effect_](https://react.dev/learn/you-might-not-need-an-effect). Every effect that survives the filter should be obvious-on-rereading why it earned its place; a future `/technical-validation` will ask.
+  Reach for `useEffect` only when you genuinely need to synchronise React state with an external system — focus management after a real user action, `addEventListener` for global keyboard shortcuts, an interval/observer that owns its own lifecycle, a `replaceState` reflecting initial state into the URL once on mount. If you're updating React state inside an effect that watched another piece of React state, you've almost certainly recreated `useMemo`. See [*You Might Not Need an Effect*](https://react.dev/learn/you-might-not-need-an-effect). Every effect that survives the filter should be obvious-on-rereading why it earned its place; a future `/technical-validation` will ask.
 
 ### 3. Tests track the spec
 
-For every numbered happy-path step, every edge case, every error case in the spec's _Use cases / edge cases_ section: write the assertion **somewhere the autonomous validators can find it.**
+For every numbered happy-path step, every edge case, every error case in the spec's *Use cases / edge cases* section: write the assertion **somewhere the autonomous validators can find it.**
 
 - Pure-function assertions → `*.utils.test.ts`.
-- UI behavioural assertions → automatically picked up by `/visual-validation` from the spec — but the _code_ must support them (deterministic seeds in URL state, stable selectors, accessible labels).
+- UI behavioural assertions → automatically picked up by `/visual-validation` from the spec — but the *code* must support them (deterministic seeds in URL state, stable selectors, accessible labels).
 - Integration assertions (URL state, history, focus management) → either a Vitest test against a JSDOM render, or a visual-validation row.
 
 Manual sweeps are not a valid coverage path — repo rule.
@@ -93,7 +90,7 @@ Manual sweeps are not a valid coverage path — repo rule.
 
 If the slice you just shipped touches visible UI, **open it in the running dev server and screenshot it yourself before declaring the row done**. Read the screenshot — not the DOM dump, not the `agent-browser snapshot` JSON, the actual PNG. Visible defects (broken `<img>` fallbacks rendering alt text, missing icons, layout breakage at narrow viewports, overflow, contrast disasters) are invisible to type-checks and unit tests; they are obvious in a screenshot a human looks at for two seconds.
 
-The cost is two `agent-browser` commands per slice. The cost of _not_ doing this is the implementer reporting the slice green, the visual-validator catching it next, and the user catching it after that.
+The cost is two `agent-browser` commands per slice. The cost of *not* doing this is the implementer reporting the slice green, the visual-validator catching it next, and the user catching it after that.
 
 Pair this with the broken-image scan from `/visual-validation`'s standard if you want a one-shot self-check:
 
@@ -102,19 +99,19 @@ agent-browser screenshot /tmp/self-check.png
 agent-browser eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => img.src)"
 ```
 
-A non-empty `eval` result is a stop-the-line — the row is not done, the broken `<img>` has to be diagnosed and fixed _before_ you tag the slice complete.
+A non-empty `eval` result is a stop-the-line — the row is not done, the broken `<img>` has to be diagnosed and fixed *before* you tag the slice complete.
 
 ## Procedure
 
 1. **Read** `spec.md` and `plan.md` end-to-end. Build a mental model.
-   1a. **Verify the plan has no open questions left unanswered.** Grep `plan.md` for "Open question", "TBD", "?", "decide", "still need". Any open item is a **stop-and-ask** — the implementer must surface it to the user and get an explicit answer _before walking the table_. Open questions in the plan are a common source of bias-laundered implementation defects: the implementer picks one of the answers themselves, the validator then validates against that silently-chosen answer, and the spec-vs-implementation gap is invisible.
+1a. **Verify the plan has no open questions left unanswered.** Grep `plan.md` for "Open question", "TBD", "?", "decide", "still need". Any open item is a **stop-and-ask** — the implementer must surface it to the user and get an explicit answer *before walking the table*. Open questions in the plan are a common source of bias-laundered implementation defects: the implementer picks one of the answers themselves, the validator then validates against that silently-chosen answer, and the spec-vs-implementation gap is invisible.
 2. **Inventory** technical surfaces. For each, invoke the matching sub-skill via `Skill` if one exists. Note any missing. **When a third-party library appears in the inventory, spend a minute on its current docs/changelog before re-implementing any of its capabilities** — many "I'll just write a quick X" moments dissolve when you discover the library already ships X natively. See [`docs/knowledge/audit-imported-deps-and-patterns-when-planning.md`](../../../docs/knowledge/audit-imported-deps-and-patterns-when-planning.md).
 3. **Walk the plan's "How each spec decision becomes code" table top-down.** For each row:
    a. Open the file the row points at (or create it).
    b. Apply the change.
    c. If the change is a pure helper, the file ends in `.utils.ts`; write the matching `.utils.test.ts` alongside it.
    d. Update local commits as you go — do not save the diff for one giant commit.
-   3a. **Re-walk the plan's §3 Code-quality self-check section bullet by bullet.** Each bullet names a repo-rule risk the plan author flagged for _this_ feature ("rename `y` → `candidateYear` in App.tsx's year-switch", "extract `pickDefaultMonth` to `data.utils.ts` so clock-dependent flows are testable", "no `useEffect` to derive `selected`", …). The plan-author wrote them because they predicted this implementation would slip on them. Verify each against the diff. An unchecked bullet is a blocker — fix the diff before running pre-flight gates; `/technical-validation` will FAIL on it otherwise. See [`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md) for the precedent.
+3a. **Re-walk the plan's §3 Code-quality self-check section bullet by bullet.** Each bullet names a repo-rule risk the plan author flagged for *this* feature ("rename `y` → `candidateYear` in App.tsx's year-switch", "extract `pickDefaultMonth` to `data.utils.ts` so clock-dependent flows are testable", "no `useEffect` to derive `selected`", …). The plan-author wrote them because they predicted this implementation would slip on them. Verify each against the diff. An unchecked bullet is a blocker — fix the diff before running pre-flight gates; `/technical-validation` will FAIL on it otherwise. See [`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md) for the precedent.
 4. **Run the plan's pre-flight gates** in order. Fix issues, do not bypass.
 5. **Run `/visual-validation`** for UI work. Read the report; the verdict must be PASS before push.
 6. **Run `/technical-validation`** always. Read the report; the verdict must be PASS before push.
@@ -131,9 +128,9 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
 - **Stuffing utilities into a file that also has DOM/network code** — split. The pure half is `<name>.utils.ts`; the rest stays in `<name>.ts`. Mixed files cannot be coverage-gated cleanly.
 - **Skipping a sub-skill that exists** — domain knowledge in the sub-skill goes unenforced; defects predicted by it ship anyway.
 - **Bypassing a hook** with `--no-verify` — repo rule says never. Fix the hook failure.
-- **Deferring the test-runner setup** — if the workspace has no Vitest yet, set it up _as part of this implementation_. Otherwise the implementation lands without coverage and the next session inherits a broken gate.
+- **Deferring the test-runner setup** — if the workspace has no Vitest yet, set it up *as part of this implementation*. Otherwise the implementation lands without coverage and the next session inherits a broken gate.
 - **Reinventing what the library already does.** Before writing a "quick custom X" on top of an imported library, read the library's current docs / changelog / `defaultOptions` for the capability you're about to recreate. The first place to look for a feature an imported library plausibly already has is the library itself.
-- **Walking the plan with open questions still in it.** Step 1a of the procedure is non-negotiable. If `plan.md` carries unanswered items, the implementer must surface them to the user _before_ writing code. Picking the answer yourself silently bakes the implementer's preference into both the implementation and the validation that follows.
+- **Walking the plan with open questions still in it.** Step 1a of the procedure is non-negotiable. If `plan.md` carries unanswered items, the implementer must surface them to the user *before* writing code. Picking the answer yourself silently bakes the implementer's preference into both the implementation and the validation that follows.
 
 ## Repo-specific notes
 

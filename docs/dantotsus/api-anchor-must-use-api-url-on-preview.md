@@ -39,30 +39,30 @@ preview.
 
 ## Root-cause chain
 
-1. **Why?** The browser opened the SPA, not the API. _Because the
+1. **Why?** The browser opened the SPA, not the API. *Because the
    anchor `<a href="/api/standings/.../laps.csv">` is a
    same-origin relative URL : the browser resolved it against the
    current origin (`last-loop-lepin-pr-27.preview.borso.fr`), not
-   against the cross-origin API host._
+   against the cross-origin API host.*
 2. **Why?** Because preview deploys the front and the API on two
-   different sub-domains. _Front sits on a static-site CloudFront
+   different sub-domains. *Front sits on a static-site CloudFront
    distribution at `<app>-pr-<N>.preview.borso.fr` ; the API has
    its own custom domain at `<app>-pr-<N>-api.preview.borso.fr`.
    That split is intentional and prod uses same-origin routing
    (CloudFront fronts `/api/*` to API Gateway), which is why the
-   same anchor works there._
+   same anchor works there.*
 3. **Why?** The repo already had a sibling Grit plugin
    `no-direct-api-fetch-in-site.grit` that catches
-   `fetch('/api/...')`, plus an `apiClient` wrapper. _Neither
+   `fetch('/api/...')`, plus an `apiClient` wrapper. *Neither
    covers `<a href>` — `apiClient` only wraps `fetch`, and the
    plugin matches the JS `string` AST node which JSX attribute
    strings aren't. The author wrote `href={`/api/foo`}` because
    it "felt same-origin" ; the existing pattern wasn't visibly on
-   the way for href-style code._
+   the way for href-style code.*
 
-**Root cause:** _thought a same-origin anchor would resolve to the
+**Root cause:** *thought a same-origin anchor would resolve to the
 API, actually only `fetch` was being routed through `apiClient`
-and direct-navigation targets had no equivalent wrapper or guard._
+and direct-navigation targets had no equivalent wrapper or guard.*
 
 ## Detection failure causes
 
@@ -71,9 +71,9 @@ and direct-navigation targets had no equivalent wrapper or guard._
   semantics aren't part of the type system.
 - **Linter / static analysis:** A sibling Grit plugin already
   catches `fetch('/api/...')`. It uses `language js` and the
-  template `\`"/api/$_"\``— both correct for normal JS string
-literals inside a`fetch()` call. JSX attribute strings are a
-different AST node (`JsxString`, wrapping a `JSX_STRING_LITERAL`
+  template `\`"/api/$_"\`` — both correct for normal JS string
+  literals inside a `fetch()` call. JSX attribute strings are a
+  different AST node (`JsxString`, wrapping a `JSX_STRING_LITERAL`
   token), invisible to that pattern.
 - **Functional validation locally:** Dev runs same-origin via
   Vite's `pnpm dev` proxy — the bug is invisible.
@@ -106,10 +106,13 @@ fires an error pointing at `apiUrl()`. Wired into
 check`) and CI gate it.
 
 The non-obvious bit took a tooling-doc dig : the Grit shape
-`\`"/api/$_"\``matches a JS`string`AST node, which JSX
-attribute strings are not — they parse to`JsxString(JSX_STRING_LITERAL)`tokens. Biome's own plugin engine exposes`JsxString()`as a
-matchable node when`engine biome(1.0)`+`language js(jsx)`are
-declared at the top of the .grit file ; the regex`r"._[\"']/api/._"`on the matched node's literal text catches both`href="/api/foo"`and`href='/api/foo'`. See
+`\`"/api/$_"\`` matches a JS `string` AST node, which JSX
+attribute strings are not — they parse to `JsxString(JSX_STRING_LITERAL)`
+tokens. Biome's own plugin engine exposes `JsxString()` as a
+matchable node when `engine biome(1.0)` + `language js(jsx)` are
+declared at the top of the .grit file ; the regex `r".*[\"']/api/.*"`
+on the matched node's literal text catches both `href="/api/foo"`
+and `href='/api/foo'`. See
 [`docs/knowledge/biome-grit-jsx-matching.md`](../knowledge/biome-grit-jsx-matching.md)
 for the working pattern shape (and the dead ends that fooled the
 first attempt).

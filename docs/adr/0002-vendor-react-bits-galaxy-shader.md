@@ -54,7 +54,7 @@ WebGL (no OGL, no React) so the app stays plain HTML / CSS / JS.
 **Easier.** `apps/borso-fr` keeps its "open file, refresh browser" dev
 loop — no Vite, no React, no bundler, no `node_modules` for the apex
 landing. The shader is a single file we can grep, profile, and
-modify without leaving the workspace. ADR 0001's commitment to _not_
+modify without leaving the workspace. ADR 0001's commitment to *not*
 forcing a build tool into every app holds for the apex landing.
 
 **Harder.** Upstream fixes to the react-bits Galaxy component won't

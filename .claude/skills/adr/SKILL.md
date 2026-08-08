@@ -7,19 +7,19 @@ description: Write an Architecture Decision Record under `docs/adr/NNNN-<slug>.m
 
 One skill, two entry modes — both end with `docs/adr/NNNN-<slug>.md` written, the index updated, and (when piloted) a verdict YAML emitted for the orchestrator.
 
-- **Interactive (default).** Human types `/adr` or asks for help on a trade-off. The skill walks the 5 rounds — _frame → criteria → options → score → choose_ — and refuses to write the file if any round is shortcut. The 30-minute conversation the operator wishes they'd had before silently picking Option A.
+- **Interactive (default).** Human types `/adr` or asks for help on a trade-off. The skill walks the 5 rounds — *frame → criteria → options → score → choose* — and refuses to write the file if any round is shortcut. The 30-minute conversation the operator wishes they'd had before silently picking Option A.
 - **Piloted (called by `/tech-lead-orchestrator`).** The orchestrator has already mined the spec's Q.O.D. + Changes / Types sections, surfaced candidates to Hugo via `AskUserQuestion`, and is invoking `/adr` for each ratified candidate. The walk is **skipped** — the orchestrator hands over `{ slug, decision-summary, triggers, alternatives, supersedes? }` and expects the file written + a verdict YAML emitted per the [sub-agent contract](../tech-lead-orchestrator/sub-agent-contract.md).
 
-Whichever mode runs, the skill calls the same **mechanical procedure** (numbering, conflict check, write, index update, supersedes handling) — described in _Procedure_ below.
+Whichever mode runs, the skill calls the same **mechanical procedure** (numbering, conflict check, write, index update, supersedes handling) — described in *Procedure* below.
 
 The canonical standard lives at [`standard.md`](./standard.md). The markdown template the skill emits is at [`template.md`](./template.md).
 
 ## Failure modes the skill exists to prevent
 
-1. **Optimistic-default.** "We'll use X — everyone does." The skill forces the operator to name at least one viable alternative and articulate the cost of _not_ picking it. (Interactive mode catches this in Round 3; piloted mode rejects an `alternatives` input of length < 2.)
-2. **Retro-justification.** Listing criteria _after_ the choice is made is opinion dressed as analysis. Interactive mode builds the rubric before scoring; piloted mode requires the orchestrator to pass `criteria[]` upfront.
+1. **Optimistic-default.** "We'll use X — everyone does." The skill forces the operator to name at least one viable alternative and articulate the cost of *not* picking it. (Interactive mode catches this in Round 3; piloted mode rejects an `alternatives` input of length < 2.)
+2. **Retro-justification.** Listing criteria *after* the choice is made is opinion dressed as analysis. Interactive mode builds the rubric before scoring; piloted mode requires the orchestrator to pass `criteria[]` upfront.
 3. **Decision-without-alternatives.** ≥ 2 viable options is the floor; one is a constraint, not a decision. The skill refuses to write the file.
-4. **Missing consequences.** Two negative consequences are mandatory in _Consequences_. If the operator (or the orchestrator's payload) can't name them, the analysis was lopsided.
+4. **Missing consequences.** Two negative consequences are mandatory in *Consequences*. If the operator (or the orchestrator's payload) can't name them, the analysis was lopsided.
 5. **Lopsided rubric.** If every cell of the comparison matrix agrees, the rubric doesn't differentiate. Push back.
 
 ## Mode A — Interactive walkthrough (5 rounds)
@@ -36,17 +36,17 @@ Ask the operator to describe, in 3–5 sentences:
 
 If the framing is fuzzy, the skill pushes back ("name the force in one phrase") rather than letting fuzziness propagate.
 
-### Round 2 — Define criteria _before_ options
+### Round 2 — Define criteria *before* options
 
-Build the rubric. The operator names 3–5 criteria with weights (`high` / `medium` / `low`) — not 1-to-5 scales (hides reasoning). For each criterion, a one-line justification: _why does it matter, anchored to the framing_.
+Build the rubric. The operator names 3–5 criteria with weights (`high` / `medium` / `low`) — not 1-to-5 scales (hides reasoning). For each criterion, a one-line justification: *why does it matter, anchored to the framing*.
 
 Example:
 
-| Criterion                            | Weight | Why it matters                               |
-| ------------------------------------ | ------ | -------------------------------------------- |
-| Idle cost ($/mo at peak-of-zero)     | high   | The race runs once a year; idle dominates.   |
-| Time-to-recovery on vendor outage    | medium | DSQL is regional; outages are rare but long. |
-| Drizzle/Postgres tooling familiarity | low    | The author already drives drizzle daily.     |
+| Criterion | Weight | Why it matters |
+|---|---|---|
+| Idle cost ($/mo at peak-of-zero) | high | The race runs once a year; idle dominates. |
+| Time-to-recovery on vendor outage | medium | DSQL is regional; outages are rare but long. |
+| Drizzle/Postgres tooling familiarity | low | The author already drives drizzle daily. |
 
 If a criterion can't be tied to the framing in one line, the skill pushes back. "Generic best practice" is not a criterion.
 
@@ -58,7 +58,7 @@ Ask the operator to list **at least two** viable options. The skill prompts:
 - The strict alternative (the option that wins under a different weighting).
 - The "no" option (do nothing / postpone / pick a smaller scope).
 
-If the operator can't name a second viable option, the skill calls it out: _"This isn't a decision — it's a constraint. Either find an alternative or drop the ADR and write a code comment."_
+If the operator can't name a second viable option, the skill calls it out: *"This isn't a decision — it's a constraint. Either find an alternative or drop the ADR and write a code comment."*
 
 ### Round 4 — Score against the rubric
 
@@ -66,30 +66,30 @@ For each (option, criterion) pair, the operator supplies `✓ <one-line justific
 
 The skill renders a comparison matrix:
 
-|                  | Option A         | Option B  | Option C         |
-| ---------------- | ---------------- | --------- | ---------------- |
-| Idle cost        | ✓ <30 USD        | ✗ 150 USD | ✓ <30 USD        |
+|   | Option A | Option B | Option C |
+|---|---|---|---|
+| Idle cost | ✓ <30 USD | ✗ 150 USD | ✓ <30 USD |
 | Time-to-recovery | ✓ vendor-managed | ✗ on-call | ✓ vendor-managed |
-| Tooling          | ✓ drizzle        | ✓ drizzle | ✗ custom         |
+| Tooling | ✓ drizzle | ✓ drizzle | ✗ custom |
 
-If every cell is `✓` or every cell is `✗`, the rubric is broken. Push back: a useful rubric _differentiates_ options.
+If every cell is `✓` or every cell is `✗`, the rubric is broken. Push back: a useful rubric *differentiates* options.
 
 ### Round 5 — Force the choice + its consequences
 
 Ask the operator to:
 
-- **Name the winner**, in one paragraph. The skill writes this into _Decision_.
-- **List two negative consequences** of the winner. _Closed doors, costs we're now paying._ The skill writes them into _Consequences_ under `-`. If the operator can't name a negative, the analysis was lopsided.
-- **State the rejection rationale** for each non-winner: _"loses on criterion X by Y"_. The skill writes those into _Alternatives considered_.
+- **Name the winner**, in one paragraph. The skill writes this into *Decision*.
+- **List two negative consequences** of the winner. *Closed doors, costs we're now paying.* The skill writes them into *Consequences* under `-`. If the operator can't name a negative, the analysis was lopsided.
+- **State the rejection rationale** for each non-winner: *"loses on criterion X by Y"*. The skill writes those into *Alternatives considered*.
 
-Then call the _Procedure_ below to write the file.
+Then call the *Procedure* below to write the file.
 
 ## Mode B — Piloted by `/tech-lead-orchestrator`
 
 The orchestrator invokes this skill via the `Skill` tool with a payload describing one ratified ADR candidate. Expected inputs in the invocation prompt:
 
 - `slug` — kebab-case, ≤ 6 words, describes the **decision**, not the feature.
-- `triggers` — non-empty subset of the 4 ADR triggers (cf. [tech-lead-orchestrator/standard.md _ADR triggers_](../tech-lead-orchestrator/standard.md#adr-triggers-4-or)).
+- `triggers` — non-empty subset of the 4 ADR triggers (cf. [tech-lead-orchestrator/standard.md *ADR triggers*](../tech-lead-orchestrator/standard.md#adr-triggers-4-or)).
 - `decision-summary` — one paragraph naming the chosen path.
 - `alternatives` — list of ≥ 1 rejected option (+1 chosen = ≥ 2 total). Each entry carries `name`, `summary`, `rejection-rationale`.
 - `criteria` — list of 3–5 criteria with weights and a one-line "why it matters" anchored to the spec.
@@ -99,7 +99,7 @@ The orchestrator invokes this skill via the `Skill` tool with a payload describi
 - `feature-path` — `docs/features/<app>/<slug>/` for the verdict YAML location.
 - `run-id`, `step` — to locate `runs/<run-id>/agents/adr-<step>.md`.
 
-The skill **does not** re-walk the rounds. It validates the payload (≥ 2 alternatives, ≥ 2 negative consequences, rubric differentiates), runs _Procedure_, and emits a verdict YAML to `<feature-path>/runs/<run-id>/agents/adr-<step>.md`. If validation fails (e.g. `alternatives.length < 2`), the verdict is `status: blocked` with `next: { kind: 'escalate', reason: '<why>' }`.
+The skill **does not** re-walk the rounds. It validates the payload (≥ 2 alternatives, ≥ 2 negative consequences, rubric differentiates), runs *Procedure*, and emits a verdict YAML to `<feature-path>/runs/<run-id>/agents/adr-<step>.md`. If validation fails (e.g. `alternatives.length < 2`), the verdict is `status: blocked` with `next: { kind: 'escalate', reason: '<why>' }`.
 
 ## Procedure (both modes)
 
@@ -114,7 +114,6 @@ The skill **does not** re-walk the rounds. It validates the payload (≥ 2 alter
    If any conflict exists:
    - **Piloted mode:** emit verdict `status: blocked`, `next: { kind: 'escalate', reason: 'adr-conflict-<slug>' }`, and stop. The orchestrator surfaces the conflict to the human.
    - **Interactive mode:** ask the operator via `AskUserQuestion` whether the new ADR supersedes the conflicting one(s). If yes, add the numbers to `supersedes` and continue. If no, bail out with a message.
-
 5. **Fill the template.** Map inputs (interactive: collected across rounds; piloted: from the payload) to the 7 mandatory sections of [`template.md`](./template.md): header block, Context, Decision, Consequences, Alternatives considered (chosen first), Evaluation rubric, Implementation pointers.
 6. **Write the file** at `docs/adr/NNNN-<slug>.md` with the rendered markdown. Header reads `# ADR-NNNN: <title>` with the number zero-padded to 4 digits.
 7. **Update the index** `docs/adr/README.md`:
@@ -136,29 +135,27 @@ The skill **does not** re-walk the rounds. It validates the payload (≥ 2 alter
 ## When to invoke
 
 Yes:
-
 - The operator faces two or more viable options. (Two is the floor; one is a constraint, not a decision.)
 - The choice is hard to reverse — vendor lock, schema shape, framework choice, security model.
-- A `/technical-conception` plan row already lists a trade-off but doesn't anchor _why this side won_.
+- A `/technical-conception` plan row already lists a trade-off but doesn't anchor *why this side won*.
 - The operator says "I'm tempted to do X, but…"
-- The orchestrator detects an ADR-qualifying decision in the spec's Q.O.D. + Changes / Types sections and Hugo confirmed _Write ADR_.
+- The orchestrator detects an ADR-qualifying decision in the spec's Q.O.D. + Changes / Types sections and Hugo confirmed *Write ADR*.
 
 No:
-
 - Reversible-at-zero-cost choices (variable names, file layout within a folder).
 - Cases where `CLAUDE.md` or a `docs/knowledge/` entry already settles the question. Cross-link instead.
-- A coding-style choice already covered by Biome / CLAUDE.md _Clean code_ — those go in the linter.
-- An accepted ADR with the same slug already exists and the new invocation hasn't declared `supersedes`. See _Procedure_ step 4.
+- A coding-style choice already covered by Biome / CLAUDE.md *Clean code* — those go in the linter.
+- An accepted ADR with the same slug already exists and the new invocation hasn't declared `supersedes`. See *Procedure* step 4.
 
 ## What `/open-pr` reads back
 
-The PR description's `## Architecture choices` section is _built from the ADRs_ referenced by the diff or the plan. Each ADR contributes:
+The PR description's `## Architecture choices` section is *built from the ADRs* referenced by the diff or the plan. Each ADR contributes:
 
 - Its **Decision** paragraph at level 1 (PR body, always visible) — the one-sentence "we picked X because Y".
 - Its **Alternatives considered + Evaluation rubric** at level 2 (collapsed `<details>`).
 - Its **Implementation pointers** at level 3 (nested `<details>`).
 
-The ADR is the only source for those sections. `/open-pr` does **not** synthesise architecture-choice content from commits or plan rows — if a non-trivial decision in the diff has no ADR, `/open-pr` flags it in _Known gaps_ and points back here.
+The ADR is the only source for those sections. `/open-pr` does **not** synthesise architecture-choice content from commits or plan rows — if a non-trivial decision in the diff has no ADR, `/open-pr` flags it in *Known gaps* and points back here.
 
 That's the contract: the walk (or the orchestrator's payload) produces a record rich enough that the PR description carries the full reasoning without re-deriving it. If the inputs are sloppy, the PR body inherits the sloppiness.
 

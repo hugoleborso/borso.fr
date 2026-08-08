@@ -5,7 +5,7 @@ Two templates live here. The skill uses both.
 1. **Dispatch-brief template** — the self-contained prompt the skill passes to the `technical-validator` agent via the `Agent` tool. Substitute placeholders.
 2. **Report template** — the markdown layout the agent writes to `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md`.
 
-The dedicated agent definition (with its own frontmatter, tools, and full procedure) is at [`../../agents/technical-validator.md`](../../agents/technical-validator.md). The brief below is the _task_ the agent receives — the agent's behaviour rules live in its definition, not here.
+The dedicated agent definition (with its own frontmatter, tools, and full procedure) is at [`../../agents/technical-validator.md`](../../agents/technical-validator.md). The brief below is the *task* the agent receives — the agent's behaviour rules live in its definition, not here.
 
 ---
 
@@ -57,31 +57,31 @@ The agent writes this at `docs/features/<app>/<slug>/validation/technical-valida
 
 ## A. Correctness vs spec
 
-| #   | Spec ref | Claim            | Code (file:line)  | Evidence (quoted) | Verdict                    |
-| --- | -------- | ---------------- | ----------------- | ----------------- | -------------------------- |
-| A01 | Q5       | <verbatim claim> | apps/.../X.tsx:NN | `…`               | PASS / FAIL / UNVERIFIABLE |
+| # | Spec ref | Claim | Code (file:line) | Evidence (quoted) | Verdict |
+|---|---|---|---|---|---|
+| A01 | Q5 | <verbatim claim> | apps/.../X.tsx:NN | `…` | PASS / FAIL / UNVERIFIABLE |
 
 ## B. Code cleanliness
 
-| #   | Rule   | Check         | Evidence | Verdict                    |
-| --- | ------ | ------------- | -------- | -------------------------- |
+| # | Rule | Check | Evidence | Verdict |
+|---|---|---|---|---|
 | B01 | <rule> | <how checked> | <result> | PASS / FAIL / UNVERIFIABLE |
 
 ## C. Tests pass
 
-| #   | Workspace        | Command                                   | Exit  | Verdict                    |
-| --- | ---------------- | ----------------------------------------- | ----- | -------------------------- |
+| # | Workspace | Command | Exit | Verdict |
+|---|---|---|---|---|
 | C01 | @borso-app/<app> | `pnpm --filter @borso-app/<app> run test` | 0 / N | PASS / FAIL / UNVERIFIABLE |
 
 ## D. Test coverage of spec
 
-| #   | Use case   | Covering test                       | Verdict     |
-| --- | ---------- | ----------------------------------- | ----------- |
+| # | Use case | Covering test | Verdict |
+|---|---|---|---|
 | D01 | <use case> | `<describe/it text>` at <file:line> | PASS / FAIL |
 
 ## Notes
 
-> _One bullet per FAIL or UNVERIFIABLE row, expanding what was observed and what was missing. PASS rows do not need a note._
+> *One bullet per FAIL or UNVERIFIABLE row, expanding what was observed and what was missing. PASS rows do not need a note.*
 
 -
 

@@ -21,6 +21,12 @@ export type PunchRejectReason =
  * Decide whether a punch at `now` should be accepted for `runnerSlug`.
  * Returns `{ ok: true, loopIndex }` (1-based) on success.
  */
+/**
+ * @Blueprint core-decision
+ * @BlueprintName Core Decision Function
+ * @BlueprintUsage Use for every business rule. Take the data and `now` as arguments, return a decision, touch nothing else.
+ * @BlueprintDescription Decides whether a punch is acceptable from the runner's existing punches, the edition, and an explicit `now`. Pure, so its test calls it with values and asserts on values, and it carries the full coverage gate and the zero-survivor mutation gate.
+ */
 export function validatePunchTiming(
   edition: RaceEdition,
   runnerSlug: string,

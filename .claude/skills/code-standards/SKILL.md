@@ -11,8 +11,9 @@ description: >-
   atoms and molecules and organisms on the front end, TanStack Query with the
   Hono client, the ban on `useEffect`, Tailwind styling, i18next, Vitest
   coverage and mutation testing, Drizzle, and the ESLint rules and git hooks
-  that enforce all of it. Use `docs/blueprints/` instead when starting
-  something new rather than changing something that exists.
+  that enforce all of it. Before writing a new file, also read
+  `.claude/skills/blueprint/blueprint-index.md` for the canonical example of
+  the layer you are working in.
 ---
 
 # Code standards
@@ -24,6 +25,11 @@ thirteen.
 
 Do not restate a rule from memory. Open the document, and quote it, because the
 documents change and your memory of them does not.
+
+A standard states a rule. The matching blueprint is the working example of it,
+marked in place on real code and listed in
+[`blueprint-index.md`](../blueprint/blueprint-index.md). Read the rule, then
+copy the example.
 
 ## Pick the documents that apply
 

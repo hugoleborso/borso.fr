@@ -11,7 +11,7 @@ time-to-detect: days
 tags: [claude-md, refactor, observability, last-loop-lepin, dsql, auth, self-improvement-loop]
 ---
 
-# A refactor commit said "drop both Secrets Manager secrets" — and silently dropped the _shared-across-stages_ property of one of them
+# A refactor commit said "drop both Secrets Manager secrets" — and silently dropped the *shared-across-stages* property of one of them
 
 ## Symptom
 
@@ -26,8 +26,8 @@ drop both Secrets Manager secrets`](https://github.com/hugoleborso/borso.fr/comm
 had landed with a long, well-explained body. The body framed
 the change as "$0.80/mo saved, drop two SM secrets, auth lives
 in DB". What the body never named was that the dropped
-`<app>/admin-pin-hash` secret had been _shared across every
-stage_ — its full name was just `<app>/admin-pin-hash`, no
+`<app>/admin-pin-hash` secret had been *shared across every
+stage* — its full name was just `<app>/admin-pin-hash`, no
 `/<stage>/` segment. Every preview, every integ, every prod
 deploy read the same SM value ; one operator seed propagated
 everywhere.
@@ -55,25 +55,25 @@ asymmetry.
 ## Root-cause chain
 
 1. **Why?** The new design assumed an explicit per-stage seed
-   step. _No infrastructure or runbook codifies the seed step,
+   step. *No infrastructure or runbook codifies the seed step,
    and the commit body doesn't name the stage-portability
-   property the old mechanism carried._
+   property the old mechanism carried.*
 2. **Why?** The old `<app>/admin-pin-hash` SM secret was
    stage-agnostic by name ; the dropped property "single seed in
    the operator's hand propagates to every stage" was a
-   side-effect of the unsuffixed secret name. _Naming
+   side-effect of the unsuffixed secret name. *Naming
    conventions implied stage portability without anyone writing
-   it down._
+   it down.*
 3. **Why?** The refactor author saw "drop two SM secrets, both
    are $0.40/mo" as the relevant economic argument and didn't
-   re-derive the portability properties of each. _The body was
+   re-derive the portability properties of each. *The body was
    written from a cost-lens, not from a
-   what-properties-do-callers-rely-on lens._
+   what-properties-do-callers-rely-on lens.*
 
-**Root cause:** _thought the two SM secrets were
+**Root cause:** *thought the two SM secrets were
 interchangeable for the purpose of describing what's being
 dropped, actually one was per-stage and one was shared-across-
-stages — the body only named the cost they shared._
+stages — the body only named the cost they shared.*
 
 ## Detection failure causes
 
@@ -98,13 +98,13 @@ stages — the body only named the cost they shared._
 ## Countermeasure
 
 This dantotsu's eradication is a **CLAUDE.md rule** added under
-_Tone & rigor_ :
+*Tone & rigor* :
 
 > **Name silent property regressions in refactor commits.** When
 > a `refactor:` / `chore:` commit removes or replaces a
 > mechanism (a Secrets Manager secret, a shared env var, a
 > centrally-managed config…), the body MUST explicitly name any
-> _observable property_ the old mechanism carried that the new
+> *observable property* the old mechanism carried that the new
 > one drops or changes — even when the change is functionally
 > equivalent. …
 
@@ -113,11 +113,11 @@ author to enumerate observable properties before declaring "drop
 X, replace by Y". A reviewer who sees a refactor body without
 that section knows to push back.
 
-The _runtime_ fix for the specific PIN-portability regression —
+The *runtime* fix for the specific PIN-portability regression —
 clone-from-prod into preview schemas — landed in PR #27 itself
 (see [`docs/knowledge/dsql-clone-from-prod.md`](../knowledge/dsql-clone-from-prod.md)) ;
-this dantotsu is about _the meta-defect that allowed it to land
-without being noticed_.
+this dantotsu is about *the meta-defect that allowed it to land
+without being noticed*.
 
 ## Eradication shipped
 
@@ -125,7 +125,7 @@ without being noticed_.
 the next refactor author and the next reviewer see the rule)
 
 **Reference:** PR ./lessons-from-pr-27 · CLAUDE.md commit
-[`<this-pr-sha>`] (new bullet under _Tone & rigor_)
+[`<this-pr-sha>`] (new bullet under *Tone & rigor*)
 
 **The actual fix:**
 
@@ -148,4 +148,4 @@ PIN behaviour the refactor accidentally dropped.
 - [`docs/knowledge/dsql-clone-from-prod.md`](../knowledge/dsql-clone-from-prod.md)
   — Neon-branch-style clone that restores stage portability
   for `admin_credentials` and any future per-stage data.
-- [`CLAUDE.md`](../../CLAUDE.md) — _Tone & rigor_ section.
+- [`CLAUDE.md`](../../CLAUDE.md) — *Tone & rigor* section.

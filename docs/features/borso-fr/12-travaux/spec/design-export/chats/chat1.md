@@ -15,7 +15,6 @@ _[tool: questions_v2]_
 ## User
 
 Questions answered:
-
 - context: Oui mais design libre pour cette page
 - aesthetic: Explore a few options
 - years: Toutes les années depuis 2025, extensible
@@ -25,9 +24,9 @@ Questions answered:
 - layout: Explore a few options
 - interactions: Cliquer sur un mois pour voir le détail dans un panneau, Hover pour aperçu rapide, Animation de progression / barre d'avancement, Mode 'ajouter une preuve' (interface d'édition)
 - real_data: Les 12 travaux de Borso
-  Résolution 2025 : 12 extraordinaires à faire
+Résolution 2025 : 12 extraordinaires à faire 
 
-Janvier : sport tout les jours, smasher correctement au volley
+Janvier : sport tout les jours, smasher correctement au volley 
 Février : 2h de tel par jour en moyenne, 14 livres dans le mois
 Mars : passer la flèche d’or
 Avril : 5k sub20
@@ -36,65 +35,54 @@ Juin : Finir la montecristo
 Juillet : Apprendre 1 ouverture par jour et monter à 1500 en rapid
 Août : Une traversée en Méditerranée en bateau ? La fabuleuse armada ?
 200km à vélo d’un coup
-Septembre : un triathlon L et battre mon record + apprendre les départements nombre et loc + sport tous les jours
+Septembre : un triathlon L et battre mon record + apprendre les départements nombre et loc + sport tous les jours 
 Octobre : 20m en apnée
-Novembre : monter 100x les marches de Montmartre dans la même journée
-Décembre : aller en Italie sans utiliser l’anglais faire un muscle up
+Novembre : monter 100x les marches de Montmartre dans la même journée 
+Décembre : aller en Italie sans utiliser l’anglais faire un muscle up 
+
 
 12 travaux 2026
-Janvier
-
+Janvier 
 - [x] Mois de la positivité : partager du positif chaque jour avec les colocs
-- [x] Sport tous les jours
+- [x] Sport tous les jours 
 
-Février
-
+Février 
 - [x] Au lit à 23h, extinction 23h30, 6j/7
 - [ ] Trouver et organiser 2 dates pour Pragma
-- [x] 10x1h de sport dans la même journée
+- [x] 10x1h de sport dans la même journée 
 
 Mars
-
 - [x] Être admissible au CAPES de maths
 - [x] Battre le métro entre 2 stations
-- [ ] 3h de HT par semaine
+- [ ] 3h de HT par semaine 
 
 Avril
-
 - [ ] Courir toutes les lignes de métro dans l’ordre en 1 mois
 
 Mai
-
 - [ ] Organiser une Backyard et y participer
 
 Juin
-
 - [ ] 1 poème par jour à une personne différente
 - [ ] Peut être la montecristo (1. Finir, 2. Sub1h30)
 
 Juillet
-
 - [ ] Sub 1h30 au Semi
 - [ ] Participer aux championnats de France de Catan
 
-Août
-
+Août 
 - [ ] Traversée du lac d’Annecy à la nage
 
 Septembre
+- [ ] Sub 6h au L de Lépin 
 
-- [ ] Sub 6h au L de Lépin
-
-Octobre
-
+Octobre 
 - [ ] Paris Dieppe à vélo en 1j et se baigner
 
 Novembre
-
 - [ ] 3000 pages lues dans le mois
 
 Décembre
-
 - [ ] Atteindre 1500 ELO aux échecs dans une cadence
 - variations: 2-3 directions visuelles différentes
 
@@ -107,7 +95,6 @@ _[tool: update_todos]_
 Parfait, j'ai tout ce qu'il me faut. Je pars sur **3 directions visuelles distinctes** présentées côte à côte sur un canvas, chacune avec les vraies données 2025 + 2026, panneaux de détail interactifs, états de complétion et zones pour preuves.
 
 Mes 3 directions :
-
 - **A — Stèle** : éditorial sobre, numéros romains, serif (Newsreader), clin d'œil mythologique sans excès
 - **B — Carnet** : dense façon log de coach, monospace, frise verticale, heatmap d'activité
 - **C — Magazine** : frise horizontale, gros titres, slots photos, contrasté éditorial
@@ -203,3 +190,4 @@ _[tool: snip]_
 _[tool: done]_
 
 Fix appliqué — filmstrip ne déborde plus sur écrans étroits.
+

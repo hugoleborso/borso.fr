@@ -3,6 +3,12 @@ import type { Database } from '../database/client';
 import { loopPunchesTable, manualDnfsTable } from './punch.schema';
 import type { LoopPunch, ManualDnf, PunchSource } from './punch.types';
 
+/**
+ * @Blueprint repository-query
+ * @BlueprintName Repository Query
+ * @BlueprintUsage Use for data access. Drizzle queries and transactions only, and the single file allowed to import the database client for its slice.
+ * @BlueprintDescription Holds every query against the punch tables. Each function returns rows, an array of rows, or a count, with no business condition, no derived field, and no formatting. A shape the database does not have is built by a core function the service calls.
+ */
 interface LoopPunchRow {
   readonly id: string;
   readonly editionSlug: string;

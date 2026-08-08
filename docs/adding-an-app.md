@@ -22,7 +22,7 @@ Inside `apps/<slug>/`:
 
 - **`package.json`** — name `@borso-app/<slug>`, `private: true`, `type: "module"`, `dependencies: { "@borso/infra": "workspace:*" }`, scripts for `dev` / `build` / `lint` / `test` / `synth` / `deploy` / `destroy`.
 - **`tsconfig.json`** — copy from an existing app; self-contained, no `extends`.
-- **`eslint.config.js`** — re-exports the root flat config, adding any app-specific override.
+- **`biome.jsonc`** — `extends: ["../../biome.jsonc"]`, `"root": false`, `files.includes` scoped to the app's source dirs.
 - **`commitlint.config.js`** — `extends: ['../../commitlint.config.js']`. Lets agents working inside the app read the convention without leaving the folder.
 - **`cdk.json`** — `{"app": "tsx bin/app.ts"}`.
 - **`bin/app.ts`** — CDK entrypoint. Reads `STAGE` and `PR_NUMBER` env, instantiates the right construct.
@@ -36,7 +36,7 @@ When you add a new app, three files at repo root must learn its slug:
 
 1. **`.github/path-filters.yml`** — add `<slug>: 'apps/<slug>/**'`. Drives which apps the preview/deploy workflows see as changed.
 2. **`commitlint.config.js`** — add `<slug>` to the `scope-enum` array. Lets `git commit -m "feat(<slug>): …"` pass.
-3. **`pnpm-workspace.yaml`** — _no change needed._ Already globs `apps/*`.
+3. **`pnpm-workspace.yaml`** — *no change needed.* Already globs `apps/*`.
 
 The workflows themselves auto-discover the app list from the workspace via `pnpm ls --filter "./apps/*" --json`, so you don't update the `apps=[…]` literal. (See `flows.md` for what the workflows actually do.)
 

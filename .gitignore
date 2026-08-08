@@ -29,3 +29,5 @@ REFACTORING-BRIEF.md
 .eslintcache
 .eslintcache
 node_modules/.cache
+.stryker-tmp
+reports

@@ -1,7 +1,7 @@
 # `rtk`-wrapped `pnpm install` can silently no-op the lockfile write
 
 The repo's PreToolUse hook routes `pnpm` commands through `rtk pnpm` for
-compact output. On commands that _would_ update `pnpm-lock.yaml`, the
+compact output. On commands that *would* update `pnpm-lock.yaml`, the
 rtk wrapper can short-circuit to `Done in 1.1s` / `ok` without writing
 the lockfile. The filesystem `pnpm-lock.yaml` stays as it was; the
 in-memory resolution lives only at `node_modules/.pnpm/lock.yaml`.

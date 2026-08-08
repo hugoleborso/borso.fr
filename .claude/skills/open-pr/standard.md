@@ -7,7 +7,7 @@ The canonical shape of a `/open-pr` body. Three rules:
    `<details>` nested inside a level-2 `<details>`.
 2. **Sourcing is verbatim.** Every level-1 line, ADR rationale, spec
    excerpt, validation row is pulled near-verbatim from the upstream
-   document. The skill is a _renderer_, not an author.
+   document. The skill is a *renderer*, not an author.
 3. **Hierarchy by surface area.** A 200-line feature has more
    collapsible space than a 20-line fix. Skip blocks that don't apply
    — no empty `<details>` shells. Silence is information: it tells
@@ -17,12 +17,11 @@ The canonical shape of a `/open-pr` body. Three rules:
 
 ### Section 1: Summary (level 1)
 
-1–3 sentences. The _why_ + the _what_ in one breath. No "see below" /
+1–3 sentences. The *why* + the *what* in one breath. No "see below" /
 "more details inside" pointers — those defeat the level-1 promise.
 
 ```markdown
 ## Summary
-
 Adds the live race-day dashboard for last-loop-lepin: spectator
 leaderboard, admin punch console, runner fiche page, all backed by a
 single Hono Lambda over Aurora DSQL. Validates PreviewableApp's first
@@ -37,8 +36,7 @@ live in section 8.
 
 ```markdown
 ## Validation
-
-- Visual: PASS — [report](docs/features/<app>/<slug>/validation/visual-validation-…md)
+- Visual:    PASS — [report](docs/features/<app>/<slug>/validation/visual-validation-…md)
 - Technical: PASS — [report](…/technical-validation-…md)
 ```
 
@@ -52,8 +50,8 @@ detected by the presence of `docs/features/<app>/<slug>/runs/<run-id>/`
 on the branch. Skipped on manual / single-shot PRs (silence is
 information: a clean linear build doesn't need this section).
 
-The section answers a single reviewer question: _how messy was the
-build, and what did the safety net catch?_ — without the reviewer
+The section answers a single reviewer question: *how messy was the
+build, and what did the safety net catch?* — without the reviewer
 having to read the journal themselves.
 
 **Level 1: one-sentence counter line.** Sourced from `state.json` +
@@ -65,8 +63,8 @@ the per-agent verdict YAMLs. Includes:
 - Kaizen items queued (count of items captured during the run,
   surfaced for `/after-task-dantotsus` post-merge).
 
-A clean run renders as: _"Built in 1 implementation round + 1
-validation round, 0 defects caught, 0 kaizen items."_ — which itself
+A clean run renders as: *"Built in 1 implementation round + 1
+validation round, 0 defects caught, 0 kaizen items."* — which itself
 is information: the system held the line, no rework was needed.
 
 **Level 2: a Mermaid flowchart + a per-agent table.**
@@ -89,7 +87,7 @@ The section closes with a single link to the run directory
 (`runs/<run-id>/`) so a reviewer who wants the full picture can dig
 into the journal + state file.
 
-````markdown
+```markdown
 ## Orchestration trace
 
 Built in 2 implementation rounds + 2 validation rounds, 1 defect
@@ -105,15 +103,14 @@ flowchart LR
   Val1 -- FAIL (technical) --> Impl2
   Impl2 --> Val2 --> Ship
 ```
-````
 
-| Round | Agent                | Output              | Verdict        | Commits | Notes                          |
-| ----- | -------------------- | ------------------- | -------------- | ------- | ------------------------------ |
-| 1     | implementation       | foundation slice    | done (partial) | 6       | priorities 1-5 + core modules  |
-| 1     | visual-validation    | 4P / 0F / 18U       | PASS_EU        | 0       | deferred UI = unverifiable     |
-| 1     | technical-validation | 74P / 1F / 12U      | FAIL           | 0       | auth bypass on rotate-password |
-| 2     | implementation (fix) | gated rotate router | done           | 1       | A09/D20 closed                 |
-| 2     | technical-validation | 0 new FAIL          | PASS_EU        | 0       | blocker closed, no regression  |
+| Round | Agent | Output | Verdict | Commits | Notes |
+|---|---|---|---|---|---|
+| 1 | implementation | foundation slice | done (partial) | 6 | priorities 1-5 + core modules |
+| 1 | visual-validation | 4P / 0F / 18U | PASS_EU | 0 | deferred UI = unverifiable |
+| 1 | technical-validation | 74P / 1F / 12U | FAIL | 0 | auth bypass on rotate-password |
+| 2 | implementation (fix) | gated rotate router | done | 1 | A09/D20 closed |
+| 2 | technical-validation | 0 new FAIL | PASS_EU | 0 | blocker closed, no regression |
 
 **Run state:** [`runs/2026-05-19-1937-pragma/`](…)
 
@@ -123,8 +120,8 @@ flowchart LR
 ### Section 3: Architecture choices (level 1 → 2 → 3)
 
 One bullet per ADR referenced by the diff or the plan. Level 1 = the
-chosen path, one line. Level 2 = the ADR's _Decision_ + _Consequences_.
-Level 3 = _Alternatives considered_ + _Evaluation rubric_.
+chosen path, one line. Level 2 = the ADR's *Decision* + *Consequences*.
+Level 3 = *Alternatives considered* + *Evaluation rubric*.
 
 ```markdown
 ## Architecture choices
@@ -150,8 +147,8 @@ Level 3 = _Alternatives considered_ + _Evaluation rubric_.
   </details>
 ```
 
-If the diff makes a non-trivial decision _without_ an ADR, the skill
-flags it in section 9 (_Known gaps_) — `/adr` should run before the PR
+If the diff makes a non-trivial decision *without* an ADR, the skill
+flags it in section 9 (*Known gaps*) — `/adr` should run before the PR
 is opened.
 
 ### Section 4: What the user sees / does (level 1 → 2)
@@ -212,10 +209,10 @@ reproduce the gate.
 <details><summary>Automated gates (run on CI)</summary>
 
 - `pnpm --filter @borso-app/<app> run test:core` → 120 tests, 100/100/100/100 perFile.
-- `pnpm --filter @borso-app/<app> run test` → 198 tests over Postgres.
-- `pnpm --filter @borso-app/<app> run typecheck` → clean.
-- `pnpm --filter @borso-app/<app> run lint` → clean.
-- `pnpm exec knip` → clean.
+- `pnpm --filter @borso-app/<app> run test`       → 198 tests over Postgres.
+- `pnpm --filter @borso-app/<app> run typecheck`  → clean.
+- `pnpm --filter @borso-app/<app> run lint`       → clean.
+- `pnpm exec knip`                                → clean.
 
 </details>
 ```
@@ -230,13 +227,13 @@ replacement.
 ```markdown
 <details><summary>What changed (diffstat)</summary>
 
-| Folder                                         | Lines      | Purpose                           |
-| ---------------------------------------------- | ---------- | --------------------------------- |
-| `apps/last-loop-lepin/api/`                    | +1240 / -0 | Hono + Drizzle backend            |
-| `apps/last-loop-lepin/site/`                   | +890 / -0  | Vite + React frontend             |
-| `apps/last-loop-lepin/cdk/`                    | +260 / -0  | PreviewableApp + DsqlClusterStack |
-| `docs/features/last-loop-lepin/race-day-live/` | +1800 / -0 | spec, plan, validation            |
-| `infra/cdk/`                                   | +0 / -0    | (unchanged)                       |
+| Folder | Lines | Purpose |
+|---|---|---|
+| `apps/last-loop-lepin/api/`  | +1240 / -0 | Hono + Drizzle backend |
+| `apps/last-loop-lepin/site/` | +890  / -0 | Vite + React frontend |
+| `apps/last-loop-lepin/cdk/`  | +260  / -0 | PreviewableApp + DsqlClusterStack |
+| `docs/features/last-loop-lepin/race-day-live/` | +1800 / -0 | spec, plan, validation |
+| `infra/cdk/`                 | +0 / -0 | (unchanged) |
 
 `git log origin/main..HEAD --oneline`
 
@@ -258,7 +255,7 @@ disclosure rule. Level 1 because the gap has to be visible up-front.
 
 ### Section 9: Known gaps & follow-ups (level 2)
 
-Bullets for everything _intentionally deferred_. Each bullet either
+Bullets for everything *intentionally deferred*. Each bullet either
 links to a Dantotsu, a `docs/knowledge/` entry, or a future kaizen
 PR.
 
@@ -279,7 +276,7 @@ PR.
 ### Section 10: Dantotsus uncovered (level 2, optional)
 
 If the work surfaced one or more Dantotsus, list them with a one-line
-_Root cause / Eradication_ per entry. Empty section is skipped.
+*Root cause / Eradication* per entry. Empty section is skipped.
 
 ```markdown
 <details><summary>Dantotsus uncovered</summary>

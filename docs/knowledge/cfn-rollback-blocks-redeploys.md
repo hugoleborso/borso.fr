@@ -12,13 +12,13 @@ $ aws cloudformation describe-stacks --stack-name borso-fr-pr-11 \
 UPDATE_ROLLBACK_IN_PROGRESS
 ```
 
-`cdk deploy` against a stack in `UPDATE_*` (other than `UPDATE_COMPLETE`) gets rejected immediately by the CFN control plane — _not_ by CDK, which is why the failure looks low-level and fast.
+`cdk deploy` against a stack in `UPDATE_*` (other than `UPDATE_COMPLETE`) gets rejected immediately by the CFN control plane — *not* by CDK, which is why the failure looks low-level and fast.
 
 ## Why
 
 CloudFormation's state machine only accepts new operations from a small set of terminal states (`CREATE_COMPLETE`, `UPDATE_COMPLETE`, `UPDATE_ROLLBACK_COMPLETE`, `ROLLBACK_COMPLETE`). Any `*_IN_PROGRESS` state holds a lock; `cdk deploy` calls `CreateChangeSet`, which returns `ValidationError: Stack is in UPDATE_ROLLBACK_IN_PROGRESS state and can not be updated.` That error percolates up and the CLI exits.
 
-Rollback duration is dominated by the _slowest custom-resource UPDATE_. In our case the same `BucketDeployment` Lambda that OOM'd on the way out also has to run on the way back to re-upload the _previous_ asset set (which was equally heavy) — so rollback took ~14 min, not seconds. During the whole window, no deploy retry will succeed.
+Rollback duration is dominated by the *slowest custom-resource UPDATE*. In our case the same `BucketDeployment` Lambda that OOM'd on the way out also has to run on the way back to re-upload the *previous* asset set (which was equally heavy) — so rollback took ~14 min, not seconds. During the whole window, no deploy retry will succeed.
 
 ## How to handle it
 
@@ -40,7 +40,7 @@ Rollback duration is dominated by the _slowest custom-resource UPDATE_. In our c
 
 3. **Then trigger a new deploy.** A no-op empty commit (`git commit --allow-empty -m "ci: retry"`) is the cheapest way to re-run the preview workflow.
 
-4. **If rollback itself fails** (`UPDATE_ROLLBACK_FAILED`), use `aws cloudformation continue-update-rollback --stack-name <stack> --resources-to-skip <logical-id>` to advance past the failing resource. Skip the resource that's failing — _not_ the resource you originally tried to update.
+4. **If rollback itself fails** (`UPDATE_ROLLBACK_FAILED`), use `aws cloudformation continue-update-rollback --stack-name <stack> --resources-to-skip <logical-id>` to advance past the failing resource. Skip the resource that's failing — *not* the resource you originally tried to update.
 
 ## Related
 

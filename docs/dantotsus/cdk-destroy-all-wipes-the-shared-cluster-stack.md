@@ -3,8 +3,8 @@ date: 2026-06-05
 introduced-at: implementation
 detected-at: production
 severity: high
-related-pr: '#26'
-fix-pr: '#30'
+related-pr: "#26"
+fix-pr: "#30"
 fix-commits: [b35a066, 3a5c9f6]
 eradication-level: 2
 time-to-detect: days
@@ -24,7 +24,7 @@ Can't delete cluster: Deletion protection is enabled. To proceed,
 disable deletion protection and try again. (Service: Dsql, Status Code: 400)
 ```
 
-The per-PR app stack `pragma-pr-26` was _supposed_ to be the only
+The per-PR app stack `pragma-pr-26` was *supposed* to be the only
 thing torn down on PR close. Instead the teardown tried to delete the
 long-lived, shared DSQL cluster that holds all of the app's database
 state.
@@ -36,7 +36,7 @@ state.
    app. Pragma's `destroy` script was `cdk destroy --all --force`.
 2. **Why does `--all` touch the cluster?** The pragma CDK app
    (`apps/pragma/cdk/bin/cdk.ts`) synthesizes **two** stacks:
-   `pragma-pr-<N>` (the per-stage app) _and_ `pragma-cluster` (the
+   `pragma-pr-<N>` (the per-stage app) *and* `pragma-cluster` (the
    long-lived DSQL owner, shared across every preview and prod).
    `--all` means "every stack this app synthesizes" — including the
    cluster.
@@ -69,7 +69,7 @@ includes the shared, stateful, cross-stage DSQL cluster.
   protection + a following prod deploy), so it carried an implicit
   seal of approval.
 - **Production monitoring:** the `DELETE_FAILED` state was only
-  surfaced because the operator's _next_ action (prod deploy) failed
+  surfaced because the operator's *next* action (prod deploy) failed
   against it — there is no alarm on cluster-stack delete attempts.
 
 ## Countermeasure
@@ -78,9 +78,9 @@ includes the shared, stateful, cross-stage DSQL cluster.
   `PR_NUMBER` env var; fail-fast with a named message when it's absent
   so a local `destroy` can never wildcard the cluster.
 - **Operator action:** unstick the already-broken `pragma-cluster`
-  stack by deleting it while _retaining_ the DSQL resource —
+  stack by deleting it while *retaining* the DSQL resource —
   `aws cloudformation delete-stack --stack-name pragma-cluster
---retain-resources Cluster3DA9CCBA` — then re-run the prod deploy so
+  --retain-resources Cluster3DA9CCBA` — then re-run the prod deploy so
   CDK recreates a fresh cluster stack. The retained cluster lives on as
   an orphan; clean up post-incident via
   `aws dsql update-cluster --no-deletion-protection-enabled` then
@@ -122,6 +122,6 @@ applied in the same kaizen PR.
 
 ## See also
 
-- [`cdk-destroy-failure-swallowed-by-trailing-or-echo.md`](./cdk-destroy-failure-swallowed-by-trailing-or-echo.md) — the teardown's _other_ destroy hazard (masking failures), fixed earlier.
+- [`cdk-destroy-failure-swallowed-by-trailing-or-echo.md`](./cdk-destroy-failure-swallowed-by-trailing-or-echo.md) — the teardown's *other* destroy hazard (masking failures), fixed earlier.
 - [`docs/knowledge/cfn-update-rollback-recovery.md`](../knowledge/cfn-update-rollback-recovery.md) — recovering a stack stuck in a failed CFN state.
 - [`dsql-first-deploy-must-be-prod.md`](./dsql-first-deploy-must-be-prod.md) — why pragma's never-deployed-prod cluster had no repair path.

@@ -89,16 +89,16 @@ bb2bdca feat(pragma): scaffold workspace, CDK placeholder, path filters
 
 ## Local gate state (pre-push)
 
-| Gate                                                       | Status | Detail                                                                                                                             |
-| ---------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm install`                                             | ✓      | Workspace registered; argon2 native build runs on demand.                                                                          |
-| `pnpm --filter @borso-app/pragma run typecheck`            | ✓      | `tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit` clean.                                                                         |
-| `pnpm exec biome lint apps/pragma`                         | ✓      | 0 errors / 0 warnings on pragma sources (`no-type-assertion-except-unknown` plugin happy).                                         |
-| `pnpm exec biome format apps/pragma`                       | ✓      | Idempotent.                                                                                                                        |
-| `pnpm --filter @borso-app/pragma run test:core --coverage` | ✓      | 108 tests across 11 files; 100% per-file coverage on every `*.core.ts` / `*.utils.ts` (statements / branches / functions / lines). |
-| `pnpm --filter @borso-app/pragma run test`                 | ✓      | 7 back-e2e tests against the sandbox Postgres (`scripts/local-postgres.sh`): bootstrap, login, rate-limit, middleware, rotation.   |
-| `pnpm --filter @borso-app/pragma run build`                | ✓      | Vite produces `apps/pragma/dist/` (252 KB / 79 KB gz).                                                                             |
-| `pnpm exec knip`                                           | ✓      | No unused exports / files / deps.                                                                                                  |
+| Gate | Status | Detail |
+|---|---|---|
+| `pnpm install` | ✓ | Workspace registered; argon2 native build runs on demand. |
+| `pnpm --filter @borso-app/pragma run typecheck` | ✓ | `tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit` clean. |
+| `pnpm exec biome lint apps/pragma` | ✓ | 0 errors / 0 warnings on pragma sources (`no-type-assertion-except-unknown` plugin happy). |
+| `pnpm exec biome format apps/pragma` | ✓ | Idempotent. |
+| `pnpm --filter @borso-app/pragma run test:core --coverage` | ✓ | 108 tests across 11 files; 100% per-file coverage on every `*.core.ts` / `*.utils.ts` (statements / branches / functions / lines). |
+| `pnpm --filter @borso-app/pragma run test` | ✓ | 7 back-e2e tests against the sandbox Postgres (`scripts/local-postgres.sh`): bootstrap, login, rate-limit, middleware, rotation. |
+| `pnpm --filter @borso-app/pragma run build` | ✓ | Vite produces `apps/pragma/dist/` (252 KB / 79 KB gz). |
+| `pnpm exec knip` | ✓ | No unused exports / files / deps. |
 
 ## Scope shipped vs deferred
 
@@ -131,12 +131,12 @@ bb2bdca feat(pragma): scaffold workspace, CDK placeholder, path filters
 
 The next stage of the orchestrator chain will dispatch `/visual-validation` and `/technical-validation`.
 
-- **`/visual-validation` will FAIL on this PR's slice.** The spec's _Use cases / edge cases_ section names six visual scenarios (catalog new-song, members mastery matrix, setlist drag/warning/energy, sessions detail, bars kanban, offline PWA). None of those route surfaces exist yet — the site renders only a single scaffold screen showing the i18n'd "Pragma — squelette prêt" message. The orchestrator should treat the visual verdict as expected-FAIL and replan on the deferred UI surfaces rather than escalate.
+- **`/visual-validation` will FAIL on this PR's slice.** The spec's *Use cases / edge cases* section names six visual scenarios (catalog new-song, members mastery matrix, setlist drag/warning/energy, sessions detail, bars kanban, offline PWA). None of those route surfaces exist yet — the site renders only a single scaffold screen showing the i18n'd "Pragma — squelette prêt" message. The orchestrator should treat the visual verdict as expected-FAIL and replan on the deferred UI surfaces rather than escalate.
 - **`/technical-validation` should PASS** on the slice that landed: every Q.O.D. row whose target is a `*.core.ts` / `*.utils.ts` is covered at 100%; the auth row matches ADR-0004 verbatim (argon2id + HMAC cookie + `app_config` storage + rotation endpoint + rate-limit). The deferred-UI rows are explicitly out of scope for this PR.
 
 ## Open-question resolutions applied (per orchestrator brief)
 
-The plan's _Open questions_ are documented; this slice applied the plan's defaults verbatim:
+The plan's *Open questions* are documented; this slice applied the plan's defaults verbatim:
 
 1. **`mastery_default` rendering** — defer to the UI PR; the schema lets the 5 × 7 cartesian product render from `(member, instrument)` lists with rows written only on edit.
 2. **PWA manifest icons** — `manifest.webmanifest` ships with an empty `icons: []` list; visible defect on iOS / Android install but not blocking the scaffold. Flag for the icon-generation follow-up before prod.

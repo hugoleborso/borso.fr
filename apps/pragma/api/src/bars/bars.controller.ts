@@ -10,6 +10,7 @@ import { getDatabase } from '../database/client';
 import { barCreateSchema, barIdParamSchema, barUpdateSchema } from './bars.schema';
 import { createBar, getBarById, getBarsSortedByName, patchBar, removeBar } from './bars.service';
 
+// @FollowsBlueprint controller-dispatch
 export function buildBarsRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)

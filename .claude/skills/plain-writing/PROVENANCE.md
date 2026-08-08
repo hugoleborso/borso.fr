@@ -12,7 +12,7 @@ this repository goes in the present file instead.
 ## How the skill applies here
 
 Apply the plain writing rules to every piece of prose we write, which includes
-the standards under `docs/standards`, the blueprints under `docs/blueprints`,
+the standards under `docs/standards`, the blueprint annotations,
 the dantotsus, the architecture decision records, commit message bodies, and
 pull request descriptions.
 

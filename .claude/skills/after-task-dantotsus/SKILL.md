@@ -55,17 +55,17 @@ reality before any conclusions.
 Sources to walk in order, capturing each friction event as one row:
 
 - **`KAIZEN.md` (primary input).** If the task maintained a root-level
-  `KAIZEN.md` scratch file (gitignored; per CLAUDE.md's _Self-improvement
-  loop_), read it first — each bullet is a friction event already
+  `KAIZEN.md` scratch file (gitignored; per CLAUDE.md's *Self-improvement
+  loop*), read it first — each bullet is a friction event already
   captured in real time, problem-only. Map every bullet to an inventory
   row. Many will resolve to `no-op: already eradicated by <existing
-entry>` once cross-checked against the corpus — that cross-check is the
+  entry>` once cross-checked against the corpus — that cross-check is the
   point. **`rm KAIZEN.md` once the kaizen PR is open** (it's local-only
   scratch, not committed).
 - **Conversation transcript.** Every interrupt-and-redirect from
-  the user (_"wait, you missed X"_, _"NO, do Y"_, _"why did you
-  assume Z"_, _"that doesn't work, try …"_, _"there was a lot more
-  friction than what you said"_) is a row. Every silent
+  the user (*"wait, you missed X"*, *"NO, do Y"*, *"why did you
+  assume Z"*, *"that doesn't work, try …"*, *"there was a lot more
+  friction than what you said"*) is a row. Every silent
   course-correction the user made is a row.
 - **Commit history**, especially:
   - `Revert "…"` commits (an approach tried, rejected, replaced).
@@ -90,18 +90,18 @@ entry>` once cross-checked against the corpus — that cross-check is the
 Output: a markdown table with these columns, **at the very top of
 the kaizen PR description**, before any other section:
 
-| #   | When | Friction | Sources / evidence               | Decision                                            |
-| --- | ---- | -------- | -------------------------------- | --------------------------------------------------- |
-| 01  | spec | …        | <commit / report / chat snippet> | dantotsu / knowledge / no-op (with one-line reason) |
+| # | When | Friction | Sources / evidence | Decision |
+| --- | --- | --- | --- | --- |
+| 01 | spec | … | <commit / report / chat snippet> | dantotsu / knowledge / no-op (with one-line reason) |
 
 Conventions:
 
 - `When`: stage where the friction occurred — `conception` /
   `spec` / `plan` / `implementation` / `validation` /
   `pr-description` / `deploy` / `post-merge`.
-- `Friction`: one sentence, user-perspective. _"I assumed X without
-  asking; user pulled me back"_, _"deploy failed with CNAME
-  conflict"_, _"validation rule missing led to false PASS"_.
+- `Friction`: one sentence, user-perspective. *"I assumed X without
+  asking; user pulled me back"*, *"deploy failed with CNAME
+  conflict"*, *"validation rule missing led to false PASS"*.
 - `Sources / evidence`: at least one of `commit:<sha>`,
   `report:<path>`, `comment:<github-link>`, `transcript:<paraphrase>`,
   `ci:<run-url>`. Concrete. A row without evidence is a row that
@@ -126,59 +126,59 @@ think about this later".**
 After the table is committed to writing, scan it as a whole.
 Patterns emerge that single-row inspection misses:
 
-- _Three rows of the form "I assumed X without asking"_ → the
+- *Three rows of the form "I assumed X without asking"* → the
   spec skill needs a stricter perspective-confrontation rule, not
   three separate dantotsus.
-- _Two rows of "the validator missed Y because Y wasn't named in
-  the spec"_ → spec template needs a new sub-section, one
+- *Two rows of "the validator missed Y because Y wasn't named in
+  the spec"* → spec template needs a new sub-section, one
   dantotsu covers both.
-- _Five rows of "tool W errored on input Z"_ → one knowledge
+- *Five rows of "tool W errored on input Z"* → one knowledge
   entry for the tool quirk, not five.
 
 Drop subjects that overlap (use `merge into <slug>` rows). Be
 ruthless: ten thin entries help nobody; three sharp ones do — but
-the inventory has to come first, so the ruthless cut is _informed_.
+the inventory has to come first, so the ruthless cut is *informed*.
 
 ### 2b. Classification cheatsheet
 
 For each surviving subject (i.e. not a `merge into` row):
 
-| Class                                                                                 | Test                                                                                   | Output                                                                                                                                                           |
-| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Real defect** (we shipped or almost shipped a bug, or our code did the wrong thing) | The fix went into the codebase / workflows.                                            | **Dantotsu** under `docs/dantotsus/`. Run [`/dantotsu`](../dantotsu/SKILL.md) per subject. Eradication is mandatory.                                             |
-| **Design pivot** (we tried approach A, abandoned it for B)                            | The PR has reverts or the user explicitly said "let's not do that".                    | **Dantotsu** about the conception-stage misconception that made A look right. Eradication: structural change so the abandoned approach is no longer expressible. |
-| **Vendor surprise** (AWS, GitHub, pnpm, etc. behaved unlike its docs)                 | The behaviour is a fact of life of the underlying tool; nothing in our code is broken. | **Knowledge entry** under `docs/knowledge/`. No causal-chain ceremony required.                                                                                  |
-| **Operator confusion** (a one-liner failed because of shell / CLI quirks)             | The "fix" was a doc / convention, no code change.                                      | **Knowledge entry** under `docs/knowledge/`.                                                                                                                     |
-| **Reusable insight** (something the team should know but isn't really a defect)       | We learned how something works; future contributors would benefit.                     | **Knowledge entry**. Knowledge is broad — anything genuinely useful.                                                                                             |
-| **No-op**                                                                             | Friction was real but already eradicated by an upstream rule, or genuinely too small.  | One-line reason inline in the table. Never a silent skip.                                                                                                        |
+| Class | Test | Output |
+| --- | --- | --- |
+| **Real defect** (we shipped or almost shipped a bug, or our code did the wrong thing) | The fix went into the codebase / workflows. | **Dantotsu** under `docs/dantotsus/`. Run [`/dantotsu`](../dantotsu/SKILL.md) per subject. Eradication is mandatory. |
+| **Design pivot** (we tried approach A, abandoned it for B) | The PR has reverts or the user explicitly said "let's not do that". | **Dantotsu** about the conception-stage misconception that made A look right. Eradication: structural change so the abandoned approach is no longer expressible. |
+| **Vendor surprise** (AWS, GitHub, pnpm, etc. behaved unlike its docs) | The behaviour is a fact of life of the underlying tool; nothing in our code is broken. | **Knowledge entry** under `docs/knowledge/`. No causal-chain ceremony required. |
+| **Operator confusion** (a one-liner failed because of shell / CLI quirks) | The "fix" was a doc / convention, no code change. | **Knowledge entry** under `docs/knowledge/`. |
+| **Reusable insight** (something the team should know but isn't really a defect) | We learned how something works; future contributors would benefit. | **Knowledge entry**. Knowledge is broad — anything genuinely useful. |
+| **No-op** | Friction was real but already eradicated by an upstream rule, or genuinely too small. | One-line reason inline in the table. Never a silent skip. |
 
 ### 2c. Library-search pass — before writing custom anything
 
 For every subject classified as **real defect** or **design pivot**
-whose draft eradication is _"add a Biome plugin"_, _"add a hook"_,
-_"add a CI script"_, _"build a wrapper / a helper / a custom utility"_,
+whose draft eradication is *"add a Biome plugin"*, *"add a hook"*,
+*"add a CI script"*, *"build a wrapper / a helper / a custom utility"*,
 or any other "we'll write X" — pause and run a library-search pass
 **before** opening the dantotsu file.
 
-The question to ask: _is there a battle-tested library that, if
+The question to ask: *is there a battle-tested library that, if
 adopted, would make the bug class impossible by deleting our code
-that hosts the bug?_ That's a **level-1** eradication (structural
+that hosts the bug?* That's a **level-1** eradication (structural
 impossibility) instead of the **level-2** lint rule you were about
 to draft.
 
 The pass is mechanical:
 
-1. Name the _role_ of the custom code you'd write. Not the bug — the
-   role. _"Subscribe to an external store and dedupe"_ → data-fetching
-   library. _"Type a fetch surface with route inference"_ → RPC
-   client. _"Parse XML to GeoJSON"_ → geo library. _"Manage form state
-   with validation"_ → form library.
+1. Name the *role* of the custom code you'd write. Not the bug — the
+   role. *"Subscribe to an external store and dedupe"* → data-fetching
+   library. *"Type a fetch surface with route inference"* → RPC
+   client. *"Parse XML to GeoJSON"* → geo library. *"Manage form state
+   with validation"* → form library.
 2. Search:
    - `git grep -l '<topic>' node_modules/.modules.yaml` — is something
      already installed that we forgot about?
-   - npm / web search for the role + the stack we're on (e.g. _"react
-     data fetching library 2026"_).
-   - Skim the top 2-3 hits' README for _"does this do X?"_.
+   - npm / web search for the role + the stack we're on (e.g. *"react
+     data fetching library 2026"*).
+   - Skim the top 2-3 hits' README for *"does this do X?"*.
 3. Evaluate against the context:
    - Bundle weight (front-side only).
    - Peer-dep constraints (React version, Node version).
@@ -187,26 +187,26 @@ The pass is mechanical:
 4. Decide:
    - **Adopt** → the eradication is the migration, not the plugin.
      Promote level from 2 to 1. The plugin can still ship as
-     defence-in-depth, but the _cause_ of the bug class has to be
+     defence-in-depth, but the *cause* of the bug class has to be
      deleted.
    - **Build custom** → document the trade-off in the dantotsu's
-     _Eradication_ block: what library was considered, why it didn't
+     *Eradication* block: what library was considered, why it didn't
      fit, what the cost-benefit decision was. Without that note, the
      next kaizen re-discovers the same library.
 
 **Rule of thumb:** if **three** rows in the inventory touch the same
-_architectural layer_ (data fetching, routing, form validation,
-i18n, …), the meta-pattern is _"we built our own where a library
-exists"_. Add an inventory row that says so, classify it as a
+*architectural layer* (data fetching, routing, form validation,
+i18n, …), the meta-pattern is *"we built our own where a library
+exists"*. Add an inventory row that says so, classify it as a
 real-defect / design-pivot with level-1 migration as the
 eradication, and merge the three original rows into it. **Reuse
-before reinvent** is the lean rule ; you can build custom _after_
+before reinvent** is the lean rule ; you can build custom *after*
 you've named the libraries you rejected and why.
 
-> _Mirrors [`docs/dantotsus/built-my-own-before-checking-the-library.md`](../../../docs/dantotsus/built-my-own-before-checking-the-library.md)
+> *Mirrors [`docs/dantotsus/built-my-own-before-checking-the-library.md`](../../../docs/dantotsus/built-my-own-before-checking-the-library.md)
 > applied at kaizen time instead of implementation time. See also
 > [`docs/knowledge/audit-imported-deps-and-patterns-when-planning.md`](../../../docs/knowledge/audit-imported-deps-and-patterns-when-planning.md)
-> for the planning-stage analogue._
+> for the planning-stage analogue.*
 
 ### 3. Write the entries
 
@@ -218,7 +218,7 @@ For each surviving subject:
    user-story name.
 2. Copy `docs/dantotsus/_template.md`.
 3. Fill the frontmatter. Tag pool: `grep -h '^tags:'
-docs/dantotsus/*.md | sort -u` — only add a new tag if no
+   docs/dantotsus/*.md | sort -u` — only add a new tag if no
    existing one fits.
 4. Walk the seven Dantotsu steps (see [`/dantotsu`](../dantotsu/SKILL.md)).
 5. **Ship the eradication** — code, in this PR. Pick the highest
@@ -255,7 +255,7 @@ plus whatever code commits the eradications required. PR title:
 **PR body shape (in this order, every section required):**
 
 1. `## Friction inventory` — the table built in step 1, verbatim.
-   This is the _first_ thing in the PR body; reviewers see the
+   This is the *first* thing in the PR body; reviewers see the
    problem space before any conclusion.
 2. `## Patterns` — a short paragraph naming the patterns the
    inventory revealed (see step 2). Keep it to 3–5 bullets.
@@ -292,7 +292,7 @@ label.
 Still open the PR with a CLAUDE.md-aligned commit:
 `docs: no setup changes from PR #<N>`. Body: one paragraph noting
 what the PR shipped and confirming no defect / surprise / pivot /
-operator-confusion came up worth capturing. The loop's _existence_,
+operator-confusion came up worth capturing. The loop's *existence*,
 not its volume, is what keeps the system improving.
 
 ## Hard rules
@@ -345,5 +345,5 @@ not its volume, is what keeps the system improving.
   freshest. The skill exists because this debt always slips.
 - **"Knowledge is enough for this defect."**
   → Almost always wrong. Re-read the root cause and push for the
-  highest level you can reach. Knowledge is the _floor_, not the
+  highest level you can reach. Knowledge is the *floor*, not the
   default.

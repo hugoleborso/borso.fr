@@ -9,11 +9,10 @@ of the dantotsu on the spectator-page banner (PR #23 post-merge).
 A field on the edition. Mutates only via
 `apiClient.adminTransitionEditionStatus(slug, 'finished')` — the
 operator-facing back-office button. Cannot transition automatically.
-Holds operator intent: _"I've decided to close this edition; show the
-final classement, enable CSV export, etc."_
+Holds operator intent: *"I've decided to close this edition; show the
+final classement, enable CSV export, etc."*
 
 Read this signal when the action implies operator-side closure:
-
 - CSV download of the final classement (only meaningful once the
   operator has signed off).
 - Hiding admin actions that only make sense pre-close.
@@ -33,9 +32,8 @@ raceEnded = isRaceEndReached(edition, now) || inRaceCount <= 1
 - `inRaceCount <= 1` — true when at most one runner is still
   `in-race` (backyard rule: the last runner standing wins).
 
-This signal carries engine truth. Read it for any _behaviour-side_
+This signal carries engine truth. Read it for any *behaviour-side*
 gate:
-
 - The "Course terminée — classement final" banner on the spectator
   page (so the natural end of the race surfaces immediately without
   waiting for admin intervention).
@@ -52,13 +50,13 @@ able to close the books deliberately, regardless of engine truth —
 e.g. to publish the final classement before the wall-clock end).
 
 The two will almost always agree once the wall-clock crosses
-`endsAt`; the gap is the window between _"engine says it's over"_
-(automatic) and _"operator pushed the button"_ (manual). Behaviour
+`endsAt`; the gap is the window between *"engine says it's over"*
+(automatic) and *"operator pushed the button"* (manual). Behaviour
 gates should not depend on that gap.
 
 ## Worked example: the SpectatorPage banner
 
-The banner _« Course terminée — classement final affiché. »_ now
+The banner *« Course terminée — classement final affiché. »* now
 fires on the disjunction (`raceEnded || edition.status === 'finished'`).
 The CSV download link, sitting in the same banner, stays on
 `edition.status === 'finished'` because the archive CSV is an

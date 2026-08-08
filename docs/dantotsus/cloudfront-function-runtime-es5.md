@@ -117,7 +117,7 @@ accepts the syntax at deploy time but fails opaquely at first invocation.
 describe('eradication: cf-host-routing-function uses ES5-only syntax', () => {
   const sourcePath = path.join(INTERNAL_DIR, 'cf-host-routing-function.code.js');
   const stripped = readStripped(sourcePath);
-  it('uses var, not let or const', () => expect(stripped).not.toMatch(/\b(let|const)\s+\w+\s*=/));
+  it('uses var, not let or const',     () => expect(stripped).not.toMatch(/\b(let|const)\s+\w+\s*=/));
   it('does not use optional chaining', () => expect(stripped).not.toMatch(/\?\./));
   it('does not use template literals', () => expect(stripped).not.toMatch(/`[^`]*\$\{/));
 });

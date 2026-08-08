@@ -18,16 +18,16 @@ tags: [react, tanstack-query, dsql, optimistic-updates, pragma]
 Dragging a setlist row to a new position animated correctly, then —
 once the drop animation finished — the row **jumped back to its
 original slot** and stayed there. The user reported it twice, the
-second time precisely: _"l'animation est correcte mais une fois
+second time precisely: *"l'animation est correcte mais une fois
 l'animation terminée, la carte saute à son état d'origine. Est-ce que
-c'est le même state partout ?"_
+c'est le même state partout ?"*
 
 The server had the new order persisted the whole time.
 
 ## Root-cause chain
 
 1. **Why did the row revert after the animation?** The TanStack Query
-   cache for the entries list was overwritten with the _old_ order
+   cache for the entries list was overwritten with the *old* order
    shortly after the optimistic update applied the new one.
 2. **Why was the cache overwritten with the old order?** The reorder
    mutation's `onSettled` ran `invalidateQueries`, which refetched the
@@ -47,11 +47,11 @@ The server had the new order persisted the whole time.
    (like reorder) where the client already holds the complete,
    authoritative result and the `PUT` confirms it with 200.
 
-**Root cause:** _thought "invalidate-and-refetch after every mutation
+**Root cause:** *thought "invalidate-and-refetch after every mutation
 is always safe", actually "for a write whose full result the client
 already knows, the post-write refetch adds nothing and can race a
 not-yet-visible DSQL commit on another connection, reverting the
-optimistic update"._
+optimistic update".*
 
 ## Detection failure causes
 
@@ -65,7 +65,7 @@ optimistic update"._
   lag was probed with a tight `curl` loop (`PUT` then immediate `GET`)
   and **never reproduced**, because `curl --keepalive` reuses one warm
   connection, where DSQL reads-its-own-writes consistently. The lag
-  only appears across _separate_ connections — exactly the app's
+  only appears across *separate* connections — exactly the app's
   `PUT`-then-`GET` shape. The warm-loop test gave false confidence and
   sent two wrong fixes out (see
   [`debug-client-state-reverts-in-the-browser-first.md`](../knowledge/debug-client-state-reverts-in-the-browser-first.md)).
@@ -94,7 +94,7 @@ apart).
 
 **Reference:** [PR #31](https://github.com/hugoleborso/borso.fr/pull/31) ·
 commit [`12bf7d9`](https://github.com/hugoleborso/borso.fr/commit/12bf7d9) ·
-CLAUDE.md _Clean code_ "Optimistic writes the client fully knows".
+CLAUDE.md *Clean code* "Optimistic writes the client fully knows".
 
 **The actual fix:**
 
@@ -124,7 +124,7 @@ CLAUDE.md _Clean code_ "Optimistic writes the client fully knows".
 **Sibling defects swept:** `useAppendSetlistEntry` / `useDeleteSetlistEntry`
 share the refetch-after-write shape but legitimately need the round-trip
 (append needs the server-assigned id), so they keep the refetch and are
-_not_ changed here. They remain latent candidates for the
+*not* changed here. They remain latent candidates for the
 reconcile-from-response upgrade; the CLAUDE.md rule names the boundary
 so the next implementer reconciles from the mutation response rather
 than blind-refetching when the response carries the full result.

@@ -37,7 +37,7 @@ in a tight inner loop.
    them, CDK has no `IDistribution` to call against.
 3. **Why is `prod`'s deploy fine but the preview path was broken?**
    The `prod` `BucketDeployment` already passes `distribution +
-distributionPaths: ['/*']` — the construct created the
+   distributionPaths: ['/*']` — the construct created the
    distribution itself, so the reference is right there. Preview's
    `BucketDeployment` uploads to the **shared** previews bucket and
    didn't have a reference to the **shared** distribution.

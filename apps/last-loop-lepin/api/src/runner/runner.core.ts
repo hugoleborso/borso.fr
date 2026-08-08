@@ -20,6 +20,7 @@ const TRIM_DASH_PATTERN = /^-+|-+$/g;
  * fiche-coureur URL is `/r/<slug>`, so the slug has to be predictable
  * and human-typable).
  */
+// @FollowsBlueprint core-decision
 export function slugifyDisplayName(displayName: string): string {
   const lowered = displayName.toLowerCase();
   const decomposed = lowered.normalize('NFD').replace(DIACRITIC_PATTERN, '');

@@ -19,13 +19,13 @@ tags: [dsql, postgres, drizzle, ddl, deploy]
 Preview deploy of PR #23 failed three times in a row, each time on
 the same custom-resource migration runner:
 
-1. _« ALTER TABLE ADD COLUMN with constraint not supported »_ on the
+1. *« ALTER TABLE ADD COLUMN with constraint not supported »* on the
    compact `ADD COLUMN "source" text DEFAULT 'admin' NOT NULL`.
-2. _« unsupported ALTER TABLE ALTER COLUMN ... SET NOT NULL
-   statement »_ on the canonical fallback (`ADD COLUMN nullable
-→ UPDATE backfill → ALTER COLUMN SET NOT NULL → ALTER COLUMN SET
-DEFAULT`).
-3. _« column "source" of relation "loop_punches" already exists »_
+2. *« unsupported ALTER TABLE ALTER COLUMN ... SET NOT NULL
+   statement »* on the canonical fallback (`ADD COLUMN nullable
+   → UPDATE backfill → ALTER COLUMN SET NOT NULL → ALTER COLUMN SET
+   DEFAULT`).
+3. *« column "source" of relation "loop_punches" already exists »*
    on the re-deploy, because the DSQL schema is a logical schema in
    a shared cluster and CFN's `DELETE_COMPLETE` doesn't wipe it —
    the partial state from attempt 1 survived.
@@ -39,20 +39,20 @@ Each iteration burnt 15-20 minutes of deploy + rollback.
    [AWS doc](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/alter-table-syntax-support.html)
    enumerates exactly which `action` clauses are accepted; the
    `ADD COLUMN` action has signature `ADD [COLUMN] [IF NOT EXISTS]
-column_name data_type [STORAGE ...]` — **no constraint clauses
+   column_name data_type [STORAGE ...]` — **no constraint clauses
    at all**.
 2. **Why did the canonical fallback fail too?** Same doc: there is
    no `ALTER COLUMN ... SET NOT NULL` action, no `ALTER COLUMN ...
-SET DEFAULT` either. The only `ALTER COLUMN` actions DSQL accepts
+   SET DEFAULT` either. The only `ALTER COLUMN` actions DSQL accepts
    are `SET STORAGE`, the four GENERATED variants, and `DROP
-IDENTITY`. Post-creation, the column's nullability / default /
-   type are _all immutable_.
+   IDENTITY`. Post-creation, the column's nullability / default /
+   type are *all immutable*.
 3. **Why did the implementer ship the buggy migration despite the
-   risk being named in `plan.md` (R-DSQL)?** The plan said _"if
-   DSQL rejects, fall back to the 3-statement form"_. The implementer
+   risk being named in `plan.md` (R-DSQL)?** The plan said *"if
+   DSQL rejects, fall back to the 3-statement form"*. The implementer
    tested the compact form locally on `pnpm dev`'s Postgres — which
-   accepted it without complaint — and concluded _"the dry-run gate
-   accepted it, ship the compact form"_. The dry-run gate was on
+   accepted it without complaint — and concluded *"the dry-run gate
+   accepted it, ship the compact form"*. The dry-run gate was on
    the wrong engine.
 4. **Why didn't the back-e2e suite catch the difference?** Because
    it runs against the same local Postgres. DSQL was never in the
@@ -63,15 +63,15 @@ IDENTITY`. Post-creation, the column's nullability / default /
    `makeIdempotent` rewrite that injects `IF NOT EXISTS`, but the
    bundle in question apparently didn't pick it up (CDK cached an
    older `dist/`?), or the rewrite missed something in the path.
-   The cleanest path was to write `IF NOT EXISTS` _directly into
-   the migration SQL file_ so the file is self-evidently safe.
+   The cleanest path was to write `IF NOT EXISTS` *directly into
+   the migration SQL file* so the file is self-evidently safe.
 
-**Root cause:** _thought DSQL's post-creation ALTER TABLE surface
+**Root cause:** *thought DSQL's post-creation ALTER TABLE surface
 mirrored Postgres's; actually DSQL only accepts plain `ADD COLUMN
 <name> <type>` post-creation — no constraint, no default, and no
 subsequent ALTER COLUMN can patch those in. The team's mental model
 needs to be `CREATE TABLE` for everything, `ADD COLUMN <type>` (no
-constraints) for additions, app-level invariants for the rest._
+constraints) for additions, app-level invariants for the rest.*
 
 ## Detection failure causes
 
@@ -81,13 +81,13 @@ constraints) for additions, app-level invariants for the rest._
   awareness.
 - **Linter / static analysis:** None — Biome doesn't introspect SQL.
 - **Functional validation locally:** `pnpm run db:local:wipe &&
-pnpm test` runs against `pnpm dev`'s Postgres, which accepts every
+  pnpm test` runs against `pnpm dev`'s Postgres, which accepts every
   banned form. The CREATE-then-ADD path also masks the
   "non-empty-table" subtlety because the back-e2e starts from an
   empty table.
 - **CI:** No DSQL is wired into CI today (cost / boot time). Only
   preview deploys exercise DSQL.
-- **Code review:** The migration file _was_ commented to mention
+- **Code review:** The migration file *was* commented to mention
   R-DSQL, but the bundling of NOT NULL DEFAULT was missed.
 - **Production monitoring:** Custom-resource failures are surfaced
   via CloudFormation events; the operator caught them in real
@@ -103,8 +103,8 @@ DSQL revelation):
 - `0d4fc0e` — drop the `.notNull().default()` from the drizzle
   schema entirely; the `source` column is now nullable forever, the
   app layer guarantees the invariant via `narrowPunchSource`.
-- `dd47f3b` — write `ADD COLUMN IF NOT EXISTS` _into the SQL file
-  itself_ so a re-deploy after a partial-state survival is a no-op.
+- `dd47f3b` — write `ADD COLUMN IF NOT EXISTS` *into the SQL file
+  itself* so a re-deploy after a partial-state survival is a no-op.
 
 The knowledge entry
 [`docs/knowledge/dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md)
@@ -116,15 +116,15 @@ rejected `action` clauses.
 ### Library search (before reaching for a custom check)
 
 Per [`/after-task-dantotsus`](../../.claude/skills/after-task-dantotsus/SKILL.md)'s
-library-search pass, the question asked first was: _does an
-existing tool already know that DSQL rejects these DDL forms?_
+library-search pass, the question asked first was: *does an
+existing tool already know that DSQL rejects these DDL forms?*
 
-| Candidate                                                                                                                                              | Verdict | Why                                                                                                                                                                                                                                     |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`awslabs/aurora-dsql-connectors`](https://github.com/awslabs/aurora-dsql-connectors)                                                                  | No      | The repo ships eight per-language connectors (.NET, Go, Java, Node, PHP, Python, Ruby, Rust) — wire-protocol auth + signed-token helpers. **No migration validation, no DDL linter** — read the README and the package list to confirm. |
-| AWS Aurora DSQL [user guide](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-unsupported-features.html) | No      | Documents the unsupported feature surface as prose and tables; no companion linter or CI-ready tool is referenced anywhere in the guide.                                                                                                |
-| [`sbdchd/squawk`](https://github.com/sbdchd/squawk)                                                                                                    | No      | Lints Postgres migrations for safety (locking, downtime, missing CONCURRENTLY) — but it's about _self-hosted Postgres_ hazards. None of its rules know that DSQL rejects `ALTER COLUMN SET NOT NULL` outright.                          |
-| [`ariga/atlas`](https://github.com/ariga/atlas)                                                                                                        | No      | Cross-engine schema migration tool; its `dsql` driver targets Aurora DSQL but the compat checks are about _its own diff output_, not arbitrary drizzle-kit-emitted SQL.                                                                 |
+| Candidate                                                                                                  | Verdict | Why                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`awslabs/aurora-dsql-connectors`](https://github.com/awslabs/aurora-dsql-connectors)                      | No      | The repo ships eight per-language connectors (.NET, Go, Java, Node, PHP, Python, Ruby, Rust) — wire-protocol auth + signed-token helpers. **No migration validation, no DDL linter** — read the README and the package list to confirm. |
+| AWS Aurora DSQL [user guide](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-unsupported-features.html) | No      | Documents the unsupported feature surface as prose and tables; no companion linter or CI-ready tool is referenced anywhere in the guide.                                                     |
+| [`sbdchd/squawk`](https://github.com/sbdchd/squawk)                                                        | No      | Lints Postgres migrations for safety (locking, downtime, missing CONCURRENTLY) — but it's about *self-hosted Postgres* hazards. None of its rules know that DSQL rejects `ALTER COLUMN SET NOT NULL` outright. |
+| [`ariga/atlas`](https://github.com/ariga/atlas)                                                            | No      | Cross-engine schema migration tool; its `dsql` driver targets Aurora DSQL but the compat checks are about *its own diff output*, not arbitrary drizzle-kit-emitted SQL.                      |
 
 Conclusion: no off-the-shelf tool checks drizzle-kit's output
 against the DSQL DDL whitelist. The repo-local

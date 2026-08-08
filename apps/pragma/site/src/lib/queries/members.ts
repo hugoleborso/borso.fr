@@ -28,6 +28,7 @@ type MemberInstrumentsResponse = InferResponseType<
   (typeof api.api.members)[':id']['instruments']['$get']
 >;
 
+// @FollowsBlueprint query-module
 export function useMembersList() {
   return useQuery({
     queryKey: memberKeys.list(),

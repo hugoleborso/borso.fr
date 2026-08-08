@@ -10,12 +10,11 @@
 
 ## Why
 
-Sur une édition longue (3-6 heures), les écarts entre coureurs se forment lentement. Pour un spectateur qui prend la retransmission en cours de route, savoir « qui est le plus rapide _en pointe_ » donne un fil narratif à suivre, distinct du classement (qui rang-ordonne par profondeur de boucle, pas par vitesse). C'est aussi une distinction symbolique légère pour les coureurs — analogue au « fastest lap » F1 (purple badge) ou au maillot à pois en cyclisme.
+Sur une édition longue (3-6 heures), les écarts entre coureurs se forment lentement. Pour un spectateur qui prend la retransmission en cours de route, savoir « qui est le plus rapide *en pointe* » donne un fil narratif à suivre, distinct du classement (qui rang-ordonne par profondeur de boucle, pas par vitesse). C'est aussi une distinction symbolique légère pour les coureurs — analogue au « fastest lap » F1 (purple badge) ou au maillot à pois en cyclisme.
 
 **Output metric** (lagging, hors CI) : self-report Hugo à la prochaine édition réelle, format binaire « la pastille apporte de la lisibilité / est invisible-ou-distrayante ». Pas de mesure quantitative — c'est un polish.
 
 **Input metrics** (driveables par `/visual-validation`) :
-
 - Le DTO standings inclut `fastestLap: ReadonlyArray<{ runnerSlug, durationMs }>`, calculé à partir des `LoopPunch[]` non-voidés.
 - Quand au moins une boucle est close, `fastestLap` contient un (ou plusieurs en cas d'ex-aequo) records.
 - La chip du runner dont `runner.slug` apparaît dans `fastestLap` porte une `.fastest-lap-badge` visible.
@@ -26,7 +25,6 @@ Sur une édition longue (3-6 heures), les écarts entre coureurs se forment lent
 ## Result
 
 Sur la chip du runner détenteur (ou les chips, en cas d'ex-aequo) :
-
 - Pastille violette ronde, ~16px de diamètre, placée en haut-droite de la chip (recouvrement léger sur le bord, comme un sticker collé dessus).
 - Icône chronomètre SVG en blanc à l'intérieur.
 - Optionnel : une légère ombre portée pour le détacher de la chip (à arbitrer en implementation visuelle).
@@ -62,15 +60,15 @@ L'écran de retransmission affiche cette pastille ; l'écran tactile (admin) aus
 
 ## Questions, Options and Decisions
 
-| Question                              | Options                                                                                                                                                                    | Décision (2026-05-15)                                                                                                                                                                                                           |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Définition « meilleur tour »**      | (a) Min `finishedAt[N] - finishedAt[N-1]` (wall-clock entre punchs). (b) Min `finishedAt[N] - (startsAt + (N-1) × interval)` (temps de course, écarte le repos au corral). | **(b)** — cohérent avec `lastLoopDurationMs` existant (`punch.core.ts:69`), c'est le temps physiquement couru. Le repos au corral fausserait la mesure.                                                                         |
-| **Tie-break à la ms**                 | (a) Les deux décorés. (b) Premier dans le temps. (c) Aucune pastille tant que doublon.                                                                                     | **(a)** — cohérent avec l'ex-aequo déjà géré par `tiesForRanking` dans `ranking.core.ts`. Affichage : deux pastilles, pas de message texte.                                                                                     |
-| **DNF holder**                        | (a) Reste sur le DNF (record d'édition). (b) Migre vers in-race. (c) Deux pastilles distinctes.                                                                            | **(a)** — sémantique « record d'édition », pas « qui est en forme maintenant ». Si la sémantique alternative devient utile, follow-up.                                                                                          |
-| **Visuel**                            | (a) Pastille ronde + icône chrono. (b) Liseret autour de la chip. (c) Pastille pleine sans icône.                                                                          | **(a)** — pastille violette F1-style, icône chronomètre, ~16px, haut-droite de la chip.                                                                                                                                         |
-| **Surface UI**                        | (a) Chip uniquement. (b) Chip + avatar carte.                                                                                                                              | **(a) v1** — la carte reste neutre, la chip porte la distinction.                                                                                                                                                               |
-| **Forme du champ DTO**                | (a) `fastestLap: { runnerSlug, durationMs } \| null`. (b) `fastestLap: ReadonlyArray<{ runnerSlug, durationMs }>`.                                                         | **(b)** — array gère le tie-break naturellement (length ≥ 2), pas de forme spéciale pour l'ex-aequo. Vide quand aucun loop close.                                                                                               |
-| **Inclure `loopIndex` dans le DTO ?** | (a) Oui (`{ runnerSlug, loopIndex, durationMs }`). (b) Non (`{ runnerSlug, durationMs }`).                                                                                 | **(b) v1** — le rendu n'a besoin que du `runnerSlug` pour décorer. Le `loopIndex` est calculable post-hoc côté admin si on veut creuser. À ajouter dans un follow-up si un tooltip « Meilleur tour : B3 en 38:42 » est demandé. |
+| Question | Options | Décision (2026-05-15) |
+| --- | --- | --- |
+| **Définition « meilleur tour »** | (a) Min `finishedAt[N] - finishedAt[N-1]` (wall-clock entre punchs). (b) Min `finishedAt[N] - (startsAt + (N-1) × interval)` (temps de course, écarte le repos au corral). | **(b)** — cohérent avec `lastLoopDurationMs` existant (`punch.core.ts:69`), c'est le temps physiquement couru. Le repos au corral fausserait la mesure. |
+| **Tie-break à la ms** | (a) Les deux décorés. (b) Premier dans le temps. (c) Aucune pastille tant que doublon. | **(a)** — cohérent avec l'ex-aequo déjà géré par `tiesForRanking` dans `ranking.core.ts`. Affichage : deux pastilles, pas de message texte. |
+| **DNF holder** | (a) Reste sur le DNF (record d'édition). (b) Migre vers in-race. (c) Deux pastilles distinctes. | **(a)** — sémantique « record d'édition », pas « qui est en forme maintenant ». Si la sémantique alternative devient utile, follow-up. |
+| **Visuel** | (a) Pastille ronde + icône chrono. (b) Liseret autour de la chip. (c) Pastille pleine sans icône. | **(a)** — pastille violette F1-style, icône chronomètre, ~16px, haut-droite de la chip. |
+| **Surface UI** | (a) Chip uniquement. (b) Chip + avatar carte. | **(a) v1** — la carte reste neutre, la chip porte la distinction. |
+| **Forme du champ DTO** | (a) `fastestLap: { runnerSlug, durationMs } \| null`. (b) `fastestLap: ReadonlyArray<{ runnerSlug, durationMs }>`. | **(b)** — array gère le tie-break naturellement (length ≥ 2), pas de forme spéciale pour l'ex-aequo. Vide quand aucun loop close. |
+| **Inclure `loopIndex` dans le DTO ?** | (a) Oui (`{ runnerSlug, loopIndex, durationMs }`). (b) Non (`{ runnerSlug, durationMs }`). | **(b) v1** — le rendu n'a besoin que du `runnerSlug` pour décorer. Le `loopIndex` est calculable post-hoc côté admin si on veut creuser. À ajouter dans un follow-up si un tooltip « Meilleur tour : B3 en 38:42 » est demandé. |
 
 ### Hors scope
 
@@ -139,23 +137,20 @@ apps/last-loop-lepin/site/src/styles/leaderboard.css (or similar)    // UPDATE: 
 - **Visual validation** — `/visual-validation` ouvre `/` avec un dataset connu : 3 coureurs avec 2 boucles chacun, durées asymétriques. Asserte (a) la pastille est sur la chip du record holder, (b) deux pastilles en cas d'ex-aequo, (c) zéro pastille avant le premier loop close, (d) pastille reste sur le DNF après que le coureur fait DNF.
 - **Technical validation** — lint + knip + typecheck + build + coverage gates. Diff revue confirme : (a) la formule `loopDurationMs` est bien extraite et réutilisée (pas dupliquée), (b) le DTO Zod parsing tolère un `fastestLap: []` sans crash sur les éditions sans punch, (c) le rendu Leaderboard n'utilise pas `useEffect` pour cette feature (CSS + Set inline).
 - **Coverage gates** — `fastest-lap.core.ts` est gaté par `api/src/**/*.core.ts` existant à 100 %. Pas d'extension de `vitest.workspace.ts` nécessaire.
-- **Manual smoke après deploy** — _belt only_ : ouvrir `/` sur l'édition test 2026-05-14 en read-only, observer que la pastille est sur le runner avec le meilleur tour vérifiable manuellement.
+- **Manual smoke après deploy** — *belt only* : ouvrir `/` sur l'édition test 2026-05-14 en read-only, observer que la pastille est sur le runner avec le meilleur tour vérifiable manuellement.
 
 ## Production strategy
 
 ### Analytics
 
 **Input metrics** :
-
 - Aucun nouvel event. La feature est pure-projection sur des données existantes ; aucun comportement utilisateur nouveau à instrumenter.
 
 **Output metric** (lagging, manual review) :
-
 - Self-report Hugo à la prochaine édition : « la pastille apporte de la lisibilité ? oui/non/autre ». Binaire qualitatif.
 
 ### Zero-defect strategy
 
 Named error classes :
-
 - **Aucune** — feature read-only, sans surface d'écriture, sans donnée utilisateur. Le seul risque est un bug de calcul (`fastestLap` faux) attrapé par les tests unitaires.
 - **`ZodError` au mount de la page** si le serveur renvoie un DTO mal formé (`fastestLap` non-tableau, mauvais shape) — déjà géré par le parsing Zod existant côté front. Pas d'alerte spécifique : si ça fire, c'est qu'on a bugé le serveur.
