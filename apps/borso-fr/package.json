@@ -23,13 +23,17 @@
     "@fontsource/cormorant-garamond": "^5.1.0",
     "@fontsource/jetbrains-mono": "^5.1.0",
     "@fontsource/playfair-display": "^5.1.0",
+    "i18next": "^23.16.8",
     "ogl": "1.0.11",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-i18next": "^15.4.0"
   },
   "devDependencies": {
     "@stryker-mutator/core": "9.6.1",
     "@stryker-mutator/vitest-runner": "9.6.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.3",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
