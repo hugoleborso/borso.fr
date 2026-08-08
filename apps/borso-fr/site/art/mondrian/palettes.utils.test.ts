@@ -4,8 +4,10 @@ import {
   CUSTOM_DEFAULTS,
   type CustomColors,
   isPaletteKey,
+  listDistinctFills,
   PALETTES,
   type PaletteKey,
+  selectPalette,
 } from './palettes.utils';
 
 describe('PALETTES', () => {
@@ -38,7 +40,6 @@ describe('buildCustomPalette', () => {
       customInk: '#111111',
     };
     const palette = buildCustomPalette(customColors);
-    expect(palette.label).toBe('Custom');
     expect(palette.bg).toBe('#fafafa');
     expect(palette.line).toBe('#111111');
     expect(palette.fills.map((fill) => fill.hex)).toStrictEqual([
@@ -72,5 +73,43 @@ describe('isPaletteKey', () => {
 
   it.each(['', 'CLASSIC', 'rainbow', 'fluorescent', '?'])('rejects "%s"', (candidate) => {
     expect(isPaletteKey(candidate)).toBe(false);
+  });
+});
+
+describe('selectPalette', () => {
+  it('builds the custom palette from the reader colours', () => {
+    expect(selectPalette('custom', CUSTOM_DEFAULTS).bg).toBe(CUSTOM_DEFAULTS.customPaper);
+  });
+
+  it.each(['classic', 'muted', 'nocturne', 'garden'] as const)(
+    'returns the "%s" preset unchanged',
+    (paletteKey) => {
+      expect(selectPalette(paletteKey, CUSTOM_DEFAULTS)).toBe(PALETTES[paletteKey]);
+    },
+  );
+});
+
+describe('listDistinctFills', () => {
+  it('drops the repeated fill a preset uses to weight a colour', () => {
+    const fills = listDistinctFills(PALETTES.classic);
+    expect(fills.map((fill) => fill.hex)).toStrictEqual([
+      '#d8332a',
+      '#1e4fb6',
+      '#f5c518',
+      '#fafafa',
+      '#1a1714',
+    ]);
+  });
+
+  it('keeps every fill when they are already distinct', () => {
+    const palette = {
+      bg: '#000000',
+      line: '#ffffff',
+      fills: [
+        { name: 'One', hex: '#111111' },
+        { name: 'Two', hex: '#222222' },
+      ],
+    };
+    expect(listDistinctFills(palette)).toHaveLength(2);
   });
 });

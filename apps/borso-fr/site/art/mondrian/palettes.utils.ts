@@ -1,10 +1,9 @@
-interface PaletteFill {
+export interface PaletteFill {
   name: string;
   hex: string;
 }
 
 export interface Palette {
-  label: string;
   bg: string;
   line: string;
   fills: PaletteFill[];
@@ -22,7 +21,6 @@ const PALETTE_KEYS: ReadonlySet<string> = new Set([
 
 export const PALETTES: Record<Exclude<PaletteKey, 'custom'>, Palette> = {
   classic: {
-    label: 'Classique',
     bg: '#fafafa',
     line: '#1a1714',
     fills: [
@@ -35,7 +33,6 @@ export const PALETTES: Record<Exclude<PaletteKey, 'custom'>, Palette> = {
     ],
   },
   muted: {
-    label: 'Muted',
     bg: '#efe6d4',
     line: '#2c2620',
     fills: [
@@ -48,7 +45,6 @@ export const PALETTES: Record<Exclude<PaletteKey, 'custom'>, Palette> = {
     ],
   },
   nocturne: {
-    label: 'Nocturne',
     bg: '#1a1714',
     line: '#f0e8d6',
     fills: [
@@ -61,7 +57,6 @@ export const PALETTES: Record<Exclude<PaletteKey, 'custom'>, Palette> = {
     ],
   },
   garden: {
-    label: 'Garden',
     bg: '#f4ede0',
     line: '#1c2a22',
     fills: [
@@ -93,7 +88,6 @@ export const CUSTOM_DEFAULTS: CustomColors = {
 
 export function buildCustomPalette(customColors: CustomColors): Palette {
   return {
-    label: 'Custom',
     bg: customColors.customPaper,
     line: customColors.customInk,
     fills: [
@@ -109,4 +103,16 @@ export function buildCustomPalette(customColors: CustomColors): Palette {
 
 export function isPaletteKey(value: string): value is PaletteKey {
   return PALETTE_KEYS.has(value);
+}
+
+export function selectPalette(paletteKey: PaletteKey, customColors: CustomColors): Palette {
+  if (paletteKey === 'custom') return buildCustomPalette(customColors);
+  return PALETTES[paletteKey];
+}
+
+/** The preset palettes repeat a fill to weight it, so the swatch row de-duplicates. */
+export function listDistinctFills(palette: Palette): readonly PaletteFill[] {
+  return palette.fills.filter(
+    (fill, index, allFills) => allFills.findIndex((other) => other.hex === fill.hex) === index,
+  );
 }

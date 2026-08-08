@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Galaxy } from './components/Galaxy';
+import { Galaxy } from './components/organisms/Galaxy';
 
 // Frozen params from the Claude Design chat — Hugo's tuning of the
 // react-bits Galaxy. Tweaks panel is intentionally out of scope; see
@@ -15,17 +15,17 @@ const GALAXY_PARAMS = {
   twinkleIntensity: 0.3,
   rotationSpeed: 0.1,
   repulsionStrength: 2,
-  mouseRepulsion: true,
-  transparent: false,
+  isMouseRepelling: true,
+  isTransparent: false,
 } as const;
 
 const mountElement = document.getElementById('bg-canvas-wrap');
 if (!mountElement) throw new Error('#bg-canvas-wrap not found');
 
-const isPrefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isReducedMotionPreferred = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 createRoot(mountElement).render(
   <StrictMode>
-    <Galaxy {...GALAXY_PARAMS} disableAnimation={isPrefersReducedMotion} />
+    <Galaxy {...GALAXY_PARAMS} isAnimationPaused={isReducedMotionPreferred} />
   </StrictMode>,
 );

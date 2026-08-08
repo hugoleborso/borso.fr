@@ -53,6 +53,25 @@ body {
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
+.twelve-travaux-filmstrip-card {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #c8bea4;
+  transition: all 0.15s;
+}
+
+.twelve-travaux-filmstrip-card:hover {
+  border-color: #171410;
+}
+
+.twelve-travaux-filmstrip-card.is-active {
+  border-color: #171410;
+}
+
 @media (max-width: 900px) {
   .twelve-travaux-hero-year {
     font-size: 140px;

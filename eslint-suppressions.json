@@ -9,65 +9,6 @@
       "count": 1
     }
   },
-  "apps/borso-fr/site/12-travaux/App.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    },
-    "max-lines": {
-      "count": 1
-    }
-  },
-  "apps/borso-fr/site/12-travaux/components.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 6
-    }
-  },
-  "apps/borso-fr/site/12-travaux/data.utils.ts": {
-    "@typescript-eslint/prefer-nullish-coalescing": {
-      "count": 1
-    },
-    "unicorn/consistent-boolean-name": {
-      "count": 2
-    }
-  },
-  "apps/borso-fr/site/12-travaux/featured-month.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 18
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    }
-  },
-  "apps/borso-fr/site/12-travaux/filmstrip-card.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 11
-    },
-    "no-param-reassign": {
-      "count": 2
-    }
-  },
-  "apps/borso-fr/site/art/mondrian/App.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 7
-    },
-    "max-lines": {
-      "count": 1
-    },
-    "react-hooks/purity": {
-      "count": 1
-    },
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    }
-  },
-  "apps/borso-fr/site/art/mondrian/components.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 6
-    },
-    "react-hooks/purity": {
-      "count": 1
-    }
-  },
   "apps/borso-fr/site/art/mondrian/download.ts": {
     "borso/conditions-live-in-pure-functions": {
       "count": 2
@@ -83,45 +24,9 @@
       "count": 1
     }
   },
-  "apps/borso-fr/site/art/mondrian/palette-theme.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
   "apps/borso-fr/site/art/mondrian/use-animation.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 7
-    },
     "no-param-reassign": {
       "count": 3
-    },
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    }
-  },
-  "apps/borso-fr/site/components/Galaxy.tsx": {
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 6
-    },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 5
-    },
-    "max-lines": {
-      "count": 1
-    }
-  },
-  "apps/borso-fr/site/script.js": {
-    "no-param-reassign": {
-      "count": 1
-    },
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    },
-    "unicorn/no-top-level-assignment-in-function": {
-      "count": 2
     }
   },
   "apps/borsouvertures/bin/app.ts": {
@@ -140,133 +45,8 @@
       "count": 1
     }
   },
-  "apps/borsouvertures/site/App.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 21
-    },
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    },
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/components/BoardView.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
-  "apps/borsouvertures/site/components/InlineBanner.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    }
-  },
-  "apps/borsouvertures/site/components/Modal.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
-    },
-    "jsx-a11y/click-events-have-key-events": {
-      "count": 1
-    },
-    "jsx-a11y/no-noninteractive-element-interactions": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/components/MoveButtonList.tsx": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/components/OpeningFlowPanels.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 21
-    }
-  },
-  "apps/borsouvertures/site/components/OpeningFlowSelector.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 18
-    },
-    "react-hooks/preserve-manual-memoization": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/components/SelectorCard.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
-  "apps/borsouvertures/site/components/SideSelector.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/components/StatusPanel.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
-  "apps/borsouvertures/site/components/ToggleSlider.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 3
-    },
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/components/TopBar.tsx": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
-  "apps/borsouvertures/site/hooks/useBoardSize.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/hooks/usePaginatedList.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
   "apps/borsouvertures/site/main.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/modes/ModeLearnTree.tsx": {
-    "@typescript-eslint/prefer-nullish-coalescing": {
-      "count": 1
-    },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 8
-    },
-    "react-hooks/refs": {
-      "count": 10
-    },
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/modes/ModePlay.tsx": {
-    "@typescript-eslint/prefer-nullish-coalescing": {
-      "count": 1
-    },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 10
-    },
-    "react-hooks/refs": {
-      "count": 13
-    },
-    "unicorn/consistent-boolean-name": {
       "count": 1
     }
   },
@@ -295,14 +75,6 @@
   },
   "apps/borsouvertures/site/openings/uciSquare.utils.ts": {
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/state/useAppState.ts": {
-    "unicorn/consistent-boolean-name": {
-      "count": 2
-    },
-    "unicorn/no-top-level-assignment-in-function": {
       "count": 1
     }
   },
@@ -696,24 +468,6 @@
       "count": 28
     }
   },
-  "apps/last-loop-lepin/site/src/components/admin/setup-form.utils.ts": {
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/site/src/components/course-map.utils.test.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    },
-    "unicorn/consistent-function-scoping": {
-      "count": 2
-    }
-  },
-  "apps/last-loop-lepin/site/src/components/elevation-profile.utils.ts": {
-    "@typescript-eslint/prefer-nullish-coalescing": {
-      "count": 1
-    }
-  },
   "apps/last-loop-lepin/site/src/data/useResource.ts": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
@@ -731,11 +485,6 @@
     },
     "borso/conditions-live-in-pure-functions": {
       "count": 3
-    }
-  },
-  "apps/last-loop-lepin/site/src/domain/requestPosition.utils.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
     }
   },
   "apps/last-loop-lepin/site/src/observability/sentry.ts": {
@@ -1234,16 +983,6 @@
     },
     "@typescript-eslint/require-await": {
       "count": 1
-    }
-  },
-  "apps/pragma/site/src/components/molecules/use-media-query.test.tsx": {
-    "unicorn/consistent-boolean-name": {
-      "count": 2
-    }
-  },
-  "apps/pragma/site/src/components/molecules/useMediaQuery.ts": {
-    "unicorn/consistent-boolean-name": {
-      "count": 2
     }
   },
   "apps/pragma/site/src/components/organisms/AppShell.tsx": {

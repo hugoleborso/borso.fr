@@ -1,6 +1,6 @@
 import { isPaletteKey, type PaletteKey } from './palettes.utils';
 
-interface UrlState {
+export interface UrlState {
   seed: number;
   paletteKey: PaletteKey;
 }

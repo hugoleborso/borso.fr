@@ -14,9 +14,9 @@ export default defineConfig({
       input: {
         index: fromHere('./site/index.html'),
         mom: fromHere('./site/family/mom.html'),
-        lesFilles: fromHere('./site/family/les-filles.html'),
+        sisters: fromHere('./site/family/les-filles.html'),
         mondrian: fromHere('./site/art/mondrian/index.html'),
-        douzeTravaux: fromHere('./site/12-travaux/index.html'),
+        twelveLabours: fromHere('./site/12-travaux/index.html'),
       },
     },
   },

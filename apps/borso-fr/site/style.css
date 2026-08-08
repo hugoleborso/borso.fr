@@ -194,7 +194,10 @@ body.menu-open .stage {
   font-size: clamp(15px, 1.4vw, 18px);
   letter-spacing: 0.02em;
   color: var(--fg-dim);
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
   padding: 6px 0;
   position: relative;
   max-width: 18ch;

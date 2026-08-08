@@ -1,0 +1,92 @@
+/**
+ * The address bar is the single source of truth for the seed and the palette,
+ * so the React tree reads it with `useSyncExternalStore` instead of mirroring
+ * it into state. Everything that changes the composition goes through here.
+ */
+import { useSyncExternalStore } from 'react';
+import type { PaletteKey } from './palettes.utils';
+import { buildSearch, freshSeed, readUrlState, type UrlState } from './url-state.utils';
+
+const DEFAULT_PALETTE_KEY: PaletteKey = 'classic';
+const POP_STATE_EVENT = 'popstate';
+const URL_CHANGED_EVENT = 'borso:composition-url-changed';
+
+/** The seed and palette this visit resolved to, before anything the reader does. */
+export const INITIAL_STATE = readUrlState(window.location.search, {
+  paletteKey: DEFAULT_PALETTE_KEY,
+  fallbackSeed: freshSeed(Math.random()),
+});
+
+const DEFAULTS = { paletteKey: INITIAL_STATE.paletteKey, fallbackSeed: INITIAL_STATE.seed };
+
+/**
+ * A visit with no `?seed=`, and a visit with an unreadable one, both end up
+ * with a shareable address bar.
+ */
+export function mirrorResolvedStateIntoUrl(): void {
+  window.history.replaceState(INITIAL_STATE, '', buildSearch(INITIAL_STATE));
+}
+
+function announceUrlChange(): void {
+  window.dispatchEvent(new Event(URL_CHANGED_EVENT));
+}
+
+function subscribeToCompositionUrl(onStoreChange: () => void): () => void {
+  window.addEventListener(POP_STATE_EVENT, onStoreChange);
+  window.addEventListener(URL_CHANGED_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener(POP_STATE_EVENT, onStoreChange);
+    window.removeEventListener(URL_CHANGED_EVENT, onStoreChange);
+  };
+}
+
+function readCompositionSearch(): string {
+  return window.location.search;
+}
+
+function readCompositionSearchOnServer(): string {
+  return buildSearch(INITIAL_STATE);
+}
+
+function readCurrentState(): UrlState {
+  return readUrlState(window.location.search, DEFAULTS);
+}
+
+export function readCurrentPaletteKey(): PaletteKey {
+  return readCurrentState().paletteKey;
+}
+
+export function useCompositionState(): UrlState {
+  const search = useSyncExternalStore(
+    subscribeToCompositionUrl,
+    readCompositionSearch,
+    readCompositionSearchOnServer,
+  );
+  return readUrlState(search, DEFAULTS);
+}
+
+/** A deliberate recomposition, so it earns a history entry the reader can undo. */
+export function composeNewSeed(): void {
+  const nextState: UrlState = {
+    seed: freshSeed(Math.random()),
+    paletteKey: readCurrentState().paletteKey,
+  };
+  window.history.pushState(nextState, '', buildSearch(nextState));
+  announceUrlChange();
+}
+
+/** Cascade reseeds on a timer, so it replaces the entry rather than stacking one per tick. */
+export function refreshSeedInPlace(): void {
+  const nextState: UrlState = {
+    seed: freshSeed(Math.random()),
+    paletteKey: readCurrentState().paletteKey,
+  };
+  window.history.replaceState(nextState, '', buildSearch(nextState));
+  announceUrlChange();
+}
+
+export function changePaletteInUrl(paletteKey: PaletteKey): void {
+  const nextState: UrlState = { seed: readCurrentState().seed, paletteKey };
+  window.history.replaceState(nextState, '', buildSearch(nextState));
+  announceUrlChange();
+}

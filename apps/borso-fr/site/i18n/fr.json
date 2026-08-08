@@ -1,0 +1,363 @@
+{
+  "common": {
+    "month": {
+      "january": "Janvier",
+      "february": "Février",
+      "march": "Mars",
+      "april": "Avril",
+      "may": "Mai",
+      "june": "Juin",
+      "july": "Juillet",
+      "august": "Août",
+      "september": "Septembre",
+      "october": "Octobre",
+      "november": "Novembre",
+      "december": "Décembre"
+    }
+  },
+  "home": {
+    "welcome": "Bienvenue sur",
+    "menu": {
+      "open-label": "Ouvrir le menu",
+      "close-label": "Fermer le menu",
+      "mother": "Maman",
+      "sisters": "Les sœurs",
+      "art": "Art",
+      "date-request": "Demande de date",
+      "twelve-labours": "Les 12 travaux de Borso"
+    },
+    "date-request": {
+      "message": "La demande de date n’est plus disponible sur borso.fr - bisous quand même",
+      "close": "Fermer"
+    }
+  },
+  "twelve-labours": {
+    "project": {
+      "label": "Le projet",
+      "description": "Douze défis par an, un par mois. Liste fixée en janvier, consignée au fil de l'année."
+    },
+    "title": {
+      "first-line": "Les douze",
+      "second-line": "travaux"
+    },
+    "hero": {
+      "edition-label": "Édition",
+      "tally-label": "Bilan en cours"
+    },
+    "stats": {
+      "daily": "Quotidiens",
+      "one-shot": "Ponctuels",
+      "remaining": "Restants"
+    },
+    "filmstrip": {
+      "heading": "L'année en douze chapitres",
+      "hint": "cliquer pour mettre en focus"
+    },
+    "featured": {
+      "label": "Mois en focus · {{month}}/{{year}}",
+      "score": "{{completed}} sur {{total}} aboutis",
+      "cover-alt": "Couverture {{month}}",
+      "note": "« {{note}} »"
+    },
+    "footer": {
+      "credit": "borso.fr · les 12 travaux"
+    },
+    "status": {
+      "done": "Réussi",
+      "partial": "Partiel",
+      "failed": "Échoué",
+      "abandoned": "Abandonné",
+      "doing": "En cours",
+      "todo": "À venir"
+    },
+    "kind": {
+      "daily": "quotidien",
+      "count": "chiffré",
+      "oneshot": "ponctuel"
+    },
+    "proof-label": {
+      "strava": "Strava",
+      "strava-line-fourteen": "Strava (ligne 14)",
+      "esf-result": "Résultat ESF",
+      "distance": "Distance",
+      "total-distance": "Distance totale",
+      "time": "Temps",
+      "pool-time": "Temps piscine",
+      "total-time": "Temps total",
+      "moving-time": "Temps en mouvement",
+      "average-pace": "Allure moyenne",
+      "metro-equivalent": "Si pris en métro",
+      "elevation": "Dénivelé",
+      "strava-elevation": "Dénivelé Strava",
+      "swim": "Nage",
+      "bike": "Vélo",
+      "run": "Course",
+      "days": "Jours"
+    },
+    "edition": {
+      "2025": {
+        "title": "Première édition",
+        "subtitle": "Une douzaine de défis pour donner du rythme à l'année.",
+        "january": {
+          "daily-sport": {
+            "title": "Sport tous les jours",
+            "note": "Un blocage de dos au milieu du mois m'a coupé la série ; j'ai rattrapé des jours en février."
+          },
+          "volleyball-spike": {
+            "title": "Smasher correctement au volley"
+          }
+        },
+        "february": {
+          "phone-time": {
+            "title": "2h de téléphone / jour en moyenne",
+            "note": "Plutôt bien réussi, modulo quelques petits écarts."
+          },
+          "fourteen-books": {
+            "title": "14 livres dans le mois",
+            "note": "7 livres lus : Barjavel, Gogol, Benzine, Roux, da Empoli, Henn."
+          }
+        },
+        "march": {
+          "golden-arrow": {
+            "title": "Passer la Flèche d'Or"
+          }
+        },
+        "april": {
+          "five-kilometres-under-twenty": {
+            "title": "5 km sub-20"
+          }
+        },
+        "may": {
+          "gr75": {
+            "title": "Le GR75",
+            "note": "Avec Corentin Gerest."
+          }
+        },
+        "june": {
+          "monte-cristo": {
+            "title": "Le Monte-Cristo (5 km nage)",
+            "note": "Course en mer annulée — 5 km en piscine à la place, puis vues sur les calanques."
+          }
+        },
+        "july": {
+          "chess-openings": {
+            "title": "Apprendre 1 ouverture / jour",
+            "note": "C'est les vacances tu connais."
+          },
+          "rapid-rating": {
+            "title": "Monter à 1500 en rapid",
+            "note": "C'est les vacances tu connais."
+          }
+        },
+        "august": {
+          "two-hundred-kilometre-ride": {
+            "title": "200 km à vélo d'un coup"
+          },
+          "mediterranean-crossing": {
+            "title": "Traversée de la Méditerranée en bateau",
+            "note": "J'y reviendrai."
+          }
+        },
+        "september": {
+          "triathlon": {
+            "title": "Triathlon L et battre mon record"
+          },
+          "daily-sport": {
+            "title": "Sport tous les jours"
+          }
+        },
+        "october": {
+          "free-diving": {
+            "title": "20 m en apnée",
+            "note": "10 m en fosse (max autorisé) ; 50 m en dynamique à côté. Génial — et plus facile que prévu."
+          }
+        },
+        "november": {
+          "montmartre-steps": {
+            "title": "100× les marches de Montmartre dans la journée",
+            "note": "4 300 D+ avec casquette verte."
+          }
+        },
+        "december": {
+          "italy-without-english": {
+            "title": "Aller en Italie sans utiliser l'anglais"
+          },
+          "muscle-up": {
+            "title": "Faire un muscle-up"
+          }
+        }
+      },
+      "2026": {
+        "title": "Deuxième édition",
+        "subtitle": "Plus structuré. Moins de défis hors-sol, plus de promesses tenables.",
+        "january": {
+          "positivity": {
+            "title": "Mois de la positivité — partager du positif chaque jour avec les colocs"
+          },
+          "daily-sport": {
+            "title": "Sport tous les jours"
+          }
+        },
+        "february": {
+          "early-nights": {
+            "title": "Au lit à 23h, extinction 23h30 (6j/7)",
+            "note": "3 semaines sur 4. Sacrés changements de vie ; sympa de se lever sans réveil."
+          },
+          "pragma-dates": {
+            "title": "Trouver et organiser 2 dates pour Pragma",
+            "note": "Décalé à septembre."
+          },
+          "ten-hours-of-sport": {
+            "title": "10×1h de sport dans la même journée",
+            "note": "Aux Pyramides avec Arnoult et Matmat. Sacrée journée."
+          }
+        },
+        "march": {
+          "capes-maths": {
+            "title": "Être admissible au CAPES de maths"
+          },
+          "beat-the-metro": {
+            "title": "Battre le métro entre 2 stations",
+            "note": "Saint-Georges → Notre-Dame-de-Lorette."
+          },
+          "weekly-strength": {
+            "title": "3h de HT par semaine"
+          }
+        },
+        "april": {
+          "metro-lines": {
+            "title": "Courir toutes les lignes de métro dans l'ordre en 1 mois",
+            "note": "Dernière ligne : la 14."
+          }
+        },
+        "may": {
+          "backyard": {
+            "title": "Organiser une Backyard et y participer"
+          }
+        },
+        "june": {
+          "daily-poem": {
+            "title": "1 poème / jour à une personne différente"
+          },
+          "montecristo": {
+            "title": "Finir la Montecristo",
+            "note": "5 km de nage en eau libre à Marseille, avec Salomé. Le cou complètement KO en sortant."
+          }
+        },
+        "july": {
+          "half-marathon": {
+            "title": "Sub-1h35 au semi",
+            "note": "Premier essai début juillet : explosé, coup de chaud. Objectif révisé de 1h30 à 1h35 pour la deuxième tentative fin juillet."
+          },
+          "catan-championship": {
+            "title": "Participer aux championnats de France de Catan"
+          }
+        },
+        "august": {
+          "annecy-crossing": {
+            "title": "Traversée du lac d'Annecy à la nage"
+          }
+        },
+        "september": {
+          "lepin-under-six-hours": {
+            "title": "Sub-6h au L de Lépin"
+          },
+          "pragma-dates": {
+            "title": "Trouver et organiser 2 dates pour Pragma"
+          }
+        },
+        "october": {
+          "paris-dieppe": {
+            "title": "Paris–Dieppe à vélo en 1j et se baigner",
+            "note": "Avec les colocs."
+          }
+        },
+        "november": {
+          "three-thousand-pages": {
+            "title": "3000 pages lues dans le mois"
+          }
+        },
+        "december": {
+          "chess-rating": {
+            "title": "Atteindre 1500 ELO aux échecs dans une cadence"
+          }
+        }
+      }
+    }
+  },
+  "mondrian": {
+    "brandmark": "Borso’s Atelier · Est. 1999",
+    "title": "Mondrian",
+    "generator-tag": "— Generator —",
+    "subtitle-before-de-stijl": "A studio for composing in the manner of",
+    "subtitle-de-stijl": "De Stijl",
+    "subtitle-after-de-stijl": ": rectangles, primary colors, and the deliberate quiet between them.",
+    "rail": {
+      "label": "Studio controls",
+      "open": "Studio",
+      "close": "Close"
+    },
+    "section": {
+      "composition": "Composition",
+      "palette": "Palette",
+      "animation": "Animation"
+    },
+    "field": {
+      "complexity": "Complexity",
+      "complexity-value": "{{count}} fields",
+      "line-weight": "Line weight",
+      "line-weight-value": "{{weight}} px",
+      "colour-balance": "Color balance",
+      "colour-balance-value": "{{percentage}}%"
+    },
+    "palette": {
+      "legend": "Palette",
+      "classic": "Classique",
+      "muted": "Muted",
+      "nocturne": "Nocturne",
+      "garden": "Garden",
+      "custom": "Custom"
+    },
+    "custom-colour": {
+      "colour-one": "Color 1",
+      "colour-two": "Color 2",
+      "colour-three": "Color 3",
+      "paper": "Paper",
+      "ink": "Ink"
+    },
+    "swatch": {
+      "change": "Click to change {{name}}",
+      "edit": "Edit {{name}}"
+    },
+    "animation": {
+      "legend": "Animation mode",
+      "still": "Still",
+      "drift": "Drift",
+      "breathe": "Breathe",
+      "cascade": "Cascade"
+    },
+    "action": {
+      "compose": "Compose",
+      "download": "Download"
+    },
+    "credit": {
+      "heading": "Studio note",
+      "body": "Each composition is generated from a single seed.",
+      "hint-fine": "Press space to compose anew",
+      "hint-coarse": "Tap the painting to compose anew",
+      "tail-before-cascade": ". Hold a palette to sit with it; switch to",
+      "tail-cascade": "Cascade",
+      "tail-after-cascade": "to let the room rearrange itself."
+    },
+    "stage": {
+      "work-number": "Composition · {{number}}",
+      "meta": "{{count}} fields · {{date}}",
+      "seed": "Seed · {{seed}}",
+      "hint-fine-before": "Press",
+      "hint-fine-key": "space",
+      "hint-fine-after": "to compose",
+      "hint-coarse": "Tap the painting to compose",
+      "frame-label": "Composition. Click to recompose."
+    }
+  }
+}

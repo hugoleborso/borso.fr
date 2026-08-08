@@ -4,7 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bonne journée bande de crottons</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <style>
+      html {
+        overflow-x: clip;
+      }
+
       body {
         background-color: lightpink;
         font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -34,6 +39,7 @@
         position: absolute;
         top: -50px; /* Start from just above the top of the page */
         width: 30px; /* Fixed size */
+        max-width: 30px;
         height: 30px; /* Fixed size */
         animation: fall 5s infinite linear;
         opacity: 0.8;
@@ -132,16 +138,32 @@
     <!-- Hidden message at the bottom -->
     <div class="hidden-message" style="z-index: 1000">Votre frère qui vous aime</div>
 
-    <script>
-      // Script to generate more falling poop PNGs evenly spaced
-      for (let i = 0; i < 30; i++) {
-        const poop = document.createElement('div');
-        poop.classList.add('poop');
-        poop.style.left = `${Math.random() * 100}%`; // Random horizontal position
-        poop.style.top = `${Math.random() * -100}px`; // Start from just above the viewport
-        poop.style.animationDuration = `${Math.random() * 3 + 4}s`; // Randomize fall speed
-        poop.innerHTML = '<img src="poop.png" alt="Poop" style="width: 30px; height: 30px;">'; // Fixed size
-        document.body.appendChild(poop);
+    <script type="module">
+      // The bundler only rewrites an asset URL it can see, so the decoration is
+      // built from an imported URL rather than from a string of markup.
+      const decorationUrl = new URL('./poop.png', import.meta.url).href;
+
+      const DECORATION_COUNT = 30;
+      const DECORATION_SIZE_PX = 30;
+      const MINIMUM_FALL_SECONDS = 4;
+      const FALL_SECONDS_SPREAD = 3;
+      const HIGHEST_START_OFFSET_PX = 100;
+
+      for (let index = 0; index < DECORATION_COUNT; index++) {
+        const decoration = document.createElement('div');
+        decoration.classList.add('poop');
+        decoration.style.left = `${Math.random() * 100}%`;
+        decoration.style.top = `${Math.random() * -HIGHEST_START_OFFSET_PX}px`;
+        decoration.style.animationDuration = `${Math.random() * FALL_SECONDS_SPREAD + MINIMUM_FALL_SECONDS}s`;
+
+        const image = document.createElement('img');
+        image.src = decorationUrl;
+        image.alt = '';
+        image.width = DECORATION_SIZE_PX;
+        image.height = DECORATION_SIZE_PX;
+        decoration.appendChild(image);
+
+        document.body.appendChild(decoration);
       }
     </script>
   </body>
