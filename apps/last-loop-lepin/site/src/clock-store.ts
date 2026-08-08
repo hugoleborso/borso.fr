@@ -43,3 +43,12 @@ export function subscribeClock(listener: Listener): () => void {
 export function getCurrentTime(): number {
   return currentTime;
 }
+
+/**
+ * Snapshot for a server render. This application only renders in the browser,
+ * so React never asks for it; it exists because `useSyncExternalStore` takes
+ * the argument, and it has to be a stable value rather than a fresh clock read.
+ */
+export function readServerTime(): number {
+  return 0;
+}

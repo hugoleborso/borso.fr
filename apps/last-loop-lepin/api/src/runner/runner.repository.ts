@@ -7,6 +7,15 @@ export async function insertRunner(database: Database, runner: Runner): Promise<
   await database.insert(runnersTable).values(runner);
 }
 
+/**
+ * Write a runner, leaving the existing row untouched when the edition and
+ * slug pair is already present. Used by the test seeding endpoint, which
+ * replays the same roster on every fixture switch.
+ */
+export async function upsertRunner(database: Database, runner: Runner): Promise<void> {
+  await database.insert(runnersTable).values(runner).onConflictDoNothing();
+}
+
 export async function findRunner(
   database: Database,
   editionSlug: string,

@@ -6,9 +6,9 @@ import { insertRunner } from '../runner/runner.repository';
 import {
   findActivePunchForLoop,
   findPunchById,
-  insertManualDnf,
+  insertManualDidNotFinish,
   insertPunch,
-  listManualDnfsForEdition,
+  listManualDidNotFinishesForEdition,
   listPunchesForEdition,
   markPunchCorrected,
   markPunchVoided,
@@ -60,17 +60,17 @@ describe('punch.repository', () => {
     expect(found?.finishedAt.toISOString()).toBe(newFinishedAt.toISOString());
   });
 
-  it('insertManualDnf + listManualDnfsForEdition', async () => {
+  it('insertManualDidNotFinish + listManualDidNotFinishesForEdition', async () => {
     const database = testDatabase();
-    await insertManualDnf(database, {
+    await insertManualDidNotFinish(database, {
       editionSlug: 'lepin-2026',
       runnerSlug: 'alice',
       outAtLoop: 1,
       reason: 'late',
       decidedAt: new Date('2026-09-19T07:01:00+02:00'),
     });
-    const dnfs = await listManualDnfsForEdition(database, 'lepin-2026');
-    expect(dnfs).toHaveLength(1);
-    expect(dnfs[0]?.reason).toBe('late');
+    const didNotFinishes = await listManualDidNotFinishesForEdition(database, 'lepin-2026');
+    expect(didNotFinishes).toHaveLength(1);
+    expect(didNotFinishes[0]?.reason).toBe('late');
   });
 });

@@ -3,8 +3,10 @@ import { listPunchesForEdition } from '../punch/punch.repository';
 import type { LoopPunch } from '../punch/punch.types';
 import { type RunnerDto, toRunnerDto } from './runner.dto.utils';
 import { readPhotosCdnHost } from './runner.environment';
-import { findRunner, insertRunner, listRunnersForEdition } from './runner.repository';
+import { findRunner, insertRunner, listRunnersForEdition, upsertRunner } from './runner.repository';
 import type { Runner } from './runner.types';
+
+export { getDatabase } from '../database/client';
 
 export class RunnerAlreadyExistsError extends Error {
   override readonly name = 'RunnerAlreadyExistsError';
@@ -94,4 +96,12 @@ export async function listPunchesForRunner(
   return allPunches
     .filter((punch) => punch.runnerSlug === runnerSlug)
     .toSorted((left, right) => left.loopIndex - right.loopIndex);
+}
+
+/**
+ * Write a runner row unless the edition already carries that slug. Exposed
+ * for the test seeding endpoint, which replays one roster on every fixture.
+ */
+export async function seedRunner(database: Database, runner: Runner): Promise<void> {
+  await upsertRunner(database, runner);
 }

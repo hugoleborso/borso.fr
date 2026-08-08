@@ -16,7 +16,7 @@
 import { isRaceEndReached, loopIndexAt, totalHourlyTops } from '../edition/edition.core';
 import type { RaceEdition } from '../edition/edition.types';
 import { lastLoopDurationMs } from '../punch/punch.core';
-import type { LoopPunch, ManualDnf } from '../punch/punch.types';
+import type { LoopPunch, ManualDidNotFinish } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
 import { fastestLap } from './fastest-lap.core';
 import type { RankedRunner, RunnerStatus, Standings } from './ranking.types';
@@ -31,7 +31,7 @@ interface RunnerProgress {
 function progressFor(
   runner: Runner,
   punches: readonly LoopPunch[],
-  manualDnf: ManualDnf | undefined,
+  manualDidNotFinish: ManualDidNotFinish | undefined,
   expectedClosedLoop: number,
 ): RunnerProgress {
   const sorted = punches
@@ -48,12 +48,16 @@ function progressFor(
   const lastPunch = sorted[sorted.length - 1];
   const lastFinishedAt = lastPunch?.finishedAt ?? null;
 
-  if (manualDnf !== undefined) {
+  if (manualDidNotFinish !== undefined) {
     return {
       runner,
       lastValidLoop,
       lastFinishedAt,
-      status: { kind: 'dnf', outAtLoop: manualDnf.outAtLoop, reason: manualDnf.reason },
+      status: {
+        kind: 'dnf',
+        outAtLoop: manualDidNotFinish.outAtLoop,
+        reason: manualDidNotFinish.reason,
+      },
     };
   }
 
@@ -105,11 +109,12 @@ export function computeStandings(
   edition: RaceEdition,
   runners: readonly Runner[],
   punches: readonly LoopPunch[],
-  manualDnfs: readonly ManualDnf[],
+  manualDidNotFinishes: readonly ManualDidNotFinish[],
   now: Date,
 ): Standings {
-  const manualDnfsBySlug = new Map<string, ManualDnf>();
-  for (const dnf of manualDnfs) manualDnfsBySlug.set(dnf.runnerSlug, dnf);
+  const manualDidNotFinishesBySlug = new Map<string, ManualDidNotFinish>();
+  for (const didNotFinish of manualDidNotFinishes)
+    manualDidNotFinishesBySlug.set(didNotFinish.runnerSlug, didNotFinish);
 
   const validPunches = punches.filter((punch) => punch.voidedAt === null);
   // `loopIndexAt` keeps growing linearly past `endsAt` — for a 15-loop
@@ -124,7 +129,12 @@ export function computeStandings(
 
   const progresses = runners
     .map((runner) =>
-      progressFor(runner, validPunches, manualDnfsBySlug.get(runner.slug), expectedClosedLoop),
+      progressFor(
+        runner,
+        validPunches,
+        manualDidNotFinishesBySlug.get(runner.slug),
+        expectedClosedLoop,
+      ),
     )
     .toSorted(compareProgresses);
 

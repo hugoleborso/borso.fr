@@ -84,10 +84,10 @@ describe('race day 2026 — end-to-end', () => {
     setHourLocal(7, 1);
     const response = await app.request(`/api/standings/${EDITION_SLUG}`);
     const body = standingsEnvelopeSchema.parse(await response.json());
-    const dnfSlugs = body.standings.ranked
+    const didNotFinishSlugs = body.standings.ranked
       .filter((entry) => entry.status.kind === 'dnf')
       .map((entry) => entry.runner.slug);
-    expect(dnfSlugs).toEqual(expect.arrayContaining(RUNNERS));
+    expect(didNotFinishSlugs).toEqual(expect.arrayContaining(RUNNERS));
   });
 
   it('exposes a healthy /api/health regardless of database state', async () => {

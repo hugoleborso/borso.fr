@@ -8,8 +8,11 @@ import {
   listEditions,
   updateEditionSetup,
   updateEditionStatus,
+  upsertEdition,
 } from './edition.repository';
 import type { GpxMetadata, RaceEdition } from './edition.types';
+
+export { getDatabase } from '../database/client';
 
 const DEFAULT_INTERVAL_MINUTES = 60;
 
@@ -243,3 +246,14 @@ export async function removeSetupEdition(database: Database, slug: string): Prom
   if (existing.status !== 'setup') throw new EditionNotInSetupError(slug);
   await deleteEdition(database, slug);
 }
+
+/**
+ * Write a whole edition row, replacing an existing one with the same slug.
+ * Exposed for the test seeding endpoint, which rebuilds its fixture edition
+ * from scratch on every call.
+ */
+export async function seedEdition(database: Database, edition: RaceEdition): Promise<void> {
+  await upsertEdition(database, edition);
+}
+
+export { computeSunriseSunset } from '../helpers/sun/sun.core';

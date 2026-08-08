@@ -9,17 +9,20 @@ export { PunchConflictError } from './punch.repository';
 
 import { type PunchRejectReason, validatePunchTiming } from './punch.core';
 import {
-  deleteManualDnf,
+  deleteAllEditionPunchesAndDidNotFinishes,
+  deleteManualDidNotFinish,
   findActivePunchForLoop,
   findPunchById,
-  insertManualDnf,
+  insertManualDidNotFinish,
   insertPunch,
   listPunchesForEdition,
   markPunchCorrected,
   markPunchVoided,
   PunchConflictError,
 } from './punch.repository';
-import type { LoopPunch, ManualDnf } from './punch.types';
+import type { LoopPunch, ManualDidNotFinish } from './punch.types';
+
+export { getDatabase } from '../database/client';
 
 export class PunchNotFoundError extends Error {
   override readonly name = 'PunchNotFoundError';
@@ -172,21 +175,21 @@ export async function voidPunch(database: Database, id: string, now: Date): Prom
   return { ...existing, voidedAt: now };
 }
 
-export interface RecordDnfInput {
+export interface RecordDidNotFinishInput {
   readonly editionSlug: string;
   readonly runnerSlug: string;
   readonly outAtLoop: number;
   readonly reason: 'late' | 'manual';
 }
 
-export async function recordManualDnf(
+export async function recordManualDidNotFinish(
   database: Database,
-  input: RecordDnfInput,
+  input: RecordDidNotFinishInput,
   now: Date,
-): Promise<ManualDnf> {
-  const dnf: ManualDnf = { ...input, decidedAt: now };
-  await insertManualDnf(database, dnf);
-  return dnf;
+): Promise<ManualDidNotFinish> {
+  const manualDidNotFinish: ManualDidNotFinish = { ...input, decidedAt: now };
+  await insertManualDidNotFinish(database, manualDidNotFinish);
+  return manualDidNotFinish;
 }
 
 export async function getPunchesForEdition(
@@ -256,6 +259,29 @@ export async function catchupPunch(
     userAgent: null,
   };
   await insertPunch(database, punch);
-  await deleteManualDnf(database, input.editionSlug, input.runnerSlug);
+  await deleteManualDidNotFinish(database, input.editionSlug, input.runnerSlug);
   return punch;
+}
+
+/**
+ * Drop every punch and every manual did-not-finish row of one edition.
+ * Exposed for the test seeding endpoint, which starts each fixture from an
+ * empty punch history so a previous fixture cannot leak into the standings.
+ */
+export async function clearEditionPunchHistory(
+  database: Database,
+  editionSlug: string,
+): Promise<void> {
+  await deleteAllEditionPunchesAndDidNotFinishes(database, editionSlug);
+}
+
+export async function seedPunch(database: Database, punch: LoopPunch): Promise<void> {
+  await insertPunch(database, punch);
+}
+
+export async function seedManualDidNotFinish(
+  database: Database,
+  didNotFinish: ManualDidNotFinish,
+): Promise<void> {
+  await insertManualDidNotFinish(database, didNotFinish);
 }

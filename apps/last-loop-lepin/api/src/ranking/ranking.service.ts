@@ -2,7 +2,7 @@ export { EditionNotFoundError } from '../edition/edition.service';
 
 import type { Database } from '../database/client';
 import { getEdition } from '../edition/edition.service';
-import { listManualDnfsForEdition } from '../punch/punch.repository';
+import { listManualDidNotFinishesForEdition } from '../punch/punch.repository';
 import { getPunchesForEdition } from '../punch/punch.service';
 import type { RunnerDto } from '../runner/runner.dto.utils';
 import { toRunnerDto } from '../runner/runner.dto.utils';
@@ -11,6 +11,8 @@ import { listRunners } from '../runner/runner.service';
 import { renderLapsCsv } from './laps-csv.core';
 import { computeStandings, formatStandingsAsCsv, mostRecentCorrectionAt } from './ranking.core';
 import type { RankedRunner, Standings } from './ranking.types';
+
+export { getDatabase } from '../database/client';
 
 export type RankedRunnerWithDto = Omit<RankedRunner, 'runner'> & { readonly runner: RunnerDto };
 
@@ -27,12 +29,12 @@ export async function computeStandingsForEdition(
   now: Date,
 ): Promise<Standings> {
   const edition = await getEdition(database, editionSlug);
-  const [runners, punches, manualDnfs] = await Promise.all([
+  const [runners, punches, manualDidNotFinishes] = await Promise.all([
     listRunners(database, editionSlug),
     getPunchesForEdition(database, editionSlug),
-    listManualDnfsForEdition(database, editionSlug),
+    listManualDidNotFinishesForEdition(database, editionSlug),
   ]);
-  return computeStandings(edition, runners, punches, manualDnfs, now);
+  return computeStandings(edition, runners, punches, manualDidNotFinishes, now);
 }
 
 export async function getSpectatorStandings(

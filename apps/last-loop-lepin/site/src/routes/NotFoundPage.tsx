@@ -1,15 +1,19 @@
+import { useTranslation } from 'react-i18next';
+import { Card, CardBody } from '../components/atoms/Card';
+
 export function NotFoundPage() {
+  const { t } = useTranslation();
   return (
     <div className="main col">
-      <div className="card">
-        <div className="card-body not-found">
-          <img src="/404.jpeg" alt="Page introuvable" className="not-found-image" />
-          <p className="muted">Page introuvable.</p>
+      <Card>
+        <CardBody modifier="not-found">
+          <img src="/404.jpeg" alt={t('not-found.image-alt')} className="not-found-image" />
+          <p className="muted">{t('not-found.message')}</p>
           <a href="/" className="not-found-home">
-            Retour à la course
+            {t('not-found.home')}
           </a>
-        </div>
-      </div>
+        </CardBody>
+      </Card>
     </div>
   );
 }

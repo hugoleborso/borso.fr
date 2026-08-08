@@ -16,7 +16,7 @@ export interface LoopPunch {
   readonly userAgent: string | null;
 }
 
-export interface ManualDnf {
+export interface ManualDidNotFinish {
   readonly editionSlug: string;
   readonly runnerSlug: string;
   readonly outAtLoop: number;

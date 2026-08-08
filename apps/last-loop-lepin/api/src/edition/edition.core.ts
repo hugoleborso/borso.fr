@@ -5,7 +5,7 @@
  * `vi.setSystemTime()` the only place the test suites need to drive time.
  */
 
-import type { LoopPunch, ManualDnf } from '../punch/punch.types';
+import type { LoopPunch, ManualDidNotFinish } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
 import type { RaceEdition } from './edition.types';
 
@@ -45,7 +45,7 @@ export function isRaceEndReached(edition: RaceEdition, now: Date): boolean {
   return now.getTime() >= edition.endsAt.getTime();
 }
 
-interface DnfProjection {
+interface DidNotFinishProjection {
   readonly runner: Runner;
   readonly missedAfterLoop: number;
 }
@@ -59,13 +59,13 @@ interface DnfProjection {
  * already-punched loop), (c) they have no valid (non-voided) punch for
  * loop N.
  */
-export function projectDnfCandidates(
+export function projectDidNotFinishCandidates(
   edition: RaceEdition,
   runners: readonly Runner[],
   punches: readonly LoopPunch[],
-  manualDnfs: readonly ManualDnf[],
+  manualDidNotFinishes: readonly ManualDidNotFinish[],
   now: Date,
-): readonly DnfProjection[] {
+): readonly DidNotFinishProjection[] {
   const currentLoop = loopIndexAt(edition, now);
   if (currentLoop <= 1) return [];
 
@@ -78,14 +78,16 @@ export function projectDnfCandidates(
   // extend the deadline past the top itself.
   const closingTimeMs = edition.startsAt.getTime() + expectedClosedLoop * intervalMs;
 
-  const dnfBySlug = new Map<string, ManualDnf>();
-  for (const dnf of manualDnfs) dnfBySlug.set(dnf.runnerSlug, dnf);
+  const manualDidNotFinishBySlug = new Map<string, ManualDidNotFinish>();
+  for (const didNotFinish of manualDidNotFinishes) {
+    manualDidNotFinishBySlug.set(didNotFinish.runnerSlug, didNotFinish);
+  }
 
   const validPunches = punches.filter((punch) => punch.voidedAt === null);
 
-  const candidates: DnfProjection[] = [];
+  const candidates: DidNotFinishProjection[] = [];
   for (const runner of runners) {
-    if (dnfBySlug.has(runner.slug)) continue;
+    if (manualDidNotFinishBySlug.has(runner.slug)) continue;
     const hasClosedLoop = validPunches.some(
       (punch) =>
         punch.runnerSlug === runner.slug &&

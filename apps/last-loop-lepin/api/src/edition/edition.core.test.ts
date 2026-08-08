@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { LoopPunch, ManualDnf } from '../punch/punch.types';
+import type { LoopPunch, ManualDidNotFinish } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
 import {
   isRaceEndReached,
   loopIndexAt,
   nextHourlyTop,
-  projectDnfCandidates,
+  projectDidNotFinishCandidates,
   totalHourlyTops,
 } from './edition.core';
 import type { RaceEdition } from './edition.types';
@@ -33,7 +33,7 @@ const RUNNERS: readonly Runner[] = [
   { editionSlug: 'lepin-2026', slug: 'carla', displayName: 'Carla', photoKey: null, bib: 3 },
 ];
 
-function makePunch(
+function buildPunch(
   runnerSlug: string,
   loopIndex: number,
   finishedAtIso: string,
@@ -119,17 +119,17 @@ describe('isRaceEndReached', () => {
   });
 });
 
-describe('projectDnfCandidates', () => {
+describe('projectDidNotFinishCandidates', () => {
   it('returns no candidates before the second top', () => {
     const now = new Date('2026-09-19T06:30:00+02:00');
-    const candidates = projectDnfCandidates(EDITION_2026, RUNNERS, [], [], now);
+    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, [], [], now);
     expect(candidates).toHaveLength(0);
   });
 
   it('flags runners with no closed-loop punch at the top of loop 2', () => {
     const now = new Date('2026-09-19T07:01:00+02:00');
-    const punches: readonly LoopPunch[] = [makePunch('alice', 1, '2026-09-19T06:55:00+02:00')];
-    const candidates = projectDnfCandidates(EDITION_2026, RUNNERS, punches, [], now);
+    const punches: readonly LoopPunch[] = [buildPunch('alice', 1, '2026-09-19T06:55:00+02:00')];
+    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);
     const slugs = candidates.map((entry) => entry.runner.slug);
     expect(slugs).toEqual(['bob', 'carla']);
     expect(candidates[0]?.missedAfterLoop).toBe(1);
@@ -137,8 +137,8 @@ describe('projectDnfCandidates', () => {
 
   it('does not flag runners already marked DNF manually', () => {
     const now = new Date('2026-09-19T07:01:00+02:00');
-    const punches: readonly LoopPunch[] = [makePunch('alice', 1, '2026-09-19T06:55:00+02:00')];
-    const manualDnfs: readonly ManualDnf[] = [
+    const punches: readonly LoopPunch[] = [buildPunch('alice', 1, '2026-09-19T06:55:00+02:00')];
+    const manualDidNotFinishes: readonly ManualDidNotFinish[] = [
       {
         editionSlug: 'lepin-2026',
         runnerSlug: 'bob',
@@ -147,23 +147,29 @@ describe('projectDnfCandidates', () => {
         decidedAt: new Date('2026-09-19T06:50:00+02:00'),
       },
     ];
-    const candidates = projectDnfCandidates(EDITION_2026, RUNNERS, punches, manualDnfs, now);
+    const candidates = projectDidNotFinishCandidates(
+      EDITION_2026,
+      RUNNERS,
+      punches,
+      manualDidNotFinishes,
+      now,
+    );
     expect(candidates.map((entry) => entry.runner.slug)).toEqual(['carla']);
   });
 
   it('ignores voided punches when projecting DNFs', () => {
     const now = new Date('2026-09-19T07:01:00+02:00');
     const punches: readonly LoopPunch[] = [
-      makePunch('alice', 1, '2026-09-19T06:55:00+02:00', '2026-09-19T07:00:00+02:00'),
+      buildPunch('alice', 1, '2026-09-19T06:55:00+02:00', '2026-09-19T07:00:00+02:00'),
     ];
-    const candidates = projectDnfCandidates(EDITION_2026, RUNNERS, punches, [], now);
+    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);
     expect(candidates.map((entry) => entry.runner.slug)).toEqual(['alice', 'bob', 'carla']);
   });
 
   it('treats a punch arriving within the tolerance window as valid', () => {
     const now = new Date('2026-09-19T07:01:00+02:00');
-    const punches: readonly LoopPunch[] = [makePunch('alice', 1, '2026-09-19T07:00:25+02:00')];
-    const candidates = projectDnfCandidates(EDITION_2026, RUNNERS, punches, [], now);
+    const punches: readonly LoopPunch[] = [buildPunch('alice', 1, '2026-09-19T07:00:25+02:00')];
+    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);
     expect(candidates.map((entry) => entry.runner.slug)).toContain('alice');
   });
 });

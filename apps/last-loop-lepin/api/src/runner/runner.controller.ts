@@ -1,10 +1,10 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireAdminSession } from '../auth/auth.middleware';
-import { getDatabase } from '../database/client';
 import { createRunnerInputSchema } from './runner.schema';
 import {
   createRunnerAsDto,
+  getDatabase,
   getRunnerAsDto,
   listPunchesForRunner,
   listRunnersAsDto,

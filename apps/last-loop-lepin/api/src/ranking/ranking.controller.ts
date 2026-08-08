@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import { getDatabase } from '../database/client';
 import {
   EditionNotFoundError,
+  getDatabase,
   getLapsCsv,
   getSpectatorStandings,
   getStandingsCsv,

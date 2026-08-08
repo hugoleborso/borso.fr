@@ -42,7 +42,7 @@ export const loopPunchesTable = pgTable('loop_punches', {
   userAgent: text('user_agent'),
 });
 
-export const manualDnfsTable = pgTable(
+export const manualDidNotFinishesTable = pgTable(
   'manual_dnfs',
   {
     editionSlug: text('edition_slug').notNull(),
@@ -80,7 +80,7 @@ export const selfPunchInputSchema = z.object({
   clientAccuracyM: z.number().nonnegative().nullable(),
 });
 
-export const createDnfInputSchema = z.object({
+export const createDidNotFinishInputSchema = z.object({
   editionSlug: editionSlugSchema,
   runnerSlug: runnerSlugSchema,
   // 0 = the runner didn't even close the first loop (the system projects

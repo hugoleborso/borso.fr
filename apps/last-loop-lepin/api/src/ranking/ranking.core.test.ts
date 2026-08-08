@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RaceEdition } from '../edition/edition.types';
-import type { LoopPunch, ManualDnf } from '../punch/punch.types';
+import type { LoopPunch, ManualDidNotFinish } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
 import { computeStandings } from './ranking.core';
 
@@ -117,7 +117,7 @@ describe('computeStandings', () => {
       punch('alice', 1, '2026-09-19T06:55:00+02:00'),
       punch('alice', 2, '2026-09-19T07:55:00+02:00'),
     ];
-    const manualDnfs: readonly ManualDnf[] = [
+    const manualDidNotFinishes: readonly ManualDidNotFinish[] = [
       {
         editionSlug: 'lepin-2026',
         runnerSlug: 'alice',
@@ -126,7 +126,7 @@ describe('computeStandings', () => {
         decidedAt: new Date('2026-09-19T08:01:00+02:00'),
       },
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, manualDnfs, now);
+    const standings = computeStandings(EDITION, RUNNERS, punches, manualDidNotFinishes, now);
     expect(standings.ranked.find((entry) => entry.runner.slug === 'alice')?.status.kind).toBe(
       'dnf',
     );

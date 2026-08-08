@@ -7,7 +7,7 @@ import { PunchConflictError } from './punch.repository';
 import {
   correctPunch,
   PunchRejectedError,
-  recordManualDnf,
+  recordManualDidNotFinish,
   registerPunch,
   registerSelfPunch,
   voidPunch,
@@ -79,12 +79,12 @@ describe('punch.service', () => {
 
   it('records a manual DNF', async () => {
     const database = testDatabase();
-    const dnf = await recordManualDnf(
+    const didNotFinish = await recordManualDidNotFinish(
       database,
       { editionSlug: 'lepin-2026', runnerSlug: 'alice', outAtLoop: 1, reason: 'manual' },
       new Date('2026-09-19T07:01:00+02:00'),
     );
-    expect(dnf.reason).toBe('manual');
+    expect(didNotFinish.reason).toBe('manual');
   });
 
   // Geofence centre per makeEdition: { lat: 45.55, lng: 5.78 }. The intra-100m

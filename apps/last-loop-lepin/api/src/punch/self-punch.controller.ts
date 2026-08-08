@@ -8,9 +8,13 @@
 
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { getDatabase } from '../database/client';
 import { selfPunchInputSchema } from './punch.schema';
-import { PunchConflictError, PunchRejectedError, registerSelfPunch } from './punch.service';
+import {
+  getDatabase,
+  PunchConflictError,
+  PunchRejectedError,
+  registerSelfPunch,
+} from './punch.service';
 
 const USER_AGENT_HEADER = 'user-agent';
 

@@ -12,6 +12,8 @@ import {
   upsertBucket,
 } from './auth.repository';
 
+export { getDatabase } from '../database/client';
+
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_ATTEMPTS = 5;
 const SCRYPT_KEY_LENGTH = 64;

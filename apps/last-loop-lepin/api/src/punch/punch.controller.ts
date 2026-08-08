@@ -1,20 +1,20 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireAdminSession } from '../auth/auth.middleware';
-import { getDatabase } from '../database/client';
 import {
   catchupPunchInputSchema,
   correctPunchInputSchema,
-  createDnfInputSchema,
+  createDidNotFinishInputSchema,
   createPunchInputSchema,
 } from './punch.schema';
 import {
   catchupPunch,
   correctPunch,
+  getDatabase,
   PunchConflictError,
   PunchNotFoundError,
   PunchRejectedError,
-  recordManualDnf,
+  recordManualDidNotFinish,
   registerPunch,
   voidPunch,
 } from './punch.service';
@@ -56,10 +56,10 @@ const adminPunchRouter = new Hono()
       throw error;
     }
   })
-  .post('/dnfs', zValidator('json', createDnfInputSchema), async (context) => {
+  .post('/dnfs', zValidator('json', createDidNotFinishInputSchema), async (context) => {
     const input = context.req.valid('json');
-    const dnf = await recordManualDnf(getDatabase(), input, new Date());
-    return context.json({ dnf }, 201);
+    const didNotFinish = await recordManualDidNotFinish(getDatabase(), input, new Date());
+    return context.json({ dnf: didNotFinish }, 201);
   })
   .post('/punches/catchup', zValidator('json', catchupPunchInputSchema), async (context) => {
     const input = context.req.valid('json');

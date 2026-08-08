@@ -1,10 +1,9 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { getDatabase } from '../database/client';
 import { AUTH_COOKIE_NAME } from './auth.middleware';
 import { loginInputSchema } from './auth.schema';
-import { AuthDeniedError, login, logout } from './auth.service';
+import { AuthDeniedError, getDatabase, login, logout } from './auth.service';
 
 const ADMIN_COOKIE_TTL_SECONDS = 12 * 60 * 60;
 

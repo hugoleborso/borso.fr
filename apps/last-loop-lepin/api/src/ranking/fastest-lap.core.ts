@@ -10,7 +10,7 @@
  * runners — a runner who set the fastest lap then DNF-ed keeps their
  * entry as long as their punch survives in the table. DNF logic lives
  * upstream in `ranking.core.ts`; this projection never consults a
- * `ManualDnf`.
+ * `ManualDidNotFinish`.
  */
 
 import type { RaceEdition } from '../edition/edition.types';

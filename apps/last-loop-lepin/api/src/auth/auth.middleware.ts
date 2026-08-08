@@ -1,7 +1,6 @@
 import type { MiddlewareHandler } from 'hono';
 import { deleteCookie, getCookie } from 'hono/cookie';
-import { getDatabase } from '../database/client';
-import { verifySession } from './auth.service';
+import { getDatabase, verifySession } from './auth.service';
 
 const ADMIN_COOKIE_NAME = 'lastloop_admin';
 
