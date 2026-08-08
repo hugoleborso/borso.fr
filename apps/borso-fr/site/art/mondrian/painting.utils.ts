@@ -88,12 +88,12 @@ export function pickSplitFraction(nextRandom: () => number): number {
 
 function chooseJitteredSplitFraction(
   rectBeingSplit: Rect,
-  vertical: boolean,
+  isVertical: boolean,
   nextRandom: () => number,
 ): number {
   const baseFraction = pickSplitFraction(nextRandom);
   const jitteredFraction = baseFraction + (nextRandom() - 0.5) * SPLIT_FRACTION_JITTER;
-  const span = vertical ? rectBeingSplit.width : rectBeingSplit.height;
+  const span = isVertical ? rectBeingSplit.width : rectBeingSplit.height;
   const lowerBound = MIN_RECT_DIMENSION / span;
   const upperBound = 1 - lowerBound;
   return Math.max(lowerBound, Math.min(upperBound, jitteredFraction));

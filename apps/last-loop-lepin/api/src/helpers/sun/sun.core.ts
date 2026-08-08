@@ -56,9 +56,9 @@ function computeUtcHour(
   dayOfYear: number,
   latitude: number,
   longitudeHours: number,
-  rising: boolean,
+  isRising: boolean,
 ): number {
-  const approximateTime = rising
+  const approximateTime = isRising
     ? dayOfYear + (6 - longitudeHours) / HOURS_IN_DAY
     : dayOfYear + (18 - longitudeHours) / HOURS_IN_DAY;
 
@@ -101,7 +101,7 @@ function computeUtcHour(
     );
   }
 
-  const hourAngleDegrees = rising
+  const hourAngleDegrees = isRising
     ? FULL_CIRCLE_DEGREES - Math.acos(cosineOfHourAngle) * RADIANS_TO_DEGREES
     : Math.acos(cosineOfHourAngle) * RADIANS_TO_DEGREES;
   const hourAngleHours = hourAngleDegrees * HOURS_PER_LONGITUDE_DEGREE;

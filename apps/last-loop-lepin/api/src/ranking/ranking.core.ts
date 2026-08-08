@@ -90,7 +90,7 @@ function compareProgresses(left: RunnerProgress, right: RunnerProgress): number 
   return leftTime - rightTime;
 }
 
-function tiesForRanking(left: RunnerProgress, right: RunnerProgress): boolean {
+function areTiedForRanking(left: RunnerProgress, right: RunnerProgress): boolean {
   if (left.status.kind !== right.status.kind) return false;
   if (left.lastValidLoop !== right.lastValidLoop) return false;
   const leftMs = left.lastFinishedAt?.getTime() ?? null;
@@ -151,7 +151,7 @@ export function computeStandings(
   const result = progresses.reduce<RankAccumulator>(
     (accumulator, progress) => {
       const isTied =
-        accumulator.previous !== null && tiesForRanking(accumulator.previous.progress, progress);
+        accumulator.previous !== null && areTiedForRanking(accumulator.previous.progress, progress);
       const assignedRank: number | 'ex-aequo' = isTied ? 'ex-aequo' : accumulator.currentRank + 1;
       const nextRank = isTied ? accumulator.currentRank : accumulator.currentRank + 1;
 
@@ -163,14 +163,11 @@ export function computeStandings(
         lastFinishedAt: progress.lastFinishedAt,
       };
 
-      const updatedRanked =
-        isTied && accumulator.previous !== null
-          ? accumulator.ranked.map((entry, index) =>
-              index === accumulator.previous?.index
-                ? { ...entry, rank: 'ex-aequo' as const }
-                : entry,
-            )
-          : accumulator.ranked;
+      const updatedRanked = isTied
+        ? accumulator.ranked.map((entry, index) =>
+            index === accumulator.previous?.index ? { ...entry, rank: 'ex-aequo' as const } : entry,
+          )
+        : accumulator.ranked;
 
       return {
         ranked: [...updatedRanked, newEntry],

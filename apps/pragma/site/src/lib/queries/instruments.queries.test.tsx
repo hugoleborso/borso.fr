@@ -11,6 +11,7 @@ import {
 } from './instruments';
 import {
   createIsolatedQueryClient,
+  createMutateSlot,
   deferred,
   flushMicrotasks,
   jsonResponse,
@@ -64,13 +65,9 @@ describe('instruments mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useCreateInstrument>['mutateAsync'] | null = null;
-    const tree = mountWithClient(
-      queryClient,
-      <ProbeCreate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
-    );
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useCreateInstrument>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useCreateInstrument>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeCreate sink={slot.sink} />);
+    const send = slot.read();
 
     send({ name: 'Bass', isHarmonic: true }).catch(() => undefined);
     await flushMicrotasks();
@@ -92,13 +89,9 @@ describe('instruments mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useUpdateInstrument>['mutateAsync'] | null = null;
-    const tree = mountWithClient(
-      queryClient,
-      <ProbeUpdate sink={(mutateAsync) => (dispatch = mutateAsync)} />,
-    );
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useUpdateInstrument>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useUpdateInstrument>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeUpdate sink={slot.sink} />);
+    const send = slot.read();
 
     send({ id: 'instr-a', name: 'Acoustic Guitar' }).catch(() => undefined);
     await flushMicrotasks();
@@ -119,13 +112,9 @@ describe('instruments mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useDeleteInstrument>['mutateAsync'] | null = null;
-    const tree = mountWithClient(
-      queryClient,
-      <ProbeDelete sink={(mutateAsync) => (dispatch = mutateAsync)} />,
-    );
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useDeleteInstrument>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useDeleteInstrument>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeDelete sink={slot.sink} />);
+    const send = slot.read();
 
     send({ id: 'instr-a' }).catch(() => undefined);
     await flushMicrotasks();

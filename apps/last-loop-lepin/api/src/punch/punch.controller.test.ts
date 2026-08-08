@@ -21,6 +21,10 @@ const conflictResponseSchema = z.object({
   punch: z.object({ id: z.string() }),
 });
 
+async function adminCookie(): Promise<string> {
+  return adminSessionCookie(testDatabase());
+}
+
 describe('admin punch controller', () => {
   const app = createApp();
 
@@ -38,10 +42,6 @@ describe('admin punch controller', () => {
     await insertEdition(database, makeEdition({ status: 'live' }));
     await insertRunner(database, makeRunner('alice'));
   });
-
-  async function adminCookie(): Promise<string> {
-    return adminSessionCookie(testDatabase());
-  }
 
   async function postPunch(body: { editionSlug: string; runnerSlug: string }, cookie: string) {
     return app.request('/api/admin/punches', {

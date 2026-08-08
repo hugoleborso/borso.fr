@@ -25,16 +25,16 @@ const MINIMAL_GPX = `<?xml version="1.0" encoding="UTF-8"?>
   <trkpt lat="45.560" lon="5.790"><ele>500.0</ele></trkpt>
 </trkseg></trk></gpx>`;
 
+async function adminCookie(): Promise<string> {
+  return adminSessionCookie(testDatabase());
+}
+
 describe('admin edition controller', () => {
   const app = createApp();
 
   beforeEach(async () => {
     await truncateAllTables(testDatabase());
   });
-
-  async function adminCookie(): Promise<string> {
-    return adminSessionCookie(testDatabase());
-  }
 
   async function postEdition(
     input: {

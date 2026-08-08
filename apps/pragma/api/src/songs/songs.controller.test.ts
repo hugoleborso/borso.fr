@@ -251,9 +251,7 @@ describe('songs controller (back-e2e)', () => {
           ? Object.fromEntries(headersRecord.entries())
           : (headersRecord ?? {});
       const userAgentValue =
-        headersDictionary &&
-        typeof headersDictionary === 'object' &&
-        'User-Agent' in headersDictionary
+        typeof headersDictionary === 'object' && 'User-Agent' in headersDictionary
           ? headersDictionary['User-Agent']
           : undefined;
       expect(userAgentValue).toContain('Pragma/');

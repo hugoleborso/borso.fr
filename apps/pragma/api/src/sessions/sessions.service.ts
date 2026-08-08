@@ -4,6 +4,7 @@
 
 import type { z } from 'zod';
 import { getSongs } from '../songs/songs.service';
+import { buildSessionInsertShape } from './sessions.core';
 import {
   buildNextSessionOfflineManifest,
   type OfflineManifestPayload,
@@ -14,7 +15,6 @@ import {
   findSessionById,
   insertSession,
   listSessions,
-  type SessionInsertShape,
   type SessionRow,
   updateSession,
 } from './sessions.repository';
@@ -22,24 +22,6 @@ import type { sessionCreateSchema, sessionUpdateSchema } from './sessions.schema
 
 type SessionCreateInput = z.infer<typeof sessionCreateSchema>;
 type SessionUpdateInput = z.infer<typeof sessionUpdateSchema>;
-
-function valuesFromCreate(input: SessionCreateInput): SessionInsertShape {
-  if (input.kind === 'concert') {
-    return {
-      kind: 'concert',
-      date: new Date(input.date),
-      venue: input.venue,
-      capacity: input.capacity,
-      gear: input.gear,
-      friendsCountPerMember: input.friendsCountPerMember,
-    };
-  }
-  return {
-    kind: 'practice',
-    date: new Date(input.date),
-    preparedConcertId: input.preparedConcertId,
-  };
-}
 
 function valuesFromUpdate(input: SessionUpdateInput): Record<string, unknown> {
   const updates: Record<string, unknown> = {};
@@ -65,7 +47,7 @@ export async function getSessionById(id: string): Promise<SessionRow | null> {
 }
 
 export async function createSession(input: SessionCreateInput): Promise<SessionRow> {
-  return await insertSession(valuesFromCreate(input));
+  return await insertSession(buildSessionInsertShape(input));
 }
 
 export async function patchSession(

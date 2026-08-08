@@ -165,6 +165,24 @@ export function previewHostname(context: NameContext): string {
 }
 
 /**
+ * Origin, meaning scheme and host with no path, that the application's
+ * frontend is served from. The API accepts it on state changing requests, so
+ * the value has to match the hostname the browser actually loaded.
+ *
+ *   prod            -> "https://<domainName>"
+ *   preview / integ -> "https://<previewHostname>"
+ */
+export function frontendOrigin(context: NameContext, domainName: string | undefined): string {
+  if (context.stage === 'prod') {
+    if (domainName === undefined) {
+      throw new Error('frontendOrigin() requires domainName for the prod stage.');
+    }
+    return `https://${domainName}`;
+  }
+  return `https://${previewHostname(context)}`;
+}
+
+/**
  * Hostname for the per-PR HTTP API behind a preview frontend. Mirrors
  * {@link previewHostname} with an `-api` suffix so the wildcard cert
  * `*.preview.borso.fr` covers both. The frontend points at this hostname

@@ -49,19 +49,19 @@ function synthAppStack(stage: 'prod' | 'preview'): Template {
   return Template.fromStack(stack);
 }
 
+function readEnvVars(resource: { readonly Properties?: unknown }): Record<string, unknown> {
+  const properties = resource.Properties;
+  if (typeof properties !== 'object' || properties === null) return {};
+  if (!('Environment' in properties)) return {};
+  const environment = properties.Environment;
+  if (typeof environment !== 'object' || environment === null) return {};
+  if (!('Variables' in environment)) return {};
+  const variables = environment.Variables;
+  return typeof variables === 'object' && variables !== null ? { ...variables } : {};
+}
+
 describe('last-loop-lepin app stack', () => {
   it('mounts the test-seed endpoint flag only on non-prod stacks', () => {
-    const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
-      const properties = resource.Properties;
-      if (typeof properties !== 'object' || properties === null) return {};
-      if (!('Environment' in properties)) return {};
-      const environment = properties.Environment;
-      if (typeof environment !== 'object' || environment === null) return {};
-      if (!('Variables' in environment)) return {};
-      const variables = environment.Variables;
-      return typeof variables === 'object' && variables !== null ? { ...variables } : {};
-    };
-
     const prodTemplate = synthAppStack('prod');
     const previewTemplate = synthAppStack('preview');
 
@@ -86,17 +86,6 @@ describe('last-loop-lepin app stack', () => {
   });
 
   it('drops PIN_HASH and JWT_SECRET env vars — admin auth lives in the DB now', () => {
-    const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
-      const properties = resource.Properties;
-      if (typeof properties !== 'object' || properties === null) return {};
-      if (!('Environment' in properties)) return {};
-      const environment = properties.Environment;
-      if (typeof environment !== 'object' || environment === null) return {};
-      if (!('Variables' in environment)) return {};
-      const variables = environment.Variables;
-      return typeof variables === 'object' && variables !== null ? { ...variables } : {};
-    };
-
     for (const stage of ['prod', 'preview'] as const) {
       const template = synthAppStack(stage);
       const functions = template.findResources('AWS::Lambda::Function');
@@ -116,17 +105,6 @@ describe('last-loop-lepin app stack', () => {
   });
 
   it('injects ALLOWED_ORIGIN on the API Lambda — prod=apex, preview=per-PR host', () => {
-    const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
-      const properties = resource.Properties;
-      if (typeof properties !== 'object' || properties === null) return {};
-      if (!('Environment' in properties)) return {};
-      const environment = properties.Environment;
-      if (typeof environment !== 'object' || environment === null) return {};
-      if (!('Variables' in environment)) return {};
-      const variables = environment.Variables;
-      return typeof variables === 'object' && variables !== null ? { ...variables } : {};
-    };
-
     const prodVars = (() => {
       const lambdaFunction = Object.entries(
         synthAppStack('prod').findResources('AWS::Lambda::Function'),
@@ -181,17 +159,6 @@ describe('last-loop-lepin app stack', () => {
   });
 
   it('injects PHOTOS_CDN_HOST env var on the API Lambda for every stage', () => {
-    const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
-      const properties = resource.Properties;
-      if (typeof properties !== 'object' || properties === null) return {};
-      if (!('Environment' in properties)) return {};
-      const environment = properties.Environment;
-      if (typeof environment !== 'object' || environment === null) return {};
-      if (!('Variables' in environment)) return {};
-      const variables = environment.Variables;
-      return typeof variables === 'object' && variables !== null ? { ...variables } : {};
-    };
-
     for (const stage of ['prod', 'preview'] as const) {
       const template = synthAppStack(stage);
       const functions = template.findResources('AWS::Lambda::Function');

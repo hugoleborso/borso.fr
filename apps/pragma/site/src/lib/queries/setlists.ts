@@ -13,7 +13,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError, api } from '../api';
+import { ApiError, api, isResponseSuccessful } from '../api';
 import { isLastPendingMutation } from './optimistic.utils';
 import {
   appendOptimisticEntry,
@@ -108,7 +108,8 @@ export function useAppendSetlistEntry() {
         param: { id: setlistId },
         json: rest,
       });
-      if (!response.ok) throw new ApiError(response.status, `append ${response.status}`, null);
+      if (!isResponseSuccessful(response))
+        throw new ApiError(response.status, `append ${response.status}`, null);
       return response.json();
     },
     onMutate: async (variables): Promise<OptimisticContext> => {

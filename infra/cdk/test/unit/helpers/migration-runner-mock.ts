@@ -71,12 +71,13 @@ export type SqlMock = ((
   end(opts: { readonly timeout: number }): Promise<void>;
 };
 
+function recordTaggedCall(strings: TemplateStringsArray): Promise<unknown[]> {
+  state.taggedCalls.push(strings.join('?'));
+  return Promise.resolve([]);
+}
+
 export function makeSql(): SqlMock {
-  const callable = (strings: TemplateStringsArray, ..._values: readonly unknown[]) => {
-    state.taggedCalls.push(strings.join('?'));
-    return Promise.resolve([]);
-  };
-  return Object.assign(callable, {
+  return Object.assign(recordTaggedCall, {
     unsafe(query: string, params?: readonly unknown[]) {
       if (state.rejectNextUnsafe !== null) {
         const error = state.rejectNextUnsafe;
@@ -117,7 +118,7 @@ export function makeSql(): SqlMock {
       }
       return Promise.resolve([]);
     },
-    end(_opts: { readonly timeout: number }) {
+    end() {
       state.ended++;
       return Promise.resolve();
     },

@@ -11,7 +11,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ENTRY = path.join(HERE, 'fixtures', 'handler.ts');
 const MIGRATIONS = path.join(HERE, 'fixtures', 'migrations');
 
-function lambdaHasTestSeedFlag(resource: unknown): boolean {
+function hasTestSeedFlag(resource: unknown): boolean {
   if (!isObject(resource)) return false;
   const properties = resource.Properties;
   if (!isObject(properties)) return false;
@@ -37,6 +37,12 @@ function bootstrap(stageId: string): Stacks {
   });
   const stageStack = new Stack(app, stageId, { env: ENV });
   return { app, clusterStack, stageStack };
+}
+
+function getProperties(resource: unknown): Record<string, unknown> | null {
+  if (!isObject(resource)) return null;
+  const properties = resource.Properties;
+  return isObject(properties) ? properties : null;
 }
 
 describe('PreviewableApp (prod, full)', () => {
@@ -94,7 +100,7 @@ describe('PreviewableApp (prod, full)', () => {
 
   it('never sets ALLOW_TEST_SEED on a prod Lambda', () => {
     const lambdas = resourcesOfType(stageTpl, 'AWS::Lambda::Function');
-    expect(lambdas.some(lambdaHasTestSeedFlag)).toBe(false);
+    expect(lambdas.some(hasTestSeedFlag)).toBe(false);
   });
 });
 
@@ -136,11 +142,6 @@ describe('PreviewableApp (preview with db)', () => {
     const customResources = Template.fromStack(stageStack).findResources(
       'AWS::CloudFormation::CustomResource',
     );
-    function getProperties(resource: unknown): Record<string, unknown> | null {
-      if (!isObject(resource)) return null;
-      const properties = resource.Properties;
-      return isObject(properties) ? properties : null;
-    }
     const schemaCustomResource = Object.values(customResources).find(
       (customResource) => getProperties(customResource)?.schemaName === 'pr_6',
     );
@@ -201,7 +202,7 @@ describe('PreviewableApp (preview with api → custom domain)', () => {
 
   it('injects ALLOW_TEST_SEED=1 on the non-prod API Lambda', () => {
     const lambdas = resourcesOfType(stageTpl, 'AWS::Lambda::Function');
-    expect(lambdas.some(lambdaHasTestSeedFlag)).toBe(true);
+    expect(lambdas.some(hasTestSeedFlag)).toBe(true);
   });
 });
 

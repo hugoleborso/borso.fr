@@ -10,6 +10,10 @@ import {
 const HMAC_KEY = randomBytes(32);
 const NOW = 1_700_000_000_000;
 
+function signPayload(payloadEncoded: string): string {
+  return createHmac('sha256', HMAC_KEY).update(payloadEncoded).digest('base64url');
+}
+
 describe('session-cookie.utils', () => {
   it('exposes the cookie name expected by the front-end', () => {
     expect(SESSION_COOKIE_NAME).toBe('pragma_session');
@@ -60,10 +64,6 @@ describe('session-cookie.utils', () => {
     const result = verifyCookie(cookie, HMAC_KEY, NOW + SESSION_TTL_MS);
     expect(result).toEqual({ ok: false, reason: 'expired' });
   });
-
-  function signPayload(payloadEncoded: string): string {
-    return createHmac('sha256', HMAC_KEY).update(payloadEncoded).digest('base64url');
-  }
 
   it('rejects a cookie whose payload is not valid JSON', () => {
     const payloadEncoded = Buffer.from('not-json-at-all', 'utf8').toString('base64url');

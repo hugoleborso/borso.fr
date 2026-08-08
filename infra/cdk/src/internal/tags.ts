@@ -1,6 +1,6 @@
 import { Tags } from 'aws-cdk-lib';
 import type { IConstruct } from 'constructs';
-import type { Stage } from './naming.js';
+import type { Stage } from './naming.utils.js';
 
 /**
  * Standard tag set applied to every resource the platform creates.

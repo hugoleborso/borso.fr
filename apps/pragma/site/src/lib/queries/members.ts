@@ -10,7 +10,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api } from '../api';
+import { ApiError, api, isResponseSuccessful } from '../api';
 import { instrumentKeys } from './instruments';
 import { isLastPendingMutation } from './optimistic.utils';
 
@@ -66,7 +66,8 @@ export function useCreateMember() {
       avatarS3Key?: string | null;
     }) => {
       const response = await api.api.members.$post({ json: variables });
-      if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
+      if (!isResponseSuccessful(response))
+        throw new ApiError(response.status, `create ${response.status}`, null);
       return response.json();
     },
     onMutate: async (variables) => {

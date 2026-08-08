@@ -43,7 +43,7 @@ export interface PlayMachine {
   revealBookMoves: () => void;
   dismissOutOfBook: () => void;
   dismissSuccess: () => void;
-  setAutoOpponent: (value: boolean) => void;
+  setAutoOpponent: (isEnabled: boolean) => void;
 }
 
 export interface PlayMachineOptions {
@@ -131,14 +131,14 @@ export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine
     };
   }
 
-  function applyUciToBoard(uci: string): boolean {
+  function didApplyUciToBoard(uci: string): boolean {
     try {
-      const move = chess.move({
+      chess.move({
         from: uciFromSquare(uci),
         to: uciToSquare(uci),
         promotion: uciPromotion(uci),
       });
-      return move !== null;
+      return true;
     } catch {
       return false;
     }
@@ -170,7 +170,7 @@ export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine
       );
       const choice = pickRandom(stillFresh.possibleNextMovesUci);
       if (!choice) return;
-      applyUciToBoard(choice);
+      didApplyUciToBoard(choice);
       playedMovesUci.push(choice);
       const afterOpponent = computeBookState(
         currentConfig.openings,
@@ -206,7 +206,7 @@ export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine
     if (isOpponentToMove(currentConfig.side) && currentConfig.autoOpponent) {
       return 'rejected-opponents-turn';
     }
-    if (!applyUciToBoard(uci)) return 'rejected-out-of-book';
+    if (!didApplyUciToBoard(uci)) return 'rejected-out-of-book';
     playedMovesUci.push(uci);
     const bookState = computeBookState(
       currentConfig.openings,
@@ -266,11 +266,11 @@ export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine
     notify(currentConfig);
   }
 
-  function setAutoOpponent(value: boolean): void {
+  function setAutoOpponent(isEnabled: boolean): void {
     const currentConfig = config;
     if (!currentConfig) return;
-    if (currentConfig.autoOpponent === value) return;
-    config = { ...currentConfig, autoOpponent: value };
+    if (currentConfig.autoOpponent === isEnabled) return;
+    config = { ...currentConfig, autoOpponent: isEnabled };
     notify(config);
   }
 

@@ -5,7 +5,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api } from '../api';
+import { ApiError, api, isResponseSuccessful } from '../api';
 import { isLastPendingMutation } from './optimistic.utils';
 
 type SessionsListShape = InferResponseType<typeof api.api.sessions.$get>;
@@ -47,7 +47,8 @@ export function useCreateSession() {
     mutationKey: sessionKeys.all,
     mutationFn: async (variables: Parameters<typeof api.api.sessions.$post>[0]['json']) => {
       const response = await api.api.sessions.$post({ json: variables });
-      if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
+      if (!isResponseSuccessful(response))
+        throw new ApiError(response.status, `create ${response.status}`, null);
       return response.json();
     },
     onMutate: async (variables) => {

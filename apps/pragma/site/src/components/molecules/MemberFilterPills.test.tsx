@@ -22,7 +22,7 @@ const PAULINE_MEMBER: FilterPillMember = { id: 'pauline-id', name: 'Pauline', co
 
 function findPillByText(container: HTMLElement, label: string): HTMLButtonElement | null {
   const buttons = Array.from(container.querySelectorAll('button'));
-  return buttons.find((button) => button.textContent?.includes(label)) ?? null;
+  return buttons.find((button) => button.textContent.includes(label)) ?? null;
 }
 
 function renderPills(root: Root, node: ReactNode): void {

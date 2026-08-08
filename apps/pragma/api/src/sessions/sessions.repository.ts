@@ -12,6 +12,7 @@ import { desc, eq, inArray } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { setlistEntryTable, setlistTable } from '../setlists/setlists.schema';
+import { encodeSessionInsert, type SessionInsertShape } from './sessions.core';
 import { friendsCountSchema, sessionTable } from './sessions.schema';
 
 export interface SessionRow {
@@ -47,23 +48,6 @@ const PROJECTION = {
   friendsCountPerMember: sessionTable.friendsCountPerMember,
 } as const;
 
-export interface ConcertInsertShape {
-  kind: 'concert';
-  date: Date;
-  venue: string;
-  capacity: number;
-  gear: string;
-  friendsCountPerMember: Record<string, number>;
-}
-
-export interface PracticeInsertShape {
-  kind: 'practice';
-  date: Date;
-  preparedConcertId: string | null;
-}
-
-export type SessionInsertShape = ConcertInsertShape | PracticeInsertShape;
-
 function rowToSession(row: SessionRawRow): SessionRow {
   // friends_count_per_member is stored as JSON-encoded text. The `as
   // unknown` step is the JSON-parse escape hatch the repo allows; the
@@ -85,26 +69,7 @@ function rowToSession(row: SessionRawRow): SessionRow {
   };
 }
 
-type SessionInsertEncoded = typeof sessionTable.$inferInsert;
-type SessionUpdateEncoded = Partial<SessionInsertEncoded>;
-
-function encodeInsert(values: SessionInsertShape): SessionInsertEncoded {
-  if (values.kind === 'concert') {
-    return {
-      kind: 'concert',
-      date: values.date,
-      venue: values.venue,
-      capacity: values.capacity,
-      gear: values.gear,
-      friendsCountPerMember: JSON.stringify(values.friendsCountPerMember ?? {}),
-    };
-  }
-  return {
-    kind: 'practice',
-    date: values.date,
-    preparedConcertId: values.preparedConcertId,
-  };
-}
+type SessionUpdateEncoded = Partial<typeof sessionTable.$inferInsert>;
 
 function encodeUpdate(updates: Record<string, unknown>): SessionUpdateEncoded {
   const encoded: SessionUpdateEncoded = {};
@@ -157,7 +122,7 @@ export async function insertSession(values: SessionInsertShape): Promise<Session
   const database = getDatabase();
   const [row] = await database
     .insert(sessionTable)
-    .values(encodeInsert(values))
+    .values(encodeSessionInsert(values))
     .returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
   return rowToSession(row);

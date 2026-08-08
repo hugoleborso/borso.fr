@@ -31,7 +31,7 @@ import {
   previewS3Prefix,
   type Stage,
   validateAppSlug,
-} from '../internal/naming.js';
+} from '../internal/naming.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 
 /**

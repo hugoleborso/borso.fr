@@ -35,16 +35,11 @@ import { useMembersList } from '../../lib/queries/members';
 import { useSong, useUpdateSong } from '../../lib/queries/songs';
 import { useSignedChartUrl } from '../../lib/queries/uploads';
 import { extractChartKind } from './chart-kind.utils';
+import { buildTonalityLabel } from './tonality-label.utils';
 
 const MASTERY_BAR_COUNT = 10;
 const NO_ROWS: readonly never[] = [];
 const MAX_TONALITY_RENDER_LENGTH = 16;
-
-function tonalityLabel(start: string | null, end: string | null): string | null {
-  if (start === null) return null;
-  if (end !== null && end !== start) return `${start} → ${end}`;
-  return start;
-}
 
 export function SongDetailPage(): JSX.Element {
   const { t } = useTranslation();
@@ -116,7 +111,7 @@ export function SongDetailPage(): JSX.Element {
   }
 
   const chartKind = extractChartKind(song.chart ?? null);
-  const tonality = tonalityLabel(song.tonalityStart, song.tonalityEnd);
+  const tonality = buildTonalityLabel(song.tonalityStart, song.tonalityEnd);
   const labelClass = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
 
   return (

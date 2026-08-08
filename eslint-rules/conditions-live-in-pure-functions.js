@@ -1,3 +1,11 @@
+import {
+  areInterchangeable,
+  isGuardClause,
+  isLookupTableSwitch,
+  isPlainValue,
+  isShapeTest,
+  isValueReference,
+} from './decisions.js';
 import { isPureFile, isTestFile } from './impurity.js';
 
 /**
@@ -92,199 +100,6 @@ const MESSAGE =
   'surrounding code touches. A presence test, a guard clause, and a choice between two plain ' +
   'values are exempt. See docs/standards/02-purity-and-core-files.md.';
 
-const NULLISH_COMPARISON_OPERATORS = new Set(['===', '!==', '==', '!=']);
-const TYPE_COMPARISON_OPERATORS = new Set(['===', '!==']);
-const COLLECTION_SIZE_PROPERTY_NAMES = new Set(['length', 'size']);
-const EMPTINESS_COMPARISON_OPERATORS = new Set(['===', '!==', '>', '<', '>=', '<=']);
-const MEANINGLESS_WRAPPER_TYPES = new Set([
-  'ChainExpression',
-  'TSNonNullExpression',
-  'TSAsExpression',
-  'TSSatisfiesExpression',
-  'TSInstantiationExpression',
-]);
-
-/** Strips the syntax that carries no decision of its own, e.g. `a?.b` and `x!`. */
-function unwrap(node) {
-  let current = node;
-  while (current !== null && MEANINGLESS_WRAPPER_TYPES.has(current.type)) {
-    current = current.expression;
-  }
-  return current;
-}
-
-function isNullishLiteral(node) {
-  const inner = unwrap(node);
-  if (inner.type === 'Literal') {
-    return inner.value === null && inner.regex === undefined;
-  }
-  return inner.type === 'Identifier' && inner.name === 'undefined';
-}
-
-function isZeroLiteral(node) {
-  const inner = unwrap(node);
-  return inner.type === 'Literal' && inner.value === 0;
-}
-
-function isCollectionSizeRead(node) {
-  const inner = unwrap(node);
-  return (
-    inner.type === 'MemberExpression' &&
-    !inner.computed &&
-    inner.property.type === 'Identifier' &&
-    COLLECTION_SIZE_PROPERTY_NAMES.has(inner.property.name)
-  );
-}
-
-function isTypeofRead(node) {
-  const inner = unwrap(node);
-  return inner.type === 'UnaryExpression' && inner.operator === 'typeof';
-}
-
-/** An identifier or a dotted path, which names a value without computing one. */
-function isValueReference(node) {
-  const inner = unwrap(node);
-  if (inner.type === 'Identifier' || inner.type === 'ThisExpression') {
-    return true;
-  }
-  return inner.type === 'MemberExpression' && isValueReference(inner.object);
-}
-
-function isArrayIsArrayCall(node) {
-  const inner = unwrap(node);
-  return (
-    inner.type === 'CallExpression' &&
-    inner.callee.type === 'MemberExpression' &&
-    !inner.callee.computed &&
-    inner.callee.object.type === 'Identifier' &&
-    inner.callee.object.name === 'Array' &&
-    inner.callee.property.type === 'Identifier' &&
-    inner.callee.property.name === 'isArray'
-  );
-}
-
-function isNullishComparison(node) {
-  return (
-    NULLISH_COMPARISON_OPERATORS.has(node.operator) &&
-    (isNullishLiteral(node.left) || isNullishLiteral(node.right))
-  );
-}
-
-function isTypeofComparison(node) {
-  return (
-    TYPE_COMPARISON_OPERATORS.has(node.operator) &&
-    (isTypeofRead(node.left) || isTypeofRead(node.right))
-  );
-}
-
-function isEmptinessComparison(node) {
-  if (!EMPTINESS_COMPARISON_OPERATORS.has(node.operator)) {
-    return false;
-  }
-  return (
-    (isCollectionSizeRead(node.left) && isZeroLiteral(node.right)) ||
-    (isZeroLiteral(node.left) && isCollectionSizeRead(node.right))
-  );
-}
-
-function isShapeBinaryTest(node) {
-  if (node.operator === 'in' || node.operator === 'instanceof') {
-    return true;
-  }
-  return isNullishComparison(node) || isTypeofComparison(node) || isEmptinessComparison(node);
-}
-
-/**
- * Asks whether a value is present, or what kind of thing it is, rather than
- * what it means.
- */
-function isShapeTest(node) {
-  const inner = unwrap(node);
-  if (inner.type === 'UnaryExpression' && inner.operator === '!') {
-    return isValueReference(inner.argument) || isShapeTest(inner.argument);
-  }
-  if (inner.type === 'BinaryExpression') {
-    return isShapeBinaryTest(inner);
-  }
-  if (inner.type === 'LogicalExpression') {
-    return isShapeTest(inner.left) && isShapeTest(inner.right);
-  }
-  return isArrayIsArrayCall(inner);
-}
-
-/**
- * A value that is read or written down rather than computed, so choosing
- * between two of them decides nothing.
- */
-function isPlainValue(node) {
-  const inner = unwrap(node);
-  if (inner.type === 'Literal') {
-    return true;
-  }
-  if (inner.type === 'TemplateLiteral') {
-    return inner.expressions.every(isPlainValue);
-  }
-  if (inner.type === 'UnaryExpression') {
-    return (inner.operator === '-' || inner.operator === '+') && isPlainValue(inner.argument);
-  }
-  return isValueReference(inner);
-}
-
-function readCalleeText(node, sourceCode) {
-  const inner = unwrap(node);
-  if (inner.type !== 'CallExpression' || inner.optional) {
-    return null;
-  }
-  if (!inner.arguments.every(isPlainValue)) {
-    return null;
-  }
-  return sourceCode.getText(inner.callee);
-}
-
-/**
- * `t('catalog.uploading')` against `t('catalog.uploadPrompt')` is still a
- * choice between two constants, so a shared callee makes both sides plain.
- */
-function areSameCallWithPlainArguments(left, right, sourceCode) {
-  const leftCallee = readCalleeText(left, sourceCode);
-  return leftCallee !== null && leftCallee === readCalleeText(right, sourceCode);
-}
-
-function unwrapBlock(statement) {
-  if (statement === null) {
-    return [];
-  }
-  return statement.type === 'BlockStatement' ? statement.body : [statement];
-}
-
-/** An `if` with no `else` that leaves the function immediately. */
-function isGuardClause(ifStatement) {
-  const consequent = unwrapBlock(ifStatement.consequent);
-  if (ifStatement.alternate !== null || consequent.length !== 1) {
-    return false;
-  }
-  const only = consequent[0];
-  return only.type === 'ReturnStatement' || only.type === 'ThrowStatement';
-}
-
-/** A `switch` whose every case is `case x: return <plain value>`. */
-function isLookupTableSwitch(switchStatement) {
-  return switchStatement.cases.every((switchCase) => {
-    if (switchCase.consequent.length === 0) {
-      return true;
-    }
-    const only = switchCase.consequent.length === 1 ? switchCase.consequent[0] : null;
-    if (only === null) {
-      return false;
-    }
-    const [statement] = unwrapBlock(only);
-    if (statement === undefined || statement.type !== 'ReturnStatement') {
-      return false;
-    }
-    return statement.argument === null || isPlainValue(statement.argument);
-  });
-}
-
 function isInsideJsx(node) {
   let current = node.parent;
   while (current !== undefined && current !== null) {
@@ -320,13 +135,6 @@ export default {
       context.report({ node, messageId: 'moveToPureFunction' });
     }
 
-    function isInterchangeable(left, right) {
-      if (isPlainValue(left) && isPlainValue(right)) {
-        return true;
-      }
-      return areSameCallWithPlainArguments(left, right, sourceCode);
-    }
-
     return {
       IfStatement(node) {
         if (isGuardClause(node) || isShapeTest(node.test)) {
@@ -338,7 +146,10 @@ export default {
         report(node);
       },
       ConditionalExpression(node) {
-        if (isShapeTest(node.test) || isInterchangeable(node.consequent, node.alternate)) {
+        if (
+          isShapeTest(node.test) ||
+          areInterchangeable(node.consequent, node.alternate, sourceCode)
+        ) {
           return;
         }
         report(node);

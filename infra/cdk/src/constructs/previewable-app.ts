@@ -3,11 +3,11 @@ import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import {
   assertDeployStage,
+  frontendOrigin,
   previewApiHostname,
-  previewHostname,
   type Stage,
   validateAppSlug,
-} from '../internal/naming.js';
+} from '../internal/naming.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { IDsqlCluster } from './dsql-cluster.js';
 import { DsqlSchema, type DsqlSchemaCloneFromConfig } from './dsql-schema.js';
@@ -151,12 +151,12 @@ export class PreviewableApp extends Construct {
         prNumber: props.prNumber,
         entry: props.api.entry,
         ...(apiCustomDomain ? { customDomain: apiCustomDomain } : {}),
-        allowedOrigins: resolveAllowedOrigins({
-          app: props.app,
-          stage: props.stage,
-          prNumber: props.prNumber,
-          domainName: props.domainName ?? '',
-        }),
+        allowedOrigins: [
+          frontendOrigin(
+            { app: props.app, stage: props.stage, prNumber: props.prNumber },
+            props.domainName,
+          ),
+        ],
         memoryMb: props.api.memoryMb,
         timeoutSeconds: props.api.timeoutSeconds,
         environment: {
@@ -209,19 +209,6 @@ export class PreviewableApp extends Construct {
  */
 function apiHttpHostname(api: LambdaApi): string {
   return `${api.httpApi.apiId}.execute-api.${Stack.of(api).region}.amazonaws.com`;
-}
-
-function resolveAllowedOrigins(props: {
-  readonly app: string;
-  readonly stage: Stage;
-  readonly prNumber?: number;
-  readonly domainName: string;
-}): readonly string[] {
-  const origin =
-    props.stage === 'prod'
-      ? props.domainName
-      : previewHostname({ app: props.app, stage: props.stage, prNumber: props.prNumber });
-  return [`https://${origin}`];
 }
 
 /**

@@ -8,6 +8,9 @@ import {
 } from './painting.utils';
 import { PALETTES } from './palettes.utils';
 
+const drawLow = (): number => 0.001;
+const drawHigh = (): number => 0.999;
+
 describe('mulberry32', () => {
   it('is deterministic for a fixed seed', () => {
     const firstStream = mulberry32(0x1234);
@@ -80,8 +83,7 @@ describe('pickSplittableEntry', () => {
       { x: 0, y: 0, width: 0.4, height: 0.4, depth: 0, id: 0 },
       { x: 0.4, y: 0, width: 0.6, height: 1, depth: 0, id: 1 },
     ];
-    const lowDrawStream = () => 0.001;
-    const splitTarget = pickSplittableEntry(rectsTwoLarge, lowDrawStream);
+    const splitTarget = pickSplittableEntry(rectsTwoLarge, drawLow);
     expect(splitTarget).not.toBeNull();
     expect(splitTarget?.rectIndex).toBe(0);
   });
@@ -91,8 +93,7 @@ describe('pickSplittableEntry', () => {
       { x: 0, y: 0, width: 0.4, height: 0.4, depth: 0, id: 0 },
       { x: 0.4, y: 0, width: 0.6, height: 1, depth: 0, id: 1 },
     ];
-    const highDrawStream = () => 0.999;
-    const splitTarget = pickSplittableEntry(rectsTwoLarge, highDrawStream);
+    const splitTarget = pickSplittableEntry(rectsTwoLarge, drawHigh);
     expect(splitTarget).not.toBeNull();
     expect(splitTarget?.rectIndex).toBe(1);
   });

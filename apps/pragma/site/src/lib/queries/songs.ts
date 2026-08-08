@@ -12,7 +12,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api } from '../api';
+import { ApiError, api, isResponseSuccessful } from '../api';
 import { isLastPendingMutation } from './optimistic.utils';
 
 export const songKeys = {
@@ -134,7 +134,8 @@ export function useCreateSong() {
     mutationKey: songKeys.all,
     mutationFn: async (variables: SongCreateVariables) => {
       const response = await api.api.songs.$post({ json: variables });
-      if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
+      if (!isResponseSuccessful(response))
+        throw new ApiError(response.status, `create ${response.status}`, null);
       return response.json();
     },
     onMutate: async (variables) => {

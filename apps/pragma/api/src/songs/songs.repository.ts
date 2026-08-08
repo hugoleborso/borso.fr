@@ -151,18 +151,17 @@ function encodeInsert(values: SongInsertShape): SongInsertEncoded {
     title: values.title,
     artist: values.artist,
     status: values.status,
-    links: JSON.stringify(values.links ?? []),
-    chart:
-      values.chart === null || values.chart === undefined ? null : JSON.stringify(values.chart),
+    links: JSON.stringify(values.links),
+    chart: values.chart === null ? null : JSON.stringify(values.chart),
     tonalityStart: values.tonalityStart,
     tonalityEnd: values.tonalityEnd,
-    defaultLineup: JSON.stringify(values.defaultLineup ?? {}),
+    defaultLineup: JSON.stringify(values.defaultLineup),
     baseEnergy: values.baseEnergy,
     mbid: values.mbid,
     album: values.album,
     durationSeconds: values.durationSeconds,
-    isrcs: JSON.stringify(values.isrcs ?? []),
-    tags: JSON.stringify(values.tags ?? []),
+    isrcs: JSON.stringify(values.isrcs),
+    tags: JSON.stringify(values.tags),
   };
 }
 

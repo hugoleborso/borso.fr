@@ -13,6 +13,13 @@ import { listRunnersForEdition } from '../runner/runner.repository';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 
+async function seed(fixture: string) {
+  const app = createApp();
+  return app.request(`/api/__test/seed?fixture=${encodeURIComponent(fixture)}`, {
+    method: 'POST',
+  });
+}
+
 describe('__test/test-seed.controller', () => {
   const originalFlag = process.env[TEST_SEED_FLAG];
 
@@ -31,13 +38,6 @@ describe('__test/test-seed.controller', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());
   });
-
-  async function seed(fixture: string) {
-    const app = createApp();
-    return app.request(`/api/__test/seed?fixture=${encodeURIComponent(fixture)}`, {
-      method: 'POST',
-    });
-  }
 
   it('returns 400 on an unknown fixture name', async () => {
     const response = await seed('totally-unknown');

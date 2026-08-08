@@ -44,7 +44,7 @@ export function SongEditPage(): JSX.Element {
     return songFromApi(parsed.data.song);
   }, [isNew, songQuery.data]);
 
-  const formKey = isNew ? 'new' : `${songId}:${songQuery.data?.song?.id ?? 'loading'}`;
+  const formKey = isNew ? 'new' : `${songId}:${songQuery.data?.song.id ?? 'loading'}`;
   const isLoading = !isNew && songQuery.isLoading;
   const queryError = songQuery.error instanceof ApiError ? songQuery.error.message : null;
 
@@ -55,7 +55,7 @@ export function SongEditPage(): JSX.Element {
       if (isNew) {
         const created = await createSong.mutateAsync(payload);
         navigate(`/catalog/${created.song.id}`, { replace: true });
-      } else if (songId !== undefined) {
+      } else {
         await updateSong.mutateAsync({ id: songId, ...payload });
         navigate(`/catalog/${songId}`);
       }

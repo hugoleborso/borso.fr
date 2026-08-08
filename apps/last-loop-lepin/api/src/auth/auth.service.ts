@@ -28,7 +28,7 @@ export class AuthDeniedError extends Error {
   }
 }
 
-function verifyPinAgainstHash(pin: string, hashedPin: string): boolean {
+function isPinMatchingHash(pin: string, hashedPin: string): boolean {
   const parts = hashedPin.split('$');
   if (parts.length !== SCRYPT_PARTS_COUNT || parts[0] !== 'scrypt') return false;
   const saltHex = parts[1];
@@ -93,7 +93,7 @@ export async function login(
     throw new AuthDeniedError('misconfigured');
   }
   await consumeRateLimit(database, input.ipAddress, now);
-  if (!verifyPinAgainstHash(input.pin, pinHash)) {
+  if (!isPinMatchingHash(input.pin, pinHash)) {
     throw new AuthDeniedError('invalid-pin');
   }
   await resetRateLimit(database, input.ipAddress, now);

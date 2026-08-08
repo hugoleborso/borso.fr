@@ -4,12 +4,13 @@ import {
   bucketName,
   dsqlSchemaName,
   lambdaFunctionName,
+  frontendOrigin,
   previewApiHostname,
   previewHostname,
   previewS3Prefix,
   stackName,
   validateAppSlug,
-} from '../../src/internal/naming.js';
+} from './naming.utils.js';
 
 describe('validateAppSlug', () => {
   it.each(['borso-fr', 'test-app', 'app1', 'a-b-c'])('accepts %s', (slug) => {
@@ -155,5 +156,26 @@ describe('previewHostname / previewS3Prefix', () => {
 
   it('rejects bad handler names in lambdaFunctionName', () => {
     expect(() => lambdaFunctionName({ app: 'test-app', stage: 'prod' }, 'Bad_Handler')).toThrow();
+  });
+});
+
+describe('frontendOrigin', () => {
+  it('uses the application domain for prod', () => {
+    expect(frontendOrigin({ app: 'test-app', stage: 'prod' }, 'test-app.borso.fr')).toBe(
+      'https://test-app.borso.fr',
+    );
+  });
+
+  it('throws for prod without a domain, since there is nothing to accept', () => {
+    expect(() => frontendOrigin({ app: 'test-app', stage: 'prod' }, undefined)).toThrow();
+  });
+
+  it('uses the preview hostname for preview and integ', () => {
+    expect(
+      frontendOrigin({ app: 'test-app', stage: 'preview', prNumber: 5 }, 'test-app.borso.fr'),
+    ).toBe('https://test-app-pr-5.preview.borso.fr');
+    expect(frontendOrigin({ app: 'test-app', stage: 'integ', prNumber: 5 }, undefined)).toBe(
+      'https://bp-integ-test-app-pr-5.preview.borso.fr',
+    );
   });
 });

@@ -26,6 +26,10 @@ const runnersListSchema = z.object({
   ),
 });
 
+async function adminCookie(): Promise<string> {
+  return adminSessionCookie(testDatabase());
+}
+
 describe('runner controller', () => {
   const app = createApp();
 
@@ -34,10 +38,6 @@ describe('runner controller', () => {
     await truncateAllTables(database);
     await insertEdition(database, makeEdition({ status: 'setup' }));
   });
-
-  async function adminCookie(): Promise<string> {
-    return adminSessionCookie(testDatabase());
-  }
 
   it('creates a runner and surfaces it in the public list', async () => {
     const cookie = await adminCookie();

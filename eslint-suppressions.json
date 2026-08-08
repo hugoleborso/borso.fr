@@ -1,55 +1,6 @@
 {
-  "apps/borso-fr/bin/app.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
-  "apps/borso-fr/scripts/screenshot.mjs": {
-    "no-console": {
-      "count": 1
-    }
-  },
-  "apps/borso-fr/site/art/mondrian/painting.utils.test.ts": {
-    "unicorn/consistent-function-scoping": {
-      "count": 2
-    }
-  },
-  "apps/borso-fr/site/art/mondrian/painting.utils.ts": {
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    }
-  },
   "apps/borso-fr/site/art/mondrian/use-animation.ts": {
     "no-param-reassign": {
-      "count": 3
-    }
-  },
-  "apps/borsouvertures/bin/app.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    }
-  },
-  "apps/borsouvertures/scripts/build-openings.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
-    },
-    "no-console": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/openings/bookTree.utils.ts": {
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    }
-  },
-  "apps/borsouvertures/site/openings/playMachine.utils.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "unicorn/consistent-boolean-name": {
       "count": 3
     }
   },
@@ -63,24 +14,6 @@
       "count": 1
     }
   },
-  "apps/borsouvertures/vite.config.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/__test/test-seed.controller.test.ts": {
-    "@typescript-eslint/no-dynamic-delete": {
-      "count": 1
-    },
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/app.test.ts": {
-    "@typescript-eslint/no-dynamic-delete": {
-      "count": 3
-    }
-  },
   "apps/last-loop-lepin/api/src/app.ts": {
     "borso/conditions-live-in-pure-functions": {
       "count": 1
@@ -89,16 +22,10 @@
   "apps/last-loop-lepin/api/src/auth/auth.controller.test.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
-    },
-    "unicorn/consistent-function-scoping": {
-      "count": 1
     }
   },
   "apps/last-loop-lepin/api/src/auth/auth.controller.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    },
-    "borso/pure-functions-live-in-core-files": {
       "count": 1
     }
   },
@@ -107,95 +34,13 @@
       "count": 1
     }
   },
-  "apps/last-loop-lepin/api/src/auth/auth.service.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    },
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/database/client.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 3
-    },
-    "unicorn/no-top-level-assignment-in-function": {
-      "count": 4
-    }
-  },
-  "apps/last-loop-lepin/api/src/edition/edition.controller.test.ts": {
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
   "apps/last-loop-lepin/api/src/edition/edition.repository.test.ts": {
     "unicorn/require-array-sort-compare": {
       "count": 1
     }
   },
-  "apps/last-loop-lepin/api/src/edition/edition.repository.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/edition/edition.schema.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/edition/edition.service.test.ts": {
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/edition/edition.service.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 3
-    }
-  },
-  "apps/last-loop-lepin/api/src/helpers/sun/sun.core.ts": {
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/main.dev.ts": {
-    "no-console": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/media/media.controller.test.ts": {
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/media/media.s3.test.ts": {
-    "@typescript-eslint/no-dynamic-delete": {
-      "count": 1
-    }
-  },
   "apps/last-loop-lepin/api/src/media/media.s3.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    },
-    "unicorn/no-top-level-assignment-in-function": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/media/media.service.test.ts": {
-    "@typescript-eslint/no-dynamic-delete": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/punch/punch.controller.test.ts": {
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/punch/punch.repository.ts": {
-    "borso/pure-functions-live-in-core-files": {
       "count": 1
     }
   },
@@ -214,34 +59,6 @@
       "count": 1
     }
   },
-  "apps/last-loop-lepin/api/src/ranking/laps-csv.core.ts": {
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/ranking/ranking.controller.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    }
-  },
-  "apps/last-loop-lepin/api/src/ranking/ranking.core.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/runner/runner.controller.test.ts": {
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
-  "apps/last-loop-lepin/api/src/runner/runner.dto.utils.test.ts": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2
-    }
-  },
   "apps/last-loop-lepin/api/src/runner/runner.repository.test.ts": {
     "unicorn/require-array-sort-compare": {
       "count": 1
@@ -252,34 +69,8 @@
       "count": 1
     }
   },
-  "apps/last-loop-lepin/cdk/bin/cdk.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
   "apps/last-loop-lepin/cdk/lib/stack.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 3
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
-    }
-  },
-  "apps/last-loop-lepin/cdk/test/stack.test.ts": {
-    "unicorn/consistent-function-scoping": {
-      "count": 4
-    }
-  },
-  "apps/last-loop-lepin/site/src/clock-store.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    },
-    "unicorn/no-top-level-assignment-in-function": {
-      "count": 3
-    }
-  },
-  "apps/last-loop-lepin/site/src/observability/sentry.ts": {
-    "borso/pure-functions-live-in-core-files": {
       "count": 2
     }
   },
@@ -294,21 +85,8 @@
     }
   },
   "apps/last-loop-lepin/test/setup-postgres.ts": {
-    "unicorn/no-top-level-assignment-in-function": {
-      "count": 1
-    },
     "unicorn/require-array-sort-compare": {
       "count": 1
-    }
-  },
-  "apps/pragma/api/src/__test/test-seed.controller.test.ts": {
-    "@typescript-eslint/no-dynamic-delete": {
-      "count": 2
-    }
-  },
-  "apps/pragma/api/src/app.test.ts": {
-    "@typescript-eslint/no-dynamic-delete": {
-      "count": 3
     }
   },
   "apps/pragma/api/src/app.ts": {
@@ -317,9 +95,6 @@
     }
   },
   "apps/pragma/api/src/auth/session-cookie.utils.test.ts": {
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    },
     "vitest/no-conditional-expect": {
       "count": 2
     }
@@ -334,24 +109,6 @@
       "count": 1
     }
   },
-  "apps/pragma/api/src/bars/bars.service.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
-    }
-  },
-  "apps/pragma/api/src/database/client.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 3
-    },
-    "unicorn/no-top-level-assignment-in-function": {
-      "count": 1
-    }
-  },
-  "apps/pragma/api/src/main.dev.ts": {
-    "no-console": {
-      "count": 1
-    }
-  },
   "apps/pragma/api/src/mastery/mastery.schema.ts": {
     "@typescript-eslint/no-deprecated": {
       "count": 2
@@ -362,27 +119,6 @@
       "count": 1
     }
   },
-  "apps/pragma/api/src/sessions/sessions.repository.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 3
-    }
-  },
-  "apps/pragma/api/src/sessions/sessions.service.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
-    }
-  },
-  "apps/pragma/api/src/setlists/setlists.repository.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 3
-    }
-  },
   "apps/pragma/api/src/setlists/transition.core.ts": {
     "unicorn/require-array-sort-compare": {
       "count": 1
@@ -391,24 +127,10 @@
   "apps/pragma/api/src/songs/songs.controller.test.ts": {
     "@typescript-eslint/no-base-to-string": {
       "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "apps/pragma/api/src/songs/songs.repository.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 5
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 4
     }
   },
   "apps/pragma/api/src/songs/songs.service.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    },
-    "borso/pure-functions-live-in-core-files": {
       "count": 1
     }
   },
@@ -419,29 +141,6 @@
   },
   "apps/pragma/api/src/transitions/transitions.schema.ts": {
     "@typescript-eslint/no-deprecated": {
-      "count": 1
-    }
-  },
-  "apps/pragma/api/src/uploads/uploads.controller.test.ts": {
-    "@typescript-eslint/no-dynamic-delete": {
-      "count": 1
-    }
-  },
-  "apps/pragma/api/src/uploads/uploads.repository.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    },
-    "unicorn/no-top-level-assignment-in-function": {
-      "count": 1
-    }
-  },
-  "apps/pragma/cdk/bin/cdk.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
-  "apps/pragma/cdk/lib/stack.ts": {
-    "borso/pure-functions-live-in-core-files": {
       "count": 1
     }
   },
@@ -458,35 +157,14 @@
       "count": 1
     }
   },
-  "apps/pragma/site/src/components/molecules/LineupEditor.test.tsx": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/require-await": {
-      "count": 6
-    }
-  },
   "apps/pragma/site/src/components/molecules/MemberChip.tsx": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    }
-  },
-  "apps/pragma/site/src/components/molecules/MemberFilterPills.test.tsx": {
-    "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     }
   },
   "apps/pragma/site/src/components/molecules/SongSearch.tsx": {
     "borso/conditions-live-in-pure-functions": {
       "count": 3
-    }
-  },
-  "apps/pragma/site/src/components/molecules/file-drop.test.tsx": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/require-await": {
-      "count": 1
     }
   },
   "apps/pragma/site/src/components/organisms/AppShell.tsx": {
@@ -507,9 +185,6 @@
   "apps/pragma/site/src/components/organisms/MasteryMatrix.tsx": {
     "borso/conditions-live-in-pure-functions": {
       "count": 2
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
     }
   },
   "apps/pragma/site/src/components/organisms/useNavBadges.ts": {
@@ -527,114 +202,34 @@
       "count": 1
     }
   },
-  "apps/pragma/site/src/lib/queries/auth.queries.test.tsx": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/require-await": {
-      "count": 1
-    }
-  },
   "apps/pragma/site/src/lib/queries/auth.ts": {
     "borso/conditions-live-in-pure-functions": {
       "count": 1
     }
   },
-  "apps/pragma/site/src/lib/queries/bars.queries.test.tsx": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
-    }
-  },
   "apps/pragma/site/src/lib/queries/bars.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
     "borso/conditions-live-in-pure-functions": {
       "count": 1
-    }
-  },
-  "apps/pragma/site/src/lib/queries/instruments.queries.test.tsx": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
     }
   },
   "apps/pragma/site/src/lib/queries/instruments.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
     "borso/conditions-live-in-pure-functions": {
       "count": 1
-    }
-  },
-  "apps/pragma/site/src/lib/queries/mastery.queries.test.tsx": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
-    }
-  },
-  "apps/pragma/site/src/lib/queries/mastery.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "borso/conditions-live-in-pure-functions": {
-      "count": 2
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    }
-  },
-  "apps/pragma/site/src/lib/queries/members.queries.test.tsx": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
     }
   },
   "apps/pragma/site/src/lib/queries/members.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
     "borso/conditions-live-in-pure-functions": {
       "count": 1
     }
   },
   "apps/pragma/site/src/lib/queries/sessions.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
     "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    }
-  },
-  "apps/pragma/site/src/lib/queries/setlists.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2
-    }
-  },
-  "apps/pragma/site/src/lib/queries/songs.queries.test.tsx": {
-    "@typescript-eslint/no-unnecessary-condition": {
       "count": 4
     }
   },
   "apps/pragma/site/src/lib/queries/songs.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
     "borso/conditions-live-in-pure-functions": {
       "count": 1
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
-    }
-  },
-  "apps/pragma/site/src/lib/queries/test-helpers.tsx": {
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
-  "apps/pragma/site/src/lib/queries/transitions.queries.test.tsx": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
     }
   },
   "apps/pragma/site/src/lib/stale-bar.utils.ts": {
@@ -669,9 +264,6 @@
     "borso/conditions-live-in-pure-functions": {
       "count": 4
     },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    },
     "max-lines": {
       "count": 1
     }
@@ -684,9 +276,6 @@
   "apps/pragma/site/src/routes/catalog/SongEditPage.tsx": {
     "@typescript-eslint/no-floating-promises": {
       "count": 3
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
     },
     "borso/conditions-live-in-pure-functions": {
       "count": 2
@@ -775,19 +364,11 @@
   "apps/pragma/test/auth-utils.ts": {
     "@typescript-eslint/no-unsafe-return": {
       "count": 1
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
     }
   },
   "apps/pragma/test/setup-postgres.ts": {
     "unicorn/require-array-sort-compare": {
       "count": 1
-    }
-  },
-  "infra/cdk/src/constructs/dsql-schema.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
     }
   },
   "infra/cdk/src/constructs/lambda-api.ts": {
@@ -797,10 +378,7 @@
   },
   "infra/cdk/src/constructs/previewable-app.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
+      "count": 3
     }
   },
   "infra/cdk/src/constructs/static-site.ts": {
@@ -818,40 +396,13 @@
       "count": 1
     }
   },
-  "infra/cdk/src/internal/env.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
-    }
-  },
   "infra/cdk/src/internal/migration-runner/index.ts": {
     "borso/conditions-live-in-pure-functions": {
       "count": 3
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    },
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    }
-  },
-  "infra/cdk/src/internal/naming.ts": {
-    "borso/conditions-live-in-pure-functions": {
-      "count": 4
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 10
-    }
-  },
-  "infra/cdk/src/internal/oidc.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
     }
   },
   "infra/cdk/src/internal/tags.ts": {
     "borso/conditions-live-in-pure-functions": {
-      "count": 1
-    },
-    "borso/pure-functions-live-in-core-files": {
       "count": 1
     }
   },
@@ -865,49 +416,12 @@
       "count": 1
     }
   },
-  "infra/cdk/test/unit/env.test.ts": {
-    "@typescript-eslint/no-dynamic-delete": {
-      "count": 2
-    }
-  },
-  "infra/cdk/test/unit/fixtures/handler.ts": {
-    "@typescript-eslint/require-await": {
-      "count": 1
-    }
-  },
   "infra/cdk/test/unit/helpers/migration-runner-mock.ts": {
     "@typescript-eslint/no-base-to-string": {
       "count": 1
     },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2
-    },
     "borso/conditions-live-in-pure-functions": {
       "count": 3
-    },
-    "borso/pure-functions-live-in-core-files": {
-      "count": 1
-    },
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
-  "infra/cdk/test/unit/helpers/template.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 4
-    }
-  },
-  "infra/cdk/test/unit/previewable-app.test.ts": {
-    "unicorn/consistent-boolean-name": {
-      "count": 1
-    },
-    "unicorn/consistent-function-scoping": {
-      "count": 1
-    }
-  },
-  "infra/shared/test/unit/helpers/template.ts": {
-    "borso/pure-functions-live-in-core-files": {
-      "count": 2
     }
   }
 }

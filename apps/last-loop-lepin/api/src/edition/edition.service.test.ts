@@ -14,20 +14,20 @@ const MINIMAL_GPX = `<?xml version="1.0"?><gpx><trk><trkseg>
   <trkpt lat="45.555" lon="5.785"><ele>500</ele></trkpt>
 </trkseg></trk></gpx>`;
 
+function input(slug = 'lepin-svc-1') {
+  return {
+    slug,
+    displayName: 'svc test',
+    startsAt: new Date('2026-09-19T06:00:00+02:00'),
+    endsAt: new Date('2026-09-19T22:00:00+02:00'),
+    gpxXml: MINIMAL_GPX,
+  };
+}
+
 describe('edition.service', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());
   });
-
-  function input(slug = 'lepin-svc-1') {
-    return {
-      slug,
-      displayName: 'svc test',
-      startsAt: new Date('2026-09-19T06:00:00+02:00'),
-      endsAt: new Date('2026-09-19T22:00:00+02:00'),
-      gpxXml: MINIMAL_GPX,
-    };
-  }
 
   it('createEdition parses GPX and computes sunrise/sunset', async () => {
     const database = testDatabase();

@@ -14,7 +14,7 @@ import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import type { IBucket } from 'aws-cdk-lib/aws-s3';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
-import { assertDeployStage, type Stage, validateAppSlug } from '../internal/naming.js';
+import { assertDeployStage, type Stage, validateAppSlug } from '../internal/naming.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 
 const SHARED_SSM = {

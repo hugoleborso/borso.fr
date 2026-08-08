@@ -38,6 +38,63 @@ export const IMPURE_GLOBALS = new Set([
 /** Member calls a pure function may not make, written as `object.property`. */
 export const IMPURE_MEMBER_CALLS = new Set(['Date.now', 'Math.random']);
 
+/**
+ * Modules whose exports read or write something outside the process's own
+ * memory. A function that touches a binding imported from one of these is
+ * impure however local its body looks, e.g. `readMigrations` calls
+ * `fs.readdirSync` and `verifyPinAgainstHash` calls `scryptSync`.
+ *
+ * `node:path` and `node:url` are absent on purpose, because they compute
+ * strings from strings.
+ */
+export const IMPURE_MODULE_SOURCES = new Set([
+  'child_process',
+  'crypto',
+  'dns',
+  'fs',
+  'fs/promises',
+  'http',
+  'https',
+  'net',
+  'node:child_process',
+  'node:crypto',
+  'node:dns',
+  'node:fs',
+  'node:fs/promises',
+  'node:http',
+  'node:https',
+  'node:net',
+  'node:os',
+  'node:process',
+  'node:readline',
+  'node:timers',
+  'node:timers/promises',
+  'node:worker_threads',
+  'os',
+  'process',
+]);
+
+/**
+ * Methods that change the receiver rather than returning a new value. Calling
+ * one of these on an argument writes outside the function's return value, so
+ * the function is not pure.
+ */
+export const MUTATING_METHOD_NAMES = new Set([
+  'add',
+  'clear',
+  'copyWithin',
+  'delete',
+  'fill',
+  'pop',
+  'push',
+  'reverse',
+  'set',
+  'shift',
+  'sort',
+  'splice',
+  'unshift',
+]);
+
 export function isPureFile(filename) {
   return PURE_FILE_PATTERN.test(filename);
 }
@@ -85,20 +142,11 @@ export function readMemberCallName(node) {
   return `${node.callee.object.name}.${node.callee.property.name}`;
 }
 
-const BRANCH_NODE_TYPES = new Set(['IfStatement', 'ConditionalExpression', 'SwitchStatement']);
-
 const FUNCTION_NODE_TYPES = new Set([
   'FunctionDeclaration',
   'FunctionExpression',
   'ArrowFunctionExpression',
 ]);
-
-export function isBranchNode(node) {
-  if (BRANCH_NODE_TYPES.has(node.type)) {
-    return true;
-  }
-  return node.type === 'LogicalExpression' && (node.operator === '&&' || node.operator === '||');
-}
 
 export function isFunctionNode(node) {
   return FUNCTION_NODE_TYPES.has(node.type);

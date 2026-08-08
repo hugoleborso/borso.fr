@@ -89,10 +89,12 @@ export function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
+function throwUnboundResolver(): never {
+  throw new Error('deferred resolver invoked before binding');
+}
+
 export function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
-  let resolver: (value: T) => void = () => {
-    throw new Error('deferred resolver invoked before binding');
-  };
+  let resolver: (value: T) => void = throwUnboundResolver;
   const promise = new Promise<T>((resolve) => {
     resolver = resolve;
   });
@@ -112,4 +114,32 @@ export async function flushMicrotasks(): Promise<void> {
       await Promise.resolve();
     }
   });
+}
+
+/**
+ * A slot a probe component publishes its `mutateAsync` handle into.
+ *
+ * The probe calls `sink` while React renders it, which TypeScript's control
+ * flow analysis cannot see, so a plain `let capturedDispatch: Mutate | null =
+ * null` stays narrowed to `null` and the check that follows reads as always
+ * true. Putting the write behind `sink` and the read behind `read` makes the
+ * absent case a real question again, and gives every suite the same message
+ * when a probe never rendered.
+ */
+export function createMutateSlot<Dispatch>(): {
+  readonly sink: (dispatch: Dispatch) => void;
+  readonly read: () => Dispatch;
+} {
+  let captured: Dispatch | null = null;
+  return {
+    sink: (dispatch: Dispatch): void => {
+      captured = dispatch;
+    },
+    read: (): Dispatch => {
+      if (captured === null) {
+        throw new Error('the probe component never published its mutate handle');
+      }
+      return captured;
+    },
+  };
 }

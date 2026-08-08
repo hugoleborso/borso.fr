@@ -98,10 +98,7 @@ function encodeEntryInsert(values: EntryInsertShape): EntryInsertEncoded {
     songId: values.songId,
     position: values.position,
     energy: values.energy,
-    lineupOverride:
-      values.lineupOverride === null || values.lineupOverride === undefined
-        ? null
-        : JSON.stringify(values.lineupOverride),
+    lineupOverride: values.lineupOverride === null ? null : JSON.stringify(values.lineupOverride),
     keyOverride: values.keyOverride,
     capo: values.capo,
     notes: values.notes,

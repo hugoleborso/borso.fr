@@ -1,4 +1,10 @@
-import { type IDsqlCluster, PhotosCdn, PreviewableApp, type Stage } from '@borso/infra';
+import {
+  frontendOrigin,
+  type IDsqlCluster,
+  PhotosCdn,
+  PreviewableApp,
+  type Stage,
+} from '@borso/infra';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import {
   BlockPublicAccess,
@@ -21,27 +27,6 @@ export interface BuildAppStackProps {
   readonly apiEntry: string;
   readonly migrationsPath: string;
   readonly cluster: IDsqlCluster;
-}
-
-/**
- * Frontend origin the API Lambda will accept on state-changing requests.
- * Used by `requireAdminSession` for the CSRF Origin-header check. Prod
- * is the apex domain; preview is the per-PR `<app>-pr-<N>.preview.borso.fr`
- * hostname. Dev sets `ALLOWED_ORIGIN` locally (typically
- * `http://localhost:5173`).
- */
-function frontendOrigin(
-  stage: Stage,
-  domainName: string | undefined,
-  prNumber: number | undefined,
-): string {
-  if (stage === 'prod') {
-    if (domainName === undefined) {
-      throw new Error('frontendOrigin: domainName required for stage="prod".');
-    }
-    return `https://${domainName}`;
-  }
-  return `https://${APP_SLUG}-pr-${prNumber ?? 0}.preview.borso.fr`;
 }
 
 /**
@@ -106,7 +91,10 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
       environment: {
         PHOTOS_BUCKET: photosBucket.bucketName,
         PHOTOS_CDN_HOST: photosCdn.hostname,
-        ALLOWED_ORIGIN: frontendOrigin(props.stage, props.domainName, props.prNumber),
+        ALLOWED_ORIGIN: frontendOrigin(
+          { app: APP_SLUG, stage: props.stage, prNumber: props.prNumber },
+          props.domainName,
+        ),
       },
     },
     database: {

@@ -32,6 +32,14 @@ const UNPROJECTED_TYPESCRIPT_FILES = [
   'infra/*/vitest.config.ts',
   'infra/*/bin/*.ts',
 ];
+// A workspace's own build and deploy tooling, as opposed to the code it ships.
+const WORKSPACE_TOOLING_FILES = [
+  'apps/*/*.config.ts',
+  'apps/*/bin/**/*.ts',
+  'apps/*/cdk/bin/**/*.ts',
+  'apps/*/scripts/**/*.{ts,mjs}',
+];
+
 const SITE_FILES = ['apps/*/site/**/*.{ts,tsx}'];
 const TEST_FILES = ['**/*.test.{ts,tsx,js}', '**/*.test-utils.ts', '**/test/**/*.ts'];
 
@@ -96,6 +104,11 @@ export default tseslint.config(
         'error',
         { ignoreArrowShorthand: true, ignoreVoidOperator: true },
       ],
+      // `const { setlistId: _setlistId, ...rest } = variables` is how a key
+      // gets dropped from an object, and the binding it needs is unused by
+      // construction, so there is no version of that line the rule would
+      // accept. Every other unused binding still fails.
+      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
     },
   },
 
@@ -165,8 +178,16 @@ export default tseslint.config(
   // and the root config files is exempt, because a build script is not a domain
   // rule and moving its branches into a `.core.ts` file would put tooling under
   // the coverage and mutation gates meant for the product.
+  //
+  // The same reason covers each workspace's own tooling, which the pattern
+  // below could not tell from product code: `apps/*/vite.config.ts` holds a
+  // workbox `urlPattern` callback, `apps/*/scripts/build-openings.ts` fetches
+  // and reshapes a third party TSV at build time, and `apps/*/bin/app.ts` is a
+  // CDK entry point. None of them ships to a user, and the vitest coverage
+  // thresholds do not reach them.
   {
     files: ['apps/**/*.{ts,tsx}', 'infra/**/*.ts'],
+    ignores: WORKSPACE_TOOLING_FILES,
     plugins: { borso: borsoPlugin },
     rules: {
       'borso/conditions-live-in-pure-functions': 'error',
@@ -286,6 +307,23 @@ export default tseslint.config(
     },
   },
 
+  // A client the process builds once, and a store React subscribes to, both
+  // live in a module level binding a function assigns on first use. That is
+  // the design of these files rather than an accident: a Lambda reuses its
+  // database and S3 clients across warm invocations, `useSyncExternalStore`
+  // needs its store outside React's tree, and the Postgres container is one
+  // per test run. Every other module keeps the rule.
+  {
+    files: [
+      'apps/*/api/src/database/client.ts',
+      'apps/*/api/src/**/*.s3.ts',
+      'apps/*/api/src/uploads/uploads.repository.ts',
+      'apps/*/site/src/*-store.ts',
+      'apps/*/test/**/*.ts',
+    ],
+    rules: { 'unicorn/no-top-level-assignment-in-function': 'off' },
+  },
+
   // Plain browser scripts that ship as-is, with no bundler and no module
   // system, so they read the DOM globals directly.
   {
@@ -342,6 +380,17 @@ export default tseslint.config(
         },
       ],
       'vitest/no-identical-title': 'error',
+      // Every finding was `delete process.env[NAME]` restoring an environment
+      // variable a test had set. The rule's reason is that a record with
+      // computed keys wants to be a `Map`, and `process.env` is not ours to
+      // redesign, so there is no version of that line the rule would accept.
+      '@typescript-eslint/no-dynamic-delete': 'off',
+      // A test's `async` marks a contract rather than an awaited call: `await
+      // act(async () => …)` takes React's asynchronous path only when the
+      // callback returns a promise, a `fetch` stub has to return one, and a
+      // Lambda handler fixture is async by its signature. Rewriting any of
+      // them as `() => Promise.resolve(…)` satisfies the rule and reads worse.
+      '@typescript-eslint/require-await': 'off',
       'max-lines': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
@@ -365,8 +414,18 @@ export default tseslint.config(
     },
   },
 
+  // Code a person runs from a terminal and reads the output of. `no-console`
+  // exists to keep logging out of what ships, and none of these ship: a build
+  // script prints its progress, and `main.dev.ts` prints the port the local
+  // API bound to. The Lambda entry point is `main.ts`, which keeps the rule.
   {
-    files: ['eslint-rules/**/*.js', 'scripts/**/*.{js,mjs}', '*.config.{js,ts}'],
+    files: [
+      'eslint-rules/**/*.js',
+      'scripts/**/*.{js,mjs}',
+      '*.config.{js,ts}',
+      'apps/*/scripts/**/*.{ts,mjs}',
+      'apps/*/api/src/main.dev.ts',
+    ],
     rules: {
       'no-console': 'off',
       'max-lines': 'off',

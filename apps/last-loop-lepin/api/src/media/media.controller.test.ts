@@ -15,12 +15,12 @@ const presignResponseSchema = z.object({
   expiresAt: z.string(),
 });
 
+async function adminCookie(): Promise<string> {
+  return adminSessionCookie(testDatabase());
+}
+
 describe('media controller', () => {
   const app = createApp();
-
-  async function adminCookie(): Promise<string> {
-    return adminSessionCookie(testDatabase());
-  }
 
   it('returns 401 without admin cookie', async () => {
     const response = await app.request('/api/admin/media/presign', {

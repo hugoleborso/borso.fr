@@ -57,7 +57,7 @@ function renderEditor(root: Root, node: ReactNode): void {
 
 function findButtonByText(container: HTMLElement, label: string): HTMLButtonElement | null {
   const buttons = Array.from(container.querySelectorAll('button'));
-  return buttons.find((button) => button.textContent?.trim() === label) ?? null;
+  return buttons.find((button) => button.textContent.trim() === label) ?? null;
 }
 
 function findInstrumentSelectFor(container: HTMLElement, memberId: string): HTMLSelectElement {

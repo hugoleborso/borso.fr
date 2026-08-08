@@ -32,7 +32,7 @@ const REMOVE_BUTTON_TEXT_EN = 'Remove';
 
 function findRemoveButton(container: HTMLElement): HTMLButtonElement | null {
   const buttons = Array.from(container.querySelectorAll('button'));
-  return buttons.find((button) => button.textContent?.trim() === REMOVE_BUTTON_TEXT_EN) ?? null;
+  return buttons.find((button) => button.textContent.trim() === REMOVE_BUTTON_TEXT_EN) ?? null;
 }
 
 describe('FileDrop — Remove button', () => {

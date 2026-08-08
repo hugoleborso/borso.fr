@@ -21,6 +21,14 @@ function readCookieValue(setCookie: string | null, name: string): string | null 
   return valuePart ?? null;
 }
 
+async function login(pin: string, ipAddress = '127.0.0.1') {
+  return createApp().request('/api/admin/auth/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': ipAddress },
+    body: JSON.stringify({ pin }),
+  });
+}
+
 describe('admin auth controller', () => {
   const originalOrigin = process.env.ALLOWED_ORIGIN;
 
@@ -46,14 +54,6 @@ describe('admin auth controller', () => {
     await truncateAllTables(testDatabase());
     await seedAdminCredentials(testDatabase());
   });
-
-  async function login(pin: string, ipAddress = '127.0.0.1') {
-    return createApp().request('/api/admin/auth/login', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-forwarded-for': ipAddress },
-      body: JSON.stringify({ pin }),
-    });
-  }
 
   it('returns 200 and sets the lastloop_admin cookie with SameSite=Lax on a correct PIN', async () => {
     const response = await login('lastloop');
