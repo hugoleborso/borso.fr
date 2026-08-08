@@ -36,6 +36,15 @@ describe('meanMasteryForSong', () => {
     expect(meanMasteryForSong(lineup, defaults)).toBe(4);
   });
 
+  it('does not credit a sitting-out member to an instrument whose id is the text "null"', () => {
+    const lineup = { m1: 'i1', m2: null };
+    const defaults = [
+      { memberId: 'm1', instrumentId: 'i1', score: 4 },
+      { memberId: 'm2', instrumentId: 'null', score: 10 },
+    ];
+    expect(meanMasteryForSong(lineup, defaults)).toBe(4);
+  });
+
   it('handles a single matched pair', () => {
     const lineup = { m1: 'i1' };
     const defaults = [{ memberId: 'm1', instrumentId: 'i1', score: 9 }];

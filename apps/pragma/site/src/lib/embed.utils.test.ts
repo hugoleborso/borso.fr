@@ -15,9 +15,23 @@ describe('resolveEmbed — YouTube', () => {
 
   it('extracts the video id from a youtu.be short URL', () => {
     const result = resolveEmbed('https://youtu.be/dQw4w9WgXcQ');
-    expect(result.kind).toBe('oembed');
-    if (result.kind !== 'oembed') return;
-    expect(result.iframeSrc).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ');
+    expect(result).toEqual({
+      kind: 'oembed',
+      provider: 'youtube',
+      iframeSrc: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      width: 560,
+      height: 315,
+    });
+  });
+
+  it('ignores a v parameter carried by a YouTube path other than /watch', () => {
+    const url = 'https://www.youtube.com/playlist?list=PL123&v=dQw4w9WgXcQ';
+    expect(resolveEmbed(url)).toEqual({ kind: 'plain', href: url });
+  });
+
+  it('does not read a /watch?v= URL served by another host as YouTube', () => {
+    const url = 'https://example.com/watch?v=dQw4w9WgXcQ';
+    expect(resolveEmbed(url)).toEqual({ kind: 'plain', href: url });
   });
 
   it('falls back to plain when no v= parameter is present', () => {
@@ -81,9 +95,30 @@ describe('resolveEmbed — Deezer', () => {
 
   it('builds an embed URL from /<lang>/<type>/<id>', () => {
     const result = resolveEmbed('https://www.deezer.com/fr/playlist/9999');
-    expect(result.kind).toBe('oembed');
-    if (result.kind !== 'oembed') return;
-    expect(result.iframeSrc).toContain('/playlist/9999');
+    expect(result).toEqual({
+      kind: 'oembed',
+      provider: 'deezer',
+      iframeSrc: 'https://widget.deezer.com/widget/dark/playlist/9999',
+      width: 300,
+      height: 380,
+    });
+  });
+
+  it('falls back to plain when the language segment is followed by a type but no id', () => {
+    expect(resolveEmbed('https://deezer.com/fr/track').kind).toBe('plain');
+  });
+
+  it('falls back to plain when neither of the first two segments is a media type', () => {
+    expect(resolveEmbed('https://deezer.com/fr/foo/1').kind).toBe('plain');
+  });
+
+  it('falls back to plain when the media type sits deeper than the language segment', () => {
+    expect(resolveEmbed('https://deezer.com/fr/profile/track/9').kind).toBe('plain');
+  });
+
+  it('does not read a deezer-shaped path served by another host as Deezer', () => {
+    const url = 'https://example.com/track/123456';
+    expect(resolveEmbed(url)).toEqual({ kind: 'plain', href: url });
   });
 
   it('falls back to plain on an unknown type segment', () => {
@@ -100,9 +135,18 @@ describe('resolveEmbed — Deezer', () => {
 describe('resolveEmbed — Vimeo', () => {
   it('builds an embed URL from /<numericId>', () => {
     const result = resolveEmbed('https://vimeo.com/123456789');
+    expect(result).toEqual({
+      kind: 'oembed',
+      provider: 'vimeo',
+      iframeSrc: 'https://player.vimeo.com/video/123456789',
+      width: 640,
+      height: 360,
+    });
+  });
+
+  it('recognises the player subdomain', () => {
+    const result = resolveEmbed('https://player.vimeo.com/123456789');
     expect(result.kind).toBe('oembed');
-    if (result.kind !== 'oembed') return;
-    expect(result.iframeSrc).toBe('https://player.vimeo.com/video/123456789');
   });
 
   it('falls back when the path is non-numeric', () => {
@@ -110,9 +154,22 @@ describe('resolveEmbed — Vimeo', () => {
     expect(result.kind).toBe('plain');
   });
 
+  it('falls back when digits only start the first segment', () => {
+    expect(resolveEmbed('https://vimeo.com/123abc').kind).toBe('plain');
+  });
+
+  it('falls back when digits only end the first segment', () => {
+    expect(resolveEmbed('https://vimeo.com/abc123').kind).toBe('plain');
+  });
+
   it('falls back on empty path', () => {
     const result = resolveEmbed('https://vimeo.com/');
     expect(result.kind).toBe('plain');
+  });
+
+  it('does not read a numeric path served by another host as Vimeo', () => {
+    const url = 'https://example.com/123456789';
+    expect(resolveEmbed(url)).toEqual({ kind: 'plain', href: url });
   });
 });
 
@@ -126,19 +183,38 @@ describe('resolveEmbed — SoundCloud', () => {
     expect(result.iframeSrc).toContain('w.soundcloud.com');
     expect(result.iframeSrc).toContain(encodeURIComponent(url));
   });
+
+  it('recognises the www subdomain', () => {
+    const result = resolveEmbed('https://www.soundcloud.com/artist/track-slug');
+    expect(result.kind).toBe('oembed');
+  });
 });
 
 describe('resolveEmbed — Soundslice', () => {
   it('builds an embed URL from /slices/<slug>', () => {
     const result = resolveEmbed('https://www.soundslice.com/slices/abc123/');
-    expect(result.kind).toBe('oembed');
-    if (result.kind !== 'oembed') return;
-    expect(result.iframeSrc).toBe('https://www.soundslice.com/slices/abc123/embed/');
+    expect(result).toEqual({
+      kind: 'oembed',
+      provider: 'soundslice',
+      iframeSrc: 'https://www.soundslice.com/slices/abc123/embed/',
+      width: 480,
+      height: 320,
+    });
   });
 
   it('falls back to plain on a non-slice path', () => {
     const result = resolveEmbed('https://www.soundslice.com/courses/abc');
     expect(result.kind).toBe('plain');
+  });
+
+  it('falls back to plain when the slice slug is missing', () => {
+    const result = resolveEmbed('https://www.soundslice.com/slices/');
+    expect(result.kind).toBe('plain');
+  });
+
+  it('does not read a slice-shaped path served by another host as Soundslice', () => {
+    const url = 'https://example.com/slices/abc123';
+    expect(resolveEmbed(url)).toEqual({ kind: 'plain', href: url });
   });
 });
 

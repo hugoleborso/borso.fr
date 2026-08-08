@@ -28,7 +28,7 @@ const SRGB_GAMMA = 2.4;
 const LUMINANCE_RED_WEIGHT = 0.2126;
 const LUMINANCE_GREEN_WEIGHT = 0.7152;
 const LUMINANCE_BLUE_WEIGHT = 0.0722;
-const READABLE_THRESHOLD = 0.5;
+export const READABLE_THRESHOLD = 0.5;
 
 const FOREGROUND_ON_LIGHT = '#1a1814';
 const FOREGROUND_ON_DARK = '#fffefa';
@@ -70,9 +70,12 @@ export function relativeLuminance(rgb: Rgb): number {
   );
 }
 
+export function foregroundForLuminance(luminance: number): string {
+  return luminance > READABLE_THRESHOLD ? FOREGROUND_ON_LIGHT : FOREGROUND_ON_DARK;
+}
+
 export function readableForeground(hex: string): string {
   const rgb = parseHex(hex);
   if (rgb === null) return FOREGROUND_ON_LIGHT;
-  const luminance = relativeLuminance(rgb);
-  return luminance > READABLE_THRESHOLD ? FOREGROUND_ON_LIGHT : FOREGROUND_ON_DARK;
+  return foregroundForLuminance(relativeLuminance(rgb));
 }

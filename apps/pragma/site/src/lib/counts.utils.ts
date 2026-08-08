@@ -10,6 +10,5 @@
 const NOTHING_COUNTED = 0;
 
 export function isPositiveCount(count: number | undefined): boolean {
-  if (count === undefined) return false;
-  return count > NOTHING_COUNTED;
+  return (count ?? NOTHING_COUNTED) > NOTHING_COUNTED;
 }

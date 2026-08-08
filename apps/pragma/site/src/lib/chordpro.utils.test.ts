@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  directiveLines,
   isTitleDirective,
   parseChordPro,
   parseChordProLine,
@@ -27,6 +28,24 @@ describe('parseChordProLine', () => {
       kind: 'directive',
       name: 'start_of_chorus',
       value: '',
+    });
+  });
+
+  it('parses a directive padded with whitespace', () => {
+    expect(parseChordProLine('  {title: Take Five}  ')).toEqual({
+      kind: 'directive',
+      name: 'title',
+      value: 'Take Five',
+    });
+  });
+
+  it('emits no trailing lyric token when the line ends on a chord', () => {
+    expect(parseChordProLine('Hello [C]')).toEqual({
+      kind: 'chord-line',
+      tokens: [
+        { kind: 'lyric', text: 'Hello ' },
+        { kind: 'chord', chord: 'C' },
+      ],
     });
   });
 
@@ -80,7 +99,26 @@ describe('isTitleDirective', () => {
   });
 });
 
+describe('directiveLines', () => {
+  it('keeps only the directive lines, in source order', () => {
+    const lines = parseChordPro('{title: My Song}\n[C]Hi\nplain\n\n{key: C}');
+    expect(directiveLines(lines)).toEqual([
+      { kind: 'directive', name: 'title', value: 'My Song' },
+      { kind: 'directive', name: 'key', value: 'C' },
+    ]);
+  });
+
+  it('answers an empty list for a chart without directives', () => {
+    expect(directiveLines(parseChordPro('[C]Hi'))).toEqual([]);
+  });
+});
+
 describe('readTitle', () => {
+  it('skips the directives that are not a title', () => {
+    const lines = parseChordPro('{key: C}\n{title: My Song}');
+    expect(readTitle(lines)).toBe('My Song');
+  });
+
   it('reads {title: ...}', () => {
     const lines = parseChordPro('{title: My Song}');
     expect(readTitle(lines)).toBe('My Song');

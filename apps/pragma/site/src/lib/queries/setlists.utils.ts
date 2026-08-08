@@ -49,10 +49,8 @@ export function reorderEntriesByIds<TEntry extends MinimalSetlistEntry>(
   const byId = new Map<string, TEntry>();
   for (const entry of cache.entries) byId.set(entry.id, entry);
   const reordered: TEntry[] = [];
-  for (let index = 0; index < entryIds.length; index += 1) {
-    const id = entryIds[index];
-    if (id === undefined) continue;
-    const found = byId.get(id);
+  for (const [index, entryId] of entryIds.entries()) {
+    const found = byId.get(entryId);
     if (found === undefined) continue;
     reordered.push({ ...found, position: index });
   }

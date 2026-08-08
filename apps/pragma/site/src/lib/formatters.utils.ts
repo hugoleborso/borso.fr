@@ -9,7 +9,6 @@
  */
 
 const THIN_SPACE = ' ';
-const THOUSAND = 1_000;
 
 export function formatSessionDate(iso: string, locale: string): string {
   const date = new Date(iso);
@@ -26,6 +25,5 @@ export function formatSessionDate(iso: string, locale: string): string {
 export function formatCapacity(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—';
   if (value < 0) return '—';
-  if (value < THOUSAND) return String(value);
   return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, THIN_SPACE);
 }

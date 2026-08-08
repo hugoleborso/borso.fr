@@ -98,11 +98,18 @@ export function isTitleDirective(directiveName: string): boolean {
 /**
  * Returns the title declared via `{title: ...}` or `{t: ...}` if any.
  */
-export function readTitle(lines: readonly ChordProLine[]): string | null {
+/** The directive lines of a parsed chart, in source order. */
+export function directiveLines(lines: readonly ChordProLine[]): readonly DirectiveLine[] {
+  const directives: DirectiveLine[] = [];
   for (const line of lines) {
-    if (line.kind === 'directive' && isTitleDirective(line.name)) {
-      return line.value;
-    }
+    if (line.kind === 'directive') directives.push(line);
+  }
+  return directives;
+}
+
+export function readTitle(lines: readonly ChordProLine[]): string | null {
+  for (const directive of directiveLines(lines)) {
+    if (isTitleDirective(directive.name)) return directive.value;
   }
   return null;
 }

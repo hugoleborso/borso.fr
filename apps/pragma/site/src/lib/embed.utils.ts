@@ -44,10 +44,14 @@ function tryParse(url: string): URL | null {
   }
 }
 
+function pathSegments(parsed: URL): readonly string[] {
+  return parsed.pathname.split('/').filter((segment) => segment.length > 0);
+}
+
 function youtubeEmbed(parsed: URL): EmbedResult | null {
   if (parsed.host === 'youtu.be') {
     const [videoId] = parsed.pathname.slice(1).split('/');
-    if (videoId === undefined || videoId === '') return null;
+    if (videoId === '') return null;
     return {
       kind: 'oembed',
       provider: 'youtube',
@@ -72,7 +76,7 @@ function youtubeEmbed(parsed: URL): EmbedResult | null {
 
 function spotifyEmbed(parsed: URL): EmbedResult | null {
   // Spotify URL shape: /track/<id>, /album/<id>, /playlist/<id>.
-  const segments = parsed.pathname.split('/').filter((segment) => segment.length > 0);
+  const segments = pathSegments(parsed);
   if (segments.length < 2) return null;
   return {
     kind: 'oembed',
@@ -95,22 +99,24 @@ function deezerWidget(mediaType: string, mediaId: string): EmbedResult {
   };
 }
 
+// Deezer URL shape: /<lang>/<type>/<id> OR /<type>/<id>, so the media
+// type sits at index 0 or index 1 and nowhere deeper.
+const DEEZER_MEDIA_TYPE_MAX_INDEX = 1;
+
 function deezerEmbed(parsed: URL): EmbedResult | null {
-  // Deezer URL shape: /<lang>/<type>/<id> OR /<type>/<id>.
-  const [firstSegment, secondSegment, thirdSegment] = parsed.pathname
-    .split('/')
-    .filter((segment) => segment.length > 0);
-  if (firstSegment === undefined || secondSegment === undefined) return null;
-  if (DEEZER_MEDIA_TYPES.has(firstSegment)) return deezerWidget(firstSegment, secondSegment);
-  if (thirdSegment !== undefined && DEEZER_MEDIA_TYPES.has(secondSegment)) {
-    return deezerWidget(secondSegment, thirdSegment);
-  }
-  return null;
+  const segments = pathSegments(parsed);
+  const mediaTypeIndex = segments.findIndex((segment) => DEEZER_MEDIA_TYPES.has(segment));
+  if (mediaTypeIndex > DEEZER_MEDIA_TYPE_MAX_INDEX) return null;
+  const mediaType = segments[mediaTypeIndex];
+  const mediaId = segments[mediaTypeIndex + 1];
+  if (mediaType === undefined || mediaId === undefined) return null;
+  return deezerWidget(mediaType, mediaId);
 }
 
 function vimeoEmbed(parsed: URL): EmbedResult | null {
-  const videoId = parsed.pathname.split('/').find((segment) => segment.length > 0);
-  if (videoId === undefined || !/^\d+$/.test(videoId)) return null;
+  const [firstSegment] = pathSegments(parsed);
+  const videoId = firstSegment?.match(/^\d+$/)?.[0];
+  if (videoId === undefined) return null;
   return {
     kind: 'oembed',
     provider: 'vimeo',
@@ -135,7 +141,7 @@ function soundcloudEmbed(parsed: URL): EmbedResult {
 
 function soundsliceEmbed(parsed: URL): EmbedResult | null {
   // Soundslice slice URL: /slices/<slug>/
-  const segments = parsed.pathname.split('/').filter((segment) => segment.length > 0);
+  const segments = pathSegments(parsed);
   if (segments[0] !== 'slices' || segments[1] === undefined) return null;
   return {
     kind: 'oembed',

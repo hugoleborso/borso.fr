@@ -14,20 +14,19 @@ export function debounce<Args extends readonly unknown[]>(
   callback: (...args: Args) => void,
   delayMs: number,
 ): DebouncedFunction<Args> {
-  let timer: ReturnType<typeof setTimeout> | null = null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
 
   const debounced = (...args: Args): void => {
-    if (timer !== null) clearTimeout(timer);
+    clearTimeout(timer);
     timer = setTimeout(() => {
-      timer = null;
+      timer = undefined;
       callback(...args);
     }, delayMs);
   };
 
   debounced.cancel = (): void => {
-    if (timer === null) return;
     clearTimeout(timer);
-    timer = null;
+    timer = undefined;
   };
 
   return debounced;
