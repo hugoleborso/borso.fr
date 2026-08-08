@@ -81,11 +81,11 @@ export function InstrumentsPage(): JSX.Element {
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
       <PageHeader title={t('instruments.title')} subtitle={t('instruments.subtitle')} />
-      {errorMessage !== null ? (
+      {errorMessage === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">
           {errorMessage}
         </p>
-      ) : null}
+      )}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-5 items-start">
         <ul className="flex flex-col gap-1.5" aria-label={t('instruments.title')}>
           {list.isLoading ? (
@@ -175,11 +175,11 @@ export function InstrumentsPage(): JSX.Element {
                   </Button>
                 )}
               </form.Subscribe>
-              {selected !== null ? (
+              {selected === null ? null : (
                 <Button type="button" variant="ghost" onClick={clearSelection}>
                   {t('common.cancel')}
                 </Button>
-              ) : null}
+              )}
             </div>
           </form>
         </Card>

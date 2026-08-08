@@ -69,8 +69,8 @@ export function MembersPage(): JSX.Element {
         }
         setSelected(null);
         form.reset();
-      } catch (caught) {
-        setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
+      } catch (error) {
+        setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
       }
     },
   });
@@ -103,11 +103,11 @@ export function MembersPage(): JSX.Element {
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-6">
       <PageHeader title={t('members.title')} subtitle={t('members.subtitle')} />
-      {firstError !== null ? (
+      {firstError === null ? null : (
         <p className="text-danger text-sm" role="alert">
           {firstError}
         </p>
-      ) : null}
+      )}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 items-start">
         <ul className="flex flex-col gap-1.5" aria-label={t('members.title')}>
           {membersQuery.isLoading ? (
@@ -205,7 +205,7 @@ export function MembersPage(): JSX.Element {
                 />
               )}
             </form.Field>
-            {selected !== null ? (
+            {selected === null ? null : (
               <fieldset className="border border-line rounded-md p-3 mt-2">
                 <legend className="text-[11px] tracking-wider uppercase text-ink-400 px-2">
                   {t('members.instrumentsAssigned')}
@@ -217,7 +217,7 @@ export function MembersPage(): JSX.Element {
                   {instruments
                     .toSorted((left, right) => left.name.localeCompare(right.name))
                     .map((instrument) => {
-                      const assigned = assignedIds.includes(instrument.id);
+                      const isAssigned = assignedIds.includes(instrument.id);
                       return (
                         <label
                           key={instrument.id}
@@ -225,7 +225,7 @@ export function MembersPage(): JSX.Element {
                         >
                           <input
                             type="checkbox"
-                            checked={assigned}
+                            checked={isAssigned}
                             onChange={() => toggleInstrument(instrument.id)}
                           />
                           {instrument.name}
@@ -234,7 +234,7 @@ export function MembersPage(): JSX.Element {
                     })}
                 </div>
               </fieldset>
-            ) : null}
+            )}
             <div className="flex gap-2 mt-2">
               <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
                 {([canSubmit, isSubmitting]) => (
@@ -243,7 +243,7 @@ export function MembersPage(): JSX.Element {
                   </Button>
                 )}
               </form.Subscribe>
-              {selected !== null ? (
+              {selected === null ? null : (
                 <Button
                   type="button"
                   variant="ghost"
@@ -254,7 +254,7 @@ export function MembersPage(): JSX.Element {
                 >
                   {t('common.cancel')}
                 </Button>
-              ) : null}
+              )}
             </div>
           </form>
         </Card>

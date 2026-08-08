@@ -126,9 +126,9 @@ export class PreviewableApp extends Construct {
         prNumber: props.prNumber,
         migrationsPath: props.database.migrationsPath,
         cluster: this.cluster,
-        ...(props.database.cloneFromSchema !== undefined
-          ? { cloneFromSchema: props.database.cloneFromSchema }
-          : {}),
+        ...(props.database.cloneFromSchema === undefined
+          ? {}
+          : { cloneFromSchema: props.database.cloneFromSchema }),
       });
     }
 

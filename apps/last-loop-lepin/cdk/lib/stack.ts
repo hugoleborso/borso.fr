@@ -61,7 +61,7 @@ function frontendOrigin(
  */
 export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
   const photosBucket = new Bucket(props.scope, 'PhotosBucket', {
-    bucketName: `${APP_SLUG}-${props.stage}-photos${props.prNumber !== undefined ? `-${props.prNumber}` : ''}`,
+    bucketName: `${APP_SLUG}-${props.stage}-photos${props.prNumber === undefined ? '' : `-${props.prNumber}`}`,
     encryption: BucketEncryption.S3_MANAGED,
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     objectOwnership: ObjectOwnership.BUCKET_OWNER_ENFORCED,
@@ -90,7 +90,7 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
   const photosCdn = new PhotosCdn(props.scope, 'PhotosCdn', {
     app: APP_SLUG,
     stage: props.stage,
-    ...(props.prNumber !== undefined ? { prNumber: props.prNumber } : {}),
+    ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
     bucket: photosBucket,
     hostname: photosCdnHostname,
   });
@@ -98,8 +98,8 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
   const previewableApp = new PreviewableApp(props.scope, 'App', {
     app: APP_SLUG,
     stage: props.stage,
-    ...(props.prNumber !== undefined ? { prNumber: props.prNumber } : {}),
-    ...(props.domainName !== undefined ? { domainName: props.domainName } : {}),
+    ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
+    ...(props.domainName === undefined ? {} : { domainName: props.domainName }),
     frontend: { distPath: props.assetsPath },
     api: {
       entry: props.apiEntry,
@@ -121,15 +121,15 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
       // Runtime-state tables (sessions, rate-limit buckets) keep their
       // structure but no rows; `runners.photo_key` is NULLed so the
       // preview's CDN doesn't dereference prod's S3 bucket.
-      ...(props.stage !== 'prod'
-        ? {
+      ...(props.stage === 'prod'
+        ? {}
+        : {
             cloneFromSchema: {
               sourceSchemaName: 'prod',
               tableBlocklist: ['admin_sessions', 'auth_attempts'],
               columnsToNullify: { runners: ['photo_key'] },
             },
-          }
-        : {}),
+          }),
     },
   });
 

@@ -39,7 +39,7 @@ const stack = new Stack(app, stackName, { env: { account, region: REGION } });
 new StaticSite(stack, 'Site', {
   app: APP_SLUG,
   stage,
-  ...(prNumber !== undefined ? { prNumber } : {}),
+  ...(prNumber === undefined ? {} : { prNumber }),
   ...(stage === 'prod' ? { domainName: PROD_DOMAIN } : {}),
   assetsPath: ASSETS_PATH,
 });

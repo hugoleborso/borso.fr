@@ -65,8 +65,8 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
         return context.json({ error: 'auth-not-bootstrapped' }, 503);
       }
       const { password } = context.req.valid('json');
-      const passwordOk = await verifyPassword(config, password);
-      if (!passwordOk) {
+      const isPasswordOk = await verifyPassword(config, password);
+      if (!isPasswordOk) {
         return context.json({ error: 'invalid-password' }, 401);
       }
       bucketStore.clear(ipHash);

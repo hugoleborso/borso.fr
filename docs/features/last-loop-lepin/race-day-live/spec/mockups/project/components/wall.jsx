@@ -1,7 +1,7 @@
 /* EliminatedWall — every DNF as a tile, latest at the top, with reason + last loop. */
 
 function EliminatedWallPanel({ phase, onPick }) {
-  const dnfs = [...phase.dnf].sort((a,b)=> b.dropAt - a.dropAt);
+  const dnfs = [...phase.dnf].sort((a, b) => b.dropAt - a.dropAt);
   return (
     <div className="card" data-screen-label="eliminated-wall">
       <div className="card-head">
@@ -10,29 +10,37 @@ function EliminatedWallPanel({ phase, onPick }) {
           <span className="en">DNF WALL</span>
         </div>
         <div className="card-meta">
-          {dnfs.length} sortis · {phase.runners.length - phase.dnf.length - phase.winners.length} en piste
+          {dnfs.length} sortis · {phase.runners.length - phase.dnf.length - phase.winners.length} en
+          piste
         </div>
       </div>
       <div className="card-body flush">
         {dnfs.length === 0 ? (
-          <div style={{padding:"var(--d-8) var(--d-5)", textAlign:"center", color:"var(--ink-3)"}}>
-            <div className="eyebrow" style={{marginBottom:"var(--d-3)"}}>Aucune sortie pour l'instant</div>
-            <div style={{fontSize:13}}>Tous les coureurs sont encore en course.</div>
+          <div
+            style={{ padding: 'var(--d-8) var(--d-5)', textAlign: 'center', color: 'var(--ink-3)' }}
+          >
+            <div className="eyebrow" style={{ marginBottom: 'var(--d-3)' }}>
+              Aucune sortie pour l'instant
+            </div>
+            <div style={{ fontSize: 13 }}>Tous les coureurs sont encore en course.</div>
           </div>
         ) : (
           <div className="wall-grid">
-            {dnfs.map(r => (
+            {dnfs.map((r) => (
               <div key={r.slug} className="dnf-tile" onClick={() => onPick && onPick(r.slug)}>
-                <div className="dnf-bib mono">#{String(r.bib).padStart(2,"0")}</div>
+                <div className="dnf-bib mono">#{String(r.bib).padStart(2, '0')}</div>
                 <div className="dnf-row">
                   <RunnerAvatar runner={r} size={36} dim />
-                  <div style={{flex:1, minWidth:0}}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="dnf-name">{r.name}</div>
-                    <div className="dnf-reason">{r.dropReason || "Cut-off"}</div>
+                    <div className="dnf-reason">{r.dropReason || 'Cut-off'}</div>
                   </div>
                 </div>
                 <div className="dnf-foot">
-                  <span className="mono"><b>{r.dropAt}</b><span className="mute-2"> boucles</span></span>
+                  <span className="mono">
+                    <b>{r.dropAt}</b>
+                    <span className="mute-2"> boucles</span>
+                  </span>
                   <span className="mono mute-2">{(r.dropAt * 6.706).toFixed(1)} km</span>
                 </div>
               </div>

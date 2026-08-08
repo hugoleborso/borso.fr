@@ -267,11 +267,11 @@ export function BarForm({ initial, onSubmit, onCancel }: BarFormProps): JSX.Elem
               </Button>
             )}
           </form.Subscribe>
-          {initial.id !== null ? (
+          {initial.id === null ? null : (
             <Button type="button" variant="ghost" onClick={onCancel}>
               {t('common.cancel')}
             </Button>
-          ) : null}
+          )}
         </div>
       </form>
     </Card>

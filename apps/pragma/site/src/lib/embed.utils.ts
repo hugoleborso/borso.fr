@@ -10,7 +10,7 @@
  * block render. Pure utility, 100% coverage gated.
  */
 
-const YOUTUBE_DOMAINS = ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'];
+const YOUTUBE_DOMAINS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be']);
 const SPOTIFY_HOST = 'open.spotify.com';
 const DEEZER_HOST = 'deezer.com';
 const VIMEO_HOST = 'vimeo.com';
@@ -86,12 +86,12 @@ function spotifyEmbed(parsed: URL): EmbedResult | null {
 function deezerEmbed(parsed: URL): EmbedResult | null {
   // Deezer URL shape: /<lang>/<type>/<id> OR /<type>/<id>.
   const segments = parsed.pathname.split('/').filter((segment) => segment.length > 0);
-  const knownTypes = ['track', 'album', 'playlist'];
+  const knownTypes = new Set(['track', 'album', 'playlist']);
   let typeAndId: [string, string] | null = null;
   if (segments.length >= 2) {
-    if (knownTypes.includes(segments[0] ?? '')) {
+    if (knownTypes.has(segments[0] ?? '')) {
       typeAndId = [segments[0] ?? '', segments[1] ?? ''];
-    } else if (segments.length >= 3 && knownTypes.includes(segments[1] ?? '')) {
+    } else if (segments.length >= 3 && knownTypes.has(segments[1] ?? '')) {
       typeAndId = [segments[1] ?? '', segments[2] ?? ''];
     }
   }
@@ -106,8 +106,8 @@ function deezerEmbed(parsed: URL): EmbedResult | null {
 }
 
 function vimeoEmbed(parsed: URL): EmbedResult | null {
-  const segments = parsed.pathname.split('/').filter((segment) => segment.length > 0);
-  const videoId = segments[0];
+  const segment_ = parsed.pathname.split('/').find((segment) => segment.length > 0);
+  const videoId = segment_;
   if (videoId === undefined || !/^\d+$/.test(videoId)) return null;
   return {
     kind: 'oembed',
@@ -148,7 +148,7 @@ export function resolveEmbed(url: string): EmbedResult {
   const parsed = tryParse(url);
   if (parsed === null) return { kind: 'plain', href: url };
 
-  if (YOUTUBE_DOMAINS.includes(parsed.host)) {
+  if (YOUTUBE_DOMAINS.has(parsed.host)) {
     const result = youtubeEmbed(parsed);
     if (result !== null) return result;
   }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { makeEdition } from '../../../test/fixtures';
 import { insertEdition } from '../edition/edition.repository';
 import {
@@ -12,13 +12,13 @@ import {
 
 describe('runner.service', () => {
   beforeEach(async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await truncateAllTables(database);
     await insertEdition(database, makeEdition({ status: 'setup' }));
   });
 
   it('createRunner inserts + listRunners returns it', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     const runner = await createRunner(database, {
       editionSlug: 'lepin-2026',
       slug: 'alice',
@@ -31,7 +31,7 @@ describe('runner.service', () => {
   });
 
   it('createRunner defaults photoKey + bib to null', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     const runner = await createRunner(database, {
       editionSlug: 'lepin-2026',
       slug: 'bob',
@@ -42,7 +42,7 @@ describe('runner.service', () => {
   });
 
   it('createRunner throws RunnerAlreadyExistsError on duplicate slug', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await createRunner(database, {
       editionSlug: 'lepin-2026',
       slug: 'carla',
@@ -58,7 +58,7 @@ describe('runner.service', () => {
   });
 
   it('getRunner throws RunnerNotFoundError on unknown slug', async () => {
-    await expect(getRunner(freshDatabase(), 'lepin-2026', 'ghost')).rejects.toBeInstanceOf(
+    await expect(getRunner(testDatabase(), 'lepin-2026', 'ghost')).rejects.toBeInstanceOf(
       RunnerNotFoundError,
     );
   });

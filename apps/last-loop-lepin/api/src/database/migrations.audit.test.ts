@@ -44,7 +44,7 @@ function scanFileForNowDefaults(
     const body = match[2] ?? '';
     const lines = body.split(/,\s*\n/);
     for (const rawLine of lines) {
-      const lineMatch = rawLine.match(COLUMN_LINE_PATTERN);
+      const lineMatch = COLUMN_LINE_PATTERN.exec(rawLine);
       if (lineMatch !== null) {
         const columnName = lineMatch[1] ?? '';
         occurrences.push({ tableName, columnName, file: fileName });

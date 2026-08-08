@@ -23,15 +23,15 @@ type MasteryDefaultsResponse = InferResponseType<typeof api.api.mastery.defaults
 type MasteryDefaultRow = MasteryDefaultsResponse['defaults'][number];
 
 function upsertDefault(rows: MasteryDefaultRow[], next: MasteryDefaultRow): MasteryDefaultRow[] {
-  let hit = false;
+  let isHit = false;
   const merged = rows.map((row) => {
     if (row.memberId === next.memberId && row.instrumentId === next.instrumentId) {
-      hit = true;
+      isHit = true;
       return next;
     }
     return row;
   });
-  return hit ? merged : [...merged, next];
+  return isHit ? merged : [...merged, next];
 }
 
 export function useMasteryDefaults() {

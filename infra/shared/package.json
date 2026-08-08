@@ -9,7 +9,7 @@
     "deploy": "pnpm --filter @borso/infra run build && cdk deploy --all --require-approval never",
     "destroy": "cdk destroy --all --force",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check",
+    "lint": "cd ../.. && eslint infra/shared --cache --cache-location node_modules/.cache/eslint",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },

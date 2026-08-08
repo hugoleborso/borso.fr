@@ -2,12 +2,12 @@
 
 ## Toolchain
 
-| Need | Why |
-| --- | --- |
-| Node 22 (`.nvmrc`) | Lambda runtime parity. |
-| pnpm 10 (via `packageManager` + corepack) | Workspaces; `npm`/`yarn` will not work. |
-| `jq` | Required by the rtk PreToolUse hook (Claude Code). Almost always already installed. |
-| Docker | Only needed if an app uses local Postgres (none do today). |
+| Need                                      | Why                                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| Node 22 (`.nvmrc`)                        | Lambda runtime parity.                                                              |
+| pnpm 10 (via `packageManager` + corepack) | Workspaces; `npm`/`yarn` will not work.                                             |
+| `jq`                                      | Required by the rtk PreToolUse hook (Claude Code). Almost always already installed. |
+| Docker                                    | Only needed if an app uses local Postgres (none do today).                          |
 
 ## First clone
 
@@ -40,7 +40,8 @@ bash scripts/install-repo-deps.sh
 ```bash
 # repo-wide
 pnpm -r typecheck            # tsc --noEmit in every workspace
-pnpm exec biome lint         # lint everything (root rules apply globally)
+pnpm exec eslint .           # lint everything (the root flat config covers every workspace)
+pnpm exec prettier --check .  # check formatting
 pnpm exec knip               # dead-code detection
 pnpm -r test                 # run vitest in every workspace
 pnpm -r build                # build every workspace that has a build script
@@ -58,11 +59,11 @@ pnpm --filter @borso/shared-infra destroy
 
 ## Husky hooks
 
-| Hook | When | What it does |
-| --- | --- | --- |
-| `commit-msg` | every commit | `commitlint` against the conventional-commit + scope-enum config |
+| Hook         | When         | What it does                                                                                                                                                                       |
+| ------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `commit-msg` | every commit | `commitlint` against the conventional-commit + scope-enum config                                                                                                                   |
 | `pre-commit` | every commit | If `infra/cdk/**` changed: `@borso/infra test:coverage`. If `infra/shared/**` changed: `@borso/shared-infra test:coverage`. Both gate at 100% statements/branches/functions/lines. |
-| `pre-push` | every push | `pnpm exec knip` repo-wide. |
+| `pre-push`   | every push   | `pnpm exec knip` repo-wide.                                                                                                                                                        |
 
 ### When `--no-verify` is OK
 

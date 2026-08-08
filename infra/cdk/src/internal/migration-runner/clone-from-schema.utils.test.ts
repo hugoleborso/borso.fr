@@ -24,9 +24,12 @@ describe('buildCreateTableLikeSql', () => {
     ['source', 'pr_27', '0starts_with_digit'],
     ['source', 'pr_27', 'has space'],
     ['source', 'pr_27', '" OR 1=1; --'],
-  ])('rejects identifiers that are not safe Postgres unquoted names (%s, %s, %s)', (source, target, table) => {
-    expect(() => buildCreateTableLikeSql(source, target, table)).toThrow(/Invalid/);
-  });
+  ])(
+    'rejects identifiers that are not safe Postgres unquoted names (%s, %s, %s)',
+    (source, target, table) => {
+      expect(() => buildCreateTableLikeSql(source, target, table)).toThrow(/Invalid/);
+    },
+  );
 });
 
 describe('buildCloneInsertSql', () => {

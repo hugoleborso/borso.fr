@@ -43,8 +43,8 @@ export function buildBarsRouter() {
     )
     .delete('/:id', zValidator('param', barIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const ok = await removeBar(getDatabase(), id);
-      if (!ok) return context.json({ error: 'not-found' }, 404);
+      const isOk = await removeBar(getDatabase(), id);
+      if (!isOk) return context.json({ error: 'not-found' }, 404);
       return context.json({ id, deleted: true });
     });
 }

@@ -1,6 +1,9 @@
 import { isPaletteKey, type PaletteKey } from './palettes.utils';
 
-type UrlState = { seed: number; paletteKey: PaletteKey };
+interface UrlState {
+  seed: number;
+  paletteKey: PaletteKey;
+}
 
 const SEED_HEX_LENGTH = 8;
 const SEED_RADIX = 16;

@@ -85,7 +85,7 @@ export function getDatabase(): Database {
   const dsql = readDsqlConfig();
   const local = readLocalConfig();
   const client =
-    dsql !== null ? createDsqlClient(dsql) : local !== null ? createLocalClient(local) : null;
+    dsql === null ? (local === null ? null : createLocalClient(local)) : createDsqlClient(dsql);
   if (client === null) {
     throw new Error('Database not configured: set DSQL_ENDPOINT+DSQL_SCHEMA or DATABASE_URL.');
   }

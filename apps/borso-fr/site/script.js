@@ -36,10 +36,12 @@ burger.addEventListener('click', () => {
 });
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && menuOpen && !dateRequestDialog.open) {
-    menuOpen = false;
-    applyMenuState();
+  if (!(event.key === 'Escape' && menuOpen && !dateRequestDialog.open)) {
+    return;
   }
+
+  menuOpen = false;
+  applyMenuState();
 });
 
 dateRequestTrigger.addEventListener('click', () => {

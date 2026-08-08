@@ -181,12 +181,12 @@ function LineupEditorContent({
           ))}
         </ul>
         <div className="flex flex-wrap gap-2 mt-2 justify-between">
-          {defaultLineup !== undefined ? (
+          {defaultLineup === undefined ? (
+            <span />
+          ) : (
             <Button type="button" variant="ghost" onClick={handleResetToDefault}>
               {t('lineup.resetToDefault')}
             </Button>
-          ) : (
-            <span />
           )}
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={onClose}>

@@ -18,7 +18,7 @@ import {
 } from './test-helpers';
 
 interface OptimisticListShape {
-  songs: Array<{ id: string; title: string }>;
+  songs: { id: string; title: string }[];
 }
 
 interface ProbeProps<Mutate> {

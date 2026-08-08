@@ -33,11 +33,13 @@ Agent({
 ## When to invoke
 
 Invoke when:
+
 - A feature has shipped to a branch and a spec exists at `docs/features/<app>/<slug>/spec/spec.md`.
 - The user asks for `/technical-validation`, "review the code", "code review against the spec".
 - The `/technical-conception` plan reaches gate 7.
 
 Do **not** invoke when:
+
 - There is no spec.
 - The branch hasn't diverged from base (no diff to review).
 - The work is purely documentation with no code changes (skip the gate; CLAUDE.md and the spec speak for themselves).
@@ -64,6 +66,7 @@ Do **not** invoke when:
 A single markdown file at `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md`. No sibling evidence folder needed (unlike visual-validation, the evidence here is quoted code lines and command output, both inline in the report).
 
 The skill's textual return is one of:
+
 - `Verdict: PASS — see <report_path>` — mergeable.
 - `Verdict: PASS_EXCEPT_UNVERIFIABLE (N unverifiable) — see <report_path>` — mergeable with PR disclosure.
 - `Verdict: FAIL (N failing) — see <report_path>` — **not mergeable**, fix and re-run.
@@ -102,17 +105,17 @@ When GitHub fires `pull_request.closed` with `merged: true` for a PR this skill 
 
 When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"pilotedByTechLead": true`, the skill writes an additional verdict file at `runs/<run-id>/agents/technical-validator-<step>.md` per [`.claude/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md). Mapping from the validator's PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL to the YAML front-matter:
 
-| Validator verdict | `status` | `next.kind` |
-|---|---|---|
-| PASS | `done` | (omit) |
-| PASS_EXCEPT_UNVERIFIABLE | `done` | (omit) — UNVERIFIABLE rows go in the body |
+| Validator verdict        | `status` | `next.kind`                                                 |
+| ------------------------ | -------- | ----------------------------------------------------------- |
+| PASS                     | `done`   | (omit)                                                      |
+| PASS_EXCEPT_UNVERIFIABLE | `done`   | (omit) — UNVERIFIABLE rows go in the body                   |
 | FAIL (local code defect) | `failed` | omit `next`; orchestrator's `nextAction` maps this to `fix` |
-| FAIL (plan flaw) | `failed` | `replan` with `scope: '<plan section>'` |
-| FAIL (spec gap) | `failed` | `escalate` with `reason: 'spec-gap-<short>'` |
-| FAIL (validator crash) | `failed` | `escalate` with `reason: 'validator-crash-<short>'` |
+| FAIL (plan flaw)         | `failed` | `replan` with `scope: '<plan section>'`                     |
+| FAIL (spec gap)          | `failed` | `escalate` with `reason: 'spec-gap-<short>'`                |
+| FAIL (validator crash)   | `failed` | `escalate` with `reason: 'validator-crash-<short>'`         |
 
 `summary:` is the report's headline (≤ 200 words). `artifacts:` is the path to the full verdict report under `validation/`. The standard report file is still produced — the verdict file is an additional artefact, not a replacement.
 
 ## Post-merge: remind to approve the prod deploy
 
-When the merged PR touches infra or app code, prod CI is now waiting on Hugo to approve the `prod` GitHub environment (CLAUDE.md "Deployments"). The agent's first response after the merge webhook is the reminder — *before* the kaizen sweep, since the deploy queue waits on a human.
+When the merged PR touches infra or app code, prod CI is now waiting on Hugo to approve the `prod` GitHub environment (CLAUDE.md "Deployments"). The agent's first response after the merge webhook is the reminder — _before_ the kaizen sweep, since the deploy queue waits on a human.

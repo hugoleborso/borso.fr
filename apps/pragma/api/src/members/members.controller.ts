@@ -48,8 +48,8 @@ export function buildMembersRouter() {
     )
     .delete('/:id', zValidator('param', memberIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const ok = await removeMember(getDatabase(), id);
-      if (!ok) return context.json({ error: 'not-found' }, 404);
+      const isOk = await removeMember(getDatabase(), id);
+      if (!isOk) return context.json({ error: 'not-found' }, 404);
       return context.json({ id, deleted: true });
     })
     .get('/:id/instruments', zValidator('param', memberIdParamSchema), async (context) => {

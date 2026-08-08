@@ -29,12 +29,12 @@ The borso.fr preview deploy (`https://borso-fr-pr-6.preview.borso.fr/`) loaded t
    Vite documents that only `<script type="module">` is rewritten by the HTML plugin. Non-module scripts are left alone for back-compat with apps that hand-manage classic scripts (e.g. analytics, third-party SDK loaders that need to stay un-bundled).
 
 4. **Why** did this slip past `pnpm build`?
-   The build *succeeded* — Vite emits zero warnings for non-module script tags it deliberately doesn't process. The asset graph contained only the `type="module"` entries; the non-module reference passed through into `dist/index.html` unchanged.
+   The build _succeeded_ — Vite emits zero warnings for non-module script tags it deliberately doesn't process. The asset graph contained only the `type="module"` entries; the non-module reference passed through into `dist/index.html` unchanged.
 
 5. **Why** did local `pnpm dev` work?
    The dev server proxies the `site/` directory directly. `script.js` lives there, dev requests `/script.js`, dev server serves `apps/borso-fr/site/script.js`. The build-time gap doesn't appear locally.
 
-**Root cause:** *thought* Vite's HTML pipeline rewrites every `<script src>`; *actually* it rewrites `type="module"` only and silently passes the rest through, so the asset lands in `dist/` only when the developer remembers the `type="module"` keyword.
+**Root cause:** _thought_ Vite's HTML pipeline rewrites every `<script src>`; _actually_ it rewrites `type="module"` only and silently passes the rest through, so the asset lands in `dist/` only when the developer remembers the `type="module"` keyword.
 
 ## Detection failure causes
 

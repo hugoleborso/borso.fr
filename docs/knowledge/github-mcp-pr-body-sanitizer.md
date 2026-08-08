@@ -26,7 +26,7 @@ Two cheap loops:
 
 2. **Inspect a recent in-repo PR known to render the pattern.**
    List recent PRs (`mcp__github__list_pull_requests
-   state: open|all`). If the pattern in question is present in
+state: open|all`). If the pattern in question is present in
    that PR's stored body and renders on GitHub, the sanitizer
    doesn't touch it.
 

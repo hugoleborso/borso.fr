@@ -8,7 +8,7 @@ _Started 2026-05-12 11:04 UTC_
 
 Je veux redesigner complètement la landing de mon site perso borso.fr.
 
-Je veux quelque chose de très moderne et design avec des composants très dynamiques, à la https://www.reactbits.dev/backgrounds/liquid-ether ou nimporte quel autre de ces backgrounds. 
+Je veux quelque chose de très moderne et design avec des composants très dynamiques, à la https://www.reactbits.dev/backgrounds/liquid-ether ou nimporte quel autre de ces backgrounds.
 
 Tu as carte blanche sur le design, je veux un truc bluffant
 
@@ -29,6 +29,7 @@ _[tool: update_todos]_
 Je pars sur ma vision : dark sophistiqué, shader WebGL liquid ether full-bleed, typo italique éditoriale (Instrument Serif) + sans moderne (Geist), accents cyan électrique. Sections : hero massif, about, projects, experience, now/contact. Tweaks pour switcher bg + palette.
 
 Aesthetic declaration:
+
 - **Type**: Instrument Serif (italic display) + Geist (body) + JetBrains Mono (technical)
 - **Couleurs**: noir profond `oklch(0.12 0.01 250)` / blanc cassé `oklch(0.96 0.005 80)` / accent cyan `oklch(0.82 0.15 200)` + magenta `oklch(0.7 0.2 340)`
 - **Background**: WebGL fragment shader fluid noise + mouse displacement
@@ -78,15 +79,15 @@ Si tu me donnes ton vrai contenu (vraies infos, vrais projets, vrais liens), je 
 
 ## User
 
-Ok no. First, just reuse the actual effect I linked, not This website is not showing what I work on. 
+Ok no. First, just reuse the actual effect I linked, not This website is not showing what I work on.
 My name is Hugo Borsoni, my nickname is borso.
 
 I love sports music, art, space, science and my friends.
 
-Here is the code for the shadcn react bit component I want : 
+Here is the code for the shadcn react bit component I want :
 install :pnpm dlx shadcn@latest add @react-bits/Galaxy-JS-CSS
 
-Dev : 
+Dev :
 
 <div style={{ width: '1080px', height: '1080px', position: 'relative' }}>
   <Galaxy
@@ -198,7 +199,7 @@ Fix livré : reveals s'affichent immédiatement avec fallback, nav "Loves" au li
 
 ## User
 
-Encore une fois, ce n'est pas un site de pub. C'est un site perso avec des links vers des pages, et c'est tout. 
+Encore une fois, ce n'est pas un site de pub. C'est un site perso avec des links vers des pages, et c'est tout.
 
 ça doit être en français. Et je ne veux pas que le type de contenu change. regarde à nouveau le site borso.fr de base
 
@@ -448,17 +449,20 @@ _[tool: done]_
 15 nouvelles options dans Tweaks → Typographie, focalisées sur tes deux préférées :
 
 **Major direction** (4 variations en plus du Major original)
+
 - Major · caps géo (le tien)
 - Major · bas-de-casse (les petits glyphes)
 - Major · espacé (tracking aéré)
 - Major × Geist Mono / × IBM Plex / × Manrope (différents body)
 
 **Funnel direction**
+
 - Funnel · bold (le tien)
 - Funnel · light (poids 300, plus élégant)
 - Funnel × Geist Mono / × Space Mono
 
 **Voisins de Funnel** (sans display contemporains à essayer si tu aimes Funnel)
+
 - Geist · Vercel
 - Manrope · humaniste
 - Schibsted · éditorial
@@ -498,4 +502,3 @@ Réglé : par défaut sur **Major · caps géo**, et quand le menu s'ouvre le ti
 ## User
 
 Save as standalone HTML: index.html
-

@@ -19,12 +19,12 @@ export function isMonotonicZeroToOne(values: readonly number[]): boolean {
   // `reduce` exposes each element as `number` (not `number | undefined`),
   // which sidesteps `noUncheckedIndexedAccess` without a banned non-null
   // assertion. The accumulator threads the previous value through.
-  let strictlyIncreasing = true;
+  let isStrictlyIncreasing = true;
   values.reduce((previous, current) => {
     if (!Number.isFinite(current) || current <= previous) {
-      strictlyIncreasing = false;
+      isStrictlyIncreasing = false;
     }
     return current;
   });
-  return strictlyIncreasing;
+  return isStrictlyIncreasing;
 }

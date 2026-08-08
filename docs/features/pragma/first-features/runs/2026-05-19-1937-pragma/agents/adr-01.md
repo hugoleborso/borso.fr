@@ -21,7 +21,7 @@ artifacts:
 - `alternatives: [shared password (chosen), individual accounts (rejected)]` — length ≥ 2. ✓
 - `consequences (negative): [no per-user audit, rotation cost is band-wide]` — length ≥ 2. ✓
 - `triggers: [multiple-alternatives, diverges-from-convention]` — non-empty. ✓
-- Criteria + score-matrix not supplied by the orchestrator; derived from the spec's framing (Q.O.D. row, *Out of scope* section, daily-use tool with 5 trusted members). Four criteria with explicit weights: friction at access (high), per-action attribution (low), resistance to credential leak (medium), operator overhead (medium). Rubric differentiates: shared wins on 2 (the high-weight one + a medium one), individual wins on 2 (the low-weight one + the other medium one). Decision is robust under a "what if I shift the weights one notch?" sensitivity check — flipping requires the band to exceed 5 trusted members or pragma to start holding sensitive data, both explicit *Out of scope* in the spec.
+- Criteria + score-matrix not supplied by the orchestrator; derived from the spec's framing (Q.O.D. row, _Out of scope_ section, daily-use tool with 5 trusted members). Four criteria with explicit weights: friction at access (high), per-action attribution (low), resistance to credential leak (medium), operator overhead (medium). Rubric differentiates: shared wins on 2 (the high-weight one + a medium one), individual wins on 2 (the low-weight one + the other medium one). Decision is robust under a "what if I shift the weights one notch?" sensitivity check — flipping requires the band to exceed 5 trusted members or pragma to start holding sensitive data, both explicit _Out of scope_ in the spec.
 
 ## Conflict check
 
@@ -31,7 +31,7 @@ Highest existing ADR number is 0003 → new number is 0004. Slug
 ## Index update
 
 - Added row `| [0004](./0004-pragma-shared-password-auth.md) | Shared-password auth for the pragma band ERP | proposed | 2026-05-19 |` to the main table.
-- Added one-line entry under *App architecture* heading.
+- Added one-line entry under _App architecture_ heading.
 - No existing entries reordered.
 
 ## Implementation pointers in the ADR

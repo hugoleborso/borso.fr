@@ -53,7 +53,7 @@ describe('buildTitle', () => {
     const seed = 0xc0ffee;
     const title = buildTitle(seed, rectsForSeed(seed, PALETTES.muted), PALETTES.muted);
     const lowerNames = PALETTES.muted.fills.map((fill) => fill.name.toLowerCase());
-    const colourMatch = title.match(TITLE_PATTERN);
+    const colourMatch = TITLE_PATTERN.exec(title);
     expect(colourMatch).not.toBeNull();
     expect(lowerNames).toContain(colourMatch?.[3]);
   });

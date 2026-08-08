@@ -133,7 +133,7 @@ export function projectFraction(track: Indexed, fraction: number): LatLngDto {
 export function projectFractionTimeAware(
   track: Indexed,
   fraction: number,
-  pointTimeFractions: ReadonlyArray<number>,
+  pointTimeFractions: readonly number[],
 ): LatLngDto {
   const first = track.points[0];
   if (first === undefined) return ORIGIN;
@@ -150,7 +150,7 @@ export function projectFractionTimeAware(
   let previousFraction = 0;
   let currentPoint = first;
   let currentFraction = 0;
-  let foundSegment = false;
+  let isFoundSegment = false;
   let isFirstPoint = true;
   for (const pointAtIndex of track.points) {
     const next = fractionIterator.next();
@@ -165,11 +165,11 @@ export function projectFractionTimeAware(
     currentPoint = pointAtIndex;
     currentFraction = fractionAtIndex;
     if (fractionAtIndex >= clamped) {
-      foundSegment = true;
+      isFoundSegment = true;
       break;
     }
   }
-  if (!foundSegment) {
+  if (!isFoundSegment) {
     // Exhausted the iterator without finding any fraction ≥ `clamped`.
     // Happens when `pointTimeFractions[last] < clamped`, which is only
     // possible if the array is shorter than `points` (length parity is
@@ -297,8 +297,8 @@ export function runnerDistanceFraction(
   const startMs = new Date(edition.startsAt).getTime();
   const elapsedSinceRace = Math.max(0, nowMs - startMs);
   const currentLoopIndex = Math.floor(elapsedSinceRace / loopMs) + 1;
-  const restingAtCorral = entry.status.lastLoop >= currentLoopIndex;
-  if (restingAtCorral) return { fraction: 0, restingAtCorral: true };
+  const isRestingAtCorral = entry.status.lastLoop >= currentLoopIndex;
+  if (isRestingAtCorral) return { fraction: 0, restingAtCorral: true };
   const currentLoopStartMs = startMs + (currentLoopIndex - 1) * loopMs;
   const elapsedInLoopMs = nowMs - currentLoopStartMs;
   const paceMs = entry.lastLoopDurationMs ?? loopMs;

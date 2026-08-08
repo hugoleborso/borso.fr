@@ -2,8 +2,7 @@
   padding: clamp(28px, 4vw, 44px) clamp(24px, 2.4vw, 38px) 56px;
   border-right: 1px solid var(--rule);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 35%),
-    var(--paper);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 35%), var(--paper);
   position: sticky;
   top: 0;
   height: 100dvh;

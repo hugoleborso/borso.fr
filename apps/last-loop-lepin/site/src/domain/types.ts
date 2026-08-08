@@ -23,20 +23,20 @@ export interface RaceEditionDto {
     readonly distanceMeters: number;
     readonly elevationGainMeters: number;
     readonly trackJson: {
-      readonly points: ReadonlyArray<{ readonly lat: number; readonly lng: number }>;
+      readonly points: readonly { readonly lat: number; readonly lng: number }[];
       /**
        * Cumulative normalised time fractions, one per `points` entry,
        * strictly monotonic from `0` to `1`. Absent when the server-side
        * GPX parser had no per-trkpt timing data — the avatar projection
        * then falls back to the linear time→distance algorithm.
        */
-      readonly pointTimeFractions?: ReadonlyArray<number>;
+      readonly pointTimeFractions?: readonly number[];
       /**
        * Per-point elevation in meters, one per `points` entry. Absent when
        * the source GPX lacked `<ele>` on any `<trkpt>` — the elevation
        * profile then renders a "Profil indisponible" placeholder.
        */
-      readonly pointElevations?: ReadonlyArray<number>;
+      readonly pointElevations?: readonly number[];
     };
     readonly startLatLng: { readonly lat: number; readonly lng: number };
   };
@@ -102,8 +102,8 @@ export interface StandingsDto {
    * loop has been closed; length ≥ 2 means a millisecond-tie between
    * distinct runners (every matching chip is decorated by the front).
    */
-  readonly fastestLap: ReadonlyArray<{
+  readonly fastestLap: readonly {
     readonly runnerSlug: string;
     readonly durationMs: number;
-  }>;
+  }[];
 }

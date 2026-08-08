@@ -58,8 +58,8 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
         runnerSlug: entry.runner.slug,
       });
       invalidateResource(`standings:${edition.slug}`);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : 'Erreur inconnue.');
     } finally {
       setBusySlug(null);
     }
@@ -101,8 +101,8 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
         runnerSlug: entry.runner.slug,
       });
       invalidateResource(`standings:${edition.slug}`);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : 'Erreur inconnue.');
     } finally {
       setBusySlug(null);
     }
@@ -116,7 +116,7 @@ export function DnfCandidatesPanel({ edition, ranked }: DnfCandidatesPanelProps)
           <span className="muted mono">{lateCandidates.length} en attente</span>
         </div>
         <div className="card-body col">
-          {error !== null ? <div className="error-text">{error}</div> : null}
+          {error === null ? null : <div className="error-text">{error}</div>}
           {lateCandidates.length === 0 ? (
             <div className="muted">Aucun coureur en attente de validation DNF.</div>
           ) : (

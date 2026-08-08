@@ -13,7 +13,7 @@ The required parameter `questions[1].question` is missing
 
 ## Why
 
-The `AskUserQuestion` tool's JSON schema requires *both* `header` (the chip-style label, max 12 characters) *and* `question` (the full sentence ending in a question mark) on every entry of the `questions` array. They look like alternatives at first glance — both are textual fields naming what is being asked — but they serve different UI affordances:
+The `AskUserQuestion` tool's JSON schema requires _both_ `header` (the chip-style label, max 12 characters) _and_ `question` (the full sentence ending in a question mark) on every entry of the `questions` array. They look like alternatives at first glance — both are textual fields naming what is being asked — but they serve different UI affordances:
 
 - `header` is the small label rendered next to the answer in the post-answer summary, so the user can grep their answer log later. Constrained to ~12 characters.
 - `question` is the full sentence rendered in the modal at ask-time. No length cap.
@@ -33,11 +33,11 @@ Every entry in the array needs:
 }
 ```
 
-A single missing `question` on any entry rejects the *entire* call (not just the offending entry).
+A single missing `question` on any entry rejects the _entire_ call (not just the offending entry).
 
 ## Common-confusion variant
 
-The schema also requires the `question` field on the *outer* level when only one question is asked, *and* on each entry when multiple are asked. The naming is cleaner than it looks once you internalise it as "header is short, question is long".
+The schema also requires the `question` field on the _outer_ level when only one question is asked, _and_ on each entry when multiple are asked. The naming is cleaner than it looks once you internalise it as "header is short, question is long".
 
 ## Operator note
 

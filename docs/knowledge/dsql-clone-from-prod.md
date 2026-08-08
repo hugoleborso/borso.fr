@@ -10,11 +10,11 @@ via `PreviewableApp.database.cloneFromSchema` from `@borso/infra`.
 For every table in the source schema (typically `prod`):
 
 1. **Structure** — `CREATE TABLE IF NOT EXISTS pr_N.<t> (LIKE prod.<t>
-   INCLUDING ALL)`. Copies columns, defaults, constraints, indexes, and
+INCLUDING ALL)`. Copies columns, defaults, constraints, indexes, and
    identity sequences. Cross-schema `LIKE` is in DSQL's documented
    `CREATE TABLE` grammar.
 2. **Data** — `INSERT INTO pr_N.<t> (cols) SELECT … FROM prod.<t> ON
-   CONFLICT DO NOTHING`. Cross-schema DML is unrestricted in DSQL.
+CONFLICT DO NOTHING`. Cross-schema DML is unrestricted in DSQL.
 
 Then the runner reads `pr_N._migrations` (just populated from the
 clone), short-circuits every migration that prod has already applied
@@ -47,8 +47,8 @@ Configurable via `DsqlSchemaCloneFromConfig`:
   rows; new prod rows propagate. Deletions in prod don't propagate
   (acceptable for preview — re-create the PR if you need a fresh start).
 - **Schema drift** (PR adds a column not yet in prod): `LIKE INCLUDING
-  ALL` copies prod's columns, the PR migration's `ALTER TABLE ADD
-  COLUMN` adds the new one (nullable per the DSQL §10 constraint, see
+ALL` copies prod's columns, the PR migration's `ALTER TABLE ADD
+COLUMN` adds the new one (nullable per the DSQL §10 constraint, see
   `dsql-postgres-compat-gaps.md`), existing rows get `NULL`.
 
 ## Constraints inherited from DSQL
@@ -61,7 +61,7 @@ Configurable via `DsqlSchemaCloneFromConfig`:
   larger tables need a chunked variant — keyset-paginated INSERT in
   a loop using the table's PK. Not shipped in v1.
 - **DDL and DML in separate transactions, 1 DDL per tx**. Each `CREATE
-  TABLE LIKE` and each `INSERT` ship in their own `sql.unsafe()` call.
+TABLE LIKE` and each `INSERT` ship in their own `sql.unsafe()` call.
 - **Optimistic concurrency**. Reads on `prod` don't block prod writes
   during the clone; the snapshot is per-table consistent but not
   cluster-globally consistent. Acceptable for preview.

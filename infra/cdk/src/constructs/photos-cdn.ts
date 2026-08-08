@@ -88,7 +88,7 @@ export class PhotosCdn extends Construct {
     // defaultTtl is what reaches the viewer.
     const cachePolicy = new CachePolicy(this, 'CachePolicy', {
       cachePolicyName: `${props.app}-${props.stage}-photos${
-        props.prNumber !== undefined ? `-pr-${props.prNumber}` : ''
+        props.prNumber === undefined ? '' : `-pr-${props.prNumber}`
       }`,
       defaultTtl: Duration.seconds(PHOTOS_CACHE_MAX_AGE_SECONDS),
       maxTtl: Duration.seconds(PHOTOS_CACHE_MAX_AGE_SECONDS),

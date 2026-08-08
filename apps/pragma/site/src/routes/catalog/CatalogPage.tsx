@@ -69,7 +69,7 @@ export function CatalogPage(): JSX.Element {
     songsQuery.error ?? membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error;
   const errorMessage =
     firstError instanceof ApiError ? firstError.message : firstError ? 'unknown-error' : null;
-  const loading =
+  const isLoading =
     songsQuery.isLoading ||
     membersQuery.isLoading ||
     instrumentsQuery.isLoading ||
@@ -196,11 +196,11 @@ export function CatalogPage(): JSX.Element {
           {errorMessage}
         </p>
       )}
-      {loading && <p className="text-ink-400 text-sm italic">{t('common.loading')}</p>}
-      {!loading && cards.length === 0 && (
+      {isLoading && <p className="text-ink-400 text-sm italic">{t('common.loading')}</p>}
+      {!isLoading && cards.length === 0 && (
         <p className="text-ink-400 text-sm italic">{t('catalog.emptyList')}</p>
       )}
-      {!loading && cards.length > 0 && <CatalogGrid songs={cards} />}
+      {!isLoading && cards.length > 0 && <CatalogGrid songs={cards} />}
     </div>
   );
 }

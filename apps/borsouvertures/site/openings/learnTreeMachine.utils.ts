@@ -17,10 +17,7 @@ interface LearnTreeSnapshot {
 }
 
 type PlayMoveResult =
-  | 'accepted'
-  | 'rejected-out-of-book'
-  | 'rejected-no-variation'
-  | 'rejected-opponents-turn';
+  'accepted' | 'rejected-out-of-book' | 'rejected-no-variation' | 'rejected-opponents-turn';
 
 export interface LearnTreeMachine {
   subscribe: (listener: () => void) => () => void;
@@ -92,8 +89,8 @@ export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): L
   let side: Side = 'white';
   let playedMovesUci: string[] = [];
   let visitedLeafIds: ReadonlySet<string> = EMPTY_VISITED;
-  let outOfBookOpen = false;
-  let showRevealedArrows = false;
+  let isOutOfBookOpen = false;
+  let isShowRevealedArrows = false;
   let generation = 0;
   let snapshot: LearnTreeSnapshot = INITIAL_SNAPSHOT;
 
@@ -113,8 +110,8 @@ export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): L
       nextBookMovesUci: nextMovesAt(currentVariation, playedMovesUci),
       visitedLeafIds,
       variationCleared: isVariationCleared(currentVariation, visitedLeafIds),
-      outOfBookOpen,
-      showRevealedArrows,
+      outOfBookOpen: isOutOfBookOpen,
+      showRevealedArrows: isShowRevealedArrows,
     };
   }
 
@@ -168,8 +165,8 @@ export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): L
     side = nextSide;
     playedMovesUci = [];
     visitedLeafIds = EMPTY_VISITED;
-    outOfBookOpen = false;
-    showRevealedArrows = false;
+    isOutOfBookOpen = false;
+    isShowRevealedArrows = false;
     generation += 1;
     notify(nextVariation);
     scheduleOpponentMove(nextVariation);
@@ -187,14 +184,14 @@ export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): L
     if (isOpponentToMove()) return 'rejected-opponents-turn';
     const candidates = nextMovesAt(currentVariation, playedMovesUci);
     if (!candidates.includes(uci)) {
-      outOfBookOpen = true;
+      isOutOfBookOpen = true;
       notify(currentVariation);
       return 'rejected-out-of-book';
     }
     applyUciToBoard(uci);
     playedMovesUci.push(uci);
     recordVisitedLeafIfReached(currentVariation);
-    showRevealedArrows = false;
+    isShowRevealedArrows = false;
     notify(currentVariation);
     if (!isVariationCleared(currentVariation, visitedLeafIds)) {
       scheduleOpponentMove(currentVariation);
@@ -205,24 +202,24 @@ export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): L
   function dismissOutOfBook(): void {
     const currentVariation = variation;
     if (!currentVariation) return;
-    if (!outOfBookOpen) return;
-    outOfBookOpen = false;
+    if (!isOutOfBookOpen) return;
+    isOutOfBookOpen = false;
     notify(currentVariation);
   }
 
   function revealArrows(): void {
     const currentVariation = variation;
     if (!currentVariation) return;
-    if (showRevealedArrows) return;
-    showRevealedArrows = true;
+    if (isShowRevealedArrows) return;
+    isShowRevealedArrows = true;
     notify(currentVariation);
   }
 
   function hideArrows(): void {
     const currentVariation = variation;
     if (!currentVariation) return;
-    if (showRevealedArrows === false) return;
-    showRevealedArrows = false;
+    if (!isShowRevealedArrows) return;
+    isShowRevealedArrows = false;
     notify(currentVariation);
   }
 

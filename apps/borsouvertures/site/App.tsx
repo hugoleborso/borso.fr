@@ -66,8 +66,8 @@ export default function App() {
     setMode(nextMode);
   }
 
-  const learnReady = mode === 'learn' && selection.variationId !== ALL_KEY;
-  const playReady =
+  const isLearnReady = mode === 'learn' && selection.variationId !== ALL_KEY;
+  const isPlayReady =
     mode === 'play' &&
     (selection.openingId !== ALL_KEY ||
       selection.variationId !== ALL_KEY ||
@@ -75,7 +75,7 @@ export default function App() {
       playScope.openingIds.length > 0 ||
       playScope.variationIds.length > 0 ||
       playScope.lineIds.length > 0);
-  const sessionStartIsAllowed = learnReady || playReady;
+  const isSessionStartIsAllowed = isLearnReady || isPlayReady;
   const sessionStartHint =
     mode === 'learn'
       ? 'Pick an opening + variation to drill its tree.'
@@ -151,11 +151,11 @@ export default function App() {
               type="button"
               className="btn active"
               onClick={() => setView('session')}
-              disabled={!sessionStartIsAllowed}
+              disabled={!isSessionStartIsAllowed}
             >
               {sessionStartLabel}
             </button>
-            {!sessionStartIsAllowed && (
+            {!isSessionStartIsAllowed && (
               <p style={{ marginTop: '0.5rem', opacity: 0.8 }}>{sessionStartHint}</p>
             )}
           </div>

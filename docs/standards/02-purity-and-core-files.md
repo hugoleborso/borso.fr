@@ -56,21 +56,20 @@ code.
 
 ```tsx
 // Don't, because the decision is buried in JSX
-{runner.status === 'finished' && runner.lapCount >= edition.requiredLaps
-  ? <FinisherBadge />
-  : runner.status === 'dnf'
-    ? <DidNotFinishBadge />
-    : null}
+{
+  runner.status === 'finished' && runner.lapCount >= edition.requiredLaps ? (
+    <FinisherBadge />
+  ) : runner.status === 'dnf' ? (
+    <DidNotFinishBadge />
+  ) : null;
+}
 ```
 
 ```ts
 // runner-badge.core.ts
 export type RunnerBadgeKind = 'finisher' | 'did-not-finish' | 'none';
 
-export function selectRunnerBadgeKind(
-  runner: Runner,
-  edition: Edition,
-): RunnerBadgeKind {
+export function selectRunnerBadgeKind(runner: Runner, edition: Edition): RunnerBadgeKind {
   if (runner.status === 'finished' && runner.lapCount >= edition.requiredLaps) {
     return 'finisher';
   }

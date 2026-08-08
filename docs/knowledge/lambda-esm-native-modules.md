@@ -66,7 +66,7 @@ Symptoms from the live API side:
   check falling back to the default route map.
 - CloudWatch (`/aws/lambda/<app>-<stage>-api`) shows
   `ReferenceError: __dirname is not defined in ES module scope` as
-  the *first* line of every invocation.
+  the _first_ line of every invocation.
 - Coverage gates pass — the trap is bundler-level, only visible at
   Lambda runtime.
 

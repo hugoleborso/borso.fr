@@ -25,7 +25,7 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
   //     suggestion like `lepin-2026` → `lepin-2027`)
   //   - no edition                  → just the create form
   const isEditing = currentEdition !== null && currentEdition.status === 'setup';
-  const showReadonlyCard = currentEdition !== null && currentEdition.status !== 'setup';
+  const isShowReadonlyCard = currentEdition !== null && currentEdition.status !== 'setup';
   const initialSlug = isEditing
     ? (currentEdition?.slug ?? 'lepin-2026')
     : suggestNextSlug(currentEdition?.slug);
@@ -68,8 +68,8 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
       }
       setGpxReadError(null);
       return text;
-    } catch (caught) {
-      setGpxReadError(caught instanceof Error ? caught.message : 'Lecture du fichier impossible.');
+    } catch (error_) {
+      setGpxReadError(error_ instanceof Error ? error_.message : 'Lecture du fichier impossible.');
       return null;
     }
   }
@@ -105,16 +105,16 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
       }
       invalidateResource('edition:current');
       invalidateResource('editions:all');
-    } catch (caught) {
-      if (caught instanceof ApiError && caught.status === 400) {
-        const summary = summariseZodError(caught.body);
+    } catch (error_) {
+      if (error_ instanceof ApiError && error_.status === 400) {
+        const summary = summariseZodError(error_.body);
         setError(
           summary === null
             ? 'Données invalides (vérifier le GPX et les horaires).'
             : `Données invalides → ${summary}`,
         );
       } else {
-        setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+        setError(error_ instanceof Error ? error_.message : 'Erreur inconnue.');
       }
     } finally {
       setSubmitting(false);
@@ -136,8 +136,8 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
       await apiClient.adminTransitionEditionStatus(currentEdition.slug, nextStatus);
       invalidateResource('edition:current');
       invalidateResource('editions:all');
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : 'Erreur inconnue.');
     } finally {
       setTransitioning(false);
     }
@@ -158,11 +158,11 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
       await apiClient.adminDeleteEdition(currentEdition.slug);
       invalidateResource('edition:current');
       invalidateResource('editions:all');
-    } catch (caught) {
-      if (caught instanceof ApiError && caught.status === 409) {
+    } catch (error_) {
+      if (error_ instanceof ApiError && error_.status === 409) {
         setError("L'édition a démarré : suppression verrouillée.");
       } else {
-        setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+        setError(error_ instanceof Error ? error_.message : 'Erreur inconnue.');
       }
     } finally {
       setDeleting(false);
@@ -170,7 +170,7 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
   }
 
   const readonlyCard =
-    showReadonlyCard && currentEdition !== null ? (
+    isShowReadonlyCard && currentEdition !== null ? (
       <LiveOrFinishedEditionCard
         edition={currentEdition}
         transitioning={transitioning}
@@ -182,7 +182,7 @@ export function SetupPanel({ currentEdition }: SetupPanelProps) {
     <EditionEditForm
       currentEdition={currentEdition}
       isEditing={isEditing}
-      showReadonlyCard={showReadonlyCard}
+      showReadonlyCard={isShowReadonlyCard}
       slug={slug}
       displayName={displayName}
       startsAt={startsAt}

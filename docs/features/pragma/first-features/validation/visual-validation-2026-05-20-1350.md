@@ -13,30 +13,30 @@ The prototype (`design-bundle/project/Pragma.html`) requires `react`, `react-dom
 
 ## Section 0 — Design-bundle fidelity (per-screen)
 
-| # | Screen file | Verdict | Evidence |
-|---|---|---|---|
-| S1 | `screens/catalog.jsx` (catalog list) | **FAIL** | `comparisons/catalog-impl.png` |
-| S2 | `screens/catalog.jsx` (song detail) | **FAIL** | `comparisons/song-detail-impl.png` |
-| S3 | `screens/catalog.jsx` (Mode scène / `PerfMode`) | **FAIL** | `comparisons/mode-scene-impl.png` |
-| S4 | `screens/setlist.jsx` (setlist editor) | **FAIL** | `comparisons/setlist-impl.png` |
-| S5 | `screens/sessions.jsx` (sessions list) | **FAIL** | `comparisons/sessions-impl.png` |
-| S6 | `screens/sessions.jsx` (session detail) | **FAIL** | `comparisons/session-detail-impl.png` |
-| S7 | `screens/bars.jsx` (kanban + list) | **FAIL** | `comparisons/bars-list-impl.png`, `comparisons/bars-kanban-impl.png` |
-| S8 | `screens/admin.jsx` (members + instruments + mastery) | PASS (with deviations noted) | `comparisons/admin-members-impl.png`, `comparisons/admin-instruments-impl.png` |
-| S9 | `shell.jsx` (app shell + sidebar + offline banner) | **FAIL** | `comparisons/shell-impl.png`, `comparisons/mobile-narrow-impl.png` |
-| S10 | `energy.jsx` (sparkline + badges) — atoms/molecules | PASS | sparkline SVG present on song detail (`comparisons/song-detail-impl.png`) and on setlist rows in spec (energy column on `comparisons/setlist-impl.png`) |
-| S11 | Login route (spec-only, no prototype counterpart) | PASS-with-caveat | `comparisons/login-impl.png` |
+| #   | Screen file                                           | Verdict                      | Evidence                                                                                                                                                |
+| --- | ----------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1  | `screens/catalog.jsx` (catalog list)                  | **FAIL**                     | `comparisons/catalog-impl.png`                                                                                                                          |
+| S2  | `screens/catalog.jsx` (song detail)                   | **FAIL**                     | `comparisons/song-detail-impl.png`                                                                                                                      |
+| S3  | `screens/catalog.jsx` (Mode scène / `PerfMode`)       | **FAIL**                     | `comparisons/mode-scene-impl.png`                                                                                                                       |
+| S4  | `screens/setlist.jsx` (setlist editor)                | **FAIL**                     | `comparisons/setlist-impl.png`                                                                                                                          |
+| S5  | `screens/sessions.jsx` (sessions list)                | **FAIL**                     | `comparisons/sessions-impl.png`                                                                                                                         |
+| S6  | `screens/sessions.jsx` (session detail)               | **FAIL**                     | `comparisons/session-detail-impl.png`                                                                                                                   |
+| S7  | `screens/bars.jsx` (kanban + list)                    | **FAIL**                     | `comparisons/bars-list-impl.png`, `comparisons/bars-kanban-impl.png`                                                                                    |
+| S8  | `screens/admin.jsx` (members + instruments + mastery) | PASS (with deviations noted) | `comparisons/admin-members-impl.png`, `comparisons/admin-instruments-impl.png`                                                                          |
+| S9  | `shell.jsx` (app shell + sidebar + offline banner)    | **FAIL**                     | `comparisons/shell-impl.png`, `comparisons/mobile-narrow-impl.png`                                                                                      |
+| S10 | `energy.jsx` (sparkline + badges) — atoms/molecules   | PASS                         | sparkline SVG present on song detail (`comparisons/song-detail-impl.png`) and on setlist rows in spec (energy column on `comparisons/setlist-impl.png`) |
+| S11 | Login route (spec-only, no prototype counterpart)     | PASS-with-caveat             | `comparisons/login-impl.png`                                                                                                                            |
 
 Tally: **PASS 2, FAIL 8, PASS-with-caveat 1.**
 
 ## Section 1 — Site-wide rendering
 
-| # | Item | Observed | Verdict |
-|---|---|---|---|
-| G1 | Body uses `Geist Variable` (mapped to spec's `--t-ui`) | `getComputedStyle(body).fontFamily = "Geist Variable", Söhne, system-ui, ...` | PASS |
-| G2 | H1 uses `Instrument Serif` italic display face | `getComputedStyle(h1).fontFamily = "Instrument Serif", "Iowan Old Style", Georgia, serif` on login + catalog + every page sampled | PASS |
-| G3 | `@theme` exposes member-palette + status-chip swatches | `tokens.css` declares `--color-member-{coral,teal,mustard,plum,sage}`, `--color-status-{wip,rehearsed}-{bg,fg,border}`; verified in the compiled stylesheet at runtime | PASS |
-| G4 | App renders in the prototype's cream-paper palette in default OS light mode | `getComputedStyle(body).backgroundColor = "rgb(22,19,15)"` on every screen even with `prefers-color-scheme: light` emulated; `--color-bg = #16130f` is the DARK swatch (light value `#f4efe6` is overwritten by Tailwind v4's `@theme` re-declaration inside `@media (prefers-color-scheme: dark)`) | **FAIL** |
+| #   | Item                                                                        | Observed                                                                                                                                                                                                                                                                                            | Verdict  |
+| --- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| G1  | Body uses `Geist Variable` (mapped to spec's `--t-ui`)                      | `getComputedStyle(body).fontFamily = "Geist Variable", Söhne, system-ui, ...`                                                                                                                                                                                                                       | PASS     |
+| G2  | H1 uses `Instrument Serif` italic display face                              | `getComputedStyle(h1).fontFamily = "Instrument Serif", "Iowan Old Style", Georgia, serif` on login + catalog + every page sampled                                                                                                                                                                   | PASS     |
+| G3  | `@theme` exposes member-palette + status-chip swatches                      | `tokens.css` declares `--color-member-{coral,teal,mustard,plum,sage}`, `--color-status-{wip,rehearsed}-{bg,fg,border}`; verified in the compiled stylesheet at runtime                                                                                                                              | PASS     |
+| G4  | App renders in the prototype's cream-paper palette in default OS light mode | `getComputedStyle(body).backgroundColor = "rgb(22,19,15)"` on every screen even with `prefers-color-scheme: light` emulated; `--color-bg = #16130f` is the DARK swatch (light value `#f4efe6` is overwritten by Tailwind v4's `@theme` re-declaration inside `@media (prefers-color-scheme: dark)`) | **FAIL** |
 
 ## Section 2 — Broken-image scan (every screenshot)
 
@@ -54,9 +54,9 @@ Tally: **PASS 2, FAIL 8, PASS-with-caveat 1.**
 
 ### S2 — Song detail (`screens/catalog.jsx` lines 141-260)
 
-- **Implementation renders an EDIT FORM, not the prototype's read-only detail.** `SongDetailPage.tsx` line 1 comment: *"Per-song detail + create page. URL `:songId === 'new'` triggers the create flow; any UUID loads the existing song and edits it in place."* DOM verifies: form labels "Titre / Interprète / Statut / Tonalité — début / Tonalité — fin / Énergie de base (1-10) / Chord chart / Liens externes / Enregistrer / Supprimer". The prototype's `SongDetail` (lines 141-260) is a two-column read-only layout: left column carries the chord-chart preview card (`<pre class="chord-pre">` with `[chord]` spans highlighted in `var(--accent)`) and the external-links card; right aside carries three cards — "Lineup par défaut" (member chip + instrument tag-mono), "Maîtrise" (10-bar gradient mastery per member, scored x/10), "Joué récemment" (date + counts).
+- **Implementation renders an EDIT FORM, not the prototype's read-only detail.** `SongDetailPage.tsx` line 1 comment: _"Per-song detail + create page. URL `:songId === 'new'` triggers the create flow; any UUID loads the existing song and edits it in place."_ DOM verifies: form labels "Titre / Interprète / Statut / Tonalité — début / Tonalité — fin / Énergie de base (1-10) / Chord chart / Liens externes / Enregistrer / Supprimer". The prototype's `SongDetail` (lines 141-260) is a two-column read-only layout: left column carries the chord-chart preview card (`<pre class="chord-pre">` with `[chord]` spans highlighted in `var(--accent)`) and the external-links card; right aside carries three cards — "Lineup par défaut" (member chip + instrument tag-mono), "Maîtrise" (10-bar gradient mastery per member, scored x/10), "Joué récemment" (date + counts).
 - **Missing on the implementation:** the lineup card with `MemberChip` rows, the mastery-bar visualization (the prototype's signature affordance — ten 6×14px bars per member in the member's hue), the "Joué récemment" recent-play card, the two action buttons "Éditer / Mode scène" in the page header (the implementation has the Mode scène button but no "Éditer" — because the page IS the edit form).
-- **Chord-chart preview** *is* rendered, inside a card, with `[Em]Well sometimes I ...` text, but as a raw ChordPro textarea/editor preview (visible labels include "Texte ChordPro / PDF / Image"); the prototype renders chord names inline highlighted in `--accent`.
+- **Chord-chart preview** _is_ rendered, inside a card, with `[Em]Well sometimes I ...` text, but as a raw ChordPro textarea/editor preview (visible labels include "Texte ChordPro / PDF / Image"); the prototype renders chord names inline highlighted in `--accent`.
 
 ### S3 — Mode scène / PerfMode (`screens/catalog.jsx` lines 276-316)
 
@@ -108,18 +108,18 @@ Tally: **PASS 2, FAIL 8, PASS-with-caveat 1.**
 
 ## Section 3 — Non-regression sweep (round-3 PASS rows)
 
-| Round-3 row | Re-check method | Outcome |
-|---|---|---|
-| Login form renders + serif treatment | Login screen capture, font-family probe | PASS (unchanged) |
-| Auth happy path → `/catalog` | `fill@password / click@button → URL` | PASS |
-| Catalog page lists songs | DOM query `a[href^=/catalog/]` length 10 (9 songs + new) | PASS |
-| Sidebar nav links to /catalog /sessions /bars /members /instruments | DOM query `nav a` | PASS (but missing /setlist — was that present in round 3? Round-3 report did not flag — so this is a NEW regression introduced by the rework that dropped the Setlist nav entry) |
-| Kanban view of bars | Toggle to Kanban, verify 5 columns | PASS |
-| French i18n on first visit | `navigator.language=fr-FR` returns French copy | PASS |
-| Members + Instruments admin pages | Captured, content matches | PASS |
-| Mastery matrix renders 5×6 grid with row+column averages | DOM verified, members down, instruments across, "Moy. 9.0 9.0 8.5 6.7 7.0 7.0" footer | PASS |
-| Dark-mode preference | Cannot verify light-mode rendering separately (the implementation is locked to dark, see G4) | regression — was PASS_EXCEPT_UNVERIFIABLE in round 3, now FAIL because the light-mode path is broken |
-| Service-worker offline reads | Not re-tested (out of scope for this round) | UNCHANGED |
+| Round-3 row                                                         | Re-check method                                                                              | Outcome                                                                                                                                                                          |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Login form renders + serif treatment                                | Login screen capture, font-family probe                                                      | PASS (unchanged)                                                                                                                                                                 |
+| Auth happy path → `/catalog`                                        | `fill@password / click@button → URL`                                                         | PASS                                                                                                                                                                             |
+| Catalog page lists songs                                            | DOM query `a[href^=/catalog/]` length 10 (9 songs + new)                                     | PASS                                                                                                                                                                             |
+| Sidebar nav links to /catalog /sessions /bars /members /instruments | DOM query `nav a`                                                                            | PASS (but missing /setlist — was that present in round 3? Round-3 report did not flag — so this is a NEW regression introduced by the rework that dropped the Setlist nav entry) |
+| Kanban view of bars                                                 | Toggle to Kanban, verify 5 columns                                                           | PASS                                                                                                                                                                             |
+| French i18n on first visit                                          | `navigator.language=fr-FR` returns French copy                                               | PASS                                                                                                                                                                             |
+| Members + Instruments admin pages                                   | Captured, content matches                                                                    | PASS                                                                                                                                                                             |
+| Mastery matrix renders 5×6 grid with row+column averages            | DOM verified, members down, instruments across, "Moy. 9.0 9.0 8.5 6.7 7.0 7.0" footer        | PASS                                                                                                                                                                             |
+| Dark-mode preference                                                | Cannot verify light-mode rendering separately (the implementation is locked to dark, see G4) | regression — was PASS_EXCEPT_UNVERIFIABLE in round 3, now FAIL because the light-mode path is broken                                                                             |
+| Service-worker offline reads                                        | Not re-tested (out of scope for this round)                                                  | UNCHANGED                                                                                                                                                                        |
 
 ## Verdict: FAIL
 

@@ -100,9 +100,9 @@ export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine
   let chess = new Chess();
   let config: PlayMachineConfig | null = null;
   let playedMovesUci: string[] = [];
-  let outOfBookOpen = false;
-  let successOpen = false;
-  let manualReveal = false;
+  let isOutOfBookOpen = false;
+  let isSuccessOpen = false;
+  let isManualReveal = false;
   let generation = 0;
   let snapshot: PlayMachineSnapshot = INITIAL_SNAPSHOT;
 
@@ -130,9 +130,9 @@ export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine
       uniqueVariation: bookState.uniqueVariation,
       uniqueLine: bookState.uniqueLine,
       candidateCount: bookState.candidates.length,
-      outOfBookOpen,
-      successOpen,
-      manualReveal,
+      outOfBookOpen: isOutOfBookOpen,
+      successOpen: isSuccessOpen,
+      manualReveal: isManualReveal,
       side: currentConfig.side,
       autoOpponent: currentConfig.autoOpponent,
     };
@@ -185,7 +185,7 @@ export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine
         [...playedMovesUci],
         currentConfig.playScope,
       );
-      if (afterOpponent.atLineEnd) successOpen = true;
+      if (afterOpponent.atLineEnd) isSuccessOpen = true;
       notify(currentConfig);
     }, opponentDelayMs);
   }
@@ -194,9 +194,9 @@ export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine
     chess = new Chess();
     config = nextConfig;
     playedMovesUci = [];
-    outOfBookOpen = false;
-    successOpen = false;
-    manualReveal = false;
+    isOutOfBookOpen = false;
+    isSuccessOpen = false;
+    isManualReveal = false;
     generation += 1;
     notify(nextConfig);
     scheduleOpponentMove(nextConfig);
@@ -224,12 +224,12 @@ export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine
     if (!bookState.inBook) {
       chess.undo();
       playedMovesUci.pop();
-      outOfBookOpen = true;
+      isOutOfBookOpen = true;
       notify(currentConfig);
       return 'rejected-out-of-book';
     }
-    manualReveal = false;
-    if (bookState.atLineEnd) successOpen = true;
+    isManualReveal = false;
+    if (bookState.atLineEnd) isSuccessOpen = true;
     notify(currentConfig);
     if (!bookState.atLineEnd) scheduleOpponentMove(currentConfig);
     return 'accepted';
@@ -242,34 +242,34 @@ export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine
     if (playedMovesUci.length < pliesToUndo) return;
     for (let i = 0; i < pliesToUndo; i += 1) chess.undo();
     playedMovesUci = playedMovesUci.slice(0, -pliesToUndo);
-    outOfBookOpen = false;
-    successOpen = false;
-    manualReveal = false;
+    isOutOfBookOpen = false;
+    isSuccessOpen = false;
+    isManualReveal = false;
     notify(currentConfig);
   }
 
   function revealBookMoves(): void {
     const currentConfig = config;
     if (!currentConfig) return;
-    if (manualReveal) return;
-    manualReveal = true;
-    outOfBookOpen = false;
+    if (isManualReveal) return;
+    isManualReveal = true;
+    isOutOfBookOpen = false;
     notify(currentConfig);
   }
 
   function dismissOutOfBook(): void {
     const currentConfig = config;
     if (!currentConfig) return;
-    if (!outOfBookOpen) return;
-    outOfBookOpen = false;
+    if (!isOutOfBookOpen) return;
+    isOutOfBookOpen = false;
     notify(currentConfig);
   }
 
   function dismissSuccess(): void {
     const currentConfig = config;
     if (!currentConfig) return;
-    if (!successOpen) return;
-    successOpen = false;
+    if (!isSuccessOpen) return;
+    isSuccessOpen = false;
     notify(currentConfig);
   }
 

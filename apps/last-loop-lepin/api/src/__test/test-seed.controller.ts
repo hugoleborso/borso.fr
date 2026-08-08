@@ -32,7 +32,7 @@ const EDITION_NAME = 'Last Loop Lépin 2026';
 const LOOP_INTERVAL_MINUTES = 60;
 const HOUR_MS = 60 * 60 * 1000;
 
-const SAMPLE_RUNNERS: ReadonlyArray<{ slug: string; displayName: string; bib: number }> = [
+const SAMPLE_RUNNERS: readonly { slug: string; displayName: string; bib: number }[] = [
   { slug: 'alice', displayName: 'Alice', bib: 1 },
   { slug: 'bob', displayName: 'Bob', bib: 2 },
   { slug: 'carla', displayName: 'Carla', bib: 3 },

@@ -16,8 +16,8 @@ tags: [cdk, s3, cloudformation, deploy, historical]
 > trap can no longer occur in this repo.
 >
 > The text below is preserved unchanged. Read it as historical context
-> — *why we thought a knowledge floor was sufficient* and *what we
-> learned that made us re-examine* — not as current operational guidance.
+> — _why we thought a knowledge floor was sufficient_ and _what we
+> learned that made us re-examine_ — not as current operational guidance.
 > If you arrive here looking for the recovery commands, you almost
 > certainly don't need them anymore. If you somehow do, the three-line
 > recovery at the bottom still works mechanically.
@@ -31,7 +31,7 @@ A CDK stack containing an `S3.Bucket` with both:
 - an explicit `bucketName: 'borso-fr-prod'` (or any pinned name), and
 - `removalPolicy: RemovalPolicy.RETAIN`
 
-…will leave the bucket behind in the AWS account if the *first* deploy of the stack fails after the bucket has been created but before the rest of the stack succeeds. CloudFormation rolls the stack back, but `RETAIN` instructs it to *keep* every resource that already existed at rollback time.
+…will leave the bucket behind in the AWS account if the _first_ deploy of the stack fails after the bucket has been created but before the rest of the stack succeeds. CloudFormation rolls the stack back, but `RETAIN` instructs it to _keep_ every resource that already existed at rollback time.
 
 The next deploy attempts to create a fresh bucket with the same literal name, and AWS::S3::Bucket fails with `BucketAlreadyOwnedByYou` because the orphan is still there. There is no automatic recovery: a human has to delete the orphan (or import it into the new stack).
 
@@ -47,7 +47,7 @@ The combination is desirable for prod static-site buckets — predictable name, 
 Three options, in order of structural strength:
 
 1. **Drop the literal `bucketName`.** CDK auto-names. Trade-off: bucket name becomes opaque (`stage-static-site-bucket123abc4`). For static-site origins this is invisible — CloudFront takes whatever name the origin reports. Use this whenever the bucket name doesn't appear in operator-facing tooling.
-2. **Keep the literal name + `RETAIN` but ensure the *first* deploy is rehearsed in `preview`.** The orphan path only triggers on first-create rollback; preview catches the same construct shape under a different name and exercises the create flow before prod ever sees it.
+2. **Keep the literal name + `RETAIN` but ensure the _first_ deploy is rehearsed in `preview`.** The orphan path only triggers on first-create rollback; preview catches the same construct shape under a different name and exercises the create flow before prod ever sees it.
 3. **Keep both, document the manual recovery.** Below.
 
 ## Manual recovery (the path that bit us in PR #6 prod cutover)

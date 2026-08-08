@@ -3,8 +3,8 @@ date: 2026-06-05
 introduced-at: implementation
 detected-at: review
 severity: high
-related-pr: "#26"
-fix-pr: "#30"
+related-pr: '#26'
+fix-pr: '#30'
 fix-commits: [0618e8b]
 eradication-level: 2
 tags: [orchestrator, skill, state-machine, technical-validation, self-improvement-loop]
@@ -20,13 +20,13 @@ implementation sub-agent's own verdict plus a `curl` smoke-test — and
 never dispatched `/technical-validation`. The bugs that slipped through
 all share a shape:
 
-- Round 10 verdict: *"SPA fallback in place: YES"* — the deployed
+- Round 10 verdict: _"SPA fallback in place: YES"_ — the deployed
   CloudFront function had no `SPA_APPS`; deep links 404'd.
-- Round 13 verdict: *"optimistic updates on 3 ops"* — `grep onMutate`
+- Round 13 verdict: _"optimistic updates on 3 ops"_ — `grep onMutate`
   returned **0** across all 10 query files.
 - Round 15→17 verdicts said `done`; a later catch-up validation
   found the setlist deep-link route was never declared and `biome
-  check` had 125 unaddressed diagnostics.
+check` had 125 unaddressed diagnostics.
 
 A `/technical-validation` dispatch — an isolated agent reading only the
 spec + diff + brief — would have opened each file and seen the claim
@@ -38,7 +38,7 @@ was false. It was built for exactly this. It just wasn't being run.
    them. The implementation sub-agent grades its own homework.
 2. **Why no independent check?** The orchestrator skipped the
    `/technical-validation` dispatch between rounds 7 and 16.
-3. **Why was it skipped?** A `curl` smoke-test *felt* like validation —
+3. **Why was it skipped?** A `curl` smoke-test _felt_ like validation —
    it confirms the deployed Lambda boots and routes return non-5xx.
    But booting is not "does what the brief claimed".
 4. **Why did the smoke-test feel sufficient?** The orchestrator
@@ -55,7 +55,7 @@ the implementer's own `done` is not evidence.
 - **CI (tests / build):** the false claims passed typecheck, lint, and
   tests — code without `onMutate` still compiles and the mutations
   still work (just slowly); a missing route still builds.
-- **Code review:** the orchestrator *was* the reviewer and accepted the
+- **Code review:** the orchestrator _was_ the reviewer and accepted the
   sub-agent's verdict verbatim.
 - **The dedicated reviewer existed but wasn't invoked** — the gate was
   present in the toolbox and absent from the loop.
@@ -65,7 +65,7 @@ the implementer's own `done` is not evidence.
 - **Code (process):** the orchestrator standard now mandates a
   `/technical-validation` dispatch on the latest SHA before the run can
   advance out of any `implement` round whose verdict is `done`. A
-  `curl`/runtime smoke-test is explicitly named as *not* a substitute.
+  `curl`/runtime smoke-test is explicitly named as _not_ a substitute.
 
 ## Eradication (mandatory — code-level)
 

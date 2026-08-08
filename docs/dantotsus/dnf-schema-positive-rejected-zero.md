@@ -25,8 +25,8 @@ POST /api/admin/dnfs  →  400  (1-2 ms)
 ```
 
 The 400 came from `zValidator` before any business logic ran. Hugo
-reported: *"je prends des 400 pour valider les DNF, et pour marquer à
-la main des DNF tour 0"*.
+reported: _"je prends des 400 pour valider les DNF, et pour marquer à
+la main des DNF tour 0"_.
 
 ## Root-cause chain
 
@@ -46,14 +46,14 @@ la main des DNF tour 0"*.
    reality: "DNF includes the runner who couldn't even close loop 1",
    for which 0 is the right number.
 5. **Why did tests not catch it?**
-   The back-e2e fixtures all DNF runners *after* loop 1. The
+   The back-e2e fixtures all DNF runners _after_ loop 1. The
    `outAtLoop: 0` path was an unexercised corner.
 
-**Root cause:** *I thought `outAtLoop` was the "last completed loop
+**Root cause:** _I thought `outAtLoop` was the "last completed loop
 of a DNFed runner", always ≥ 1 because DNF implies at least one
 attempt. Actually the system's own projection emits 0 for runners who
 miss the very first top, and the front's DNF-confirmation flow has
-to be able to round-trip that value.* If I had known the projection
+to be able to round-trip that value._ If I had known the projection
 emits 0, the schema would have read `nonnegative()` from day one.
 
 ## Detection failure causes

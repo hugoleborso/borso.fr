@@ -8,24 +8,34 @@ function RunnerFichePage({ phase, setRoute }) {
   // Default: leader if any; otherwise first runner
   const defaultSlug = (phase.inRace[0] || phase.runners[0]).slug;
   const [slug, setSlug] = _rfS(defaultSlug);
-  const runner = phase.runners.find(r => r.slug === slug) || phase.runners[0];
+  const runner = phase.runners.find((r) => r.slug === slug) || phase.runners[0];
 
   return (
     <div className="rf" data-screen-label="03 Fiche coureur">
       <aside className="rf-sidebar">
-        <div className="eyebrow" style={{marginBottom:"var(--d-3)"}}>Sélectionner · /r/&lt;slug&gt;</div>
-        <input className="input" placeholder="Chercher un nom…" style={{marginBottom:"var(--d-3)"}} />
+        <div className="eyebrow" style={{ marginBottom: 'var(--d-3)' }}>
+          Sélectionner · /r/&lt;slug&gt;
+        </div>
+        <input
+          className="input"
+          placeholder="Chercher un nom…"
+          style={{ marginBottom: 'var(--d-3)' }}
+        />
         <div className="rf-list">
-          {phase.runners.map(r => (
-            <button key={r.slug}
-                    className={`rf-listitem ${r.slug === slug ? "active" : ""}`}
-                    onClick={() => setSlug(r.slug)}>
-              <RunnerAvatar runner={r} size={26} dim={r.status === "DNF"} />
-              <div style={{flex:1, minWidth:0}}>
+          {phase.runners.map((r) => (
+            <button
+              key={r.slug}
+              className={`rf-listitem ${r.slug === slug ? 'active' : ''}`}
+              onClick={() => setSlug(r.slug)}
+            >
+              <RunnerAvatar runner={r} size={26} dim={r.status === 'DNF'} />
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="rf-li-name">{r.name}</div>
                 <div className="rf-li-meta mono">{r.town}</div>
               </div>
-              <span className={`rf-tag rf-tag-${r.status.toLowerCase()}`}>{r.status === "IN" ? `${r.completedLoops}b` : r.status === "DNF" ? "DNF" : "★"}</span>
+              <span className={`rf-tag rf-tag-${r.status.toLowerCase()}`}>
+                {r.status === 'IN' ? `${r.completedLoops}b` : r.status === 'DNF' ? 'DNF' : '★'}
+              </span>
             </button>
           ))}
         </div>
@@ -35,34 +45,51 @@ function RunnerFichePage({ phase, setRoute }) {
         <header className="rf-hero">
           <div className="rf-hero-photo">
             <RunnerAvatar runner={runner} size={96} />
-            <span className="rf-hero-bib mono">#{String(runner.bib).padStart(3,"0")}</span>
+            <span className="rf-hero-bib mono">#{String(runner.bib).padStart(3, '0')}</span>
           </div>
-          <div style={{flex:1, minWidth:0}}>
-            <div className="row" style={{gap:"var(--d-3)", marginBottom:"var(--d-2)"}}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="row" style={{ gap: 'var(--d-3)', marginBottom: 'var(--d-2)' }}>
               <StatusBadge status={runner.status} />
-              <span className="muted mono" style={{fontSize:11}}>/r/{runner.slug}</span>
+              <span className="muted mono" style={{ fontSize: 11 }}>
+                /r/{runner.slug}
+              </span>
             </div>
             <h1 className="rf-name">{runner.name}</h1>
             <div className="rf-sub">
-              {runner.town} · {runner.gender === "F" ? "F" : "M"} · {runner.age} ans · pace habituelle {runner.avgLoopMin}'
+              {runner.town} · {runner.gender === 'F' ? 'F' : 'M'} · {runner.age} ans · pace
+              habituelle {runner.avgLoopMin}'
             </div>
-            <div className="row" style={{gap:"var(--d-2)", marginTop:"var(--d-4)"}}>
-              <button className="btn btn-sm" onClick={()=>setRoute("spectator")}>← Spectateur</button>
+            <div className="row" style={{ gap: 'var(--d-2)', marginTop: 'var(--d-4)' }}>
+              <button className="btn btn-sm" onClick={() => setRoute('spectator')}>
+                ← Spectateur
+              </button>
               <button className="btn btn-sm">Partager le lien</button>
             </div>
           </div>
           <div className="rf-stats">
             <Stat label="Boucles" labelEn="LOOPS" value={runner.completedLoops} />
-            <Stat label="Distance" labelEn="DIST" value={(runner.completedLoops * 6.706).toFixed(1)} unit="km" />
-            <Stat label="D+ cumulé" labelEn="ELEV" value={(runner.completedLoops * 184).toLocaleString("fr-FR")} unit="m" />
-            <Stat label="Rang" labelEn="RANK" value={runner.status === "IN" ? runner.rank : "—"} />
+            <Stat
+              label="Distance"
+              labelEn="DIST"
+              value={(runner.completedLoops * 6.706).toFixed(1)}
+              unit="km"
+            />
+            <Stat
+              label="D+ cumulé"
+              labelEn="ELEV"
+              value={(runner.completedLoops * 184).toLocaleString('fr-FR')}
+              unit="m"
+            />
+            <Stat label="Rang" labelEn="RANK" value={runner.status === 'IN' ? runner.rank : '—'} />
           </div>
         </header>
 
         <div className="rf-grid">
           <div className="card">
             <div className="card-head">
-              <div className="card-title">Boucles bouclées <span className="en">LOOP TIMES</span></div>
+              <div className="card-title">
+                Boucles bouclées <span className="en">LOOP TIMES</span>
+              </div>
               <div className="card-meta">{runner.completedLoops} pointages</div>
             </div>
             <div className="card-body">
@@ -72,23 +99,60 @@ function RunnerFichePage({ phase, setRoute }) {
 
           <div className="card">
             <div className="card-head">
-              <div className="card-title">Position estimée <span className="en">POSITION</span></div>
-              <div className="card-meta">{runner.status === "IN" ? `${Math.round(runner.progress*100)}% sur la boucle` : "Hors course"}</div>
+              <div className="card-title">
+                Position estimée <span className="en">POSITION</span>
+              </div>
+              <div className="card-meta">
+                {runner.status === 'IN'
+                  ? `${Math.round(runner.progress * 100)}% sur la boucle`
+                  : 'Hors course'}
+              </div>
             </div>
-            <div className="card-body" style={{display:"grid", placeItems:"center", padding:"var(--d-4)"}}>
-              <svg viewBox="0 0 100 100" style={{width:"100%", maxWidth:280, aspectRatio:"1/1"}}>
-                <ellipse cx="50" cy="55" rx="48" ry="40" fill="var(--bg-elev-2)" stroke="var(--line-soft)" strokeWidth="0.4" strokeDasharray="0.6 0.4" />
+            <div
+              className="card-body"
+              style={{ display: 'grid', placeItems: 'center', padding: 'var(--d-4)' }}
+            >
+              <svg
+                viewBox="0 0 100 100"
+                style={{ width: '100%', maxWidth: 280, aspectRatio: '1/1' }}
+              >
+                <ellipse
+                  cx="50"
+                  cy="55"
+                  rx="48"
+                  ry="40"
+                  fill="var(--bg-elev-2)"
+                  stroke="var(--line-soft)"
+                  strokeWidth="0.4"
+                  strokeDasharray="0.6 0.4"
+                />
                 <path d={window.COURSE_PATH} fill="none" stroke="var(--line)" strokeWidth="1.6" />
-                <path d={window.COURSE_PATH} fill="none" stroke="var(--accent)" strokeWidth="0.55" strokeLinecap="round" strokeDasharray="0.6 1.2" />
-                {runner.status === "IN" && <RunnerDotOnPath runner={runner} />}
-                <circle cx="50" cy="12" r="2.2" fill="var(--bg)" stroke="var(--ink)" strokeWidth="0.6" />
+                <path
+                  d={window.COURSE_PATH}
+                  fill="none"
+                  stroke="var(--accent)"
+                  strokeWidth="0.55"
+                  strokeLinecap="round"
+                  strokeDasharray="0.6 1.2"
+                />
+                {runner.status === 'IN' && <RunnerDotOnPath runner={runner} />}
+                <circle
+                  cx="50"
+                  cy="12"
+                  r="2.2"
+                  fill="var(--bg)"
+                  stroke="var(--ink)"
+                  strokeWidth="0.6"
+                />
               </svg>
             </div>
           </div>
 
-          <div className="card" style={{gridColumn:"1 / -1"}}>
+          <div className="card" style={{ gridColumn: '1 / -1' }}>
             <div className="card-head">
-              <div className="card-title">Historique de pointages <span className="en">PUNCH HISTORY</span></div>
+              <div className="card-title">
+                Historique de pointages <span className="en">PUNCH HISTORY</span>
+              </div>
               <div className="card-meta">Dernières 12 boucles</div>
             </div>
             <div className="card-body flush">
@@ -173,117 +237,245 @@ function RunnerFichePage({ phase, setRoute }) {
   );
 }
 
-function Stat({ label, labelEn, value, unit }){
+function Stat({ label, labelEn, value, unit }) {
   return (
-    <div style={{textAlign:"right"}}>
-      <div style={{fontSize:10, letterSpacing:"0.1em", textTransform:"uppercase", color:"var(--ink-3)", fontWeight:600}}>
-        {label} <span style={{color:"var(--ink-mute)", fontFamily:"var(--font-mono)", fontSize:9}}>{labelEn}</span>
+    <div style={{ textAlign: 'right' }}>
+      <div
+        style={{
+          fontSize: 10,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: 'var(--ink-3)',
+          fontWeight: 600,
+        }}
+      >
+        {label}{' '}
+        <span style={{ color: 'var(--ink-mute)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>
+          {labelEn}
+        </span>
       </div>
-      <div style={{fontFamily:"var(--font-display)", fontWeight:700, fontSize:28, letterSpacing:"-0.02em", lineHeight:1.05, color:"var(--ink)"}}>
-        {value}{unit && <span style={{fontSize:14, color:"var(--ink-3)", marginLeft:4, fontWeight:500}}>{unit}</span>}
+      <div
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontWeight: 700,
+          fontSize: 28,
+          letterSpacing: '-0.02em',
+          lineHeight: 1.05,
+          color: 'var(--ink)',
+        }}
+      >
+        {value}
+        {unit && (
+          <span style={{ fontSize: 14, color: 'var(--ink-3)', marginLeft: 4, fontWeight: 500 }}>
+            {unit}
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
-function StatusBadge({ status }){
-  if (status === "WINNER") return (
-    <span style={{
-      padding:"3px 10px", borderRadius:"var(--radius-pill)",
-      background:"color-mix(in oklch, var(--warn) 16%, transparent)",
-      border:"1px solid color-mix(in oklch, var(--warn) 40%, transparent)",
-      color:"var(--warn)", fontSize:11, fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase"
-    }}>★ Vainqueur·e · winner</span>
-  );
-  if (status === "DNF") return (
-    <span style={{
-      padding:"3px 10px", borderRadius:"var(--radius-pill)",
-      background:"color-mix(in oklch, var(--danger) 14%, transparent)",
-      border:"1px solid color-mix(in oklch, var(--danger) 35%, transparent)",
-      color:"var(--danger)", fontSize:11, fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase"
-    }}>● Sorti·e · DNF</span>
-  );
+function StatusBadge({ status }) {
+  if (status === 'WINNER')
+    return (
+      <span
+        style={{
+          padding: '3px 10px',
+          borderRadius: 'var(--radius-pill)',
+          background: 'color-mix(in oklch, var(--warn) 16%, transparent)',
+          border: '1px solid color-mix(in oklch, var(--warn) 40%, transparent)',
+          color: 'var(--warn)',
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+        }}
+      >
+        ★ Vainqueur·e · winner
+      </span>
+    );
+  if (status === 'DNF')
+    return (
+      <span
+        style={{
+          padding: '3px 10px',
+          borderRadius: 'var(--radius-pill)',
+          background: 'color-mix(in oklch, var(--danger) 14%, transparent)',
+          border: '1px solid color-mix(in oklch, var(--danger) 35%, transparent)',
+          color: 'var(--danger)',
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+        }}
+      >
+        ● Sorti·e · DNF
+      </span>
+    );
   return (
-    <span style={{
-      padding:"3px 10px", borderRadius:"var(--radius-pill)",
-      background:"color-mix(in oklch, var(--accent) 14%, transparent)",
-      border:"1px solid color-mix(in oklch, var(--accent) 35%, transparent)",
-      color:"var(--accent)", fontSize:11, fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase"
-    }}>● En course · in</span>
+    <span
+      style={{
+        padding: '3px 10px',
+        borderRadius: 'var(--radius-pill)',
+        background: 'color-mix(in oklch, var(--accent) 14%, transparent)',
+        border: '1px solid color-mix(in oklch, var(--accent) 35%, transparent)',
+        color: 'var(--accent)',
+        fontSize: 11,
+        fontWeight: 600,
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase',
+      }}
+    >
+      ● En course · in
+    </span>
   );
 }
 
 function LoopTimings({ runner, phase }) {
   // Synthesize loop times: avg ± small variance per loop.
   const N = runner.completedLoops;
-  if (N === 0) return <div className="muted" style={{padding:"var(--d-4)"}}>Aucune boucle bouclée à ce stade.</div>;
+  if (N === 0)
+    return (
+      <div className="muted" style={{ padding: 'var(--d-4)' }}>
+        Aucune boucle bouclée à ce stade.
+      </div>
+    );
   const times = [];
   let seed = runner.bib * 31;
   for (let i = 0; i < N; i++) {
     seed = (seed * 9301 + 49297) % 233280;
-    const variance = ((seed / 233280) - 0.5) * 6; // ±3 minutes
-    times.push(Math.max(28, runner.avgLoopMin + variance + i*0.1)); // fatigue: +0.1/loop
+    const variance = (seed / 233280 - 0.5) * 6; // ±3 minutes
+    times.push(Math.max(28, runner.avgLoopMin + variance + i * 0.1)); // fatigue: +0.1/loop
   }
   const max = 60;
   const min = 30;
 
   return (
     <div>
-      <div style={{display:"flex", alignItems:"flex-end", gap:"3px", height: 150, padding: "var(--d-3) 0"}}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: '3px',
+          height: 150,
+          padding: 'var(--d-3) 0',
+        }}
+      >
         {times.map((t, i) => {
           const h = ((t - min) / (max - min)) * 100;
           const danger = t > 55;
           return (
-            <div key={i} title={`Boucle ${i+1} · ${t.toFixed(1)}'`} style={{flex:1, display:"flex", flexDirection:"column", justifyContent:"flex-end", gap:4, minWidth: 0}}>
-              <div style={{
-                height: `${h}%`,
-                background: danger ? "var(--danger)" : "var(--accent)",
-                borderRadius: "3px 3px 0 0",
-                opacity: 0.55 + (i / N) * 0.45,
-                minHeight: 4,
-              }}></div>
-              <div className="mono mute-2" style={{fontSize: 9, textAlign:"center", lineHeight: 1}}>{i+1}</div>
+            <div
+              key={i}
+              title={`Boucle ${i + 1} · ${t.toFixed(1)}'`}
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+                gap: 4,
+                minWidth: 0,
+              }}
+            >
+              <div
+                style={{
+                  height: `${h}%`,
+                  background: danger ? 'var(--danger)' : 'var(--accent)',
+                  borderRadius: '3px 3px 0 0',
+                  opacity: 0.55 + (i / N) * 0.45,
+                  minHeight: 4,
+                }}
+              ></div>
+              <div
+                className="mono mute-2"
+                style={{ fontSize: 9, textAlign: 'center', lineHeight: 1 }}
+              >
+                {i + 1}
+              </div>
             </div>
           );
         })}
       </div>
-      <div style={{display:"flex", justifyContent:"space-between", paddingTop:"var(--d-2)", borderTop:"1px dashed var(--line-soft)", marginTop:"var(--d-2)"}}>
-        <span className="mono mute-2" style={{fontSize:11}}>30' min</span>
-        <span className="mono mute-2" style={{fontSize:11}}>cut-off 60'</span>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          paddingTop: 'var(--d-2)',
+          borderTop: '1px dashed var(--line-soft)',
+          marginTop: 'var(--d-2)',
+        }}
+      >
+        <span className="mono mute-2" style={{ fontSize: 11 }}>
+          30' min
+        </span>
+        <span className="mono mute-2" style={{ fontSize: 11 }}>
+          cut-off 60'
+        </span>
       </div>
     </div>
   );
 }
 
-function PunchHistory({ runner, phase }){
+function PunchHistory({ runner, phase }) {
   const N = runner.completedLoops;
   const rows = [];
   for (let i = N; i > Math.max(0, N - 12); i--) {
-    const ts = `${String(10 + i - 1).padStart(2,"0")}:${String(Math.round(runner.avgLoopMin)).padStart(2,"0")}:${String((runner.bib*7) % 60).padStart(2,"0")}`;
-    rows.push({ loop: i, ts, status: "OK" });
+    const ts = `${String(10 + i - 1).padStart(2, '0')}:${String(Math.round(runner.avgLoopMin)).padStart(2, '0')}:${String((runner.bib * 7) % 60).padStart(2, '0')}`;
+    rows.push({ loop: i, ts, status: 'OK' });
   }
-  if (runner.status === "DNF") rows.unshift({ loop: runner.dropAt + 1, ts: "—", status: "DNF", reason: runner.dropReason });
+  if (runner.status === 'DNF')
+    rows.unshift({ loop: runner.dropAt + 1, ts: '—', status: 'DNF', reason: runner.dropReason });
   return (
-    <table style={{width:"100%", borderCollapse:"collapse", fontSize:13}}>
+    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
       <thead>
-        <tr style={{textAlign:"left", color:"var(--ink-3)", fontSize:10, letterSpacing:"0.1em", textTransform:"uppercase"}}>
-          <th style={{padding:"8px 16px", borderBottom:"1px solid var(--line-soft)"}}>Boucle</th>
-          <th style={{padding:"8px 16px", borderBottom:"1px solid var(--line-soft)"}}>Heure pointage</th>
-          <th style={{padding:"8px 16px", borderBottom:"1px solid var(--line-soft)"}}>Statut</th>
-          <th style={{padding:"8px 16px", borderBottom:"1px solid var(--line-soft)"}}>Note</th>
+        <tr
+          style={{
+            textAlign: 'left',
+            color: 'var(--ink-3)',
+            fontSize: 10,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+          }}
+        >
+          <th style={{ padding: '8px 16px', borderBottom: '1px solid var(--line-soft)' }}>
+            Boucle
+          </th>
+          <th style={{ padding: '8px 16px', borderBottom: '1px solid var(--line-soft)' }}>
+            Heure pointage
+          </th>
+          <th style={{ padding: '8px 16px', borderBottom: '1px solid var(--line-soft)' }}>
+            Statut
+          </th>
+          <th style={{ padding: '8px 16px', borderBottom: '1px solid var(--line-soft)' }}>Note</th>
         </tr>
       </thead>
       <tbody>
-        {rows.map((r,i) => (
-          <tr key={i} style={{borderBottom:"1px solid var(--line-soft)"}}>
-            <td style={{padding:"10px 16px"}} className="mono">{String(r.loop).padStart(2,"0")}</td>
-            <td style={{padding:"10px 16px"}} className="mono">{r.ts}</td>
-            <td style={{padding:"10px 16px"}}>
-              {r.status === "DNF"
-                ? <span style={{color:"var(--danger)", fontFamily:"var(--font-mono)", fontSize:11}}>DNF</span>
-                : <span style={{color:"var(--accent)", fontFamily:"var(--font-mono)", fontSize:11}}>PUNCH</span>}
+        {rows.map((r, i) => (
+          <tr key={i} style={{ borderBottom: '1px solid var(--line-soft)' }}>
+            <td style={{ padding: '10px 16px' }} className="mono">
+              {String(r.loop).padStart(2, '0')}
             </td>
-            <td style={{padding:"10px 16px"}} className="muted" >{r.reason || (r.status === "OK" ? "Top respecté" : "")}</td>
+            <td style={{ padding: '10px 16px' }} className="mono">
+              {r.ts}
+            </td>
+            <td style={{ padding: '10px 16px' }}>
+              {r.status === 'DNF' ? (
+                <span
+                  style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)', fontSize: 11 }}
+                >
+                  DNF
+                </span>
+              ) : (
+                <span
+                  style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: 11 }}
+                >
+                  PUNCH
+                </span>
+              )}
+            </td>
+            <td style={{ padding: '10px 16px' }} className="muted">
+              {r.reason || (r.status === 'OK' ? 'Top respecté' : '')}
+            </td>
           </tr>
         ))}
       </tbody>
@@ -291,13 +483,13 @@ function PunchHistory({ runner, phase }){
   );
 }
 
-function RunnerDotOnPath({ runner }){
+function RunnerDotOnPath({ runner }) {
   const ref = React.useRef(null);
   const [pos, setPos] = React.useState(null);
   React.useEffect(() => {
-    const svgNS = "http://www.w3.org/2000/svg";
-    const p = document.createElementNS(svgNS, "path");
-    p.setAttribute("d", window.COURSE_PATH);
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const p = document.createElementNS(svgNS, 'path');
+    p.setAttribute('d', window.COURSE_PATH);
     const len = p.getTotalLength();
     const pt = p.getPointAtLength(runner.progress * len);
     setPos([pt.x, pt.y]);
@@ -306,9 +498,25 @@ function RunnerDotOnPath({ runner }){
   const fill = `oklch(0.70 0.13 ${runner.hue})`;
   return (
     <g>
-      <circle cx={pos[0]} cy={pos[1]} r="3.5" fill={fill} stroke="var(--bg-elev)" strokeWidth="0.8" />
-      <text x={pos[0]} y={pos[1] + 1.2} fontSize="3" fontWeight="700" textAnchor="middle"
-            fill="var(--bg)" style={{fontFamily:"var(--font-display)"}}>{runner.initials}</text>
+      <circle
+        cx={pos[0]}
+        cy={pos[1]}
+        r="3.5"
+        fill={fill}
+        stroke="var(--bg-elev)"
+        strokeWidth="0.8"
+      />
+      <text
+        x={pos[0]}
+        y={pos[1] + 1.2}
+        fontSize="3"
+        fontWeight="700"
+        textAnchor="middle"
+        fill="var(--bg)"
+        style={{ fontFamily: 'var(--font-display)' }}
+      >
+        {runner.initials}
+      </text>
     </g>
   );
 }

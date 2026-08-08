@@ -14,7 +14,7 @@
     "db:local:url": "../../scripts/local-postgres.sh url last-loop-lepin",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "biome check",
+    "lint": "cd ../.. && eslint apps/last-loop-lepin --cache --cache-location node_modules/.cache/eslint",
     "typecheck": "tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit",
     "test:core": "pnpm --filter @borso/infra run build && vitest run --project core",
     "test": "DATABASE_URL=$(../../scripts/local-postgres.sh start last-loop-lepin) vitest run --project back-e2e",

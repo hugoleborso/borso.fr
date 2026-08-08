@@ -2,11 +2,11 @@
 
 The skill emits one ADR per `/adr` invocation, written to
 `docs/adr/<NNNN>-<kebab-slug>.md` using the layout below. The standard at
-[`standard.md`](./standard.md) explains *why* each section is mandatory; this
-template gives the *what*.
+[`standard.md`](./standard.md) explains _why_ each section is mandatory; this
+template gives the _what_.
 
 Placeholders are `{{double-braces}}`. Substitute everything; leave a section
-empty only if the standard explicitly says it's optional (only *Revisions*
+empty only if the standard explicitly says it's optional (only _Revisions_
 qualifies).
 
 ---
@@ -69,18 +69,18 @@ below.}}
 
 ## Evaluation rubric
 
-| Criterion | Weight | Why it matters |
-|---|---|---|
-| {{criterion 1}} | high \| medium \| low | {{one-line tie to the spec, the
-operational reality, or a prior ADR / Dantotsu}} |
-| {{criterion 2}} | high \| medium \| low | {{...}} |
-| {{criterion 3}} | high \| medium \| low | {{...}} |
+| Criterion                                        | Weight                | Why it matters                  |
+| ------------------------------------------------ | --------------------- | ------------------------------- |
+| {{criterion 1}}                                  | high \| medium \| low | {{one-line tie to the spec, the |
+| operational reality, or a prior ADR / Dantotsu}} |
+| {{criterion 2}}                                  | high \| medium \| low | {{...}}                         |
+| {{criterion 3}}                                  | high \| medium \| low | {{...}}                         |
 
-|             | Option A | Option B | Option C |
-|---|---|---|---|
+|                 | Option A            | Option B            | Option C  |
+| --------------- | ------------------- | ------------------- | --------- |
 | {{criterion 1}} | ✓ {{justification}} | ✗ {{justification}} | ✓ {{...}} |
-| {{criterion 2}} | ✓ {{...}} | ✓ {{...}} | ✗ {{...}} |
-| {{criterion 3}} | ✓ {{...}} | ✗ {{...}} | ✓ {{...}} |
+| {{criterion 2}} | ✓ {{...}}           | ✓ {{...}}           | ✗ {{...}} |
+| {{criterion 3}} | ✓ {{...}}           | ✗ {{...}}           | ✓ {{...}} |
 
 ## Implementation pointers
 

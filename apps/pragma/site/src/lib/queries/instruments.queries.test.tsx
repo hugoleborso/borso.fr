@@ -19,7 +19,7 @@ import {
 } from './test-helpers';
 
 interface OptimisticListShape {
-  instruments: Array<{ id: string; name: string; isHarmonic: boolean }>;
+  instruments: { id: string; name: string; isHarmonic: boolean }[];
 }
 
 interface ProbeProps<Mutate> {

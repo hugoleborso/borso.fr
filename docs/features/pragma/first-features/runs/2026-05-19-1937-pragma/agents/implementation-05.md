@@ -102,7 +102,7 @@ next:
   v4 syntax by default**: lost ~5 minutes hunting for the right
   config key. Worth a Dantotsu entry under `docs/dantotsus/` once
   the kaizen sweep runs: the symptom is `× Tailwind-specific syntax
-  is disabled`, the fix is the `css.parser.tailwindDirectives: true`
+is disabled`, the fix is the `css.parser.tailwindDirectives: true`
   flip.
 
 - **Knip + CSS-only imports**: knip's static analyser doesn't see

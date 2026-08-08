@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { makeEdition, makeRunner } from '../../../test/fixtures';
 import { insertEdition } from '../edition/edition.repository';
 import { insertRunner } from '../runner/runner.repository';
@@ -23,7 +23,7 @@ describe('punch.service', () => {
   });
 
   beforeEach(async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await truncateAllTables(database);
     await insertEdition(database, makeEdition({ status: 'live' }));
     await insertRunner(database, makeRunner('alice'));
@@ -31,7 +31,7 @@ describe('punch.service', () => {
 
   it('rejects punches before the race starts', async () => {
     vi.setSystemTime(new Date('2026-09-19T05:30:00+02:00'));
-    const database = freshDatabase();
+    const database = testDatabase();
     await expect(
       registerPunch(database, { editionSlug: 'lepin-2026', runnerSlug: 'alice' }, new Date()),
     ).rejects.toBeInstanceOf(PunchRejectedError);
@@ -39,7 +39,7 @@ describe('punch.service', () => {
 
   it('persists a valid punch with loop_index 1', async () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
-    const database = freshDatabase();
+    const database = testDatabase();
     const punch = await registerPunch(
       database,
       { editionSlug: 'lepin-2026', runnerSlug: 'alice' },
@@ -51,7 +51,7 @@ describe('punch.service', () => {
 
   it('throws PunchConflictError on second punch for the same loop', async () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
-    const database = freshDatabase();
+    const database = testDatabase();
     await registerPunch(database, { editionSlug: 'lepin-2026', runnerSlug: 'alice' }, new Date());
     await expect(
       registerPunch(database, { editionSlug: 'lepin-2026', runnerSlug: 'alice' }, new Date()),
@@ -60,7 +60,7 @@ describe('punch.service', () => {
 
   it('void + correct: marks the rows accordingly', async () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
-    const database = freshDatabase();
+    const database = testDatabase();
     const punch = await registerPunch(
       database,
       { editionSlug: 'lepin-2026', runnerSlug: 'alice' },
@@ -78,7 +78,7 @@ describe('punch.service', () => {
   });
 
   it('records a manual DNF', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     const dnf = await recordManualDnf(
       database,
       { editionSlug: 'lepin-2026', runnerSlug: 'alice', outAtLoop: 1, reason: 'manual' },
@@ -96,7 +96,7 @@ describe('punch.service', () => {
 
   it('self-punch: persists a punch with source=self and the metadata fields', async () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
-    const database = freshDatabase();
+    const database = testDatabase();
     const punch = await registerSelfPunch(
       database,
       {
@@ -121,7 +121,7 @@ describe('punch.service', () => {
 
   it('self-punch: records distance metadata when coordinates are provided (no longer used for rejection)', async () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
-    const database = freshDatabase();
+    const database = testDatabase();
     const punch = await registerSelfPunch(
       database,
       {
@@ -140,7 +140,7 @@ describe('punch.service', () => {
 
   it('self-punch: accepts null coordinates (geoloc removed from the client flow)', async () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
-    const database = freshDatabase();
+    const database = testDatabase();
     const punch = await registerSelfPunch(
       database,
       {
@@ -160,7 +160,7 @@ describe('punch.service', () => {
 
   it('self-punch: rejects before the race starts', async () => {
     vi.setSystemTime(new Date('2026-09-19T05:30:00+02:00'));
-    const database = freshDatabase();
+    const database = testDatabase();
     await expect(
       registerSelfPunch(
         database,
@@ -179,7 +179,7 @@ describe('punch.service', () => {
 
   it('self-punch: conflicts with an existing admin punch on the same loop', async () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
-    const database = freshDatabase();
+    const database = testDatabase();
     await registerPunch(database, { editionSlug: 'lepin-2026', runnerSlug: 'alice' }, new Date());
     await expect(
       registerSelfPunch(

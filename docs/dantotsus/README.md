@@ -47,15 +47,15 @@ output.
 
 ## Reading the frontmatter
 
-| Field | Meaning |
-| --- | --- |
-| `introduced-at` | Stage where the defect was *born*. `conception` (design wrong), `implementation` (design right, code didn't match), `self-validation` (developer's checks didn't catch), `code-review` (reviewer didn't catch). |
-| `detected-at` | Where the defect was *finally* caught. Walk the defence-in-depth ladder: typing → linter → local → ci → review → qa → staging → production → operator-deploy. |
-| `severity` | User impact at the time of detection. `low`: nobody noticed. `medium`: degraded UX, recoverable. `high`: user-blocking or data-integrity. |
-| `eradication-level` | Level reached on the ladder above. Should be 1 if at all possible. |
-| `fix-commits` | The actual commits that landed the eradication — not the original countermeasure. Always linkable. |
-| `time-to-detect` | Wall-clock from "lives in main" to "we noticed". |
-| `tags` | Topics for grep / future skill matching. |
+| Field               | Meaning                                                                                                                                                                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `introduced-at`     | Stage where the defect was _born_. `conception` (design wrong), `implementation` (design right, code didn't match), `self-validation` (developer's checks didn't catch), `code-review` (reviewer didn't catch). |
+| `detected-at`       | Where the defect was _finally_ caught. Walk the defence-in-depth ladder: typing → linter → local → ci → review → qa → staging → production → operator-deploy.                                                   |
+| `severity`          | User impact at the time of detection. `low`: nobody noticed. `medium`: degraded UX, recoverable. `high`: user-blocking or data-integrity.                                                                       |
+| `eradication-level` | Level reached on the ladder above. Should be 1 if at all possible.                                                                                                                                              |
+| `fix-commits`       | The actual commits that landed the eradication — not the original countermeasure. Always linkable.                                                                                                              |
+| `time-to-detect`    | Wall-clock from "lives in main" to "we noticed".                                                                                                                                                                |
+| `tags`              | Topics for grep / future skill matching.                                                                                                                                                                        |
 
 Patterns to watch as the corpus grows:
 

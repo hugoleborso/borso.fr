@@ -22,10 +22,10 @@ const GALAXY_PARAMS = {
 const mountElement = document.getElementById('bg-canvas-wrap');
 if (!mountElement) throw new Error('#bg-canvas-wrap not found');
 
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isPrefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 createRoot(mountElement).render(
   <StrictMode>
-    <Galaxy {...GALAXY_PARAMS} disableAnimation={prefersReducedMotion} />
+    <Galaxy {...GALAXY_PARAMS} disableAnimation={isPrefersReducedMotion} />
   </StrictMode>,
 );

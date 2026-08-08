@@ -97,7 +97,7 @@ export function computeBookState(
   const uniqueVariation = uniqueBy(matchingCandidates, (candidate) => candidate.variation);
   const uniqueLine = uniqueBy(matchingCandidates, (candidate) => candidate.line);
 
-  const atLineEnd =
+  const isAtLineEnd =
     matchingCandidates.length > 0 &&
     matchingCandidates.every((candidate) => candidate.line.movesUci.length === playedMoves.length);
 
@@ -108,7 +108,7 @@ export function computeBookState(
     uniqueOpening,
     uniqueVariation,
     uniqueLine,
-    atLineEnd,
+    atLineEnd: isAtLineEnd,
   };
 }
 

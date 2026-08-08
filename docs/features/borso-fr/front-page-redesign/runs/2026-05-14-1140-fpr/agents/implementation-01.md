@@ -23,26 +23,42 @@ summary: |
     drawArrays synchrone puis early-return (pas de rAF, pas de listeners
     pointer). Vendored locals (cw/ch/U) renommés (pixelWidth/pixelHeight/
     uniforms) pour lisibilité, GLSL upstream verbatim.
-  
+
   Knip mis à jour : "ignore": ["docs/**"] ajouté à knip.json racine — les
   fichiers de référence sous spec/design-*.js{x} ne sont pas du code source.
-  
+
   DÉRIVE SPEC/RÉALITÉ DOCUMENTÉE : la spec disait "garder plain HTML, pas
   de build pipeline" — réalité : apps/borso-fr est déjà sur Vite. Aucun
   impact sur le code livré (vanilla HTML/CSS/JS, Vite les consomme tels
   quels). React/react-dom conservés (utilisés par art/mondrian).
-  
+
   Biome ignore ajouté pour gl.useProgram(program) — false positive de la
   règle useHookAtTopLevel qui matche le pattern use*. Le WebGL useProgram
   n'est pas un hook React.
 
 pre_flight_gates:
-  - { gate: "pnpm install", status: PASS, note: "via SessionStart hook" }
-  - { gate: "pnpm --filter @borso-app/borso-fr typecheck", status: PASS, note: "après pnpm --filter @borso/infra build pour produire les types CDK" }
-  - { gate: "pnpm exec biome lint apps/borso-fr/site/*", status: PASS, note: "1 biome-ignore ajouté pour gl.useProgram (false positive useHookAtTopLevel)" }
-  - { gate: "pnpm --filter @borso-app/borso-fr build", status: PASS, note: "vite build, dist/index.html + assets générés ; mondrian build inchangé" }
-  - { gate: "pnpm exec knip", status: PASS, note: "knip.json ignore docs/** ajouté" }
-  - { gate: "self-screenshot via agent-browser", status: UNVERIFIABLE, note: "agent-browser install échoue sur le certificat googlechromelabs.github.io dans cet environnement ; pas de Chrome local. Le dev server répond correctement (curl 200 sur /, /style.css, /script.js, /shader-bg.js) et le HTML servi est conforme à la spec, mais aucune capture pixel n'a été faite. La vérification visuelle relève de /visual-validation (orchestrator stage suivant) qui tournera en isolation avec son propre browser." }
+  - { gate: 'pnpm install', status: PASS, note: 'via SessionStart hook' }
+  - {
+      gate: 'pnpm --filter @borso-app/borso-fr typecheck',
+      status: PASS,
+      note: 'après pnpm --filter @borso/infra build pour produire les types CDK',
+    }
+  - {
+      gate: 'pnpm exec biome lint apps/borso-fr/site/*',
+      status: PASS,
+      note: '1 biome-ignore ajouté pour gl.useProgram (false positive useHookAtTopLevel)',
+    }
+  - {
+      gate: 'pnpm --filter @borso-app/borso-fr build',
+      status: PASS,
+      note: 'vite build, dist/index.html + assets générés ; mondrian build inchangé',
+    }
+  - { gate: 'pnpm exec knip', status: PASS, note: 'knip.json ignore docs/** ajouté' }
+  - {
+      gate: 'self-screenshot via agent-browser',
+      status: UNVERIFIABLE,
+      note: "agent-browser install échoue sur le certificat googlechromelabs.github.io dans cet environnement ; pas de Chrome local. Le dev server répond correctement (curl 200 sur /, /style.css, /script.js, /shader-bg.js) et le HTML servi est conforme à la spec, mais aucune capture pixel n'a été faite. La vérification visuelle relève de /visual-validation (orchestrator stage suivant) qui tournera en isolation avec son propre browser.",
+    }
 
 artifacts:
   - apps/borso-fr/site/index.html

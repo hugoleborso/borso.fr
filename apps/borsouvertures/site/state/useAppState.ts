@@ -2,9 +2,13 @@ import { useSyncExternalStore } from 'react';
 import { ALL_KEY, type Selection } from '@/openings/selectors.utils';
 import type { Opening } from '@/openings/types';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
-import type { Mode, PlayScope, Side, TreeVisualizationMode, View } from './persistedState.utils';
 import {
+  type Mode,
   type PersistedState,
+  type PlayScope,
+  type Side,
+  type TreeVisualizationMode,
+  type View,
   parsePersistedState,
   stringifyPersistedState,
 } from './persistedState.utils';

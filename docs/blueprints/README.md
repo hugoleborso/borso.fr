@@ -14,11 +14,11 @@ standard constrains code that already exists and a blueprint starts code that
 does not exist yet. Follow a blueprint once, and follow the standards forever
 after.
 
-| Blueprint | Use it when |
-|-----------|-------------|
-| [New application](./new-application.md) | You are adding a new `apps/<slug>` folder |
-| [React front end](./react-frontend.md) | You are building the `site/` half of an application |
-| [Hono back end](./hono-backend.md) | You are building the `api/` half of an application |
+| Blueprint                                               | Use it when                                          |
+| ------------------------------------------------------- | ---------------------------------------------------- |
+| [New application](./new-application.md)                 | You are adding a new `apps/<slug>` folder            |
+| [React front end](./react-frontend.md)                  | You are building the `site/` half of an application  |
+| [Hono back end](./hono-backend.md)                      | You are building the `api/` half of an application   |
 | [Agentic browser testing](./agentic-browser-testing.md) | You want a browser to exercise a running application |
 
 ## Keeping a blueprint honest

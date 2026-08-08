@@ -13,12 +13,7 @@ import { recordAnalyticsEvent } from '../observability/sentry';
 const RACE_CACHE_KEY = 'edition:current';
 
 type LoginState =
-  | 'idle'
-  | 'submitting'
-  | 'authenticated'
-  | 'denied'
-  | 'rate-limited'
-  | 'unknown-error';
+  'idle' | 'submitting' | 'authenticated' | 'denied' | 'rate-limited' | 'unknown-error';
 
 function PinForm({ onAuthenticated }: { onAuthenticated: () => void }) {
   const [pin, setPin] = useState('');
@@ -68,7 +63,7 @@ function PinForm({ onAuthenticated }: { onAuthenticated: () => void }) {
             minLength={4}
           />
         </div>
-        {message !== null ? <div className="error-text">{message}</div> : null}
+        {message === null ? null : <div className="error-text">{message}</div>}
         <button className="btn btn-primary" type="submit" disabled={state === 'submitting'}>
           {state === 'submitting' ? 'Connexion…' : 'Entrer'}
         </button>
@@ -146,7 +141,7 @@ function PunchPanel({
       await apiClient.adminRegisterPunch({ editionSlug: edition.slug, runnerSlug: runner.slug });
       recordAnalyticsEvent('loop_punched', { editionSlug: edition.slug, runnerSlug: runner.slug });
       onMutated();
-    } catch (caught) {
+    } catch (error_) {
       // Roll the optimistic punch back so the tile flips out of the
       // "punched" state and the orga sees the error inline.
       setOptimisticPunches((previous) => {
@@ -154,10 +149,10 @@ function PunchPanel({
         next.delete(runner.slug);
         return next;
       });
-      if (caught instanceof ApiError && caught.status === 409) {
+      if (error_ instanceof ApiError && error_.status === 409) {
         setError(`${runner.displayName} a déjà pointé pour cette boucle.`);
       } else {
-        setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+        setError(error_ instanceof Error ? error_.message : 'Erreur inconnue.');
       }
     } finally {
       setBusy(null);
@@ -176,11 +171,11 @@ function PunchPanel({
         </span>
       </div>
       <div className="card-body" style={{ padding: 0 }}>
-        {error !== null ? (
+        {error === null ? null : (
           <div className="error-text" style={{ padding: 'var(--d-3) var(--d-5)' }}>
             {error}
           </div>
-        ) : null}
+        )}
         {inRace.length === 0 ? (
           <div className="muted" style={{ padding: 'var(--d-5)' }}>
             Personne en course.
@@ -189,14 +184,14 @@ function PunchPanel({
           <div className="punch-grid">
             {inRace.map((entry) => {
               const avatar = initialsAvatar(entry.runner.displayName);
-              const serverPunched =
+              const isServerPunched =
                 entry.status.kind === 'in-race' && entry.status.lastLoop >= currentLoopIndex;
-              const punched = serverPunched || optimisticPunches.has(entry.runner.slug);
-              const late = !punched && progressInLoop > 0.85;
+              const isPunched = isServerPunched || optimisticPunches.has(entry.runner.slug);
+              const isLate = !isPunched && progressInLoop > 0.85;
               return (
                 <button
                   type="button"
-                  className={`punch-tile${punched ? ' punched' : ''}${late ? ' late' : ''}`}
+                  className={`punch-tile${isPunched ? ' punched' : ''}${isLate ? ' late' : ''}`}
                   key={entry.runner.slug}
                   onClick={() => void handlePunch(entry.runner)}
                   disabled={busy !== null}
@@ -220,7 +215,7 @@ function PunchPanel({
                   </span>
                   <span className="punch-bottom">
                     <span className="punch-meta">
-                      {punched
+                      {isPunched
                         ? '✓ Pointé·e'
                         : entry.status.kind === 'in-race'
                           ? `${entry.status.lastLoop} boucle${entry.status.lastLoop > 1 ? 's' : ''}`
@@ -262,8 +257,8 @@ function FinishRacePrompt({
       await apiClient.adminTransitionEditionStatus(edition.slug, 'finished');
       invalidateResource('edition:current');
       invalidateResource('editions:all');
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : 'Erreur inconnue.');
     } finally {
       setBusy(false);
     }
@@ -277,7 +272,7 @@ function FinishRacePrompt({
           {totalRunners} coureur{totalRunners > 1 ? 's' : ''} en DNF. La course est terminée dans
           les faits.
         </small>
-        {error !== null ? <div className="error-text">{error}</div> : null}
+        {error === null ? null : <div className="error-text">{error}</div>}
       </div>
       <button
         type="button"
@@ -332,12 +327,12 @@ export function AdminPage() {
   }
 
   const inRaceCount = ranked.filter((entry) => entry.status.kind === 'in-race').length;
-  const showFinishPrompt =
+  const isShowFinishPrompt =
     edition !== null && edition.status === 'live' && ranked.length > 0 && inRaceCount === 0;
 
   return (
     <div className="main col">
-      {showFinishPrompt && edition !== null ? (
+      {isShowFinishPrompt && edition !== null ? (
         <FinishRacePrompt edition={edition} totalRunners={ranked.length} />
       ) : null}
       <nav className="nav" style={{ marginLeft: 0 }}>

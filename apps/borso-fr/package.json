@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "biome check",
+    "lint": "cd ../.. && eslint apps/borso-fr --cache --cache-location node_modules/.cache/eslint",
     "typecheck": "tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",

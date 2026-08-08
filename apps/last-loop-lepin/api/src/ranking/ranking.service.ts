@@ -15,7 +15,7 @@ export type RankedRunnerWithDto = Omit<RankedRunner, 'runner'> & { readonly runn
 
 export interface SpectatorStandings {
   readonly standings: Omit<Standings, 'ranked'> & {
-    readonly ranked: ReadonlyArray<RankedRunnerWithDto>;
+    readonly ranked: readonly RankedRunnerWithDto[];
   };
   readonly mostRecentCorrectionAt: string | null;
 }
@@ -44,7 +44,7 @@ export async function getSpectatorStandings(
     getPunchesForEdition(database, editionSlug),
   ]);
   const cdnHost = readPhotosCdnHost();
-  const rankedWithDto: ReadonlyArray<RankedRunnerWithDto> = standings.ranked.map((entry) => ({
+  const rankedWithDto: readonly RankedRunnerWithDto[] = standings.ranked.map((entry) => ({
     ...entry,
     runner: toRunnerDto(entry.runner, cdnHost),
   }));

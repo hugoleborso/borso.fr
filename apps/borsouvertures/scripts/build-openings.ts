@@ -161,7 +161,7 @@ async function buildOpenings(): Promise<void> {
   );
 }
 
-buildOpenings().catch((err) => {
-  console.error(err);
+buildOpenings().catch((error) => {
+  console.error(error);
   process.exit(1);
 });

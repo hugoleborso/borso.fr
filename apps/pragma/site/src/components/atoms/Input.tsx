@@ -26,8 +26,7 @@ export const inputVariants = cva(
 type InputVariantProps = VariantProps<typeof inputVariants>;
 
 export interface InputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>,
-    InputVariantProps {}
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>, InputVariantProps {}
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, size, ...rest }, ref) => (

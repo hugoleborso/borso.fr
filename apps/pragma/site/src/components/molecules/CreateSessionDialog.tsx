@@ -210,11 +210,11 @@ export function CreateSessionDialog({
               />
             )}
           </concertForm.Field>
-          {submitError !== null ? (
+          {submitError === null ? null : (
             <p className="text-danger text-sm" role="alert">
               {submitError}
             </p>
-          ) : null}
+          )}
           <div className="flex gap-2 mt-2 justify-end">
             <Button type="button" variant="ghost" onClick={onClose}>
               {t('common.cancel')}
@@ -281,11 +281,11 @@ export function CreateSessionDialog({
               </select>
             )}
           </practiceForm.Field>
-          {submitError !== null ? (
+          {submitError === null ? null : (
             <p className="text-danger text-sm" role="alert">
               {submitError}
             </p>
-          ) : null}
+          )}
           <div className="flex gap-2 mt-2 justify-end">
             <Button type="button" variant="ghost" onClick={onClose}>
               {t('common.cancel')}

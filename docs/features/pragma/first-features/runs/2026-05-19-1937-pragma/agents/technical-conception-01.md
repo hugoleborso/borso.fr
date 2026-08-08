@@ -38,8 +38,8 @@ next:
 This is a fresh workspace, no carried-over deps to question. Three observations:
 
 1. **`design-bundle/` is a vendor surface that must NOT be imported by production code.** The spec mandates "re-create them in production code"; the plan codifies this as a knip-excluded archive path and a `grep -rn design-bundle apps/pragma/` self-check. If a future commit silently imports `design-bundle/data.js` to bootstrap fixtures, the Pattern Coherence rule is violated. Flagged as Risk row 13 ("low" — `grep` is the detection).
-2. **`react-i18next` is a new vendor surface to the repo.** No other app currently ships i18n (borso-fr and borsouvertures are FR-only static; last-loop-lepin is FR-only). Pragma introduces the pattern; the cost is justified by the *Code language* + *User-facing language* Q.O.D. rows (English code + FR/EN UI for portfolio reviewers). If a future app needs i18n, this is the precedent.
-3. **PWA service-worker pattern is also new to the repo.** Hand-written rather than via Workbox to keep the dep tree small and the cache-key logic auditable. Flagged in *Missing technical skills* (`/pwa-service-worker`) so the next app needing offline picks up a documented pattern instead of re-deriving it.
+2. **`react-i18next` is a new vendor surface to the repo.** No other app currently ships i18n (borso-fr and borsouvertures are FR-only static; last-loop-lepin is FR-only). Pragma introduces the pattern; the cost is justified by the _Code language_ + _User-facing language_ Q.O.D. rows (English code + FR/EN UI for portfolio reviewers). If a future app needs i18n, this is the precedent.
+3. **PWA service-worker pattern is also new to the repo.** Hand-written rather than via Workbox to keep the dep tree small and the cache-key logic auditable. Flagged in _Missing technical skills_ (`/pwa-service-worker`) so the next app needing offline picks up a documented pattern instead of re-deriving it.
 
 ## What is shaky
 

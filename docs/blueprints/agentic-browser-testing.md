@@ -42,12 +42,12 @@ failures.
 
 The device profiles we use:
 
-| Profile | Width | Height | Pixel ratio | Pointer |
-|---------|-------|--------|-------------|---------|
-| iPhone SE | 375 | 667 | 2 | coarse |
-| iPhone 15 Pro | 393 | 852 | 3 | coarse |
-| Pixel 8 | 412 | 915 | 2.6 | coarse |
-| Desktop | 1280 | 800 | 1 | fine |
+| Profile       | Width | Height | Pixel ratio | Pointer |
+| ------------- | ----- | ------ | ----------- | ------- |
+| iPhone SE     | 375   | 667    | 2           | coarse  |
+| iPhone 15 Pro | 393   | 852    | 3           | coarse  |
+| Pixel 8       | 412   | 915    | 2.6         | coarse  |
+| Desktop       | 1280  | 800    | 1           | fine    |
 
 ## Traps we have already hit
 

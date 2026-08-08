@@ -3,8 +3,8 @@ date: 2026-06-05
 introduced-at: conception
 detected-at: review
 severity: medium
-related-pr: "#26"
-fix-pr: "#30"
+related-pr: '#26'
+fix-pr: '#30'
 fix-commits: [0618e8b]
 eradication-level: 2
 tags: [orchestrator, skill, adr, conception-pivot]
@@ -14,22 +14,22 @@ tags: [orchestrator, skill, adr, conception-pivot]
 
 ## Symptom
 
-Two opposite failures in one run, both about *where the human/agent
-boundary sits*:
+Two opposite failures in one run, both about _where the human/agent
+boundary sits_:
 
 1. **Too timid (early):** round 1 silently re-scoped the ratified spec
    to a "foundation slice" without asking; round 3 surfaced an
    `AskUserQuestion` to triage which FAIL rows to fix — a tech-lead
-   mechanic, not a product decision. Hugo: *"I wanted you to work on
+   mechanic, not a product decision. Hugo: _"I wanted you to work on
    this during the night, but now I have to manage concurrent Claude
-   sessions."*
+   sessions."_
 2. **Over-eager (later), after the "have agency" correction:** round 16
    was dispatched entirely on the orchestrator's judgement to integrate
    a third-party service (GetSongBPM), add a CDK env var, require a new
    GitHub repo secret, and mandate a permanent attribution link in the
-   production UI — all inferred from Hugo's casual *"ce serait cool de
-   remplir autant d'info que possible"*. Hugo: *"Tu prends tellement de
-   décisions à ma place c'est pas du tout ce qui était convenu."* The
+   production UI — all inferred from Hugo's casual _"ce serait cool de
+   remplir autant d'info que possible"_. Hugo: _"Tu prends tellement de
+   décisions à ma place c'est pas du tout ce qui était convenu."_ The
    work was reverted.
 
 ## Root-cause chain
@@ -45,12 +45,12 @@ boundary sits*:
    of which is a "stop and surface" signal — yet none fired because the
    triggers weren't wired to the dispatch decision.
 3. **Why no guardrail?** The orchestrator standard's
-   *Decisions stay with the orchestrator* section listed what the
-   orchestrator *may* decide (fix ordering, retry vs escalate, scope of
+   _Decisions stay with the orchestrator_ section listed what the
+   orchestrator _may_ decide (fix ordering, retry vs escalate, scope of
    a fix round) but had no symmetric **NOT-orchestrator** list.
 
 **Root cause:** thought "have agency" meant "decide product scope too",
-actually it meant "drive the *ratified* spec to done without
+actually it meant "drive the _ratified_ spec to done without
 checkpoints" — execution mechanics are the orchestrator's; product
 surface and ADR-triggering changes are the human's.
 
@@ -61,7 +61,7 @@ surface and ADR-triggering changes are the human's.
   the shipped result.
 - **Spec / ADR gate:** the four ADR triggers existed in the spec
   template but weren't consulted at dispatch time — they only gate
-  *writing an ADR*, not *deciding to add a dependency*.
+  _writing an ADR_, not _deciding to add a dependency_.
 
 ## Countermeasure
 
@@ -77,7 +77,7 @@ surface and ADR-triggering changes are the human's.
 **Reference:** [PR #30](https://github.com/hugoleborso/borso.fr/pull/30) · commit `docs(meta): orchestrator decision-boundary + ADR-trigger stop list`
 
 **The actual fix:** extended `.claude/skills/tech-lead-orchestrator/standard.md`'s
-*Decisions stay with the orchestrator* section with a **NOT
+_Decisions stay with the orchestrator_ section with a **NOT
 orchestrator** counterpart naming: new third-party dependency,
 secret/credential management, UI obligations to a third party
 (attribution, telemetry), schema columns motivated by an external
@@ -85,7 +85,7 @@ service, and any feature scope beyond the ratified spec. Each is a
 stop-and-surface. The same edit states the positive boundary: once the
 human ratifies the spec, the orchestrator drives to "PR opens with
 visual evidence" without per-FAIL-row checkpoints, and escalates on
-*lack of progress* (stuck loop / net-negative regression / genuine
+_lack of progress_ (stuck loop / net-negative regression / genuine
 product ambiguity), not on a small retry count.
 
 **Sibling defects swept:** the "retry cap of 3 → premature escalation"

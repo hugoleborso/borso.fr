@@ -53,15 +53,15 @@ export function PracticeReadView({
           </option>
         ))}
       </select>
-      {preparedConcert !== null ? (
+      {preparedConcert === null ? null : (
         <p className="text-sm text-ink-500 mt-2">
           {t('sessions.preparesConcert')}{' '}
           <Link to={`/sessions/${preparedConcert.id}`} className="text-accent hover:underline">
             {formatSessionDate(preparedConcert.date, language)}
-            {preparedConcert.venue !== null ? ` — ${preparedConcert.venue}` : ''}
+            {preparedConcert.venue === null ? '' : ` — ${preparedConcert.venue}`}
           </Link>
         </p>
-      ) : null}
+      )}
     </Card>
   );
 }

@@ -28,10 +28,10 @@ function synth(props: {
   new DsqlSchema(stack, 'Db', {
     app: 'test-app',
     stage: props.stage,
-    ...(props.prNumber !== undefined ? { prNumber: props.prNumber } : {}),
+    ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
     migrationsPath: MIGRATIONS,
     cluster,
-    ...(props.cloneFromSchema !== undefined ? { cloneFromSchema: props.cloneFromSchema } : {}),
+    ...(props.cloneFromSchema === undefined ? {} : { cloneFromSchema: props.cloneFromSchema }),
   });
   return Template.fromStack(stack);
 }

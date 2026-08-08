@@ -44,14 +44,14 @@ Le tech lead orchestrator analysera la spec en stage `adrs`. Pré-shortlist
 
 1. **Vendoring du shader WebGL (react-bits, MIT) en local au lieu de npm**
    — trigger 1 (multiple alternatives : npm vs vendored vs from-scratch)
-   + trigger 4 (looks-standard : OGL/react-bits est un pattern public).
+   - trigger 4 (looks-standard : OGL/react-bits est un pattern public).
 2. **Pas de build pipeline (vanilla HTML / CSS / JS conservé)** — trigger 3
-   (divergence : la convention CLAUDE.md *Layout* dit `cd apps/<x> && pnpm
-   dev` sans préciser de build ; on confirme ici qu'on reste plain HTML
+   (divergence : la convention CLAUDE.md _Layout_ dit `cd apps/<x> && pnpm
+dev` sans préciser de build ; on confirme ici qu'on reste plain HTML
    malgré l'ajout d'un shader).
 3. **Pas de test runner ajouté à apps/borso-fr** — trigger 3 (divergence :
    le repo applique "*.utils.ts à 100% coverage" mais cette feature
-   n'introduit aucune util pure). Pourrait au contraire être un *non*-ADR
+   n'introduit aucune util pure). Pourrait au contraire être un _non_-ADR
    si on considère que c'est juste une application directe de la règle ;
    à juger.
 

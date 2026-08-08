@@ -12,31 +12,31 @@ Delete the block-quoted prompt under each heading once the section is written.
 
 ## How each spec decision becomes code
 
-> *Every Q.O.D. number and every "Changes" entry from the spec maps to a row. Out-of-scope items get a row with `Where it lands = (out of scope)` so they are not silently dropped.*
+> _Every Q.O.D. number and every "Changes" entry from the spec maps to a row. Out-of-scope items get a row with `Where it lands = (out of scope)` so they are not silently dropped._
 
 | Spec ref | Decision | Where it lands | Self-check |
-|---|---|---|---|
-| Q1 |  |  |  |
+| -------- | -------- | -------------- | ---------- |
+| Q1       |          |                |            |
 
 ## Mount-time contract
 
-> *Required if the feature mirrors React state (or any client-side state) to an external system on first paint — URL, `localStorage`, `document.title`, focus management, analytics events. Each mirror is a discrete assertion the validators check explicitly: an unlisted mirror is invisible to `/technical-validation`, and any defect in it lives until `/visual-validation` catches it the hard way. Skip the section entirely (delete the heading) if no mount-time mirroring exists.*
+> _Required if the feature mirrors React state (or any client-side state) to an external system on first paint — URL, `localStorage`, `document.title`, focus management, analytics events. Each mirror is a discrete assertion the validators check explicitly: an unlisted mirror is invisible to `/technical-validation`, and any defect in it lives until `/visual-validation` catches it the hard way. Skip the section entirely (delete the heading) if no mount-time mirroring exists._
 
-| State | External system | Call | History mode | When |
-|---|---|---|---|---|
-|  |  | `history.replaceState` / `localStorage.setItem` / … | push / replace / N/A | initial render, before any user interaction |
+| State | External system | Call                                                | History mode         | When                                        |
+| ----- | --------------- | --------------------------------------------------- | -------------------- | ------------------------------------------- |
+|       |                 | `history.replaceState` / `localStorage.setItem` / … | push / replace / N/A | initial render, before any user interaction |
 
 ## Risk register
 
-> *Every risk that can ship needs a detection path. If a risk has no detection, escalate to the spec author — it's a Sentry blind spot.*
+> _Every risk that can ship needs a detection path. If a risk has no detection, escalate to the spec author — it's a Sentry blind spot._
 
-| Risk | Severity | Mitigation in plan | Detection if it slips |
-|---|---|---|---|
-|  | low / medium / high |  |  |
+| Risk | Severity            | Mitigation in plan | Detection if it slips |
+| ---- | ------------------- | ------------------ | --------------------- |
+|      | low / medium / high |                    |                       |
 
 ## Code-quality self-check
 
-> *Pulled from CLAUDE.md and the repo's biome / knip / commitlint config. Sub-skills (`/vite`, `/three-js`, …) extend this. An unchecked box blocks push.*
+> _Pulled from CLAUDE.md and the repo's biome / knip / commitlint config. Sub-skills (`/vite`, `/three-js`, …) extend this. An unchecked box blocks push._
 
 - [ ] `pnpm exec biome lint` clean (incl. type-assertion plugin: only `as const`, `as unknown`).
 - [ ] `pnpm typecheck` clean (`tsc --noEmit` in every workspace touched).
@@ -51,7 +51,7 @@ Delete the block-quoted prompt under each heading once the section is written.
 
 ## Pre-flight gates
 
-> *Numbered, reproducible, verifiable. Gates that need human judgement are listed as `human:`.*
+> _Numbered, reproducible, verifiable. Gates that need human judgement are listed as `human:`._
 
 1. `pnpm install`.
 2. `pnpm --filter <pkg> typecheck`.
@@ -63,12 +63,12 @@ Delete the block-quoted prompt under each heading once the section is written.
 
 ## Open questions / unknowns
 
-> *Ambiguities planning surfaced that the spec did not resolve. Sent back to the spec author. Implementation does not silently proceed past them.*
+> _Ambiguities planning surfaced that the spec did not resolve. Sent back to the spec author. Implementation does not silently proceed past them._
 
 -
 
 ## Missing technical skills
 
-> *Domains that would have benefited from a `.claude/skills/<name>/` skill but did not have one. Seed next iteration.*
+> _Domains that would have benefited from a `.claude/skills/<name>/` skill but did not have one. Seed next iteration._
 
 -

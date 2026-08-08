@@ -19,15 +19,15 @@ User asked for L-shaped knight arrows. I jumped to designing my own SVG
 overlay component (~120 lines + tests + math for square-to-pixel coordinates)
 and quoted three options:
 
-> *"A — Custom SVG overlay above the board (recommended). … B — Replace
+> _"A — Custom SVG overlay above the board (recommended). … B — Replace
 > `customArrows` entirely with my own SVG overlay. … C — Drop the L-arrow
-> attempt and use a square highlight instead."*
+> attempt and use a square highlight instead."_
 
 User pulled me back:
 
-> *"A if you manage to get uniformity, but I am surprised that you need
+> _"A if you manage to get uniformity, but I am surprised that you need
 > to create your own arrows. First, quickly research for the lib used here,
-> if correct arrows are available."*
+> if correct arrows are available."_
 
 Five minutes later the library docs revealed `react-chessboard@5.4.0`
 shipped this exact feature natively (PR #208, merged August 2025). The
@@ -38,16 +38,16 @@ version bump.
 
 1. **Why did I propose a custom build first?**
    Because the v4 API I had in hand (`Arrow = [Square, Square, color?]`)
-   couldn't express a knight L-shape. I extrapolated *"the lib can't do
-   this"* from *"the version we pin can't do this"*.
+   couldn't express a knight L-shape. I extrapolated _"the lib can't do
+   this"_ from _"the version we pin can't do this"_.
 2. **Why didn't I check the latest version?**
    Because the install was already working — the upgrade decision felt
    "out of scope" and the library wasn't on my mental shortlist of
    load-bearing surfaces to revisit.
 3. **Why isn't checking-upstream a habit?**
    No procedural prompt for it. The `/implementation` skill walks the plan
-   top-to-bottom; the plan never says *"before writing new code, check the
-   relevant library's latest release for this feature."*
+   top-to-bottom; the plan never says _"before writing new code, check the
+   relevant library's latest release for this feature."_
 4. **Why does it matter beyond this one row?**
    Same pattern bit the visual-validator session 1 (where I would have
    built a custom screenshot-byte-management helper before realising the
@@ -55,9 +55,9 @@ version bump.
    shows up across the PR — every reach for "I'll write this from scratch"
    on a vendor surface is suspect.
 
-**Root cause:** *thought* the pinned-version's API is the library's API;
-*actually* libraries ship features, and the gap between *what we have* and
-*what's available* is one `npm view <pkg> versions` call away. No
+**Root cause:** _thought_ the pinned-version's API is the library's API;
+_actually_ libraries ship features, and the gap between _what we have_ and
+_what's available_ is one `npm view <pkg> versions` call away. No
 procedural step in the implementation flow forces that call.
 
 ## Detection failure causes
@@ -65,13 +65,13 @@ procedural step in the implementation flow forces that call.
 - **Typing:** N/A — the typed API of v4.7.3 genuinely lacks the feature.
 - **Linter:** Can't reason about "is there a better library version?".
 - **Functional validation locally:** Validates the wrong-shape arrow; can't
-  surface the *missed-feature-upstream* defect.
+  surface the _missed-feature-upstream_ defect.
 - **CI:** Same.
 - **`/visual-validation`:** Would have FAILed the L-arrow row, but doesn't
   point at the library upgrade.
 - **`/technical-validation`:** Reviews the diff vs the plan, not vs the
   upstream library's release notes.
-- **Self-review:** *"It's a clan-only app, just write the SVG overlay"* —
+- **Self-review:** _"It's a clan-only app, just write the SVG overlay"_ —
   the absence of a procedural prompt to check upstream made the
   reinvent-it path look like the natural choice.
 
@@ -86,15 +86,15 @@ and absorbed the L-arrow + a year of other upstream fixes for free.
 **Type:** Procedural / detection rule in `/implementation` (level 4 —
 detection at the right step of the workflow). The matching "Pattern
 Coherence pass" already exists in `/technical-conception` for the
-*planning* stage; what was missing is the same discipline applied at
-*implementation* time when a new pattern is being written from scratch.
+_planning_ stage; what was missing is the same discipline applied at
+_implementation_ time when a new pattern is being written from scratch.
 
 **Reference:** [PR #9](https://github.com/hugoleborso/borso.fr/pulls?q=is%3Apr+head%3Aclaude%2Flessons-from-pr-8) ·
 this kaizen PR.
 
 **The actual fix:**
 
-```diff
+````diff
  # .claude/skills/implementation/SKILL.md
    "Failure modes to avoid" section
 + - **Reinventing what the library already does.** Before writing a new
@@ -108,9 +108,9 @@ this kaizen PR.
 +   feature you're about to build already ships, the right move is a
 +   version bump — not a custom util. Document the trade-off in the kaizen
 +   commit if a bump isn't viable (peer-dep conflict, etc.).
-```
+````
 
-Cross-link to the existing `/technical-conception` *Pattern Coherence*
+Cross-link to the existing `/technical-conception` _Pattern Coherence_
 pass — same anti-pattern at a different layer:
 
 ```diff
@@ -129,19 +129,19 @@ helper that does what react-chessboard / chess.js / vite-plugin-pwa /
 react-dnd already does."
 
 > **Update 2026-05-18 — extended to the kaizen layer.**
-> The same misconception fired again at *kaizen time* during the
-> PR #23 sweep: the agent classified two friction rows as *"ship a
-> Biome plugin (level 2)"* without first asking *"is there a library
-> that would delete the code hosting the bug (level 1)?"*. The
+> The same misconception fired again at _kaizen time_ during the
+> PR #23 sweep: the agent classified two friction rows as _"ship a
+> Biome plugin (level 2)"_ without first asking _"is there a library
+> that would delete the code hosting the bug (level 1)?"_. The
 > `/after-task-dantotsus` skill now carries a parallel rule —
-> Step 2c, *Library-search pass — before writing custom anything*.
+> Step 2c, _Library-search pass — before writing custom anything_.
 > The operator's quote that triggered the update:
 >
-> > *« Mais même si tanstack n'était pas installé, la bonne méthode
+> > _« Mais même si tanstack n'était pas installé, la bonne méthode
 > > ici serait de checker des libs, trouver tanstack, et décider ou
 > > non de l'installer suivant notre contexte. C'est génial de build
 > > nos plugins custom mais il faut aussi savoir réutiliser ce qui
-> > existe déjà. »*
+> > existe déjà. »_
 >
 > Same anti-pattern, three layers (planning, implementation, kaizen).
 > All three now have a procedural prompt.

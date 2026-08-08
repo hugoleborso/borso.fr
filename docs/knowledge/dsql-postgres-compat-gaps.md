@@ -152,9 +152,10 @@ SET SCHEMA
 ```
 
 Everything else is rejected at runtime:
+
 - `ADD COLUMN <type> NOT NULL` / `... DEFAULT <value>` / `... CHECK (...)`
   / `... UNIQUE` / `... PRIMARY KEY` / `... REFERENCES ...` — the
-  supported syntax for `ADD COLUMN` carries *no constraint clause*.
+  supported syntax for `ADD COLUMN` carries _no constraint clause_.
 - `ALTER COLUMN ... SET NOT NULL` / `... DROP NOT NULL`.
 - `ALTER COLUMN ... SET DEFAULT` / `... DROP DEFAULT`.
 - `ALTER COLUMN ... TYPE ...`.
@@ -179,7 +180,7 @@ on `CREATE TABLE` statements. For a column added by a later migration:
   value; read-side narrows `string | null → 'admin' | 'self'` via a
   small helper like `narrowPunchSource` in `punch.repository.ts`).
 - If a runtime default is needed on inserts that omit the column,
-  carry it in the *drizzle write-side* (the service or the repository),
+  carry it in the _drizzle write-side_ (the service or the repository),
   not in the SQL schema. Drop `.notNull()` and `.default('x')` from the
   drizzle column declaration — keeping them would (a) lie about the DB
   state and (b) make every future `drizzle-kit generate` emit an

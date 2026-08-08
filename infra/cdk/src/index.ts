@@ -31,8 +31,4 @@ export {
 export type { Stage } from './internal/naming.js';
 export type { GithubSubject, SubjectKind } from './internal/oidc.js';
 // Lower-level helpers needed by infra/shared/ (sibling workspace).
-export {
-  GITHUB_OIDC_ISSUER,
-  githubActionsPrincipal,
-  githubSubClaim,
-} from './internal/oidc.js';
+export { GITHUB_OIDC_ISSUER, githubActionsPrincipal, githubSubClaim } from './internal/oidc.js';

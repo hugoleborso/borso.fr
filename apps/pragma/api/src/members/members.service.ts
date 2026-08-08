@@ -69,9 +69,7 @@ export async function getMemberInstruments(
 }
 
 export type AssignInstrumentsResult =
-  | { kind: 'ok' }
-  | { kind: 'member-not-found' }
-  | { kind: 'instrument-not-found' };
+  { kind: 'ok' } | { kind: 'member-not-found' } | { kind: 'instrument-not-found' };
 
 export async function assignInstrumentsToMember(
   database: Database,
@@ -80,8 +78,8 @@ export async function assignInstrumentsToMember(
 ): Promise<AssignInstrumentsResult> {
   const member = await findMemberById(database, memberId);
   if (member === null) return { kind: 'member-not-found' };
-  const known = await instrumentsExist(database, instrumentIds);
-  if (!known) return { kind: 'instrument-not-found' };
+  const isKnown = await instrumentsExist(database, instrumentIds);
+  if (!isKnown) return { kind: 'instrument-not-found' };
   await replaceMemberInstruments(database, memberId, instrumentIds);
   return { kind: 'ok' };
 }

@@ -53,12 +53,10 @@ export function OpeningFlowSelector({
     [openings],
   );
 
-  const selectedOpening = !isPlay
-    ? openings.find((opening) => opening.id === openingId)
-    : undefined;
-  const selectedVariation = !isPlay
-    ? selectedOpening?.variations.find((variation) => variation.id === variationId)
-    : undefined;
+  const selectedOpening = isPlay ? undefined : openings.find((opening) => opening.id === openingId);
+  const selectedVariation = isPlay
+    ? undefined
+    : selectedOpening?.variations.find((variation) => variation.id === variationId);
 
   const openingsForVariations = isPlay
     ? playScope.openingIds.length > 0

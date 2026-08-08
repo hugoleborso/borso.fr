@@ -5,7 +5,7 @@ Two templates live here. The skill uses both.
 1. **Dispatch-brief template** — the self-contained prompt the skill passes to the `visual-validator` agent via the `Agent` tool. Substitute placeholders.
 2. **Report template** — the markdown layout the agent writes to `docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md`.
 
-The dedicated agent definition (with its own frontmatter, tools, and instructions) is at [`../../agents/visual-validator.md`](../../agents/visual-validator.md). The brief below is the *task* the agent receives — the agent's behaviour rules live in its definition, not here.
+The dedicated agent definition (with its own frontmatter, tools, and instructions) is at [`../../agents/visual-validator.md`](../../agents/visual-validator.md). The brief below is the _task_ the agent receives — the agent's behaviour rules live in its definition, not here.
 
 ---
 
@@ -43,7 +43,7 @@ sufficient; users see broken alt-text where icons / sprites / glyphs
 should be.
 ```
 
-The brief is intentionally short. The agent's standard, tooling rules, report format, and verdict semantics live in its definition file (`.claude/agents/visual-validator.md`). The brief only carries the *task-specific* paths.
+The brief is intentionally short. The agent's standard, tooling rules, report format, and verdict semantics live in its definition file (`.claude/agents/visual-validator.md`). The brief only carries the _task-specific_ paths.
 
 ---
 
@@ -61,13 +61,13 @@ The agent writes this at `docs/features/<app>/<slug>/validation/visual-validatio
 
 ## Assertions
 
-| # | From | Assertion | Action | Evidence | Verdict |
-|---|---|---|---|---|---|
-| 01 | Result | "<verbatim claim>" | <one-line action> | `./visual-validation-<timestamp>/01-default.png` or `URL = http://…?seed=DEADBEEF` | PASS / FAIL / UNVERIFIABLE |
+| #   | From   | Assertion          | Action            | Evidence                                                                           | Verdict                    |
+| --- | ------ | ------------------ | ----------------- | ---------------------------------------------------------------------------------- | -------------------------- |
+| 01  | Result | "<verbatim claim>" | <one-line action> | `./visual-validation-<timestamp>/01-default.png` or `URL = http://…?seed=DEADBEEF` | PASS / FAIL / UNVERIFIABLE |
 
 ## Notes
 
-> *One bullet per FAIL or UNVERIFIABLE row, with what was observed and what was missing. PASS rows do not need a note.*
+> _One bullet per FAIL or UNVERIFIABLE row, with what was observed and what was missing. PASS rows do not need a note._
 
 -
 
@@ -77,5 +77,5 @@ The agent writes this at `docs/features/<app>/<slug>/validation/visual-validatio
 ### Path conventions
 
 - The report links to its sibling spec via `../spec/spec.md`.
-- Screenshots referenced from the report use paths *relative to the report file*: `./visual-validation-<timestamp>/<row-id>-<short-slug>.png`.
+- Screenshots referenced from the report use paths _relative to the report file_: `./visual-validation-<timestamp>/<row-id>-<short-slug>.png`.
 - The agent never writes outside `evidence_dir` or `report_path`. Files there are committed alongside the report.

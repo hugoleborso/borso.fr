@@ -44,7 +44,7 @@ export interface BuildPragmaAppStackProps {
 
 export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
   const uploadsBucket = new Bucket(props.scope, 'UploadsBucket', {
-    bucketName: `${APP_SLUG}-${props.stage}-uploads${props.prNumber !== undefined ? `-${props.prNumber}` : ''}`,
+    bucketName: `${APP_SLUG}-${props.stage}-uploads${props.prNumber === undefined ? '' : `-${props.prNumber}`}`,
     encryption: BucketEncryption.S3_MANAGED,
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     objectOwnership: ObjectOwnership.BUCKET_OWNER_ENFORCED,
@@ -66,8 +66,8 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
   const previewableApp = new PreviewableApp(props.scope, 'App', {
     app: APP_SLUG,
     stage: props.stage,
-    ...(props.prNumber !== undefined ? { prNumber: props.prNumber } : {}),
-    ...(props.domainName !== undefined ? { domainName: props.domainName } : {}),
+    ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
+    ...(props.domainName === undefined ? {} : { domainName: props.domainName }),
     frontend: { distPath: props.assetsPath },
     api: {
       entry: props.apiEntry,

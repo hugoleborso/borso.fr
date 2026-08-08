@@ -57,8 +57,8 @@ export function buildSongsRouter() {
     )
     .delete('/:id', zValidator('param', songIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const ok = await removeSong(getDatabase(), id);
-      if (!ok) return context.json({ error: 'not-found' }, 404);
+      const isOk = await removeSong(getDatabase(), id);
+      if (!isOk) return context.json({ error: 'not-found' }, 404);
       return context.json({ id, deleted: true });
     });
 }

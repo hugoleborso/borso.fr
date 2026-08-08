@@ -46,10 +46,10 @@ file.text() promise hadn't resolved yet.
    The race only appears on slower disks / network-backed file
    abstractions.
 
-**Root cause:** *I thought storing the read **content** in state during
+**Root cause:** _I thought storing the read **content** in state during
 `onChange` was equivalent to storing the **file reference** and reading
 at submit. Actually `onChange` is sync-by-contract but `file.text()`
-isn't, so the storage races the submit on real I/O.* If I had known
+isn't, so the storage races the submit on real I/O._ If I had known
 the read must happen inside the same async handler that gates the API
 call, I would have kept a `File | null` ref in state and read it inside
 `handleSubmit` from day one.
@@ -82,8 +82,8 @@ call, I would have kept a `File | null` ref in state and read it inside
 
 Reading the file inside the same async handler that gates the API call
 removes the race: the submit cannot fire its network call until the
-read has resolved. The new shape — *hold the source, transform at
-boundary* — is the structural rule: any future form field that wraps
+read has resolved. The new shape — _hold the source, transform at
+boundary_ — is the structural rule: any future form field that wraps
 an async input now follows this template.
 
 **Reference:** [PR #12](https://github.com/hugoleborso/borso.fr/pull/12) ·

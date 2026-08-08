@@ -22,10 +22,7 @@ export type SelfPunchStateKind =
   | 'network-error';
 
 export type SelfPunchBusinessReason =
-  | 'race-not-started'
-  | 'race-finished'
-  | 'already-punched-this-loop'
-  | 'runner-not-in-race';
+  'race-not-started' | 'race-finished' | 'already-punched-this-loop' | 'runner-not-in-race';
 
 export interface SelfPunchState {
   readonly kind: SelfPunchStateKind;

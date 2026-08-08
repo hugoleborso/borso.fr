@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { adminSessionCookie, freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { adminSessionCookie, testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 
 const editionEnvelopeSchema = z.object({
@@ -29,11 +29,11 @@ describe('admin edition controller', () => {
   const app = createApp();
 
   beforeEach(async () => {
-    await truncateAllTables(freshDatabase());
+    await truncateAllTables(testDatabase());
   });
 
   async function adminCookie(): Promise<string> {
-    return adminSessionCookie(freshDatabase());
+    return adminSessionCookie(testDatabase());
   }
 
   async function postEdition(

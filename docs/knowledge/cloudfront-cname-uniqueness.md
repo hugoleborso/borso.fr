@@ -14,7 +14,7 @@ Request ID: …)
 
 ## Why
 
-CloudFront's invariant: **at most one distribution can list a given alias (Aliases.Items entry) at any time**, account-wide. The constraint is not unique to creation — it applies to any update that adds an alias already claimed elsewhere. CloudFront does *not* offer a "transfer" or "reassign" operation; the only way to move an alias from one distribution to another is to remove it from the first, wait for that change to propagate, then add it to the second.
+CloudFront's invariant: **at most one distribution can list a given alias (Aliases.Items entry) at any time**, account-wide. The constraint is not unique to creation — it applies to any update that adds an alias already claimed elsewhere. CloudFront does _not_ offer a "transfer" or "reassign" operation; the only way to move an alias from one distribution to another is to remove it from the first, wait for that change to propagate, then add it to the second.
 
 ## Concrete recovery
 

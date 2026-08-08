@@ -9,7 +9,7 @@ function evaluateHandler(event: CfEvent): unknown {
   const factory = new Function(`${STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE}; return handler;`);
   const result: unknown = factory();
   if (typeof result !== 'function') {
-    throw new Error('CloudFront Function source did not yield a callable handler.');
+    throw new TypeError('CloudFront Function source did not yield a callable handler.');
   }
   return result(event);
 }

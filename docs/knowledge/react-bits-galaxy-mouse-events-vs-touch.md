@@ -73,7 +73,7 @@ the slide as a scroll/zoom gesture mid-drag:
    to make sure.
 
 2. **Upstream-PR opportunity**
-   This *should* be fixed upstream — every react-bits user mounting
+   This _should_ be fixed upstream — every react-bits user mounting
    Galaxy on a touch-friendly site will hit the same. The fix is
    the three-line swap above. We haven't submitted a patch (the
    agent's hard rule is to not open PRs against repos outside

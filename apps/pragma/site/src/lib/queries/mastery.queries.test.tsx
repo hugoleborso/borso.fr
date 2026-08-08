@@ -17,7 +17,7 @@ import {
 } from './test-helpers';
 
 interface OptimisticDefaultsShape {
-  defaults: Array<{ memberId: string; instrumentId: string; score: number }>;
+  defaults: { memberId: string; instrumentId: string; score: number }[];
 }
 
 interface ProbeProps<Mutate> {

@@ -41,19 +41,35 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @borso/infra build
       - run: pnpm -r typecheck
-      # Per-workspace biome check — lint + formatter — (each app's
-      # biome.jsonc has its own `includes` glob, e.g. apps/borso-fr
-      # restricts to bin/ + site/). Formatter drift is part of the gate:
-      # if local hooks were skipped or the editor wasn't on biome, this
-      # fails the PR.
-      - run: pnpm -r lint
-      # Repo-wide biome check at root scope — covers files outside any
-      # workspace (scripts/, docs-adjacent code, biome-plugins/, etc.).
-      # Defense in depth on top of the .husky/pre-commit gate: catches
-      # commits that bypassed the local hook. Rung-1 eradication (paired
-      # with the pre-commit hook) of
+      # Repo-wide ESLint at root scope. The flat config in eslint.config.js
+      # covers every workspace plus the files that belong to none, e.g.
+      # scripts/ and eslint-rules/, so one run replaces the per-workspace
+      # pass the biome setup needed. Defence in depth on top of the
+      # .husky/pre-commit gate, catching commits that bypassed the local
+      # hook. Rung-1 eradication, paired with the pre-commit hook, of
       # docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
-      - run: pnpm exec biome check
+      # ESLint here is type-aware, which means it builds a TypeScript program
+      # for every workspace before it can run a single rule. A cold run takes
+      # about 80 s on this repository against about 3 s for the biome run it
+      # replaced, and a warm cache brings it back to about 3 s. Persisting the
+      # cache keyed on the lockfile and the config is what keeps the job in
+      # the same range as before the migration.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .eslintcache
+            node_modules/.cache/prettier
+          key: lint-cache-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.js', '.prettierrc.json') }}-${{ github.sha }}
+          restore-keys: |
+            lint-cache-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.js', '.prettierrc.json') }}-
+            lint-cache-
+      - run: pnpm exec eslint . --cache --cache-location .eslintcache
+      # Formatter drift is part of the gate. A commit made with hooks
+      # skipped, or from an editor that is not on prettier, fails here.
+      - run: pnpm exec prettier --check . --cache
+      # The custom ESLint rules under eslint-rules/ each ship a RuleTester
+      # suite. A rule that misfires costs more than the rule saves.
+      - run: pnpm run test:eslint-rules
       # DSQL-compat scan on every migration SQL file. Mirrors the
       # pre-commit hook so a bypass via `git push --no-verify` still
       # gets caught before merge. Rung-2 eradication (paired with the

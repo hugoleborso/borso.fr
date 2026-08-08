@@ -69,7 +69,7 @@ export async function listRunners(
 export async function listRunnersAsDto(
   database: Database,
   editionSlug: string,
-): Promise<ReadonlyArray<RunnerDto>> {
+): Promise<readonly RunnerDto[]> {
   const cdnHost = readPhotosCdnHost();
   const runners = await listRunnersForEdition(database, editionSlug);
   return runners.map((runner) => toRunnerDto(runner, cdnHost));

@@ -127,7 +127,7 @@ export async function createEditionFromInput(
     displayName: input.displayName,
     startsAt: new Date(input.startsAt),
     endsAt: new Date(input.endsAt),
-    ...(input.intervalMinutes !== undefined ? { intervalMinutes: input.intervalMinutes } : {}),
+    ...(input.intervalMinutes === undefined ? {} : { intervalMinutes: input.intervalMinutes }),
     gpxXml: input.gpxXml,
   });
 }
@@ -149,8 +149,8 @@ export async function replaceEditionFromInput(
     displayName: input.displayName,
     startsAt: new Date(input.startsAt),
     endsAt: new Date(input.endsAt),
-    ...(input.intervalMinutes !== undefined ? { intervalMinutes: input.intervalMinutes } : {}),
-    ...(input.gpxXml !== undefined ? { gpxXml: input.gpxXml } : {}),
+    ...(input.intervalMinutes === undefined ? {} : { intervalMinutes: input.intervalMinutes }),
+    ...(input.gpxXml === undefined ? {} : { gpxXml: input.gpxXml }),
   });
 }
 

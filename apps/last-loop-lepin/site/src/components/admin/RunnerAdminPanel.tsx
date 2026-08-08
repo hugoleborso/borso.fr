@@ -88,11 +88,11 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
       setBib('');
       setPhotoFile(null);
       invalidateResource(rosterKey);
-    } catch (caught) {
-      if (caught instanceof ApiError && caught.status === 409) {
+    } catch (error_) {
+      if (error_ instanceof ApiError && error_.status === 409) {
         setError('Un coureur avec ce slug existe déjà.');
       } else {
-        setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+        setError(error_ instanceof Error ? error_.message : 'Erreur inconnue.');
       }
     } finally {
       setSubmitting(false);
@@ -157,7 +157,7 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
         <div className="muted mono" style={{ fontSize: 11 }}>
           Aucune photo → initiales déterministes sur fond coloré (fallback automatique).
         </div>
-        {error !== null ? <div className="error-text">{error}</div> : null}
+        {error === null ? null : <div className="error-text">{error}</div>}
       </form>
       <div className="card-body flush">
         {roster.length === 0 ? (

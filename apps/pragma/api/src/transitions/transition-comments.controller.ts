@@ -42,8 +42,8 @@ export function buildTransitionCommentsRouter() {
     )
     .delete('/:a/:b', zValidator('param', transitionPairParamSchema), async (context) => {
       const { a, b } = context.req.valid('param');
-      const ok = await removeTransitionComment(getDatabase(), a, b);
-      if (!ok) return context.json({ error: 'not-found' }, 404);
+      const isOk = await removeTransitionComment(getDatabase(), a, b);
+      if (!isOk) return context.json({ error: 'not-found' }, 404);
       return context.json({ songAId: a, songBId: b, deleted: true });
     });
 }

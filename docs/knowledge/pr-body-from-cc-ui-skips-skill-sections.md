@@ -9,7 +9,7 @@ For features that ran `/visual-validation`, the visual-validation skill's standa
 1. A `## Visual evidence` section embedding the screenshots committed under `docs/features/<app>/<slug>/validation/visual-validation-*/`.
 2. A `## Validation gaps` section listing every UNVERIFIABLE row verbatim (only required when the verdict was `PASS_EXCEPT_UNVERIFIABLE`).
 
-The auto-generated body has neither. The screenshots stay in the repo, but reviewers reading the PR description don't see them; the UNVERIFIABLE rows stay in the validation report, but reviewers don't see them either. The validation gate's *disclosure* requirement gets silently bypassed.
+The auto-generated body has neither. The screenshots stay in the repo, but reviewers reading the PR description don't see them; the UNVERIFIABLE rows stay in the validation report, but reviewers don't see them either. The validation gate's _disclosure_ requirement gets silently bypassed.
 
 This first bit PR #11: the body was auto-generated at open time, and the missing sections only surfaced when the agent re-read the visual-validation standard mid-review.
 
@@ -36,7 +36,7 @@ Retrofit the body via the GitHub MCP after the PR is open:
 
 ## Why the harness can't do this automatically
 
-The UI doesn't know which features carried `/visual-validation` runs, where their evidence lives, or what verdict came back. The skill's standard *is* the source of truth; the harness defers to it. Until the harness grows a "PR-opened-via-UI hook" that loads the per-feature standard, the agent re-runs the disclosure step after the fact.
+The UI doesn't know which features carried `/visual-validation` runs, where their evidence lives, or what verdict came back. The skill's standard _is_ the source of truth; the harness defers to it. Until the harness grows a "PR-opened-via-UI hook" that loads the per-feature standard, the agent re-runs the disclosure step after the fact.
 
 ## Trigger for the next session
 
@@ -50,5 +50,5 @@ and grep the `body` field for `## Visual evidence` and `## Validation gaps`. Eit
 
 ## Related
 
-- `.claude/skills/visual-validation/SKILL.md` — *"Visual evidence in the PR body"* section: the source of truth for what the PR body should look like.
+- `.claude/skills/visual-validation/SKILL.md` — _"Visual evidence in the PR body"_ section: the source of truth for what the PR body should look like.
 - `.claude/skills/technical-validation/SKILL.md` — same disclosure rule for the technical side (when verdict is `PASS_EXCEPT_UNVERIFIABLE` for the technical gate).

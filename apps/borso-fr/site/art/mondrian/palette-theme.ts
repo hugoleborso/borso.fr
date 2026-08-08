@@ -1,12 +1,12 @@
 import type { PaletteKey } from './palettes.utils';
 
-type PaperTheme = {
+interface PaperTheme {
   paper: string;
   paperDeep: string;
   ink: string;
   inkSoft: string;
   ruleAlpha: string;
-};
+}
 
 const PAPER_THEMES: Record<Exclude<PaletteKey, 'custom'>, PaperTheme> = {
   classic: {

@@ -16,20 +16,21 @@ tags: [visual-validation, agent-browser, screenshots, react]
 ## Symptom
 
 After `/visual-validation` returned PASS_EXCEPT_UNVERIFIABLE on PR #8, I wrote
-the PR description claiming *"pieces render correctly"* and that the only gaps
+the PR description claiming _"pieces render correctly"_ and that the only gaps
 were tool-budget UNVERIFIABLE rows. The user opened one of the committed
 screenshots and immediately fired back:
 
-> *"It is quite clear from the screenshot that the pieces are not displayed?
-> How did you not check???"*
+> _"It is quite clear from the screenshot that the pieces are not displayed?
+> How did you not check???"_
 
 Every square in the committed screenshots showed the `<img>` alt text (`bR`,
 `wP`, `bN`, …) stacked together — the third-party CDN sprites were 404-ing.
-Visible at a glance. I had described the *layout* (three columns, status
-panel, banner content, button labels) without ever asking *"do the pieces
-actually render?"*.
+Visible at a glance. I had described the _layout_ (three columns, status
+panel, banner content, button labels) without ever asking _"do the pieces
+actually render?"_.
 
 Two related defects in the same PR slipped through the same way:
+
 - **Inline banner DOM order** — rendered AFTER `<BoardView>`, so visually
   below the board even though the spec said "above the board". DOM said
   `inline-banner` exists; pixels said `banner.top > board.top`.
@@ -43,29 +44,29 @@ Two related defects in the same PR slipped through the same way:
    took the verdict at face value without inspecting the evidence the
    validator committed.
 2. **Why didn't I inspect the evidence?**
-   Because *describing the layout from the screenshot* feels indistinguishable
-   from *verifying the pixels look right*. The output to the user is prose
+   Because _describing the layout from the screenshot_ feels indistinguishable
+   from _verifying the pixels look right_. The output to the user is prose
    either way.
 3. **Why did the validator pass on broken pieces?**
-   Because its assertion model is DOM-presence-based: *"is there a
-   `.selector-card` with a `<div>` of correct dimensions?"* The agent never
-   asked *"did the `<img>` inside actually load?"*.
+   Because its assertion model is DOM-presence-based: _"is there a
+   `.selector-card` with a `<div>` of correct dimensions?"_ The agent never
+   asked _"did the `<img>` inside actually load?"_.
 4. **Why isn't there a load-success check?**
    Because the agent's brief never asked for one. The standard
    `/visual-validation` flow takes a screenshot, narrates the DOM, and writes
-   a verdict — there is no step that says *"verify no broken images"*.
+   a verdict — there is no step that says _"verify no broken images"_.
 
-**Root cause:** *thought* the validator's PASS verdict + a screenshot in
-the conversation was enough to claim correctness; *actually* the validator
+**Root cause:** _thought_ the validator's PASS verdict + a screenshot in
+the conversation was enough to claim correctness; _actually_ the validator
 only checked DOM-presence, the screenshot bytes were just decorative, and a
-visible defect like *"every piece is alt text"* falls through every layer
+visible defect like _"every piece is alt text"_ falls through every layer
 unless someone explicitly looks at the pixels.
 
 ## Detection failure causes
 
 - **Typing:** N/A — runtime rendering issue.
 - **Linter / static analysis:** Biome can't reason about whether an `<img
-  src>` resolves.
+src>` resolves.
 - **Functional validation locally:** Should have caught it — implementer
   spinning up the dev server and looking. Didn't, because the validator was
   expected to do it.
@@ -105,7 +106,7 @@ this kaizen PR's commits.
    is FAIL until the source is fixed or the image is explicitly excluded
    (e.g. a placeholder).
 
-   ```diff
+   ````diff
     # .claude/skills/visual-validation/standard.md
    + ### Pixel-content checks (every screenshot)
    +
@@ -121,7 +122,7 @@ this kaizen PR's commits.
    + the actual image — the canonical "third-party CDN is broken" failure.
    + Non-empty → FAIL the row that covered the screenshot, name the broken
    + src in the report.
-   ```
+   ````
 
 2. **Implementation skill requires per-PR self-screenshot of UI work**
    before declaring the validator-gate clean. The rule lands as a new bullet
@@ -139,6 +140,7 @@ this kaizen PR's commits.
    ```
 
 **Sibling defects swept:**
+
 - `apps/borsouvertures/site/modes/ModeLearnTree.tsx` (banner DOM order — fixed
   commit `99e91a4` in PR #8).
 - `apps/borsouvertures/site/App.tsx` (Start button label — same commit).

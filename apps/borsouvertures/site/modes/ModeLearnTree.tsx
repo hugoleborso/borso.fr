@@ -60,11 +60,11 @@ export function ModeLearnTree({
     return <LoadingPanel message="Pick an opening + variation to drill its tree." />;
   }
 
-  const showButtons =
+  const isShowButtons =
     treeVisualizationMode === 'buttons' || (treeVisualizationMode === null && isMobile);
 
   const arrows: Arrow[] =
-    !showButtons && snapshot.showRevealedArrows
+    !isShowButtons && snapshot.showRevealedArrows
       ? snapshot.nextBookMovesUci.map((uci) => uciToArrow(uci))
       : [];
   const highlightSquares: Record<string, CSSProperties> = {};
@@ -119,7 +119,7 @@ export function ModeLearnTree({
             )}
           </div>
         </div>
-        {showButtons && (
+        {isShowButtons && (
           <MoveButtonList
             candidates={snapshot.nextBookMovesUci}
             fen={snapshot.fen}

@@ -20,6 +20,7 @@ Trois ajustements de lisibilité + une étude de faisabilité produit, regroupé
 **Output metric.** L'écran de course raconte une histoire juste de la course en cours, sans intervention humaine — un spectateur qui ouvre la page comprend en 5 secondes (a) combien il reste de boucles, (b) qui a été sorti par le chrono vs qui a abandonné, (c) qui est encore en course. Mesure : self-report auprès de 3 spectateurs après la prochaine édition réelle.
 
 **Input metrics.**
+
 - Le pavé "Classement" affiche un badge distinct pour `late-validated` vs `manual` (assertable en `/visual-validation`).
 - Le card "Prochain top horaire" affiche `Boucle N / Total · X restantes` à la place de `MM:SS`.
 - Aucune card "Mur des éliminés" présente dans le DOM de `/`.
@@ -32,11 +33,13 @@ Trois ajustements de lisibilité + une étude de faisabilité produit, regroupé
 ### Avant / après — Écran spectateur
 
 **Avant** (état actuel, screenshot dans la conversation) :
+
 - Card "Prochain top horaire" : flip `01:02` MM:SS, sous-label `MM:SS`, ligne `2 EN COURSE` `4 DNF`.
 - Card "Classement" : badges `BOUCLE 3` (vert) pour en-course, `DNF · B2` (rouge) pour DNF — sans distinction late vs manual.
 - Card "Mur des éliminés" : 4 vignettes "Sorti boucle 1/2".
 
 **Après** :
+
 - Card "Prochain top horaire" : flip `01:02` MM:SS, sous-label `BOUCLE 3 / 12 · 9 restantes` (mono, même style que `MM:SS` actuel), ligne `2 EN COURSE` `4 DNF` (inchangée).
 - Card "Classement" : badges inchangés pour en-course, badges `DNF · B2` portant une variante visuelle pour `late-validated` (à distinguer de `manual`). Proposition designer : `late-validated` reste rouge (statut final identique) mais le texte devient `Hors délai · B2` au lieu de `DNF · B2`. À confronter visuellement.
 - Pas de card "Mur des éliminés".
@@ -92,31 +95,31 @@ Pas de mockup — l'étude livre une décision en ADR. Si décision = build, un 
 
 ## Questions, Options and Decisions
 
-| Question | Options | Décision (2026-05-15) |
-| --- | --- | --- |
-| **Granularité du statut DNF** | (a) Garder `late \| manual`. (b) Étendre à `late \| manual \| late-validated`. (c) Champ `validatedAt` à part. | **(b)** — extension d'enum cohérente avec le modèle existant, pas de nouveau champ, tests `*.core.ts` minimes. |
-| **Découpage du spec** | (a) Un seul spec. (b) Deux specs (polish vs étude). (c) Polish maintenant, étude plus tard. | **(a)** — choix utilisateur explicite, malgré la recommandation de splitter. Trace conservée ici en cas de regret. |
-| **Source des totaux de boucles** | (a) Dérivé (`endsAt − startsAt`) / `intervalMinutes`. (b) Nouveau champ `totalLoops` en base. | **(a)** — `totalHourlyTops()` existe déjà comme helper pur ; pas de migration. |
-| **Format compteur de boucles** | (a) Pill discrète sous le flip. (b) Nouvelle card à côté. (c) Remplace `MM:SS` du sous-label. | **(c)** — choix utilisateur. Le label `MM:SS` est redondant avec le flip lui-même. |
-| **Visibilité de `late-validated`** | (a) Backend seulement. (b) Backend + classement public. (c) Backend + classement + admin. | **(c)** — choix utilisateur. Distinction visible partout pour cohérence narrative. |
-| **Texte du badge classement** | (a) Garder `DNF · B2` pour les deux. (b) `Hors délai · B2` vs `DNF · B2`. (c) Couleur différente, texte identique. | **(b)** — choix utilisateur. Même couleur rouge ou variante à trancher au plan. |
-| **Sémantique du compteur de boucles** | (a) Boucle en cours (loopIndexAt). (b) Dernière boucle fermée (loopIndexAt − 1), `—` avant le 1ᵉʳ top. | **(b)** — choix utilisateur. Aligne avec le badge classement qui montre déjà la dernière boucle fermée. |
-| **Refactor confirmDnf** | (a) Param `reason: 'manual' \| 'late-validated'`. (b) Splitter en deux fonctions distinctes. | **(a)** — choix utilisateur. Refactor minimal, 1 ligne. |
-| **Self-punching — vaut le coup ?** | Critères : anti-triche + simplicité. Options ci-dessous. | **À trancher en ADR** `docs/adr/NNNN-self-punching-last-loop-lepin.md`. Mécanisme candidat : géoloc + bouton sur fiche coureur, coexistant avec le pointage admin. Voir tableau d'évaluation ci-dessous. |
-| **Self-punching — coexistence** | (a) Remplace admin. (b) Coexiste, premier des deux gagne. (c) À trancher en ADR. | **(b)** — choix utilisateur. L'admin reste le filet de sécurité ; le coureur est un raccourci. |
-| **Self-punching — auth coureur** | (a) Slug seul (URL fiche publique). (b) Token unique par coureur (généré au pré-enregistrement). (c) Magic link SMS au départ. | **À trancher en ADR.** Slug seul = trivialement spoofable ; token = effort logistique modéré ; SMS = dépendance externe + coût. |
+| Question                              | Options                                                                                                                        | Décision (2026-05-15)                                                                                                                                                                                    |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Granularité du statut DNF**         | (a) Garder `late \| manual`. (b) Étendre à `late \| manual \| late-validated`. (c) Champ `validatedAt` à part.                 | **(b)** — extension d'enum cohérente avec le modèle existant, pas de nouveau champ, tests `*.core.ts` minimes.                                                                                           |
+| **Découpage du spec**                 | (a) Un seul spec. (b) Deux specs (polish vs étude). (c) Polish maintenant, étude plus tard.                                    | **(a)** — choix utilisateur explicite, malgré la recommandation de splitter. Trace conservée ici en cas de regret.                                                                                       |
+| **Source des totaux de boucles**      | (a) Dérivé (`endsAt − startsAt`) / `intervalMinutes`. (b) Nouveau champ `totalLoops` en base.                                  | **(a)** — `totalHourlyTops()` existe déjà comme helper pur ; pas de migration.                                                                                                                           |
+| **Format compteur de boucles**        | (a) Pill discrète sous le flip. (b) Nouvelle card à côté. (c) Remplace `MM:SS` du sous-label.                                  | **(c)** — choix utilisateur. Le label `MM:SS` est redondant avec le flip lui-même.                                                                                                                       |
+| **Visibilité de `late-validated`**    | (a) Backend seulement. (b) Backend + classement public. (c) Backend + classement + admin.                                      | **(c)** — choix utilisateur. Distinction visible partout pour cohérence narrative.                                                                                                                       |
+| **Texte du badge classement**         | (a) Garder `DNF · B2` pour les deux. (b) `Hors délai · B2` vs `DNF · B2`. (c) Couleur différente, texte identique.             | **(b)** — choix utilisateur. Même couleur rouge ou variante à trancher au plan.                                                                                                                          |
+| **Sémantique du compteur de boucles** | (a) Boucle en cours (loopIndexAt). (b) Dernière boucle fermée (loopIndexAt − 1), `—` avant le 1ᵉʳ top.                         | **(b)** — choix utilisateur. Aligne avec le badge classement qui montre déjà la dernière boucle fermée.                                                                                                  |
+| **Refactor confirmDnf**               | (a) Param `reason: 'manual' \| 'late-validated'`. (b) Splitter en deux fonctions distinctes.                                   | **(a)** — choix utilisateur. Refactor minimal, 1 ligne.                                                                                                                                                  |
+| **Self-punching — vaut le coup ?**    | Critères : anti-triche + simplicité. Options ci-dessous.                                                                       | **À trancher en ADR** `docs/adr/NNNN-self-punching-last-loop-lepin.md`. Mécanisme candidat : géoloc + bouton sur fiche coureur, coexistant avec le pointage admin. Voir tableau d'évaluation ci-dessous. |
+| **Self-punching — coexistence**       | (a) Remplace admin. (b) Coexiste, premier des deux gagne. (c) À trancher en ADR.                                               | **(b)** — choix utilisateur. L'admin reste le filet de sécurité ; le coureur est un raccourci.                                                                                                           |
+| **Self-punching — auth coureur**      | (a) Slug seul (URL fiche publique). (b) Token unique par coureur (généré au pré-enregistrement). (c) Magic link SMS au départ. | **À trancher en ADR.** Slug seul = trivialement spoofable ; token = effort logistique modéré ; SMS = dépendance externe + coût.                                                                          |
 
 ### Évaluation du mécanisme géoloc (entrée pour l'ADR)
 
 Critères pondérés par l'utilisateur : **anti-triche** + **simplicité**.
 
-| Critère | Géoloc + slug (URL publique) | Géoloc + token coureur unique |
-| --- | --- | --- |
-| Anti-triche réseau | Faible (browser geoloc spoofable en 3 clics dev tools) | Idem (la géoloc reste le maillon faible) |
-| Anti-triche identité | Aucun (n'importe qui peut pointer pour un slug visible) | Modéré (token nécessaire) |
-| Simplicité coureur | Très forte (lien dans la fiche, 1 clic) | Modérée (recevoir le token avant la course) |
-| Effort de dev | 1-2 j (route publique + check geoloc + UI bouton) | 3-5 j (gen tokens + distribution + UI) |
-| Effort orga (jour J) | Aucun | Modéré (vérifier que chaque coureur a son token) |
+| Critère              | Géoloc + slug (URL publique)                            | Géoloc + token coureur unique                    |
+| -------------------- | ------------------------------------------------------- | ------------------------------------------------ |
+| Anti-triche réseau   | Faible (browser geoloc spoofable en 3 clics dev tools)  | Idem (la géoloc reste le maillon faible)         |
+| Anti-triche identité | Aucun (n'importe qui peut pointer pour un slug visible) | Modéré (token nécessaire)                        |
+| Simplicité coureur   | Très forte (lien dans la fiche, 1 clic)                 | Modérée (recevoir le token avant la course)      |
+| Effort de dev        | 1-2 j (route publique + check geoloc + UI bouton)       | 3-5 j (gen tokens + distribution + UI)           |
+| Effort orga (jour J) | Aucun                                                   | Modéré (vérifier que chaque coureur a son token) |
 
 **Conclusion provisoire pour l'ADR** : la géoloc seule n'est pas un mécanisme anti-triche cryptographique. Elle filtre les pointages flemmards à distance, mais ne tient pas contre un coureur motivé à tricher. Pour un last-man-standing entre amis, c'est probablement suffisant ; pour une édition compétitive, non. Décision à prendre après confrontation à un cas réel (test la veille, prochaine édition). **Statut : étude reportée à un /adr dédié**, ce spec n'écrit que la partie 1-2-3.
 
@@ -209,7 +212,7 @@ docs/adr/NNNN-self-punching-last-loop-lepin.md                       // NEW via 
   3. `/` en `status='live'` : aucun élément contenant le texte "Mur des éliminés".
   4. `/admin` connecté : cliquer "Valider DNF" sur un candidat `late` → après repoll, le coureur disparaît de "DNF à valider", apparaît dans "Réintégrer un DNF" avec le label exact `auto-DNF validé · B<n>`.
 - **Technical validation** — lint + knip + typecheck + build + tous les unit tests passent ; revue de diff confirme que `reason: 'manual'` n'est plus envoyé par "Valider DNF" et toujours envoyé par "Marquer abandon".
-- **Pas de manual sweep** — la passe humaine (préfèrer une vraie édition test) est explicitement notée comme belt sur les bretelles, sous *Production strategy → Manual smoke after deploy* ci-dessous, pas comme gate.
+- **Pas de manual sweep** — la passe humaine (préfèrer une vraie édition test) est explicitement notée comme belt sur les bretelles, sous _Production strategy → Manual smoke after deploy_ ci-dessous, pas comme gate.
 
 L'étude self-punching n'a pas de gate de test : son livrable est l'ADR. Si l'ADR conclut "build", un spec follow-up portera ses propres gates.
 
@@ -218,14 +221,17 @@ L'étude self-punching n'a pas de gate de test : son livrable est l'ADR. Si l'AD
 ### Analytics
 
 **Input metrics** (events nommés, instrumentés via `recordAnalyticsEvent`) :
+
 - `dnf_validated` existe déjà (`DnfCandidatesPanel.tsx:57`) — ajouter le champ `reason: 'late-validated'` pour les distinguer des `manual` dans Sentry breadcrumbs.
 - Nouvel event `loop_progress_viewed` ? **Non** — la card est rendue sur 100 % des visites `/`, pas besoin d'event dédié, le pageview suffit.
 - Pas d'event nouveau pour la suppression du mur (negation ne se mesure pas en event).
 
 Seuils :
+
 - Aucun seuil dur. La métrique est lagging : "le spectateur comprend en 5 s", mesurée par self-report.
 
 **Output metric** (lagging, hors CI) :
+
 - Self-report après la prochaine édition réelle (3 spectateurs interrogés, "qu'est-ce qui manque / trop ?"). Aussi : vérifier que le ratio `late-validated / total DNF` dans les archives correspond au sentiment subjectif.
 
 ### Zero-defect strategy

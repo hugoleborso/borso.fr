@@ -33,13 +33,13 @@ One AWS account. Two regions:
 
 ## Constructs (`@borso/infra`)
 
-| Construct | What it makes | Used by |
-| --- | --- | --- |
-| `StaticSite` | Prod: dedicated S3 bucket + CloudFront + Route 53 alias. Preview/integ: uploads to the shared previews bucket at a key prefix; URL is host-routed to the prefix. | Apex-style apps. |
-| `LambdaApi` | One Lambda + one HTTP API. CORS preflight, error alarm, single-handler routing. | API-style apps. |
-| `DsqlCluster` | Aurora DSQL cluster, deletion-protected by default. Publishes ARN + endpoint to `/borso/<app>/dsql-cluster-{arn,endpoint}` so other stages can find it. | One per app, owned by the prod stack. |
-| `DsqlSchema` | Postgres schema in the app's DSQL cluster (resolved via SSM in preview/integ). Forward-only migrations, advisory-locked, DROP CASCADE on stack delete. | Apps with persistence. |
-| `PreviewableApp` | Composes the four above. | Full-stack apps. |
+| Construct        | What it makes                                                                                                                                                    | Used by                               |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `StaticSite`     | Prod: dedicated S3 bucket + CloudFront + Route 53 alias. Preview/integ: uploads to the shared previews bucket at a key prefix; URL is host-routed to the prefix. | Apex-style apps.                      |
+| `LambdaApi`      | One Lambda + one HTTP API. CORS preflight, error alarm, single-handler routing.                                                                                  | API-style apps.                       |
+| `DsqlCluster`    | Aurora DSQL cluster, deletion-protected by default. Publishes ARN + endpoint to `/borso/<app>/dsql-cluster-{arn,endpoint}` so other stages can find it.          | One per app, owned by the prod stack. |
+| `DsqlSchema`     | Postgres schema in the app's DSQL cluster (resolved via SSM in preview/integ). Forward-only migrations, advisory-locked, DROP CASCADE on stack delete.           | Apps with persistence.                |
+| `PreviewableApp` | Composes the four above.                                                                                                                                         | Full-stack apps.                      |
 
 ## Stages
 
@@ -47,12 +47,12 @@ One AWS account. Two regions:
 
 Each app gets its own DSQL cluster (created by the prod stack). All stages of an app share that cluster, isolated as separate Postgres schemas:
 
-| Stage | Where | Stack name | DSQL schema (within the app's cluster) |
-| --- | --- | --- | --- |
-| `dev` | local | n/a — never deployed | local Postgres in Docker (when an app needs it) |
-| `preview` | AWS, per PR | `<app>-pr-<n>` | `pr_<n>` |
-| `integ` | reserved (not used in this monorepo) | `bp-integ-pr-<n>-<app>` | `integ_<n>` |
-| `prod` | AWS | `<app>-prod` | `prod` |
+| Stage     | Where                                | Stack name              | DSQL schema (within the app's cluster)          |
+| --------- | ------------------------------------ | ----------------------- | ----------------------------------------------- |
+| `dev`     | local                                | n/a — never deployed    | local Postgres in Docker (when an app needs it) |
+| `preview` | AWS, per PR                          | `<app>-pr-<n>`          | `pr_<n>`                                        |
+| `integ`   | reserved (not used in this monorepo) | `bp-integ-pr-<n>-<app>` | `integ_<n>`                                     |
+| `prod`    | AWS                                  | `<app>-prod`            | `prod`                                          |
 
 ## Cost targets
 
@@ -77,4 +77,4 @@ Cost alarms fire at $5 / $20 / $50 monthly thresholds (80% of each); USD because
 
 Each `apps/<slug>/` folder is self-contained: `cd apps/<x> && pnpm dev` works on a fresh checkout, the IDE resolves imports, tests run from inside the folder. **No cross-app imports.** Sibling apps don't appear in IntelliSense.
 
-Exceptions live at the repo root by design: `pnpm-workspace.yaml`, `package.json`, `biome.jsonc`, `commitlint.config.js`, husky hooks. Each is the single source of truth for its concern.
+Exceptions live at the repo root by design: `pnpm-workspace.yaml`, `package.json`, `eslint.config.js`, `.prettierrc.json`, `commitlint.config.js`, husky hooks. Each is the single source of truth for its concern.

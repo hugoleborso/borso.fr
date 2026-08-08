@@ -112,7 +112,7 @@ export function makeSql(): SqlMock {
       if (/SELECT name FROM/i.test(query)) {
         return Promise.resolve([...state.appliedMigrations].map((name) => ({ name })));
       }
-      if (/INSERT INTO/.test(query) && params?.[0] !== undefined) {
+      if (query.includes('INSERT INTO') && params?.[0] !== undefined) {
         state.appliedMigrations.add(String(params[0]));
       }
       return Promise.resolve([]);

@@ -42,7 +42,7 @@ interface CandidateEntry {
 export function fastestLap(
   edition: RaceEdition,
   punches: readonly LoopPunch[],
-): ReadonlyArray<FastestLapEntry> {
+): readonly FastestLapEntry[] {
   const candidates: CandidateEntry[] = [];
   for (const punch of punches) {
     if (punch.voidedAt !== null) continue;

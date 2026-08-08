@@ -20,10 +20,10 @@ threads, three unresolved), and pushed two commits without ever
 calling `mcp__github__pull_request_read get_review_comments`. The
 user surfaced it explicitly:
 
-> *« Est-ce que tu avais correctement lu les commentaires sur la
-> PR au fait ? »*
+> _« Est-ce que tu avais correctement lu les commentaires sur la
+> PR au fait ? »_
 
-The agent had to apologise and run the missing fetch *after* the
+The agent had to apologise and run the missing fetch _after_ the
 push. The unread threads were exactly the input the agent needed
 to write commits — three of them were direct guidance for the
 exact areas the agent was about to touch (library-search,
@@ -32,16 +32,16 @@ sanitiser claims, custom-script justification).
 ## Root-cause chain
 
 1. **Why didn't the agent fetch review comments before pushing?**
-   No step in the agent's commit-and-push flow says *"if this
+   No step in the agent's commit-and-push flow says _"if this
    branch has an open PR, the unresolved review threads must be
-   fetched before adding new commits"*. The agent reasoned about
+   fetched before adding new commits"_. The agent reasoned about
    the local task (SPA fallback) and shipped it; the PR-side
    review context was invisible.
 2. **Why isn't there such a step?**
-   The repo's *outbound* PR-creation flow has the
+   The repo's _outbound_ PR-creation flow has the
    [`/open-pr`](../../.claude/skills/open-pr/SKILL.md) skill that
-   walks the body before posting. The *follow-up* flow — pushing
-   new commits to an *existing* PR — has no symmetric anchor.
+   walks the body before posting. The _follow-up_ flow — pushing
+   new commits to an _existing_ PR — has no symmetric anchor.
    The agent's mental model treated the second push as "more of
    the same work", not as "an iteration that should integrate
    reviewer feedback".
@@ -49,11 +49,11 @@ sanitiser claims, custom-script justification).
    It runs `pnpm exec knip` and that's it. It has no awareness
    of GitHub state.
 
-**Root cause:** *thought* the local task drives the next commit,
-*actually* on a branch with an open PR, the *reviewer's
-unresolved comments* drive the next commit. No procedural anchor
-in the harness binds *"push to a `claude/*` branch with an open
-PR"* → *"fetch the open review threads first"*.
+**Root cause:** _thought_ the local task drives the next commit,
+_actually_ on a branch with an open PR, the _reviewer's
+unresolved comments_ drive the next commit. No procedural anchor
+in the harness binds _"push to a `claude/*` branch with an open
+PR"_ → _"fetch the open review threads first"_.
 
 ## Detection failure causes
 
@@ -61,8 +61,8 @@ PR"* → *"fetch the open review threads first"*.
 - **CI** — irrelevant; CI runs on the push, after the gap.
 - **Operator review** — caught it, but only after one more cycle
   of "agent pushes again, user re-reads what landed". That's
-  exactly the wasted-attention pattern the *Self-improvement
-  loop* exists to prevent.
+  exactly the wasted-attention pattern the _Self-improvement
+  loop_ exists to prevent.
 
 ## Countermeasure
 
@@ -97,12 +97,12 @@ this kaizen PR.
 ```diff
  # .husky/pre-push
  #!/usr/bin/env bash
- 
+
  set -euo pipefail
- 
+
  echo "[pre-push] running knip"
  pnpm exec knip
- 
+
 +# Detection nudge: on agent-authored branches (claude/*), the
 +# branch likely has an open PR with unresolved review threads.
 +# Print a reminder so the agent's next response addresses them
@@ -118,7 +118,7 @@ this kaizen PR.
 ```
 
 **Sibling defects swept:** the same workflow gap also covered
-the *post-merge* arc — the agent doesn't auto-propose the
+the _post-merge_ arc — the agent doesn't auto-propose the
 follow-up actions on a `merged` webhook event. That's tracked
 separately under
 [`post-merge-deploy-and-kaizen-reminder.md`](./post-merge-deploy-and-kaizen-reminder.md)
@@ -127,5 +127,5 @@ not Husky hook).
 
 ## See also
 
-- [`designated-branch-was-a-merged-pr-head.md`](./designated-branch-was-a-merged-pr-head.md) — sibling: the *previous* anchor along the same flow (which branch you're on before you commit).
-- [`post-merge-deploy-and-kaizen-reminder.md`](./post-merge-deploy-and-kaizen-reminder.md) — sibling: the *next* anchor (what to do once the PR merges).
+- [`designated-branch-was-a-merged-pr-head.md`](./designated-branch-was-a-merged-pr-head.md) — sibling: the _previous_ anchor along the same flow (which branch you're on before you commit).
+- [`post-merge-deploy-and-kaizen-reminder.md`](./post-merge-deploy-and-kaizen-reminder.md) — sibling: the _next_ anchor (what to do once the PR merges).

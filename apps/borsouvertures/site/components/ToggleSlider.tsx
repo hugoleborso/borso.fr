@@ -21,7 +21,7 @@ export function ToggleSlider({
       aria-pressed={value}
       aria-label={ariaLabel ?? `${leftLabel}/${rightLabel} toggle`}
     >
-      <span className={`toggle-label ${!value ? 'active' : ''}`}>{leftLabel}</span>
+      <span className={`toggle-label ${value ? '' : 'active'}`}>{leftLabel}</span>
       <span className="toggle-track">
         <span className="toggle-thumb" />
       </span>

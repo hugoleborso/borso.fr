@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { makeEdition, makePunch, makeRunner } from '../../../test/fixtures';
 import { createApp } from '../app';
 import { insertEdition } from '../edition/edition.repository';
@@ -35,7 +35,7 @@ describe('ranking controller', () => {
   });
 
   beforeEach(async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await truncateAllTables(database);
     await insertEdition(database, makeEdition({ status: 'live' }));
     await insertRunner(database, makeRunner('alice'));
@@ -57,7 +57,7 @@ describe('ranking controller', () => {
   });
 
   it('marks identical loop+time entries as ex-aequo after race end', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await truncateAllTables(database);
     await insertEdition(database, makeEdition({ status: 'live' }));
     await insertRunner(database, makeRunner('alice'));
@@ -73,7 +73,7 @@ describe('ranking controller', () => {
   });
 
   it('puts late DNF runners after the survivors', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await truncateAllTables(database);
     await insertEdition(database, makeEdition({ status: 'live' }));
     await insertRunner(database, makeRunner('alice'));
@@ -94,7 +94,7 @@ describe('ranking controller', () => {
     const savedCdnHost = process.env.PHOTOS_CDN_HOST;
     process.env.PHOTOS_CDN_HOST = 'photos-cdn.test.example';
     try {
-      const database = freshDatabase();
+      const database = testDatabase();
       await truncateAllTables(database);
       await insertEdition(database, makeEdition({ status: 'live' }));
       await insertRunner(database, makeRunner('borso', { photoKey: 'lepin-2026/borso/x.jpg' }));
@@ -115,7 +115,7 @@ describe('ranking controller', () => {
 
   it('surfaces fastestLap on the response body and matches the seeded record holder', async () => {
     // Alice loop 1 = 55 min, Bob loop 1 = 58 min → Alice holds at 55 min.
-    const database = freshDatabase();
+    const database = testDatabase();
     await truncateAllTables(database);
     await insertEdition(database, makeEdition({ status: 'live' }));
     await insertRunner(database, makeRunner('alice'));
@@ -130,7 +130,7 @@ describe('ranking controller', () => {
   });
 
   it('exposes GET /standings/:slug/laps.csv with a header row and one row per runner', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await truncateAllTables(database);
     await insertEdition(database, makeEdition({ status: 'finished' }));
     await insertRunner(database, makeRunner('alice', { bib: 1 }));

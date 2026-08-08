@@ -8,11 +8,11 @@ The Dynamic Workflow **does not** invoke `/specification` or `/adr` — those ar
 human-bound and stay as chat Skills. Before running `/feature-pipeline`, confirm:
 
 - A `docs/features/<app>/<slug>/spec/spec.md` exists, every perspective
-  checkbox is ticked, the *Q.O.D.* table is filled, and you've ratified it.
+  checkbox is ticked, the _Q.O.D._ table is filled, and you've ratified it.
   If it isn't, run `/specification` first.
 - Every ADR-trigger candidate from the spec has been ratified via
   `/adr` (piloted mode), and the resulting ADRs are committed under
-  `docs/adr/`. The spec's *Architectural choices* section names them.
+  `docs/adr/`. The spec's _Architectural choices_ section names them.
 - The branch you want the workflow to push to is checked out
   (typically `claude/<slug>-<short>`).
 
@@ -37,7 +37,7 @@ invoke them, not to reimplement them.
 - **Skill invoked:** `/technical-conception`.
 - **Standard:** [`.claude/skills/technical-conception/standard.md`](../skills/technical-conception/standard.md).
 - **Input:** the spec path passed as `args.specPath`. The ADR numbers from
-  the spec's *Architectural choices* table.
+  the spec's _Architectural choices_ table.
 - **Output the subagent writes:** `docs/features/<app>/<slug>/plan/plan.md`,
   referencing every ADR. Verdict YAML at `runs/<run-id>/agents/technical-conception-01.md`.
 - **Workflow guard:** if the verdict is `status: question`, exit with
@@ -58,7 +58,7 @@ invoke them, not to reimplement them.
 - **Workflow guard — ADR trigger:** if any sub-agent emits a verdict
   flagging an ADR trigger (new third-party dep, new secret, attribution-in-prod-UI,
   schema column driven by an external service, feature scope beyond the
-  ratified spec — per `tech-lead-orchestrator/standard.md` § *Decision boundary*),
+  ratified spec — per `tech-lead-orchestrator/standard.md` § _Decision boundary_),
   the workflow **exits** with `outcome: needs-human-adr-ratification`,
   serialises the trigger to `runs/<run-id>/state.json::pendingAdr`, and
   surfaces the trigger to the operator. The operator runs `/adr` (piloted
@@ -79,7 +79,7 @@ invoke them, not to reimplement them.
 - **Workflow guard:** `PASS` → advance to visual (or to ship if UI not in
   scope). `PASS_EXCEPT_UNVERIFIABLE` → advance with a disclosure carried
   to the PR body. `FAIL` → loop back to `implement` (consume one fix-round
-  budget). Escalation criteria are *progress-based*, not retry-count based:
+  budget). Escalation criteria are _progress-based_, not retry-count based:
   exit with `outcome: stuck-loop` if a round closes 0 blockers, or
   `outcome: regression-net-negative` if a round adds strictly more new
   FAILs than it closes.
@@ -88,7 +88,7 @@ invoke them, not to reimplement them.
 
 - **Skill invoked:** `/visual-validation`.
 - **Standard:** [`.claude/skills/visual-validation/standard.md`](../skills/visual-validation/standard.md).
-- **Scope:** if the spec's *What the user sees / does* section is empty
+- **Scope:** if the spec's _What the user sees / does_ section is empty
   (back-end-only feature), skip — verdict `not-applicable`, record in
   the journal, advance to ship.
 - **Same workflow guards** as technical: `FAIL` → loop back to implement.

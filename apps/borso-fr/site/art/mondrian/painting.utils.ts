@@ -1,13 +1,13 @@
 import type { Palette } from './palettes.utils';
 
-type Rect = {
+interface Rect {
   x: number;
   y: number;
   width: number;
   height: number;
   depth: number;
   id: number;
-};
+}
 
 export type ColoredRect = Rect & {
   fill: string;
@@ -36,13 +36,20 @@ const SPLIT_FRACTION_JITTER = 0.12;
 const AREA_WEIGHT_LARGE_RECT_BOOST = 0.5;
 const SEVENTH = 1 / 7;
 
-type SplittableEntry = { rectIndex: number; rect: Rect };
+interface SplittableEntry {
+  rectIndex: number;
+  rect: Rect;
+}
 
 export function pickSplittableEntry(
   candidateRects: Rect[],
   nextRandom: () => number,
 ): SplittableEntry | null {
-  type WeightedSplittable = { rectIndex: number; rect: Rect; weight: number };
+  interface WeightedSplittable {
+    rectIndex: number;
+    rect: Rect;
+    weight: number;
+  }
   let totalWeight = 0;
   const weightedSplittables: WeightedSplittable[] = [];
   candidateRects.forEach((candidateRect, rectIndex) => {
@@ -107,19 +114,19 @@ export function generateLayout({ seed, complexity }: { seed: number; complexity:
     const canSplitVertically = rectBeingSplit.width > MIN_RECT_DIMENSION * 2;
     const canSplitHorizontally = rectBeingSplit.height > MIN_RECT_DIMENSION * 2;
 
-    let vertical: boolean;
+    let isVertical: boolean;
     if (canSplitVertically && canSplitHorizontally) {
       const aspectRatio = rectBeingSplit.width / rectBeingSplit.height;
       const verticalProbability = 0.5 + ASPECT_BIAS_STRENGTH * Math.tanh(Math.log(aspectRatio));
-      vertical = nextRandom() < verticalProbability;
+      isVertical = nextRandom() < verticalProbability;
     } else {
-      vertical = canSplitVertically;
+      isVertical = canSplitVertically;
     }
 
-    const splitFraction = chooseJitteredSplitFraction(rectBeingSplit, vertical, nextRandom);
+    const splitFraction = chooseJitteredSplitFraction(rectBeingSplit, isVertical, nextRandom);
     let firstHalf: Rect;
     let secondHalf: Rect;
-    if (vertical) {
+    if (isVertical) {
       const splitX = rectBeingSplit.x + rectBeingSplit.width * splitFraction;
       firstHalf = {
         x: rectBeingSplit.x,
@@ -186,9 +193,9 @@ export function colorize(
       NEUTRAL_PROBABILITY_AREA_GAIN * Math.min(1, rectArea * NEUTRAL_AREA_SATURATION) -
       balance * NEUTRAL_BALANCE_PENALTY;
 
-    const useNeutral = nextRandom() < neutralProbability;
+    const isUseNeutral = nextRandom() < neutralProbability;
     const chosenFill =
-      useNeutral && neutralFill !== undefined
+      isUseNeutral && neutralFill !== undefined
         ? neutralFill
         : pickUniform(nonNeutralFills, nextRandom);
 

@@ -1,11 +1,14 @@
-type PaletteFill = { name: string; hex: string };
+interface PaletteFill {
+  name: string;
+  hex: string;
+}
 
-export type Palette = {
+export interface Palette {
   label: string;
   bg: string;
   line: string;
   fills: PaletteFill[];
-};
+}
 
 export type PaletteKey = 'classic' | 'muted' | 'nocturne' | 'garden' | 'custom';
 
@@ -72,13 +75,13 @@ export const PALETTES: Record<Exclude<PaletteKey, 'custom'>, Palette> = {
   },
 };
 
-export type CustomColors = {
+export interface CustomColors {
   customColor1: string;
   customColor2: string;
   customColor3: string;
   customPaper: string;
   customInk: string;
-};
+}
 
 export const CUSTOM_DEFAULTS: CustomColors = {
   customColor1: '#e94e3b',

@@ -45,7 +45,7 @@ export function SongEditPage(): JSX.Element {
   }, [isNew, songQuery.data]);
 
   const formKey = isNew ? 'new' : `${songId}:${songQuery.data?.song?.id ?? 'loading'}`;
-  const loading = !isNew && songQuery.isLoading;
+  const isLoading = !isNew && songQuery.isLoading;
   const queryError = songQuery.error instanceof ApiError ? songQuery.error.message : null;
 
   const handleSubmit = async (value: SongDraftState): Promise<void> => {
@@ -59,8 +59,8 @@ export function SongEditPage(): JSX.Element {
         await updateSong.mutateAsync({ id: songId, ...payload });
         navigate(`/catalog/${songId}`);
       }
-    } catch (caught) {
-      setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
+    } catch (error) {
+      setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
     }
   };
 
@@ -69,12 +69,12 @@ export function SongEditPage(): JSX.Element {
     try {
       await deleteSong.mutateAsync({ id: songId });
       navigate('/catalog', { replace: true });
-    } catch (caught) {
-      setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
+    } catch (error) {
+      setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
 

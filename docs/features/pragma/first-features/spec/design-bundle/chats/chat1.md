@@ -19,6 +19,7 @@ Empty project — I'll start with clarifying questions before designing. The spe
 ## User
 
 Questions answered:
+
 - band_vibe: We like every genre from Jazz (a lot) to hard rock to pop
 - scope: All of the above
 - platforms: Both — show paired mobile + desktop layouts for key screens
@@ -36,14 +37,14 @@ Questions answered:
 - I'm so Excited
 - Take on me
 - Lose control (teddy swins)
-- Footloose 
+- Footloose
 - Take on me
 - maniac
 - Assassymphonie
 
 A contacter pour les sessions septembre 25
 Les disquaires : gui
-L’alimentation générale : gui 
+L’alimentation générale : gui
 
 Proud Mary
 Valerie
@@ -61,6 +62,7 @@ I kissed a girl
 Begin
 Paroles paroles
 Manhattan Kaboul
+
 - tweaks: Color palette / theme, Member color style (chip / pill / accent), Energy curve style (sparkline / full chart / inline), Density (comfortable vs compact), Mobile vs desktop preview frame
 - interaction_depth: Clickable prototype — can drag setlist rows, move kanban cards, fill energy
 
@@ -73,6 +75,7 @@ _[tool: copy_starter_component]_
 Great fixtures. Let me lock in the direction and build.
 
 **Plan / system declaration:**
+
 - **Aesthetic:** Editorial-jazz — warm cream paper background + deep ink, "Instrument Serif" display + "Geist" body + "JetBrains Mono" for tags, single accent (stage-light amber). Sophisticated French-band feel that flexes from jazz to pop to rock.
 - **Member palette:** five distinct, equal-chroma hues (coral, teal, mustard, plum, sage).
 - **Structure:** ONE clickable prototype, sidebar nav, all 11 screens reachable. A **Tweaks** panel exposes: theme, member-color treatment (4 options), energy curve style (4 options), density, mobile/desktop/split frame, **and** the setlist mobile drag pattern (3 options).
@@ -128,6 +131,7 @@ _[tool: fork_verifier_agent]_
 Pragma is live. Here's what's in the prototype:
 
 **Desktop & mobile screens (all 11 in scope):**
+
 - Catalogue (grid + dense table), song detail with ChordPro preview, **fullscreen Mode Scène** (auto-scroll, zoom)
 - Setlist editor with real drag-reorder, energy sliders, **transition warnings in a side gutter** (click to comment), composition stats per member
 - Sessions (timeline), concert detail (friends-per-member viz), practice detail (linked to concert)
@@ -137,6 +141,7 @@ Pragma is live. Here's what's in the prototype:
 - Offline banner + PWA install prompt (toggle from Tweaks)
 
 **The Tweaks panel exposes every exploration you asked for:**
+
 - **Cadre** — Desktop / Mobile (iOS frame) / **Split** (side-by-side)
 - **Style des membres** — chip / pill / accent / avatar (live preview)
 - **Courbe d'énergie** — sparkline / bars / stripe / gradient
@@ -148,6 +153,7 @@ Pragma is live. Here's what's in the prototype:
 **Aesthetic:** Instrument Serif italic display + Geist body + JetBrains Mono for tags/tonalities, warm cream paper, stage-light amber accent. Sober enough for jazz, flexible enough for pop and rock.
 
 **Open for your call:**
+
 - Try the **Split** frame first — it answers Q1 (mobile vs desktop setlist) and Q6 (PWA install placement) in one view
 - Cycle through the 4 energy curve styles on the Setlist screen
 - Drag a bar between kanban columns
@@ -198,7 +204,8 @@ _[tool: read_file]_
 _[tool: str_replace_edit]_
 
 Quatre choses à faire :
-1. Retirer "Rôle" / "Maîtres" 
+
+1. Retirer "Rôle" / "Maîtres"
 2. Matrice de maîtrise (membre × instrument) + maîtrise moyenne par morceau
 3. Réparer le rendu des warnings de transition
 4. **Mode scène setlist** — défilement des accords morceau par morceau
@@ -240,6 +247,7 @@ Tout est en place :
 **Instruments** — colonne "Maîtres" supprimée.
 
 **Maîtrise par morceau** — calculée automatiquement (moyenne des cellules `mastery[membre][instrument]` selon le lineup). Affichée :
+
 - en méta sur chaque ligne de setlist (★ + score)
 - dans le ph-sub en tête de setlist (moyenne globale du concert)
 - dans un nouveau card "Maîtrise par titre" du side panel, code couleur vert/jaune/rouge
@@ -247,8 +255,8 @@ Tout est en place :
 **Warnings de transition** — réécrits avec mesure DOM via `useLayoutEffect` + `ResizeObserver`, donc le marqueur tombe pile entre les deux lignes même si la hauteur de ligne change (énergie viz, density…). Tu devrais voir 3 marqueurs `!` dans la marge gauche, dont 1 rouge (changement de tonalité G → Em) et 2 ambres.
 
 **Mode scène** — gros bouton sur la page Setlist. Vue plein écran fond noir :
+
 - En-tête : N°, titre, artiste, tonalité, énergie
 - Corps : grille d'accords en grand (zoom A−/A+, défil. auto, scroll reset à chaque chanson)
 - Pied : pilules horizontales avec tout le setlist, courante en orange, déjà jouées en barré
 - Navigation : ← → / espace / PageUp / PageDown clavier, clic sur pilule, boutons Préc./Suivant, Esc pour quitter
-

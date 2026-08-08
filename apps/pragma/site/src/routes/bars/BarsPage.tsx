@@ -165,11 +165,11 @@ export function BarsPage(): JSX.Element {
         }
       />
 
-      {displayError !== null ? (
+      {displayError === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">
           {displayError}
         </p>
-      ) : null}
+      )}
       {barsQuery.isLoading ? (
         <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
       ) : null}
@@ -238,9 +238,9 @@ export function BarsPage(): JSX.Element {
                   <div className="text-[10.5px] font-mono text-ink-400 tracking-wide">
                     {bar.city ?? ''} · {formatCapacity(bar.capacity)}
                   </div>
-                  {bar.contactName !== null ? (
+                  {bar.contactName === null ? null : (
                     <div className="text-[11.5px] text-ink-500 mt-1.5">{bar.contactName}</div>
-                  ) : null}
+                  )}
                 </button>
               ))}
             </section>

@@ -57,7 +57,7 @@ invalidating every existing session cookie).
   TLS body, same as every login/reset form on the web; no intermediate
   node sees it pre-decryption. Server-side it's never persisted in
   clear — the Hono `logger()` middleware logs only `method path
-  status`, never the body, and no API Gateway access-log / data-trace
+status`, never the body, and no API Gateway access-log / data-trace
   is enabled. The only clear-text exposure is your own terminal/browser
   at send time — hence `read -rsp`.
 - **Seed order**: after bootstrap, create members → instruments → songs

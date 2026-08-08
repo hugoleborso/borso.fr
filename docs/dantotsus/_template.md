@@ -1,14 +1,14 @@
 ---
-date: <YYYY-MM-DD>                  # when the Dantotsu was written
-introduced-at: <stage>              # conception | implementation | self-validation | code-review
-detected-at: <layer>                # typing | linter | local | ci | review | qa | staging | production | operator-deploy
-severity: <level>                   # low | medium | high
-related-pr: <#n or url>             # the PR where the defect first lived
-fix-pr: <#n or url>                 # the PR that landed the eradication (often the kaizen PR for this dantotsu)
-fix-commits: [<sha>, …]             # the commits on fix-pr that actually moved the eradication
-eradication-level: <1-5>             # 1=structural impossibility | 2=devx check | 3=vendor patch | 4=detection | 5=knowledge
+date: <YYYY-MM-DD> # when the Dantotsu was written
+introduced-at: <stage> # conception | implementation | self-validation | code-review
+detected-at: <layer> # typing | linter | local | ci | review | qa | staging | production | operator-deploy
+severity: <level> # low | medium | high
+related-pr: <#n or url> # the PR where the defect first lived
+fix-pr: <#n or url> # the PR that landed the eradication (often the kaizen PR for this dantotsu)
+fix-commits: [<sha>, …] # the commits on fix-pr that actually moved the eradication
+eradication-level: <1-5> # 1=structural impossibility | 2=devx check | 3=vendor patch | 4=detection | 5=knowledge
 time-to-detect: <minutes/hours/days>
-tags: [<topic>, …]                  # cdk, cloudfront, s3, ci, pnpm, dsql, github-actions, …
+tags: [<topic>, …] # cdk, cloudfront, s3, ci, pnpm, dsql, github-actions, …
 ---
 
 # <Title — sparks curiosity, hints at the lesson, NOT the user-story name>
@@ -23,17 +23,17 @@ User-perspective. Verbatim error or screenshot if useful.
    <answer>
 2. **Why?** <step-2 question>
    <answer>
-…
+   …
 
 **Root cause:** one sentence in `thought X, actually Y` form.
-Validate with: *if the developer had known the "actually" part,
-would they have written correct code on the first try?*
+Validate with: _if the developer had known the "actually" part,
+would they have written correct code on the first try?_
 
 ## Detection failure causes
 
 For each defence-in-depth layer that should have caught the defect
 but didn't, name the specific reason. Drop layers that are
-inapplicable. Avoid "no test"-as-terminal — push to *why* there was
+inapplicable. Avoid "no test"-as-terminal — push to _why_ there was
 no test or why the test didn't cover the path.
 
 - **Typing:** <…>
@@ -73,8 +73,8 @@ Level reached on the eradication ladder (top is best):
    `docs/knowledge/`, not here.
 
 Fill exactly these three blocks per shipped eradication. Keep them
-explicit so a reviewer can audit: *what type of fix, where it
-lives, what changed*.
+explicit so a reviewer can audit: _what type of fix, where it
+lives, what changed_.
 
 **Type:** <one of: code diff · DevX check · vendor patch · detection · knowledge addition> (level <N> — <name>)
 

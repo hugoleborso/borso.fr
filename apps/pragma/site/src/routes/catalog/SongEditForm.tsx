@@ -124,11 +124,11 @@ export function SongEditForm({
         )}
       </form.Subscribe>
 
-      {error !== null ? (
+      {error === null ? null : (
         <p className="text-danger text-sm" role="alert">
           {error}
         </p>
-      ) : null}
+      )}
 
       <form.Subscribe
         selector={(state) => [state.values.chartKind, state.values.chordproText] as const}
@@ -283,12 +283,12 @@ export function SongEditForm({
                 </Button>
               )}
             </form.Subscribe>
-            {!isNew ? (
+            {isNew ? null : (
               <Button type="button" variant="ghost" onClick={() => void onDelete()}>
                 <Icon name="trash" size={14} />
                 {t('common.delete')}
               </Button>
-            ) : null}
+            )}
           </div>
         </form>
       </Card>

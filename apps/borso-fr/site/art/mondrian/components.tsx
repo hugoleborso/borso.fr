@@ -8,7 +8,9 @@ const INKBLOOM_RANDOM_JITTER_MS = 80;
 const INKBLOOM_DURATION_MS = 700;
 const INKBLOOM_REDUCED_DURATION_MS = 180;
 
-type AnnouncerProps = { message: string };
+interface AnnouncerProps {
+  message: string;
+}
 
 export function Announcer({ message }: AnnouncerProps) {
   return (
@@ -18,11 +20,11 @@ export function Announcer({ message }: AnnouncerProps) {
   );
 }
 
-type FieldProps = {
+interface FieldProps {
   label: string;
   value: string;
   children: ReactNode;
-};
+}
 
 export function Field({ label, value, children }: FieldProps) {
   return (
@@ -36,17 +38,20 @@ export function Field({ label, value, children }: FieldProps) {
   );
 }
 
-type ReadOnlySwatchProps = { color: string; name: string };
+interface ReadOnlySwatchProps {
+  color: string;
+  name: string;
+}
 
 export function ReadOnlySwatch({ color, name }: ReadOnlySwatchProps) {
   return <span className="swatch" style={{ background: color }} title={name} />;
 }
 
-type EditableSwatchProps = {
+interface EditableSwatchProps {
   color: string;
   name: string;
   onColorChange: (nextHex: string) => void;
-};
+}
 
 export function EditableSwatch({ color, name, onColorChange }: EditableSwatchProps) {
   return (
@@ -66,13 +71,13 @@ export function EditableSwatch({ color, name, onColorChange }: EditableSwatchPro
   );
 }
 
-type SegmentsProps<Value extends string> = {
+interface SegmentsProps<Value extends string> {
   options: readonly { value: Value; label: string }[];
   value: Value;
   onChange: (nextValue: Value) => void;
   layout?: 'four' | 'five';
   legend: string;
-};
+}
 
 export function Segments<Value extends string>({
   options,
@@ -100,7 +105,7 @@ export function Segments<Value extends string>({
   );
 }
 
-type MondrianFrameProps = {
+interface MondrianFrameProps {
   rects: ColoredRect[];
   palette: Palette;
   lineWeight: number;
@@ -108,7 +113,7 @@ type MondrianFrameProps = {
   animationMode: AnimationMode;
   reducedMotion: boolean;
   onCompose: () => void;
-};
+}
 
 export function MondrianFrame({
   rects,

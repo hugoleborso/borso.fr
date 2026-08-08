@@ -11,8 +11,7 @@ export const ALLOWED_IMAGE_MIMES = ['image/png', 'image/jpeg', 'image/webp', 'im
 
 export type FileDropChartKind = 'pdf' | 'image';
 export type AllowedUploadContentType =
-  | typeof ALLOWED_PDF_MIME
-  | (typeof ALLOWED_IMAGE_MIMES)[number];
+  typeof ALLOWED_PDF_MIME | (typeof ALLOWED_IMAGE_MIMES)[number];
 
 export type FileValidationResult =
   | { ok: true; kind: FileDropChartKind; contentType: AllowedUploadContentType }

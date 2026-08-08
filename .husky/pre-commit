@@ -1,18 +1,22 @@
 set -e
 
-# Repo-wide Biome check (lint + formatter) at every commit — fast,
-# catches per-file issues before they accumulate in a branch. Runs at
-# root scope so it covers files outside any pnpm workspace (e.g.,
-# scripts/, docs/-adjacent code), complementing the per-workspace
-# `pnpm -r lint` step in CI. Biome takes ~1 s on this repo. Rung-1
-# eradication (combined with the ci.yml backup below) of
-# docs/dantotsus/biome-lint-was-not-gated-anywhere.md — the defect
-# class is now structurally unable to land in main: pre-commit rejects
-# the introducing commit, and if the hook is bypassed CI rejects the
-# PR. `check` (instead of `lint`) brings formatter drift into the gate
-# too — formatting is part of the standard, not optional.
-echo "[pre-commit] running biome check (lint + format)"
-pnpm exec biome check
+# Repo-wide ESLint + Prettier check at every commit. Runs at root scope so it
+# covers files outside any pnpm workspace, e.g. scripts/ and eslint-rules/,
+# complementing the per-workspace `pnpm -r lint` step in ci.yml.
+#
+# Rung-1 eradication, together with the ci.yml backup, of
+# docs/dantotsus/biome-lint-was-not-gated-anywhere.md. The defect class cannot
+# land in main, because pre-commit rejects the introducing commit and CI
+# rejects the pull request when someone bypasses the hook.
+#
+# `--max-warnings 0` is deliberately absent while the react-hooks warnings
+# inherited from the biome era are still being cleared. The errors gate is
+# hard, and eslint-suppressions.json is the inventory of what is left.
+echo "[pre-commit] running eslint"
+pnpm exec eslint . --cache --cache-location .eslintcache
+
+echo "[pre-commit] running prettier"
+pnpm exec prettier --check . --cache
 
 # Run the relevant @borso/* infra package's full test suite (including 100%
 # coverage thresholds) whenever a commit touches its source. Cheap to skip

@@ -62,7 +62,7 @@ function usePrefersReducedMotion(): boolean {
 }
 
 export function App() {
-  const reducedMotion = usePrefersReducedMotion();
+  const isReducedMotion = usePrefersReducedMotion();
 
   const initialUrlState = useMemo(
     () => readUrlState(window.location.search, { paletteKey: 'classic' }),
@@ -362,7 +362,7 @@ export function App() {
             lineWeight={lineWeight}
             drawKey={drawKey}
             animationMode={animationMode}
-            reducedMotion={reducedMotion}
+            reducedMotion={isReducedMotion}
             onCompose={compose}
           />
         </div>

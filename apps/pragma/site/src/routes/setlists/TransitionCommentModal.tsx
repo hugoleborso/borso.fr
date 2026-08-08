@@ -62,11 +62,11 @@ export function TransitionCommentModal({
         <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-4">
           {t('setlist.transitionCommentTitle')}
         </h3>
-        {displayError !== null ? (
+        {displayError === null ? null : (
           <p className="text-danger text-sm mb-3" role="alert">
             {displayError}
           </p>
-        ) : null}
+        )}
         {existing.isLoading ? (
           <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
         ) : (

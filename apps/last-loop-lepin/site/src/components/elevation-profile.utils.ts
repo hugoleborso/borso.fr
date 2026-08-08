@@ -40,8 +40,8 @@ function clampFraction(fraction: number): number {
 }
 
 function zipSamples(
-  pointElevations: ReadonlyArray<number>,
-  cumulativeDistances: ReadonlyArray<number>,
+  pointElevations: readonly number[],
+  cumulativeDistances: readonly number[],
 ): readonly Sample[] {
   // Lock-step iteration: `for…of` over `pointElevations` yields each entry
   // as `number` (not `number | undefined`), and a fresh iterator over
@@ -112,8 +112,8 @@ function summarise(samples: readonly Sample[]): SampleStats | null {
  * @param height pixel height of the SVG `viewBox`.
  */
 export function buildProfileGeometry(
-  pointElevations: ReadonlyArray<number>,
-  cumulativeDistances: ReadonlyArray<number>,
+  pointElevations: readonly number[],
+  cumulativeDistances: readonly number[],
   width: number,
   height: number,
 ): ProfileGeometry {
@@ -170,7 +170,7 @@ export function buildProfileGeometry(
     // trade a binary-search optimisation for a simpler closure.
     let previousSample = firstSample;
     let foundSample = lastSample;
-    let foundSegment = false;
+    let isFoundSegment = false;
     let isFirstIteration = true;
     for (const sample of samples) {
       if (isFirstIteration) {
@@ -182,10 +182,10 @@ export function buildProfileGeometry(
         continue;
       }
       foundSample = sample;
-      foundSegment = true;
+      isFoundSegment = true;
       break;
     }
-    if (!foundSegment) return yForElevation(lastSample.elevation);
+    if (!isFoundSegment) return yForElevation(lastSample.elevation);
     // `segmentSpan === 0` is unreachable here: `previousSample` is only
     // advanced when its cumulative was strictly < `targetDistance`, and
     // `foundSample.cumulative >= targetDistance`, so they cannot be

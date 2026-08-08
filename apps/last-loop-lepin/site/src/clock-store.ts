@@ -23,10 +23,12 @@ function ensureInterval(): void {
 }
 
 function maybeStopInterval(): void {
-  if (intervalId !== null && listeners.size === 0) {
-    clearInterval(intervalId);
-    intervalId = null;
+  if (!(intervalId !== null && listeners.size === 0)) {
+    return;
   }
+
+  clearInterval(intervalId);
+  intervalId = null;
 }
 
 export function subscribeClock(listener: Listener): () => void {

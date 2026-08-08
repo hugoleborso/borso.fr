@@ -181,7 +181,7 @@ void main() {
 }
 `;
 
-type GalaxyProps = {
+interface GalaxyProps {
   focal?: [number, number];
   rotation?: [number, number];
   starSpeed?: number;
@@ -198,7 +198,7 @@ type GalaxyProps = {
   rotationSpeed?: number;
   autoCenterRepulsion?: number;
   transparent?: boolean;
-};
+}
 
 const MOUSE_LERP_FACTOR = 0.05;
 

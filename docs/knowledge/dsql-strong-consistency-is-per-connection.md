@@ -5,7 +5,7 @@
 Two HTTP requests to a Lambda-backed API — a write (`PUT`) immediately
 followed by a read (`GET`) — can be served by **different Lambda
 invocations on different DSQL connections**. Aurora DSQL gives you
-read-your-own-writes consistency *within a connection/transaction*, but
+read-your-own-writes consistency _within a connection/transaction_, but
 a read that starts on connection B microseconds after a commit on
 connection A can still observe the **pre-commit snapshot**. The commit
 is durable and globally consistent shortly after, but "shortly" is long
@@ -23,7 +23,7 @@ The obvious local check — a tight `curl` loop doing `PUT` then `GET` —
 gives a **false PASS**. `curl` (and most keep-alive HTTP clients) reuse
 a single warm connection, so the `GET` rides the same DSQL session as
 the `PUT` and reads-its-own-writes consistently. The lag only shows
-across *separate* connections, which is exactly the browser → API → new
+across _separate_ connections, which is exactly the browser → API → new
 Lambda shape. If you must probe this from the shell, force a new
 connection per request (e.g. separate processes, `Connection: close`),
 or — better — reproduce in the real client and watch the network.

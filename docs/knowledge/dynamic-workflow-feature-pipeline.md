@@ -115,7 +115,7 @@ regenerated script honours.
 - The verdict YAMLs at `runs/<run-id>/agents/<skill>-<NN>.md` are the
   authoritative record of what each subagent decided.
 - If the run aborts (Claude Code exit, network drop, runtime crash),
-  resume is *not* automatic across sessions. Re-launch
+  resume is _not_ automatic across sessions. Re-launch
   `/feature-pipeline <spec-path>`; the script reads `state.json`, skips
   already-completed stages, and continues.
 

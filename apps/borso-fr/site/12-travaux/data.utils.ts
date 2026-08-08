@@ -3,7 +3,10 @@ import type { ChallengeKind, ChallengeStatus, Data, Month, ProofType, Year } fro
 const DONE_WEIGHT = 1;
 const PARTIAL_WEIGHT = 0.5;
 
-type Score = { done: number; total: number };
+interface Score {
+  done: number;
+  total: number;
+}
 
 export function monthScore(month: Month): Score {
   let done = 0;

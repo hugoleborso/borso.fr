@@ -81,8 +81,8 @@ export async function removeEntryAndCompact(
   setlistId: string,
   entryId: string,
 ): Promise<boolean> {
-  const ok = await deleteEntry(database, setlistId, entryId);
-  if (!ok) return false;
+  const isOk = await deleteEntry(database, setlistId, entryId);
+  if (!isOk) return false;
   // Compact positions so the next append lands at the right index.
   const remaining = await listEntries(database, setlistId);
   for (let position = 0; position < remaining.length; position += 1) {

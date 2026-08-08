@@ -171,17 +171,17 @@ export function EditionEditForm({
             onChange={(event) => onGpxFileChange(event.target.files?.[0] ?? null)}
             required={!isEditing}
           />
-          {gpxFile !== null ? (
+          {gpxFile === null ? null : (
             <div className="muted mono" style={{ fontSize: 11 }}>
               {gpxFile.name} ({(gpxFile.size / 1024).toFixed(1)} kB)
             </div>
-          ) : null}
-          {gpxReadError !== null ? <div className="error-text">{gpxReadError}</div> : null}
+          )}
+          {gpxReadError === null ? null : <div className="error-text">{gpxReadError}</div>}
         </div>
         <div className="muted mono" style={{ fontSize: 11 }}>
           Sunrise / sunset sont calculés depuis le premier point du GPX et la date de départ.
         </div>
-        {error !== null ? <div className="error-text">{error}</div> : null}
+        {error === null ? null : <div className="error-text">{error}</div>}
         <div className="row" style={{ gap: 'var(--d-2)', flexWrap: 'wrap' }}>
           <button
             className="btn btn-primary"

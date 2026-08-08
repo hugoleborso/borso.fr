@@ -22,6 +22,7 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
 ## 2025 — Première édition
 
 ### Janvier
+
 - **Sport tous les jours** (daily)
   - status:
   - note:
@@ -32,6 +33,7 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
   - proofs:
 
 ### Février
+
 - **2h de téléphone / jour en moyenne** (daily)
   - status:
   - note:
@@ -42,30 +44,35 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
   - proofs:
 
 ### Mars
+
 - **Passer la Flèche d'Or** (oneshot)
   - status:
   - note:
   - proofs:
 
 ### Avril
+
 - **5 km sub-20** (oneshot)
   - status:
   - note:
   - proofs:
 
 ### Mai
+
 - **Le GR75** (oneshot)
   - status:
   - note:
   - proofs:
 
 ### Juin
+
 - **Finir la Montecristo** (oneshot)
   - status:
   - note:
   - proofs:
 
 ### Juillet
+
 - **Apprendre 1 ouverture / jour** (daily)
   - status:
   - note:
@@ -76,6 +83,7 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
   - proofs:
 
 ### Août
+
 - **200 km à vélo d'un coup** (oneshot)
   - status:
   - note:
@@ -86,6 +94,7 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
   - proofs:
 
 ### Septembre
+
 - **Triathlon L et battre mon record** (oneshot)
   - status:
   - note:
@@ -100,18 +109,21 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
   - proofs:
 
 ### Octobre
+
 - **20 m en apnée** (oneshot)
   - status:
   - note:
   - proofs:
 
 ### Novembre
+
 - **100× les marches de Montmartre dans la journée** (oneshot)
   - status:
   - note:
   - proofs:
 
 ### Décembre
+
 - **Aller en Italie sans utiliser l'anglais** (oneshot)
   - status:
   - note:
@@ -126,6 +138,7 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
 ## 2026 — Deuxième édition
 
 ### Janvier
+
 - **Mois de la positivité — partager du positif chaque jour avec les colocs** (daily)
   - status:
   - note:
@@ -136,6 +149,7 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
   - proofs:
 
 ### Février
+
 - **Au lit à 23h, extinction 23h30 (6j/7)** (daily)
   - status:
   - note:
@@ -150,6 +164,7 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
   - proofs:
 
 ### Mars
+
 - **Être admissible au CAPES de maths** (oneshot)
   - status:
   - note:
@@ -164,18 +179,21 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
   - proofs:
 
 ### Avril
+
 - **Courir toutes les lignes de métro dans l'ordre en 1 mois** (daily)
   - status:
   - note:
   - proofs:
 
 ### Mai
+
 - **Organiser une Backyard et y participer** (oneshot)
   - status:
   - note:
   - proofs:
 
 ### Juin
+
 - **1 poème / jour à une personne différente** (daily)
   - status:
   - note:
@@ -186,6 +204,7 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
   - proofs:
 
 ### Juillet
+
 - **Sub-1h30 au semi** (oneshot)
   - status:
   - note:
@@ -196,30 +215,35 @@ Tu peux laisser `proofs:` vide. Tu peux supprimer un champ que tu ne veux pas re
   - proofs:
 
 ### Août
+
 - **Traversée du lac d'Annecy à la nage** (oneshot)
   - status:
   - note:
   - proofs:
 
 ### Septembre
+
 - **Sub-6h au L de Lépin** (oneshot)
   - status:
   - note:
   - proofs:
 
 ### Octobre
+
 - **Paris–Dieppe à vélo en 1j et se baigner** (oneshot)
   - status:
   - note:
   - proofs:
 
 ### Novembre
+
 - **3000 pages lues dans le mois** (count)
   - status:
   - note:
   - proofs:
 
 ### Décembre
+
 - **Atteindre 1500 ELO aux échecs dans une cadence** (oneshot)
   - status:
   - note:

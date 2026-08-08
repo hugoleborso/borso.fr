@@ -57,7 +57,7 @@ export function SongDetailPage(): JSX.Element {
   const members = membersQuery.data?.members ?? [];
   const instruments = instrumentsQuery.data?.instruments ?? [];
   const masteryDefaults = masteryQuery.data?.defaults ?? [];
-  const loading =
+  const isLoading =
     songQuery.isLoading ||
     membersQuery.isLoading ||
     instrumentsQuery.isLoading ||
@@ -91,7 +91,7 @@ export function SongDetailPage(): JSX.Element {
     updateSong.mutate({ id: song.id, defaultLineup: lineup ?? {} });
   };
 
-  if (loading) {
+  if (isLoading) {
     return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
   if (song === null) {
@@ -126,14 +126,14 @@ export function SongDetailPage(): JSX.Element {
           </h1>
           <div className="flex items-center gap-2.5 text-[13px] text-ink-500 flex-wrap">
             <span>{song.artist}</span>
-            {tonality !== null ? (
+            {tonality === null ? null : (
               <>
                 <span className="text-ink-300">·</span>
                 <span className="font-mono text-xs">
                   {tonality.slice(0, MAX_TONALITY_RENDER_LENGTH)}
                 </span>
               </>
-            ) : null}
+            )}
             <span className="text-ink-300">·</span>
             <StatusChip status={song.status} />
             <span className="text-ink-300">·</span>
@@ -156,11 +156,11 @@ export function SongDetailPage(): JSX.Element {
         </div>
       </header>
 
-      {error !== null ? (
+      {error === null ? null : (
         <p className="text-danger text-sm" role="alert">
           {error}
         </p>
-      ) : null}
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
         <div className="flex flex-col gap-4 min-w-0">
@@ -318,7 +318,7 @@ export function SongDetailPage(): JSX.Element {
                       ))}
                     </div>
                     <span className="font-mono text-[11px] text-ink-400 min-w-[24px] text-right">
-                      {score !== null ? `${score}/10` : '—'}
+                      {score === null ? '—' : `${score}/10`}
                     </span>
                   </div>
                 );
@@ -326,12 +326,12 @@ export function SongDetailPage(): JSX.Element {
             </div>
           </Card>
 
-          {song.baseEnergy !== null ? (
+          {song.baseEnergy === null ? null : (
             <Card variant="flat" className="bg-bg-sunk border-0">
               <div className={`${labelClass} mb-1.5`}>{t('catalog.baseEnergy')}</div>
               <div className="font-mono text-[14px] text-ink-700">{song.baseEnergy}/10</div>
             </Card>
-          ) : null}
+          )}
         </aside>
       </div>
       <LineupEditor

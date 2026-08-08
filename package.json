@@ -8,16 +8,35 @@
   },
   "scripts": {
     "prepare": "husky",
-    "lint": "biome check",
-    "knip": "knip"
+    "lint": "eslint . --cache --cache-location .eslintcache",
+    "knip": "knip",
+    "lint:fix": "eslint . --cache --cache-location .eslintcache --fix",
+    "format": "prettier --write . --cache",
+    "format:check": "prettier --check . --cache",
+    "test:eslint-rules": "vitest run"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.0",
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
+    "@eslint-community/eslint-plugin-eslint-comments": "4.7.2",
+    "@eslint/js": "10.0.1",
+    "@vitest/eslint-plugin": "1.6.26",
     "esbuild": "^0.24.0",
+    "eslint": "10.8.1",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-import-resolver-typescript": "4.4.5",
+    "eslint-plugin-import-x": "4.17.1",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.3",
+    "eslint-plugin-unicorn": "73.0.0",
+    "globals": "17.9.0",
     "husky": "^9.1.0",
-    "knip": "6.10.0"
+    "knip": "6.10.0",
+    "prettier": "3.9.6",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "8.66.0",
+    "vitest": "4.1.10"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

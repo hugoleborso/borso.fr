@@ -1,4 +1,4 @@
-# commitlint enforces a hard 100-char cap on the commit *header*
+# commitlint enforces a hard 100-char cap on the commit _header_
 
 ## Symptom
 
@@ -20,14 +20,14 @@ A scope like `borso-fr` (8 chars) plus the type and separators consumes 14 chara
 
 Rough budget for the `<subject>` portion, by scope:
 
-| Scope | Boilerplate | Subject budget |
-| --- | --- | --- |
-| `feat(borso-fr): ` | 16 | 84 |
-| `fix(borso-fr): ` | 15 | 85 |
-| `docs(borso-fr): ` | 16 | 84 |
-| `feat(infra): ` | 13 | 87 |
-| `docs: ` | 6 | 94 |
-| `chore(deps): ` | 13 | 87 |
+| Scope              | Boilerplate | Subject budget |
+| ------------------ | ----------- | -------------- |
+| `feat(borso-fr): ` | 16          | 84             |
+| `fix(borso-fr): `  | 15          | 85             |
+| `docs(borso-fr): ` | 16          | 84             |
+| `feat(infra): `    | 13          | 87             |
+| `docs: `           | 6           | 94             |
+| `chore(deps): `    | 13          | 87             |
 
 If the subject would be longer, move detail into the body — that's what the body is for. Conventional Commits explicitly recommends short headers and rich bodies.
 
@@ -43,7 +43,7 @@ Two `-m` flags create a two-paragraph commit (header + body). Don't try to amend
 
 - Don't bypass the hook with `--no-verify`. Repo rule (CLAUDE.md): hook failures are fixed, never bypassed.
 - Don't loosen `header-max-length` in `commitlint.config.js`. The cap is in place for a reason: PR titles, GitHub web UI, log readers all assume single-line, scannable headers.
-- Don't pad the body with the same content the header would have carried. Use the body for the *why* and *what changed*, not for the long version of the title.
+- Don't pad the body with the same content the header would have carried. Use the body for the _why_ and _what changed_, not for the long version of the title.
 
 ## See also
 

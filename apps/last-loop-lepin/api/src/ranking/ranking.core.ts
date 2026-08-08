@@ -75,9 +75,9 @@ function progressFor(
 }
 
 function compareProgresses(left: RunnerProgress, right: RunnerProgress): number {
-  const leftIsInRace = left.status.kind === 'in-race';
-  const rightIsInRace = right.status.kind === 'in-race';
-  if (leftIsInRace !== rightIsInRace) return leftIsInRace ? -1 : 1;
+  const isLeftIsInRace = left.status.kind === 'in-race';
+  const isRightIsInRace = right.status.kind === 'in-race';
+  if (isLeftIsInRace !== isRightIsInRace) return isLeftIsInRace ? -1 : 1;
   if (left.lastValidLoop !== right.lastValidLoop) {
     return right.lastValidLoop - left.lastValidLoop;
   }
@@ -140,10 +140,10 @@ export function computeStandings(
 
   const result = progresses.reduce<RankAccumulator>(
     (accumulator, progress) => {
-      const tied =
+      const isTied =
         accumulator.previous !== null && tiesForRanking(accumulator.previous.progress, progress);
-      const assignedRank: number | 'ex-aequo' = tied ? 'ex-aequo' : accumulator.currentRank + 1;
-      const nextRank = tied ? accumulator.currentRank : accumulator.currentRank + 1;
+      const assignedRank: number | 'ex-aequo' = isTied ? 'ex-aequo' : accumulator.currentRank + 1;
+      const nextRank = isTied ? accumulator.currentRank : accumulator.currentRank + 1;
 
       const newEntry: RankedRunner = {
         runner: progress.runner,
@@ -154,7 +154,7 @@ export function computeStandings(
       };
 
       const updatedRanked =
-        tied && accumulator.previous !== null
+        isTied && accumulator.previous !== null
           ? accumulator.ranked.map((entry, idx) =>
               idx === accumulator.previous?.index ? { ...entry, rank: 'ex-aequo' as const } : entry,
             )

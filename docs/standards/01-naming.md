@@ -56,16 +56,16 @@ reorderSetlistEntries(entries, movedEntryId, targetPosition);
 
 The verbs we use, and what each one promises:
 
-| Verb | Returns |
-|------|---------|
-| `find…` | The thing, or `null` when it is absent |
-| `get…` | The thing, and throws when it is absent |
-| `list…` | An array, possibly empty |
-| `build…` and `compose…` | A new value assembled from parts |
-| `project…` and `derive…` | A view computed from source data |
-| `select…` | One option chosen from several |
-| `assert…` | Nothing, and throws when the check fails |
-| `is…`, `has…`, and `can…` | A boolean |
+| Verb                      | Returns                                  |
+| ------------------------- | ---------------------------------------- |
+| `find…`                   | The thing, or `null` when it is absent   |
+| `get…`                    | The thing, and throws when it is absent  |
+| `list…`                   | An array, possibly empty                 |
+| `build…` and `compose…`   | A new value assembled from parts         |
+| `project…` and `derive…`  | A view computed from source data         |
+| `select…`                 | One option chosen from several           |
+| `assert…`                 | Nothing, and throws when the check fails |
+| `is…`, `has…`, and `can…` | A boolean                                |
 
 The verbs `handle`, `process`, `manage`, and `do` are banned, because a reader
 cannot predict what any of them will do.
@@ -80,16 +80,16 @@ un-negate it every time it appears inside a `!`.
 
 ## A file name says what the file contains
 
-| Suffix | Contents |
-|--------|----------|
-| `<domain>.controller.ts` | HTTP routes, and no logic |
-| `<domain>.service.ts` | Orchestration and input and output |
-| `<domain>.repository.ts` | Database access only |
-| `<domain>.schema.ts` | Drizzle tables and Zod input schemas |
-| `<domain>.core.ts` | Pure domain rules, covered fully |
-| `<topic>.utils.ts` | Pure cross-cutting helpers, covered fully |
-| `<domain>.types.ts` | Types shared inside one slice |
-| `<Component>.tsx` | Exactly one React component |
+| Suffix                   | Contents                                  |
+| ------------------------ | ----------------------------------------- |
+| `<domain>.controller.ts` | HTTP routes, and no logic                 |
+| `<domain>.service.ts`    | Orchestration and input and output        |
+| `<domain>.repository.ts` | Database access only                      |
+| `<domain>.schema.ts`     | Drizzle tables and Zod input schemas      |
+| `<domain>.core.ts`       | Pure domain rules, covered fully          |
+| `<topic>.utils.ts`       | Pure cross-cutting helpers, covered fully |
+| `<domain>.types.ts`      | Types shared inside one slice             |
+| `<Component>.tsx`        | Exactly one React component               |
 
 [02. Purity and core files](./02-purity-and-core-files.md) explains what makes
 a file `.core.ts` rather than `.utils.ts`.
@@ -117,13 +117,13 @@ this repository is written in English, with no exceptions.
 The rule covers words that arrive in French during a conversation, and you
 translate them at the moment you write them down rather than later.
 
-| Heard in chat | Written in code |
-|---------------|-----------------|
-| `prenom` | `firstName` |
-| `lieu` | `location` |
-| `porteurTonal` | `tonalCentreHolder` |
-| `matos` | `equipment` |
-| `fiche coureur` | `runnerProfile` |
+| Heard in chat   | Written in code     |
+| --------------- | ------------------- |
+| `prenom`        | `firstName`         |
+| `lieu`          | `location`          |
+| `porteurTonal`  | `tonalCentreHolder` |
+| `matos`         | `equipment`         |
+| `fiche coureur` | `runnerProfile`     |
 
 Text that a user reads is the one place where non-English words exist, and it
 lives in `site/src/i18n/fr.json` rather than inline in a component. See

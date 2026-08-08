@@ -25,7 +25,7 @@ function formatDurationMs(ms: number): string {
 function deriveLoopDurations(
   raceStartIso: string | undefined,
   punches: readonly LoopPunchDto[],
-): ReadonlyArray<{ loopIndex: number; finishedAt: string; durationMs: number; voided: boolean }> {
+): readonly { loopIndex: number; finishedAt: string; durationMs: number; voided: boolean }[] {
   const validSorted = punches
     .filter((punch) => punch.voidedAt === null)
     .toSorted((left, right) => left.loopIndex - right.loopIndex);
@@ -87,7 +87,7 @@ export function RunnerFichePage({ editionSlug, runnerSlug }: RunnerFichePageProp
       <div className="card">
         <div className="card-head">
           <h2 className="card-title">Fiche coureur</h2>
-          {edition !== null ? <span className="muted mono">{edition.displayName}</span> : null}
+          {edition === null ? null : <span className="muted mono">{edition.displayName}</span>}
         </div>
         <div className="card-body row" style={{ gap: 'var(--d-5)', flexWrap: 'wrap' }}>
           <div
@@ -98,8 +98,8 @@ export function RunnerFichePage({ editionSlug, runnerSlug }: RunnerFichePageProp
           </div>
           <div className="col">
             <strong style={{ fontSize: 20 }}>{runner.displayName}</strong>
-            {runner.bib !== null ? <span className="muted mono">Dossard #{runner.bib}</span> : null}
-            {entry !== undefined ? (
+            {runner.bib === null ? null : <span className="muted mono">Dossard #{runner.bib}</span>}
+            {entry === undefined ? null : (
               <span
                 className={`status-pill ${entry.status.kind === 'in-race' ? 'in-race' : 'dnf'}`}
               >
@@ -107,7 +107,7 @@ export function RunnerFichePage({ editionSlug, runnerSlug }: RunnerFichePageProp
                   ? `En course · boucle ${entry.status.lastLoop}`
                   : `DNF · boucle ${entry.status.outAtLoop}`}
               </span>
-            ) : null}
+            )}
             <span className="muted">
               Rang actuel :{' '}
               {entry === undefined ? '—' : entry.rank === 'ex-aequo' ? 'ex-æquo' : entry.rank}

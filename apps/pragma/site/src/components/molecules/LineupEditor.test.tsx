@@ -63,7 +63,7 @@ function findButtonByText(container: HTMLElement, label: string): HTMLButtonElem
 function findInstrumentSelectFor(container: HTMLElement, memberId: string): HTMLSelectElement {
   const select = container.querySelector(`#lineup-editor-instrument-${memberId}`);
   if (!(select instanceof HTMLSelectElement)) {
-    throw new Error(`no select found for member ${memberId}`);
+    throw new TypeError(`no select found for member ${memberId}`);
   }
   return select;
 }

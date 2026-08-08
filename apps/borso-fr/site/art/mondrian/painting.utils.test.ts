@@ -137,13 +137,13 @@ describe('generateLayout', () => {
         const firstRect = layout[firstIndex];
         const secondRect = layout[secondIndex];
         if (!firstRect || !secondRect) continue;
-        const overlapsHorizontally =
+        const isOverlapsHorizontally =
           firstRect.x < secondRect.x + secondRect.width &&
           secondRect.x < firstRect.x + firstRect.width;
-        const overlapsVertically =
+        const isOverlapsVertically =
           firstRect.y < secondRect.y + secondRect.height &&
           secondRect.y < firstRect.y + firstRect.height;
-        expect(overlapsHorizontally && overlapsVertically).toBe(false);
+        expect(isOverlapsHorizontally && isOverlapsVertically).toBe(false);
       }
     }
   });
@@ -168,21 +168,21 @@ describe('generateLayout', () => {
   });
 
   it('produces both vertical and horizontal splits across many seeds (covers vertical / horizontal branches)', () => {
-    let sawVerticalSplit = false;
-    let sawHorizontalSplit = false;
+    let isSawVerticalSplit = false;
+    let isSawHorizontalSplit = false;
     for (
       let seedIndex = 1;
-      seedIndex < 30 && !(sawVerticalSplit && sawHorizontalSplit);
+      seedIndex < 30 && !(isSawVerticalSplit && isSawHorizontalSplit);
       seedIndex++
     ) {
       const layout = generateLayout({ seed: seedIndex, complexity: 22 });
       const xCoords = new Set(layout.map((generatedRect) => generatedRect.x));
       const yCoords = new Set(layout.map((generatedRect) => generatedRect.y));
-      if (xCoords.size > 2) sawVerticalSplit = true;
-      if (yCoords.size > 2) sawHorizontalSplit = true;
+      if (xCoords.size > 2) isSawVerticalSplit = true;
+      if (yCoords.size > 2) isSawHorizontalSplit = true;
     }
-    expect(sawVerticalSplit).toBe(true);
-    expect(sawHorizontalSplit).toBe(true);
+    expect(isSawVerticalSplit).toBe(true);
+    expect(isSawHorizontalSplit).toBe(true);
   });
 });
 

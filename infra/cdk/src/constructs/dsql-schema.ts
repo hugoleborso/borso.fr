@@ -208,7 +208,7 @@ export class DsqlSchema extends Construct {
         schemaName: this.schemaName,
         migrations,
         migrationsDigest: digestMigrations(migrations),
-        ...(props.cloneFromSchema !== undefined ? { cloneFromSchema: props.cloneFromSchema } : {}),
+        ...(props.cloneFromSchema === undefined ? {} : { cloneFromSchema: props.cloneFromSchema }),
       },
     });
 

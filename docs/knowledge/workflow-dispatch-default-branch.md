@@ -47,7 +47,7 @@ done locally; the workflow only became UI-triggerable after merge.
    (post-merge), the UI shows the button AND lets you run against
    any branch — including a fresh PR's branch. So
    `workflow_dispatch` is genuinely useful for testing PR-branch
-   code, just not for *bootstrapping* the workflow itself.
+   code, just not for _bootstrapping_ the workflow itself.
 
 **Root cause:** we thought `workflow_dispatch` workflows were
 triggerable from any branch they exist on. Actually GitHub
@@ -65,7 +65,7 @@ introduced by a PR doesn't appear in the UI until that PR merges.
 
 - **Code:** none — GitHub's intentional behaviour.
 - **Operator action when adding a new dispatchable workflow:**
-  - For the *first* run, deploy locally (or push the workflow to
+  - For the _first_ run, deploy locally (or push the workflow to
     a throwaway commit on `main`, run, then revert).
   - After merge, the workflow appears in the UI; future runs go
     through the dropdown and pick the desired branch.

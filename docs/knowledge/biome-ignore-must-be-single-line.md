@@ -2,7 +2,7 @@
 
 Biome's suppression comment is recognised only when it sits on the
 **single line directly above** the diagnostic. A multi-line comment
-block — even if the *first* line is the `// biome-ignore` directive —
+block — even if the _first_ line is the `// biome-ignore` directive —
 isn't recognised, and the rule fires.
 
 ## How it bit us
@@ -19,7 +19,7 @@ useEffect(() => {
 ```
 
 Biome continued to emit the diagnostic. Reason: the directive line was
-*two* lines above `useEffect`, with another `//` comment in between.
+_two_ lines above `useEffect`, with another `//` comment in between.
 Biome only looks one line up.
 
 Fixed by collapsing to a single line:
@@ -34,7 +34,7 @@ useEffect(() => {
 ## Why the single-line constraint
 
 Per [biome's docs](https://biomejs.dev/linter/suppressions/),
-suppression comments are scoped to the *next non-comment node*. The
+suppression comments are scoped to the _next non-comment node_. The
 parser doesn't treat a sequence of `//` comments as a continuation;
 each line is its own comment and only the one immediately preceding
 the diagnostic is considered.
@@ -53,7 +53,7 @@ Other rules of thumb:
 
 The accompanying signal is `lint/suppressions/unused` firing on the
 exact `// biome-ignore` line that should have been suppressing the
-diagnostic. When you see "this suppression is unused" *and* the
+diagnostic. When you see "this suppression is unused" _and_ the
 original rule still firing, the comment is in the wrong place.
 
 ## Related

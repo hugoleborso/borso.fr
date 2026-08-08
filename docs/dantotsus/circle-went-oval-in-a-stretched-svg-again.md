@@ -16,8 +16,8 @@ tags: [react, svg, biome, grit, plugins, pragma]
 ## Symptom
 
 The energy sparkline on the setlist editor rendered its point markers
-as horizontally-squashed ovals on desktop. User: *"l'energy bar : les
-points sont moches et ovale en mode desktop."*
+as horizontally-squashed ovals on desktop. User: _"l'energy bar : les
+points sont moches et ovale en mode desktop."_
 
 ## Root-cause chain
 
@@ -25,7 +25,7 @@ points sont moches et ovale en mode desktop."*
    `<svg preserveAspectRatio="none">` stretched to the full container
    width. Non-uniform scaling stretches X far more than Y on a wide
    layout, so a circle becomes an ellipse.
-2. **Why was this not caught before shipping?** It *had* been — this
+2. **Why was this not caught before shipping?** It _had_ been — this
    exact trap was already documented in
    [`docs/knowledge/svg-preserveaspectratio-distorts-non-uniform.md`](../knowledge/svg-preserveaspectratio-distorts-non-uniform.md),
    added in an earlier PR (`c5eb3e0`). The knowledge entry existed and
@@ -38,13 +38,13 @@ points sont moches et ovale en mode desktop."*
 4. **Why did the first fix make it worse?** The first attempt
    (`f1b5ebf`) reached for a `ResizeObserver` to measure the width and
    render the SVG 1:1 — JavaScript to make a circle round. The user
-   pushed back: *"There is no way we need a useEffect to force a circle
-   to be round."* The right fix is pure layout.
+   pushed back: _"There is no way we need a useEffect to force a circle
+   to be round."_ The right fix is pure layout.
 
-**Root cause:** *thought "we documented this SVG-distortion trap, so the
+**Root cause:** _thought "we documented this SVG-distortion trap, so the
 team won't hit it again", actually "a level-5 knowledge entry has no
 teeth — only a lint that fires at the offending keystroke prevents a
-documented trap from recurring".*
+documented trap from recurring"._
 
 ## Detection failure causes
 
@@ -60,7 +60,7 @@ documented trap from recurring".*
 ## Countermeasure
 
 - **Code:** commit [`f209f36`](https://github.com/hugoleborso/borso.fr/commit/f209f36) —
-  keep the smooth area + line in the stretched SVG (a stretched *path*
+  keep the smooth area + line in the stretched SVG (a stretched _path_
   is fine, and `vector-effect="non-scaling-stroke"` keeps the line a
   uniform width) and render the point markers as CSS-positioned
   `rounded-full` elements over it: `left` as a percentage straight from

@@ -101,7 +101,7 @@ describe('last-loop-lepin app stack', () => {
       const template = synthAppStack(stage);
       const functions = template.findResources('AWS::Lambda::Function');
       const apiFn = Object.entries(functions).find(([logicalId]) =>
-        /AppApiFn/.test(logicalId),
+        logicalId.includes('AppApiFn'),
       )?.[1];
       expect(apiFn, `api function not found in ${stage} template`).toBeDefined();
       const variables = apiFn === undefined ? {} : readEnvVars(apiFn);
@@ -129,7 +129,7 @@ describe('last-loop-lepin app stack', () => {
 
     const prodVars = (() => {
       const fn = Object.entries(synthAppStack('prod').findResources('AWS::Lambda::Function')).find(
-        ([logicalId]) => /AppApiFn/.test(logicalId),
+        ([logicalId]) => logicalId.includes('AppApiFn'),
       )?.[1];
       return fn === undefined ? {} : readEnvVars(fn);
     })();
@@ -138,7 +138,7 @@ describe('last-loop-lepin app stack', () => {
     const previewVars = (() => {
       const fn = Object.entries(
         synthAppStack('preview').findResources('AWS::Lambda::Function'),
-      ).find(([logicalId]) => /AppApiFn/.test(logicalId))?.[1];
+      ).find(([logicalId]) => logicalId.includes('AppApiFn'))?.[1];
       return fn === undefined ? {} : readEnvVars(fn);
     })();
     expect(previewVars.ALLOWED_ORIGIN).toBe('https://last-loop-lepin-pr-1.preview.borso.fr');
@@ -196,7 +196,7 @@ describe('last-loop-lepin app stack', () => {
       const template = synthAppStack(stage);
       const functions = template.findResources('AWS::Lambda::Function');
       const apiFn = Object.entries(functions).find(([logicalId]) =>
-        /AppApiFn/.test(logicalId),
+        logicalId.includes('AppApiFn'),
       )?.[1];
       expect(apiFn, `api function not found in ${stage} template`).toBeDefined();
       const variables = apiFn === undefined ? {} : readEnvVars(apiFn);

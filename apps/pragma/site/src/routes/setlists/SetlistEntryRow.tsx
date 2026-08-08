@@ -165,7 +165,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           <Icon name="drag" size={16} />
         </button>
         <div className="min-w-0">
-          {props.prominentMemberInstrument !== null ? (
+          {props.prominentMemberInstrument === null ? null : (
             <div className="flex items-center gap-2 mb-1">
               <MemberChip
                 memberName={props.prominentMemberInstrument.memberName}
@@ -176,7 +176,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                 {props.prominentMemberInstrument.instrumentName}
               </span>
             </div>
-          ) : null}
+          )}
           {props.hasOverride ? (
             <div className="mb-1">
               <span className="inline-block whitespace-nowrap text-[10px] uppercase tracking-wider text-accent bg-accent-soft px-1.5 py-0.5 rounded font-medium">
@@ -189,15 +189,15 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           </div>
           <div className="flex items-center gap-2 text-[11.5px] text-ink-500 mt-0.5 flex-wrap">
             <span>{props.artist}</span>
-            {props.tonalityLabel !== null ? (
+            {props.tonalityLabel === null ? null : (
               <>
                 <span className="text-ink-300">·</span>
                 <span className="font-mono text-[10.5px] uppercase tracking-wider">
                   {props.tonalityLabel}
                 </span>
               </>
-            ) : null}
-            {props.meanMastery !== null ? (
+            )}
+            {props.meanMastery === null ? null : (
               <>
                 <span className="text-ink-300">·</span>
                 <span
@@ -208,7 +208,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                   {props.meanMastery.toFixed(1)}
                 </span>
               </>
-            ) : null}
+            )}
             <span className="text-ink-300">·</span>
             <MemberLineup
               lineup={props.lineup}

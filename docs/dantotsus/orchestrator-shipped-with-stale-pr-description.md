@@ -33,7 +33,7 @@ was actually about to merge.
 
 The user surfaced it in one sentence:
 
-> *N'oublie pas aussi de changer la description de la PR.*
+> _N'oublie pas aussi de changer la description de la PR._
 
 The fix took two minutes (one `update_pull_request` call). The fact
 that it required a human prompt is the defect.
@@ -49,8 +49,8 @@ that it required a human prompt is the defect.
 
 2. **Why** wasn't "update the PR body" part of `ship`?
    The original orchestrator design implicitly assumed one feature ≈
-   one PR opened *after* the orchestrator run. In practice, the PR
-   gets opened *during* the work (often before the orchestrator was
+   one PR opened _after_ the orchestrator run. In practice, the PR
+   gets opened _during_ the work (often before the orchestrator was
    even invoked, as a placeholder branch in Claude Code's web UI).
    The standard treated PR description as an artefact owned by
    something else (the human, an earlier session, a separate
@@ -59,7 +59,7 @@ that it required a human prompt is the defect.
 3. **Why** is that a problem and not just a preference?
    The PR description is the **only** thing a reviewer reads before
    approving. The validators write reports under `docs/features/<app>/
-   <slug>/validation/`; ADRs land under `docs/adr/`. None of those
+<slug>/validation/`; ADRs land under `docs/adr/`. None of those
    surface in the GitHub PR view unless the body links to them. A
    stale body silently divorces the PR view from the work.
 
@@ -72,8 +72,8 @@ that it required a human prompt is the defect.
    ogl) — the body and title from "seed meta slug" had nothing left
    in common with the final diff.
 
-**Root cause:** the `ship` stage *thought* its job was to land the
-code; *actually* its job is to land the code **and surface what
+**Root cause:** the `ship` stage _thought_ its job was to land the
+code; _actually_ its job is to land the code **and surface what
 landed to the next reader**. The PR description is part of "what
 landed" — it's the reader's first contact with the work and the only
 contact most reviewers ever have.
@@ -101,7 +101,7 @@ branch has no open PR, the step is skipped (the orchestrator never
 opens PRs on its own).
 
 - **Code:** commit `<sha>` — `.claude/skills/tech-lead-orchestrator/
-  standard.md` gains a *PR description maintenance (stage `ship`)*
+standard.md` gains a _PR description maintenance (stage `ship`)_
   section, plus the `ship` row in the stage-transition table now
   reads "Push successful, deploy reminder issued, **PR description
   updated to reflect what the run actually shipped**".
@@ -167,7 +167,7 @@ walk the new checklist.
 
 - [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](./believed-the-bundle-readme-not-the-live-package-json.md)
   — same PR. Shows the same pattern from a different angle: the
-  orchestrator's standards needed *additions*, not corrections, for
+  orchestrator's standards needed _additions_, not corrections, for
   the loop to be tight.
 - [`docs/dantotsus/feature-flow-skills-do-not-auto-trigger.md`](./feature-flow-skills-do-not-auto-trigger.md) —
   ancestor: feature-flow skills not auto-firing was the seed that

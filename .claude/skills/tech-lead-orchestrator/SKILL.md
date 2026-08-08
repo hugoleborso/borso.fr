@@ -43,12 +43,14 @@ is a signal we don't yet trust the agent on this kind of feature.
 ## When to invoke
 
 Invoke when:
+
 - The user opens with `/tech-lead-orchestrator "<feature description>"` or
   any of "be my tech lead for X", "drive this feature", "ship X end-to-end".
 - A feature is non-trivial (multi-file, has architectural choices, or touches
   more than one workspace).
 
 Do **not** invoke when:
+
 - The work is a one-line fix or a mechanical rename — direct edit.
 - The user is mid-discussion on direction and hasn't asked for an end-to-end
   run yet — keep the `/specification` loop alive on its own.
@@ -70,7 +72,7 @@ stage: spec → adrs → plan → implement → validate → arbitrate → ship
 
 Each transition appends one JSON object per line to
 `runs/<run-id>/journal.md.jsonl`. The schema for those events is given in
-[`standard.md`](./standard.md) (*Journal event schema*). The orchestrator
+[`standard.md`](./standard.md) (_Journal event schema_). The orchestrator
 never reads back its own journal during a run — it only writes; metrics
 are computed post-hoc.
 
@@ -85,8 +87,8 @@ are computed post-hoc.
      `state.specChecksum`. Continue.
 
    The spec is the source of truth for ADR-qualifying choices in stage 2.
-   Treat its *Questions, Options and Decisions* (Q.O.D.) section and
-   *Changes / Types* section as the inventory the orchestrator mines next.
+   Treat its _Questions, Options and Decisions_ (Q.O.D.) section and
+   _Changes / Types_ section as the inventory the orchestrator mines next.
    If the spec is thin on tech surface (no Q.O.D., no Types), the
    orchestrator escalates back to `/specification` with a request for
    detail — `/adr` cannot conjure architectural choices that
@@ -101,7 +103,7 @@ are computed post-hoc.
    `/adr`, surface the candidate list to the human via
    `AskUserQuestion`: one question per candidate, options
    `[ "Write ADR (Recommended)", "Skip — not really architectural",
-   "Merge with ADR <NNNN>" ]`. The human acts as tech-lead and either
+"Merge with ADR <NNNN>" ]`. The human acts as tech-lead and either
    confirms, drops, or merges each candidate. This is a `guidance` /
    `answer` human-message, **not** a `correction` — the orchestrator's
    judgment is a draft, the human ratifies. Append a
@@ -197,7 +199,7 @@ The classification is best-effort, captured by the orchestrator itself
 
 If a `pre-commit` or `pre-push` hook fails during `ship`, the orchestrator
 reads stderr and treats the failure as a `fail-local` verdict — back to
-arbitrate, never `--no-verify` (CLAUDE.md *Hooks* rule).
+arbitrate, never `--no-verify` (CLAUDE.md _Hooks_ rule).
 
 ### Spec immutability
 
@@ -219,7 +221,7 @@ escalation message.
    [`standard.md`](./standard.md#statejson-schema) and write to
    `docs/features/<app>/<slug>/runs/<run-id>/state.json`. Append a
    `run_started` event.
-3. **Walk the state machine** per the *Stages* section above. After
+3. **Walk the state machine** per the _Stages_ section above. After
    every stage transition, write `state.json`, append a
    `stage_changed` event.
 4. **At `ship`:** commit aborted-and-current runs, commit feature diff,
@@ -227,7 +229,7 @@ escalation message.
 5. **Append `run_completed`** with the final stage, the ADR count, the
    total retries.
 6. **If the diff touched `infra/shared/**`,** tell Hugo to approve the
-   pending `prod-shared` deploy in GitHub Actions (CLAUDE.md *Deployments*
+   pending `prod-shared` deploy in GitHub Actions (CLAUDE.md _Deployments_
    rule). Prod app deploys run automatically — no reminder needed.
 
 ## Failure modes to avoid
@@ -246,7 +248,7 @@ escalation message.
   `/technical-conception`'s auto-chain blocks **must** check
   `state.json#pilotedByTechLead` and stand down when it's true. The
   orchestrator drives every transition itself.
-- **Writing ADRs after the plan.** ADRs come *before* the plan — they
+- **Writing ADRs after the plan.** ADRs come _before_ the plan — they
   constrain it. Mining the plan for ADR candidates is too late and lets
   the plan ossify around assumptions that should have been ratified
   ADRs.
@@ -256,4 +258,4 @@ escalation message.
   pollutes `docs/adr/` and erodes trust in the orchestrator.
 - **Inventing TS code for the orchestrator.** This skill is markdown-
   driven. If a future change feels like it needs a TS workspace, that's
-  a smell — re-read CLAUDE.md *Layout* and reconsider.
+  a smell — re-read CLAUDE.md _Layout_ and reconsider.

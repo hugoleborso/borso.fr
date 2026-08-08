@@ -6,7 +6,7 @@ Brief explainer + the lesson from PR #23's elevation profile.
 
 An `<svg viewBox="0 0 800 200" preserveAspectRatio="none">` renders
 into whatever box CSS gives it, **without** preserving the 4:1 aspect
-ratio. Width and height scale *independently*. If the container is
+ratio. Width and height scale _independently_. If the container is
 600 × 200 (a 3:1 box), the horizontal scale is `600 / 800 = 0.75`
 and the vertical scale is `200 / 200 = 1.0`. A `<circle cx="400"
 cy="100" r="10">` is then drawn as an ellipse with rx = 7.5 px and
@@ -42,7 +42,7 @@ roughly the same aspect as its 4:1 viewBox anyway.
 
 ## When `preserveAspectRatio="none"` IS the right call
 
-When the SVG content is *intentionally* a stretch-to-fit visual
+When the SVG content is _intentionally_ a stretch-to-fit visual
 (e.g. a backdrop gradient that has no recognisable shapes, or a
 purely-decorative shape where distortion is acceptable). In any SVG
 containing circles, regular polygons, or text whose readability
@@ -50,7 +50,7 @@ depends on consistent x/y, `none` is the wrong setting.
 
 ## When you genuinely need the full-width stretch AND round shapes
 
-Sometimes letterboxing isn't acceptable — a full-width sparkline *wants*
+Sometimes letterboxing isn't acceptable — a full-width sparkline _wants_
 the curve stretched edge to edge, but its point markers must stay round.
 Don't measure the width with a `ResizeObserver` to force the SVG 1:1
 (that was PR #31's rejected first attempt — JavaScript to round a

@@ -57,10 +57,10 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
 
   const search = useSongSearch(debouncedQuery);
   const hits = search.data?.hits ?? [];
-  const loading = search.isFetching;
+  const isLoading = search.isFetching;
   const error =
     search.error instanceof ApiError ? search.error.message : search.error ? 'search-failed' : null;
-  const hasSearched = debouncedQuery.length > 0 && !loading && error === null;
+  const hasSearched = debouncedQuery.length > 0 && !isLoading && error === null;
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
@@ -78,12 +78,12 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
         />
       </div>
       <p className="text-xs text-ink-400">{t('catalog.searchSongHint')}</p>
-      {loading ? <p className="text-xs text-ink-500 italic">{t('common.loading')}</p> : null}
-      {error !== null ? (
+      {isLoading ? <p className="text-xs text-ink-500 italic">{t('common.loading')}</p> : null}
+      {error === null ? null : (
         <p className="text-xs text-danger" role="alert">
           {error}
         </p>
-      ) : null}
+      )}
       {hits.length > 0 ? (
         <ul className="flex flex-col gap-1 border border-line rounded-md p-1 bg-bg-elev max-h-72 overflow-y-auto">
           {hits.map((hit) => (
@@ -138,9 +138,9 @@ function SongSearchHitRow({ hit, onPick }: SongSearchHitRowProps): JSX.Element {
           </div>
         ) : null}
       </div>
-      {hit.disambiguation !== null ? (
+      {hit.disambiguation === null ? null : (
         <div className="text-[11px] text-ink-400 italic">{hit.disambiguation}</div>
-      ) : null}
+      )}
     </button>
   );
 }

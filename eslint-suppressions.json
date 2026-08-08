@@ -1,0 +1,964 @@
+{
+  "apps/borso-fr/scripts/screenshot.mjs": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "apps/borso-fr/site/12-travaux/App.tsx": {
+    "max-lines": {
+      "count": 1
+    }
+  },
+  "apps/borso-fr/site/12-travaux/data.utils.ts": {
+    "@typescript-eslint/prefer-nullish-coalescing": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 2
+    }
+  },
+  "apps/borso-fr/site/12-travaux/filmstrip-card.tsx": {
+    "no-param-reassign": {
+      "count": 2
+    }
+  },
+  "apps/borso-fr/site/art/mondrian/App.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/borso-fr/site/art/mondrian/components.tsx": {
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "apps/borso-fr/site/art/mondrian/painting.utils.test.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 2
+    }
+  },
+  "apps/borso-fr/site/art/mondrian/painting.utils.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/borso-fr/site/art/mondrian/use-animation.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "no-param-reassign": {
+      "count": 3
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/borso-fr/site/components/Galaxy.tsx": {
+    "@typescript-eslint/no-unsafe-member-access": {
+      "count": 6
+    },
+    "max-lines": {
+      "count": 1
+    }
+  },
+  "apps/borso-fr/site/script.js": {
+    "no-param-reassign": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    },
+    "unicorn/no-top-level-assignment-in-function": {
+      "count": 2
+    }
+  },
+  "apps/borsouvertures/scripts/build-openings.ts": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "apps/borsouvertures/site/App.tsx": {
+    "@typescript-eslint/no-floating-promises": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    },
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/borsouvertures/site/components/Modal.tsx": {
+    "jsx-a11y/click-events-have-key-events": {
+      "count": 1
+    },
+    "jsx-a11y/no-noninteractive-element-interactions": {
+      "count": 1
+    }
+  },
+  "apps/borsouvertures/site/components/MoveButtonList.tsx": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "apps/borsouvertures/site/components/OpeningFlowSelector.tsx": {
+    "react-hooks/preserve-manual-memoization": {
+      "count": 1
+    }
+  },
+  "apps/borsouvertures/site/components/ToggleSlider.tsx": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/borsouvertures/site/modes/ModeLearnTree.tsx": {
+    "@typescript-eslint/prefer-nullish-coalescing": {
+      "count": 1
+    },
+    "react-hooks/refs": {
+      "count": 10
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/borsouvertures/site/modes/ModePlay.tsx": {
+    "@typescript-eslint/prefer-nullish-coalescing": {
+      "count": 1
+    },
+    "react-hooks/refs": {
+      "count": 13
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/borsouvertures/site/openings/bookTree.utils.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/borsouvertures/site/openings/playMachine.utils.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 3
+    }
+  },
+  "apps/borsouvertures/site/openings/selectors.utils.ts": {
+    "@typescript-eslint/no-redundant-type-constituents": {
+      "count": 3
+    }
+  },
+  "apps/borsouvertures/site/openings/uciSquare.utils.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "apps/borsouvertures/site/state/useAppState.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 2
+    },
+    "unicorn/no-top-level-assignment-in-function": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/__test/test-seed.controller.test.ts": {
+    "@typescript-eslint/no-dynamic-delete": {
+      "count": 1
+    },
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/__test/test-seed.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 5
+    }
+  },
+  "apps/last-loop-lepin/api/src/app.test.ts": {
+    "@typescript-eslint/no-dynamic-delete": {
+      "count": 3
+    }
+  },
+  "apps/last-loop-lepin/api/src/auth/auth.controller.test.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/auth/auth.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/auth/auth.service.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/database/client.ts": {
+    "unicorn/no-top-level-assignment-in-function": {
+      "count": 4
+    }
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.controller.test.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.repository.test.ts": {
+    "unicorn/require-array-sort-compare": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.service.test.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/helpers/sun/sun.core.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/main.dev.ts": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/media/media.controller.test.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/media/media.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/media/media.s3.test.ts": {
+    "@typescript-eslint/no-dynamic-delete": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/media/media.s3.ts": {
+    "unicorn/no-top-level-assignment-in-function": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/media/media.service.test.ts": {
+    "@typescript-eslint/no-dynamic-delete": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/punch/punch.controller.test.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/punch/punch.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/punch/punch.schema.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/punch/self-punch.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/ranking/fastest-lap.core.test.ts": {
+    "unicorn/require-array-sort-compare": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/ranking/laps-csv.core.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/ranking/ranking.controller.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    },
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/ranking/ranking.core.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.controller.test.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.repository.test.ts": {
+    "unicorn/require-array-sort-compare": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.schema.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/cdk/test/stack.test.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 4
+    }
+  },
+  "apps/last-loop-lepin/site/src/api/client.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/site/src/clock-store.ts": {
+    "unicorn/no-top-level-assignment-in-function": {
+      "count": 3
+    }
+  },
+  "apps/last-loop-lepin/site/src/components/admin/CreateEditionForm.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/site/src/components/admin/EditionEditForm.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/site/src/components/admin/RunnerAdminPanel.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/site/src/components/admin/SetupPanel.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 9
+    }
+  },
+  "apps/last-loop-lepin/site/src/components/admin/setup-form.utils.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/site/src/components/course-map.utils.test.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    },
+    "unicorn/consistent-function-scoping": {
+      "count": 2
+    }
+  },
+  "apps/last-loop-lepin/site/src/components/elevation-profile.utils.ts": {
+    "@typescript-eslint/prefer-nullish-coalescing": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/site/src/data/useResource.ts": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "@typescript-eslint/prefer-nullish-coalescing": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/site/src/data/useStandingsPoll.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/site/src/domain/requestPosition.utils.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/site/src/routes/AdminPage.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/site/src/routes/SpectatorPage.tsx": {
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/test/fixtures.ts": {
+    "@typescript-eslint/restrict-plus-operands": {
+      "count": 1
+    }
+  },
+  "apps/last-loop-lepin/test/setup-postgres.ts": {
+    "unicorn/no-top-level-assignment-in-function": {
+      "count": 1
+    },
+    "unicorn/require-array-sort-compare": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/__test/test-seed.controller.test.ts": {
+    "@typescript-eslint/no-dynamic-delete": {
+      "count": 2
+    }
+  },
+  "apps/pragma/api/src/__test/test-seed.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 8
+    }
+  },
+  "apps/pragma/api/src/app.test.ts": {
+    "@typescript-eslint/no-dynamic-delete": {
+      "count": 3
+    }
+  },
+  "apps/pragma/api/src/auth/auth.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/auth/auth.service.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/auth/session-cookie.utils.test.ts": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    },
+    "vitest/no-conditional-expect": {
+      "count": 2
+    }
+  },
+  "apps/pragma/api/src/auth/session-cookie.utils.ts": {
+    "@typescript-eslint/prefer-optional-chain": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/bars/bars.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/bars/bars.core.ts": {
+    "@typescript-eslint/no-unnecessary-type-parameters": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/bars/bars.repository.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/bars/bars.service.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/database/client.ts": {
+    "unicorn/no-top-level-assignment-in-function": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/instruments/instruments.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/instruments/instruments.repository.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/instruments/instruments.service.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/main.dev.ts": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/mastery/mastery.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/mastery/mastery.repository.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 2
+    }
+  },
+  "apps/pragma/api/src/mastery/mastery.schema.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 2
+    }
+  },
+  "apps/pragma/api/src/mastery/mastery.service.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 2
+    }
+  },
+  "apps/pragma/api/src/members/members.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/members/members.repository.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 2
+    }
+  },
+  "apps/pragma/api/src/members/members.schema.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/members/members.service.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/sessions/sessions.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 2
+    }
+  },
+  "apps/pragma/api/src/sessions/sessions.repository.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/sessions/sessions.service.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/setlists/setlists.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/setlists/setlists.repository.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/setlists/setlists.service.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/setlists/transition.core.ts": {
+    "unicorn/require-array-sort-compare": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/songs/songs.controller.test.ts": {
+    "@typescript-eslint/no-base-to-string": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/songs/songs.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/songs/songs.repository.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 5
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/songs/songs.service.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/songs/tonality.core.ts": {
+    "@typescript-eslint/prefer-nullish-coalescing": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/transitions/transition-comments.controller.ts": {
+    "borso/no-controller-imports-outside-service": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/transitions/transitions.repository.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/transitions/transitions.schema.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/transitions/transitions.service.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/uploads/uploads.controller.test.ts": {
+    "@typescript-eslint/no-dynamic-delete": {
+      "count": 1
+    }
+  },
+  "apps/pragma/api/src/uploads/uploads.repository.ts": {
+    "unicorn/no-top-level-assignment-in-function": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/components/molecules/CreateSessionDialog.tsx": {
+    "@typescript-eslint/prefer-nullish-coalescing": {
+      "count": 2
+    }
+  },
+  "apps/pragma/site/src/components/molecules/LineupEditor.test.tsx": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/require-await": {
+      "count": 6
+    }
+  },
+  "apps/pragma/site/src/components/molecules/LineupEditor.tsx": {
+    "@typescript-eslint/prefer-nullish-coalescing": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/components/molecules/MemberFilterPills.test.tsx": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/components/molecules/file-drop.test.tsx": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/require-await": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/components/molecules/use-media-query.test.tsx": {
+    "unicorn/consistent-boolean-name": {
+      "count": 2
+    }
+  },
+  "apps/pragma/site/src/components/molecules/useMediaQuery.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 2
+    }
+  },
+  "apps/pragma/site/src/components/organisms/AppShell.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 2
+    }
+  },
+  "apps/pragma/site/src/components/organisms/useNavBadges.ts": {
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/i18n/i18n-parity.core.ts": {
+    "unicorn/require-array-sort-compare": {
+      "count": 2
+    }
+  },
+  "apps/pragma/site/src/i18n/i18n.utils.ts": {
+    "unicorn/require-array-sort-compare": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/lib/queries/auth.queries.test.tsx": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/require-await": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/lib/queries/bars.queries.test.tsx": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 4
+    }
+  },
+  "apps/pragma/site/src/lib/queries/bars.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/lib/queries/instruments.queries.test.tsx": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 3
+    }
+  },
+  "apps/pragma/site/src/lib/queries/instruments.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/lib/queries/mastery.queries.test.tsx": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 4
+    }
+  },
+  "apps/pragma/site/src/lib/queries/mastery.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/lib/queries/members.queries.test.tsx": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 4
+    }
+  },
+  "apps/pragma/site/src/lib/queries/members.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/lib/queries/sessions.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/lib/queries/setlists.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 2
+    }
+  },
+  "apps/pragma/site/src/lib/queries/songs.queries.test.tsx": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 4
+    }
+  },
+  "apps/pragma/site/src/lib/queries/songs.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/lib/queries/test-helpers.tsx": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/lib/queries/transitions.queries.test.tsx": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    }
+  },
+  "apps/pragma/site/src/lib/queries/transitions.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/lib/stale-bar.utils.ts": {
+    "@typescript-eslint/no-unnecessary-type-parameters": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/routes/Login.tsx": {
+    "@typescript-eslint/no-floating-promises": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/routes/bars/BarsPage.tsx": {
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/routes/catalog/CatalogPage.tsx": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/routes/catalog/SongDetailPage.tsx": {
+    "max-lines": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/routes/catalog/SongEditPage.tsx": {
+    "@typescript-eslint/no-floating-promises": {
+      "count": 3
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    }
+  },
+  "apps/pragma/site/src/routes/catalog/SongScenePage.tsx": {
+    "@typescript-eslint/no-floating-promises": {
+      "count": 1
+    },
+    "@typescript-eslint/no-misused-promises": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx": {
+    "@typescript-eslint/prefer-optional-chain": {
+      "count": 3
+    },
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/routes/sessions/SessionsPage.tsx": {
+    "@typescript-eslint/no-misused-promises": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/routes/setlists/SetlistEntryRow.tsx": {
+    "@typescript-eslint/no-empty-function": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/routes/setlists/TransitionCommentModal.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "apps/pragma/site/src/sw/register-sw.ts": {
+    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
+      "count": 1
+    }
+  },
+  "apps/pragma/test/auth-utils.ts": {
+    "@typescript-eslint/no-unsafe-return": {
+      "count": 1
+    }
+  },
+  "apps/pragma/test/setup-postgres.ts": {
+    "unicorn/require-array-sort-compare": {
+      "count": 1
+    }
+  },
+  "infra/cdk/src/internal/cf-host-routing-function.code.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "infra/cdk/src/internal/cf-static-site-index-rewrite.code.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "infra/cdk/src/internal/migration-runner/index.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    }
+  },
+  "infra/cdk/test/unit/cf-host-routing-function.test.ts": {
+    "@typescript-eslint/no-implied-eval": {
+      "count": 1
+    }
+  },
+  "infra/cdk/test/unit/cf-static-site-index-rewrite.test.ts": {
+    "@typescript-eslint/no-implied-eval": {
+      "count": 1
+    }
+  },
+  "infra/cdk/test/unit/env.test.ts": {
+    "@typescript-eslint/no-dynamic-delete": {
+      "count": 2
+    }
+  },
+  "infra/cdk/test/unit/fixtures/handler.ts": {
+    "@typescript-eslint/require-await": {
+      "count": 1
+    }
+  },
+  "infra/cdk/test/unit/helpers/migration-runner-mock.ts": {
+    "@typescript-eslint/no-base-to-string": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    },
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  },
+  "infra/cdk/test/unit/previewable-app.test.ts": {
+    "unicorn/consistent-boolean-name": {
+      "count": 1
+    },
+    "unicorn/consistent-function-scoping": {
+      "count": 1
+    }
+  }
+}

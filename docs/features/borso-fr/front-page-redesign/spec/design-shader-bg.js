@@ -2,18 +2,18 @@
 // Fragment shader adapted from the react-bits Galaxy component
 // (MIT, © David Haz — https://github.com/DavidHDev/react-bits).
 
-(function(){
+(function () {
   const PARAMS = {
-    starSpeed:        0.3,
-    density:          2.2,
-    hueShift:         205,
-    speed:            1.2,
-    glowIntensity:    0.25,
-    saturation:       0.2,
+    starSpeed: 0.3,
+    density: 2.2,
+    hueShift: 205,
+    speed: 1.2,
+    glowIntensity: 0.25,
+    saturation: 0.2,
     twinkleIntensity: 0.3,
-    rotationSpeed:    0.1,
-    repulsionStrength:2,
-    mouseRepulsion:   true,
+    rotationSpeed: 0.1,
+    repulsionStrength: 2,
+    mouseRepulsion: true,
   };
 
   const VERT = `
@@ -142,11 +142,11 @@
     }
   `;
 
-  function compile(gl, type, src){
+  function compile(gl, type, src) {
     const sh = gl.createShader(type);
     gl.shaderSource(sh, src);
     gl.compileShader(sh);
-    if(!gl.getShaderParameter(sh, gl.COMPILE_STATUS)){
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
       console.error('shader compile:', gl.getShaderInfoLog(sh));
       gl.deleteShader(sh);
       return null;
@@ -154,25 +154,29 @@
     return sh;
   }
 
-  function init(){
+  function init() {
     const wrap = document.getElementById('bg-canvas-wrap');
-    if(!wrap) return;
+    if (!wrap) return;
     const canvas = document.createElement('canvas');
     canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block';
     wrap.appendChild(canvas);
 
-    const gl = canvas.getContext('webgl', { alpha: false, antialias: false, premultipliedAlpha: false })
-            || canvas.getContext('experimental-webgl');
-    if(!gl){ console.warn('WebGL unavailable'); return; }
+    const gl =
+      canvas.getContext('webgl', { alpha: false, antialias: false, premultipliedAlpha: false }) ||
+      canvas.getContext('experimental-webgl');
+    if (!gl) {
+      console.warn('WebGL unavailable');
+      return;
+    }
 
     const vs = compile(gl, gl.VERTEX_SHADER, VERT);
     const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
-    if(!vs || !fs) return;
+    if (!vs || !fs) return;
     const prog = gl.createProgram();
     gl.attachShader(prog, vs);
     gl.attachShader(prog, fs);
     gl.linkProgram(prog);
-    if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
       console.error('program link:', gl.getProgramInfoLog(prog));
       return;
     }
@@ -181,55 +185,66 @@
     // Fullscreen triangle (covers clip-space).
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      -1, -1,
-       3, -1,
-      -1,  3,
-    ]), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     const posLoc = gl.getAttribLocation(prog, 'position');
     gl.enableVertexAttribArray(posLoc);
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
 
     const U = {};
-    ['uTime','uResolution','uFocal','uRotation','uStarSpeed','uDensity','uHueShift',
-     'uSpeed','uMouse','uGlowIntensity','uSaturation','uTwinkleIntensity',
-     'uRotationSpeed','uRepulsionStrength','uMouseActiveFactor','uMouseRepulsion']
-      .forEach(n => U[n] = gl.getUniformLocation(prog, n));
+    [
+      'uTime',
+      'uResolution',
+      'uFocal',
+      'uRotation',
+      'uStarSpeed',
+      'uDensity',
+      'uHueShift',
+      'uSpeed',
+      'uMouse',
+      'uGlowIntensity',
+      'uSaturation',
+      'uTwinkleIntensity',
+      'uRotationSpeed',
+      'uRepulsionStrength',
+      'uMouseActiveFactor',
+      'uMouseRepulsion',
+    ].forEach((n) => (U[n] = gl.getUniformLocation(prog, n)));
 
     gl.uniform2f(U.uFocal, 0.5, 0.5);
     gl.uniform2f(U.uRotation, 1.0, 0.0);
 
     // Seed ALL uniforms synchronously so the very first draw renders a real
     // starfield even if the rAF loop is throttled (e.g. hidden tab on load).
-    function pushUniforms(time){
-      gl.uniform1f(U.uTime,              time);
-      gl.uniform1f(U.uStarSpeed,         (time * PARAMS.starSpeed) / 10.0);
-      gl.uniform1f(U.uDensity,           PARAMS.density);
-      gl.uniform1f(U.uHueShift,          PARAMS.hueShift);
-      gl.uniform1f(U.uSpeed,             PARAMS.speed);
-      gl.uniform1f(U.uGlowIntensity,     PARAMS.glowIntensity);
-      gl.uniform1f(U.uSaturation,        PARAMS.saturation);
-      gl.uniform1f(U.uTwinkleIntensity,  PARAMS.twinkleIntensity);
-      gl.uniform1f(U.uRotationSpeed,     PARAMS.rotationSpeed);
+    function pushUniforms(time) {
+      gl.uniform1f(U.uTime, time);
+      gl.uniform1f(U.uStarSpeed, (time * PARAMS.starSpeed) / 10.0);
+      gl.uniform1f(U.uDensity, PARAMS.density);
+      gl.uniform1f(U.uHueShift, PARAMS.hueShift);
+      gl.uniform1f(U.uSpeed, PARAMS.speed);
+      gl.uniform1f(U.uGlowIntensity, PARAMS.glowIntensity);
+      gl.uniform1f(U.uSaturation, PARAMS.saturation);
+      gl.uniform1f(U.uTwinkleIntensity, PARAMS.twinkleIntensity);
+      gl.uniform1f(U.uRotationSpeed, PARAMS.rotationSpeed);
       gl.uniform1f(U.uRepulsionStrength, PARAMS.repulsionStrength);
-      gl.uniform1f(U.uMouseRepulsion,    PARAMS.mouseRepulsion ? 1.0 : 0.0);
+      gl.uniform1f(U.uMouseRepulsion, PARAMS.mouseRepulsion ? 1.0 : 0.0);
     }
 
-    function resize(){
+    function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const w = Math.max(wrap.offsetWidth  || window.innerWidth,  1);
+      const w = Math.max(wrap.offsetWidth || window.innerWidth, 1);
       const h = Math.max(wrap.offsetHeight || window.innerHeight, 1);
       const cw = Math.floor(w * dpr);
       const ch = Math.floor(h * dpr);
-      if(canvas.width !== cw || canvas.height !== ch){
-        canvas.width = cw; canvas.height = ch;
+      if (canvas.width !== cw || canvas.height !== ch) {
+        canvas.width = cw;
+        canvas.height = ch;
         gl.viewport(0, 0, cw, ch);
         gl.uniform2f(U.uResolution, cw, ch);
       }
     }
     window.addEventListener('resize', resize);
     // Also react to layout-driven size changes of the wrap itself.
-    if(window.ResizeObserver){
+    if (window.ResizeObserver) {
       const ro = new ResizeObserver(resize);
       ro.observe(wrap);
     }
@@ -243,7 +258,9 @@
       target.y = 1.0 - (e.clientY - r.top) / r.height;
       target.active = 1.0;
     });
-    window.addEventListener('pointerleave', () => { target.active = 0; });
+    window.addEventListener('pointerleave', () => {
+      target.active = 0;
+    });
 
     // Synchronous first draw: starfield is visible even before rAF ticks.
     pushUniforms(0);
@@ -251,7 +268,7 @@
     gl.uniform2f(U.uMouse, 0.5, 0.5);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-    function frame(t){
+    function frame(t) {
       resize(); // cheap; only updates GL state if size actually changed
       const time = t * 0.001;
       const k = 0.05;
@@ -261,7 +278,7 @@
 
       pushUniforms(time);
       gl.uniform1f(U.uMouseActiveFactor, smooth.active);
-      gl.uniform2f(U.uMouse,             smooth.x, smooth.y);
+      gl.uniform2f(U.uMouse, smooth.x, smooth.y);
 
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       requestAnimationFrame(frame);
@@ -271,17 +288,33 @@
 
   // Expose controller for the Tweaks panel.
   window.BgController = {
-    setHueShift(v){ PARAMS.hueShift = +v; },
-    setDensity(v){ PARAMS.density = +v; },
-    setSpeed(v){ PARAMS.speed = +v; },
-    setGlow(v){ PARAMS.glowIntensity = +v; },
-    setSaturation(v){ PARAMS.saturation = +v; },
-    setTwinkle(v){ PARAMS.twinkleIntensity = +v; },
-    setRotation(v){ PARAMS.rotationSpeed = +v; },
-    setRepulsion(v){ PARAMS.repulsionStrength = +v; },
+    setHueShift(v) {
+      PARAMS.hueShift = +v;
+    },
+    setDensity(v) {
+      PARAMS.density = +v;
+    },
+    setSpeed(v) {
+      PARAMS.speed = +v;
+    },
+    setGlow(v) {
+      PARAMS.glowIntensity = +v;
+    },
+    setSaturation(v) {
+      PARAMS.saturation = +v;
+    },
+    setTwinkle(v) {
+      PARAMS.twinkleIntensity = +v;
+    },
+    setRotation(v) {
+      PARAMS.rotationSpeed = +v;
+    },
+    setRepulsion(v) {
+      PARAMS.repulsionStrength = +v;
+    },
   };
 
-  if(document.readyState === 'loading'){
+  if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();

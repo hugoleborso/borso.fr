@@ -48,8 +48,8 @@ function makeFakeMediaQuery(initial: boolean): FakeMediaQueryList {
 }
 
 function Probe({ query, sink }: { query: string; sink: (value: boolean) => void }): null {
-  const value = useMediaQuery(query);
-  sink(value);
+  const isValue = useMediaQuery(query);
+  sink(isValue);
   return null;
 }
 
@@ -76,37 +76,37 @@ describe('useMediaQuery', () => {
   it('returns true when the query matches at mount', () => {
     const list = makeFakeMediaQuery(true);
     setMatchMedia(list);
-    let last = false;
+    let isLast = false;
     act(() => {
-      root.render(<Probe query="(min-width: 768px)" sink={(value) => (last = value)} />);
+      root.render(<Probe query="(min-width: 768px)" sink={(value) => (isLast = value)} />);
     });
-    expect(last).toBe(true);
+    expect(isLast).toBe(true);
   });
 
   it('returns false when the query does not match at mount', () => {
     const list = makeFakeMediaQuery(false);
     setMatchMedia(list);
-    let last = true;
+    let isLast = true;
     act(() => {
-      root.render(<Probe query="(min-width: 1024px)" sink={(value) => (last = value)} />);
+      root.render(<Probe query="(min-width: 1024px)" sink={(value) => (isLast = value)} />);
     });
-    expect(last).toBe(false);
+    expect(isLast).toBe(false);
   });
 
   it('re-renders with the new value when the MediaQueryList fires a change event', () => {
     const list = makeFakeMediaQuery(false);
     setMatchMedia(list);
-    let last = true;
+    let isLast = true;
     act(() => {
-      root.render(<Probe query="(min-width: 768px)" sink={(value) => (last = value)} />);
+      root.render(<Probe query="(min-width: 768px)" sink={(value) => (isLast = value)} />);
     });
-    expect(last).toBe(false);
+    expect(isLast).toBe(false);
 
     list.matches = true;
     act(() => {
       list._fire();
     });
-    expect(last).toBe(true);
+    expect(isLast).toBe(true);
   });
 
   it('exposes the BREAKPOINT_MD and BREAKPOINT_LG named constants', () => {

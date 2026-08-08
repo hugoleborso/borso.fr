@@ -161,7 +161,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
         </ul>
       </SortableContext>
       <DragOverlay dropAnimation={null}>
-        {activeEntryId !== null ? renderDragPreview(props, activeEntryId) : null}
+        {activeEntryId === null ? null : renderDragPreview(props, activeEntryId)}
       </DragOverlay>
     </DndContext>
   );

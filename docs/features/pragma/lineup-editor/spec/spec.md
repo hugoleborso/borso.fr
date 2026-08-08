@@ -11,9 +11,9 @@
 ## Why
 
 - Pragma's domain model already knows about lineups (every song has a `defaultLineup` map and every setlist entry has a `lineupOverride`) but **there is no write affordance anywhere in the UI** — every lineup is `{}` in practice. Members showing up to rehearsal don't know who's on bass tonight; Hugo bridges the gap by messaging the band before each session.
-- **Output metric** (lagging, out-of-band): a band member, asked at any moment before a session, can answer *"what am I playing tonight?"* in under 10 seconds. Measured by Hugo asking one member ad-hoc at each rehearsal.
+- **Output metric** (lagging, out-of-band): a band member, asked at any moment before a session, can answer _"what am I playing tonight?"_ in under 10 seconds. Measured by Hugo asking one member ad-hoc at each rehearsal.
 - **Input metrics** (leading, instrumentable):
-  - **Coverage** — ≥ 80% of setlist entries on a concert scheduled in the next 30 days have a non-empty *resolved* lineup (resolved = `lineupOverride` if set, else song's `defaultLineup`). Measured weekly from the DB.
+  - **Coverage** — ≥ 80% of setlist entries on a concert scheduled in the next 30 days have a non-empty _resolved_ lineup (resolved = `lineupOverride` if set, else song's `defaultLineup`). Measured weekly from the DB.
   - **Use** — `lineup_saved` events fire at least once per concert in the week before the concert date.
 - **Gemba** — Hugo's current WhatsApp routine before every rehearsal: paste the setlist, tag each member with "you're on X for song Y". The substitute the app must make obsolete.
 
@@ -28,25 +28,28 @@ The modal contents are a table — one row per band member, one cell with an ins
 
 The existing read-only `MemberLineup` chips on both surfaces stay as-is — they already render the lineup once it has content.
 
-A small badge on a setlist entry indicates *override* vs *default* so reviewers can see at a glance whether the entry has been customised away from the song.
+A small badge on a setlist entry indicates _override_ vs _default_ so reviewers can see at a glance whether the entry has been customised away from the song.
 
-**Per-member rollup view** (the surface the output metric depends on): the setlist editor / session detail page carries a member-filter pill row at the top — one pill per band member, each rendered with the member's existing color chip. Tapping a pill enters *single-member mode*: the setlist below collapses to only the entries where that member is in the resolved lineup, each entry showing the instrument the member plays on that song as a prominent chip. Tapping the pill again (or "All members") returns to the full setlist. The pill row stays sticky on scroll so a member arriving at a concert can hit their name first thing and read the list straight down.
+**Per-member rollup view** (the surface the output metric depends on): the setlist editor / session detail page carries a member-filter pill row at the top — one pill per band member, each rendered with the member's existing color chip. Tapping a pill enters _single-member mode_: the setlist below collapses to only the entries where that member is in the resolved lineup, each entry showing the instrument the member plays on that song as a prominent chip. Tapping the pill again (or "All members") returns to the full setlist. The pill row stays sticky on scroll so a member arriving at a concert can hit their name first thing and read the list straight down.
 
 ## Use cases / edge cases
 
 **Happy path — set a song's default lineup:**
+
 1. Hugo opens any song detail page → clicks "Edit default lineup" → modal opens with every member set to "— not playing —" (empty default).
 2. He sets Hugo → Guitar, Pauline → Bass, Adrien → Drums, Camille → "— not playing —" → clicks Save.
 3. Modal closes. `MemberLineup` chips on the page reflect the saved lineup.
 4. Every setlist entry referencing this song that has no `lineupOverride` now displays this default.
 
 **Happy path — override a setlist entry's lineup:**
+
 1. Hugo opens a setlist with a song whose default is Hugo/Pauline/Adrien.
 2. He clicks "Lineup" on the entry → modal opens pre-filled with the default (Hugo→Guitar, Pauline→Bass, Adrien→Drums).
 3. He changes Pauline to "— not playing —" and Camille to Bass (sub bassist tonight) → Save.
-4. Modal closes. Entry row shows the override; the *override* badge appears; the song's default is unchanged.
+4. Modal closes. Entry row shows the override; the _override_ badge appears; the song's default is unchanged.
 
 **Happy path — reset an override:**
+
 1. Hugo opens a setlist entry with an override → clicks "Lineup" → modal shows the override pre-filled.
 2. He clicks "Reset to song default" → modal returns to the song's default values (no save yet).
 3. He clicks Save → the override is cleared (`lineupOverride = null` in the API), the badge disappears.
@@ -62,6 +65,7 @@ A small badge on a setlist entry indicates *override* vs *default* so reviewers 
 **Error — API rejects the lineup save:** optimistic update rolls back (existing TanStack mutation `onMutate` / `onError` pattern already used for setlist-entry update; reuse).
 
 **Happy path — read the setlist as one specific member:**
+
 1. A band member opens the app on the day of a concert and lands on the setlist for that session.
 2. They tap their own pill in the sticky member-filter row at the top of the page.
 3. The setlist filters to only the entries where their member ID appears in the resolved lineup; each remaining row shows the instrument they play on that song (chip variant of the existing `MemberLineup`).
@@ -74,17 +78,18 @@ A small badge on a setlist entry indicates *override* vs *default* so reviewers 
 
 ## Questions, Options and Decisions
 
-| Question | Options | Decision (2026-06-06) |
-|---|---|---|
-| Where can a lineup be edited? | (a) only setlist entry, (b) only song, (c) both | (c) — default on the song, override per setlist entry. Matches the existing schema and the existing resolver that already does override-else-default. |
-| When picking who plays an instrument, who appears in the dropdown? | filtered by `member_instrument` vs unfiltered | Unfiltered — Hugo can assign anyone to anything, useful for fill-in lineups. The schema's intent of `member_instrument` is "what each member typically owns", not a hard constraint. |
-| What happens to lineup entries when a band member is deleted? | (a) cascade-scrub from every lineup, (b) keep + render "— (deleted)" forever | (a) — cascade. Matches the existing manual-cascade pattern; keeps the UI clean. Historical record is *not* a goal of pragma. |
-| UX shape for the editor? | popover, modal, inline expansion | Modal — operator's call. Matches the `CreateSessionDialog` pattern already used in pragma for similar density (per `apps/pragma/site/src/components/molecules/`). |
-| Is this an ADR-trigger? | yes / no | No. No new dependency, no new secret, no schema change, no cross-app surface. Cross-cutting within pragma only (members + songs + setlists) — captured here, not in ADR-land. |
+| Question                                                           | Options                                                                      | Decision (2026-06-06)                                                                                                                                                                |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Where can a lineup be edited?                                      | (a) only setlist entry, (b) only song, (c) both                              | (c) — default on the song, override per setlist entry. Matches the existing schema and the existing resolver that already does override-else-default.                                |
+| When picking who plays an instrument, who appears in the dropdown? | filtered by `member_instrument` vs unfiltered                                | Unfiltered — Hugo can assign anyone to anything, useful for fill-in lineups. The schema's intent of `member_instrument` is "what each member typically owns", not a hard constraint. |
+| What happens to lineup entries when a band member is deleted?      | (a) cascade-scrub from every lineup, (b) keep + render "— (deleted)" forever | (a) — cascade. Matches the existing manual-cascade pattern; keeps the UI clean. Historical record is _not_ a goal of pragma.                                                         |
+| UX shape for the editor?                                           | popover, modal, inline expansion                                             | Modal — operator's call. Matches the `CreateSessionDialog` pattern already used in pragma for similar density (per `apps/pragma/site/src/components/molecules/`).                    |
+| Is this an ADR-trigger?                                            | yes / no                                                                     | No. No new dependency, no new secret, no schema change, no cross-app surface. Cross-cutting within pragma only (members + songs + setlists) — captured here, not in ADR-land.        |
 
 **Out of scope (named):**
+
 - Printable / shareable session sheet (a one-page poster of the whole matrix to PDF / image) — the per-member rollup covers the on-device reading need; export is a separate ask.
-- External notification (email / push / SMS) — replaces Hugo's WhatsApp routine *only inside the app*. WhatsApp paste-friendliness is a follow-up.
+- External notification (email / push / SMS) — replaces Hugo's WhatsApp routine _only inside the app_. WhatsApp paste-friendliness is a follow-up.
 - Lineup history / audit log (who-changed-what-when) — out.
 - Per-instrument constraints (one drummer, max two guitars, …) — out; the model already allows arbitrary assignment, and the band knows what's musically sensible.
 
@@ -162,7 +167,7 @@ apps/pragma/site/src/i18n/en.json + fr.json                      // UPDATE: new 
 
 **Threshold gate** (input — measured weekly from the DB, not from events): ≥ 80% of `setlist_entry` rows whose parent session is a `kind='concert'` scheduled in the next 30 days have a non-empty resolved lineup. Below threshold → Sentry breadcrumb + the operator gets a weekly digest.
 
-**Output metric** (lagging, out-of-band — *not* a CI gate): the "10 second" ask-a-member objective. Hugo asks one band member at random at each rehearsal "what are you playing tonight?" — the time-to-answer is the output. If three sessions in a row clear > 10s while the input metric is green, the input metric is the wrong proxy and this spec returns.
+**Output metric** (lagging, out-of-band — _not_ a CI gate): the "10 second" ask-a-member objective. Hugo asks one band member at random at each rehearsal "what are you playing tonight?" — the time-to-answer is the output. If three sessions in a row clear > 10s while the input metric is green, the input metric is the wrong proxy and this spec returns.
 
 ### Zero-defect strategy
 

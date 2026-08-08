@@ -24,7 +24,9 @@ table, and `database/schema.ts` re-exports all of them for drizzle-kit.
 ```ts
 export const runnersTable = pgTable('runners', {
   id: uuid('id').primaryKey().defaultRandom(),
-  editionId: uuid('edition_id').notNull().references(() => editionsTable.id),
+  editionId: uuid('edition_id')
+    .notNull()
+    .references(() => editionsTable.id),
   firstName: text('first_name').notNull(),
   bibNumber: integer('bib_number').notNull(),
 });

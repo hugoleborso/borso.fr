@@ -172,16 +172,16 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const queryError = entriesQuery.error instanceof ApiError ? entriesQuery.error.message : null;
   const displayError = localError ?? queryError;
 
-  const inFilteredMode = selectedMemberId !== null;
+  const isInFilteredMode = selectedMemberId !== null;
   const visibleEntries = filtered.visibleEntries;
 
   return (
     <div className="flex flex-col gap-4">
-      {displayError !== null ? (
+      {displayError === null ? null : (
         <p className="text-danger text-sm" role="alert">
           {displayError}
         </p>
-      ) : null}
+      )}
       <MemberFilterPills
         members={lineupMembers}
         selectedMemberId={selectedMemberId}
@@ -205,23 +205,23 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         </div>
         <EnergySparkline values={energyValues} height={ENERGY_SPARKLINE_HEIGHT_PX} />
       </div>
-      {inFilteredMode && visibleEntries.length === 0 ? (
+      {isInFilteredMode && visibleEntries.length === 0 ? (
         <p className="text-ink-500 italic text-sm py-6 text-center">{t('lineup.emptyForMember')}</p>
       ) : (
         <div className="relative">
-          {!inFilteredMode ? (
+          {isInFilteredMode ? null : (
             <WarnMarkerGutter
               transitions={transitions}
               entries={entries}
               onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
             />
-          ) : null}
+          )}
           <SetlistEntriesList
             entries={entries}
             visibleEntries={visibleEntries}
             songsById={songsById}
             transitions={transitions}
-            inFilteredMode={inFilteredMode}
+            inFilteredMode={isInFilteredMode}
             selectedMemberId={selectedMemberId}
             filteredInstrumentByEntryId={filtered.instrumentByEntryId}
             lineupMembers={lineupMembers}
@@ -237,13 +237,13 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         </div>
       )}
       <SetlistSongPicker songs={songs} onPick={addEntry} />
-      {transitionEditing !== null ? (
+      {transitionEditing === null ? null : (
         <TransitionCommentModal
           songAId={transitionEditing.songAId}
           songBId={transitionEditing.songBId}
           onClose={() => setTransitionEditing(null)}
         />
-      ) : null}
+      )}
     </div>
   );
 }

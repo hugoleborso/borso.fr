@@ -139,8 +139,8 @@ export function SpectatorPage() {
   }
 
   const isLive = edition.status === 'live';
-  const raceEnded = standingsState.standings?.raceEnded === true;
-  const isFinished = edition.status === 'finished' || raceEnded;
+  const isRaceEnded = standingsState.standings?.raceEnded === true;
+  const isFinished = edition.status === 'finished' || isRaceEnded;
   const upcomingBoundary = nextLoopBoundary(edition, Date.now());
   const mostRecentCorrection =
     standingsState.mostRecentCorrectionAt === null

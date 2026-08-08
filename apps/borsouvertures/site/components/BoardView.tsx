@@ -26,7 +26,7 @@ export function BoardView({
 }: BoardViewProps) {
   const { theme } = getBoardAppearance(boardStyleId);
   const wrapperStyle: CSSProperties =
-    boardWidth !== undefined ? { width: `${boardWidth}px` } : { width: '100%' };
+    boardWidth === undefined ? { width: '100%' } : { width: `${boardWidth}px` };
   return (
     <div className="panel board-container" style={wrapperStyle}>
       <Chessboard

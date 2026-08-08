@@ -30,9 +30,9 @@ export function SessionsPage(): JSX.Element {
   useEffect(() => {
     const dialog = confirmDialogRef.current;
     if (dialog === null) return;
-    const wantsOpen = pendingDeletion !== null;
-    if (wantsOpen && !dialog.open) dialog.showModal();
-    if (!wantsOpen && dialog.open) dialog.close();
+    const isWantsOpen = pendingDeletion !== null;
+    if (isWantsOpen && !dialog.open) dialog.showModal();
+    if (!isWantsOpen && dialog.open) dialog.close();
   }, [pendingDeletion]);
 
   const sessions = sessionsQuery.data?.sessions ?? [];
@@ -69,11 +69,11 @@ export function SessionsPage(): JSX.Element {
         }
       />
 
-      {error !== null ? (
+      {error === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">
           {error}
         </p>
-      ) : null}
+      )}
       {sessionsQuery.isLoading ? (
         <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
       ) : null}
@@ -105,9 +105,9 @@ export function SessionsPage(): JSX.Element {
                   <div className="font-display italic text-2xl text-ink-900 leading-tight">
                     {formatSessionDate(session.date, i18n.language)}
                   </div>
-                  {session.venue !== null ? (
+                  {session.venue === null ? null : (
                     <div className="text-[12.5px] text-ink-500 mt-0.5">{session.venue}</div>
-                  ) : null}
+                  )}
                 </Link>
                 <button
                   type="button"
@@ -127,7 +127,7 @@ export function SessionsPage(): JSX.Element {
         })}
       </ul>
 
-      {creating !== null ? (
+      {creating === null ? null : (
         <CreateSessionDialog
           kind={creating}
           open={creating !== null}
@@ -139,7 +139,7 @@ export function SessionsPage(): JSX.Element {
             venue: concert.venue,
           }))}
         />
-      ) : null}
+      )}
 
       <dialog
         ref={confirmDialogRef}

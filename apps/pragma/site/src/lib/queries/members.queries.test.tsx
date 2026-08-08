@@ -24,10 +24,10 @@ import {
 } from './test-helpers';
 
 interface OptimisticMembersList {
-  members: Array<{ id: string; firstName: string; color: string; avatarS3Key: string | null }>;
+  members: { id: string; firstName: string; color: string; avatarS3Key: string | null }[];
 }
 interface OptimisticRoster {
-  instruments: Array<{ id: string; name: string; isHarmonic: boolean }>;
+  instruments: { id: string; name: string; isHarmonic: boolean }[];
 }
 
 interface ProbeProps<Mutate> {

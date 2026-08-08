@@ -30,7 +30,7 @@ export function CorrectionPanel({ edition }: CorrectionPanelProps) {
         <span className="muted mono">annuler ou réajuster un pointage</span>
       </div>
       <div className="card-body col">
-        {error !== null ? <div className="error-text">{error}</div> : null}
+        {error === null ? null : <div className="error-text">{error}</div>}
         {roster.length === 0 ? (
           <div className="muted">Aucun coureur — pas de pointage à corriger.</div>
         ) : (
@@ -90,8 +90,8 @@ function RunnerRow({
       recordAnalyticsEvent('correction_applied', { editionSlug, punchId: id });
       invalidateResource(punchesKey);
       invalidateResource(`standings:${editionSlug}`);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Erreur inconnue.');
     } finally {
       setBusyPunchId(null);
     }

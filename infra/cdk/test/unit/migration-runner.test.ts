@@ -62,8 +62,8 @@ describe('migration-runner handler', () => {
     const sqlsRun = state.unsafeCalls
       .map((c) => c.query)
       .filter((q) => /CREATE TABLE (IF NOT EXISTS )?[ab] /.test(q));
-    expect(sqlsRun.some((s) => /CREATE TABLE IF NOT EXISTS a/.test(s))).toBe(false);
-    expect(sqlsRun.some((s) => /CREATE TABLE IF NOT EXISTS b/.test(s))).toBe(true);
+    expect(sqlsRun.some((s) => s.includes('CREATE TABLE IF NOT EXISTS a'))).toBe(false);
+    expect(sqlsRun.some((s) => s.includes('CREATE TABLE IF NOT EXISTS b'))).toBe(true);
   });
 
   it('Update: passes through PhysicalResourceId', async () => {
@@ -83,8 +83,8 @@ describe('migration-runner handler', () => {
       ResourceProperties: baseProps,
     });
     const queries = state.unsafeCalls.map((c) => c.query);
-    expect(queries.some((q) => /DROP SCHEMA IF EXISTS "test_app" CASCADE/.test(q))).toBe(true);
-    expect(queries.some((q) => /CREATE SCHEMA/.test(q))).toBe(false);
+    expect(queries.some((q) => q.includes('DROP SCHEMA IF EXISTS "test_app" CASCADE'))).toBe(true);
+    expect(queries.some((q) => q.includes('CREATE SCHEMA'))).toBe(false);
     expect(state.ended).toBe(1);
   });
 
@@ -106,8 +106,8 @@ describe('migration-runner handler', () => {
       },
     });
     const queries = state.unsafeCalls.map((c) => c.query);
-    expect(queries.some((q) => /ALTER TABLE a ADD COLUMN IF NOT EXISTS b/.test(q))).toBe(true);
-    expect(queries.some((q) => /ALTER TABLE a ADD COLUMN IF NOT EXISTS c/.test(q))).toBe(true);
+    expect(queries.some((q) => q.includes('ALTER TABLE a ADD COLUMN IF NOT EXISTS b'))).toBe(true);
+    expect(queries.some((q) => q.includes('ALTER TABLE a ADD COLUMN IF NOT EXISTS c'))).toBe(true);
     // A statement that already has IF NOT EXISTS shouldn't be doubled up.
     await handler({
       RequestType: 'Create',
@@ -141,11 +141,11 @@ describe('migration-runner handler', () => {
     });
     const queries = state.unsafeCalls.map((c) => c.query);
     expect(
-      queries.some((q) => /CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON foo \(col\)/.test(q)),
+      queries.some((q) => q.includes('CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON foo (col)')),
     ).toBe(true);
     expect(
       queries.some((q) =>
-        /CREATE UNIQUE INDEX ASYNC IF NOT EXISTS bar_idx ON bar \(col_a, col_b\)/.test(q),
+        q.includes('CREATE UNIQUE INDEX ASYNC IF NOT EXISTS bar_idx ON bar (col_a, col_b)'),
       ),
     ).toBe(true);
   });
@@ -168,7 +168,7 @@ describe('migration-runner handler', () => {
     });
     const queries = state.unsafeCalls.map((c) => c.query);
     expect(
-      queries.some((q) => /CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON t \(col\)/.test(q)),
+      queries.some((q) => q.includes('CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON t (col)')),
     ).toBe(true);
     expect(queries.some((q) => /USING\s+btree/i.test(q))).toBe(false);
   });

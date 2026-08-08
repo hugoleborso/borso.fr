@@ -46,7 +46,7 @@ export function FileDrop({
   const sign = useSignChartUpload();
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const busy = sign.isPending;
+  const isBusy = sign.isPending;
 
   const handleFile = async (file: File): Promise<void> => {
     setError(null);
@@ -63,7 +63,7 @@ export function FileDrop({
       const signed = await sign.mutateAsync({
         contentType: validated.contentType,
         contentLength: file.size,
-        ...(songId !== undefined ? { songId } : {}),
+        ...(songId === undefined ? {} : { songId }),
       });
       const putResponse = await fetch(signed.uploadUrl, {
         method: 'PUT',
@@ -75,8 +75,8 @@ export function FileDrop({
         return;
       }
       onUploaded({ kind: validated.kind, objectKey: signed.objectKey });
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : t('catalog.uploadFailed'));
+    } catch (error_) {
+      setError(error_ instanceof ApiError ? error_.message : t('catalog.uploadFailed'));
     }
   };
 
@@ -110,7 +110,7 @@ export function FileDrop({
       >
         <Icon name="upload" size={20} />
         <span className="text-sm font-medium">
-          {busy ? t('catalog.uploadInProgress') : t('catalog.uploadPrompt')}
+          {isBusy ? t('catalog.uploadInProgress') : t('catalog.uploadPrompt')}
         </span>
         <span className="text-xs text-ink-400">
           {t('catalog.uploadHint', { maxMb: Math.round(FILE_DROP_MAX_BYTES / (1024 * 1024)) })}
@@ -132,7 +132,7 @@ export function FileDrop({
           <span className="truncate">
             {t('catalog.uploadCurrent')}: <span className="font-mono">{currentObjectKey}</span>
           </span>
-          {onRemoved !== undefined ? (
+          {onRemoved === undefined ? null : (
             <button
               type="button"
               onClick={() => {
@@ -143,14 +143,14 @@ export function FileDrop({
             >
               {t('fileDrop.remove')}
             </button>
-          ) : null}
+          )}
         </div>
       ) : null}
-      {error !== null ? (
+      {error === null ? null : (
         <p className="text-xs text-danger" role="alert">
           {error}
         </p>
-      ) : null}
+      )}
     </div>
   );
 }

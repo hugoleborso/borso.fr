@@ -4,27 +4,39 @@
 function LeaderboardPanel({ phase, onPick }) {
   const inRace = phase.inRace;
   return (
-    <div className="card" data-screen-label="leaderboard" style={{minHeight:0}}>
+    <div className="card" data-screen-label="leaderboard" style={{ minHeight: 0 }}>
       <div className="card-head">
         <div className="card-title">
           En course
           <span className="en">STILL IN</span>
         </div>
-        <div className="card-meta">{inRace.length} · {phase.loopIdx > 0 ? `${phase.loopIdx} boucles bouclées` : "départ imminent"}</div>
+        <div className="card-meta">
+          {inRace.length} ·{' '}
+          {phase.loopIdx > 0 ? `${phase.loopIdx} boucles bouclées` : 'départ imminent'}
+        </div>
       </div>
-      <div className="card-body flush" style={{padding: 0}}>
+      <div className="card-body flush" style={{ padding: 0 }}>
         <div className="lb-head">
           <div className="lb-rank">#</div>
-          <div className="lb-name">Coureur·euse <span className="en">RUNNER</span></div>
-          <div className="lb-loops">Boucles <span className="en">LOOPS</span></div>
-          <div className="lb-last">Dernière <span className="en">LAST</span></div>
-          <div className="lb-now">Boucle en cours <span className="en">CURRENT</span></div>
+          <div className="lb-name">
+            Coureur·euse <span className="en">RUNNER</span>
+          </div>
+          <div className="lb-loops">
+            Boucles <span className="en">LOOPS</span>
+          </div>
+          <div className="lb-last">
+            Dernière <span className="en">LAST</span>
+          </div>
+          <div className="lb-now">
+            Boucle en cours <span className="en">CURRENT</span>
+          </div>
         </div>
         <div className="lb-rows">
-          {phase.key === "prerace"
-            ? <PreraceList runners={phase.runners} onPick={onPick} />
-            : inRace.map(r => <LeaderRow key={r.slug} r={r} phase={phase} onPick={onPick} />)
-          }
+          {phase.key === 'prerace' ? (
+            <PreraceList runners={phase.runners} onPick={onPick} />
+          ) : (
+            inRace.map((r) => <LeaderRow key={r.slug} r={r} phase={phase} onPick={onPick} />)
+          )}
         </div>
       </div>
       <style>{`
@@ -83,32 +95,45 @@ function LeaderRow({ r, phase, onPick }) {
   const finished = r.progress >= 1;
   const loopMin = Math.round(r.avgLoopMin);
   return (
-    <div className={`lb-row${podium? " podium":""}`} onClick={() => onPick && onPick(r.slug)}>
-      <div className="lb-rank">{String(r.rank).padStart(2,"0")}</div>
+    <div className={`lb-row${podium ? ' podium' : ''}`} onClick={() => onPick && onPick(r.slug)}>
+      <div className="lb-rank">{String(r.rank).padStart(2, '0')}</div>
       <div className="lb-name">
         <RunnerLine runner={r} secondary={r.town} />
       </div>
       <div className="lb-loops">{r.completedLoops}</div>
-      <div className="lb-last">{phase.loopIdx > 0 ? `${loopMin}'${(r.avgLoopMin*60%60).toFixed(0).padStart(2,"0")}` : "—"}</div>
+      <div className="lb-last">
+        {phase.loopIdx > 0
+          ? `${loopMin}'${((r.avgLoopMin * 60) % 60).toFixed(0).padStart(2, '0')}`
+          : '—'}
+      </div>
       <div className="lb-now">
-        {finished
-          ? <><span className="done-mark">PUNCHED</span><span style={{flex:1}}></span></>
-          : <>
-              <span className="track"><i style={{width: `${r.progress*100}%`}}></i></span>
-              <span className="pct">{Math.round(r.progress*100)}%</span>
-            </>}
+        {finished ? (
+          <>
+            <span className="done-mark">PUNCHED</span>
+            <span style={{ flex: 1 }}></span>
+          </>
+        ) : (
+          <>
+            <span className="track">
+              <i style={{ width: `${r.progress * 100}%` }}></i>
+            </span>
+            <span className="pct">{Math.round(r.progress * 100)}%</span>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-function PreraceList({ runners, onPick }){
+function PreraceList({ runners, onPick }) {
   return (
     <div>
-      {runners.map(r => (
-        <div key={r.slug} className="lb-row" onClick={()=> onPick && onPick(r.slug)}>
-          <div className="lb-rank mono">{String(r.bib).padStart(2,"0")}</div>
-          <div className="lb-name"><RunnerLine runner={r} secondary={r.town} /></div>
+      {runners.map((r) => (
+        <div key={r.slug} className="lb-row" onClick={() => onPick && onPick(r.slug)}>
+          <div className="lb-rank mono">{String(r.bib).padStart(2, '0')}</div>
+          <div className="lb-name">
+            <RunnerLine runner={r} secondary={r.town} />
+          </div>
           <div className="lb-loops mute-2">—</div>
           <div className="lb-last mute-2">—</div>
           <div className="lb-now">

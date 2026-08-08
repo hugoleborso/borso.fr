@@ -98,16 +98,16 @@ export function OpeningsPanel({
       )}
       {visibleOpenings.map((opening) => {
         const preview = openingPreviews.get(opening.id);
-        const activePlay = playScope.openingIds.includes(opening.id);
+        const isActivePlay = playScope.openingIds.includes(opening.id);
         return (
           <SelectorCard
             key={opening.id}
             label={opening.name}
             meta={`${opening.variations.length} variations`}
-            active={isPlay ? activePlay : selection.openingId === opening.id}
+            active={isPlay ? isActivePlay : selection.openingId === opening.id}
             onClick={() => {
               if (isPlay) {
-                const next = activePlay
+                const next = isActivePlay
                   ? playScope.openingIds.filter((id) => id !== opening.id)
                   : [...playScope.openingIds, opening.id];
                 onPlayScopeChange({ ...playScope, openingIds: next });
@@ -171,19 +171,19 @@ export function VariationsPanel({
         />
       )}
       {visibleVariations.map(({ opening, variation, preview }) => {
-        const activePlay = playScope.variationIds.includes(variation.id);
+        const isActivePlay = playScope.variationIds.includes(variation.id);
         return (
           <SelectorCard
             key={`${opening.id}-${variation.id}`}
             label={variation.name}
             meta={`${variation.lines.length} lines`}
-            active={isPlay ? activePlay : selection.variationId === variation.id}
+            active={isPlay ? isActivePlay : selection.variationId === variation.id}
             onClick={() => {
               if (isPlay) {
                 const nextOpeningIds = playScope.openingIds.includes(opening.id)
                   ? playScope.openingIds
                   : [...playScope.openingIds, opening.id];
-                const nextVariationIds = activePlay
+                const nextVariationIds = isActivePlay
                   ? playScope.variationIds.filter((id) => id !== variation.id)
                   : [...playScope.variationIds, variation.id];
                 onPlayScopeChange({
@@ -249,13 +249,13 @@ export function LinesPanel({
         const { line, preview } = entry;
         const openingForLine = isPlayLineEntry(entry) ? entry.opening : undefined;
         const variationForLine = isPlayLineEntry(entry) ? entry.variation : undefined;
-        const activePlay = playScope.lineIds.includes(line.id);
+        const isActivePlay = playScope.lineIds.includes(line.id);
         return (
           <SelectorCard
             key={`${preview.variationId}-${line.id}`}
             label={line.name}
             meta={`ECO ${line.eco}`}
-            active={isPlay ? activePlay : selection.lineId === line.id}
+            active={isPlay ? isActivePlay : selection.lineId === line.id}
             onClick={() => {
               if (isPlay) {
                 const nextOpeningIds =
@@ -266,7 +266,7 @@ export function LinesPanel({
                   variationForLine && !playScope.variationIds.includes(variationForLine.id)
                     ? [...playScope.variationIds, variationForLine.id]
                     : playScope.variationIds;
-                const next = activePlay
+                const next = isActivePlay
                   ? playScope.lineIds.filter((id) => id !== line.id)
                   : [...playScope.lineIds, line.id];
                 onPlayScopeChange({

@@ -36,7 +36,7 @@ export function MemberFilterPills({
   className,
 }: MemberFilterPillsProps): JSX.Element {
   const { t } = useTranslation();
-  const allActive = selectedMemberId === null;
+  const isAllActive = selectedMemberId === null;
   return (
     <div
       className={cn('flex gap-2 overflow-x-auto whitespace-nowrap py-2', className)}
@@ -46,9 +46,9 @@ export function MemberFilterPills({
       <button
         type="button"
         role="tab"
-        aria-selected={allActive}
+        aria-selected={isAllActive}
         onClick={() => onChange(null)}
-        className={cn(PILL_BASE_CLASS, allActive ? PILL_ACTIVE_CLASS : PILL_INACTIVE_CLASS)}
+        className={cn(PILL_BASE_CLASS, isAllActive ? PILL_ACTIVE_CLASS : PILL_INACTIVE_CLASS)}
       >
         {t('lineup.allMembers')}
       </button>

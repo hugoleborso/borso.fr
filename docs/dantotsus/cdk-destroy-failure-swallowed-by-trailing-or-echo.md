@@ -28,7 +28,7 @@ tags: [github-actions, cdk, cloudformation, ci, idempotency, pnpm-scripts]
 >     at StaticSite.buildPreview (.../infra/cdk/src/constructs/static-site.ts:233)
 > ```
 >
-> That's the *actual* reason every nightly cleanup-orphans run since
+> That's the _actual_ reason every nightly cleanup-orphans run since
 > 2026-05-05 was failing. `cdk destroy` synthesizes the app first, and
 > `Source.asset(path.resolve(props.assetsPath))` resolves the path at
 > synth time. The `destroy` script in `apps/borso-fr/package.json`
@@ -41,7 +41,7 @@ tags: [github-actions, cdk, cloudformation, ci, idempotency, pnpm-scripts]
 > means the stack is gone") was true but downstream. The deeper
 > misconception was **"`cdk destroy` is symmetric with `cdk deploy`"**.
 > It isn't — `deploy` explicitly chains the build (`pnpm --filter
-> @borso/infra run build && pnpm build && cdk deploy …`), `destroy`
+@borso/infra run build && pnpm build && cdk deploy …`), `destroy`
 > doesn't (`cdk destroy --all --force`) — yet synth has the same
 > filesystem prerequisites either way. Making `destroy` chain the
 > same builds as `deploy` removes the asymmetry and upgrades this
@@ -53,7 +53,7 @@ tags: [github-actions, cdk, cloudformation, ci, idempotency, pnpm-scripts]
 > The rung-4 detection layer stays in the workflows as a sibling
 > backstop — necessary if anyone ever bypasses the workspace script
 > and invokes `cdk destroy` directly. The original Eradication section
-> is preserved at the bottom of this entry under *Prior eradication*.
+> is preserved at the bottom of this entry under _Prior eradication_.
 
 # A trailing `|| echo` turned every cdk-destroy failure into silent green
 
@@ -63,8 +63,8 @@ Hugo ran a manual `aws cloudformation list-stacks` on 2026-05-11 and
 found four preview stacks still alive, weeks after the PRs that owned
 them had merged:
 
-| Stack | PR | Closed at |
-| --- | --- | --- |
+| Stack           | PR     | Closed at  |
+| --------------- | ------ | ---------- |
 | `borso-fr-pr-2` | merged | 2026-05-03 |
 | `borso-fr-pr-4` | merged | 2026-05-03 |
 | `borso-fr-pr-6` | merged | 2026-05-03 |
@@ -109,10 +109,12 @@ think about them" was no longer true, and nothing alerted us.
 
 4. **Why didn't `destroy` build the app like `deploy` does?**
    `apps/borso-fr/package.json` had:
+
    ```json
    "deploy":  "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
    "destroy": "cdk destroy --all --force"
    ```
+
    The author wrote each script to its surface intent — deploy needs
    `dist/` on disk so it can upload to S3; destroy is "just delete
    the stack." That conflated the AWS-side semantics (deploy uploads,
@@ -122,12 +124,13 @@ think about them" was no longer true, and nothing alerted us.
 
 5. **Why did the workflow report green when destroy failed?**
    Both workflows wrapped the destroy call in the same idiom:
+
    ```bash
    pnpm --filter "@borso-app/$app" run destroy \
      || echo "(stack does not exist or already destroyed)"
    ```
-   `|| echo …` returns 0. The `for` loop continued. The step exited
-   0. The job went green.
+
+   `|| echo …` returns 0. The `for` loop continued. The step exited 0. The job went green.
 
 6. **Why was the `|| echo` written that way?**
    The author wanted idempotent re-runs. If a previous nightly had
@@ -138,24 +141,24 @@ think about them" was no longer true, and nothing alerted us.
 7. **Why did "tolerate idempotent re-runs" become "swallow all exit
    codes"?**
    `cdk destroy --force` returns the same non-zero exit code for
-   *every* failure mode: missing stack, IAM error, custom-resource
-   Delete handler failure, missing context, network blip, *missing
-   asset directory*, anything. `|| echo` can't tell those apart. The
+   _every_ failure mode: missing stack, IAM error, custom-resource
+   Delete handler failure, missing context, network blip, _missing
+   asset directory_, anything. `|| echo` can't tell those apart. The
    author collapsed all of them into "benign" by treating exit-code
    alone as the signal.
 
-**Root cause (revised):** the author thought *"`cdk destroy` is
+**Root cause (revised):** the author thought _"`cdk destroy` is
 symmetric with `cdk deploy` — both invoke the CDK CLI, deploy needs
-extra steps because it uploads, destroy is simpler"*, but actually
-*"both run synth first; synth has the same filesystem prerequisites
+extra steps because it uploads, destroy is simpler"_, but actually
+_"both run synth first; synth has the same filesystem prerequisites
 either way; deploy chains the build because the author noticed, and
-destroy didn't because the author didn't"*. If they had known that,
+destroy didn't because the author didn't"_. If they had known that,
 they would have written `destroy` as the same chain minus the upload-
 specific tail, and `apps/borso-fr/dist/` would have always existed
 when synth ran.
 
-A second misconception sat on top of the first: *"`cdk destroy`
-failing means the stack is gone — so swallow the exit code"*. That
+A second misconception sat on top of the first: _"`cdk destroy`
+failing means the stack is gone — so swallow the exit code"_. That
 one would have been benign on its own; combined with the missing-
 build, it produced 8 days of silent failures. Both are eradicated
 in this revision — the build chain at rung 2, the loud failures at
@@ -191,7 +194,7 @@ it by construction.
 - **Primary code fix:** commit
   [`6632679`](../../commit/663267998ba86c91d5e91817831547e85090fcf5) —
   `apps/borso-fr/package.json` chains `pnpm --filter @borso/infra
-  run build && pnpm build` ahead of `cdk destroy --all --force`,
+run build && pnpm build` ahead of `cdk destroy --all --force`,
   mirroring the existing `deploy` chain. Synth now always has its
   asset prerequisites met when invoked via the workspace script.
 - **Detection backstop:** commit
@@ -230,8 +233,9 @@ contains the same build chain as `deploy`:
 describe('eradication: every app `destroy` script chains the same builds as `deploy`', () => {
   const APPS_DIR = path.resolve(HERE, '../../../../apps');
   const appNames = fs.existsSync(APPS_DIR)
-    ? fs.readdirSync(APPS_DIR).filter((entry) =>
-        fs.existsSync(path.join(APPS_DIR, entry, 'package.json')))
+    ? fs
+        .readdirSync(APPS_DIR)
+        .filter((entry) => fs.existsSync(path.join(APPS_DIR, entry, 'package.json')))
     : [];
 
   it.each(appNames)('%s/package.json: destroy chains the build', (appName) => {
@@ -348,11 +352,12 @@ construction, and the eradication-checks test refuses to let a
 sibling app ship a regression.
 
 **Sibling defects swept:**
+
 - The same `|| echo "(failure)"` shape was present in both workflows
   (`preview.yml` teardown + `cleanup-orphans.yml`) and was fixed in
   both in commit `8b581dc`.
 - No other workflow in `.github/workflows/` uses the `cdk destroy ...
-  ||` pattern (grep'd).
+||` pattern (grep'd).
 - `apps/borsouvertures/` (under construction in PR #8) does not yet
   exist on `main`; the eradication-checks test will hold the line
   when it lands. PR #8 / PR #10 author will see a CI red if the
@@ -393,8 +398,8 @@ sibling app ship a regression.
 > >
 > > [workflow diffs preserved above under "Sibling detection layer"]
 > >
-> > **Why level 4, not level 1.** Making this defect *structurally
-> > impossible* would mean encoding the stack's intended lifetime in
+> > **Why level 4, not level 1.** Making this defect _structurally
+> > impossible_ would mean encoding the stack's intended lifetime in
 > > a type-safe way that AWS would enforce — AWS doesn't offer "delete
 > > this stack at time T". A DevX check (level 2) over bash exit-code
 > > semantics is also not credible. The honest level is detection:

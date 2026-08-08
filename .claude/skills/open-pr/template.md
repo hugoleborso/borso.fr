@@ -3,15 +3,15 @@
 The skeleton `/open-pr` fills in. Substitute every `{{double-brace}}`
 placeholder; omit a section entirely when its source doesn't exist (no
 empty `<details>` shells — silence is information). The standard at
-[`standard.md`](./standard.md) explains *why* each section sits at the level
-it does; this template gives the *what*.
+[`standard.md`](./standard.md) explains _why_ each section sits at the level
+it does; this template gives the _what_.
 
 The PR title is generated separately, as `feat({{scope}}): {{subject}}`,
 per [`commitlint.config.js`](../../../commitlint.config.js).
 
 ---
 
-```markdown
+````markdown
 ## Summary
 
 {{1–3 sentences. The *why* + the *what* in one breath. Sourced from
@@ -19,7 +19,7 @@ spec.md § "Pourquoi" + the feature's headline result.}}
 
 ## Validation
 
-- Visual:    {{PASS | PASS_EXCEPT_UNVERIFIABLE (N) | FAIL}} — [report](docs/features/{{app}}/{{slug}}/validation/visual-validation-{{ts}}.md)
+- Visual: {{PASS | PASS_EXCEPT_UNVERIFIABLE (N) | FAIL}} — [report](docs/features/{{app}}/{{slug}}/validation/visual-validation-{{ts}}.md)
 - Technical: {{PASS | PASS_EXCEPT_UNVERIFIABLE (N) | FAIL}} — [report](docs/features/{{app}}/{{slug}}/validation/technical-validation-{{ts}}.md)
 
 ## Orchestration trace
@@ -27,9 +27,9 @@ spec.md § "Pourquoi" + the feature's headline result.}}
 {{One-line level-1 summary — counters that tell the reviewer at-a-
 glance how messy the build was. Example:
 
-  *Built in 2 implementation rounds + 2 validation rounds, 1 defect
-  caught by the technical-validator (auth bypass on rotate-password),
-  fix landed in round 2, 6 kaizen items queued for post-merge sweep.*}}
+_Built in 2 implementation rounds + 2 validation rounds, 1 defect
+caught by the technical-validator (auth bypass on rotate-password),
+fix landed in round 2, 6 kaizen items queued for post-merge sweep._}}
 
 <details><summary>Flow diagram + per-stage results</summary>
 
@@ -50,6 +50,7 @@ flowchart LR
   class Impl2 fix
   class ShipReady ok
 ```
+````
 
 {{Render the diagram from `runs/<run-id>/journal.md.jsonl`: one node
 per dispatched sub-agent (implementation / technical-validation /
@@ -57,12 +58,12 @@ visual-validation), with edge labels carrying the verdict.
 `fail` class for FAIL verdicts, `fix` class for retry rounds, `ok`
 class for ship-ready / PASS final nodes.}}
 
-| Round | Agent | Output | Verdict | Commits | Notes |
-|---|---|---|---|---|---|
-{{One row per dispatched agent, in chronological order. Pull
-`status`, `summary` (first sentence), `sha` from the agent's verdict
-YAML at `runs/<run-id>/agents/<agent>-<NN>.md`. Mark retries as
-"fix round 1", "fix round 2", etc.}}
+| Round                                                                | Agent | Output | Verdict | Commits | Notes |
+| -------------------------------------------------------------------- | ----- | ------ | ------- | ------- | ----- |
+| {{One row per dispatched agent, in chronological order. Pull         |
+| `status`, `summary` (first sentence), `sha` from the agent's verdict |
+| YAML at `runs/<run-id>/agents/<agent>-<NN>.md`. Mark retries as      |
+| "fix round 1", "fix round 2", etc.}}                                 |
 
 **Run state:** [`docs/features/{{app}}/{{slug}}/runs/{{run-id}}/`]({{path}}) — journal, per-agent verdicts, state checkpoint.
 
@@ -137,20 +138,21 @@ items.}}
 <details><summary>Automated gates (run on CI)</summary>
 
 - `pnpm --filter {{app_pkg}} run test:core` → {{N}} tests, 100/100/100/100 perFile on `*.core.ts` + `*.utils.ts`.
-- `pnpm --filter {{app_pkg}} run test`      → {{N}} tests over Postgres.
+- `pnpm --filter {{app_pkg}} run test` → {{N}} tests over Postgres.
 - `pnpm --filter {{app_pkg}} run typecheck` → clean.
-- `pnpm --filter {{app_pkg}} run lint`      → clean.
-- `pnpm exec knip`                          → clean.
+- `pnpm --filter {{app_pkg}} run lint` → clean.
+- `pnpm exec knip` → clean.
 
 </details>
 
 <details><summary>What changed (diffstat)</summary>
 
-| Folder | Lines | Purpose |
-|---|---|---|
-{{table rows from `git diff origin/main --stat | grep apps/`}}
+| Folder                                         | Lines         | Purpose |
+| ---------------------------------------------- | ------------- | ------- |
+| {{table rows from `git diff origin/main --stat | grep apps/`}} |
 
 `git log origin/main..HEAD --oneline`:
+
 ```
 {{compact log}}
 ```
@@ -164,6 +166,7 @@ items.}}
 ---
 
 https://claude.ai/code/session_{{session_id}}
+
 ```
 
 ---
@@ -203,3 +206,4 @@ https://claude.ai/code/session_{{session_id}}
 - **One backlink at the foot.** The
   `https://claude.ai/code/session_<id>` trailer is the only forced line;
   everything else is operator-controlled.
+```

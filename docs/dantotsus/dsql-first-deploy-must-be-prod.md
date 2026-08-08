@@ -151,6 +151,7 @@ stack ref → automatic deploy ordering) or has been deployed
 previously (SSM resolves at deploy time).
 
 **Sibling defects swept:**
+
 - `PreviewableApp` no longer has a `stage === 'prod' ? new : lookup`
   branch; the conditional is gone.
 - `lookupDsqlCluster` kept as a public helper for advanced use

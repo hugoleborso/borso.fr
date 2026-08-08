@@ -20,9 +20,9 @@ apps to deploy: `borsouvertures` (first) and `last-loop-lepin`
 (second), serialised by `max-parallel: 1`. `borsouvertures` failed.
 GitHub then cancelled `last-loop-lepin` before it ever started.
 
-Hugo: *"Le job de deploy ne lance pas les deploy en simultané : du
+Hugo: _"Le job de deploy ne lance pas les deploy en simultané : du
 coup comme le deploy de borsouvertures a fail, celui de last loop
-lepin n'a pas commencé"*.
+lepin n'a pas commencé"_.
 
 ## Root-cause chain
 
@@ -40,7 +40,7 @@ lepin n'a pas commencé"*.
 
 **Root cause:** thought "`max-parallel: 1` means serial, so each
 app gets its turn", actually "`max-parallel: 1` + default
-`fail-fast: true` means strictly *up to* the first failure; siblings
+`fail-fast: true` means strictly _up to_ the first failure; siblings
 are cancelled".
 
 ## Detection failure causes
@@ -52,7 +52,7 @@ are cancelled".
 - **CI:** the deploy workflow is the CI; it can't catch its own
   semantic gap.
 - **Code review:** the comment `max-parallel: 1 — avoid CFN updates
-  touching shared zone records` framed the matrix as "safety
+touching shared zone records` framed the matrix as "safety
   serialisation"; nothing flagged that fail-fast was still on.
 - **Staging monitoring:** there is no staging for the prod deploy
   workflow itself; first detection is observing a prod release.

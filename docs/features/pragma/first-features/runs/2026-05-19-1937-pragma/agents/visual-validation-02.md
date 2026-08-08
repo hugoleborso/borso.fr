@@ -51,7 +51,7 @@ next:
   against `:5175` 404s because there is no proxy to `:3001`. For PWA
   offline reads the SW caches the shell and the runtime data is already
   in localStorage / IndexedDB, so the test still passes; but any
-  visual-validation row that *needs* a live API on the preview build
+  visual-validation row that _needs_ a live API on the preview build
   will require a tiny http-proxy or a `preview.proxy` config addition.
   Either way: document it.
 - **Login auth cookie persists offline.** The offline `/catalog` test
@@ -61,7 +61,7 @@ next:
   a per-row gate.
 - **Headless Chrome and `navigator.language`.** Round-1 kaizen #5 still
   applies — the validator's chromium is hard-pinned to `en-US`. Re-launching
-  with `--lang=fr-FR` and `LANG=fr_FR.UTF-8` did *not* change
+  with `--lang=fr-FR` and `LANG=fr_FR.UTF-8` did _not_ change
   `navigator.language` on this build of chromium-1194; locale switching
   requires either an installed FR locale on the system OR a runtime
   `?lang=` query escape hatch in the app. The cleanest fix is the second:

@@ -60,8 +60,8 @@ export function buildSessionsRouter() {
     )
     .delete('/:id', zValidator('param', sessionIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const ok = await removeSession(getDatabase(), id);
-      if (!ok) return context.json({ error: 'not-found' }, 404);
+      const isOk = await removeSession(getDatabase(), id);
+      if (!isOk) return context.json({ error: 'not-found' }, 404);
       return context.json({ id, deleted: true });
     });
 }

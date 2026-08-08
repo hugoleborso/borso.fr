@@ -37,8 +37,7 @@ export type RunnerValidationFailure =
   | 'bib-already-taken';
 
 export type RunnerValidation =
-  | { readonly ok: true }
-  | { readonly ok: false; readonly reason: RunnerValidationFailure };
+  { readonly ok: true } | { readonly ok: false; readonly reason: RunnerValidationFailure };
 
 /**
  * Validate a runner draft against the rules the controller can't express

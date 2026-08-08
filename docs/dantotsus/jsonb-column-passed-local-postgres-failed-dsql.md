@@ -3,8 +3,8 @@ date: 2026-06-05
 introduced-at: implementation
 detected-at: ci
 severity: medium
-related-pr: "#26"
-fix-pr: "#30"
+related-pr: '#26'
+fix-pr: '#30'
 fix-commits: [8776ee2]
 eradication-level: 2
 tags: [dsql, postgres, drizzle, ddl, deploy]
@@ -44,16 +44,16 @@ orchestration before the schema was rewritten to `text`.
    compatibility linter (`scripts/check-migration-sql-dsql-compat.sh`,
    wired into pre-commit + CI) already existed — but it only covered
    `ALTER TABLE` / `ADD CONSTRAINT` / `DROP COLUMN` forms. `jsonb`
-   column *declarations* weren't in its rule set.
+   column _declarations_ weren't in its rule set.
 
 **Root cause:** thought "the back-e2e suite proves the schema deploys",
-actually it proves the schema runs on *local Postgres*, whose DDL
+actually it proves the schema runs on _local Postgres_, whose DDL
 surface is a superset of DSQL's — the only gate that speaks DSQL is the
 DDL lint, and it had a `jsonb`-shaped hole.
 
 ## Detection failure causes
 
-- **Typing:** Drizzle types `jsonb()` as valid; it *is* valid Postgres.
+- **Typing:** Drizzle types `jsonb()` as valid; it _is_ valid Postgres.
 - **CI (tests / build):** back-e2e ran on local Postgres, which accepts
   `jsonb` — green.
 - **Pre-deploy DDL lint:** existed and was enforced, but its rule set
@@ -98,4 +98,4 @@ it) and was eradicated at the runner level during the original PR.
 
 - [`docs/knowledge/dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md) — §1 (jsonb), §11 (CREATE INDEX ASYNC).
 - [`dsql-alter-table-only-add-column.md`](./dsql-alter-table-only-add-column.md) — the ALTER-TABLE gaps the lint already covered.
-- [`docs/knowledge/local-postgres-without-docker.md`](../knowledge/local-postgres-without-docker.md) — why the test DB is real Postgres, and what that does *not* prove.
+- [`docs/knowledge/local-postgres-without-docker.md`](../knowledge/local-postgres-without-docker.md) — why the test DB is real Postgres, and what that does _not_ prove.

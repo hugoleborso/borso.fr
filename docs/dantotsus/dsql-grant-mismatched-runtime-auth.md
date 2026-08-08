@@ -51,11 +51,11 @@ fails at runtime.
    when we still thought non-admin users were on the roadmap. The
    shipped grant drifted away from the only viable client behaviour.
 
-**Root cause:** *I thought DSQL behaved like RDS where the user
+**Root cause:** _I thought DSQL behaved like RDS where the user
 provisions per-app DB users, so granting `DbConnect` and letting the
 runtime authenticate as a non-admin was a real option. Actually DSQL
 ships only an `admin` user today and the `DbConnectAdmin` IAM action
-is the only viable runtime grant.* If I had known that, the grant and
+is the only viable runtime grant._ If I had known that, the grant and
 the signer call would have agreed on day one.
 
 ## Detection failure causes

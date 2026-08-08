@@ -45,7 +45,7 @@ CloudFormation rolled back. The next CI deploy job (started after the user stopp
    The `/12-travaux` feature retroactively documents Hugo's monthly challenges with photos and a video. The site is the right home for the assets (no CMS needed; everything stays version-controlled). The bundle is going to grow, not shrink.
 
 4. **Why didn't anyone notice the 128 MB default during conception?**
-   The construct's defaults are right for the *original* static-site shape this repo deploys. No app had previously crossed a few MiB of assets. The default became a latent footgun the moment we landed image-heavy content.
+   The construct's defaults are right for the _original_ static-site shape this repo deploys. No app had previously crossed a few MiB of assets. The default became a latent footgun the moment we landed image-heavy content.
 
 **Root cause:** thought `BucketDeployment`'s Lambda defaults were tuned for arbitrary static-site payloads; actually the 128 MB default OOMs on anything past a few MiB of total upload, and the failure mode is a misleading SSL error rather than an OOM kill.
 
@@ -56,7 +56,7 @@ CloudFormation rolled back. The next CI deploy job (started after the user stopp
 - **Functional validation locally:** local dev never invokes the BucketDeployment Lambda. `pnpm dev` serves files directly from `site/public/`; the OOM is invisible until cloud deploy.
 - **CI (build):** the bundle builds successfully; `pnpm build` doesn't probe upload feasibility.
 - **Code review:** the construct call looks idiomatic; the missing `memoryLimit` is the absence of a prop, not the presence of a wrong one. Reviewers don't flag what isn't there.
-- **Staging monitoring:** preview *is* the staging environment for this app; the OOM only fires here.
+- **Staging monitoring:** preview _is_ the staging environment for this app; the OOM only fires here.
 
 ## Countermeasure
 
@@ -64,7 +64,7 @@ The eradication landed in the StaticSite construct (which both prod and preview 
 
 - **Code:** commit [`c2eea65`](https://github.com/hugoleborso/borso.fr/commit/c2eea65058a85f108302f4df505de017a85c2a6b) — `BucketDeployment` `memoryLimit: 512` on both the prod and preview paths inside `infra/cdk/src/constructs/static-site.ts`, with a comment explaining the SSL-EOF symptom so the next reader doesn't roll the number back.
 - **Code:** commit [`374c8c9`](https://github.com/hugoleborso/borso.fr/commit/374c8c965df168d3e08c10b1a3a06fefa9b4a2bf) — recompressed the actual /12-travaux JPEGs to 1600 px / q80 (13 MiB → 9.3 MiB). Defence in depth: smaller bundles upload faster regardless of Lambda memory.
-- **Operator action:** during the original failure, the rollback Lambda itself re-uploads the *old* asset set — equally large. If you ever see a `UPDATE_ROLLBACK_IN_PROGRESS` that's been running close to the 15-minute Lambda timeout, it may be on the verge of `UPDATE_ROLLBACK_FAILED`. Wait it out or, if it fails, `aws cloudformation continue-update-rollback`.
+- **Operator action:** during the original failure, the rollback Lambda itself re-uploads the _old_ asset set — equally large. If you ever see a `UPDATE_ROLLBACK_IN_PROGRESS` that's been running close to the 15-minute Lambda timeout, it may be on the verge of `UPDATE_ROLLBACK_FAILED`. Wait it out or, if it fails, `aws cloudformation continue-update-rollback`.
 
 ## Eradication (mandatory — code-level)
 

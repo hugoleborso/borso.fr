@@ -49,9 +49,9 @@ export function CreateEditionForm({
       let gpxXml: string;
       try {
         gpxXml = await gpxFile.text();
-      } catch (caught) {
+      } catch (error_) {
         setGpxReadError(
-          caught instanceof Error ? caught.message : 'Lecture du fichier impossible.',
+          error_ instanceof Error ? error_.message : 'Lecture du fichier impossible.',
         );
         return;
       }
@@ -71,18 +71,18 @@ export function CreateEditionForm({
       setGpxFile(null);
       invalidateResource('edition:current');
       invalidateResource('editions:all');
-    } catch (caught) {
-      if (caught instanceof ApiError && caught.status === 409) {
+    } catch (error_) {
+      if (error_ instanceof ApiError && error_.status === 409) {
         setError('Une édition avec ce slug existe déjà. Choisis-en un autre.');
-      } else if (caught instanceof ApiError && caught.status === 400) {
-        const summary = summariseZodError(caught.body);
+      } else if (error_ instanceof ApiError && error_.status === 400) {
+        const summary = summariseZodError(error_.body);
         setError(
           summary === null
             ? 'Données invalides (vérifier le GPX et les horaires).'
             : `Données invalides → ${summary}`,
         );
       } else {
-        setError(caught instanceof Error ? caught.message : 'Erreur inconnue.');
+        setError(error_ instanceof Error ? error_.message : 'Erreur inconnue.');
       }
     } finally {
       setSubmitting(false);
@@ -179,17 +179,17 @@ export function CreateEditionForm({
             }}
             required
           />
-          {gpxFile !== null ? (
+          {gpxFile === null ? null : (
             <div className="muted mono" style={{ fontSize: 11 }}>
               {gpxFile.name} ({(gpxFile.size / 1024).toFixed(1)} kB)
             </div>
-          ) : null}
-          {gpxReadError !== null ? <div className="error-text">{gpxReadError}</div> : null}
+          )}
+          {gpxReadError === null ? null : <div className="error-text">{gpxReadError}</div>}
         </div>
         <div className="muted mono" style={{ fontSize: 11 }}>
           Sunrise / sunset sont calculés depuis le premier point du GPX et la date de départ.
         </div>
-        {error !== null ? <div className="error-text">{error}</div> : null}
+        {error === null ? null : <div className="error-text">{error}</div>}
         <div className="row" style={{ gap: 'var(--d-2)', flexWrap: 'wrap' }}>
           <button className="btn btn-primary" type="submit" disabled={submitting}>
             {submitting ? 'Création…' : "Créer l'édition"}

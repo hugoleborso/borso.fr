@@ -104,7 +104,7 @@ next:
 - **The prompt's "drag-via-handle" mobile pattern was approximated
   with up/down arrow buttons** on the setlist editor — the design
   bundle's handle drag is genuinely v2 polish (it requires touch
-  + pointer + keyboard alternative all wired together to be
-  accessible). Buttons cover the same intent today; the kanban
-  drag-and-drop on bars uses HTML5 DnD instead. Verdict-worthy
-  trade-off, not a defect.
+  - pointer + keyboard alternative all wired together to be
+    accessible). Buttons cover the same intent today; the kanban
+    drag-and-drop on bars uses HTML5 DnD instead. Verdict-worthy
+    trade-off, not a defect.

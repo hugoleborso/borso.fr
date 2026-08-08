@@ -20,7 +20,7 @@ check.
 
 ```ts
 // Don't
-const body = await request.json() as CreateRunnerBody;
+const body = (await request.json()) as CreateRunnerBody;
 
 // Do
 const body = createRunnerSchema.parse(await request.json());
@@ -81,12 +81,12 @@ the body cannot widen the public contract without anyone noticing.
 
 ## Never hand-write a type another tool derives
 
-| Source of truth | How to get the type |
-|-----------------|---------------------|
-| A Drizzle table | `typeof runnersTable.$inferSelect` |
-| A Drizzle insert | `typeof runnersTable.$inferInsert` |
-| A Zod schema | `z.infer<typeof schema>` |
-| The Hono routes | `hc<typeof apiRouter>` on the front end |
+| Source of truth  | How to get the type                     |
+| ---------------- | --------------------------------------- |
+| A Drizzle table  | `typeof runnersTable.$inferSelect`      |
+| A Drizzle insert | `typeof runnersTable.$inferInsert`      |
+| A Zod schema     | `z.infer<typeof schema>`                |
+| The Hono routes  | `hc<typeof apiRouter>` on the front end |
 
 A hand-written copy of any of the four drifts away from its source. See
 [06. Data fetching](./06-data-fetching.md).

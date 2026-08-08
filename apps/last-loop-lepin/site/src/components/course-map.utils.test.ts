@@ -153,7 +153,7 @@ describe('projectFractionTimeAware', () => {
     // 4 evenly-spaced points; time fractions skewed: 0..0.9 covers points 0..1
     // (slow uphill), then 0.9..1 covers points 1..3 (fast downhill).
     const track = indexTrack(SAMPLE_POINTS);
-    const pointTimeFractions: ReadonlyArray<number> = [0, 0.9, 0.95, 1];
+    const pointTimeFractions: readonly number[] = [0, 0.9, 0.95, 1];
     const position = projectFractionTimeAware(track, 0.5, pointTimeFractions);
     const first = SAMPLE_POINTS[0] ?? { lat: 0, lng: 0 };
     const second = SAMPLE_POINTS[1] ?? first;
@@ -167,7 +167,7 @@ describe('projectFractionTimeAware', () => {
   it('downhill-first profile: at timeFraction 0.5, the runner has covered ~90% of the distance', () => {
     // Mirror profile: fast first half, slow second half.
     const track = indexTrack(SAMPLE_POINTS);
-    const pointTimeFractions: ReadonlyArray<number> = [0, 0.05, 0.1, 1];
+    const pointTimeFractions: readonly number[] = [0, 0.05, 0.1, 1];
     const position = projectFractionTimeAware(track, 0.5, pointTimeFractions);
     const third = SAMPLE_POINTS[2] ?? { lat: 0, lng: 0 };
     const fourth = SAMPLE_POINTS[3] ?? third;
@@ -189,7 +189,7 @@ describe('projectFractionTimeAware', () => {
 
   it('returns the exact boundary point at each pointTimeFractions[i]', () => {
     const track = indexTrack(SAMPLE_POINTS);
-    const pointTimeFractions: ReadonlyArray<number> = [0, 0.3, 0.7, 1];
+    const pointTimeFractions: readonly number[] = [0, 0.3, 0.7, 1];
     for (let index = 0; index < SAMPLE_POINTS.length; index += 1) {
       const expectedPoint = SAMPLE_POINTS[index];
       const probe = pointTimeFractions[index];
@@ -202,7 +202,7 @@ describe('projectFractionTimeAware', () => {
 
   it('clamps fraction outside [0, 1]', () => {
     const track = indexTrack(SAMPLE_POINTS);
-    const pointTimeFractions: ReadonlyArray<number> = [0, 0.3, 0.7, 1];
+    const pointTimeFractions: readonly number[] = [0, 0.3, 0.7, 1];
     const first = SAMPLE_POINTS[0] ?? { lat: 0, lng: 0 };
     const last = SAMPLE_POINTS[SAMPLE_POINTS.length - 1] ?? first;
     const below = projectFractionTimeAware(track, -1, pointTimeFractions);
@@ -218,7 +218,7 @@ describe('projectFractionTimeAware', () => {
     // practice, but the function survives them) — the lockstep walk
     // breaks on the first match at index 1.
     const track = indexTrack(SAMPLE_POINTS);
-    const pointTimeFractions: ReadonlyArray<number> = [0, 0.5, 0.5, 1];
+    const pointTimeFractions: readonly number[] = [0, 0.5, 0.5, 1];
     const position = projectFractionTimeAware(track, 0.5, pointTimeFractions);
     expect(position).toEqual(SAMPLE_POINTS[1]);
   });
@@ -228,7 +228,7 @@ describe('projectFractionTimeAware', () => {
     // exists only when callers bypass it. The iterator runs dry and we
     // return the last segment-end we saw.
     const track = indexTrack(SAMPLE_POINTS);
-    const pointTimeFractions: ReadonlyArray<number> = [0, 0.5];
+    const pointTimeFractions: readonly number[] = [0, 0.5];
     const position = projectFractionTimeAware(track, 1, pointTimeFractions);
     expect(position).toEqual(SAMPLE_POINTS[1]);
   });
@@ -237,7 +237,7 @@ describe('projectFractionTimeAware', () => {
     // ptf[1] === 0 forces the first segment to have zero span — the
     // `segmentSpan === 0 ? 0 : …` branch returns the previous point.
     const track = indexTrack(SAMPLE_POINTS);
-    const pointTimeFractions: ReadonlyArray<number> = [0, 0, 0.5, 1];
+    const pointTimeFractions: readonly number[] = [0, 0, 0.5, 1];
     const position = projectFractionTimeAware(track, 0, pointTimeFractions);
     expect(position).toEqual(SAMPLE_POINTS[0]);
   });

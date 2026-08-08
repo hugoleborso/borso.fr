@@ -46,11 +46,11 @@ export function Login(): JSX.Element {
       try {
         await login.mutateAsync({ password: value.password });
         navigate(readFromState(location.state), { replace: true });
-      } catch (caught) {
-        if (caught instanceof ApiError) {
-          if (caught.status === 429) setServerError(t('auth.rateLimited'));
-          else if (caught.status === 401) setServerError(t('auth.invalidPassword'));
-          else if (caught.status === 503) setServerError(t('auth.notBootstrapped'));
+      } catch (error) {
+        if (error instanceof ApiError) {
+          if (error.status === 429) setServerError(t('auth.rateLimited'));
+          else if (error.status === 401) setServerError(t('auth.invalidPassword'));
+          else if (error.status === 503) setServerError(t('auth.notBootstrapped'));
           else setServerError(t('auth.unknownError'));
         } else {
           setServerError(t('auth.unknownError'));
@@ -128,11 +128,11 @@ export function Login(): JSX.Element {
               </Button>
             )}
           </form.Subscribe>
-          {serverError !== null ? (
+          {serverError === null ? null : (
             <p className="text-danger text-sm" role="alert">
               {serverError}
             </p>
-          ) : null}
+          )}
         </form>
       </Card>
     </main>

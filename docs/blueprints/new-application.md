@@ -52,16 +52,16 @@ follows every standard.
 
 ## The scripts every application defines
 
-| Script | Does |
-|--------|------|
-| `dev` | Starts everything the application needs locally |
-| `build` | Builds the site bundle |
-| `lint` | Runs ESLint with the cache |
-| `typecheck` | Runs `tsc --noEmit` for the app and the CDK entry |
-| `test` | Runs the full Vitest suite, starting Postgres when needed |
-| `test:coverage` | Adds the coverage thresholds |
-| `test:mutation` | Runs Stryker over the pure files |
-| `synth`, `diff`, `deploy`, `destroy` | The CDK commands |
+| Script                               | Does                                                      |
+| ------------------------------------ | --------------------------------------------------------- |
+| `dev`                                | Starts everything the application needs locally           |
+| `build`                              | Builds the site bundle                                    |
+| `lint`                               | Runs ESLint with the cache                                |
+| `typecheck`                          | Runs `tsc --noEmit` for the app and the CDK entry         |
+| `test`                               | Runs the full Vitest suite, starting Postgres when needed |
+| `test:coverage`                      | Adds the coverage thresholds                              |
+| `test:mutation`                      | Runs Stryker over the pure files                          |
+| `synth`, `diff`, `deploy`, `destroy` | The CDK commands                                          |
 
 Two rules about the scripts have already caused incidents. Any script whose
 name pnpm also uses, which includes `deploy` and `destroy`, has to be invoked

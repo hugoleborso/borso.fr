@@ -8,7 +8,7 @@ on the source letter case:
 - **Lowercase source** (`borso.fr` written as-is) → renders as simple
   monocase block letters. Clean, geometric, looks "default".
 - **Uppercase source** (`BORSO.FR`, or `text-transform: uppercase`)
-  → renders the *decorative* caps with the geometric outline ornaments
+  → renders the _decorative_ caps with the geometric outline ornaments
   that distinguish the font. This is the "caps geo" variant the design
   preset names.
 
@@ -71,7 +71,7 @@ its uppercase preview, it's a monocase / dual-glyph font. The CSS
 choice is part of the design intent.
 
 Design-tool exports (Claude Design, Figma, etc.) often capture the
-intent as a *preset* (here, an entry in a `FONT_PAIRS` object with a
+intent as a _preset_ (here, an entry in a `FONT_PAIRS` object with a
 `transform: 'uppercase'` field). When you port the design, port the
 preset's `transform` field too — not just the `font-family`.
 
@@ -79,6 +79,6 @@ preset's `transform` field too — not just the `font-family`.
 
 - [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](../dantotsus/believed-the-bundle-readme-not-the-live-package-json.md)
   — neighbour: the same design import was wrong about the workspace's
-  toolchain. Imported briefs are *snapshots*; everything in them
+  toolchain. Imported briefs are _snapshots_; everything in them
   (toolchain assumptions, font presets, copy) needs a live read at
   port time.

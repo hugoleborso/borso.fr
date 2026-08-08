@@ -36,7 +36,7 @@ tags: [cdk, s3, cloudformation, deploy]
 > destroy.
 >
 > The original Eradication section is preserved at the bottom under
-> *Prior eradication* for the audit trail. The knowledge entry is
+> _Prior eradication_ for the audit trail. The knowledge entry is
 > kept as historical context with a banner pointing here.
 
 # A failed first deploy leaves the retained S3 bucket as an orphan; retries 409 on bucket-name reuse
@@ -92,12 +92,12 @@ the name.
 5. **Why** is this not a one-off?
    Any first deploy that crashes after `CreateBucket` succeeded but before
    the rest of the stack landed reproduces this. The alias-conflict was
-   *one* such failure; the next will be something else (cert-issued-too-late,
+   _one_ such failure; the next will be something else (cert-issued-too-late,
    IAM-permission-eventual-consistency, BucketDeployment Lambda timeout, …).
    `borsouvertures-prod`'s first deploy (PR #8) is the next candidate.
 
-**Root cause:** *thought* "buckets should always be RETAIN — that's the
-safe default"; *actually* "RETAIN is only safe when the bucket holds
+**Root cause:** _thought_ "buckets should always be RETAIN — that's the
+safe default"; _actually_ "RETAIN is only safe when the bucket holds
 irrecoverable data. A static-site bucket holds only `dist/` output and
 is fully rebuildable, so RETAIN buys no protection while introducing
 the failed-create orphan and the destroy-doesn't-destroy surprise."
@@ -111,13 +111,13 @@ have existed.
 
 - **Typing / linter / CI:** N/A — runtime AWS API error.
 - **Local synth (`cdk diff`, `cdk synth`):** these compare the proposed
-  template against the *target stack*'s existing template. They cannot see
-  resources that exist in the account but are *not* part of the target stack.
+  template against the _target stack_'s existing template. They cannot see
+  resources that exist in the account but are _not_ part of the target stack.
 - **CI:** the deploy job ran, `CreateStack` returned the 409 mid-flight, the
   stack rolled back. The CI doesn't have a step between `cdk synth` and
   `cdk deploy` that probes the account for orphans.
 - **Code review:** the reviewer would have to question the RETAIN reflex
-  itself — i.e. recognise that *this particular bucket* holds no
+  itself — i.e. recognise that _this particular bucket_ holds no
   irrecoverable data. Without that observation the RETAIN looks like
   textbook safety, not a footgun.
 
@@ -183,12 +183,12 @@ And two synth-time assertions in `infra/cdk/test/unit/static-site.test.ts`
 
 **Why level 1 (structural impossibility):**
 
-| Outcome | Old (RETAIN) | New (DESTROY + autoDeleteObjects) |
-| --- | --- | --- |
-| Failed first deploy post-CreateBucket | orphan; next deploy 409s | bucket rolled back cleanly; next deploy proceeds |
-| Operator runs `cdk destroy --all` on prod | bucket survives; operator surprised | bucket gone, contents gone (rebuildable) |
-| Accidental `cdk destroy` on prod | bucket survives (safety net) | bucket gone — but contents are rebuildable from `pnpm build` |
-| Bucket name re-creation collision | possible (orphan blocks) | impossible (rollback wipes the bucket) |
+| Outcome                                   | Old (RETAIN)                        | New (DESTROY + autoDeleteObjects)                            |
+| ----------------------------------------- | ----------------------------------- | ------------------------------------------------------------ |
+| Failed first deploy post-CreateBucket     | orphan; next deploy 409s            | bucket rolled back cleanly; next deploy proceeds             |
+| Operator runs `cdk destroy --all` on prod | bucket survives; operator surprised | bucket gone, contents gone (rebuildable)                     |
+| Accidental `cdk destroy` on prod          | bucket survives (safety net)        | bucket gone — but contents are rebuildable from `pnpm build` |
+| Bucket name re-creation collision         | possible (orphan blocks)            | impossible (rollback wipes the bucket)                       |
 
 The trade is "lose the rebuildable bucket on accidental destroy" against
 "never hit the orphan trap, and destroy means destroy." For static-site
@@ -229,9 +229,10 @@ user-data bucket where RETAIN is genuinely the right choice).
 **Decision (at the time):** an earlier draft shipped a
 `scripts/preflight-orphan-buckets.sh` (level 2 DevX check) that scanned
 `cdk.out` for pinned `BucketName`s and head-checked each one against S3
-+ CFN before allowing `cdk deploy` to proceed. PR #7 review concluded
-the gate was heavy-handed for a rare failure mode with a three-command
-manual recovery, and rolled it back in favour of the knowledge entry.
+
+- CFN before allowing `cdk deploy` to proceed. PR #7 review concluded
+  the gate was heavy-handed for a rare failure mode with a three-command
+  manual recovery, and rolled it back in favour of the knowledge entry.
 
 **Why the rationale was wrong:** the decision treated the bucket as a
 generic "data bucket" where RETAIN is the safe default. Static-site
@@ -239,4 +240,4 @@ buckets are not data buckets — they're caches of `dist/` — so the
 "safe default" was actually buying nothing while shipping the failed-
 create orphan. The right rung was 1, not 5. The 2026-05-11 fix swaps
 the policy at source and adds an eradication-check guard, removing the
-need for a preflight script *and* eliminating the failure mode itself.
+need for a preflight script _and_ eliminating the failure mode itself.

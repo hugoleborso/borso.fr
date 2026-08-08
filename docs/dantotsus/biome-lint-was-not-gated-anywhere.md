@@ -44,28 +44,28 @@ command on a whim.
 2. **Why** wasn't there a root-scope biome gate? Wasn't `pnpm -r lint`
    in CI already running biome?
    Half-true, and that's exactly why it slipped. `.github/workflows/
-   ci.yml` runs `pnpm -r lint`, which iterates every workspace and
+ci.yml` runs `pnpm -r lint`, which iterates every workspace and
    runs each one's `lint` script (`biome lint`). Each per-workspace
    `biome.jsonc` has `"files.includes": ["bin/**", "site/**"]` —
    biome only scans the workspace's own source. **Files outside any
    workspace** — `docs/`, `scripts/`, `biome-plugins/`, top-level
    markdown-adjacent code — were never scanned by `pnpm -r lint`.
-   The root `biome.jsonc` *would* scan them, but nothing in CI or
+   The root `biome.jsonc` _would_ scan them, but nothing in CI or
    hooks invoked biome from the root.
 
 3. **Why** does scope-narrowed-per-workspace + un-gated-at-root
    produce silent drift?
    Because the assumption "biome lint runs in CI" is true for
    workspace code but false for everything else. The signal "biome
-   ran green" was *valid* for the apps; it was *vacuous* for the
+   ran green" was _valid_ for the apps; it was _vacuous_ for the
    files under `docs/`. The vacuous case is invisible — no error
    message says "biome didn't even look at this file".
 
 4. **Why** were biome-eligible files in `docs/` at all?
    Hand-off bundles from external design tools (Claude Design,
    Figma exports) drop their source files into `docs/features/
-   <app>/<slug>/spec/design-export/` as references. Those files
-   are *intent documentation*, not source — but they have `.jsx`
+<app>/<slug>/spec/design-export/` as references. Those files
+   are _intent documentation_, not source — but they have `.jsx`
    / `.ts` extensions and biome happily lints them. The first time
    PR #11 landed design-export fixtures, biome would have flagged
    them — but no gate looked, so the errors merged. PR #14 added
@@ -74,13 +74,13 @@ command on a whim.
 5. **Why** is "if a tool exists in the repo, it must be gated"
    not enshrined anywhere?
    Because the convention is implicit: `package.json` scripts +
-   pre-commit + pre-push + CI are *expected* to invoke every
+   pre-commit + pre-push + CI are _expected_ to invoke every
    long-lived tool, but no checklist enforces it. The first time
    a tool is added behind a per-workspace include glob, the root
    surface becomes a blind spot.
 
-**Root cause:** *thought* "biome's presence in CI implies biome's
-enforcement"; *actually* `pnpm -r lint` enforces biome only on
+**Root cause:** _thought_ "biome's presence in CI implies biome's
+enforcement"; _actually_ `pnpm -r lint` enforces biome only on
 files inside workspace `includes` globs, and the repo had grown
 biome-eligible files outside any workspace (under `docs/`) that
 nothing was gating. The defect-class is "tool with workspace
@@ -96,10 +96,10 @@ workspaces".
 - **Pre-push hook:** ran `knip`, `actionlint`, and a script-shadow
   check. No biome call at any scope.
 - **CI workflow `ci.yml`:** ran `pnpm -r typecheck` and `pnpm -r
-  lint`. The latter executes biome inside each workspace at its
+lint`. The latter executes biome inside each workspace at its
   own `includes` glob — covered `apps/<x>/bin/` + `apps/<x>/site/`
   but missed everything outside (`docs/`, `scripts/`, root-level
-  markdown). The CI gate was *partially* there, which made it
+  markdown). The CI gate was _partially_ there, which made it
   feel covered.
 - **Code review:** humans don't run `pnpm exec biome lint` on
   every branch. Biome is supposed to be the automation, not the
@@ -116,13 +116,13 @@ so the gate isn't permanently red on `main` for fixture-shape
 problems we don't actually want to fix.
 
 - **Code:** PR #15 — adds `pnpm exec biome lint` to `.husky/
-  pre-commit` (primary gate, fast feedback) and to `.github/
-  workflows/ci.yml`'s `build` job (defense-in-depth, catches
+pre-commit` (primary gate, fast feedback) and to `.github/
+workflows/ci.yml`'s `build` job (defense-in-depth, catches
   commits where the hook was bypassed despite the
   no-`--no-verify` rule). The earlier same-PR fix to root
   `biome.jsonc` (`"files.includes": ["**", "!docs/**"]`)
   removes `docs/` from biome's consideration entirely — fixtures
-  there document *intent*, not source.
+  there document _intent_, not source.
 
 ## Eradication (mandatory — code-level)
 

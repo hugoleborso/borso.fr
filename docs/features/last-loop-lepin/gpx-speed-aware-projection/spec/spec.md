@@ -2,19 +2,20 @@
 
 ## Perspectives confronted
 
-- [x] **Client / business** — confirmé : usage en retransmission spectateur de l'écran `/`, où la carte est le point focal. Aujourd'hui le mouvement de l'avatar est visuellement incohérent avec la position réelle observée pendant le test du 2026-05-14 (cf. *Why → Gemba*).
-- [x] **Product** — confirmé : pas de nouvelle surface UI, on raffine un mouvement existant. Le gain est *implicite* — le spectateur n'a pas à savoir qu'on est passé d'un modèle linéaire à un modèle basé sur la trace enregistrée ; il doit juste trouver que « la carte colle ».
+- [x] **Client / business** — confirmé : usage en retransmission spectateur de l'écran `/`, où la carte est le point focal. Aujourd'hui le mouvement de l'avatar est visuellement incohérent avec la position réelle observée pendant le test du 2026-05-14 (cf. _Why → Gemba_).
+- [x] **Product** — confirmé : pas de nouvelle surface UI, on raffine un mouvement existant. Le gain est _implicite_ — le spectateur n'a pas à savoir qu'on est passé d'un modèle linéaire à un modèle basé sur la trace enregistrée ; il doit juste trouver que « la carte colle ».
 - [x] **Tech-lead** — confirmé : on étend `GpxMetadata.trackJson` d'un tableau parallèle `pointTimeFractions: ReadonlyArray<number>` (cumulatif normalisé 0..1), produit au parsing GPX si tous les `<trkpt>` ont un `<time>`. La projection passe d'un mapping linéaire `time-fraction → distance-fraction` à `time-fraction → distance-fraction via le profil enregistré`. Aucune migration de schéma DB (la colonne `editions.gpx` est déjà `text`-JSON, `rowToEdition` parse côté repo). Fallback silencieux si pas de timings → comportement actuel préservé pour les éditions déjà uploadées.
 - [x] **Developer** — confirmé : un nouveau `*.utils.ts` pur côté site qui prend `(timeFraction, pointTimeFractions, cumulativeDistances) → distanceFraction`, 100 % coverage. Côté api, le parser GPX est étendu pour produire les fractions normalisées ; la mutation est circonscrite à `gpx.core.ts` et son test (déjà à 100 %). Pas de hook React, pas de useEffect, juste une fonction pure substituée dans le `useEffect` Leaflet existant de `CourseMap.tsx`.
-- [x] **Designer** — confirmé : aucune affordance nouvelle, aucun composant nouveau. Le seul changement visible est *physique* (le marqueur se déplace différemment dans le temps). Pas de mockup ; le « avant / après » se valide en faisant tourner l'app avec la même `now` et le même GPX, en visualisant le delta de position sur deux fractions données.
+- [x] **Designer** — confirmé : aucune affordance nouvelle, aucun composant nouveau. Le seul changement visible est _physique_ (le marqueur se déplace différemment dans le temps). Pas de mockup ; le « avant / après » se valide en faisant tourner l'app avec la même `now` et le même GPX, en visualisant le delta de position sur deux fractions données.
 
 ## Why
 
-Pendant l'édition test du 2026-05-14, Hugo a constaté en retransmission que l'avatar des coureurs avançait visiblement *trop vite* sur les portions de montée du tracé (l'avatar s'affichait déjà en haut alors que les coureurs étaient encore à mi-pente) et *trop lentement* en descente (l'avatar restait en haut alors que les coureurs étaient déjà rentrés). Le mouvement de l'avatar étant le repère visuel principal pour le spectateur entre deux tops horaires, cette incohérence dégrade la perception de « ce qui se passe ». Avec une boucle plus vallonnée sur la prochaine édition, l'écart deviendra criant.
+Pendant l'édition test du 2026-05-14, Hugo a constaté en retransmission que l'avatar des coureurs avançait visiblement _trop vite_ sur les portions de montée du tracé (l'avatar s'affichait déjà en haut alors que les coureurs étaient encore à mi-pente) et _trop lentement_ en descente (l'avatar restait en haut alors que les coureurs étaient déjà rentrés). Le mouvement de l'avatar étant le repère visuel principal pour le spectateur entre deux tops horaires, cette incohérence dégrade la perception de « ce qui se passe ». Avec une boucle plus vallonnée sur la prochaine édition, l'écart deviendra criant.
 
 **Output metric** (lagging, hors CI) : self-report du spectateur en retransmission à la prochaine édition réelle, format binaire « la carte colle / ne colle pas ». Pas de mesure quantitative — le décalage actuel est qualitatif et la cible est qualitative.
 
 **Input metrics** (driveables par `/visual-validation`) :
+
 - Le DTO `edition.gpx.trackJson` inclut `pointTimeFractions` (array croissant strict, démarrant à 0, terminant à 1) si le GPX uploadé avait des `<time>` sur tous les `<trkpt>`.
 - Quand `pointTimeFractions` est présent, la position de l'avatar à `timeFraction = 0.5` correspond au point GPX dont la fraction cumulative dépasse 0.5 (et **pas** au point à mi-distance linéaire).
 - Quand `pointTimeFractions` est absent, l'avatar suit l'algorithme actuel (mi-temps = mi-distance).
@@ -23,7 +24,7 @@ Pendant l'édition test du 2026-05-14, Hugo a constaté en retransmission que l'
 
 ## Result
 
-Aucun nouvel élément visible. Le seul résultat est *comportemental* : sur la même édition, à la même seconde, l'avatar d'un coureur n'est pas à la même position lat/lng qu'avant — il est sur le point qui correspond au moment où le runner enregistré (Hugo) était lui-même à `timeFraction × loopMs` dans son enregistrement.
+Aucun nouvel élément visible. Le seul résultat est _comportemental_ : sur la même édition, à la même seconde, l'avatar d'un coureur n'est pas à la même position lat/lng qu'avant — il est sur le point qui correspond au moment où le runner enregistré (Hugo) était lui-même à `timeFraction × loopMs` dans son enregistrement.
 
 Pour valider : `/visual-validation` ouvre `/`, attend que la carte rende, capture la position des avatars à `now = startsAt + 0.25 × loopMs`, puis à `now = startsAt + 0.5 × loopMs`, puis à `now = startsAt + 0.75 × loopMs`. Trois screenshots. Pour chacun, l'agent compare la position lat/lng des avatars à des valeurs attendues (calculées au préalable depuis le GPX test). Pas de « ça a l'air bien » — assertions numériques.
 
@@ -44,7 +45,7 @@ Pour valider : `/visual-validation` ouvre `/`, attend que la carte rende, captur
 
 - **GPX sans `<time>` (plotted, ou recorded puis stripé)** : `pointTimeFractions` est `undefined` dans le DTO. `CourseMap.tsx` détecte l'absence et bascule sur `projectFraction(track, fraction)` (algorithme actuel). Sentry breadcrumb `projection_mode: 'linear-fallback'` au mount du composant pour traçabilité, pas d'alerte (cf. Q3 Q.O.D.).
 - **GPX avec `<time>` partiel** (un seul `<trkpt>` sans timestamp sur 2644) : traité comme « pas de timings du tout » — la moindre absence invalide la série, on tombe au fallback. Plus simple à raisonner qu'un mode partiel.
-- **Coureur 2× plus lent que l'enregistrement** : la fraction temporelle reste 0..1 sur la durée *de la boucle du coureur*. Si Hugo a couru en 44 min mais Borso met 88 min, à `timeFraction = 0.5` Borso est sur le point que Hugo a atteint en 22 min de son propre run — pas en 44 min. La *forme* du profil est conservée, seul le scale temporel total est différent.
+- **Coureur 2× plus lent que l'enregistrement** : la fraction temporelle reste 0..1 sur la durée _de la boucle du coureur_. Si Hugo a couru en 44 min mais Borso met 88 min, à `timeFraction = 0.5` Borso est sur le point que Hugo a atteint en 22 min de son propre run — pas en 44 min. La _forme_ du profil est conservée, seul le scale temporel total est différent.
 - **Pause GPX dans l'enregistrement** (lacets, photo) : la pause se retrouve dans `pointTimeFractions` comme un grand saut de fraction sur une courte distance. L'avatar s'arrêtera 30 s à cet endroit lors de la projection. Pas de smoothing v1, ré-évaluable post-test (cf. Q5 Q.O.D.).
 - **Premier point et dernier point au même lieu** (boucle fermée) : déjà géré par `projectFraction` actuel ; aucune logique nouvelle nécessaire.
 - **Boucle GPX trop dense (2644 trkpts ≈ 1 pt/s sur 44 min)** : le DTO grossit de ~21 KB de doubles JSON pour `pointTimeFractions` (2644 × ~8 caractères). Acceptable mais à monitorer ; un sous-échantillonnage à ~200 points pourrait être justifié dans un follow-up si la taille du DTO devient un problème (cf. Q6 Q.O.D., out of scope v1).
@@ -56,20 +57,20 @@ Pour valider : `/visual-validation` ouvre `/`, attend que la carte rende, captur
 
 ## Questions, Options and Decisions
 
-| Question | Options | Décision (2026-05-15) |
-| --- | --- | --- |
-| **Locus de la projection** | (a) Avatar sur la carte (`CourseMap.tsx`). (b) Nouveau % sur les chips du classement. (c) Les deux. | **(a)** — seule surface où une projection existe aujourd'hui. Les chips n'affichent que la dernière boucle validée + heure du top, pas de projection. |
-| **Modèle slope → vitesse** | (a) Linéaire par morceaux sur la pente. (b) Naismith / Tobler. (c) Polynôme empirique (Strava GAP). (d) Calibrage online. (e) **Utiliser le temps point-à-point du GPX enregistré** — pas un modèle, des mesures réelles. | **(e)** — exploite la donnée déjà présente dans le GPX Strava-exported, capture *tous* les effets (pente, surface, virages, fatigue), pas de constante magique à défendre. |
-| **Source de la donnée de pente / vitesse** | (a) Élévation brute dans le DTO (modèle slope client-side). (b) Facteurs pré-calculés serveur. (c) Re-parse GPX client-side. (d) **Fractions de temps normalisées dans le DTO** (avec décision e ci-dessus, on stocke ce qui est utile). | **(d)** — un tableau `pointTimeFractions: ReadonlyArray<number>` cumulatif 0..1 dans `trackJson`. Lecture O(log n) côté client via binary search. |
-| **GPX sans balises `<time>`** | (a) Rejet au upload. (b) **Fallback silencieux** vers l'algo actuel. (c) Flag explicite dans le DTO. | **(b)** — préserve les éditions déjà uploadées, breadcrumb Sentry pour traçabilité, pas d'alerte. |
-| **Smoothing des durées de segment** | (a) **Pas de smoothing v1**. (b) Clamp à 3× la médiane. (c) Moyenne mobile. | **(a)** — on commence simple, on observe en prod, on smooth seulement si une pause de l'enregistrement crée un défaut visuel notable. |
-| **Sous-échantillonnage du GPX** | (a) Garder tous les points (2644 pour le test). (b) Sous-échantillonner à ~200 points au parsing. | **(a) v1** — taille du DTO acceptable (~21 KB additionnels). À revoir si DTO total dépasse 100 KB ou si la carte rame sur mobile. *Out of scope v1.* |
+| Question                                   | Options                                                                                                                                                                                                                                  | Décision (2026-05-15)                                                                                                                                                      |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Locus de la projection**                 | (a) Avatar sur la carte (`CourseMap.tsx`). (b) Nouveau % sur les chips du classement. (c) Les deux.                                                                                                                                      | **(a)** — seule surface où une projection existe aujourd'hui. Les chips n'affichent que la dernière boucle validée + heure du top, pas de projection.                      |
+| **Modèle slope → vitesse**                 | (a) Linéaire par morceaux sur la pente. (b) Naismith / Tobler. (c) Polynôme empirique (Strava GAP). (d) Calibrage online. (e) **Utiliser le temps point-à-point du GPX enregistré** — pas un modèle, des mesures réelles.                | **(e)** — exploite la donnée déjà présente dans le GPX Strava-exported, capture _tous_ les effets (pente, surface, virages, fatigue), pas de constante magique à défendre. |
+| **Source de la donnée de pente / vitesse** | (a) Élévation brute dans le DTO (modèle slope client-side). (b) Facteurs pré-calculés serveur. (c) Re-parse GPX client-side. (d) **Fractions de temps normalisées dans le DTO** (avec décision e ci-dessus, on stocke ce qui est utile). | **(d)** — un tableau `pointTimeFractions: ReadonlyArray<number>` cumulatif 0..1 dans `trackJson`. Lecture O(log n) côté client via binary search.                          |
+| **GPX sans balises `<time>`**              | (a) Rejet au upload. (b) **Fallback silencieux** vers l'algo actuel. (c) Flag explicite dans le DTO.                                                                                                                                     | **(b)** — préserve les éditions déjà uploadées, breadcrumb Sentry pour traçabilité, pas d'alerte.                                                                          |
+| **Smoothing des durées de segment**        | (a) **Pas de smoothing v1**. (b) Clamp à 3× la médiane. (c) Moyenne mobile.                                                                                                                                                              | **(a)** — on commence simple, on observe en prod, on smooth seulement si une pause de l'enregistrement crée un défaut visuel notable.                                      |
+| **Sous-échantillonnage du GPX**            | (a) Garder tous les points (2644 pour le test). (b) Sous-échantillonner à ~200 points au parsing.                                                                                                                                        | **(a) v1** — taille du DTO acceptable (~21 KB additionnels). À revoir si DTO total dépasse 100 KB ou si la carte rame sur mobile. _Out of scope v1._                       |
 
 ### Hors scope
 
 - Sous-échantillonnage du GPX.
 - Smoothing des durées (clamp, moyenne mobile).
-- Profil de vitesse *par coureur* (chaque coureur a son propre rythme observé). v1 utilise un profil unique = celui du GPX uploadé.
+- Profil de vitesse _par coureur_ (chaque coureur a son propre rythme observé). v1 utilise un profil unique = celui du GPX uploadé.
 - Recalibrage du profil depuis les pointages observés de l'édition courante (Bayesian update).
 - Rejet au upload des GPX sans `<time>` (préservation du backward-compatibility).
 - Affichage d'un graphe profil élévation / vitesse quelque part dans l'UI.
@@ -138,24 +139,27 @@ apps/last-loop-lepin/site/src/components/CourseMap.tsx               // UPDATE: 
 - **Visual validation** — `/visual-validation` ouvre `/` avec un GPX test connu (le fixture qu'on commit dans `apps/last-loop-lepin/api/src/helpers/gpx/__fixtures__/strava-recorded.gpx` — extrait du GPX réel uploadé en session, sous-échantillonné à 50 points pour rester en repo), une `now` mockée, et capture la position lat/lng des avatars à `timeFraction = 0.25 / 0.5 / 0.75`. Pour chaque, l'agent compare aux positions attendues (pré-calculées au parsing, dump dans un fichier `.expected.json` à côté du fixture).
 - **Technical validation** — lint + knip + typecheck + build + coverage gates passent. Per-Q.O.D. correctness pass sur le diff confirme : (a) fallback bien câblé quand `pointTimeFractions` est `undefined`, (b) Zod refine bien en place, (c) le parser GPX retourne `null` plutôt qu'un tableau invalide en cas de timing partiel.
 - **Coverage gates** — `course-map.utils.ts` (NEW, site) gaté par le pattern existant `site/src/**/*.utils.ts` à 100 %. `gpx.core.ts` reste à 100 %. Pas de `infra/cdk/**` ni `infra/shared/**` modifié.
-- **Manual smoke après deploy** — *belt only* : ouvrir `/` en retransmission avec le GPX du test 2026-05-14 et observer pendant 5 minutes si le mouvement de l'avatar est cohérent avec une boucle complète. Pas un gate.
+- **Manual smoke après deploy** — _belt only_ : ouvrir `/` en retransmission avec le GPX du test 2026-05-14 et observer pendant 5 minutes si le mouvement de l'avatar est cohérent avec une boucle complète. Pas un gate.
 
 ## Production strategy
 
 ### Analytics
 
 **Input metrics** (Sentry breadcrumbs + structured logs, basse cardinalité) :
+
 - `course_map_projection_mode` — breadcrumb au mount de `CourseMap`, valeur `'recorded-pace'` ou `'linear-fallback'`. Permet de répondre à la question post-prod « est-ce que toutes nos éditions tournent en mode recorded-pace, ou y a-t-il des éditions qui silentement retombent sur le linéaire ? ».
 - `gpx_parse_partial_timings` — breadcrumb au parsing serveur si certains `<trkpt>` ont un `<time>` et d'autres non. Permet de détecter un GPX dégénéré sans bloquer l'upload.
 
 Pas de p50/p75 thresholds — la volumétrie est anecdotique (un upload GPX par édition, deux ou trois éditions au mieux par an).
 
 **Output metric** (lagging, manual review) :
+
 - Self-report Hugo en retransmission de la prochaine édition réelle : « la carte colle / ne colle pas ». Binaire, qualitatif. Si « ne colle pas », ouverture d'un follow-up spec pour smoothing ou modèle alternatif.
 
 ### Zero-defect strategy
 
 Named error classes :
+
 - **Aucune nouvelle classe d'erreur** — le fallback silencieux est intentionnel et le Zod refine au repo-read catch les corruptions en base.
 - **`ZodError` au mount de `editionFromRowSchema.parse`** — déjà géré, surface en Sentry. Si elle fire avec un message mentionnant `pointTimeFractions`, c'est qu'on a écrit une donnée corrompue : alerte > 1 occurrence en prod, parce que c'est forcément un bug, pas un input utilisateur.
 - **`GpxParseError` au upload** — déjà géré, surface en 4xx sur la route admin. Pas d'alerte (input utilisateur).

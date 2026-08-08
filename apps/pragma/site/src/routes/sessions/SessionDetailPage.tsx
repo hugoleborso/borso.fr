@@ -114,9 +114,9 @@ export function SessionDetailPage(): JSX.Element {
     updateSession.mutate({ id: session.id, preparedConcertId: concertId });
   };
 
-  const loading = sessionQuery.isLoading || membersQuery.isLoading || sessionsQuery.isLoading;
+  const isLoading = sessionQuery.isLoading || membersQuery.isLoading || sessionsQuery.isLoading;
 
-  if (loading) {
+  if (isLoading) {
     return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
   const queryError = sessionQuery.error instanceof ApiError ? sessionQuery.error.message : null;
@@ -178,22 +178,22 @@ export function SessionDetailPage(): JSX.Element {
               {t('common.edit')}
             </Button>
           ) : null}
-          {setlist !== null ? (
+          {setlist === null ? null : (
             <Link to="/setlists">
               <Button variant="accent" type="button">
                 <Icon name="setlist" size={14} />
                 {t('sessions.setlist')}
               </Button>
             </Link>
-          ) : null}
+          )}
         </div>
       </header>
 
-      {displayError !== null ? (
+      {displayError === null ? null : (
         <p className="text-danger text-sm" role="alert">
           {displayError}
         </p>
-      ) : null}
+      )}
 
       {isConcert ? (
         editingConcert ? (

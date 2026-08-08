@@ -15,10 +15,10 @@ defect required.
 
 ## When does an entry belong here vs in `docs/dantotsus/`?
 
-| Belongs in `dantotsus/` | Belongs in `knowledge/` |
-| --- | --- |
-| There was a defect (or near-miss) and we shipped an eradication | There's no defect — just something a reader would benefit from knowing |
-| The "fix" is a code commit + diff | The "output" is the doc itself; no code lever exists or is needed |
+| Belongs in `dantotsus/`                                         | Belongs in `knowledge/`                                                    |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| There was a defect (or near-miss) and we shipped an eradication | There's no defect — just something a reader would benefit from knowing     |
+| The "fix" is a code commit + diff                               | The "output" is the doc itself; no code lever exists or is needed          |
 | Future occurrences can be prevented at lint, type, or test time | The behaviour is just a fact (vendor, convention, design choice); we adapt |
 
 Two failure modes to watch for:
@@ -57,7 +57,7 @@ Two failure modes to watch for:
 
 ### pnpm / package management
 
-- [`pnpm-peer-warning-is-not-enforcement.md`](./pnpm-peer-warning-is-not-enforcement.md) — pnpm only *warns* on peer-dep mismatch; installs succeed and the bad combination crashes at runtime.
+- [`pnpm-peer-warning-is-not-enforcement.md`](./pnpm-peer-warning-is-not-enforcement.md) — pnpm only _warns_ on peer-dep mismatch; installs succeed and the bad combination crashes at runtime.
 - [`rtk-pnpm-install-can-skip-lockfile-write.md`](./rtk-pnpm-install-can-skip-lockfile-write.md) — when `pnpm install` is invoked through `rtk`, the lockfile sometimes doesn't write back; mirror from `node_modules/.pnpm/lock.yaml` if `git status` shows nothing changed.
 
 ### Claude Code tooling
@@ -96,7 +96,7 @@ Two failure modes to watch for:
 
 ### Spec & metrics framing
 
-- [`input-vs-output-metrics.md`](./input-vs-output-metrics.md) — Amazon flywheel framing for the *Why → measurable objective* split; visual-validation drives input metrics only.
+- [`input-vs-output-metrics.md`](./input-vs-output-metrics.md) — Amazon flywheel framing for the _Why → measurable objective_ split; visual-validation drives input metrics only.
 - [`audit-imported-deps-and-patterns-when-planning.md`](./audit-imported-deps-and-patterns-when-planning.md) — when porting / iterating, run a Pattern Coherence pass at planning time; question every dep and every state-management pattern instead of carrying them forward.
 
 ### Skills & orchestration
@@ -123,7 +123,7 @@ Two failure modes to watch for:
 - [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](./rolled-our-own-data-fetching-instead-of-tanstack-query.md) — the cost of writing custom `useStandingsPoll` / `useResource` hooks instead of TanStack Query: each new bug found in our hooks (the PR #23 polling storm) would've been a library author's problem already. Migration sketch when the data layer needs to grow.
 - [`svg-preserveaspectratio-distorts-non-uniform.md`](./svg-preserveaspectratio-distorts-non-uniform.md) — `preserveAspectRatio="none"` distorts circles into ellipses when the container aspect ≠ viewBox aspect. Default (`xMidYMid meet`) preserves and letterboxes. Now enforced in pragma by the `no-circle-in-non-uniform-svg.grit` Biome plugin (see [`../dantotsus/circle-went-oval-in-a-stretched-svg-again.md`](../dantotsus/circle-went-oval-in-a-stretched-svg-again.md)).
 - [`dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](./dnd-kit-pointersensor-loses-touch-to-page-scroll.md) — a single `PointerSensor` loses touch-drag to native page scroll on phones; split into `MouseSensor` (6px distance) + `TouchSensor` (200ms delay) + `KeyboardSensor`, and `touch-none` on the handle.
-- [`debug-client-state-reverts-in-the-browser-first.md`](./debug-client-state-reverts-in-the-browser-first.md) — when the server is right but the UI reverts, reproduce in a real browser and diff the write's request body against the next read's response *before* theorizing; don't ship a fix you never watched fail then pass.
+- [`debug-client-state-reverts-in-the-browser-first.md`](./debug-client-state-reverts-in-the-browser-first.md) — when the server is right but the UI reverts, reproduce in a real browser and diff the write's request body against the next read's response _before_ theorizing; don't ship a fix you never watched fail then pass.
 
 ### last-loop-lepin app domain
 

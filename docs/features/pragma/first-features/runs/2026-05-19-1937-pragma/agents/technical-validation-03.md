@@ -33,7 +33,7 @@ self-improvement loop (orchestrator ignores them):
 
 - **The B08 failure is the second time in three rounds where the per-domain
   triad rule has been the load-bearing find.** The standard amendment landed in
-  `cc5cc3e` — *during* this run — because round-1 surfaced the same gap. The
+  `cc5cc3e` — _during_ this run — because round-1 surfaced the same gap. The
   implementer (`/implementation`) read the same standard the validator read, and
   shipped controllers-only anyway. Candidate fix: the implementation skill
   should carry a checklist row that explicitly says "for every new domain
@@ -44,13 +44,13 @@ self-improvement loop (orchestrator ignores them):
 
 - **Spec-routing gap on category A vs D for the mastery matrix.** The spec says
   "click a cell to edit; scroll-wheel to ±1; right-click to clear; row averages
-  + column averages update live". The validator's standard splits visual rows
-  to `/visual-validation` and deterministic rows to `/technical-validation`,
-  but the spec didn't enumerate which side this assertion goes to. Result: the
-  validator had to make a judgement call. Specs should carry the explicit
-  "UI behavioural assertions" sub-section the validator standard already
-  anticipates — currently it's a free-form *Test strategy* paragraph. Worth a
-  `/specification` skill amendment to require the sub-section verbatim.
+  - column averages update live". The validator's standard splits visual rows
+    to `/visual-validation` and deterministic rows to `/technical-validation`,
+    but the spec didn't enumerate which side this assertion goes to. Result: the
+    validator had to make a judgement call. Specs should carry the explicit
+    "UI behavioural assertions" sub-section the validator standard already
+    anticipates — currently it's a free-form _Test strategy_ paragraph. Worth a
+    `/specification` skill amendment to require the sub-section verbatim.
 
 - **The implementer's punted-feature comments** ("Reordering uses up/down
   buttons rather than HTML5 drag (handle pattern stays a v2 polish — …)" in
@@ -63,10 +63,10 @@ self-improvement loop (orchestrator ignores them):
   inside source comments would catch this at pre-commit.
 
 - **Coverage gates pass while two spec-named utils files are absent.** The
-  100%-on-`*.utils.ts` rule only fires if the file *exists*. Missing utils
+  100%-on-`*.utils.ts` rule only fires if the file _exists_. Missing utils
   files (no `manifest.utils.ts`, no `embed.utils.ts`) silently bypass the gate
   — the spec-named-but-missing case is exactly the gap. A complementary check
   in the validator: cross-reference plan-named files against the diff's
   file-list and FAIL on absent-but-promised paths. Could ship as a row in the
   technical-validation standard or as a pre-commit hook reading the plan's
-  *Files to change* fence.
+  _Files to change_ fence.

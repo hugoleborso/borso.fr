@@ -35,7 +35,7 @@ function synth(opts?: { budgetEmail?: string }): Template {
     crossRegionReferences: true,
     borsoFrCert,
     previewCert,
-    ...(opts?.budgetEmail !== undefined ? { budgetEmail: opts.budgetEmail } : {}),
+    ...(opts?.budgetEmail === undefined ? {} : { budgetEmail: opts.budgetEmail }),
   });
   return Template.fromStack(stack);
 }

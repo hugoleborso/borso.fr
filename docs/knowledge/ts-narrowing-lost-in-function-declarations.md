@@ -10,7 +10,7 @@ if (!container) return;
 ```
 
 That narrowing **survives into arrow-function expressions** declared
-*after* the guard, because they capture the binding at their lexical
+_after_ the guard, because they capture the binding at their lexical
 position (after narrowing). It **doesn't survive into `function`
 declarations** in the same scope, because function declarations get
 hoisted to the top of the enclosing function for type-checking
@@ -21,28 +21,31 @@ purposes — they read the variable's pre-narrow type.
 `apps/borso-fr/site/components/Galaxy.tsx` originally had:
 
 ```ts
-useEffect(() => {
-  const container = containerRef.current;
-  if (!container) return;
+useEffect(
+  () => {
+    const container = containerRef.current;
+    if (!container) return;
 
-  // … 80 lines of WebGL setup …
+    // … 80 lines of WebGL setup …
 
-  function resize() {
-    renderer.setSize(container.offsetWidth, container.offsetHeight);
-    //                ^^^^^^^^^ TS18047: 'container' is possibly 'null'
-  }
+    function resize() {
+      renderer.setSize(container.offsetWidth, container.offsetHeight);
+      //                ^^^^^^^^^ TS18047: 'container' is possibly 'null'
+    }
 
-  function handleMouseMove(e) {
-    const rect = container.getBoundingClientRect();
-    //           ^^^^^^^^^ TS18047: 'container' is possibly 'null'
-  }
-}, [/* deps */]);
+    function handleMouseMove(e) {
+      const rect = container.getBoundingClientRect();
+      //           ^^^^^^^^^ TS18047: 'container' is possibly 'null'
+    }
+  },
+  [/* deps */],
+);
 ```
 
 `tsc --noEmit` produced three TS18047 errors even though the early
 return clearly narrowed `container` to non-null. The reason is the
 `function` declarations: TypeScript hoists them, type-checks them
-against the *pre-narrow* type of `container`, and reports it as
+against the _pre-narrow_ type of `container`, and reports it as
 possibly-null inside.
 
 ## The fix
@@ -64,7 +67,7 @@ TypeScript sees them inside the narrowed flow and preserves the
 narrowing. No casts needed (`as Foo` is banned in this repo anyway by
 the `no-type-assertion-except-unknown` plugin).
 
-The repo's *Clean code* rule says no abbreviations / single-letter
+The repo's _Clean code_ rule says no abbreviations / single-letter
 locals, so when converting `function update(t) { … }` to
 `const update = (timestamp: number) => { … }` was the natural moment
 to also rename `t` to `timestamp` and `cw`/`ch` to `pixelWidth` /

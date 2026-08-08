@@ -17,8 +17,8 @@ tags: [react, cloudfront, frontend, api]
 ## Symptom
 
 Live retransmission on the preview, operator tapping their own chip
-to self-punch: every attempt produced *« Tu n'es pas inscrit comme
-coureur dans cette édition. »* in the modal. The runner is, of course,
+to self-punch: every attempt produced _« Tu n'es pas inscrit comme
+coureur dans cette édition. »_ in the modal. The runner is, of course,
 inscrit. A direct curl against the API host (`*-api.preview.borso.fr`)
 returned 201 with a valid punch — so the back was correct.
 
@@ -35,7 +35,7 @@ returned 201 with a valid punch — so the back was correct.
    `{ error: '<reason>' }` envelope — it was an HTML page returned
    by something other than the API.
 3. **Why did the fetch return an HTML page?** The fetch URL was
-   `'/api/self-punches'` — a *relative path*. The page lives on
+   `'/api/self-punches'` — a _relative path_. The page lives on
    `last-loop-lepin-pr-23.preview.borso.fr`, so the browser resolved
    the URL to that origin. That origin is the static-site CloudFront
    distribution, which serves only the SPA bundle and has no
@@ -48,12 +48,12 @@ returned 201 with a valid punch — so the back was correct.
    through `apiClient` → `fetchUnknown` → `resolveUrl` which
    prepends the build-time `VITE_API_BASE` (the API custom domain).
 
-**Root cause:** *thought `/api/*` was same-origin in every environment
+**Root cause:** _thought `/api/*` was same-origin in every environment
 because dev uses Vite's proxy and prod could in theory route via the
 same CloudFront; actually preview and prod split front and API onto
 distinct hostnames, so the front MUST be told the API origin via
 `VITE_API_BASE`, and any fetch that bypasses `resolveUrl` lands on
-the wrong host.*
+the wrong host._
 
 ## Detection failure causes
 
@@ -63,7 +63,7 @@ the wrong host.*
   call-site URL conventions. The repo had no custom rule for it.
 - **Functional validation locally:** `pnpm dev` proxies `/api/*` to
   the local Hono server via Vite's `server.proxy` config — so the
-  relative path *works* locally. The failure is preview/prod-only.
+  relative path _works_ locally. The failure is preview/prod-only.
 - **CI:** No integration test exercises the preview-origin split.
   The /visual-validation skill could in theory have caught it, but
   the operator approved the PR after a successful manual test on
@@ -96,21 +96,21 @@ envelope shape (its error handling is custom).
 
 **The actual fix:** two layers.
 
-*Layer 1 — every front-side fetch now goes through Hono's `hc`
-client.* The site's `api/client.ts` was rewritten on top of
+_Layer 1 — every front-side fetch now goes through Hono's `hc`
+client._ The site's `api/client.ts` was rewritten on top of
 `hc<AppType>` (the back's chained-router type, exported from
 `apps/.../api/src/app.ts`). Each `apiClient.<method>` dispatches to
 the typed `client.api.<path>.$<method>(...)` and unwraps via
 `r.ok` narrowing. There is no `fetch('/api/...')` literal anywhere
 in the source — the only direct fetch left is the photo PUT against
-a *presigned absolute URL* returned by the API, which is by
+a _presigned absolute URL_ returned by the API, which is by
 definition not a `/api/...` path. End-to-end typing of every front
 call comes from the back's Hono types ; no hand-rolled Zod schema
 on the read side. See the companion knowledge entry
 [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](../knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
 
-*Layer 2 — anyone reintroducing a bare `fetch('/api/...')` in site/
-code gets a lint error.* The Biome Grit plugin
+_Layer 2 — anyone reintroducing a bare `fetch('/api/...')` in site/
+code gets a lint error._ The Biome Grit plugin
 [`no-direct-api-fetch-in-site.grit`](../../biome-plugins/no-direct-api-fetch-in-site.grit)
 fires on any string-literal `/api/...` URL passed as the first
 argument to `fetch`. Registered in `apps/last-loop-lepin/biome.jsonc`.

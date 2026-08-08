@@ -42,8 +42,8 @@ export function buildInstrumentsRouter() {
         const input = context.req.valid('json');
         const instrument = await patchInstrument(getDatabase(), id, input);
         if (instrument === null) {
-          const onlyEmpty = Object.keys(input).length === 0;
-          if (onlyEmpty) return context.json({ error: 'empty-update' }, 400);
+          const isOnlyEmpty = Object.keys(input).length === 0;
+          if (isOnlyEmpty) return context.json({ error: 'empty-update' }, 400);
           return context.json({ error: 'not-found' }, 404);
         }
         return context.json({ instrument });
@@ -51,8 +51,8 @@ export function buildInstrumentsRouter() {
     )
     .delete('/:id', zValidator('param', instrumentIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const ok = await removeInstrument(getDatabase(), id);
-      if (!ok) return context.json({ error: 'not-found' }, 404);
+      const isOk = await removeInstrument(getDatabase(), id);
+      if (!isOk) return context.json({ error: 'not-found' }, 404);
       return context.json({ id, deleted: true });
     });
 }

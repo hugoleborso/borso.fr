@@ -15,12 +15,12 @@ tags: [react, ux, race-engine]
 
 ## Symptom
 
-Operator question after PR #23 merged: *« Est-ce que tu peux me
+Operator question after PR #23 merged: _« Est-ce que tu peux me
 confirmer le comportement quand on arrive à la fin de la course ?
-Les boucles s'arrêtent ? »* Reading the spectator page revealed a
-hole: the banner *« Course terminée — classement final affiché. »*
+Les boucles s'arrêtent ? »_ Reading the spectator page revealed a
+hole: the banner _« Course terminée — classement final affiché. »_
 is gated on `edition.status === 'finished'`, a field that only
-transitions when the admin clicks *Finish edition* in the back-office.
+transitions when the admin clicks _Finish edition_ in the back-office.
 The actual end-of-race condition is computed every poll by
 `ranking.core.ts:165-168` as `isRaceEndReached(edition, now) ||
 inRaceCount <= 1` — fires automatically at `endsAt`, or when only
@@ -39,7 +39,7 @@ until the admin remembers to click.
 2. **Why was the signal split when `raceEnded` was added?** The
    `raceEnded` field was added to the standings DTO during the
    ranking-engine refactor for the backyard rule. The frontend
-   consumer of `raceEnded` is the *ranking layout* (it knows to
+   consumer of `raceEnded` is the _ranking layout_ (it knows to
    stop showing per-loop progression). The banner wasn't moved —
    nobody noticed the duplication.
 3. **Why didn't the duplication surface in the spec or plan of
@@ -50,11 +50,11 @@ until the admin remembers to click.
    happens at end of race?" forced a read of every signal — and the
    reader noticed the gap.
 
-**Root cause:** *thought `edition.status === 'finished'` was the
+**Root cause:** _thought `edition.status === 'finished'` was the
 canonical "is the race over?" signal because it was the original
 one; actually `standings.raceEnded` was introduced later as the
 **computed** authoritative answer, but the banner wasn't updated to
-follow it.*
+follow it._
 
 ## Detection failure causes
 
@@ -62,7 +62,7 @@ follow it.*
   perfectly typed; the duplication is semantic, not structural.
 - **Linter:** No rule could plausibly detect this.
 - **Functional validation locally:** The condition only fires on a
-  race that has run past `endsAt` *or* reduced to one in-race
+  race that has run past `endsAt` _or_ reduced to one in-race
   runner — neither is in the back-e2e fixtures by default.
 - **/visual-validation:** Same — the spec doesn't articulate the
   banner-on-raceEnded contract, so the validator has nothing to

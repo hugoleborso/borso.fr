@@ -40,10 +40,10 @@ user pushed back hard :
    `"lint": "biome lint"`, propagating the same lint-only gate
    into `pnpm -r lint`.
 
-**Root cause:** *thought `biome lint` covered everything biome
+**Root cause:** _thought `biome lint` covered everything biome
 checks, actually biome splits lint and format — only `biome check`
 runs both, and we'd only wired the half that skipped the formatter
-rules.*
+rules._
 
 ## Detection failure causes
 
@@ -56,7 +56,7 @@ rules.*
   review when each commit was locally clean against its own author's
   editor settings.
 - **Quality bar:** docs/dantotsus/biome-lint-was-not-gated-anywhere.md
-  closed the *lint*-gating gap in 2026-04 ; the *format*-gating
+  closed the _lint_-gating gap in 2026-04 ; the _format_-gating
   gap survived.
 
 ## Countermeasure
@@ -70,7 +70,8 @@ Move every reference of `biome lint` to `biome check` :
   → `"lint": "biome check"`.
 
 `biome check` runs lint AND format checks in one pass ; pre-commit
-+ CI now reject any commit that introduces format drift.
+
+- CI now reject any commit that introduces format drift.
 
 Bonus : the repo-wide formatter pass that closed the accumulated
 debt landed in `cfb24e2 chore(meta): repo-wide biome formatter

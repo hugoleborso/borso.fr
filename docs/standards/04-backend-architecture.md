@@ -37,14 +37,10 @@ A handler does three things, which are validating the input, calling one
 service method, and shaping the response.
 
 ```ts
-punchController.post(
-  '/punches',
-  zValidator('json', createPunchSchema),
-  async (context) => {
-    const punch = await punchService.recordPunch(context.req.valid('json'));
-    return context.json(punch, 201);
-  },
-);
+punchController.post('/punches', zValidator('json', createPunchSchema), async (context) => {
+  const punch = await punchService.recordPunch(context.req.valid('json'));
+  return context.json(punch, 201);
+});
 ```
 
 A controller may not call `map`, `filter`, `reduce`, or `find` over domain

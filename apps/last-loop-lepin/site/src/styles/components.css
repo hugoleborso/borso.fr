@@ -44,7 +44,6 @@
   }
 }
 
-
 .card {
   background: var(--bg-elev);
   border: 1px solid var(--line);
@@ -272,4 +271,3 @@
   color: var(--accent);
   text-decoration: underline;
 }
-

@@ -78,8 +78,8 @@ export function buildSetlistsRouter() {
       zValidator('param', setlistEntryIdParamSchema),
       async (context) => {
         const { id, entryId } = context.req.valid('param');
-        const ok = await removeEntryAndCompact(getDatabase(), id, entryId);
-        if (!ok) return context.json({ error: 'not-found' }, 404);
+        const isOk = await removeEntryAndCompact(getDatabase(), id, entryId);
+        if (!isOk) return context.json({ error: 'not-found' }, 404);
         return context.json({ id: entryId, deleted: true });
       },
     )

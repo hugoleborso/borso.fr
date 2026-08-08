@@ -48,5 +48,5 @@ Real-device sweeps are not an option — they're manual, which the spec rule for
 ## Don'ts
 
 - Don't downgrade UNVERIFIABLE to PASS by reading the source code. The rule exists because the implementation can drift from the source we read; the whole point of a visual run is to observe the live DOM.
-- Don't fall back to Playwright for the touch-emulation case. Playwright *does* propagate `pointer: coarse` via `page.emulate(devices['iPhone 14'])`, but the repo's tooling pick is agent-browser; switching for one row breaks the consistency rule and moves the validator off its standard.
-- Don't gate the next push on closing the gap if the source code is correct *and* the surface area is genuinely cosmetic (caption swap, no behavioural change). Surface the row, document, move on.
+- Don't fall back to Playwright for the touch-emulation case. Playwright _does_ propagate `pointer: coarse` via `page.emulate(devices['iPhone 14'])`, but the repo's tooling pick is agent-browser; switching for one row breaks the consistency rule and moves the validator off its standard.
+- Don't gate the next push on closing the gap if the source code is correct _and_ the surface area is genuinely cosmetic (caption swap, no behavioural change). Surface the row, document, move on.

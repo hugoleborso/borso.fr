@@ -17,14 +17,14 @@ tags: [harness, orchestrator, conception, hooks]
 
 The session-start system prompt said:
 
-> *Develop on branch `claude/fix-dnf-validation-NIGKH`.*
+> _Develop on branch `claude/fix-dnf-validation-NIGKH`._
 
 The agent checked out the branch, made two commits (SPA fallback
 for `StaticSite`), and pushed. Two turns later, the user:
 
-> *« Est-ce que tu avais correctement lu les commentaires sur la
+> _« Est-ce que tu avais correctement lu les commentaires sur la
 > PR au fait ? En l'occurence elle a des merge conflicts, j'ai
-> mergé autre chose depuis. »*
+> mergé autre chose depuis. »_
 
 The conversation context was a kaizen follow-up to PR #23 (the
 SPA-routing question, library-search comments, sanitiser knowledge
@@ -38,23 +38,23 @@ the interim).
 
 The user pulled back explicitly:
 
-> *« Non mais tu devrais dev dans lessons-from-pr-23 ... »*
+> _« Non mais tu devrais dev dans lessons-from-pr-23 ... »_
 
 ## Root-cause chain
 
 1. **Why did the agent follow the prescribed branch without
    cross-checking?**
    The system prompt phrases the branch as a hard instruction
-   (*"You are working on the following feature branches"*,
-   *"NEVER push to a different branch without explicit
-   permission"*). The agent read this as authoritative state, not
+   (_"You are working on the following feature branches"_,
+   _"NEVER push to a different branch without explicit
+   permission"_). The agent read this as authoritative state, not
    as a hint that needed validation against the conversation.
 2. **Why didn't the conversation context override the prescribed
    branch?**
    No procedural step in the agent's pre-commit flow says
-   *"compare the prescribed branch's PR state to the conversation
+   _"compare the prescribed branch's PR state to the conversation
    subject; if a closed-and-merged PR exists for this branch,
-   stop and ask"*. The conversation was about kaizen subjects;
+   stop and ask"_. The conversation was about kaizen subjects;
    the branch was a merged feature branch; the mismatch was
    visible to anyone who looked, but no step in the flow forces
    the look.
@@ -63,14 +63,14 @@ The user pulled back explicitly:
    The orchestrator that routed the session re-used the branch
    from a prior task without checking the PR state. That's
    upstream and not directly fixable from this repo, but the
-   *local* defence — *"if HEAD is the merge commit of a closed
-   PR, surface and confirm"* — is implementable here.
+   _local_ defence — _"if HEAD is the merge commit of a closed
+   PR, surface and confirm"_ — is implementable here.
 
-**Root cause:** *thought* the prescribed branch is the source of
-truth, *actually* the orchestrator's branch routing can be stale
+**Root cause:** _thought_ the prescribed branch is the source of
+truth, _actually_ the orchestrator's branch routing can be stale
 when the previous task's branch already shipped. The agent's
 pre-commit flow lacked a procedural anchor that catches the
-mismatch *before* the first push.
+mismatch _before_ the first push.
 
 ## Detection failure causes
 
@@ -152,7 +152,7 @@ state into the SessionStart output where the agent will see it,
 not to refuse session boot.
 
 **Sibling defects swept:** none in this kaizen, but the pattern
-*orchestrator hands the agent a state the agent didn't verify*
+_orchestrator hands the agent a state the agent didn't verify_
 also covers prior incidents around stale PR descriptions
 (`orchestrator-shipped-with-stale-pr-description.md`) and stale
 worktrees (worktree-drift inventory row in the PR #23 kaizen).
@@ -162,4 +162,4 @@ branch-state surface to the pattern.
 ## See also
 
 - [`orchestrator-shipped-with-stale-pr-description.md`](./orchestrator-shipped-with-stale-pr-description.md) — sibling: orchestrator-driven state that wasn't re-verified by the agent.
-- [`pushed-without-reading-pr-review-comments.md`](./pushed-without-reading-pr-review-comments.md) — sibling found in the same kaizen: the *next* anchor along the pre-push flow.
+- [`pushed-without-reading-pr-review-comments.md`](./pushed-without-reading-pr-review-comments.md) — sibling found in the same kaizen: the _next_ anchor along the pre-push flow.

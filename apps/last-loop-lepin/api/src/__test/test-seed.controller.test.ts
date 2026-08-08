@@ -6,7 +6,7 @@
  */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 import { findEditionBySlug } from '../edition/edition.repository';
 import { listRunnersForEdition } from '../runner/runner.repository';
@@ -29,7 +29,7 @@ describe('__test/test-seed.controller', () => {
   });
 
   beforeEach(async () => {
-    await truncateAllTables(freshDatabase());
+    await truncateAllTables(testDatabase());
   });
 
   async function seed(fixture: string) {
@@ -48,7 +48,7 @@ describe('__test/test-seed.controller', () => {
     const response = await seed('race-down-to-one-survivor');
     expect(response.status).toBe(200);
 
-    const database = freshDatabase();
+    const database = testDatabase();
     const edition = await findEditionBySlug(database, 'lepin-2026');
     expect(edition).not.toBeNull();
     const runners = await listRunnersForEdition(database, 'lepin-2026');
@@ -59,7 +59,7 @@ describe('__test/test-seed.controller', () => {
     const response = await seed('race-finished');
     expect(response.status).toBe(200);
 
-    const database = freshDatabase();
+    const database = testDatabase();
     const edition = await findEditionBySlug(database, 'lepin-2026');
     expect(edition).not.toBeNull();
   });

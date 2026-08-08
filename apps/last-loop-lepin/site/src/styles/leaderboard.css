@@ -34,7 +34,9 @@
   background: var(--bg-elev-2);
   border: 1px solid var(--line);
   border-radius: var(--radius-2);
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 /* Violet F1-style "Fastest lap" sticker on the top-right corner of a

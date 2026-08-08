@@ -45,9 +45,7 @@ export function effective(
   return fallback ?? null;
 }
 
-export interface Lineup {
-  readonly [memberId: string]: InstrumentId | null;
-}
+export type Lineup = Readonly<Record<string, InstrumentId | null>>;
 
 export function meanForSong(
   defaults: DefaultMap,

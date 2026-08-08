@@ -46,7 +46,10 @@ export function buildTitle(seed: number, rects: ColoredRect[], palette: Palette)
   return `A ${adjective} ${noun} in ${dominantColor.toLowerCase()}`;
 }
 
-type ColorTotal = { totalArea: number; colorName: string };
+interface ColorTotal {
+  totalArea: number;
+  colorName: string;
+}
 
 export function dominantColorName(rects: ColoredRect[], palette: Palette): string {
   const neutralHex = palette.bg.toLowerCase();
@@ -66,7 +69,7 @@ export function dominantColorName(rects: ColoredRect[], palette: Palette): strin
   }
 
   const firstFill = palette.fills[0];
-  let dominantName = firstFill !== undefined ? firstFill.name : FALLBACK_COLOR_NAME;
+  let dominantName = firstFill === undefined ? FALLBACK_COLOR_NAME : firstFill.name;
   let dominantArea = -1;
   for (const colorTotal of totalsByColor.values()) {
     if (colorTotal.totalArea > dominantArea) {

@@ -134,7 +134,7 @@ describe('pragma app stack', () => {
       const template = synthAppStack(stage);
       const functions = template.findResources('AWS::Lambda::Function');
       const apiFn = Object.entries(functions).find(([logicalId]) =>
-        /AppApiFn/.test(logicalId),
+        logicalId.includes('AppApiFn'),
       )?.[1];
       expect(apiFn, `api function not found in ${stage} template`).toBeDefined();
       const variables = apiFn === undefined ? {} : readEnvVars(apiFn);

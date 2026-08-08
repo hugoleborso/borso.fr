@@ -15,13 +15,13 @@ Two cascade shapes had grown organically before the lineup-editor work landed:
 - `deleteSongWithCascade` (`apps/pragma/api/src/songs/songs.repository.ts:225-235`) — deletes the song's `mastery_override` + `setlist_entry` rows in dependency order, then the song row. Sequential `DELETE` statements, no transaction.
 - `deleteSessionWithCascade` (`apps/pragma/api/src/sessions/sessions.repository.ts:178-195`) — looks up the session's setlists, deletes the entries, then the setlists, then the session row. Same shape.
 
-The lineup-editor feature introduced a third surface: deleting a band member must also scrub that member's ID out of every `song.defaultLineup` and every `setlist_entry.lineupOverride` — both stored as JSON-encoded TEXT (DSQL has no `jsonb`, [§1](../knowledge/dsql-postgres-compat-gaps.md)). The cascade is *richer* than the previous two: it doesn't just delete dependent rows, it transforms them (parse JSON → drop the member key → re-stringify → write back). Before this becomes the fourth manual cascade in the repo, the pattern deserves an ADR — for the next "delete X, propagate to N tables" feature to follow a documented shape instead of re-inventing.
+The lineup-editor feature introduced a third surface: deleting a band member must also scrub that member's ID out of every `song.defaultLineup` and every `setlist_entry.lineupOverride` — both stored as JSON-encoded TEXT (DSQL has no `jsonb`, [§1](../knowledge/dsql-postgres-compat-gaps.md)). The cascade is _richer_ than the previous two: it doesn't just delete dependent rows, it transforms them (parse JSON → drop the member key → re-stringify → write back). Before this becomes the fourth manual cascade in the repo, the pattern deserves an ADR — for the next "delete X, propagate to N tables" feature to follow a documented shape instead of re-inventing.
 
-The spec's *Use case 4 / cascade behaviour* row settled the user-facing choice (cascade, not preserve-as-deleted). This ADR settles the **implementation shape** the cascade must follow across pragma.
+The spec's _Use case 4 / cascade behaviour_ row settled the user-facing choice (cascade, not preserve-as-deleted). This ADR settles the **implementation shape** the cascade must follow across pragma.
 
 ## Decision
 
-**Wrap every cascade-on-delete inside a `database.transaction(...)`, with each cascade step expressed as a small async helper taking a `DatabaseExecutor` (the Drizzle client OR a transaction handle), allowing the helpers to be called inside or outside a transaction without duplication.** Pure transformations on JSON-encoded blob columns (e.g. *scrub member ID from lineup record*) live in `*.core.ts` files with 100% coverage so the read-write boundary stays correct as the blob shape evolves.
+**Wrap every cascade-on-delete inside a `database.transaction(...)`, with each cascade step expressed as a small async helper taking a `DatabaseExecutor` (the Drizzle client OR a transaction handle), allowing the helpers to be called inside or outside a transaction without duplication.** Pure transformations on JSON-encoded blob columns (e.g. _scrub member ID from lineup record_) live in `*.core.ts` files with 100% coverage so the read-write boundary stays correct as the blob shape evolves.
 
 Concretely, every new cascade follows three layered conventions:
 

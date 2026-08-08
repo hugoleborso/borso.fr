@@ -23,7 +23,7 @@ The validator can fall back to this for `<button>` elements that look correct in
 ## Affected (observed) cases on borso.fr
 
 - The framed-canvas `<button>` (`Composition. Click to recompose.` aria-label) — actually responds to CDP clicks.
-- The rail's `Compose →` button — does *not* respond to CDP clicks; needs `eval`.
+- The rail's `Compose →` button — does _not_ respond to CDP clicks; needs `eval`.
 - Palette segment buttons (Classique / Muted / …) — needs `eval`.
 - Animation segment buttons (Still / Drift / …) — needs `eval`.
 

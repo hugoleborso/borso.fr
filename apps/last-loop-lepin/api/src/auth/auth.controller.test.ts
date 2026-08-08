@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
-  freshDatabase,
+  testDatabase,
   seedAdminCredentials,
   truncateAllTables,
 } from '../../../test/database-utils';
@@ -43,8 +43,8 @@ describe('admin auth controller', () => {
   });
 
   beforeEach(async () => {
-    await truncateAllTables(freshDatabase());
-    await seedAdminCredentials(freshDatabase());
+    await truncateAllTables(testDatabase());
+    await seedAdminCredentials(testDatabase());
   });
 
   async function login(pin: string, ip = '127.0.0.1') {
@@ -71,7 +71,7 @@ describe('admin auth controller', () => {
     const sessionId = readCookieValue(response.headers.get('set-cookie'), 'lastloop_admin');
     expect(sessionId).not.toBeNull();
     if (sessionId === null) throw new Error('session cookie missing');
-    const session = await findValidSession(freshDatabase(), sessionId, new Date());
+    const session = await findValidSession(testDatabase(), sessionId, new Date());
     expect(session?.id).toBe(sessionId);
   });
 
@@ -120,6 +120,6 @@ describe('admin auth controller', () => {
     });
     expect(logoutResponse.status).toBe(200);
     expect(logoutResponse.headers.get('set-cookie')).toMatch(/lastloop_admin=;/);
-    expect(await findValidSession(freshDatabase(), sessionId, new Date())).toBeNull();
+    expect(await findValidSession(testDatabase(), sessionId, new Date())).toBeNull();
   });
 });

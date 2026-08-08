@@ -29,7 +29,7 @@ spotting the actual cause.
 
 1. **Why?** The package's deploy script didn't run.
    Because `pnpm <name>` consults pnpm's built-in command table
-   *before* falling through to scripts. `deploy` is one of those
+   _before_ falling through to scripts. `deploy` is one of those
    built-ins.
 2. **Why does pnpm have a built-in named `deploy`?**
    It copies a workspace package and its production deps into a
@@ -60,7 +60,7 @@ shadows it.
 - **Typing:** package.json scripts aren't typed.
 - **Linter:** no rule for "pnpm script names colliding with built-ins".
 - **Functional validation locally:** locally we ran `pnpm --filter
-  ... run deploy` (with `run`) by reflex, which dodges the trap.
+... run deploy` (with `run`) by reflex, which dodges the trap.
   Hugo only realised CI was different when it failed.
 - **CI:** CI is where this surfaced — the first run of
   `preview.yml` against a real PR.
@@ -104,7 +104,7 @@ shadows it.
 + fi
 ```
 
-CLAUDE.md captures the rule under Conventions: *"Always use `pnpm run <script>` for `deploy` / `destroy` (and any name pnpm reserves)."*
+CLAUDE.md captures the rule under Conventions: _"Always use `pnpm run <script>` for `deploy` / `destroy` (and any name pnpm reserves)."_
 
 **Sibling defects swept:** every `pnpm --filter ... <verb>` in the repo audited; all four workflows use `run`. The pre-push grep covers any future workflow added.
 

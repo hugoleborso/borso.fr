@@ -16,7 +16,7 @@ summary: <single sentence describing what happened; ≤ 200 words total>
 artifacts:
   - <relative path of a file the sub-agent produced or modified>
   - <…>
-next:                                # optional; structured hint
+next: # optional; structured hint
   kind: validate | answer-needed | replan | escalate
   # ... extra fields depending on kind, see below
 ---
@@ -24,12 +24,12 @@ next:                                # optional; structured hint
 
 ### `next` shapes
 
-| kind | extra fields | semantic |
-|---|---|---|
-| `validate` | (none) | "I am done, please run the validators." Used by `/implementation` and `/technical-conception` when the orchestrator should advance the stage. |
+| kind            | extra fields                             | semantic                                                                                                                                          |
+| --------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `validate`      | (none)                                   | "I am done, please run the validators." Used by `/implementation` and `/technical-conception` when the orchestrator should advance the stage.     |
 | `answer-needed` | `question: string`, `options?: string[]` | "I need a human decision." The orchestrator surfaces this via `AskUserQuestion` — the human answers, the sub-agent is re-invoked with the answer. |
-| `replan` | `scope: string` | "The plan is wrong, here's which section needs revising." The orchestrator transitions to `plan` stage scoped to `scope`. |
-| `escalate` | `reason: string` | "Stop the run, hand back to the human." Used for spec flaws, unrecoverable errors, hook failures, ADR conflicts. |
+| `replan`        | `scope: string`                          | "The plan is wrong, here's which section needs revising." The orchestrator transitions to `plan` stage scoped to `scope`.                         |
+| `escalate`      | `reason: string`                         | "Stop the run, hand back to the human." Used for spec flaws, unrecoverable errors, hook failures, ADR conflicts.                                  |
 
 ### Required fields
 

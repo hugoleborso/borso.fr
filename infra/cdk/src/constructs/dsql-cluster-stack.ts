@@ -42,9 +42,9 @@ export class DsqlClusterStack extends Stack {
       // recreated for stage churn) — even though preview/integ schemas
       // live alongside.
       stage: 'prod',
-      ...(props.deletionProtection !== undefined
-        ? { deletionProtection: props.deletionProtection }
-        : {}),
+      ...(props.deletionProtection === undefined
+        ? {}
+        : { deletionProtection: props.deletionProtection }),
     });
   }
 }

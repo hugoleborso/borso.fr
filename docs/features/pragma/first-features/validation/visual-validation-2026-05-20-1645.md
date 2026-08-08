@@ -14,34 +14,34 @@ The prototype's `Pragma.html` requires `react`, `react-dom` and `@babel/standalo
 
 ## Blocker closure summary (round 4 → round 5)
 
-| # | Round-4 blocker | Round-5 verdict |
-|---|---|---|
-| 0 | Dark-mode regression: cream paper never rendered (whole app dark) | **CLOSED** — `tokens.css` rewritten; light `@theme {}` declares cream defaults, dark overrides moved to `:root` inside the media query (outside `@theme`). `getComputedStyle(body).backgroundColor = rgb(244,239,230)` (= `#f4efe6`) on `prefers-color-scheme: light` and `rgb(22,19,15)` (= `#16130f`) on `prefers-color-scheme: dark`. Verified both. |
-| 1 | Catalog chart-kind icons never render (API/schema field mismatch) | **CLOSED** — each card's top-right icon now correlates to `song.chart.kind`: `chordpro` → "lines+T" path (`M5 5h14M9 5v14M5 12h8`); `pdf` → text-lines path (`M9 8h6M9 12h6M9 16h4`); `image` → mountain path (`M21 16l-5-5-9 9`); null → italic "pas d'accord" badge. Three icons all distinct across the seeded songs. |
-| 2 | Song detail = edit form (mastery viz + lineup card absent) | **CLOSED** — `/catalog/:songId` renders read-only display. `document.querySelectorAll('input,textarea,select').length === 0`. Layout: status chip + chart-kind badge + tonality + `Modifier` + `Mode scène` actions, font-display H1 "Helpless", chord-chart preview with `[D]` highlighted in `text-accent`, `Liens externes` iframe (oEmbed), right aside with `Lineup par défaut` (member chip + instrument tag-mono per member) and `Maîtrise` (10-bar gradient per member, score on the right, hue = member palette). |
-| 3 | Session detail = edit form (no venue H1, no friends-bars) | **CLOSED** — `/sessions/:id` shows venue as H1 (`Le Sentier des Halles · Paris`), CONCERT tracking-wide eyebrow, date + capacity + friends-count metaline, `Modifier` + `Setlist` actions, `Amis par membre` card with horizontal hue-coloured bars + Σ total + jauge percentage, `Matériel` card, `Lieu` card on the right. Edit form lives behind the `Modifier` button. |
-| 4 | Setlist editor: drag-on-right + no sparkline + no warning gutter | **CLOSED** — drag handle (24px wide) is the 2nd column at `left=325` inside each row at `left=268..1232` — clearly LEFT half. The energy sparkline (a long quadratic-bezier `path d="M 0 40 Q 0 40 45 36.6..."`) sits at `top=650`, the entry list starts at `top=763` — sparkline above. Side gutter at `x=244` (LEFT of `listLeft=268`) carries two circular warning markers (`aria-label="Voir / commenter la transition"`) at the two transitions where my forced lineup override breaks harmonic continuity. Clicking a marker opens `Commentaire de transition` modal. |
-| 5 | Mode scène renders inside AppShell | **CLOSED** — `/catalog/:songId/scene` renders WITHOUT the AppShell sidebar (no `nav a[href*=catalog]` in the DOM). Dark `#0d0a07`-ish background, `← Retour` top-left, font-display H2 "Helpless", transpose `-1/+0/+1` + zoom `A−/A+` controls top-right. ESC navigates back to `/catalog/:songId`. |
-| 6 | Sidebar missing Setlists entry + missing badge counts | **CLOSED** — sidebar nav = `Catalogue 3 / Sessions 1 / Setlists 1 / Bars 5 / Membres / Instruments` (six links, group divider before Membres). Badge counts mirror the prototype's `useNavBadges`-derived values (concert-ready song count, upcoming-session count, setlist count, bar count). Members and Instruments are admin and intentionally unbadged. |
-| 7 | Mobile-nav fallback: sidebar still 232px at 375px viewport | **CLOSED** — at `set viewport 375 812`, sidebar is hidden, hamburger button `aria-label="Ouvrir le menu"` is rendered top-left. Clicking the hamburger opens a slide-over panel with the six nav links + badges; tapping a link navigates (verified `Sessions 1 → /sessions`). |
+| #   | Round-4 blocker                                                   | Round-5 verdict                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| --- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | Dark-mode regression: cream paper never rendered (whole app dark) | **CLOSED** — `tokens.css` rewritten; light `@theme {}` declares cream defaults, dark overrides moved to `:root` inside the media query (outside `@theme`). `getComputedStyle(body).backgroundColor = rgb(244,239,230)` (= `#f4efe6`) on `prefers-color-scheme: light` and `rgb(22,19,15)` (= `#16130f`) on `prefers-color-scheme: dark`. Verified both.                                                                                                                                                                                                                      |
+| 1   | Catalog chart-kind icons never render (API/schema field mismatch) | **CLOSED** — each card's top-right icon now correlates to `song.chart.kind`: `chordpro` → "lines+T" path (`M5 5h14M9 5v14M5 12h8`); `pdf` → text-lines path (`M9 8h6M9 12h6M9 16h4`); `image` → mountain path (`M21 16l-5-5-9 9`); null → italic "pas d'accord" badge. Three icons all distinct across the seeded songs.                                                                                                                                                                                                                                                     |
+| 2   | Song detail = edit form (mastery viz + lineup card absent)        | **CLOSED** — `/catalog/:songId` renders read-only display. `document.querySelectorAll('input,textarea,select').length === 0`. Layout: status chip + chart-kind badge + tonality + `Modifier` + `Mode scène` actions, font-display H1 "Helpless", chord-chart preview with `[D]` highlighted in `text-accent`, `Liens externes` iframe (oEmbed), right aside with `Lineup par défaut` (member chip + instrument tag-mono per member) and `Maîtrise` (10-bar gradient per member, score on the right, hue = member palette).                                                   |
+| 3   | Session detail = edit form (no venue H1, no friends-bars)         | **CLOSED** — `/sessions/:id` shows venue as H1 (`Le Sentier des Halles · Paris`), CONCERT tracking-wide eyebrow, date + capacity + friends-count metaline, `Modifier` + `Setlist` actions, `Amis par membre` card with horizontal hue-coloured bars + Σ total + jauge percentage, `Matériel` card, `Lieu` card on the right. Edit form lives behind the `Modifier` button.                                                                                                                                                                                                   |
+| 4   | Setlist editor: drag-on-right + no sparkline + no warning gutter  | **CLOSED** — drag handle (24px wide) is the 2nd column at `left=325` inside each row at `left=268..1232` — clearly LEFT half. The energy sparkline (a long quadratic-bezier `path d="M 0 40 Q 0 40 45 36.6..."`) sits at `top=650`, the entry list starts at `top=763` — sparkline above. Side gutter at `x=244` (LEFT of `listLeft=268`) carries two circular warning markers (`aria-label="Voir / commenter la transition"`) at the two transitions where my forced lineup override breaks harmonic continuity. Clicking a marker opens `Commentaire de transition` modal. |
+| 5   | Mode scène renders inside AppShell                                | **CLOSED** — `/catalog/:songId/scene` renders WITHOUT the AppShell sidebar (no `nav a[href*=catalog]` in the DOM). Dark `#0d0a07`-ish background, `← Retour` top-left, font-display H2 "Helpless", transpose `-1/+0/+1` + zoom `A−/A+` controls top-right. ESC navigates back to `/catalog/:songId`.                                                                                                                                                                                                                                                                         |
+| 6   | Sidebar missing Setlists entry + missing badge counts             | **CLOSED** — sidebar nav = `Catalogue 3 / Sessions 1 / Setlists 1 / Bars 5 / Membres / Instruments` (six links, group divider before Membres). Badge counts mirror the prototype's `useNavBadges`-derived values (concert-ready song count, upcoming-session count, setlist count, bar count). Members and Instruments are admin and intentionally unbadged.                                                                                                                                                                                                                 |
+| 7   | Mobile-nav fallback: sidebar still 232px at 375px viewport        | **CLOSED** — at `set viewport 375 812`, sidebar is hidden, hamburger button `aria-label="Ouvrir le menu"` is rendered top-left. Clicking the hamburger opens a slide-over panel with the six nav links + badges; tapping a link navigates (verified `Sessions 1 → /sessions`).                                                                                                                                                                                                                                                                                               |
 
 ## Section 0 — Design-bundle fidelity (per-screen)
 
 Each row asserts the five PASS criteria from the standard (typography stack matches, layout structure matches, affordances match, palette tokens match, microcopy matches). Evidence files are under `./screenshots-2026-05-20-1645/`.
 
-| # | Screen file | Verdict | Evidence |
-|---|---|---|---|
-| S1 | `screens/catalog.jsx` (catalog list) | **PASS** | `01-catalog.png`, `01-catalog-full.png` |
-| S2 | `screens/catalog.jsx` (song detail) | **PASS** | `02-song-detail.png`, `02-song-detail-full.png` |
-| S3 | `screens/catalog.jsx` (Mode scène / `PerfMode`) | **PASS** | `03-mode-scene.png` |
-| S4 | `screens/setlist.jsx` (setlist editor) | **PASS** | `04-setlist-editor-rows.png`, `04-setlist-warnings-detail.png`, `04-transition-modal.png` |
-| S5 | `screens/sessions.jsx` (sessions list) | **PASS** | `05-sessions-list.png` |
-| S6 | `screens/sessions.jsx` (session detail) | **PASS** | `06-session-detail.png`, `06-session-detail-full.png`, `04-setlist-with-warnings.png` |
-| S7 | `screens/bars.jsx` (kanban + list) | **PASS** | `07-bars-list.png`, `07-bars-kanban.png` |
-| S8 | `screens/admin.jsx` (members + instruments + mastery matrix) | **PASS** | `09-admin-members.png`, `09-admin-instruments.png`, `10-mastery-matrix.png` |
-| S9 | `shell.jsx` (app shell + sidebar + mobile slide-over) | **PASS** | `01-catalog.png` (sidebar at 1440px), `08-mobile-catalog.png` (375px hamburger), `08-mobile-slideover.png` (slide-over), `08-mobile-after-nav.png` (post-tap navigation) |
-| S10 | `energy.jsx` (sparkline + badges) — atoms | **PASS** | sparkline visible above setlist entries (`04-setlist-warnings-detail.png`), energy chip `E 5` on every catalog card (`01-catalog.png`) |
-| S11 | Login route (spec-only) | **PASS** | `00-login-fr-light.png`, `00-login-dark.png` |
+| #   | Screen file                                                  | Verdict  | Evidence                                                                                                                                                                 |
+| --- | ------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1  | `screens/catalog.jsx` (catalog list)                         | **PASS** | `01-catalog.png`, `01-catalog-full.png`                                                                                                                                  |
+| S2  | `screens/catalog.jsx` (song detail)                          | **PASS** | `02-song-detail.png`, `02-song-detail-full.png`                                                                                                                          |
+| S3  | `screens/catalog.jsx` (Mode scène / `PerfMode`)              | **PASS** | `03-mode-scene.png`                                                                                                                                                      |
+| S4  | `screens/setlist.jsx` (setlist editor)                       | **PASS** | `04-setlist-editor-rows.png`, `04-setlist-warnings-detail.png`, `04-transition-modal.png`                                                                                |
+| S5  | `screens/sessions.jsx` (sessions list)                       | **PASS** | `05-sessions-list.png`                                                                                                                                                   |
+| S6  | `screens/sessions.jsx` (session detail)                      | **PASS** | `06-session-detail.png`, `06-session-detail-full.png`, `04-setlist-with-warnings.png`                                                                                    |
+| S7  | `screens/bars.jsx` (kanban + list)                           | **PASS** | `07-bars-list.png`, `07-bars-kanban.png`                                                                                                                                 |
+| S8  | `screens/admin.jsx` (members + instruments + mastery matrix) | **PASS** | `09-admin-members.png`, `09-admin-instruments.png`, `10-mastery-matrix.png`                                                                                              |
+| S9  | `shell.jsx` (app shell + sidebar + mobile slide-over)        | **PASS** | `01-catalog.png` (sidebar at 1440px), `08-mobile-catalog.png` (375px hamburger), `08-mobile-slideover.png` (slide-over), `08-mobile-after-nav.png` (post-tap navigation) |
+| S10 | `energy.jsx` (sparkline + badges) — atoms                    | **PASS** | sparkline visible above setlist entries (`04-setlist-warnings-detail.png`), energy chip `E 5` on every catalog card (`01-catalog.png`)                                   |
+| S11 | Login route (spec-only)                                      | **PASS** | `00-login-fr-light.png`, `00-login-dark.png`                                                                                                                             |
 
 Tally: **PASS 11, FAIL 0, PASS-with-caveat 0**.
 
@@ -105,13 +105,13 @@ Tally: **PASS 11, FAIL 0, PASS-with-caveat 0**.
 
 ## Section 1 — Site-wide rendering
 
-| # | Item | Observed | Verdict |
-|---|---|---|---|
-| G1 | Body sans-serif stack | `getComputedStyle(body).fontFamily = "Geist Variable", Söhne, system-ui, -apple-system, "Helvetica Neue", sans-serif` | PASS |
-| G2 | H1 display stack | `getComputedStyle(h1).fontFamily = "Instrument Serif", "Iowan Old Style", Georgia, serif` on every page sampled | PASS |
-| G3 | Tokens exposed via `@theme` | Compiled stylesheet declares `--color-member-{coral,teal,mustard,plum,sage}`, `--color-status-{wip,rehearsed}-{bg,fg,border}`, `--color-bg-{,elev,sunk}`, `--color-ink-{900,700,500,400,300}`, accent + warn + danger + good | PASS |
-| G4 | Cream paper in light mode | `media=light` → `bodyBg = rgb(244,239,230)` (`#f4efe6`) | PASS (was FAIL round 4) |
-| G5 | Dark swatch in dark mode | `media=dark` → `bodyBg = rgb(22,19,15)` (`#16130f`) | PASS |
+| #   | Item                        | Observed                                                                                                                                                                                                                     | Verdict                 |
+| --- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| G1  | Body sans-serif stack       | `getComputedStyle(body).fontFamily = "Geist Variable", Söhne, system-ui, -apple-system, "Helvetica Neue", sans-serif`                                                                                                        | PASS                    |
+| G2  | H1 display stack            | `getComputedStyle(h1).fontFamily = "Instrument Serif", "Iowan Old Style", Georgia, serif` on every page sampled                                                                                                              | PASS                    |
+| G3  | Tokens exposed via `@theme` | Compiled stylesheet declares `--color-member-{coral,teal,mustard,plum,sage}`, `--color-status-{wip,rehearsed}-{bg,fg,border}`, `--color-bg-{,elev,sunk}`, `--color-ink-{900,700,500,400,300}`, accent + warn + danger + good | PASS                    |
+| G4  | Cream paper in light mode   | `media=light` → `bodyBg = rgb(244,239,230)` (`#f4efe6`)                                                                                                                                                                      | PASS (was FAIL round 4) |
+| G5  | Dark swatch in dark mode    | `media=dark` → `bodyBg = rgb(22,19,15)` (`#16130f`)                                                                                                                                                                          | PASS                    |
 
 ## Section 2 — Broken-image scan (per page)
 
@@ -119,17 +119,17 @@ Tally: **PASS 11, FAIL 0, PASS-with-caveat 0**.
 
 ## Section 3 — Non-regression sweep
 
-| Round-3/4 PASSes | Re-check method | Outcome |
-|---|---|---|
-| Login form renders + serif treatment | `00-login-fr-light.png` + font-family probe | PASS (unchanged) |
-| Auth happy path → `/catalog` | `fill@e3 / click@e4 → url=/catalog` | PASS |
-| Catalog page lists songs | DOM query | PASS (6 songs across 4 chart kinds) |
-| Sidebar nav (Catalogue/Sessions/Bars/Members/Instruments) | DOM query | PASS — AND **Setlists** restored |
-| Kanban view of bars | Toggle + 5-column grid | PASS |
-| French i18n on first visit | `navigator.language=fr-FR` returns French copy | PASS |
-| Admin pages | Captured | PASS |
-| Mastery matrix renders grid with row + column averages | DOM verified — `Moy. 7.5 10.0 8.0 7.5 8.5` | PASS |
-| Dark-mode preference flips palette | `set media dark` → `#16130f`; `set media light` → `#f4efe6` | PASS (was UNVERIFIABLE round 3, FAIL round 4, now PASS) |
+| Round-3/4 PASSes                                          | Re-check method                                             | Outcome                                                 |
+| --------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------- |
+| Login form renders + serif treatment                      | `00-login-fr-light.png` + font-family probe                 | PASS (unchanged)                                        |
+| Auth happy path → `/catalog`                              | `fill@e3 / click@e4 → url=/catalog`                         | PASS                                                    |
+| Catalog page lists songs                                  | DOM query                                                   | PASS (6 songs across 4 chart kinds)                     |
+| Sidebar nav (Catalogue/Sessions/Bars/Members/Instruments) | DOM query                                                   | PASS — AND **Setlists** restored                        |
+| Kanban view of bars                                       | Toggle + 5-column grid                                      | PASS                                                    |
+| French i18n on first visit                                | `navigator.language=fr-FR` returns French copy              | PASS                                                    |
+| Admin pages                                               | Captured                                                    | PASS                                                    |
+| Mastery matrix renders grid with row + column averages    | DOM verified — `Moy. 7.5 10.0 8.0 7.5 8.5`                  | PASS                                                    |
+| Dark-mode preference flips palette                        | `set media dark` → `#16130f`; `set media light` → `#f4efe6` | PASS (was UNVERIFIABLE round 3, FAIL round 4, now PASS) |
 
 ## Verdict: PASS
 

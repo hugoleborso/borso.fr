@@ -15,10 +15,7 @@ export type PunchValidation =
   | { readonly ok: false; readonly reason: PunchRejectReason };
 
 export type PunchRejectReason =
-  | 'race-not-started'
-  | 'race-finished'
-  | 'already-punched-this-loop'
-  | 'runner-not-in-race';
+  'race-not-started' | 'race-finished' | 'already-punched-this-loop' | 'runner-not-in-race';
 
 /**
  * Decide whether a punch at `now` should be accepted for `runnerSlug`.
@@ -40,10 +37,10 @@ export function validatePunchTiming(
   const currentLoopFloor = loopIndexAt(edition, now);
   const targetLoop = Math.max(1, currentLoopFloor);
 
-  const conflict = validPunchesForRunner.some(
+  const isConflict = validPunchesForRunner.some(
     (punch) => punch.runnerSlug === runnerSlug && punch.loopIndex === targetLoop,
   );
-  if (conflict) {
+  if (isConflict) {
     return { ok: false, reason: 'already-punched-this-loop' };
   }
 

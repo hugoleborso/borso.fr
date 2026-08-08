@@ -41,8 +41,8 @@ export function buildMasteryRouter() {
       zValidator('param', masteryDefaultPathSchema),
       async (context) => {
         const { memberId, instrumentId } = context.req.valid('param');
-        const ok = await removeMasteryDefault(getDatabase(), memberId, instrumentId);
-        if (!ok) return context.json({ error: 'not-found' }, 404);
+        const isOk = await removeMasteryDefault(getDatabase(), memberId, instrumentId);
+        if (!isOk) return context.json({ error: 'not-found' }, 404);
         return context.json({ memberId, instrumentId, deleted: true });
       },
     )
@@ -61,8 +61,8 @@ export function buildMasteryRouter() {
       zValidator('param', masteryOverridePathSchema),
       async (context) => {
         const { memberId, instrumentId, songId } = context.req.valid('param');
-        const ok = await removeMasteryOverride(getDatabase(), memberId, instrumentId, songId);
-        if (!ok) return context.json({ error: 'not-found' }, 404);
+        const isOk = await removeMasteryOverride(getDatabase(), memberId, instrumentId, songId);
+        if (!isOk) return context.json({ error: 'not-found' }, 404);
         return context.json({ memberId, instrumentId, songId, deleted: true });
       },
     );
