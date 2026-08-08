@@ -395,3 +395,420 @@ All under `docs/features/meta/preview-validation/last-loop-lepin/`.
 | `self-punch-modal-375.png` | The self punch dialog at 375 pixels, with the confirm button fully on screen |
 | `argent-self-punch-375-touch.png` | The same dialog reached by a real touch tap, showing the `confirm loop 5` label of defect 1 |
 | `self-punch-already-punched-375.png` | The `You already punched this loop.` result of defect 1 |
+
+---
+
+# Regression check at `f88e1d0` — 8 August 2026
+
+## Verdict
+
+**No regressions found.** Nothing that worked at the baseline stopped working,
+and none of the five changes listed for this run introduced a new failure. The
+countdown ticks, the `<html lang>` attribute tracks the switcher, CORS is
+correct, the CSV exports work, and the map still draws a moving runner marker.
+
+The baseline's four defects all still reproduce, unchanged. Two things this run
+found are pre-existing rather than new, but were not stated in the baseline and
+are worth writing down: the preview auto-seed in CI has never worked for this
+app, and the seed endpoint does not seed an admin credential even though the
+workflow comment says it does.
+
+Target: <https://last-loop-lepin-pr-40.preview.borso.fr>
+API: <https://last-loop-lepin-pr-40-api.preview.borso.fr>
+
+## How this ran
+
+`agent-browser` in a session named `lastloop-regress`, launched with
+`--ssl-version-max=tls1.2 --enable-unsafe-swiftshader --use-gl=angle
+--use-angle=swiftshader --no-sandbox`, drove the functional walkthrough.
+
+The touch pass ran against the argent device `chromium-cdp-9222`. As the recipe
+in
+[`docs/knowledge/driving-previews-with-agent-browser-and-argent.md`](../../../knowledge/driving-previews-with-agent-browser-and-argent.md)
+warns, `gesture-tap` was not used; taps went through `Input.dispatchTouchEvent`
+on a separate protocol session, which also sent
+`Emulation.setDeviceMetricsOverride` and `Emulation.setTouchEmulationEnabled`.
+That session measured `matchMedia('(pointer: coarse)')` true,
+`matchMedia('(hover: none)')` true, `navigator.maxTouchPoints` 5, a device pixel
+ratio of 2, and a 375 by 667 viewport.
+
+The edition on the preview when this run started was the finished `race-finished`
+state left by an earlier call, so `race-down-to-one-survivor` was seeded again to
+get a live runner. See *What this run changed on the preview* at the end.
+
+## Change 1, `<html lang>` follows the language switcher
+
+**Works.** No regression.
+
+The entry document is authored as `<html lang="fr">`, confirmed by fetching the
+raw HTML. On load in this browser the attribute reads `en`, because
+`navigator.languages` is `['en-US']` and `selectInitialLanguage` prefers a
+supported browser language over the `fr` default. That is the module-level
+`applyDocumentLanguage(i18next.language)` call overwriting the authored value,
+which is the mechanism working rather than failing. The prompt for this run
+expected `fr` on load; that expectation only holds on a French-language browser.
+
+Six switches through the `#language-switcher` select, alternating French and
+English:
+
+```
+set=fr lang=fr saved=fr | PROCHAIN TOP HORAIRE
+set=en lang=en saved=en | NEXT HOURLY TOP
+set=fr lang=fr saved=fr | PROCHAIN TOP HORAIRE
+set=en lang=en saved=en | NEXT HOURLY TOP
+set=fr lang=fr saved=fr | PROCHAIN TOP HORAIRE
+set=en lang=en saved=en | NEXT HOURLY TOP
+```
+
+The attribute tracked every switch, and so did the visible copy and the value
+written to `last-loop-lepin.language` in local storage. The subscription does not
+decay: the sixth switch behaved exactly like the first.
+
+With `fr` saved, a reload came back with `lang=fr` and French copy, and the
+attribute stayed `fr` across `/archives`, `/r/alice` and `/admin`, so the
+module-level listener survives client-side navigation.
+
+## Change 2, the spectator countdown reading the clock through `clock-store`
+
+**Works, including the boundary rollover.** This was the highest-risk change and
+it is clean.
+
+The seeded edition starts at 17:00:00 UTC on an hourly interval, so the next loop
+boundary was 21:00:00 UTC. Sampled from the page's `role="timer"` element over
+104 seconds:
+
+```
+20:03:28  56:31 MM:SS
+20:03:41  56:18 MM:SS
+20:03:53  56:06 MM:SS
+20:04:05  55:54 MM:SS
+20:04:19  55:41 MM:SS
+20:04:31  55:28 MM:SS
+20:04:45  55:14 MM:SS
+20:04:58  55:01 MM:SS
+20:05:12  54:47 MM:SS
+```
+
+Every reading equals `21:00:00` minus the wall clock at that instant, to the
+second. The counter never stalled, never skipped, and never drifted from the
+clock over the whole window. A second, independent observation in the argent
+browser gave `41:01` then `40:46` fifteen seconds later, which is the same
+one-second cadence in a different browser.
+
+**Rollover.** No fixture places a boundary inside a usable observation window, so
+the page clock was offset instead: `Date.now` was replaced with a function
+returning the real time plus 3 250 000 ms, which puts the page eight seconds
+before the 21:00:00 boundary. The store reads `Date.now()` on every tick, so the
+next tick picked the offset up.
+
+```
+20:59:53 pageclock ->  00:06 MM:SS
+21:00:00 pageclock ->  59:59 MM:SS
+21:00:05 pageclock ->  59:54 MM:SS
+21:00:11 pageclock ->  59:48 MM:SS
+21:00:16 pageclock ->  59:43 MM:SS
+21:00:22 pageclock ->  59:37 MM:SS
+21:00:28 pageclock ->  59:31 MM:SS
+21:00:33 pageclock ->  59:26 MM:SS
+```
+
+At the boundary the counter rolled from `00:06` straight to `59:59` and kept
+counting down toward the 22:00:00 boundary. No freeze at zero, no negative value,
+no `NaN`, no flicker back to the old target. `projectNextLoopBoundaryMs` returned
+the next interval as soon as the clock crossed, which is what it is supposed to
+do.
+
+The page clock override was removed by the reload that followed.
+
+## Change 3, `ranking.core.ts` tests for `mostRecentCorrectionAt` and `formatStandingsAsCsv`
+
+**The CSV export works. `mostRecentCorrectionAt` could not be exercised with a
+real correction.**
+
+The CSV export is reachable, and there are two of them. Both return 200 with the
+right headers and real rows:
+
+```
+GET /api/standings/lepin-2026/csv
+  content-type: text/csv; charset=utf-8
+  content-disposition: attachment; filename="standings-lepin-2026.csv"
+
+rank,bib,runner_slug,display_name,status,out_at_loop,last_loop,last_finished_at
+1,1,alice,"Alice",in-race,,3,2026-08-08T19:57:00.000Z
+2,2,bob,"Bob",dnf,2,,2026-08-08T18:58:12.000Z
+3,3,carla,"Carla",dnf,1,,2026-08-08T17:58:48.000Z
+4,4,dan,"Dan",dnf,1,,2026-08-08T17:59:24.000Z
+```
+
+The header line matches `CSV_HEADER` in `ranking.core.ts` exactly, display names
+are quoted, and the empty cells fall where the status says they should. The
+per-lap export at `/api/standings/lepin-2026/laps.csv` also returns 200 with a
+`B1`…`B16` column per loop. The archived edition `3l-lepin-2026` exports too, so
+the download links on `/archives` and the `Download the CSV` button on the
+spectator view both point at working endpoints.
+
+`mostRecentCorrectionAt` is plumbed through: it is a top-level key of the
+standings response, sibling to `standings`, and the spectator page reads it at
+`apps/last-loop-lepin/site/src/routes/SpectatorPage.tsx:75`. On this preview it is
+`null` for both `lepin-2026` and `3l-lepin-2026`, because no punch anywhere has a
+`correctedAt` or a `voidedAt`. Creating one needs the admin correction panel,
+which needs the PIN, which this run does not have — see change 5. So the field was
+confirmed present and correctly `null`, and the "results amended at" line was
+confirmed absent, but the non-null path was not seen on screen. An attempt to
+force it by stubbing the standings response through
+`agent-browser network route` did not produce a usable page, so it is not
+reported as evidence.
+
+## Change 4, `frontendOrigin` moving into `@borso/infra`, and CORS
+
+**No regression.** Every API call from the site succeeds.
+
+Across full loads of `/`, `/archives`, `/r/alice` and `/admin`, plus a self punch
+and a login attempt, no request was blocked and no CORS error reached the
+console. A single spectator load recorded 62 requests, all 200 apart from the
+missing icon of defect 3.
+
+The headers are exact rather than permissive:
+
+```
+OPTIONS /api/self-punches
+  Origin: https://last-loop-lepin-pr-40.preview.borso.fr
+  -> 204
+  access-control-allow-origin: https://last-loop-lepin-pr-40.preview.borso.fr
+  access-control-allow-methods: DELETE,GET,OPTIONS,PATCH,POST,PUT
+  access-control-allow-headers: authorization,content-type
+  access-control-allow-credentials: true
+  access-control-max-age: 600
+
+GET /api/editions/current
+  Origin: https://evil.example.com
+  -> 200 with no access-control-allow-origin header
+```
+
+The preview origin is echoed back exactly, credentials are allowed, and a foreign
+origin gets no allow header at all, so the browser blocks it. That is the
+behaviour the moved `frontendOrigin` is meant to produce.
+
+The `bp-integ-` prefix on the integ stage is not observable from a preview URL and
+was not checked.
+
+## Change 5, the admin PIN no longer cloned from production
+
+**Admin login does not work here, and the reason is not the one the change
+predicts.**
+
+`POST /api/admin/auth/login` with the repository's test PIN `lastloop` returns
+401 with `{"error":"auth denied","reason":"invalid-pin"}`, both through the API
+directly and through the form, which renders `Invalid PIN.` correctly. The
+service returns `misconfigured` when the credential row is missing, so the row
+exists — this preview schema kept the credential it already had, exactly as the
+change predicts. What it kept is the production PIN, which is not in the
+repository, so the admin area stays unreachable.
+
+That is the same outcome as the baseline, for the same reason, so it is not a
+regression. Two login attempts were made in total, one through the API and one
+through the form; no PIN was guessed at, since the rate limit is five attempts
+per five minutes and the value is a live secret. The only PIN in the repository is
+the literal `lastloop`, whose scrypt hash is at
+`apps/last-loop-lepin/test/database-utils.ts:30`, used only by the test suite.
+There is no seeded credential under `apps/last-loop-lepin/api/src/__test/`.
+
+**Worth flagging.** The comment above the auto-seed step in
+`.github/workflows/preview.yml:140` says the seed endpoint "bootstraps the admin
+password on first call". It does not.
+`apps/last-loop-lepin/api/src/__test/test-seed.service.ts` contains no reference
+to `adminCredentials`, `scryptHash` or any credential at all. So even a corrected
+seed call would leave a fresh preview with no way into the admin area. With the
+production clone now removed, a brand new preview schema will have no credential
+row at all and will answer `misconfigured`. Everything behind the PIN — the setup
+panel, the roster, the correction panel, the manual did-not-finish flow — stays
+unchecked, and so does any admin write.
+
+## Seeding
+
+**The endpoint is healthy. The workflow's call to it is not, and never was.**
+
+The prompt for this run described the fixture as a JSON body. It is not; it is a
+query parameter. `test-seed.controller.ts` uses
+`zValidator('query', seedFixtureSchema)`, and the preview behaves accordingly:
+
+| Request | Status |
+|---|---|
+| `POST /api/__test/seed` with no body and no query | 400 |
+| `POST /api/__test/seed` with `{"fixture":"race-finished"}` as a JSON body | 400 |
+| `POST /api/__test/seed?fixture=race-finished` | 200 |
+
+Both 400s carry the same Zod error, `path: ["fixture"]`, `received: "undefined"`.
+A JSON body is ignored entirely.
+
+All three fixtures seed cleanly through the query parameter, each returning 200
+and a coherent race:
+
+| Fixture | Response | Edition state | Standings |
+|---|---|---|---|
+| `race-down-to-one-survivor` | `{"fixture":"race-down-to-one-survivor","edition":"lepin-2026","runners":4}` | `live`, 17:00 to 09:00, top of the hour | Alice in race at loop 3, Bob out at L2, Carla and Dan out at L1 |
+| `race-finished` | `{"fixture":"race-finished","edition":"lepin-2026","runners":4}` | `finished`, ended five minutes ago | All four out, Alice last at L5 |
+| `top-with-dnf-candidates` | `{"fixture":"top-with-dnf-candidates","edition":"lepin-2026","runners":4}` | `live`, started 62 minutes ago | Alice and Bob in race at loop 1, Carla and Dan ex aequo and out at L0 |
+
+`raceEnded` reads `true` on `race-down-to-one-survivor` even though the edition is
+`live` and its window has not closed. That is deliberate:
+`ranking.core.ts:187` sets `raceEnded: isRaceEndReached(edition, now) || inRaceCount <= 1`,
+and the fixture leaves exactly one runner in the race. The spectator view shows
+`Race over — final standings shown.` while still drawing a live runner marker and
+a running countdown, which reads oddly but is the specified behaviour.
+
+**The workflow call.** `.github/workflows/preview.yml:154` runs
+`curl -X POST "$SEED_URL"` with no query string and no body. That is the first
+row of the table above, a 400, which falls through the `case` statement to the
+`*)` branch and emits a `::warning::` without failing the job. So the auto-seed
+has never seeded this app, and the failure has only ever been a warning
+annotation. The seeding mechanism itself is healthy; the call site is wrong. One
+query parameter fixes it.
+
+## The baseline checks, re-confirmed
+
+### The spectator view and the map
+
+Passes. The map draws the course polyline, the start marker and one runner
+marker for the single runner still in the race. The marker moves. Sampling its
+Leaflet transform every fifteen seconds over 75 seconds:
+
+```
+20:11:16  start (114px, 223px)   runner (170px, 143px)
+20:11:31  start (114px, 223px)   runner (172px, 140px)
+20:11:46  start (114px, 223px)   runner (173px, 139px)
+20:12:01  start (114px, 223px)   runner (174px, 137px)
+20:12:16  start (114px, 223px)   runner (175px, 135px)
+20:12:31  start (114px, 223px)   runner (177px, 133px)
+```
+
+The start marker holds still and the runner marker advances steadily, which is
+the right pair of behaviours. Evidence is `regress-spectator-live-1280.png` and
+`regress-spectator-live-375.png`.
+
+### Horizontal overflow
+
+Passes everywhere. Each cell is `scrollWidth / clientWidth`.
+
+| Route | 375 | 393 | 412 | 1280 |
+|---|---|---|---|---|
+| `/` spectator | 375 / 375 | 393 / 393 | 412 / 412 | 1280 / 1280 |
+| `/archives` | 375 / 375 | 393 / 393 | 412 / 412 | 1280 / 1280 |
+| `/r/alice` | 375 / 375 | 393 / 393 | 412 / 412 | 1280 / 1280 |
+| `/admin` | 375 / 375 | 393 / 393 | 412 / 412 | 1280 / 1280 |
+
+The argent touch session measured 375 / 375 as well, at a device pixel ratio of 2.
+
+### The self punch button on a phone
+
+Reachable and large enough. At 375 pixels the confirm button measures 104 by 44
+with its right edge at x 338, and `Cancel` measures 78 by 44 — identical to the
+baseline. A real touch tap through `Input.dispatchTouchEvent` opened the dialog
+for Bob, whose `Close` button measured 286 by 44. Evidence is
+`regress-argent-touch-punch-375.png`.
+
+A write was made and it persisted. With geolocation set to 45.55, 5.78, the
+dialog for Alice read `I am Alice, confirm loop 4?`, and confirming returned
+`POST /api/self-punches` 201 with `Loop 4 confirmed!`. `/r/alice` afterwards
+listed a fourth entry, `L4, Closed at 20:15, Δ 18:08, VALID`, and the standings
+chip read `LOOP 4 · 08:15:08 PM`.
+
+### Every route renders real data
+
+Passes. `/` shows the countdown, the map and four standings chips. `/archives`
+shows one edition dated 16 May 2026, 6.53 km with 260 m of climb, five finishers
+and two CSV links. `/r/alice` shows the full loop history. `/admin` shows the PIN
+form. An unknown path renders the application's own `Page not found.` with a
+`Back to the race` link, not an origin error document.
+
+### Console errors
+
+None. `agent-browser errors` and `agent-browser console` both returned empty on
+`/`, `/archives`, `/r/alice`, `/admin` and an unknown path. There is nothing to
+quote because nothing was logged.
+
+### API statuses
+
+No 5xx anywhere. The only 4xx responses were deliberate or already recorded as
+defect 3:
+
+| Call | Status |
+|---|---|
+| `GET /api/editions/current`, `/api/editions`, `/api/standings/lepin-2026` | 200 |
+| `GET /api/standings/{lepin-2026,3l-lepin-2026}/csv`, `/laps.csv` | 200 |
+| `GET /api/editions/lepin-2026/runners/alice` and `/punches` | 200 |
+| `OPTIONS /api/self-punches`, `/api/admin/auth/login` | 204 |
+| `POST /api/self-punches`, first attempt | 201 |
+| `POST /api/self-punches`, second attempt | 409, defect 1, deliberate |
+| `POST /api/admin/auth/login` | 401, deliberate wrong PIN |
+| `POST /api/__test/seed?fixture=…`, all three | 200 |
+| `POST /api/__test/seed` with no query | 400, deliberate |
+| `GET /favicon.svg` | 404, defect 3 |
+
+## The four baseline defects
+
+| Defect | Still reproduces | Evidence from this run |
+|---|---|---|
+| 1, the self punch dialog offers a loop the server refuses | **Yes, identically** | With Alice holding a confirmed loop 4 and the server's clock-derived loop still 4, reopening the dialog read `I am Alice, confirm loop 5?` and offered the full size `I am here` button. Tapping it returned 409 and `You already punched this loop.` `regress-self-punch-offers-loop5-375.png`, `regress-self-punch-already-punched-375.png` |
+| 2, the language switcher is below the 44 pixel floor | **Yes** | `#language-switcher` measures 96 by 31 at 375 with a coarse pointer, while the three navigation links beside it measure 60 by 44, 83 by 44 and 69 by 44 |
+| 3, the site requests an icon file that does not exist | **Yes** | `/favicon.svg` and `/favicon.ico` both answer 404 with `content-type: application/xml`, the origin's error document |
+| 4, tap targets on the map and the archives below 44 pixels | **Yes, all of them** | Runner avatar marker 28 by 28, start and finish marker 16 by 16, archive runner links 76 by 20 and 70 by 20, Leaflet attribution links 43 by 14, 71 by 14 and 35 by 14. Leaflet's own zoom controls remain 44 by 44 |
+
+Defect 1 is worth restating because it is the one that matters mid race. The
+client label comes from `selectTargetLoopIndex` in
+`apps/last-loop-lepin/site/src/components/organisms/self-punch.core.ts`, which
+returns `runner.status.lastLoop + FIRST_LOOP_INDEX` and never reads the clock.
+The server derives the loop from the wall clock through `loopIndexAt(edition, now)`
+in `apps/last-loop-lepin/api/src/punch/punch.service.ts`. Between the moment a
+runner closes loop N and the moment the next hour opens, the client advertises
+N plus one while the server still considers N current. This run reproduced it
+within seconds of a successful punch, which is exactly the state a runner who
+taps twice lands in.
+
+## What could not be checked
+
+**Everything behind the admin PIN**, for the reason in change 5. That includes
+the correction panel, and therefore the non-null path of
+`mostRecentCorrectionAt` and the spectator's "results amended at" line.
+
+**The `bp-integ-` prefix** on the integ stage, which is not reachable from a
+preview URL.
+
+**Real device behaviour.** No `/dev/kvm`, no Android SDK, not macOS, so only a
+headless Chromium was available. Software keyboards, iOS Safari, scroll chaining
+and `100vh` against a dynamic toolbar all stay unverified.
+
+**Colour contrast**, not measured this session and unchanged since the baseline
+measured it.
+
+## What this run changed on the preview
+
+The seed endpoint was called five times in total, so the `lepin-2026` edition was
+rewritten repeatedly. It is left in the `race-down-to-one-survivor` state: `live`,
+17:00:00 to 09:00:00 UTC, four runners, Alice in race and Bob, Carla and Dan out.
+
+On top of that fixture this run created one self punch for `alice`, loop 4,
+through `POST /api/self-punches` at 20:15 UTC. A second attempt was refused with
+409 and wrote nothing. Two failed admin login attempts were made; both were
+rejected and neither wrote a session.
+
+The cloned edition `3l-lepin-2026` was not touched and is still listed on
+`/archives` with its eighteen runners. `GET /api/editions/current` returns the
+seeded edition rather than the cloned one, so anyone opening the preview link now
+sees the four runner fixture. Redeploying the preview is the way back to a clean
+clone.
+
+## Screenshots
+
+All under `docs/features/meta/preview-validation/last-loop-lepin/`.
+
+| File | What it shows |
+|---|---|
+| `regress-spectator-live-1280.png` | The spectator view with the countdown at 42:28, the course, the moving `AL` marker and the four standings chips |
+| `regress-spectator-live-375.png` | The same view at 375 pixels, top bar wrapped, no sideways scroll |
+| `regress-archives-1280.png`, `regress-archives-375.png` | The archives page with both CSV links |
+| `regress-runner-alice-375.png` | The runner profile showing the loop 4 punch this run created |
+| `regress-admin-wrong-pin-375.png` | The `Invalid PIN.` error path |
+| `regress-self-punch-offers-loop5-375.png` | Defect 1, the dialog offering `confirm loop 5` |
+| `regress-self-punch-already-punched-375.png` | Defect 1, the `You already punched this loop.` result |
+| `regress-argent-touch-punch-375.png` | The dialog opened by a real touch tap through `Input.dispatchTouchEvent` at 375 by 667 with a coarse pointer |

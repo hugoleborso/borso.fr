@@ -137,24 +137,33 @@ jobs:
       - name: Preflight recovery
         run: ./scripts/preflight-preview-recovery.sh "${{ matrix.app }}" "$PR_NUMBER"
       - run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
-      # Auto-seed the preview so it lands loginable + populated. The
-      # `__test/seed` endpoint is mounted by PreviewableApp on every
-      # non-prod API Lambda (see infra/cdk/src/constructs/previewable-app.ts;
-      # commit a232c58); it wipes domain tables and writes a coherent
-      # fixture + bootstraps the admin password on first call. Apps
-      # without /api/__test (front-end-only sites) short-circuit at the
-      # DNS layer and we silently skip. Prod never sees this — the flag
-      # is structurally absent there, asserted by infra unit tests.
+      # Auto-seed the preview so it lands populated. The `__test/seed`
+      # endpoint is mounted by PreviewableApp on every non-prod API Lambda
+      # (see infra/cdk/src/constructs/previewable-app.ts; commit a232c58);
+      # it wipes domain tables and writes a coherent fixture. Apps without
+      # /api/__test (front-end-only sites) short-circuit at the DNS layer
+      # and we silently skip. Prod never sees this — the flag is
+      # structurally absent there, asserted by infra unit tests.
+      #
+      # `last-loop-lepin` validates a `fixture` QUERY parameter and rejects
+      # a call without one, so this step posted a bare URL and took a 400 on
+      # every preview deploy since the endpoint was written. It failed as a
+      # `::warning::`, which is a line nobody reads in a green run. Found by
+      # the preview validation, not by the workflow.
+      #
+      # `pragma` takes no parameter, so an empty query string is correct for
+      # it and for any future app that seeds one way.
       - name: Auto-seed preview (non-prod fixture)
         shell: bash
         env:
           SEED_URL: ${{ env.VITE_API_BASE }}/api/__test/seed
+          SEED_QUERY: ${{ matrix.app == 'last-loop-lepin' && '?fixture=race-down-to-one-survivor' || '' }}
         run: |
           set -uo pipefail
-          status=$(curl -sS --max-time 30 -o /tmp/seed-response.txt -w "%{http_code}" -X POST "$SEED_URL" 2>/dev/null || echo "000")
+          status=$(curl -sS --max-time 30 -o /tmp/seed-response.txt -w "%{http_code}" -X POST "${SEED_URL}${SEED_QUERY}" 2>/dev/null || echo "000")
           case "$status" in
             200|201)
-              echo "[seed] $SEED_URL -> $status :: $(cat /tmp/seed-response.txt)"
+              echo "[seed] ${SEED_URL}${SEED_QUERY} -> $status :: $(cat /tmp/seed-response.txt)"
               ;;
             404)
               echo "[seed] $SEED_URL -> 404 (no test-seed endpoint mounted; skipping)"
@@ -163,7 +172,11 @@ jobs:
               echo "[seed] $SEED_URL unreachable (front-end-only app or DNS not yet propagated; skipping)"
               ;;
             *)
-              echo "::warning::[seed] $SEED_URL -> $status (preview deployed but seed failed): $(cat /tmp/seed-response.txt 2>/dev/null || echo '<no response body>')"
+              # A seed that answers with the wrong status is a broken preview,
+              # not a cosmetic problem. Fail the job rather than warn, because
+              # the warning is what let this sit unnoticed.
+              echo "::error::[seed] ${SEED_URL}${SEED_QUERY} -> $status (preview deployed but seed failed): $(cat /tmp/seed-response.txt 2>/dev/null || echo '<no response body>')"
+              exit 1
               ;;
           esac
       - id: meta
