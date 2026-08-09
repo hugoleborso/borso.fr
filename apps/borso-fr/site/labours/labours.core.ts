@@ -15,6 +15,7 @@ const FIRST_MONTH_NUMBER = 1;
 const MONTH_NUMBER_OFFSET_FROM_INDEX = 1;
 const MIDDLE_DOT_SEPARATOR = ' · ';
 const SINGLE_DECIMAL = 1;
+const FRENCH_LOCALE = 'fr-FR';
 const MINIMUM_PHOTOS_FOR_IMPLICIT_COVER = 2;
 const ONE_COVER = 1;
 
@@ -61,7 +62,7 @@ export function selectCompletionRatio(score: Score): number {
  * avoids.
  */
 export function formatScore(value: number): string {
-  return Number(value.toFixed(SINGLE_DECIMAL)).toLocaleString('fr-FR');
+  return Number(value.toFixed(SINGLE_DECIMAL)).toLocaleString(FRENCH_LOCALE);
 }
 
 function countChallenges(edition: Edition, isCounted: (challenge: Challenge) => boolean): number {

@@ -136,8 +136,14 @@ wait_for_gates
 # A changed *test* file pulls in its sibling source, because weakening a test
 # is exactly how a mutant comes back to life without the source moving.
 #
-# `--mutate` does NOT accumulate: passing the flag twice silently keeps only
-# the last glob. Every file therefore goes into one brace expression.
+# Two things about `--mutate`, both measured rather than assumed:
+#   - It does NOT accumulate. Passing the flag twice silently keeps the last
+#     value only, so every file goes into one flag.
+#   - The value is split on commas BEFORE globbing, so a brace expression is
+#     wrong: `{a,b}` becomes the two patterns `{a` and `b}`, each matching
+#     nothing, and `{a}` alone matches nothing either because a single-element
+#     brace never expands. Stryker then instruments zero files and exits 1 on
+#     "No tests were executed". Comma-separated plain paths, no braces.
 if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
   for app in $changed_app_slugs; do
     # `|| true` because a grep that matches nothing exits 1, and a failing
@@ -148,7 +154,7 @@ if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
       grep -E '\.(core|utils)\.ts$' |
       sort -u || true)
     [ -z "$pure_files" ] && continue
-    mutate_glob="{$(echo "$pure_files" | paste -sd, -)}"
+    mutate_glob=$(echo "$pure_files" | paste -sd, -)
     echo "[pre-push] $app: mutating $(echo "$pure_files" | grep -c .) changed pure file(s)"
     start_gate "mutation-$app" \
       pnpm --filter "@borso-app/$app" exec stryker run --mutate "$mutate_glob"
