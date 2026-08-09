@@ -33,12 +33,6 @@ interface Sample {
   readonly cumulative: number;
 }
 
-function clampFraction(fraction: number): number {
-  if (fraction <= 0) return 0;
-  if (fraction >= 1) return 1;
-  return fraction;
-}
-
 function zipSamples(
   pointElevations: readonly number[],
   cumulativeDistances: readonly number[],
@@ -75,19 +69,18 @@ interface SampleStats {
  * that's unreachable in practice but counts against branch coverage.
  */
 function summarise(samples: readonly Sample[]): SampleStats | null {
-  let firstSample: Sample | null = null;
-  let lastSample: Sample | null = null;
-  let minElevation = Number.POSITIVE_INFINITY;
-  let maxElevation = Number.NEGATIVE_INFINITY;
+  const firstSample = samples[0];
+  if (firstSample === undefined) return null;
+  let lastSample = firstSample;
+  let minElevation = firstSample.elevation;
+  let maxElevation = firstSample.elevation;
   let totalDistance = 0;
   for (const sample of samples) {
-    firstSample ??= sample;
     lastSample = sample;
-    if (sample.elevation < minElevation) minElevation = sample.elevation;
-    if (sample.elevation > maxElevation) maxElevation = sample.elevation;
-    if (sample.cumulative > totalDistance) totalDistance = sample.cumulative;
+    minElevation = Math.min(minElevation, sample.elevation);
+    maxElevation = Math.max(maxElevation, sample.elevation);
+    totalDistance = Math.max(totalDistance, sample.cumulative);
   }
-  if (firstSample === null || lastSample === null) return null;
   return { firstSample, lastSample, minElevation, maxElevation, totalDistance };
 }
 
@@ -158,10 +151,10 @@ export function buildProfileGeometry(
   const areaPolygonPoints = `0,${height} ${linePolylinePoints} ${width},${height}`;
 
   function yAt(distanceFraction: number): number {
-    if (samples.length === 1 || totalDistance === 0) {
+    if (totalDistance === 0) {
       return yForElevation(firstSample.elevation);
     }
-    const clamped = clampFraction(distanceFraction);
+    const clamped = Math.max(0, Math.min(1, distanceFraction));
     if (clamped === 0) return yForElevation(firstSample.elevation);
     if (clamped === 1) return yForElevation(lastSample.elevation);
     const targetDistance = clamped * totalDistance;

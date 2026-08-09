@@ -113,6 +113,69 @@ describe('buildProfileGeometry', () => {
     expect(geometry.yAt(0.25)).toBeCloseTo(expectedY, 5);
   });
 
+  it('yAt(0.75) lerps from the sample before it, not from the start of the track', () => {
+    // 3 evenly-spaced samples [100, 200, 300]; fraction 0.75 lands halfway
+    // between sample 1 (50 m, 200 m of elevation) and sample 2 → 250.
+    const geometry = buildProfileGeometry(
+      [100, 200, 300],
+      [0, 50, 100],
+      PROFILE_WIDTH,
+      PROFILE_HEIGHT,
+    );
+    const usableHeight = PROFILE_HEIGHT * (1 - 0.05);
+    const expectedY = PROFILE_HEIGHT - 0.75 * usableHeight;
+    expect(geometry.yAt(0.75)).toBeCloseTo(expectedY, 5);
+  });
+
+  it('spreads the samples across the full width', () => {
+    const geometry = buildProfileGeometry(
+      [100, 200, 300],
+      [0, 50, 100],
+      PROFILE_WIDTH,
+      PROFILE_HEIGHT,
+    );
+    const xCoords = geometry.linePolylinePoints
+      .split(' ')
+      .map((pair) => Number.parseFloat(pair.split(',')[0] ?? ''));
+    expect(xCoords).toEqual([0, PROFILE_WIDTH / 2, PROFILE_WIDTH]);
+  });
+
+  it('pins every sample of a zero-length track at x = 0 rather than NaN', () => {
+    const geometry = buildProfileGeometry([100, 200], [0, 0], PROFILE_WIDTH, PROFILE_HEIGHT);
+    const xCoords = geometry.linePolylinePoints
+      .split(' ')
+      .map((pair) => Number.parseFloat(pair.split(',')[0] ?? ''));
+    expect(xCoords).toEqual([0, 0]);
+  });
+
+  it('takes the first sample reaching the target when several share a distance', () => {
+    // Samples 1 and 2 both sit at 50 m: the one that first reaches the
+    // target is the answer, so 0.5 reads elevation 200, not 400.
+    const geometry = buildProfileGeometry(
+      [100, 200, 400, 300],
+      [0, 50, 50, 100],
+      PROFILE_WIDTH,
+      PROFILE_HEIGHT,
+    );
+    const usableHeight = PROFILE_HEIGHT * (1 - 0.05);
+    const normalisedFor200 = (200 - 100) / (400 - 100);
+    expect(geometry.yAt(0.5)).toBeCloseTo(PROFILE_HEIGHT - normalisedFor200 * usableHeight, 5);
+  });
+
+  it('reads the very last sample at fraction 1 when the track ends on a repeated distance', () => {
+    // The last two samples both sit at 100 m; fraction 1 is the end of the
+    // track, which is elevation 300, not the 400 of the sample before it.
+    const geometry = buildProfileGeometry(
+      [100, 200, 400, 300],
+      [0, 50, 100, 100],
+      PROFILE_WIDTH,
+      PROFILE_HEIGHT,
+    );
+    const usableHeight = PROFILE_HEIGHT * (1 - 0.05);
+    const normalisedFor300 = (300 - 100) / (400 - 100);
+    expect(geometry.yAt(1)).toBeCloseTo(PROFILE_HEIGHT - normalisedFor300 * usableHeight, 5);
+  });
+
   it('clamps fraction outside [0, 1]', () => {
     const geometry = buildProfileGeometry(
       [100, 200, 300],
@@ -170,5 +233,18 @@ describe('buildProfileGeometry', () => {
     expect(Number.isFinite(fallback)).toBe(true);
     // Also exercises the `< targetDistance` truthy branch (twice).
     expect(fallback).toBeCloseTo(PROFILE_HEIGHT * 0.05, 5);
+  });
+
+  it('non-monotonic cumulative: fraction 0 still reads the first sample', () => {
+    // Without the fraction-0 short-circuit, the walk would extrapolate
+    // backwards across the decreasing first segment and land on the last
+    // elevation instead of the first.
+    const geometry = buildProfileGeometry(
+      [100, 300, 500],
+      [100, 50, 25],
+      PROFILE_WIDTH,
+      PROFILE_HEIGHT,
+    );
+    expect(geometry.yAt(0)).toBeCloseTo(PROFILE_HEIGHT, 5);
   });
 });

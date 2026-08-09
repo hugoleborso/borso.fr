@@ -7,29 +7,11 @@
  * lifecycle, but the maths is testable in isolation at 100% coverage.
  */
 
+import { haversineDistanceMeters } from '../../lib/haversine.utils';
 import { buildRunnerAvatar } from '../../lib/runner-avatar.utils';
 import type { LatLngDto, RankedRunnerDto } from '../../lib/race.types';
 
-const EARTH_RADIUS_METERS = 6_371_000;
-const DEGREES_PER_HALF_TURN = 180;
 const ORIGIN: LatLngDto = { lat: 0, lng: 0 };
-
-/**
- * Great-circle distance in meters between two lat/lng points. Same
- * formulation as `geo.core.polylineDistanceMeters` on the back; the bounding
- * box for Lépin's loop is small enough that floating-point cancellation
- * isn't a concern here.
- */
-export function metersBetween(origin: LatLngDto, destination: LatLngDto): number {
-  const originLatRadians = (origin.lat * Math.PI) / DEGREES_PER_HALF_TURN;
-  const destinationLatRadians = (destination.lat * Math.PI) / DEGREES_PER_HALF_TURN;
-  const deltaLat = ((destination.lat - origin.lat) * Math.PI) / DEGREES_PER_HALF_TURN;
-  const deltaLng = ((destination.lng - origin.lng) * Math.PI) / DEGREES_PER_HALF_TURN;
-  const haversine =
-    Math.sin(deltaLat / 2) ** 2 +
-    Math.cos(originLatRadians) * Math.cos(destinationLatRadians) * Math.sin(deltaLng / 2) ** 2;
-  return 2 * EARTH_RADIUS_METERS * Math.asin(Math.min(1, Math.sqrt(haversine)));
-}
 
 export interface Indexed {
   readonly points: readonly LatLngDto[];
@@ -49,7 +31,7 @@ export function indexTrack(points: readonly LatLngDto[]): Indexed {
   let previous: LatLngDto | undefined;
   for (const current of points) {
     if (previous !== undefined) {
-      running += metersBetween(previous, current);
+      running += haversineDistanceMeters(previous, current);
     }
     cumulative.push(running);
     previous = current;
@@ -65,44 +47,57 @@ function interpolateSegment(start: LatLngDto, end: LatLngDto, localFraction: num
 }
 
 /**
+ * Interpolate along `points` at `target`, where `keys[i]` is the value of
+ * the projection variable at `points[i]`. `keys` must be non-decreasing and
+ * start at `0`; both callers below satisfy that (cumulative metres from
+ * `indexTrack`, and the Zod-validated recorded time fractions).
+ *
+ * Walks `points` in a single pass and pulls the matching key from a fresh
+ * iterator, so each `point` arrives as `LatLngDto` and each key as `number`
+ * without the defensive `??` branches `noUncheckedIndexedAccess` forces on
+ * array indexing. A `keys` shorter than `points` ends the walk early and
+ * yields the last point seen.
+ */
+function interpolateAlong(
+  points: readonly LatLngDto[],
+  keys: readonly number[],
+  target: number,
+): LatLngDto {
+  const first = points[0];
+  if (first === undefined) return ORIGIN;
+  const keyIterator = keys[Symbol.iterator]();
+  let previousPoint = first;
+  let previousKey = 0;
+  let currentPoint = first;
+  let currentKey = 0;
+  let isFoundSegment = false;
+  for (const point of points) {
+    const next = keyIterator.next();
+    if (next.done === true) break;
+    previousPoint = currentPoint;
+    previousKey = currentKey;
+    currentPoint = point;
+    currentKey = next.value;
+    if (currentKey >= target) {
+      isFoundSegment = true;
+      break;
+    }
+  }
+  if (!isFoundSegment) return currentPoint;
+  const segmentSpan = currentKey - previousKey;
+  const localFraction = segmentSpan === 0 ? 0 : (target - previousKey) / segmentSpan;
+  return interpolateSegment(previousPoint, currentPoint, localFraction);
+}
+
+/**
  * Linear time → distance projection: maps `fraction` (`0..1` of the loop
  * duration) to the lat/lng at `fraction × total` meters along the polyline.
  * Used as the silent fallback when the GPX has no recorded per-point
  * timing.
  */
 export function projectFraction(track: Indexed, fraction: number): LatLngDto {
-  const first = track.points[0];
-  if (first === undefined) return ORIGIN;
-  if (track.points.length === 1 || track.total === 0) return first;
-  const target = Math.max(0, Math.min(1, fraction)) * track.total;
-  // Walk segments by iterating `points` directly — each `current` arrives
-  // as `LatLngDto` (not `LatLngDto | undefined`), sidestepping
-  // `noUncheckedIndexedAccess`'s defensive `??` branches. `cumulativeDistance`
-  // is recomputed alongside, mirroring `track.cumulative` without indexing.
-  let segmentStart = first;
-  let segmentEnd = first;
-  let segmentStartMeters = 0;
-  let segmentEndMeters = 0;
-  let previousPoint = first;
-  let cumulativeDistance = 0;
-  let isFirstIteration = true;
-  for (const current of track.points) {
-    if (isFirstIteration) {
-      isFirstIteration = false;
-      continue;
-    }
-    const stepLength = metersBetween(previousPoint, current);
-    segmentStart = previousPoint;
-    segmentEnd = current;
-    segmentStartMeters = cumulativeDistance;
-    cumulativeDistance += stepLength;
-    segmentEndMeters = cumulativeDistance;
-    previousPoint = current;
-    if (cumulativeDistance >= target) break;
-  }
-  const segmentLength = segmentEndMeters - segmentStartMeters;
-  const localFraction = segmentLength === 0 ? 0 : (target - segmentStartMeters) / segmentLength;
-  return interpolateSegment(segmentStart, segmentEnd, localFraction);
+  const clamped = Math.max(0, Math.min(1, fraction));
+  return interpolateAlong(track.points, track.cumulative, clamped * track.total);
 }
 
 /**
@@ -123,53 +118,8 @@ export function projectFractionTimeAware(
   fraction: number,
   pointTimeFractions: readonly number[],
 ): LatLngDto {
-  const first = track.points[0];
-  if (first === undefined) return ORIGIN;
-  if (track.points.length === 1) return first;
   const clamped = Math.max(0, Math.min(1, fraction));
-  // Walk `points` in a single pass; pull a matching fraction from a fresh
-  // iterator on `pointTimeFractions`. The for-of yields each `point` as
-  // `LatLngDto` (not `LatLngDto | undefined`) and the iterator yields each
-  // fraction as `number` once we've ruled out the `done` end. The Zod
-  // refine guarantees length parity at the read boundary, so the `done`
-  // branch only fires on degenerate input (different lengths).
-  const fractionIterator = pointTimeFractions[Symbol.iterator]();
-  let previousPoint = first;
-  let previousFraction = 0;
-  let currentPoint = first;
-  let currentFraction = 0;
-  let isFoundSegment = false;
-  let isFirstPoint = true;
-  for (const pointAtIndex of track.points) {
-    const next = fractionIterator.next();
-    if (next.done === true) break;
-    const fractionAtIndex = next.value;
-    if (isFirstPoint) {
-      isFirstPoint = false;
-      continue;
-    }
-    previousPoint = currentPoint;
-    previousFraction = currentFraction;
-    currentPoint = pointAtIndex;
-    currentFraction = fractionAtIndex;
-    if (fractionAtIndex >= clamped) {
-      isFoundSegment = true;
-      break;
-    }
-  }
-  if (!isFoundSegment) {
-    // Exhausted the iterator without finding any fraction ≥ `clamped`.
-    // Happens when `pointTimeFractions[last] < clamped`, which is only
-    // possible if the array is shorter than `points` (length parity is
-    // enforced by Zod at the read boundary, so this is degenerate input)
-    // or every fraction was < `clamped` (impossible when the refine
-    // guarantees `ptf[last] === 1 ≥ clamped`). Either way the safest
-    // answer is the last point we saw.
-    return currentPoint;
-  }
-  const segmentSpan = currentFraction - previousFraction;
-  const localFraction = segmentSpan === 0 ? 0 : (clamped - previousFraction) / segmentSpan;
-  return interpolateSegment(previousPoint, currentPoint, localFraction);
+  return interpolateAlong(track.points, pointTimeFractions, clamped);
 }
 
 const MINUTES_TO_MS = 60_000;

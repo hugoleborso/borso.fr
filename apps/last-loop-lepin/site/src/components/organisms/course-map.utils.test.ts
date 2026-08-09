@@ -5,7 +5,6 @@ import {
   escapeHtml,
   type Indexed,
   indexTrack,
-  metersBetween,
   projectFraction,
   projectFractionTimeAware,
   type RaceTimingInputs,
@@ -60,17 +59,6 @@ function buildOutEntry(): RankedRunnerDto {
     lastFinishedAt: null,
   };
 }
-
-describe('metersBetween', () => {
-  it('returns 0 for identical points', () => {
-    const point: LatLngDto = { lat: 45, lng: 5 };
-    expect(metersBetween(point, point)).toBe(0);
-  });
-
-  it('returns a positive distance for distinct points', () => {
-    expect(metersBetween({ lat: 0, lng: 0 }, { lat: 0, lng: 0.001 })).toBeGreaterThan(0);
-  });
-});
 
 describe('indexTrack', () => {
   it('returns total 0 and empty cumulative array for empty points', () => {
@@ -306,6 +294,15 @@ describe('runnerDistanceFraction', () => {
     const nowMs = RACE_START_MS + 18 * 60_000;
     const result = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(0, 30 * 60_000), nowMs);
     expect(result).toEqual({ fraction: 0.6, restingAtCorral: false });
+  });
+
+  it('measures the elapsed time from the current loop start, not from the race start', () => {
+    // 1 h 30 into the race, so loop 2; the runner closed loop 1 only, so
+    // they are running loop 2 and are 30 min into it. paceMs = 60 min →
+    // fraction = 0.5, not the 1.5 the race-start offset would give.
+    const nowMs = RACE_START_MS + 90 * 60_000;
+    const result = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(1, ONE_HOUR_MS), nowMs);
+    expect(result).toEqual({ fraction: 0.5, restingAtCorral: false });
   });
 
   it('falls back to loopMs when lastLoopDurationMs is null', () => {
