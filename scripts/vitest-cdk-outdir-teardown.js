@@ -8,9 +8,19 @@
  * run. On a sandbox with a fixed disk allowance this exhausts the disk in a few
  * hours, and the failure surfaces as `ENOSPC` inside an unrelated test.
  *
- * The teardown removes the directories this run created, identified by
- * differencing the temp folder rather than by age, so a suite running
- * concurrently keeps its own.
+ * Each run gets its own temp root and deletes that, rather than differencing
+ * the shared temp folder before and after. Differencing cannot survive
+ * concurrency: it attributes every directory that appears during a run's
+ * lifetime to that run, so when six gates run at once — which `.husky/pre-push`
+ * now does — the first one to finish deletes the live cloud assemblies of the
+ * ones still synthesizing, and they fail with `ENOENT` on a path they are in
+ * the middle of writing. The previous version of this file claimed in its own
+ * docstring that a concurrent suite would keep its own directories. It did not.
+ *
+ * Redirecting `TMPDIR` is what makes the isolation real: `os.tmpdir()` reads it
+ * on every call, Vitest spawns its workers after `globalSetup` returns, and
+ * they inherit the environment, so every `mkdtemp` in the run lands inside this
+ * run's root.
  *
  * Plain JavaScript, like the repository's other root-level tooling, because no
  * `tsconfig.json` covers `scripts/`.
@@ -18,25 +28,17 @@
  * @returns the teardown vitest calls once every suite in the project has run.
  */
 
-import { readdir, rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const CDK_OUTDIR_PREFIX = 'cdk.out';
-
-async function listAssemblyDirectories() {
-  const entries = await readdir(tmpdir());
-  return new Set(entries.filter((entry) => entry.startsWith(CDK_OUTDIR_PREFIX)));
-}
+const RUN_TEMP_PREFIX = 'vitest-cdk-';
 
 export async function setup() {
-  const before = await listAssemblyDirectories();
+  const runTempRoot = await mkdtemp(join(tmpdir(), RUN_TEMP_PREFIX));
+  process.env.TMPDIR = runTempRoot;
 
   return async function teardown() {
-    const after = await listAssemblyDirectories();
-    const created = [...after].filter((entry) => !before.has(entry));
-    await Promise.all(
-      created.map((entry) => rm(join(tmpdir(), entry), { recursive: true, force: true })),
-    );
+    await rm(runTempRoot, { recursive: true, force: true });
   };
 }
