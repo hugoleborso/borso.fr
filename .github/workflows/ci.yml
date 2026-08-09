@@ -83,46 +83,73 @@ jobs:
       - run: pnpm -r build
       - run: pnpm exec knip
 
-  app-tests:
+  # Which apps this change actually touches. An `infra/cdk` change means all of
+  # them, because the constructs are the contract. No `base:` on paths-filter —
+  # it defaults to github.event.before on push, and naming HEAD~1 fails with
+  # git exit 128. See docs/dantotsus/paths-filter-base-head1-on-push.md.
+  detect:
     runs-on: ubuntu-latest
-    # Postgres for last-loop-lepin's back-e2e suite. The vitest globalSetup
-    # at apps/last-loop-lepin/test/setup-postgres.ts honours `DATABASE_URL`
-    # when set (skips testcontainers, uses this service instead). Local
-    # sandbox runs without Docker use scripts/local-postgres.sh — same
-    # contract, different boot mechanism.
+    outputs:
+      apps: ${{ steps.compute.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: .github/path-filters.yml
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: compute
+        env:
+          CHANGES: ${{ steps.filter.outputs.changes }}
+        run: |
+          all_apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
+            | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
+          if jq -e 'index("infra")' <<<"$CHANGES" >/dev/null; then
+            echo "apps=$all_apps" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          apps=$(jq -c --argjson all "$all_apps" \
+            'map(select(. as $c | $all | index($c)))' <<<"$CHANGES")
+          echo "apps=$apps" >> "$GITHUB_OUTPUT"
+
+  # One job per changed app, in parallel, rather than one job running all four
+  # in sequence. A pull request touching a single app now pays for that app.
+  # The unscoped run over every app lives in full-suite.yml, on main.
+  app-tests:
+    needs: detect
+    if: needs.detect.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: ${{ fromJson(needs.detect.outputs.apps) }}
+      fail-fast: false
+    # One Postgres per matrix job, so the two full-stack apps no longer share a
+    # runner and cannot see each other's tables. Front-end-only apps ignore it;
+    # the container costs a few seconds and keeps this job uniform.
+    # test/setup-postgres.ts trusts DATABASE_URL verbatim, so generic
+    # credentials work for every app.
     services:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: lastloop
-          POSTGRES_PASSWORD: lastloop
-          POSTGRES_DB: lastloop
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U lastloop"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-      # A second instance rather than a second database on the first: the two
-      # apps apply their own migration sets and each truncates its own table
-      # list, so sharing one database would leave each app's teardown blind to
-      # the other's tables.
-      pragma-postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: pragma
-          POSTGRES_PASSWORD: pragma
-          POSTGRES_DB: pragma
-        ports:
-          - 5433:5432
-        options: >-
-          --health-cmd "pg_isready -U pragma"
+          --health-cmd "pg_isready -U app"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgres://lastloop:lastloop@localhost:5432/lastloop
+      DATABASE_URL: postgres://app:app@localhost:5432/app
+      APP: ${{ matrix.app }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -131,25 +158,22 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # `cdk/test/stack.test.ts` in last-loop-lepin imports `@borso/infra`
+      # `cdk/test/stack.test.ts` in the full-stack apps imports `@borso/infra`
       # via its package entry — the CDK constructs must be built first.
       - run: pnpm --filter @borso/infra build
-      # Frontend-only apps: pure `*.utils.ts` coverage at 100 %.
-      - run: pnpm --filter @borso-app/borso-fr run test:coverage
-      - run: pnpm --filter @borso-app/borsouvertures run test:coverage
-      # last-loop-lepin: `core` project (no DB) + `back-e2e` project (uses
-      # the Postgres service above). Invoke vitest directly to bypass the
-      # `test` script's local-postgres.sh wrapper, which is for sandboxes
-      # without Docker — irrelevant here.
-      - run: pnpm --filter @borso-app/last-loop-lepin run test:core
-      - run: pnpm --filter @borso-app/last-loop-lepin exec vitest run --project back-e2e
-      # pragma ran in no job at all until this line existed. Its 609 tests and
-      # the 100 % per-file coverage gate on its pure files were never a gate on
-      # a pull request, only something a developer might run locally.
-      - run: pnpm --filter @borso-app/pragma run test:core
-      - run: pnpm --filter @borso-app/pragma exec vitest run --project back-e2e
-        env:
-          DATABASE_URL: postgres://pragma:pragma@localhost:5433/pragma
+      # `test:core` where it exists — the full-stack apps, whose `test:coverage`
+      # wants a Postgres — and `test:coverage` otherwise. Both carry the 100%
+      # per-file threshold on `*.core.ts` / `*.utils.ts`.
+      - name: Pure suites and the per-file coverage gate
+        run: |
+          if grep -q '"test:core"' "apps/$APP/package.json"; then
+            pnpm --filter "@borso-app/$APP" run test:core
+          else
+            pnpm --filter "@borso-app/$APP" run test:coverage
+          fi
+      - name: Back-end end-to-end suite
+        if: hashFiles(format('apps/{0}/api/**', matrix.app)) != ''
+        run: pnpm --filter "@borso-app/$APP" exec vitest run --project back-e2e
 
   commitlint:
     if: github.event_name == 'pull_request'
