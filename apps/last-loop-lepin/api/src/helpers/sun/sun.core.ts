@@ -45,10 +45,10 @@ function dayOfYearUtc(date: Date): number {
 }
 
 /**
- * Fold an angle into `[0, 360)`. Exported for direct testing: every caller
- * inside this module feeds the result into quadrant arithmetic that is
- * invariant under whole turns, so the wrap is only observable at the unit
- * boundary.
+ * Fold an angle into `[0, 360)`. Exported for direct testing: inside this
+ * module the result only ever reaches a sine, a cosine, or the mod-24 wrap
+ * at the end, all of which are invariant under whole turns, so the fold is
+ * observable at the unit boundary and nowhere else.
  */
 export function normalizeDegrees(value: number): number {
   const wrapped = value % FULL_CIRCLE_DEGREES;
