@@ -70,11 +70,20 @@ fi
 # and shell-quoting bugs in `run:` blocks. Stays on push because it needs a
 # binary that is not always installed. Rung-2 eradication of
 # docs/dantotsus/paths-filter-base-head1-on-push.md.
+#
+# The skip is only tolerable when the branch does not touch a workflow. It was
+# not: this branch changed ci.yml and preview.yml, the binary had silently
+# never been installed, and the push went through on a WARN. A gate that
+# excuses itself on exactly the branches that need it is not a gate.
 if command -v actionlint >/dev/null 2>&1; then
   echo "[pre-push] running actionlint"
   actionlint
+elif echo "$changed_since_main" | grep -q '^\.github/workflows/'; then
+  echo "[pre-push] actionlint is not installed and this branch changes a workflow." >&2
+  echo "[pre-push] Install it, then push again:  ./scripts/install-repo-deps.sh" >&2
+  exit 1
 else
-  echo "[pre-push] WARN: actionlint not installed — skipping. Install via the SessionStart hook (.claude/hooks/session-start.sh)." >&2
+  echo "[pre-push] WARN: actionlint not installed — skipping. No workflow changed on this branch, so nothing was skipped that matters. Install via ./scripts/install-repo-deps.sh." >&2
 fi
 
 # Detection nudge: agent-authored branches almost always have an open pull
