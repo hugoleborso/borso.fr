@@ -44,19 +44,18 @@ jobs:
         id: filter
         with:
           filters: .github/path-filters.yml
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
       - id: compute
         env:
           CHANGES: ${{ steps.filter.outputs.changes }}
         run: |
+          # App slugs are the directory names under apps/, which is exactly what
+          # pnpm-workspace.yaml declares as `apps/*`. Reading them off the
+          # checkout keeps this job to a checkout: it used to install the whole
+          # workspace purely to run `pnpm ls`, about 25 s sitting in front of
+          # every matrix that waits on this output.
           # All app slugs from the workspace (dynamic — no hard-coded list).
-          all_apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
-            | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
+          all_apps=$(find apps -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
+            | sort | jq -R . | jq -sc .)
 
           # If infra/cdk changed, redeploy every app's preview — constructs
           # are the contract.
