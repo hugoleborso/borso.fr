@@ -64,7 +64,11 @@ describe('countRunnersInRace', () => {
   });
 
   it('counts only the runners still going', () => {
-    const field = [buildRankedRunner('alice', IN_RACE), buildRankedRunner('dan', OUT_LATE)];
-    expect(countRunnersInRace(field)).toBe(1);
+    const field = [
+      buildRankedRunner('alice', IN_RACE),
+      buildRankedRunner('bob', IN_RACE),
+      buildRankedRunner('dan', OUT_LATE),
+    ];
+    expect(countRunnersInRace(field)).toBe(2);
   });
 });

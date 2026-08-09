@@ -57,8 +57,9 @@ export function formatLoopDuration(durationMs: number): string {
 
 /** Pace shown on a punch tile, e.g. `58'12"`, or an em dash when unknown. */
 export function formatPace(durationMs: number | null): string {
-  if (durationMs === null || durationMs <= 0) return EMPTY_VALUE;
-  const totalSeconds = Math.floor(durationMs / MILLISECONDS_PER_SECOND);
+  const paceMs = durationMs ?? 0;
+  if (paceMs <= 0) return EMPTY_VALUE;
+  const totalSeconds = Math.floor(paceMs / MILLISECONDS_PER_SECOND);
   const minutes = Math.floor(totalSeconds / SECONDS_PER_MINUTE);
   const seconds = totalSeconds % SECONDS_PER_MINUTE;
   return `${minutes}'${padTwoDigits(seconds)}"`;

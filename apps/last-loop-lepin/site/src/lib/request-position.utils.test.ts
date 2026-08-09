@@ -50,6 +50,25 @@ describe('requestPosition', () => {
     });
   });
 
+  it('asks for the high-accuracy fix the geofence needs, with no cached position', () => {
+    // A cached or low-accuracy fix would be compared against the 100 m
+    // geofence, so the options are part of the contract, not a preference.
+    let receivedOptions: PositionOptions | undefined;
+    const geolocation: Geolocation = {
+      getCurrentPosition: (_success, _error, options) => {
+        receivedOptions = options;
+      },
+      watchPosition: () => 0,
+      clearWatch: () => undefined,
+    };
+    void requestPosition(geolocation);
+    expect(receivedOptions).toEqual({
+      enableHighAccuracy: true,
+      timeout: 10_000,
+      maximumAge: 0,
+    });
+  });
+
   it('reports a refused permission', async () => {
     await expect(requestPosition(buildFailing(1))).resolves.toEqual({ kind: 'denied' });
   });

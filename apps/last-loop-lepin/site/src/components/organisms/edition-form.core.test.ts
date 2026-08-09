@@ -77,6 +77,18 @@ describe('editionFormValuesSchema', () => {
     );
   });
 
+  it('accepts an interval of exactly one minute', () => {
+    expect(editionFormValuesSchema.safeParse({ ...VALUES, intervalMinutes: '1' }).success).toBe(
+      true,
+    );
+  });
+
+  it('accepts an interval of exactly four hours', () => {
+    expect(editionFormValuesSchema.safeParse({ ...VALUES, intervalMinutes: '240' }).success).toBe(
+      true,
+    );
+  });
+
   it('rejects an interval above four hours', () => {
     expect(editionFormValuesSchema.safeParse({ ...VALUES, intervalMinutes: '241' }).success).toBe(
       false,

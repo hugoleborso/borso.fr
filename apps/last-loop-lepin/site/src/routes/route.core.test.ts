@@ -27,7 +27,7 @@ describe('parseRoute', () => {
   });
 
   it('falls through to not found for a runner slug with unexpected characters', () => {
-    expect(parseRoute('/r/Alice Martin').name).toBe('not-found');
+    expect(parseRoute('/r/Alice Martin')).toEqual({ name: 'not-found', runnerSlug: '' });
   });
 });
 

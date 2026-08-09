@@ -133,6 +133,13 @@ describe('listPunchTiles', () => {
     );
   });
 
+  it('does not call a runner late exactly on the lateness threshold', () => {
+    const thresholdClock = projectPunchLoopClock(RACE_START, 60, RACE_START_MS + 0.85 * HOUR_MS);
+    expect(
+      listPunchTiles([buildRunner('bob')], thresholdClock, EMPTY_PUNCH_OVERLAY)[0]?.isLate,
+    ).toBe(false);
+  });
+
   it('never calls a punched runner late', () => {
     const lateClock = projectPunchLoopClock(RACE_START, 60, RACE_START_MS + 0.9 * HOUR_MS);
     const credited = buildRunner('alice', { status: { kind: 'in-race', lastLoop: 1 } });

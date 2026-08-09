@@ -42,6 +42,12 @@ describe('formatClockTime', () => {
   it('includes the seconds', () => {
     expect(formatClockTime(new Date(2026, 5, 13, 7, 5, 9), 'fr-FR')).toBe('07:05:09');
   });
+
+  it('pads the hour to two digits in a locale that would not', () => {
+    // en-US drops the leading zero on its own; the explicit 2-digit
+    // options are the only reason the chips line up in a column.
+    expect(formatClockTime(new Date(2026, 5, 13, 7, 5, 9), 'en-US')).toBe('07:05:09 AM');
+  });
 });
 
 describe('formatTimeOfDay', () => {

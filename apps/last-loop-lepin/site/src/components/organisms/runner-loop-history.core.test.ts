@@ -76,7 +76,8 @@ describe('countValidPunches', () => {
       countValidPunches([
         buildPunch({ id: 'a' }),
         buildPunch({ id: 'b', voidedAt: '2026-06-13T05:10:00.000Z' }),
+        buildPunch({ id: 'c' }),
       ]),
-    ).toBe(1);
+    ).toBe(2);
   });
 });

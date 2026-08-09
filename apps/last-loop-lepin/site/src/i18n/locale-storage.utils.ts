@@ -13,14 +13,13 @@ export interface LanguageStorage {
   readonly setItem: (key: string, value: string) => void;
 }
 
-function isSupportedLanguage(candidate: string): candidate is SupportedLanguage {
+function isSupportedLanguage(candidate: string | null): candidate is SupportedLanguage {
   return SUPPORTED_LANGUAGES.some((supported) => supported === candidate);
 }
 
 export function readSavedLanguage(storage: LanguageStorage | undefined): SupportedLanguage | null {
   if (storage === undefined) return null;
   const saved = storage.getItem(LANGUAGE_STORAGE_KEY);
-  if (saved === null) return null;
   if (!isSupportedLanguage(saved)) return null;
   return saved;
 }

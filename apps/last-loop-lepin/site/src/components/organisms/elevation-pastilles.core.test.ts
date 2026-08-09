@@ -100,6 +100,22 @@ describe('hasElevationSamples', () => {
   it('is true when the track carries enough of both', () => {
     expect(hasElevationSamples(buildEdition())).toBe(true);
   });
+
+  it('is true at exactly two points and two elevations', () => {
+    const edition = buildEdition();
+    expect(
+      hasElevationSamples({
+        ...edition,
+        gpx: {
+          ...edition.gpx,
+          trackJson: {
+            points: [POINTS[0] ?? { lat: 0, lng: 0 }, POINTS[1] ?? { lat: 0, lng: 0 }],
+            pointElevations: [400, 460],
+          },
+        },
+      }),
+    ).toBe(true);
+  });
 });
 
 describe('listElevationPastilles', () => {

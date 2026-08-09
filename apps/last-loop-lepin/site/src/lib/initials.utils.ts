@@ -12,6 +12,8 @@ const OKLCH_LIGHTNESS = 0.72;
 const OKLCH_CHROMA = 0.14;
 const HUE_DEGREES_FULL_CIRCLE = 360;
 const INITIALS_MAX_LENGTH = 2;
+const WORD_PATTERN = /\S+/g;
+const NO_NAME_INITIALS = '??';
 
 export interface InitialsAvatar {
   readonly initials: string;
@@ -27,23 +29,19 @@ function djb2Hash(input: string): number {
 }
 
 function pickInitials(displayName: string): string {
-  const trimmed = displayName.trim();
-  if (trimmed.length === 0) return '??';
-
-  const words = trimmed.split(/\s+/);
-  if (words.length === 1) {
-    return trimmed.slice(0, INITIALS_MAX_LENGTH).toUpperCase();
+  // `matchAll` over runs of non-space is the whitespace split without the
+  // empty entries a `split` on a single-space pattern would leave behind,
+  // and each match's group 0 types as `string`, so no index access is
+  // needed to read the initial off it.
+  const wordInitials = Array.from(displayName.matchAll(WORD_PATTERN), (match) =>
+    match[0].charAt(0),
+  );
+  const [firstInitial] = wordInitials;
+  if (firstInitial === undefined) return NO_NAME_INITIALS;
+  if (wordInitials.length === 1) {
+    return displayName.trim().slice(0, INITIALS_MAX_LENGTH).toUpperCase();
   }
-
-  let firstInitial = '';
-  let lastInitial = '';
-  // `forEach` exposes `word: string` (not `string | undefined`), sidestepping
-  // `noUncheckedIndexedAccess` without a non-null assertion.
-  words.forEach((word) => {
-    const initial = word.charAt(0);
-    if (firstInitial === '') firstInitial = initial;
-    lastInitial = initial;
-  });
+  const lastInitial = wordInitials.at(-1) ?? firstInitial;
   return (firstInitial + lastInitial).toUpperCase();
 }
 

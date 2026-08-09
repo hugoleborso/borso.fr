@@ -138,8 +138,12 @@ describe('listRunnerMarkers', () => {
         trackJson: { ...edition.gpx.trackJson, pointTimeFractions: [0, 0.9, 1] },
       },
     };
-    const markers = listRunnerMarkers(timed, [buildRunner()], RACE_START_MS + HOUR_MS / 2);
-    expect(markers).toHaveLength(1);
-    expect(markers[0]?.position.lat).toBeGreaterThan(45.55);
+    const timedMarkers = listRunnerMarkers(timed, [buildRunner()], RACE_START_MS + HOUR_MS / 2);
+    const linearMarkers = listRunnerMarkers(edition, [buildRunner()], RACE_START_MS + HOUR_MS / 2);
+    expect(timedMarkers).toHaveLength(1);
+    expect(timedMarkers[0]?.position.lat).toBeGreaterThan(45.55);
+    // The recorded pace spends 90 % of the loop on the first segment, so
+    // the halfway avatar sits somewhere the linear projection never puts it.
+    expect(timedMarkers[0]?.position).not.toEqual(linearMarkers[0]?.position);
   });
 });

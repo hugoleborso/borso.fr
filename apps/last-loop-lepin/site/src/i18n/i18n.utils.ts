@@ -37,7 +37,7 @@ export function flattenKeys(tree: CatalogueTree, prefix = ''): readonly string[]
   return keys.toSorted(compareCatalogueKeys);
 }
 
-function isSupportedLanguage(candidate: string): candidate is SupportedLanguage {
+function isSupportedLanguage(candidate: string | null): candidate is SupportedLanguage {
   return SUPPORTED_LANGUAGES.some((supported) => supported === candidate);
 }
 
@@ -57,7 +57,7 @@ export function selectInitialLanguage(
   savedLanguage: string | null,
   browserLanguages: readonly string[],
 ): SupportedLanguage {
-  if (savedLanguage !== null && isSupportedLanguage(savedLanguage)) return savedLanguage;
+  if (isSupportedLanguage(savedLanguage)) return savedLanguage;
   for (const languageTag of browserLanguages) {
     const family = readLanguageFamily(languageTag);
     if (isSupportedLanguage(family)) return family;

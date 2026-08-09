@@ -64,11 +64,14 @@ describe('summariseZodError', () => {
       error: {
         issues: [
           { path: ['slug'], message: 'too short' },
+          { path: ['gpx', 'points'], message: 'Invalid input' },
           { path: ['startsAt'], message: 'Invalid datetime' },
         ],
       },
     };
-    expect(summariseZodError(body)).toBe('slug: too short · startsAt: Invalid datetime');
+    expect(summariseZodError(body)).toBe(
+      'slug: too short · gpx.points: Invalid input · startsAt: Invalid datetime',
+    );
   });
 
   it('uses ? as placeholder when path is missing', () => {

@@ -13,6 +13,11 @@ const ZOD_BODY = {
   error: { issues: [{ path: ['startsAt'], message: 'Invalid datetime' }] },
 };
 
+const EMPTY_DETAIL_MESSAGE = {
+  key: 'common.error-detail',
+  parameters: { summary: '', detail: '', name: '', contentType: '', status: '' },
+};
+
 describe('selectEditionWriteError', () => {
   it('names a slug collision', () => {
     expect(selectEditionWriteError(new ApiError(409, null)).key).toBe('admin.setup.slug-taken');
@@ -41,6 +46,17 @@ describe('selectEditionWriteError', () => {
   it('reports an empty detail for a thrown value that is not an error', () => {
     expect(selectEditionWriteError('boom').parameters.detail).toBe('');
   });
+
+  it('survives a rejection that carried nothing at all', () => {
+    expect(selectEditionWriteError(null)).toEqual(EMPTY_DETAIL_MESSAGE);
+  });
+
+  it('leaves every parameter it does not fill empty', () => {
+    expect(selectEditionWriteError(new ApiError(409, null))).toEqual({
+      key: 'admin.setup.slug-taken',
+      parameters: { summary: '', detail: '', name: '', contentType: '', status: '' },
+    });
+  });
 });
 
 describe('selectEditionDeleteError', () => {
@@ -50,6 +66,10 @@ describe('selectEditionDeleteError', () => {
 
   it('reports the error message otherwise', () => {
     expect(selectEditionDeleteError(new Error('nope')).key).toBe('common.error-detail');
+  });
+
+  it('survives a rejection that carried nothing at all', () => {
+    expect(selectEditionDeleteError(undefined)).toEqual(EMPTY_DETAIL_MESSAGE);
   });
 });
 

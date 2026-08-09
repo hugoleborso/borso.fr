@@ -55,7 +55,7 @@ export function slugifyRunnerName(displayName: string): string {
 }
 
 export function readBibNumber(raw: string): number {
-  return Number.parseInt(raw.trim(), 10);
+  return Number.parseInt(raw, 10);
 }
 
 export type PhotoRejection = 'unsupported-type' | 'too-large' | null;

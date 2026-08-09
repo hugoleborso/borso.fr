@@ -54,6 +54,16 @@ describe('runnerFormValuesSchema', () => {
     );
   });
 
+  it('accepts a bib of exactly one', () => {
+    expect(runnerFormValuesSchema.safeParse({ displayName: 'Alice', bib: '1' }).success).toBe(true);
+  });
+
+  it('accepts a bib of exactly nine thousand nine hundred and ninety nine', () => {
+    expect(runnerFormValuesSchema.safeParse({ displayName: 'Alice', bib: '9999' }).success).toBe(
+      true,
+    );
+  });
+
   it('rejects a bib of zero', () => {
     expect(runnerFormValuesSchema.safeParse({ displayName: 'Alice', bib: '0' }).success).toBe(
       false,

@@ -8,6 +8,10 @@
  */
 
 import type { RankedRunnerDto } from '../../lib/race.types';
+import { selectRunnerOutReason } from '../../lib/runner-status.utils';
+
+/** The reason the projection assigns on its own, before an organiser confirms. */
+const AUTOMATIC_OUT_REASON = 'late';
 
 export interface DidNotFinishLists {
   readonly awaitingConfirmation: readonly RankedRunnerDto[];
@@ -16,11 +20,12 @@ export interface DidNotFinishLists {
 }
 
 export function splitByDidNotFinish(ranked: readonly RankedRunnerDto[]): DidNotFinishLists {
+  const allOut = ranked.filter((entry) => entry.status.kind === 'dnf');
   return {
-    awaitingConfirmation: ranked.filter(
-      (entry) => entry.status.kind === 'dnf' && entry.status.reason === 'late',
+    awaitingConfirmation: allOut.filter(
+      (entry) => selectRunnerOutReason(entry.status) === AUTOMATIC_OUT_REASON,
     ),
-    allOut: ranked.filter((entry) => entry.status.kind === 'dnf'),
+    allOut,
     stillRunning: ranked.filter((entry) => entry.status.kind === 'in-race'),
   };
 }

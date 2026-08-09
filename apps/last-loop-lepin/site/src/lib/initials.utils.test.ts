@@ -22,9 +22,22 @@ describe('initialsAvatar', () => {
     expect(initialsAvatar('  Marie   Curie  ').initials).toBe('MC');
   });
 
+  it('ignores the padding around a single-word name', () => {
+    expect(initialsAvatar('  Hugo  ').initials).toBe('HU');
+  });
+
   it('falls back to "??" for empty / whitespace-only input', () => {
     expect(initialsAvatar('').initials).toBe('??');
     expect(initialsAvatar('   ').initials).toBe('??');
+  });
+
+  it('pins the colour each exemplar name hashes to', () => {
+    // Golden values: the hue is the only visible output of the djb2 hash,
+    // and "same name, same colour" alone cannot see the hash changing.
+    expect(initialsAvatar('Hugo').backgroundColor).toBe('oklch(0.72 0.14 224)');
+    expect(initialsAvatar('Marie Curie').backgroundColor).toBe('oklch(0.72 0.14 127)');
+    expect(initialsAvatar('Éloïse Aïn').backgroundColor).toBe('oklch(0.72 0.14 102)');
+    expect(initialsAvatar('').backgroundColor).toBe('oklch(0.72 0.14 341)');
   });
 
   it('is deterministic: same name produces same colour', () => {

@@ -178,6 +178,10 @@ describe('readValidatedLoopIndex', () => {
     expect(readValidatedLoopIndex('nope')).toBe(0);
   });
 
+  it('returns zero for a null body', () => {
+    expect(readValidatedLoopIndex(null)).toBe(0);
+  });
+
   it('returns zero for a body with no punch', () => {
     expect(readValidatedLoopIndex({})).toBe(0);
   });
