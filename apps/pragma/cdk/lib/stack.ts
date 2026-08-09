@@ -16,7 +16,7 @@
  * prod-exclusion. The API reads it to mount `/api/__test/seed`.
  */
 
-import { type IDsqlCluster, PreviewableApp, type Stage } from '@borso/infra';
+import { type IDsqlCluster, isProductionStage, PreviewableApp, type Stage } from '@borso/infra';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import {
   BlockPublicAccess,
@@ -28,6 +28,7 @@ import {
 import type { Construct } from 'constructs';
 
 const APP_SLUG = 'pragma';
+
 const CHART_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
 
@@ -43,6 +44,7 @@ export interface BuildPragmaAppStackProps {
 }
 
 export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
+  const isProduction = isProductionStage(props.stage);
   const uploadsBucket = new Bucket(props.scope, 'UploadsBucket', {
     bucketName: `${APP_SLUG}-${props.stage}-uploads${props.prNumber === undefined ? '' : `-${props.prNumber}`}`,
     encryption: BucketEncryption.S3_MANAGED,
@@ -78,6 +80,44 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
     database: {
       migrationsPath: props.migrationsPath,
       cluster: props.cluster,
+      // Neon-branch-style clone: every non-prod schema starts as a copy of
+      // prod's data, so a preview shows the real catalogue, members, setlists
+      // and sessions rather than a fixture. Skipped automatically for the prod
+      // stack (source === target) and for the very first app deploy (source
+      // doesn't exist yet).
+      //
+      // `app_config` is cloned ON PURPOSE, which is the opposite of the call
+      // made for last-loop-lepin, and the difference is what the password
+      // protects. There, the cloned data is race results that prod publishes
+      // anyway, so the PIN was the only secret and sharing it across stages
+      // meant a preview compromise reached prod's admin. Here the DATA is the
+      // secret, so the preview needs a real password — and the only one that
+      // is neither hard-coded in this public repository nor in need of
+      // distribution is production's own. Blocking the row would force a
+      // second credential into the repo or into CI, which is worse.
+      //
+      // Consequence, stated because it is a real trade: `app_config` also
+      // carries `hmac_key`, the symmetric key signing session cookies. Every
+      // preview therefore holds key material that would validate against prod.
+      // Accepted deliberately — the alternative is a shared secret with a
+      // wider blast radius. `rotatePassword()` rerolls the key if a preview is
+      // ever suspected.
+      //
+      // `auth_attempt` is rate-limit state and is meaningless across schemas.
+      // `member.avatar_s3_key` is NULLed so the preview does not ask its own
+      // uploads bucket for a key that only exists in prod's; the UI already
+      // falls back to the initials avatar. `song.chart` is deliberately NOT
+      // nullified — most charts are inline ChordPro text, which is the useful
+      // part, and a PDF chart merely 404s.
+      ...(isProduction
+        ? {}
+        : {
+            cloneFromSchema: {
+              sourceSchemaName: 'prod',
+              tableBlocklist: ['auth_attempt'],
+              columnsToNullify: { member: ['avatar_s3_key'] },
+            },
+          }),
     },
   });
 

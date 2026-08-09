@@ -61,6 +61,41 @@ function readEnvVars(resource: { readonly Properties?: unknown }): Record<string
   return typeof variables === 'object' && variables !== null ? { ...variables } : {};
 }
 
+function readSchemaCloneConfig(template: Template): unknown {
+  for (const resource of Object.values(
+    template.findResources('AWS::CloudFormation::CustomResource'),
+  )) {
+    const properties: unknown = resource.Properties;
+    if (typeof properties !== 'object' || properties === null) continue;
+    if (!('cloneFromSchema' in properties)) continue;
+    return properties.cloneFromSchema;
+  }
+  return undefined;
+}
+
+describe('pragma preview schema cloning', () => {
+  // This stack copies production rows — real members, songs, setlists — into
+  // every preview, and a preview URL is public. These two assertions are the
+  // guard rails on that decision: prod must never clone (a self-clone would be
+  // destructive), and the exclusions must not silently shrink.
+  it('never clones on prod', () => {
+    expect(readSchemaCloneConfig(synthAppStack('prod'))).toBeUndefined();
+  });
+
+  it('clones prod into a preview, minus rate-limit state, with avatar keys nulled', () => {
+    expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
+      sourceSchemaName: 'prod',
+      // `app_config` is deliberately absent from this list: the preview is
+      // protected by production's own password, which is the only credential
+      // that is neither hard-coded in a public repository nor in need of
+      // distribution. Adding it here would lock every preview out.
+      tableBlocklist: ['auth_attempt'],
+      // Prod's uploads bucket is a different bucket; a cloned key would 404.
+      columnsToNullify: { member: ['avatar_s3_key'] },
+    });
+  });
+});
+
 describe('pragma app stack', () => {
   it('declares no Secrets Manager resources — auth state lives in the DB (ADR-0004)', () => {
     for (const stage of ['prod', 'preview'] as const) {

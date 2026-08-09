@@ -169,6 +169,25 @@ jobs:
             echo "[seed] ${APP} is front-end only (no apps/${APP}/api); nothing to seed"
             exit 0
           fi
+          # Skip only the combination that destroys data: a preview schema
+          # cloned from production AND a seed that wipes before it writes.
+          # pragma is both, so seeding would throw the clone away on every
+          # deploy and leave a fixture behind — the opposite of what the clone
+          # is for. Its auth row arrives with the clone too, so there is
+          # nothing to bootstrap either.
+          #
+          # last-loop-lepin also clones, but its seed only upserts, so the
+          # fixture lands alongside the cloned edition and seeding stays
+          # correct. Testing "clones" alone would have silently changed that.
+          #
+          # Both halves are read from the repository rather than listed here,
+          # so the rule cannot drift from the code it describes, and the
+          # default stays "seed" for any new full-stack app.
+          if grep -rq 'cloneFromSchema' "apps/${APP}/cdk/lib/stack.ts" &&
+             grep -rq 'deleteAllDomainRows' "apps/${APP}/api/src/__test/"; then
+            echo "[seed] ${APP} clones production and its seed wipes; skipping the destructive fixture"
+            exit 0
+          fi
           status=$(curl -sS --max-time 30 -o /tmp/seed-response.txt -w "%{http_code}" -X POST "${SEED_URL}${SEED_QUERY}" 2>/dev/null || echo "000")
           case "$status" in
             200|201)
