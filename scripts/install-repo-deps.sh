@@ -31,9 +31,16 @@ fail() { printf '[install-repo-deps] ERROR: %s\n' "$*" >&2; exit 1; }
 # and re-stated at the end, because a tool that is quietly absent turns the
 # gate that needs it into a gate that skips itself.
 missing_optional=()
+#
+# These warnings go to stdout, not stderr. The SessionStart hook surfaces only
+# stdout in the banner an agent reads at the top of a session, so a warning on
+# stderr is a warning nobody sees — which is the failure this whole mechanism
+# exists to stop. Observed on the first session to run the fixed script: rtk
+# failed, the run correctly carried on, and not one WARN line reached the
+# banner.
 note_missing() {
   missing_optional+=("$1")
-  printf '[install-repo-deps] WARN: %s\n' "$2" >&2
+  printf '[install-repo-deps] WARN: %s\n' "$2"
 }
 
 # 1. jq — required by the rtk PreToolUse hook
@@ -161,8 +168,8 @@ find /tmp -maxdepth 1 -name 'cdk.out*' -type d -exec rm -rf {} + 2>/dev/null || 
 "$REPO_ROOT/scripts/check-branch-context.sh" || true
 
 if [ ${#missing_optional[@]} -gt 0 ]; then
-  printf '[install-repo-deps] WARN: optional tools missing: %s\n' "${missing_optional[*]}" >&2
-  printf '[install-repo-deps] WARN: re-run ./scripts/install-repo-deps.sh once the network settles.\n' >&2
+  printf '[install-repo-deps] WARN: optional tools missing: %s\n' "${missing_optional[*]}"
+  printf '[install-repo-deps] WARN: re-run ./scripts/install-repo-deps.sh once the network settles.\n'
 fi
 
 log "done"

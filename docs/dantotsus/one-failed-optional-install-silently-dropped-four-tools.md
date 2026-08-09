@@ -92,6 +92,14 @@ than letting six quiet degradations stand in for one loud message:
 Each warning states the consequence of *that* tool being absent, so the reader
 does not have to know what `rtk` is to decide whether to care.
 
+**The warnings print on stdout, not stderr**, which is the opposite of the
+convention and deliberate. The first session to run the fixed script proved why:
+it worked — `rtk` failed, every later step ran — and the SessionStart banner an
+agent reads at the top of a session showed *not one* WARN line, because that
+banner surfaces stdout only. A warning nobody sees is the exact failure this
+mechanism exists to stop, so the summary had to move to the stream that reaches
+the reader.
+
 And `pre-push` no longer skips the workflow lint unconditionally. No workflow
 touched, warn and continue as before. A workflow touched and no actionlint,
 fail with the command that installs it.
