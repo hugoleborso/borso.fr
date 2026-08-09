@@ -17,16 +17,14 @@ const MILLISECONDS_PER_MINUTE = 60_000;
  * `edition.startsAt` plus multiples of `edition.intervalMinutes`.
  */
 export function nextHourlyTop(edition: RaceEdition, now: Date): Date | null {
-  if (now.getTime() >= edition.endsAt.getTime()) return null;
-
   const intervalMs = edition.intervalMinutes * MILLISECONDS_PER_MINUTE;
   const elapsedMs = now.getTime() - edition.startsAt.getTime();
-  if (elapsedMs < 0) return new Date(edition.startsAt.getTime());
-
-  const loopsElapsed = Math.floor(elapsedMs / intervalMs);
-  const nextBoundary = edition.startsAt.getTime() + (loopsElapsed + 1) * intervalMs;
-  if (nextBoundary >= edition.endsAt.getTime()) return null;
-  return new Date(nextBoundary);
+  // Clamped at zero so a `now` before the race answers `startsAt`, however
+  // far ahead of it the question is asked.
+  const boundariesPassed = Math.max(0, Math.floor(elapsedMs / intervalMs) + 1);
+  const nextBoundaryMs = edition.startsAt.getTime() + boundariesPassed * intervalMs;
+  if (nextBoundaryMs >= edition.endsAt.getTime()) return null;
+  return new Date(nextBoundaryMs);
 }
 
 /**

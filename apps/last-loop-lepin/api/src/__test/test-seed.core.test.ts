@@ -36,6 +36,42 @@ describe('planSeedFixture', () => {
     ]);
   });
 
+  it('gives every survivor-fixture runner the punches their story needs', () => {
+    const plan = planSeedFixture('race-down-to-one-survivor', NOW);
+    const startMs = plan.raceWindow.startsAt.getTime();
+    expect(
+      plan.punches.map((punch) => ({
+        runnerSlug: punch.runnerSlug,
+        loopIndex: punch.loopIndex,
+        hoursFromStart: (punch.finishedAt.getTime() - startMs) / HOUR_MS,
+      })),
+    ).toEqual([
+      { runnerSlug: 'alice', loopIndex: 1, hoursFromStart: 0.92 },
+      { runnerSlug: 'alice', loopIndex: 2, hoursFromStart: 1.93 },
+      { runnerSlug: 'alice', loopIndex: 3, hoursFromStart: 2.95 },
+      { runnerSlug: 'bob', loopIndex: 1, hoursFromStart: 0.95 },
+      { runnerSlug: 'bob', loopIndex: 2, hoursFromStart: 1.97 },
+      { runnerSlug: 'carla', loopIndex: 1, hoursFromStart: 0.98 },
+      { runnerSlug: 'dan', loopIndex: 1, hoursFromStart: 0.99 },
+    ]);
+  });
+
+  it('finishes each generated loop shortly before its own top of hour', () => {
+    // `listLoopPunches` places loop N a fraction of an hour *before* the
+    // Nth top; adding the offset instead would push every punch past its
+    // own boundary and turn the finished fixture into a wall of DNFs.
+    const plan = planSeedFixture('race-finished', NOW);
+    const startMs = plan.raceWindow.startsAt.getTime();
+    const aliceHours = plan.punches
+      .filter((punch) => punch.runnerSlug === 'alice')
+      .map((punch) => (punch.finishedAt.getTime() - startMs) / HOUR_MS);
+    expect(aliceHours).toEqual([0.95, 1.95, 2.95, 3.95, 4.95]);
+    const bobHours = plan.punches
+      .filter((punch) => punch.runnerSlug === 'bob')
+      .map((punch) => (punch.finishedAt.getTime() - startMs) / HOUR_MS);
+    expect(bobHours).toEqual([0.9, 1.9, 2.9]);
+  });
+
   it('orders every survivor punch strictly inside the race window', () => {
     const plan = planSeedFixture('race-down-to-one-survivor', NOW);
     for (const punch of plan.punches) {

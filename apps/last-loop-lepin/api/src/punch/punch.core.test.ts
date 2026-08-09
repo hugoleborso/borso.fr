@@ -70,6 +70,17 @@ describe('validatePunchTiming', () => {
     expect(result).toEqual({ ok: false, reason: 'already-punched-this-loop' });
   });
 
+  it('does not consider the runner’s punch for an earlier loop as a conflict', () => {
+    const existing: readonly LoopPunch[] = [buildPunch(1, '2026-09-19T06:55:00+02:00')];
+    const result = validatePunchTiming(
+      EDITION,
+      'alice',
+      existing,
+      new Date('2026-09-19T07:55:00+02:00'),
+    );
+    expect(result).toEqual({ ok: true, loopIndex: 2 });
+  });
+
   it('does not consider another runner’s punch as a conflict', () => {
     const existing: readonly LoopPunch[] = [
       { ...buildPunch(1, '2026-09-19T06:55:00+02:00'), runnerSlug: 'bob' },
@@ -117,6 +128,14 @@ describe('lastLoopDurationMs', () => {
     const punches = [
       buildPunch(1, '2026-09-19T06:48:30+02:00'),
       buildPunch(2, '2026-09-19T07:51:15+02:00'),
+    ];
+    expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(51 * 60_000 + 15_000);
+  });
+
+  it('reads the deepest loop, not the last element, when punches arrive out of order', () => {
+    const punches = [
+      buildPunch(2, '2026-09-19T07:51:15+02:00'),
+      buildPunch(1, '2026-09-19T06:48:30+02:00'),
     ];
     expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(51 * 60_000 + 15_000);
   });

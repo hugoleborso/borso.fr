@@ -94,6 +94,40 @@ describe('validateRunnerDraft', () => {
     ).toEqual({ ok: false, reason: 'slug-invalid-chars' });
   });
 
+  it('accepts the slug slugifyDisplayName builds from a two-word name', () => {
+    const slug = slugifyDisplayName('Jean-Luc Picard');
+    expect(slug).toBe('jean-luc-picard');
+    expect(validateRunnerDraft({ displayName: 'Jean-Luc Picard', slug, bib: null }, [])).toEqual({
+      ok: true,
+    });
+  });
+
+  it('gives the same verdict on a slug it is asked about twice', () => {
+    const draft = { displayName: 'Carla', slug: 'carla!', bib: null };
+    expect(validateRunnerDraft(draft, [])).toEqual(validateRunnerDraft(draft, []));
+  });
+
+  it('accepts a display name of exactly 120 chars', () => {
+    const result = validateRunnerDraft(
+      { displayName: 'a'.repeat(120), slug: 'carla', bib: null },
+      baseRoster,
+    );
+    expect(result).toEqual({ ok: true });
+  });
+
+  it('accepts a slug of exactly 2 chars', () => {
+    const result = validateRunnerDraft({ displayName: 'Carla', slug: 'ab', bib: null }, baseRoster);
+    expect(result).toEqual({ ok: true });
+  });
+
+  it('accepts a slug of exactly 64 chars', () => {
+    const result = validateRunnerDraft(
+      { displayName: 'Carla', slug: 'a'.repeat(64), bib: null },
+      baseRoster,
+    );
+    expect(result).toEqual({ ok: true });
+  });
+
   it('rejects non-positive bib', () => {
     expect(
       validateRunnerDraft({ displayName: 'Carla', slug: 'carla', bib: 0 }, baseRoster),

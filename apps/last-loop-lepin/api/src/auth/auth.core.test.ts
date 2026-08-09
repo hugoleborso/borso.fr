@@ -51,6 +51,12 @@ describe('isRequestOriginRejected', () => {
     expect(isRequestOriginRejected('POST', ALLOWED, ALLOWED)).toBe(false);
   });
 
+  it('accepts a POST matching any entry of a multi-origin allow-list', () => {
+    const twoOrigins = 'https://a.example,https://b.example';
+    expect(isRequestOriginRejected('POST', 'https://a.example', twoOrigins)).toBe(false);
+    expect(isRequestOriginRejected('POST', 'https://b.example', twoOrigins)).toBe(false);
+  });
+
   it('rejects a POST from an origin outside the allow-list', () => {
     expect(isRequestOriginRejected('POST', 'https://evil.example', ALLOWED)).toBe(true);
   });

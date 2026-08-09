@@ -12,6 +12,11 @@ const MIN_SLUG_LENGTH = 2;
 const MAX_SLUG_LENGTH = 64;
 const DIACRITIC_PATTERN = /[̀-ͯ]/g;
 const NON_SLUG_PATTERN = /[^a-z0-9]+/g;
+// Interior dashes are what `slugifyDisplayName` produces from a space, so
+// they are valid; leading and trailing ones are checked separately. No `g`
+// flag: `RegExp.prototype.test` on a global pattern carries `lastIndex`
+// between calls and would alternate its verdict on the same slug.
+const INVALID_SLUG_CHARACTER_PATTERN = /[^a-z0-9-]/;
 const TRIM_DASH_PATTERN = /^-+|-+$/g;
 
 /**
@@ -55,7 +60,11 @@ export function validateRunnerDraft(
 
   if (draft.slug.length < MIN_SLUG_LENGTH) return { ok: false, reason: 'slug-too-short' };
   if (draft.slug.length > MAX_SLUG_LENGTH) return { ok: false, reason: 'slug-too-long' };
-  if (NON_SLUG_PATTERN.test(draft.slug) || draft.slug.startsWith('-') || draft.slug.endsWith('-')) {
+  if (
+    INVALID_SLUG_CHARACTER_PATTERN.test(draft.slug) ||
+    draft.slug.startsWith('-') ||
+    draft.slug.endsWith('-')
+  ) {
     return { ok: false, reason: 'slug-invalid-chars' };
   }
 

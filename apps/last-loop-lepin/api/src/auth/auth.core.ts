@@ -50,5 +50,5 @@ export function isRequestOriginRejected(
   if (!STATE_CHANGING_METHODS.has(method)) return false;
   const allowed = parseAllowedOrigins(allowedOriginRaw);
   if (allowed === null) return false;
-  return origin === undefined || !allowed.includes(origin);
+  return !allowed.some((allowedOrigin) => allowedOrigin === origin);
 }

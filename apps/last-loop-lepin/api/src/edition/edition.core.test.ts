@@ -62,9 +62,25 @@ describe('nextHourlyTop', () => {
     expect(nextHourlyTop(EDITION_2026, before)).toEqual(EDITION_2026.startsAt);
   });
 
+  it('returns startsAt when now is more than one interval before the race begins', () => {
+    const wellBefore = new Date('2026-09-19T03:30:00+02:00');
+    expect(nextHourlyTop(EDITION_2026, wellBefore)).toEqual(EDITION_2026.startsAt);
+  });
+
+  it('returns the first boundary after startsAt when now lands exactly on startsAt', () => {
+    expect(nextHourlyTop(EDITION_2026, EDITION_2026.startsAt)).toEqual(
+      new Date('2026-09-19T07:00:00+02:00'),
+    );
+  });
+
   it('returns the next hourly boundary mid-race', () => {
     const midLoop3 = new Date('2026-09-19T08:35:00+02:00');
     expect(nextHourlyTop(EDITION_2026, midLoop3)).toEqual(new Date('2026-09-19T09:00:00+02:00'));
+  });
+
+  it('returns null when the next boundary lands exactly on endsAt', () => {
+    const insideTheLastLoop = new Date('2026-09-19T21:30:00+02:00');
+    expect(nextHourlyTop(EDITION_2026, insideTheLastLoop)).toBeNull();
   });
 
   it('returns null after endsAt', () => {
@@ -164,6 +180,22 @@ describe('projectDidNotFinishCandidates', () => {
     ];
     const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);
     expect(candidates.map((entry) => entry.runner.slug)).toEqual(['alice', 'bob', 'carla']);
+  });
+
+  it('does not let a punch for another loop stand in for the one that just closed', () => {
+    // Alice punched loop 2 early — from the future, as far as the loop-1
+    // deadline is concerned. It must not clear her of loop 1.
+    const now = new Date('2026-09-19T07:01:00+02:00');
+    const punches: readonly LoopPunch[] = [buildPunch('alice', 2, '2026-09-19T06:40:00+02:00')];
+    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);
+    expect(candidates.map((entry) => entry.runner.slug)).toEqual(['alice', 'bob', 'carla']);
+  });
+
+  it('counts a punch landing exactly on the closing top', () => {
+    const now = new Date('2026-09-19T07:01:00+02:00');
+    const punches: readonly LoopPunch[] = [buildPunch('alice', 1, '2026-09-19T07:00:00+02:00')];
+    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);
+    expect(candidates.map((entry) => entry.runner.slug)).toEqual(['bob', 'carla']);
   });
 
   it('treats a punch arriving within the tolerance window as valid', () => {
