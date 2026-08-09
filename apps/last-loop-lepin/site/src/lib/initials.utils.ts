@@ -36,12 +36,12 @@ function pickInitials(displayName: string): string {
   const wordInitials = Array.from(displayName.matchAll(WORD_PATTERN), (match) =>
     match[0].charAt(0),
   );
-  const [firstInitial] = wordInitials;
+  const [firstInitial, ...laterInitials] = wordInitials;
   if (firstInitial === undefined) return NO_NAME_INITIALS;
-  if (wordInitials.length === 1) {
+  const lastInitial = laterInitials.at(-1);
+  if (lastInitial === undefined) {
     return displayName.trim().slice(0, INITIALS_MAX_LENGTH).toUpperCase();
   }
-  const lastInitial = wordInitials.at(-1) ?? firstInitial;
   return (firstInitial + lastInitial).toUpperCase();
 }
 

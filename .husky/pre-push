@@ -25,6 +25,27 @@ if echo "$changed_since_main" | grep -q '^infra/shared/'; then
   pnpm --filter @borso/shared-infra test:coverage
 fi
 
+# The 100 % per-file coverage gate on pure files, for every application that
+# changed on this branch. This is the same script `ci.yml` runs, and it lived
+# only there until an unreachable `?? fallback` in a rewritten pure file passed
+# a green mutation gate, passed pre-push, and went red in CI. Mutation and
+# coverage do not catch the same thing: Stryker's `LogicalOperator` mutator
+# kills a `??` whose right side is dead, while `v8` still reports the branch as
+# uncovered.
+#
+# `test:core` where it exists — the full-stack apps, whose `test:coverage`
+# wants a Postgres — and `test:coverage` otherwise.
+changed_app_slugs=$(echo "$changed_since_main" | sed -n 's|^apps/\([^/]*\)/.*|\1|p' | sort -u)
+for app in $changed_app_slugs; do
+  if grep -q '"test:core"' "apps/$app/package.json"; then
+    coverage_script=test:core
+  else
+    coverage_script=test:coverage
+  fi
+  echo "[pre-push] $app changed — running $coverage_script"
+  pnpm --filter "@borso-app/$app" run "$coverage_script"
+done
+
 # Mutation testing on the pure files of every workspace whose `*.core.ts` or
 # `*.utils.ts` files changed on this branch. Coverage says a line ran; a
 # surviving mutant says no assertion noticed a change to it, which is the
