@@ -28,7 +28,6 @@ const UNPROJECTED_TYPESCRIPT_FILES = [
   'apps/*/bin/*.ts',
   'apps/*/scripts/*.ts',
   'apps/*/cdk/bin/*.ts',
-  'apps/*/vitest*.workspace.ts',
   'infra/*/vitest.config.ts',
   'infra/*/bin/*.ts',
 ];

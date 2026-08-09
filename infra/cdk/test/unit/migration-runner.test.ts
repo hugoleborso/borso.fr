@@ -10,10 +10,16 @@ vi.mock('postgres', () => ({
   default: vi.fn(() => makeSql()),
 }));
 
+// `function`, not an arrow. `DsqlSigner` is called with `new`, and Vitest 4
+// invokes a mock's implementation as a constructor rather than calling it and
+// taking the return value. An arrow has no [[Construct]], so it fails with
+// "is not a constructor".
 vi.mock('@aws-sdk/dsql-signer', () => ({
-  DsqlSigner: vi.fn().mockImplementation(() => ({
-    getDbConnectAdminAuthToken: () => Promise.resolve('TOKEN'),
-  })),
+  DsqlSigner: vi.fn().mockImplementation(function mockDsqlSigner(this: {
+    getDbConnectAdminAuthToken: () => Promise<string>;
+  }) {
+    this.getDbConnectAdminAuthToken = () => Promise.resolve('TOKEN');
+  }),
 }));
 
 const { handler } = await import('../../src/internal/migration-runner/index.js');

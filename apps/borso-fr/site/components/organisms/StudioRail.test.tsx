@@ -1,19 +1,23 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { CUSTOM_DEFAULTS, PALETTES } from '../../art/mondrian/palettes.utils';
+import { beforeAll, describe, expect, it, type Mock, vi } from 'vitest';
+import type { AnimationMode } from '../../art/mondrian/animation.core';
+import { CUSTOM_DEFAULTS, PALETTES, type PaletteKey } from '../../art/mondrian/palettes.utils';
 import { i18next } from '../../i18n/i18n';
 import { StudioRail } from './StudioRail';
 
+// `ReturnType<typeof vi.fn>` is `Mock<Procedure | Constructable>` in Vitest 4,
+// which no longer narrows to a call signature. Naming the signature is both
+// what the compiler needs and a better description of the prop.
 interface RailSpies {
-  onPaletteKeyChange: ReturnType<typeof vi.fn>;
-  onAnimationModeChange: ReturnType<typeof vi.fn>;
+  onPaletteKeyChange: Mock<(nextPaletteKey: PaletteKey) => void>;
+  onAnimationModeChange: Mock<(nextMode: AnimationMode) => void>;
 }
 
 function renderRail(): RailSpies {
   const spies: RailSpies = {
-    onPaletteKeyChange: vi.fn(),
-    onAnimationModeChange: vi.fn(),
+    onPaletteKeyChange: vi.fn<(nextPaletteKey: PaletteKey) => void>(),
+    onAnimationModeChange: vi.fn<(nextMode: AnimationMode) => void>(),
   };
   render(
     <StudioRail
