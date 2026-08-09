@@ -26,6 +26,8 @@ import { DsqlSigner } from '@aws-sdk/dsql-signer';
 import postgres from 'postgres';
 import {
   buildCloneInsertSql,
+  buildReplaceBeforeCloneSql,
+  isReplacedBeforeClone,
   buildCreateTableLikeSql,
   selectCloneableDataTables,
 } from './clone-from-schema.utils.js';
@@ -41,6 +43,7 @@ interface CloneFromSchemaProps {
   readonly sourceSchemaName: string;
   readonly tableBlocklist?: readonly string[];
   readonly columnsToNullify?: Readonly<Record<string, readonly string[]>>;
+  readonly tablesToReplace?: readonly string[];
 }
 
 interface ResourceProps {
@@ -166,9 +169,17 @@ async function cloneFromSchema(
 
   // Data step — blocklisted (runtime state) tables keep their shape and lose
   // their rows.
+  const tablesToReplace = config.tablesToReplace ?? [];
   for (const table of selectCloneableDataTables(sourceTables, blocklist)) {
     const columns = await listColumns(sql, config.sourceSchemaName, table);
     if (columns.length === 0) continue;
+    // A table the source must own outright is emptied first, because the
+    // INSERT below is ON CONFLICT DO NOTHING and would otherwise keep a stale
+    // row whose primary key already exists in the target.
+    const isReplaced = isReplacedBeforeClone(table, tablesToReplace);
+    if (isReplaced) {
+      await sql.unsafe(buildReplaceBeforeCloneSql(targetSchemaName, table));
+    }
     const nullifyColumns = nullifyMap[table] ?? [];
     await sql.unsafe(
       buildCloneInsertSql(

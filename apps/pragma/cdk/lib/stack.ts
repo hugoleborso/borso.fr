@@ -116,6 +116,13 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
               sourceSchemaName: 'prod',
               tableBlocklist: ['auth_attempt'],
               columnsToNullify: { member: ['avatar_s3_key'] },
+              // `app_config` is a singleton keyed on id=1, and the clone
+              // INSERT is ON CONFLICT DO NOTHING. Without this, a schema that
+              // was bootstrapped before cloning existed keeps its old row, so
+              // the preview stays on the fixture's published password while
+              // now holding real production data. Replacing makes prod's
+              // credential authoritative on every deploy.
+              tablesToReplace: ['app_config'],
             },
           }),
     },

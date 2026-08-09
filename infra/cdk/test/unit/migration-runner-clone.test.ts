@@ -62,10 +62,25 @@ describe('migration-runner handler — cloneFromSchema (Neon-branch pattern)', (
           sourceSchemaName: 'prod',
           tableBlocklist: ['admin_sessions'],
           columnsToNullify: { runners: ['photo_key'] },
+          tablesToReplace: ['admin_credentials'],
         },
       },
     });
     const queries = state.unsafeCalls.map((call) => call.query).join('\n');
+
+    // A replaced table is emptied before its rows are copied, because the
+    // INSERT is ON CONFLICT DO NOTHING and would otherwise keep a stale row
+    // whose primary key already exists in the target. Order matters: a DELETE
+    // after the INSERT would leave the table empty.
+    const deleteIndex = queries.indexOf('DELETE FROM "pr_27"."admin_credentials"');
+    const insertIndex = queries.indexOf('INSERT INTO "pr_27"."admin_credentials"');
+    expect(deleteIndex).toBeGreaterThan(-1);
+    expect(insertIndex).toBeGreaterThan(deleteIndex);
+
+    // Only the named table is emptied — a clone must never delete domain data.
+    expect(queries).not.toMatch(/DELETE FROM "pr_27"\."editions"/);
+    expect(queries).not.toMatch(/DELETE FROM "pr_27"\."runners"/);
+    expect(queries).not.toMatch(/DELETE FROM "prod"\./);
 
     // Structure for every prod table (including the blocklisted one) so
     // the app can write to the empty admin_sessions table post-deploy.

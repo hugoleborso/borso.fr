@@ -92,6 +92,11 @@ describe('pragma preview schema cloning', () => {
       tableBlocklist: ['auth_attempt'],
       // Prod's uploads bucket is a different bucket; a cloned key would 404.
       columnsToNullify: { member: ['avatar_s3_key'] },
+      // Without this the clone's ON CONFLICT DO NOTHING concedes to whatever
+      // row id=1 the schema already had — which on a schema bootstrapped by
+      // the old fixture meant real production data behind the fixture's
+      // published password.
+      tablesToReplace: ['app_config'],
     });
   });
 });

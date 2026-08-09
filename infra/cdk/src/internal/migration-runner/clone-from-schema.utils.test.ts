@@ -2,9 +2,43 @@ import { describe, expect, it } from 'vitest';
 import {
   buildCloneInsertSql,
   buildCreateTableLikeSql,
+  buildReplaceBeforeCloneSql,
   isCloneableDataTable,
+  isReplacedBeforeClone,
   selectCloneableDataTables,
 } from './clone-from-schema.utils.js';
+
+describe('isReplacedBeforeClone', () => {
+  it('selects only the named tables', () => {
+    expect(isReplacedBeforeClone('app_config', ['app_config'])).toBe(true);
+    expect(isReplacedBeforeClone('member', ['app_config'])).toBe(false);
+  });
+
+  it('replaces nothing when the list is empty, which is the default', () => {
+    expect(isReplacedBeforeClone('app_config', [])).toBe(false);
+  });
+});
+
+describe('buildReplaceBeforeCloneSql', () => {
+  it('empties the target table so the source row wins over a stale one', () => {
+    expect(buildReplaceBeforeCloneSql('pr_40', 'app_config')).toBe(
+      'DELETE FROM "pr_40"."app_config"',
+    );
+  });
+
+  it('touches only the target schema — the source is never written to', () => {
+    const sql = buildReplaceBeforeCloneSql('pr_40', 'app_config');
+    expect(sql).not.toContain('prod');
+    expect(sql.startsWith('DELETE FROM "pr_40"')).toBe(true);
+  });
+
+  it('rejects an identifier that could smuggle SQL', () => {
+    expect(() => buildReplaceBeforeCloneSql('pr_40', 'app_config"; DROP SCHEMA "prod')).toThrow(
+      /Invalid table name/,
+    );
+    expect(() => buildReplaceBeforeCloneSql('pr-40', 'app_config')).toThrow(/Invalid schema name/);
+  });
+});
 
 describe('buildCreateTableLikeSql', () => {
   it('emits CREATE TABLE IF NOT EXISTS … LIKE … INCLUDING ALL with quoted identifiers', () => {

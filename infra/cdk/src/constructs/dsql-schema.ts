@@ -70,6 +70,17 @@ export interface DsqlSchemaCloneFromConfig {
    * would otherwise dereference prod's bucket and get 403s or worse.
    */
   readonly columnsToNullify?: Readonly<Record<string, readonly string[]>>;
+  /**
+   * Tables emptied in the target immediately before their rows are copied, so
+   * the source wins outright.
+   *
+   * The clone INSERT is `ON CONFLICT DO NOTHING`, which is right for domain
+   * data — a re-deploy keeps what the preview accumulated and adds what is new
+   * upstream. It is wrong for a singleton row that exists to mirror the
+   * source: the conflict clause keeps the stale one forever. Use this for a
+   * credential or config row with a fixed primary key.
+   */
+  readonly tablesToReplace?: readonly string[];
 }
 
 /** @beta */
