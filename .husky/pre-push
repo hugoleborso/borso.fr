@@ -101,29 +101,32 @@ if echo "$changed" | grep -q '^infra/shared/'; then
   start_gate infra-shared pnpm --filter @borso/shared-infra test:coverage
 fi
 
-# The 100 % per-file coverage gate on pure files, for every application touched
-# by this push. Scoped by application rather than by test file on purpose: a
-# per-file threshold needs the whole suite that covers those files, and running
-# only the changed tests would report every untouched pure file at 0 %.
+# Only the tests this push affects. `--changed <base>` walks Vitest's module
+# graph, so it selects the test files that changed AND the test files that
+# import a source file that changed, however deep the chain. Measured on
+# borso-fr against a one-line change to labours.core.ts: 2 files and 53 tests
+# in 2.9 s, against 16 files and 318 tests in about 40 s for the whole suite.
+# It picked App.test.tsx, which reaches the changed file transitively — the
+# graph is doing the work, not a filename convention.
 #
-# This lived only in CI until an unreachable `?? fallback` in a rewritten pure
-# file passed a green mutation gate, passed pre-push, and went red in CI.
-# Mutation and coverage do not catch the same thing: Stryker's LogicalOperator
-# mutator kills a `??` whose right side is dead, while v8 still reports the
-# branch as uncovered.
+# `--project core` on the full-stack apps keeps the back-e2e project out of it,
+# because that one wants a Postgres this hook has no business booting. The
+# back-e2e suites run in CI, per changed app.
 #
-# `test:core` where it exists — the full-stack apps, whose `test:coverage`
-# wants a Postgres — and `test:coverage` otherwise.
+# The per-file coverage gate is NOT here. A per-file threshold needs the whole
+# suite that covers those files, so running it over a changed-only selection
+# would report every untouched pure file at 0 %. It runs in CI on each changed
+# app, and unscoped on main in full-suite.yml.
 changed_app_slugs=$(echo "$changed" | sed -n 's|^apps/\([^/]*\)/.*|\1|p' | sort -u)
 for app in $changed_app_slugs; do
   if grep -q '"test:core"' "apps/$app/package.json"; then
-    start_gate "coverage-$app" pnpm --filter "@borso-app/$app" run test:core
+    start_gate "tests-$app" \
+      pnpm --filter "@borso-app/$app" exec vitest run --project core --changed "$push_base"
   else
-    start_gate "coverage-$app" pnpm --filter "@borso-app/$app" run test:coverage
+    start_gate "tests-$app" \
+      pnpm --filter "@borso-app/$app" exec vitest run --changed "$push_base"
   fi
 done
-
-wait_for_gates
 
 # Mutation testing, scoped to the pure files this push actually touches.
 #
@@ -159,8 +162,14 @@ if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
     start_gate "mutation-$app" \
       pnpm --filter "@borso-app/$app" exec stryker run --mutate "$mutate_glob"
   done
-  wait_for_gates
 fi
+
+# One wait for the whole wave — knip, the infra suites, every app's affected
+# tests and every app's scoped mutation run all at once. It has to sit outside
+# the SKIP_MUTATION_GATE branch above: with the mutation gate skipped, a wait
+# nested inside it would leave the test gates started and never awaited, and
+# the hook would exit 0 without reading a single result.
+wait_for_gates
 
 rm -rf "$gate_log_dir"
 
