@@ -122,6 +122,14 @@ describe('fastestLap', () => {
     expect(fastestLap(EDITION, punches)).toEqual([]);
   });
 
+  it('skips null-duration punches and still crowns the fastest real one', () => {
+    const punches = [
+      buildPunch('alice', 1, '2026-09-19T05:30:00+02:00'),
+      buildPunch('bob', 1, '2026-09-19T06:42:00+02:00'),
+    ];
+    expect(fastestLap(EDITION, punches)).toEqual([{ runnerSlug: 'bob', durationMs: 42 * 60_000 }]);
+  });
+
   it('is order-independent — passing punches in arbitrary order yields the same record', () => {
     const sorted = [
       buildPunch('alice', 1, '2026-09-19T06:47:00+02:00'),

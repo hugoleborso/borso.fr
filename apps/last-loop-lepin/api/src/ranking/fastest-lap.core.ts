@@ -43,24 +43,23 @@ export function fastestLap(
   edition: RaceEdition,
   punches: readonly LoopPunch[],
 ): readonly FastestLapEntry[] {
-  const candidates: CandidateEntry[] = [];
-  for (const punch of punches) {
-    if (punch.voidedAt !== null) continue;
-    const duration = loopDurationMs(edition, punch);
-    if (duration === null) continue;
-    candidates.push({ runnerSlug: punch.runnerSlug, durationMs: duration });
-  }
-  if (candidates.length === 0) return [];
+  const candidates = punches
+    .filter((punch) => punch.voidedAt === null)
+    .map((punch) => ({
+      runnerSlug: punch.runnerSlug,
+      durationMs: loopDurationMs(edition, punch),
+    }))
+    .filter((candidate): candidate is CandidateEntry => candidate.durationMs !== null);
 
-  const minimum = candidates.reduce(
-    (current, candidate) => (candidate.durationMs < current ? candidate.durationMs : current),
+  const minimumDurationMs = candidates.reduce(
+    (current, candidate) => Math.min(current, candidate.durationMs),
     Number.POSITIVE_INFINITY,
   );
 
   const seenSlugs = new Set<string>();
   const result: FastestLapEntry[] = [];
   for (const candidate of candidates) {
-    if (candidate.durationMs !== minimum) continue;
+    if (candidate.durationMs !== minimumDurationMs) continue;
     if (seenSlugs.has(candidate.runnerSlug)) continue;
     seenSlugs.add(candidate.runnerSlug);
     result.push({ runnerSlug: candidate.runnerSlug, durationMs: candidate.durationMs });

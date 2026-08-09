@@ -30,12 +30,12 @@ interface RunnerProgress {
 
 function progressFor(
   runner: Runner,
-  punches: readonly LoopPunch[],
+  validPunches: readonly LoopPunch[],
   manualDidNotFinish: ManualDidNotFinish | undefined,
   expectedClosedLoop: number,
 ): RunnerProgress {
-  const sorted = punches
-    .filter((punch) => punch.runnerSlug === runner.slug && punch.voidedAt === null)
+  const sorted = validPunches
+    .filter((punch) => punch.runnerSlug === runner.slug)
     .toSorted((left, right) => left.loopIndex - right.loopIndex);
 
   let lastValidLoop = 0;
@@ -139,19 +139,19 @@ export function computeStandings(
     .toSorted(compareProgresses);
 
   // `reduce` over progresses to build the ranked list while carrying the
-  // previous progress + index of its pushed entry. Avoids array index access
-  // and the defensive-undefined branches that `noUncheckedIndexedAccess`
-  // otherwise forces on every for-loop iteration.
+  // previous progress. Avoids array index access and the
+  // defensive-undefined branches that `noUncheckedIndexedAccess` otherwise
+  // forces on every for-loop iteration.
   interface RankAccumulator {
     readonly ranked: readonly RankedRunner[];
-    readonly previous: { progress: RunnerProgress; index: number } | null;
+    readonly previous: RunnerProgress | null;
     readonly currentRank: number;
   }
 
   const result = progresses.reduce<RankAccumulator>(
     (accumulator, progress) => {
       const isTied =
-        accumulator.previous !== null && areTiedForRanking(accumulator.previous.progress, progress);
+        accumulator.previous !== null && areTiedForRanking(accumulator.previous, progress);
       const assignedRank: number | 'ex-aequo' = isTied ? 'ex-aequo' : accumulator.currentRank + 1;
       const nextRank = isTied ? accumulator.currentRank : accumulator.currentRank + 1;
 
@@ -163,15 +163,16 @@ export function computeStandings(
         lastFinishedAt: progress.lastFinishedAt,
       };
 
+      const tiedEntryIndex = accumulator.ranked.length - 1;
       const updatedRanked = isTied
         ? accumulator.ranked.map((entry, index) =>
-            index === accumulator.previous?.index ? { ...entry, rank: 'ex-aequo' as const } : entry,
+            index === tiedEntryIndex ? { ...entry, rank: 'ex-aequo' as const } : entry,
           )
         : accumulator.ranked;
 
       return {
         ranked: [...updatedRanked, newEntry],
-        previous: { progress, index: updatedRanked.length },
+        previous: progress,
         currentRank: nextRank,
       };
     },
@@ -191,16 +192,15 @@ export function computeStandings(
 }
 
 export function mostRecentCorrectionAt(punches: readonly LoopPunch[]): Date | null {
-  return punches.reduce<Date | null>((accumulator, punch) => {
-    const candidates: Date[] = [];
-    if (punch.correctedAt !== null) candidates.push(punch.correctedAt);
-    if (punch.voidedAt !== null) candidates.push(punch.voidedAt);
-    return candidates.reduce<Date | null>(
-      (inner, candidate) =>
-        inner === null || candidate.getTime() > inner.getTime() ? candidate : inner,
-      accumulator,
-    );
-  }, null);
+  const amendmentsMs = punches
+    .flatMap((punch) => [punch.correctedAt, punch.voidedAt])
+    .filter((instant): instant is Date => instant !== null)
+    .map((instant) => instant.getTime());
+  const latestMs = amendmentsMs.reduce(
+    (latest, current) => Math.max(latest, current),
+    Number.NEGATIVE_INFINITY,
+  );
+  return Number.isFinite(latestMs) ? new Date(latestMs) : null;
 }
 
 const CSV_HEADER =
@@ -212,11 +212,11 @@ function csvQuote(value: string): string {
 
 function formatStandingsRow(entry: Standings['ranked'][number]): string {
   const status = entry.status.kind;
-  const outAtLoop = entry.status.kind === 'dnf' ? entry.status.outAtLoop : '';
-  const lastLoop = entry.status.kind === 'in-race' ? entry.status.lastLoop : '';
+  const outAtLoop = entry.status.kind === 'dnf' ? `${entry.status.outAtLoop}` : '';
+  const lastLoop = entry.status.kind === 'in-race' ? `${entry.status.lastLoop}` : '';
   const finishedIso = entry.lastFinishedAt?.toISOString() ?? '';
   return [
-    entry.rank === 'ex-aequo' ? 'ex-aequo' : `${entry.rank}`,
+    `${entry.rank}`,
     entry.runner.bib ?? '',
     entry.runner.slug,
     csvQuote(entry.runner.displayName),
