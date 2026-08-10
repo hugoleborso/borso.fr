@@ -10,6 +10,7 @@ import { requireSharedPasswordSession } from '../auth/shared-password.middleware
 import { signGetInputSchema, signUploadInputSchema } from './uploads.schema';
 import { mintChartGetUrl, mintChartUpload } from './uploads.service';
 
+// @FollowsBlueprint controller-dispatch
 export function buildUploadsRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { meanMasteryForSong } from './mastery-aggregate.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('meanMasteryForSong', () => {
   it('returns null for an empty lineup', () => {
     expect(meanMasteryForSong({}, [])).toBeNull();

@@ -41,6 +41,7 @@ function isImportOfBucket(source, bucket) {
   return new RegExp(String.raw`(^|/)${bucket}(/|$)`).test(source);
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

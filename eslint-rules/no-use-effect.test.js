@@ -1,6 +1,12 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-use-effect.js';
 
+/**
+ * @Blueprint test-lint-rule
+ * @BlueprintName Lint Rule Tester Suite
+ * @BlueprintUsage Use for the suite that ships beside every custom lint rule.
+ * @BlueprintDescription Drives the rule through `RuleTester`, where every valid case is a near miss with the reason it is allowed written beside it, so a reader sees the edge of the rule rather than a list of unrelated snippets, and adds a second tester block under a back end file name for the guard that silences the rule and a third for the disable comment the standard names as the escape hatch.
+ */
 createRuleTester().run('no-use-effect', rule, {
   valid: [
     // Derived state, which is what most effects were doing.

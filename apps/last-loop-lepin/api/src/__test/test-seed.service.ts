@@ -69,6 +69,7 @@ export interface SeedResult {
  * Rebuild the fixture edition, its roster, and its punch history from a
  * clean slate, then report how many runners the edition ended up with.
  */
+// @FollowsBlueprint service-orchestration
 export async function applySeedFixture(fixture: SeedFixtureName, now: Date): Promise<SeedResult> {
   const database = getDatabase();
   const plan = planSeedFixture(fixture, now);

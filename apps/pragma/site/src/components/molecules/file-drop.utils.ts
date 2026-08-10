@@ -25,6 +25,7 @@ export type FileValidationResult =
   | { ok: true; kind: FileDropChartKind; contentType: AllowedUploadContentType }
   | { ok: false; reason: FileRejectionReason };
 
+// @FollowsBlueprint utils-pure-module
 export function validateChartFile(file: File): FileValidationResult {
   if (file.size > FILE_DROP_MAX_BYTES) return { ok: false, reason: 'too-large' };
   if (file.type === ALLOWED_PDF_MIME) {

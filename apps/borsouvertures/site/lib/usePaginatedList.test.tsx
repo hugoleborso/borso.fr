@@ -5,6 +5,12 @@ import { usePaginatedList } from './usePaginatedList';
 
 const PAGE_SIZE = 2;
 
+/**
+ * @Blueprint test-hook-probe
+ * @BlueprintName Hook Probe Component
+ * @BlueprintUsage Use to drive a custom hook from a test without pulling in a hook testing library.
+ * @BlueprintDescription Declares a throwaway component in the test file that calls the hook and publishes each returned value into the tree, rendering the list through real elements and the scalar through a test identifier. The test then asserts by querying the rendered output and advances the hook by clicking the button wired to its callback, so it exercises the hook the way a component does. Remount behaviour is covered by rerendering the probe under a different `key`, which is the only way to assert state that resets by remounting rather than by an effect.
+ */
 function PaginatedNames({ names }: { names: string[] }) {
   const { visibleItems, hasMore, loadMore } = usePaginatedList(names, PAGE_SIZE);
   return (

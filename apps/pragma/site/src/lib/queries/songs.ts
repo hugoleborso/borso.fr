@@ -128,6 +128,12 @@ export function useSongSearch(query: string) {
   });
 }
 
+/**
+ * @Blueprint query-optimistic-mutation
+ * @BlueprintName Optimistic Mutation
+ * @BlueprintUsage Use for a write whose new state the client can predict, so the change shows before the server answers.
+ * @BlueprintDescription Cancels the in flight reads for the key, snapshots the list cache, writes the predicted row, and returns the snapshot as the mutation context so `onError` can put it back verbatim. `onSettled` invalidates only once `isLastPendingMutation` reports the family has drained, which stops a refetch from an early write landing after a later optimistic one and snapping the user interface back.
+ */
 export function useCreateSong() {
   const queryClient = useQueryClient();
   return useMutation({

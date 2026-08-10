@@ -8,6 +8,7 @@ interface ToggleSliderProps {
   ariaLabel: string;
 }
 
+// @FollowsBlueprint component-lookup-table
 const TRACK_CLASS_BY_STATE: ValueByFlag<string> = {
   true: 'toggle-slider on',
   false: 'toggle-slider',
@@ -18,6 +19,7 @@ const LABEL_CLASS_BY_ACTIVE: ValueByFlag<string> = {
   false: 'toggle-label',
 };
 
+// @FollowsBlueprint atom-plain
 export function ToggleSlider({
   isOn,
   onToggle,

@@ -36,18 +36,27 @@ function trackJsonOf(track: GpxTrack): GpxMetadata['trackJson'] {
   return { ...withTimings, pointElevations: track.pointElevations };
 }
 
+// @FollowsBlueprint named-domain-error
 export class EditionAlreadyExistsError extends Error {
   override readonly name = 'EditionAlreadyExistsError';
 }
 
+// @FollowsBlueprint named-domain-error
 export class EditionNotFoundError extends Error {
   override readonly name = 'EditionNotFoundError';
 }
 
+// @FollowsBlueprint named-domain-error
 export class EditionNotInSetupError extends Error {
   override readonly name = 'EditionNotInSetupError';
 }
 
+/**
+ * @Blueprint service-facade-reexport
+ * @BlueprintName Service Facade Re-export
+ * @BlueprintUsage Use for an error another module raises that the controller has to catch, so the controller still imports one module per slice.
+ * @BlueprintDescription Re-exports the parser and calculator errors this service lets through, so `edition.controller.ts` catches `GpxParseError` and `SunCalculationError` from the slice's own service rather than importing from `helpers/gpx` and `helpers/sun` directly.
+ */
 export { GpxParseError } from '../helpers/gpx/gpx.core';
 export { SunCalculationError } from '../helpers/sun/sun.core';
 
@@ -60,6 +69,7 @@ export interface CreateEditionInput {
   readonly gpxXml: string;
 }
 
+// @FollowsBlueprint service-orchestration
 export async function createEdition(
   database: Database,
   input: CreateEditionInput,
@@ -202,6 +212,7 @@ export interface UpdateSetupEditionInput {
  * GPX + schedule are the contract the spectators see and shouldn't shift
  * mid-race. Slug is the primary key and never edits.
  */
+// @FollowsBlueprint service-orchestration
 export async function replaceSetupEdition(
   database: Database,
   slug: string,

@@ -37,6 +37,7 @@ interface RunnerProfilePageProps {
  * closed. The edition comes from the current edition response, so the page
  * follows whichever edition the API says is current.
  */
+// @FollowsBlueprint route-detail-page
 export function RunnerProfilePage({ runnerSlug }: RunnerProfilePageProps) {
   const { t } = useTranslation();
   const currentEdition = useCurrentEdition();

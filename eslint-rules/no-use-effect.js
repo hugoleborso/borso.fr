@@ -52,7 +52,13 @@ export function isUseEffectCallee(callee) {
   );
 }
 
-/** @type {import('eslint').Rule.RuleModule} */
+/**
+ * @Blueprint lint-rule
+ * @BlueprintName Custom Lint Rule
+ * @BlueprintUsage Use for a rule in the `borso` plugin that enforces one document in `docs/standards/`.
+ * @BlueprintDescription Keeps the argument for the rule in a file header that also lists what the rule deliberately allows, holds the whole operator facing text in one `MESSAGE` constant ending in a pointer to the standard, exports the matching predicate so the test can drive it directly, and opens `create` with a file name guard that returns an empty visitor object for the paths the rule does not police.
+ * @type {import('eslint').Rule.RuleModule}
+ */
 export default {
   meta: {
     type: 'problem',

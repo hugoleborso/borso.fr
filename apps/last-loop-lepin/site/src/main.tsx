@@ -29,6 +29,7 @@ const queryClient = new QueryClient({
   },
 });
 
+// @FollowsBlueprint site-entrypoint
 const rootElement = document.getElementById('root');
 if (rootElement === null) {
   throw new Error('Missing #root element in index.html');

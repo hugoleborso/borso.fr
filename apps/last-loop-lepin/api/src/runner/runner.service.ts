@@ -8,10 +8,12 @@ import type { Runner } from './runner.types';
 
 export { getDatabase } from '../database/client';
 
+// @FollowsBlueprint named-domain-error
 export class RunnerAlreadyExistsError extends Error {
   override readonly name = 'RunnerAlreadyExistsError';
 }
 
+// @FollowsBlueprint named-domain-error
 export class RunnerNotFoundError extends Error {
   override readonly name = 'RunnerNotFoundError';
 }
@@ -32,6 +34,7 @@ export async function createRunnerAsDto(
   return toRunnerDto(runner, readPhotosCdnHost());
 }
 
+// @FollowsBlueprint service-orchestration
 export async function createRunner(database: Database, input: CreateRunnerInput): Promise<Runner> {
   const existing = await findRunner(database, input.editionSlug, input.slug);
   if (existing !== null) {
@@ -69,6 +72,12 @@ export async function listRunners(
   return listRunnersForEdition(database, editionSlug);
 }
 
+/**
+ * @Blueprint service-dto-mapping
+ * @BlueprintName Service DTO Mapping
+ * @BlueprintUsage Use for turning a list of domain rows into DTOs when the mapper needs a value the environment holds.
+ * @BlueprintDescription Reads the CDN host once into a local before the map, then calls the pure `toRunnerDto` for each row with that host as an argument. The environment is read a single time per request instead of once per runner, and the mapper stays free of `process.env` so it keeps its full coverage gate.
+ */
 export async function listRunnersAsDto(
   database: Database,
   editionSlug: string,

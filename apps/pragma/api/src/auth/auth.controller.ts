@@ -19,31 +19,25 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { setCookie } from 'hono/cookie';
-import { z } from 'zod';
-import { bootstrapAuth, getAppConfig, isPasswordValid, rotatePassword } from './auth.service';
-import { hashIp, readClientIp } from './ip-hash.utils';
-import {
-  type BucketStore,
-  createBucketStore,
-  isRateLimited,
-  recordAttempt,
-} from './rate-limit.utils';
-import { buildCookie, SESSION_COOKIE_NAME, SESSION_TTL_MS } from './session-cookie.utils';
+import { credentialsSchema } from './auth.schema';
+import { attemptLogin, bootstrapAuth, rotatePassword } from './auth.service';
+import { type BucketStore, createBucketStore } from './rate-limit.utils';
+import { SESSION_COOKIE_NAME, SESSION_TTL_MS } from './session-cookie.utils';
 import { requireSharedPasswordSession } from './shared-password.middleware';
 
-const PASSWORD_MIN_LENGTH = 8;
-const PASSWORD_MAX_LENGTH = 256;
 const SESSION_COOKIE_MAX_AGE_S = SESSION_TTL_MS / 1000;
-
-const credentialsSchema = z.object({
-  password: z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH),
-});
 
 export interface BuildAuthRouterOptions {
   readonly bucketStore?: BucketStore;
   readonly clock?: () => Date;
 }
 
+/**
+ * @Blueprint controller-split-routers
+ * @BlueprintName Controller With Split Routers
+ * @BlueprintUsage Use for a slice whose routes do not all share one gate, so an ungated route cannot be mounted by mistake.
+ * @BlueprintDescription Returns three named routers rather than one: login and the bootstrap endpoint stay open, while rotate-password is built on a router that applies requireSharedPasswordSession to every route it carries. The rate-limit store and the clock arrive through the options argument, so a caller can drive the login window without a real clock.
+ */
 export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
   const bucketStore = options.bucketStore ?? createBucketStore();
   const clock = options.clock ?? (() => new Date());
@@ -52,32 +46,28 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
     '/login',
     zValidator('json', credentialsSchema),
     async (context) => {
-      const ipHash = hashIp(readClientIp(context.req.header('x-forwarded-for')));
-      const now = clock();
-      const updatedBucket = recordAttempt(bucketStore.read(ipHash), now.getTime());
-      bucketStore.write(ipHash, updatedBucket);
-      if (isRateLimited(updatedBucket)) {
-        return context.json({ error: 'rate-limited' }, 429);
-      }
-      const config = await getAppConfig();
-      if (config === null) {
+      const { password } = context.req.valid('json');
+      const result = await attemptLogin({
+        password,
+        forwardedForHeader: context.req.header('x-forwarded-for'),
+        bucketStore,
+        now: clock(),
+      });
+      if (result.kind === 'rate-limited') return context.json({ error: 'rate-limited' }, 429);
+      if (result.kind === 'not-bootstrapped') {
         return context.json({ error: 'auth-not-bootstrapped' }, 503);
       }
-      const { password } = context.req.valid('json');
-      const isPasswordOk = await isPasswordValid(config, password);
-      if (!isPasswordOk) {
+      if (result.kind === 'invalid-password') {
         return context.json({ error: 'invalid-password' }, 401);
       }
-      bucketStore.clear(ipHash);
-      const cookie = buildCookie(config.hmacKey, now.getTime());
-      setCookie(context, SESSION_COOKIE_NAME, cookie, {
+      setCookie(context, SESSION_COOKIE_NAME, result.cookieValue, {
         httpOnly: true,
         secure: process.env.STAGE !== 'dev',
         sameSite: 'Strict',
         maxAge: SESSION_COOKIE_MAX_AGE_S,
         path: '/',
       });
-      return context.json({ expiresAt: new Date(now.getTime() + SESSION_TTL_MS).toISOString() });
+      return context.json({ expiresAt: result.expiresAt });
     },
   );
 

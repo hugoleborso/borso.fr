@@ -56,6 +56,7 @@ export function useMemberInstruments(memberId: string, isEnabled = true) {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useCreateMember() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -47,6 +47,12 @@ export function formatTimeOfDay(instant: Date, locale: string): string {
 }
 
 /** `MM:SS`, or an em dash for a negative duration the race cannot produce. */
+/**
+ * @Blueprint utils-formatter
+ * @BlueprintName Formatter Utilities Module
+ * @BlueprintUsage Use for every number, date, and duration a screen shows, so no component formats a value inline.
+ * @BlueprintDescription One exported function per display format, each returning a string and each taking whatever it needs as an argument, including the locale where the format depends on one. No function reads `navigator.language` or the i18n instance, so the module is deterministic and carries the full coverage gate, and a value that cannot be shown returns the named `EMPTY_VALUE` rather than an empty string a caller would have to test for.
+ */
 export function formatLoopDuration(durationMs: number): string {
   if (durationMs < 0) return EMPTY_VALUE;
   const totalSeconds = Math.floor(durationMs / MILLISECONDS_PER_SECOND);

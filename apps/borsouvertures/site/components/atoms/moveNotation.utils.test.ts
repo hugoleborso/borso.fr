@@ -4,6 +4,7 @@ import { describeMoveInStandardNotation } from './moveNotation.utils';
 
 const STARTING_FEN = new Chess().fen();
 
+// @FollowsBlueprint test-pure-unit
 describe('describeMoveInStandardNotation', () => {
   it('renders a knight move in standard algebraic notation', () => {
     expect(describeMoveInStandardNotation('g1f3', STARTING_FEN)).toBe('Nf3');

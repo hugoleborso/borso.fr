@@ -9,6 +9,7 @@ import {
 
 const MEGABYTE = 1024 * 1024;
 
+// @FollowsBlueprint test-pure-unit
 describe('slugifyRunnerName', () => {
   it('lowercases and joins words with a dash', () => {
     expect(slugifyRunnerName('Alice Martin')).toBe('alice-martin');

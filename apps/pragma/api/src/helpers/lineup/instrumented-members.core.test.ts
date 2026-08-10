@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { instrumentedMembers } from './instrumented-members.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('instrumentedMembers', () => {
   it('answers an empty list for an empty lineup', () => {
     expect(instrumentedMembers({})).toEqual([]);

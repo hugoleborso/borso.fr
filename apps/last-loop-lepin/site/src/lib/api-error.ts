@@ -4,6 +4,7 @@
  * which builds itself at module load time.
  */
 
+// @FollowsBlueprint named-domain-error
 export class ApiError extends Error {
   override readonly name = 'ApiError';
   constructor(

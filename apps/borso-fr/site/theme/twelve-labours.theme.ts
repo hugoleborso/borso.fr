@@ -11,5 +11,11 @@ export const FAILURE_INK = '#9a3b2c';
 export const NOTE_INK = '#3a3530';
 export const ACTIVE_INNER_RULE = '#3a3530';
 
+export const SUCCESS_BAR = '#7ee29a';
+export const WARNING_BAR = '#e8b76a';
+export const FAILURE_BAR = '#e89090';
+export const ABANDONED_BAR_ON_DARK = '#5a5852';
+export const ABANDONED_BAR_ON_LIGHT = '#bcb3a0';
+
 export const SANS_FAMILY = '"Space Grotesk", sans-serif';
 export const SERIF_FAMILY = '"Instrument Serif", serif';

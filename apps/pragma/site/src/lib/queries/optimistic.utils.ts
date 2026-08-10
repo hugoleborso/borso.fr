@@ -33,6 +33,7 @@ interface Identified {
  * `rewrite` rather than a patch object, because a song merges its update
  * through `mergeSongUpdate` while a bar merges by spreading.
  */
+// @FollowsBlueprint utils-pure-module
 export function replaceEntityById<TEntity extends Identified>(
   entities: readonly TEntity[],
   id: string,

@@ -18,6 +18,7 @@ function evaluateHandler(event: CfEvent): unknown {
   return result(event);
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('HOST_ROUTING_FUNCTION_CODE', () => {
   it('exports a non-empty CloudFront Function source string', () => {
     expect(HOST_ROUTING_FUNCTION_CODE).toContain('function handler');

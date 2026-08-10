@@ -5,6 +5,7 @@ import { LaboursHero } from '../components/organisms/LaboursHero';
 import { LaboursMasthead } from '../components/organisms/LaboursMasthead';
 import { MonthFilmstrip } from '../components/organisms/MonthFilmstrip';
 import {
+  listAvailableYears,
   selectCurrentMonthNumber,
   selectDefaultMonthNumber,
   selectDefaultYear,
@@ -16,9 +17,7 @@ import { INK, MUTED, PAPER, RULE, SANS_FAMILY } from '../theme/twelve-labours.th
 
 const TODAY = new Date();
 
-const AVAILABLE_YEARS = Object.keys(LABOURS.editions)
-  .map(Number)
-  .sort((left, right) => left - right);
+const AVAILABLE_YEARS = listAvailableYears(LABOURS);
 
 const DEFAULT_YEAR = selectDefaultYear(AVAILABLE_YEARS, TODAY.getFullYear());
 

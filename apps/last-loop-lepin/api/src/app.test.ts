@@ -13,6 +13,7 @@ import { createApp } from './app';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 
+// @FollowsBlueprint test-back-e2e
 describe('createApp — test-seed routing flag', () => {
   const originalFlag = process.env[TEST_SEED_FLAG];
 

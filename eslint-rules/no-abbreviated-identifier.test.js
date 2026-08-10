@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-abbreviated-identifier.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester('apps/pragma/api/src/songs/songs.service.ts', { jsx: false }).run(
   'no-abbreviated-identifier',
   rule,

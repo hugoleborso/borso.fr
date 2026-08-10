@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { composeApiOrigin, composeApiUrl, selectApiBase } from './api-base.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectApiBase', () => {
   it('returns an empty base when the environment value is absent', () => {
     expect(selectApiBase(undefined)).toBe('');

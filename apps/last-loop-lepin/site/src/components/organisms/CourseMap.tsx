@@ -64,6 +64,12 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
    * pan and zoom state, and has to be torn down explicitly. A ref callback
    * with a cleanup is the way in that does not need an effect.
    */
+  /**
+   * @Blueprint organism-imperative-bridge
+   * @BlueprintName Organism Bridging An Imperative Library
+   * @BlueprintUsage Use for a third party library that owns a DOM node and needs to be created and torn down with it.
+   * @BlueprintDescription Builds the Leaflet map inside a ref callback that returns its own cleanup, which React calls when the node goes away, so the map's lifecycle follows the element rather than a mount effect. The callback is wrapped in `useCallback` over the values the map is built from, so a re-render with the same track does not tear the map down and rebuild it.
+   */
   const attachMap = useCallback(
     (container: HTMLDivElement) => {
       const latLngs: L.LatLngTuple[] = points.map((point) => [point.lat, point.lng]);

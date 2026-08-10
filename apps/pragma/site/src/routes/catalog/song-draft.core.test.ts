@@ -30,6 +30,7 @@ const API_SONG: Song = {
   tags: ['rock'],
 };
 
+// @FollowsBlueprint test-pure-unit
 describe('songSchema', () => {
   it('accepts a song from the API', () => {
     expect(songSchema.safeParse(API_SONG).success).toBe(true);

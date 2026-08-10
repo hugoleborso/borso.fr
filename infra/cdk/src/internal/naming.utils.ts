@@ -50,6 +50,11 @@ export function isProductionStage(stage: Stage): boolean {
 /**
  * Throws if `stage` is `'dev'`. Acts as a TypeScript assertion so callers
  * see `stage` narrowed to {@link DeployStage}.
+ *
+ * @Blueprint construct-stage-guard
+ * @BlueprintName Deploy Stage Guard
+ * @BlueprintUsage Use for the first lines of any construct or naming helper that takes a stage.
+ * @BlueprintDescription Declares an `asserts stage is DeployStage` return type, so one call both throws on the development stage at synth time and narrows the parameter for the rest of the function. The narrowing is what lets a following `switch` over the stage be exhaustive without a default branch, and it is why every construct calls this in its prologue rather than each one re-testing the string.
  */
 export function assertDeployStage(stage: Stage): asserts stage is DeployStage {
   if (stage === 'dev') {
@@ -73,6 +78,7 @@ function previewSuffix(prNumber: number | undefined): string {
   return `pr-${prNumber}`;
 }
 
+// @FollowsBlueprint utils-pure-module
 /**
  * CloudFormation stack name.
  *

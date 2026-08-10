@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { selectAdminCredentialsState, selectInstrumentIds } from './test-seed.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectInstrumentIds', () => {
   const instrumentIdByName = new Map([
     ['Guitar', 'guitar-id'],

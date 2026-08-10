@@ -31,6 +31,7 @@ function buildRunner(slug: string, overrides: Partial<RankedRunnerDto> = {}): Ra
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('projectPunchLoopClock', () => {
   it('starts on loop one at the gun', () => {
     const clock = projectPunchLoopClock(RACE_START, 60, RACE_START_MS);

@@ -26,6 +26,7 @@ function buildFailing(code: number): Geolocation {
   });
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('requestPosition', () => {
   it('resolves with the position when the browser answers', async () => {
     const geolocation = buildGeolocation((success) => {

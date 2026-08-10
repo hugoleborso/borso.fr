@@ -13,6 +13,7 @@ interface MoveButtonListProps {
  * labelled with the move, so a user can tap a move instead of dragging a piece
  * on a small board.
  */
+// @FollowsBlueprint atom-plain
 export function MoveButtonList({ candidates, fen, onPick }: MoveButtonListProps) {
   return (
     <div className="panel move-button-list">

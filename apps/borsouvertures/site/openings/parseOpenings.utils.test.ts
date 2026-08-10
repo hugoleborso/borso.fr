@@ -37,6 +37,7 @@ function openingWithLineOverrides(overrides: Record<string, unknown>) {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('parseOpenings', () => {
   it('parses a well-formed payload', () => {
     const result = parseOpenings([validOpening]);

@@ -25,6 +25,12 @@ interface ButtonProps {
   readonly style?: CSSProperties;
 }
 
+/**
+ * @Blueprint atom-lookup-variants
+ * @BlueprintName Atom With Lookup Variants
+ * @BlueprintUsage Use for a user interface primitive with more than two visual variants in an application that has no Tailwind and no cva.
+ * @BlueprintDescription This application styles through hand written CSS files, so it cannot follow `atom-variant`; the same intent lands as one frozen record per variant axis, `CLASS_BY_VARIANT` and `CLASS_BY_SIZE`, each keyed by the prop union so a new variant without a class is a type error. The component indexes both records and concatenates the two results, with no conditional in the markup and no class name assembled from a condition.
+ */
 export function Button({
   children,
   onClick,

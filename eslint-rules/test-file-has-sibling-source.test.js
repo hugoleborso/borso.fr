@@ -18,6 +18,7 @@ const sourceWithoutSiblingTest = pureFile(
 const siblingTestItself = pureFile('apps/last-loop-lepin/api/src/ranking/ranking.core.test.ts');
 const impureSource = pureFile('apps/last-loop-lepin/api/src/ranking/ranking.service.ts');
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(sourceWithSiblingTest, { jsx: false }).run('test-file-has-sibling-source', rule, {
   valid: [
     { code: 'export const metres = 1;' },

@@ -25,7 +25,9 @@ const WORKSPACE_ROOT = path.resolve(HERE, '..', '..');
 const FAKE_ASSETS_DIR = path.join(WORKSPACE_ROOT, 'site');
 const FAKE_API_ENTRY = path.join(WORKSPACE_ROOT, 'api', 'src', 'main.ts');
 const FAKE_MIGRATIONS_DIR = path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations');
+const PREVIEW_PR_NUMBER = 1;
 
+// @FollowsBlueprint test-cdk-synth
 function synthAppStack(stage: 'prod' | 'preview'): Template {
   const app = new App();
   const env = { account: '123456789012', region: 'eu-west-3' };
@@ -39,7 +41,7 @@ function synthAppStack(stage: 'prod' | 'preview'): Template {
   buildLastLoopLepinAppStack({
     scope: stack,
     stage,
-    prNumber: stage === 'preview' ? 1 : undefined,
+    ...(stage === 'preview' ? { prNumber: PREVIEW_PR_NUMBER } : {}),
     domainName: stage === 'prod' ? 'last-loop-lepin.borso.fr' : undefined,
     assetsPath: FAKE_ASSETS_DIR,
     apiEntry: FAKE_API_ENTRY,
@@ -144,6 +146,28 @@ describe('last-loop-lepin app stack', () => {
         }),
       }),
     );
+  });
+
+  it('refuses a non-production stage with no PR number instead of naming a pr-0 host', () => {
+    const app = new App();
+    const env = { account: '123456789012', region: 'eu-west-3' };
+    const clusterStack = new DsqlClusterStack(app, 'last-loop-lepin-cluster', {
+      app: 'last-loop-lepin',
+      env,
+    });
+    const stack = new Stack(app, 'last-loop-lepin-pr-1', { env });
+
+    expect(() =>
+      buildLastLoopLepinAppStack({
+        scope: stack,
+        stage: 'preview',
+        domainName: undefined,
+        assetsPath: FAKE_ASSETS_DIR,
+        apiEntry: FAKE_API_ENTRY,
+        migrationsPath: FAKE_MIGRATIONS_DIR,
+        cluster: clusterStack.cluster,
+      }),
+    ).toThrow('last-loop-lepin: a non-production stage requires prNumber.');
   });
 
   it('provisions a per-PR PhotosCdn distribution on preview', () => {

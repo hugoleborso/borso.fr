@@ -25,6 +25,7 @@ function buildEntry(
   return { id, songId, lineupOverride };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('filterEntriesForMember', () => {
   it('returns every entry with an empty instrument map when no member is selected', () => {
     const songsById = { [ALPHA_SONG_ID]: buildSong(ALPHA_SONG_ID, { [HUGO]: GUITAR }) };

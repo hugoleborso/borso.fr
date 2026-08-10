@@ -23,6 +23,7 @@ export interface TransitionCommentModalProps {
   readonly onClose: () => void;
 }
 
+// @FollowsBlueprint organism-query-owning
 export function TransitionCommentModal({
   songAId,
   songBId,

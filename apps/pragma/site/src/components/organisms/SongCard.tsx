@@ -9,6 +9,7 @@
  */
 
 import { Link } from 'react-router-dom';
+import { buildTonalityLabel } from '../../routes/catalog/tonality-label.utils';
 import { type ChartKind, ChartKindIcon } from '../molecules/ChartKindIcon';
 import { EnergyBadge } from '../molecules/EnergyBadge';
 import { MasteryBadge } from '../molecules/MasteryBadge';
@@ -30,6 +31,12 @@ export interface SongCardProps {
   instruments: readonly LineupInstrument[];
 }
 
+/**
+ * @Blueprint organism-presentational
+ * @BlueprintName Presentational Organism
+ * @BlueprintUsage Use for a screen region that composes molecules and atoms but owns no state and fetches nothing.
+ * @BlueprintDescription Takes every value it draws as a prop, composes molecules and atoms only, and delegates its one derived string to the covered `buildTonalityLabel` instead of computing it inline. Holding no state and no query is what lets the route above it decide when the card re-renders.
+ */
 export function SongCard({
   id,
   title,
@@ -44,13 +51,7 @@ export function SongCard({
   members,
   instruments,
 }: SongCardProps): JSX.Element {
-  const tonalityLabel = (() => {
-    if (tonalityStart === null) return null;
-    if (tonalityEnd !== null && tonalityEnd !== tonalityStart) {
-      return `${tonalityStart} → ${tonalityEnd}`;
-    }
-    return tonalityStart;
-  })();
+  const tonalityLabel = buildTonalityLabel(tonalityStart, tonalityEnd);
   return (
     <Link
       to={`/catalog/${id}`}

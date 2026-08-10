@@ -60,6 +60,7 @@ function buildOutEntry(): RankedRunnerDto {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('indexTrack', () => {
   it('returns total 0 and empty cumulative array for empty points', () => {
     const track = indexTrack([]);

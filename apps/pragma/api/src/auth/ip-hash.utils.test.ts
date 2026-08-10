@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { hashIp, readClientIp, UNKNOWN_IP_PLACEHOLDER } from './ip-hash.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('ip-hash.utils', () => {
   describe('readClientIp', () => {
     it('returns the unknown placeholder when the header is absent', () => {

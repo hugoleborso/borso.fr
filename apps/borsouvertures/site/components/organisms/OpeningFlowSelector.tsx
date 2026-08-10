@@ -8,6 +8,7 @@ import { useAppState } from '@/state/appState';
 import { CompactOpeningFlow } from './CompactOpeningFlow';
 import { WideOpeningFlow } from './WideOpeningFlow';
 
+// @FollowsBlueprint component-lookup-table
 const FLOW_BY_VIEWPORT: ComponentByFlag<OpeningPanelProps> = {
   true: CompactOpeningFlow,
   false: WideOpeningFlow,
@@ -22,6 +23,7 @@ interface OpeningFlowSelectorProps {
   openings: Opening[];
 }
 
+// @FollowsBlueprint organism-table-dispatch
 export function OpeningFlowSelector({ openings }: OpeningFlowSelectorProps) {
   const { mode, selection, playScope, boardStyle } = useAppState();
   const isCompactViewport = useIsCompactViewport();

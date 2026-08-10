@@ -22,6 +22,7 @@ interface MondrianFrameProps {
   onCompose: () => void;
 }
 
+// @FollowsBlueprint organism-presentational
 export function MondrianFrame({
   rectangles,
   palette,

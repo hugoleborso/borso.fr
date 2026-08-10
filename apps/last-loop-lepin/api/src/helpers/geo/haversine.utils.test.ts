@@ -10,6 +10,7 @@ const ANTIPODE_OF_PARIS = { lat: -48.8566, lng: 2.3522 + 180 };
 const EARTH_HALF_CIRCUMFERENCE_METERS = 20_015_086;
 const ANTIPODE_TOLERANCE_METERS = 50_000;
 
+// @FollowsBlueprint test-pure-unit
 describe('haversineDistanceMeters', () => {
   it('returns 0 for coincident points', () => {
     expect(haversineDistanceMeters(PARIS, PARIS)).toBe(0);

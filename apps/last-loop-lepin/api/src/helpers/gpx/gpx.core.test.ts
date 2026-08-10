@@ -8,12 +8,14 @@ import {
   tryParseFloat,
 } from './gpx.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('GpxParseError', () => {
   it('carries GpxParseError as its name', () => {
     expect(new GpxParseError('boom').name).toBe('GpxParseError');
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('tryParseFloat', () => {
   it('returns null for non-numeric strings', () => {
     expect(tryParseFloat('abc')).toBeNull();
@@ -34,6 +36,7 @@ describe('tryParseFloat', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('tryParseDate', () => {
   it('returns null for malformed datetime strings', () => {
     expect(tryParseDate('not-a-date')).toBeNull();
@@ -44,6 +47,7 @@ describe('tryParseDate', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('buildPointTimeFractions', () => {
   it('returns null when fewer than two points are timestamped', () => {
     expect(buildPointTimeFractions([])).toBeNull();
@@ -91,6 +95,7 @@ describe('buildPointTimeFractions', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('buildPointElevations', () => {
   it('returns the elevations array when every entry is present', () => {
     expect(buildPointElevations([100, 110, 120])).toEqual([100, 110, 120]);
@@ -184,6 +189,7 @@ const STRAVA_RECORDED_SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
  </trk>
 </gpx>`;
 
+// @FollowsBlueprint test-pure-unit
 describe('parseGpx', () => {
   it('extracts distance, elevation gain and start point from a minimal GPX', () => {
     const track = parseGpx(MINIMAL_GPX);

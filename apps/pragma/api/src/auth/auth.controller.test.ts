@@ -48,6 +48,7 @@ function extractSessionCookie(response: Response): string | null {
   return match === null ? null : (match[1] ?? null);
 }
 
+// @FollowsBlueprint test-back-e2e
 describe('shared-password auth controller (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

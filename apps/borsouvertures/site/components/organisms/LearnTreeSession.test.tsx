@@ -4,6 +4,7 @@ import '@/i18n/i18n';
 import { EMPTY_PLAY_SCOPE, FULL_SELECTION } from '@/openings/playScope.core';
 import { LearnTreeSession } from './LearnTreeSession';
 
+// @FollowsBlueprint test-component-render
 describe('LearnTreeSession', () => {
   it('asks the user to pick a variation when the selection names none', () => {
     render(

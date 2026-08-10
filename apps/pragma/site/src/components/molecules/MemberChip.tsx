@@ -18,6 +18,7 @@ export interface MemberChipProps {
   className?: string;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function MemberChip({
   memberName,
   memberColor,

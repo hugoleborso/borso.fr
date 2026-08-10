@@ -24,6 +24,7 @@ export interface WarnMarkerGutterProps {
   readonly onOpenTransition: (leftSongId: string, rightSongId: string) => void;
 }
 
+// @FollowsBlueprint organism-presentational
 export function WarnMarkerGutter(props: WarnMarkerGutterProps): JSX.Element {
   const { t } = useTranslation();
   return (

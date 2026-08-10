@@ -19,6 +19,7 @@ import { setPlayScope, setSelection } from '@/state/appState';
 import type { Mode, PlayScope } from '@/state/persistedState.utils';
 import type { OpeningPanelProps } from './openingPanel.types';
 
+// @FollowsBlueprint component-lookup-table
 const ALL_VARIATIONS_CARD_BY_MODE: ComponentByKind<Mode, SelectorCardProps> = {
   play: SelectorCard,
   learn: EmptySlot,
@@ -36,6 +37,7 @@ const VARIATION_PICK_BY_MODE: Record<Mode, (entry: VariationEntry, scope: PlaySc
     setPlayScope(toggleVariationInPlayScope(scope, opening.id, variation.id)),
 };
 
+// @FollowsBlueprint molecule-presentational
 export function VariationsPanel({
   mode,
   lists,

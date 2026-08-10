@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { composeClassName } from './class-name.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('composeClassName', () => {
   it('joins string class names with a space', () => {
     expect(composeClassName('a', 'b')).toBe('a b');

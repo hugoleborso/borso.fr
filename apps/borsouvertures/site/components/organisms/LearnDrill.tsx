@@ -25,6 +25,7 @@ interface ClearedBannerProps {
   variationId: string;
 }
 
+// @FollowsBlueprint component-lookup-table
 const CLEARED_BANNER_BY_STATE: ComponentByFlag<ClearedBannerProps> = {
   true: LearnClearedBanner,
   false: EmptySlot,
@@ -53,6 +54,7 @@ interface LearnDrillProps {
   visualization: TreeVisualization;
 }
 
+// @FollowsBlueprint organism-machine-bound
 export function LearnDrill({ target, side, boardStyle, visualization }: LearnDrillProps) {
   const { opening, variation } = target;
   useSessionStart(() => learnTreeMachine.start(variation, side));

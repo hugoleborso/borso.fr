@@ -28,6 +28,7 @@ function buildRankedRunner(slug: string, status: RunnerStatusDto): RankedRunnerD
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('selectRunnerStatusKind', () => {
   it('reports a running runner as in race', () => {
     expect(selectRunnerStatusKind(IN_RACE)).toBe('in-race');

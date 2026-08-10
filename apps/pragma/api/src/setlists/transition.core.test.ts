@@ -8,6 +8,12 @@ const INSTRUMENTS = {
   bass: { isHarmonic: false },
 };
 
+/**
+ * @Blueprint test-pure-unit
+ * @BlueprintName Pure Unit Test
+ * @BlueprintUsage Use for every `*.core.ts` and `*.utils.ts` file, which the per-file coverage gate holds at 100 percent.
+ * @BlueprintDescription Calls the function with literal values and asserts on the returned value, with no mock, no fake timer and no database. The instrument map is one shared constant, and each case names the rule it pins, including the boundaries: an absent member, a null instrument, an instrument missing from the map, and the sorted order of the warning list.
+ */
 describe('evaluateTransition', () => {
   it('marks the pair safe when the same member holds a harmonic instrument across both songs', () => {
     const result = evaluateTransition(

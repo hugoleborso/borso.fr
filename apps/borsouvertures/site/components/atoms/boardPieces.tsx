@@ -4,6 +4,7 @@ import { defaultPieces, type PieceRenderObject } from 'react-chessboard';
 
 type PieceRenderProps = Parameters<PieceRenderObject[string]>[0];
 
+// @FollowsBlueprint core-label-key
 const PIECE_LABEL_KEY_BY_TYPE = {
   wP: 'board.piece.white-pawn',
   wN: 'board.piece.white-knight',
@@ -34,6 +35,7 @@ const PIECE_LABEL_STYLE: CSSProperties = {
  * command takes its accessible name from its contents, so the name has to be
  * rendered inside the piece — which the `pieces` option is the only hook for.
  */
+// @FollowsBlueprint component-lookup-table
 export function buildNamedPieces(translate: TFunction): PieceRenderObject {
   return Object.fromEntries(
     Object.entries(PIECE_LABEL_KEY_BY_TYPE).map(([pieceType, labelKey]) => [

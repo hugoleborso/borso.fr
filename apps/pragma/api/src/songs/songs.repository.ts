@@ -91,6 +91,7 @@ interface SongRawRow {
   createdAt: Date;
 }
 
+// @FollowsBlueprint repository-projection
 const PROJECTION = {
   id: songTable.id,
   title: songTable.title,
@@ -116,10 +117,13 @@ function parseJsonArrayColumn<T>(raw: string | null, schema: z.ZodSchema<T[]>): 
   return schema.parse(parsed);
 }
 
+/**
+ * @Blueprint repository-json-column
+ * @BlueprintName Repository Json Column Boundary
+ * @BlueprintUsage Use for a column holding json as text, which is what Aurora DSQL forces because it has no jsonb type.
+ * @BlueprintDescription Decodes every text-encoded column in one place: `JSON.parse` into a value annotated `unknown`, then a Zod schema that narrows it, which is why no type assertion is needed. `encodeInsert` and `encodeUpdate` are the matching write side, so the encoded string never leaves this file.
+ */
 function rowToSong(row: SongRawRow): SongRow {
-  // The JSON blobs are stored as TEXT because Aurora DSQL doesn't
-  // support jsonb. The `as unknown` step is the JSON-parse escape hatch
-  // the repo allows; Zod schemas do the runtime validation.
   const linksRaw: unknown = JSON.parse(row.links);
   const chartRaw: unknown = row.chart === null ? null : JSON.parse(row.chart);
   const defaultLineupRaw: unknown = JSON.parse(row.defaultLineup);

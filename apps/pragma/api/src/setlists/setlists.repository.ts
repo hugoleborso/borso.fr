@@ -55,6 +55,7 @@ interface SetlistEntryRawRow {
   notes: string;
 }
 
+// @FollowsBlueprint repository-projection
 const ENTRY_PROJECTION = {
   id: setlistEntryTable.id,
   setlistId: setlistEntryTable.setlistId,
@@ -67,10 +68,8 @@ const ENTRY_PROJECTION = {
   notes: setlistEntryTable.notes,
 } as const;
 
+// @FollowsBlueprint repository-json-column
 function rowToEntry(row: SetlistEntryRawRow): SetlistEntryRow {
-  // lineup_override is stored as JSON-encoded text. The `as unknown`
-  // step is the JSON-parse escape hatch the repo allows; the row Zod
-  // schema does the runtime validation.
   let lineupOverride: LineupOverride | null = null;
   if (row.lineupOverride !== null) {
     const lineupOverrideRaw: unknown = JSON.parse(row.lineupOverride);

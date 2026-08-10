@@ -32,6 +32,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+// @FollowsBlueprint test-handler-mocked-sdk
 describe('migration-runner handler — cloneFromSchema (Neon-branch pattern)', () => {
   it('clones structure + data + _migrations, skips blocklisted tables, nullifies S3 columns', async () => {
     state.existingSchemas.add('prod');

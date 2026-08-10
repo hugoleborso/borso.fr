@@ -5,6 +5,7 @@ import {
   type SessionInsertShape,
 } from './sessions.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('buildSessionInsertShape', () => {
   it('keeps the concert columns and parses the ISO date', () => {
     expect(

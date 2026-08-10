@@ -3,6 +3,7 @@ import { defineConfig } from 'vitest/config';
 
 const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
+// @FollowsBlueprint workspace-test-config
 export default defineConfig({
   resolve: {
     alias: {
@@ -12,6 +13,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    setupFiles: ['./site/test-setup.ts'],
     include: ['site/**/*.test.ts', 'site/**/*.test.tsx'],
     coverage: {
       provider: 'v8',

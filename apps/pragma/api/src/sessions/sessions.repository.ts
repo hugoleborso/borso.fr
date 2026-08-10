@@ -37,6 +37,7 @@ interface SessionRawRow {
   friendsCountPerMember: string | null;
 }
 
+// @FollowsBlueprint repository-projection
 const PROJECTION = {
   id: sessionTable.id,
   kind: sessionTable.kind,
@@ -48,10 +49,8 @@ const PROJECTION = {
   friendsCountPerMember: sessionTable.friendsCountPerMember,
 } as const;
 
+// @FollowsBlueprint repository-json-column
 function rowToSession(row: SessionRawRow): SessionRow {
-  // friends_count_per_member is stored as JSON-encoded text. The `as
-  // unknown` step is the JSON-parse escape hatch the repo allows; the
-  // row Zod schema does the runtime validation.
   let friendsCountPerMember: unknown = null;
   if (row.friendsCountPerMember !== null) {
     const friendsCountRaw: unknown = JSON.parse(row.friendsCountPerMember);

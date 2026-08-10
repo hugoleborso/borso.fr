@@ -12,6 +12,7 @@ const FUTURE_PRACTICE = {
 };
 const SESSIONS = [PAST_CONCERT, FUTURE_CONCERT, FUTURE_PRACTICE];
 
+// @FollowsBlueprint test-pure-unit
 describe('selectUpcomingConcerts', () => {
   it('keeps the concerts that have not happened yet', () => {
     expect(selectUpcomingConcerts(SESSIONS, NOW).map((session) => session.id)).toStrictEqual([

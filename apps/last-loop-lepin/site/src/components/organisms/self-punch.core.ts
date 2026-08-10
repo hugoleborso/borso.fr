@@ -61,6 +61,12 @@ function assertNever(value: never): never {
  * `already-out` for one who has stopped, which skips the geolocation dance
  * entirely.
  */
+/**
+ * @Blueprint core-client-state-machine
+ * @BlueprintName Core Client State Machine
+ * @BlueprintUsage Use for a front end flow with several named outcomes, so the component stores one state instead of a set of flags.
+ * @BlueprintDescription One reducer over a union state and a union event, with a `default` arm calling `assertNever`, so a new event without a transition is a compile error rather than a blank dialog. The adapters beside it, `selectFailureEvent` and `selectRejectionEvent`, turn a rejected request into an event before it reaches the reducer, which keeps the transport out of the machine and leaves the whole file pure and covered.
+ */
 export function nextStep(_current: SelfPunchState, event: SelfPunchEvent): SelfPunchState {
   switch (event.type) {
     case 'open':

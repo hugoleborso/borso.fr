@@ -88,6 +88,7 @@ export interface SetlistEntryRowProps {
   readonly onOpenTransitionBefore: () => void;
 }
 
+// @FollowsBlueprint organism-form
 export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
   const [moreOpen, setMoreOpen] = useState<boolean>(false);

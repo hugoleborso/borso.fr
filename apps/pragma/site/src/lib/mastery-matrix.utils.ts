@@ -5,6 +5,7 @@
  * matrix is edited.
  */
 
+// @FollowsBlueprint utils-pure-module
 export function cellKey(memberId: string, instrumentId: string): string {
   return `${memberId}/${instrumentId}`;
 }

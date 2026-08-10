@@ -9,15 +9,10 @@ import {
   httpStatusForAuthDenial,
   login,
   logout,
+  readClientIp,
 } from './auth.service';
 
 const ADMIN_COOKIE_TTL_SECONDS = 12 * 60 * 60;
-
-function readClientIp(headerValue: string | undefined): string {
-  if (headerValue === undefined) return 'unknown';
-  const first = headerValue.split(',')[0];
-  return first === undefined ? 'unknown' : first.trim();
-}
 
 /**
  * `sameSite: 'Lax'` is the deliberate default — `Strict` blocked the
@@ -29,6 +24,7 @@ function readClientIp(headerValue: string | undefined): string {
  * covered. `requireAdminSession` adds an explicit Origin-header check
  * as belt-and-braces for scripted cross-origin requests.
  */
+// @FollowsBlueprint controller-public-router
 const authRouter = new Hono()
   .post('/login', zValidator('json', loginInputSchema), async (context) => {
     const ipAddress = readClientIp(context.req.header('x-forwarded-for'));

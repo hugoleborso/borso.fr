@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { StaticSite } from '../../src/constructs/static-site.js';
 import { synthTemplate } from './helpers/template.js';
 
+// @FollowsBlueprint test-cdk-synth
 describe('StaticSite (prod, spaFallback)', () => {
   const tpl = synthTemplate((stack) => {
     new StaticSite(stack, 'Site', {

@@ -29,6 +29,7 @@ export function useSignChartUpload() {
 }
 
 /** Short lived GET URL for a stored chart, or nothing while there is no chart to sign. */
+// @FollowsBlueprint query-module
 export function useSignedChartUrl(objectKey: string | null) {
   return useQuery({
     queryKey: uploadKeys.signedGet(objectKey ?? ''),

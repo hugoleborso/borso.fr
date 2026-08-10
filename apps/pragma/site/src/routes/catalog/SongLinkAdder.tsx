@@ -17,6 +17,7 @@ interface SongLinkAdderProps {
   readonly onAdd: () => void;
 }
 
+// @FollowsBlueprint organism-presentational
 export function SongLinkAdder({
   newLinkUrl,
   setNewLinkUrl,

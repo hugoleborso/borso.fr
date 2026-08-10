@@ -40,6 +40,7 @@ void i18next.use(initReactI18next).init({
  * `languageChanged` on every switch, which is a subscription this module owns
  * for the life of the page — no component needs an effect for it.
  */
+// @FollowsBlueprint i18n-setup
 function applyDocumentLanguage(language: string): void {
   if (typeof document === 'undefined') return;
   document.documentElement.lang = language;

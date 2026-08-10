@@ -19,6 +19,7 @@ interface NextLoopCountdownProps {
   readonly label: string;
 }
 
+// @FollowsBlueprint molecule-clock-subscriber
 export function NextLoopCountdown({ edition, label }: NextLoopCountdownProps) {
   const nowMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
   return <Countdown targetEpochMs={projectNextLoopBoundaryMs(edition, nowMs)} label={label} />;

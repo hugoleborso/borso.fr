@@ -22,6 +22,7 @@ function makeEntry(overrides: Partial<MinimalSetlistEntry>): MinimalSetlistEntry
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('applyEntryPatch', () => {
   it('merges the patch into the matching entry', () => {
     const cache: EntriesCache = {

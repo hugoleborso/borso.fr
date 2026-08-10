@@ -20,6 +20,7 @@ interface TagProps {
   size: TagSize;
 }
 
+// @FollowsBlueprint atom-plain
 export function Tag({ label, foreground, background, borderColor, size }: TagProps) {
   const sizing = SIZING_BY_SIZE[size];
   return (

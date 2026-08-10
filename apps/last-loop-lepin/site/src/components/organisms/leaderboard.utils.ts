@@ -5,6 +5,7 @@
 
 export type ChipInteractivity = 'tappable' | 'display-only';
 
+// @FollowsBlueprint core-view-intent
 export function selectChipInteractivity(hasSelectHandler: boolean): ChipInteractivity {
   return hasSelectHandler ? 'tappable' : 'display-only';
 }

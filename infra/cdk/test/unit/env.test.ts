@@ -8,6 +8,7 @@ import {
 
 const TRACKED_ENV = ['STAGE', 'PR_NUMBER', 'CDK_DEFAULT_ACCOUNT', 'AWS_ACCOUNT_ID', 'TEST_VAR'];
 
+// @FollowsBlueprint test-node-adapter
 describe('env helpers', () => {
   let snapshot: Record<string, string | undefined>;
 

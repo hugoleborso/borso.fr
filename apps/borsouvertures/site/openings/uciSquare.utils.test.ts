@@ -10,6 +10,7 @@ import {
   uciToSquare,
 } from './uciSquare.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('isSquare / toSquare', () => {
   it('accepts valid algebraic squares', () => {
     expect(isSquare('a1')).toBe(true);

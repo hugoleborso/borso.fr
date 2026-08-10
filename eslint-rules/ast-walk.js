@@ -17,6 +17,7 @@ function isAstNode(value) {
   return typeof value === 'object' && value !== null && typeof value.type === 'string';
 }
 
+// @FollowsBlueprint lint-rule-predicate
 /** Calls `visit` on every descendant of `node`, and not on `node` itself. */
 export function forEachDescendant(node, visit) {
   for (const key of Object.keys(node)) {

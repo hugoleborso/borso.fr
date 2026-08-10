@@ -39,6 +39,7 @@ export function loopIndexAt(edition: RaceEdition, now: Date): number {
 }
 
 /** True iff `now` is past the race's cut-off. */
+// @FollowsBlueprint core-decision
 export function isRaceEndReached(edition: RaceEdition, now: Date): boolean {
   return now.getTime() >= edition.endsAt.getTime();
 }
@@ -57,6 +58,7 @@ interface DidNotFinishProjection {
  * already-punched loop), (c) they have no valid (non-voided) punch for
  * loop N.
  */
+// @FollowsBlueprint core-projection
 export function projectDidNotFinishCandidates(
   edition: RaceEdition,
   runners: readonly Runner[],

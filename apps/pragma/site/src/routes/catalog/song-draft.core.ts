@@ -133,6 +133,7 @@ export interface SongSavePayload {
   readonly tags: string[];
 }
 
+// @FollowsBlueprint core-form-schema
 export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null {
   const titleTrimmed = draft.title.trim();
   if (titleTrimmed.length === 0) return null;

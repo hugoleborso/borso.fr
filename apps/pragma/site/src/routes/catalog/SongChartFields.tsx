@@ -31,6 +31,7 @@ interface SongChartFieldsProps {
 const LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
 const RADIO_LABEL_CLASS = 'flex items-center gap-2 text-sm text-ink-700 cursor-pointer';
 
+// @FollowsBlueprint organism-presentational
 export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
   const { t } = useTranslation();
   return (

@@ -9,6 +9,7 @@ export interface CatalogGridProps {
   songs: readonly SongCardProps[];
 }
 
+// @FollowsBlueprint organism-presentational
 export function CatalogGrid({ songs }: CatalogGridProps): JSX.Element {
   return (
     <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">

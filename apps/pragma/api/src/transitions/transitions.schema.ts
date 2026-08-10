@@ -7,6 +7,7 @@
 import { pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
+// @FollowsBlueprint schema-table-and-input
 export const transitionCommentTable = pgTable(
   'transition_comment',
   {

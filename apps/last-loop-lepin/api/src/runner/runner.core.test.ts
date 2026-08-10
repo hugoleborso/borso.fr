@@ -13,6 +13,7 @@ function buildRunner(slug: string, bib: number | null = null): Runner {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('slugifyDisplayName', () => {
   it('lowercases and replaces whitespace with dashes', () => {
     expect(slugifyDisplayName('Hugo Le Borso')).toBe('hugo-le-borso');
@@ -40,6 +41,7 @@ describe('slugifyDisplayName', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('validateRunnerDraft', () => {
   const baseRoster = [buildRunner('alice', 1), buildRunner('bob', 2)];
 
@@ -159,6 +161,7 @@ describe('validateRunnerDraft', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('totalElapsedMs', () => {
   const start = new Date('2026-09-19T06:00:00+02:00');
 

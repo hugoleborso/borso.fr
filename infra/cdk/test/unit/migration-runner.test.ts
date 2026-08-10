@@ -32,6 +32,12 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+/**
+ * @Blueprint test-handler-mocked-sdk
+ * @BlueprintName Handler Test Over A Mocked SDK
+ * @BlueprintUsage Use for a Lambda handler whose only collaborators are a third party SDK and a database driver.
+ * @BlueprintDescription Registers every `vi.mock` first and imports the handler afterwards with a top level `await import`, because a static import would bind the real module before the mocks exist. The SQL double and its mutable state live in `helpers/`, outside the test glob and outside `src/`, so the harness neither auto-runs nor faces the coverage gate, and each case resets that state in `beforeEach`. Assertions read the recorded query strings, which is how the suite proves a statement rewrite reached the driver and how it proves the connection closed through `finally` after a rejection.
+ */
 describe('migration-runner handler', () => {
   it('Create: ensures schema, applies all migrations, returns physicalId', async () => {
     const result = await handler({

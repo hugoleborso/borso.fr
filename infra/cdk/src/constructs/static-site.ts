@@ -97,6 +97,7 @@ export interface StaticSiteProps {
   readonly spaFallback?: boolean;
 }
 
+// @FollowsBlueprint reusable-cdk-construct
 /**
  * S3 + CloudFront static-site construct.
  *

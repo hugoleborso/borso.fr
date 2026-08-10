@@ -16,6 +16,7 @@ function isSameCell(row: MasteryCell, memberId: string, instrumentId: string): b
 }
 
 /** The rows with `next` replacing the row for the same cell, or appended. */
+// @FollowsBlueprint utils-pure-module
 export function upsertMasteryDefault<Row extends MasteryCell>(
   rows: readonly Row[],
   next: Row,

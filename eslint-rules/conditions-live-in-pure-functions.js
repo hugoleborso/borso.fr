@@ -161,6 +161,7 @@ function isRenderedByJsx(node) {
   return isInsideJsx(node);
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

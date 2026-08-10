@@ -33,6 +33,7 @@ export function useMasteryDefaults() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useSaveMasteryDefault() {
   const queryClient = useQueryClient();
   return useMutation({

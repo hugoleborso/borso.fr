@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { httpStatusForAuthDenial, isRequestOriginRejected, parseAllowedOrigins } from './auth.core';
+import {
+  httpStatusForAuthDenial,
+  isRequestOriginRejected,
+  parseAllowedOrigins,
+  readClientIp,
+} from './auth.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('httpStatusForAuthDenial', () => {
   it('answers 429 for a rate-limited denial', () => {
     expect(httpStatusForAuthDenial('rate-limited')).toBe(429);
@@ -15,6 +21,7 @@ describe('httpStatusForAuthDenial', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('parseAllowedOrigins', () => {
   it('answers null when the variable is unset', () => {
     expect(parseAllowedOrigins(undefined)).toBeNull();
@@ -36,6 +43,7 @@ describe('parseAllowedOrigins', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('isRequestOriginRejected', () => {
   const ALLOWED = 'https://a.example';
 
@@ -69,5 +77,29 @@ describe('isRequestOriginRejected', () => {
     for (const method of ['PUT', 'PATCH', 'DELETE']) {
       expect(isRequestOriginRejected(method, 'https://evil.example', ALLOWED)).toBe(true);
     }
+  });
+});
+
+// @FollowsBlueprint test-pure-unit
+describe('readClientIp', () => {
+  it('answers unknown when the header is absent', () => {
+    expect(readClientIp(undefined)).toBe('unknown');
+  });
+
+  it('answers the whole header when it carries a single address', () => {
+    expect(readClientIp('203.0.113.7')).toBe('203.0.113.7');
+  });
+
+  it('answers the leftmost address when proxies appended their hops', () => {
+    expect(readClientIp('203.0.113.7, 70.41.3.18, 150.172.238.178')).toBe('203.0.113.7');
+  });
+
+  it('trims the surrounding whitespace of the address it answers', () => {
+    expect(readClientIp('  203.0.113.7  ')).toBe('203.0.113.7');
+    expect(readClientIp('  203.0.113.7 , 70.41.3.18')).toBe('203.0.113.7');
+  });
+
+  it('answers an empty string for an empty header, which buckets as one caller', () => {
+    expect(readClientIp('')).toBe('');
   });
 });

@@ -104,6 +104,7 @@ function summarise(samples: readonly Sample[]): SampleStats | null {
  * @param width pixel width of the SVG `viewBox`.
  * @param height pixel height of the SVG `viewBox`.
  */
+// @FollowsBlueprint utils-geometry
 export function buildProfileGeometry(
   pointElevations: readonly number[],
   cumulativeDistances: readonly number[],

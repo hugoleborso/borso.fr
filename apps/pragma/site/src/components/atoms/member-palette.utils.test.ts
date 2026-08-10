@@ -7,6 +7,7 @@ import {
   parseHexTriplet,
 } from './member-palette.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('parseHexTriplet', () => {
   it('reads the three channel bytes of a six-digit hex', () => {
     expect(parseHexTriplet('#c4583a')).toEqual([0xc4, 0x58, 0x3a]);

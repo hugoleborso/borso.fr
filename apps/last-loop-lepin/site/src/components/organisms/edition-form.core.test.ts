@@ -44,6 +44,7 @@ function buildEdition(overrides: Partial<RaceEditionDto> = {}): RaceEditionDto {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('editionFormValuesSchema', () => {
   it('accepts a well formed edition', () => {
     expect(editionFormValuesSchema.safeParse(VALUES).success).toBe(true);

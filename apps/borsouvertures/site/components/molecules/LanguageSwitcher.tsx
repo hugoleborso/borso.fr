@@ -4,11 +4,13 @@ import { readBrowserStorage } from '@/i18n/i18n';
 import { readLanguageFamily, type SupportedLanguage } from '@/i18n/i18n.utils';
 import { writeSavedLanguage } from '@/i18n/locale-storage.utils';
 
+// @FollowsBlueprint component-lookup-table
 const LANGUAGE_BY_IS_FRENCH: Record<`${boolean}`, SupportedLanguage> = {
   true: 'fr',
   false: 'en',
 };
 
+// @FollowsBlueprint molecule-presentational
 export function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
   const isFrenchActive = readLanguageFamily(i18n.language) === 'fr';

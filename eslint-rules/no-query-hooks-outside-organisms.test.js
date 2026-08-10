@@ -6,6 +6,7 @@ const moleculeFile = 'apps/pragma/site/src/components/molecules/MemberChip.tsx';
 const organismFile = 'apps/pragma/site/src/components/organisms/CatalogGrid.tsx';
 const queryModuleFile = 'apps/pragma/site/src/lib/queries/songs.ts';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(moleculeFile).run('no-query-hooks-outside-organisms (molecule)', rule, {
   valid: [
     'const label = useMemo(() => formatName(member), [member]);',

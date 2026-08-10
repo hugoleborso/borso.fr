@@ -38,6 +38,7 @@ const PAYLOAD = {
   contactPhone: null,
 } as const;
 
+// @FollowsBlueprint test-pure-unit
 describe('selectToggleState', () => {
   it('is active for the current view', () => {
     expect(selectToggleState('list', 'list')).toBe('active');

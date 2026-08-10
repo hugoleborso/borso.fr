@@ -1,18 +1,8 @@
-import { App, Stack } from 'aws-cdk-lib';
-import { Template } from 'aws-cdk-lib/assertions';
+import type { Stack } from 'aws-cdk-lib';
 import { Code, Function as LambdaFunction, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { describe, expect, it } from 'vitest';
 import { DsqlCluster, lookupDsqlCluster } from '../../src/constructs/dsql-cluster.js';
-import { isObject, resourcesOfType } from './helpers/template.js';
-
-function synth(setup: (stack: Stack) => void): Template {
-  const app = new App();
-  const stack = new Stack(app, 'TestStack', {
-    env: { account: '123456789012', region: 'eu-west-3' },
-  });
-  setup(stack);
-  return Template.fromStack(stack);
-}
+import { isObject, resourcesOfType, synthTemplate as synth } from './helpers/template.js';
 
 function makeLambda(stack: Stack, id: string): LambdaFunction {
   return new LambdaFunction(stack, id, {
@@ -22,6 +12,7 @@ function makeLambda(stack: Stack, id: string): LambdaFunction {
   });
 }
 
+// @FollowsBlueprint test-cdk-synth
 describe('DsqlCluster', () => {
   it('creates a deletion-protected DSQL cluster by default', () => {
     const tpl = synth((stack) => {
@@ -80,6 +71,14 @@ describe('DsqlCluster', () => {
     ).toThrow();
   });
 
+  it('rejects stage="dev"', () => {
+    expect(() =>
+      synth((stack) => {
+        new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'dev' });
+      }),
+    ).toThrow(/not deployable/);
+  });
+
   it('grantConnect adds dsql:DbConnect to the principal policy', () => {
     const tpl = synth((stack) => {
       const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
@@ -99,6 +98,7 @@ describe('DsqlCluster', () => {
   });
 });
 
+// @FollowsBlueprint test-cdk-synth
 describe('lookupDsqlCluster', () => {
   it('reads the per-app SSM params and grantConnect references the resolved ARN', () => {
     const tpl = synth((stack) => {

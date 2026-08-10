@@ -20,6 +20,7 @@ async function seed(fixture: string) {
   });
 }
 
+// @FollowsBlueprint test-back-e2e
 describe('__test/test-seed.controller', () => {
   const originalFlag = process.env[TEST_SEED_FLAG];
 

@@ -54,6 +54,12 @@ function scanFileForNowDefaults(
   return occurrences;
 }
 
+/**
+ * @Blueprint test-artifact-audit
+ * @BlueprintName Test Artifact Audit
+ * @BlueprintUsage Use for a check on a generated file that ships, so the assertion is made about the file rather than about the objects that produced it.
+ * @BlueprintDescription Reads the `.sql` files the migration runner applies straight off disk and fails on any column carrying `DEFAULT now()` outside a named allow list, which also catches a migration edited by hand, something an assertion over the Drizzle table objects would miss.
+ */
 describe('migration SQL audit', () => {
   it('asserts no business column lands in prod with DEFAULT now()', () => {
     const sqlFiles = readdirSync(MIGRATIONS_DIR).filter((name) => name.endsWith('.sql'));

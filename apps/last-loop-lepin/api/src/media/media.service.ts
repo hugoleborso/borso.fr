@@ -1,5 +1,6 @@
 import { createPresignedUpload, type PresignedUpload } from './media.s3';
 
+// @FollowsBlueprint service-facade-reexport
 export { MediaConfigError, MediaContentTypeError } from './media.s3';
 
 export interface PresignAdminInput {

@@ -152,6 +152,7 @@ function soundsliceEmbed(parsed: URL): EmbedResult | null {
   };
 }
 
+// @FollowsBlueprint utils-pure-module
 export function resolveEmbed(url: string): EmbedResult {
   const parsed = tryParse(url);
   if (parsed === null) return { kind: 'plain', href: url };

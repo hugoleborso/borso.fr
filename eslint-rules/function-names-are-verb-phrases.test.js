@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './function-names-are-verb-phrases.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester('apps/pragma/site/src/components/organisms/CatalogGrid.tsx').run(
   'function-names-are-verb-phrases',
   rule,

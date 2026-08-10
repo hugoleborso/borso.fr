@@ -23,6 +23,7 @@ function countNotifications(machine: { subscribe: (listener: () => void) => () =
   return { read: () => calls };
 }
 
+// @FollowsBlueprint test-machine-transition
 describe('createLearnTreeMachine', () => {
   it('produces an INITIAL snapshot before start is called', () => {
     const machine = createLearnTreeMachine();

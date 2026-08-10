@@ -8,6 +8,7 @@ import {
   smoothedSeries,
 } from './energy-curve.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('energy-curve.core', () => {
   describe('smoothedSeries', () => {
     it('returns only the baseline anchor for an empty list', () => {

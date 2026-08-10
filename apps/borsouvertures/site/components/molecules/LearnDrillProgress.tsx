@@ -6,6 +6,7 @@ interface LearnDrillProgressProps {
   totalCount: number;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function LearnDrillProgress({ visitedCount, totalCount }: LearnDrillProgressProps) {
   const { t } = useTranslation();
   return (

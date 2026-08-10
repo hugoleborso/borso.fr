@@ -32,6 +32,7 @@ function ProbeSave({
   return null;
 }
 
+// @FollowsBlueprint test-query-hook
 describe('transitions mutation — optimistic update', () => {
   let stub: ReturnType<typeof stubFetch> | null = null;
   beforeEach(() => {

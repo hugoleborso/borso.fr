@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { selectKindLabelKey } from '../../labours/labours-appearance.core';
+import { NO_BORDER, selectKindLabelKey } from '../../labours/labours-appearance.core';
 import { listChallengeNoteKeys, listProofSections } from '../../labours/labours.core';
 import type { Challenge } from '../../labours/labours.types';
 import {
@@ -16,7 +16,7 @@ import { ProofSection } from './ProofSection';
 
 const META_ROW_MARGIN_BOTTOM_PX: Readonly<Record<`${boolean}`, number>> = { true: 10, false: 0 };
 const ROW_BORDER_BOTTOM: Readonly<Record<`${boolean}`, string>> = {
-  true: 'none',
+  true: NO_BORDER,
   false: `1px dashed ${DASH_RULE}`,
 };
 
@@ -26,6 +26,7 @@ interface ChallengeRowProps {
   isLastRow: boolean;
 }
 
+// @FollowsBlueprint organism-presentational
 export function ChallengeRow({ challenge, position, isLastRow }: ChallengeRowProps) {
   const { t } = useTranslation();
   const noteKeys = listChallengeNoteKeys(challenge);

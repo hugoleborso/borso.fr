@@ -8,6 +8,7 @@ interface InlineBannerProps {
 
 const CELEBRATION_MARK = '🎉 ';
 
+// @FollowsBlueprint atom-plain
 export function InlineBanner({
   message,
   primaryLabel,

@@ -6,6 +6,7 @@ const PRACTICE_DATE = '2026-04-28T18:30:00.000Z';
 const MEMBER_ID = '3f1d8a2c-0b4e-4f7a-9c1d-5e6f7a8b9c0d';
 const CONCERT_ID = '7c2e4b6a-1d3f-4a5b-8c9d-0e1f2a3b4c5d';
 
+// @FollowsBlueprint test-pure-unit
 describe('buildOptimisticSession', () => {
   it('keeps the concert columns and blanks the practice one', () => {
     expect(

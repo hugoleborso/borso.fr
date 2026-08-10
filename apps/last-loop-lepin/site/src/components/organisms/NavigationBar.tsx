@@ -21,6 +21,7 @@ const ENTRIES: readonly NavigationEntry[] = [
   { path: '/admin', route: 'admin', labelKey: 'nav.admin' },
 ];
 
+// @FollowsBlueprint organism-shell
 export function NavigationBar() {
   const { t } = useTranslation();
   const pathname = useSyncExternalStore(subscribeLocation, readPathname, readServerPathname);

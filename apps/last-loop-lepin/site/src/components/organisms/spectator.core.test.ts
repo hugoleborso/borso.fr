@@ -37,6 +37,7 @@ function buildEdition(overrides: Partial<RaceEditionDto> = {}): RaceEditionDto {
 const START_MS = new Date('2026-06-13T04:00:00.000Z').getTime();
 const END_MS = new Date('2026-06-13T20:00:00.000Z').getTime();
 
+// @FollowsBlueprint test-pure-unit
 describe('selectSpectatorView', () => {
   it('waits when there is no edition', () => {
     expect(selectSpectatorView(null)).toBe('waiting');

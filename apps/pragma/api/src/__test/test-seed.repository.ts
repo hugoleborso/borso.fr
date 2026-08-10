@@ -15,6 +15,7 @@ import { setlistEntryTable, setlistTable } from '../setlists/setlists.schema';
 import { songTable } from '../songs/songs.schema';
 import { transitionCommentTable } from '../transitions/transitions.schema';
 
+// @FollowsBlueprint repository-query
 export async function deleteAllDomainRows(): Promise<void> {
   const database = getDatabase();
   await database.delete(setlistEntryTable);

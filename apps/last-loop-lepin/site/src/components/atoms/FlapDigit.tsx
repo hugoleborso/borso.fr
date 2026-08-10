@@ -8,6 +8,7 @@ interface FlapDigitProps {
  * `flap` keyframes defined in `styles/components.css`; without it React reuses
  * the element and the animation only plays once, on mount.
  */
+// @FollowsBlueprint atom-plain
 export function FlapDigit({ digit }: FlapDigitProps) {
   return (
     <span key={digit} className="flap mono" aria-hidden>

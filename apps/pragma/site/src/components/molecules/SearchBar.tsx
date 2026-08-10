@@ -16,6 +16,7 @@ export interface SearchBarProps {
   className?: string;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function SearchBar({
   value,
   onChange,

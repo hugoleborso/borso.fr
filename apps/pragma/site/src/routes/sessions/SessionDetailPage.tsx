@@ -31,6 +31,12 @@ import { PracticeReadView } from './PracticeReadView';
 
 const NO_ROWS: readonly never[] = [];
 
+/**
+ * @Blueprint route-detail-page
+ * @BlueprintName Route Detail Page
+ * @BlueprintUsage Use for a route that reads one record named by a route parameter.
+ * @BlueprintDescription Reads the identifier with `useParams`, passes it to the id scoped query hooks together with an enabled flag so no request fires for an absent parameter, and returns early for the loading and the missing record cases before any markup that assumes the record exists. Everything after the early returns is a read organism taking plain props, so the page stays a thin orchestrator over the query hooks.
+ */
 export function SessionDetailPage(): JSX.Element {
   const { t, i18n } = useTranslation();
   const { sessionId } = useParams<{ sessionId: string }>();

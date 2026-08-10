@@ -13,6 +13,7 @@ import { adminRunnerRouter, runnerRouter } from './runner/runner.controller';
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 const TEST_SEED_FLAG_ON = '1';
 
+// @FollowsBlueprint api-composition-root
 function buildAppRouter() {
   return new Hono()
     .use('*', logger())
@@ -31,7 +32,7 @@ function buildAppRouter() {
 
 export type AppType = ReturnType<typeof buildAppRouter>;
 
-export function createApp(): Hono {
+export function createApp(): AppType {
   const app = buildAppRouter();
   const isTestSeedEnabled = process.env[TEST_SEED_FLAG] === TEST_SEED_FLAG_ON;
   if (isTestSeedEnabled) {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveLineup } from './lineup.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('resolveLineup', () => {
   it('returns the default when the override is null', () => {
     expect(resolveLineup({ hugo: 'guitar', gui: 'drums' }, null)).toEqual({

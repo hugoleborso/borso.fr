@@ -23,6 +23,7 @@ export function buildOfflineManifestRouter() {
   });
 }
 
+// @FollowsBlueprint controller-dispatch
 export function buildSessionsRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)

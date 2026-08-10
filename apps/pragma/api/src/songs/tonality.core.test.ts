@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { deriveTonality } from './tonality.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('deriveTonality', () => {
   it('returns null for both ends on an empty source', () => {
     expect(deriveTonality('')).toEqual({ start: null, end: null });

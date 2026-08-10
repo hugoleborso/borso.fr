@@ -46,6 +46,7 @@ async function createInstrument(
   return created.instrument.id;
 }
 
+// @FollowsBlueprint test-back-e2e
 describe('members controller (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

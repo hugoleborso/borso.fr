@@ -16,6 +16,7 @@ interface InputProps {
   readonly onBlur?: () => void;
 }
 
+// @FollowsBlueprint atom-plain
 export function Input({
   id,
   value,

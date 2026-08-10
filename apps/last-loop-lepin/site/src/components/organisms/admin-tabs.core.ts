@@ -21,6 +21,7 @@ export interface AdminTab {
     | 'admin.tab.corrections';
 }
 
+// @FollowsBlueprint data-module
 export const ADMIN_TABS: readonly AdminTab[] = [
   { name: 'setup', labelKey: 'admin.tab.setup' },
   { name: 'runners', labelKey: 'admin.tab.runners' },
@@ -52,6 +53,7 @@ export function isRaceOverInPractice(totalRunners: number, runnersInRace: number
 }
 
 /** The tab whose panel needs an edition to act on, or null for setup. */
+// @FollowsBlueprint core-view-intent
 export function selectEditionPanelTab(tab: AdminTabName): EditionPanelTab | null {
   if (tab === 'setup') return null;
   return tab;

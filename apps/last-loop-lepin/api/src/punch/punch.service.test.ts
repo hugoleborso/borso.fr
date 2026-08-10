@@ -13,6 +13,7 @@ import {
   voidPunch,
 } from './punch.service';
 
+// @FollowsBlueprint test-repository-integration
 describe('punch.service', () => {
   beforeAll(() => {
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -69,7 +70,7 @@ describe('punch.service', () => {
     const corrected = await correctPunch(
       database,
       punch.id,
-      new Date('2026-09-19T06:31:00+02:00'),
+      '2026-09-19T06:31:00+02:00',
       new Date('2026-09-19T06:35:00+02:00'),
     );
     expect(corrected.correctedAt).not.toBeNull();

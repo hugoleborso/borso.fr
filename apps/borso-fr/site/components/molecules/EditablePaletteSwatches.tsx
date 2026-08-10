@@ -9,6 +9,7 @@ export interface PaletteSwatchesProps {
   onCustomColorChange: (slot: CustomColorSlot, nextHex: string) => void;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function EditablePaletteSwatches({
   customColors,
   onCustomColorChange,

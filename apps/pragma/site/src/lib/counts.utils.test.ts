@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isPositiveCount } from './counts.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('isPositiveCount', () => {
   it('accepts a count with something in it', () => {
     expect(isPositiveCount(1)).toBe(true);

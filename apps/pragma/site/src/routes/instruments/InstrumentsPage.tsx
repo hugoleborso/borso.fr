@@ -4,9 +4,9 @@
  *
  * Reads go through `useInstrumentsList()` (TanStack Query); writes
  * through the matching create / update / delete mutation hooks. Each
- * write invalidates the list query on success — pessimistic update.
- * The selected-instrument-for-edit state stays in `useState` because
- * it's UI state, not server state.
+ * write applies its change to the list cache optimistically and rolls
+ * that change back if the request fails. The selected-instrument-for-edit
+ * state stays in `useState` because it's UI state, not server state.
  */
 
 import { useForm } from '@tanstack/react-form';
@@ -36,6 +36,7 @@ interface SelectedInstrument {
 const INSTRUMENT_NAME_MIN_LENGTH = 1;
 const INSTRUMENT_NAME_MAX_LENGTH = 64;
 
+// @FollowsBlueprint route-list-page
 export function InstrumentsPage(): JSX.Element {
   const { t } = useTranslation();
   const list = useInstrumentsList();

@@ -27,6 +27,7 @@ export interface SmoothedPoint {
   gap: boolean;
 }
 
+// @FollowsBlueprint core-projection
 export function smoothedSeries(values: readonly (number | null)[]): readonly SmoothedPoint[] {
   const points: SmoothedPoint[] = [{ index: 0, value: BASELINE_ENERGY, gap: false }];
   values.forEach((value, position) => {

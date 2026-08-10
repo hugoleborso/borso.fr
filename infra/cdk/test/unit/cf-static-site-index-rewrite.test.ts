@@ -15,6 +15,7 @@ function evaluateHandler(event: CfEvent): unknown {
   return result(event);
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE', () => {
   it('exports a non-empty CloudFront Function source string', () => {
     expect(STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE).toContain('function handler');

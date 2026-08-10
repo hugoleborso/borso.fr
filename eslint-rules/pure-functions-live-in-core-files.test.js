@@ -7,6 +7,7 @@ const coreFile = 'apps/last-loop-lepin/api/src/punch/punch.core.ts';
 const componentFile = 'apps/pragma/site/src/components/organisms/Leaderboard.tsx';
 const testHarnessFile = 'apps/pragma/test/auth-utils.ts';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(serviceFile, { jsx: false }).run('pure-functions-live-in-core-files', rule, {
   valid: [
     // No branch, so nothing to extract.

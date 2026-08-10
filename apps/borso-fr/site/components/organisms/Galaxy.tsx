@@ -114,6 +114,7 @@ interface GalaxyProps {
   isTransparent?: boolean;
 }
 
+// @FollowsBlueprint vendored-third-party
 export function Galaxy({
   focal = [CENTRE, CENTRE],
   rotation = [1.0, 0.0],

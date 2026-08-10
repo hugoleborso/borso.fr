@@ -39,6 +39,7 @@ function harmonicMembersIn(lineup: Lineup, instruments: InstrumentMap): Set<Memb
   return members;
 }
 
+// @FollowsBlueprint core-decision
 export function evaluateTransition(
   lineupA: Lineup,
   lineupB: Lineup,

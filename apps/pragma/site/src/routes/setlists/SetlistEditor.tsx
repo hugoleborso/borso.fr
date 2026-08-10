@@ -54,6 +54,7 @@ const ENERGY_SPARKLINE_HEIGHT_PX = 160;
 const NO_ROWS: readonly never[] = [];
 const COPIED_FEEDBACK_MS = 2000;
 
+// @FollowsBlueprint organism-query-owning
 export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
   const entriesQuery = useSetlistEntries(setlistId);

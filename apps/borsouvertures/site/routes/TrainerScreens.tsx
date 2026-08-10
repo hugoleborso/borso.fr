@@ -18,6 +18,7 @@ const SCREEN_BY_KIND: ComponentByKind<TrainerScreenKind, { openings: Opening[] }
  * Reads the openings dataset with `use`, so the enclosing Suspense boundary
  * owns the loading state and no effect writes a fetch result into state.
  */
+// @FollowsBlueprint component-lookup-table
 export function TrainerScreens() {
   const load = use(readOpeningsRequest());
   const { view } = useAppState();

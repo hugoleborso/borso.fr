@@ -4,6 +4,7 @@ import { Construct } from 'constructs';
 import {
   assertDeployStage,
   frontendOrigin,
+  isProductionStage,
   previewApiHostname,
   type Stage,
   validateAppSlug,
@@ -75,6 +76,7 @@ export interface PreviewableAppProps {
   };
 }
 
+// @FollowsBlueprint reusable-cdk-construct
 /**
  * High-level construct composing `StaticSite` + optional `LambdaApi` +
  * optional `DsqlSchema`. The DSQL cluster lives in a dedicated
@@ -130,7 +132,7 @@ export class PreviewableApp extends Construct {
       // `domainName`, but the API's CORS allow-list is computed first — so
       // guard explicitly here. Same error shape as StaticSite's check, so
       // the failure mode looks the same to the operator.
-      if (props.stage === 'prod' && !props.domainName) {
+      if (isProductionStage(props.stage) && !props.domainName) {
         throw new Error('domainName is required for stage="prod".');
       }
       const apiCustomDomain = resolveApiCustomDomain(
@@ -218,7 +220,7 @@ function resolveApiCustomDomain(
       readonly hostedZoneName: string;
     }
   | undefined {
-  if (context.stage === 'prod') return undefined;
+  if (isProductionStage(context.stage)) return undefined;
   const hostname = apiOptions.customDomainHostname ?? previewApiHostname(context);
   return {
     hostname,

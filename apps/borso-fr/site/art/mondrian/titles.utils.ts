@@ -105,6 +105,7 @@ export function composeSubject(
   return translate(noun.phraseKey, { adjective: translate(adjective[noun.gender]) });
 }
 
+// @FollowsBlueprint utils-seeded-generator
 export function buildTitle(
   seed: number,
   rects: ColoredRect[],

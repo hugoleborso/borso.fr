@@ -18,7 +18,13 @@
       "play": "Jouer"
     },
     "board-style": {
-      "label": "Style d'échiquier :"
+      "label": "Style d'échiquier :",
+      "theme": {
+        "lichess": "Lichess",
+        "chesscom": "Chess.com",
+        "nord": "Bleu nord",
+        "sand": "Sable"
+      }
     },
     "language": {
       "aria-label": "Langue de l'interface",

@@ -50,6 +50,7 @@ export async function createSession(input: SessionCreateInput): Promise<SessionR
   return await insertSession(buildSessionInsertShape(input));
 }
 
+// @FollowsBlueprint service-crud-update
 export async function patchSession(
   id: string,
   input: SessionUpdateInput,
@@ -65,6 +66,7 @@ export async function removeSession(id: string): Promise<DeletionOutcome> {
   return await deleteSessionWithCascade(id);
 }
 
+// @FollowsBlueprint service-read-model
 export async function getNextSessionOfflineManifest(now: Date): Promise<OfflineManifestPayload> {
   const [sessions, songs] = await Promise.all([getSessions(), getSongs()]);
   return buildNextSessionOfflineManifest(sessions, songs, now);

@@ -14,7 +14,8 @@ import {
 } from './auth.repository';
 
 export { getDatabase } from '../database/client';
-export { httpStatusForAuthDenial } from './auth.core';
+// @FollowsBlueprint service-facade-reexport
+export { httpStatusForAuthDenial, readClientIp } from './auth.core';
 
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_ATTEMPTS = 5;
@@ -23,6 +24,7 @@ const SCRYPT_PARTS_COUNT = 3;
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const SESSION_ID_BYTES = 32;
 
+// @FollowsBlueprint named-domain-error
 export class AuthDeniedError extends Error {
   override readonly name = 'AuthDeniedError';
   constructor(public readonly reason: AuthDenialReason) {
@@ -85,6 +87,7 @@ export interface LoginResult {
  * Throws `AuthDeniedError('misconfigured')` if the operator hasn't seeded
  * the `admin_credentials` row yet.
  */
+// @FollowsBlueprint service-orchestration
 export async function login(
   database: Database,
   input: LoginInput,

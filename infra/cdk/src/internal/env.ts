@@ -16,6 +16,7 @@ const ACCOUNT_ENV = 'CDK_DEFAULT_ACCOUNT';
 const ACCOUNT_FALLBACK_ENV = 'AWS_ACCOUNT_ID';
 const DEFAULT_STAGE: Stage = 'prod';
 
+// @FollowsBlueprint environment-reader
 /**
  * Reads `name` from the process environment. Throws if it's missing or
  * empty. The error message names the missing variable so callers (and CI

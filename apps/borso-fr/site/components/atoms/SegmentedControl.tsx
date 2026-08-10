@@ -24,6 +24,7 @@ interface SegmentedControlProps<Value extends string> {
   legend: string;
 }
 
+// @FollowsBlueprint atom-plain
 export function SegmentedControl<Value extends string>({
   options,
   value,

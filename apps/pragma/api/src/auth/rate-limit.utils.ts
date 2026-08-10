@@ -48,6 +48,7 @@ export function createBucketStore(): BucketStore {
  * the action; if rejecting, the bucket is still updated so repeated
  * failed checks count against the same window.
  */
+// @FollowsBlueprint utils-pure-module
 export function recordAttempt(existing: RateBucket | undefined, nowMillis: number): RateBucket {
   if (existing === undefined || nowMillis - existing.windowStartedAt >= RATE_LIMIT_WINDOW_MS) {
     return { attempts: 1, windowStartedAt: nowMillis };

@@ -59,6 +59,7 @@ async function postLogin(password: string) {
   return response.json();
 }
 
+// @FollowsBlueprint query-pessimistic-mutation
 export function useLogin() {
   const queryClient = useQueryClient();
   return useMutation({

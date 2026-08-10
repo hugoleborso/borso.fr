@@ -81,6 +81,7 @@ export function buildLineSelection(selection: Selection, lineId: string): Select
   return { openingId: selection.openingId, variationId: selection.variationId, lineId };
 }
 
+// @FollowsBlueprint core-view-intent
 export function isOpeningActive(
   mode: Mode,
   openingId: string,

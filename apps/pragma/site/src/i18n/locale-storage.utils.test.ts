@@ -19,6 +19,7 @@ function memoryStorage(initial: Record<string, string> = {}): LocaleStorage & {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('locale-storage.utils', () => {
   describe('readPersistedLocale', () => {
     it('returns null when no storage is available', () => {

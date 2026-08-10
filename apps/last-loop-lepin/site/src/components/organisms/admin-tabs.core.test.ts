@@ -9,6 +9,7 @@ import {
   selectTabClassName,
 } from './admin-tabs.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('ADMIN_TABS', () => {
   it('lists the five organiser tabs in order', () => {
     expect(ADMIN_TABS.map((tab) => tab.name)).toEqual([

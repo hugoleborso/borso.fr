@@ -43,6 +43,7 @@ const PAPER_THEMES: Readonly<Record<PaletteKey, PaperTheme>> = {
   },
 };
 
+// @FollowsBlueprint browser-edge-module
 export function applyPaperTheme(key: PaletteKey): void {
   const theme = PAPER_THEMES[key];
   const root = document.documentElement.style;

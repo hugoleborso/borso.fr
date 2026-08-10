@@ -71,6 +71,12 @@ function indexPunches(
  * valid punch exists for that runner/loop. A trailing newline closes the
  * body so the file is well-formed for Excel and `csvkit`.
  */
+/**
+ * @Blueprint core-serializer
+ * @BlueprintName Core Serializer
+ * @BlueprintUsage Use for rendering a text format. Take the data as arguments, return the whole string, read nothing else.
+ * @BlueprintDescription Builds the header from the edition's loop count, indexes the punches once into a lookup so the row loop stays linear, quotes only the free text field, and returns the document as a string. No file is written and no locale is read, so a test compares the return value to a literal.
+ */
 export function renderLapsCsv(
   edition: RaceEdition,
   ranked: readonly RankedRunner[],

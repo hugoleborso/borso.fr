@@ -132,6 +132,7 @@ const TITLE_KEY_BY_MODE = {
   edit: 'members.editTitle',
 } as const;
 
+// @FollowsBlueprint route-form
 export function MemberEditForm({
   mode,
   initialValues,

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { StatusItem } from '@/components/atoms/StatusItem';
 import type { ValueByFlag } from '@/lib/componentTable.types';
 
+// @FollowsBlueprint component-lookup-table
 const BOOK_STATUS_KEY_BY_IN_BOOK: ValueByFlag<'play.status.in-book' | 'play.status.out-of-book'> = {
   true: 'play.status.in-book',
   false: 'play.status.out-of-book',
@@ -24,6 +25,7 @@ interface PlayStatusPanelProps {
   candidateCount: number;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function PlayStatusPanel({
   isInBook,
   openingName,

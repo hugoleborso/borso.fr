@@ -10,6 +10,7 @@ export interface OfflineBannerProps {
   readonly isVisible: boolean;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function OfflineBanner({ isVisible }: OfflineBannerProps): JSX.Element | null {
   const { t } = useTranslation();
   if (!isVisible) return null;

@@ -54,6 +54,12 @@ export interface LineupEditorProps {
 const FIELD_CLASS =
   'w-full bg-bg-elev border border-line rounded-md px-2 py-1 text-[13px] font-mono text-ink-900 outline-none focus:border-ink-700';
 
+/**
+ * @Blueprint molecule-dialog-form
+ * @BlueprintName Molecule Dialog With A Form
+ * @BlueprintUsage Use for a modal that edits a record and hands the result back to its parent.
+ * @BlueprintDescription Returns null when closed and delegates to an inner component holding every hook, so no hook ever runs conditionally, and the native dialog opens itself through the module level ref callback `openDialogOnAttach` rather than an effect watching an open prop. Field state and validation go through `useForm`, and the conversions between the record and the form values live in the covered sibling core.
+ */
 export function LineupEditor(props: LineupEditorProps): JSX.Element | null {
   if (!props.open) return null;
   return <LineupEditorContent {...props} />;

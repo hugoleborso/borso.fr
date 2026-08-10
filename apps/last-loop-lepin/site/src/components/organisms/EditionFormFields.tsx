@@ -42,6 +42,7 @@ interface EditionFormFieldsProps {
  * their own `useForm` instance and pass its bindings in, so their field state
  * never bleeds across.
  */
+// @FollowsBlueprint organism-presentational
 export function EditionFormFields({
   idPrefix,
   slug,

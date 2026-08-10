@@ -21,6 +21,7 @@ const LINE: Line = {
 
 const BARE_LINE: Line = { ...LINE, name: 'Italian Game' };
 
+// @FollowsBlueprint test-pure-unit
 describe('selectLineLabel', () => {
   it('returns nothing while no opening is identified', () => {
     expect(

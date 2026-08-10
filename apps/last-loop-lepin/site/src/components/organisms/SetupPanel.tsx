@@ -22,6 +22,7 @@ interface SetupPanelProps {
  * edit form for an edition still in setup or a read only card for one that
  * has started.
  */
+// @FollowsBlueprint organism-presentational
 export function SetupPanel({ currentEdition, locale, now }: SetupPanelProps) {
   return (
     <>

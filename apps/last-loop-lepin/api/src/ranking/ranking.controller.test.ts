@@ -23,6 +23,7 @@ const standingsResponseSchema = z.object({
   }),
 });
 
+// @FollowsBlueprint test-back-e2e
 describe('ranking controller', () => {
   const app = createApp();
 

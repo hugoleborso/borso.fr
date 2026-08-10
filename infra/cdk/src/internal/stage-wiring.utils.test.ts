@@ -5,6 +5,7 @@ import {
   selectTestSeedEnvironment,
 } from './stage-wiring.utils.js';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectTestSeedEnvironment', () => {
   it('gives prod nothing, so the seed route cannot mount there', () => {
     expect(selectTestSeedEnvironment('prod')).toStrictEqual({});

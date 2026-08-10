@@ -10,6 +10,7 @@ import {
   tonalityLabelFor,
 } from './setlist-editor.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('tonalityLabelFor', () => {
   it('returns null for an undefined song', () => {
     expect(tonalityLabelFor(undefined)).toBe(null);

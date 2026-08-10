@@ -75,6 +75,7 @@ export interface LambdaApiProps {
   readonly cors?: CorsPreflightOptions;
 }
 
+// @FollowsBlueprint reusable-cdk-construct
 /**
  * One HTTP API + one Lambda handling every method + path.
  *

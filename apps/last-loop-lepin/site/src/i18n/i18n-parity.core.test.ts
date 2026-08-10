@@ -9,6 +9,7 @@ import { diffCatalogues, isInParity, listIdenticalValueKeys } from './i18n-parit
  * same in both languages. Adding a key here is a claim a reviewer can check
  * against the comment next to it.
  */
+// @FollowsBlueprint test-i18n-parity
 const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = [
   'admin.corrections.title', // same word, same spelling
   'admin.pin-label', // the PIN acronym

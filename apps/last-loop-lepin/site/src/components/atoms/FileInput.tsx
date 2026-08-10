@@ -6,6 +6,7 @@ interface FileInputProps {
   readonly required?: boolean;
 }
 
+// @FollowsBlueprint atom-plain
 export function FileInput({ id, onFileChange, accept, capture, required = false }: FileInputProps) {
   return (
     <input

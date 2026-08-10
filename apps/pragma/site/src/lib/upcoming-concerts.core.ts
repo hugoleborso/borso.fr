@@ -14,6 +14,7 @@ export interface DatedSession {
 
 const CONCERT_KIND = 'concert';
 
+// @FollowsBlueprint core-view-projection
 export function selectUpcomingConcerts<TSession extends DatedSession>(
   sessions: readonly TSession[],
   nowEpochMs: number,

@@ -54,6 +54,7 @@ function isAssembledKey(node) {
   return node.type === 'BinaryExpression' && node.operator === '+';
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

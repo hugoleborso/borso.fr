@@ -78,6 +78,12 @@ function setProcessEnv(databaseUrl: string): void {
   delete process.env.JWT_SECRET;
 }
 
+/**
+ * @Blueprint test-global-setup
+ * @BlueprintName Test Global Setup
+ * @BlueprintUsage Use for the vitest `globalSetup` of a suite that needs a real database, with a paired teardown that releases whatever the setup started.
+ * @BlueprintDescription Takes an already configured `DATABASE_URL` when the environment provides one and boots a container only otherwise, then applies the migration files off disk rather than the Drizzle objects, so the suite runs against the artefact the deploy applies. `teardown` stops the container only when this module started it.
+ */
 export async function setup(): Promise<void> {
   const externalUrl = process.env.DATABASE_URL;
   if (externalUrl !== undefined && externalUrl.length > 0) {

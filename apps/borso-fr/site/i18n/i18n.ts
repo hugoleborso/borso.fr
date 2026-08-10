@@ -27,4 +27,5 @@ void i18next.use(initReactI18next).init({
   returnNull: false,
 });
 
+// @FollowsBlueprint i18n-setup
 export { i18next };

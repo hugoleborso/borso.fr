@@ -38,6 +38,7 @@ function buildDisplay(left: number, right: number, format: CountdownFormat): Cou
   };
 }
 
+// @FollowsBlueprint core-view-projection
 export function projectCountdownDisplay(remainingMs: number): CountdownDisplay {
   const totalSeconds = Math.max(0, Math.floor(remainingMs / MILLISECONDS_PER_SECOND));
   if (totalSeconds >= SWITCH_TO_HOURS_AT_SECONDS) {

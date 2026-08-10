@@ -4,6 +4,7 @@
  * the seed created the admin credentials or found them already set.
  */
 
+// @FollowsBlueprint core-projection
 export function selectInstrumentIds(
   instrumentNames: readonly string[],
   instrumentIdByName: ReadonlyMap<string, string>,

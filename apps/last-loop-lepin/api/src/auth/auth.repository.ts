@@ -22,6 +22,7 @@ export async function findBucket(
   return rows[0] ?? null;
 }
 
+// @FollowsBlueprint repository-idempotent-upsert
 export async function upsertBucket(database: Database, bucket: RateLimitBucket): Promise<void> {
   await database
     .insert(authAttemptsTable)
@@ -62,6 +63,7 @@ export async function createSession(database: Database, session: AdminSession): 
  * lazily. Splitting expiry filter from physical deletion keeps the
  * read-path query cheap (single PK lookup + timestamp comparison).
  */
+// @FollowsBlueprint repository-query
 export async function findValidSession(
   database: Database,
   id: string,

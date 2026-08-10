@@ -4,6 +4,7 @@ import rule from './no-raw-sql-outside-migrations.js';
 const serviceFile = 'apps/last-loop-lepin/api/src/punch/punch.service.ts';
 const repositoryFile = 'apps/last-loop-lepin/api/src/punch/punch.repository.ts';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(serviceFile, { jsx: false }).run('no-raw-sql-outside-migrations', rule, {
   valid: [
     'const punches = await punchRepository.listForRunner(runnerId);',

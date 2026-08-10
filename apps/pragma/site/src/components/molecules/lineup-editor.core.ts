@@ -20,6 +20,7 @@ export const NOT_PLAYING_OPTION_VALUE = '';
 
 export type LineupFormValues = Record<string, string>;
 
+// @FollowsBlueprint core-form-schema
 export function lineupToFormValues(
   lineup: LineupRecord,
   members: readonly LineupEditorMember[],

@@ -44,6 +44,7 @@ interface SongEditFormProps {
   readonly error: string | null;
 }
 
+// @FollowsBlueprint route-form
 export function SongEditForm({
   isNew,
   songId,

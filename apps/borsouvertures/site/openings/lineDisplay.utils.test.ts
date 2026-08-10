@@ -19,6 +19,7 @@ function lineWith(name: string): Line {
   return { id: 'x', name, eco: 'C50', movesSan: [], movesUci: [] };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('shortLineName', () => {
   it('strips both the opening prefix and the variation prefix from a colon-delimited line', () => {
     expect(

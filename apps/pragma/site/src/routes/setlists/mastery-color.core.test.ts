@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { selectMasteryColor } from './mastery-color.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectMasteryColor', () => {
   it('is neutral for an unscored member', () => {
     expect(selectMasteryColor(null)).toBe('var(--color-ink-400)');

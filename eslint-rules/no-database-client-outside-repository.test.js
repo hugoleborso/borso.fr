@@ -5,6 +5,7 @@ const serviceFile = 'apps/last-loop-lepin/api/src/punch/punch.service.ts';
 const repositoryFile = 'apps/last-loop-lepin/api/src/punch/punch.repository.ts';
 const clientFile = 'apps/last-loop-lepin/api/src/database/client.ts';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(serviceFile, { jsx: false }).run('no-database-client-outside-repository', rule, {
   valid: [
     // The handle a repository method takes, which every layer passes along.

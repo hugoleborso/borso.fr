@@ -18,6 +18,7 @@ function synth(): Template {
   return Template.fromStack(stack);
 }
 
+// @FollowsBlueprint test-cdk-synth
 describe('CertsStack', () => {
   it('hosted-zone constant is borso.fr', () => {
     expect(HOSTED_ZONE_NAME).toBe('borso.fr');

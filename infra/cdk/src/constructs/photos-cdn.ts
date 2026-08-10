@@ -14,7 +14,12 @@ import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import type { IBucket } from 'aws-cdk-lib/aws-s3';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
-import { assertDeployStage, type Stage, validateAppSlug } from '../internal/naming.utils.js';
+import {
+  assertDeployStage,
+  isProductionStage,
+  type Stage,
+  validateAppSlug,
+} from '../internal/naming.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 
 const SHARED_SSM = {
@@ -66,6 +71,11 @@ export interface PhotosCdnProps {
  * distribution does the public-facing read.
  *
  * @beta
+ *
+ * @Blueprint reusable-cdk-construct
+ * @BlueprintName Reusable CDK Construct
+ * @BlueprintUsage Use for any piece of infrastructure more than one application stack composes.
+ * @BlueprintDescription A `Construct` subclass whose constructor opens with the same four line prologue every construct in this package repeats: `super(scope, id)`, then `validateAppSlug(props.app)`, then `assertDeployStage(props.stage)` so a stack cannot be synthesised for the development stage, then `applyStandardTags(this, props)` so every resource below carries the tags the deploy roles are scoped to. Inputs arrive through one readonly props interface documenting what the construct deliberately does not own, the values a caller needs are assigned to readonly members, and the constructor closes with a `CfnOutput` so the deployed value is readable from the console.
  */
 export class PhotosCdn extends Construct {
   public readonly distribution: Distribution;
@@ -78,8 +88,9 @@ export class PhotosCdn extends Construct {
     applyStandardTags(this, props);
     this.hostname = props.hostname;
 
-    const certSsmPath =
-      props.stage === 'prod' ? SHARED_SSM.certBorsoFrArn : SHARED_SSM.certPreviewArn;
+    const certSsmPath = isProductionStage(props.stage)
+      ? SHARED_SSM.certBorsoFrArn
+      : SHARED_SSM.certPreviewArn;
     const certArn = StringParameter.valueForStringParameter(this, certSsmPath);
     const certificate = Certificate.fromCertificateArn(this, 'Cert', certArn);
 

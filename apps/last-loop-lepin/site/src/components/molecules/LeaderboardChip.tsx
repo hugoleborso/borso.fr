@@ -21,6 +21,7 @@ interface LeaderboardChipProps {
 }
 
 /** The chip body, shared by the tappable and the display only variants. */
+// @FollowsBlueprint molecule-presentational
 export function LeaderboardChip({ entry, hasFastestLap, locale }: LeaderboardChipProps) {
   const { t } = useTranslation();
   const statusKind = selectRunnerStatusKind(entry.status);

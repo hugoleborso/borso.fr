@@ -3,6 +3,7 @@ import { Button } from '@/components/atoms/Button';
 import { Modal } from '@/components/atoms/Modal';
 import { playMachine } from '@/openings/machineInstances';
 
+// @FollowsBlueprint molecule-presentational
 export function PlayOutOfBookModal() {
   const { t } = useTranslation();
   return (

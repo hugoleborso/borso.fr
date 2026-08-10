@@ -23,6 +23,7 @@ import {
   saveMasteryOverride,
 } from './mastery.service';
 
+// @FollowsBlueprint controller-dispatch
 export function buildMasteryRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)

@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-direct-api-fetch-in-site.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester().run('no-direct-api-fetch-in-site', rule, {
   valid: [
     'await api.api.runners.$get();',

@@ -5,6 +5,7 @@
  */
 export type BoardDropDecision = 'ignored' | 'played';
 
+// @FollowsBlueprint core-view-intent
 export function selectBoardDropDecision(targetSquare: string | null): BoardDropDecision {
   return targetSquare === null ? 'ignored' : 'played';
 }

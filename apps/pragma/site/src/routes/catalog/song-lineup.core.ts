@@ -43,6 +43,7 @@ export function buildMasteryKey(memberId: string, instrumentId: string): string 
   return `${memberId}::${instrumentId}`;
 }
 
+// @FollowsBlueprint core-view-projection
 export function buildSongLineupRows(
   defaultLineup: Readonly<Record<string, string | null>>,
   members: readonly LineupMember[],

@@ -43,6 +43,18 @@ if echo "$changed" | grep -q 'api/src/database/migrations/.*\.sql$'; then
   ./scripts/check-migration-sql-dsql-compat.sh
 fi
 
+# Blueprint annotations, whenever source changed. A `@Blueprint` missing a tag
+# still lands in the index with an empty cell, and a `// @FollowsBlueprint` that
+# names nothing still reads as adoption, so neither fails anything on its own.
+# The check also refuses a stale index, which is what stops an annotation from
+# being added without the generated file catching up. One pass over the tree,
+# well under a second, so it belongs on the commit.
+if [ -n "$staged_lintable" ]; then
+  echo "[pre-commit] checking blueprint annotations"
+  pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --check
+  pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts --check
+fi
+
 # A non-module <script src> tag ships un-bundled and 404s in preview and
 # production. A grep over the app HTML, so it costs nothing and belongs on the
 # commit rather than the push. Rung-2 eradication of

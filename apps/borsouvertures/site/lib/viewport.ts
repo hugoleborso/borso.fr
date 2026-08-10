@@ -21,6 +21,7 @@ function readServerViewportWidth(): number {
   return SERVER_VIEWPORT_WIDTH_PX;
 }
 
+// @FollowsBlueprint hook-external-store
 export function useViewportWidth(): number {
   return useSyncExternalStore(subscribeToViewportWidth, readViewportWidth, readServerViewportWidth);
 }

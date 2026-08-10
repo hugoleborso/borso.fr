@@ -3,18 +3,23 @@ import {
   selectFilmstripBarColor,
   selectFilmstripCardClassName,
   selectFilmstripCardColors,
+  TRANSPARENT,
 } from '../../labours/labours-appearance.core';
-import { buildFilmstripSummary, deriveMonthScore, formatScore } from '../../labours/labours.core';
+import {
+  buildFilmstripSummary,
+  deriveMonthScore,
+  formatMonthNumber,
+  formatScore,
+} from '../../labours/labours.core';
 import type { Month } from '../../labours/labours.types';
 import { ACCENT, SANS_FAMILY, SERIF_FAMILY } from '../../theme/twelve-labours.theme';
 
 const SUMMARY_TITLE_COUNT = 2;
-const MONTH_NUMBER_DIGITS = 2;
 const CURRENT_MONTH_DOT_SIZE_PX = 6;
 
 const CURRENT_MONTH_DOT_BACKGROUND: Readonly<Record<`${boolean}`, string>> = {
   true: ACCENT,
-  false: 'transparent',
+  false: TRANSPARENT,
 };
 
 interface FilmstripCardProps {
@@ -24,6 +29,7 @@ interface FilmstripCardProps {
   onSelect: () => void;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function FilmstripCard({ month, isActive, isCurrentMonth, onSelect }: FilmstripCardProps) {
   const { t } = useTranslation();
   const score = deriveMonthScore(month);
@@ -59,7 +65,7 @@ export function FilmstripCard({ month, isActive, isCurrentMonth, onSelect }: Fil
             opacity: colors.secondaryOpacity,
           }}
         >
-          {String(month.monthNumber).padStart(MONTH_NUMBER_DIGITS, '0')}
+          {formatMonthNumber(month.monthNumber)}
         </span>
         <span
           style={{

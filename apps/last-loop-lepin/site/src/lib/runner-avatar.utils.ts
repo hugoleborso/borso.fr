@@ -44,6 +44,7 @@ export interface RunnerAvatarInput {
  * composer; the DTO mapper returns `null` for missing keys, but coalescing
  * here gives a single source of truth).
  */
+// @FollowsBlueprint utils-pure-module
 export function buildRunnerAvatar(input: RunnerAvatarInput): RunnerAvatar {
   const initialsBranch = initialsAvatar(input.displayName);
   if (input.photoUrl === null || input.photoUrl === undefined || input.photoUrl === '') {

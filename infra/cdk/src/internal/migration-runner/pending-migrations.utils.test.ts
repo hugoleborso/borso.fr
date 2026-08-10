@@ -7,6 +7,7 @@ const MIGRATIONS = [
   { name: '0003_punches', sql: 'CREATE TABLE c();' },
 ];
 
+// @FollowsBlueprint test-pure-unit
 describe('selectPendingMigrations', () => {
   it('keeps only the migrations the schema has not recorded', () => {
     expect(selectPendingMigrations(MIGRATIONS, new Set(['0001_init']))).toStrictEqual([

@@ -29,6 +29,7 @@ async function login(pin: string, ipAddress = '127.0.0.1') {
   });
 }
 
+// @FollowsBlueprint test-back-e2e
 describe('admin auth controller', () => {
   const originalOrigin = process.env.ALLOWED_ORIGIN;
 

@@ -25,6 +25,7 @@ import {
   songFromApi,
 } from './song-draft.core';
 
+// @FollowsBlueprint route-detail-page
 export function SongEditPage(): JSX.Element {
   const { t } = useTranslation();
   const { songId } = useParams<{ songId: string }>();

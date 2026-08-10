@@ -8,6 +8,7 @@ const GUITAR_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 const BASS_ID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
 const DRUMS_ID = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
 
+// @FollowsBlueprint test-pure-unit
 describe('scrubMemberFromLineup', () => {
   it('returns an empty record when the input lineup is empty', () => {
     expect(scrubMemberFromLineup({}, TARGET_MEMBER_ID)).toEqual({});

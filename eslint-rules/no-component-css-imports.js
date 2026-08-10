@@ -35,6 +35,7 @@ const STYLESHEET_PATTERN = /\.css(\?.*)?$/;
 
 const ENTRY_POINT_PATTERN = /(^|\/)main\.tsx?$/;
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

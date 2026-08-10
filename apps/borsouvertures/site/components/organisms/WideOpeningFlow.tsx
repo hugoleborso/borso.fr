@@ -8,6 +8,7 @@ function stayOnTheSameStep(): void {
   // Intentionally empty.
 }
 
+// @FollowsBlueprint organism-presentational
 export function WideOpeningFlow(props: OpeningPanelProps) {
   return (
     <div className="selector-columns">

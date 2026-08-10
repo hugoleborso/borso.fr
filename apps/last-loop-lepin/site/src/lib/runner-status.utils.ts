@@ -8,6 +8,7 @@ import type { RankedRunnerDto, RunnerStatusDto } from './race.types';
 
 export type RunnerStatusKind = 'in-race' | 'out';
 
+// @FollowsBlueprint core-view-intent
 export function selectRunnerStatusKind(status: RunnerStatusDto): RunnerStatusKind {
   return status.kind === 'in-race' ? 'in-race' : 'out';
 }

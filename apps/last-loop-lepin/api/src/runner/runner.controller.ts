@@ -12,6 +12,7 @@ import {
   RunnerNotFoundError,
 } from './runner.service';
 
+// @FollowsBlueprint controller-public-router
 const runnerRouter = new Hono()
   .get('/editions/:editionSlug/runners', async (context) => {
     const runners = await listRunnersAsDto(getDatabase(), context.req.param('editionSlug'));
@@ -39,6 +40,7 @@ const runnerRouter = new Hono()
     return context.json({ punches });
   });
 
+// @FollowsBlueprint controller-guarded-router
 const adminRunnerRouter = new Hono()
   .use('*', requireAdminSession)
   .post('/', zValidator('json', createRunnerInputSchema), async (context) => {

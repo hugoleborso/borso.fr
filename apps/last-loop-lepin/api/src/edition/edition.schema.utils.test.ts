@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isMonotonicZeroToOne } from './edition.schema.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('isMonotonicZeroToOne', () => {
   it('rejects an empty array', () => {
     expect(isMonotonicZeroToOne([])).toBe(false);

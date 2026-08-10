@@ -19,6 +19,7 @@ async function adminCookie(): Promise<string> {
   return adminSessionCookie(testDatabase());
 }
 
+// @FollowsBlueprint test-back-e2e
 describe('media controller', () => {
   const app = createApp();
 

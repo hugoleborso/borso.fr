@@ -11,6 +11,7 @@ const MEMBERS: readonly LineupEditorMember[] = [
   { id: 'bob', name: 'Bob', color: '#222222' },
 ];
 
+// @FollowsBlueprint test-pure-unit
 describe('lineupToFormValues', () => {
   it('fills a value for every member', () => {
     expect(lineupToFormValues({ ada: 'guitar' }, MEMBERS)).toEqual({

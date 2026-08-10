@@ -23,6 +23,7 @@ const TRANSFORM_BY_REDUCED_MOTION: Readonly<
  * Cascade reseeds the composition rather than moving it, so it shares the
  * still transform, and a reader who asked for reduced motion gets none of them.
  */
+// @FollowsBlueprint core-lookup-table
 export function selectCanvasTransform(
   mode: AnimationMode,
   isReducedMotion: boolean,

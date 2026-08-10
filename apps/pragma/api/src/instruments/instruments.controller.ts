@@ -20,6 +20,7 @@ import {
   removeInstrument,
 } from './instruments.service';
 
+// @FollowsBlueprint controller-dispatch
 export function buildInstrumentsRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)
@@ -39,13 +40,10 @@ export function buildInstrumentsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const instrument = await patchInstrument(id, input);
-        if (instrument === null) {
-          const isOnlyEmpty = Object.keys(input).length === 0;
-          if (isOnlyEmpty) return context.json({ error: 'empty-update' }, 400);
-          return context.json({ error: 'not-found' }, 404);
-        }
-        return context.json({ instrument });
+        const result = await patchInstrument(id, input);
+        if (result.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
+        if (result.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ instrument: result.instrument });
       },
     )
     .delete('/:id', zValidator('param', instrumentIdParamSchema), async (context) => {

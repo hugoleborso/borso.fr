@@ -47,6 +47,7 @@ function isTypeOnlyImport(node) {
   return node.specifiers.length > 0 && valueSpecifiers.length === 0;
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

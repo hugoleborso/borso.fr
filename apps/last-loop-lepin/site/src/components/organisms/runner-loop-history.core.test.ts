@@ -24,6 +24,7 @@ function buildPunch(overrides: Partial<LoopPunchDto> = {}): LoopPunchDto {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('listClosedLoops', () => {
   it('returns nothing when the runner has no punch', () => {
     expect(listClosedLoops(RACE_START, [])).toEqual([]);

@@ -18,6 +18,12 @@ export const PALETTE_KEY_LIST: readonly PaletteKey[] = [
   'custom',
 ];
 
+/**
+ * @Blueprint core-label-key
+ * @BlueprintName Label Key Selector Core
+ * @BlueprintUsage Use whenever a component needs the words for a domain value, so that the words themselves never reach the component.
+ * @BlueprintDescription Returns a `TranslationKey` read from a frozen record keyed by the domain union, so the component calls `t(selectPaletteLabelKey(key))` and holds no user facing string. The return type is the key union derived from `en.json`, which makes a stale catalogue entry a typecheck failure, and the lookup replaces the runtime key concatenation that the parity test and the type checker both stop seeing through.
+ */
 export function selectPaletteLabelKey(paletteKey: PaletteKey): TranslationKey {
   return PALETTE_LABEL_KEY[paletteKey];
 }
@@ -70,6 +76,7 @@ const CUSTOM_PALETTE_KEY: PaletteKey = 'custom';
 
 export type SwatchRowKind = 'editable' | 'read-only';
 
+// @FollowsBlueprint core-view-intent
 export function selectSwatchRowKind(paletteKey: PaletteKey): SwatchRowKind {
   if (paletteKey === CUSTOM_PALETTE_KEY) return 'editable';
   return 'read-only';

@@ -13,6 +13,12 @@ import { registerServiceWorker } from './sw/register-sw';
 
 registerServiceWorker();
 
+/**
+ * @Blueprint site-entrypoint
+ * @BlueprintName Site Entry Point
+ * @BlueprintUsage Use for the module a browser loads first, which mounts React and nothing else.
+ * @BlueprintDescription Imports the translation setup and the token stylesheet for their side effects, starts the worker, then mounts one component tree under the providers the whole application shares. The missing root element throws rather than failing silently, and every provider is created in its own module so this file holds configuration for nothing.
+ */
 const rootElement = document.getElementById('root');
 if (rootElement === null) {
   throw new Error('Missing #root element in index.html');

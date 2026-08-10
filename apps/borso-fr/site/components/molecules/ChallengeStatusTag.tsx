@@ -8,6 +8,7 @@ interface ChallengeStatusTagProps {
   size: TagSize;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function ChallengeStatusTag({ status, size }: ChallengeStatusTagProps) {
   const { t } = useTranslation();
   const colors = selectStatusTagColors(status);

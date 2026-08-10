@@ -10,6 +10,7 @@ import {
   selectInkbloomDelayMs,
 } from './animation.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('isAnimationMode', () => {
   it.each(ANIMATION_MODE_LIST)('accepts "%s"', (mode) => {
     expect(isAnimationMode(mode)).toBe(true);

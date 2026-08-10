@@ -21,6 +21,7 @@ const MESSAGE =
 
 const API_PREFIX = '/api/';
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

@@ -55,6 +55,7 @@ const SEED = {
   ],
 };
 
+// @FollowsBlueprint test-query-hook
 describe('bars mutations — optimistic updates', () => {
   let stub: ReturnType<typeof stubFetch> | null = null;
   beforeEach(() => {

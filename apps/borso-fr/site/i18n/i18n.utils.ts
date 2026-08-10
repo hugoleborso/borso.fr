@@ -27,10 +27,11 @@ export type TranslationKey = DottedLeafPaths<typeof english>;
 
 const KEY_PATH_SEPARATOR = '.';
 
-function sortAlphabetically(values: readonly string[]): readonly string[] {
-  return [...values].sort((left, right) => left.localeCompare(right));
+export function compareTranslationKeys(left: string, right: string): number {
+  return left.localeCompare(right);
 }
 
+// @FollowsBlueprint i18n-key-walk
 export function listTranslationKeys(tree: CatalogueTree, prefix = ''): readonly string[] {
   const paths: string[] = [];
   for (const [segment, value] of Object.entries(tree)) {
@@ -41,5 +42,5 @@ export function listTranslationKeys(tree: CatalogueTree, prefix = ''): readonly 
       paths.push(...listTranslationKeys(value, path));
     }
   }
-  return sortAlphabetically(paths);
+  return paths.sort(compareTranslationKeys);
 }

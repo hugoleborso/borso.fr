@@ -16,6 +16,7 @@ const INSTRUMENTS = [
   { id: 'bass', name: 'Bass' },
 ];
 
+// @FollowsBlueprint test-pure-unit
 describe('buildMasteryKey', () => {
   it('joins the pair the mastery lookup is keyed by', () => {
     expect(buildMasteryKey('ana', 'guitar')).toBe('ana::guitar');

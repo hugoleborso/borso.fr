@@ -10,6 +10,7 @@ interface FastestLapBadgeProps {
  * Inline chronometer mark. Inline rather than an asset so the SVG can carry
  * its own `<title>`, which is what screen readers announce.
  */
+// @FollowsBlueprint atom-plain
 export function FastestLapBadge({ title }: FastestLapBadgeProps) {
   return (
     <span className="leaderboard-chip__fastest-lap-badge">

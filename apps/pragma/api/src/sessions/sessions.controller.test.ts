@@ -28,6 +28,7 @@ const setlistEnvelope = z.object({
 });
 const entriesEnvelope = z.object({ entries: z.array(z.unknown()) });
 
+// @FollowsBlueprint test-back-e2e
 describe('sessions controller (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

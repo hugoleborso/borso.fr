@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { selectFeaturedArticleClassName } from '../../labours/labours-appearance.core';
 import {
   deriveMonthScore,
+  formatMonthNumber,
   formatScore,
   listMonthCoverImages,
   selectCompletionRatio,
@@ -19,7 +20,6 @@ import {
 import { ProgressBar } from '../atoms/ProgressBar';
 import { ChallengeRow } from './ChallengeRow';
 
-const MONTH_NUMBER_DIGITS = 2;
 const MONTH_PROGRESS_HEIGHT_PX = 8;
 
 interface FeaturedMonthProps {
@@ -27,6 +27,7 @@ interface FeaturedMonthProps {
   year: number;
 }
 
+// @FollowsBlueprint organism-presentational
 export function FeaturedMonth({ month, year }: FeaturedMonthProps) {
   const { t } = useTranslation();
   const score = deriveMonthScore(month);
@@ -72,7 +73,7 @@ export function FeaturedMonth({ month, year }: FeaturedMonthProps) {
             }}
           >
             {t('twelve-labours.featured.label', {
-              month: String(month.monthNumber).padStart(MONTH_NUMBER_DIGITS, '0'),
+              month: formatMonthNumber(month.monthNumber),
               year,
             })}
           </div>

@@ -1,5 +1,6 @@
 import type { Edition } from './labours.types';
 
+// @FollowsBlueprint data-module
 export const EDITION_2025: Edition = {
   titleKey: 'twelve-labours.edition.2025.title',
   subtitleKey: 'twelve-labours.edition.2025.subtitle',

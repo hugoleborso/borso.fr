@@ -6,6 +6,7 @@ interface CardHeaderProps {
   readonly hint?: ReactNode;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function CardHeader({ title, hint }: CardHeaderProps) {
   return (
     <div className="card-head">

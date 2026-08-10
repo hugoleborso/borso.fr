@@ -13,6 +13,7 @@ interface ProgressBarProps {
   markerColor?: string;
 }
 
+// @FollowsBlueprint atom-plain
 export function ProgressBar({
   ratio,
   heightPx,

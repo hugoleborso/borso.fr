@@ -50,6 +50,7 @@ const SEED = {
   instruments: [{ id: 'instr-a', name: 'Guitar', isHarmonic: true }],
 };
 
+// @FollowsBlueprint test-query-hook
 describe('instruments mutations — optimistic updates', () => {
   let stub: ReturnType<typeof stubFetch> | null = null;
   beforeEach(() => {

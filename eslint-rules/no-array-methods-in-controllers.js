@@ -47,6 +47,7 @@ function isArrayMethodCall(node, methodName) {
   return FUNCTION_ARGUMENT_TYPES.has(node.arguments[0].type);
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

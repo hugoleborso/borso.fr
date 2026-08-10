@@ -3,6 +3,7 @@ import { selectVisibleBookMoves } from './bookArrows.utils';
 
 const BOOK_MOVES = ['e2e4', 'd2d4'];
 
+// @FollowsBlueprint test-pure-unit
 describe('selectVisibleBookMoves', () => {
   it('returns the book moves when the arrows are visible', () => {
     expect(selectVisibleBookMoves(BOOK_MOVES, true)).toEqual(BOOK_MOVES);

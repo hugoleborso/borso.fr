@@ -26,6 +26,7 @@ const getResponseSchema = z.object({
   expiresAt: z.string(),
 });
 
+// @FollowsBlueprint test-back-e2e
 describe('uploads controller (back-e2e)', () => {
   const previous: Record<string, string | undefined> = {};
 

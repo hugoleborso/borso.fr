@@ -28,6 +28,7 @@ function Wrapper({ children }: { readonly children: ReactNode }) {
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
+// @FollowsBlueprint test-component-render
 describe('App', () => {
   beforeAll(async () => {
     await i18next.changeLanguage('fr');

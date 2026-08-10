@@ -6,6 +6,7 @@
 
 import type { RaceEditionDto } from '../../lib/race.types';
 
+// @FollowsBlueprint core-label-key
 export function selectDistanceLabelKey(
   edition: RaceEditionDto,
 ): 'common.distance' | 'spectator.track-pending' {

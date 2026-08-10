@@ -1,7 +1,7 @@
 import type { ComponentType, CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type MediaProofType, selectMediaProofType } from '../../labours/labours-appearance.core';
-import { listProofLabelKeys } from '../../labours/labours.core';
+import { selectProofLabel } from '../../labours/labours.core';
 import type { Proof } from '../../labours/labours.types';
 import { PROOF_BACKGROUND } from '../../theme/twelve-labours.theme';
 import { CarouselImage } from '../atoms/CarouselImage';
@@ -34,11 +34,11 @@ interface ProofMediaProps {
   proof: Proof;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function ProofMedia({ proof }: ProofMediaProps) {
   const { t } = useTranslation();
   const Media = MEDIA_COMPONENT[selectMediaProofType(proof.type)];
-  const alternativeText =
-    listProofLabelKeys(proof).map((key) => t(key))[0] ?? DECORATIVE_ALTERNATIVE_TEXT;
+  const alternativeText = selectProofLabel(proof, t) ?? DECORATIVE_ALTERNATIVE_TEXT;
   return (
     <Media source={proof.value} alternativeText={alternativeText} style={CAROUSEL_ITEM_STYLE} />
   );

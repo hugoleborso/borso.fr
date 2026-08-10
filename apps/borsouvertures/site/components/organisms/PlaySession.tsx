@@ -17,6 +17,7 @@ import type { SessionBodyProps } from './session.types';
 const NO_HIGHLIGHTS: Record<string, CSSProperties> = {};
 const ACCEPTED = 'accepted';
 
+// @FollowsBlueprint component-lookup-table
 const COMPLETED_BANNER_BY_STATE: ComponentByFlag<{ lineLabel: string | undefined }> = {
   true: PlayCompletedBanner,
   false: EmptySlot,
@@ -27,6 +28,12 @@ const OUT_OF_BOOK_MODAL_BY_STATE: ComponentByFlag<Record<string, never>> = {
   false: EmptySlot,
 };
 
+/**
+ * @Blueprint organism-machine-bound
+ * @BlueprintName Organism Bound To A State Machine
+ * @BlueprintUsage Use for a screen region whose state lives in a hand written machine outside React.
+ * @BlueprintDescription Starts the machine once from `useSessionStart`, then reads it through `useSyncExternalStore` with the machine's own `subscribe` and `getSnapshot` passed as stable references rather than inline closures. Everything the markup needs is derived from that snapshot during render through pure selectors, and the two modal flags are read as lookup keys, so the component holds no `useState` mirroring the machine and no effect keeping the two in step.
+ */
 export function PlaySession({
   openings,
   selection,

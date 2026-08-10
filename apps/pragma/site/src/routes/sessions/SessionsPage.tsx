@@ -20,6 +20,7 @@ import { openDialogOnAttach } from '../../lib/modal-dialog';
 import { useNavigateTo } from '../../lib/navigation';
 import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions';
 
+// @FollowsBlueprint route-list-page
 export function SessionsPage(): JSX.Element {
   const { t, i18n } = useTranslation();
   const navigateTo = useNavigateTo();

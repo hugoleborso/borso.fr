@@ -1,3 +1,23 @@
+/**
+ * Last Loop Lépin CDK stack — composes `PreviewableApp` (StaticSite +
+ * LambdaApi + DsqlSchema) from `@borso/infra`, the S3 bucket the admin
+ * uploads runner photos to, and the `PhotosCdn` distribution in front of
+ * it.
+ *
+ * Admin auth wiring is intentionally absent: per ADR-0004 the PIN scrypt
+ * hash and the session state live in the application DB rows
+ * `admin_credentials` and `admin_sessions`, not in Secrets Manager. The
+ * stack therefore carries no `AWS::SecretsManager::Secret` resources and
+ * no `PIN_HASH` or `JWT_SECRET` environment variable — the test
+ * `stack.test.ts` asserts all three absences. The operator seeds the PIN
+ * hash row through psql after the first deploy of a stage; sessions are
+ * random ids the Lambda mints on each login.
+ *
+ * Test-seed flag: `ALLOW_TEST_SEED=1` is injected on non-prod API
+ * Lambdas by `PreviewableApp` itself, not here — the construct owns the
+ * prod-exclusion. The API reads it to mount `/api/__test/seed`.
+ */
+
 import {
   frontendOrigin,
   type IDsqlCluster,
@@ -19,7 +39,22 @@ import type { Construct } from 'constructs';
 const APP_SLUG = 'last-loop-lepin';
 const PHOTOS_CDN_PROD_HOSTNAME = 'photos-cdn.borso.fr';
 
-export interface BuildAppStackProps {
+const PHOTO_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
+const ABORT_MULTIPART_UPLOAD_DAYS = 1;
+
+/**
+ * Mirrors the `previewSuffix` guard inside `@borso/infra`, which every other
+ * per-stage name in this stack already goes through. Kept here because the
+ * photos CDN hostname is composed in this file rather than by a construct.
+ */
+function requirePreviewSuffix(prNumber: number | undefined): string {
+  if (prNumber === undefined) {
+    throw new Error(`${APP_SLUG}: a non-production stage requires prNumber.`);
+  }
+  return `pr-${prNumber}`;
+}
+
+export interface BuildLastLoopLepinAppStackProps {
   readonly scope: Construct;
   readonly stage: Stage;
   readonly prNumber?: number;
@@ -30,22 +65,8 @@ export interface BuildAppStackProps {
   readonly cluster: IDsqlCluster;
 }
 
-/**
- * Composes the StaticSite + LambdaApi + DsqlSchema for the app, plus the
- * S3 bucket the admin uploads runner photos to.
- *
- * The `ALLOW_TEST_SEED` env var that mounts the `__test/` routes is set
- * on the Lambda for every deploy stage EXCEPT `prod` by `PreviewableApp`
- * itself — the construct owns the prod-exclusion, so this stack no
- * longer wires it. Verified by `PreviewableApp`'s own unit test.
- *
- * Admin auth lives entirely in the DB (`admin_credentials` for the PIN
- * scrypt hash, `admin_sessions` for the session-cookie state). Replaces
- * the two Secrets Manager secrets the older flow used ($0.40/mo each):
- * the operator seeds the PIN hash row after the first deploy via psql,
- * sessions are random ids minted by the Lambda on each login.
- */
-export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
+// @FollowsBlueprint app-cdk-stack
+export function buildLastLoopLepinAppStack(props: BuildLastLoopLepinAppStackProps): void {
   const photosBucket = new Bucket(props.scope, 'PhotosBucket', {
     bucketName: `${APP_SLUG}-${props.stage}-photos${props.prNumber === undefined ? '' : `-${props.prNumber}`}`,
     encryption: BucketEncryption.S3_MANAGED,
@@ -58,10 +79,12 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
         allowedMethods: [HttpMethods.PUT, HttpMethods.GET],
         allowedOrigins: ['*'],
         allowedHeaders: ['*'],
-        maxAge: 300,
+        maxAge: PHOTO_UPLOAD_CORS_MAX_AGE_SECONDS,
       },
     ],
-    lifecycleRules: [{ abortIncompleteMultipartUploadAfter: Duration.days(1) }],
+    lifecycleRules: [
+      { abortIncompleteMultipartUploadAfter: Duration.days(ABORT_MULTIPART_UPLOAD_DAYS) },
+    ],
   });
 
   // Photos CDN — CloudFront fronting `photosBucket`, deterministic URL
@@ -72,7 +95,7 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
   const isProduction = isProductionStage(props.stage);
   const photosCdnHostname = isProduction
     ? PHOTOS_CDN_PROD_HOSTNAME
-    : `${APP_SLUG}-pr-${props.prNumber ?? 0}-photos.preview.borso.fr`;
+    : `${APP_SLUG}-${requirePreviewSuffix(props.prNumber)}-photos.preview.borso.fr`;
   const photosCdn = new PhotosCdn(props.scope, 'PhotosCdn', {
     app: APP_SLUG,
     stage: props.stage,

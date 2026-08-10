@@ -10,6 +10,12 @@ import { z } from 'zod';
 
 export const BAR_STATUSES = ['lead', 'contacted', 'booked', 'played', 'cold'] as const;
 
+/**
+ * @Blueprint schema-table-and-input
+ * @BlueprintName Schema With Table And Input
+ * @BlueprintUsage Use for a slice that owns a table, so its Drizzle definition and its Zod input schemas live in one file.
+ * @BlueprintDescription Declares the table, the status list, and the create schema, then derives the update schema with `.partial()` so a new field cannot be added to one and forgotten in the other. `BarStatus` is derived from the same status list the enum reads, which turns an unknown status into a type error rather than a runtime surprise.
+ */
 export const barTable = pgTable('bar', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),

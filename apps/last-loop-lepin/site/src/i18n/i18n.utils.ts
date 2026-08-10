@@ -24,6 +24,7 @@ export function compareCatalogueKeys(left: string, right: string): number {
   return 0;
 }
 
+// @FollowsBlueprint i18n-key-walk
 export function flattenKeys(tree: CatalogueTree, prefix = ''): readonly string[] {
   const keys: string[] = [];
   for (const [key, value] of Object.entries(tree)) {

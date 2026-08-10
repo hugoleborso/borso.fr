@@ -6,6 +6,7 @@ interface CardProps {
   readonly modifier?: string;
 }
 
+// @FollowsBlueprint atom-plain
 export function Card({ children, modifier = '' }: CardProps) {
   return <div className={`card ${modifier}`.trimEnd()}>{children}</div>;
 }

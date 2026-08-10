@@ -26,6 +26,7 @@ export interface Month {
   coverImage?: string;
 }
 
+// @FollowsBlueprint domain-types-module
 export interface Edition {
   titleKey: TranslationKey;
   subtitleKey: TranslationKey;

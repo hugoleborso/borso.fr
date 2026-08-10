@@ -16,6 +16,7 @@ export const LINK_PROVIDERS = ['spotify', 'deezer', 'youtube', 'other'] as const
 export const ENERGY_MIN = 1;
 export const ENERGY_MAX = 10;
 
+// @FollowsBlueprint schema-table-and-input
 export const songTable = pgTable('song', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: text('title').notNull(),
@@ -90,6 +91,7 @@ const songBaseSchema = z.object({
 export const songCreateInputSchema = songBaseSchema;
 export const songUpdateInputSchema = songBaseSchema.partial();
 export const songIdParamSchema = z.object({ id: z.string().uuid() });
+export const externalSearchQuerySchema = z.object({ q: z.string().min(1).max(256) });
 
 // Row-side Zod schema for the `links` text column — wraps the array
 // shape that the controller validates per-element. The repository uses

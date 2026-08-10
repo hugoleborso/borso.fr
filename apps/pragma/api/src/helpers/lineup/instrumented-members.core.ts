@@ -12,6 +12,7 @@ export type Lineup = Readonly<Record<MemberId, InstrumentId | null>>;
 
 export type InstrumentedMember = readonly [MemberId, InstrumentId];
 
+// @FollowsBlueprint helper-module
 export function instrumentedMembers(lineup: Lineup): readonly InstrumentedMember[] {
   const held: InstrumentedMember[] = [];
   for (const [memberId, instrumentId] of Object.entries(lineup)) {

@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+import { requireAwsAccount, requireEnv } from '@borso/infra';
 import { App } from 'aws-cdk-lib';
 import { CertsStack } from '../lib/certs-stack.js';
 import { SharedStack } from '../lib/shared-stack.js';
@@ -7,14 +8,13 @@ const CERTS_STACK_NAME = 'borso-shared-certs';
 const SHARED_STACK_NAME = 'borso-shared';
 const CERTS_REGION = 'us-east-1';
 const DEFAULT_PRIMARY_REGION = 'eu-west-3';
+const BUDGET_EMAIL_ENV = 'BORSO_BUDGET_EMAIL';
 
+// @FollowsBlueprint cdk-app-entrypoint
 const app = new App();
 
-const account = process.env.CDK_DEFAULT_ACCOUNT ?? process.env.AWS_ACCOUNT_ID;
-if (!account) {
-  throw new Error('Set CDK_DEFAULT_ACCOUNT (or AWS_ACCOUNT_ID) before deploying shared infra.');
-}
-
+const account = requireAwsAccount();
+const budgetEmail = requireEnv(BUDGET_EMAIL_ENV);
 const primaryRegion = process.env.BORSO_REGION ?? DEFAULT_PRIMARY_REGION;
 
 const certs = new CertsStack(app, CERTS_STACK_NAME, {
@@ -27,4 +27,5 @@ new SharedStack(app, SHARED_STACK_NAME, {
   crossRegionReferences: true,
   borsoFrCert: certs.borsoFrCert,
   previewCert: certs.previewCert,
+  budgetEmail,
 });

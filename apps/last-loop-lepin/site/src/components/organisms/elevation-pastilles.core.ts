@@ -34,6 +34,7 @@ export function hasElevationSamples(edition: RaceEditionDto): boolean {
   return edition.gpx.trackJson.points.length >= MINIMUM_PROFILE_POINTS;
 }
 
+// @FollowsBlueprint core-view-projection
 export function listElevationPastilles(
   edition: RaceEditionDto,
   ranked: readonly RankedRunnerDto[],

@@ -45,6 +45,7 @@ interface RunnerAdminPanelProps {
  * uploaded to S3 first and the returned object key travels with the runner,
  * so a failed upload never leaves a runner pointing at a missing image.
  */
+// @FollowsBlueprint organism-form
 export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
   const { t } = useTranslation();
   const roster = useRunnerRoster(edition.slug);

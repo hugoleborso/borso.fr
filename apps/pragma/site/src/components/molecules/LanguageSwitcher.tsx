@@ -7,6 +7,7 @@
  */
 
 import { useTranslation } from 'react-i18next';
+import { browserStorage } from '../../i18n/i18n';
 import { SUPPORTED_LOCALES, type SupportedLocale } from '../../i18n/i18n.utils';
 import { writePersistedLocale } from '../../i18n/locale-storage.utils';
 import { composeClassName } from '../atoms/class-name.utils';
@@ -16,11 +17,7 @@ const LOCALE_LABEL_KEY = {
   en: 'nav.language.en',
 } as const satisfies Readonly<Record<SupportedLocale, string>>;
 
-function getBrowserStorage(): Storage | undefined {
-  if (typeof window === 'undefined') return undefined;
-  return window.localStorage;
-}
-
+// @FollowsBlueprint molecule-presentational
 export function LanguageSwitcher(): JSX.Element {
   const { t, i18n } = useTranslation();
   const activeLocale = SUPPORTED_LOCALES.find((locale) => locale === i18n.language) ?? 'fr';
@@ -28,7 +25,7 @@ export function LanguageSwitcher(): JSX.Element {
   const selectLocale = (locale: SupportedLocale): void => {
     if (locale === activeLocale) return;
     void i18n.changeLanguage(locale);
-    writePersistedLocale(getBrowserStorage(), locale);
+    writePersistedLocale(browserStorage(), locale);
   };
 
   return (

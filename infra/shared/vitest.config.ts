@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
+// @FollowsBlueprint workspace-test-config
 export default defineConfig({
   test: {
     include: ['test/unit/**/*.test.ts'],

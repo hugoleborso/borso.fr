@@ -44,6 +44,7 @@ const NO_MEMBERS: readonly MemberRow[] = [];
 const NO_INSTRUMENTS: readonly InstrumentRow[] = [];
 const NO_ASSIGNED_INSTRUMENTS: readonly string[] = [];
 
+// @FollowsBlueprint route-list-page
 export function MembersPage(): JSX.Element {
   const { t } = useTranslation();
   const membersQuery = useMembersList();

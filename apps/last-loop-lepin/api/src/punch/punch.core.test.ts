@@ -38,6 +38,7 @@ function buildPunch(loopIndex: number, finishedAtIso: string): LoopPunch {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('validatePunchTiming', () => {
   it('rejects punches before the race starts', () => {
     const result = validatePunchTiming(EDITION, 'alice', [], new Date('2026-09-19T05:30:00+02:00'));
@@ -105,6 +106,7 @@ describe('validatePunchTiming', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('lastLoopDurationMs', () => {
   it('returns null when the runner has no punches', () => {
     expect(lastLoopDurationMs(EDITION, 'alice', [])).toBeNull();
@@ -157,6 +159,7 @@ describe('lastLoopDurationMs', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('loopDurationMs', () => {
   it('returns the elapsed time from the loop boundary to finishedAt', () => {
     const punch = buildPunch(1, '2026-09-19T06:48:30+02:00');

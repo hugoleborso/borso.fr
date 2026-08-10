@@ -8,6 +8,7 @@ interface PlayCompletedBannerProps {
 }
 
 /** Shown once the played moves have walked a book line to its end. */
+// @FollowsBlueprint molecule-presentational
 export function PlayCompletedBanner({ lineLabel }: PlayCompletedBannerProps) {
   const { t } = useTranslation();
   return (

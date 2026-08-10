@@ -6,6 +6,7 @@ import { ALL_KEY } from '@/openings/selectors.utils';
 import { setMode, setPlayScope, setSelection, useAppState } from '@/state/appState';
 import { TopBar } from './TopBar';
 
+// @FollowsBlueprint test-hook-probe
 function AppStateProbe() {
   const { mode, selection, playScope } = useAppState();
   return (
@@ -23,6 +24,7 @@ beforeEach(() => {
   setPlayScope({ openingIds: ['italian'], variationIds: [], lineIds: [] });
 });
 
+// @FollowsBlueprint test-component-render
 describe('TopBar', () => {
   it('drops the drilled selection and the scope when the user switches to play', async () => {
     render(

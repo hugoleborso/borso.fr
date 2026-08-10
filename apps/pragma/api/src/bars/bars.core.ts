@@ -18,6 +18,7 @@ export interface BarStaleInput {
  * threshold. A null `lastInteractionAt` counts as stale (the band
  * never logged any interaction; the banner should remind them to).
  */
+// @FollowsBlueprint core-decision
 export function isStale(
   bar: BarStaleInput,
   now: Date,

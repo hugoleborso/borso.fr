@@ -5,6 +5,7 @@ interface ErrorPanelProps {
   onReload: () => void;
 }
 
+// @FollowsBlueprint atom-plain
 export function ErrorPanel({ title, message, reloadLabel, onReload }: ErrorPanelProps) {
   return (
     <div className="panel" role="alert">

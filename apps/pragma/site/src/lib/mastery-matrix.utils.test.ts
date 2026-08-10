@@ -8,6 +8,7 @@ import {
   rowAverage,
 } from './mastery-matrix.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('cellKey', () => {
   it('joins member and instrument ids', () => {
     expect(cellKey('m1', 'i1')).toBe('m1/i1');

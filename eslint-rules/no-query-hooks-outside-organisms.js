@@ -46,6 +46,7 @@ function readCalleeName(callee) {
   return null;
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

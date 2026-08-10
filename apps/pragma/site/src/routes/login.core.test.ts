@@ -6,6 +6,7 @@ import {
   UNKNOWN_LOGIN_ERROR_KEY,
 } from './login.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectPostLoginPath', () => {
   it('returns the page the guard bounced the visitor from', () => {
     expect(selectPostLoginPath({ from: '/bars' })).toBe('/bars');

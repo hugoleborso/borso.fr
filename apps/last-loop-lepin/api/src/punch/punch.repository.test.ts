@@ -14,6 +14,12 @@ import {
   markPunchVoided,
 } from './punch.repository';
 
+/**
+ * @Blueprint test-repository-integration
+ * @BlueprintName Repository Integration Test
+ * @BlueprintUsage Use for a repository or a service. Drive it against the real database with no HTTP transport in the way.
+ * @BlueprintDescription Truncates every table and re-inserts the edition and the runner each punch row refers to, because the database enforces no foreign key here, then calls the repository functions directly and asserts on the rows they return, so a failure names a query rather than a route.
+ */
 describe('punch.repository', () => {
   beforeEach(async () => {
     const database = testDatabase();

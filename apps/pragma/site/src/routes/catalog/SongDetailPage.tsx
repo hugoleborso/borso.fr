@@ -42,6 +42,7 @@ import { buildTonalityLabel } from './tonality-label.utils';
 const NO_ROWS: readonly never[] = [];
 const MAX_TONALITY_RENDER_LENGTH = 16;
 
+// @FollowsBlueprint route-detail-page
 export function SongDetailPage(): JSX.Element {
   const { t } = useTranslation();
   const { songId } = useParams<{ songId: string }>();

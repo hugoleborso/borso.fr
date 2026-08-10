@@ -35,6 +35,7 @@ interface ProofSectionProps {
   proofs: readonly Proof[];
 }
 
+// @FollowsBlueprint organism-table-dispatch
 export function ProofSection({ challenge, kind, proofs }: ProofSectionProps) {
   const ProofItem = PROOF_COMPONENT[kind];
   return (

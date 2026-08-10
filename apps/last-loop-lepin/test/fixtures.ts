@@ -9,6 +9,12 @@ import type { RaceEdition } from '../api/src/edition/edition.types';
 import type { LoopPunch } from '../api/src/punch/punch.types';
 import type { Runner } from '../api/src/runner/runner.types';
 
+/**
+ * @Blueprint test-fixtures-object-mother
+ * @BlueprintName Test Fixture Object Mother
+ * @BlueprintUsage Use for building a complete valid domain object in one call, so a test states only the field its assertion is about.
+ * @BlueprintDescription Returns every field filled with a valid default and spreads `overrides` last, so a caller can change one field without restating the others and a field added to the type later fails to compile here rather than silently in every test.
+ */
 export function makeEdition(overrides: Partial<RaceEdition> = {}): RaceEdition {
   return {
     slug: 'lepin-2026',
@@ -29,6 +35,7 @@ export function makeEdition(overrides: Partial<RaceEdition> = {}): RaceEdition {
   };
 }
 
+// @FollowsBlueprint test-fixtures-object-mother
 export function makeRunner(slug: string, overrides: Partial<Runner> = {}): Runner {
   return {
     editionSlug: 'lepin-2026',
@@ -40,6 +47,7 @@ export function makeRunner(slug: string, overrides: Partial<Runner> = {}): Runne
   };
 }
 
+// @FollowsBlueprint test-fixtures-object-mother
 export function makePunch(
   runnerSlug: string,
   loopIndex: number,

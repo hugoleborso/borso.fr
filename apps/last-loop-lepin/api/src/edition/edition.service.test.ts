@@ -24,6 +24,7 @@ function input(slug = 'lepin-svc-1') {
   };
 }
 
+// @FollowsBlueprint test-repository-integration
 describe('edition.service', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

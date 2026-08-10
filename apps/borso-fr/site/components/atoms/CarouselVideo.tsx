@@ -6,6 +6,7 @@ interface CarouselVideoProps {
   style: CSSProperties;
 }
 
+// @FollowsBlueprint atom-plain
 export function CarouselVideo({ source, alternativeText, style }: CarouselVideoProps) {
   return (
     <video

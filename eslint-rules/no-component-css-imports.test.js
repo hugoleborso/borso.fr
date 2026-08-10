@@ -4,6 +4,7 @@ import rule from './no-component-css-imports.js';
 const componentFile = 'apps/borso-fr/site/components/Galaxy.tsx';
 const entryPointFile = 'apps/pragma/site/src/main.tsx';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(componentFile).run('no-component-css-imports', rule, {
   valid: [
     "import { clsx } from 'clsx';",

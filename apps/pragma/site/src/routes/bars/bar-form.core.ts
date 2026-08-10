@@ -76,6 +76,7 @@ function emptyToNull(value: string): string | null {
   return value.length === 0 ? null : value;
 }
 
+// @FollowsBlueprint core-form-schema
 export function buildBarPayloadFromFormValues(values: BarFormValues): BarFormSubmitPayload {
   const capacity = emptyToNull(values.capacity);
   return {

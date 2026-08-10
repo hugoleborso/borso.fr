@@ -105,6 +105,7 @@ function RunnerPunches({ runner, editionSlug, isOpen, onToggle, onFailure }: Run
 }
 
 /** Cancelling a punch the organiser recorded by mistake, runner by runner. */
+// @FollowsBlueprint organism-query-owning
 export function CorrectionPanel({ edition }: CorrectionPanelProps) {
   const { t } = useTranslation();
   const roster = useRunnerRoster(edition.slug);

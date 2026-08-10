@@ -12,6 +12,7 @@ export interface BarStaleInput {
   readonly lastInteractionAt: string | null;
 }
 
+// @FollowsBlueprint utils-pure-module
 export function isStale(
   bar: BarStaleInput,
   now: Date,

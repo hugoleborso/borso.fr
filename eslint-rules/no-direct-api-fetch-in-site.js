@@ -28,6 +28,7 @@ function readStaticUrl(node) {
   return null;
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

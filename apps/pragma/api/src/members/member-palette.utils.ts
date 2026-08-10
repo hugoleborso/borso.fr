@@ -20,6 +20,7 @@ export const MEMBER_PALETTE = [
  * modulo, so any whole number lands on a slot however large it is.
  * A member index that is not a whole number has no slot and throws.
  */
+// @FollowsBlueprint utils-pure-module
 export function pickPaletteHex(memberIndex: number): string {
   const paletteSize = MEMBER_PALETTE.length;
   const slotIndex = ((memberIndex % paletteSize) + paletteSize) % paletteSize;

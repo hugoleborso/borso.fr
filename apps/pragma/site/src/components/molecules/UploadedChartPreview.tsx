@@ -16,6 +16,7 @@ export interface UploadedChartPreviewProps {
   readonly errorMessage: string | null;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function UploadedChartPreview({
   kind,
   objectKey,

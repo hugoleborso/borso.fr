@@ -4,6 +4,7 @@ import rule from './no-impure-calls-in-core-files.js';
 const coreFile = 'apps/last-loop-lepin/api/src/punch/punch.core.ts';
 const serviceFile = 'apps/last-loop-lepin/api/src/punch/punch.service.ts';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(coreFile, { jsx: false }).run('no-impure-calls-in-core-files', rule, {
   valid: [
     'export function isRaceOver(edition: Edition, now: Date): boolean { return now > edition.endsAt; }',

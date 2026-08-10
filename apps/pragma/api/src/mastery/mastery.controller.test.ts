@@ -64,6 +64,7 @@ async function seedTriple(
   };
 }
 
+// @FollowsBlueprint test-back-e2e
 describe('mastery controller (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

@@ -8,11 +8,18 @@ import { areCataloguesInParity, diffCatalogues, listIdenticalValueKeys } from '.
  * a design choice. The only exceptions are the entries below, which read the
  * same in both languages. Adding a key here is a claim a reviewer can check
  * against the comment next to it.
+ *
+ * @Blueprint test-i18n-parity
+ * @BlueprintName Catalogue Parity Test
+ * @BlueprintUsage Use as the sibling test of the parity gate, so an untranslated string cannot merge.
+ * @BlueprintDescription Asserts the shipped catalogues against the gate twice: once for key parity, and once for value parity by comparing the identical value list to this named allowlist with `toEqual`. The equality is exact in both directions, so a newly copied English value fails the test and a translated entry left in the allowlist fails it too, which is what stops the list rotting. Every entry carries an inline comment giving the reason that key reads the same in both languages, so adding one is a claim a reviewer can check rather than a silent suppression. The failure cases use small literal catalogues rather than the shipped ones, so they stay readable and cannot drift.
  */
 const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = [
   'common.value.none', // an em dash, not a word
   'learn.lines-visited.value', // "{{visited}} / {{total}}" — two numbers and a slash
   'selection.lines.eco', // ECO is the Encyclopaedia of Chess Openings code, untranslated
+  'top-bar.board-style.theme.chesscom', // the Chess.com brand, a proper noun
+  'top-bar.board-style.theme.lichess', // the Lichess brand, a proper noun
   'top-bar.brand', // the Borsouvertures brand
   'top-bar.language.english', // the EN language tag
   'top-bar.language.french', // the FR language tag

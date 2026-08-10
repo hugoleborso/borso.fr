@@ -5,6 +5,7 @@ import { getEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
 import { haversineDistanceMeters } from '../helpers/geo/haversine.utils';
 
+// @FollowsBlueprint service-facade-reexport
 export { PunchConflictError } from './punch.repository';
 
 import { type PunchRejectReason, validatePunchTiming } from './punch.core';
@@ -25,10 +26,17 @@ import type { LoopPunch, ManualDidNotFinish } from './punch.types';
 
 export { getDatabase } from '../database/client';
 
+// @FollowsBlueprint named-domain-error
 export class PunchNotFoundError extends Error {
   override readonly name = 'PunchNotFoundError';
 }
 
+/**
+ * @Blueprint named-domain-error
+ * @BlueprintName Named Domain Error
+ * @BlueprintUsage Use for a failure a caller has to tell apart, so the controller matches on the class rather than on the message text.
+ * @BlueprintDescription Subclasses `Error` and overrides `name` with a string literal, because a subclass otherwise inherits `Error.prototype.name` and calls itself `Error`, and carries the machine readable reason as a readonly field so the controller answers with it instead of parsing the message.
+ */
 export class PunchRejectedError extends Error {
   override readonly name = 'PunchRejectedError';
   constructor(public readonly reason: PunchRejectReason) {
@@ -161,14 +169,20 @@ export async function registerSelfPunch(
   return punch;
 }
 
+/**
+ * Move an existing punch to a new finishing instant. `finishedAtIso` arrives
+ * as the ISO string the request carried; the service owns the conversion so
+ * the controller stays free of domain types.
+ */
 export async function correctPunch(
   database: Database,
   id: string,
-  newFinishedAt: Date,
+  finishedAtIso: string,
   now: Date,
 ): Promise<LoopPunch> {
   const existing = await findPunchById(database, id);
   if (existing === null) throw new PunchNotFoundError(id);
+  const newFinishedAt = new Date(finishedAtIso);
   await markPunchCorrected(database, id, newFinishedAt, now);
   return { ...existing, finishedAt: newFinishedAt, correctedAt: now };
 }

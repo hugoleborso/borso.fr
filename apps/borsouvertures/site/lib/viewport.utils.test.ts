@@ -15,6 +15,7 @@ describe('isCompactViewport', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('selectBoardWidth', () => {
   it('gives a desktop viewport a share of its width', () => {
     expect(selectBoardWidth(1100)).toBe(660);

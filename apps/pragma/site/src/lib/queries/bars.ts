@@ -60,6 +60,7 @@ export function useBarsList() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useCreateBar() {
   const queryClient = useQueryClient();
   return useMutation({

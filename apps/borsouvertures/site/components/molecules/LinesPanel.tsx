@@ -20,6 +20,7 @@ import { setPlayScope, setSelection } from '@/state/appState';
 import type { Mode, PlayScope } from '@/state/persistedState.utils';
 import type { OpeningPanelProps } from './openingPanel.types';
 
+// @FollowsBlueprint component-lookup-table
 const ALL_LINES_CARD_BY_MODE: ComponentByKind<Mode, SelectorCardProps> = {
   play: SelectorCard,
   learn: EmptySlot,
@@ -41,6 +42,7 @@ const LINE_PICK_BY_MODE: Record<Mode, (entry: LineEntry, context: LinePickContex
     setPlayScope(toggleLineInPlayScope(scope, opening.id, variation.id, line.id)),
 };
 
+// @FollowsBlueprint molecule-presentational
 export function LinesPanel({ mode, lists, selection, playScope, boardStyle }: OpeningPanelProps) {
   const { t } = useTranslation();
   const { visibleItems, hasMore, loadMore } = usePaginatedList(lists.panelLineEntries);

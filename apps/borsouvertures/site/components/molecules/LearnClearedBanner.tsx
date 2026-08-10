@@ -9,6 +9,7 @@ interface LearnClearedBannerProps {
 }
 
 /** Shown once every line of the drilled variation has been visited. */
+// @FollowsBlueprint molecule-presentational
 export function LearnClearedBanner({ openingId, variationId }: LearnClearedBannerProps) {
   const { t } = useTranslation();
   return (

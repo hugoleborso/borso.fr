@@ -25,6 +25,7 @@ interface PaletteSwatchRowProps {
   onCustomColorChange: (slot: CustomColorSlot, nextHex: string) => void;
 }
 
+// @FollowsBlueprint organism-table-dispatch
 export function PaletteSwatchRow({
   paletteKey,
   palette,

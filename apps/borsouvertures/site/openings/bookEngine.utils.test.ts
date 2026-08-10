@@ -187,6 +187,7 @@ describe('gatherCandidates', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('computeBookState', () => {
   it('reports out-of-book when no candidate matches', () => {
     const state = computeBookState([italianMain], allSelection, ['a2a3']);

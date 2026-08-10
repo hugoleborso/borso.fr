@@ -35,6 +35,7 @@ function findRemoveButton(container: HTMLElement): HTMLButtonElement | null {
   return buttons.find((button) => button.textContent.trim() === REMOVE_BUTTON_TEXT_EN) ?? null;
 }
 
+// @FollowsBlueprint test-component-render
 describe('FileDrop — Remove button', () => {
   let container: HTMLDivElement;
   let root: Root;

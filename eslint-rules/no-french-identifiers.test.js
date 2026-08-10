@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-french-identifiers.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester('apps/last-loop-lepin/api/src/runner/runner.schema.ts', { jsx: false }).run(
   'no-french-identifiers',
   rule,

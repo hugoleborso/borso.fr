@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildChartObjectKey, extensionForContentType } from './uploads.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('extensionForContentType', () => {
   it('maps every allowed content type to an extension', () => {
     expect(extensionForContentType('application/pdf')).toBe('pdf');

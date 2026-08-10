@@ -6,6 +6,7 @@
  * "not blocking", and only an explicit value blocks the button.
  */
 
+// @FollowsBlueprint utils-pure-module
 export function isSubmitDisabled(
   canSubmit: boolean | undefined,
   isSubmitting: boolean | undefined,

@@ -32,6 +32,12 @@ export interface EditionFormValues {
   readonly intervalMinutes: string;
 }
 
+/**
+ * @Blueprint core-form-schema
+ * @BlueprintName Core Form Schema And Payload
+ * @BlueprintUsage Use for the validation, the starting values and the request body of a form, kept out of the component that renders it.
+ * @BlueprintDescription Declares the Zod schema the form's `validators` wrap, beside `buildCreateFormDefaults` and `buildEditFormDefaults` for the starting values and `buildCreateEditionPayload` and `buildReplaceEditionPayload` for the request bodies. All of it is pure, so the module carries the full coverage gate and two components share one contract. The schema restates the back end's input schema rather than importing it, because that file also declares the Drizzle tables, and the header says so.
+ */
 export const editionFormValuesSchema = z.object({
   slug: z
     .string()

@@ -19,6 +19,12 @@ const initialLanguage = selectInitialLanguage(
   globalThis.navigator.languages,
 );
 
+/**
+ * @Blueprint i18n-setup
+ * @BlueprintName i18n Runtime Setup
+ * @BlueprintUsage Use for the module that builds the translation instance and keeps the document in step with the active language.
+ * @BlueprintDescription Initialises i18next once at module scope with both catalogues as static imports, so the bundler sees them and no key is fetched at runtime, and takes the starting language from `selectInitialLanguage`, a pure function handed the saved choice and the browser languages rather than reading either itself. The `lang` attribute follows the active language through a module owned `languageChanged` subscription, which is a listener that lives for the page, so no component needs an effect to keep the document honest.
+ */
 void i18next.use(initReactI18next).init({
   resources: {
     en: { translation: english },

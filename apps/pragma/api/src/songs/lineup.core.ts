@@ -19,6 +19,7 @@ export type MemberId = string;
 export type InstrumentId = string;
 export type Lineup = Readonly<Record<MemberId, InstrumentId | null>>;
 
+// @FollowsBlueprint core-projection
 export function resolveLineup(defaultLineup: Lineup, overrideLineup: Lineup | null): Lineup {
   if (overrideLineup === null) return { ...defaultLineup };
   const resolved: Record<MemberId, InstrumentId | null> = { ...defaultLineup };

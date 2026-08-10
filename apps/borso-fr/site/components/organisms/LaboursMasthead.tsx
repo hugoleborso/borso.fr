@@ -10,6 +10,7 @@ interface LaboursMastheadProps {
   onYearSelected: (year: number) => void;
 }
 
+// @FollowsBlueprint organism-presentational
 export function LaboursMasthead({
   availableYears,
   selectedYear,

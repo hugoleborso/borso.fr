@@ -3,6 +3,7 @@ import rule from './no-flat-components-folder.js';
 
 const componentSource = 'export function Leaderboard() { return null; }';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester().run('no-flat-components-folder', rule, {
   valid: [
     {

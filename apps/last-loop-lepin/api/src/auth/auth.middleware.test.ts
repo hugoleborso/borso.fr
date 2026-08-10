@@ -14,6 +14,12 @@ function buildGuardedApp() {
 
 const ALLOWED_ORIGIN = 'https://last-loop-lepin.borso.fr';
 
+/**
+ * @Blueprint test-middleware-integration
+ * @BlueprintName Middleware Integration Test
+ * @BlueprintUsage Use for a middleware, so it is exercised through a router of its own rather than through the routes of the real application.
+ * @BlueprintDescription Builds a throwaway Hono app in `buildGuardedApp` that mounts only the middleware plus one read route and one write route, which lets the suite set `ALLOWED_ORIGIN` for itself and cover both the guarded and the open configuration without changing what the deployed application sees.
+ */
 describe('auth.middleware', () => {
   const originalOrigin = process.env.ALLOWED_ORIGIN;
 

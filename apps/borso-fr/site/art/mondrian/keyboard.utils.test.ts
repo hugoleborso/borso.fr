@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isComposeKeyEvent } from './keyboard.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('isComposeKeyEvent', () => {
   it('returns true for a Space keydown on the document body', () => {
     const event = new KeyboardEvent('keydown', { code: 'Space' });

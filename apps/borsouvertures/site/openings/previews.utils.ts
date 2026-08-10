@@ -22,6 +22,7 @@ export interface LinePreview {
   fen: string;
 }
 
+// @FollowsBlueprint utils-pure-module
 export function buildOpeningPreview(opening: Opening): OpeningPreview {
   const mainVariation = opening.variations.find((variation) =>
     variation.name.toLowerCase().includes(MAIN_LINE_HINT),

@@ -7,6 +7,7 @@ import { insertPunch } from '../punch/punch.repository';
 import { insertRunner } from '../runner/runner.repository';
 import { computeStandingsForEdition } from './ranking.service';
 
+// @FollowsBlueprint test-repository-integration
 describe('ranking.service', () => {
   beforeAll(() => {
     vi.useFakeTimers({ toFake: ['Date'] });

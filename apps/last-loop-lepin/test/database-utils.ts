@@ -34,6 +34,12 @@ export function testDatabase(): Database {
   return getDatabase();
 }
 
+/**
+ * @Blueprint test-database-isolation
+ * @BlueprintName Test Database Isolation
+ * @BlueprintUsage Use for giving every suite a clean database without rebuilding the schema, which is the expensive step.
+ * @BlueprintDescription Names the tables in one module level list and empties them in a single `TRUNCATE ... CASCADE`, so adding a table is one line here rather than a delete statement per suite, and the ordering problems a sequence of deletes would raise never come up.
+ */
 export async function truncateAllTables(database: Database): Promise<void> {
   await database.execute(
     sql.raw(
@@ -63,6 +69,7 @@ const TEST_ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
  * so the helper can be invoked multiple times in a single test without
  * primary-key conflicts.
  */
+// @FollowsBlueprint test-database-isolation
 export async function adminSessionCookie(database: Database): Promise<string> {
   const sessionId = randomBytes(16).toString('hex');
   const expiresAt = new Date(Date.now() + TEST_ADMIN_SESSION_TTL_MS);

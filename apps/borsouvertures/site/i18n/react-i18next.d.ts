@@ -5,6 +5,11 @@ import type english from './en.json';
  * Types every `t(...)` call against the English catalogue, so a key that does
  * not exist is a typecheck failure rather than a raw key rendered in the user
  * interface. French parity is enforced by `i18n-parity.core.test.ts`.
+ *
+ * @Blueprint i18n-typed-keys
+ * @BlueprintName Typed Translation Keys Declaration
+ * @BlueprintUsage Use once per application, so an unknown or renamed translation key fails the typecheck instead of rendering as itself.
+ * @BlueprintDescription Augments i18next's `CustomTypeOptions` with `resources: { translation: typeof english }`, which makes the English catalogue the single source of the key union every `t()` call is checked against. The English file is imported as a type only, so the declaration adds nothing to the bundle. `returnNull: false` is set here as well as in the runtime `init`, because the flag changes the declared return type of `t()` and the two would otherwise disagree; keys are then only assignable as literals, which is why a key chosen at runtime has to come from a frozen lookup rather than a template string.
  */
 declare module 'i18next' {
   interface CustomTypeOptions {

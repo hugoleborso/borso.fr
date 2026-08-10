@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildSparklinePath } from './energy-sparkline.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('buildSparklinePath', () => {
   it('returns an empty geometry for an empty list', () => {
     const geometry = buildSparklinePath([], 100, 50);

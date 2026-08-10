@@ -14,6 +14,7 @@ function readSelectedLanguage(value: string): SupportedLanguage {
 }
 
 /** Interface language picker, which remembers the choice for the next visit. */
+// @FollowsBlueprint molecule-presentational
 export function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
   return (

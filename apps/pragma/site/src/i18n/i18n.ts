@@ -15,7 +15,7 @@ import fr from './fr.json';
 import { DEFAULT_LOCALE, detectInitialLocale } from './i18n.utils';
 import { readPersistedLocale } from './locale-storage.utils';
 
-function browserStorage(): Storage | undefined {
+export function browserStorage(): Storage | undefined {
   if (typeof window === 'undefined') return undefined;
   return window.localStorage;
 }
@@ -25,6 +25,7 @@ const initialLocale =
   persistedLocale ??
   detectInitialLocale(typeof navigator === 'undefined' ? undefined : navigator.language);
 
+// @FollowsBlueprint i18n-setup
 void i18next.use(initReactI18next).init({
   resources: {
     en: { translation: en },

@@ -35,6 +35,12 @@ export interface FileDropProps {
   readonly className?: string;
 }
 
+/**
+ * @Blueprint molecule-local-state
+ * @BlueprintName Molecule With Local State
+ * @BlueprintUsage Use for a molecule that needs a small interface flag of its own, such as a drag highlight or an inline error.
+ * @BlueprintDescription Owns two `useState` flags written only from event handlers, never from an effect watching another piece of state, so the highlight and the message follow the user's action directly. Every rule about the dropped file lives in the covered sibling `file-drop.utils.ts`, which leaves the component with markup and handlers alone.
+ */
 export function FileDrop({
   songId,
   currentObjectKey,

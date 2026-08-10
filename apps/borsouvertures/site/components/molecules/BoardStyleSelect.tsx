@@ -6,6 +6,7 @@ interface BoardStyleSelectProps {
   boardStyle: BoardThemeId;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function BoardStyleSelect({ boardStyle }: BoardStyleSelectProps) {
   const { t } = useTranslation();
   return (
@@ -19,7 +20,7 @@ export function BoardStyleSelect({ boardStyle }: BoardStyleSelectProps) {
       >
         {boardThemes.map((theme) => (
           <option key={theme.id} value={theme.id}>
-            {theme.name}
+            {t(theme.nameKey)}
           </option>
         ))}
       </select>

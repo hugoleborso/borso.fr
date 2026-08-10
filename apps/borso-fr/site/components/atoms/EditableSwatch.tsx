@@ -6,6 +6,7 @@ interface EditableSwatchProps {
   onColorChange: (nextHex: string) => void;
 }
 
+// @FollowsBlueprint atom-plain
 export function EditableSwatch({
   color,
   name,

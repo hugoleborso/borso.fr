@@ -63,6 +63,7 @@ function rasterizeAndDownload(serializedSvg: string, fileName: string) {
   rasterImage.src = svgObjectUrl;
 }
 
+// @FollowsBlueprint browser-edge-module
 export function downloadCompositionPng(args: {
   rects: ColoredRect[];
   palette: Palette;

@@ -7,6 +7,7 @@ import {
 import { findValidSession } from './auth.repository';
 import { AuthDeniedError, login, logout, verifySession } from './auth.service';
 
+// @FollowsBlueprint test-repository-integration
 describe('auth.service', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

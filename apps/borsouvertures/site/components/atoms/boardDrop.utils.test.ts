@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildDroppedUci, selectBoardDropDecision } from './boardDrop.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectBoardDropDecision', () => {
   it('ignores a piece dropped outside the board', () => {
     expect(selectBoardDropDecision(null)).toBe('ignored');

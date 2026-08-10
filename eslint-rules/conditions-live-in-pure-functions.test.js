@@ -7,6 +7,7 @@ const repositoryFile = 'apps/pragma/api/src/songs/songs.repository.ts';
 const coreFile = 'apps/last-loop-lepin/api/src/punch/punch.core.ts';
 const componentFile = 'apps/pragma/site/src/components/organisms/Leaderboard.tsx';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(serviceFile, { jsx: false }).run('conditions-live-in-pure-functions', rule, {
   valid: [
     // The decision moved out, so the service is a straight line.

@@ -6,6 +6,7 @@ interface PlayBookPanelProps {
   isUndoAllowed: boolean;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function PlayBookPanel({ isUndoAllowed }: PlayBookPanelProps) {
   const { t } = useTranslation();
   return (

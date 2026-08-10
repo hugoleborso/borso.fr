@@ -28,7 +28,9 @@ const WORKSPACE_ROOT = path.resolve(HERE, '..', '..');
 const FAKE_ASSETS_DIR = path.join(WORKSPACE_ROOT, 'site');
 const FAKE_API_ENTRY = path.join(WORKSPACE_ROOT, 'api', 'src', 'main.ts');
 const FAKE_MIGRATIONS_DIR = path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations');
+const PREVIEW_PR_NUMBER = 1;
 
+// @FollowsBlueprint test-cdk-synth
 function synthAppStack(stage: 'prod' | 'preview'): Template {
   const app = new App();
   const env = { account: '123456789012', region: 'eu-west-3' };
@@ -40,7 +42,7 @@ function synthAppStack(stage: 'prod' | 'preview'): Template {
   buildPragmaAppStack({
     scope: stack,
     stage,
-    prNumber: stage === 'preview' ? 1 : undefined,
+    ...(stage === 'preview' ? { prNumber: PREVIEW_PR_NUMBER } : {}),
     domainName: stage === 'prod' ? 'pragma.borso.fr' : undefined,
     assetsPath: FAKE_ASSETS_DIR,
     apiEntry: FAKE_API_ENTRY,

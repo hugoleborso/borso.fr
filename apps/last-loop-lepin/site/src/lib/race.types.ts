@@ -11,6 +11,12 @@ export interface LatLngDto {
   readonly lng: number;
 }
 
+/**
+ * @Blueprint domain-types-module
+ * @BlueprintName Domain Types Module
+ * @BlueprintUsage Use for the shapes a front end reads off its API, when those shapes are shared by several components.
+ * @BlueprintDescription Every field is `readonly` and every collection a `readonly T[]`, so a component cannot write into a response it was handed. Slugs stay plain `string` rather than branded types, because a brand needs a type assertion and this repository bans them, and the header records that decision along with why a field is optional on the wire. Validation stays on the server; these interfaces only describe what comes back.
+ */
 export interface RaceEditionDto {
   readonly slug: string;
   readonly displayName: string;

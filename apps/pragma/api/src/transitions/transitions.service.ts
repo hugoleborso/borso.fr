@@ -11,6 +11,7 @@ import {
   upsertTransitionComment,
 } from './transitions.repository';
 
+// @FollowsBlueprint service-passthrough
 export async function getTransitionComments(): Promise<TransitionCommentRow[]> {
   return await listTransitionComments();
 }
@@ -26,8 +27,9 @@ export async function saveTransitionComment(
   songAId: string,
   songBId: string,
   comment: string,
+  now: Date,
 ): Promise<void> {
-  await upsertTransitionComment(songAId, songBId, comment, new Date());
+  await upsertTransitionComment(songAId, songBId, comment, now);
 }
 
 export async function removeTransitionComment(

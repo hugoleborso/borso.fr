@@ -3,6 +3,7 @@ import { Button } from '@/components/atoms/Button';
 import type { ValueByFlag } from '@/lib/componentTable.types';
 import { learnTreeMachine } from '@/openings/machineInstances';
 
+// @FollowsBlueprint component-lookup-table
 const ARROW_LABEL_KEY_BY_VISIBILITY: ValueByFlag<'learn.arrows.hide' | 'learn.arrows.reveal'> = {
   true: 'learn.arrows.hide',
   false: 'learn.arrows.reveal',
@@ -18,6 +19,7 @@ interface LearnDrillPanelProps {
   areArrowsRevealed: boolean;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function LearnDrillPanel({ variationName, areArrowsRevealed }: LearnDrillPanelProps) {
   const { t } = useTranslation();
   return (

@@ -16,6 +16,7 @@ import {
 
 const ADA: MemberSelection = { id: 'ada-id', firstName: 'Ada', color: '#112233' };
 
+// @FollowsBlueprint test-pure-unit
 describe('sortMembersByFirstName', () => {
   it('orders by first name without mutating the input', () => {
     const members = [

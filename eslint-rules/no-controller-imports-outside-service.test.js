@@ -4,6 +4,7 @@ import rule from './no-controller-imports-outside-service.js';
 const controllerFile = 'apps/pragma/api/src/songs/songs.controller.ts';
 const serviceFile = 'apps/pragma/api/src/songs/songs.service.ts';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(controllerFile).run('no-controller-imports-outside-service', rule, {
   valid: [
     "import { songsService } from './songs.service';",

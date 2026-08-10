@@ -13,6 +13,7 @@ export interface EnergyBadgeProps {
   className?: string;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function EnergyBadge({ value, className }: EnergyBadgeProps): JSX.Element {
   const { t } = useTranslation();
   return (

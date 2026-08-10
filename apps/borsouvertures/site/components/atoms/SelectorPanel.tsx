@@ -5,6 +5,7 @@ interface SelectorPanelProps {
   children: ReactNode;
 }
 
+// @FollowsBlueprint atom-plain
 export function SelectorPanel({ title, children }: SelectorPanelProps) {
   return (
     <div className="panel selector-panel">

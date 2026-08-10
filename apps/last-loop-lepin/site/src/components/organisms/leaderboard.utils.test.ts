@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { composeChipClassName, composeChipKey, selectChipInteractivity } from './leaderboard.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectChipInteractivity', () => {
   it('makes the chip tappable when the parent supplied a handler', () => {
     expect(selectChipInteractivity(true)).toBe('tappable');

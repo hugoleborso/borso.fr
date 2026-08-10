@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { formatCurrentRank, isLoadingRunnerProfile } from './runner-profile.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('isLoadingRunnerProfile', () => {
   it('is not loading once the request failed', () => {
     expect(isLoadingRunnerProfile(true, false)).toBe(false);

@@ -34,6 +34,7 @@ const COMPOSE_ON_SPACE: Readonly<Record<`${boolean}`, (event: KeyboardEvent) => 
   false: () => undefined,
 };
 
+// @FollowsBlueprint site-entrypoint
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('#root not found');
 

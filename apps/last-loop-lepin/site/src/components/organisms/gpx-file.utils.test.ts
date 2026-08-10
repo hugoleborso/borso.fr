@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { selectOptionalGpxResult, selectRequiredGpxResult } from './gpx-file.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectRequiredGpxResult', () => {
   it('asks for a file when none was picked', () => {
     expect(selectRequiredGpxResult(false, null)).toEqual({

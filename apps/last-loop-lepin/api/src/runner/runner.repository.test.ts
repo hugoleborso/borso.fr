@@ -4,6 +4,7 @@ import { makeEdition, makeRunner } from '../../../test/fixtures';
 import { insertEdition } from '../edition/edition.repository';
 import { findRunner, insertRunner, listRunnersForEdition } from './runner.repository';
 
+// @FollowsBlueprint test-repository-integration
 describe('runner.repository', () => {
   beforeEach(async () => {
     const database = testDatabase();

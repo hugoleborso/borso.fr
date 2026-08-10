@@ -12,6 +12,7 @@
 import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
+// @FollowsBlueprint schema-table-and-input
 export const sessionTable = pgTable('session', {
   id: uuid('id').primaryKey().defaultRandom(),
   kind: text('kind').notNull(),

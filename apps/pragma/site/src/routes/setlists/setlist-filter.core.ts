@@ -23,6 +23,7 @@ export interface FilterEntriesResult<TEntry extends FilterableEntry> {
   readonly instrumentByEntryId: Readonly<Record<string, string>>;
 }
 
+// @FollowsBlueprint core-view-projection
 export function filterEntriesForMember<TEntry extends FilterableEntry>(
   entries: readonly TEntry[],
   songsById: Readonly<Record<string, SetlistEditorSong>>,

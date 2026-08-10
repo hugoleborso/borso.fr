@@ -23,6 +23,7 @@ interface SongExternalLinksProps {
   readonly onRemove: (index: number) => void;
 }
 
+// @FollowsBlueprint organism-presentational
 export function SongExternalLinks({ links, onRemove }: SongExternalLinksProps): JSX.Element | null {
   const { t } = useTranslation();
   const embeds = useMemo(

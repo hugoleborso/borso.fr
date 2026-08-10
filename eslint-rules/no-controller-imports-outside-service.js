@@ -29,6 +29,7 @@ const FORBIDDEN_SOURCE_PATTERNS = [
   /database\/client$/,
 ];
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

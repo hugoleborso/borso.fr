@@ -10,6 +10,7 @@ import {
   RunnerNotFoundError,
 } from './runner.service';
 
+// @FollowsBlueprint test-repository-integration
 describe('runner.service', () => {
   beforeEach(async () => {
     const database = testDatabase();

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { selectSessionGateState } from './session-gate.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectSessionGateState', () => {
   it('asks for a sign-in without ever probing when the browser has no marker', () => {
     expect(selectSessionGateState(false, true, undefined)).toBe('sign-in-required');

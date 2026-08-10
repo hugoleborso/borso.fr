@@ -17,7 +17,6 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   DsqlClusterStack,
-  PreviewableApp,
   requireAwsAccount,
   requireDeployStage,
   requirePrNumber,
@@ -35,6 +34,12 @@ const ASSETS_PATH = path.join(REPO_ROOT_RELATIVE, 'dist');
 const API_ENTRY = path.join(REPO_ROOT_RELATIVE, 'api', 'src', 'main.ts');
 const MIGRATIONS_PATH = path.join(REPO_ROOT_RELATIVE, 'api', 'src', 'database', 'migrations');
 
+/**
+ * @Blueprint cdk-app-entrypoint
+ * @BlueprintName CDK Application Entry Point
+ * @BlueprintUsage Use for the executable that turns the deploy environment into one CDK application tree.
+ * @BlueprintDescription Reads every required environment variable through the `require…` helpers before a single construct exists, so a missing account or PR number fails before synth rather than producing a stack named after `undefined`, then routes the stage to a stack name and builds the cluster stack and the application stack in that order; the two front end only applications use the same shape in `apps/<slug>/bin/app.ts` without the cluster and database arm, which is why they are followers of this one rather than a pattern of their own.
+ */
 const account = requireAwsAccount();
 const stage = requireDeployStage();
 if (stage === 'integ') {
@@ -63,5 +68,3 @@ buildPragmaAppStack({
   migrationsPath: MIGRATIONS_PATH,
   cluster: clusterStack.cluster,
 });
-
-void PreviewableApp;

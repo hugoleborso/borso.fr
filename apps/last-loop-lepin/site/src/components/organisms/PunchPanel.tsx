@@ -38,6 +38,12 @@ interface PunchPanelProps {
  * local overlay, so the next bib can be tapped without waiting on the two
  * second standings poll, and the poll is what confirms it.
  */
+/**
+ * @Blueprint organism-mutation-panel
+ * @BlueprintName Organism Mutation Panel
+ * @BlueprintUsage Use for a panel whose controls each fire a mutation and have to look applied before the server answers.
+ * @BlueprintDescription Each tile's click handler writes an immutable overlay through `withPendingPunch` and then calls the mutation, and `onError` puts the overlay back with `withoutPendingPunch`, so the optimistic state is a value rather than an effect watching the request. The overlay carries the loop it belongs to, so the next loop simply stops matching it and nothing has to clear it. The tiles themselves come from `listPunchTiles`, a pure projection over the standings, the clock and the overlay.
+ */
 export function PunchPanel({ edition, ranked, now }: PunchPanelProps) {
   const { t } = useTranslation();
   const [overlay, setOverlay] = useState<PunchOverlay>(EMPTY_PUNCH_OVERLAY);

@@ -8,6 +8,7 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatDuration } from './song-duration.utils';
 
 interface SongMusicBrainzPanelProps {
   readonly album: string;
@@ -17,15 +18,7 @@ interface SongMusicBrainzPanelProps {
   readonly isrcs: readonly string[];
 }
 
-const SECONDS_PER_MINUTE = 60;
-const SECONDS_LABEL_PAD = 2;
-
-function formatDuration(totalSeconds: number): string {
-  const minutes = Math.floor(totalSeconds / SECONDS_PER_MINUTE);
-  const seconds = totalSeconds % SECONDS_PER_MINUTE;
-  return `${minutes}:${String(seconds).padStart(SECONDS_LABEL_PAD, '0')}`;
-}
-
+// @FollowsBlueprint organism-presentational
 export function SongMusicBrainzPanel({
   album,
   durationSeconds,

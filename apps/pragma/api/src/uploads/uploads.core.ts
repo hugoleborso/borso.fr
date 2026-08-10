@@ -14,6 +14,7 @@ const EXTENSION_BY_CONTENT_TYPE: Readonly<Record<AllowedUploadContentType, strin
   'image/heic': 'heic',
 };
 
+// @FollowsBlueprint core-lookup-table
 export function extensionForContentType(contentType: AllowedUploadContentType): string {
   return EXTENSION_BY_CONTENT_TYPE[contentType];
 }

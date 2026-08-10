@@ -36,6 +36,7 @@ export interface MasteryQuery {
   readonly songId: SongId;
 }
 
+// @FollowsBlueprint core-decision
 export function effective(
   defaults: DefaultMap,
   overrides: OverrideMap,

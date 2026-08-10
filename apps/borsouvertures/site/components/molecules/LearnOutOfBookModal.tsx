@@ -8,6 +8,7 @@ function revealBookMovesAndClose(): void {
   learnTreeMachine.dismissOutOfBook();
 }
 
+// @FollowsBlueprint molecule-presentational
 export function LearnOutOfBookModal() {
   const { t } = useTranslation();
   return (

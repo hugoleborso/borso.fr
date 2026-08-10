@@ -5,7 +5,7 @@ import {
   selectProofChipShape,
   selectProofIcon,
 } from '../../labours/labours-appearance.core';
-import { buildProofChipText, listProofLabelKeys } from '../../labours/labours.core';
+import { buildProofChipText, selectProofLabel } from '../../labours/labours.core';
 import type { Proof } from '../../labours/labours.types';
 import { ACCENT, INK, PROOF_BACKGROUND, SANS_FAMILY } from '../../theme/twelve-labours.theme';
 import { Chip, type ChipProps } from '../atoms/Chip';
@@ -29,16 +29,15 @@ const CHIP_COMPONENT: Readonly<Record<ProofChipShape, ComponentType<ChipProps>>>
   plain: Chip,
 };
 
-const NO_LABEL = null;
-
 interface ProofChipProps {
   proof: Proof;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function ProofChip({ proof }: ProofChipProps) {
   const { t } = useTranslation();
   const ChipShape = CHIP_COMPONENT[selectProofChipShape(proof.type)];
-  const label = listProofLabelKeys(proof).map((key) => t(key))[0] ?? NO_LABEL;
+  const label = selectProofLabel(proof, t);
   return (
     <ChipShape address={proof.value} style={CHIP_STYLE}>
       <span style={{ color: ACCENT, fontWeight: 600 }}>{selectProofIcon(proof.type)}</span>

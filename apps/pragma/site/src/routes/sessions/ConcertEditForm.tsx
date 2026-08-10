@@ -52,6 +52,7 @@ const concertFormSchema = z.object({
   friends: z.record(z.string(), z.number().int().min(0).max(FRIENDS_PER_MEMBER_MAX)),
 });
 
+// @FollowsBlueprint route-form
 export function ConcertEditForm({
   members,
   initial,

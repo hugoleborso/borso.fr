@@ -18,6 +18,7 @@ interface SongEmbedProps {
 
 const DEFAULT_IFRAME_CLASS = 'rounded-md';
 
+// @FollowsBlueprint molecule-presentational
 export function SongEmbed({ embed, title, iframeClassName }: SongEmbedProps): JSX.Element {
   if (embed.kind === 'oembed') {
     return (

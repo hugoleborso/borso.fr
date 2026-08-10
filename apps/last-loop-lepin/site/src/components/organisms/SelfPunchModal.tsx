@@ -124,6 +124,7 @@ function NoConnectionBody({ onRetry }: BodyProps) {
   );
 }
 
+// @FollowsBlueprint component-lookup-table
 const BODY_BY_STATE: Readonly<Record<SelfPunchStateKind, (props: BodyProps) => ReactNode>> = {
   confirm: ConfirmBody,
   'awaiting-geo': SendingBody,
@@ -143,6 +144,12 @@ const BODY_BY_STATE: Readonly<Record<SelfPunchStateKind, (props: BodyProps) => R
  *
  * The standings query polls every two seconds, so a confirmed punch needs no
  * refetch here to show up on the leaderboard.
+ */
+/**
+ * @Blueprint organism-state-machine
+ * @BlueprintName Organism Driven By A State Machine
+ * @BlueprintUsage Use for a flow with several outcomes, where each step has to name why it happened rather than only whether it worked.
+ * @BlueprintDescription Holds one `useState` over the union `SelfPunchState` and never writes it directly: every change goes through `nextStep`, the pure reducer in `self-punch.core.ts`, and a rejected request becomes an event through `selectFailureEvent` before it reaches the reducer. The state's `kind` then indexes `BODY_BY_STATE`, a frozen record of body components, so adding a state without a body is a type error and the shell contains no branch.
  */
 export function SelfPunchModal({ runner, editionSlug, onClose }: SelfPunchModalProps) {
   const { t } = useTranslation();

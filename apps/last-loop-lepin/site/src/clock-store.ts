@@ -31,6 +31,12 @@ function maybeStopInterval(): void {
   intervalId = null;
 }
 
+/**
+ * @Blueprint external-store-module
+ * @BlueprintName External Store Module
+ * @BlueprintUsage Use for state that lives outside React and that components read with `useSyncExternalStore`.
+ * @BlueprintDescription Exports the three arguments `useSyncExternalStore` takes as module level functions, so a component never passes a fresh closure and never resubscribes on a render. The store owns its own interval: `subscribeClock` starts it on the first listener and the returned unsubscribe stops it once the listener set empties, which is the lifecycle a component would otherwise write as an effect. `readServerTime` returns a fixed value rather than reading the clock, because a server snapshot has to be stable.
+ */
 export function subscribeClock(listener: Listener): () => void {
   listeners.add(listener);
   ensureInterval();

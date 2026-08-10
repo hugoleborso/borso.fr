@@ -7,6 +7,7 @@ import {
   githubSubClaims,
 } from '../../src/internal/oidc.js';
 
+// @FollowsBlueprint test-pure-unit
 describe('githubSubClaims', () => {
   it('builds an environment-scoped sub claim', () => {
     expect(
@@ -46,6 +47,7 @@ describe('githubSubClaims', () => {
   });
 });
 
+// @FollowsBlueprint test-cdk-synth
 describe('githubActionsPrincipal', () => {
   it('produces a FederatedPrincipal that synths a trust policy with the issuer + sub claim', () => {
     const stack = new Stack(new App(), 'S');

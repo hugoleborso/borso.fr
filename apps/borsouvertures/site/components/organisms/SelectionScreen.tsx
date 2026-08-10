@@ -11,6 +11,7 @@ import { OpeningFlowSelector } from './OpeningFlowSelector';
 import { SelectionAutoOpponentRow } from './SelectionAutoOpponentRow';
 import { SessionStartHint } from './SessionStartHint';
 
+// @FollowsBlueprint component-lookup-table
 const AUTO_OPPONENT_ROW_BY_MODE: ComponentByKind<Mode, { isAutoOpponentEnabled: boolean }> = {
   play: SelectionAutoOpponentRow,
   learn: EmptySlot,
@@ -30,6 +31,7 @@ interface SelectionScreenProps {
   openings: Opening[];
 }
 
+// @FollowsBlueprint organism-table-dispatch
 export function SelectionScreen({ openings }: SelectionScreenProps) {
   const { t } = useTranslation();
   const { mode, side, selection, playScope, playAutoOpponent } = useAppState();

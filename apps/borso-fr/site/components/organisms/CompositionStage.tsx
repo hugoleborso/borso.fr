@@ -20,6 +20,7 @@ interface CompositionStageProps {
   onCompose: () => void;
 }
 
+// @FollowsBlueprint organism-presentational
 export function CompositionStage({
   seed,
   title,
@@ -66,7 +67,10 @@ export function CompositionStage({
       </div>
 
       <button type="button" className="stage-compose" onClick={onCompose}>
-        {t('mondrian.action.compose')} <span className="arrow">→</span>
+        {t('mondrian.action.compose')}{' '}
+        <span className="arrow" aria-hidden="true">
+          →
+        </span>
       </button>
 
       <div className="stage-foot">

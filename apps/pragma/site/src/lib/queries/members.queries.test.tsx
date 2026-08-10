@@ -69,6 +69,7 @@ const SEED_INSTRUMENTS = {
   ],
 };
 
+// @FollowsBlueprint test-query-hook
 describe('members mutations — optimistic updates', () => {
   let stub: ReturnType<typeof stubFetch> | null = null;
   beforeEach(() => {

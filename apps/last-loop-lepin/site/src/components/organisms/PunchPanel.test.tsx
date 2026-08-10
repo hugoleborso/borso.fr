@@ -59,6 +59,7 @@ function Wrapper({ children }: { readonly children: ReactNode }) {
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
+// @FollowsBlueprint test-component-render
 describe('PunchPanel', () => {
   beforeEach(() => {
     registerPunch.mockReset();

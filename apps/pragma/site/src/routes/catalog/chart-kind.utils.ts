@@ -37,6 +37,7 @@ export function selectChordProText(chart: ChordProChartLike | null | undefined):
   return text;
 }
 
+// @FollowsBlueprint core-lookup-table
 export function extractChartKind(chart: ChartLike | null | undefined): ChartKindTag {
   if (chart === null || chart === undefined) return null;
   const candidate = chart.kind;

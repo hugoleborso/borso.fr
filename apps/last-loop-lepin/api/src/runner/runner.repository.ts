@@ -12,6 +12,7 @@ export async function insertRunner(database: Database, runner: Runner): Promise<
  * slug pair is already present. Used by the test seeding endpoint, which
  * replays the same roster on every fixture switch.
  */
+// @FollowsBlueprint repository-idempotent-upsert
 export async function upsertRunner(database: Database, runner: Runner): Promise<void> {
   await database.insert(runnersTable).values(runner).onConflictDoNothing();
 }
@@ -29,6 +30,7 @@ export async function findRunner(
   return rows[0] ?? null;
 }
 
+// @FollowsBlueprint repository-query
 export async function listRunnersForEdition(
   database: Database,
   editionSlug: string,

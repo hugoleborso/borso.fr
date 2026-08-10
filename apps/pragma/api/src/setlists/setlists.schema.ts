@@ -9,6 +9,7 @@
 import { integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
+// @FollowsBlueprint schema-table-and-input
 export const setlistTable = pgTable('setlist', {
   id: uuid('id').primaryKey().defaultRandom(),
   sessionId: uuid('session_id').notNull().unique(),

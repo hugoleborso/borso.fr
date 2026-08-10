@@ -7,6 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 
+// @FollowsBlueprint query-module
 export const runnerKeys = {
   all: ['runners'] as const,
   roster: (editionSlug: string) => [...runnerKeys.all, 'roster', editionSlug] as const,

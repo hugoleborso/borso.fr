@@ -4,6 +4,7 @@ import { LanguageSwitcher } from '@/components/molecules/LanguageSwitcher';
 import { ModeToggle } from '@/components/molecules/ModeToggle';
 import { useAppState } from '@/state/appState';
 
+// @FollowsBlueprint organism-presentational
 export function TopBar() {
   const { t } = useTranslation();
   const { mode, boardStyle } = useAppState();

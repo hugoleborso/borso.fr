@@ -1,8 +1,11 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
 import { requireAdminSession } from '../auth/auth.middleware';
-import { createEditionInputSchema, updateEditionInputSchema } from './edition.schema';
+import {
+  createEditionInputSchema,
+  editionStatusUpdateSchema,
+  updateEditionInputSchema,
+} from './edition.schema';
 import {
   createEditionFromInput,
   EditionAlreadyExistsError,
@@ -20,8 +23,7 @@ import {
   transitionEditionStatus,
 } from './edition.service';
 
-const statusUpdateSchema = z.object({ status: z.enum(['setup', 'live', 'finished']) });
-
+// @FollowsBlueprint controller-public-router
 const editionRouter = new Hono()
   .get('/', async (context) => {
     const editions = await getAllEditions(getDatabase());
@@ -46,6 +48,7 @@ const editionRouter = new Hono()
     return context.json({ edition });
   });
 
+// @FollowsBlueprint controller-guarded-router
 const adminEditionRouter = new Hono()
   .use('*', requireAdminSession)
   .post('/', zValidator('json', createEditionInputSchema), async (context) => {
@@ -82,9 +85,10 @@ const adminEditionRouter = new Hono()
     }
   })
   .delete('/:slug', async (context) => {
+    const slug = context.req.param('slug');
     try {
-      await removeSetupEdition(getDatabase(), context.req.param('slug'));
-      return context.json({ slug: context.req.param('slug'), deleted: true });
+      await removeSetupEdition(getDatabase(), slug);
+      return context.json({ slug, deleted: true });
     } catch (error) {
       if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);
       if (error instanceof EditionNotInSetupError)
@@ -92,7 +96,7 @@ const adminEditionRouter = new Hono()
       throw error;
     }
   })
-  .put('/:slug/status', zValidator('json', statusUpdateSchema), async (context) => {
+  .put('/:slug/status', zValidator('json', editionStatusUpdateSchema), async (context) => {
     const slug = context.req.param('slug');
     const { status } = context.req.valid('json');
     try {

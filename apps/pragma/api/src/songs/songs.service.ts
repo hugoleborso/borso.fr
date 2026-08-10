@@ -60,6 +60,7 @@ export async function createSong(input: SongCreateInput): Promise<SongRow> {
   return await insertSong(valuesFromCreate(input));
 }
 
+// @FollowsBlueprint service-crud-update
 export async function patchSong(
   id: string,
   input: SongUpdateInput,

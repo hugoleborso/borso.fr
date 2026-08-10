@@ -25,6 +25,7 @@ export interface MemberLineupProps {
   instruments: readonly LineupInstrument[];
 }
 
+// @FollowsBlueprint molecule-presentational
 export function MemberLineup({ lineup, members, instruments }: MemberLineupProps): JSX.Element {
   return (
     <span className="inline-flex gap-1 flex-wrap">

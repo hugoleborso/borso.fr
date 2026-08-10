@@ -34,6 +34,12 @@ function setHourLocal(hour: number, minute: number): void {
   );
 }
 
+/**
+ * @Blueprint test-scenario-e2e
+ * @BlueprintName Scenario End To End Test
+ * @BlueprintUsage Use for a workflow whose meaning is the order events happen in, walked as one long case rather than split into independent ones.
+ * @BlueprintDescription Fakes the `Date` only, so the database and the router stay real, then moves the clock forward with `vi.setSystemTime` between `app.request` calls and asserts the standings after each step, which is how a rule that only shows up on the third loop gets covered.
+ */
 describe('race day 2026 — end-to-end', () => {
   const app = createApp();
 

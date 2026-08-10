@@ -53,6 +53,7 @@ function isMatchingOnServer(): boolean {
   return false;
 }
 
+// @FollowsBlueprint hook-external-store
 export function useIsMediaQueryMatching(query: string): boolean {
   return useSyncExternalStore(
     subscribeToMediaQuery(query),

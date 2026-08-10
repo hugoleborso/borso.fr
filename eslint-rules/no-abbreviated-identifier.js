@@ -105,6 +105,7 @@ function isForHeaderDeclarator(declarator) {
   return declaration.parent !== undefined && FOR_HEADER_TYPES.has(declaration.parent.type);
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

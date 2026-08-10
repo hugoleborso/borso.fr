@@ -35,6 +35,7 @@ function listLineIds(entries: readonly { line: { id: string } }[]): string[] {
   return entries.map((entry) => entry.line.id);
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('buildOpeningFlowLists in play mode', () => {
   it('spans every opening when the scope is empty', () => {
     const lists = buildOpeningFlowLists('play', OPENINGS, FULL_SELECTION, EMPTY_PLAY_SCOPE);

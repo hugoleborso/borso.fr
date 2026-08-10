@@ -25,6 +25,12 @@ export interface GpxFileState {
   readonly readOptional: () => Promise<GpxReadResult>;
 }
 
+/**
+ * @Blueprint hook-stateful-helper
+ * @BlueprintName Hook Owning State And Returning Callbacks
+ * @BlueprintUsage Use for a piece of component state with its own small workflow, shared by more than one component.
+ * @BlueprintDescription Owns two `useState` values and returns them beside the callbacks that write them, with no effect anywhere: the file is read inside `readRequired` and `readOptional`, which run from the submit handler rather than from a subscription to the picked file. Every decision about what a read means is delegated to `gpx-file.utils.ts`, so the hook itself holds no rule and the rules stay testable without React.
+ */
 export function useGpxFile(): GpxFileState {
   const [file, setFile] = useState<File | null>(null);
   const [errorKey, setErrorKey] = useState<GpxErrorKey | null>(null);

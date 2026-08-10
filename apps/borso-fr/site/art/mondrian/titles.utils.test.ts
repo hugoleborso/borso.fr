@@ -91,6 +91,7 @@ beforeAll(async () => {
   await i18next.changeLanguage('fr');
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('pickFromNonEmptyList', () => {
   const flowers = ['rose', 'daisy', 'iris', 'tulip'] as const;
 

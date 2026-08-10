@@ -50,6 +50,7 @@ export type RunnerValidation =
  * via Zod alone — namely the per-edition bib uniqueness check, which
  * needs the existing roster.
  */
+// @FollowsBlueprint core-decision
 export function validateRunnerDraft(
   draft: { readonly displayName: string; readonly slug: string; readonly bib: number | null },
   existingRoster: readonly Runner[],

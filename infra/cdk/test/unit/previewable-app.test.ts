@@ -5,7 +5,7 @@ import { Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { DsqlClusterStack } from '../../src/constructs/dsql-cluster-stack.js';
 import { PreviewableApp } from '../../src/constructs/previewable-app.js';
-import { isObject, resourcesOfType } from './helpers/template.js';
+import { isObject, resourcesOfType, TEST_ENV as ENV } from './helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ENTRY = path.join(HERE, 'fixtures', 'handler.ts');
@@ -20,8 +20,6 @@ function hasTestSeedFlag(resource: unknown): boolean {
   const variables = environment.Variables;
   return isObject(variables) && variables.ALLOW_TEST_SEED === '1';
 }
-
-const ENV = { account: '123456789012', region: 'eu-west-3' };
 
 interface Stacks {
   readonly app: App;
@@ -45,6 +43,7 @@ function getProperties(resource: unknown): Record<string, unknown> | null {
   return isObject(properties) ? properties : null;
 }
 
+// @FollowsBlueprint test-cdk-synth
 describe('PreviewableApp (prod, full)', () => {
   const { clusterStack, stageStack } = bootstrap('S');
   new PreviewableApp(stageStack, 'App', {

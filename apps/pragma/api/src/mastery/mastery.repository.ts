@@ -20,6 +20,7 @@ export interface MasteryOverrideRow {
   score: number;
 }
 
+// @FollowsBlueprint repository-query
 export async function listMasteryDefaults(): Promise<MasteryDefaultRow[]> {
   const database = getDatabase();
   return await database
@@ -31,6 +32,7 @@ export async function listMasteryDefaults(): Promise<MasteryDefaultRow[]> {
     .from(masteryDefaultTable);
 }
 
+// @FollowsBlueprint repository-idempotent-upsert
 export async function upsertMasteryDefault(row: MasteryDefaultRow): Promise<void> {
   const database = getDatabase();
   await database

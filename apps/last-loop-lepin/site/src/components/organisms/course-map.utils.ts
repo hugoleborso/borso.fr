@@ -25,6 +25,12 @@ export interface Indexed {
  * meters; `total` is the loop length (= `cumulative[last]`, or `0` for an
  * empty or single-point series).
  */
+/**
+ * @Blueprint utils-geometry
+ * @BlueprintName Geometry Utilities Module
+ * @BlueprintUsage Use for the coordinate and distance maths behind a map, a chart, or any other drawn surface.
+ * @BlueprintDescription Knows nothing about React, Leaflet, or the transport shape: points in, an index of cumulative metres out, with the projections beside it taking that index and a fraction and returning a point. The walk pulls each key from a fresh iterator alongside the `for…of` over the points, which is how the module reads two parallel arrays without the defensive `??` branches `noUncheckedIndexedAccess` forces on array indexing, and it is what lets the module hold full branch coverage.
+ */
 export function indexTrack(points: readonly LatLngDto[]): Indexed {
   const cumulative: number[] = [];
   let running = 0;

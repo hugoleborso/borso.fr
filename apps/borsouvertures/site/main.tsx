@@ -7,6 +7,7 @@ import './index.css';
 
 registerSW();
 
+// @FollowsBlueprint site-entrypoint
 const rootElement = document.getElementById('root');
 if (rootElement) {
   createRoot(rootElement).render(

@@ -10,6 +10,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 
+// @FollowsBlueprint query-module
 export const editionKeys = {
   all: ['editions'] as const,
   list: () => [...editionKeys.all, 'list'] as const,
@@ -65,6 +66,7 @@ export function useEditionList() {
   });
 }
 
+// @FollowsBlueprint query-pessimistic-mutation
 export function useCreateEdition() {
   const queryClient = useQueryClient();
   return useMutation({

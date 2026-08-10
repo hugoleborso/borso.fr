@@ -6,6 +6,7 @@ interface ControlFieldProps {
   children: ReactNode;
 }
 
+// @FollowsBlueprint atom-plain
 export function ControlField({ label, value, children }: ControlFieldProps) {
   return (
     <div className="field">

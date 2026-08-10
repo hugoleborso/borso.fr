@@ -40,6 +40,7 @@ export function useSession(id: string, isEnabled = true) {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useCreateSession() {
   const queryClient = useQueryClient();
   return useMutation({

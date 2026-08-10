@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getCurrentTime, readServerTime, subscribeClock } from '../clock-store';
 import { CorrectionBanner } from '../components/molecules/CorrectionBanner';
 import { InRaceCounter } from '../components/molecules/InRaceCounter';
 import { CourseMap } from '../components/organisms/CourseMap';
@@ -31,7 +32,15 @@ const BANNER_STYLE = { justifyContent: 'space-between' } as const;
 const EMPTY_RANKED: readonly RankedRunnerDto[] = [];
 const EMPTY_FASTEST_LAP: readonly { readonly runnerSlug: string }[] = [];
 
-/** The public race screen: countdown, track, standings, elevation profile. */
+/**
+ * The public race screen: countdown, track, standings, elevation profile.
+ *
+ * The map markers and the elevation pastilles are placed from the wall clock,
+ * so the screen subscribes to the shared clock once and hands the same instant
+ * to both. Reading `new Date()` during render instead would only advance when
+ * something else re-rendered the tree, which is the standings poll.
+ */
+// @FollowsBlueprint route-list-page
 export function SpectatorPage() {
   const { t, i18n } = useTranslation();
   const currentEdition = useCurrentEdition();
@@ -39,6 +48,8 @@ export function SpectatorPage() {
   const edition = currentEdition.data?.edition ?? null;
   const standings = useStandings(edition?.slug ?? '');
   const [selectedRunner, setSelectedRunner] = useState<RankedRunnerDto | null>(null);
+  const nowMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
+  const now = new Date(nowMs);
 
   const ranked = standings.data?.standings.ranked ?? EMPTY_RANKED;
 
@@ -94,7 +105,7 @@ export function SpectatorPage() {
                   </span>
                 }
               />
-              <CourseMap edition={raceEdition} ranked={ranked} now={new Date()} />
+              <CourseMap edition={raceEdition} ranked={ranked} now={now} />
             </Card>
             <Card modifier="classement-card">
               <CardHeader
@@ -127,7 +138,7 @@ export function SpectatorPage() {
                   </span>
                 }
               />
-              <ElevationProfile edition={raceEdition} ranked={ranked} now={new Date()} />
+              <ElevationProfile edition={raceEdition} ranked={ranked} now={now} />
             </Card>
           </div>
           {listPresent(selectedRunner).map((runner) => (

@@ -45,6 +45,7 @@ export interface ClipboardSetlistEntry {
  * it is omitted when neither is available. A missing song id yields a
  * `?` placeholder so the position numbering stays aligned.
  */
+// @FollowsBlueprint utils-pure-module
 export function formatSetlistOrder(
   entries: readonly ClipboardSetlistEntry[],
   songsById: Readonly<Record<string, SetlistEditorSong>>,

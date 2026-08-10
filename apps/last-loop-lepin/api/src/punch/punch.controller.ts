@@ -19,6 +19,12 @@ import {
   voidPunch,
 } from './punch.service';
 
+/**
+ * @Blueprint controller-guarded-router
+ * @BlueprintName Guarded Controller Router
+ * @BlueprintUsage Use for an administration router, so authentication is applied to every route of the chain before any handler can be reached.
+ * @BlueprintDescription Mounts `requireAdminSession` as the first link of the chain, so a route added later inherits the guard by position rather than by remembering to repeat it, and each handler answers by matching the service's named errors onto their status codes instead of parsing messages.
+ */
 const adminPunchRouter = new Hono()
   .use('*', requireAdminSession)
   .post('/punches', zValidator('json', createPunchInputSchema), async (context) => {
@@ -40,7 +46,7 @@ const adminPunchRouter = new Hono()
     const id = context.req.param('id');
     const { finishedAt } = context.req.valid('json');
     try {
-      const punch = await correctPunch(getDatabase(), id, new Date(finishedAt), new Date());
+      const punch = await correctPunch(getDatabase(), id, finishedAt, new Date());
       return context.json({ punch });
     } catch (error) {
       if (error instanceof PunchNotFoundError) return context.json({ error: error.message }, 404);

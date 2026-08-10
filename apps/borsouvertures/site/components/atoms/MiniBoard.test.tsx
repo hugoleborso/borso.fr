@@ -6,6 +6,7 @@ import { SelectorCard } from './SelectorCard';
 
 const STARTING_FEN = new Chess().fen();
 
+// @FollowsBlueprint test-component-render
 describe('MiniBoard', () => {
   it('exposes no target of its own, so the card around it stays the only one', () => {
     render(

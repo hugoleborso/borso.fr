@@ -1,5 +1,6 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getCurrentTime, readServerTime, subscribeClock } from '../clock-store';
 import { Card, CardBody } from '../components/atoms/Card';
 import { Show } from '../components/atoms/Show';
 import { AdminLoginForm } from '../components/organisms/AdminLoginForm';
@@ -32,18 +33,28 @@ interface EditionTabProps {
   readonly edition: RaceEditionDto;
   readonly ranked: readonly RankedRunnerDto[];
   readonly locale: string;
+  readonly now: Date;
 }
 
+// @FollowsBlueprint component-lookup-table
 const PANEL_BY_TAB: Readonly<Record<EditionPanelTab, (props: EditionTabProps) => ReactNode>> = {
   runners: ({ edition }) => <RunnerAdminPanel edition={edition} />,
-  punch: ({ edition, ranked }) => <PunchPanel edition={edition} ranked={ranked} now={new Date()} />,
+  punch: ({ edition, ranked, now }) => <PunchPanel edition={edition} ranked={ranked} now={now} />,
   'did-not-finish': ({ edition, ranked }) => (
     <DidNotFinishPanel edition={edition} ranked={ranked} />
   ),
   corrections: ({ edition }) => <CorrectionPanel edition={edition} />,
 };
 
-/** The organiser screen. PIN first, then one panel per tab. */
+/**
+ * The organiser screen. PIN first, then one panel per tab.
+ *
+ * The punch grid flags a runner as late from how far into the loop the race
+ * is, so the screen subscribes to the shared clock once and hands the instant
+ * down. Reading `new Date()` during render instead would only advance when the
+ * standings poll happened to re-render the tree.
+ */
+// @FollowsBlueprint route-list-page
 export function AdminPage() {
   const { t, i18n } = useTranslation();
   const [isAuthenticated, setAuthenticated] = useState(false);
@@ -52,6 +63,8 @@ export function AdminPage() {
   const edition = currentEdition.data?.edition ?? null;
   const standings = useStandings(edition?.slug ?? '');
   const ranked = standings.data?.standings.ranked ?? EMPTY_RANKED;
+  const nowMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
+  const now = new Date(nowMs);
 
   return (
     <>
@@ -91,7 +104,7 @@ export function AdminPage() {
           </nav>
 
           <Show when={tab === 'setup'}>
-            <SetupPanel currentEdition={edition} locale={i18n.language} now={new Date()} />
+            <SetupPanel currentEdition={edition} locale={i18n.language} now={now} />
           </Show>
 
           <Show when={isTabBlockedByMissingEdition(tab, edition !== null)}>
@@ -109,6 +122,7 @@ export function AdminPage() {
                   edition={activeEdition}
                   ranked={ranked}
                   locale={i18n.language}
+                  now={now}
                 />
               );
             }),

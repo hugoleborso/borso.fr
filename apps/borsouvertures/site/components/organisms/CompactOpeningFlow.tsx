@@ -10,6 +10,7 @@ import type { ComponentByKind } from '@/lib/componentTable.types';
 
 type SelectorStep = 'opening' | 'variation' | 'line';
 
+// @FollowsBlueprint component-lookup-table
 const PANEL_BY_STEP: ComponentByKind<SelectorStep, OpeningPanelProps> = {
   opening: OpeningsPanel,
   variation: VariationsPanel,
@@ -43,6 +44,7 @@ const BACK_BUTTON_BY_STEP: ComponentByKind<SelectorStep, BackButtonProps> = {
  * On a narrow viewport the three columns become one step at a time, so a card
  * tap moves the flow forward and the back button walks it out again.
  */
+// @FollowsBlueprint organism-table-dispatch
 export function CompactOpeningFlow(props: OpeningPanelProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState<SelectorStep>('opening');

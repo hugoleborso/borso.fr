@@ -6,6 +6,7 @@ import {
   formatDateTimeLocal,
 } from './create-session-dialog.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('formatDateTimeLocal', () => {
   it('pads month, day, hour and minute to two digits', () => {
     const date = new Date(2024, 0, 5, 3, 7);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { selectTrainerScreenKind } from './trainerScreen.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectTrainerScreenKind', () => {
   it('shows the failure panel when the dataset did not load', () => {
     expect(selectTrainerScreenKind('failed', 'select')).toBe('load-failure');

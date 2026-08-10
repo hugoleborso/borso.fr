@@ -31,6 +31,7 @@ export function useInstrumentsList() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useCreateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MEMBER_PALETTE, pickNextPaletteHex, pickPaletteHex } from './member-palette.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('pickPaletteHex', () => {
   it('returns the slot hex for indices 0..4', () => {
     expect(pickPaletteHex(0)).toBe(MEMBER_PALETTE[0].hex);

@@ -14,6 +14,7 @@ function signPayload(payloadEncoded: string): string {
   return createHmac('sha256', HMAC_KEY).update(payloadEncoded).digest('base64url');
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('session-cookie.utils', () => {
   it('exposes the cookie name expected by the front-end', () => {
     expect(SESSION_COOKIE_NAME).toBe('pragma_session');

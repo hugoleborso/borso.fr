@@ -51,6 +51,7 @@ const VIEW_TOGGLE_CLASS = {
   inactive: 'bg-transparent text-ink-500 hover:text-ink-700',
 } as const;
 
+// @FollowsBlueprint route-list-page
 export function BarsPage(): JSX.Element {
   const { t } = useTranslation();
   const [view, setView] = useState<BarsView>('list');

@@ -17,6 +17,7 @@ import { Button } from '../../components/atoms/Button';
 import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists';
 import { SetlistEditor } from './SetlistEditor';
 
+// @FollowsBlueprint route-detail-page
 export function SetlistEditorPage(): JSX.Element {
   const { sessionId } = useParams<{ sessionId: string }>();
   const { t } = useTranslation();

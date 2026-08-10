@@ -30,6 +30,12 @@ function isOnlineOnServer(): boolean {
   return true;
 }
 
+/**
+ * @Blueprint hook-external-store
+ * @BlueprintName Hook Over An External Store
+ * @BlueprintUsage Use for reading a browser API into React, in place of an effect copying it into state.
+ * @BlueprintDescription Subscribes through `useSyncExternalStore`, which stays correct during concurrent rendering where an effect does not, and declares subscribe, snapshot and server snapshot as module level functions so React receives the same three identities on every render and never resubscribes. The subscribe function returns the matching `removeEventListener` calls as its own cleanup.
+ */
 export function useIsOnline(): boolean {
   return useSyncExternalStore(subscribeToOnlineStatus, isBrowserOnline, isOnlineOnServer);
 }

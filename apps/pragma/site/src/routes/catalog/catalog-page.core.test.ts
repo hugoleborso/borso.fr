@@ -15,6 +15,7 @@ const SONGS: readonly CatalogSong[] = [
   { title: 'Afterglow', artist: 'Nova Reef', status: 'concert_ready' },
 ];
 
+// @FollowsBlueprint test-pure-unit
 describe('countSongsWithStatus', () => {
   it('counts every song for the all filter', () => {
     expect(countSongsWithStatus(SONGS, 'all')).toBe(3);

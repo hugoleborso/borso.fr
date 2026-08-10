@@ -29,6 +29,12 @@ function narrowPunchSource(raw: string | null): PunchSource {
   return raw === 'self' ? 'self' : 'admin';
 }
 
+/**
+ * @Blueprint repository-row-mapper
+ * @BlueprintName Repository Row Mapper
+ * @BlueprintUsage Use for a column wider than the domain type, so the narrowing happens once at the data boundary instead of at every read site.
+ * @BlueprintDescription Declares the row shape as a private interface and maps it field by field, routing the nullable `source` column through `narrowPunchSource` so a value the database allows but the domain does not becomes the default rather than leaking out as `string | null`.
+ */
 function rowToLoopPunch(row: LoopPunchRow): LoopPunch {
   return {
     id: row.id,
@@ -47,6 +53,7 @@ function rowToLoopPunch(row: LoopPunchRow): LoopPunch {
   };
 }
 
+// @FollowsBlueprint named-domain-error
 export class PunchConflictError extends Error {
   override readonly name = 'PunchConflictError';
   constructor(public readonly existing: LoopPunch) {

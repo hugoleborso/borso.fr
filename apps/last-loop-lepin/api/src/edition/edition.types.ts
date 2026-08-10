@@ -6,6 +6,7 @@
  * in TypeScript requires `as Foo`, which the repo's Grit plugin bans.
  */
 
+// @FollowsBlueprint domain-types-module
 export type EditionStatus = 'setup' | 'live' | 'finished';
 
 export interface GpxMetadata {

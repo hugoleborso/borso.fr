@@ -18,6 +18,12 @@ const EVERY_STATUS: ChallengeStatus[] = ['done', 'partial', 'failed', 'abandoned
 const EVERY_KIND: ChallengeKind[] = ['daily', 'count', 'oneshot'];
 const EVERY_PROOF_TYPE: ProofType[] = ['photo', 'video', 'link', 'note', 'stat'];
 
+/**
+ * @Blueprint test-exhaustive-domain
+ * @BlueprintName Exhaustive Domain Test
+ * @BlueprintUsage Use for a function whose whole behaviour is a lookup keyed by a domain union, where every member has to be exercised.
+ * @BlueprintDescription Declares one array per domain union at the top of the file, typed as that union so a new member is a typecheck failure until the array names it, then drives each array through `it.each` with the case name interpolated into the test title. Every branch of the record runs from a single assertion, which is how the lookup reaches full branch coverage without a case written by hand per member and without a loop that reports one passing test whatever it covered.
+ */
 describe('selectStatusLabelKey', () => {
   it.each(EVERY_STATUS)('names a catalogue key for "%s"', (status) => {
     expect(selectStatusLabelKey(status)).toBe(`twelve-labours.status.${status}`);

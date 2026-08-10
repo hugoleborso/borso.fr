@@ -6,6 +6,7 @@ import {
   selectInitialLanguage,
 } from './i18n.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('flattenKeys', () => {
   it('returns an empty list for an empty catalogue', () => {
     expect(flattenKeys({})).toEqual([]);

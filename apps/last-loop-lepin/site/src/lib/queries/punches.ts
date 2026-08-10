@@ -12,6 +12,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api';
 
+// @FollowsBlueprint query-module
 export const punchKeys = {
   all: ['punches'] as const,
   forRunner: (editionSlug: string, runnerSlug: string) =>
@@ -76,6 +77,7 @@ export function useRegisterPunch() {
   });
 }
 
+// @FollowsBlueprint query-pessimistic-mutation
 export function useVoidPunch() {
   const queryClient = useQueryClient();
   return useMutation({

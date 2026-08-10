@@ -23,6 +23,12 @@ const SENTRY_BREADCRUMB_MESSAGE = 'runner_photo_load_failed';
  * swaps to the initials placeholder when the image fails to load, which is a
  * DOM event and so needs one piece of state and no effect.
  */
+/**
+ * @Blueprint molecule-view-selector
+ * @BlueprintName Molecule With A Selected View
+ * @BlueprintUsage Use for a molecule that renders one of several shapes, where the choice depends on props plus one small piece of local state.
+ * @BlueprintDescription Owns exactly one flag, `hasPhotoFailed`, written only from the image's `onError` handler, and hands it with the built avatar to `selectRunnerAvatarView`, a pure covered selector returning a union `kind`. That `kind` indexes `PHOTO_BY_VIEW`, so the component ends on a table lookup and carries no conditional. The selector returns both the photo URL and the initials, which is what lets the failure swap render without a second decision.
+ */
 export function RunnerAvatar({ runner, size, surface }: RunnerAvatarProps) {
   const avatar = buildRunnerAvatar(runner);
   const [hasPhotoFailed, setPhotoFailed] = useState(false);

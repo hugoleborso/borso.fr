@@ -5,6 +5,7 @@ interface StatusItemProps {
   value: string;
 }
 
+// @FollowsBlueprint atom-plain
 export function StatusItem({ label, value }: StatusItemProps) {
   return (
     <div className="status-item">

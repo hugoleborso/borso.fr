@@ -15,6 +15,7 @@ import { createHash } from 'node:crypto';
 
 export const UNKNOWN_IP_PLACEHOLDER = 'unknown';
 
+// @FollowsBlueprint utils-pure-module
 export function readClientIp(headerValue: string | undefined): string {
   if (headerValue === undefined) return UNKNOWN_IP_PLACEHOLDER;
   const separatorIndex = headerValue.indexOf(',');

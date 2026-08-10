@@ -15,6 +15,7 @@ interface EditionRow {
   readonly status: string;
 }
 
+// @FollowsBlueprint repository-row-mapper
 function rowToEdition(row: EditionRow): RaceEdition {
   // gpx is stored as JSON-encoded text (Aurora DSQL doesn't support jsonb).
   // The `as unknown` step is the JSON-parse escape hatch the repo allows;
@@ -56,6 +57,12 @@ export async function insertEdition(database: Database, edition: RaceEdition): P
  * The test seeding endpoint rebuilds one fixture edition over and over, and
  * an upsert lets it do that without first asking whether the row is there.
  */
+/**
+ * @Blueprint repository-idempotent-upsert
+ * @BlueprintName Repository Idempotent Upsert
+ * @BlueprintUsage Use for a write a caller may replay, so a fixture or a retry does not need a delete first.
+ * @BlueprintDescription Builds the column values once and passes the same object to `values` and to `onConflictDoUpdate`, keyed on the slug, so inserting and replacing stay in step and a second call with different content overwrites rather than failing on the primary key.
+ */
 export async function upsertEdition(database: Database, edition: RaceEdition): Promise<void> {
   const values = {
     slug: edition.slug,
@@ -74,6 +81,7 @@ export async function upsertEdition(database: Database, edition: RaceEdition): P
     .onConflictDoUpdate({ target: editionsTable.slug, set: values });
 }
 
+// @FollowsBlueprint repository-query
 export async function findEditionBySlug(
   database: Database,
   slug: string,

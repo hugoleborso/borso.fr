@@ -57,6 +57,11 @@ function collectIdenticalValueKeys(
  * alone stays green when an English value is copied into `fr.json`, so the
  * sibling test asserts this list equals a named allowlist of the words that
  * genuinely read the same in both languages.
+ *
+ * @Blueprint i18n-parity-gate
+ * @BlueprintName Catalogue Parity Gate
+ * @BlueprintUsage Use in every application shipping two catalogues, to fail the build on a key or a translation that was never written.
+ * @BlueprintDescription Pairs two pure comparisons over the raw catalogues. `diffCatalogues` reports the keys each side is missing by walking both into sorted dotted paths and filtering one set against the other. `listIdenticalValueKeys` then catches what key parity cannot see, an English string pasted into the French catalogue to silence the first check, by recursing both trees together and collecting every path whose two values are byte identical. Both take the catalogues as arguments and read no file, so the sibling test supplies small literals for the failure cases and the shipped catalogues for the real one.
  */
 export function listIdenticalValueKeys(
   english: TranslationCatalogue,

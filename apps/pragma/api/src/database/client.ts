@@ -74,6 +74,12 @@ function createLocalClient(config: LocalConfig): Sql {
   return postgres(config.databaseUrl, { types: { bigint: postgres.BigInt } });
 }
 
+/**
+ * @Blueprint database-client
+ * @BlueprintName Database Client Singleton
+ * @BlueprintUsage Use for the one module a repository imports to reach the database.
+ * @BlueprintDescription Builds the Drizzle client once per process and caches it, choosing the DSQL connection when the endpoint and schema variables are set and the plain `DATABASE_URL` otherwise. The DSQL password is a callback rather than a value, so the signer mints a fresh token per connection instead of one that expires with the container. `DatabaseExecutor` above widens the client to include a transaction handle, which is how a repository runs the same query inside or outside a transaction.
+ */
 export function getDatabase(): Database {
   if (cachedDatabase !== null) return cachedDatabase;
   const dsql = readDsqlConfig();

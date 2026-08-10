@@ -34,6 +34,7 @@ const MESSAGE =
 
 const CROSS_SLICE_REPOSITORY_PATTERN = /^\.\.\/.*\.repository(\.[jt]sx?)?$/;
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

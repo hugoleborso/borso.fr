@@ -32,6 +32,7 @@ const CANCEL_BUTTON_TEXT_EN = 'Cancel';
 
 // JSDOM doesn't implement <dialog>.showModal/close; stub the
 // prototype once so the production showModal() call doesn't throw.
+// @FollowsBlueprint test-jsdom-gap-stub
 function stubDialogModal(): void {
   function stubShowModal(this: HTMLDialogElement): void {
     this.setAttribute('open', '');
@@ -68,6 +69,7 @@ function findInstrumentSelectFor(container: HTMLElement, memberId: string): HTML
   return select;
 }
 
+// @FollowsBlueprint test-component-render
 describe('LineupEditor', () => {
   let container: HTMLDivElement;
   let root: Root;

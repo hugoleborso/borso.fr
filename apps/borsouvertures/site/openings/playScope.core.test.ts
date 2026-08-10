@@ -149,6 +149,7 @@ describe('buildLineSelection', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('isOpeningActive', () => {
   it('reads the play scope in play mode', () => {
     expect(isOpeningActive('play', 'italian', FULL_SELECTION, SCOPE)).toBe(true);

@@ -12,6 +12,7 @@ export interface ClosedLoop {
   readonly durationMs: number;
 }
 
+// @FollowsBlueprint core-view-projection
 export function listClosedLoops(
   raceStartIso: string | undefined,
   punches: readonly LoopPunchDto[],

@@ -14,6 +14,7 @@ export function selectToggledRunner(
   return tappedRunnerSlug;
 }
 
+// @FollowsBlueprint core-view-intent
 export function selectPunchTone(voidedAt: string | null): PillTone {
   if (voidedAt === null) return 'in-race';
   return 'out';

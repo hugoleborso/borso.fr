@@ -18,6 +18,7 @@ interface AdminLoginFormProps {
 }
 
 /** PIN entry that opens the organiser screens. */
+// @FollowsBlueprint organism-form
 export function AdminLoginForm({ onAuthenticated }: AdminLoginFormProps) {
   const { t } = useTranslation();
   const [failure, setFailure] = useState<AdminErrorMessage | null>(null);

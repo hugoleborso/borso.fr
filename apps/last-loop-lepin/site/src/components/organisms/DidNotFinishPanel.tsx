@@ -54,6 +54,7 @@ function RunnerRow({ entry, loopLabel, note, children }: RunnerRowProps) {
  * The out tab. It confirms a runner the system projected as out, reinstates
  * one who was projected too eagerly, and records a voluntary withdrawal.
  */
+// @FollowsBlueprint organism-mutation-panel
 export function DidNotFinishPanel({ edition, ranked }: DidNotFinishPanelProps) {
   const { t } = useTranslation();
   const [busySlug, setBusySlug] = useState<string | null>(null);

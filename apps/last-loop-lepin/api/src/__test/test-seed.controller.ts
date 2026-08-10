@@ -9,6 +9,7 @@ import { Hono } from 'hono';
 import { applySeedFixture } from './test-seed.service';
 import { seedFixtureSchema } from './test-seed.schema';
 
+// @FollowsBlueprint controller-public-router
 const testSeedRouter = new Hono().post(
   '/seed',
   zValidator('query', seedFixtureSchema),

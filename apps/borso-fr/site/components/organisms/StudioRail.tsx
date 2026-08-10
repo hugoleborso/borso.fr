@@ -42,6 +42,7 @@ interface StudioRailProps {
   onDownload: () => void;
 }
 
+// @FollowsBlueprint organism-presentational
 export function StudioRail({
   isRailOpen,
   complexity,
@@ -173,7 +174,10 @@ export function StudioRail({
 
       <div className="btn-row">
         <button type="button" className="btn primary" onClick={onCompose}>
-          {t('mondrian.action.compose')} <span className="arrow">→</span>
+          {t('mondrian.action.compose')}{' '}
+          <span className="arrow" aria-hidden="true">
+            →
+          </span>
         </button>
         <button type="button" className="btn ghost" onClick={onDownload}>
           {t('mondrian.action.download')}

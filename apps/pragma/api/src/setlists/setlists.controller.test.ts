@@ -57,6 +57,7 @@ async function seed(
   return { setlistId, songIds };
 }
 
+// @FollowsBlueprint test-back-e2e
 describe('setlists controller (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

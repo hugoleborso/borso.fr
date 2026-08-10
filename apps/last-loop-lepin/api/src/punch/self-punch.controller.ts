@@ -18,6 +18,12 @@ import {
 
 const USER_AGENT_HEADER = 'user-agent';
 
+/**
+ * @Blueprint controller-public-router
+ * @BlueprintName Public Controller Router
+ * @BlueprintUsage Use for a router that is deliberately left ungated, so the reason is written where a reviewer looking for the missing guard will find it.
+ * @BlueprintDescription Builds the router with no authentication middleware and states in the file header which barrier replaces it and which spec decision accepted that limit, so the absent `requireAdminSession` reads as a choice rather than an omission.
+ */
 const selfPunchRouter = new Hono().post(
   '/self-punches',
   zValidator('json', selfPunchInputSchema),

@@ -7,7 +7,13 @@ import { Template } from 'aws-cdk-lib/assertions';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DsqlCluster } from '../../src/constructs/dsql-cluster.js';
 import { DsqlSchema } from '../../src/constructs/dsql-schema.js';
-import { isObject, outputValues, resourcesOfType } from './helpers/template.js';
+import {
+  isObject,
+  outputValues,
+  resourcesOfType,
+  synthTemplate,
+  TEST_ENV,
+} from './helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS = path.join(HERE, 'fixtures', 'migrations');
@@ -17,23 +23,20 @@ function synth(props: {
   prNumber?: number;
   cloneFromSchema?: { readonly sourceSchemaName: string };
 }) {
-  const app = new App();
-  const stack = new Stack(app, 'TestStack', {
-    env: { account: '123456789012', region: 'eu-west-3' },
+  return synthTemplate((stack) => {
+    // Stand up a real cluster in the same stack so the schema has something
+    // to reference. In production, prod stacks use this same pattern; preview
+    // stacks use `lookupDsqlCluster(scope, app)` from SSM instead.
+    const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
+    new DsqlSchema(stack, 'Db', {
+      app: 'test-app',
+      stage: props.stage,
+      ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
+      migrationsPath: MIGRATIONS,
+      cluster,
+      ...(props.cloneFromSchema === undefined ? {} : { cloneFromSchema: props.cloneFromSchema }),
+    });
   });
-  // Stand up a real cluster in the same stack so the schema has something
-  // to reference. In production, prod stacks use this same pattern; preview
-  // stacks use `lookupDsqlCluster(scope, app)` from SSM instead.
-  const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
-  new DsqlSchema(stack, 'Db', {
-    app: 'test-app',
-    stage: props.stage,
-    ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
-    migrationsPath: MIGRATIONS,
-    cluster,
-    ...(props.cloneFromSchema === undefined ? {} : { cloneFromSchema: props.cloneFromSchema }),
-  });
-  return Template.fromStack(stack);
 }
 
 // A clone that copies a credential table without saying which behaviour it
@@ -98,6 +101,7 @@ describe('DsqlSchema clone guard on credential tables', () => {
   });
 });
 
+// @FollowsBlueprint test-cdk-synth
 describe('DsqlSchema', () => {
   it('creates a NodejsFunction migration runner with dsql:DbConnectAdmin', () => {
     const tpl = synth({ stage: 'prod' });
@@ -147,9 +151,7 @@ describe('DsqlSchema', () => {
 
   it('throws when migrationsPath does not exist', () => {
     const app = new App();
-    const stack = new Stack(app, 'S', {
-      env: { account: '123456789012', region: 'eu-west-3' },
-    });
+    const stack = new Stack(app, 'S', { env: TEST_ENV });
     const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
     expect(
       () =>
@@ -164,9 +166,7 @@ describe('DsqlSchema', () => {
 
   it('grantConnect adds dsql:DbConnectAdmin to the principal policy', () => {
     const app = new App();
-    const stack = new Stack(app, 'S', {
-      env: { account: '123456789012', region: 'eu-west-3' },
-    });
+    const stack = new Stack(app, 'S', { env: TEST_ENV });
     const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
     const schema = new DsqlSchema(stack, 'Db', {
       app: 'test-app',
@@ -200,9 +200,7 @@ describe('DsqlSchema (migrations directory edge cases)', () => {
 
   it('reads only files matching the migration pattern, in order', () => {
     const app = new App();
-    const stack = new Stack(app, 'S', {
-      env: { account: '123456789012', region: 'eu-west-3' },
-    });
+    const stack = new Stack(app, 'S', { env: TEST_ENV });
     const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
     new DsqlSchema(stack, 'Db', {
       app: 'test-app',

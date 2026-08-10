@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildTonalityLabel } from './tonality-label.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('buildTonalityLabel', () => {
   it('has no label when the song has no start key', () => {
     expect(buildTonalityLabel(null, 'D')).toBeNull();

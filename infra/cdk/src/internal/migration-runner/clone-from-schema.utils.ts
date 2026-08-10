@@ -46,6 +46,7 @@ export function buildCreateTableLikeSql(
   return `CREATE TABLE IF NOT EXISTS ${quote(targetSchema)}.${quote(table)} (LIKE ${quote(sourceSchema)}.${quote(table)} INCLUDING ALL)`;
 }
 
+// @FollowsBlueprint utils-pure-module
 /**
  * `INSERT INTO target.table (cols) SELECT cols FROM source.table
  *  ON CONFLICT DO NOTHING`. Columns in `nullifyColumns` are replaced by

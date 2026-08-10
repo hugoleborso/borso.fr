@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { composeRunnerPath, parseRoute, selectNavigationClassName } from './route.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('parseRoute', () => {
   it('reads the root as the spectator screen', () => {
     expect(parseRoute('/')).toEqual({ name: 'spectator', runnerSlug: '' });

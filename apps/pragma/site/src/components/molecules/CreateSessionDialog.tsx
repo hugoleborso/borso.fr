@@ -54,6 +54,7 @@ const practiceFormSchema = z.object({
   preparedConcertId: z.string().uuid().nullable(),
 });
 
+// @FollowsBlueprint molecule-dialog-form
 export function CreateSessionDialog({
   kind,
   onClose,

@@ -2,9 +2,9 @@ import { App } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { DsqlClusterStack } from '../../src/constructs/dsql-cluster-stack.js';
+import { TEST_ENV as ENV } from './helpers/template.js';
 
-const ENV = { account: '123456789012', region: 'eu-west-3' };
-
+// @FollowsBlueprint test-cdk-synth
 describe('DsqlClusterStack', () => {
   it('creates a deletion-protected DSQL cluster + SSM params for the app', () => {
     const app = new App();

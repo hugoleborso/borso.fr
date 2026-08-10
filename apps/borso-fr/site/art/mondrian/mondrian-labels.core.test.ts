@@ -13,6 +13,7 @@ import {
 } from './mondrian-labels.core';
 import { CUSTOM_DEFAULTS } from './palettes.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectPaletteLabelKey', () => {
   it.each(PALETTE_KEY_LIST)('names a catalogue key for "%s"', (paletteKey) => {
     expect(selectPaletteLabelKey(paletteKey)).toBe(`mondrian.palette.${paletteKey}`);

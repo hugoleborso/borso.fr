@@ -47,6 +47,7 @@ const MIN_SPLITTABLE_SPAN = MIN_RECT_DIMENSION * 2;
 /** Repeated cuts drift a coordinate by a few units in the last place. */
 const FLOAT_DRIFT = 1e-9;
 
+// @FollowsBlueprint test-pure-unit
 describe('mulberry32', () => {
   it('is deterministic for a fixed seed', () => {
     const firstStream = mulberry32(0x1234);

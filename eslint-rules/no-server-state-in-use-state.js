@@ -81,6 +81,7 @@ function isStateSetterCall(node) {
   );
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

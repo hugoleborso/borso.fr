@@ -3,6 +3,7 @@ import { easeTowards, selectStarClock } from './galaxy-clock.core';
 
 const PREVIOUS_CLOCK = { elapsedSeconds: 12, travelledDistance: 3 };
 
+// @FollowsBlueprint test-pure-unit
 describe('selectStarClock', () => {
   it('advances the clock with the timestamp', () => {
     expect(selectStarClock(false, 2000, 0.5, PREVIOUS_CLOCK)).toEqual({

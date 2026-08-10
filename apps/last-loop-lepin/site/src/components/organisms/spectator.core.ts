@@ -16,6 +16,7 @@ export type SpectatorView = 'waiting' | 'racing';
  * Race day shows the live screen; anything else shows the announcement and
  * the archives, which is also what an absent edition shows.
  */
+// @FollowsBlueprint core-view-intent
 export function selectSpectatorView(edition: RaceEditionDto | null): SpectatorView {
   if (edition === null) return 'waiting';
   if (edition.status === 'setup') return 'waiting';

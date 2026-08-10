@@ -23,6 +23,7 @@ export interface LatLng {
  * Great-circle distance between two `LatLng` points, in metres.
  * Returns 0 for coincident points; symmetric in its arguments.
  */
+// @FollowsBlueprint utils-geometry
 export function haversineDistanceMeters(origin: LatLng, destination: LatLng): number {
   const originLatRadians = origin.lat * DEGREES_TO_RADIANS;
   const destinationLatRadians = destination.lat * DEGREES_TO_RADIANS;

@@ -22,6 +22,7 @@ interface ChordChartViewerProps {
   readonly compact?: boolean;
 }
 
+// @FollowsBlueprint organism-presentational
 export function ChordChartViewer({
   source,
   semitones = 0,

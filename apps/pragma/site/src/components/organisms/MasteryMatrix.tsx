@@ -20,12 +20,11 @@
  *
  * The matrix reads scores from `useMasteryDefaults()` directly and
  * writes through `useSaveMasteryDefault` / `useDeleteMasteryDefault`.
- * Optimistic UI: each write mutation patches the TanStack Query
- * cache in `onMutate`, rolls back in `onError`, and lets the on-
- * `Success` invalidation reconcile with the server.
+ * Those two hooks own the optimistic update: they patch the TanStack
+ * Query cache in `onMutate`, roll it back in `onError`, and reconcile
+ * in `onSettled`. This component only surfaces the error.
  */
 
-import { useQueryClient } from '@tanstack/react-query';
 import {
   type ColumnDef,
   flexRender,
@@ -40,12 +39,10 @@ import { ApiError } from '../../lib/api';
 import { cellKey, clampScore, columnAverage, rowAverage } from '../../lib/mastery-matrix.utils';
 import { readableForeground } from '../../lib/member-color.utils';
 import {
-  masteryKeys,
   useDeleteMasteryDefault,
   useMasteryDefaults,
   useSaveMasteryDefault,
 } from '../../lib/queries/mastery';
-import { upsertMasteryDefault, withoutMasteryDefault } from '../../lib/queries/mastery.utils';
 
 export interface MasteryMatrixMember {
   readonly id: string;
@@ -64,10 +61,6 @@ interface MasteryMatrixProps {
   readonly onError: (message: string) => void;
 }
 
-interface MasteryDefaultsResponse {
-  defaults: { memberId: string; instrumentId: string; score: number }[];
-}
-
 interface MatrixRow {
   readonly member: MasteryMatrixMember;
 }
@@ -83,7 +76,6 @@ const RIGHT_MOUSE_BUTTON = 2;
  */
 export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixProps): JSX.Element {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const defaults = useMasteryDefaults();
   const save = useSaveMasteryDefault();
   const remove = useDeleteMasteryDefault();
@@ -104,44 +96,30 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
 
   const writeScore = useCallback(
     (memberId: string, instrumentId: string, score: number): void => {
-      const previous = queryClient.getQueryData<MasteryDefaultsResponse>(masteryKeys.defaults());
-      queryClient.setQueryData<MasteryDefaultsResponse>(masteryKeys.defaults(), (current) => ({
-        defaults: upsertMasteryDefault(current?.defaults ?? [], { memberId, instrumentId, score }),
-      }));
       save.mutate(
         { memberId, instrumentId, score },
         {
           onError: (error) => {
-            if (previous !== undefined) {
-              queryClient.setQueryData(masteryKeys.defaults(), previous);
-            }
             onError(error instanceof ApiError ? error.message : 'unknown-error');
           },
         },
       );
     },
-    [queryClient, save, onError],
+    [save, onError],
   );
 
   const clearScore = useCallback(
     (memberId: string, instrumentId: string): void => {
-      const previous = queryClient.getQueryData<MasteryDefaultsResponse>(masteryKeys.defaults());
-      queryClient.setQueryData<MasteryDefaultsResponse>(masteryKeys.defaults(), (current) => ({
-        defaults: withoutMasteryDefault(current?.defaults ?? [], memberId, instrumentId),
-      }));
       remove.mutate(
         { memberId, instrumentId },
         {
           onError: (error) => {
-            if (previous !== undefined) {
-              queryClient.setQueryData(masteryKeys.defaults(), previous);
-            }
             onError(error instanceof ApiError ? error.message : 'unknown-error');
           },
         },
       );
     },
-    [queryClient, remove, onError],
+    [remove, onError],
   );
 
   const data = useMemo<MatrixRow[]>(() => members.map((member) => ({ member })), [members]);

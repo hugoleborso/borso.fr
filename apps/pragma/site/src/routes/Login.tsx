@@ -25,6 +25,7 @@ import { selectLoginErrorMessageKey, selectPostLoginPath } from './login.core';
 
 const passwordSchema = z.object({ password: z.string().min(8).max(256) });
 
+// @FollowsBlueprint route-form
 export function Login(): JSX.Element {
   const { t } = useTranslation();
   const navigateTo = useNavigateTo();

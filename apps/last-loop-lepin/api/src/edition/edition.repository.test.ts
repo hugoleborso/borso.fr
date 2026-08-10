@@ -8,6 +8,7 @@ import {
   updateEditionStatus,
 } from './edition.repository';
 
+// @FollowsBlueprint test-repository-integration
 describe('edition.repository', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

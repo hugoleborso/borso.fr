@@ -11,6 +11,7 @@ interface MiniBoardProps {
   boardStyleId: BoardThemeId;
 }
 
+// @FollowsBlueprint atom-plain
 export function MiniBoard({ fen, boardStyleId }: MiniBoardProps) {
   const { theme } = getBoardAppearance(boardStyleId);
   return (

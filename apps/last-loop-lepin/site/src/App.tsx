@@ -12,6 +12,7 @@ interface PageProps {
   readonly runnerSlug: string;
 }
 
+// @FollowsBlueprint component-lookup-table
 const PAGE_BY_ROUTE: Readonly<Record<RouteName, (props: PageProps) => ReactNode>> = {
   spectator: () => <SpectatorPage />,
   admin: () => <AdminPage />,

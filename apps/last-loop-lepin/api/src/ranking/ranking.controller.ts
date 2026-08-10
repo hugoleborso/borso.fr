@@ -7,6 +7,7 @@ import {
   getStandingsCsv,
 } from './ranking.service';
 
+// @FollowsBlueprint controller-public-router
 const rankingRouter = new Hono()
   .get('/standings/:editionSlug', async (context) => {
     try {
@@ -19,6 +20,12 @@ const rankingRouter = new Hono()
       throw error;
     }
   })
+  /**
+   * @Blueprint controller-file-response
+   * @BlueprintName Controller File Response
+   * @BlueprintUsage Use for a route that answers with a downloadable file rather than json.
+   * @BlueprintDescription Sets the content type and a `content-disposition` naming the file after the edition, then answers with `context.body(csv)` rather than `context.json`, so the string is sent verbatim instead of being quoted and escaped as a json document.
+   */
   .get('/standings/:editionSlug/csv', async (context) => {
     const editionSlug = context.req.param('editionSlug');
     try {
@@ -31,6 +38,7 @@ const rankingRouter = new Hono()
       throw error;
     }
   })
+  // @FollowsBlueprint controller-file-response
   .get('/standings/:editionSlug/laps.csv', async (context) => {
     const editionSlug = context.req.param('editionSlug');
     try {

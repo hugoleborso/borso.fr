@@ -6,6 +6,11 @@ export const LANGUAGE_STORAGE_KEY = 'borsouvertures.language';
  * The slice of the `Storage` interface this module needs. Injecting it keeps
  * the read and the write pure enough to test with an in-memory stand-in, and
  * lets the caller pass `undefined` when there is no `window`.
+ *
+ * @Blueprint injected-storage-slice
+ * @BlueprintName Injected Storage Slice
+ * @BlueprintUsage Use when a module reads or writes a browser storage API and its logic still has to be testable without a browser.
+ * @BlueprintDescription Declares the two methods the module actually calls as its own interface, rather than depending on the whole `Storage` type, so a test passes a plain object over a `Map` and `window.localStorage` satisfies it structurally with no adapter. The parameter is `LanguageStorage | undefined` and both functions return early on `undefined`, which is how a server render or a locked down browser is handled at the type level instead of behind a `typeof window` check.
  */
 export interface LanguageStorage {
   getItem: (key: string) => string | null;

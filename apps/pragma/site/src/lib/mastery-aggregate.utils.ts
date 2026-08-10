@@ -16,6 +16,7 @@ export interface MasteryDefaultRow {
   readonly score: number;
 }
 
+// @FollowsBlueprint utils-pure-module
 export function meanMasteryForSong(
   defaultLineup: Readonly<Record<string, string | null>>,
   defaults: readonly MasteryDefaultRow[],

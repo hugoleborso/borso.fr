@@ -75,6 +75,7 @@ export function asyncifyIndex(statement: string): string {
   );
 }
 
+// @FollowsBlueprint utils-pure-module
 export function splitStatements(sql: string): readonly string[] {
   return sql
     .split(STATEMENT_BREAKPOINT)

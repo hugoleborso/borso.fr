@@ -1,3 +1,4 @@
+// @FollowsBlueprint service-facade-reexport
 export { EditionNotFoundError } from '../edition/edition.service';
 
 import type { Database } from '../database/client';
@@ -22,6 +23,12 @@ export interface SpectatorStandings {
   readonly mostRecentCorrectionAt: string | null;
 }
 
+/**
+ * @Blueprint service-read-model
+ * @BlueprintName Service Read Model
+ * @BlueprintUsage Use for a query that assembles a view from several tables. Read everything, then let one pure function decide the shape.
+ * @BlueprintDescription Fetches the edition first because the rest depends on it, then reads runners, punches and did-not-finish rows in a single `Promise.all`, and hands all four plus `now` to `computeStandings`. Nothing is written and no ordering or ranking rule lives here, so the whole projection stays testable without a database.
+ */
 export async function computeStandingsForEdition(
   database: Database,
   editionSlug: string,
@@ -36,6 +43,7 @@ export async function computeStandingsForEdition(
   return computeStandings(edition, runners, punches, manualDidNotFinishes, now);
 }
 
+// @FollowsBlueprint service-dto-mapping
 export async function getSpectatorStandings(
   database: Database,
   editionSlug: string,
@@ -66,6 +74,7 @@ export async function getStandingsCsv(
   return formatStandingsAsCsv(standings);
 }
 
+// @FollowsBlueprint service-read-model
 export async function getLapsCsv(
   database: Database,
   editionSlug: string,

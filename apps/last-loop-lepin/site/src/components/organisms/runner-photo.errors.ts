@@ -6,6 +6,7 @@
 
 import type { PhotoRejection } from './runner-form.core';
 
+// @FollowsBlueprint named-domain-error
 export class RunnerPhotoRejectedError extends Error {
   override readonly name = 'RunnerPhotoRejectedError';
   constructor(

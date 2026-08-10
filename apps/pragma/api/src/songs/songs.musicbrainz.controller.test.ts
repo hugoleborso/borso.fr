@@ -25,6 +25,7 @@ const songSchema = z.object({
 
 const singleEnvelope = z.object({ song: songSchema.passthrough() });
 
+// @FollowsBlueprint test-back-e2e
 describe('songs controller — MusicBrainz enrichment columns (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

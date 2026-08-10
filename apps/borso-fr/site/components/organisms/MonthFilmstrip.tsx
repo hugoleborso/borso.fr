@@ -12,6 +12,7 @@ interface MonthFilmstripProps {
   onMonthSelected: (monthNumber: number) => void;
 }
 
+// @FollowsBlueprint organism-presentational
 export function MonthFilmstrip({
   edition,
   selectedMonthNumber,

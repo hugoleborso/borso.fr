@@ -56,6 +56,7 @@ export async function appendEntry(
   });
 }
 
+// @FollowsBlueprint service-crud-update
 export async function patchEntry(
   setlistId: string,
   entryId: string,

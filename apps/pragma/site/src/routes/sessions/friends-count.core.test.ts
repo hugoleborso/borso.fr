@@ -3,6 +3,7 @@ import { computeSharePercent, isCapacityKnown, parseFriendsCounts } from './frie
 
 const MEMBER_ID = '00000000-0000-4000-8000-000000000000';
 
+// @FollowsBlueprint test-pure-unit
 describe('parseFriendsCounts', () => {
   it('keeps a well-formed record', () => {
     expect(parseFriendsCounts({ [MEMBER_ID]: 3 })).toEqual({ [MEMBER_ID]: 3 });

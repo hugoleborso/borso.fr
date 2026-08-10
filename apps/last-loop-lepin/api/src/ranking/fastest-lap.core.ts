@@ -39,6 +39,7 @@ interface CandidateEntry {
  * appear once (deduplication by `runnerSlug` — only the slug matters
  * downstream for chip decoration).
  */
+// @FollowsBlueprint core-projection
 export function fastestLap(
   edition: RaceEdition,
   punches: readonly LoopPunch[],

@@ -27,6 +27,7 @@ function isNarrowed(selectedId: string | null): boolean {
   return selectedId !== ALL_KEY && selectedId !== null;
 }
 
+// @FollowsBlueprint core-view-intent
 export function isSessionStartAllowed(mode: Mode, selection: Selection, scope: PlayScope): boolean {
   if (mode === 'learn') return isLearnSessionReady(selection);
   return isPlaySessionReady(selection, scope);

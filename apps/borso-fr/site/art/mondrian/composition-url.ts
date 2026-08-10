@@ -56,6 +56,7 @@ export function readCurrentPaletteKey(): PaletteKey {
   return readCurrentState().paletteKey;
 }
 
+// @FollowsBlueprint hook-external-store
 export function useCompositionState(): UrlState {
   const search = useSyncExternalStore(
     subscribeToCompositionUrl,
@@ -66,6 +67,7 @@ export function useCompositionState(): UrlState {
 }
 
 /** A deliberate recomposition, so it earns a history entry the reader can undo. */
+// @FollowsBlueprint browser-edge-module
 export function composeNewSeed(): void {
   const nextState: UrlState = {
     seed: freshSeed(Math.random()),

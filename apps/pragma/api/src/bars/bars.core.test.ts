@@ -4,6 +4,7 @@ import { countStale, isStale, STALE_BAR_DEFAULT_THRESHOLD_DAYS } from './bars.co
 const NOW = new Date('2026-05-20T00:00:00.000Z');
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// @FollowsBlueprint test-pure-unit
 describe('isStale', () => {
   it('treats null lastInteractionAt as stale (no interaction ever logged)', () => {
     expect(isStale({ lastInteractionAt: null }, NOW)).toBe(true);

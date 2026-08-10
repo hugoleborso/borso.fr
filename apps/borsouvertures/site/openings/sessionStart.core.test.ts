@@ -76,6 +76,7 @@ describe('isPlaySessionReady', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('isSessionStartAllowed', () => {
   it('applies the learn rule in learn mode', () => {
     expect(isSessionStartAllowed('learn', NOTHING_SELECTED, EMPTY_PLAY_SCOPE)).toBe(false);

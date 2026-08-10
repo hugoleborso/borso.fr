@@ -9,11 +9,13 @@ export interface SelectorCardProps {
   onSelect: () => void;
 }
 
+// @FollowsBlueprint component-lookup-table
 const CARD_CLASS_BY_ACTIVE: ValueByFlag<string> = {
   true: 'selector-card active',
   false: 'selector-card',
 };
 
+// @FollowsBlueprint atom-plain
 export function SelectorCard({ label, meta, board, isActive, onSelect }: SelectorCardProps) {
   return (
     <button type="button" className={CARD_CLASS_BY_ACTIVE[`${isActive}`]} onClick={onSelect}>

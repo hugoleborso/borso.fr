@@ -41,6 +41,7 @@ const PLACEHOLDER_STYLE = {
  * clipped to it, so a broken or slow image lets the circle show through with
  * no error handler; SVG image error events are not reliable across browsers.
  */
+// @FollowsBlueprint organism-presentational
 export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps) {
   const { t } = useTranslation();
   const hasSamples = hasElevationSamples(edition);

@@ -18,6 +18,7 @@ const MOVE_ANIMATION_MS = 200;
 
 type IsMoveAccepted = (uci: string) => boolean;
 
+// @FollowsBlueprint component-lookup-table
 const DROP_OUTCOME_BY_DECISION: Record<
   BoardDropDecision,
   (isMoveAccepted: IsMoveAccepted, uci: string) => boolean
@@ -36,6 +37,7 @@ interface BoardViewProps {
   boardWidth: number;
 }
 
+// @FollowsBlueprint atom-plain
 export function BoardView({
   orientation,
   fen,

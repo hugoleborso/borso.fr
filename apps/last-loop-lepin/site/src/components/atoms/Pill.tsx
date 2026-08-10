@@ -12,6 +12,7 @@ interface PillProps {
   readonly children: ReactNode;
 }
 
+// @FollowsBlueprint atom-lookup-variants
 export function Pill({ tone, children }: PillProps) {
   return <span className={CLASS_BY_TONE[tone]}>{children}</span>;
 }

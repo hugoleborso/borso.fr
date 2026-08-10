@@ -22,6 +22,7 @@ const FILLED_VALUES: BarFormValues = {
   contactPhone: '0102030405',
 };
 
+// @FollowsBlueprint test-pure-unit
 describe('barFormValuesSchema', () => {
   it('accepts a filled form', () => {
     expect(barFormValuesSchema.safeParse(FILLED_VALUES).success).toBe(true);

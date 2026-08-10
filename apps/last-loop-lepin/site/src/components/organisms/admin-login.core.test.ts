@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { adminLoginSchema } from './admin-login.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('adminLoginSchema', () => {
   it('accepts a four digit PIN', () => {
     expect(adminLoginSchema.safeParse({ pin: '1234' }).success).toBe(true);

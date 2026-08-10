@@ -16,6 +16,7 @@ export function isCompactViewport(viewportWidth: number): boolean {
 }
 
 /** The board takes a share of a desktop viewport and the full width of a phone. */
+// @FollowsBlueprint utils-pure-module
 export function selectBoardWidth(viewportWidth: number): number {
   const availableWidth = readAvailableBoardWidth(viewportWidth);
   return Math.max(MIN_BOARD_PX, Math.min(MAX_BOARD_PX, availableWidth));

@@ -93,6 +93,11 @@ export type BarWriteIntent =
  * A blank name means the operator submitted an untouched form, which is
  * not a write. Otherwise the presence of an identifier decides between
  * an insert and an update.
+ *
+ * @Blueprint core-view-intent
+ * @BlueprintName Core View Intent
+ * @BlueprintUsage Use for a decision a route makes about what to do next, so the component holds no condition.
+ * @BlueprintDescription Returns a discriminated union naming what the submission means, and `applyBarWriteIntent` below dispatches that union to a visitor whose branches the page supplies, so the page reads as three named callbacks rather than a chain of ifs over a nullable identifier. The decision is pure, which is what lets a test state the rule directly instead of rendering the form.
  */
 export function selectBarWriteIntent(
   id: string | null,

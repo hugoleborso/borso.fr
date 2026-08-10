@@ -253,6 +253,12 @@ async function provisionSchema(sql: postgres.Sql, props: ResourceProps): Promise
   await applyMigrations(sql, props.schemaName, props.migrations);
 }
 
+/**
+ * @Blueprint custom-resource-handler
+ * @BlueprintName Custom Resource Handler
+ * @BlueprintUsage Use for the Lambda behind a CloudFormation custom resource.
+ * @BlueprintDescription Dispatches on `RequestType` through a frozen record of the three CloudFormation events rather than a switch, so a missing branch is a type error instead of a deploy that hangs waiting for a response. Create and Update deliberately map to the same idempotent provisioning function. The connection is opened once, the dispatched work runs inside `try`, and `sql.end()` runs in `finally` so a failed migration still closes its connection instead of holding the cluster's slot until the Lambda times out. The returned `PhysicalResourceId` falls back to a value derived from the schema name, and is otherwise passed straight through, because changing it tells CloudFormation to delete the old resource.
+ */
 export async function handler(event: CfnEvent): Promise<CfnResponse> {
   const props = event.ResourceProperties;
   const physicalId = event.PhysicalResourceId ?? `dsql-schema:${props.schemaName}`;

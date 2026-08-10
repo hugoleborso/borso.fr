@@ -51,6 +51,7 @@ function punch(
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('computeStandings', () => {
   it('returns every runner in race before any punches', () => {
     const now = new Date('2026-09-19T06:30:00+02:00');
@@ -411,6 +412,7 @@ function amendedPunch(
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('mostRecentCorrectionAt', () => {
   it('returns null when no punch has been corrected or voided', () => {
     const untouched = [
@@ -469,6 +471,7 @@ function standingsOf(ranked: Standings['ranked']): Standings {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('formatStandingsAsCsv', () => {
   it('writes the header even when nobody is ranked', () => {
     expect(formatStandingsAsCsv(standingsOf([]))).toBe(`${CSV_HEADER}\n\n`);

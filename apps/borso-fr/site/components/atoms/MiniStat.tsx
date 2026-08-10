@@ -20,6 +20,7 @@ interface MiniStatProps {
   tone: MiniStatTone;
 }
 
+// @FollowsBlueprint atom-plain
 export function MiniStat({ label, value, tone }: MiniStatProps) {
   return (
     <div style={{ borderTop: `1px solid ${RULE}`, paddingTop: 8 }}>

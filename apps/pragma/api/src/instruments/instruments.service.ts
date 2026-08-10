@@ -31,15 +31,21 @@ export async function createInstrument(input: {
   return await insertInstrument(input);
 }
 
+export type PatchInstrumentResult =
+  { kind: 'ok'; instrument: InstrumentRow } | { kind: 'empty' } | { kind: 'not-found' };
+
+// @FollowsBlueprint service-crud-update
 export async function patchInstrument(
   id: string,
   input: { name?: string; isHarmonic?: boolean },
-): Promise<InstrumentRow | null> {
+): Promise<PatchInstrumentResult> {
   const updates: Partial<{ name: string; isHarmonic: boolean }> = {};
   if (input.name !== undefined) updates.name = input.name;
   if (input.isHarmonic !== undefined) updates.isHarmonic = input.isHarmonic;
-  if (Object.keys(updates).length === 0) return null;
-  return await updateInstrument(id, updates);
+  if (Object.keys(updates).length === 0) return { kind: 'empty' };
+  const instrument = await updateInstrument(id, updates);
+  if (instrument === null) return { kind: 'not-found' };
+  return { kind: 'ok', instrument };
 }
 
 export async function removeInstrument(id: string): Promise<DeletionOutcome> {

@@ -10,6 +10,7 @@ interface InitialsAvatarProps {
   readonly surface?: string;
 }
 
+// @FollowsBlueprint atom-plain
 export function InitialsAvatar({
   initials,
   backgroundColor,

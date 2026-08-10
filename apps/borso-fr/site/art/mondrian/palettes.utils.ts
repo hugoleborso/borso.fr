@@ -111,6 +111,7 @@ export function isPaletteKey(value: unknown): value is PaletteKey {
   return PALETTE_KEYS.has(value);
 }
 
+// @FollowsBlueprint utils-pure-module
 export function selectPalette(paletteKey: PaletteKey, customColors: CustomColors): Palette {
   if (paletteKey === 'custom') return buildCustomPalette(customColors);
   return PALETTES[paletteKey];

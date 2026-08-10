@@ -24,6 +24,7 @@ export function defaultDateTimeLocal(now: Date): string {
  * Format a `Date` as the value attribute expected by
  * `<input type="datetime-local">`. Uses the local timezone (no `Z`).
  */
+// @FollowsBlueprint utils-pure-module
 export function formatDateTimeLocal(date: Date): string {
   const year = String(date.getFullYear()).padStart(4, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');

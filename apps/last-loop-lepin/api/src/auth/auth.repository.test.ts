@@ -15,6 +15,7 @@ import {
   upsertBucket,
 } from './auth.repository';
 
+// @FollowsBlueprint test-repository-integration
 describe('auth.repository — rate limit buckets', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());
@@ -43,6 +44,7 @@ describe('auth.repository — rate limit buckets', () => {
   });
 });
 
+// @FollowsBlueprint test-repository-integration
 describe('auth.repository — admin credentials', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());
@@ -58,6 +60,7 @@ describe('auth.repository — admin credentials', () => {
   });
 });
 
+// @FollowsBlueprint test-repository-integration
 describe('auth.repository — admin sessions', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

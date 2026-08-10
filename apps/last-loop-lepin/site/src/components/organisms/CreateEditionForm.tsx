@@ -34,6 +34,12 @@ interface CreateEditionFormProps {
  * year's race while the current one is still running. It owns its own field
  * state, so editing the live edition next to it cannot leak values across.
  */
+/**
+ * @Blueprint organism-form
+ * @BlueprintName Organism Form
+ * @BlueprintUsage Use for a screen region that collects fields and writes them through a mutation.
+ * @BlueprintDescription Holds one `useForm` whose `defaultValues`, `validators` and payload all come from `edition-form.core.ts`, so the schema, the starting values and the request body are pure and tested away from React. Field values are read with `useStore` rather than mirrored into `useState`, the submit handler calls `mutateAsync` directly instead of watching a flag in an effect, and a rejected write becomes a translation key through `selectEditionWriteError`.
+ */
 export function CreateEditionForm({
   currentEdition,
   titleKey,

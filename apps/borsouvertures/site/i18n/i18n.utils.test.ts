@@ -46,6 +46,7 @@ describe('readLanguageFamily', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('selectInitialLanguage', () => {
   it('prefers the saved language over the browser languages', () => {
     expect(selectInitialLanguage('fr', ['en-GB'])).toBe('fr');

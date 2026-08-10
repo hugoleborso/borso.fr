@@ -70,6 +70,7 @@ const FRENCH_WORDS = [
   'travaux',
 ];
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

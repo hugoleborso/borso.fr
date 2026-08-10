@@ -444,6 +444,7 @@ function spreadImpurityAlongCallGraph(moduleFunctions, findings) {
   }
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

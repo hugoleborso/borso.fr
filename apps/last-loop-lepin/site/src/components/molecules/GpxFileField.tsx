@@ -27,6 +27,12 @@ interface GpxFileFieldProps {
  * identifier and has no entry for `.gpx`, so any value greys every file out in
  * the picker. The API rejects a body that is not GPX with a 400 anyway.
  */
+/**
+ * @Blueprint molecule-field
+ * @BlueprintName Molecule Form Field
+ * @BlueprintUsage Use for one labelled form control with its hint and its error message.
+ * @BlueprintDescription Composes the `Label`, `FileInput` and `ErrorText` atoms into one field, and owns no state: the picked file, whether it is required, and which error to show all arrive as props, so the form that owns the field state decides everything. The hint and the error are gated by `Show` rather than a ternary, and the error is a translation key union rather than a message, so the field never holds a user facing string.
+ */
 export function GpxFileField({
   id,
   label,

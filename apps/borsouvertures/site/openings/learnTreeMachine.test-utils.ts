@@ -42,6 +42,7 @@ interface DriverHandles {
  * assert it. Every timer is fired by hand, so the value never makes a test
  * wait.
  */
+// @FollowsBlueprint test-machine-driver
 export function buildDriver(): DriverHandles {
   const pendingTimers: ScheduledCallback[] = [];
   const rngQueue: string[] = [];

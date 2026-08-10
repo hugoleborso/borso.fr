@@ -7,6 +7,7 @@ import { listArchivedEditions } from '../components/organisms/spectator.core';
 import { useEditionList } from '../lib/queries/editions';
 
 /** Every edition already run, most recent first, with its result downloads. */
+// @FollowsBlueprint route-list-page
 export function ArchivesPage() {
   const { t, i18n } = useTranslation();
   const editionList = useEditionList();

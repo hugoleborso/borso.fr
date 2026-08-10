@@ -17,6 +17,7 @@ export interface AppConfig {
 
 const SINGLETON_ID = 1;
 
+// @FollowsBlueprint repository-query
 export async function loadAppConfig(): Promise<AppConfig | null> {
   const database = getDatabase();
   const rows = await database

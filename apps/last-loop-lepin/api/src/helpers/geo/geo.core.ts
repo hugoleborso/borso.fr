@@ -5,30 +5,11 @@
  * loop that's accurate to a few metres, well below GPX measurement noise.
  */
 
-const EARTH_RADIUS_METERS = 6_371_000;
-const DEGREES_TO_RADIANS = Math.PI / 180;
+import { haversineDistanceMeters, type LatLng } from './haversine.utils';
+
 const ELEVATION_NOISE_THRESHOLD_METERS = 3;
 
-export interface LatLng {
-  readonly lat: number;
-  readonly lng: number;
-}
-
-/**
- * Great-circle distance between two `LatLng` points, in metres.
- * Returns 0 for coincident points; symmetric in its arguments.
- */
-export function haversineMeters(origin: LatLng, destination: LatLng): number {
-  const phi1 = origin.lat * DEGREES_TO_RADIANS;
-  const phi2 = destination.lat * DEGREES_TO_RADIANS;
-  const deltaPhi = (destination.lat - origin.lat) * DEGREES_TO_RADIANS;
-  const deltaLambda = (destination.lng - origin.lng) * DEGREES_TO_RADIANS;
-
-  const haversineRoot =
-    Math.sin(deltaPhi / 2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
-  const angularDistance = 2 * Math.atan2(Math.sqrt(haversineRoot), Math.sqrt(1 - haversineRoot));
-  return EARTH_RADIUS_METERS * angularDistance;
-}
+export type { LatLng };
 
 /**
  * Total horizontal length of a polyline (sum of Haversine distances between
@@ -39,7 +20,7 @@ export function polylineDistanceMeters(points: readonly LatLng[]): number {
   let previous: LatLng | undefined;
   for (const current of points) {
     if (previous !== undefined) {
-      total += haversineMeters(previous, current);
+      total += haversineDistanceMeters(previous, current);
     }
     previous = current;
   }
@@ -52,6 +33,7 @@ export function polylineDistanceMeters(points: readonly LatLng[]): number {
  * (we measure D+, not net). `noiseFloorMeters` defaults to 3 m — typical
  * for consumer GPS noise per fix on hilly terrain.
  */
+// @FollowsBlueprint helper-module
 export function smoothedElevationGainMeters(
   elevations: readonly number[],
   noiseFloorMeters: number = ELEVATION_NOISE_THRESHOLD_METERS,

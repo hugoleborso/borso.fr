@@ -148,6 +148,7 @@ const PLANNER_BY_FIXTURE: Readonly<Record<SeedFixtureName, (now: Date) => SeedPl
  * wall clock. Timestamps are relative to `now` so the seeded race window
  * stays inside the punch validator's accepted range.
  */
+// @FollowsBlueprint core-lookup-table
 export function planSeedFixture(fixture: SeedFixtureName, now: Date): SeedPlan {
   return PLANNER_BY_FIXTURE[fixture](now);
 }

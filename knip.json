@@ -10,10 +10,9 @@
         "@stryker-mutator/vitest-runner",
         "@swmansion/argent",
         "agent-browser",
-        "esbuild",
-        "tsx"
+        "esbuild"
       ],
-      "entry": [".claude/skills/blueprint/blueprint-indexing.ts"],
+      "entry": [".claude/skills/blueprint/blueprint-*.ts"],
       "project": [".claude/skills/blueprint/**/*.ts"]
     },
     "apps/borso-fr": {

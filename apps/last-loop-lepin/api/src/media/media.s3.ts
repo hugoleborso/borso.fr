@@ -31,10 +31,12 @@ export interface PresignedUpload {
   readonly expiresAt: Date;
 }
 
+// @FollowsBlueprint named-domain-error
 export class MediaConfigError extends Error {
   override readonly name = 'MediaConfigError';
 }
 
+// @FollowsBlueprint named-domain-error
 export class MediaContentTypeError extends Error {
   override readonly name = 'MediaContentTypeError';
 }
@@ -43,6 +45,12 @@ export class MediaContentTypeError extends Error {
  * Build a short-lived S3 PUT URL the admin can post the runner photo to.
  * The key is opaque (UUID), scoped under `editions/<slug>/runners/<slug>/`,
  * with the extension derived from the content type.
+ */
+/**
+ * @Blueprint external-service-adapter
+ * @BlueprintName External Service Adapter
+ * @BlueprintUsage Use for the one file in a slice that talks to a third party SDK, so no other file imports the vendor package.
+ * @BlueprintDescription Caches the SDK client in a module level variable, reads its configuration through `readEnv` at call time rather than at import time so a test can set the variables late, throws the slice's named errors instead of the vendor's, and takes `now` as a parameter so the returned expiry is deterministic.
  */
 export async function createPresignedUpload(
   input: PresignInput,

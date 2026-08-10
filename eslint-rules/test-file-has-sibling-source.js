@@ -37,6 +37,7 @@ const TEST_EXTENSIONS = ['.test.ts', '.test.tsx'];
 
 const UNNAMED_FILENAMES = new Set(['<input>', '<text>']);
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

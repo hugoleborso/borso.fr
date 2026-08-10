@@ -26,6 +26,7 @@ const IN_ZONE_LAT = 45.5505;
 const IN_ZONE_LNG = 5.78;
 const TEST_USER_AGENT = 'Mozilla/5.0 (iPhone) AppleWebKit Test';
 
+// @FollowsBlueprint test-back-e2e
 describe('self-punch controller (public, no admin middleware)', () => {
   const app = createApp();
 

@@ -52,6 +52,7 @@ function readDeclaredFunctionName(node) {
   return readFunctionName(node);
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

@@ -5,6 +5,7 @@ interface LabelProps {
   readonly children: ReactNode;
 }
 
+// @FollowsBlueprint atom-plain
 export function Label({ htmlFor, children }: LabelProps) {
   return (
     <label className="field-label" htmlFor={htmlFor}>

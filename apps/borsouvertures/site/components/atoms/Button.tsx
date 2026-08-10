@@ -12,6 +12,7 @@ interface ButtonProps {
   onActivate: () => void;
 }
 
+// @FollowsBlueprint atom-lookup-variants
 export function Button({
   label,
   variant = 'default',

@@ -18,6 +18,7 @@ const CAMEL_BOUNDARY_PATTERN = /([a-z0-9])([A-Z])/g;
 const ACRONYM_BOUNDARY_PATTERN = /([A-Z]+)([A-Z][a-z])/g;
 const NON_ALPHANUMERIC_PATTERN = /[^A-Za-z0-9]+/g;
 
+// @FollowsBlueprint lint-rule-predicate
 /**
  * The lower case words an identifier is made of.
  *

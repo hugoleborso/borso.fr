@@ -1,18 +1,34 @@
 export type BoardThemeId = 'lichess' | 'chesscom' | 'nord' | 'sand';
 
+/**
+ * Written as a union of literals rather than `string`, so `t(theme.nameKey)`
+ * still typechecks against the catalogue and a renamed key is a build failure.
+ */
+type BoardThemeNameKey =
+  | 'top-bar.board-style.theme.lichess'
+  | 'top-bar.board-style.theme.chesscom'
+  | 'top-bar.board-style.theme.nord'
+  | 'top-bar.board-style.theme.sand';
+
 interface BoardTheme {
   id: BoardThemeId;
-  name: string;
+  nameKey: BoardThemeNameKey;
   light: string;
   dark: string;
   highlight: string;
   arrow: string;
 }
 
+/**
+ * @Blueprint satisfies-over-assertion
+ * @BlueprintName Satisfies Over Type Assertion
+ * @BlueprintUsage Use for a literal table that must match a declared type while keeping its own narrower inferred type.
+ * @BlueprintDescription Checks the literal against `Record<BoardThemeId, BoardTheme>` with `satisfies`, so a missing or misspelt entry fails the build while the inferred type stays the exact object rather than widening to the annotation. That is what lets `getBoardTheme` index it without a lookup returning `undefined`, and what keeps each `nameKey` its literal type so `t(theme.nameKey)` still typechecks against the catalogue. An `as Record<...>` annotation would silently accept a wrong shape and widen every field; both forms of assertion are banned here.
+ */
 const boardThemesById = {
   lichess: {
     id: 'lichess',
-    name: 'Lichess',
+    nameKey: 'top-bar.board-style.theme.lichess',
     light: '#f0d9b5',
     dark: '#b58863',
     highlight: '#f6f669',
@@ -20,7 +36,7 @@ const boardThemesById = {
   },
   chesscom: {
     id: 'chesscom',
-    name: 'Chess.com',
+    nameKey: 'top-bar.board-style.theme.chesscom',
     light: '#d9d7c9',
     dark: '#6b8f41',
     highlight: '#ffda79',
@@ -28,7 +44,7 @@ const boardThemesById = {
   },
   nord: {
     id: 'nord',
-    name: 'Nord Blue',
+    nameKey: 'top-bar.board-style.theme.nord',
     light: '#eceff4',
     dark: '#4c566a',
     highlight: '#88c0d0',
@@ -36,7 +52,7 @@ const boardThemesById = {
   },
   sand: {
     id: 'sand',
-    name: 'Sand',
+    nameKey: 'top-bar.board-style.theme.sand',
     light: '#f3e9dc',
     dark: '#c2a878',
     highlight: '#ffd590',
@@ -58,6 +74,7 @@ export function isBoardThemeId(value: unknown): value is BoardThemeId {
  * Narrow a raw `<select>` value to a board theme, keeping the current theme
  * when the value is not one we ship.
  */
+// @FollowsBlueprint utils-pure-module
 export function toBoardThemeId(value: string, fallback: BoardThemeId): BoardThemeId {
   return isBoardThemeId(value) ? value : fallback;
 }

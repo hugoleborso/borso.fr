@@ -6,6 +6,7 @@ const moleculeFile = 'apps/pragma/site/src/components/molecules/MemberChip.tsx';
 const organismFile = 'apps/pragma/site/src/components/organisms/CatalogGrid.tsx';
 const routeFile = 'apps/pragma/site/src/routes/catalog/CatalogPage.tsx';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(atomFile).run('atomic-design-import-direction (atom)', rule, {
   valid: [
     "import { clsx } from 'clsx';",

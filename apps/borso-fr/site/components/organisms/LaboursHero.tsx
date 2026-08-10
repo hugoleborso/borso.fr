@@ -27,6 +27,7 @@ interface LaboursHeroProps {
   year: number;
 }
 
+// @FollowsBlueprint organism-presentational
 export function LaboursHero({ edition, year }: LaboursHeroProps) {
   const { t } = useTranslation();
   const score = deriveEditionScore(edition);

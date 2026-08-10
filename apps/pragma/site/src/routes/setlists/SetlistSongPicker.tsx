@@ -16,6 +16,7 @@ export interface SetlistSongPickerProps {
   readonly onPick: (songId: string) => void;
 }
 
+// @FollowsBlueprint organism-presentational
 export function SetlistSongPicker(props: SetlistSongPickerProps): JSX.Element {
   const { t } = useTranslation();
   return (

@@ -4,6 +4,7 @@ import { planSeedFixture } from './test-seed.core';
 const NOW = new Date('2026-06-13T14:37:24.000Z');
 const HOUR_MS = 60 * 60 * 1000;
 
+// @FollowsBlueprint test-pure-unit
 describe('planSeedFixture', () => {
   it('starts the survivor fixture three whole hours before now, on a top of hour', () => {
     const plan = planSeedFixture('race-down-to-one-survivor', NOW);
