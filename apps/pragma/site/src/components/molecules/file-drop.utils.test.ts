@@ -8,6 +8,8 @@ import {
   ALLOWED_PDF_MIME,
   FILE_DROP_ACCEPT_ATTRIBUTE,
   FILE_DROP_MAX_BYTES,
+  FILE_DROP_MAX_MEBIBYTES,
+  selectRejectionMessageKey,
   validateChartFile,
 } from './file-drop.utils';
 
@@ -39,9 +41,27 @@ describe('validateChartFile', () => {
     expect(result).toEqual({ ok: false, reason: 'unsupported-type' });
   });
 
+  it('accepts a file sitting exactly on the ceiling', () => {
+    const result = validateChartFile(fakeFile(ALLOWED_PDF_MIME, FILE_DROP_MAX_BYTES));
+    expect(result).toEqual({ ok: true, kind: 'pdf', contentType: ALLOWED_PDF_MIME });
+  });
+
   it('rejects files over the 10 MiB ceiling', () => {
     const result = validateChartFile(fakeFile(ALLOWED_PDF_MIME, FILE_DROP_MAX_BYTES + 1));
     expect(result).toEqual({ ok: false, reason: 'too-large' });
+  });
+});
+
+describe('selectRejectionMessageKey', () => {
+  it('names the message for each rejection reason', () => {
+    expect(selectRejectionMessageKey('too-large')).toBe('catalog.uploadTooLarge');
+    expect(selectRejectionMessageKey('unsupported-type')).toBe('catalog.uploadUnsupported');
+  });
+});
+
+describe('FILE_DROP_MAX_MEBIBYTES', () => {
+  it('states the ceiling in the unit the message interpolates', () => {
+    expect(FILE_DROP_MAX_MEBIBYTES).toBe(FILE_DROP_MAX_BYTES / (1024 * 1024));
   });
 });
 

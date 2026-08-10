@@ -2,8 +2,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { requireAdminSession } from '../auth/auth.middleware';
-import { MediaConfigError, MediaContentTypeError } from './media.s3';
-import { presignRunnerPhotoUpload } from './media.service';
+import { MediaConfigError, MediaContentTypeError, presignRunnerPhotoUpload } from './media.service';
 
 const presignInputSchema = z.object({
   editionSlug: z.string().min(3).max(64),

@@ -56,7 +56,7 @@ const appStack = new Stack(app, appStackName, { env });
 buildPragmaAppStack({
   scope: appStack,
   stage,
-  ...(prNumber !== undefined ? { prNumber } : {}),
+  ...(prNumber === undefined ? {} : { prNumber }),
   domainName: stage === 'prod' ? PROD_DOMAIN : undefined,
   assetsPath: ASSETS_PATH,
   apiEntry: API_ENTRY,

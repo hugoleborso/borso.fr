@@ -8,7 +8,7 @@
  * @beta
  */
 
-import { assertDeployStage, type Stage } from './naming.js';
+import { assertDeployStage, type Stage } from './naming.utils.js';
 
 const STAGE_ENV = 'STAGE';
 const PR_NUMBER_ENV = 'PR_NUMBER';

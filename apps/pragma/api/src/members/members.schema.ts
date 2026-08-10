@@ -25,9 +25,7 @@ export const memberInstrumentTable = pgTable(
     memberId: uuid('member_id').notNull(),
     instrumentId: uuid('instrument_id').notNull(),
   },
-  (table) => ({
-    primary: primaryKey({ columns: [table.memberId, table.instrumentId] }),
-  }),
+  (table) => [primaryKey({ columns: [table.memberId, table.instrumentId] })],
 );
 
 export const firstNameSchema = z.string().trim().min(1).max(64);

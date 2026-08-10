@@ -5,7 +5,7 @@
  * (radio-like): exactly one option is active at a time.
  */
 
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 
 export interface FilterPillOption<TValue extends string> {
   value: TValue;
@@ -28,7 +28,7 @@ export function FilterPillGroup<TValue extends string>({
 }: FilterPillGroupProps<TValue>): JSX.Element {
   return (
     <div
-      className={cn('inline-flex gap-1 p-[3px] bg-bg-sunk rounded-lg', className)}
+      className={composeClassName('inline-flex gap-1 p-[3px] bg-bg-sunk rounded-lg', className)}
       role="tablist"
     >
       {options.map((option) => {
@@ -40,7 +40,7 @@ export function FilterPillGroup<TValue extends string>({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(option.value)}
-            className={cn(
+            className={composeClassName(
               'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer',
               isActive
                 ? 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]'

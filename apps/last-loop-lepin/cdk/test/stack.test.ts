@@ -49,30 +49,30 @@ function synthAppStack(stage: 'prod' | 'preview'): Template {
   return Template.fromStack(stack);
 }
 
+function readEnvVars(resource: { readonly Properties?: unknown }): Record<string, unknown> {
+  const properties = resource.Properties;
+  if (typeof properties !== 'object' || properties === null) return {};
+  if (!('Environment' in properties)) return {};
+  const environment = properties.Environment;
+  if (typeof environment !== 'object' || environment === null) return {};
+  if (!('Variables' in environment)) return {};
+  const variables = environment.Variables;
+  return typeof variables === 'object' && variables !== null ? { ...variables } : {};
+}
+
 describe('last-loop-lepin app stack', () => {
   it('mounts the test-seed endpoint flag only on non-prod stacks', () => {
-    const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
-      const properties = resource.Properties;
-      if (typeof properties !== 'object' || properties === null) return {};
-      if (!('Environment' in properties)) return {};
-      const environment = properties.Environment;
-      if (typeof environment !== 'object' || environment === null) return {};
-      if (!('Variables' in environment)) return {};
-      const variables = environment.Variables;
-      return typeof variables === 'object' && variables !== null ? { ...variables } : {};
-    };
-
     const prodTemplate = synthAppStack('prod');
     const previewTemplate = synthAppStack('preview');
 
     const prodFunctions = prodTemplate.findResources('AWS::Lambda::Function');
-    for (const fn of Object.values(prodFunctions)) {
-      expect(readEnvVars(fn)).not.toHaveProperty('ALLOW_TEST_SEED');
+    for (const lambdaFunction of Object.values(prodFunctions)) {
+      expect(readEnvVars(lambdaFunction)).not.toHaveProperty('ALLOW_TEST_SEED');
     }
 
     const previewFunctions = previewTemplate.findResources('AWS::Lambda::Function');
     const flaggedFunctions = Object.values(previewFunctions).filter(
-      (fn) => 'ALLOW_TEST_SEED' in readEnvVars(fn),
+      (lambdaFunction) => 'ALLOW_TEST_SEED' in readEnvVars(lambdaFunction),
     );
     expect(flaggedFunctions.length).toBeGreaterThan(0);
   });
@@ -86,25 +86,14 @@ describe('last-loop-lepin app stack', () => {
   });
 
   it('drops PIN_HASH and JWT_SECRET env vars — admin auth lives in the DB now', () => {
-    const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
-      const properties = resource.Properties;
-      if (typeof properties !== 'object' || properties === null) return {};
-      if (!('Environment' in properties)) return {};
-      const environment = properties.Environment;
-      if (typeof environment !== 'object' || environment === null) return {};
-      if (!('Variables' in environment)) return {};
-      const variables = environment.Variables;
-      return typeof variables === 'object' && variables !== null ? { ...variables } : {};
-    };
-
     for (const stage of ['prod', 'preview'] as const) {
       const template = synthAppStack(stage);
       const functions = template.findResources('AWS::Lambda::Function');
-      const apiFn = Object.entries(functions).find(([logicalId]) =>
-        /AppApiFn/.test(logicalId),
+      const apiFunction = Object.entries(functions).find(([logicalId]) =>
+        logicalId.includes('AppApiFn'),
       )?.[1];
-      expect(apiFn, `api function not found in ${stage} template`).toBeDefined();
-      const variables = apiFn === undefined ? {} : readEnvVars(apiFn);
+      expect(apiFunction, `api function not found in ${stage} template`).toBeDefined();
+      const variables = apiFunction === undefined ? {} : readEnvVars(apiFunction);
       expect(variables).not.toHaveProperty('PIN_HASH');
       expect(variables).not.toHaveProperty('JWT_SECRET');
     }
@@ -116,30 +105,19 @@ describe('last-loop-lepin app stack', () => {
   });
 
   it('injects ALLOWED_ORIGIN on the API Lambda — prod=apex, preview=per-PR host', () => {
-    const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
-      const properties = resource.Properties;
-      if (typeof properties !== 'object' || properties === null) return {};
-      if (!('Environment' in properties)) return {};
-      const environment = properties.Environment;
-      if (typeof environment !== 'object' || environment === null) return {};
-      if (!('Variables' in environment)) return {};
-      const variables = environment.Variables;
-      return typeof variables === 'object' && variables !== null ? { ...variables } : {};
-    };
-
     const prodVars = (() => {
-      const fn = Object.entries(synthAppStack('prod').findResources('AWS::Lambda::Function')).find(
-        ([logicalId]) => /AppApiFn/.test(logicalId),
-      )?.[1];
-      return fn === undefined ? {} : readEnvVars(fn);
+      const lambdaFunction = Object.entries(
+        synthAppStack('prod').findResources('AWS::Lambda::Function'),
+      ).find(([logicalId]) => logicalId.includes('AppApiFn'))?.[1];
+      return lambdaFunction === undefined ? {} : readEnvVars(lambdaFunction);
     })();
     expect(prodVars.ALLOWED_ORIGIN).toBe('https://last-loop-lepin.borso.fr');
 
     const previewVars = (() => {
-      const fn = Object.entries(
+      const lambdaFunction = Object.entries(
         synthAppStack('preview').findResources('AWS::Lambda::Function'),
-      ).find(([logicalId]) => /AppApiFn/.test(logicalId))?.[1];
-      return fn === undefined ? {} : readEnvVars(fn);
+      ).find(([logicalId]) => logicalId.includes('AppApiFn'))?.[1];
+      return lambdaFunction === undefined ? {} : readEnvVars(lambdaFunction);
     })();
     expect(previewVars.ALLOWED_ORIGIN).toBe('https://last-loop-lepin-pr-1.preview.borso.fr');
   });
@@ -181,25 +159,14 @@ describe('last-loop-lepin app stack', () => {
   });
 
   it('injects PHOTOS_CDN_HOST env var on the API Lambda for every stage', () => {
-    const readEnvVars = (resource: { readonly Properties?: unknown }): Record<string, unknown> => {
-      const properties = resource.Properties;
-      if (typeof properties !== 'object' || properties === null) return {};
-      if (!('Environment' in properties)) return {};
-      const environment = properties.Environment;
-      if (typeof environment !== 'object' || environment === null) return {};
-      if (!('Variables' in environment)) return {};
-      const variables = environment.Variables;
-      return typeof variables === 'object' && variables !== null ? { ...variables } : {};
-    };
-
     for (const stage of ['prod', 'preview'] as const) {
       const template = synthAppStack(stage);
       const functions = template.findResources('AWS::Lambda::Function');
-      const apiFn = Object.entries(functions).find(([logicalId]) =>
-        /AppApiFn/.test(logicalId),
+      const apiFunction = Object.entries(functions).find(([logicalId]) =>
+        logicalId.includes('AppApiFn'),
       )?.[1];
-      expect(apiFn, `api function not found in ${stage} template`).toBeDefined();
-      const variables = apiFn === undefined ? {} : readEnvVars(apiFn);
+      expect(apiFunction, `api function not found in ${stage} template`).toBeDefined();
+      const variables = apiFunction === undefined ? {} : readEnvVars(apiFunction);
       expect(variables).toHaveProperty('PHOTOS_CDN_HOST');
     }
   });

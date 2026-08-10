@@ -14,7 +14,6 @@
 // has historically been stricter than the docs imply, so we stick to
 // var + string concat to avoid FunctionExecutionError surprises.
 
-// biome-ignore lint/correctness/noUnusedVariables: CloudFront Functions runtime requires the entry point be named exactly `handler`. This file is read as a string at synth time, not imported.
 function handler(event) {
   var request = event.request;
   var hostHeader = request.headers && request.headers.host;

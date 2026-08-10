@@ -25,6 +25,7 @@ import {
   useInstrumentsList,
   useUpdateInstrument,
 } from '../../lib/queries/instruments';
+import { selectInstrumentDeletionEffect } from './instruments-page.core';
 
 interface SelectedInstrument {
   id: string;
@@ -73,6 +74,16 @@ export function InstrumentsPage(): JSX.Element {
     form.reset();
   };
 
+  const applyDeletionEffect = {
+    'keep-form': (): void => undefined,
+    'clear-form': clearSelection,
+  } as const;
+
+  const removeInstrument = (instrumentId: string): void => {
+    remove.mutate({ id: instrumentId });
+    applyDeletionEffect[selectInstrumentDeletionEffect(selected?.id ?? null, instrumentId)]();
+  };
+
   const instruments = list.data?.instruments ?? [];
   const lastError: unknown = list.error ?? create.error ?? update.error ?? remove.error ?? null;
   const errorMessage =
@@ -81,11 +92,11 @@ export function InstrumentsPage(): JSX.Element {
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
       <PageHeader title={t('instruments.title')} subtitle={t('instruments.subtitle')} />
-      {errorMessage !== null ? (
+      {errorMessage === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">
           {errorMessage}
         </p>
-      ) : null}
+      )}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-5 items-start">
         <ul className="flex flex-col gap-1.5" aria-label={t('instruments.title')}>
           {list.isLoading ? (
@@ -110,11 +121,8 @@ export function InstrumentsPage(): JSX.Element {
                 </Badge>
                 <button
                   type="button"
-                  className="text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
-                  onClick={() => {
-                    remove.mutate({ id: row.id });
-                    if (selected?.id === row.id) clearSelection();
-                  }}
+                  className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
+                  onClick={() => removeInstrument(row.id)}
                   aria-label={t('common.delete')}
                 >
                   ×
@@ -175,11 +183,11 @@ export function InstrumentsPage(): JSX.Element {
                   </Button>
                 )}
               </form.Subscribe>
-              {selected !== null ? (
+              {selected === null ? null : (
                 <Button type="button" variant="ghost" onClick={clearSelection}>
                   {t('common.cancel')}
                 </Button>
-              ) : null}
+              )}
             </div>
           </form>
         </Card>

@@ -9,7 +9,8 @@
 
 import { and, asc, eq } from 'drizzle-orm';
 import type { z } from 'zod';
-import type { Database } from '../database/client';
+import { getDatabase } from '../database/client';
+import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { lineupOverrideSchema, setlistEntryTable, setlistTable } from './setlists.schema';
 
 export type LineupOverride = z.infer<typeof lineupOverrideSchema>;
@@ -97,10 +98,7 @@ function encodeEntryInsert(values: EntryInsertShape): EntryInsertEncoded {
     songId: values.songId,
     position: values.position,
     energy: values.energy,
-    lineupOverride:
-      values.lineupOverride === null || values.lineupOverride === undefined
-        ? null
-        : JSON.stringify(values.lineupOverride),
+    lineupOverride: values.lineupOverride === null ? null : JSON.stringify(values.lineupOverride),
     keyOverride: values.keyOverride,
     capo: values.capo,
     notes: values.notes,
@@ -132,10 +130,8 @@ function encodeEntryUpdate(updates: Record<string, unknown>): EntryUpdateEncoded
   return encoded;
 }
 
-export async function findSetlistBySession(
-  database: Database,
-  sessionId: string,
-): Promise<SetlistRow | null> {
+export async function findSetlistBySession(sessionId: string): Promise<SetlistRow | null> {
+  const database = getDatabase();
   const rows = await database
     .select({ id: setlistTable.id, sessionId: setlistTable.sessionId })
     .from(setlistTable)
@@ -144,7 +140,8 @@ export async function findSetlistBySession(
   return rows[0] ?? null;
 }
 
-export async function insertSetlist(database: Database, sessionId: string): Promise<SetlistRow> {
+export async function insertSetlist(sessionId: string): Promise<SetlistRow> {
+  const database = getDatabase();
   const [row] = await database
     .insert(setlistTable)
     .values({ sessionId })
@@ -153,10 +150,8 @@ export async function insertSetlist(database: Database, sessionId: string): Prom
   return row;
 }
 
-export async function listEntries(
-  database: Database,
-  setlistId: string,
-): Promise<SetlistEntryRow[]> {
+export async function listEntries(setlistId: string): Promise<SetlistEntryRow[]> {
+  const database = getDatabase();
   const rows = await database
     .select(ENTRY_PROJECTION)
     .from(setlistEntryTable)
@@ -165,10 +160,8 @@ export async function listEntries(
   return rows.map((row) => rowToEntry(row));
 }
 
-export async function insertEntry(
-  database: Database,
-  values: EntryInsertShape,
-): Promise<SetlistEntryRow> {
+export async function insertEntry(values: EntryInsertShape): Promise<SetlistEntryRow> {
+  const database = getDatabase();
   const [row] = await database
     .insert(setlistEntryTable)
     .values(encodeEntryInsert(values))
@@ -178,11 +171,11 @@ export async function insertEntry(
 }
 
 export async function updateEntry(
-  database: Database,
   setlistId: string,
   entryId: string,
   updates: Record<string, unknown>,
 ): Promise<SetlistEntryRow | null> {
+  const database = getDatabase();
   const [row] = await database
     .update(setlistEntryTable)
     .set(encodeEntryUpdate(updates))
@@ -191,33 +184,25 @@ export async function updateEntry(
   return row === undefined ? null : rowToEntry(row);
 }
 
-export async function deleteEntry(
-  database: Database,
-  setlistId: string,
-  entryId: string,
-): Promise<boolean> {
+export async function deleteEntry(setlistId: string, entryId: string): Promise<DeletionOutcome> {
+  const database = getDatabase();
   const deleted = await database
     .delete(setlistEntryTable)
     .where(and(eq(setlistEntryTable.id, entryId), eq(setlistEntryTable.setlistId, setlistId)))
     .returning({ id: setlistEntryTable.id });
-  return deleted.length > 0;
+  return selectDeletionOutcome(deleted.length);
 }
 
-export async function setEntryPosition(
-  database: Database,
-  entryId: string,
-  position: number,
-): Promise<void> {
+export async function setEntryPosition(entryId: string, position: number): Promise<void> {
+  const database = getDatabase();
   await database
     .update(setlistEntryTable)
     .set({ position })
     .where(eq(setlistEntryTable.id, entryId));
 }
 
-export async function listEntryIds(
-  database: Database,
-  setlistId: string,
-): Promise<{ id: string }[]> {
+export async function listEntryIds(setlistId: string): Promise<{ id: string }[]> {
+  const database = getDatabase();
   return await database
     .select({ id: setlistEntryTable.id })
     .from(setlistEntryTable)

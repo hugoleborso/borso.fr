@@ -1,46 +1,202 @@
 set -e
 
-# Dead-code detection across the workspace.
-# Runs only at push time so multi-commit branches with intermediate
-# unused-export states aren't blocked mid-story.
-echo "[pre-push] running knip"
-pnpm exec knip
+# Pre-push gates the commits being pushed, not the branch.
+#
+# It used to key every check on `git merge-base HEAD origin/main`, which on a
+# long branch means "everything, every time": a one-line change to a shell
+# script re-ran four coverage suites and four full mutation suites, about fifty
+# minutes, to prove that nothing had moved. A gate that expensive gets skipped,
+# and a skipped gate is the thing this repository keeps rediscovering.
+#
+# So the range is the push itself. Git feeds this hook one line per ref:
+#
+#   <local ref> <local sha> <remote ref> <remote sha>
+#
+# and <remote sha> is the commit the remote branch is currently at, or all
+# zeros when the branch is new. Gating on <remote sha>..HEAD means each push
+# pays only for what it adds. The chain holds as long as no push is skipped,
+# which is what the full suite in CD exists to backstop — see
+# .github/workflows/full-suite.yml, which runs everything unscoped on main.
+#
+# The cheap per-commit invariants live in .husky/pre-commit.
 
-# Reject any workflow YAML invoking `pnpm --filter <pkg> <reserved-name>`
-# without `run`. `deploy`, `destroy`, `install`, `update`, `sync`, `fetch`,
-# `publish` are pnpm built-in commands; without `run` they shadow the
-# package's scripts.* entry and silently do the wrong thing. Rung-2
-# eradication of docs/dantotsus/pnpm-reserved-script-names.md.
-echo "[pre-push] checking workflows for pnpm reserved-name shadowing"
-PNPM_RESERVED_REGEX='pnpm[[:space:]]+--filter[[:space:]]+("[^"]+"|[^[:space:]]+)[[:space:]]+(deploy|destroy|install|update|sync|fetch|publish)([[:space:]]|$)'
-if grep -nrE "$PNPM_RESERVED_REGEX" .github/workflows/ >&2; then
-  echo "[pre-push] ERROR: above lines invoke a pnpm built-in instead of a package script." >&2
-  echo "[pre-push] Use 'pnpm --filter <pkg> run <name>' to force script lookup." >&2
-  exit 1
+push_base=''
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  [ -z "$local_sha" ] && continue
+  # A remote sha of all zeros means the branch does not exist upstream yet.
+  case "$remote_sha" in
+    *[!0]*)
+      push_base="$remote_sha"
+      break
+      ;;
+  esac
+done
+
+if [ -n "$push_base" ] && git cat-file -e "$push_base" 2>/dev/null; then
+  range_label="this push"
+else
+  push_base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
+  range_label="the whole branch (new or unfetchable remote ref)"
 fi
 
-# Workflow lint — catches paths-filter base misuses, deprecated action
-# versions, shell-quoting bugs in `run:` blocks, etc. Rung-2 eradication
-# of docs/dantotsus/paths-filter-base-head1-on-push.md and a generic net
-# for the next workflow trap.
+changed=$(git diff --name-only "$push_base" HEAD)
+echo "[pre-push] gating $(echo "$changed" | grep -c . ) changed file(s) — range: $range_label"
+
+if [ -z "$changed" ]; then
+  echo "[pre-push] nothing changed in this range; skipping the file-scoped gates"
+fi
+
+# Runs a labelled gate in the background, capturing its output so parallel jobs
+# do not interleave. Logs are printed only for the gates that fail.
+gate_log_dir=$(mktemp -d)
+gate_pids=''
+gate_names=''
+
+start_gate() {
+  gate_name="$1"
+  shift
+  echo "[pre-push] start: $gate_name"
+  ( "$@" ) >"$gate_log_dir/$gate_name.log" 2>&1 &
+  gate_pids="$gate_pids $!"
+  gate_names="$gate_names $gate_name"
+}
+
+wait_for_gates() {
+  failed=''
+  set -- $gate_pids
+  index=1
+  for name in $gate_names; do
+    eval "pid=\${$index}"
+    index=$((index + 1))
+    if wait "$pid"; then
+      echo "[pre-push] pass: $name"
+    else
+      failed="$failed $name"
+    fi
+  done
+  for name in $failed; do
+    echo "" >&2
+    echo "[pre-push] FAILED: $name" >&2
+    cat "$gate_log_dir/$name.log" >&2
+  done
+  gate_pids=''
+  gate_names=''
+  if [ -n "$failed" ]; then
+    rm -rf "$gate_log_dir"
+    exit 1
+  fi
+}
+
+# Dead-code detection across the workspace. Push time rather than commit time,
+# because a multi-commit branch legitimately passes through intermediate states
+# where an export is written before its caller exists. Runs alongside the infra
+# suites rather than in front of them.
+start_gate knip pnpm exec knip
+
+if echo "$changed" | grep -q '^infra/cdk/'; then
+  start_gate infra-cdk pnpm --filter @borso/infra test:coverage
+fi
+
+if echo "$changed" | grep -q '^infra/shared/'; then
+  start_gate infra-shared pnpm --filter @borso/shared-infra test:coverage
+fi
+
+# Only the tests this push affects. `--changed <base>` walks Vitest's module
+# graph, so it selects the test files that changed AND the test files that
+# import a source file that changed, however deep the chain. Measured on
+# borso-fr against a one-line change to labours.core.ts: 2 files and 53 tests
+# in 2.9 s, against 16 files and 318 tests in about 40 s for the whole suite.
+# It picked App.test.tsx, which reaches the changed file transitively — the
+# graph is doing the work, not a filename convention.
+#
+# `--project core` on the full-stack apps keeps the back-e2e project out of it,
+# because that one wants a Postgres this hook has no business booting. The
+# back-e2e suites run in CI, per changed app.
+#
+# The per-file coverage gate is NOT here. A per-file threshold needs the whole
+# suite that covers those files, so running it over a changed-only selection
+# would report every untouched pure file at 0 %. It runs in CI on each changed
+# app, and unscoped on main in full-suite.yml.
+changed_app_slugs=$(echo "$changed" | sed -n 's|^apps/\([^/]*\)/.*|\1|p' | sort -u)
+for app in $changed_app_slugs; do
+  if grep -q '"test:core"' "apps/$app/package.json"; then
+    start_gate "tests-$app" \
+      pnpm --filter "@borso-app/$app" exec vitest run --project core --changed "$push_base"
+  else
+    start_gate "tests-$app" \
+      pnpm --filter "@borso-app/$app" exec vitest run --changed "$push_base"
+  fi
+done
+
+# Mutation testing, scoped to the pure files this push actually touches.
+#
+# Coverage says a line ran; a surviving mutant says no assertion noticed a
+# change to it, which is the signal docs/standards/10-testing.md asks for. A
+# full run over one application is fifteen to twenty-five minutes, so an
+# unscoped gate is a gate nobody can afford on every push. Mutating only the
+# changed files takes seconds, and the unscoped run moves to CD.
+#
+# A changed *test* file pulls in its sibling source, because weakening a test
+# is exactly how a mutant comes back to life without the source moving.
+#
+# Two things about `--mutate`, both measured rather than assumed:
+#   - It does NOT accumulate. Passing the flag twice silently keeps the last
+#     value only, so every file goes into one flag.
+#   - The value is split on commas BEFORE globbing, so a brace expression is
+#     wrong: `{a,b}` becomes the two patterns `{a` and `b}`, each matching
+#     nothing, and `{a}` alone matches nothing either because a single-element
+#     brace never expands. Stryker then instruments zero files and exits 1 on
+#     "No tests were executed". Comma-separated plain paths, no braces.
+if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
+  for app in $changed_app_slugs; do
+    # `|| true` because a grep that matches nothing exits 1, and a failing
+    # command substitution inside an assignment aborts the hook under `set -e`.
+    pure_files=$(echo "$changed" |
+      sed -n "s|^apps/$app/||p" |
+      sed -e 's|\.\(core\|utils\)\.test\.ts$|.\1.ts|' |
+      grep -E '\.(core|utils)\.ts$' |
+      sort -u || true)
+    [ -z "$pure_files" ] && continue
+    mutate_glob=$(echo "$pure_files" | paste -sd, -)
+    echo "[pre-push] $app: mutating $(echo "$pure_files" | grep -c .) changed pure file(s)"
+    start_gate "mutation-$app" \
+      pnpm --filter "@borso-app/$app" exec stryker run --mutate "$mutate_glob"
+  done
+fi
+
+# One wait for the whole wave — knip, the infra suites, every app's affected
+# tests and every app's scoped mutation run all at once. It has to sit outside
+# the SKIP_MUTATION_GATE branch above: with the mutation gate skipped, a wait
+# nested inside it would leave the test gates started and never awaited, and
+# the hook would exit 0 without reading a single result.
+wait_for_gates
+
+rm -rf "$gate_log_dir"
+
+# Workflow lint. Catches paths-filter base misuses, deprecated action versions,
+# and shell-quoting bugs in `run:` blocks. Stays on push because it needs a
+# binary that is not always installed. Rung-2 eradication of
+# docs/dantotsus/paths-filter-base-head1-on-push.md.
+#
+# The skip is only tolerable when the push does not touch a workflow. It was
+# not: this branch changed ci.yml and preview.yml, the binary had silently
+# never been installed, and the push went through on a WARN. A gate that
+# excuses itself on exactly the pushes that need it is not a gate.
 if command -v actionlint >/dev/null 2>&1; then
   echo "[pre-push] running actionlint"
   actionlint
+elif echo "$changed" | grep -q '^\.github/workflows/'; then
+  echo "[pre-push] actionlint is not installed and this push changes a workflow." >&2
+  echo "[pre-push] Install it, then push again:  ./scripts/install-repo-deps.sh" >&2
+  exit 1
 else
-  echo "[pre-push] WARN: actionlint not installed — skipping. Install via the SessionStart hook (.claude/hooks/session-start.sh)." >&2
+  echo "[pre-push] WARN: actionlint not installed — skipping. No workflow changed in this push, so nothing was skipped that matters. Install via ./scripts/install-repo-deps.sh." >&2
 fi
 
-# Reject non-module <script src> tags in app HTML; they ship un-bundled
-# and 404 in production preview / prod builds. Rung-2 eradication of
-# docs/dantotsus/vite-non-module-script-tags-arent-bundled.md.
-echo "[pre-push] checking app HTML for non-module <script src> tags"
-scripts/check-non-module-scripts.sh
-
-# Detection nudge: agent-authored branches (claude/*) almost always
-# have an open PR with reviewer threads. Print a reminder so the
-# agent's next response addresses unresolved review threads BEFORE
-# treating "push succeeded" as the all-clear signal. Rung-4
-# eradication of
+# Detection nudge: agent-authored branches almost always have an open pull
+# request with reviewer threads. Print a reminder so the agent's next response
+# addresses unresolved threads before treating "push succeeded" as the
+# all-clear. Rung-4 eradication of
 # docs/dantotsus/pushed-without-reading-pr-review-comments.md.
 current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')
 case "$current_branch" in

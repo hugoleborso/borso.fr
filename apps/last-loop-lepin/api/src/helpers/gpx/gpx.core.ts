@@ -37,10 +37,16 @@ export class GpxParseError extends Error {
 }
 
 const TRKPT_TAG_PATTERN = /<trkpt\b[\s\S]*?(?:\/>|<\/trkpt>)/g;
-const LAT_ATTR_PATTERN = /\blat\s*=\s*"([^"]+)"/;
-const LON_ATTR_PATTERN = /\blon\s*=\s*"([^"]+)"/;
-const ELE_PATTERN = /<ele>\s*([-\d.eE+]+)\s*<\/ele>/;
-const TIME_PATTERN = /<time>\s*([^<]+?)\s*<\/time>/;
+// The delimiters sit in lookarounds so the value is the whole match, which
+// TypeScript types as a plain `string` — a capture group would be
+// `string | undefined` and buy an unreachable branch at every call site.
+const LATITUDE_ATTRIBUTE_PATTERN = /(?<=\blat\s*=\s*")[^"]+/;
+const LONGITUDE_ATTRIBUTE_PATTERN = /(?<=\blon\s*=\s*")[^"]+/;
+const ELE_PATTERN = /(?<=<ele>\s*)[-\d.eE+]+(?=\s*<\/ele>)/;
+const TIME_PATTERN = /(?<=<time>\s*)[^<\s][^<]*?(?=\s*<\/time>)/;
+
+/** Stand-in for both ends of an empty series, so its span comes out zero. */
+const EMPTY_SERIES_TIMESTAMP_MS = 0;
 
 interface RawPoint {
   readonly lat: number;
@@ -49,27 +55,17 @@ interface RawPoint {
   readonly timestampMs: number | null;
 }
 
-/**
- * Parse a string as a finite float. Returns `null` for `undefined`, NaN, and
- * non-finite values. Exported so the `=== undefined` branch can be covered
- * by a direct unit test — at every real call site the input is the capture
- * group of a regex that always populates it, so the branch is otherwise
- * unreachable from production code.
- */
-export function tryParseFloat(raw: string | undefined): number | null {
-  if (raw === undefined) return null;
+/** Parse a string as a finite float. Returns `null` for NaN and infinities. */
+export function tryParseFloat(raw: string): number | null {
   const parsed = Number.parseFloat(raw);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
 /**
  * Parse an ISO-8601 datetime string into milliseconds since epoch. Returns
- * `null` for `undefined`, malformed input, or anything `Date` deserialises
- * to `NaN`. Same shape as {@link tryParseFloat} — exported for direct test
- * coverage of the `=== undefined` branch.
+ * `null` for malformed input, or anything `Date` deserialises to `NaN`.
  */
-export function tryParseDate(raw: string | undefined): number | null {
-  if (raw === undefined) return null;
+export function tryParseDate(raw: string): number | null {
   const parsedMs = Date.parse(raw);
   return Number.isFinite(parsedMs) ? parsedMs : null;
 }
@@ -81,19 +77,19 @@ function extractTrackPoints(xml: string): readonly RawPoint[] {
   // streaming iterator over `<trkpt>` elements. The returned string is
   // discarded — only the side-effect of pushing into `collected` matters.
   xml.replace(TRKPT_TAG_PATTERN, (fullMatch) => {
-    const latMatch = LAT_ATTR_PATTERN.exec(fullMatch);
-    const lonMatch = LON_ATTR_PATTERN.exec(fullMatch);
+    const latMatch = LATITUDE_ATTRIBUTE_PATTERN.exec(fullMatch);
+    const lonMatch = LONGITUDE_ATTRIBUTE_PATTERN.exec(fullMatch);
     if (latMatch === null || lonMatch === null) return fullMatch;
-    const lat = tryParseFloat(latMatch[1]);
-    const lng = tryParseFloat(lonMatch[1]);
+    const lat = tryParseFloat(latMatch[0]);
+    const lng = tryParseFloat(lonMatch[0]);
     if (lat === null || lng === null) return fullMatch;
     const eleMatch = ELE_PATTERN.exec(fullMatch);
-    const elevation = eleMatch === null ? null : tryParseFloat(eleMatch[1]);
+    const elevation = eleMatch === null ? null : tryParseFloat(eleMatch[0]);
     // `<time>` is matched inside the trkpt slice, so the regex cannot
     // contaminate the per-point timestamp with a sibling tag like
     // `<metadata><time>`.
     const timeMatch = TIME_PATTERN.exec(fullMatch);
-    const timestampMs = timeMatch === null ? null : tryParseDate(timeMatch[1]);
+    const timestampMs = timeMatch === null ? null : tryParseDate(timeMatch[0]);
     collected.push({ lat, lng, elevation, timestampMs });
     return fullMatch;
   });
@@ -101,16 +97,15 @@ function extractTrackPoints(xml: string): readonly RawPoint[] {
 }
 
 function isWellFormedXml(xml: string): boolean {
-  if (xml.length === 0) return false;
   return xml.includes('<gpx') || xml.includes('<trk');
 }
 
 /**
  * Build the cumulative normalised time fractions for a series of point
  * timestamps. Returns `null` if any timestamp is `null` (timing-partial
- * invalidates the whole series), if the series has fewer than two
- * timestamped points (no usable spread), or if the elapsed span is zero
- * (every point timestamped to the same instant — degenerate, not usable).
+ * invalidates the whole series) or if the elapsed span is not strictly
+ * positive — which also covers the empty and single-point series, whose
+ * span is zero.
  *
  * The last element is forced to exactly `1` via the final-division shape
  * (`(timestampMs[i] - first) / (last - first)`), so floating-point drift
@@ -119,19 +114,16 @@ function isWellFormedXml(xml: string): boolean {
 export function buildPointTimeFractions(
   timestampsMs: readonly (number | null)[],
 ): readonly number[] | null {
-  if (timestampsMs.length < 2) return null;
-  const first = timestampsMs[0];
-  const last = timestampsMs[timestampsMs.length - 1];
-  if (first === null || first === undefined) return null;
-  if (last === null || last === undefined) return null;
-  const span = last - first;
-  if (span <= 0) return null;
-  const fractions: number[] = [];
+  const timedPoints: number[] = [];
   for (const timestampMs of timestampsMs) {
     if (timestampMs === null) return null;
-    fractions.push((timestampMs - first) / span);
+    timedPoints.push(timestampMs);
   }
-  return fractions;
+  const first = timedPoints[0] ?? EMPTY_SERIES_TIMESTAMP_MS;
+  const last = timedPoints[timedPoints.length - 1] ?? EMPTY_SERIES_TIMESTAMP_MS;
+  const span = last - first;
+  if (span <= 0) return null;
+  return timedPoints.map((timestampMs) => (timestampMs - first) / span);
 }
 
 /**

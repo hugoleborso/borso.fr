@@ -9,6 +9,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   createIsolatedQueryClient,
+  createMutateSlot,
   deferred,
   flushMicrotasks,
   jsonResponse,
@@ -46,10 +47,9 @@ describe('transitions mutation — optimistic update', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useSaveTransitionComment>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeSave sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useSaveTransitionComment>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useSaveTransitionComment>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeSave sink={slot.sink} />);
+    const send = slot.read();
 
     send({ a: 'song-a', b: 'song-b', comment: 'Tight key change here' }).catch(() => undefined);
     await flushMicrotasks();
@@ -71,10 +71,9 @@ describe('transitions mutation — optimistic update', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useSaveTransitionComment>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeSave sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useSaveTransitionComment>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useSaveTransitionComment>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeSave sink={slot.sink} />);
+    const send = slot.read();
 
     send({ a: 'song-a', b: 'song-b', comment: 'Will fail' }).catch(() => undefined);
     await flushMicrotasks();

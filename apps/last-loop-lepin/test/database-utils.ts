@@ -34,11 +34,6 @@ export function testDatabase(): Database {
   return getDatabase();
 }
 
-/** @deprecated Kept for migration; prefer `testDatabase()`. */
-export function freshDatabase(): Database {
-  return getDatabase();
-}
-
 export async function truncateAllTables(database: Database): Promise<void> {
   await database.execute(
     sql.raw(

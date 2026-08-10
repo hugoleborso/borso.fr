@@ -2,18 +2,18 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { requireAdminSession } from '../auth/auth.middleware';
-import { getDatabase } from '../database/client';
 import { createEditionInputSchema, updateEditionInputSchema } from './edition.schema';
 import {
   createEditionFromInput,
   EditionAlreadyExistsError,
   EditionNotFoundError,
   EditionNotInSetupError,
-  GpxParseError,
   getAllEditions,
   getCurrentEdition,
+  getDatabase,
   getEdition,
   getEditionOrNull,
+  GpxParseError,
   removeSetupEdition,
   replaceEditionFromInput,
   SunCalculationError,

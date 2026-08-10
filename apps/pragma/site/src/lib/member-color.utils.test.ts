@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { parseHex, readableForeground, relativeLuminance } from './member-color.utils';
+import {
+  foregroundForLuminance,
+  parseHex,
+  READABLE_THRESHOLD,
+  readableForeground,
+  relativeLuminance,
+} from './member-color.utils';
+
+const SRGB_THRESHOLD = 0.03928;
+const SRGB_SCALE = 12.92;
+const LUMINANCE_RED_WEIGHT = 0.2126;
 
 describe('member-color.utils', () => {
   describe('parseHex', () => {
@@ -50,11 +60,23 @@ describe('member-color.utils', () => {
     });
 
     it('uses the sRGB linear branch on small channels', () => {
-      // r=g=b=1 is below the 0.03928 threshold once divided by 255, so
-      // we take the linear branch — luminance ends up tiny but non-zero.
-      const small = relativeLuminance({ r: 1, g: 1, b: 1 });
-      expect(small).toBeGreaterThan(0);
-      expect(small).toBeLessThan(0.001);
+      expect(relativeLuminance({ r: 1, g: 1, b: 1 })).toBeCloseTo(0.000303527, 9);
+    });
+
+    it('still uses the linear branch for a channel sitting exactly on the threshold', () => {
+      expect(relativeLuminance({ r: SRGB_THRESHOLD * 255, g: 0, b: 0 })).toBe(
+        LUMINANCE_RED_WEIGHT * (SRGB_THRESHOLD / SRGB_SCALE),
+      );
+    });
+  });
+
+  describe('foregroundForLuminance', () => {
+    it('reads a luminance sitting exactly on the threshold as dark', () => {
+      expect(foregroundForLuminance(READABLE_THRESHOLD)).toBe('#fffefa');
+    });
+
+    it('reads a luminance just past the threshold as light', () => {
+      expect(foregroundForLuminance(READABLE_THRESHOLD + 0.001)).toBe('#1a1814');
     });
   });
 

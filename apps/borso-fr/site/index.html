@@ -1,56 +1,111 @@
 <!doctype html>
 <html lang="fr">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>borso.fr</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>borso.fr</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Space+Mono:wght@400&display=swap"
-  >
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Space+Mono:wght@400&display=swap"
+    />
 
-  <link rel="stylesheet" href="./style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="bg-canvas-wrap"></div>
+    <div id="bg-grain"></div>
 
-<div id="bg-canvas-wrap"></div>
-<div id="bg-grain"></div>
+    <main class="stage">
+      <div class="welcome">Bienvenue sur</div>
+      <h1 class="title">borso.fr</h1>
+    </main>
 
-<main class="stage">
-  <div class="welcome">Bienvenue sur</div>
-  <h1 class="title">borso.fr</h1>
-</main>
+    <button
+      id="burger"
+      class="burger"
+      type="button"
+      aria-label="Ouvrir le menu"
+      aria-expanded="false"
+      aria-controls="menu"
+    >
+      <svg
+        class="burger-icon burger-icon--lines"
+        width="22"
+        height="22"
+        viewBox="0 0 22 22"
+        aria-hidden="true"
+      >
+        <line
+          x1="3"
+          y1="7"
+          x2="19"
+          y2="7"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+        <line
+          x1="3"
+          y1="15"
+          x2="19"
+          y2="15"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+      </svg>
+      <svg
+        class="burger-icon burger-icon--cross"
+        width="22"
+        height="22"
+        viewBox="0 0 22 22"
+        aria-hidden="true"
+      >
+        <line
+          x1="4"
+          y1="4"
+          x2="18"
+          y2="18"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+        <line
+          x1="18"
+          y1="4"
+          x2="4"
+          y2="18"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+      </svg>
+    </button>
 
-<button id="burger" class="burger" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="menu">
-  <svg class="burger-icon burger-icon--lines" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-    <line x1="3" y1="7" x2="19" y2="7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-    <line x1="3" y1="15" x2="19" y2="15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-  </svg>
-  <svg class="burger-icon burger-icon--cross" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-    <line x1="4" y1="4" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-    <line x1="18" y1="4" x2="4" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-  </svg>
-</button>
+    <nav id="menu" class="menu" aria-hidden="true">
+      <ul>
+        <li><a href="family/mom.html">Maman</a></li>
+        <li><a href="family/les-filles.html">Les sœurs</a></li>
+        <li><a href="art/mondrian/">Art</a></li>
+        <li>
+          <button id="date-request-trigger" class="menu-link--deprecated" type="button">
+            Demande de date
+          </button>
+        </li>
+        <li><a href="12-travaux/">Les 12 travaux de Borso</a></li>
+      </ul>
+    </nav>
 
-<nav id="menu" class="menu" aria-hidden="true">
-  <ul>
-    <li><a href="family/mom.html">Maman</a></li>
-    <li><a href="family/les-filles.html">Les sœurs</a></li>
-    <li><a href="art/mondrian/">Art</a></li>
-    <li><button id="date-request-trigger" class="menu-link--deprecated" type="button">Demande de date</button></li>
-    <li><a href="12-travaux/">Les 12 travaux de Borso</a></li>
-  </ul>
-</nav>
+    <dialog id="date-request-dialog" class="date-request-dialog">
+      <p>La demande de date n’est plus disponible sur borso.fr - bisous quand même</p>
+      <button id="date-request-close" class="date-request-close" type="button">Fermer</button>
+    </dialog>
 
-<dialog id="date-request-dialog" class="date-request-dialog">
-  <p>La demande de date n’est plus disponible sur borso.fr - bisous quand même</p>
-  <button id="date-request-close" class="date-request-close" type="button">Fermer</button>
-</dialog>
-
-<script type="module" src="./galaxy.tsx"></script>
-<script type="module" src="./script.js"></script>
-</body>
+    <script type="module" src="./main.tsx"></script>
+    <script type="module" src="./home-page.ts"></script>
+  </body>
 </html>

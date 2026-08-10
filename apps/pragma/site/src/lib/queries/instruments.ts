@@ -7,8 +7,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api } from '../api';
-import { isLastPendingMutation } from './optimistic.utils';
+import { ApiError, api, isResponseSuccessful } from '../api';
+import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 
 export const instrumentKeys = {
   all: ['instruments'] as const,
@@ -37,7 +37,8 @@ export function useCreateInstrument() {
     mutationKey: instrumentKeys.all,
     mutationFn: async (variables: { name: string; isHarmonic: boolean }) => {
       const response = await api.api.instruments.$post({ json: variables });
-      if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
+      if (!isResponseSuccessful(response))
+        throw new ApiError(response.status, `create ${response.status}`, null);
       return response.json();
     },
     onMutate: async (variables) => {
@@ -86,9 +87,10 @@ export function useUpdateInstrument() {
       queryClient.setQueryData<InstrumentsListResponse>(listKey, (old) => {
         if (old === undefined) return old;
         return {
-          instruments: old.instruments.map((instrument) =>
-            instrument.id === id ? { ...instrument, ...patch } : instrument,
-          ),
+          instruments: replaceEntityById(old.instruments, id, (instrument) => ({
+            ...instrument,
+            ...patch,
+          })),
         };
       });
       return { previousList };

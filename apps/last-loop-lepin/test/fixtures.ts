@@ -33,7 +33,7 @@ export function makeRunner(slug: string, overrides: Partial<Runner> = {}): Runne
   return {
     editionSlug: 'lepin-2026',
     slug,
-    displayName: slug[0]?.toUpperCase() + slug.slice(1),
+    displayName: (slug[0]?.toUpperCase() ?? '') + slug.slice(1),
     photoKey: null,
     bib: null,
     ...overrides,

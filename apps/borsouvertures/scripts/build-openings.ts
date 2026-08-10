@@ -60,9 +60,9 @@ const FAMILIES = [
 
 async function fetchTsv(letter: string): Promise<string> {
   const url = `https://raw.githubusercontent.com/lichess-org/chess-openings/${LICHESS_COMMIT}/${letter}.tsv`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
-  return res.text();
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status}`);
+  return response.text();
 }
 
 function parseTsv(tsv: string): RawRow[] {
@@ -140,7 +140,7 @@ async function buildOpenings(): Promise<void> {
     ...opening,
     variations: opening.variations.map((variation) => ({
       ...variation,
-      lines: variation.lines.sort((a, b) => a.name.localeCompare(b.name)),
+      lines: variation.lines.sort((left, right) => left.name.localeCompare(right.name)),
     })),
   }));
 
@@ -161,7 +161,7 @@ async function buildOpenings(): Promise<void> {
   );
 }
 
-buildOpenings().catch((err) => {
-  console.error(err);
+buildOpenings().catch((error) => {
+  console.error(error);
   process.exit(1);
 });

@@ -13,7 +13,7 @@ import {
   dsqlSchemaName,
   type Stage,
   validateAppSlug,
-} from '../internal/naming.js';
+} from '../internal/naming.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { IDsqlCluster } from './dsql-cluster.js';
 
@@ -70,6 +70,17 @@ export interface DsqlSchemaCloneFromConfig {
    * would otherwise dereference prod's bucket and get 403s or worse.
    */
   readonly columnsToNullify?: Readonly<Record<string, readonly string[]>>;
+  /**
+   * Tables emptied in the target immediately before their rows are copied, so
+   * the source wins outright.
+   *
+   * The clone INSERT is `ON CONFLICT DO NOTHING`, which is right for domain
+   * data — a re-deploy keeps what the preview accumulated and adds what is new
+   * upstream. It is wrong for a singleton row that exists to mirror the
+   * source: the conflict clause keeps the stale one forever. Use this for a
+   * credential or config row with a fixed primary key.
+   */
+  readonly tablesToReplace?: readonly string[];
 }
 
 /** @beta */
@@ -113,8 +124,8 @@ function readMigrations(dir: string): readonly MigrationFile[] {
   }
   const entries = fs.readdirSync(absDir);
   const files = entries
-    .filter((f) => MIGRATION_FILE_PATTERN.test(f))
-    .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
+    .filter((fileName) => MIGRATION_FILE_PATTERN.test(fileName))
+    .sort((left, right) => left.localeCompare(right, 'en', { numeric: true }));
   return files.map((name) => ({
     name,
     sql: fs.readFileSync(path.join(absDir, name), 'utf8'),
@@ -208,7 +219,7 @@ export class DsqlSchema extends Construct {
         schemaName: this.schemaName,
         migrations,
         migrationsDigest: digestMigrations(migrations),
-        ...(props.cloneFromSchema !== undefined ? { cloneFromSchema: props.cloneFromSchema } : {}),
+        ...(props.cloneFromSchema === undefined ? {} : { cloneFromSchema: props.cloneFromSchema }),
       },
     });
 

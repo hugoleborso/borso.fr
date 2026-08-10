@@ -23,9 +23,10 @@ export const MEMBER_PALETTE = {
 
 export type MemberPaletteKey = keyof typeof MEMBER_PALETTE;
 
-const HEX_PATTERN = /^#([0-9a-f]{6})$/i;
+const HEX_PATTERN = /^#[0-9a-f]{6}$/i;
 const HEX_RADIX = 16;
 const HEX_PAIR_LENGTH = 2;
+const HASH_PREFIX_LENGTH = 1;
 const FALLBACK_KEY: MemberPaletteKey = 'coral';
 
 const PALETTE_RGB: Record<MemberPaletteKey, readonly [number, number, number]> = {
@@ -36,11 +37,11 @@ const PALETTE_RGB: Record<MemberPaletteKey, readonly [number, number, number]> =
   sage: [0x6e, 0x8a, 0x48],
 };
 
-function parseHexTriplet(hex: string): readonly [number, number, number] | null {
-  const match = HEX_PATTERN.exec(hex.trim());
-  if (!match) return null;
-  const body = match[1];
-  if (body === undefined) return null;
+/** The three channel bytes of a `#rrggbb` string, or `null` when it is not one. */
+export function parseHexTriplet(hex: string): readonly [number, number, number] | null {
+  const trimmed = hex.trim();
+  if (!HEX_PATTERN.test(trimmed)) return null;
+  const body = trimmed.slice(HASH_PREFIX_LENGTH);
   const red = Number.parseInt(body.slice(0, HEX_PAIR_LENGTH), HEX_RADIX);
   const green = Number.parseInt(body.slice(HEX_PAIR_LENGTH, HEX_PAIR_LENGTH * 2), HEX_RADIX);
   const blue = Number.parseInt(body.slice(HEX_PAIR_LENGTH * 2), HEX_RADIX);

@@ -47,15 +47,3 @@ export function toRunnerDto(runner: Runner, cdnHost: string | undefined): Runner
     bib: runner.bib,
   };
 }
-
-/**
- * Read `PHOTOS_CDN_HOST` from the ambient process env. Returns
- * `undefined` when the env var is unset or empty — the mapper then
- * yields `photoUrl: null`, and the front cascades to initials. This
- * keeps dev environments (no CDN) and misconfigured deployments from
- * crashing the response.
- */
-export function readPhotosCdnHost(): string | undefined {
-  const raw = process.env.PHOTOS_CDN_HOST;
-  return raw === undefined || raw === '' ? undefined : raw;
-}

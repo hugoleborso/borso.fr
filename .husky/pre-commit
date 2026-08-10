@@ -1,40 +1,63 @@
 set -e
 
-# Repo-wide Biome check (lint + formatter) at every commit — fast,
-# catches per-file issues before they accumulate in a branch. Runs at
-# root scope so it covers files outside any pnpm workspace (e.g.,
-# scripts/, docs/-adjacent code), complementing the per-workspace
-# `pnpm -r lint` step in CI. Biome takes ~1 s on this repo. Rung-1
-# eradication (combined with the ci.yml backup below) of
-# docs/dantotsus/biome-lint-was-not-gated-anywhere.md — the defect
-# class is now structurally unable to land in main: pre-commit rejects
-# the introducing commit, and if the hook is bypassed CI rejects the
-# PR. `check` (instead of `lint`) brings formatter drift into the gate
-# too — formatting is part of the standard, not optional.
-echo "[pre-commit] running biome check (lint + format)"
-pnpm exec biome check
+# Pre-commit holds only checks that are cheap and that should be true of every
+# single commit, so committing stays fast enough that nobody reaches for
+# --no-verify. Anything that needs the whole branch in view, or that takes more
+# than a second or two, lives in .husky/pre-push instead.
+#
+# The split, so the next person editing these files keeps it:
+#
+#   pre-commit  a per-file invariant, cheap, and true of every commit
+#   pre-push    needs the branch in view, or costs real time
 
-# Run the relevant @borso/* infra package's full test suite (including 100%
-# coverage thresholds) whenever a commit touches its source. Cheap to skip
-# when nothing under infra/ changed.
 changed=$(git diff --cached --name-only --diff-filter=ACMR)
 
-if echo "$changed" | grep -q '^infra/cdk/'; then
-  echo "[pre-commit] infra/cdk/ changed — running @borso/infra test:coverage"
-  pnpm --filter @borso/infra test:coverage
+# ESLint and Prettier over the STAGED files only. Linting the whole repository
+# here would not be a small check: the type-aware rules build a TypeScript
+# program per workspace, so a cold full run is about 80 s, and a branch that
+# touches many files thrashes the cache and pays most of that on every commit.
+#
+# Whole-repository linting still happens, in ci.yml, where it also catches the
+# cross-file rules that a staged-file run cannot see, e.g. import-x/no-cycle.
+# So the commit gate is fast and local, and the branch gate is exhaustive.
+#
+# Rung-1 eradication, together with the ci.yml backup, of
+# docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
+staged_lintable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs)$' || true)
+if [ -n "$staged_lintable" ]; then
+  echo "[pre-commit] running eslint on staged files"
+  echo "$staged_lintable" | xargs pnpm exec eslint --no-warn-ignored --cache --cache-strategy content --cache-location .eslintcache
 fi
 
-if echo "$changed" | grep -q '^infra/shared/'; then
-  echo "[pre-commit] infra/shared/ changed — running @borso/shared-infra test:coverage"
-  pnpm --filter @borso/shared-infra test:coverage
+staged_formattable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html)$' || true)
+if [ -n "$staged_formattable" ]; then
+  echo "[pre-commit] running prettier on staged files"
+  echo "$staged_formattable" | xargs pnpm exec prettier --check --cache --ignore-unknown
 fi
 
-# DSQL compatibility check on staged migration SQL files. Cheap (~50 ms)
-# enough to be unconditional, but the find inside is no-op when no
-# migration is staged so unrelated work isn't slowed down. Rung-2
-# eradication of docs/dantotsus/dsql-alter-table-only-add-column.md —
-# the dangerous DDL forms can no longer land in a commit.
+# DSQL compatibility of staged migration SQL. The find inside is a no-op when
+# no migration is staged, so unrelated work is not slowed down. Rung-2
+# eradication of docs/dantotsus/dsql-alter-table-only-add-column.md.
 if echo "$changed" | grep -q 'api/src/database/migrations/.*\.sql$'; then
   echo "[pre-commit] migration SQL changed — running DSQL-compat check"
   ./scripts/check-migration-sql-dsql-compat.sh
+fi
+
+# A non-module <script src> tag ships un-bundled and 404s in preview and
+# production. A grep over the app HTML, so it costs nothing and belongs on the
+# commit rather than the push. Rung-2 eradication of
+# docs/dantotsus/vite-non-module-script-tags-arent-bundled.md.
+echo "[pre-commit] checking app HTML for non-module <script src> tags"
+scripts/check-non-module-scripts.sh
+
+# `deploy`, `destroy`, `install`, `update`, `sync`, `fetch` and `publish` are
+# pnpm built-ins. Without `run`, pnpm shadows the package's scripts entry and
+# silently does the wrong thing. Another instant grep of a standing invariant.
+# Rung-2 eradication of docs/dantotsus/pnpm-reserved-script-names.md.
+echo "[pre-commit] checking workflows for pnpm reserved-name shadowing"
+PNPM_RESERVED_REGEX='pnpm[[:space:]]+--filter[[:space:]]+("[^"]+"|[^[:space:]]+)[[:space:]]+(deploy|destroy|install|update|sync|fetch|publish)([[:space:]]|$)'
+if grep -nrE "$PNPM_RESERVED_REGEX" .github/workflows/ >&2; then
+  echo "[pre-commit] ERROR: above lines invoke a pnpm built-in instead of a package script." >&2
+  echo "[pre-commit] Use 'pnpm --filter <pkg> run <name>' to force script lookup." >&2
+  exit 1
 fi

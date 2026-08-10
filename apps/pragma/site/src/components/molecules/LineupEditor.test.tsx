@@ -57,13 +57,13 @@ function renderEditor(root: Root, node: ReactNode): void {
 
 function findButtonByText(container: HTMLElement, label: string): HTMLButtonElement | null {
   const buttons = Array.from(container.querySelectorAll('button'));
-  return buttons.find((button) => button.textContent?.trim() === label) ?? null;
+  return buttons.find((button) => button.textContent.trim() === label) ?? null;
 }
 
 function findInstrumentSelectFor(container: HTMLElement, memberId: string): HTMLSelectElement {
   const select = container.querySelector(`#lineup-editor-instrument-${memberId}`);
   if (!(select instanceof HTMLSelectElement)) {
-    throw new Error(`no select found for member ${memberId}`);
+    throw new TypeError(`no select found for member ${memberId}`);
   }
   return select;
 }

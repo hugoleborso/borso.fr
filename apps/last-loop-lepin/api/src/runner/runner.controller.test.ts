@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { adminSessionCookie, freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { adminSessionCookie, testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { makeEdition } from '../../../test/fixtures';
 import { createApp } from '../app';
 import { insertEdition } from '../edition/edition.repository';
@@ -26,18 +26,18 @@ const runnersListSchema = z.object({
   ),
 });
 
+async function adminCookie(): Promise<string> {
+  return adminSessionCookie(testDatabase());
+}
+
 describe('runner controller', () => {
   const app = createApp();
 
   beforeEach(async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await truncateAllTables(database);
     await insertEdition(database, makeEdition({ status: 'setup' }));
   });
-
-  async function adminCookie(): Promise<string> {
-    return adminSessionCookie(freshDatabase());
-  }
 
   it('creates a runner and surfaces it in the public list', async () => {
     const cookie = await adminCookie();

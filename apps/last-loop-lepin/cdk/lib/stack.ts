@@ -1,4 +1,11 @@
-import { type IDsqlCluster, PhotosCdn, PreviewableApp, type Stage } from '@borso/infra';
+import {
+  frontendOrigin,
+  type IDsqlCluster,
+  isProductionStage,
+  PhotosCdn,
+  PreviewableApp,
+  type Stage,
+} from '@borso/infra';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import {
   BlockPublicAccess,
@@ -24,27 +31,6 @@ export interface BuildAppStackProps {
 }
 
 /**
- * Frontend origin the API Lambda will accept on state-changing requests.
- * Used by `requireAdminSession` for the CSRF Origin-header check. Prod
- * is the apex domain; preview is the per-PR `<app>-pr-<N>.preview.borso.fr`
- * hostname. Dev sets `ALLOWED_ORIGIN` locally (typically
- * `http://localhost:5173`).
- */
-function frontendOrigin(
-  stage: Stage,
-  domainName: string | undefined,
-  prNumber: number | undefined,
-): string {
-  if (stage === 'prod') {
-    if (domainName === undefined) {
-      throw new Error('frontendOrigin: domainName required for stage="prod".');
-    }
-    return `https://${domainName}`;
-  }
-  return `https://${APP_SLUG}-pr-${prNumber ?? 0}.preview.borso.fr`;
-}
-
-/**
  * Composes the StaticSite + LambdaApi + DsqlSchema for the app, plus the
  * S3 bucket the admin uploads runner photos to.
  *
@@ -61,7 +47,7 @@ function frontendOrigin(
  */
 export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
   const photosBucket = new Bucket(props.scope, 'PhotosBucket', {
-    bucketName: `${APP_SLUG}-${props.stage}-photos${props.prNumber !== undefined ? `-${props.prNumber}` : ''}`,
+    bucketName: `${APP_SLUG}-${props.stage}-photos${props.prNumber === undefined ? '' : `-${props.prNumber}`}`,
     encryption: BucketEncryption.S3_MANAGED,
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     objectOwnership: ObjectOwnership.BUCKET_OWNER_ENFORCED,
@@ -83,14 +69,14 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
   // `docs/features/last-loop-lepin/runner-photos-everywhere`. The
   // `PHOTOS_CDN_HOST` env var flows into the API Lambda so the runner
   // DTO mapper can compose `photoUrl` server-side.
-  const photosCdnHostname =
-    props.stage === 'prod'
-      ? PHOTOS_CDN_PROD_HOSTNAME
-      : `${APP_SLUG}-pr-${props.prNumber ?? 0}-photos.preview.borso.fr`;
+  const isProduction = isProductionStage(props.stage);
+  const photosCdnHostname = isProduction
+    ? PHOTOS_CDN_PROD_HOSTNAME
+    : `${APP_SLUG}-pr-${props.prNumber ?? 0}-photos.preview.borso.fr`;
   const photosCdn = new PhotosCdn(props.scope, 'PhotosCdn', {
     app: APP_SLUG,
     stage: props.stage,
-    ...(props.prNumber !== undefined ? { prNumber: props.prNumber } : {}),
+    ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
     bucket: photosBucket,
     hostname: photosCdnHostname,
   });
@@ -98,15 +84,18 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
   const previewableApp = new PreviewableApp(props.scope, 'App', {
     app: APP_SLUG,
     stage: props.stage,
-    ...(props.prNumber !== undefined ? { prNumber: props.prNumber } : {}),
-    ...(props.domainName !== undefined ? { domainName: props.domainName } : {}),
+    ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
+    ...(props.domainName === undefined ? {} : { domainName: props.domainName }),
     frontend: { distPath: props.assetsPath },
     api: {
       entry: props.apiEntry,
       environment: {
         PHOTOS_BUCKET: photosBucket.bucketName,
         PHOTOS_CDN_HOST: photosCdn.hostname,
-        ALLOWED_ORIGIN: frontendOrigin(props.stage, props.domainName, props.prNumber),
+        ALLOWED_ORIGIN: frontendOrigin(
+          { app: APP_SLUG, stage: props.stage, prNumber: props.prNumber },
+          props.domainName,
+        ),
       },
     },
     database: {
@@ -121,15 +110,24 @@ export function buildLastLoopLepinAppStack(props: BuildAppStackProps): void {
       // Runtime-state tables (sessions, rate-limit buckets) keep their
       // structure but no rows; `runners.photo_key` is NULLed so the
       // preview's CDN doesn't dereference prod's S3 bucket.
-      ...(props.stage !== 'prod'
-        ? {
+      //
+      // `admin_credentials` is blocked because a preview is a public URL and
+      // must not hold production's PIN hash. ADR-0004 moved the PIN out of a
+      // stage-shared Secrets Manager entry into a per-schema row precisely so
+      // each stage would carry its own; cloning the row from prod put the
+      // sharing back by another route. Consequence: a fresh preview has no
+      // admin PIN and the admin area is unreachable until someone seeds the
+      // row, which is the intended per-stage behaviour rather than a
+      // regression.
+      ...(isProduction
+        ? {}
+        : {
             cloneFromSchema: {
               sourceSchemaName: 'prod',
-              tableBlocklist: ['admin_sessions', 'auth_attempts'],
+              tableBlocklist: ['admin_credentials', 'admin_sessions', 'auth_attempts'],
               columnsToNullify: { runners: ['photo_key'] },
             },
-          }
-        : {}),
+          }),
     },
   });
 

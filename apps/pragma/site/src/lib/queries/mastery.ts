@@ -11,6 +11,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
+import { upsertMasteryDefault, withoutMasteryDefault } from './mastery.utils';
 import { isLastPendingMutation } from './optimistic.utils';
 
 export const masteryKeys = {
@@ -20,19 +21,6 @@ export const masteryKeys = {
 };
 
 type MasteryDefaultsResponse = InferResponseType<typeof api.api.mastery.defaults.$get>;
-type MasteryDefaultRow = MasteryDefaultsResponse['defaults'][number];
-
-function upsertDefault(rows: MasteryDefaultRow[], next: MasteryDefaultRow): MasteryDefaultRow[] {
-  let hit = false;
-  const merged = rows.map((row) => {
-    if (row.memberId === next.memberId && row.instrumentId === next.instrumentId) {
-      hit = true;
-      return next;
-    }
-    return row;
-  });
-  return hit ? merged : [...merged, next];
-}
 
 export function useMasteryDefaults() {
   return useQuery({
@@ -60,7 +48,7 @@ export function useSaveMasteryDefault() {
       const previousDefaults = queryClient.getQueryData<MasteryDefaultsResponse>(key);
       queryClient.setQueryData<MasteryDefaultsResponse>(key, (old) => {
         if (old === undefined) return old;
-        return { defaults: upsertDefault(old.defaults, variables) };
+        return { defaults: upsertMasteryDefault(old.defaults, variables) };
       });
       return { previousDefaults };
     },
@@ -94,10 +82,7 @@ export function useDeleteMasteryDefault() {
       queryClient.setQueryData<MasteryDefaultsResponse>(key, (old) => {
         if (old === undefined) return old;
         return {
-          defaults: old.defaults.filter(
-            (row) =>
-              !(row.memberId === variables.memberId && row.instrumentId === variables.instrumentId),
-          ),
+          defaults: withoutMasteryDefault(old.defaults, variables.memberId, variables.instrumentId),
         };
       });
       return { previousDefaults };

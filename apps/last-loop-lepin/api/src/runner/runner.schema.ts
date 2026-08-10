@@ -16,9 +16,7 @@ export const runnersTable = pgTable(
     photoKey: text('photo_key'),
     bib: integer('bib'),
   },
-  (table) => ({
-    primary: primaryKey({ columns: [table.editionSlug, table.slug] }),
-  }),
+  (table) => [primaryKey({ columns: [table.editionSlug, table.slug] })],
 );
 
 export const runnerSlugSchema = z

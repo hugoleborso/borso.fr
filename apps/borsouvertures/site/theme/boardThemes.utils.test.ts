@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { boardThemes, getBoardTheme, isBoardThemeId } from './boardThemes.utils';
+import { boardThemes, getBoardTheme, isBoardThemeId, toBoardThemeId } from './boardThemes.utils';
 
 describe('boardThemes', () => {
   it('exposes the four supported themes', () => {
@@ -24,5 +24,15 @@ describe('isBoardThemeId', () => {
   it('rejects unknown ids', () => {
     expect(isBoardThemeId('classic')).toBe(false);
     expect(isBoardThemeId('')).toBe(false);
+  });
+});
+
+describe('toBoardThemeId', () => {
+  it('returns the value when it names a shipped theme', () => {
+    expect(toBoardThemeId('nord', 'chesscom')).toBe('nord');
+  });
+
+  it('returns the fallback when the value names no shipped theme', () => {
+    expect(toBoardThemeId('classic', 'chesscom')).toBe('chesscom');
   });
 });

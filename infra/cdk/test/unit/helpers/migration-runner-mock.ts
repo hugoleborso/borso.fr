@@ -71,19 +71,20 @@ export type SqlMock = ((
   end(opts: { readonly timeout: number }): Promise<void>;
 };
 
+function recordTaggedCall(strings: TemplateStringsArray): Promise<unknown[]> {
+  state.taggedCalls.push(strings.join('?'));
+  return Promise.resolve([]);
+}
+
 export function makeSql(): SqlMock {
-  const callable = (strings: TemplateStringsArray, ..._values: readonly unknown[]) => {
-    state.taggedCalls.push(strings.join('?'));
-    return Promise.resolve([]);
-  };
-  return Object.assign(callable, {
+  return Object.assign(recordTaggedCall, {
     unsafe(query: string, params?: readonly unknown[]) {
       if (state.rejectNextUnsafe !== null) {
         const error = state.rejectNextUnsafe;
         state.rejectNextUnsafe = null;
         return Promise.reject(error);
       }
-      state.unsafeCalls.push({ query, ...(params ? { params } : {}) });
+      state.unsafeCalls.push({ query, ...(params === undefined ? {} : { params }) });
       const schemaExistsMatch = /information_schema\.schemata WHERE schema_name = '([^']+)'/i.exec(
         query,
       );
@@ -112,12 +113,13 @@ export function makeSql(): SqlMock {
       if (/SELECT name FROM/i.test(query)) {
         return Promise.resolve([...state.appliedMigrations].map((name) => ({ name })));
       }
-      if (/INSERT INTO/.test(query) && params?.[0] !== undefined) {
-        state.appliedMigrations.add(String(params[0]));
+      const insertedMigrationName = params?.[0];
+      if (query.includes('INSERT INTO') && typeof insertedMigrationName === 'string') {
+        state.appliedMigrations.add(insertedMigrationName);
       }
       return Promise.resolve([]);
     },
-    end(_opts: { readonly timeout: number }) {
+    end() {
       state.ended++;
       return Promise.resolve();
     },

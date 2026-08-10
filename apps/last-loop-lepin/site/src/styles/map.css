@@ -74,3 +74,16 @@
 .elevation-profile svg {
   display: block;
 }
+
+/* Leaflet ships 30px controls, which is below the 44px touch floor. */
+.course-map .leaflet-control-zoom a {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+}
+
+.course-map .leaflet-control-attribution {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}

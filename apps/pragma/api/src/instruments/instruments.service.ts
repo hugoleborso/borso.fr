@@ -6,7 +6,7 @@
  * any setlist") have a single place to land.
  */
 
-import type { Database } from '../database/client';
+import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteInstrument,
   type InstrumentRow,
@@ -19,20 +19,19 @@ function byName(left: InstrumentRow, right: InstrumentRow): number {
   return left.name.localeCompare(right.name);
 }
 
-export async function getInstrumentsSorted(database: Database): Promise<InstrumentRow[]> {
-  const rows = await listInstruments(database);
+export async function getInstrumentsSorted(): Promise<InstrumentRow[]> {
+  const rows = await listInstruments();
   return rows.toSorted(byName);
 }
 
-export async function createInstrument(
-  database: Database,
-  input: { name: string; isHarmonic: boolean },
-): Promise<InstrumentRow> {
-  return await insertInstrument(database, input);
+export async function createInstrument(input: {
+  name: string;
+  isHarmonic: boolean;
+}): Promise<InstrumentRow> {
+  return await insertInstrument(input);
 }
 
 export async function patchInstrument(
-  database: Database,
   id: string,
   input: { name?: string; isHarmonic?: boolean },
 ): Promise<InstrumentRow | null> {
@@ -40,9 +39,9 @@ export async function patchInstrument(
   if (input.name !== undefined) updates.name = input.name;
   if (input.isHarmonic !== undefined) updates.isHarmonic = input.isHarmonic;
   if (Object.keys(updates).length === 0) return null;
-  return await updateInstrument(database, id, updates);
+  return await updateInstrument(id, updates);
 }
 
-export async function removeInstrument(database: Database, id: string): Promise<boolean> {
-  return await deleteInstrument(database, id);
+export async function removeInstrument(id: string): Promise<DeletionOutcome> {
+  return await deleteInstrument(id);
 }

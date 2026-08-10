@@ -3,13 +3,18 @@
  */
 
 import type { z } from 'zod';
-import type { Database } from '../database/client';
+import { getSongs } from '../songs/songs.service';
+import { buildSessionInsertShape } from './sessions.core';
+import {
+  buildNextSessionOfflineManifest,
+  type OfflineManifestPayload,
+} from './offline-manifest.core';
+import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteSessionWithCascade,
   findSessionById,
   insertSession,
   listSessions,
-  type SessionInsertShape,
   type SessionRow,
   updateSession,
 } from './sessions.repository';
@@ -17,24 +22,6 @@ import type { sessionCreateSchema, sessionUpdateSchema } from './sessions.schema
 
 type SessionCreateInput = z.infer<typeof sessionCreateSchema>;
 type SessionUpdateInput = z.infer<typeof sessionUpdateSchema>;
-
-function valuesFromCreate(input: SessionCreateInput): SessionInsertShape {
-  if (input.kind === 'concert') {
-    return {
-      kind: 'concert',
-      date: new Date(input.date),
-      venue: input.venue,
-      capacity: input.capacity,
-      gear: input.gear,
-      friendsCountPerMember: input.friendsCountPerMember,
-    };
-  }
-  return {
-    kind: 'practice',
-    date: new Date(input.date),
-    preparedConcertId: input.preparedConcertId,
-  };
-}
 
 function valuesFromUpdate(input: SessionUpdateInput): Record<string, unknown> {
   const updates: Record<string, unknown> = {};
@@ -51,67 +38,34 @@ function valuesFromUpdate(input: SessionUpdateInput): Record<string, unknown> {
   return updates;
 }
 
-export async function getSessions(database: Database): Promise<SessionRow[]> {
-  return await listSessions(database);
+export async function getSessions(): Promise<SessionRow[]> {
+  return await listSessions();
 }
 
-export async function getSessionById(database: Database, id: string): Promise<SessionRow | null> {
-  return await findSessionById(database, id);
+export async function getSessionById(id: string): Promise<SessionRow | null> {
+  return await findSessionById(id);
 }
 
-export async function createSession(
-  database: Database,
-  input: SessionCreateInput,
-): Promise<SessionRow> {
-  return await insertSession(database, valuesFromCreate(input));
+export async function createSession(input: SessionCreateInput): Promise<SessionRow> {
+  return await insertSession(buildSessionInsertShape(input));
 }
 
 export async function patchSession(
-  database: Database,
   id: string,
   input: SessionUpdateInput,
 ): Promise<{ kind: 'ok'; session: SessionRow } | { kind: 'empty' } | { kind: 'not-found' }> {
   const updates = valuesFromUpdate(input);
   if (Object.keys(updates).length === 0) return { kind: 'empty' };
-  const session = await updateSession(database, id, updates);
+  const session = await updateSession(id, updates);
   if (session === null) return { kind: 'not-found' };
   return { kind: 'ok', session };
 }
 
-export async function removeSession(database: Database, id: string): Promise<boolean> {
-  return await deleteSessionWithCascade(database, id);
+export async function removeSession(id: string): Promise<DeletionOutcome> {
+  return await deleteSessionWithCascade(id);
 }
 
-export interface OfflineManifestPayload {
-  catalogListUrl: string;
-  songDetailUrls: string[];
-  nextSessionUrl: string | null;
-  nextSetlistUrl: string | null;
-}
-
-/**
- * Composes the offline-manifest payload from session + song lists.
- * The "next session" rule lives in `sw/manifest.utils.ts` (front-end
- * pure utility) and is mirrored here in unit-friendly shape so the
- * back-e2e test can assert the wire contract.
- */
-export function buildNextSessionOfflineManifest(
-  sessions: readonly SessionRow[],
-  songs: readonly { id: string }[],
-  now: Date,
-): OfflineManifestPayload {
-  const futureSessions = sessions
-    .filter((session) => session.date.getTime() > now.getTime())
-    .toSorted((left, right) => {
-      const deltaMs = left.date.getTime() - right.date.getTime();
-      if (deltaMs !== 0) return deltaMs;
-      return left.id.localeCompare(right.id);
-    });
-  const next = futureSessions[0];
-  return {
-    catalogListUrl: '/api/songs',
-    songDetailUrls: songs.map((song) => `/api/songs/${song.id}`),
-    nextSessionUrl: next === undefined ? null : `/api/sessions/${next.id}`,
-    nextSetlistUrl: next === undefined ? null : `/api/setlists/by-session/${next.id}`,
-  };
+export async function getNextSessionOfflineManifest(now: Date): Promise<OfflineManifestPayload> {
+  const [sessions, songs] = await Promise.all([getSessions(), getSongs()]);
+  return buildNextSessionOfflineManifest(sessions, songs, now);
 }

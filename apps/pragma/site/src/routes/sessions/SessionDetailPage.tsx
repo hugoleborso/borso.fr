@@ -10,13 +10,15 @@
  */
 
 import type { JSX } from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
-import { z } from 'zod';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
+import { getCurrentTime, readServerTime, subscribeClock } from '../../clock-store';
 import { ApiError } from '../../lib/api';
+import { isPositiveCount } from '../../lib/counts.utils';
+import { selectUpcomingConcerts } from '../../lib/upcoming-concerts.core';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useMembersList } from '../../lib/queries/members';
 import { useSession, useSessionsList, useUpdateSession } from '../../lib/queries/sessions';
@@ -24,15 +26,10 @@ import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlist
 import { SetlistEditor } from '../setlists/SetlistEditor';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
 import { ConcertReadView } from './ConcertReadView';
+import { parseFriendsCounts } from './friends-count.core';
 import { PracticeReadView } from './PracticeReadView';
 
-const friendsCountShape = z.record(z.string().uuid(), z.number());
-
-function parseFriendsCounts(raw: unknown): Record<string, number> {
-  const parsed = friendsCountShape.safeParse(raw);
-  if (!parsed.success) return {};
-  return parsed.data;
-}
+const NO_ROWS: readonly never[] = [];
 
 export function SessionDetailPage(): JSX.Element {
   const { t, i18n } = useTranslation();
@@ -44,12 +41,13 @@ export function SessionDetailPage(): JSX.Element {
   const updateSession = useUpdateSession();
   const createSetlist = useCreateSetlist();
 
+  const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
   const [editingConcert, setEditingConcert] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const session = sessionQuery.data?.session ?? null;
-  const members = membersQuery.data?.members ?? [];
-  const sessions = sessionsQuery.data?.sessions ?? [];
+  const members = membersQuery.data?.members ?? NO_ROWS;
+  const sessions = useMemo(() => sessionsQuery.data?.sessions ?? NO_ROWS, [sessionsQuery.data]);
   const setlist = setlistQuery.data?.setlist ?? null;
 
   const concertFormInitial = useMemo<ConcertEditFormPayload>(
@@ -62,16 +60,15 @@ export function SessionDetailPage(): JSX.Element {
     [session],
   );
 
-  const upcomingConcerts = useMemo(() => {
-    const now = Date.now();
-    return sessions.filter(
-      (entry) => entry.kind === 'concert' && new Date(entry.date).getTime() > now,
-    );
-  }, [sessions]);
+  const upcomingConcerts = useMemo(
+    () => selectUpcomingConcerts(sessions, nowEpochMs),
+    [sessions, nowEpochMs],
+  );
 
   const preparedConcert = useMemo(() => {
-    if (session === null || session.preparedConcertId === null) return null;
-    return upcomingConcerts.find((entry) => entry.id === session.preparedConcertId) ?? null;
+    const preparedConcertId = session?.preparedConcertId ?? null;
+    if (preparedConcertId === null) return null;
+    return upcomingConcerts.find((entry) => entry.id === preparedConcertId) ?? null;
   }, [session, upcomingConcerts]);
 
   const friendsCounts = useMemo(
@@ -90,7 +87,7 @@ export function SessionDetailPage(): JSX.Element {
   };
 
   const saveConcertDetails = (payload: ConcertEditFormPayload): void => {
-    if (session === null || session.kind !== 'concert') return;
+    if (session?.kind !== 'concert') return;
     const trimmedVenue = payload.venue.trim();
     const trimmedCapacity = payload.capacity.trim();
     updateSession.mutate(
@@ -110,13 +107,13 @@ export function SessionDetailPage(): JSX.Element {
   };
 
   const setPreparedConcert = (concertId: string | null): void => {
-    if (session === null || session.kind !== 'practice') return;
+    if (session?.kind !== 'practice') return;
     updateSession.mutate({ id: session.id, preparedConcertId: concertId });
   };
 
-  const loading = sessionQuery.isLoading || membersQuery.isLoading || sessionsQuery.isLoading;
+  const isLoading = sessionQuery.isLoading || membersQuery.isLoading || sessionsQuery.isLoading;
 
-  if (loading) {
+  if (isLoading) {
     return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
   const queryError = sessionQuery.error instanceof ApiError ? sessionQuery.error.message : null;
@@ -129,6 +126,7 @@ export function SessionDetailPage(): JSX.Element {
   }
 
   const isConcert = session.kind === 'concert';
+  const hasGuests = isPositiveCount(friendsTotal);
   const formattedDate = formatSessionDate(session.date, i18n.language);
   const titleText = isConcert ? (session.venue ?? formattedDate) : t('sessions.kindPractice');
   const displayError = localError ?? queryError;
@@ -161,7 +159,7 @@ export function SessionDetailPage(): JSX.Element {
                 </span>
               </>
             ) : null}
-            {isConcert && friendsTotal > 0 ? (
+            {isConcert && hasGuests ? (
               <>
                 <span className="text-ink-300">·</span>
                 <span>
@@ -178,22 +176,22 @@ export function SessionDetailPage(): JSX.Element {
               {t('common.edit')}
             </Button>
           ) : null}
-          {setlist !== null ? (
+          {setlist === null ? null : (
             <Link to="/setlists">
               <Button variant="accent" type="button">
                 <Icon name="setlist" size={14} />
                 {t('sessions.setlist')}
               </Button>
             </Link>
-          ) : null}
+          )}
         </div>
       </header>
 
-      {displayError !== null ? (
+      {displayError === null ? null : (
         <p className="text-danger text-sm" role="alert">
           {displayError}
         </p>
-      ) : null}
+      )}
 
       {isConcert ? (
         editingConcert ? (

@@ -22,8 +22,8 @@ export interface Standings {
    * loop has been closed; length ≥ 2 means a millisecond-tie between
    * distinct runners (both chips are decorated by the front).
    */
-  readonly fastestLap: ReadonlyArray<{
+  readonly fastestLap: readonly {
     readonly runnerSlug: string;
     readonly durationMs: number;
-  }>;
+  }[];
 }

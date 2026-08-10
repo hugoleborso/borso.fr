@@ -38,6 +38,7 @@ describe('formatters.utils', () => {
     });
 
     it('groups thousands with a thin space', () => {
+      expect(formatCapacity(1_000)).toBe('1 000');
       expect(formatCapacity(1_200)).toBe('1 200');
       expect(formatCapacity(1_200_000)).toBe('1 200 000');
     });

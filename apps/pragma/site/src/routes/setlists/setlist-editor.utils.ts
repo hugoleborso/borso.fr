@@ -123,6 +123,17 @@ export function findOrphanMemberIds(
   return orphans;
 }
 
+/**
+ * The orphans nobody has been told about yet, so the caller loops over a list
+ * rather than deciding per entry whether it has already complained.
+ */
+export function selectUnwarnedMemberIds(
+  orphanMemberIds: readonly string[],
+  warnedMemberIds: ReadonlySet<string>,
+): string[] {
+  return orphanMemberIds.filter((memberId) => !warnedMemberIds.has(memberId));
+}
+
 export function prominentMemberInstrumentFor(
   instrumentId: string | undefined,
   selectedMemberId: string | null,

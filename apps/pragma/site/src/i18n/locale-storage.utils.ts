@@ -15,14 +15,13 @@ export interface LocaleStorage {
   setItem: (key: string, value: string) => void;
 }
 
-function isSupportedLocale(candidate: string): candidate is SupportedLocale {
+function isSupportedLocale(candidate: string | null): candidate is SupportedLocale {
   return SUPPORTED_LOCALES.some((supported) => supported === candidate);
 }
 
 export function readPersistedLocale(storage: LocaleStorage | undefined): SupportedLocale | null {
   if (storage === undefined) return null;
   const stored = storage.getItem(LOCALE_STORAGE_KEY);
-  if (stored === null) return null;
   if (!isSupportedLocale(stored)) return null;
   return stored;
 }

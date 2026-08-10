@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { makeEdition } from '../../../test/fixtures';
 import {
   findEditionBySlug,
@@ -10,11 +10,11 @@ import {
 
 describe('edition.repository', () => {
   beforeEach(async () => {
-    await truncateAllTables(freshDatabase());
+    await truncateAllTables(testDatabase());
   });
 
   it('insertEdition + findEditionBySlug round-trip', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await insertEdition(database, makeEdition());
     const found = await findEditionBySlug(database, 'lepin-2026');
     expect(found?.slug).toBe('lepin-2026');
@@ -23,12 +23,12 @@ describe('edition.repository', () => {
   });
 
   it('findEditionBySlug returns null on unknown slug', async () => {
-    const found = await findEditionBySlug(freshDatabase(), 'nope');
+    const found = await findEditionBySlug(testDatabase(), 'nope');
     expect(found).toBeNull();
   });
 
   it('listEditions returns all rows', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await insertEdition(database, makeEdition({ slug: 'lepin-a' }));
     await insertEdition(database, makeEdition({ slug: 'lepin-b' }));
     const list = await listEditions(database);
@@ -36,7 +36,7 @@ describe('edition.repository', () => {
   });
 
   it('updateEditionStatus changes the row', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await insertEdition(database, makeEdition({ status: 'setup' }));
     await updateEditionStatus(database, 'lepin-2026', 'live');
     const reloaded = await findEditionBySlug(database, 'lepin-2026');
@@ -44,7 +44,7 @@ describe('edition.repository', () => {
   });
 
   it('persists pointTimeFractions when present and round-trips it', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await insertEdition(
       database,
       makeEdition({
@@ -69,7 +69,7 @@ describe('edition.repository', () => {
   });
 
   it('absent pointTimeFractions stays undefined after a write→read cycle (no `null` leak)', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await insertEdition(
       database,
       makeEdition({
@@ -87,7 +87,7 @@ describe('edition.repository', () => {
   });
 
   it('persists pointElevations when present and round-trips it', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await insertEdition(
       database,
       makeEdition({
@@ -112,7 +112,7 @@ describe('edition.repository', () => {
   });
 
   it('absent pointElevations stays undefined after a write→read cycle (no `null` leak)', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await insertEdition(
       database,
       makeEdition({

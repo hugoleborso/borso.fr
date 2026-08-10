@@ -20,6 +20,12 @@ describe('rate-limit.utils', () => {
       expect(next).toEqual({ attempts: 2, windowStartedAt: 1000 });
     });
 
+    it('increments inside the current window at epoch-scale timestamps', () => {
+      const windowStartedAt = 1_700_000_000_000;
+      const next = recordAttempt({ attempts: 1, windowStartedAt }, windowStartedAt + 1000);
+      expect(next).toEqual({ attempts: 2, windowStartedAt });
+    });
+
     it('opens a fresh window once the previous window expires', () => {
       const opened = recordAttempt(undefined, 1000);
       const fresh = recordAttempt(opened, 1000 + RATE_LIMIT_WINDOW_MS);

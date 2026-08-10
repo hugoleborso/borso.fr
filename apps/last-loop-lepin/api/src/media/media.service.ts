@@ -1,5 +1,7 @@
 import { createPresignedUpload, type PresignedUpload } from './media.s3';
 
+export { MediaConfigError, MediaContentTypeError } from './media.s3';
+
 export interface PresignAdminInput {
   readonly editionSlug: string;
   readonly runnerSlug: string;

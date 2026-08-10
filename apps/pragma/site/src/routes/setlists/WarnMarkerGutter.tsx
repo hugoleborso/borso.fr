@@ -39,7 +39,6 @@ export function WarnMarkerGutter(props: WarnMarkerGutterProps): JSX.Element {
         const offsetPx = (gapIndex + 1) * (ROW_HEIGHT_PX + ROW_GAP_PX) - WARN_MARKER_OFFSET_PX;
         return (
           <button
-            // biome-ignore lint/suspicious/noArrayIndexKey: warnings are tied to a stable entry pair, the gap index is the natural key
             key={`gap-${gapIndex}`}
             type="button"
             className="pointer-events-auto absolute left-0 w-5 h-5 rounded-full bg-warn text-bg-elev font-bold text-[11px] inline-flex items-center justify-center cursor-pointer border-0 shadow-[0_2px_6px_rgba(184,132,26,0.4)] hover:opacity-90"

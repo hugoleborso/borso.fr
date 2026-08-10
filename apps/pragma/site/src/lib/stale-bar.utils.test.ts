@@ -9,6 +9,11 @@ describe('isStale (front-end mirror)', () => {
     expect(isStale({ lastInteractionAt: null }, NOW)).toBe(true);
   });
 
+  it('treats null lastInteractionAt as stale even when the epoch itself would look fresh', () => {
+    const daysAfterEpoch = new Date(4 * DAY_MS);
+    expect(isStale({ lastInteractionAt: null }, daysAfterEpoch)).toBe(true);
+  });
+
   it('treats a malformed ISO string as stale', () => {
     expect(isStale({ lastInteractionAt: 'not a date' }, NOW)).toBe(true);
   });

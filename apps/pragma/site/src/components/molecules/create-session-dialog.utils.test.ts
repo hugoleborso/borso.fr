@@ -12,6 +12,12 @@ describe('formatDateTimeLocal', () => {
     expect(formatDateTimeLocal(date)).toBe('2024-01-05T03:07');
   });
 
+  it('pads a year below four digits', () => {
+    const date = new Date(2024, 0, 5, 3, 7);
+    date.setFullYear(999);
+    expect(formatDateTimeLocal(date)).toBe('0999-01-05T03:07');
+  });
+
   it('preserves a fully-padded date', () => {
     const date = new Date(2031, 10, 25, 22, 45);
     expect(formatDateTimeLocal(date)).toBe('2031-11-25T22:45');
@@ -56,6 +62,11 @@ describe('filterFutureConcerts', () => {
     ];
     const future = filterFutureConcerts(concerts, now);
     expect(future).toEqual([{ id: 'a', date: '2026-05-26T12:00:00Z' }]);
+  });
+
+  it('drops a concert starting exactly now', () => {
+    const concerts = [{ id: 'a', date: now.toISOString() }];
+    expect(filterFutureConcerts(concerts, now)).toEqual([]);
   });
 
   it('drops concerts whose date is unparseable', () => {

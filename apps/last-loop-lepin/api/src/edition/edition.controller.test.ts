@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { adminSessionCookie, freshDatabase, truncateAllTables } from '../../../test/database-utils';
+import { adminSessionCookie, testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 
 const editionEnvelopeSchema = z.object({
@@ -25,16 +25,16 @@ const MINIMAL_GPX = `<?xml version="1.0" encoding="UTF-8"?>
   <trkpt lat="45.560" lon="5.790"><ele>500.0</ele></trkpt>
 </trkseg></trk></gpx>`;
 
+async function adminCookie(): Promise<string> {
+  return adminSessionCookie(testDatabase());
+}
+
 describe('admin edition controller', () => {
   const app = createApp();
 
   beforeEach(async () => {
-    await truncateAllTables(freshDatabase());
+    await truncateAllTables(testDatabase());
   });
-
-  async function adminCookie(): Promise<string> {
-    return adminSessionCookie(freshDatabase());
-  }
 
   async function postEdition(
     input: {

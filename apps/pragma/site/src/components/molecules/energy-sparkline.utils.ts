@@ -25,23 +25,17 @@ export function buildSparklinePath(
   width: number,
   height: number,
 ): SparklineGeometry {
-  if (values.length === 0) {
-    return { path: '', points: [] };
-  }
   const usableHeight = height - VERTICAL_PADDING * 2;
   const lastIndex = values.length - 1;
   const points = values.map((rawValue, index): [number, number] => {
     const value = rawValue ?? ENERGY_FALLBACK;
-    const x = lastIndex === 0 ? width / 2 : (index / lastIndex) * width;
-    const y = height - VERTICAL_PADDING - (value / ENERGY_MAX) * usableHeight;
-    return [x, y];
+    const xCoordinate = lastIndex === 0 ? width / 2 : (index / lastIndex) * width;
+    const yCoordinate = height - VERTICAL_PADDING - (value / ENERGY_MAX) * usableHeight;
+    return [xCoordinate, yCoordinate];
   });
   const pathSegments = points.map((point, index) => {
-    if (index === 0) return `M ${point[0]} ${point[1]}`;
     const previous = points[index - 1];
-    // The first branch returned above guarantees `previous` exists for
-    // `index >= 1`. TypeScript can't see the invariant; we narrow once.
-    if (previous === undefined) return '';
+    if (previous === undefined) return `M ${point[0]} ${point[1]}`;
     const controlX = (previous[0] + point[0]) / 2;
     const controlY = (previous[1] + point[1]) / 2;
     return `Q ${previous[0]} ${previous[1]} ${controlX} ${controlY} T ${point[0]} ${point[1]}`;

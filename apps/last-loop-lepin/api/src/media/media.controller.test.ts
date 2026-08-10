@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { adminSessionCookie, freshDatabase } from '../../../test/database-utils';
+import { adminSessionCookie, testDatabase } from '../../../test/database-utils';
 import { createApp } from '../app';
 
 const presignResponseSchema = z.object({
@@ -15,12 +15,12 @@ const presignResponseSchema = z.object({
   expiresAt: z.string(),
 });
 
+async function adminCookie(): Promise<string> {
+  return adminSessionCookie(testDatabase());
+}
+
 describe('media controller', () => {
   const app = createApp();
-
-  async function adminCookie(): Promise<string> {
-    return adminSessionCookie(freshDatabase());
-  }
 
   it('returns 401 without admin cookie', async () => {
     const response = await app.request('/api/admin/media/presign', {

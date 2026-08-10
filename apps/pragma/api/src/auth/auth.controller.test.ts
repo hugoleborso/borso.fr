@@ -33,10 +33,10 @@ async function bootstrap(app: Hono, password: string): Promise<Response> {
   });
 }
 
-async function login(app: Hono, password: string, ip = '203.0.113.1'): Promise<Response> {
+async function login(app: Hono, password: string, ipAddress = '203.0.113.1'): Promise<Response> {
   return app.request(`${ANY_HOST}/api/auth/login`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': ipAddress },
     body: JSON.stringify({ password }),
   });
 }
@@ -88,12 +88,12 @@ describe('shared-password auth controller (back-e2e)', () => {
   it('rate-limits after 5 attempts in 15 min on the same ip', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrap(app, VALID_PASSWORD);
-    const ip = '198.51.100.42';
+    const ipAddress = '198.51.100.42';
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const response = await login(app, WRONG_PASSWORD, ip);
+      const response = await login(app, WRONG_PASSWORD, ipAddress);
       expect(response.status).toBe(401);
     }
-    const blocked = await login(app, WRONG_PASSWORD, ip);
+    const blocked = await login(app, WRONG_PASSWORD, ipAddress);
     expect(blocked.status).toBe(429);
   });
 
@@ -114,7 +114,7 @@ describe('shared-password auth controller (back-e2e)', () => {
   it('rejects rotate-password with 401 when no session cookie is presented', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrap(app, VALID_PASSWORD);
-    const configBefore = await loadAppConfig(testDatabase());
+    const configBefore = await loadAppConfig();
     expect(configBefore).not.toBeNull();
 
     const rotateResponse = await app.request(`${ANY_HOST}/api/admin/rotate-password`, {
@@ -126,7 +126,7 @@ describe('shared-password auth controller (back-e2e)', () => {
 
     // The row MUST stay untouched: anyone hitting the endpoint without
     // a cookie should not be able to mutate password_hash or hmac_key.
-    const configAfter = await loadAppConfig(testDatabase());
+    const configAfter = await loadAppConfig();
     expect(configAfter).not.toBeNull();
     expect(configAfter?.passwordHash).toBe(configBefore?.passwordHash);
     expect(configAfter?.hmacKey.equals(configBefore?.hmacKey ?? Buffer.alloc(0))).toBe(true);
@@ -147,7 +147,7 @@ describe('shared-password auth controller (back-e2e)', () => {
     });
     expect(protectedBefore.status).toBe(200);
 
-    const configBefore = await loadAppConfig(testDatabase());
+    const configBefore = await loadAppConfig();
     expect(configBefore).not.toBeNull();
 
     const rotateResponse = await app.request(`${ANY_HOST}/api/admin/rotate-password`, {
@@ -161,7 +161,7 @@ describe('shared-password auth controller (back-e2e)', () => {
     expect(rotateResponse.status).toBe(200);
 
     // The row MUST have been mutated: both columns rewritten.
-    const configAfter = await loadAppConfig(testDatabase());
+    const configAfter = await loadAppConfig();
     expect(configAfter).not.toBeNull();
     expect(configAfter?.passwordHash).not.toBe(configBefore?.passwordHash);
     expect(configAfter?.hmacKey.equals(configBefore?.hmacKey ?? Buffer.alloc(0))).toBe(false);

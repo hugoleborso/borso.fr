@@ -10,10 +10,16 @@ vi.mock('postgres', () => ({
   default: vi.fn(() => makeSql()),
 }));
 
+// `function`, not an arrow. `DsqlSigner` is called with `new`, and Vitest 4
+// invokes a mock's implementation as a constructor rather than calling it and
+// taking the return value. An arrow has no [[Construct]], so it fails with
+// "is not a constructor".
 vi.mock('@aws-sdk/dsql-signer', () => ({
-  DsqlSigner: vi.fn().mockImplementation(() => ({
-    getDbConnectAdminAuthToken: () => Promise.resolve('TOKEN'),
-  })),
+  DsqlSigner: vi.fn().mockImplementation(function mockDsqlSigner(this: {
+    getDbConnectAdminAuthToken: () => Promise<string>;
+  }) {
+    this.getDbConnectAdminAuthToken = () => Promise.resolve('TOKEN');
+  }),
 }));
 
 const { handler } = await import('../../src/internal/migration-runner/index.js');
@@ -35,7 +41,7 @@ describe('migration-runner handler', () => {
     expect(result.PhysicalResourceId).toBe('dsql-schema:test_app');
     expect(result.Data?.SchemaName).toBe('test_app');
 
-    const queries = state.unsafeCalls.map((c) => c.query).join('\n');
+    const queries = state.unsafeCalls.map((call) => call.query).join('\n');
     expect(queries).toMatch(/CREATE SCHEMA IF NOT EXISTS "test_app"/);
     expect(queries).toMatch(/CREATE TABLE IF NOT EXISTS "test_app"\._migrations/);
     // Migration SQL is run through `makeIdempotent` before each round-trip
@@ -60,10 +66,10 @@ describe('migration-runner handler', () => {
       ResourceProperties: baseProps,
     });
     const sqlsRun = state.unsafeCalls
-      .map((c) => c.query)
-      .filter((q) => /CREATE TABLE (IF NOT EXISTS )?[ab] /.test(q));
-    expect(sqlsRun.some((s) => /CREATE TABLE IF NOT EXISTS a/.test(s))).toBe(false);
-    expect(sqlsRun.some((s) => /CREATE TABLE IF NOT EXISTS b/.test(s))).toBe(true);
+      .map((call) => call.query)
+      .filter((query) => /CREATE TABLE (IF NOT EXISTS )?[ab] /.test(query));
+    expect(sqlsRun.some((sql) => sql.includes('CREATE TABLE IF NOT EXISTS a'))).toBe(false);
+    expect(sqlsRun.some((sql) => sql.includes('CREATE TABLE IF NOT EXISTS b'))).toBe(true);
   });
 
   it('Update: passes through PhysicalResourceId', async () => {
@@ -82,9 +88,11 @@ describe('migration-runner handler', () => {
       PhysicalResourceId: 'dsql-schema:test_app',
       ResourceProperties: baseProps,
     });
-    const queries = state.unsafeCalls.map((c) => c.query);
-    expect(queries.some((q) => /DROP SCHEMA IF EXISTS "test_app" CASCADE/.test(q))).toBe(true);
-    expect(queries.some((q) => /CREATE SCHEMA/.test(q))).toBe(false);
+    const queries = state.unsafeCalls.map((call) => call.query);
+    expect(
+      queries.some((query) => query.includes('DROP SCHEMA IF EXISTS "test_app" CASCADE')),
+    ).toBe(true);
+    expect(queries.some((query) => query.includes('CREATE SCHEMA'))).toBe(false);
     expect(state.ended).toBe(1);
   });
 
@@ -105,9 +113,13 @@ describe('migration-runner handler', () => {
         ],
       },
     });
-    const queries = state.unsafeCalls.map((c) => c.query);
-    expect(queries.some((q) => /ALTER TABLE a ADD COLUMN IF NOT EXISTS b/.test(q))).toBe(true);
-    expect(queries.some((q) => /ALTER TABLE a ADD COLUMN IF NOT EXISTS c/.test(q))).toBe(true);
+    const queries = state.unsafeCalls.map((call) => call.query);
+    expect(
+      queries.some((query) => query.includes('ALTER TABLE a ADD COLUMN IF NOT EXISTS b')),
+    ).toBe(true);
+    expect(
+      queries.some((query) => query.includes('ALTER TABLE a ADD COLUMN IF NOT EXISTS c')),
+    ).toBe(true);
     // A statement that already has IF NOT EXISTS shouldn't be doubled up.
     await handler({
       RequestType: 'Create',
@@ -118,7 +130,7 @@ describe('migration-runner handler', () => {
         ],
       },
     });
-    const requeried = state.unsafeCalls.map((c) => c.query).join('\n');
+    const requeried = state.unsafeCalls.map((call) => call.query).join('\n');
     expect(requeried).not.toMatch(/ADD COLUMN IF NOT EXISTS IF NOT EXISTS/);
   });
 
@@ -139,13 +151,15 @@ describe('migration-runner handler', () => {
         ],
       },
     });
-    const queries = state.unsafeCalls.map((c) => c.query);
+    const queries = state.unsafeCalls.map((call) => call.query);
     expect(
-      queries.some((q) => /CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON foo \(col\)/.test(q)),
+      queries.some((query) =>
+        query.includes('CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON foo (col)'),
+      ),
     ).toBe(true);
     expect(
-      queries.some((q) =>
-        /CREATE UNIQUE INDEX ASYNC IF NOT EXISTS bar_idx ON bar \(col_a, col_b\)/.test(q),
+      queries.some((query) =>
+        query.includes('CREATE UNIQUE INDEX ASYNC IF NOT EXISTS bar_idx ON bar (col_a, col_b)'),
       ),
     ).toBe(true);
   });
@@ -166,11 +180,13 @@ describe('migration-runner handler', () => {
         ],
       },
     });
-    const queries = state.unsafeCalls.map((c) => c.query);
+    const queries = state.unsafeCalls.map((call) => call.query);
     expect(
-      queries.some((q) => /CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON t \(col\)/.test(q)),
+      queries.some((query) =>
+        query.includes('CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON t (col)'),
+      ),
     ).toBe(true);
-    expect(queries.some((q) => /USING\s+btree/i.test(q))).toBe(false);
+    expect(queries.some((query) => /USING\s+btree/i.test(query))).toBe(false);
   });
 
   it('Create: never doubles up ASYNC when the input already contains it', async () => {
@@ -189,7 +205,7 @@ describe('migration-runner handler', () => {
         ],
       },
     });
-    const queries = state.unsafeCalls.map((c) => c.query).join('\n');
+    const queries = state.unsafeCalls.map((call) => call.query).join('\n');
     expect(queries).not.toMatch(/ASYNC\s+ASYNC/i);
     expect(queries).not.toMatch(/ASYNC\s+IF\s+NOT\s+EXISTS\s+ASYNC/i);
     expect(queries).toMatch(/CREATE INDEX ASYNC IF NOT EXISTS foo_idx ON foo \(col\)/);

@@ -56,9 +56,5 @@ export function filterFutureConcerts<T extends { date: string }>(
   now: Date,
 ): readonly T[] {
   const nowMs = now.getTime();
-  return concerts.filter((concert) => {
-    const concertMs = new Date(concert.date).getTime();
-    if (Number.isNaN(concertMs)) return false;
-    return concertMs > nowMs;
-  });
+  return concerts.filter((concert) => new Date(concert.date).getTime() > nowMs);
 }

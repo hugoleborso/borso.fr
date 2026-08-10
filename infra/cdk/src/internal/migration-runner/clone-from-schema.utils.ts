@@ -84,6 +84,33 @@ export function buildCloneInsertSql(
 }
 
 /**
+ * `DELETE FROM target.table` — run immediately before the clone INSERT for a
+ * table the source must own outright.
+ *
+ * The INSERT is `ON CONFLICT DO NOTHING`, which is right for domain data: a
+ * re-deploy keeps whatever the preview accumulated and adds what is new in
+ * prod. It is wrong for a singleton row whose whole purpose is to match the
+ * source. `app_config` is one: it holds pragma's shared password hash, it has
+ * a fixed primary key, and a schema that was bootstrapped before cloning was
+ * switched on already has row id 1 — so the conflict clause silently kept the
+ * old credential and the preview stayed on a password that had since been
+ * published in a public repository, guarding cloned production data.
+ *
+ * Emptying the table first makes the source authoritative, at the cost of a
+ * sub-second window mid-deploy where the app answers 503 `auth-not-bootstrapped`.
+ */
+export function buildReplaceBeforeCloneSql(targetSchema: string, table: string): string {
+  assertIdentifier(targetSchema, 'schema');
+  assertIdentifier(table, 'table');
+  return `DELETE FROM ${quote(targetSchema)}.${quote(table)}`;
+}
+
+/** Whether the clone must empty this table first so the source row wins. */
+export function isReplacedBeforeClone(table: string, tablesToReplace: readonly string[]): boolean {
+  return tablesToReplace.includes(table);
+}
+
+/**
  * Decide whether a table name should have its rows cloned. Returns
  * `false` for `_migrations` (handled out-of-band by the runner so the
  * applied-migrations marker survives even when the blocklist would
@@ -95,4 +122,12 @@ export function buildCloneInsertSql(
 export function isCloneableDataTable(table: string, blocklist: readonly string[]): boolean {
   if (table === '_migrations') return false;
   return !blocklist.includes(table);
+}
+
+/** The tables whose rows the clone copies, so the caller loops rather than skips. */
+export function selectCloneableDataTables(
+  tables: readonly string[],
+  blocklist: readonly string[],
+): string[] {
+  return tables.filter((table) => isCloneableDataTable(table, blocklist));
 }

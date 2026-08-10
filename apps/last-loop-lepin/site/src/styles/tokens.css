@@ -24,7 +24,7 @@
   --ink-3: #7a7f8a;
   --ink-mute: #4e5260;
 
-  --accent: oklch(0.82 0.20 145);
+  --accent: oklch(0.82 0.2 145);
   --accent-ink: #06140b;
   --warn: oklch(0.78 0.18 70);
   --danger: oklch(0.66 0.22 25);
@@ -87,4 +87,3 @@ textarea {
   font-family: var(--font-display);
   letter-spacing: -0.01em;
 }
-

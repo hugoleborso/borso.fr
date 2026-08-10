@@ -20,8 +20,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { setCookie } from 'hono/cookie';
 import { z } from 'zod';
-import { getDatabase } from '../database/client';
-import { bootstrapAuth, getAppConfig, rotatePassword, verifyPassword } from './auth.service';
+import { bootstrapAuth, getAppConfig, isPasswordValid, rotatePassword } from './auth.service';
 import { hashIp, readClientIp } from './ip-hash.utils';
 import {
   type BucketStore,
@@ -60,13 +59,13 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
       if (isRateLimited(updatedBucket)) {
         return context.json({ error: 'rate-limited' }, 429);
       }
-      const config = await getAppConfig(getDatabase());
+      const config = await getAppConfig();
       if (config === null) {
         return context.json({ error: 'auth-not-bootstrapped' }, 503);
       }
       const { password } = context.req.valid('json');
-      const passwordOk = await verifyPassword(config, password);
-      if (!passwordOk) {
+      const isPasswordOk = await isPasswordValid(config, password);
+      if (!isPasswordOk) {
         return context.json({ error: 'invalid-password' }, 401);
       }
       bucketStore.clear(ipHash);
@@ -87,7 +86,7 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
     zValidator('json', credentialsSchema),
     async (context) => {
       const { password } = context.req.valid('json');
-      const result = await bootstrapAuth(getDatabase(), password, clock());
+      const result = await bootstrapAuth(password, clock());
       if (result.kind === 'already-bootstrapped') {
         return context.json({ error: 'already-bootstrapped' }, 409);
       }
@@ -99,7 +98,7 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
     .use('*', requireSharedPasswordSession)
     .post('/rotate-password', zValidator('json', credentialsSchema), async (context) => {
       const { password } = context.req.valid('json');
-      const result = await rotatePassword(getDatabase(), password, clock());
+      const result = await rotatePassword(password, clock());
       if (result.kind === 'not-bootstrapped') {
         return context.json({ error: 'auth-not-bootstrapped' }, 503);
       }

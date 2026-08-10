@@ -12,7 +12,6 @@
 
 import { randomBytes } from 'node:crypto';
 import { argon2id, argon2Verify } from 'hash-wasm';
-import type { Database } from '../database/client';
 import {
   type AppConfig,
   insertInitialAppConfig,
@@ -39,40 +38,32 @@ async function hashSharedPassword(password: string): Promise<string> {
   });
 }
 
-export async function getAppConfig(database: Database): Promise<AppConfig | null> {
-  return await loadAppConfig(database);
+export async function getAppConfig(): Promise<AppConfig | null> {
+  return await loadAppConfig();
 }
 
-export async function verifyPassword(config: AppConfig, password: string): Promise<boolean> {
+export async function isPasswordValid(config: AppConfig, password: string): Promise<boolean> {
   return await argon2Verify({ password, hash: config.passwordHash });
 }
 
 export type BootstrapResult = { kind: 'ok' } | { kind: 'already-bootstrapped' };
 
-export async function bootstrapAuth(
-  database: Database,
-  password: string,
-  now: Date,
-): Promise<BootstrapResult> {
-  const existing = await loadAppConfig(database);
+export async function bootstrapAuth(password: string, now: Date): Promise<BootstrapResult> {
+  const existing = await loadAppConfig();
   if (existing !== null) return { kind: 'already-bootstrapped' };
   const hash = await hashSharedPassword(password);
   const hmacKey = randomBytes(HMAC_KEY_BYTES);
-  await insertInitialAppConfig(database, hash, hmacKey, now);
+  await insertInitialAppConfig(hash, hmacKey, now);
   return { kind: 'ok' };
 }
 
 export type RotateResult = { kind: 'ok' } | { kind: 'not-bootstrapped' };
 
-export async function rotatePassword(
-  database: Database,
-  password: string,
-  now: Date,
-): Promise<RotateResult> {
-  const existing = await loadAppConfig(database);
+export async function rotatePassword(password: string, now: Date): Promise<RotateResult> {
+  const existing = await loadAppConfig();
   if (existing === null) return { kind: 'not-bootstrapped' };
   const hash = await hashSharedPassword(password);
   const hmacKey = randomBytes(HMAC_KEY_BYTES);
-  await updateAppConfig(database, hash, hmacKey, now);
+  await updateAppConfig(hash, hmacKey, now);
   return { kind: 'ok' };
 }

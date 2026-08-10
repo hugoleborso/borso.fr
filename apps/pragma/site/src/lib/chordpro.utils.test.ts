@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  directiveLines,
+  isTitleDirective,
   parseChordPro,
   parseChordProLine,
   readTitle,
@@ -26,6 +28,24 @@ describe('parseChordProLine', () => {
       kind: 'directive',
       name: 'start_of_chorus',
       value: '',
+    });
+  });
+
+  it('parses a directive padded with whitespace', () => {
+    expect(parseChordProLine('  {title: Take Five}  ')).toEqual({
+      kind: 'directive',
+      name: 'title',
+      value: 'Take Five',
+    });
+  });
+
+  it('emits no trailing lyric token when the line ends on a chord', () => {
+    expect(parseChordProLine('Hello [C]')).toEqual({
+      kind: 'chord-line',
+      tokens: [
+        { kind: 'lyric', text: 'Hello ' },
+        { kind: 'chord', chord: 'C' },
+      ],
     });
   });
 
@@ -67,7 +87,38 @@ describe('parseChordPro', () => {
   });
 });
 
+describe('isTitleDirective', () => {
+  it('accepts both spellings of the title directive', () => {
+    expect(isTitleDirective('title')).toBe(true);
+    expect(isTitleDirective('t')).toBe(true);
+  });
+
+  it('rejects every other directive', () => {
+    expect(isTitleDirective('comment')).toBe(false);
+    expect(isTitleDirective('')).toBe(false);
+  });
+});
+
+describe('directiveLines', () => {
+  it('keeps only the directive lines, in source order', () => {
+    const lines = parseChordPro('{title: My Song}\n[C]Hi\nplain\n\n{key: C}');
+    expect(directiveLines(lines)).toEqual([
+      { kind: 'directive', name: 'title', value: 'My Song' },
+      { kind: 'directive', name: 'key', value: 'C' },
+    ]);
+  });
+
+  it('answers an empty list for a chart without directives', () => {
+    expect(directiveLines(parseChordPro('[C]Hi'))).toEqual([]);
+  });
+});
+
 describe('readTitle', () => {
+  it('skips the directives that are not a title', () => {
+    const lines = parseChordPro('{key: C}\n{title: My Song}');
+    expect(readTitle(lines)).toBe('My Song');
+  });
+
   it('reads {title: ...}', () => {
     const lines = parseChordPro('{title: My Song}');
     expect(readTitle(lines)).toBe('My Song');
@@ -120,6 +171,16 @@ describe('transposeChord', () => {
 
   it('handles negative semitone wrap', () => {
     expect(transposeChord('C', -2)).toBe('A#');
+  });
+
+  it('leaves an enharmonic spelling absent from the twelve-tone tables untouched', () => {
+    // Cb and Fb are B and E respelled; E# and B# are F and C respelled.
+    // Neither table lists them, so the chord comes back as written
+    // rather than silently landing a semitone away.
+    expect(transposeChord('Cb', 1)).toBe('Cb');
+    expect(transposeChord('Fbm7', 3)).toBe('Fbm7');
+    expect(transposeChord('E#', 1)).toBe('E#');
+    expect(transposeChord('B#sus4', 2)).toBe('B#sus4');
   });
 });
 

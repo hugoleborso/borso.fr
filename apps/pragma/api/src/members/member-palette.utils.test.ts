@@ -19,6 +19,11 @@ describe('pickPaletteHex', () => {
     expect(pickPaletteHex(-1)).toBe(MEMBER_PALETTE[4].hex);
     expect(pickPaletteHex(-5)).toBe(MEMBER_PALETTE[0].hex);
   });
+
+  it('throws rather than returning a colourless member when the index is not a whole number', () => {
+    expect(() => pickPaletteHex(1.5)).toThrow('pickPaletteHex expects a whole member index');
+    expect(() => pickPaletteHex(Number.NaN)).toThrow('pickPaletteHex expects a whole member index');
+  });
 });
 
 describe('pickNextPaletteHex', () => {

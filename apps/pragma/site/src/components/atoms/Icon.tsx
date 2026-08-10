@@ -9,7 +9,7 @@
  */
 
 import type { SVGProps } from 'react';
-import { cn } from './cn.utils';
+import { composeClassName } from './class-name.utils';
 
 const ICONS = {
   catalog: <path d="M4 5h16M4 12h16M4 19h10" />,
@@ -197,7 +197,7 @@ export function Icon({ name, size = 16, className, ...rest }: IconProps): JSX.El
       strokeWidth="1.6"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={cn('inline-block shrink-0', className)}
+      className={composeClassName('inline-block shrink-0', className)}
       aria-hidden="true"
       {...rest}
     >

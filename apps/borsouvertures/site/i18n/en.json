@@ -1,0 +1,162 @@
+{
+  "common": {
+    "action": {
+      "back": "Back",
+      "close": "Close",
+      "load-more": "Load more",
+      "reload": "Reload"
+    },
+    "value": {
+      "none": "—"
+    }
+  },
+  "top-bar": {
+    "brand": "Borsouvertures",
+    "mode": {
+      "aria-label": "Toggle mode",
+      "learn": "Learn",
+      "play": "Play"
+    },
+    "board-style": {
+      "label": "Board style:"
+    },
+    "language": {
+      "aria-label": "Interface language",
+      "english": "EN",
+      "french": "FR"
+    }
+  },
+  "loading": {
+    "openings": "Loading openings…"
+  },
+  "load-failure": {
+    "title": "Couldn't load openings",
+    "message": "The opening dataset failed to load. Try reloading the page."
+  },
+  "selection": {
+    "side": {
+      "aria-label": "Choose side",
+      "label": "Train as:",
+      "white": "White",
+      "black": "Black"
+    },
+    "auto-opponent": {
+      "aria-label": "Auto opponent toggle",
+      "off": "You play both",
+      "on": "Auto opponent"
+    },
+    "start": {
+      "learn": "Drill this variation",
+      "play": "Play within this scope"
+    },
+    "hint": {
+      "learn": "Pick an opening + variation to drill its tree.",
+      "play": "Pick at least one opening, variation, or line to play."
+    },
+    "openings": {
+      "title": "Openings",
+      "all": "All openings",
+      "family-count_one": "{{count}} family",
+      "family-count_other": "{{count}} families",
+      "variation-count_one": "{{count}} variation",
+      "variation-count_other": "{{count}} variations"
+    },
+    "variations": {
+      "title": "Variations",
+      "all": "All variations",
+      "total-count": "{{total}} total",
+      "line-count_one": "{{count}} line",
+      "line-count_other": "{{count}} lines"
+    },
+    "lines": {
+      "title": "Lines",
+      "all": "All lines",
+      "total-count_one": "{{count}} line",
+      "total-count_other": "{{count}} lines",
+      "eco": "ECO {{eco}}"
+    }
+  },
+  "session": {
+    "change-selection": "Change selection",
+    "show-moves": {
+      "aria-label": "Show moves toggle",
+      "off": "Hide moves",
+      "on": "Show moves"
+    },
+    "tree-visualization": {
+      "aria-label": "Tree visualization mode",
+      "arrows": "Arrows",
+      "buttons": "Buttons"
+    }
+  },
+  "board": {
+    "piece": {
+      "white-pawn": "white pawn on {{square}}",
+      "white-knight": "white knight on {{square}}",
+      "white-bishop": "white bishop on {{square}}",
+      "white-rook": "white rook on {{square}}",
+      "white-queen": "white queen on {{square}}",
+      "white-king": "white king on {{square}}",
+      "black-pawn": "black pawn on {{square}}",
+      "black-knight": "black knight on {{square}}",
+      "black-bishop": "black bishop on {{square}}",
+      "black-rook": "black rook on {{square}}",
+      "black-queen": "black queen on {{square}}",
+      "black-king": "black king on {{square}}"
+    }
+  },
+  "learn": {
+    "pick-prompt": "Pick an opening + variation to drill its tree.",
+    "title": "Drill: {{variation}}",
+    "description": "Play any book move. The opponent picks one of the book replies at random; the drill ends when every line in this variation has been visited at least once.",
+    "reset": "Reset drill",
+    "arrows": {
+      "hide": "Hide arrows",
+      "reveal": "Reveal arrows"
+    },
+    "cleared": {
+      "message": "Variation cleared — every line visited at least once",
+      "play-scope": "Switch to Play with this scope",
+      "drill-again": "Drill again"
+    },
+    "lines-visited": {
+      "label": "Lines visited",
+      "value": "{{visited}} / {{total}}"
+    },
+    "out-of-book": {
+      "title": "Out of book",
+      "message": "That move isn't in this variation. Try one of the book moves shown.",
+      "try-again": "Try again",
+      "reveal": "Reveal book moves"
+    }
+  },
+  "play": {
+    "title": "Play within book",
+    "description": "Stay in-book by matching any candidate line. Request book moves if you go out of book.",
+    "reset": "Reset game",
+    "undo": "Undo",
+    "completed": {
+      "named": "Line completed — {{line}}!",
+      "generic": "Line completed!",
+      "play-again": "Play again",
+      "dismiss": "Dismiss"
+    },
+    "out-of-book": {
+      "title": "Out of book",
+      "try-again": "Try again",
+      "show-moves": "Show book moves"
+    },
+    "status": {
+      "in-book": "In book",
+      "out-of-book": "Out of book",
+      "matches": "Matches: {{total}}",
+      "opening": "Opening",
+      "variation": "Variation",
+      "line": "Line",
+      "next-moves": {
+        "label": "Possible next moves",
+        "available": "See arrows when requested"
+      }
+    }
+  }
+}

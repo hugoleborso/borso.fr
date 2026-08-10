@@ -5,7 +5,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
-import { getDatabase } from '../database/client';
 import {
   setlistBySessionParamSchema,
   setlistCreateSchema,
@@ -33,20 +32,20 @@ export function buildSetlistsRouter() {
       zValidator('param', setlistBySessionParamSchema),
       async (context) => {
         const { sessionId } = context.req.valid('param');
-        const setlist = await getSetlistBySession(getDatabase(), sessionId);
+        const setlist = await getSetlistBySession(sessionId);
         if (setlist === null) return context.json({ error: 'not-found' }, 404);
         return context.json({ setlist });
       },
     )
     .post('/', zValidator('json', setlistCreateSchema), async (context) => {
       const { sessionId } = context.req.valid('json');
-      const result = await createSetlistForSession(getDatabase(), sessionId);
+      const result = await createSetlistForSession(sessionId);
       if (result.kind === 'already-exists') return context.json({ error: 'already-exists' }, 409);
       return context.json({ setlist: result.setlist }, 201);
     })
     .get('/:id/entries', zValidator('param', setlistIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const entries = await getEntries(getDatabase(), id);
+      const entries = await getEntries(id);
       return context.json({ entries });
     })
     .post(
@@ -56,7 +55,7 @@ export function buildSetlistsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const entry = await appendEntry(getDatabase(), id, input);
+        const entry = await appendEntry(id, input);
         return context.json({ entry }, 201);
       },
     )
@@ -67,7 +66,7 @@ export function buildSetlistsRouter() {
       async (context) => {
         const { id, entryId } = context.req.valid('param');
         const input = context.req.valid('json');
-        const result = await patchEntry(getDatabase(), id, entryId, input);
+        const result = await patchEntry(id, entryId, input);
         if (result.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
         if (result.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
         return context.json({ entry: result.entry });
@@ -78,8 +77,8 @@ export function buildSetlistsRouter() {
       zValidator('param', setlistEntryIdParamSchema),
       async (context) => {
         const { id, entryId } = context.req.valid('param');
-        const ok = await removeEntryAndCompact(getDatabase(), id, entryId);
-        if (!ok) return context.json({ error: 'not-found' }, 404);
+        const outcome = await removeEntryAndCompact(id, entryId);
+        if (outcome === 'not-found') return context.json({ error: 'not-found' }, 404);
         return context.json({ id: entryId, deleted: true });
       },
     )
@@ -90,7 +89,7 @@ export function buildSetlistsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const { entryIds } = context.req.valid('json');
-        const result = await reorderEntries(getDatabase(), id, entryIds);
+        const result = await reorderEntries(id, entryIds);
         if (result.kind === 'stale') return context.json({ error: 'reorder-stale' }, 409);
         return context.json({ id, entryIds });
       },

@@ -63,4 +63,9 @@ describe('clampScore', () => {
   it('returns the value unchanged inside the range', () => {
     expect(clampScore(5)).toBe(5);
   });
+
+  it('keeps both bounds themselves', () => {
+    expect(clampScore(MASTERY_SCORE_MIN)).toBe(MASTERY_SCORE_MIN);
+    expect(clampScore(MASTERY_SCORE_MAX)).toBe(MASTERY_SCORE_MAX);
+  });
 });

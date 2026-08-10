@@ -13,7 +13,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError, api } from '../api';
+import { ApiError, api, isResponseSuccessful } from '../api';
 import { isLastPendingMutation } from './optimistic.utils';
 import {
   appendOptimisticEntry,
@@ -42,7 +42,7 @@ export const setlistKeys = {
 
 const ENTRY_MUTATION_KEY = [...setlistKeys.all, 'entry-mutation'] as const;
 
-export function useSetlistBySession(sessionId: string, enabled = true) {
+export function useSetlistBySession(sessionId: string, isEnabled = true) {
   return useQuery({
     queryKey: setlistKeys.bySessionId(sessionId),
     queryFn: async () => {
@@ -53,11 +53,11 @@ export function useSetlistBySession(sessionId: string, enabled = true) {
       if (!response.ok) throw new ApiError(response.status, `setlist ${response.status}`, null);
       return response.json();
     },
-    enabled,
+    enabled: isEnabled,
   });
 }
 
-export function useSetlistEntries(setlistId: string, enabled = true) {
+export function useSetlistEntries(setlistId: string, isEnabled = true) {
   return useQuery({
     queryKey: setlistKeys.entriesOf(setlistId),
     queryFn: async () => {
@@ -67,7 +67,7 @@ export function useSetlistEntries(setlistId: string, enabled = true) {
       if (!response.ok) throw new ApiError(response.status, `entries ${response.status}`, null);
       return response.json();
     },
-    enabled,
+    enabled: isEnabled,
   });
 }
 
@@ -108,7 +108,8 @@ export function useAppendSetlistEntry() {
         param: { id: setlistId },
         json: rest,
       });
-      if (!response.ok) throw new ApiError(response.status, `append ${response.status}`, null);
+      if (!isResponseSuccessful(response))
+        throw new ApiError(response.status, `append ${response.status}`, null);
       return response.json();
     },
     onMutate: async (variables): Promise<OptimisticContext> => {

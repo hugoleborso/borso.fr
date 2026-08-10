@@ -52,8 +52,5 @@ function resolveInstrumentForMember(
   }
   const song = songsById[entry.songId];
   if (song === undefined) return null;
-  if (memberId in song.defaultLineup) {
-    return song.defaultLineup[memberId] ?? null;
-  }
-  return null;
+  return song.defaultLineup[memberId] ?? null;
 }

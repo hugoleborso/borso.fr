@@ -61,7 +61,7 @@ const appStack = new Stack(app, appStackName, { env });
 buildLastLoopLepinAppStack({
   scope: appStack,
   stage,
-  ...(prNumber !== undefined ? { prNumber } : {}),
+  ...(prNumber === undefined ? {} : { prNumber }),
   domainName: stage === 'prod' ? PROD_DOMAIN : undefined,
   assetsPath: ASSETS_PATH,
   apiEntry: API_ENTRY,

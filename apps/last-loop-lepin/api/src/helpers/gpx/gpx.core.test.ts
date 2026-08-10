@@ -8,11 +8,13 @@ import {
   tryParseFloat,
 } from './gpx.core';
 
-describe('tryParseFloat', () => {
-  it('returns null for undefined (the unreachable-from-regex branch covered directly)', () => {
-    expect(tryParseFloat(undefined)).toBeNull();
+describe('GpxParseError', () => {
+  it('carries GpxParseError as its name', () => {
+    expect(new GpxParseError('boom').name).toBe('GpxParseError');
   });
+});
 
+describe('tryParseFloat', () => {
   it('returns null for non-numeric strings', () => {
     expect(tryParseFloat('abc')).toBeNull();
   });
@@ -33,10 +35,6 @@ describe('tryParseFloat', () => {
 });
 
 describe('tryParseDate', () => {
-  it('returns null for undefined', () => {
-    expect(tryParseDate(undefined)).toBeNull();
-  });
-
   it('returns null for malformed datetime strings', () => {
     expect(tryParseDate('not-a-date')).toBeNull();
   });
@@ -50,6 +48,14 @@ describe('buildPointTimeFractions', () => {
   it('returns null when fewer than two points are timestamped', () => {
     expect(buildPointTimeFractions([])).toBeNull();
     expect(buildPointTimeFractions([1000])).toBeNull();
+  });
+
+  it('normalises a two-point series to its endpoints', () => {
+    expect(buildPointTimeFractions([1000, 3000])).toEqual([0, 1]);
+  });
+
+  it('normalises against the first timestamp, not against epoch zero', () => {
+    expect(buildPointTimeFractions([1000, 5000, 6000])).toEqual([0, 0.8, 1]);
   });
 
   it('returns null when any timestamp is null (timing-partial invalidates series)', () => {
@@ -228,20 +234,36 @@ describe('parseGpx', () => {
     expect(track.distanceMeters).toBeGreaterThan(0);
   });
 
-  it('throws GpxParseError on empty input', () => {
+  it('accepts a <trk> root with no enclosing <gpx>', () => {
+    const trkOnly = `<trk><trkseg>
+      <trkpt lat="45.0" lon="5.0"/>
+      <trkpt lat="45.001" lon="5.001"/>
+    </trkseg></trk>`;
+    expect(parseGpx(trkOnly).points).toHaveLength(2);
+  });
+
+  it('throws the missing-root message on empty input', () => {
     expect(() => parseGpx('')).toThrow(GpxParseError);
+    expect(() => parseGpx('')).toThrow('GPX input is empty or missing <gpx>/<trk> root.');
   });
 
-  it('throws GpxParseError when no <gpx> or <trk> root is present', () => {
-    expect(() => parseGpx('<html><body>nope</body></html>')).toThrow(GpxParseError);
+  it('throws the missing-root message when no <gpx> or <trk> root is present', () => {
+    expect(() => parseGpx('<html><body>nope</body></html>')).toThrow(
+      'GPX input is empty or missing <gpx>/<trk> root.',
+    );
   });
 
-  it('throws GpxParseError when <gpx> contains no <trkpt>', () => {
+  it('throws the no-trkpt message when a <gpx> root carries no track at all', () => {
+    expect(() => parseGpx('<gpx></gpx>')).toThrow('GPX contains no <trkpt> elements.');
+  });
+
+  it('throws the no-trkpt message when <gpx> contains an empty <trkseg>', () => {
     const empty = '<gpx><trk><trkseg></trkseg></trk></gpx>';
     expect(() => parseGpx(empty)).toThrow(GpxParseError);
+    expect(() => parseGpx(empty)).toThrow('GPX contains no <trkpt> elements.');
   });
 
-  it('ignores trkpt entries missing lat or lon attributes', () => {
+  it('ignores trkpt entries missing both lat and lon attributes', () => {
     const missingAttrs = `<gpx><trk><trkseg>
       <trkpt foo="bar"/>
       <trkpt lat="45.0" lon="5.0"/>
@@ -250,7 +272,25 @@ describe('parseGpx', () => {
     expect(track.points).toHaveLength(1);
   });
 
-  it('ignores trkpt entries with non-numeric coordinates', () => {
+  it('ignores a trkpt carrying lat but no lon', () => {
+    const lonMissing = `<gpx><trk><trkseg>
+      <trkpt lat="45.0"/>
+      <trkpt lat="45.001" lon="5.001"/>
+    </trkseg></trk></gpx>`;
+    const track = parseGpx(lonMissing);
+    expect(track.points).toEqual([{ lat: 45.001, lng: 5.001 }]);
+  });
+
+  it('ignores a trkpt carrying lon but no lat', () => {
+    const latMissing = `<gpx><trk><trkseg>
+      <trkpt lon="5.0"/>
+      <trkpt lat="45.001" lon="5.001"/>
+    </trkseg></trk></gpx>`;
+    const track = parseGpx(latMissing);
+    expect(track.points).toEqual([{ lat: 45.001, lng: 5.001 }]);
+  });
+
+  it('ignores trkpt entries with a non-numeric latitude', () => {
     const malformed = `<gpx><trk><trkseg>
       <trkpt lat="not-a-number" lon="5.0"><ele>100</ele></trkpt>
       <trkpt lat="45.0" lon="5.0"><ele>100</ele></trkpt>
@@ -259,6 +299,25 @@ describe('parseGpx', () => {
     const track = parseGpx(malformed);
     expect(track.points).toHaveLength(2);
     expect(track.startLatLng).toEqual({ lat: 45.0, lng: 5.0 });
+  });
+
+  it('ignores trkpt entries with a non-numeric longitude', () => {
+    const malformed = `<gpx><trk><trkseg>
+      <trkpt lat="45.0" lon="not-a-number"><ele>100</ele></trkpt>
+      <trkpt lat="45.001" lon="5.001"><ele>110</ele></trkpt>
+    </trkseg></trk></gpx>`;
+    const track = parseGpx(malformed);
+    expect(track.points).toEqual([{ lat: 45.001, lng: 5.001 }]);
+  });
+
+  it('reads <ele> and <time> padded with whitespace', () => {
+    const padded = `<gpx><trk><trkseg>
+      <trkpt lat="0.0" lon="0.0"><ele> 100 </ele><time> 2026-01-01T00:00:00Z </time></trkpt>
+      <trkpt lat="0.0" lon="0.001"><ele> 130 </ele><time> 2026-01-01T00:10:00Z </time></trkpt>
+    </trkseg></trk></gpx>`;
+    const track = parseGpx(padded);
+    expect(track.pointElevations).toEqual([100, 130]);
+    expect(track.pointTimeFractions).toEqual([0, 1]);
   });
 
   it('ignores trkpt elevation entries that are not numeric', () => {

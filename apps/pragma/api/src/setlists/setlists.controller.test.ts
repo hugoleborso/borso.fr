@@ -33,26 +33,26 @@ async function seed(
   app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
   cookieHeader: string,
 ): Promise<{ setlistId: string; songIds: readonly string[] }> {
-  const sessionRes = await jsonRequest(app, '/api/sessions', {
+  const sessionResponse = await jsonRequest(app, '/api/sessions', {
     method: 'POST',
     body: { kind: 'practice', date: '2025-09-08T19:00:00Z' },
     cookieHeader,
   });
-  const sessionId = (await readJson(sessionRes, sessionEnvelope)).session.id;
-  const setlistRes = await jsonRequest(app, '/api/setlists', {
+  const sessionId = (await readJson(sessionResponse, sessionEnvelope)).session.id;
+  const setlistResponse = await jsonRequest(app, '/api/setlists', {
     method: 'POST',
     body: { sessionId },
     cookieHeader,
   });
-  const setlistId = (await readJson(setlistRes, setlistEnvelope)).setlist.id;
+  const setlistId = (await readJson(setlistResponse, setlistEnvelope)).setlist.id;
   const songIds: string[] = [];
   for (const title of ['Alpha', 'Bravo', 'Charlie']) {
-    const songRes = await jsonRequest(app, '/api/songs', {
+    const songResponse = await jsonRequest(app, '/api/songs', {
       method: 'POST',
       body: { title, status: 'idea' },
       cookieHeader,
     });
-    songIds.push((await readJson(songRes, songEnvelope)).song.id);
+    songIds.push((await readJson(songResponse, songEnvelope)).song.id);
   }
   return { setlistId, songIds };
 }
@@ -84,12 +84,12 @@ describe('setlists controller (back-e2e)', () => {
     const { setlistId, songIds } = await seed(app, cookieHeader);
     const entryIds: string[] = [];
     for (const songId of songIds) {
-      const res = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+      const response = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
         method: 'POST',
         body: { songId },
         cookieHeader,
       });
-      entryIds.push((await readJson(res, singleEntryEnvelope)).entry.id);
+      entryIds.push((await readJson(response, singleEntryEnvelope)).entry.id);
     }
     const reversed = [...entryIds].reverse();
     const reorder = await jsonRequest(app, `/api/setlists/${setlistId}/reorder`, {
@@ -126,12 +126,12 @@ describe('setlists controller (back-e2e)', () => {
     const { setlistId, songIds } = await seed(app, cookieHeader);
     const ids: string[] = [];
     for (const songId of songIds) {
-      const res = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+      const response = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
         method: 'POST',
         body: { songId },
         cookieHeader,
       });
-      ids.push((await readJson(res, singleEntryEnvelope)).entry.id);
+      ids.push((await readJson(response, singleEntryEnvelope)).entry.id);
     }
     // Remove the middle entry; the others must end up at positions [0, 1].
     await jsonRequest(app, `/api/setlists/${setlistId}/entries/${ids[1]}`, {
@@ -170,12 +170,12 @@ describe('setlists controller (back-e2e)', () => {
 
   it('rejects the creation of a second setlist on the same session', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
-    const sessionRes = await jsonRequest(app, '/api/sessions', {
+    const sessionResponse = await jsonRequest(app, '/api/sessions', {
       method: 'POST',
       body: { kind: 'practice', date: '2025-09-08T19:00:00Z' },
       cookieHeader,
     });
-    const sessionId = (await readJson(sessionRes, sessionEnvelope)).session.id;
+    const sessionId = (await readJson(sessionResponse, sessionEnvelope)).session.id;
     const first = await jsonRequest(app, '/api/setlists', {
       method: 'POST',
       body: { sessionId },

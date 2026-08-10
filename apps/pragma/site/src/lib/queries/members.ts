@@ -10,9 +10,9 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api } from '../api';
+import { ApiError, api, isResponseSuccessful } from '../api';
 import { instrumentKeys } from './instruments';
-import { isLastPendingMutation } from './optimistic.utils';
+import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 
 type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;
 
@@ -28,6 +28,7 @@ type MemberInstrumentsResponse = InferResponseType<
   (typeof api.api.members)[':id']['instruments']['$get']
 >;
 
+// @FollowsBlueprint query-module
 export function useMembersList() {
   return useQuery({
     queryKey: memberKeys.list(),
@@ -39,7 +40,7 @@ export function useMembersList() {
   });
 }
 
-export function useMemberInstruments(memberId: string, enabled = true) {
+export function useMemberInstruments(memberId: string, isEnabled = true) {
   return useQuery({
     queryKey: memberKeys.instrumentsOf(memberId),
     queryFn: async () => {
@@ -51,7 +52,7 @@ export function useMemberInstruments(memberId: string, enabled = true) {
       }
       return response.json();
     },
-    enabled,
+    enabled: isEnabled,
   });
 }
 
@@ -65,7 +66,8 @@ export function useCreateMember() {
       avatarS3Key?: string | null;
     }) => {
       const response = await api.api.members.$post({ json: variables });
-      if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
+      if (!isResponseSuccessful(response))
+        throw new ApiError(response.status, `create ${response.status}`, null);
       return response.json();
     },
     onMutate: async (variables) => {
@@ -123,9 +125,7 @@ export function useUpdateMember() {
       queryClient.setQueryData<MembersListResponse>(listKey, (old) => {
         if (old === undefined) return old;
         return {
-          members: old.members.map((member) =>
-            member.id === id ? { ...member, ...patch } : member,
-          ),
+          members: replaceEntityById(old.members, id, (member) => ({ ...member, ...patch })),
         };
       });
       return { previousList };
@@ -198,10 +198,14 @@ export function useAssignMemberInstruments() {
         if (old === undefined) return old;
         if (allInstruments === undefined) {
           return {
-            instruments: old.instruments.filter((i) => variables.instrumentIds.includes(i.id)),
+            instruments: old.instruments.filter((instrument) =>
+              variables.instrumentIds.includes(instrument.id),
+            ),
           };
         }
-        const byId = new Map(allInstruments.instruments.map((i) => [i.id, i]));
+        const byId = new Map(
+          allInstruments.instruments.map((instrument) => [instrument.id, instrument]),
+        );
         const nextInstruments = variables.instrumentIds.flatMap((id) => {
           const instrument = byId.get(id);
           return instrument === undefined ? [] : [instrument];

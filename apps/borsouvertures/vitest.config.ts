@@ -11,11 +11,13 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    include: ['site/**/*.utils.test.ts'],
+    globals: true,
+    include: ['site/**/*.test.ts', 'site/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
-      include: ['site/**/*.utils.ts'],
+      include: ['site/**/*.utils.ts', 'site/**/*.core.ts'],
       thresholds: {
+        perFile: true,
         statements: 100,
         branches: 100,
         functions: 100,

@@ -27,7 +27,7 @@ export function App(): JSX.Element {
         <Route path="/login" element={<Login />} />
         <Route element={<RequireSession />}>
           {/*
-            Mode Scène is a fullscreen takeover (black background,
+            The stage view is a fullscreen takeover (black background,
             edge-to-edge chord chart). It sits OUTSIDE the AppShell
             so neither the sidebar nor the offline banner intrudes.
           */}

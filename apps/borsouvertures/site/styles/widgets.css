@@ -44,7 +44,10 @@
   font-size: 0.9rem;
 }
 
+/* Coarse pointers need a 44 pixel target, which the padding alone does not
+   reach on a phone. */
 .toggle-slider {
+  min-height: 44px;
   border: none;
   background: transparent;
   color: inherit;

@@ -52,18 +52,18 @@ export function SongMusicBrainzPanel({
             <dd className="text-ink-900">{album}</dd>
           </div>
         ) : null}
-        {durationSeconds !== null ? (
+        {durationSeconds === null ? null : (
           <div>
             <dt className="text-ink-500">{t('catalog.duration')}</dt>
             <dd className="text-ink-900 font-mono">{formatDuration(durationSeconds)}</dd>
           </div>
-        ) : null}
-        {mbid !== null ? (
+        )}
+        {mbid === null ? null : (
           <div className="sm:col-span-2">
             <dt className="text-ink-500">{t('catalog.mbid')}</dt>
             <dd className="text-ink-700 font-mono break-all">{mbid}</dd>
           </div>
-        ) : null}
+        )}
         {isrcs.length > 0 ? (
           <div className="sm:col-span-2">
             <dt className="text-ink-500">{t('catalog.isrcs')}</dt>

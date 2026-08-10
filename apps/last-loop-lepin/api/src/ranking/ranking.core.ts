@@ -16,7 +16,7 @@
 import { isRaceEndReached, loopIndexAt, totalHourlyTops } from '../edition/edition.core';
 import type { RaceEdition } from '../edition/edition.types';
 import { lastLoopDurationMs } from '../punch/punch.core';
-import type { LoopPunch, ManualDnf } from '../punch/punch.types';
+import type { LoopPunch, ManualDidNotFinish } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
 import { fastestLap } from './fastest-lap.core';
 import type { RankedRunner, RunnerStatus, Standings } from './ranking.types';
@@ -30,12 +30,12 @@ interface RunnerProgress {
 
 function progressFor(
   runner: Runner,
-  punches: readonly LoopPunch[],
-  manualDnf: ManualDnf | undefined,
+  validPunches: readonly LoopPunch[],
+  manualDidNotFinish: ManualDidNotFinish | undefined,
   expectedClosedLoop: number,
 ): RunnerProgress {
-  const sorted = punches
-    .filter((punch) => punch.runnerSlug === runner.slug && punch.voidedAt === null)
+  const sorted = validPunches
+    .filter((punch) => punch.runnerSlug === runner.slug)
     .toSorted((left, right) => left.loopIndex - right.loopIndex);
 
   let lastValidLoop = 0;
@@ -48,12 +48,16 @@ function progressFor(
   const lastPunch = sorted[sorted.length - 1];
   const lastFinishedAt = lastPunch?.finishedAt ?? null;
 
-  if (manualDnf !== undefined) {
+  if (manualDidNotFinish !== undefined) {
     return {
       runner,
       lastValidLoop,
       lastFinishedAt,
-      status: { kind: 'dnf', outAtLoop: manualDnf.outAtLoop, reason: manualDnf.reason },
+      status: {
+        kind: 'dnf',
+        outAtLoop: manualDidNotFinish.outAtLoop,
+        reason: manualDidNotFinish.reason,
+      },
     };
   }
 
@@ -75,9 +79,9 @@ function progressFor(
 }
 
 function compareProgresses(left: RunnerProgress, right: RunnerProgress): number {
-  const leftIsInRace = left.status.kind === 'in-race';
-  const rightIsInRace = right.status.kind === 'in-race';
-  if (leftIsInRace !== rightIsInRace) return leftIsInRace ? -1 : 1;
+  const isLeftIsInRace = left.status.kind === 'in-race';
+  const isRightIsInRace = right.status.kind === 'in-race';
+  if (isLeftIsInRace !== isRightIsInRace) return isLeftIsInRace ? -1 : 1;
   if (left.lastValidLoop !== right.lastValidLoop) {
     return right.lastValidLoop - left.lastValidLoop;
   }
@@ -86,7 +90,7 @@ function compareProgresses(left: RunnerProgress, right: RunnerProgress): number 
   return leftTime - rightTime;
 }
 
-function tiesForRanking(left: RunnerProgress, right: RunnerProgress): boolean {
+function areTiedForRanking(left: RunnerProgress, right: RunnerProgress): boolean {
   if (left.status.kind !== right.status.kind) return false;
   if (left.lastValidLoop !== right.lastValidLoop) return false;
   const leftMs = left.lastFinishedAt?.getTime() ?? null;
@@ -105,11 +109,12 @@ export function computeStandings(
   edition: RaceEdition,
   runners: readonly Runner[],
   punches: readonly LoopPunch[],
-  manualDnfs: readonly ManualDnf[],
+  manualDidNotFinishes: readonly ManualDidNotFinish[],
   now: Date,
 ): Standings {
-  const manualDnfsBySlug = new Map<string, ManualDnf>();
-  for (const dnf of manualDnfs) manualDnfsBySlug.set(dnf.runnerSlug, dnf);
+  const manualDidNotFinishesBySlug = new Map<string, ManualDidNotFinish>();
+  for (const didNotFinish of manualDidNotFinishes)
+    manualDidNotFinishesBySlug.set(didNotFinish.runnerSlug, didNotFinish);
 
   const validPunches = punches.filter((punch) => punch.voidedAt === null);
   // `loopIndexAt` keeps growing linearly past `endsAt` — for a 15-loop
@@ -124,26 +129,31 @@ export function computeStandings(
 
   const progresses = runners
     .map((runner) =>
-      progressFor(runner, validPunches, manualDnfsBySlug.get(runner.slug), expectedClosedLoop),
+      progressFor(
+        runner,
+        validPunches,
+        manualDidNotFinishesBySlug.get(runner.slug),
+        expectedClosedLoop,
+      ),
     )
     .toSorted(compareProgresses);
 
   // `reduce` over progresses to build the ranked list while carrying the
-  // previous progress + index of its pushed entry. Avoids array index access
-  // and the defensive-undefined branches that `noUncheckedIndexedAccess`
-  // otherwise forces on every for-loop iteration.
+  // previous progress. Avoids array index access and the
+  // defensive-undefined branches that `noUncheckedIndexedAccess` otherwise
+  // forces on every for-loop iteration.
   interface RankAccumulator {
     readonly ranked: readonly RankedRunner[];
-    readonly previous: { progress: RunnerProgress; index: number } | null;
+    readonly previous: RunnerProgress | null;
     readonly currentRank: number;
   }
 
   const result = progresses.reduce<RankAccumulator>(
     (accumulator, progress) => {
-      const tied =
-        accumulator.previous !== null && tiesForRanking(accumulator.previous.progress, progress);
-      const assignedRank: number | 'ex-aequo' = tied ? 'ex-aequo' : accumulator.currentRank + 1;
-      const nextRank = tied ? accumulator.currentRank : accumulator.currentRank + 1;
+      const isTied =
+        accumulator.previous !== null && areTiedForRanking(accumulator.previous, progress);
+      const assignedRank: number | 'ex-aequo' = isTied ? 'ex-aequo' : accumulator.currentRank + 1;
+      const nextRank = isTied ? accumulator.currentRank : accumulator.currentRank + 1;
 
       const newEntry: RankedRunner = {
         runner: progress.runner,
@@ -153,16 +163,16 @@ export function computeStandings(
         lastFinishedAt: progress.lastFinishedAt,
       };
 
-      const updatedRanked =
-        tied && accumulator.previous !== null
-          ? accumulator.ranked.map((entry, idx) =>
-              idx === accumulator.previous?.index ? { ...entry, rank: 'ex-aequo' as const } : entry,
-            )
-          : accumulator.ranked;
+      const tiedEntryIndex = accumulator.ranked.length - 1;
+      const updatedRanked = isTied
+        ? accumulator.ranked.map((entry, index) =>
+            index === tiedEntryIndex ? { ...entry, rank: 'ex-aequo' as const } : entry,
+          )
+        : accumulator.ranked;
 
       return {
         ranked: [...updatedRanked, newEntry],
-        previous: { progress, index: updatedRanked.length },
+        previous: progress,
         currentRank: nextRank,
       };
     },
@@ -182,16 +192,15 @@ export function computeStandings(
 }
 
 export function mostRecentCorrectionAt(punches: readonly LoopPunch[]): Date | null {
-  return punches.reduce<Date | null>((accumulator, punch) => {
-    const candidates: Date[] = [];
-    if (punch.correctedAt !== null) candidates.push(punch.correctedAt);
-    if (punch.voidedAt !== null) candidates.push(punch.voidedAt);
-    return candidates.reduce<Date | null>(
-      (inner, candidate) =>
-        inner === null || candidate.getTime() > inner.getTime() ? candidate : inner,
-      accumulator,
-    );
-  }, null);
+  const amendmentsMs = punches
+    .flatMap((punch) => [punch.correctedAt, punch.voidedAt])
+    .filter((instant): instant is Date => instant !== null)
+    .map((instant) => instant.getTime());
+  const latestMs = amendmentsMs.reduce(
+    (latest, current) => Math.max(latest, current),
+    Number.NEGATIVE_INFINITY,
+  );
+  return Number.isFinite(latestMs) ? new Date(latestMs) : null;
 }
 
 const CSV_HEADER =
@@ -203,11 +212,11 @@ function csvQuote(value: string): string {
 
 function formatStandingsRow(entry: Standings['ranked'][number]): string {
   const status = entry.status.kind;
-  const outAtLoop = entry.status.kind === 'dnf' ? entry.status.outAtLoop : '';
-  const lastLoop = entry.status.kind === 'in-race' ? entry.status.lastLoop : '';
+  const outAtLoop = entry.status.kind === 'dnf' ? `${entry.status.outAtLoop}` : '';
+  const lastLoop = entry.status.kind === 'in-race' ? `${entry.status.lastLoop}` : '';
   const finishedIso = entry.lastFinishedAt?.toISOString() ?? '';
   return [
-    entry.rank === 'ex-aequo' ? 'ex-aequo' : `${entry.rank}`,
+    `${entry.rank}`,
     entry.runner.bib ?? '',
     entry.runner.slug,
     csvQuote(entry.runner.displayName),

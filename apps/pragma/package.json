@@ -14,16 +14,17 @@
     "db:local:url": "../../scripts/local-postgres.sh url pragma",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "biome lint",
+    "lint": "cd ../.. && eslint apps/pragma --cache --cache-location node_modules/.cache/eslint",
     "typecheck": "tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit",
-    "test:core": "vitest run --project core",
+    "test:core": "pnpm --filter @borso/infra run build && vitest run --project core --coverage",
     "test": "DATABASE_URL=$(../../scripts/local-postgres.sh start pragma) vitest run --project back-e2e",
-    "test:coverage": "DATABASE_URL=$(../../scripts/local-postgres.sh start pragma) vitest run --coverage",
+    "test:coverage": "pnpm --filter @borso/infra run build && DATABASE_URL=$(../../scripts/local-postgres.sh start pragma) vitest run --coverage",
     "db:generate": "drizzle-kit generate",
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
-    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"pragma-pr-${PR_NUMBER:?PR_NUMBER env var required — pragma destroy targets the per-PR app stack only, never the shared pragma-cluster stack}\" --force"
+    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"pragma-pr-${PR_NUMBER:?PR_NUMBER env var required — pragma destroy targets the per-PR app stack only, never the shared pragma-cluster stack}\" --force",
+    "test:mutation": "stryker run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.726.0",
@@ -57,11 +58,15 @@
   },
   "devDependencies": {
     "@hono/node-server": "^1.13.7",
+    "@stryker-mutator/core": "9.6.1",
+    "@stryker-mutator/vitest-runner": "9.6.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.3",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/coverage-v8": "^4.1.10",
     "aws-cdk": "^2.180.0",
     "aws-cdk-lib": "^2.180.0",
     "concurrently": "9.2.1",
@@ -71,6 +76,6 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.10"
   }
 }

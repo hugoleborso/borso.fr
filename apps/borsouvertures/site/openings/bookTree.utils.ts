@@ -40,7 +40,7 @@ export function nextMovesAt(variation: Variation, playedMovesUci: string[]): str
  */
 export function leafReachedAt(variation: Variation, playedMovesUci: string[]): Line | null {
   for (const line of variation.lines) {
-    if (sequencesEqual(line.movesUci, playedMovesUci)) return line;
+    if (areSequencesEqual(line.movesUci, playedMovesUci)) return line;
   }
   return null;
 }
@@ -61,7 +61,7 @@ export function isVariationCleared(
   return true;
 }
 
-function sequencesEqual(a: readonly string[], b: readonly string[]): boolean {
-  if (a.length !== b.length) return false;
-  return a.every((value, index) => value === b[index]);
+function areSequencesEqual(left: readonly string[], right: readonly string[]): boolean {
+  if (left.length !== right.length) return false;
+  return left.every((value, index) => value === right[index]);
 }

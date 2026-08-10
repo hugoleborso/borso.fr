@@ -6,7 +6,8 @@
  */
 
 import { eq, inArray, isNotNull } from 'drizzle-orm';
-import type { Database, DatabaseExecutor } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { instrumentTable } from '../instruments/instruments.schema';
 import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.schema';
 import { defaultLineupSchema, songTable } from '../songs/songs.schema';
@@ -39,11 +40,13 @@ const INSTRUMENT_PROJECTION = {
   isHarmonic: instrumentTable.isHarmonic,
 } as const;
 
-export async function listMembers(database: Database): Promise<MemberRow[]> {
+export async function listMembers(): Promise<MemberRow[]> {
+  const database = getDatabase();
   return await database.select(MEMBER_PROJECTION).from(memberTable);
 }
 
-export async function findMemberById(database: Database, id: string): Promise<MemberRow | null> {
+export async function findMemberById(id: string): Promise<MemberRow | null> {
+  const database = getDatabase();
   const rows = await database
     .select(MEMBER_PROJECTION)
     .from(memberTable)
@@ -52,20 +55,22 @@ export async function findMemberById(database: Database, id: string): Promise<Me
   return rows[0] ?? null;
 }
 
-export async function insertMember(
-  database: Database,
-  values: { firstName: string; color: string; avatarS3Key: string | null },
-): Promise<MemberRow> {
+export async function insertMember(values: {
+  firstName: string;
+  color: string;
+  avatarS3Key: string | null;
+}): Promise<MemberRow> {
+  const database = getDatabase();
   const [row] = await database.insert(memberTable).values(values).returning(MEMBER_PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
   return row;
 }
 
 export async function updateMember(
-  database: Database,
   id: string,
   updates: Partial<{ firstName: string; color: string; avatarS3Key: string | null }>,
 ): Promise<MemberRow | null> {
+  const database = getDatabase();
   const [row] = await database
     .update(memberTable)
     .set(updates)
@@ -74,21 +79,25 @@ export async function updateMember(
   return row ?? null;
 }
 
-export async function deleteMemberWithLinks(database: Database, id: string): Promise<boolean> {
-  return await database.transaction(async (tx) => {
-    await scrubMemberFromSongDefaults(tx, id);
-    await scrubMemberFromSetlistOverrides(tx, id);
-    await tx.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, id));
-    const deleted = await tx
+export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome> {
+  const database = getDatabase();
+  return await database.transaction(async (transaction) => {
+    await scrubMemberFromSongDefaults(transaction, id);
+    await scrubMemberFromSetlistOverrides(transaction, id);
+    await transaction.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, id));
+    const deleted = await transaction
       .delete(memberTable)
       .where(eq(memberTable.id, id))
       .returning({ id: memberTable.id });
-    return deleted.length > 0;
+    return selectDeletionOutcome(deleted.length);
   });
 }
 
-async function scrubMemberFromSongDefaults(tx: DatabaseExecutor, memberId: string): Promise<void> {
-  const songs = await tx
+async function scrubMemberFromSongDefaults(
+  transaction: DatabaseExecutor,
+  memberId: string,
+): Promise<void> {
+  const songs = await transaction
     .select({ id: songTable.id, defaultLineup: songTable.defaultLineup })
     .from(songTable);
   for (const songRow of songs) {
@@ -96,7 +105,7 @@ async function scrubMemberFromSongDefaults(tx: DatabaseExecutor, memberId: strin
     const lineup = defaultLineupSchema.parse(lineupRaw);
     if (!(memberId in lineup)) continue;
     const scrubbed = scrubMemberFromLineup(lineup, memberId);
-    await tx
+    await transaction
       .update(songTable)
       .set({ defaultLineup: JSON.stringify(scrubbed) })
       .where(eq(songTable.id, songRow.id));
@@ -104,10 +113,10 @@ async function scrubMemberFromSongDefaults(tx: DatabaseExecutor, memberId: strin
 }
 
 async function scrubMemberFromSetlistOverrides(
-  tx: DatabaseExecutor,
+  transaction: DatabaseExecutor,
   memberId: string,
 ): Promise<void> {
-  const entries = await tx
+  const entries = await transaction
     .select({ id: setlistEntryTable.id, lineupOverride: setlistEntryTable.lineupOverride })
     .from(setlistEntryTable)
     .where(isNotNull(setlistEntryTable.lineupOverride));
@@ -117,17 +126,15 @@ async function scrubMemberFromSetlistOverrides(
     const lineup = lineupOverrideSchema.parse(lineupRaw);
     if (!(memberId in lineup)) continue;
     const scrubbed = scrubMemberFromLineup(lineup, memberId);
-    await tx
+    await transaction
       .update(setlistEntryTable)
       .set({ lineupOverride: JSON.stringify(scrubbed) })
       .where(eq(setlistEntryTable.id, entryRow.id));
   }
 }
 
-export async function listInstrumentsForMember(
-  database: Database,
-  memberId: string,
-): Promise<MemberInstrumentRow[]> {
+export async function listInstrumentsForMember(memberId: string): Promise<MemberInstrumentRow[]> {
+  const database = getDatabase();
   return await database
     .select(INSTRUMENT_PROJECTION)
     .from(memberInstrumentTable)
@@ -135,10 +142,8 @@ export async function listInstrumentsForMember(
     .where(eq(memberInstrumentTable.memberId, memberId));
 }
 
-export async function instrumentsExist(
-  database: Database,
-  instrumentIds: readonly string[],
-): Promise<boolean> {
+export async function areInstrumentsKnown(instrumentIds: readonly string[]): Promise<boolean> {
+  const database = getDatabase();
   if (instrumentIds.length === 0) return true;
   const rows = await database
     .select({ id: instrumentTable.id })
@@ -148,10 +153,10 @@ export async function instrumentsExist(
 }
 
 export async function replaceMemberInstruments(
-  database: Database,
   memberId: string,
   instrumentIds: readonly string[],
 ): Promise<void> {
+  const database = getDatabase();
   await database.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, memberId));
   if (instrumentIds.length > 0) {
     await database

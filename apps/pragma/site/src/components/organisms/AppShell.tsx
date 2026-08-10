@@ -1,34 +1,30 @@
 /**
- * AppShell — sidebar nav + offline banner + page outlet. Mirrors
- * the prototype's `shell.jsx`: cream paper background, editorial
- * sidebar with "Pragma · ERP DU GROUPE" wordmark, two nav sections
- * (main + administration), bottom-aligned "me" chip.
+ * AppShell — sidebar nav, offline banner, and page outlet. Cream paper
+ * background, editorial sidebar with the "Pragma · ERP DU GROUPE"
+ * wordmark, two nav sections (main and administration), and a
+ * bottom-aligned "me" chip.
  *
- * Adds, vs round-5:
- *  - the `/setlists` primary nav entry the prototype shows between
- *    Sessions and Bars;
- *  - badge counts per nav entry, fetched lazily from cheap list
- *    endpoints so the placeholder map is gone;
- *  - a `<lg`-breakpoint mobile fallback — the 232px sidebar is
- *    replaced by a slide-over panel triggered from a hamburger
- *    button (the prototype's `MobileNav` pattern).
+ * Under the `lg` breakpoint the 232px sidebar is replaced by a
+ * slide-over panel opened from a hamburger button.
  *
- * The two `useEffect`s in this file synchronise React state with
- * `navigator.onLine` and `window.matchMedia`, both canonical
- * external-system carve-outs from CLAUDE.md "useEffect is a smell".
+ * The browser's online status and the viewport width are both read
+ * through `useSyncExternalStore` hooks, so this file holds no effect.
  */
 
 import type { ParseKeys } from 'i18next';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Avatar } from '../atoms/Avatar';
 import { Badge } from '../atoms/Badge';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Icon, type IconName } from '../atoms/Icon';
+import { isPositiveCount } from '../../lib/counts.utils';
 import { MEMBER_PALETTE, memberInitial } from '../atoms/member-palette.utils';
 import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
 import { OfflineBanner } from '../molecules/OfflineBanner';
+import { BREAKPOINT_BELOW_LG, useIsMediaQueryMatching } from '../molecules/useIsMediaQueryMatching';
+import { useIsOnline } from '../molecules/useOnlineStatus';
 import { useNavBadges } from './useNavBadges';
 
 interface NavItem {
@@ -49,57 +45,19 @@ const ADMIN_NAV: readonly NavItem[] = [
   { to: '/instruments', labelKey: 'nav.instruments', icon: 'instr' },
 ];
 
-const NARROW_VIEWPORT_QUERY = '(max-width: 1023px)';
-
-function readInitialOnline(): boolean {
-  if (typeof navigator === 'undefined') return true;
-  return navigator.onLine;
-}
-
-function readInitialNarrow(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return false;
-  }
-  return window.matchMedia(NARROW_VIEWPORT_QUERY).matches;
-}
-
 export function AppShell(): JSX.Element {
   const { t } = useTranslation();
   const location = useLocation();
-  const [online, setOnline] = useState<boolean>(readInitialOnline);
-  const [isNarrow, setIsNarrow] = useState<boolean>(readInitialNarrow);
-  const [mobileNavOpen, setMobileNavOpen] = useState<boolean>(false);
+  const isOnline = useIsOnline();
+  const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
   const badges = useNavBadges();
 
-  useEffect(() => {
-    const handleOnline = (): void => setOnline(true);
-    const handleOffline = (): void => setOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const mediaQuery = window.matchMedia(NARROW_VIEWPORT_QUERY);
-    const handle = (event: MediaQueryListEvent): void => setIsNarrow(event.matches);
-    mediaQuery.addEventListener('change', handle);
-    setIsNarrow(mediaQuery.matches);
-    return () => mediaQuery.removeEventListener('change', handle);
-  }, []);
-
-  // Closing the slide-over on link navigation is handled by an
-  // onClick prop on each <SidebarLink>, not by watching the location
-  // — per CLAUDE.md "useEffect is a smell", event-time work belongs
-  // in event handlers, not in an effect that observes derived state.
-  const closeMobileNav = (): void => setMobileNavOpen(false);
+  const closeMobileNav = (): void => setIsMobileNavOpen(false);
 
   const renderSidebar = (variant: 'desktop' | 'mobile'): JSX.Element => (
     <nav
-      className={cn(
+      className={composeClassName(
         'px-3.5 py-4 flex flex-col gap-3.5 bg-bg-sunk',
         variant === 'desktop'
           ? 'w-[232px] min-w-[232px] border-r border-line h-full'
@@ -168,12 +126,12 @@ export function AppShell(): JSX.Element {
 
       {/* Mobile slide-over — rendered only when open to keep the
           tree light when the user is on desktop. */}
-      {isNarrow && mobileNavOpen ? (
+      {isNarrow && isMobileNavOpen ? (
         <div className="fixed inset-0 z-40 flex">
           <div
             className="absolute inset-0 bg-[rgba(20,16,12,0.5)]"
             aria-hidden="true"
-            onClick={() => setMobileNavOpen(false)}
+            onClick={closeMobileNav}
           />
           <div className="relative z-10">{renderSidebar('mobile')}</div>
         </div>
@@ -183,7 +141,7 @@ export function AppShell(): JSX.Element {
         {isNarrow ? (
           <button
             type="button"
-            onClick={() => setMobileNavOpen(true)}
+            onClick={() => setIsMobileNavOpen(true)}
             aria-label={t('nav.openMenu')}
             className="lg:hidden sticky top-0 z-30 inline-flex items-center gap-2 px-4 py-3 text-ink-700 bg-bg/90 backdrop-blur border-b border-line w-full text-left cursor-pointer"
           >
@@ -193,7 +151,7 @@ export function AppShell(): JSX.Element {
             </span>
           </button>
         ) : null}
-        <OfflineBanner visible={!online} />
+        <OfflineBanner isVisible={!isOnline} />
         <Outlet />
       </main>
     </div>
@@ -209,11 +167,12 @@ interface SidebarLinkProps {
 }
 
 function SidebarLink({ item, label, badge, isActive, onClick }: SidebarLinkProps): JSX.Element {
+  const isBadgeShown = isPositiveCount(badge);
   return (
     <NavLink
       to={item.to}
       onClick={onClick}
-      className={cn(
+      className={composeClassName(
         'flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13.5px] border border-transparent',
         'hover:bg-[rgba(26,22,18,0.04)] transition-colors',
         isActive ? 'bg-bg-elev text-ink-900 border-line' : 'text-ink-700',
@@ -221,7 +180,7 @@ function SidebarLink({ item, label, badge, isActive, onClick }: SidebarLinkProps
     >
       <Icon name={item.icon} size={16} className="opacity-85" />
       <span className="flex-1">{label}</span>
-      {badge !== undefined && badge > 0 ? (
+      {isBadgeShown ? (
         <Badge tone="default" size="sm">
           {badge}
         </Badge>

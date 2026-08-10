@@ -8,10 +8,12 @@
  * entry's badge undefined, and `SidebarLink` skips rendering.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
+import { getCurrentTime, readServerTime, subscribeClock } from '../../clock-store';
 import { useBarsList } from '../../lib/queries/bars';
 import { useSessionsList } from '../../lib/queries/sessions';
 import { useSongsList } from '../../lib/queries/songs';
+import { selectUpcomingConcerts } from '../../lib/upcoming-concerts.core';
 
 export type NavBadgeMap = Readonly<Record<string, number | undefined>>;
 
@@ -19,13 +21,15 @@ export function useNavBadges(): NavBadgeMap {
   const songs = useSongsList();
   const sessions = useSessionsList();
   const bars = useBarsList();
+  const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
 
   return useMemo<NavBadgeMap>(() => {
-    const now = Date.now();
     const songsReady = songs.data?.songs.filter((song) => song.status === 'concert_ready').length;
-    const upcomingConcerts = sessions.data?.sessions.filter(
-      (session) => session.kind === 'concert' && new Date(session.date).getTime() > now,
-    ).length;
+    const upcomingSessions = sessions.data?.sessions;
+    const upcomingConcerts =
+      upcomingSessions === undefined
+        ? undefined
+        : selectUpcomingConcerts(upcomingSessions, nowEpochMs).length;
     const barsCount = bars.data?.bars.length;
     return {
       '/catalog': songsReady,
@@ -33,5 +37,5 @@ export function useNavBadges(): NavBadgeMap {
       '/setlists': upcomingConcerts,
       '/bars': barsCount,
     };
-  }, [songs.data, sessions.data, bars.data]);
+  }, [songs.data, sessions.data, bars.data, nowEpochMs]);
 }

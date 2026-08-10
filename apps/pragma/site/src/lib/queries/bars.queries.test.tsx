@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { barKeys, useCreateBar, useDeleteBar, useUpdateBar } from './bars';
 import {
   createIsolatedQueryClient,
+  createMutateSlot,
   deferred,
   flushMicrotasks,
   jsonResponse,
@@ -17,7 +18,7 @@ import {
 } from './test-helpers';
 
 interface OptimisticListShape {
-  bars: Array<{ id: string; name: string; status: string }>;
+  bars: { id: string; name: string; status: string }[];
 }
 
 interface ProbeProps<Mutate> {
@@ -69,10 +70,9 @@ describe('bars mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useUpdateBar>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeUpdate sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useUpdateBar>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useUpdateBar>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeUpdate sink={slot.sink} />);
+    const send = slot.read();
 
     send({ id: 'bar-a', status: 'booked' }).catch(() => undefined);
     await flushMicrotasks();
@@ -90,10 +90,9 @@ describe('bars mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useUpdateBar>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeUpdate sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useUpdateBar>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useUpdateBar>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeUpdate sink={slot.sink} />);
+    const send = slot.read();
 
     send({ id: 'bar-a', status: 'booked' }).catch(() => undefined);
     await flushMicrotasks();
@@ -115,10 +114,9 @@ describe('bars mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useCreateBar>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeCreate sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useCreateBar>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useCreateBar>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeCreate sink={slot.sink} />);
+    const send = slot.read();
 
     send({ name: 'Zeta Bar', status: 'lead', notes: '' }).catch(() => undefined);
     await flushMicrotasks();
@@ -136,10 +134,9 @@ describe('bars mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useDeleteBar>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeDelete sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useDeleteBar>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useDeleteBar>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeDelete sink={slot.sink} />);
+    const send = slot.read();
 
     send({ id: 'bar-a' }).catch(() => undefined);
     await flushMicrotasks();

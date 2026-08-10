@@ -44,19 +44,18 @@ jobs:
         id: filter
         with:
           filters: .github/path-filters.yml
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
       - id: compute
         env:
           CHANGES: ${{ steps.filter.outputs.changes }}
         run: |
+          # App slugs are the directory names under apps/, which is exactly what
+          # pnpm-workspace.yaml declares as `apps/*`. Reading them off the
+          # checkout keeps this job to a checkout: it used to install the whole
+          # workspace purely to run `pnpm ls`, about 25 s sitting in front of
+          # every matrix that waits on this output.
           # All app slugs from the workspace (dynamic — no hard-coded list).
-          all_apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
-            | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
+          all_apps=$(find apps -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
+            | sort | jq -R . | jq -sc .)
 
           # If infra/cdk changed, redeploy every app's preview — constructs
           # are the contract.
@@ -137,33 +136,69 @@ jobs:
       - name: Preflight recovery
         run: ./scripts/preflight-preview-recovery.sh "${{ matrix.app }}" "$PR_NUMBER"
       - run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
-      # Auto-seed the preview so it lands loginable + populated. The
-      # `__test/seed` endpoint is mounted by PreviewableApp on every
-      # non-prod API Lambda (see infra/cdk/src/constructs/previewable-app.ts;
-      # commit a232c58); it wipes domain tables and writes a coherent
-      # fixture + bootstraps the admin password on first call. Apps
-      # without /api/__test (front-end-only sites) short-circuit at the
-      # DNS layer and we silently skip. Prod never sees this — the flag
-      # is structurally absent there, asserted by infra unit tests.
+      # Auto-seed the preview so it lands populated. The `__test/seed`
+      # endpoint is mounted by PreviewableApp on every non-prod API Lambda
+      # (see infra/cdk/src/constructs/previewable-app.ts; commit a232c58);
+      # it wipes domain tables and writes a coherent fixture. Prod never
+      # sees this — the flag is structurally absent there, asserted by
+      # infra unit tests.
+      #
+      # Whether an app has an API is read from the repository rather than
+      # from a list here, so adding a full-stack app seeds it and adding a
+      # front-end-only one skips it, with nothing to remember. The previous
+      # version inferred it from the HTTP status and got it wrong: the
+      # comment claimed front-end-only apps "short-circuit at the DNS
+      # layer", but `*.preview.borso.fr` is a wildcard, so the API hostname
+      # resolves and CloudFront answers a status like any other host.
+      #
+      # `last-loop-lepin` validates a `fixture` QUERY parameter and rejects
+      # a call without one, so this step posted a bare URL and took a 400 on
+      # every preview deploy since the endpoint was written. It failed as a
+      # `::warning::`, which is a line nobody reads in a green run. Found by
+      # the preview validation, not by the workflow. `pragma` takes no
+      # parameter, so an empty query string is right for it.
       - name: Auto-seed preview (non-prod fixture)
         shell: bash
         env:
+          APP: ${{ matrix.app }}
           SEED_URL: ${{ env.VITE_API_BASE }}/api/__test/seed
+          SEED_QUERY: ${{ matrix.app == 'last-loop-lepin' && '?fixture=race-down-to-one-survivor' || '' }}
         run: |
           set -uo pipefail
-          status=$(curl -sS --max-time 30 -o /tmp/seed-response.txt -w "%{http_code}" -X POST "$SEED_URL" 2>/dev/null || echo "000")
+          if [ ! -d "apps/${APP}/api" ]; then
+            echo "[seed] ${APP} is front-end only (no apps/${APP}/api); nothing to seed"
+            exit 0
+          fi
+          # Skip only the combination that destroys data: a preview schema
+          # cloned from production AND a seed that wipes before it writes.
+          # pragma is both, so seeding would throw the clone away on every
+          # deploy and leave a fixture behind — the opposite of what the clone
+          # is for. Its auth row arrives with the clone too, so there is
+          # nothing to bootstrap either.
+          #
+          # last-loop-lepin also clones, but its seed only upserts, so the
+          # fixture lands alongside the cloned edition and seeding stays
+          # correct. Testing "clones" alone would have silently changed that.
+          #
+          # Both halves are read from the repository rather than listed here,
+          # so the rule cannot drift from the code it describes, and the
+          # default stays "seed" for any new full-stack app.
+          if grep -rq 'cloneFromSchema' "apps/${APP}/cdk/lib/stack.ts" &&
+             grep -rq 'deleteAllDomainRows' "apps/${APP}/api/src/__test/"; then
+            echo "[seed] ${APP} clones production and its seed wipes; skipping the destructive fixture"
+            exit 0
+          fi
+          status=$(curl -sS --max-time 30 -o /tmp/seed-response.txt -w "%{http_code}" -X POST "${SEED_URL}${SEED_QUERY}" 2>/dev/null || echo "000")
           case "$status" in
             200|201)
-              echo "[seed] $SEED_URL -> $status :: $(cat /tmp/seed-response.txt)"
-              ;;
-            404)
-              echo "[seed] $SEED_URL -> 404 (no test-seed endpoint mounted; skipping)"
-              ;;
-            000)
-              echo "[seed] $SEED_URL unreachable (front-end-only app or DNS not yet propagated; skipping)"
+              echo "[seed] ${SEED_URL}${SEED_QUERY} -> $status :: $(cat /tmp/seed-response.txt)"
               ;;
             *)
-              echo "::warning::[seed] $SEED_URL -> $status (preview deployed but seed failed): $(cat /tmp/seed-response.txt 2>/dev/null || echo '<no response body>')"
+              # This app has an API, so a seed that does not answer 200 is a
+              # broken preview rather than a cosmetic problem. Fail rather
+              # than warn, because warning is what let the 400 sit unnoticed.
+              echo "::error::[seed] ${SEED_URL}${SEED_QUERY} -> $status (preview deployed but seed failed): $(cat /tmp/seed-response.txt 2>/dev/null || echo '<no response body>')"
+              exit 1
               ;;
           esac
       - id: meta

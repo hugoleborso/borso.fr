@@ -18,18 +18,20 @@
  */
 
 import { useForm } from '@tanstack/react-form';
-import { type JSX, useEffect, useRef } from 'react';
+import { type JSX, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { openDialogOnAttach } from '../../lib/modal-dialog';
 import { Button } from '../atoms/Button';
+import {
+  formValuesToLineup,
+  type LineupEditorMember,
+  type LineupRecord,
+  lineupToFormValues,
+  NOT_PLAYING_OPTION_VALUE,
+} from './lineup-editor.core';
 import { MemberChip } from './MemberChip';
 
-export type LineupRecord = Readonly<Record<string, string | null>>;
-
-export interface LineupEditorMember {
-  readonly id: string;
-  readonly name: string;
-  readonly color: string;
-}
+export type { LineupEditorMember, LineupRecord };
 
 export interface LineupEditorInstrument {
   readonly id: string;
@@ -49,34 +51,8 @@ export interface LineupEditorProps {
   readonly onClose: () => void;
 }
 
-const NOT_PLAYING_OPTION_VALUE = '';
 const FIELD_CLASS =
   'w-full bg-bg-elev border border-line rounded-md px-2 py-1 text-[13px] font-mono text-ink-900 outline-none focus:border-ink-700';
-
-type FormValues = Record<string, string>;
-
-function lineupToFormValues(
-  lineup: LineupRecord,
-  members: readonly LineupEditorMember[],
-): FormValues {
-  const values: FormValues = {};
-  for (const member of members) {
-    const stored = lineup[member.id];
-    values[member.id] = stored === undefined || stored === null ? NOT_PLAYING_OPTION_VALUE : stored;
-  }
-  return values;
-}
-
-function formValuesToLineup(values: FormValues): LineupRecord | null {
-  let hasAnyAssignment = false;
-  const lineup: Record<string, string | null> = {};
-  for (const [memberId, instrumentId] of Object.entries(values)) {
-    if (instrumentId === NOT_PLAYING_OPTION_VALUE) continue;
-    lineup[memberId] = instrumentId;
-    hasAnyAssignment = true;
-  }
-  return hasAnyAssignment ? lineup : null;
-}
 
 export function LineupEditor(props: LineupEditorProps): JSX.Element | null {
   if (!props.open) return null;
@@ -93,7 +69,6 @@ function LineupEditorContent({
   onClose,
 }: LineupEditorProps): JSX.Element {
   const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const wasResetRef = useRef<boolean>(false);
   const form = useForm({
     defaultValues: lineupToFormValues(currentLineup, members),
@@ -103,12 +78,7 @@ function LineupEditorContent({
     },
   });
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog !== null && !dialog.open) dialog.showModal();
-  }, []);
-
-  const handleResetToDefault = (): void => {
+  const resetToDefaultLineup = (): void => {
     if (defaultLineup === undefined) return;
     wasResetRef.current = true;
     const nextValues = lineupToFormValues(defaultLineup, members);
@@ -122,7 +92,7 @@ function LineupEditorContent({
 
   return (
     <dialog
-      ref={dialogRef}
+      ref={openDialogOnAttach}
       onClose={onClose}
       className="m-auto w-[calc(100vw-2rem)] sm:w-[28rem] max-w-[28rem] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
     >
@@ -181,12 +151,12 @@ function LineupEditorContent({
           ))}
         </ul>
         <div className="flex flex-wrap gap-2 mt-2 justify-between">
-          {defaultLineup !== undefined ? (
-            <Button type="button" variant="ghost" onClick={handleResetToDefault}>
+          {defaultLineup === undefined ? (
+            <span />
+          ) : (
+            <Button type="button" variant="ghost" onClick={resetToDefaultLineup}>
               {t('lineup.resetToDefault')}
             </Button>
-          ) : (
-            <span />
           )}
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={onClose}>

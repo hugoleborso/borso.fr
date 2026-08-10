@@ -9,17 +9,21 @@ export { PunchConflictError } from './punch.repository';
 
 import { type PunchRejectReason, validatePunchTiming } from './punch.core';
 import {
-  deleteManualDnf,
+  deleteAllEditionPunchesAndDidNotFinishes,
+  deleteManualDidNotFinish,
   findActivePunchForLoop,
   findPunchById,
-  insertManualDnf,
+  insertManualDidNotFinish,
   insertPunch,
+  listManualDidNotFinishesForEdition,
   listPunchesForEdition,
   markPunchCorrected,
   markPunchVoided,
   PunchConflictError,
 } from './punch.repository';
-import type { LoopPunch, ManualDnf } from './punch.types';
+import type { LoopPunch, ManualDidNotFinish } from './punch.types';
+
+export { getDatabase } from '../database/client';
 
 export class PunchNotFoundError extends Error {
   override readonly name = 'PunchNotFoundError';
@@ -37,6 +41,36 @@ export interface RegisterPunchInput {
   readonly runnerSlug: string;
 }
 
+/**
+ * The error a rejected punch attempt should throw. `already-punched-this-loop`
+ * is the one reason the caller can be told *which* punch is in the way, so it
+ * costs a repository read the other reasons do not need.
+ */
+async function buildPunchRejectionError(
+  database: Database,
+  edition: RaceEdition,
+  input: RegisterPunchInput,
+  reason: PunchRejectReason,
+  now: Date,
+): Promise<PunchConflictError | PunchRejectedError> {
+  if (reason !== 'already-punched-this-loop') return new PunchRejectedError(reason);
+  const conflictLoop = Math.max(1, loopIndexAt(edition, now));
+  const existing = await findActivePunchForLoop(
+    database,
+    input.editionSlug,
+    input.runnerSlug,
+    conflictLoop,
+  );
+  if (existing !== null) return new PunchConflictError(existing);
+  return new PunchRejectedError(reason);
+}
+
+/**
+ * @Blueprint service-orchestration
+ * @BlueprintName Service Orchestration
+ * @BlueprintUsage Use for a workflow that reads, decides, then writes. The service is the only impure layer allowed to be interesting.
+ * @BlueprintDescription Reads the edition and the runner's existing punches through the repository, hands them to a pure decision function in punch.core.ts, throws a named domain error when the decision rejects, and writes through the repository. The branches live in the core file, so the service reads as a sequence of steps.
+ */
 export async function registerPunch(
   database: Database,
   input: RegisterPunchInput,
@@ -48,17 +82,7 @@ export async function registerPunch(
 
   const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
   if (!validation.ok) {
-    if (validation.reason === 'already-punched-this-loop') {
-      const conflictLoop = Math.max(1, loopIndexAt(edition, now));
-      const existing = await findActivePunchForLoop(
-        database,
-        input.editionSlug,
-        input.runnerSlug,
-        conflictLoop,
-      );
-      if (existing !== null) throw new PunchConflictError(existing);
-    }
-    throw new PunchRejectedError(validation.reason);
+    throw await buildPunchRejectionError(database, edition, input, validation.reason, now);
   }
 
   const punch: LoopPunch = {
@@ -115,17 +139,7 @@ export async function registerSelfPunch(
 
   const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
   if (!validation.ok) {
-    if (validation.reason === 'already-punched-this-loop') {
-      const conflictLoop = Math.max(1, loopIndexAt(edition, now));
-      const existing = await findActivePunchForLoop(
-        database,
-        input.editionSlug,
-        input.runnerSlug,
-        conflictLoop,
-      );
-      if (existing !== null) throw new PunchConflictError(existing);
-    }
-    throw new PunchRejectedError(validation.reason);
+    throw await buildPunchRejectionError(database, edition, input, validation.reason, now);
   }
 
   const punch: LoopPunch = {
@@ -166,21 +180,21 @@ export async function voidPunch(database: Database, id: string, now: Date): Prom
   return { ...existing, voidedAt: now };
 }
 
-export interface RecordDnfInput {
+export interface RecordDidNotFinishInput {
   readonly editionSlug: string;
   readonly runnerSlug: string;
   readonly outAtLoop: number;
   readonly reason: 'late' | 'manual';
 }
 
-export async function recordManualDnf(
+export async function recordManualDidNotFinish(
   database: Database,
-  input: RecordDnfInput,
+  input: RecordDidNotFinishInput,
   now: Date,
-): Promise<ManualDnf> {
-  const dnf: ManualDnf = { ...input, decidedAt: now };
-  await insertManualDnf(database, dnf);
-  return dnf;
+): Promise<ManualDidNotFinish> {
+  const manualDidNotFinish: ManualDidNotFinish = { ...input, decidedAt: now };
+  await insertManualDidNotFinish(database, manualDidNotFinish);
+  return manualDidNotFinish;
 }
 
 export async function getPunchesForEdition(
@@ -188,6 +202,13 @@ export async function getPunchesForEdition(
   editionSlug: string,
 ): Promise<readonly LoopPunch[]> {
   return listPunchesForEdition(database, editionSlug);
+}
+
+export async function listManualDidNotFinishes(
+  database: Database,
+  editionSlug: string,
+): Promise<readonly ManualDidNotFinish[]> {
+  return listManualDidNotFinishesForEdition(database, editionSlug);
 }
 
 export interface CatchupPunchInput {
@@ -250,6 +271,29 @@ export async function catchupPunch(
     userAgent: null,
   };
   await insertPunch(database, punch);
-  await deleteManualDnf(database, input.editionSlug, input.runnerSlug);
+  await deleteManualDidNotFinish(database, input.editionSlug, input.runnerSlug);
   return punch;
+}
+
+/**
+ * Drop every punch and every manual did-not-finish row of one edition.
+ * Exposed for the test seeding endpoint, which starts each fixture from an
+ * empty punch history so a previous fixture cannot leak into the standings.
+ */
+export async function clearEditionPunchHistory(
+  database: Database,
+  editionSlug: string,
+): Promise<void> {
+  await deleteAllEditionPunchesAndDidNotFinishes(database, editionSlug);
+}
+
+export async function seedPunch(database: Database, punch: LoopPunch): Promise<void> {
+  await insertPunch(database, punch);
+}
+
+export async function seedManualDidNotFinish(
+  database: Database,
+  didNotFinish: ManualDidNotFinish,
+): Promise<void> {
+  await insertManualDidNotFinish(database, didNotFinish);
 }

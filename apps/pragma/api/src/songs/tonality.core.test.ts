@@ -52,6 +52,10 @@ describe('deriveTonality', () => {
     expect(deriveTonality('[verse]Lyrics')).toEqual({ start: null, end: null });
   });
 
+  it('skips a bracketed token that is not a chord and keeps the surrounding chords', () => {
+    expect(deriveTonality('[C]Hello [N.C.]world')).toEqual({ start: 'C', end: 'C' });
+  });
+
   it('handles an empty bracket', () => {
     expect(deriveTonality('[]Hello')).toEqual({ start: null, end: null });
   });

@@ -15,14 +15,17 @@ export type PunchValidation =
   | { readonly ok: false; readonly reason: PunchRejectReason };
 
 export type PunchRejectReason =
-  | 'race-not-started'
-  | 'race-finished'
-  | 'already-punched-this-loop'
-  | 'runner-not-in-race';
+  'race-not-started' | 'race-finished' | 'already-punched-this-loop' | 'runner-not-in-race';
 
 /**
  * Decide whether a punch at `now` should be accepted for `runnerSlug`.
  * Returns `{ ok: true, loopIndex }` (1-based) on success.
+ */
+/**
+ * @Blueprint core-decision
+ * @BlueprintName Core Decision Function
+ * @BlueprintUsage Use for every business rule. Take the data and `now` as arguments, return a decision, touch nothing else.
+ * @BlueprintDescription Decides whether a punch is acceptable from the runner's existing punches, the edition, and an explicit `now`. Pure, so its test calls it with values and asserts on values, and it carries the full coverage gate and the zero-survivor mutation gate.
  */
 export function validatePunchTiming(
   edition: RaceEdition,
@@ -40,10 +43,10 @@ export function validatePunchTiming(
   const currentLoopFloor = loopIndexAt(edition, now);
   const targetLoop = Math.max(1, currentLoopFloor);
 
-  const conflict = validPunchesForRunner.some(
+  const isConflict = validPunchesForRunner.some(
     (punch) => punch.runnerSlug === runnerSlug && punch.loopIndex === targetLoop,
   );
-  if (conflict) {
+  if (isConflict) {
     return { ok: false, reason: 'already-punched-this-loop' };
   }
 

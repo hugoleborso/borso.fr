@@ -1,10 +1,15 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { getDatabase } from '../database/client';
 import { AUTH_COOKIE_NAME } from './auth.middleware';
 import { loginInputSchema } from './auth.schema';
-import { AuthDeniedError, login, logout } from './auth.service';
+import {
+  AuthDeniedError,
+  getDatabase,
+  httpStatusForAuthDenial,
+  login,
+  logout,
+} from './auth.service';
 
 const ADMIN_COOKIE_TTL_SECONDS = 12 * 60 * 60;
 
@@ -26,11 +31,11 @@ function readClientIp(headerValue: string | undefined): string {
  */
 const authRouter = new Hono()
   .post('/login', zValidator('json', loginInputSchema), async (context) => {
-    const ip = readClientIp(context.req.header('x-forwarded-for'));
+    const ipAddress = readClientIp(context.req.header('x-forwarded-for'));
     try {
       const result = await login(
         getDatabase(),
-        { pin: context.req.valid('json').pin, ipAddress: ip },
+        { pin: context.req.valid('json').pin, ipAddress },
         new Date(),
       );
       setCookie(context, AUTH_COOKIE_NAME, result.sessionId, {
@@ -43,9 +48,10 @@ const authRouter = new Hono()
       return context.json({ expiresAt: result.expiresAt.toISOString() });
     } catch (error) {
       if (error instanceof AuthDeniedError) {
-        const status =
-          error.reason === 'rate-limited' ? 429 : error.reason === 'misconfigured' ? 500 : 401;
-        return context.json({ error: 'auth denied', reason: error.reason }, status);
+        return context.json(
+          { error: 'auth denied', reason: error.reason },
+          httpStatusForAuthDenial(error.reason),
+        );
       }
       throw error;
     }

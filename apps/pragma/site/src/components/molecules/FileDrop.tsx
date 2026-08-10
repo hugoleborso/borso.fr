@@ -12,12 +12,13 @@ import { type DragEvent, type JSX, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api';
 import { useSignChartUpload } from '../../lib/queries/uploads';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import {
   FILE_DROP_ACCEPT_ATTRIBUTE,
-  FILE_DROP_MAX_BYTES,
+  FILE_DROP_MAX_MEBIBYTES,
   type FileDropChartKind,
+  selectRejectionMessageKey,
   validateChartFile,
 } from './file-drop.utils';
 
@@ -46,24 +47,20 @@ export function FileDrop({
   const sign = useSignChartUpload();
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const busy = sign.isPending;
+  const isBusy = sign.isPending;
 
-  const handleFile = async (file: File): Promise<void> => {
+  const uploadChartFile = async (file: File): Promise<void> => {
     setError(null);
     const validated = validateChartFile(file);
     if (!validated.ok) {
-      setError(
-        validated.reason === 'too-large'
-          ? t('catalog.uploadTooLarge', { maxMb: Math.round(FILE_DROP_MAX_BYTES / (1024 * 1024)) })
-          : t('catalog.uploadUnsupported'),
-      );
+      setError(t(selectRejectionMessageKey(validated.reason), { maxMb: FILE_DROP_MAX_MEBIBYTES }));
       return;
     }
     try {
       const signed = await sign.mutateAsync({
         contentType: validated.contentType,
         contentLength: file.size,
-        ...(songId !== undefined ? { songId } : {}),
+        ...(songId === undefined ? {} : { songId }),
       });
       const putResponse = await fetch(signed.uploadUrl, {
         method: 'PUT',
@@ -75,8 +72,8 @@ export function FileDrop({
         return;
       }
       onUploaded({ kind: validated.kind, objectKey: signed.objectKey });
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : t('catalog.uploadFailed'));
+    } catch (error_) {
+      setError(error_ instanceof ApiError ? error_.message : t('catalog.uploadFailed'));
     }
   };
 
@@ -91,17 +88,17 @@ export function FileDrop({
     event.preventDefault();
     setDragOver(false);
     const dropped = event.dataTransfer.files[0];
-    if (dropped !== undefined) void handleFile(dropped);
+    if (dropped !== undefined) void uploadChartFile(dropped);
   };
 
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
+    <div className={composeClassName('flex flex-col gap-2', className)}>
       <label
         htmlFor="file-drop-input"
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        className={cn(
+        className={composeClassName(
           'flex flex-col items-center justify-center gap-2 px-6 py-8 rounded-md border-2 border-dashed cursor-pointer transition-colors',
           dragOver
             ? 'border-accent bg-accent/5'
@@ -110,10 +107,10 @@ export function FileDrop({
       >
         <Icon name="upload" size={20} />
         <span className="text-sm font-medium">
-          {busy ? t('catalog.uploadInProgress') : t('catalog.uploadPrompt')}
+          {isBusy ? t('catalog.uploadInProgress') : t('catalog.uploadPrompt')}
         </span>
         <span className="text-xs text-ink-400">
-          {t('catalog.uploadHint', { maxMb: Math.round(FILE_DROP_MAX_BYTES / (1024 * 1024)) })}
+          {t('catalog.uploadHint', { maxMb: FILE_DROP_MAX_MEBIBYTES })}
         </span>
         <input
           ref={inputRef}
@@ -123,7 +120,7 @@ export function FileDrop({
           className="hidden"
           onChange={(event) => {
             const picked = event.target.files?.[0];
-            if (picked !== undefined) void handleFile(picked);
+            if (picked !== undefined) void uploadChartFile(picked);
           }}
         />
       </label>
@@ -132,7 +129,7 @@ export function FileDrop({
           <span className="truncate">
             {t('catalog.uploadCurrent')}: <span className="font-mono">{currentObjectKey}</span>
           </span>
-          {onRemoved !== undefined ? (
+          {onRemoved === undefined ? null : (
             <button
               type="button"
               onClick={() => {
@@ -143,14 +140,14 @@ export function FileDrop({
             >
               {t('fileDrop.remove')}
             </button>
-          ) : null}
+          )}
         </div>
       ) : null}
-      {error !== null ? (
+      {error === null ? null : (
         <p className="text-xs text-danger" role="alert">
           {error}
         </p>
-      ) : null}
+      )}
     </div>
   );
 }

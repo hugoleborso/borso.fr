@@ -19,21 +19,20 @@
  *     anchor; useful for the side-gutter tooltip.
  */
 
+import { instrumentedMembers } from '../helpers/lineup/instrumented-members.core';
+
 export type MemberId = string;
 export type InstrumentId = string;
 export type Lineup = Readonly<Record<MemberId, InstrumentId | null>>;
 export type InstrumentMap = Readonly<Record<InstrumentId, { readonly isHarmonic: boolean }>>;
 
 export type TransitionVerdict =
-  | { kind: 'safe' }
-  | { kind: 'warn'; missingHarmonicMembers: readonly MemberId[] };
+  { kind: 'safe' } | { kind: 'warn'; missingHarmonicMembers: readonly MemberId[] };
 
 function harmonicMembersIn(lineup: Lineup, instruments: InstrumentMap): Set<MemberId> {
   const members = new Set<MemberId>();
-  for (const [memberId, instrumentId] of Object.entries(lineup)) {
-    if (instrumentId === null) continue;
-    const instrument = instruments[instrumentId];
-    if (instrument?.isHarmonic === true) {
+  for (const [memberId, instrumentId] of instrumentedMembers(lineup)) {
+    if (instruments[instrumentId]?.isHarmonic === true) {
       members.add(memberId);
     }
   }

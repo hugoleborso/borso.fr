@@ -68,23 +68,22 @@ describe('__test/test-seed.controller (back-e2e)', () => {
       adminCredentials: 'created',
     });
 
-    const database = testDatabase();
-    expect((await listInstruments(database)).length).toBe(5);
-    expect((await listMembers(database)).length).toBe(4);
+    expect((await listInstruments()).length).toBe(5);
+    expect((await listMembers()).length).toBe(4);
 
-    const songs = await listSongsNewestFirst(database);
+    const songs = await listSongsNewestFirst();
     expect(songs.length).toBe(6);
     expect(songs.every((song) => song.baseEnergy !== null)).toBe(true);
 
-    const sessions = await listSessions(database);
+    const sessions = await listSessions();
     expect(sessions.length).toBe(1);
     const sessionId = sessions[0]?.id;
     expect(sessionId).toBeDefined();
     if (sessionId === undefined) return;
-    const setlist = await findSetlistBySession(database, sessionId);
+    const setlist = await findSetlistBySession(sessionId);
     expect(setlist).not.toBeNull();
     if (setlist === null) return;
-    const entries = await listEntries(database, setlist.id);
+    const entries = await listEntries(setlist.id);
     expect(entries.length).toBe(6);
     expect(entries.every((entry) => entry.energy === null)).toBe(true);
   });
@@ -98,7 +97,7 @@ describe('__test/test-seed.controller (back-e2e)', () => {
   it('is idempotent — re-seeding replaces rather than appends', async () => {
     await postSeed();
     await postSeed();
-    expect((await listSongsNewestFirst(testDatabase())).length).toBe(6);
+    expect((await listSongsNewestFirst()).length).toBe(6);
   });
 
   it('is not mounted when ALLOW_TEST_SEED is unset', async () => {

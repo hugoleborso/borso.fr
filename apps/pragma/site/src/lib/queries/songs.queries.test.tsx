@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { songKeys, useCreateSong, useDeleteSong, useUpdateSong } from './songs';
 import {
   createIsolatedQueryClient,
+  createMutateSlot,
   deferred,
   flushMicrotasks,
   jsonResponse,
@@ -18,7 +19,7 @@ import {
 } from './test-helpers';
 
 interface OptimisticListShape {
-  songs: Array<{ id: string; title: string }>;
+  songs: { id: string; title: string }[];
 }
 
 interface ProbeProps<Mutate> {
@@ -83,10 +84,9 @@ describe('songs mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useCreateSong>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeCreate sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('probe never reported a mutate handle');
-    const send: ReturnType<typeof useCreateSong>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useCreateSong>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeCreate sink={slot.sink} />);
+    const send = slot.read();
 
     const inflight = send({ title: 'Brand New', artist: 'X', status: 'idea' });
     inflight.catch(() => undefined);
@@ -109,10 +109,9 @@ describe('songs mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useCreateSong>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeCreate sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('probe never reported a mutate handle');
-    const send: ReturnType<typeof useCreateSong>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useCreateSong>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeCreate sink={slot.sink} />);
+    const send = slot.read();
 
     send({ title: 'Will Fail', status: 'idea' }).catch(() => undefined);
     await flushMicrotasks();
@@ -133,10 +132,9 @@ describe('songs mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useUpdateSong>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeUpdate sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('probe never reported a mutate handle');
-    const send: ReturnType<typeof useUpdateSong>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useUpdateSong>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeUpdate sink={slot.sink} />);
+    const send = slot.read();
 
     send({ id: 'song-a', title: 'Renamed' }).catch(() => undefined);
     await flushMicrotasks();
@@ -155,10 +153,9 @@ describe('songs mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useDeleteSong>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeDelete sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('probe never reported a mutate handle');
-    const send: ReturnType<typeof useDeleteSong>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useDeleteSong>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeDelete sink={slot.sink} />);
+    const send = slot.read();
 
     send({ id: 'song-a' }).catch(() => undefined);
     await flushMicrotasks();

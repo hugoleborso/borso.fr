@@ -50,6 +50,14 @@ export function getBoardTheme(id: BoardThemeId): BoardTheme {
   return boardThemesById[id];
 }
 
-export function isBoardThemeId(value: string): value is BoardThemeId {
+export function isBoardThemeId(value: unknown): value is BoardThemeId {
   return value === 'lichess' || value === 'chesscom' || value === 'nord' || value === 'sand';
+}
+
+/**
+ * Narrow a raw `<select>` value to a board theme, keeping the current theme
+ * when the value is not one we ship.
+ */
+export function toBoardThemeId(value: string, fallback: BoardThemeId): BoardThemeId {
+  return isBoardThemeId(value) ? value : fallback;
 }

@@ -20,7 +20,7 @@ const EDITION: RaceEdition = {
   status: 'live',
 };
 
-function makePunch(
+function buildPunch(
   runnerSlug: string,
   loopIndex: number,
   finishedAtIso: string,
@@ -50,14 +50,14 @@ describe('fastestLap', () => {
 
   it('returns [] when every punch is voided', () => {
     const punches = [
-      makePunch('alice', 1, '2026-09-19T06:45:00+02:00', '2026-09-19T06:50:00+02:00'),
-      makePunch('bob', 1, '2026-09-19T06:50:00+02:00', '2026-09-19T06:55:00+02:00'),
+      buildPunch('alice', 1, '2026-09-19T06:45:00+02:00', '2026-09-19T06:50:00+02:00'),
+      buildPunch('bob', 1, '2026-09-19T06:50:00+02:00', '2026-09-19T06:55:00+02:00'),
     ];
     expect(fastestLap(EDITION, punches)).toEqual([]);
   });
 
   it('surfaces the only runner when a single runner has a single loop', () => {
-    const punches = [makePunch('alice', 1, '2026-09-19T06:42:00+02:00')];
+    const punches = [buildPunch('alice', 1, '2026-09-19T06:42:00+02:00')];
     const result = fastestLap(EDITION, punches);
     expect(result).toEqual([{ runnerSlug: 'alice', durationMs: 42 * 60_000 }]);
   });
@@ -67,11 +67,11 @@ describe('fastestLap', () => {
     // Bob:   loop 1 = 42 min, loop 2 = 48 min  → Bob holds 42 min.
     // Carla: loop 1 = 51 min.
     const punches = [
-      makePunch('alice', 1, '2026-09-19T06:47:00+02:00'),
-      makePunch('alice', 2, '2026-09-19T07:44:00+02:00'),
-      makePunch('bob', 1, '2026-09-19T06:42:00+02:00'),
-      makePunch('bob', 2, '2026-09-19T07:48:00+02:00'),
-      makePunch('carla', 1, '2026-09-19T06:51:00+02:00'),
+      buildPunch('alice', 1, '2026-09-19T06:47:00+02:00'),
+      buildPunch('alice', 2, '2026-09-19T07:44:00+02:00'),
+      buildPunch('bob', 1, '2026-09-19T06:42:00+02:00'),
+      buildPunch('bob', 2, '2026-09-19T07:48:00+02:00'),
+      buildPunch('carla', 1, '2026-09-19T06:51:00+02:00'),
     ];
     const result = fastestLap(EDITION, punches);
     expect(result).toEqual([{ runnerSlug: 'bob', durationMs: 42 * 60_000 }]);
@@ -79,9 +79,9 @@ describe('fastestLap', () => {
 
   it('returns both runners (length 2) when two distinct runners tie at the millisecond', () => {
     const punches = [
-      makePunch('alice', 1, '2026-09-19T06:42:00.000+02:00'),
-      makePunch('bob', 1, '2026-09-19T06:42:00.000+02:00'),
-      makePunch('carla', 1, '2026-09-19T06:55:00.000+02:00'),
+      buildPunch('alice', 1, '2026-09-19T06:42:00.000+02:00'),
+      buildPunch('bob', 1, '2026-09-19T06:42:00.000+02:00'),
+      buildPunch('carla', 1, '2026-09-19T06:55:00.000+02:00'),
     ];
     const result = fastestLap(EDITION, punches);
     expect(result).toHaveLength(2);
@@ -92,9 +92,9 @@ describe('fastestLap', () => {
   it('dedupes by runnerSlug when one runner has multiple punches at the same minimum', () => {
     // Alice's loop 1 and loop 2 both clock 42 min — surface her once.
     const punches = [
-      makePunch('alice', 1, '2026-09-19T06:42:00+02:00'),
-      makePunch('alice', 2, '2026-09-19T07:42:00+02:00'),
-      makePunch('bob', 1, '2026-09-19T06:55:00+02:00'),
+      buildPunch('alice', 1, '2026-09-19T06:42:00+02:00'),
+      buildPunch('alice', 2, '2026-09-19T07:42:00+02:00'),
+      buildPunch('bob', 1, '2026-09-19T06:55:00+02:00'),
     ];
     const result = fastestLap(EDITION, punches);
     expect(result).toEqual([{ runnerSlug: 'alice', durationMs: 42 * 60_000 }]);
@@ -103,11 +103,11 @@ describe('fastestLap', () => {
   it('keeps the record on a DNF holder (caller is responsible for filtering — we are not)', () => {
     // The "DNF" runner here is simply absent from later loops; their
     // earlier punch survives and remains the record. The projection
-    // never consults ManualDnf — it operates on punches only.
+    // never consults ManualDidNotFinish — it operates on punches only.
     const punches = [
-      makePunch('borso', 1, '2026-09-19T06:40:00+02:00'),
-      makePunch('hugo', 1, '2026-09-19T06:44:00+02:00'),
-      makePunch('hugo', 2, '2026-09-19T07:44:00+02:00'),
+      buildPunch('borso', 1, '2026-09-19T06:40:00+02:00'),
+      buildPunch('hugo', 1, '2026-09-19T06:44:00+02:00'),
+      buildPunch('hugo', 2, '2026-09-19T07:44:00+02:00'),
     ];
     const result = fastestLap(EDITION, punches);
     expect(result).toEqual([{ runnerSlug: 'borso', durationMs: 40 * 60_000 }]);
@@ -116,17 +116,25 @@ describe('fastestLap', () => {
   it('returns [] when every punch yields a null duration (clock-skew degenerate)', () => {
     // All punches precede the edition's startsAt → every duration is null.
     const punches = [
-      makePunch('alice', 1, '2026-09-19T05:30:00+02:00'),
-      makePunch('bob', 1, '2026-09-19T05:45:00+02:00'),
+      buildPunch('alice', 1, '2026-09-19T05:30:00+02:00'),
+      buildPunch('bob', 1, '2026-09-19T05:45:00+02:00'),
     ];
     expect(fastestLap(EDITION, punches)).toEqual([]);
   });
 
+  it('skips null-duration punches and still crowns the fastest real one', () => {
+    const punches = [
+      buildPunch('alice', 1, '2026-09-19T05:30:00+02:00'),
+      buildPunch('bob', 1, '2026-09-19T06:42:00+02:00'),
+    ];
+    expect(fastestLap(EDITION, punches)).toEqual([{ runnerSlug: 'bob', durationMs: 42 * 60_000 }]);
+  });
+
   it('is order-independent — passing punches in arbitrary order yields the same record', () => {
     const sorted = [
-      makePunch('alice', 1, '2026-09-19T06:47:00+02:00'),
-      makePunch('bob', 1, '2026-09-19T06:42:00+02:00'),
-      makePunch('alice', 2, '2026-09-19T07:44:00+02:00'),
+      buildPunch('alice', 1, '2026-09-19T06:47:00+02:00'),
+      buildPunch('bob', 1, '2026-09-19T06:42:00+02:00'),
+      buildPunch('alice', 2, '2026-09-19T07:44:00+02:00'),
     ];
     const shuffled = [sorted[2], sorted[0], sorted[1]].filter(
       (punch): punch is LoopPunch => punch !== undefined,

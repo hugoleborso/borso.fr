@@ -42,7 +42,7 @@ export const loopPunchesTable = pgTable('loop_punches', {
   userAgent: text('user_agent'),
 });
 
-export const manualDnfsTable = pgTable(
+export const manualDidNotFinishesTable = pgTable(
   'manual_dnfs',
   {
     editionSlug: text('edition_slug').notNull(),
@@ -52,9 +52,7 @@ export const manualDnfsTable = pgTable(
     decidedAt: timestamp('decided_at', { withTimezone: true, mode: 'date' }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   },
-  (table) => ({
-    primary: primaryKey({ columns: [table.editionSlug, table.runnerSlug] }),
-  }),
+  (table) => [primaryKey({ columns: [table.editionSlug, table.runnerSlug] })],
 );
 
 export const createPunchInputSchema = z.object({
@@ -80,7 +78,7 @@ export const selfPunchInputSchema = z.object({
   clientAccuracyM: z.number().nonnegative().nullable(),
 });
 
-export const createDnfInputSchema = z.object({
+export const createDidNotFinishInputSchema = z.object({
   editionSlug: editionSlugSchema,
   runnerSlug: runnerSlugSchema,
   // 0 = the runner didn't even close the first loop (the system projects

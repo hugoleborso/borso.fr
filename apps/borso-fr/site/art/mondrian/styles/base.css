@@ -9,9 +9,7 @@
   --serif: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
   --serif-soft: 'Cormorant Garamond', Georgia, serif;
   --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --shadow:
-    0 30px 80px -40px rgba(26, 23, 20, 0.35),
-    0 4px 18px -8px rgba(26, 23, 20, 0.18);
+  --shadow: 0 30px 80px -40px rgba(26, 23, 20, 0.35), 0 4px 18px -8px rgba(26, 23, 20, 0.18);
 }
 
 * {

@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
-  freshDatabase,
+  testDatabase,
   seedAdminCredentials,
   truncateAllTables,
 } from '../../../test/database-utils';
@@ -21,6 +21,14 @@ function readCookieValue(setCookie: string | null, name: string): string | null 
   return valuePart ?? null;
 }
 
+async function login(pin: string, ipAddress = '127.0.0.1') {
+  return createApp().request('/api/admin/auth/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': ipAddress },
+    body: JSON.stringify({ pin }),
+  });
+}
+
 describe('admin auth controller', () => {
   const originalOrigin = process.env.ALLOWED_ORIGIN;
 
@@ -29,7 +37,7 @@ describe('admin auth controller', () => {
   });
 
   afterEach(() => {
-    process.env.ALLOWED_ORIGIN = ALLOWED_ORIGIN ?? originalOrigin;
+    process.env.ALLOWED_ORIGIN = ALLOWED_ORIGIN;
   });
 
   afterAll(() => {
@@ -43,17 +51,9 @@ describe('admin auth controller', () => {
   });
 
   beforeEach(async () => {
-    await truncateAllTables(freshDatabase());
-    await seedAdminCredentials(freshDatabase());
+    await truncateAllTables(testDatabase());
+    await seedAdminCredentials(testDatabase());
   });
-
-  async function login(pin: string, ip = '127.0.0.1') {
-    return createApp().request('/api/admin/auth/login', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
-      body: JSON.stringify({ pin }),
-    });
-  }
 
   it('returns 200 and sets the lastloop_admin cookie with SameSite=Lax on a correct PIN', async () => {
     const response = await login('lastloop');
@@ -71,7 +71,7 @@ describe('admin auth controller', () => {
     const sessionId = readCookieValue(response.headers.get('set-cookie'), 'lastloop_admin');
     expect(sessionId).not.toBeNull();
     if (sessionId === null) throw new Error('session cookie missing');
-    const session = await findValidSession(freshDatabase(), sessionId, new Date());
+    const session = await findValidSession(testDatabase(), sessionId, new Date());
     expect(session?.id).toBe(sessionId);
   });
 
@@ -83,25 +83,25 @@ describe('admin auth controller', () => {
   });
 
   it('returns 429 once the rate-limit window is full', async () => {
-    const ip = '198.51.100.42';
+    const ipAddress = '198.51.100.42';
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const intermediate = await login('totallywrong', ip);
+      const intermediate = await login('totallywrong', ipAddress);
       expect(intermediate.status).toBe(401);
     }
-    const blocked = await login('totallywrong', ip);
+    const blocked = await login('totallywrong', ipAddress);
     expect(blocked.status).toBe(429);
     const body = errorResponseSchema.parse(await blocked.json());
     expect(body.reason).toBe('rate-limited');
   });
 
   it('resets the rate-limit window after a successful login', async () => {
-    const ip = '198.51.100.43';
+    const ipAddress = '198.51.100.43';
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      await login('totallywrong', ip);
+      await login('totallywrong', ipAddress);
     }
-    const success = await login('lastloop', ip);
+    const success = await login('lastloop', ipAddress);
     expect(success.status).toBe(200);
-    const nextAttempt = await login('totallywrong', ip);
+    const nextAttempt = await login('totallywrong', ipAddress);
     expect(nextAttempt.status).toBe(401);
   });
 
@@ -120,6 +120,6 @@ describe('admin auth controller', () => {
     });
     expect(logoutResponse.status).toBe(200);
     expect(logoutResponse.headers.get('set-cookie')).toMatch(/lastloop_admin=;/);
-    expect(await findValidSession(freshDatabase(), sessionId, new Date())).toBeNull();
+    expect(await findValidSession(testDatabase(), sessionId, new Date())).toBeNull();
   });
 });

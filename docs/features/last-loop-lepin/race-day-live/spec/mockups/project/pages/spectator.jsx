@@ -5,16 +5,16 @@ function SpectatorPage({ phase, t, setTweak, setRoute }) {
   return (
     <div className="spec-grid" data-screen-label="01 Spectateur">
       <div className="spec-cell spec-leader">
-        <LeaderboardPanel phase={phase} onPick={(slug) => setRoute("runner")} />
+        <LeaderboardPanel phase={phase} onPick={(slug) => setRoute('runner')} />
       </div>
       <div className="spec-cell spec-count">
         <CountdownPanel phase={phase} style={t.countdownStyle} />
       </div>
       <div className="spec-cell spec-map">
-        <CourseMapPanel phase={phase} onPick={(slug) => setRoute("runner")} />
+        <CourseMapPanel phase={phase} onPick={(slug) => setRoute('runner')} />
       </div>
       <div className="spec-cell spec-wall">
-        <EliminatedWallPanel phase={phase} onPick={(slug) => setRoute("runner")} />
+        <EliminatedWallPanel phase={phase} onPick={(slug) => setRoute('runner')} />
       </div>
       <style>{`
         .spec-grid {

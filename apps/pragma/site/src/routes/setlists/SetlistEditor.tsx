@@ -51,6 +51,7 @@ interface SetlistEditorProps {
 }
 
 const ENERGY_SPARKLINE_HEIGHT_PX = 160;
+const NO_ROWS: readonly never[] = [];
 const COPIED_FEEDBACK_MS = 2000;
 
 export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
@@ -72,10 +73,13 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [orderCopied, setOrderCopied] = useState(false);
 
-  const entries = entriesQuery.data?.entries ?? [];
-  const songs = songsQuery.data?.songs ?? [];
-  const instruments = instrumentsQuery.data?.instruments ?? [];
-  const members = membersQuery.data?.members ?? [];
+  const entries = useMemo(() => entriesQuery.data?.entries ?? NO_ROWS, [entriesQuery.data]);
+  const songs = useMemo(() => songsQuery.data?.songs ?? NO_ROWS, [songsQuery.data]);
+  const instruments = useMemo(
+    () => instrumentsQuery.data?.instruments ?? NO_ROWS,
+    [instrumentsQuery.data],
+  );
+  const members = useMemo(() => membersQuery.data?.members ?? NO_ROWS, [membersQuery.data]);
 
   const songsById = useMemo(() => {
     const out: Record<string, (typeof songs)[number]> = {};
@@ -143,19 +147,19 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     );
   };
 
-  const handleRemove = (entryId: string): void => {
+  const removeSetlistEntry = (entryId: string): void => {
     removeEntry.mutate({ setlistId, entryId }, { onError: recordError });
   };
 
-  const handleReorder = (orderedEntryIds: readonly string[]): void => {
+  const reorderSetlistEntries = (orderedEntryIds: readonly string[]): void => {
     reorder.mutate({ setlistId, entryIds: [...orderedEntryIds] }, { onError: recordError });
   };
 
-  const handleUpdate = (entryId: string, patch: Record<string, unknown>): void => {
+  const updateSetlistEntry = (entryId: string, patch: Record<string, unknown>): void => {
     updateEntry.mutate({ setlistId, entryId, ...patch }, { onError: recordError });
   };
 
-  const handleCopyOrder = async (): Promise<void> => {
+  const copyOrderToClipboard = async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(formatSetlistOrder(entries, songsById));
       setOrderCopied(true);
@@ -172,16 +176,16 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const queryError = entriesQuery.error instanceof ApiError ? entriesQuery.error.message : null;
   const displayError = localError ?? queryError;
 
-  const inFilteredMode = selectedMemberId !== null;
+  const isInFilteredMode = selectedMemberId !== null;
   const visibleEntries = filtered.visibleEntries;
 
   return (
     <div className="flex flex-col gap-4">
-      {displayError !== null ? (
+      {displayError === null ? null : (
         <p className="text-danger text-sm" role="alert">
           {displayError}
         </p>
-      ) : null}
+      )}
       <MemberFilterPills
         members={lineupMembers}
         selectedMemberId={selectedMemberId}
@@ -196,7 +200,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => void handleCopyOrder()}
+            onClick={() => void copyOrderToClipboard()}
             disabled={entries.length === 0}
           >
             <Icon name={orderCopied ? 'check' : 'text'} size={14} />
@@ -205,23 +209,23 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         </div>
         <EnergySparkline values={energyValues} height={ENERGY_SPARKLINE_HEIGHT_PX} />
       </div>
-      {inFilteredMode && visibleEntries.length === 0 ? (
+      {isInFilteredMode && visibleEntries.length === 0 ? (
         <p className="text-ink-500 italic text-sm py-6 text-center">{t('lineup.emptyForMember')}</p>
       ) : (
         <div className="relative">
-          {!inFilteredMode ? (
+          {isInFilteredMode ? null : (
             <WarnMarkerGutter
               transitions={transitions}
               entries={entries}
               onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
             />
-          ) : null}
+          )}
           <SetlistEntriesList
             entries={entries}
             visibleEntries={visibleEntries}
             songsById={songsById}
             transitions={transitions}
-            inFilteredMode={inFilteredMode}
+            inFilteredMode={isInFilteredMode}
             selectedMemberId={selectedMemberId}
             filteredInstrumentByEntryId={filtered.instrumentByEntryId}
             lineupMembers={lineupMembers}
@@ -229,21 +233,21 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
             membersById={membersById}
             instrumentsById={instrumentsById}
             knownMemberIds={knownMemberIds}
-            onReorder={handleReorder}
-            onUpdate={handleUpdate}
-            onRemove={handleRemove}
+            onReorder={reorderSetlistEntries}
+            onUpdate={updateSetlistEntry}
+            onRemove={removeSetlistEntry}
             onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
           />
         </div>
       )}
       <SetlistSongPicker songs={songs} onPick={addEntry} />
-      {transitionEditing !== null ? (
+      {transitionEditing === null ? null : (
         <TransitionCommentModal
           songAId={transitionEditing.songAId}
           songBId={transitionEditing.songBId}
           onClose={() => setTransitionEditing(null)}
         />
-      ) : null}
+      )}
     </div>
   );
 }

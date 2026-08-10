@@ -86,6 +86,12 @@ describe('leafReachedAt', () => {
   it('returns null when the played sequence diverges from every line', () => {
     expect(leafReachedAt(ITALIAN_MAIN, ['a2a3'])).toBeNull();
   });
+
+  it('returns null when the played sequence runs past the end of a line', () => {
+    expect(
+      leafReachedAt(ITALIAN_MAIN, ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5', 'g8f6']),
+    ).toBeNull();
+  });
 });
 
 describe('isVariationCleared', () => {

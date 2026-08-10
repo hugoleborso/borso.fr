@@ -6,6 +6,7 @@ import {
   instrumentHarmonicMap,
   lineupOf,
   prominentMemberInstrumentFor,
+  selectUnwarnedMemberIds,
   tonalityLabelFor,
 } from './setlist-editor.utils';
 
@@ -22,6 +23,19 @@ describe('tonalityLabelFor', () => {
         artist: 'a',
         defaultLineup: {},
         tonalityStart: null,
+      }),
+    ).toBe(null);
+  });
+
+  it('returns null when only the end tonality is known', () => {
+    expect(
+      tonalityLabelFor({
+        id: 's1',
+        title: 't',
+        artist: 'a',
+        defaultLineup: {},
+        tonalityStart: null,
+        tonalityEnd: 'G',
       }),
     ).toBe(null);
   });
@@ -125,6 +139,20 @@ describe('findOrphanMemberIds', () => {
   });
 });
 
+describe('selectUnwarnedMemberIds', () => {
+  it('keeps the orphans nobody has been told about', () => {
+    expect(selectUnwarnedMemberIds(['mGhost', 'mOther'], new Set(['mGhost']))).toEqual(['mOther']);
+  });
+
+  it('drops every orphan once they have all been reported', () => {
+    expect(selectUnwarnedMemberIds(['mGhost'], new Set(['mGhost']))).toEqual([]);
+  });
+
+  it('leaves an empty list empty', () => {
+    expect(selectUnwarnedMemberIds([], new Set())).toEqual([]);
+  });
+});
+
 describe('formatSetlistOrder', () => {
   const songsById = {
     s1: {
@@ -194,6 +222,16 @@ describe('prominentMemberInstrumentFor', () => {
 
   it('returns null when no member is selected', () => {
     expect(prominentMemberInstrumentFor('i1', null, members, instruments)).toBe(null);
+  });
+
+  it('returns null with no member selected, even against a member keyed "null"', () => {
+    const keyedByNullText = { null: { firstName: 'Hugo', color: '#abc' } };
+    expect(prominentMemberInstrumentFor('i1', null, keyedByNullText, instruments)).toBe(null);
+  });
+
+  it('returns null with no instrument id, even against an instrument keyed "undefined"', () => {
+    const keyedByUndefinedText = { undefined: { name: 'Guitar' } };
+    expect(prominentMemberInstrumentFor(undefined, 'm1', members, keyedByUndefinedText)).toBe(null);
   });
 
   it('returns null when the member id cannot be resolved', () => {

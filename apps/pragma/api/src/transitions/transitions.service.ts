@@ -2,7 +2,7 @@
  * Service layer for transition comments.
  */
 
-import type { Database } from '../database/client';
+import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteTransitionComment,
   findTransitionComment,
@@ -11,31 +11,28 @@ import {
   upsertTransitionComment,
 } from './transitions.repository';
 
-export async function getTransitionComments(database: Database): Promise<TransitionCommentRow[]> {
-  return await listTransitionComments(database);
+export async function getTransitionComments(): Promise<TransitionCommentRow[]> {
+  return await listTransitionComments();
 }
 
 export async function getTransitionComment(
-  database: Database,
-  a: string,
-  b: string,
+  songAId: string,
+  songBId: string,
 ): Promise<TransitionCommentRow | null> {
-  return await findTransitionComment(database, a, b);
+  return await findTransitionComment(songAId, songBId);
 }
 
 export async function saveTransitionComment(
-  database: Database,
-  a: string,
-  b: string,
+  songAId: string,
+  songBId: string,
   comment: string,
 ): Promise<void> {
-  await upsertTransitionComment(database, a, b, comment, new Date());
+  await upsertTransitionComment(songAId, songBId, comment, new Date());
 }
 
 export async function removeTransitionComment(
-  database: Database,
-  a: string,
-  b: string,
-): Promise<boolean> {
-  return await deleteTransitionComment(database, a, b);
+  songAId: string,
+  songBId: string,
+): Promise<DeletionOutcome> {
+  return await deleteTransitionComment(songAId, songBId);
 }

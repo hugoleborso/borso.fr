@@ -8,7 +8,7 @@
 
 import type { ReactNode } from 'react';
 import { Crumb } from '../atoms/Crumb';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 
 export interface PageHeaderProps {
   crumb?: ReactNode;
@@ -26,7 +26,7 @@ export function PageHeader({
   className,
 }: PageHeaderProps): JSX.Element {
   return (
-    <header className={cn('mb-5', className)}>
+    <header className={composeClassName('mb-5', className)}>
       {crumb !== undefined && crumb !== null && <Crumb className="mb-2">{crumb}</Crumb>}
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div className="min-w-0">

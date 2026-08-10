@@ -10,7 +10,7 @@
  * block render. Pure utility, 100% coverage gated.
  */
 
-const YOUTUBE_DOMAINS = ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'];
+const YOUTUBE_DOMAINS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be']);
 const SPOTIFY_HOST = 'open.spotify.com';
 const DEEZER_HOST = 'deezer.com';
 const VIMEO_HOST = 'vimeo.com';
@@ -44,9 +44,13 @@ function tryParse(url: string): URL | null {
   }
 }
 
+function pathSegments(parsed: URL): readonly string[] {
+  return parsed.pathname.split('/').filter((segment) => segment.length > 0);
+}
+
 function youtubeEmbed(parsed: URL): EmbedResult | null {
   if (parsed.host === 'youtu.be') {
-    const videoId = parsed.pathname.slice(1).split('/')[0] ?? '';
+    const [videoId] = parsed.pathname.slice(1).split('/');
     if (videoId === '') return null;
     return {
       kind: 'oembed',
@@ -72,7 +76,7 @@ function youtubeEmbed(parsed: URL): EmbedResult | null {
 
 function spotifyEmbed(parsed: URL): EmbedResult | null {
   // Spotify URL shape: /track/<id>, /album/<id>, /playlist/<id>.
-  const segments = parsed.pathname.split('/').filter((segment) => segment.length > 0);
+  const segments = pathSegments(parsed);
   if (segments.length < 2) return null;
   return {
     kind: 'oembed',
@@ -83,32 +87,36 @@ function spotifyEmbed(parsed: URL): EmbedResult | null {
   };
 }
 
-function deezerEmbed(parsed: URL): EmbedResult | null {
-  // Deezer URL shape: /<lang>/<type>/<id> OR /<type>/<id>.
-  const segments = parsed.pathname.split('/').filter((segment) => segment.length > 0);
-  const knownTypes = ['track', 'album', 'playlist'];
-  let typeAndId: [string, string] | null = null;
-  if (segments.length >= 2) {
-    if (knownTypes.includes(segments[0] ?? '')) {
-      typeAndId = [segments[0] ?? '', segments[1] ?? ''];
-    } else if (segments.length >= 3 && knownTypes.includes(segments[1] ?? '')) {
-      typeAndId = [segments[1] ?? '', segments[2] ?? ''];
-    }
-  }
-  if (typeAndId === null || typeAndId[1] === '') return null;
+const DEEZER_MEDIA_TYPES = new Set(['track', 'album', 'playlist']);
+
+function deezerWidget(mediaType: string, mediaId: string): EmbedResult {
   return {
     kind: 'oembed',
     provider: 'deezer',
-    iframeSrc: `https://widget.deezer.com/widget/dark/${typeAndId[0]}/${typeAndId[1]}`,
+    iframeSrc: `https://widget.deezer.com/widget/dark/${mediaType}/${mediaId}`,
     width: SPOTIFY_IFRAME_WIDTH,
     height: SPOTIFY_IFRAME_HEIGHT,
   };
 }
 
+// Deezer URL shape: /<lang>/<type>/<id> OR /<type>/<id>, so the media
+// type sits at index 0 or index 1 and nowhere deeper.
+const DEEZER_MEDIA_TYPE_MAX_INDEX = 1;
+
+function deezerEmbed(parsed: URL): EmbedResult | null {
+  const segments = pathSegments(parsed);
+  const mediaTypeIndex = segments.findIndex((segment) => DEEZER_MEDIA_TYPES.has(segment));
+  if (mediaTypeIndex > DEEZER_MEDIA_TYPE_MAX_INDEX) return null;
+  const mediaType = segments[mediaTypeIndex];
+  const mediaId = segments[mediaTypeIndex + 1];
+  if (mediaType === undefined || mediaId === undefined) return null;
+  return deezerWidget(mediaType, mediaId);
+}
+
 function vimeoEmbed(parsed: URL): EmbedResult | null {
-  const segments = parsed.pathname.split('/').filter((segment) => segment.length > 0);
-  const videoId = segments[0];
-  if (videoId === undefined || !/^\d+$/.test(videoId)) return null;
+  const [firstSegment] = pathSegments(parsed);
+  const videoId = firstSegment?.match(/^\d+$/)?.[0];
+  if (videoId === undefined) return null;
   return {
     kind: 'oembed',
     provider: 'vimeo',
@@ -133,7 +141,7 @@ function soundcloudEmbed(parsed: URL): EmbedResult {
 
 function soundsliceEmbed(parsed: URL): EmbedResult | null {
   // Soundslice slice URL: /slices/<slug>/
-  const segments = parsed.pathname.split('/').filter((segment) => segment.length > 0);
+  const segments = pathSegments(parsed);
   if (segments[0] !== 'slices' || segments[1] === undefined) return null;
   return {
     kind: 'oembed',
@@ -148,7 +156,7 @@ export function resolveEmbed(url: string): EmbedResult {
   const parsed = tryParse(url);
   if (parsed === null) return { kind: 'plain', href: url };
 
-  if (YOUTUBE_DOMAINS.includes(parsed.host)) {
+  if (YOUTUBE_DOMAINS.has(parsed.host)) {
     const result = youtubeEmbed(parsed);
     if (result !== null) return result;
   }

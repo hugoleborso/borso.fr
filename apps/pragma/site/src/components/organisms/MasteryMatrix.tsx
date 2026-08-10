@@ -45,6 +45,7 @@ import {
   useMasteryDefaults,
   useSaveMasteryDefault,
 } from '../../lib/queries/mastery';
+import { upsertMasteryDefault, withoutMasteryDefault } from '../../lib/queries/mastery.utils';
 
 export interface MasteryMatrixMember {
   readonly id: string;
@@ -74,32 +75,12 @@ interface MatrixRow {
 const DECIMALS = 1;
 const RIGHT_MOUSE_BUTTON = 2;
 
-function setCachedScore(
-  previous: MasteryDefaultsResponse | undefined,
-  memberId: string,
-  instrumentId: string,
-  score: number,
-): MasteryDefaultsResponse {
-  const base = previous?.defaults ?? [];
-  const without = base.filter(
-    (row) => !(row.memberId === memberId && row.instrumentId === instrumentId),
-  );
-  return { defaults: [...without, { memberId, instrumentId, score }] };
-}
-
-function deleteCachedScore(
-  previous: MasteryDefaultsResponse | undefined,
-  memberId: string,
-  instrumentId: string,
-): MasteryDefaultsResponse {
-  const base = previous?.defaults ?? [];
-  return {
-    defaults: base.filter(
-      (row) => !(row.memberId === memberId && row.instrumentId === instrumentId),
-    ),
-  };
-}
-
+/**
+ * @Blueprint organism-table
+ * @BlueprintName Organism With Headless Table
+ * @BlueprintUsage Use for a screen region showing tabular data with sorting or filtering.
+ * @BlueprintDescription Composes molecules and atoms into a screen region, owns the interface state, and drives the grid through the headless useReactTable rather than a hand-rolled table with manual sort state. An organism is the lowest level allowed to call a query hook.
+ */
 export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixProps): JSX.Element {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -124,9 +105,9 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
   const writeScore = useCallback(
     (memberId: string, instrumentId: string, score: number): void => {
       const previous = queryClient.getQueryData<MasteryDefaultsResponse>(masteryKeys.defaults());
-      queryClient.setQueryData<MasteryDefaultsResponse>(masteryKeys.defaults(), (current) =>
-        setCachedScore(current, memberId, instrumentId, score),
-      );
+      queryClient.setQueryData<MasteryDefaultsResponse>(masteryKeys.defaults(), (current) => ({
+        defaults: upsertMasteryDefault(current?.defaults ?? [], { memberId, instrumentId, score }),
+      }));
       save.mutate(
         { memberId, instrumentId, score },
         {
@@ -145,9 +126,9 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
   const clearScore = useCallback(
     (memberId: string, instrumentId: string): void => {
       const previous = queryClient.getQueryData<MasteryDefaultsResponse>(masteryKeys.defaults());
-      queryClient.setQueryData<MasteryDefaultsResponse>(masteryKeys.defaults(), (current) =>
-        deleteCachedScore(current, memberId, instrumentId),
-      );
+      queryClient.setQueryData<MasteryDefaultsResponse>(masteryKeys.defaults(), (current) => ({
+        defaults: withoutMasteryDefault(current?.defaults ?? [], memberId, instrumentId),
+      }));
       remove.mutate(
         { memberId, instrumentId },
         {

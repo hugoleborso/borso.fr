@@ -7,7 +7,9 @@
 
 import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/atoms/Card';
+import { composeClassName } from '../../components/atoms/class-name.utils';
 import { MemberChip } from '../../components/molecules/MemberChip';
+import { computeSharePercent, isCapacityKnown } from './friends-count.core';
 
 export interface ConcertReadViewMember {
   readonly id: string;
@@ -35,6 +37,7 @@ export function ConcertReadView({
   friendsTotal,
 }: ConcertReadViewProps): JSX.Element {
   const { t } = useTranslation();
+  const isVenueFillShown = isCapacityKnown(capacity);
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 items-start">
       <div className="flex flex-col gap-4">
@@ -48,7 +51,7 @@ export function ConcertReadView({
           <div className="flex flex-col gap-1.5">
             {members.map((member) => {
               const count = friendsCounts[member.id] ?? 0;
-              const percent = friendsTotal === 0 ? 0 : (count / friendsTotal) * 100;
+              const percent = computeSharePercent(count, friendsTotal);
               return (
                 <div key={member.id} className="flex items-center gap-2.5">
                   <MemberChip memberName={member.firstName} memberColor={member.color} />
@@ -72,17 +75,18 @@ export function ConcertReadView({
               );
             })}
           </div>
-          {capacity !== null && capacity > 0 ? (
+          {isVenueFillShown ? (
             <div className="mt-3.5 pt-3.5 border-t border-line flex justify-between text-[12.5px]">
               <span className="text-ink-500">{t('sessions.capacity')}</span>
               <span className="font-mono">
-                {Math.round((friendsTotal / capacity) * 100)}% · {friendsTotal}/{capacity}
+                {Math.round(computeSharePercent(friendsTotal, capacity))}% · {friendsTotal}/
+                {capacity}
               </span>
             </div>
           ) : null}
         </Card>
         <Card>
-          <div className={`${LABEL_CLASS} mb-2.5`}>{t('sessions.gear')}</div>
+          <div className={composeClassName(LABEL_CLASS, 'mb-2.5')}>{t('sessions.gear')}</div>
           <div className="text-[13px] text-ink-700 whitespace-pre-line font-mono">
             {gear === null || gear.length === 0 ? '—' : gear}
           </div>
@@ -90,7 +94,7 @@ export function ConcertReadView({
       </div>
       <aside className="flex flex-col gap-4">
         <Card variant="sunk">
-          <div className={`${LABEL_CLASS} mb-1.5`}>{t('sessions.venue')}</div>
+          <div className={composeClassName(LABEL_CLASS, 'mb-1.5')}>{t('sessions.venue')}</div>
           <div className="font-display italic text-2xl text-ink-900 leading-tight">
             {venue ?? '—'}
           </div>

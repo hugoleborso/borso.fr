@@ -2,7 +2,13 @@
   color-scheme: dark;
   background-color: #0b0b0b;
   color: #f5f5f5;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   line-height: 1.5;
 }
 
@@ -14,8 +20,7 @@ body {
   margin: 0;
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.05), transparent 35%),
-    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.04), transparent 30%),
-    #0b0b0b;
+    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.04), transparent 30%), #0b0b0b;
   min-height: 100vh;
 }
 
@@ -32,6 +37,11 @@ select {
   font: inherit;
 }
 
+h2 {
+  font-size: 1.17rem;
+  margin: 1em 0;
+}
+
 .app-shell {
   display: flex;
   flex-direction: column;
@@ -44,6 +54,12 @@ select {
   .app-shell {
     padding: 0.5rem;
   }
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .panel {
@@ -70,6 +86,7 @@ select {
 }
 
 .brand-title {
+  margin: 0;
   font-weight: 700;
   font-size: 1.2rem;
 }
@@ -102,7 +119,10 @@ select {
   align-items: center;
 }
 
+/* Coarse pointers need a 44 pixel target, which the padding alone does not
+   reach on a phone. */
 .select {
+  min-height: 44px;
   padding: 0.4rem 0.6rem;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -111,6 +131,7 @@ select {
 }
 
 .btn {
+  min-height: 44px;
   padding: 0.5rem 0.9rem;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.15);

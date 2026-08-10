@@ -20,7 +20,7 @@ const EDITION: RaceEdition = {
   status: 'live',
 };
 
-function makePunch(loopIndex: number, finishedAtIso: string): LoopPunch {
+function buildPunch(loopIndex: number, finishedAtIso: string): LoopPunch {
   return {
     id: `alice-${loopIndex}`,
     editionSlug: 'lepin-2026',
@@ -60,7 +60,7 @@ describe('validatePunchTiming', () => {
   });
 
   it('rejects a second punch for the same loop', () => {
-    const existing = [makePunch(1, '2026-09-19T06:55:00+02:00')];
+    const existing = [buildPunch(1, '2026-09-19T06:55:00+02:00')];
     const result = validatePunchTiming(
       EDITION,
       'alice',
@@ -70,9 +70,20 @@ describe('validatePunchTiming', () => {
     expect(result).toEqual({ ok: false, reason: 'already-punched-this-loop' });
   });
 
+  it('does not consider the runner’s punch for an earlier loop as a conflict', () => {
+    const existing: readonly LoopPunch[] = [buildPunch(1, '2026-09-19T06:55:00+02:00')];
+    const result = validatePunchTiming(
+      EDITION,
+      'alice',
+      existing,
+      new Date('2026-09-19T07:55:00+02:00'),
+    );
+    expect(result).toEqual({ ok: true, loopIndex: 2 });
+  });
+
   it('does not consider another runner’s punch as a conflict', () => {
     const existing: readonly LoopPunch[] = [
-      { ...makePunch(1, '2026-09-19T06:55:00+02:00'), runnerSlug: 'bob' },
+      { ...buildPunch(1, '2026-09-19T06:55:00+02:00'), runnerSlug: 'bob' },
     ];
     const result = validatePunchTiming(
       EDITION,
@@ -100,12 +111,12 @@ describe('lastLoopDurationMs', () => {
   });
 
   it('returns elapsed time since startsAt for the first loop', () => {
-    const punch = makePunch(1, '2026-09-19T06:48:30+02:00');
+    const punch = buildPunch(1, '2026-09-19T06:48:30+02:00');
     expect(lastLoopDurationMs(EDITION, 'alice', [punch])).toBe(48.5 * 60_000);
   });
 
   it('returns null when the only punch precedes startsAt', () => {
-    const punch = makePunch(1, '2026-09-19T05:30:00+02:00');
+    const punch = buildPunch(1, '2026-09-19T05:30:00+02:00');
     expect(lastLoopDurationMs(EDITION, 'alice', [punch])).toBeNull();
   });
 
@@ -115,16 +126,24 @@ describe('lastLoopDurationMs', () => {
     // Loop 2 punch at 07:51:15 → 51 min 15 s of actual running, not the
     // 1h02m45s wall-clock gap between the two punches.
     const punches = [
-      makePunch(1, '2026-09-19T06:48:30+02:00'),
-      makePunch(2, '2026-09-19T07:51:15+02:00'),
+      buildPunch(1, '2026-09-19T06:48:30+02:00'),
+      buildPunch(2, '2026-09-19T07:51:15+02:00'),
+    ];
+    expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(51 * 60_000 + 15_000);
+  });
+
+  it('reads the deepest loop, not the last element, when punches arrive out of order', () => {
+    const punches = [
+      buildPunch(2, '2026-09-19T07:51:15+02:00'),
+      buildPunch(1, '2026-09-19T06:48:30+02:00'),
     ];
     expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(51 * 60_000 + 15_000);
   });
 
   it('ignores punches from other runners', () => {
     const punches: readonly LoopPunch[] = [
-      makePunch(1, '2026-09-19T06:48:30+02:00'),
-      { ...makePunch(2, '2026-09-19T07:50:00+02:00'), runnerSlug: 'bob' },
+      buildPunch(1, '2026-09-19T06:48:30+02:00'),
+      { ...buildPunch(2, '2026-09-19T07:50:00+02:00'), runnerSlug: 'bob' },
     ];
     expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(48.5 * 60_000);
   });
@@ -133,24 +152,24 @@ describe('lastLoopDurationMs', () => {
     // A runner who skipped loop 1 and only punched loop 2 has their loop
     // time measured from 07:00, not 06:00 — the boundary is keyed on the
     // recorded loopIndex.
-    const punches = [makePunch(2, '2026-09-19T07:48:30+02:00')];
+    const punches = [buildPunch(2, '2026-09-19T07:48:30+02:00')];
     expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(48.5 * 60_000);
   });
 });
 
 describe('loopDurationMs', () => {
   it('returns the elapsed time from the loop boundary to finishedAt', () => {
-    const punch = makePunch(1, '2026-09-19T06:48:30+02:00');
+    const punch = buildPunch(1, '2026-09-19T06:48:30+02:00');
     expect(loopDurationMs(EDITION, punch)).toBe(48.5 * 60_000);
   });
 
   it('returns null when finishedAt precedes the loop boundary (clock skew)', () => {
-    const punch = makePunch(1, '2026-09-19T05:30:00+02:00');
+    const punch = buildPunch(1, '2026-09-19T05:30:00+02:00');
     expect(loopDurationMs(EDITION, punch)).toBeNull();
   });
 
   it('returns 0 when finishedAt equals the loop boundary exactly', () => {
-    const punch = makePunch(1, '2026-09-19T06:00:00+02:00');
+    const punch = buildPunch(1, '2026-09-19T06:00:00+02:00');
     expect(loopDurationMs(EDITION, punch)).toBe(0);
   });
 });

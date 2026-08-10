@@ -3,7 +3,7 @@ import type { LoopPunch } from '../punch/punch.types';
 import { slugifyDisplayName, totalElapsedMs, validateRunnerDraft } from './runner.core';
 import type { Runner } from './runner.types';
 
-function makeRunner(slug: string, bib: number | null = null): Runner {
+function buildRunner(slug: string, bib: number | null = null): Runner {
   return {
     editionSlug: 'lepin-2026',
     slug,
@@ -41,7 +41,7 @@ describe('slugifyDisplayName', () => {
 });
 
 describe('validateRunnerDraft', () => {
-  const baseRoster = [makeRunner('alice', 1), makeRunner('bob', 2)];
+  const baseRoster = [buildRunner('alice', 1), buildRunner('bob', 2)];
 
   it('accepts a clean draft', () => {
     const result = validateRunnerDraft({ displayName: 'Carla', slug: 'carla', bib: 3 }, baseRoster);
@@ -94,6 +94,40 @@ describe('validateRunnerDraft', () => {
     ).toEqual({ ok: false, reason: 'slug-invalid-chars' });
   });
 
+  it('accepts the slug slugifyDisplayName builds from a two-word name', () => {
+    const slug = slugifyDisplayName('Jean-Luc Picard');
+    expect(slug).toBe('jean-luc-picard');
+    expect(validateRunnerDraft({ displayName: 'Jean-Luc Picard', slug, bib: null }, [])).toEqual({
+      ok: true,
+    });
+  });
+
+  it('gives the same verdict on a slug it is asked about twice', () => {
+    const draft = { displayName: 'Carla', slug: 'carla!', bib: null };
+    expect(validateRunnerDraft(draft, [])).toEqual(validateRunnerDraft(draft, []));
+  });
+
+  it('accepts a display name of exactly 120 chars', () => {
+    const result = validateRunnerDraft(
+      { displayName: 'a'.repeat(120), slug: 'carla', bib: null },
+      baseRoster,
+    );
+    expect(result).toEqual({ ok: true });
+  });
+
+  it('accepts a slug of exactly 2 chars', () => {
+    const result = validateRunnerDraft({ displayName: 'Carla', slug: 'ab', bib: null }, baseRoster);
+    expect(result).toEqual({ ok: true });
+  });
+
+  it('accepts a slug of exactly 64 chars', () => {
+    const result = validateRunnerDraft(
+      { displayName: 'Carla', slug: 'a'.repeat(64), bib: null },
+      baseRoster,
+    );
+    expect(result).toEqual({ ok: true });
+  });
+
   it('rejects non-positive bib', () => {
     expect(
       validateRunnerDraft({ displayName: 'Carla', slug: 'carla', bib: 0 }, baseRoster),
@@ -128,7 +162,7 @@ describe('validateRunnerDraft', () => {
 describe('totalElapsedMs', () => {
   const start = new Date('2026-09-19T06:00:00+02:00');
 
-  function makePunch(
+  function buildPunch(
     runnerSlug: string,
     loopIndex: number,
     finishedAtIso: string,
@@ -157,8 +191,8 @@ describe('totalElapsedMs', () => {
 
   it('returns elapsed ms from start to the last valid punch', () => {
     const punches = [
-      makePunch('alice', 1, '2026-09-19T06:55:00+02:00'),
-      makePunch('alice', 2, '2026-09-19T07:55:00+02:00'),
+      buildPunch('alice', 1, '2026-09-19T06:55:00+02:00'),
+      buildPunch('alice', 2, '2026-09-19T07:55:00+02:00'),
     ];
     const expectedMs = new Date('2026-09-19T07:55:00+02:00').getTime() - start.getTime();
     expect(totalElapsedMs('alice', start, punches)).toBe(expectedMs);
@@ -166,8 +200,8 @@ describe('totalElapsedMs', () => {
 
   it('ignores voided punches', () => {
     const punches = [
-      makePunch('alice', 1, '2026-09-19T06:55:00+02:00'),
-      makePunch('alice', 2, '2026-09-19T07:55:00+02:00', '2026-09-19T08:00:00+02:00'),
+      buildPunch('alice', 1, '2026-09-19T06:55:00+02:00'),
+      buildPunch('alice', 2, '2026-09-19T07:55:00+02:00', '2026-09-19T08:00:00+02:00'),
     ];
     const expectedMs = new Date('2026-09-19T06:55:00+02:00').getTime() - start.getTime();
     expect(totalElapsedMs('alice', start, punches)).toBe(expectedMs);
@@ -175,8 +209,8 @@ describe('totalElapsedMs', () => {
 
   it('ignores other runners', () => {
     const punches = [
-      makePunch('alice', 1, '2026-09-19T06:55:00+02:00'),
-      makePunch('bob', 2, '2026-09-19T07:55:00+02:00'),
+      buildPunch('alice', 1, '2026-09-19T06:55:00+02:00'),
+      buildPunch('bob', 2, '2026-09-19T07:55:00+02:00'),
     ];
     const expectedMs = new Date('2026-09-19T06:55:00+02:00').getTime() - start.getTime();
     expect(totalElapsedMs('alice', start, punches)).toBe(expectedMs);

@@ -1,222 +1,147 @@
 import { useState } from 'react';
-import { apiClient, apiUrl } from '../api/client';
-import { CorrectionBanner } from '../components/CorrectionBanner';
-import { Countdown } from '../components/Countdown';
-import { CourseMap } from '../components/CourseMap';
-import { ElevationProfile } from '../components/ElevationProfile';
-import { Leaderboard } from '../components/Leaderboard';
-import { SelfPunchModal } from '../components/SelfPunchModal';
-import { useResource } from '../data/useResource';
-import { useStandings } from '../data/useStandingsPoll';
-import type { RaceEditionDto, RankedRunnerDto } from '../domain/types';
+import { useTranslation } from 'react-i18next';
+import { CorrectionBanner } from '../components/molecules/CorrectionBanner';
+import { InRaceCounter } from '../components/molecules/InRaceCounter';
+import { CourseMap } from '../components/organisms/CourseMap';
+import { ElevationProfile } from '../components/organisms/ElevationProfile';
+import { Leaderboard } from '../components/organisms/Leaderboard';
+import { NextLoopCountdown } from '../components/organisms/NextLoopCountdown';
+import { SelfPunchModal } from '../components/organisms/SelfPunchModal';
+import {
+  collectFastestLapSlugs,
+  isRaceOver,
+  isShowingAnnouncement,
+  listFinishedEditions,
+  readCorrectionInstant,
+  selectRacingEdition,
+} from '../components/organisms/spectator.core';
+import { UpcomingEditionCard } from '../components/organisms/UpcomingEditionCard';
+import { Card, CardBody } from '../components/atoms/Card';
+import { Show } from '../components/atoms/Show';
+import { CardHeader } from '../components/molecules/CardHeader';
+import { apiUrl } from '../lib/api';
+import { formatElevationMetres } from '../lib/formatters.utils';
+import { listPresent } from '../lib/optional.utils';
+import { useCurrentEdition, useEditionList } from '../lib/queries/editions';
+import { useStandings } from '../lib/queries/standings';
+import type { RankedRunnerDto } from '../lib/race.types';
+import { countRunnersInRace } from '../lib/runner-status.utils';
 
-function InRaceCounter({ ranked }: { readonly ranked: readonly RankedRunnerDto[] }) {
-  const inRace = ranked.filter((entry) => entry.status.kind === 'in-race').length;
-  const dnf = ranked.length - inRace;
-  return (
-    <div className="in-race-counter">
-      <div className="in-race-counter__main">
-        <span className="in-race-counter__value mono">{inRace}</span>
-        <span className="in-race-counter__label">en course</span>
-      </div>
-      <span className="in-race-counter__detail muted mono">{dnf} DNF</span>
-    </div>
-  );
-}
+const BANNER_STYLE = { justifyContent: 'space-between' } as const;
+const EMPTY_RANKED: readonly RankedRunnerDto[] = [];
+const EMPTY_FASTEST_LAP: readonly { readonly runnerSlug: string }[] = [];
 
-const RACE_CACHE_KEY = 'edition:current';
-const ALL_EDITIONS_KEY = 'editions:all';
-
-function formatRaceDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function nextLoopBoundary(edition: RaceEditionDto, now: number): number {
-  const startMs = new Date(edition.startsAt).getTime();
-  const endMs = new Date(edition.endsAt).getTime();
-  if (now <= startMs) return startMs;
-  if (now >= endMs) return endMs;
-  const intervalMs = edition.intervalMinutes * 60_000;
-  const elapsed = now - startMs;
-  const elapsedIntervals = Math.floor(elapsed / intervalMs);
-  return startMs + (elapsedIntervals + 1) * intervalMs;
-}
-
-function HorsJourJ({
-  upcoming,
-  archives,
-}: {
-  readonly upcoming: RaceEditionDto | null;
-  readonly archives: readonly RaceEditionDto[];
-}) {
-  return (
-    <div className="main col">
-      <div className="card">
-        <div className="card-head">
-          <h2 className="card-title">Last Loop Lépin</h2>
-          <span className="muted mono">Lépin-le-Lac</span>
-        </div>
-        <div className="card-body col">
-          {upcoming === null ? (
-            <div className="muted">Pas d'édition annoncée pour l'instant.</div>
-          ) : (
-            <>
-              <strong style={{ fontSize: 18 }}>{upcoming.displayName}</strong>
-              <span className="muted">
-                Départ : {formatRaceDate(upcoming.startsAt)} ·{' '}
-                {upcoming.gpx.distanceMeters > 0
-                  ? `${(upcoming.gpx.distanceMeters / 1000).toFixed(2)} km`
-                  : 'Tracé à venir'}{' '}
-                · {Math.round(upcoming.gpx.elevationGainMeters)} m D+
-              </span>
-              <Countdown
-                targetEpochMs={new Date(upcoming.startsAt).getTime()}
-                label="Départ dans"
-              />
-            </>
-          )}
-        </div>
-      </div>
-      <div className="card">
-        <div className="card-head">
-          <h2 className="card-title">Archives</h2>
-          <span className="muted mono">
-            {archives.length} édition{archives.length === 1 ? '' : 's'}
-          </span>
-        </div>
-        <div className="card-body">
-          {archives.length === 0 ? (
-            <div className="muted">Aucune édition archivée.</div>
-          ) : (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {archives.map((edition) => (
-                <li
-                  key={edition.slug}
-                  style={{ padding: '8px 0', borderBottom: '1px solid var(--line-soft)' }}
-                >
-                  <strong>{edition.displayName}</strong>
-                  <span className="muted" style={{ marginLeft: 8 }}>
-                    {formatRaceDate(edition.startsAt)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
+/** The public race screen: countdown, track, standings, elevation profile. */
 export function SpectatorPage() {
-  const editionState = useResource(RACE_CACHE_KEY, () => apiClient.getCurrentEdition());
-  const allEditionsState = useResource(ALL_EDITIONS_KEY, () => apiClient.listEditions());
-  const edition = editionState.value?.edition ?? null;
-  const allEditions = allEditionsState.value?.editions ?? [];
-  const standingsState = useStandings(edition?.slug ?? '');
-  const standings = standingsState.standings;
+  const { t, i18n } = useTranslation();
+  const currentEdition = useCurrentEdition();
+  const editionList = useEditionList();
+  const edition = currentEdition.data?.edition ?? null;
+  const standings = useStandings(edition?.slug ?? '');
   const [selectedRunner, setSelectedRunner] = useState<RankedRunnerDto | null>(null);
 
-  if (editionState.error !== null) {
-    return (
-      <div className="main">
-        <div className="card">
-          <div className="card-body error-text">
-            Le serveur ne répond pas pour l'instant. Réessayez dans un instant.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (edition === null || edition.status === 'setup') {
-    const archives = allEditions.filter((entry) => entry.status === 'finished');
-    return <HorsJourJ upcoming={edition} archives={archives} />;
-  }
-
-  const isLive = edition.status === 'live';
-  const raceEnded = standingsState.standings?.raceEnded === true;
-  const isFinished = edition.status === 'finished' || raceEnded;
-  const upcomingBoundary = nextLoopBoundary(edition, Date.now());
-  const mostRecentCorrection =
-    standingsState.mostRecentCorrectionAt === null
-      ? null
-      : new Date(standingsState.mostRecentCorrectionAt);
+  const ranked = standings.data?.standings.ranked ?? EMPTY_RANKED;
 
   return (
-    <div className="main">
-      {isFinished ? (
-        <div className="banner row" style={{ justifyContent: 'space-between' }}>
-          <span>Course terminée — classement final affiché.</span>
-          <a
-            className="btn btn-sm"
-            href={apiUrl(`/api/standings/${encodeURIComponent(edition.slug)}/csv`)}
-          >
-            Télécharger le CSV
-          </a>
+    <>
+      <Show when={currentEdition.isError}>
+        <div className="main">
+          <Card>
+            <CardBody modifier="error-text">{t('spectator.server-unreachable')}</CardBody>
+          </Card>
         </div>
-      ) : null}
-      <CorrectionBanner correctedAt={mostRecentCorrection} />
-      <div className="spectator-layout">
-        <div className="card countdown-card">
-          <div className="card-head">
-            <h2 className="card-title">Prochain top horaire</h2>
-            <span className="muted mono">{edition.displayName}</span>
-          </div>
-          <div className="card-body col">
-            <Countdown targetEpochMs={upcomingBoundary} label="" />
-            <InRaceCounter ranked={standings?.ranked ?? []} />
-          </div>
-        </div>
-        <div className="card map-card">
-          <div className="card-head">
-            <h2 className="card-title">Tracé</h2>
-            <span className="muted mono">
-              {standings === null
-                ? ''
-                : `${standings.ranked.filter((entry) => entry.status.kind === 'in-race').length} en course`}
-            </span>
-          </div>
-          <CourseMap edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
-        </div>
-        <div className="card classement-card">
-          <div className="card-head">
-            <h2 className="card-title">Classement</h2>
-            {isLive ? <span className="live-pill">Live</span> : null}
-          </div>
-          <div className="card-body flush">
-            <Leaderboard
-              ranked={standings?.ranked ?? []}
-              fastestLapSlugs={
-                new Set((standings?.fastestLap ?? []).map((entry) => entry.runnerSlug))
-              }
-              onChipSelect={setSelectedRunner}
-            />
-          </div>
-        </div>
-        <div className="card profile-card">
-          <div className="card-head">
-            <h2 className="card-title">Profil</h2>
-            <span className="muted mono">{Math.round(edition.gpx.elevationGainMeters)} m D+</span>
-          </div>
-          <ElevationProfile edition={edition} ranked={standings?.ranked ?? []} now={new Date()} />
-        </div>
-      </div>
-      {selectedRunner === null ? null : (
-        <SelfPunchModal
-          runner={selectedRunner}
-          editionSlug={edition.slug}
-          onClose={() => setSelectedRunner(null)}
-          onPunchPersisted={() => {
-            // The standings poll auto-refreshes every 2 s; nothing to do
-            // here on success beyond letting the user dismiss the modal.
-          }}
+      </Show>
+      <Show when={isShowingAnnouncement(currentEdition.isError, edition)}>
+        <UpcomingEditionCard
+          upcoming={edition}
+          archives={listFinishedEditions(editionList.data?.editions ?? [])}
+          locale={i18n.language}
         />
-      )}
-    </div>
+      </Show>
+      {listPresent(selectRacingEdition(edition)).map((raceEdition) => (
+        <div className="main" key={raceEdition.slug}>
+          <Show when={isRaceOver(raceEdition, standings.data?.standings.raceEnded === true)}>
+            <div className="banner row" style={BANNER_STYLE}>
+              <span>{t('spectator.race-over')}</span>
+              <a
+                className="btn btn-sm"
+                href={apiUrl(`/api/standings/${encodeURIComponent(raceEdition.slug)}/csv`)}
+              >
+                {t('spectator.download-standings-csv')}
+              </a>
+            </div>
+          </Show>
+          <CorrectionBanner
+            correctedAt={readCorrectionInstant(standings.data?.mostRecentCorrectionAt ?? null)}
+          />
+          <div className="spectator-layout">
+            <Card modifier="countdown-card">
+              <CardHeader
+                title={t('spectator.next-top-title')}
+                hint={<span className="muted mono">{raceEdition.displayName}</span>}
+              />
+              <CardBody modifier="col">
+                <NextLoopCountdown edition={raceEdition} label="" />
+                <InRaceCounter ranked={ranked} />
+              </CardBody>
+            </Card>
+            <Card modifier="map-card">
+              <CardHeader
+                title={t('spectator.track-title')}
+                hint={
+                  <span className="muted mono">
+                    {t('spectator.in-race-count', { runners: countRunnersInRace(ranked) })}
+                  </span>
+                }
+              />
+              <CourseMap edition={raceEdition} ranked={ranked} now={new Date()} />
+            </Card>
+            <Card modifier="classement-card">
+              <CardHeader
+                title={t('spectator.standings-title')}
+                hint={
+                  <Show when={raceEdition.status === 'live'}>
+                    <span className="live-pill">{t('spectator.live')}</span>
+                  </Show>
+                }
+              />
+              <CardBody modifier="flush">
+                <Leaderboard
+                  ranked={ranked}
+                  fastestLapSlugs={collectFastestLapSlugs(
+                    standings.data?.standings.fastestLap ?? EMPTY_FASTEST_LAP,
+                  )}
+                  onChipSelect={setSelectedRunner}
+                  locale={i18n.language}
+                />
+              </CardBody>
+            </Card>
+            <Card modifier="profile-card">
+              <CardHeader
+                title={t('spectator.elevation-title')}
+                hint={
+                  <span className="muted mono">
+                    {t('common.elevation-gain', {
+                      metres: formatElevationMetres(raceEdition.gpx.elevationGainMeters),
+                    })}
+                  </span>
+                }
+              />
+              <ElevationProfile edition={raceEdition} ranked={ranked} now={new Date()} />
+            </Card>
+          </div>
+          {listPresent(selectedRunner).map((runner) => (
+            <SelfPunchModal
+              key={runner.runner.slug}
+              runner={runner}
+              editionSlug={raceEdition.slug}
+              onClose={() => {
+                setSelectedRunner(null);
+              }}
+            />
+          ))}
+        </div>
+      ))}
+    </>
   );
 }

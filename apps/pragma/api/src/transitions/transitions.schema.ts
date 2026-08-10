@@ -16,9 +16,7 @@ export const transitionCommentTable = pgTable(
     comment: text('comment').notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   },
-  (table) => ({
-    orderedPair: uniqueIndex('transition_comment_ordered_pair').on(table.songAId, table.songBId),
-  }),
+  (table) => [uniqueIndex('transition_comment_ordered_pair').on(table.songAId, table.songBId)],
 );
 
 export const transitionPairParamSchema = z.object({

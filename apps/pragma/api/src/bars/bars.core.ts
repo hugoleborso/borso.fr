@@ -33,8 +33,8 @@ export function isStale(
  * Counts bars currently above the staleness threshold. Used by the
  * /bars list view + login banner to display "N bars need attention".
  */
-export function countStale<T extends BarStaleInput>(
-  bars: readonly T[],
+export function countStale(
+  bars: readonly BarStaleInput[],
   now: Date,
   thresholdDays = STALE_BAR_DEFAULT_THRESHOLD_DAYS,
 ): number {

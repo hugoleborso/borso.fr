@@ -17,7 +17,8 @@ import { isLastPendingMutation } from './optimistic.utils';
 export const transitionKeys = {
   all: ['transition-comments'] as const,
   list: () => [...transitionKeys.all, 'list'] as const,
-  byPair: (a: string, b: string) => [...transitionKeys.all, 'byPair', a, b] as const,
+  byPair: (songAId: string, songBId: string) =>
+    [...transitionKeys.all, 'byPair', songAId, songBId] as const,
 };
 
 type TransitionPairOk = Extract<
@@ -26,18 +27,18 @@ type TransitionPairOk = Extract<
 >;
 type TransitionPairCache = TransitionPairOk | null;
 
-export function useTransitionComment(a: string, b: string, enabled = true) {
+export function useTransitionComment(songAId: string, songBId: string, isEnabled = true) {
   return useQuery({
-    queryKey: transitionKeys.byPair(a, b),
+    queryKey: transitionKeys.byPair(songAId, songBId),
     queryFn: async () => {
       const response = await api.api['transition-comments'][':a'][':b'].$get({
-        param: { a, b },
+        param: { a: songAId, b: songBId },
       });
       if (response.status === 404) return null;
       if (!response.ok) throw new ApiError(response.status, `transition ${response.status}`, null);
       return response.json();
     },
-    enabled,
+    enabled: isEnabled,
   });
 }
 

@@ -19,8 +19,10 @@ const HOURS_PER_LONGITUDE_DEGREE = 1 / 15;
 const STANDARD_ZENITH_DEGREES = 90.833;
 const MILLISECONDS_PER_HOUR = 3_600_000;
 const FULL_CIRCLE_DEGREES = 360;
-const QUARTER_CIRCLE_DEGREES = 90;
 const HOURS_IN_DAY = 24;
+
+export const POLAR_NIGHT_MESSAGE = 'Polar night: sun does not rise at this latitude on this date.';
+export const POLAR_DAY_MESSAGE = 'Polar day: sun does not set at this latitude on this date.';
 
 export class SunCalculationError extends Error {
   override readonly name = 'SunCalculationError';
@@ -42,23 +44,41 @@ function dayOfYearUtc(date: Date): number {
   return Math.floor((normalizedTimestamp - yearStartTimestamp) / millisecondsPerDay);
 }
 
-function normalizeDegrees(value: number): number {
+/**
+ * Fold an angle into `[0, 360)`. Exported for direct testing: inside this
+ * module the result only ever reaches a sine, a cosine, or the mod-24 wrap
+ * at the end, all of which are invariant under whole turns, so the fold is
+ * observable at the unit boundary and nowhere else.
+ */
+export function normalizeDegrees(value: number): number {
   const wrapped = value % FULL_CIRCLE_DEGREES;
   return wrapped < 0 ? wrapped + FULL_CIRCLE_DEGREES : wrapped;
 }
 
-function normalizeHours(value: number): number {
+/** Fold an hour count into `[0, 24)`. Exported for the same reason. */
+export function normalizeHours(value: number): number {
   const wrapped = value % HOURS_IN_DAY;
   return wrapped < 0 ? wrapped + HOURS_IN_DAY : wrapped;
+}
+
+/**
+ * The reason the sun never crosses the horizon on this day, or `null` when
+ * it does. `cosineOfHourAngle` leaves `[-1, 1]` exactly when the sun stays
+ * below the horizon all day (above `1`) or above it all day (below `-1`).
+ */
+export function polarCrossingFailure(cosineOfHourAngle: number): string | null {
+  if (cosineOfHourAngle > 1) return POLAR_NIGHT_MESSAGE;
+  if (cosineOfHourAngle < -1) return POLAR_DAY_MESSAGE;
+  return null;
 }
 
 function computeUtcHour(
   dayOfYear: number,
   latitude: number,
   longitudeHours: number,
-  rising: boolean,
+  isRising: boolean,
 ): number {
-  const approximateTime = rising
+  const approximateTime = isRising
     ? dayOfYear + (6 - longitudeHours) / HOURS_IN_DAY
     : dayOfYear + (18 - longitudeHours) / HOURS_IN_DAY;
 
@@ -73,16 +93,15 @@ function computeUtcHour(
   );
   const trueLongitudeRadians = trueLongitudeDegrees * DEGREES_TO_RADIANS;
 
-  const rightAscensionRaw =
-    Math.atan(0.91764 * Math.tan(trueLongitudeRadians)) * RADIANS_TO_DEGREES;
-  const rightAscensionDegrees = normalizeDegrees(rightAscensionRaw);
-  const trueLongitudeQuadrant =
-    Math.floor(trueLongitudeDegrees / QUARTER_CIRCLE_DEGREES) * QUARTER_CIRCLE_DEGREES;
-  const rightAscensionQuadrant =
-    Math.floor(rightAscensionDegrees / QUARTER_CIRCLE_DEGREES) * QUARTER_CIRCLE_DEGREES;
-  const rightAscensionHours =
-    (rightAscensionDegrees + (trueLongitudeQuadrant - rightAscensionQuadrant)) *
-    HOURS_PER_LONGITUDE_DEGREE;
+  // `atan2` lands the right ascension in the same quadrant as the true
+  // longitude on its own. The reference algorithm reaches the same angle by
+  // taking `atan` of a tangent and adding back the quadrant difference,
+  // which blows up numerically as the longitude approaches 90°.
+  const rightAscensionDegrees = normalizeDegrees(
+    Math.atan2(0.91764 * Math.sin(trueLongitudeRadians), Math.cos(trueLongitudeRadians)) *
+      RADIANS_TO_DEGREES,
+  );
+  const rightAscensionHours = rightAscensionDegrees * HOURS_PER_LONGITUDE_DEGREE;
 
   const sineOfDeclination = 0.39782 * Math.sin(trueLongitudeRadians);
   const cosineOfDeclination = Math.cos(Math.asin(sineOfDeclination));
@@ -93,15 +112,12 @@ function computeUtcHour(
       sineOfDeclination * Math.sin(latitudeRadians)) /
     (cosineOfDeclination * Math.cos(latitudeRadians));
 
-  if (cosineOfHourAngle > 1 || cosineOfHourAngle < -1) {
-    throw new SunCalculationError(
-      cosineOfHourAngle > 1
-        ? 'Polar night: sun does not rise at this latitude on this date.'
-        : 'Polar day: sun does not set at this latitude on this date.',
-    );
+  const polarFailure = polarCrossingFailure(cosineOfHourAngle);
+  if (polarFailure !== null) {
+    throw new SunCalculationError(polarFailure);
   }
 
-  const hourAngleDegrees = rising
+  const hourAngleDegrees = isRising
     ? FULL_CIRCLE_DEGREES - Math.acos(cosineOfHourAngle) * RADIANS_TO_DEGREES
     : Math.acos(cosineOfHourAngle) * RADIANS_TO_DEGREES;
   const hourAngleHours = hourAngleDegrees * HOURS_PER_LONGITUDE_DEGREE;

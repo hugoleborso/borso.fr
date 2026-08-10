@@ -10,6 +10,10 @@ import {
 const HMAC_KEY = randomBytes(32);
 const NOW = 1_700_000_000_000;
 
+function signPayload(payloadEncoded: string): string {
+  return createHmac('sha256', HMAC_KEY).update(payloadEncoded).digest('base64url');
+}
+
 describe('session-cookie.utils', () => {
   it('exposes the cookie name expected by the front-end', () => {
     expect(SESSION_COOKIE_NAME).toBe('pragma_session');
@@ -18,11 +22,10 @@ describe('session-cookie.utils', () => {
   it('round-trips a freshly built cookie', () => {
     const cookie = buildCookie(HMAC_KEY, NOW);
     const result = verifyCookie(cookie, HMAC_KEY, NOW);
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.payload.issuedAt).toBe(NOW);
-      expect(result.payload.expiresAt).toBe(NOW + SESSION_TTL_MS);
-    }
+    expect(result).toEqual({
+      ok: true,
+      payload: { issuedAt: NOW, expiresAt: NOW + SESSION_TTL_MS },
+    });
   });
 
   it('rejects a cookie missing the separator', () => {
@@ -47,6 +50,13 @@ describe('session-cookie.utils', () => {
     expect(result).toEqual({ ok: false, reason: 'bad-signature' });
   });
 
+  it('rejects a signature whose byte length differs from the expected one', () => {
+    const cookie = buildCookie(HMAC_KEY, NOW);
+    const [payloadEncoded] = cookie.split('.');
+    const result = verifyCookie(`${payloadEncoded ?? ''}.AA`, HMAC_KEY, NOW);
+    expect(result).toEqual({ ok: false, reason: 'bad-signature' });
+  });
+
   it('rejects a cookie with a tampered payload', () => {
     const cookie = buildCookie(HMAC_KEY, NOW);
     const [, signature] = cookie.split('.');
@@ -60,10 +70,6 @@ describe('session-cookie.utils', () => {
     const result = verifyCookie(cookie, HMAC_KEY, NOW + SESSION_TTL_MS);
     expect(result).toEqual({ ok: false, reason: 'expired' });
   });
-
-  function signPayload(payloadEncoded: string): string {
-    return createHmac('sha256', HMAC_KEY).update(payloadEncoded).digest('base64url');
-  }
 
   it('rejects a cookie whose payload is not valid JSON', () => {
     const payloadEncoded = Buffer.from('not-json-at-all', 'utf8').toString('base64url');

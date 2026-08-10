@@ -5,7 +5,7 @@
  */
 
 import type { z } from 'zod';
-import type { Database } from '../database/client';
+import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteEntry,
   findSetlistBySession,
@@ -22,37 +22,29 @@ import type { setlistEntryCreateSchema } from './setlists.schema';
 
 type EntryCreateInput = z.infer<typeof setlistEntryCreateSchema>;
 
-export async function getSetlistBySession(
-  database: Database,
-  sessionId: string,
-): Promise<SetlistRow | null> {
-  return await findSetlistBySession(database, sessionId);
+export async function getSetlistBySession(sessionId: string): Promise<SetlistRow | null> {
+  return await findSetlistBySession(sessionId);
 }
 
 export async function createSetlistForSession(
-  database: Database,
   sessionId: string,
 ): Promise<{ kind: 'ok'; setlist: SetlistRow } | { kind: 'already-exists' }> {
-  const existing = await findSetlistBySession(database, sessionId);
+  const existing = await findSetlistBySession(sessionId);
   if (existing !== null) return { kind: 'already-exists' };
-  const setlist = await insertSetlist(database, sessionId);
+  const setlist = await insertSetlist(sessionId);
   return { kind: 'ok', setlist };
 }
 
-export async function getEntries(
-  database: Database,
-  setlistId: string,
-): Promise<SetlistEntryRow[]> {
-  return await listEntries(database, setlistId);
+export async function getEntries(setlistId: string): Promise<SetlistEntryRow[]> {
+  return await listEntries(setlistId);
 }
 
 export async function appendEntry(
-  database: Database,
   setlistId: string,
   input: EntryCreateInput,
 ): Promise<SetlistEntryRow> {
-  const existing = await listEntries(database, setlistId);
-  return await insertEntry(database, {
+  const existing = await listEntries(setlistId);
+  return await insertEntry({
     setlistId,
     songId: input.songId,
     position: existing.length,
@@ -65,42 +57,39 @@ export async function appendEntry(
 }
 
 export async function patchEntry(
-  database: Database,
   setlistId: string,
   entryId: string,
   input: Partial<EntryCreateInput>,
 ): Promise<{ kind: 'ok'; entry: SetlistEntryRow } | { kind: 'empty' } | { kind: 'not-found' }> {
   if (Object.keys(input).length === 0) return { kind: 'empty' };
-  const entry = await updateEntry(database, setlistId, entryId, input);
+  const entry = await updateEntry(setlistId, entryId, input);
   if (entry === null) return { kind: 'not-found' };
   return { kind: 'ok', entry };
 }
 
 export async function removeEntryAndCompact(
-  database: Database,
   setlistId: string,
   entryId: string,
-): Promise<boolean> {
-  const ok = await deleteEntry(database, setlistId, entryId);
-  if (!ok) return false;
+): Promise<DeletionOutcome> {
+  const outcome = await deleteEntry(setlistId, entryId);
+  if (outcome === 'not-found') return outcome;
   // Compact positions so the next append lands at the right index.
-  const remaining = await listEntries(database, setlistId);
+  const remaining = await listEntries(setlistId);
   for (let position = 0; position < remaining.length; position += 1) {
     const entry = remaining[position];
     if (entry === undefined) continue;
-    await setEntryPosition(database, entry.id, position);
+    await setEntryPosition(entry.id, position);
   }
-  return true;
+  return outcome;
 }
 
 export type ReorderResult = { kind: 'ok' } | { kind: 'stale' };
 
 export async function reorderEntries(
-  database: Database,
   setlistId: string,
   entryIds: readonly string[],
 ): Promise<ReorderResult> {
-  const existing = await listEntryIds(database, setlistId);
+  const existing = await listEntryIds(setlistId);
   if (entryIds.length !== existing.length) return { kind: 'stale' };
   const existingIds = new Set(existing.map((row) => row.id));
   for (const entryId of entryIds) {
@@ -109,7 +98,7 @@ export async function reorderEntries(
   for (let position = 0; position < entryIds.length; position += 1) {
     const entryId = entryIds[position];
     if (entryId === undefined) continue;
-    await setEntryPosition(database, entryId, position);
+    await setEntryPosition(entryId, position);
   }
   return { kind: 'ok' };
 }

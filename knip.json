@@ -5,7 +5,16 @@
   "workspaces": {
     ".": {
       "ignoreBinaries": ["typecheck", "build"],
-      "ignoreDependencies": ["esbuild"]
+      "ignoreDependencies": [
+        "@stryker-mutator/core",
+        "@stryker-mutator/vitest-runner",
+        "@swmansion/argent",
+        "agent-browser",
+        "esbuild",
+        "tsx"
+      ],
+      "entry": [".claude/skills/blueprint/blueprint-indexing.ts"],
+      "project": [".claude/skills/blueprint/**/*.ts"]
     },
     "apps/borso-fr": {
       "entry": [

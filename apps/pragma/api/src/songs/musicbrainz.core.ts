@@ -44,7 +44,7 @@ const artistCreditSchema = z
       artist: z.object({ name: z.string().optional() }).optional(),
     }),
   )
-  .optional();
+  .default([]);
 
 const tagSchema = z.object({
   name: z.string(),
@@ -61,7 +61,7 @@ const recordingSchema = z.object({
   title: z.string().optional(),
   length: z.number().nullable().optional(),
   disambiguation: z.string().optional(),
-  'first-release-date': z.string().optional(),
+  'first-release-date': z.string().default(''),
   'artist-credit': artistCreditSchema,
   releases: z.array(releaseSchema).optional(),
   isrcs: z.array(z.string()).optional(),
@@ -69,27 +69,22 @@ const recordingSchema = z.object({
 });
 
 const responseSchema = z.object({
-  recordings: z.array(recordingSchema).optional(),
+  recordings: z.array(recordingSchema).default([]),
 });
 
 const YEAR_REGEX = /^(\d{4})/;
 
-function parseYear(raw: string | undefined): number | null {
-  if (raw === undefined) return null;
+function parseYear(raw: string): number | null {
   const match = YEAR_REGEX.exec(raw);
   if (match === null) return null;
   return Number(match[1]);
 }
 
 function composeArtist(credit: z.infer<typeof artistCreditSchema>): string {
-  if (credit === undefined || credit.length === 0) return '';
-  const parts: string[] = [];
-  for (const entry of credit) {
-    const name = entry.name ?? entry.artist?.name ?? '';
-    parts.push(name);
-    if (entry.joinphrase !== undefined) parts.push(entry.joinphrase);
-  }
-  return parts.join('').trim();
+  return credit
+    .map((entry) => `${entry.name ?? entry.artist?.name ?? ''}${entry.joinphrase ?? ''}`)
+    .join('')
+    .trim();
 }
 
 function pickFirstRelease(
@@ -126,9 +121,8 @@ function durationFromLength(lengthMs: number | null | undefined): {
 export function mapMusicBrainzRecordings(payload: unknown): ExternalSongHit[] {
   const parsed = responseSchema.safeParse(payload);
   if (!parsed.success) return [];
-  const recordings = parsed.data.recordings ?? [];
   const hits: ExternalSongHit[] = [];
-  for (const recording of recordings) {
+  for (const recording of parsed.data.recordings) {
     const title = recording.title ?? '';
     if (title.length === 0) continue;
     const release = pickFirstRelease(recording.releases);
@@ -151,4 +145,20 @@ export function mapMusicBrainzRecordings(payload: unknown): ExternalSongHit[] {
     });
   }
   return hits;
+}
+
+export interface ExternalSearchCacheEntry {
+  readonly value: ExternalSongHit[];
+  readonly expiresAt: number;
+}
+
+/**
+ * The keys of a search cache whose entries have reached their expiry, so the
+ * caller can drop them without iterating a map it is mutating.
+ */
+export function expiredSearchCacheKeys(
+  cache: ReadonlyMap<string, ExternalSearchCacheEntry>,
+  now: number,
+): readonly string[] {
+  return [...cache].filter(([, entry]) => entry.expiresAt <= now).map(([cacheKey]) => cacheKey);
 }

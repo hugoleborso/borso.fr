@@ -22,6 +22,21 @@ const validOpening = {
   ],
 };
 
+function openingWithLineOverrides(overrides: Record<string, unknown>) {
+  return {
+    ...validOpening,
+    variations: [
+      {
+        id: 'main',
+        name: 'Main',
+        lines: [
+          { id: 'a', name: 'A', eco: 'C50', movesSan: ['e4'], movesUci: ['e2e4'], ...overrides },
+        ],
+      },
+    ],
+  };
+}
+
 describe('parseOpenings', () => {
   it('parses a well-formed payload', () => {
     const result = parseOpenings([validOpening]);
@@ -116,5 +131,30 @@ describe('parseOpenings', () => {
 
   it('rejects null entries (non-object record)', () => {
     expect(() => parseOpenings([null])).toThrow(/opening entry is not an object/);
+  });
+
+  it('names the opening field it rejected', () => {
+    const broken = { ...validOpening, name: 42 };
+    expect(() => parseOpenings([broken])).toThrow(/opening\.name is not a string/);
+  });
+
+  it('names the variation field it rejected', () => {
+    const broken = { ...validOpening, variations: [{ id: 'main', name: 42, lines: [] }] };
+    expect(() => parseOpenings([broken])).toThrow(/variation\.name is not a string/);
+  });
+
+  it('names each line field it rejected', () => {
+    expect(() => parseOpenings([openingWithLineOverrides({ id: 42 })])).toThrow(
+      /line\.id is not a string/,
+    );
+    expect(() => parseOpenings([openingWithLineOverrides({ name: 42 })])).toThrow(
+      /line\.name is not a string/,
+    );
+    expect(() => parseOpenings([openingWithLineOverrides({ eco: 42 })])).toThrow(
+      /line\.eco is not a string/,
+    );
+    expect(() => parseOpenings([openingWithLineOverrides({ movesUci: 'e2e4' })])).toThrow(
+      /line\.movesUci is not an array/,
+    );
   });
 });

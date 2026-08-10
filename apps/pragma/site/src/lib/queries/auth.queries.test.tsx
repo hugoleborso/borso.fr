@@ -11,6 +11,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { authKeys, useLogin } from './auth';
 import {
   createIsolatedQueryClient,
+  createMutateSlot,
   flushMicrotasks,
   jsonResponse,
   mountWithClient,
@@ -38,11 +39,10 @@ describe('useLogin — session cache reconciliation', () => {
     const queryClient = createIsolatedQueryClient();
     queryClient.setQueryData(authKeys.session(), { authenticated: false });
 
-    let dispatch: ReturnType<typeof useLogin>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeLogin sink={(m) => (dispatch = m)} />);
+    const slot = createMutateSlot<ReturnType<typeof useLogin>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeLogin sink={slot.sink} />);
     await flushMicrotasks();
-    if (dispatch === null) throw new Error('login mutate not captured');
-    const send: ReturnType<typeof useLogin>['mutateAsync'] = dispatch;
+    const send = slot.read();
 
     await send({ password: 'correct-horse-battery' });
     await flushMicrotasks();

@@ -27,11 +27,12 @@ import { STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE } from '../internal/cf-static-s
 import {
   assertDeployStage,
   bucketName,
+  isProductionStage,
   previewHostname,
   previewS3Prefix,
   type Stage,
   validateAppSlug,
-} from '../internal/naming.js';
+} from '../internal/naming.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 
 /**
@@ -117,11 +118,8 @@ export class StaticSite extends Construct {
     assertDeployStage(props.stage);
     applyStandardTags(this, props);
 
-    if (props.stage === 'prod') {
-      this.url = this.buildProd(props);
-    } else {
-      this.url = this.buildPreview(props);
-    }
+    const isProduction = isProductionStage(props.stage);
+    this.url = isProduction ? this.buildProd(props) : this.buildPreview(props);
 
     new CfnOutput(this, 'Url', { value: this.url });
   }

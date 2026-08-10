@@ -1,0 +1,444 @@
+{
+  "common": {
+    "month": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "brand": {
+      "name": "borso",
+      "domain": "fr"
+    }
+  },
+  "home": {
+    "welcome": "Welcome to",
+    "menu": {
+      "open-label": "Open menu",
+      "close-label": "Close menu",
+      "mother": "Mum",
+      "sisters": "The sisters",
+      "art": "Art",
+      "date-request": "Date request",
+      "twelve-labours": "The twelve labours of Borso"
+    },
+    "date-request": {
+      "message": "Date requests are no longer available on borso.fr - hugs all the same",
+      "close": "Close"
+    }
+  },
+  "twelve-labours": {
+    "project": {
+      "label": "The project",
+      "description": "Twelve challenges a year, one a month. The list is fixed in January and written up as the year goes."
+    },
+    "title": {
+      "first-line": "The twelve",
+      "second-line": "labours"
+    },
+    "hero": {
+      "edition-label": "Edition",
+      "tally-label": "Running tally"
+    },
+    "stats": {
+      "daily": "Daily",
+      "one-shot": "One-off",
+      "remaining": "Remaining"
+    },
+    "filmstrip": {
+      "heading": "The year in twelve chapters",
+      "hint": "click to bring into focus"
+    },
+    "featured": {
+      "label": "Month in focus · {{month}}/{{year}}",
+      "score_one": "{{completed}} of {{total}} completed",
+      "score_other": "{{completed}} of {{total}} completed",
+      "cover-alt": "Cover {{month}}",
+      "note": "“{{note}}”"
+    },
+    "footer": {
+      "credit": "borso.fr · the twelve labours"
+    },
+    "status": {
+      "done": "Completed",
+      "partial": "Partial",
+      "failed": "Failed",
+      "abandoned": "Abandoned",
+      "doing": "In progress",
+      "todo": "Upcoming"
+    },
+    "kind": {
+      "daily": "daily",
+      "count": "counted",
+      "oneshot": "one-off"
+    },
+    "proof-label": {
+      "strava": "Strava",
+      "strava-line-fourteen": "Strava (line 14)",
+      "esf-result": "ESF result",
+      "distance": "Distance",
+      "total-distance": "Total distance",
+      "time": "Time",
+      "pool-time": "Pool time",
+      "total-time": "Total time",
+      "moving-time": "Moving time",
+      "average-pace": "Average pace",
+      "metro-equivalent": "By metro",
+      "elevation": "Elevation gain",
+      "strava-elevation": "Strava elevation gain",
+      "swim": "Swim",
+      "bike": "Bike",
+      "run": "Run",
+      "days": "Days"
+    },
+    "edition": {
+      "2025": {
+        "title": "First edition",
+        "subtitle": "A dozen challenges to give the year a rhythm.",
+        "january": {
+          "daily-sport": {
+            "title": "Sport every day",
+            "note": "A locked back mid-month broke the streak; I made the days up in February."
+          },
+          "volleyball-spike": {
+            "title": "Spike properly at volleyball"
+          }
+        },
+        "february": {
+          "phone-time": {
+            "title": "Two hours of phone a day on average",
+            "note": "Went rather well, give or take a few slips."
+          },
+          "fourteen-books": {
+            "title": "Fourteen books in the month",
+            "note": "Seven books read: Barjavel, Gogol, Benzine, Roux, da Empoli, Henn."
+          }
+        },
+        "march": {
+          "golden-arrow": {
+            "title": "Pass the Golden Arrow ski test"
+          }
+        },
+        "april": {
+          "five-kilometres-under-twenty": {
+            "title": "5 km under twenty minutes"
+          }
+        },
+        "may": {
+          "gr75": {
+            "title": "The GR75",
+            "note": "With Corentin Gerest."
+          }
+        },
+        "june": {
+          "monte-cristo": {
+            "title": "The Monte-Cristo (5 km swim)",
+            "note": "The sea race was cancelled — 5 km in a pool instead, then views over the calanques."
+          }
+        },
+        "july": {
+          "chess-openings": {
+            "title": "Learn one chess opening a day",
+            "note": "It was the holidays, you know how it goes."
+          },
+          "rapid-rating": {
+            "title": "Climb to 1500 in rapid chess",
+            "note": "It was the holidays, you know how it goes."
+          }
+        },
+        "august": {
+          "two-hundred-kilometre-ride": {
+            "title": "200 km by bike in one go"
+          },
+          "mediterranean-crossing": {
+            "title": "Cross the Mediterranean by boat",
+            "note": "I will come back to it."
+          }
+        },
+        "september": {
+          "triathlon": {
+            "title": "Olympic-distance triathlon and beat my record"
+          },
+          "daily-sport": {
+            "title": "Sport every day"
+          }
+        },
+        "october": {
+          "free-diving": {
+            "title": "20 m free diving",
+            "note": "10 m in the dive pit (the permitted maximum) ; 50 m dynamic alongside. Wonderful — and easier than expected."
+          }
+        },
+        "november": {
+          "montmartre-steps": {
+            "title": "The Montmartre steps a hundred times in one day",
+            "note": "4,300 m of climbing, green cap on."
+          }
+        },
+        "december": {
+          "italy-without-english": {
+            "title": "Go to Italy without using English"
+          },
+          "muscle-up": {
+            "title": "Do a muscle-up"
+          }
+        }
+      },
+      "2026": {
+        "title": "Second edition",
+        "subtitle": "More structured. Fewer far-fetched challenges, more promises I can keep.",
+        "january": {
+          "positivity": {
+            "title": "Positivity month — share something positive with the flatmates every day"
+          },
+          "daily-sport": {
+            "title": "Sport every day"
+          }
+        },
+        "february": {
+          "early-nights": {
+            "title": "In bed at 11pm, lights out at 11.30pm (six days out of seven)",
+            "note": "Three weeks out of four. A real change of life ; good to wake up without an alarm."
+          },
+          "pragma-dates": {
+            "title": "Find and book two gigs for Pragma",
+            "note": "Pushed back to September."
+          },
+          "ten-hours-of-sport": {
+            "title": "Ten one-hour sport sessions in the same day",
+            "note": "At Les Pyramides with Arnoult and Matmat. Quite a day."
+          }
+        },
+        "march": {
+          "capes-maths": {
+            "title": "Qualify for the oral round of the maths CAPES"
+          },
+          "beat-the-metro": {
+            "title": "Beat the metro between two stations",
+            "note": "Saint-Georges → Notre-Dame-de-Lorette."
+          },
+          "weekly-strength": {
+            "title": "Three hours of strength training a week"
+          }
+        },
+        "april": {
+          "metro-lines": {
+            "title": "Run every metro line in order within one month",
+            "note": "Last line: number 14."
+          }
+        },
+        "may": {
+          "backyard": {
+            "title": "Organise a backyard ultra and run it"
+          }
+        },
+        "june": {
+          "daily-poem": {
+            "title": "One poem a day to a different person"
+          },
+          "montecristo": {
+            "title": "Finish the Montecristo",
+            "note": "A 5 km open-water swim in Marseille with Salomé. My neck was wrecked coming out."
+          }
+        },
+        "july": {
+          "half-marathon": {
+            "title": "Half marathon under 1h35",
+            "note": "First attempt in early July: blew up in the heat. Target revised from 1h30 to 1h35 for the second attempt at the end of July."
+          },
+          "catan-championship": {
+            "title": "Take part in the French Catan championship"
+          }
+        },
+        "august": {
+          "annecy-crossing": {
+            "title": "Swim across Lake Annecy"
+          }
+        },
+        "september": {
+          "lepin-under-six-hours": {
+            "title": "Under six hours at the Lépin Olympic distance"
+          },
+          "pragma-dates": {
+            "title": "Find and book two gigs for Pragma"
+          }
+        },
+        "october": {
+          "paris-dieppe": {
+            "title": "Paris–Dieppe by bike in one day, then a swim",
+            "note": "With the flatmates."
+          }
+        },
+        "november": {
+          "three-thousand-pages": {
+            "title": "Three thousand pages read in the month"
+          }
+        },
+        "december": {
+          "chess-rating": {
+            "title": "Reach a 1500 chess rating in one time control"
+          }
+        }
+      }
+    }
+  },
+  "mondrian": {
+    "brandmark": "Borso’s Atelier · Est. 1999",
+    "title": "Mondrian",
+    "generator-tag": "— Generator —",
+    "subtitle-before-de-stijl": "A studio for composing in the manner of",
+    "subtitle-de-stijl": "De Stijl",
+    "subtitle-after-de-stijl": ": rectangles, primary colors, and the deliberate quiet between them.",
+    "rail": {
+      "label": "Studio controls",
+      "open": "Studio",
+      "close": "Close"
+    },
+    "section": {
+      "composition": "Composition",
+      "palette": "Palette",
+      "animation": "Animation"
+    },
+    "field": {
+      "complexity": "Complexity",
+      "complexity-value": "{{count}} fields",
+      "line-weight": "Line weight",
+      "line-weight-value": "{{weight}} px",
+      "colour-balance": "Color balance",
+      "colour-balance-value": "{{percentage}}%"
+    },
+    "palette": {
+      "legend": "Palette",
+      "classic": "Classic",
+      "muted": "Muted",
+      "nocturne": "Nocturne",
+      "garden": "Garden",
+      "custom": "Custom"
+    },
+    "custom-colour": {
+      "colour-one": "Color 1",
+      "colour-two": "Color 2",
+      "colour-three": "Color 3",
+      "paper": "Paper",
+      "ink": "Ink"
+    },
+    "colour": {
+      "vermillion": "Vermillion",
+      "cobalt": "Cobalt",
+      "saffron": "Saffron",
+      "ivory": "Ivory",
+      "onyx": "Onyx",
+      "terracotta": "Terracotta",
+      "slate": "Slate",
+      "ochre": "Ochre",
+      "bone": "Bone",
+      "espresso": "Espresso",
+      "ember": "Ember",
+      "indigo": "Indigo",
+      "citrine": "Citrine",
+      "pearl": "Pearl",
+      "ink": "Ink",
+      "moss": "Moss",
+      "plum": "Plum",
+      "goldenrod": "Goldenrod",
+      "linen": "Linen",
+      "charcoal": "Charcoal",
+      "unnamed": "Color"
+    },
+    "artwork-title": {
+      "sentence": "{{subject}} in {{colour}}",
+      "subject": {
+        "study": "A {{adjective}} study",
+        "song": "A {{adjective}} song",
+        "gesture": "A {{adjective}} gesture",
+        "conversation": "A {{adjective}} conversation",
+        "breath": "A {{adjective}} breath",
+        "argument": "A {{adjective}} argument"
+      },
+      "adjective": {
+        "quiet": {
+          "masculine": "quiet",
+          "feminine": "quiet"
+        },
+        "restless": {
+          "masculine": "restless",
+          "feminine": "restless"
+        },
+        "bright": {
+          "masculine": "bright",
+          "feminine": "bright"
+        },
+        "hushed": {
+          "masculine": "hushed",
+          "feminine": "hushed"
+        },
+        "slow": {
+          "masculine": "slow",
+          "feminine": "slow"
+        },
+        "sudden": {
+          "masculine": "sudden",
+          "feminine": "sudden"
+        },
+        "careful": {
+          "masculine": "careful",
+          "feminine": "careful"
+        },
+        "generous": {
+          "masculine": "generous",
+          "feminine": "generous"
+        },
+        "brief": {
+          "masculine": "brief",
+          "feminine": "brief"
+        },
+        "patient": {
+          "masculine": "patient",
+          "feminine": "patient"
+        }
+      }
+    },
+    "swatch": {
+      "change": "Click to change {{name}}",
+      "edit": "Edit {{name}}"
+    },
+    "animation": {
+      "legend": "Animation mode",
+      "still": "Still",
+      "drift": "Drift",
+      "breathe": "Breathe",
+      "cascade": "Cascade"
+    },
+    "action": {
+      "compose": "Compose",
+      "download": "Download"
+    },
+    "credit": {
+      "heading": "Studio note",
+      "body": "Each composition is generated from a single seed.",
+      "hint-fine": "Press space to compose anew",
+      "hint-coarse": "Tap the painting to compose anew",
+      "tail-before-cascade": ". Hold a palette to sit with it; switch to",
+      "tail-cascade": "Cascade",
+      "tail-after-cascade": "to let the room rearrange itself."
+    },
+    "stage": {
+      "work-number": "Composition · {{number}}",
+      "meta": "{{count}} fields · {{date}}",
+      "seed": "Seed · {{seed}}",
+      "hint-fine-before": "Press",
+      "hint-fine-key": "space",
+      "hint-fine-after": "to compose",
+      "hint-coarse": "Tap the painting to compose",
+      "frame-label": "Composition. Click to recompose."
+    }
+  }
+}

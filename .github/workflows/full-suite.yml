@@ -1,0 +1,112 @@
+# The unscoped gate: every application, every suite, mutation included.
+#
+# Pre-push and `ci` are both scoped — pre-push mutates only the pure files a
+# push touches, `ci` tests only the apps a pull request changes. That is what
+# keeps them affordable enough to be run rather than skipped, and it leaves one
+# hole: a change in app A that resurrects a mutant in app B, or in a file the
+# push never touched. This workflow is that hole's backstop. It runs after the
+# merge, on main, where nobody is waiting on it.
+#
+# One job per app, in parallel, so wall-clock is the slowest single app rather
+# than the sum of four.
+
+name: full-suite
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Not cancel-in-progress: each commit on main deserves its own verdict, and a
+# run cancelled halfway proves nothing about the commit that cancelled it.
+concurrency:
+  group: full-suite-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.compute.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: compute
+        run: |
+          apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
+            | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
+          echo "apps=$apps" >> "$GITHUB_OUTPUT"
+
+  app:
+    needs: list
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: ${{ fromJson(needs.list.outputs.apps) }}
+      fail-fast: false
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://app:app@localhost:5432/app
+      APP: ${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
+
+      - name: Pure suites and the per-file coverage gate
+        run: |
+          if grep -q '"test:core"' "apps/$APP/package.json"; then
+            pnpm --filter "@borso-app/$APP" run test:core
+          else
+            pnpm --filter "@borso-app/$APP" run test:coverage
+          fi
+
+      - name: Back-end end-to-end suite
+        if: hashFiles(format('apps/{0}/api/**', matrix.app)) != ''
+        run: pnpm --filter "@borso-app/$APP" exec vitest run --project back-e2e
+
+      # Stryker's incremental file records, per mutant, the tests that covered
+      # it and the hash of the source it came from. Restoring it means a run
+      # re-tests the mutants whose source or tests moved and reuses the verdict
+      # for the rest. A cache miss simply costs a full run.
+      - uses: actions/cache@v4
+        with:
+          path: apps/${{ matrix.app }}/reports/mutation/incremental.json
+          key: stryker-${{ matrix.app }}-${{ github.sha }}
+          restore-keys: |
+            stryker-${{ matrix.app }}-
+
+      - name: Mutation testing, every pure file
+        run: |
+          pnpm --filter "@borso-app/$APP" exec stryker run \
+            --incremental \
+            --incrementalFile reports/mutation/incremental.json

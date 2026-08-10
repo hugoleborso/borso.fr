@@ -5,13 +5,13 @@
  * member-chip wiring (VD blocker).
  */
 
-import type { Database } from '../database/client';
 import { pickNextPaletteHex } from './member-palette.utils';
+import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteMemberWithLinks,
   findMemberById,
   insertMember,
-  instrumentsExist,
+  areInstrumentsKnown,
   listInstrumentsForMember,
   listMembers,
   type MemberInstrumentRow,
@@ -20,21 +20,22 @@ import {
   updateMember,
 } from './members.repository';
 
-export async function getMembersSortedByFirstName(database: Database): Promise<MemberRow[]> {
-  const rows = await listMembers(database);
+export async function getMembersSortedByFirstName(): Promise<MemberRow[]> {
+  const rows = await listMembers();
   return rows.toSorted((left, right) => left.firstName.localeCompare(right.firstName));
 }
 
-export async function createMember(
-  database: Database,
-  input: { firstName: string; color?: string; avatarS3Key?: string | null },
-): Promise<MemberRow> {
+export async function createMember(input: {
+  firstName: string;
+  color?: string;
+  avatarS3Key?: string | null;
+}): Promise<MemberRow> {
   let color = input.color;
   if (color === undefined) {
-    const existing = await listMembers(database);
+    const existing = await listMembers();
     color = pickNextPaletteHex(existing.length);
   }
-  return await insertMember(database, {
+  return await insertMember({
     firstName: input.firstName,
     color,
     avatarS3Key: input.avatarS3Key ?? null,
@@ -42,7 +43,6 @@ export async function createMember(
 }
 
 export async function patchMember(
-  database: Database,
   id: string,
   input: { firstName?: string; color?: string; avatarS3Key?: string | null },
 ): Promise<{ kind: 'ok'; member: MemberRow } | { kind: 'empty' } | { kind: 'not-found' }> {
@@ -51,37 +51,31 @@ export async function patchMember(
   if (input.color !== undefined) updates.color = input.color;
   if (input.avatarS3Key !== undefined) updates.avatarS3Key = input.avatarS3Key;
   if (Object.keys(updates).length === 0) return { kind: 'empty' };
-  const member = await updateMember(database, id, updates);
+  const member = await updateMember(id, updates);
   if (member === null) return { kind: 'not-found' };
   return { kind: 'ok', member };
 }
 
-export async function removeMember(database: Database, id: string): Promise<boolean> {
-  return await deleteMemberWithLinks(database, id);
+export async function removeMember(id: string): Promise<DeletionOutcome> {
+  return await deleteMemberWithLinks(id);
 }
 
-export async function getMemberInstruments(
-  database: Database,
-  memberId: string,
-): Promise<MemberInstrumentRow[]> {
-  const rows = await listInstrumentsForMember(database, memberId);
+export async function getMemberInstruments(memberId: string): Promise<MemberInstrumentRow[]> {
+  const rows = await listInstrumentsForMember(memberId);
   return rows.toSorted((left, right) => left.name.localeCompare(right.name));
 }
 
 export type AssignInstrumentsResult =
-  | { kind: 'ok' }
-  | { kind: 'member-not-found' }
-  | { kind: 'instrument-not-found' };
+  { kind: 'ok' } | { kind: 'member-not-found' } | { kind: 'instrument-not-found' };
 
 export async function assignInstrumentsToMember(
-  database: Database,
   memberId: string,
   instrumentIds: readonly string[],
 ): Promise<AssignInstrumentsResult> {
-  const member = await findMemberById(database, memberId);
+  const member = await findMemberById(memberId);
   if (member === null) return { kind: 'member-not-found' };
-  const known = await instrumentsExist(database, instrumentIds);
-  if (!known) return { kind: 'instrument-not-found' };
-  await replaceMemberInstruments(database, memberId, instrumentIds);
+  const isKnown = await areInstrumentsKnown(instrumentIds);
+  if (!isKnown) return { kind: 'instrument-not-found' };
+  await replaceMemberInstruments(memberId, instrumentIds);
   return { kind: 'ok' };
 }

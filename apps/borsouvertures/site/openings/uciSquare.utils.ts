@@ -10,7 +10,12 @@ const DEFAULT_ARROW_COLOR = '#5bc86e';
 // The runtime gate is `SQUARE_PATTERN.test(value)` in {@link toSquare}.
 type Square = string;
 
-export function isSquare(value: string): value is Square {
+/**
+ * Not a type guard, deliberately. `Square` is `string`, so narrowing on it
+ * would make the failing branch `never` and leave `value` unprintable in the
+ * error {@link toSquare} throws.
+ */
+export function isSquare(value: string): boolean {
   return SQUARE_PATTERN.test(value);
 }
 

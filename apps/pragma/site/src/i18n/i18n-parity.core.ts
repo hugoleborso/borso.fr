@@ -15,16 +15,16 @@ export interface ParityDiff {
   readonly missingInFr: readonly string[];
 }
 
-export function diffCatalogs(en: CatalogTree, fr: CatalogTree): ParityDiff {
-  const enKeys = new Set(flattenKeys(en));
-  const frKeys = new Set(flattenKeys(fr));
+export function diffCatalogs(english: CatalogTree, french: CatalogTree): ParityDiff {
+  const englishKeys = new Set(flattenKeys(english));
+  const frenchKeys = new Set(flattenKeys(french));
   const missingInEn: string[] = [];
   const missingInFr: string[] = [];
-  for (const key of frKeys) {
-    if (!enKeys.has(key)) missingInEn.push(key);
+  for (const key of frenchKeys) {
+    if (!englishKeys.has(key)) missingInEn.push(key);
   }
-  for (const key of enKeys) {
-    if (!frKeys.has(key)) missingInFr.push(key);
+  for (const key of englishKeys) {
+    if (!frenchKeys.has(key)) missingInFr.push(key);
   }
   return {
     missingInEn: missingInEn.toSorted(),
@@ -34,4 +34,38 @@ export function diffCatalogs(en: CatalogTree, fr: CatalogTree): ParityDiff {
 
 export function isInParity(diff: ParityDiff): boolean {
   return diff.missingInEn.length === 0 && diff.missingInFr.length === 0;
+}
+
+const KEY_PATH_SEPARATOR = '.';
+
+function collectIdenticalValueKeys(
+  english: CatalogTree,
+  french: CatalogTree,
+  prefix: string,
+  identical: string[],
+): void {
+  for (const [key, englishValue] of Object.entries(english)) {
+    const path = prefix === '' ? key : `${prefix}${KEY_PATH_SEPARATOR}${key}`;
+    const frenchValue = french[key];
+    if (typeof englishValue === 'string') {
+      if (frenchValue === englishValue) identical.push(path);
+    } else if (typeof frenchValue === 'object') {
+      collectIdenticalValueKeys(englishValue, frenchValue, path, identical);
+    }
+  }
+}
+
+/**
+ * Every key whose two catalogs carry the byte-identical string. Key parity
+ * alone stays green when an English value is copied into `fr.json`, so the
+ * sibling test asserts this list equals a named allowlist of the entries that
+ * genuinely read the same in both languages.
+ */
+export function listIdenticalValueKeys(
+  english: CatalogTree,
+  french: CatalogTree,
+): readonly string[] {
+  const identical: string[] = [];
+  collectIdenticalValueKeys(english, french, '', identical);
+  return identical.toSorted();
 }

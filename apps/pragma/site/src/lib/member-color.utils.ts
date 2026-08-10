@@ -15,8 +15,9 @@
  * sync with `styles/design-tokens.css` (`--ink` / `--surface`).
  */
 
-const HEX_PATTERN = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+const HEX_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const HEX_RADIX = 16;
+const HASH_PREFIX_LENGTH = 1;
 const SHORT_HEX_LENGTH = 3;
 const BYTE_MAX = 255;
 const SRGB_THRESHOLD = 0.03928;
@@ -27,7 +28,7 @@ const SRGB_GAMMA = 2.4;
 const LUMINANCE_RED_WEIGHT = 0.2126;
 const LUMINANCE_GREEN_WEIGHT = 0.7152;
 const LUMINANCE_BLUE_WEIGHT = 0.0722;
-const READABLE_THRESHOLD = 0.5;
+export const READABLE_THRESHOLD = 0.5;
 
 const FOREGROUND_ON_LIGHT = '#1a1814';
 const FOREGROUND_ON_DARK = '#fffefa';
@@ -39,9 +40,9 @@ export interface Rgb {
 }
 
 export function parseHex(hex: string): Rgb | null {
-  const match = HEX_PATTERN.exec(hex.trim());
-  if (match === null) return null;
-  const raw = match[1] ?? '';
+  const trimmed = hex.trim();
+  if (!HEX_PATTERN.test(trimmed)) return null;
+  const raw = trimmed.slice(HASH_PREFIX_LENGTH);
   const normalised =
     raw.length === SHORT_HEX_LENGTH
       ? raw
@@ -49,10 +50,10 @@ export function parseHex(hex: string): Rgb | null {
           .map((character) => character + character)
           .join('')
       : raw;
-  const r = Number.parseInt(normalised.slice(0, 2), HEX_RADIX);
-  const g = Number.parseInt(normalised.slice(2, 4), HEX_RADIX);
-  const b = Number.parseInt(normalised.slice(4, 6), HEX_RADIX);
-  return { r, g, b };
+  const red = Number.parseInt(normalised.slice(0, 2), HEX_RADIX);
+  const green = Number.parseInt(normalised.slice(2, 4), HEX_RADIX);
+  const blue = Number.parseInt(normalised.slice(4, 6), HEX_RADIX);
+  return { r: red, g: green, b: blue };
 }
 
 function srgbChannel(byte: number): number {
@@ -69,9 +70,12 @@ export function relativeLuminance(rgb: Rgb): number {
   );
 }
 
+export function foregroundForLuminance(luminance: number): string {
+  return luminance > READABLE_THRESHOLD ? FOREGROUND_ON_LIGHT : FOREGROUND_ON_DARK;
+}
+
 export function readableForeground(hex: string): string {
   const rgb = parseHex(hex);
   if (rgb === null) return FOREGROUND_ON_LIGHT;
-  const luminance = relativeLuminance(rgb);
-  return luminance > READABLE_THRESHOLD ? FOREGROUND_ON_LIGHT : FOREGROUND_ON_DARK;
+  return foregroundForLuminance(relativeLuminance(rgb));
 }

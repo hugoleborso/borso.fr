@@ -1,0 +1,89 @@
+# Dependency updates.
+#
+# The cooldown is the point of this file, not the automation. A malicious npm
+# release is typically published, installed by whoever updates first, reported,
+# and unpublished inside a day or two. Waiting before opening the pull request
+# means this repository is never the one that updates first, and costs nothing
+# but latency on updates nobody is waiting for.
+#
+# `directories` names the workspaces explicitly. GitHub's ecosystem table lists
+# pnpm 7–10 under `package-ecosystem: npm`, but does not document whether a
+# single root entry reaches the packages of a pnpm workspace, so this does not
+# rely on it. Globbing is supported by `directories` and not by `directory`.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - '/'
+      - '/apps/*'
+      - '/infra/*'
+    schedule:
+      interval: weekly
+      day: monday
+      time: '05:00'
+      timezone: Europe/Paris
+    cooldown:
+      default-days: 7
+      # A major is a migration whichever week it lands in, so it waits for a
+      # second week of other people finding the problems first.
+      semver-major-days: 14
+    # One developer. A queue longer than this is a queue that gets ignored,
+    # which is worse than a shorter one that gets read.
+    open-pull-requests-limit: 5
+    groups:
+      # Grouped by the thing that breaks together. A vitest bump that leaves
+      # `@vitest/coverage-v8` behind fails the coverage gate rather than the
+      # install, so the two travel in one pull request or neither does.
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
+          - 'jsdom'
+      stryker:
+        patterns:
+          - '@stryker-mutator/*'
+      eslint:
+        patterns:
+          - 'eslint'
+          - 'eslint-*'
+          - '@eslint/*'
+          - '@eslint-community/*'
+          - 'typescript-eslint'
+          - 'prettier'
+      tanstack:
+        patterns:
+          - '@tanstack/*'
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
+      aws-cdk:
+        patterns:
+          - 'aws-cdk'
+          - 'aws-cdk-lib'
+          - 'constructs'
+          - '@aws-sdk/*'
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # The Node 20 deprecation warning on every CI run comes from here:
+  # actions/checkout@v4, actions/setup-node@v4 and pnpm/action-setup@v4 are all
+  # pinned to a major whose runtime GitHub is retiring.
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+      time: '05:00'
+      timezone: Europe/Paris
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns:
+          - '*'

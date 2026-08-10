@@ -26,8 +26,15 @@ import { useTranslation } from 'react-i18next';
 import { formatCapacity } from '../../lib/formatters.utils';
 import { Badge } from '../atoms/Badge';
 import { Chip } from '../atoms/Chip';
-import { cn } from '../atoms/cn.utils';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
+
+const MOBILE_HIDDEN_COLUMN_IDS = new Set(['city', 'capacity']);
+
+const SORT_ARROW_ROTATION_BY_DIRECTION = {
+  asc: '-rotate-90',
+  desc: 'rotate-90',
+} as const;
 
 export interface BarsListRow {
   readonly id: string;
@@ -45,6 +52,7 @@ interface BarsListProps {
   readonly onRemove: (id: string) => void;
 }
 
+// @FollowsBlueprint organism-table
 export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProps): JSX.Element {
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
@@ -108,7 +116,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         cell: ({ row }) => (
           <button
             type="button"
-            className="text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
+            className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
             onClick={() => onRemove(row.original.id)}
             aria-label={t('common.delete')}
           >
@@ -136,9 +144,9 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         {table.getHeaderGroups()[0]?.headers.map((header, index) => {
           const sortDirection = header.column.getIsSorted();
           const canSort = header.column.getCanSort();
-          const className = cn(
+          const className = composeClassName(
             index === 0 && 'flex-1',
-            (header.column.id === 'city' || header.column.id === 'capacity') && 'hidden md:inline',
+            MOBILE_HIDDEN_COLUMN_IDS.has(header.column.id) && 'hidden md:inline',
             canSort && 'cursor-pointer select-none',
           );
           return (
@@ -147,16 +155,21 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
               type="button"
               onClick={header.column.getToggleSortingHandler()}
               disabled={!canSort}
-              className={cn(
+              className={composeClassName(
                 className,
                 'bg-transparent border-0 text-[10.5px] tracking-wider uppercase text-ink-500 font-medium p-0 text-left',
               )}
             >
               {flexRender(header.column.columnDef.header, header.getContext())}
-              {sortDirection === 'asc' ? (
-                <Icon name="chevR" size={10} className="inline-block ml-1 -rotate-90" />
-              ) : sortDirection === 'desc' ? (
-                <Icon name="chevR" size={10} className="inline-block ml-1 rotate-90" />
+              {sortDirection ? (
+                <Icon
+                  name="chevR"
+                  size={10}
+                  className={composeClassName(
+                    'inline-block ml-1',
+                    SORT_ARROW_ROTATION_BY_DIRECTION[sortDirection],
+                  )}
+                />
               ) : null}
             </button>
           );
@@ -165,18 +178,21 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
       {table.getRowModel().rows.map((row) => (
         <li
           key={row.id}
-          className={cn(
+          className={composeClassName(
             'flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors',
             row.original.isStale && 'border-warn/40',
           )}
         >
           {row.getVisibleCells().map((cell) => {
             const isName = cell.column.id === 'name';
-            const isHiddenOnMobile = cell.column.id === 'city' || cell.column.id === 'capacity';
+            const isHiddenOnMobile = MOBILE_HIDDEN_COLUMN_IDS.has(cell.column.id);
             return (
               <span
                 key={cell.id}
-                className={cn(isName && 'flex-1', isHiddenOnMobile && 'hidden md:inline')}
+                className={composeClassName(
+                  isName && 'flex-1',
+                  isHiddenOnMobile && 'hidden md:inline',
+                )}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </span>

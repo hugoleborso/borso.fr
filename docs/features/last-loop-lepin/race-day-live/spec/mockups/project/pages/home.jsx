@@ -3,33 +3,72 @@
    Switches to a live-status banner when the phase is anything but prerace. */
 
 function HomePage({ phase, setRoute }) {
-  const isRaceDay = phase.key !== "prerace";
+  const isRaceDay = phase.key !== 'prerace';
   return (
     <div className="home" data-screen-label="00 Home">
       <section className="home-hero">
         <div className="home-hero-left">
-          <div className="eyebrow">Édition {window.EDITION.edition} · {window.EDITION.year}</div>
+          <div className="eyebrow">
+            Édition {window.EDITION.edition} · {window.EDITION.year}
+          </div>
           <h1 className="home-h1">
             Last Loop Lépin
-            <span className="home-h1-tag">Backyard Ultra · 6,706&nbsp;km/h jusqu'au dernier·ère</span>
+            <span className="home-h1-tag">
+              Backyard Ultra · 6,706&nbsp;km/h jusqu'au dernier·ère
+            </span>
           </h1>
           <dl className="home-facts">
-            <div><dt>Date</dt><dd>{window.EDITION.date} · départ <span className="mono">{window.EDITION.startTime}</span></dd></div>
-            <div><dt>Lieu</dt><dd>{window.EDITION.location}</dd></div>
-            <div><dt>Boucle</dt><dd><span className="mono">{window.EDITION.loopDistanceKm} km</span> · D+ <span className="mono">{window.EDITION.loopDPlusM} m</span></dd></div>
-            <div><dt>Inscrit·es</dt><dd><span className="mono">{window.EDITION.registered}</span> coureur·euses · liste arrêtée</dd></div>
+            <div>
+              <dt>Date</dt>
+              <dd>
+                {window.EDITION.date} · départ{' '}
+                <span className="mono">{window.EDITION.startTime}</span>
+              </dd>
+            </div>
+            <div>
+              <dt>Lieu</dt>
+              <dd>{window.EDITION.location}</dd>
+            </div>
+            <div>
+              <dt>Boucle</dt>
+              <dd>
+                <span className="mono">{window.EDITION.loopDistanceKm} km</span> · D+{' '}
+                <span className="mono">{window.EDITION.loopDPlusM} m</span>
+              </dd>
+            </div>
+            <div>
+              <dt>Inscrit·es</dt>
+              <dd>
+                <span className="mono">{window.EDITION.registered}</span> coureur·euses · liste
+                arrêtée
+              </dd>
+            </div>
           </dl>
-          <div className="row" style={{marginTop:"var(--d-6)", gap:"var(--d-3)", flexWrap:"wrap"}}>
-            {isRaceDay
-              ? <button className="btn btn-primary btn-lg" onClick={()=> setRoute("spectator")}>
-                  Voir la course en direct →
-                </button>
-              : <button className="btn btn-primary btn-lg" disabled
-                        style={{opacity:0.5, cursor:"default"}}>
-                  Direct ouvert le jour J · 10:00
-                </button>}
-            <button className="btn btn-lg" onClick={()=> setRoute("setup")}>Espace organisation</button>
-            <a className="btn btn-ghost btn-lg" href="#archives" onClick={e=>e.preventDefault()}>
+          <div
+            className="row"
+            style={{ marginTop: 'var(--d-6)', gap: 'var(--d-3)', flexWrap: 'wrap' }}
+          >
+            {isRaceDay ? (
+              <button className="btn btn-primary btn-lg" onClick={() => setRoute('spectator')}>
+                Voir la course en direct →
+              </button>
+            ) : (
+              <button
+                className="btn btn-primary btn-lg"
+                disabled
+                style={{ opacity: 0.5, cursor: 'default' }}
+              >
+                Direct ouvert le jour J · 10:00
+              </button>
+            )}
+            <button className="btn btn-lg" onClick={() => setRoute('setup')}>
+              Espace organisation
+            </button>
+            <a
+              className="btn btn-ghost btn-lg"
+              href="#archives"
+              onClick={(e) => e.preventDefault()}
+            >
               Voir l'édition 2025 ↗
             </a>
           </div>
@@ -38,11 +77,20 @@ function HomePage({ phase, setRoute }) {
             <div className="home-live-strip">
               <span className="live-pill">Live</span>
               <span>
-                Boucle <b className="mono">{phase.loopIdx + 1}</b> en cours ·{" "}
-                <b className="mono">{phase.inRace.length}</b> coureur·euses encore en course ·{" "}
+                Boucle <b className="mono">{phase.loopIdx + 1}</b> en cours ·{' '}
+                <b className="mono">{phase.inRace.length}</b> coureur·euses encore en course ·{' '}
                 <b className="mono">{phase.dnf.length}</b> DNF
               </span>
-              <a onClick={()=>setRoute("spectator")} className="muted" style={{marginLeft:"auto", cursor:"pointer", fontSize:13, textDecoration:"underline"}}>
+              <a
+                onClick={() => setRoute('spectator')}
+                className="muted"
+                style={{
+                  marginLeft: 'auto',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  textDecoration: 'underline',
+                }}
+              >
                 Vue spectateur →
               </a>
             </div>
@@ -53,20 +101,61 @@ function HomePage({ phase, setRoute }) {
           <div className="home-course-card">
             <div className="home-course-head">
               <div className="eyebrow">Tracé officiel · GPX</div>
-              <div className="mute-2 mono" style={{fontSize:11}}>aiguebelette.gpx · 184 pts</div>
+              <div className="mute-2 mono" style={{ fontSize: 11 }}>
+                aiguebelette.gpx · 184 pts
+              </div>
             </div>
-            <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" style={{width:"100%", aspectRatio:"1/1"}}>
-              <ellipse cx="50" cy="55" rx="48" ry="40" fill="color-mix(in oklch, var(--accent) 4%, var(--bg-elev-2))" stroke="var(--line-soft)" strokeWidth="0.4" strokeDasharray="0.6 0.4" />
+            <svg
+              viewBox="0 0 100 100"
+              preserveAspectRatio="xMidYMid meet"
+              style={{ width: '100%', aspectRatio: '1/1' }}
+            >
+              <ellipse
+                cx="50"
+                cy="55"
+                rx="48"
+                ry="40"
+                fill="color-mix(in oklch, var(--accent) 4%, var(--bg-elev-2))"
+                stroke="var(--line-soft)"
+                strokeWidth="0.4"
+                strokeDasharray="0.6 0.4"
+              />
               <path d={window.COURSE_PATH} fill="none" stroke="var(--line)" strokeWidth="1.6" />
-              <path d={window.COURSE_PATH} fill="none" stroke="var(--accent)" strokeWidth="0.55" strokeLinecap="round" strokeDasharray="0.6 1.2" />
-              <circle cx="50" cy="12" r="2.2" fill="var(--bg)" stroke="var(--ink)" strokeWidth="0.6" />
+              <path
+                d={window.COURSE_PATH}
+                fill="none"
+                stroke="var(--accent)"
+                strokeWidth="0.55"
+                strokeLinecap="round"
+                strokeDasharray="0.6 1.2"
+              />
+              <circle
+                cx="50"
+                cy="12"
+                r="2.2"
+                fill="var(--bg)"
+                stroke="var(--ink)"
+                strokeWidth="0.6"
+              />
               <circle cx="50" cy="12" r="0.8" fill="var(--ink)" />
             </svg>
             <div className="home-course-stats">
-              <div><span className="mute-2">DIST</span><b className="mono">6,706 km</b></div>
-              <div><span className="mute-2">D+</span><b className="mono">184 m</b></div>
-              <div><span className="mute-2">SOL</span><b>Sentier · 70%</b></div>
-              <div><span className="mute-2">PARTS</span><b>2 ravitos</b></div>
+              <div>
+                <span className="mute-2">DIST</span>
+                <b className="mono">6,706 km</b>
+              </div>
+              <div>
+                <span className="mute-2">D+</span>
+                <b className="mono">184 m</b>
+              </div>
+              <div>
+                <span className="mute-2">SOL</span>
+                <b>Sentier · 70%</b>
+              </div>
+              <div>
+                <span className="mute-2">PARTS</span>
+                <b>2 ravitos</b>
+              </div>
             </div>
           </div>
         </div>
@@ -79,13 +168,43 @@ function HomePage({ phase, setRoute }) {
         </div>
         <div className="home-timeline-grid">
           {[
-            { t: "Vendredi 18 · 18:00", title: "Retrait des dossards", desc: "Halle communale, accueil café. Briefing 19:00.", icon: "△" },
-            { t: "Samedi 19 · 09:30",  title: "Corral & vérifs", desc: "Tous au corral, vérif matériel obligatoire (frontale, eau).", icon: "◇" },
-            { t: "Samedi 19 · 10:00",  title: "Départ boucle 1", desc: "Top horaire — la course commence. Une boucle/h, T+0 = sortie.", icon: "●" },
-            { t: "Samedi 19 · 19:36",  title: "Coucher de soleil", desc: "Frontales obligatoires à partir du top suivant.", icon: "☼" },
-            { t: "Dimanche 20 · 07:25", title: "Lever de soleil", desc: "Frontales retirables. Café au corral, médical éveillé.", icon: "☼" },
-            { t: "Dimanche 20 · 10:00", title: "Limite physique", desc: "24 boucles · 160,9 km. Si encore en jeu, on continue.", icon: "▢" },
-          ].map((step,i) => (
+            {
+              t: 'Vendredi 18 · 18:00',
+              title: 'Retrait des dossards',
+              desc: 'Halle communale, accueil café. Briefing 19:00.',
+              icon: '△',
+            },
+            {
+              t: 'Samedi 19 · 09:30',
+              title: 'Corral & vérifs',
+              desc: 'Tous au corral, vérif matériel obligatoire (frontale, eau).',
+              icon: '◇',
+            },
+            {
+              t: 'Samedi 19 · 10:00',
+              title: 'Départ boucle 1',
+              desc: 'Top horaire — la course commence. Une boucle/h, T+0 = sortie.',
+              icon: '●',
+            },
+            {
+              t: 'Samedi 19 · 19:36',
+              title: 'Coucher de soleil',
+              desc: 'Frontales obligatoires à partir du top suivant.',
+              icon: '☼',
+            },
+            {
+              t: 'Dimanche 20 · 07:25',
+              title: 'Lever de soleil',
+              desc: 'Frontales retirables. Café au corral, médical éveillé.',
+              icon: '☼',
+            },
+            {
+              t: 'Dimanche 20 · 10:00',
+              title: 'Limite physique',
+              desc: '24 boucles · 160,9 km. Si encore en jeu, on continue.',
+              icon: '▢',
+            },
+          ].map((step, i) => (
             <div key={i} className="home-step">
               <span className="home-step-icon">{step.icon}</span>
               <div>
@@ -104,25 +223,49 @@ function HomePage({ phase, setRoute }) {
           <h2>{window.EDITION.registered} coureur·euses au départ</h2>
         </div>
         <div className="home-runners">
-          {window.RUNNERS.map(r => (
-            <button key={r.slug} className="home-runner-chip" onClick={()=>setRoute("runner")}>
+          {window.RUNNERS.map((r) => (
+            <button key={r.slug} className="home-runner-chip" onClick={() => setRoute('runner')}>
               <RunnerAvatar runner={r} size={28} />
               <span>{r.name}</span>
-              <span className="mono mute-2">#{String(r.bib).padStart(3,"0")}</span>
+              <span className="mono mute-2">#{String(r.bib).padStart(3, '0')}</span>
             </button>
           ))}
         </div>
       </section>
 
       <footer className="home-foot">
-        <div className="row" style={{justifyContent:"space-between", flexWrap:"wrap", gap:"var(--d-4)"}}>
-          <div className="mute-2 mono" style={{fontSize:11}}>
+        <div
+          className="row"
+          style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--d-4)' }}
+        >
+          <div className="mute-2 mono" style={{ fontSize: 11 }}>
             © Last Loop Lépin · association loi 1901 · Savoie
           </div>
-          <div className="row" style={{gap:"var(--d-4)"}}>
-            <a className="mute-2" style={{fontSize:12}} href="#" onClick={e=>e.preventDefault()}>Règlement</a>
-            <a className="mute-2" style={{fontSize:12}} href="#" onClick={e=>e.preventDefault()}>Édition 2025 ↗</a>
-            <a className="mute-2" style={{fontSize:12}} href="#" onClick={e=>e.preventDefault()}>Contact orga</a>
+          <div className="row" style={{ gap: 'var(--d-4)' }}>
+            <a
+              className="mute-2"
+              style={{ fontSize: 12 }}
+              href="#"
+              onClick={(e) => e.preventDefault()}
+            >
+              Règlement
+            </a>
+            <a
+              className="mute-2"
+              style={{ fontSize: 12 }}
+              href="#"
+              onClick={(e) => e.preventDefault()}
+            >
+              Édition 2025 ↗
+            </a>
+            <a
+              className="mute-2"
+              style={{ fontSize: 12 }}
+              href="#"
+              onClick={(e) => e.preventDefault()}
+            >
+              Contact orga
+            </a>
           </div>
         </div>
       </footer>

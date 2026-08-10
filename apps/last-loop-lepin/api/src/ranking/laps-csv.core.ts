@@ -21,6 +21,11 @@ import type { RankedRunner } from './ranking.types';
 const MILLISECONDS_PER_SECOND = 1_000;
 const SECONDS_PER_MINUTE = 60;
 const MINUTES_PER_HOUR = 60;
+const TWO_DIGITS = 2;
+
+function pad(value: number): string {
+  return value.toString().padStart(TWO_DIGITS, '0');
+}
 
 /**
  * Format a loop duration as `MM:SS` (e.g. `58:14`) when under an hour, or
@@ -37,7 +42,6 @@ export function formatLoopDuration(durationMs: number | null): string {
   const seconds = totalSeconds % SECONDS_PER_MINUTE;
   const hours = Math.floor(totalMinutes / MINUTES_PER_HOUR);
   const minutesWithinHour = totalMinutes % MINUTES_PER_HOUR;
-  const pad = (value: number): string => value.toString().padStart(2, '0');
   if (hours === 0) {
     return `${pad(totalMinutes)}:${pad(seconds)}`;
   }

@@ -12,8 +12,9 @@
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { ApiError } from '../../lib/api';
+import { useNavigateTo } from '../../lib/navigation';
 import { useCreateSong, useDeleteSong, useSong, useUpdateSong } from '../../lib/queries/songs';
 import { SongEditForm } from './SongEditForm';
 import {
@@ -22,12 +23,12 @@ import {
   type SongDraftState,
   singleSongSchema,
   songFromApi,
-} from './song-draft';
+} from './song-draft.core';
 
 export function SongEditPage(): JSX.Element {
   const { t } = useTranslation();
   const { songId } = useParams<{ songId: string }>();
-  const navigate = useNavigate();
+  const navigateTo = useNavigateTo();
   const isNew = songId === undefined || songId === 'new';
   const songQuery = useSong(songId ?? '', !isNew);
   const createSong = useCreateSong();
@@ -44,37 +45,37 @@ export function SongEditPage(): JSX.Element {
     return songFromApi(parsed.data.song);
   }, [isNew, songQuery.data]);
 
-  const formKey = isNew ? 'new' : `${songId}:${songQuery.data?.song?.id ?? 'loading'}`;
-  const loading = !isNew && songQuery.isLoading;
+  const formKey = isNew ? 'new' : `${songId}:${songQuery.data?.song.id ?? 'loading'}`;
+  const isLoading = !isNew && songQuery.isLoading;
   const queryError = songQuery.error instanceof ApiError ? songQuery.error.message : null;
 
-  const handleSubmit = async (value: SongDraftState): Promise<void> => {
+  const saveSong = async (value: SongDraftState): Promise<void> => {
     const payload = payloadFromDraft(value);
     if (payload === null) return;
     try {
       if (isNew) {
         const created = await createSong.mutateAsync(payload);
-        navigate(`/catalog/${created.song.id}`, { replace: true });
-      } else if (songId !== undefined) {
+        navigateTo(`/catalog/${created.song.id}`, { replace: true });
+      } else {
         await updateSong.mutateAsync({ id: songId, ...payload });
-        navigate(`/catalog/${songId}`);
+        navigateTo(`/catalog/${songId}`);
       }
-    } catch (caught) {
-      setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
+    } catch (error) {
+      setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
     }
   };
 
-  const handleDelete = async (): Promise<void> => {
+  const removeSong = async (): Promise<void> => {
     if (songId === undefined || isNew) return;
     try {
       await deleteSong.mutateAsync({ id: songId });
-      navigate('/catalog', { replace: true });
-    } catch (caught) {
-      setLocalError(caught instanceof ApiError ? caught.message : 'unknown-error');
+      navigateTo('/catalog', { replace: true });
+    } catch (error) {
+      setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
 
@@ -84,8 +85,8 @@ export function SongEditPage(): JSX.Element {
       isNew={isNew}
       songId={songId}
       defaultValues={defaultValues}
-      onSubmit={handleSubmit}
-      onDelete={handleDelete}
+      onSubmit={saveSong}
+      onDelete={removeSong}
       newLinkUrl={newLinkUrl}
       setNewLinkUrl={setNewLinkUrl}
       error={localError ?? queryError}

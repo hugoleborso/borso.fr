@@ -1,9 +1,10 @@
 import { Chess } from 'chess.js';
 import type { Side } from '@/state/persistedState.utils';
-import { computeBookState, type PlayScopeFilter } from './bookEngine.utils';
+import { type BookState, computeBookState, type PlayScopeFilter } from './bookEngine.utils';
 import type { Selection } from './selectors.utils';
 import type { Line, Opening, Variation } from './types';
 import { uciFromSquare, uciPromotion, uciToSquare } from './uciSquare.utils';
+import { pickRandomCandidate, scheduleTimeoutCallback } from './machineEffects';
 
 export interface PlayMachineConfig {
   openings: Opening[];
@@ -42,7 +43,7 @@ export interface PlayMachine {
   revealBookMoves: () => void;
   dismissOutOfBook: () => void;
   dismissSuccess: () => void;
-  setAutoOpponent: (value: boolean) => void;
+  setAutoOpponent: (isEnabled: boolean) => void;
 }
 
 export interface PlayMachineOptions {
@@ -73,19 +74,88 @@ const INITIAL_SNAPSHOT: PlayMachineSnapshot = {
   autoOpponent: true,
 };
 
-function defaultPickRandom(candidates: readonly string[]): string | undefined {
-  return candidates[Math.floor(Math.random() * candidates.length)];
+/**
+ * Everything one game owns: the configuration it was started with, the chess
+ * engine, the played-move history, and the three modal flags. A fresh object
+ * per {@link PlayMachine.start}, so the object's identity doubles as the
+ * game's identity — a pending opponent timeout captures the run it belongs to
+ * and bails once the machine has moved on, which is the mitigation for B5 in
+ * the spec (a stale setTimeout firing after a reset).
+ */
+interface PlayRun {
+  config: PlayMachineConfig;
+  chess: Chess;
+  playedMovesUci: string[];
+  isOutOfBookOpen: boolean;
+  isSuccessOpen: boolean;
+  isManualReveal: boolean;
 }
 
-function defaultScheduleTimeout(callback: () => void, delayMs: number): void {
-  setTimeout(callback, delayMs);
+function beginRun(config: PlayMachineConfig): PlayRun {
+  return {
+    config,
+    chess: new Chess(),
+    playedMovesUci: [],
+    isOutOfBookOpen: false,
+    isSuccessOpen: false,
+    isManualReveal: false,
+  };
+}
+
+function readBookState(run: PlayRun): BookState {
+  return computeBookState(
+    run.config.openings,
+    run.config.selection,
+    [...run.playedMovesUci],
+    run.config.playScope,
+  );
+}
+
+function computeSnapshot(run: PlayRun): PlayMachineSnapshot {
+  const bookState = readBookState(run);
+  return {
+    fen: run.chess.fen(),
+    playedMovesUci: [...run.playedMovesUci],
+    inBook: bookState.inBook,
+    atLineEnd: bookState.atLineEnd,
+    nextBookMovesUci: bookState.possibleNextMovesUci,
+    uniqueOpening: bookState.uniqueOpening,
+    uniqueVariation: bookState.uniqueVariation,
+    uniqueLine: bookState.uniqueLine,
+    candidateCount: bookState.candidates.length,
+    outOfBookOpen: run.isOutOfBookOpen,
+    successOpen: run.isSuccessOpen,
+    manualReveal: run.isManualReveal,
+    side: run.config.side,
+    autoOpponent: run.config.autoOpponent,
+  };
+}
+
+function didApplyUciToBoard(run: PlayRun, uci: string): boolean {
+  try {
+    run.chess.move({
+      from: uciFromSquare(uci),
+      to: uciToSquare(uci),
+      promotion: uciPromotion(uci),
+    });
+  } catch {
+    return false;
+  }
+  return true;
+}
+
+function isOpponentToMove(run: PlayRun): boolean {
+  const ply = run.playedMovesUci.length;
+  return (
+    (run.config.side === 'white' && ply % 2 === 1) || (run.config.side === 'black' && ply % 2 === 0)
+  );
 }
 
 /**
- * Play-mode state machine. Owns one chess.js engine + the played-move history
- * + a generation counter for stale-setTimeout protection (spec B5). Components
- * subscribe via `useSyncExternalStore`; tests drive it directly with injected
- * timers + RNG.
+ * Play-mode state machine. Owns one chess.js engine plus the played-move
+ * history, both held in the {@link PlayRun} the current game created.
+ * Components subscribe via `useSyncExternalStore`; tests drive it directly
+ * with injected timers + RNG.
  *
  * The machine consults `computeBookState` on every move to decide whether the
  * user is still in book; the book engine is the source of truth for "what
@@ -94,191 +164,115 @@ function defaultScheduleTimeout(callback: () => void, delayMs: number): void {
  */
 export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine {
   const opponentDelayMs = options.opponentDelayMs ?? DEFAULT_OPPONENT_DELAY_MS;
-  const pickRandom = options.pickRandom ?? defaultPickRandom;
-  const scheduleTimeout = options.scheduleTimeout ?? defaultScheduleTimeout;
+  const pickRandom = options.pickRandom ?? pickRandomCandidate;
+  const scheduleTimeout = options.scheduleTimeout ?? scheduleTimeoutCallback;
 
-  let chess = new Chess();
-  let config: PlayMachineConfig | null = null;
-  let playedMovesUci: string[] = [];
-  let outOfBookOpen = false;
-  let successOpen = false;
-  let manualReveal = false;
-  let generation = 0;
+  let run: PlayRun | null = null;
   let snapshot: PlayMachineSnapshot = INITIAL_SNAPSHOT;
 
   const listeners = new Set<() => void>();
 
-  function notify(currentConfig: PlayMachineConfig): void {
-    snapshot = computeSnapshot(currentConfig);
+  function notify(currentRun: PlayRun): void {
+    snapshot = computeSnapshot(currentRun);
     for (const listener of listeners) listener();
   }
 
-  function computeSnapshot(currentConfig: PlayMachineConfig): PlayMachineSnapshot {
-    const bookState = computeBookState(
-      currentConfig.openings,
-      currentConfig.selection,
-      [...playedMovesUci],
-      currentConfig.playScope,
-    );
-    return {
-      fen: chess.fen(),
-      playedMovesUci: [...playedMovesUci],
-      inBook: bookState.inBook,
-      atLineEnd: bookState.atLineEnd,
-      nextBookMovesUci: bookState.possibleNextMovesUci,
-      uniqueOpening: bookState.uniqueOpening,
-      uniqueVariation: bookState.uniqueVariation,
-      uniqueLine: bookState.uniqueLine,
-      candidateCount: bookState.candidates.length,
-      outOfBookOpen,
-      successOpen,
-      manualReveal,
-      side: currentConfig.side,
-      autoOpponent: currentConfig.autoOpponent,
-    };
-  }
-
-  function applyUciToBoard(uci: string): boolean {
-    try {
-      const move = chess.move({
-        from: uciFromSquare(uci),
-        to: uciToSquare(uci),
-        promotion: uciPromotion(uci),
-      });
-      return move !== null;
-    } catch {
-      return false;
-    }
-  }
-
-  function isOpponentToMove(side: Side): boolean {
-    const ply = playedMovesUci.length;
-    return (side === 'white' && ply % 2 === 1) || (side === 'black' && ply % 2 === 0);
-  }
-
-  function scheduleOpponentMove(currentConfig: PlayMachineConfig): void {
-    if (!currentConfig.autoOpponent) return;
-    if (!isOpponentToMove(currentConfig.side)) return;
-    const bookState = computeBookState(
-      currentConfig.openings,
-      currentConfig.selection,
-      [...playedMovesUci],
-      currentConfig.playScope,
-    );
-    if (!bookState.inBook) return;
-    const myGeneration = generation;
+  function scheduleOpponentMove(scheduledRun: PlayRun): void {
+    if (!scheduledRun.config.autoOpponent) return;
+    if (!isOpponentToMove(scheduledRun)) return;
+    if (!readBookState(scheduledRun).inBook) return;
     scheduleTimeout(() => {
-      if (myGeneration !== generation) return;
-      const stillFresh = computeBookState(
-        currentConfig.openings,
-        currentConfig.selection,
-        [...playedMovesUci],
-        currentConfig.playScope,
-      );
-      const choice = pickRandom(stillFresh.possibleNextMovesUci);
+      const activeRun = run;
+      // The machine has moved on: a start or a reset replaced the run this
+      // reply was scheduled for.
+      if (activeRun !== scheduledRun) return;
+      const choice = pickRandom(readBookState(activeRun).possibleNextMovesUci);
       if (!choice) return;
-      applyUciToBoard(choice);
-      playedMovesUci.push(choice);
-      const afterOpponent = computeBookState(
-        currentConfig.openings,
-        currentConfig.selection,
-        [...playedMovesUci],
-        currentConfig.playScope,
-      );
-      if (afterOpponent.atLineEnd) successOpen = true;
-      notify(currentConfig);
+      didApplyUciToBoard(activeRun, choice);
+      activeRun.playedMovesUci.push(choice);
+      if (readBookState(activeRun).atLineEnd) activeRun.isSuccessOpen = true;
+      notify(activeRun);
     }, opponentDelayMs);
   }
 
   function start(nextConfig: PlayMachineConfig): void {
-    chess = new Chess();
-    config = nextConfig;
-    playedMovesUci = [];
-    outOfBookOpen = false;
-    successOpen = false;
-    manualReveal = false;
-    generation += 1;
-    notify(nextConfig);
-    scheduleOpponentMove(nextConfig);
+    const nextRun = beginRun(nextConfig);
+    run = nextRun;
+    notify(nextRun);
+    scheduleOpponentMove(nextRun);
   }
 
   function reset(): void {
-    if (!config) return;
-    start(config);
+    const currentRun = run;
+    if (!currentRun) return;
+    start(currentRun.config);
   }
 
   function playMove(uci: string): PlayMoveResult {
-    const currentConfig = config;
-    if (!currentConfig) return 'rejected-out-of-book';
-    if (isOpponentToMove(currentConfig.side) && currentConfig.autoOpponent) {
+    const currentRun = run;
+    if (!currentRun) return 'rejected-out-of-book';
+    if (isOpponentToMove(currentRun) && currentRun.config.autoOpponent) {
       return 'rejected-opponents-turn';
     }
-    if (!applyUciToBoard(uci)) return 'rejected-out-of-book';
-    playedMovesUci.push(uci);
-    const bookState = computeBookState(
-      currentConfig.openings,
-      currentConfig.selection,
-      [...playedMovesUci],
-      currentConfig.playScope,
-    );
+    if (!didApplyUciToBoard(currentRun, uci)) return 'rejected-out-of-book';
+    currentRun.playedMovesUci.push(uci);
+    const bookState = readBookState(currentRun);
     if (!bookState.inBook) {
-      chess.undo();
-      playedMovesUci.pop();
-      outOfBookOpen = true;
-      notify(currentConfig);
+      currentRun.chess.undo();
+      currentRun.playedMovesUci.pop();
+      currentRun.isOutOfBookOpen = true;
+      notify(currentRun);
       return 'rejected-out-of-book';
     }
-    manualReveal = false;
-    if (bookState.atLineEnd) successOpen = true;
-    notify(currentConfig);
-    if (!bookState.atLineEnd) scheduleOpponentMove(currentConfig);
+    currentRun.isManualReveal = false;
+    if (bookState.atLineEnd) currentRun.isSuccessOpen = true;
+    notify(currentRun);
+    if (!bookState.atLineEnd) scheduleOpponentMove(currentRun);
     return 'accepted';
   }
 
   function undo(): void {
-    const currentConfig = config;
-    if (!currentConfig) return;
-    const pliesToUndo = currentConfig.autoOpponent ? 2 : 1;
-    if (playedMovesUci.length < pliesToUndo) return;
-    for (let i = 0; i < pliesToUndo; i += 1) chess.undo();
-    playedMovesUci = playedMovesUci.slice(0, -pliesToUndo);
-    outOfBookOpen = false;
-    successOpen = false;
-    manualReveal = false;
-    notify(currentConfig);
+    const currentRun = run;
+    if (!currentRun) return;
+    const pliesToUndo = currentRun.config.autoOpponent ? 2 : 1;
+    if (currentRun.playedMovesUci.length < pliesToUndo) return;
+    for (let undone = 0; undone < pliesToUndo; undone += 1) currentRun.chess.undo();
+    currentRun.playedMovesUci = currentRun.playedMovesUci.slice(0, -pliesToUndo);
+    currentRun.isOutOfBookOpen = false;
+    currentRun.isSuccessOpen = false;
+    currentRun.isManualReveal = false;
+    notify(currentRun);
   }
 
   function revealBookMoves(): void {
-    const currentConfig = config;
-    if (!currentConfig) return;
-    if (manualReveal) return;
-    manualReveal = true;
-    outOfBookOpen = false;
-    notify(currentConfig);
+    const currentRun = run;
+    if (!currentRun) return;
+    if (currentRun.isManualReveal) return;
+    currentRun.isManualReveal = true;
+    currentRun.isOutOfBookOpen = false;
+    notify(currentRun);
   }
 
   function dismissOutOfBook(): void {
-    const currentConfig = config;
-    if (!currentConfig) return;
-    if (!outOfBookOpen) return;
-    outOfBookOpen = false;
-    notify(currentConfig);
+    const currentRun = run;
+    if (!currentRun?.isOutOfBookOpen) return;
+    currentRun.isOutOfBookOpen = false;
+    notify(currentRun);
   }
 
   function dismissSuccess(): void {
-    const currentConfig = config;
-    if (!currentConfig) return;
-    if (!successOpen) return;
-    successOpen = false;
-    notify(currentConfig);
+    const currentRun = run;
+    if (!currentRun?.isSuccessOpen) return;
+    currentRun.isSuccessOpen = false;
+    notify(currentRun);
   }
 
-  function setAutoOpponent(value: boolean): void {
-    const currentConfig = config;
-    if (!currentConfig) return;
-    if (currentConfig.autoOpponent === value) return;
-    config = { ...currentConfig, autoOpponent: value };
-    notify(config);
+  function setAutoOpponent(isEnabled: boolean): void {
+    const currentRun = run;
+    if (!currentRun) return;
+    if (currentRun.config.autoOpponent === isEnabled) return;
+    currentRun.config = { ...currentRun.config, autoOpponent: isEnabled };
+    notify(currentRun);
   }
 
   return {

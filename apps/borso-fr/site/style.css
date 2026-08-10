@@ -7,9 +7,14 @@
   --font-mono: 'Space Mono', ui-monospace, monospace;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-html, body {
+html,
+body {
   height: 100%;
   background: var(--bg);
   color: var(--fg);
@@ -19,8 +24,14 @@ html, body {
   overflow: hidden;
 }
 
-a { color: inherit; text-decoration: none; }
-::selection { background: var(--accent); color: var(--bg); }
+a {
+  color: inherit;
+  text-decoration: none;
+}
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
 
 #bg-canvas-wrap {
   position: fixed;
@@ -55,7 +66,9 @@ a { color: inherit; text-decoration: none; }
   text-align: center;
   pointer-events: none;
   z-index: 2;
-  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition:
+    opacity 0.4s ease,
+    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .welcome {
@@ -78,12 +91,24 @@ a { color: inherit; text-decoration: none; }
 }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-body.animate-in .welcome { opacity: 0; animation: fadeUp 1.2s ease-out 0.2s both; }
-body.animate-in .title   { opacity: 0; animation: fadeUp 1.2s ease-out 0.5s both; }
+body.animate-in .welcome {
+  opacity: 0;
+  animation: fadeUp 1.2s ease-out 0.2s both;
+}
+body.animate-in .title {
+  opacity: 0;
+  animation: fadeUp 1.2s ease-out 0.5s both;
+}
 
 body.menu-open .stage {
   opacity: 0.32;
@@ -107,14 +132,27 @@ body.menu-open .stage {
   cursor: pointer;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.25s, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition:
+    background 0.25s,
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.burger:hover { background: rgba(245, 245, 240, 0.08); }
+.burger:hover {
+  background: rgba(245, 245, 240, 0.08);
+}
 
-.burger-icon { display: block; transition: opacity 0.2s ease; }
-.burger-icon--cross { display: none; }
-.burger.is-open .burger-icon--lines { display: none; }
-.burger.is-open .burger-icon--cross { display: block; }
+.burger-icon {
+  display: block;
+  transition: opacity 0.2s ease;
+}
+.burger-icon--cross {
+  display: none;
+}
+.burger.is-open .burger-icon--lines {
+  display: none;
+}
+.burger.is-open .burger-icon--cross {
+  display: block;
+}
 
 .menu {
   position: fixed;
@@ -139,9 +177,13 @@ body.menu-open .stage {
 .menu li {
   opacity: 0;
   transform: translateX(12px);
-  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.menu.is-open { pointer-events: auto; }
+.menu.is-open {
+  pointer-events: auto;
+}
 .menu.is-open li {
   opacity: 1;
   transform: none;
@@ -152,14 +194,19 @@ body.menu-open .stage {
   font-size: clamp(15px, 1.4vw, 18px);
   letter-spacing: 0.02em;
   color: var(--fg-dim);
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
   padding: 6px 0;
   position: relative;
   max-width: 18ch;
   text-wrap: balance;
   transition: color 0.25s;
 }
-.menu a:hover { color: var(--fg); }
+.menu a:hover {
+  color: var(--fg);
+}
 .menu .menu-link--deprecated {
   background: transparent;
   border: 0;
@@ -168,9 +215,11 @@ body.menu-open .stage {
   -webkit-tap-highlight-color: transparent;
   text-decoration: line-through;
 }
-.menu .menu-link--deprecated:hover { color: var(--fg); }
+.menu .menu-link--deprecated:hover {
+  color: var(--fg);
+}
 .menu a::after {
-  content: "";
+  content: '';
   position: absolute;
   right: 0;
   bottom: 2px;
@@ -179,7 +228,9 @@ body.menu-open .stage {
   background: var(--fg);
   transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.menu a:hover::after { width: 100%; }
+.menu a:hover::after {
+  width: 100%;
+}
 
 .date-request-dialog {
   margin: auto;
@@ -214,7 +265,10 @@ body.menu-open .stage {
   cursor: pointer;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.25s, border-color 0.25s, background 0.25s;
+  transition:
+    color 0.25s,
+    border-color 0.25s,
+    background 0.25s;
 }
 .date-request-close:hover {
   color: var(--fg);
@@ -233,10 +287,18 @@ body.menu-open .stage {
     opacity: 0;
     transition: opacity 0.35s;
   }
-  .menu.is-open { opacity: 1; }
-  .menu ul { align-items: center; text-align: center; gap: 24px; }
+  .menu.is-open {
+    opacity: 1;
+  }
+  .menu ul {
+    align-items: center;
+    text-align: center;
+    gap: 24px;
+  }
   .menu a,
-  .menu .menu-link--deprecated { font-size: 22px; }
+  .menu .menu-link--deprecated {
+    font-size: 22px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

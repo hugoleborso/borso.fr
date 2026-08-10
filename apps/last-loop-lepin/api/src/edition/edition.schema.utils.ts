@@ -13,18 +13,17 @@
  * unguarded `>` would silently accept it.
  */
 export function isMonotonicZeroToOne(values: readonly number[]): boolean {
-  if (values.length < 2) return false;
   if (values[0] !== 0) return false;
   if (values[values.length - 1] !== 1) return false;
   // `reduce` exposes each element as `number` (not `number | undefined`),
   // which sidesteps `noUncheckedIndexedAccess` without a banned non-null
   // assertion. The accumulator threads the previous value through.
-  let strictlyIncreasing = true;
+  let isStrictlyIncreasing = true;
   values.reduce((previous, current) => {
     if (!Number.isFinite(current) || current <= previous) {
-      strictlyIncreasing = false;
+      isStrictlyIncreasing = false;
     }
     return current;
   });
-  return strictlyIncreasing;
+  return isStrictlyIncreasing;
 }

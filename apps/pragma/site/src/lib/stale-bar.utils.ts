@@ -25,8 +25,8 @@ export function isStale(
   return ageDays > thresholdDays;
 }
 
-export function countStale<T extends BarStaleInput>(
-  bars: readonly T[],
+export function countStale(
+  bars: readonly BarStaleInput[],
   now: Date,
   thresholdDays = STALE_BAR_DEFAULT_THRESHOLD_DAYS,
 ): number {

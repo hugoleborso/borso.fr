@@ -51,6 +51,29 @@ export async function insertEdition(database: Database, edition: RaceEdition): P
   });
 }
 
+/**
+ * Write an edition, replacing every field when the slug already exists.
+ * The test seeding endpoint rebuilds one fixture edition over and over, and
+ * an upsert lets it do that without first asking whether the row is there.
+ */
+export async function upsertEdition(database: Database, edition: RaceEdition): Promise<void> {
+  const values = {
+    slug: edition.slug,
+    displayName: edition.displayName,
+    startsAt: edition.startsAt,
+    endsAt: edition.endsAt,
+    sunriseAt: edition.sunriseAt,
+    sunsetAt: edition.sunsetAt,
+    intervalMinutes: edition.intervalMinutes,
+    gpx: JSON.stringify(edition.gpx),
+    status: edition.status,
+  };
+  await database
+    .insert(editionsTable)
+    .values(values)
+    .onConflictDoUpdate({ target: editionsTable.slug, set: values });
+}
+
 export async function findEditionBySlug(
   database: Database,
   slug: string,

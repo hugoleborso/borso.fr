@@ -14,16 +14,17 @@
     "db:local:url": "../../scripts/local-postgres.sh url last-loop-lepin",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "biome check",
+    "lint": "cd ../.. && eslint apps/last-loop-lepin --cache --cache-location node_modules/.cache/eslint",
     "typecheck": "tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit",
-    "test:core": "pnpm --filter @borso/infra run build && vitest run --project core",
+    "test:core": "pnpm --filter @borso/infra run build && vitest run --project core --coverage",
     "test": "DATABASE_URL=$(../../scripts/local-postgres.sh start last-loop-lepin) vitest run --project back-e2e",
     "test:coverage": "pnpm --filter @borso/infra run build && DATABASE_URL=$(../../scripts/local-postgres.sh start last-loop-lepin) vitest run --coverage",
     "db:generate": "drizzle-kit generate",
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
-    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"last-loop-lepin-pr-${PR_NUMBER:?PR_NUMBER env var required — destroy targets the per-PR app stack only, never the shared last-loop-lepin-cluster stack}\" --force"
+    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"last-loop-lepin-pr-${PR_NUMBER:?PR_NUMBER env var required — destroy targets the per-PR app stack only, never the shared last-loop-lepin-cluster stack}\" --force",
+    "test:mutation": "stryker run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.726.0",
@@ -32,24 +33,31 @@
     "@borso/infra": "workspace:*",
     "@hono/zod-validator": "^0.4.0",
     "@sentry/react": "^8.50.0",
+    "@tanstack/react-form": "1.32.0",
     "@tanstack/react-query": "5.100.10",
     "drizzle-orm": "^0.36.0",
     "hono": "^4.6.0",
+    "i18next": "^23.16.8",
     "leaflet": "1.9.4",
     "postgres": "^3.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-i18next": "^15.4.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
     "@hono/node-server": "^1.13.7",
+    "@stryker-mutator/core": "9.6.1",
+    "@stryker-mutator/vitest-runner": "9.6.1",
     "@testcontainers/postgresql": "^10.16.0",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.3",
     "@types/leaflet": "1.9.21",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/coverage-v8": "^4.1.10",
     "aws-cdk": "^2.180.0",
     "aws-cdk-lib": "^2.180.0",
     "concurrently": "9.2.1",
@@ -59,6 +67,6 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.10"
   }
 }

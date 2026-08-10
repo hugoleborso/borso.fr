@@ -1,0 +1,66 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/atoms/Button';
+import { ShowMovesToggle } from '@/components/molecules/ShowMovesToggle';
+import type { ComponentByKind } from '@/lib/componentTable.types';
+import { useIsCompactViewport } from '@/lib/viewport';
+import { buildSessionKey, selectTreeVisualization } from '@/openings/sessionStart.core';
+import type { Opening } from '@/openings/types';
+import { setView, useAppState } from '@/state/appState';
+import type { Mode } from '@/state/persistedState.utils';
+import { LearnSessionControl } from './LearnSessionControl';
+import { LearnTreeSession } from './LearnTreeSession';
+import { PlaySession } from './PlaySession';
+import { PlaySessionControl } from './PlaySessionControl';
+import type { SessionBodyProps, SessionModeControlProps } from './session.types';
+
+const CONTROLS_ROW_STYLE = { justifyContent: 'space-between' } as const;
+
+const SESSION_BODY_BY_MODE: ComponentByKind<Mode, SessionBodyProps> = {
+  learn: LearnTreeSession,
+  play: PlaySession,
+};
+
+const SESSION_CONTROL_BY_MODE: ComponentByKind<Mode, SessionModeControlProps> = {
+  learn: LearnSessionControl,
+  play: PlaySessionControl,
+};
+
+interface SessionScreenProps {
+  openings: Opening[];
+}
+
+export function SessionScreen({ openings }: SessionScreenProps) {
+  const { t } = useTranslation();
+  const { mode, side, boardStyle, selection, playScope, playAutoOpponent, treeVisualizationMode } =
+    useAppState();
+  const [areMovesShown, setAreMovesShown] = useState(false);
+  const isCompactViewport = useIsCompactViewport();
+  const visualization = selectTreeVisualization(treeVisualizationMode, isCompactViewport);
+
+  const SessionBody = SESSION_BODY_BY_MODE[mode];
+  const SessionControl = SESSION_CONTROL_BY_MODE[mode];
+
+  return (
+    <>
+      <div className="controls-row" style={CONTROLS_ROW_STYLE}>
+        <div className="controls-row">
+          <Button label={t('session.change-selection')} onActivate={() => setView('select')} />
+          <ShowMovesToggle areMovesShown={areMovesShown} onToggle={setAreMovesShown} />
+          <SessionControl visualization={visualization} isAutoOpponentEnabled={playAutoOpponent} />
+        </div>
+      </div>
+      <SessionBody
+        key={buildSessionKey(mode, side, selection, playScope)}
+        openings={openings}
+        selection={selection}
+        playScope={playScope}
+        side={side}
+        boardStyle={boardStyle}
+        isAutoOpponentEnabled={playAutoOpponent}
+        areMovesShown={areMovesShown}
+        visualization={visualization}
+      />
+    </>
+  );
+}

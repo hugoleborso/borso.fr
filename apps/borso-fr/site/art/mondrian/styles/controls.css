@@ -26,7 +26,7 @@
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 24px;
+  min-height: 44px;
   background: transparent;
   cursor: pointer;
   outline: none;
@@ -74,6 +74,8 @@
 .swatch {
   width: 38px;
   height: 38px;
+  min-width: 44px;
+  min-height: 44px;
   border: 1px solid var(--rule-strong);
   background: white;
   cursor: pointer;
@@ -87,11 +89,18 @@
 .swatch:hover {
   transform: translateY(-2px);
 }
+/*
+ * The label is wider than the 44px swatch it names — `Couleur 1` needs 56px —
+ * so it is centred on the swatch and sized to its content rather than clipped
+ * to the swatch's box. Constraining it to `left: 0; right: 0` made the text
+ * spill symmetrically into both neighbours.
+ */
 .swatch .name {
   position: absolute;
   bottom: -18px;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
   text-align: center;
   font-family: var(--mono);
   font-size: 8px;
@@ -120,6 +129,33 @@
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   background: rgba(0, 0, 0, 0.18);
 }
+@media (hover: none) {
+  /*
+   * With no pointer to hover, every label is shown at once rather than one at
+   * a time, so the row needs enough horizontal gap for labels wider than their
+   * swatches to clear each other. 56px of label centred on a 44px swatch
+   * overhangs 6px each side, so the gap has to beat 12px.
+   */
+  .palette {
+    column-gap: 16px;
+  }
+  .swatch .name {
+    opacity: 0.7;
+  }
+  .swatch.editable::after {
+    content: '✎';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.18);
+  }
+}
+
 .swatch input[type='color'] {
   position: absolute;
   inset: 0;
@@ -168,6 +204,18 @@
 .seg.on {
   background: var(--ink);
   color: var(--paper);
+}
+/*
+ * The sliders and swatches above carry their 44px touch floor unconditionally
+ * because they are already at least that tall on a mouse. A segment is not:
+ * it is 39px tall and as little as 44px wide at 1280, so raising it everywhere
+ * would turn the palette row square and push an already-scrolling rail further
+ * down. The floor is therefore only spent where a finger needs it.
+ */
+@media (hover: none) {
+  .seg {
+    min-height: 44px;
+  }
 }
 
 .btn-row {

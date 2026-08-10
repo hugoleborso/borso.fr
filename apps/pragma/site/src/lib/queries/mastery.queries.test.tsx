@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { masteryKeys, useDeleteMasteryDefault, useSaveMasteryDefault } from './mastery';
 import {
   createIsolatedQueryClient,
+  createMutateSlot,
   deferred,
   flushMicrotasks,
   jsonResponse,
@@ -17,7 +18,7 @@ import {
 } from './test-helpers';
 
 interface OptimisticDefaultsShape {
-  defaults: Array<{ memberId: string; instrumentId: string; score: number }>;
+  defaults: { memberId: string; instrumentId: string; score: number }[];
 }
 
 interface ProbeProps<Mutate> {
@@ -58,10 +59,9 @@ describe('mastery default mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeSave sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useSaveMasteryDefault>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeSave sink={slot.sink} />);
+    const send = slot.read();
 
     send({ memberId: 'mem-a', instrumentId: 'instr-a', score: 6 }).catch(() => undefined);
     await flushMicrotasks();
@@ -82,10 +82,9 @@ describe('mastery default mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeSave sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useSaveMasteryDefault>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeSave sink={slot.sink} />);
+    const send = slot.read();
 
     send({ memberId: 'mem-b', instrumentId: 'instr-c', score: 4 }).catch(() => undefined);
     await flushMicrotasks();
@@ -104,10 +103,9 @@ describe('mastery default mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeSave sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useSaveMasteryDefault>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useSaveMasteryDefault>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeSave sink={slot.sink} />);
+    const send = slot.read();
 
     send({ memberId: 'mem-a', instrumentId: 'instr-a', score: 9 }).catch(() => undefined);
     await flushMicrotasks();
@@ -126,10 +124,9 @@ describe('mastery default mutations — optimistic updates', () => {
     const pending = deferred<Response>();
     stub = stubFetch(() => pending.promise);
 
-    let dispatch: ReturnType<typeof useDeleteMasteryDefault>['mutateAsync'] | null = null;
-    const tree = mountWithClient(queryClient, <ProbeDelete sink={(m) => (dispatch = m)} />);
-    if (dispatch === null) throw new Error('no mutate');
-    const send: ReturnType<typeof useDeleteMasteryDefault>['mutateAsync'] = dispatch;
+    const slot = createMutateSlot<ReturnType<typeof useDeleteMasteryDefault>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeDelete sink={slot.sink} />);
+    const send = slot.read();
 
     send({ memberId: 'mem-a', instrumentId: 'instr-a' }).catch(() => undefined);
     await flushMicrotasks();

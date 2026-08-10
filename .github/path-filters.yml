@@ -13,7 +13,8 @@
 #
 # Adding a new app: append `<slug>: 'apps/<slug>/**'` here, plus the slug
 # in commitlint.config.js scope-enum. The workflows pick it up automatically
-# via `pnpm ls --filter './apps/*' --json`.
+# by listing the directories under `apps/`, which is what pnpm-workspace.yaml
+# declares as `apps/*` — no install needed to know the slugs.
 
 borso-fr: 'apps/borso-fr/**'
 borsouvertures: 'apps/borsouvertures/**'

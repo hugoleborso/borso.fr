@@ -18,7 +18,10 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-3);
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.05s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.05s ease;
   position: relative;
   min-height: 104px;
   text-align: left;

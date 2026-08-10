@@ -42,16 +42,13 @@ export function pickNextSession(
   sessions: readonly OfflineManifestSession[],
   now: Date,
 ): OfflineManifestSession | null {
-  const futureSessions = sessions.filter(
-    (session) => new Date(session.date).getTime() > now.getTime(),
-  );
-  if (futureSessions.length === 0) return null;
-  const sorted = [...futureSessions].sort((left, right) => {
+  const upcoming = sessions.filter((session) => new Date(session.date).getTime() > now.getTime());
+  const soonestFirst = upcoming.toSorted((left, right) => {
     const dateDelta = new Date(left.date).getTime() - new Date(right.date).getTime();
     if (dateDelta !== 0) return dateDelta;
     return left.id.localeCompare(right.id);
   });
-  return sorted[0] ?? null;
+  return soonestFirst[0] ?? null;
 }
 
 export function buildOfflineManifest(input: OfflineManifestInput): OfflineManifest {

@@ -1,6 +1,17 @@
 import { Tags } from 'aws-cdk-lib';
 import type { IConstruct } from 'constructs';
-import type { Stage } from './naming.js';
+import type { Stage } from './naming.utils.js';
+
+/**
+ * The integ role's IAM policy selects resources by `IntegTest`, so the tag has
+ * to be absent everywhere else rather than merely false.
+ */
+const STAGE_ONLY_TAGS: Readonly<Record<Stage, Readonly<Record<string, string>>>> = {
+  dev: {},
+  preview: {},
+  integ: { IntegTest: 'true' },
+  prod: {},
+};
 
 /**
  * Standard tag set applied to every resource the platform creates.
@@ -24,7 +35,7 @@ export function applyStandardTags(scope: IConstruct, opts: StandardTagOptions): 
   if (opts.prNumber !== undefined) {
     tags.add('PrNumber', String(opts.prNumber));
   }
-  if (opts.stage === 'integ') {
-    tags.add('IntegTest', 'true');
+  for (const [name, value] of Object.entries(STAGE_ONLY_TAGS[opts.stage])) {
+    tags.add(name, value);
   }
 }

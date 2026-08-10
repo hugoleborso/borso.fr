@@ -56,11 +56,11 @@ export function SetlistsPage(): JSX.Element {
     [concerts, setlistQueries],
   );
 
-  const loading = sessionsQuery.isLoading || setlistQueries.some((query) => query.isLoading);
+  const isLoading = sessionsQuery.isLoading || setlistQueries.some((query) => query.isLoading);
   const error =
     sessionsQuery.error instanceof ApiError
       ? sessionsQuery.error.message
-      : (setlistQueries.find((q) => q.error instanceof ApiError)?.error?.message ?? null);
+      : (setlistQueries.find((query) => query.error instanceof ApiError)?.error?.message ?? null);
 
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
@@ -70,13 +70,13 @@ export function SetlistsPage(): JSX.Element {
         subtitle={t('setlist.indexSubtitle')}
       />
 
-      {error !== null ? (
+      {error === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">
           {error}
         </p>
-      ) : null}
-      {loading ? <p className="text-ink-400 italic text-sm">{t('common.loading')}</p> : null}
-      {!loading && rows.length === 0 ? (
+      )}
+      {isLoading ? <p className="text-ink-400 italic text-sm">{t('common.loading')}</p> : null}
+      {!isLoading && rows.length === 0 ? (
         <p className="text-ink-400 italic text-sm">{t('setlist.indexEmpty')}</p>
       ) : null}
 

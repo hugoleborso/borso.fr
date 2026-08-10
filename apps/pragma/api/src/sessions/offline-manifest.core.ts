@@ -1,0 +1,53 @@
+/**
+ * The offline manifest a service worker pre-caches: the catalog list,
+ * every song detail, and the next upcoming session with its setlist.
+ *
+ * The "next session" rule is mirrored on the front end in
+ * `site/src/sw/manifest.utils.ts`; both read the same shape so the
+ * back-e2e test can assert the wire contract.
+ */
+
+export interface OfflineManifestSession {
+  readonly id: string;
+  readonly date: Date;
+}
+
+export interface OfflineManifestSong {
+  readonly id: string;
+}
+
+export interface OfflineManifestPayload {
+  readonly catalogListUrl: string;
+  readonly songDetailUrls: string[];
+  readonly nextSessionUrl: string | null;
+  readonly nextSetlistUrl: string | null;
+}
+
+const CATALOG_LIST_URL = '/api/songs';
+
+function findNextSession(
+  sessions: readonly OfflineManifestSession[],
+  now: Date,
+): OfflineManifestSession | undefined {
+  return sessions
+    .filter((session) => session.date.getTime() > now.getTime())
+    .toSorted((left, right) => {
+      const deltaMs = left.date.getTime() - right.date.getTime();
+      if (deltaMs !== 0) return deltaMs;
+      return left.id.localeCompare(right.id);
+    })[0];
+}
+
+export function buildNextSessionOfflineManifest(
+  sessions: readonly OfflineManifestSession[],
+  songs: readonly OfflineManifestSong[],
+  now: Date,
+): OfflineManifestPayload {
+  const next = findNextSession(sessions, now);
+  return {
+    catalogListUrl: CATALOG_LIST_URL,
+    songDetailUrls: songs.map((song) => `${CATALOG_LIST_URL}/${song.id}`),
+    nextSessionUrl: next === undefined ? null : `/api/sessions/${next.id}`,
+    nextSetlistUrl: next === undefined ? null : `/api/setlists/by-session/${next.id}`,
+  };
+}

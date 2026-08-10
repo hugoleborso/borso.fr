@@ -61,7 +61,5 @@ export const MASTERY_SCORE_MIN = 0;
 export const MASTERY_SCORE_MAX = 10;
 
 export function clampScore(value: number): number {
-  if (value < MASTERY_SCORE_MIN) return MASTERY_SCORE_MIN;
-  if (value > MASTERY_SCORE_MAX) return MASTERY_SCORE_MAX;
-  return Math.round(value);
+  return Math.min(Math.max(Math.round(value), MASTERY_SCORE_MIN), MASTERY_SCORE_MAX);
 }

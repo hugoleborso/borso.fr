@@ -35,3 +35,16 @@ export class ApiError extends Error {
 export const api = hc<AppRouter>(API_BASE === '' ? '/' : API_BASE, {
   init: { credentials: 'include' },
 });
+
+/**
+ * Whether a response succeeded, read through a boolean parameter.
+ *
+ * A route that declares one success status gives the Hono client an `ok`
+ * typed as the literal `true`, which makes the usual `if (!response.ok)`
+ * guard look redundant to the type checker even though a 401 from the
+ * session middleware, a 400 from the validator, or an unhandled 500 still
+ * reaches it at runtime. Reading the flag here keeps the guard.
+ */
+export function isResponseSuccessful(response: { readonly ok: boolean }): boolean {
+  return response.ok;
+}

@@ -1,5 +1,6 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { Database } from '../database/client';
+import type { AuthDenialReason } from './auth.core';
 import {
   type AdminSession,
   createSession,
@@ -12,6 +13,9 @@ import {
   upsertBucket,
 } from './auth.repository';
 
+export { getDatabase } from '../database/client';
+export { httpStatusForAuthDenial } from './auth.core';
+
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_ATTEMPTS = 5;
 const SCRYPT_KEY_LENGTH = 64;
@@ -21,12 +25,12 @@ const SESSION_ID_BYTES = 32;
 
 export class AuthDeniedError extends Error {
   override readonly name = 'AuthDeniedError';
-  constructor(public readonly reason: 'rate-limited' | 'invalid-pin' | 'misconfigured') {
+  constructor(public readonly reason: AuthDenialReason) {
     super(`auth denied: ${reason}`);
   }
 }
 
-function verifyPinAgainstHash(pin: string, hashedPin: string): boolean {
+function isPinMatchingHash(pin: string, hashedPin: string): boolean {
   const parts = hashedPin.split('$');
   if (parts.length !== SCRYPT_PARTS_COUNT || parts[0] !== 'scrypt') return false;
   const saltHex = parts[1];
@@ -91,7 +95,7 @@ export async function login(
     throw new AuthDeniedError('misconfigured');
   }
   await consumeRateLimit(database, input.ipAddress, now);
-  if (!verifyPinAgainstHash(input.pin, pinHash)) {
+  if (!isPinMatchingHash(input.pin, pinHash)) {
     throw new AuthDeniedError('invalid-pin');
   }
   await resetRateLimit(database, input.ipAddress, now);

@@ -12,8 +12,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api } from '../api';
-import { isLastPendingMutation } from './optimistic.utils';
+import { ApiError, api, isResponseSuccessful } from '../api';
+import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 
 export const songKeys = {
   all: ['songs'] as const,
@@ -87,6 +87,12 @@ function mergeSongUpdate(existing: SongRow, patch: Omit<SongUpdateVariables, 'id
   return merged;
 }
 
+/**
+ * @Blueprint query-module
+ * @BlueprintName Query Module
+ * @BlueprintUsage Use for every call from a front end to its own API. One module per domain, holding the key factory and the hooks.
+ * @BlueprintDescription Declares the song query keys in one typed factory so no caller invents a key, and wraps each call in useQuery or useMutation over the Hono client, so the request and response types come from the API router type rather than a hand-written fetcher. Mutations reconcile from the mutation response and roll back in onError.
+ */
 export function useSongsList() {
   return useQuery({
     queryKey: songKeys.list(),
@@ -98,7 +104,7 @@ export function useSongsList() {
   });
 }
 
-export function useSong(id: string, enabled = true) {
+export function useSong(id: string, isEnabled = true) {
   return useQuery({
     queryKey: songKeys.byId(id),
     queryFn: async () => {
@@ -106,7 +112,7 @@ export function useSong(id: string, enabled = true) {
       if (!response.ok) throw new ApiError(response.status, `song ${response.status}`, null);
       return response.json();
     },
-    enabled,
+    enabled: isEnabled,
   });
 }
 
@@ -128,7 +134,8 @@ export function useCreateSong() {
     mutationKey: songKeys.all,
     mutationFn: async (variables: SongCreateVariables) => {
       const response = await api.api.songs.$post({ json: variables });
-      if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
+      if (!isResponseSuccessful(response))
+        throw new ApiError(response.status, `create ${response.status}`, null);
       return response.json();
     },
     onMutate: async (variables) => {
@@ -178,7 +185,7 @@ export function useUpdateSong() {
       queryClient.setQueryData<SongsListResponse>(listKey, (old) => {
         if (old === undefined) return old;
         return {
-          songs: old.songs.map((song) => (song.id === id ? mergeSongUpdate(song, patch) : song)),
+          songs: replaceEntityById(old.songs, id, (song) => mergeSongUpdate(song, patch)),
         };
       });
       queryClient.setQueryData<SongByIdResponse>(byIdKey, (old) => {

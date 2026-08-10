@@ -30,7 +30,8 @@ import { useState } from 'react';
 import type { LineupEditorInstrument } from '../../components/molecules/LineupEditor';
 import type { LineupMember } from '../../components/molecules/MemberLineup';
 import { warnIfOrphanMemberIds } from './orphan-member-warn';
-import { SetlistEntryDragPreview, SetlistEntryRow } from './SetlistEntryRow';
+import { SetlistEntryDragPreview } from '../../components/molecules/SetlistEntryDragPreview';
+import { SetlistEntryRow } from './SetlistEntryRow';
 import {
   compactLineup,
   lineupOf,
@@ -83,7 +84,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const handleDragEnd = (event: DragEndEvent): void => {
+  const commitDragReorder = (event: DragEndEvent): void => {
     setActiveEntryId(null);
     const { active, over } = event;
     if (over === null || active.id === over.id) return;
@@ -103,7 +104,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={(event: DragStartEvent) => setActiveEntryId(String(event.active.id))}
-      onDragEnd={handleDragEnd}
+      onDragEnd={commitDragReorder}
       onDragCancel={() => setActiveEntryId(null)}
     >
       <SortableContext
@@ -161,7 +162,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
         </ul>
       </SortableContext>
       <DragOverlay dropAnimation={null}>
-        {activeEntryId !== null ? renderDragPreview(props, activeEntryId) : null}
+        {activeEntryId === null ? null : renderDragPreview(props, activeEntryId)}
       </DragOverlay>
     </DndContext>
   );

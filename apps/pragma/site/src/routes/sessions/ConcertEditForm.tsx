@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
+import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Input } from '../../components/atoms/Input';
 import { readableForeground } from '../../lib/member-color.utils';
 
@@ -120,7 +121,9 @@ export function ConcertEditForm({
           )}
         </form.Field>
         <fieldset className="border border-line rounded-md p-3 mt-2">
-          <legend className={`${LABEL_CLASS} px-2`}>{t('sessions.friendsCountPerMember')}</legend>
+          <legend className={composeClassName(LABEL_CLASS, 'px-2')}>
+            {t('sessions.friendsCountPerMember')}
+          </legend>
           <form.Field name="friends">
             {(friendsField) => (
               <>

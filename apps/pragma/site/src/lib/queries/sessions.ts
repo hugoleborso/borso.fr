@@ -5,8 +5,9 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api } from '../api';
-import { isLastPendingMutation } from './optimistic.utils';
+import { ApiError, api, isResponseSuccessful } from '../api';
+import { buildOptimisticSession } from './optimistic-session.core';
+import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 
 type SessionsListShape = InferResponseType<typeof api.api.sessions.$get>;
 
@@ -27,7 +28,7 @@ export function useSessionsList() {
   });
 }
 
-export function useSession(id: string, enabled = true) {
+export function useSession(id: string, isEnabled = true) {
   return useQuery({
     queryKey: sessionKeys.byId(id),
     queryFn: async () => {
@@ -35,11 +36,9 @@ export function useSession(id: string, enabled = true) {
       if (!response.ok) throw new ApiError(response.status, `session ${response.status}`, null);
       return response.json();
     },
-    enabled,
+    enabled: isEnabled,
   });
 }
-
-type SessionRow = SessionsListShape['sessions'][number];
 
 export function useCreateSession() {
   const queryClient = useQueryClient();
@@ -47,26 +46,15 @@ export function useCreateSession() {
     mutationKey: sessionKeys.all,
     mutationFn: async (variables: Parameters<typeof api.api.sessions.$post>[0]['json']) => {
       const response = await api.api.sessions.$post({ json: variables });
-      if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
+      if (!isResponseSuccessful(response))
+        throw new ApiError(response.status, `create ${response.status}`, null);
       return response.json();
     },
     onMutate: async (variables) => {
       const key = sessionKeys.list();
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<SessionsListShape>(key);
-      const tempId = crypto.randomUUID();
-      const optimistic: SessionRow = {
-        id: tempId,
-        kind: variables.kind,
-        date: variables.date,
-        preparedConcertId:
-          variables.kind === 'practice' ? (variables.preparedConcertId ?? null) : null,
-        venue: variables.kind === 'concert' ? variables.venue : null,
-        capacity: variables.kind === 'concert' ? variables.capacity : null,
-        gear: variables.kind === 'concert' ? (variables.gear ?? null) : null,
-        friendsCountPerMember:
-          variables.kind === 'concert' ? (variables.friendsCountPerMember ?? {}) : null,
-      };
+      const optimistic = buildOptimisticSession(crypto.randomUUID(), variables);
       queryClient.setQueryData<SessionsListShape>(key, (old) =>
         old === undefined ? old : { ...old, sessions: [...old.sessions, optimistic] },
       );
@@ -110,7 +98,13 @@ export function useUpdateSession() {
       queryClient.setQueryData<SessionsListShape>(listKey, (old) =>
         old === undefined
           ? old
-          : { ...old, sessions: old.sessions.map((s) => (s.id === id ? { ...s, ...patch } : s)) },
+          : {
+              ...old,
+              sessions: replaceEntityById(old.sessions, id, (session) => ({
+                ...session,
+                ...patch,
+              })),
+            },
       );
       return { previousList, previousById };
     },

@@ -10,7 +10,7 @@
  * runners — a runner who set the fastest lap then DNF-ed keeps their
  * entry as long as their punch survives in the table. DNF logic lives
  * upstream in `ranking.core.ts`; this projection never consults a
- * `ManualDnf`.
+ * `ManualDidNotFinish`.
  */
 
 import type { RaceEdition } from '../edition/edition.types';
@@ -42,25 +42,24 @@ interface CandidateEntry {
 export function fastestLap(
   edition: RaceEdition,
   punches: readonly LoopPunch[],
-): ReadonlyArray<FastestLapEntry> {
-  const candidates: CandidateEntry[] = [];
-  for (const punch of punches) {
-    if (punch.voidedAt !== null) continue;
-    const duration = loopDurationMs(edition, punch);
-    if (duration === null) continue;
-    candidates.push({ runnerSlug: punch.runnerSlug, durationMs: duration });
-  }
-  if (candidates.length === 0) return [];
+): readonly FastestLapEntry[] {
+  const candidates = punches
+    .filter((punch) => punch.voidedAt === null)
+    .map((punch) => ({
+      runnerSlug: punch.runnerSlug,
+      durationMs: loopDurationMs(edition, punch),
+    }))
+    .filter((candidate): candidate is CandidateEntry => candidate.durationMs !== null);
 
-  const minimum = candidates.reduce(
-    (current, candidate) => (candidate.durationMs < current ? candidate.durationMs : current),
+  const minimumDurationMs = candidates.reduce(
+    (current, candidate) => Math.min(current, candidate.durationMs),
     Number.POSITIVE_INFINITY,
   );
 
   const seenSlugs = new Set<string>();
   const result: FastestLapEntry[] = [];
   for (const candidate of candidates) {
-    if (candidate.durationMs !== minimum) continue;
+    if (candidate.durationMs !== minimumDurationMs) continue;
     if (seenSlugs.has(candidate.runnerSlug)) continue;
     seenSlugs.add(candidate.runnerSlug);
     result.push({ runnerSlug: candidate.runnerSlug, durationMs: candidate.durationMs });

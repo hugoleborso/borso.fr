@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { createApp } from '../../api/src/app';
 import { findEditionBySlug, insertEdition } from '../../api/src/edition/edition.repository';
 import { insertRunner } from '../../api/src/runner/runner.repository';
-import { freshDatabase, truncateAllTables } from '../database-utils';
+import { testDatabase, truncateAllTables } from '../database-utils';
 import { makeEdition, makeRunner } from '../fixtures';
 
 const standingsEnvelopeSchema = z.object({
@@ -49,13 +49,13 @@ describe('race day 2026 — end-to-end', () => {
   });
 
   beforeEach(async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await truncateAllTables(database);
   });
 
   it('seeds the edition + 8 runners the day before', async () => {
     setHourLocal(5, 30);
-    const database = freshDatabase();
+    const database = testDatabase();
     await insertEdition(database, makeEdition({ status: 'setup' }));
     for (const slug of RUNNERS) await insertRunner(database, makeRunner(slug));
 
@@ -65,7 +65,7 @@ describe('race day 2026 — end-to-end', () => {
 
   it('returns the empty standings before any punch', async () => {
     setHourLocal(5, 30);
-    const database = freshDatabase();
+    const database = testDatabase();
     await insertEdition(database, makeEdition({ status: 'live' }));
     for (const slug of RUNNERS) await insertRunner(database, makeRunner(slug));
 
@@ -77,17 +77,17 @@ describe('race day 2026 — end-to-end', () => {
   });
 
   it('marks late runners DNF after the second hourly top', async () => {
-    const database = freshDatabase();
+    const database = testDatabase();
     await insertEdition(database, makeEdition({ status: 'live' }));
     for (const slug of RUNNERS) await insertRunner(database, makeRunner(slug));
 
     setHourLocal(7, 1);
     const response = await app.request(`/api/standings/${EDITION_SLUG}`);
     const body = standingsEnvelopeSchema.parse(await response.json());
-    const dnfSlugs = body.standings.ranked
+    const didNotFinishSlugs = body.standings.ranked
       .filter((entry) => entry.status.kind === 'dnf')
       .map((entry) => entry.runner.slug);
-    expect(dnfSlugs).toEqual(expect.arrayContaining(RUNNERS));
+    expect(didNotFinishSlugs).toEqual(expect.arrayContaining(RUNNERS));
   });
 
   it('exposes a healthy /api/health regardless of database state', async () => {

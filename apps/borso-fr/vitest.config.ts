@@ -3,11 +3,13 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'jsdom',
-    include: ['site/**/*.utils.test.ts'],
+    setupFiles: ['./site/test-setup.ts'],
+    include: ['site/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
-      include: ['site/**/*.utils.ts'],
+      include: ['site/**/*.{core,utils}.ts'],
       thresholds: {
+        perFile: true,
         statements: 100,
         branches: 100,
         functions: 100,

@@ -5,7 +5,7 @@
  * `vi.setSystemTime()` the only place the test suites need to drive time.
  */
 
-import type { LoopPunch, ManualDnf } from '../punch/punch.types';
+import type { LoopPunch, ManualDidNotFinish } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
 import type { RaceEdition } from './edition.types';
 
@@ -17,16 +17,14 @@ const MILLISECONDS_PER_MINUTE = 60_000;
  * `edition.startsAt` plus multiples of `edition.intervalMinutes`.
  */
 export function nextHourlyTop(edition: RaceEdition, now: Date): Date | null {
-  if (now.getTime() >= edition.endsAt.getTime()) return null;
-
   const intervalMs = edition.intervalMinutes * MILLISECONDS_PER_MINUTE;
   const elapsedMs = now.getTime() - edition.startsAt.getTime();
-  if (elapsedMs < 0) return new Date(edition.startsAt.getTime());
-
-  const loopsElapsed = Math.floor(elapsedMs / intervalMs);
-  const nextBoundary = edition.startsAt.getTime() + (loopsElapsed + 1) * intervalMs;
-  if (nextBoundary >= edition.endsAt.getTime()) return null;
-  return new Date(nextBoundary);
+  // Clamped at zero so a `now` before the race answers `startsAt`, however
+  // far ahead of it the question is asked.
+  const boundariesPassed = Math.max(0, Math.floor(elapsedMs / intervalMs) + 1);
+  const nextBoundaryMs = edition.startsAt.getTime() + boundariesPassed * intervalMs;
+  if (nextBoundaryMs >= edition.endsAt.getTime()) return null;
+  return new Date(nextBoundaryMs);
 }
 
 /**
@@ -45,7 +43,7 @@ export function isRaceEndReached(edition: RaceEdition, now: Date): boolean {
   return now.getTime() >= edition.endsAt.getTime();
 }
 
-interface DnfProjection {
+interface DidNotFinishProjection {
   readonly runner: Runner;
   readonly missedAfterLoop: number;
 }
@@ -59,13 +57,13 @@ interface DnfProjection {
  * already-punched loop), (c) they have no valid (non-voided) punch for
  * loop N.
  */
-export function projectDnfCandidates(
+export function projectDidNotFinishCandidates(
   edition: RaceEdition,
   runners: readonly Runner[],
   punches: readonly LoopPunch[],
-  manualDnfs: readonly ManualDnf[],
+  manualDidNotFinishes: readonly ManualDidNotFinish[],
   now: Date,
-): readonly DnfProjection[] {
+): readonly DidNotFinishProjection[] {
   const currentLoop = loopIndexAt(edition, now);
   if (currentLoop <= 1) return [];
 
@@ -78,14 +76,16 @@ export function projectDnfCandidates(
   // extend the deadline past the top itself.
   const closingTimeMs = edition.startsAt.getTime() + expectedClosedLoop * intervalMs;
 
-  const dnfBySlug = new Map<string, ManualDnf>();
-  for (const dnf of manualDnfs) dnfBySlug.set(dnf.runnerSlug, dnf);
+  const manualDidNotFinishBySlug = new Map<string, ManualDidNotFinish>();
+  for (const didNotFinish of manualDidNotFinishes) {
+    manualDidNotFinishBySlug.set(didNotFinish.runnerSlug, didNotFinish);
+  }
 
   const validPunches = punches.filter((punch) => punch.voidedAt === null);
 
-  const candidates: DnfProjection[] = [];
+  const candidates: DidNotFinishProjection[] = [];
   for (const runner of runners) {
-    if (dnfBySlug.has(runner.slug)) continue;
+    if (manualDidNotFinishBySlug.has(runner.slug)) continue;
     const hasClosedLoop = validPunches.some(
       (punch) =>
         punch.runnerSlug === runner.slug &&
