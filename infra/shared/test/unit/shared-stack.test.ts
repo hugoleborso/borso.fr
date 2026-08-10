@@ -4,7 +4,7 @@ import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { HOSTED_ZONE_NAME } from '../../lib/certs-stack.js';
 import { SharedStack } from '../../lib/shared-stack.js';
-import { isObject, resourcesOfType } from './helpers/template.js';
+import { isObject, resourcesOfType, serializeTemplateForSnapshot } from './helpers/template.js';
 
 function synth(opts?: { budgetEmail?: string }): Template {
   const app = new App();
@@ -255,6 +255,24 @@ describe('SharedStack', () => {
           process.env.BORSO_BUDGET_EMAIL = original;
         }
       }
+    });
+  });
+
+  // Everything else in this file asserts a property somebody thought to name.
+  // The drift that reached production was one nobody had: a `biome-ignore`
+  // comment deleted from cf-host-routing-function.code.js, a file infra/cdk
+  // reads as a *string* and ships to the CloudFront edge, which moved this
+  // stack's template while nothing under infra/shared/ meaningfully changed.
+  // shared-deploy.yml is dispatch-only, so no run ever diffed it.
+  //
+  // A committed snapshot makes any change to this template appear in the pull
+  // request that causes it, whichever workspace the change came from. Update it
+  // deliberately with `pnpm --filter @borso/shared-infra exec vitest -u` — the
+  // diff in the snapshot file IS the review.
+  describe('template snapshot', () => {
+    it('matches the committed template, so drift shows up in the diff', async () => {
+      const template = serializeTemplateForSnapshot(synth({ budgetEmail: 'hugo@example.com' }));
+      await expect(template).toMatchFileSnapshot('./__snapshots__/borso-shared.template.json');
     });
   });
 
