@@ -5,7 +5,7 @@ detected-at: operator-deploy
 severity: medium
 related-pr: 40
 fix-pr: 45
-fix-commits: [1595450, b8ce6c3]
+fix-commits: [1595450, 4e485c8]
 eradication-level: 2
 time-to-detect: months
 tags: [github-actions, deploy, claude-md, harness, self-improvement-loop]
@@ -79,7 +79,7 @@ description was never checkable.*
 
 ## Countermeasure
 
-- **Code:** commit `1595450`, amended by `b8ce6c3` — the false claims in
+- **Code:** commit `1595450`, amended by `4e485c8` — the false claims in
   the workflow header, the IAM role description and CLAUDE.md are replaced
   by what is actually true, and the post-merge reminder is re-keyed to an
   artefact instead of a queue.
@@ -93,7 +93,7 @@ a belief)
 
 **Reference:** [PR #45](https://github.com/hugoleborso/borso.fr/pull/45) ·
 commits [`1595450`](https://github.com/hugoleborso/borso.fr/commit/1595450),
-[`b8ce6c3`](https://github.com/hugoleborso/borso.fr/commit/b8ce6c3)
+[`4e485c8`](https://github.com/hugoleborso/borso.fr/commit/4e485c8)
 
 ### The eradication I first shipped, and why it was wrong
 
@@ -113,7 +113,7 @@ confirmation prompt has no threat model: it cannot stop the one person
 authorised to do the thing. It buys the *appearance* of safety at a cost
 paid on every deploy, forever.
 
-`b8ce6c3` removes it. `action` defaults to `deploy` again.
+`4e485c8` removes it. `action` defaults to `deploy` again.
 
 **What replaces it — and it is strictly better than the prompt:** the
 committed template snapshot from
@@ -155,7 +155,7 @@ Two changes, neither of which costs anything at deploy time:
 **Sibling defects swept:** the `prod` environment carried the same false
 claim and was corrected in PR #40 — this entry exists because that sweep
 stopped at the first instance. `SharedInfraDeployRole`'s IAM description
-carried it too, corrected in `2c7e27a` and again in `b8ce6c3`.
+carried it too, corrected in `2c7e27a` and again in `4e485c8`.
 
 ## See also
 
