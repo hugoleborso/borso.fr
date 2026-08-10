@@ -68,6 +68,20 @@ fi
 log "running pnpm install"
 pnpm install --frozen-lockfile
 
+# 3b. Build @borso/infra. Its consumers import it by package entry, so every
+# app's `cdk/` typecheck — and every `cdk/test/stack.test.ts` — fails with
+# "Cannot find module '@borso/infra'" until `dist/` exists. CI builds it before
+# `pnpm -r typecheck` and again in each test job; a fresh session starts from a
+# clean checkout and had no equivalent, so the first typecheck of a session was
+# red for a reason unrelated to whatever was being changed.
+#
+# Built unconditionally rather than guarded on `dist/` existing, because a
+# *stale* dist is its own hazard — see
+# docs/dantotsus/shared-deploy-stale-dist.md.
+log "building @borso/infra (its dist is what app cdk typechecks resolve)"
+pnpm --filter @borso/infra run build ||
+  note_missing '@borso/infra dist' "@borso/infra did not build. Every app cdk typecheck and cdk/test/stack.test.ts will fail on \"Cannot find module '@borso/infra'\" until you run: pnpm --filter @borso/infra run build"
+
 # 4. AWS CLI v2 — only if the session has AWS creds configured (cloud sessions).
 # Local sessions without AWS_ACCESS_KEY_ID set don't pay this install cost.
 install_aws_cli() {

@@ -29,6 +29,18 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/posttool-format-write.sh",
+            "statusMessage": "Formatting with Prettier"
+          }
+        ]
+      }
     ]
   }
 }

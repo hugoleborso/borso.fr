@@ -1,12 +1,29 @@
 # Manual deploy of @borso/shared-infra. Trusts
 # repo:hugoleborso/borso.fr:environment:prod-shared via
-# SharedInfraDeployRole. The `prod-shared` GitHub environment requires
-# Hugo's manual approval before the deploy job actually runs.
+# SharedInfraDeployRole.
 #
 # workflow_dispatch only — shared infra rarely changes and we don't
 # want a stray push to main rewriting OIDC providers, deploy roles,
 # or the previews CDN. Trigger from the Actions tab → "Shared infra
 # deploy" → "Run workflow".
+#
+# There is no approval gate on this workflow, and the dispatch is not
+# confirmed. That is deliberate: this repository is a one-person lab, and
+# friction on a deploy the owner triggers by hand buys nothing it does not
+# also cost.
+#
+# This file used to claim the `prod-shared` GitHub environment required a
+# reviewer's approval first. It does not: run 7 was dispatched at 14:28:05
+# and its job started at 14:28:09, four seconds later, with nothing to
+# approve. An environment with no protection rule only scopes the OIDC
+# subject the role trusts — it stops another workflow from assuming
+# SharedInfraDeployRole, and stops nothing a dispatcher does.
+#
+# What replaces the gate is knowing what a deploy will do before dispatching
+# it: infra/shared/test/unit/__snapshots__/borso-shared.template.json is the
+# synthesized template, committed, so every change to this stack appears in
+# the pull request that causes it. Read the snapshot's diff, then dispatch.
+# See docs/dantotsus/an-approval-gate-that-only-existed-in-a-comment.md.
 
 name: shared-deploy
 

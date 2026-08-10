@@ -8,6 +8,7 @@ import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
+import { findUndecidedCredentialTables } from '../internal/migration-runner/clone-from-schema.utils.js';
 import {
   assertDeployStage,
   dsqlSchemaName,
@@ -133,6 +134,31 @@ function readMigrations(dir: string): readonly MigrationFile[] {
 }
 
 /**
+ * Fail the synth when a clone config says nothing about a credential-bearing
+ * table. pragma shipped a preview that served production's band data behind a
+ * password published in this repository, because `app_config` was in neither
+ * list and the clone's `ON CONFLICT DO NOTHING` quietly kept the fixture's row.
+ * The decision is cheap to state and expensive to forget, so the construct
+ * refuses to synthesize without it.
+ */
+function assertCredentialTablesDecided(
+  config: DsqlSchemaCloneFromConfig | undefined,
+  migrations: readonly MigrationFile[],
+): void {
+  if (config === undefined) return;
+  const undecided = findUndecidedCredentialTables(
+    config,
+    migrations.map((migration) => migration.sql),
+  );
+  if (undecided.length === 0) return;
+  throw new Error(
+    `DsqlSchema: cloneFromSchema does not say what to do with ${undecided.join(', ')}. ` +
+      `Add each to tableBlocklist (the preview gets no credential) or to tablesToReplace ` +
+      `(the preview shares the source's credential — see docs/adr/0009-pragma-previews-clone-production.md).`,
+  );
+}
+
+/**
  * Manages an Aurora DSQL schema's lifecycle: create on stack create, apply
  * migrations idempotently on update, DROP CASCADE on delete.
  *
@@ -154,6 +180,8 @@ export class DsqlSchema extends Construct {
     super(scope, id);
     validateAppSlug(props.app);
     assertDeployStage(props.stage);
+    const migrations = readMigrations(props.migrationsPath);
+    assertCredentialTablesDecided(props.cloneFromSchema, migrations);
     applyStandardTags(this, props);
 
     const stack = Stack.of(this);
@@ -210,7 +238,6 @@ export class DsqlSchema extends Construct {
       logGroup: providerLogGroup,
     });
 
-    const migrations = readMigrations(props.migrationsPath);
     new CustomResource(this, 'Schema', {
       serviceToken: provider.serviceToken,
       properties: {
