@@ -58,10 +58,11 @@ export default defineConfig({
           globalSetup: ['../../scripts/vitest-cdk-outdir-teardown.js'],
           // The CDK snapshot tests in this project synthesize a whole app,
           // twice per test (prod and preview), which does not fit the 5 s
-          // default. infra/cdk gives the same kind of test 30 s for the same
-          // reason; matching it here removes a failure that depended on how
-          // busy the machine was.
-          testTimeout: 30_000,
+          // default. 30 s was enough on an idle machine and not enough under
+          // the pre-push hook, which starts four mutation runs and four test
+          // runs at once. The budget is for the slowest machine the gate runs
+          // on, not the quietest.
+          testTimeout: 60_000,
         },
       },
       {
