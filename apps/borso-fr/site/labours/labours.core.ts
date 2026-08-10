@@ -99,11 +99,16 @@ export function selectCurrentMonthNumber(year: number, today: Date): number | nu
   return today.getMonth() + MONTH_NUMBER_OFFSET_FROM_INDEX;
 }
 
-/** The years the data module carries, oldest first, which is the order the masthead offers them in. */
+/**
+ * The years the data module carries, oldest first, which is the order the
+ * masthead offers them in.
+ *
+ * A key that reads as an array index is enumerated in ascending numeric order,
+ * and a year always does, so the keys arrive sorted and sorting them again here
+ * would be dead code.
+ */
 export function listAvailableYears(data: LaboursData): readonly number[] {
-  return Object.keys(data.editions)
-    .map(Number)
-    .sort((left, right) => left - right);
+  return Object.keys(data.editions).map(Number);
 }
 
 export function selectDefaultYear(availableYears: readonly number[], fallbackYear: number): number {

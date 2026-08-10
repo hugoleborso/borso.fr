@@ -9,6 +9,9 @@ export interface CatalogueParityDiff {
  * The two catalogues carry the exact same leaf set. This returns the two
  * directions of the difference so the sibling test can fail with the precise
  * list rather than a boolean.
+ *
+ * Both lists come out sorted because `listTranslationKeys` sorts and a `Set`
+ * iterates in insertion order, so sorting them again here would be dead code.
  */
 // @FollowsBlueprint i18n-parity-gate
 export function diffCatalogues(english: CatalogueTree, french: CatalogueTree): CatalogueParityDiff {
@@ -22,10 +25,7 @@ export function diffCatalogues(english: CatalogueTree, french: CatalogueTree): C
   for (const key of englishKeys) {
     if (!frenchKeys.has(key)) missingInFrench.push(key);
   }
-  return {
-    missingInEnglish: missingInEnglish.sort(compareTranslationKeys),
-    missingInFrench: missingInFrench.sort(compareTranslationKeys),
-  };
+  return { missingInEnglish, missingInFrench };
 }
 
 export function isInParity(diff: CatalogueParityDiff): boolean {
