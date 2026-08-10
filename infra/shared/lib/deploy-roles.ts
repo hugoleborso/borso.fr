@@ -7,6 +7,12 @@ import type { Construct } from 'constructs';
 const CONSUMER_REPO = 'hugoleborso/borso.fr';
 
 /**
+ * The branch a `schedule` or `workflow_dispatch` run reports as its ref, and
+ * therefore the branch name that ends up in the OIDC sub claim for those events.
+ */
+const DEFAULT_BRANCH = 'main';
+
+/**
  * IAM actions a CDK-driven deploy needs on the per-stack roles it creates,
  * updates, tags, and deletes. Shared between PreviewDeployRole and
  * ProdDeployRole (which scope these to different role-name patterns) and
@@ -84,7 +90,7 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
     roleName: 'ProdDeployRole',
     assumedBy: githubActionsPrincipal(oidcProviderArn, {
       repo: CONSUMER_REPO,
-      subject: { kind: 'environment', environment: 'prod' },
+      subjects: [{ kind: 'environment', environment: 'prod' }],
     }),
     maxSessionDuration: Duration.hours(1),
     description:
@@ -100,16 +106,23 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
   );
   prod.addToPolicy(dsqlAppPolicy);
 
-  // --- PreviewDeployRole — trusts repo:…:pull_request ---
+  // --- PreviewDeployRole — trusts repo:…:pull_request AND the default branch ---
+  //
+  // preview.yml assumes this on `pull_request`, and cleanup-orphans.yml assumes
+  // it on `pull_request`, `schedule` AND `workflow_dispatch`. The last two mint
+  // a `ref:refs/heads/main` sub, not a `pull_request` one, so a trust policy
+  // naming only `pull_request` left the nightly sweep unable to authenticate
+  // from the day it was written.
 
   const preview = new Role(scope, 'PreviewDeployRole', {
     roleName: 'PreviewDeployRole',
     assumedBy: githubActionsPrincipal(oidcProviderArn, {
       repo: CONSUMER_REPO,
-      subject: { kind: 'pull_request' },
+      subjects: [{ kind: 'pull_request' }, { kind: 'branch', branch: DEFAULT_BRANCH }],
     }),
     maxSessionDuration: Duration.hours(2),
-    description: 'Used by preview.yml to deploy/destroy <app>-pr-<n> stacks.',
+    description:
+      'Used by preview.yml to deploy/destroy <app>-pr-<n> stacks, and by cleanup-orphans.yml on its schedule.',
   });
   preview.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess'));
   preview.addToPolicy(
@@ -127,10 +140,11 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
     roleName: 'SharedInfraDeployRole',
     assumedBy: githubActionsPrincipal(oidcProviderArn, {
       repo: CONSUMER_REPO,
-      subject: { kind: 'environment', environment: 'prod-shared' },
+      subjects: [{ kind: 'environment', environment: 'prod-shared' }],
     }),
     maxSessionDuration: Duration.hours(1),
-    description: 'Self-deploy role for this stack. Gated by GitHub prod-shared environment.',
+    description:
+      'Self-deploy role for this stack. The prod-shared GitHub environment scopes this trust; the gate is shared-deploy.yml’s typed confirmation, not a reviewer rule.',
   });
   shared.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess'));
   // IAM role/policy lifecycle on the resources this stack owns:
