@@ -111,6 +111,59 @@ export function isReplacedBeforeClone(table: string, tablesToReplace: readonly s
 }
 
 /**
+ * Tables that hold a credential rather than domain data. Cloning one of these
+ * without saying which behaviour you want is never right, and the two possible
+ * mistakes fail in opposite directions:
+ *
+ *   - copied and *not* replaced → `ON CONFLICT DO NOTHING` keeps whatever row
+ *     the target already had, so the preview guards cloned production data with
+ *     a stale password. On pragma that stale row came from a test fixture whose
+ *     password is published in a public repository.
+ *   - copied and replaced → the preview shares production's credential, which
+ *     is a deliberate, defensible choice (ADR-0009) but has to be deliberate.
+ *   - blocklisted → the preview has no credential and answers 503 until seeded.
+ *
+ * Add a table here when an app introduces one; the guard below then forces the
+ * author to pick.
+ */
+const CREDENTIAL_TABLES = ['app_config', 'admin_credentials'] as const;
+
+interface CloneDecisionLists {
+  readonly tableBlocklist?: readonly string[];
+  readonly tablesToReplace?: readonly string[];
+}
+
+function hasCreateTableStatement(migrationSql: string, table: string): boolean {
+  return new RegExp(String.raw`CREATE\s+TABLE\s+(IF\s+NOT\s+EXISTS\s+)?"?${table}"?\b`, 'i').test(
+    migrationSql,
+  );
+}
+
+/**
+ * The credential tables an app's own migrations create and whose clone
+ * behaviour its config leaves unstated.
+ *
+ * Scoped to the migrations rather than to {@link CREDENTIAL_TABLES} wholesale
+ * because each app has one such table and not the other: pragma keeps its
+ * shared password in `app_config`, last-loop-lepin keeps its admin PIN in
+ * `admin_credentials`. Demanding a decision about a table the schema has never
+ * heard of would be noise, and noise is what gets a guard deleted.
+ */
+export function findUndecidedCredentialTables(
+  config: CloneDecisionLists,
+  migrationSql: readonly string[],
+): string[] {
+  const blocklist = config.tableBlocklist ?? [];
+  const tablesToReplace = config.tablesToReplace ?? [];
+  return CREDENTIAL_TABLES.filter(
+    (table) =>
+      migrationSql.some((sql) => hasCreateTableStatement(sql, table)) &&
+      !blocklist.includes(table) &&
+      !tablesToReplace.includes(table),
+  );
+}
+
+/**
  * Decide whether a table name should have its rows cloned. Returns
  * `false` for `_migrations` (handled out-of-band by the runner so the
  * applied-migrations marker survives even when the blocklist would

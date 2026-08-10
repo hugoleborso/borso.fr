@@ -36,6 +36,68 @@ function synth(props: {
   return Template.fromStack(stack);
 }
 
+// A clone that copies a credential table without saying which behaviour it
+// wants is the shape that put production band data behind a published password
+// on a public pragma preview. The construct refuses to synthesize it.
+describe('DsqlSchema clone guard on credential tables', () => {
+  let credentialMigrations: string;
+
+  beforeAll(() => {
+    credentialMigrations = fs.mkdtempSync(path.join(os.tmpdir(), 'borso-credential-migrations-'));
+    fs.writeFileSync(
+      path.join(credentialMigrations, '0001_init.sql'),
+      'CREATE TABLE IF NOT EXISTS "app_config" (id INT PRIMARY KEY, password_hash TEXT NOT NULL);',
+    );
+  });
+
+  afterAll(() => {
+    fs.rmSync(credentialMigrations, { recursive: true, force: true });
+  });
+
+  function synthWithCredentialTable(cloneFromSchema: {
+    readonly sourceSchemaName: string;
+    readonly tableBlocklist?: readonly string[];
+    readonly tablesToReplace?: readonly string[];
+  }): Template {
+    const app = new App();
+    const stack = new Stack(app, 'GuardStack', {
+      env: { account: '123456789012', region: 'eu-west-3' },
+    });
+    const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
+    new DsqlSchema(stack, 'Db', {
+      app: 'test-app',
+      stage: 'preview',
+      prNumber: 1,
+      migrationsPath: credentialMigrations,
+      cluster,
+      cloneFromSchema,
+    });
+    return Template.fromStack(stack);
+  }
+
+  it('refuses to synth when the config says nothing about the credential table', () => {
+    expect(() => synthWithCredentialTable({ sourceSchemaName: 'prod' })).toThrow(
+      /does not say what to do with app_config/,
+    );
+  });
+
+  it('synths when the credential table is blocklisted', () => {
+    expect(() =>
+      synthWithCredentialTable({ sourceSchemaName: 'prod', tableBlocklist: ['app_config'] }),
+    ).not.toThrow();
+  });
+
+  it('synths when the credential table is replaced', () => {
+    expect(() =>
+      synthWithCredentialTable({ sourceSchemaName: 'prod', tablesToReplace: ['app_config'] }),
+    ).not.toThrow();
+  });
+
+  it('leaves a schema that does not clone alone', () => {
+    expect(() => synth({ stage: 'prod' })).not.toThrow();
+  });
+});
+
 describe('DsqlSchema', () => {
   it('creates a NodejsFunction migration runner with dsql:DbConnectAdmin', () => {
     const tpl = synth({ stage: 'prod' });
