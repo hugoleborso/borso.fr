@@ -144,7 +144,7 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
     }),
     maxSessionDuration: Duration.hours(1),
     description:
-      'Self-deploy role for this stack. The prod-shared GitHub environment scopes this trust; the gate is shared-deploy.yml’s typed confirmation, not a reviewer rule.',
+      'Self-deploy role for this stack. The prod-shared GitHub environment scopes this trust and carries no reviewer rule; shared-deploy.yml is dispatch-only, so the operator dispatching it is the gate.',
   });
   shared.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess'));
   // IAM role/policy lifecycle on the resources this stack owns:

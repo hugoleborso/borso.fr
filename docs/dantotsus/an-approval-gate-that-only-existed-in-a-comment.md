@@ -5,7 +5,7 @@ detected-at: operator-deploy
 severity: medium
 related-pr: 40
 fix-pr: 45
-fix-commits: [1595450]
+fix-commits: [1595450, b8ce6c3]
 eradication-level: 2
 time-to-detect: months
 tags: [github-actions, deploy, claude-md, harness, self-improvement-loop]
@@ -79,65 +79,83 @@ description was never checkable.*
 
 ## Countermeasure
 
-- **Code:** commit `1595450` — the gate becomes a `confirm` input checked
-  in the repo, `action` defaults to `diff`, and the false claims in the
-  workflow header and CLAUDE.md are replaced by what is actually true.
-- **Operator action:** optional. If a reviewer rule on `prod-shared` is
-  wanted as well, it has to be set in GitHub's settings by hand — and it
-  will still be unverifiable from here, which is the point of not relying
-  on it.
+- **Code:** commit `1595450`, amended by `b8ce6c3` — the false claims in
+  the workflow header, the IAM role description and CLAUDE.md are replaced
+  by what is actually true, and the post-merge reminder is re-keyed to an
+  artefact instead of a queue.
+- **Operator action:** none. Dispatch the workflow when the snapshot moved.
 
 ## Eradication (mandatory — code-level)
 
-**Type:** DevX check (level 2 — the gate moves from an unobservable
-settings page into a file the test suite and every reviewer can read)
+**Type:** code diff (level 2 — the reminder that produced the false
+statement is re-keyed to a file in the diff, so it can no longer fire on
+a belief)
 
 **Reference:** [PR #45](https://github.com/hugoleborso/borso.fr/pull/45) ·
-commit [`1595450`](https://github.com/hugoleborso/borso.fr/commit/1595450)
+commits [`1595450`](https://github.com/hugoleborso/borso.fr/commit/1595450),
+[`b8ce6c3`](https://github.com/hugoleborso/borso.fr/commit/b8ce6c3)
 
-**The actual fix:**
+### The eradication I first shipped, and why it was wrong
+
+`1595450` made the claim true by adding the gate: a typed `confirm` input
+required for `action=deploy`, with `action` defaulting to `diff`. The
+operator rejected it immediately and correctly:
+
+> I do not want to have to confirm anything. This repo is my lab. Any
+> friction makes it less likely to be so.
+
+The reasoning is worth keeping, because the mistake is easy to repeat.
+The defect was **a false description**, and I fixed it by making the
+description true — which is the lazy direction, and it silently changed
+the product to match the documentation rather than the reverse. In a
+one-person repository where the only dispatcher is the owner, a
+confirmation prompt has no threat model: it cannot stop the one person
+authorised to do the thing. It buys the *appearance* of safety at a cost
+paid on every deploy, forever.
+
+`b8ce6c3` removes it. `action` defaults to `deploy` again.
+
+**What replaces it — and it is strictly better than the prompt:** the
+committed template snapshot from
+[`a-comment-that-shipped-to-the-cloudfront-edge.md`](./a-comment-that-shipped-to-the-cloudfront-edge.md).
+Every change to `borso-shared` appears in the pull request that causes it,
+so the operator reads what a deploy will do *before* dispatching. A
+confirmation asks "are you sure?" of somebody who has no way to know; a
+snapshot tells them what they are confirming. **Prefer making the
+consequence visible over making the action harder** — now a `Don't` in
+CLAUDE.md.
+
+### The eradication that actually addresses the root cause
+
+Two changes, neither of which costs anything at deploy time:
+
+1. **The reminder is keyed to an artefact.** CLAUDE.md's post-merge rule
+   used to say *"approve the pending shared-infra deploy when the diff
+   touched `infra/shared/**`"* — a queue that does not exist, gated on a
+   condition that is neither necessary nor sufficient. It now says: the
+   committed snapshot moved, therefore dispatch. A file in the diff cannot
+   be misremembered.
+2. **A new `Don't`:** *don't describe a protection this repository cannot
+   observe as if it were enforced.* Environment reviewer rules, branch
+   protection and repository secrets are invisible to every test, lint and
+   type here, so claims about them age without resistance. State what the
+   repo can check; say "unverified from here" otherwise.
 
 ```diff
-       action:
-         type: choice
-         options: [deploy, diff, synth]
--        default: deploy
-+        default: diff
-+      confirm:
-+        description: 'Type deploy-shared-infra to allow action=deploy'
-+        type: string
-+        default: ''
-
-     steps:
-+      # Before the checkout, so a mistyped confirmation costs no credentials.
-+      - name: Require a typed confirmation to deploy
-+        if: inputs.action == 'deploy'
-+        env:
-+          CONFIRM: ${{ inputs.confirm }}
-+        run: |
-+          if [ "$CONFIRM" != 'deploy-shared-infra' ]; then
-+            echo "::error::action=deploy needs confirm=deploy-shared-infra."
-+            exit 1
-+          fi
+-  1. *Approve the pending shared-infra deploy* … **only when the merged diff
+-     touched `infra/shared/**`** (that deploy waits in the `prod-shared`
+-     queue until approved).
++  1. *Ask the operator to dispatch `shared-deploy`* — **whenever the merged diff
++     changes the synthesized `borso-shared` template**, which is not the same
++     thing as touching `infra/shared/**`. … **Check, don't infer:** the committed
++     snapshot changes in the diff exactly when a deploy is owed. Nothing is ever
++     queued or awaiting approval — say "dispatch it", never "approve it".
 ```
 
-**What this does and does not buy, stated plainly:** it does not restrict
-*who* can deploy. Anyone who could dispatch the workflow before still
-can, and a determined operator types eleven characters. What changes is
-that the gate is now a line in a file — greppable, reviewable, and
-impossible to describe falsely for months, because the description sits
-next to the code that implements it.
-
-The deeper eradication is the rule about rules: **a protection this
-repository cannot observe must not be described as if it were enforced.**
-CLAUDE.md now says what `prod` and `prod-shared` actually do.
-
 **Sibling defects swept:** the `prod` environment carried the same false
-claim and was corrected in PR #40 (commit
-[`e79d27a`](https://github.com/hugoleborso/borso.fr/commit/e79d27a)'s
-range) — this entry exists because that sweep stopped at the first
-instance. `SharedInfraDeployRole`'s IAM description carried the claim too
-and is corrected in `2c7e27a`.
+claim and was corrected in PR #40 — this entry exists because that sweep
+stopped at the first instance. `SharedInfraDeployRole`'s IAM description
+carried it too, corrected in `2c7e27a` and again in `b8ce6c3`.
 
 ## See also
 

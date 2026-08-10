@@ -632,7 +632,7 @@
           ],
           "Version": "2012-10-17"
         },
-        "Description": "Self-deploy role for this stack. The prod-shared GitHub environment scopes this trust; the gate is shared-deploy.yml’s typed confirmation, not a reviewer rule.",
+        "Description": "Self-deploy role for this stack. The prod-shared GitHub environment scopes this trust and carries no reviewer rule; shared-deploy.yml is dispatch-only, so the operator dispatching it is the gate.",
         "ManagedPolicyArns": [
           {
             "Fn::Join": [
