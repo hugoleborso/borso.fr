@@ -46,6 +46,7 @@ Two failure modes to watch for:
 ### GitHub Actions
 
 - [`workflow-dispatch-default-branch.md`](./workflow-dispatch-default-branch.md) — `workflow_dispatch` and `issue_comment` workflows only show in the UI once on the default branch.
+- [`github-scheduled-workflows-fire-late.md`](./github-scheduled-workflows-fire-late.md) — measured: this repo's nightly cron fires 1h01m–2h45m after its declared time, every day observed. Never key a wait on the cron expression; read the last few `created_at` values instead. Includes the monitor-that-cannot-report-its-own-failure trap.
 - [`github-oidc-sub-claim-per-trigger.md`](./github-oidc-sub-claim-per-trigger.md) — the OIDC `sub` claim describes the *event*, not the workflow, so adding a `schedule:` trigger changes the credential presented; claim-per-trigger table, why `environment:` wins, and how to trust several.
 
 ### Operator / shell
