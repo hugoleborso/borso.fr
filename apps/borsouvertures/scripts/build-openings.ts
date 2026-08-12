@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { Chess } from 'chess.js';
+import { buildLineId, toSlug } from '../site/openings/openingIds.utils.js';
 
 interface RawRow {
   eco: string;
@@ -76,14 +77,6 @@ function parseTsv(tsv: string): RawRow[] {
     .map(([eco, name, pgn]) => ({ eco, name, pgn }));
 }
 
-function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .replace(/['’]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
 function extractVariation(name: string): { variation: string; lineName: string } {
   if (!name.includes(':')) return { variation: 'Main Line', lineName: name };
   const [, rest] = name.split(':');
@@ -101,6 +94,21 @@ function convertPgnToMoves(pgn: string): { movesSan: string[]; movesUci: string[
   };
 }
 
+function assertUniqueLineIds(openings: Opening[]): void {
+  const seenIds = new Set<string>();
+  for (const opening of openings) {
+    for (const variation of opening.variations) {
+      for (const line of variation.lines) {
+        const key = `${opening.id}/${variation.id}/${line.id}`;
+        if (seenIds.has(key)) {
+          throw new Error(`Duplicate line id ${line.id} in ${opening.id}/${variation.id}`);
+        }
+        seenIds.add(key);
+      }
+    }
+  }
+}
+
 async function buildOpenings(): Promise<void> {
   const openingsMap = new Map<string, Opening>();
 
@@ -111,7 +119,7 @@ async function buildOpenings(): Promise<void> {
       const family = FAMILIES.find((familyName) => row.name.startsWith(familyName));
       if (!family) continue;
 
-      const openingId = slugify(family);
+      const openingId = toSlug(family);
       let opening = openingsMap.get(openingId);
       if (!opening) {
         opening = { id: openingId, name: family, ecoCodes: [], variations: [] };
@@ -120,7 +128,7 @@ async function buildOpenings(): Promise<void> {
       if (!opening.ecoCodes.includes(row.eco)) opening.ecoCodes.push(row.eco);
 
       const { variation, lineName } = extractVariation(row.name);
-      const variationId = slugify(variation);
+      const variationId = toSlug(variation);
       let variationEntry = opening.variations.find((entry) => entry.id === variationId);
       if (!variationEntry) {
         variationEntry = { id: variationId, name: variation, lines: [] };
@@ -129,7 +137,7 @@ async function buildOpenings(): Promise<void> {
 
       const { movesSan, movesUci } = convertPgnToMoves(row.pgn);
       variationEntry.lines.push({
-        id: slugify(lineName),
+        id: buildLineId(lineName, movesUci),
         name: lineName,
         eco: row.eco,
         movesSan,
@@ -145,6 +153,7 @@ async function buildOpenings(): Promise<void> {
       lines: variation.lines.sort((left, right) => left.name.localeCompare(right.name)),
     })),
   }));
+  assertUniqueLineIds(openings);
 
   await mkdir(path.dirname(BUNDLED_OUTPUT_PATH), { recursive: true });
   await mkdir(path.dirname(PUBLIC_OUTPUT_PATH), { recursive: true });
