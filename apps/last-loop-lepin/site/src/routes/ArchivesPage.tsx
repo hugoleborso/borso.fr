@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardBody } from '../components/atoms/Card';
 import { Show } from '../components/atoms/Show';
-import { CardHeader } from '../components/molecules/CardHeader';
+import { CardHeader } from '../components/atoms/CardHeader';
 import { ArchivedEditionCard } from '../components/organisms/ArchivedEditionCard';
 import { listArchivedEditions } from '../components/organisms/spectator.core';
 import { useEditionList } from '../lib/queries/editions';

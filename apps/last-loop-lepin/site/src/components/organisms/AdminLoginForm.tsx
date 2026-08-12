@@ -9,7 +9,7 @@ import { ErrorText } from '../atoms/ErrorText';
 import { Input } from '../atoms/Input';
 import { Label } from '../atoms/Label';
 import { Show } from '../atoms/Show';
-import { CardHeader } from '../molecules/CardHeader';
+import { CardHeader } from '../atoms/CardHeader';
 import { type AdminErrorMessage, selectAdminLoginError } from './admin-errors.core';
 import { adminLoginSchema, PIN_INPUT_ID } from './admin-login.core';
 

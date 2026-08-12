@@ -8,7 +8,7 @@ import { listPresent } from '../../lib/optional.utils';
 import type { RaceEditionDto } from '../../lib/race.types';
 import { Card, CardBody } from '../atoms/Card';
 import { Show } from '../atoms/Show';
-import { CardHeader } from '../molecules/CardHeader';
+import { CardHeader } from '../atoms/CardHeader';
 import { Countdown } from '../molecules/Countdown';
 import { selectDistanceLabelKey } from './upcoming-edition.core';
 

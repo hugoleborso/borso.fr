@@ -6,7 +6,7 @@ interface CardHeaderProps {
   readonly hint?: ReactNode;
 }
 
-// @FollowsBlueprint molecule-presentational
+// @FollowsBlueprint atom-plain
 export function CardHeader({ title, hint }: CardHeaderProps) {
   return (
     <div className="flex items-baseline justify-between gap-3 px-5 py-4 border-b border-line-soft">

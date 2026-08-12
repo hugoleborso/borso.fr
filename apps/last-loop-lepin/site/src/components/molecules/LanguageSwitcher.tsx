@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '../../i18n/i18n';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../../i18n/i18n.utils';
+import { Select } from '../atoms/Select';
 
 const LABEL_KEY_BY_LANGUAGE = {
   fr: 'nav.language-french',
@@ -20,20 +21,17 @@ export function LanguageSwitcher() {
   return (
     <label className="inline-flex items-center" htmlFor={SELECT_ID}>
       <span className="sr-only">{t('nav.language')}</span>
-      <select
+      <Select
         id={SELECT_ID}
-        className="px-2.5 py-1.5 rounded-lg border border-line bg-bg-elev text-[13px] font-medium text-ink-2"
         value={readSelectedLanguage(i18n.language)}
-        onChange={(event) => {
-          changeLanguage(readSelectedLanguage(event.target.value));
+        options={SUPPORTED_LANGUAGES.map((language) => ({
+          value: language,
+          label: t(LABEL_KEY_BY_LANGUAGE[language]),
+        }))}
+        onSelect={(value) => {
+          changeLanguage(readSelectedLanguage(value));
         }}
-      >
-        {SUPPORTED_LANGUAGES.map((language) => (
-          <option key={language} value={language}>
-            {t(LABEL_KEY_BY_LANGUAGE[language])}
-          </option>
-        ))}
-      </select>
+      />
     </label>
   );
 }

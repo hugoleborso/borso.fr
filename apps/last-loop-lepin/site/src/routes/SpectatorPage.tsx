@@ -20,7 +20,7 @@ import { UpcomingEditionCard } from '../components/organisms/UpcomingEditionCard
 import { ButtonLink } from '../components/atoms/ButtonLink';
 import { Card, CardBody } from '../components/atoms/Card';
 import { Show } from '../components/atoms/Show';
-import { CardHeader } from '../components/molecules/CardHeader';
+import { CardHeader } from '../components/atoms/CardHeader';
 import { apiUrl } from '../lib/api';
 import { formatElevationMetres } from '../lib/formatters.utils';
 import { listPresent } from '../lib/optional.utils';

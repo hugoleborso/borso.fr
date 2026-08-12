@@ -3,7 +3,7 @@ import { Card, CardBody } from '../components/atoms/Card';
 import { InitialsAvatar } from '../components/atoms/InitialsAvatar';
 import { Pill } from '../components/atoms/Pill';
 import { Show } from '../components/atoms/Show';
-import { CardHeader } from '../components/molecules/CardHeader';
+import { CardHeader } from '../components/atoms/CardHeader';
 import {
   RUNNER_ROW_CLASS,
   RUNNER_ROW_DETAIL_CLASS,

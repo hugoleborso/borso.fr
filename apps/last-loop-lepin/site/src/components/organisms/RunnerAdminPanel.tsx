@@ -12,8 +12,9 @@ import { ErrorText } from '../atoms/ErrorText';
 import { FileInput } from '../atoms/FileInput';
 import { InitialsAvatar } from '../atoms/InitialsAvatar';
 import { Label } from '../atoms/Label';
+import { MonoNote } from '../atoms/MonoNote';
 import { Show } from '../atoms/Show';
-import { CardHeader } from '../molecules/CardHeader';
+import { CardHeader } from '../atoms/CardHeader';
 import { FormField } from '../molecules/FormField';
 import { type AdminErrorMessage, selectRunnerCreateError } from './admin-errors.core';
 import {
@@ -141,9 +142,7 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
             </Button>
           </div>
         </div>
-        <div className="font-mono tabular-nums text-[11px] text-ink-3">
-          {t('admin.runners.photo-hint')}
-        </div>
+        <MonoNote>{t('admin.runners.photo-hint')}</MonoNote>
         <Show when={failure !== null}>
           <ErrorText>{t(failure?.key ?? 'common.error-detail', failure?.parameters)}</ErrorText>
         </Show>

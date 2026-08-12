@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MonoNote } from '../atoms/MonoNote';
 import { FormField } from '../molecules/FormField';
 import { type GpxErrorKey, GpxFileField } from '../molecules/GpxFileField';
 
@@ -122,9 +123,7 @@ export function EditionFormFields({
         required={isGpxRequired}
         errorKey={gpxErrorKey}
       />
-      <div className="font-mono tabular-nums text-[11px] text-ink-3">
-        {t('admin.setup.sun-hint')}
-      </div>
+      <MonoNote>{t('admin.setup.sun-hint')}</MonoNote>
     </>
   );
 }

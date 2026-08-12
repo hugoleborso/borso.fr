@@ -3,6 +3,7 @@ import { formatKilobytes } from '../../lib/formatters.utils';
 import { ErrorText } from '../atoms/ErrorText';
 import { FileInput } from '../atoms/FileInput';
 import { Label } from '../atoms/Label';
+import { MonoNote } from '../atoms/MonoNote';
 import { Show } from '../atoms/Show';
 
 /** The three ways reading a picked GPX file can fail. */
@@ -45,12 +46,12 @@ export function GpxFileField({
       <Label htmlFor={id}>{label}</Label>
       <FileInput id={id} onFileChange={onFileChange} required={required} />
       <Show when={file !== null}>
-        <div className="font-mono tabular-nums text-[11px] text-ink-3">
+        <MonoNote>
           {t('admin.setup.gpx-file-summary', {
             name: file?.name ?? '',
             kilobytes: formatKilobytes(file?.size ?? 0),
           })}
-        </div>
+        </MonoNote>
       </Show>
       <Show when={errorKey !== null}>
         <ErrorText>{t(errorKey ?? 'admin.setup.gpx-unreadable')}</ErrorText>

@@ -13,8 +13,9 @@ import type { RaceEditionDto } from '../../lib/race.types';
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { ErrorText } from '../atoms/ErrorText';
+import { MonoNote } from '../atoms/MonoNote';
 import { Show } from '../atoms/Show';
-import { CardHeader } from '../molecules/CardHeader';
+import { CardHeader } from '../atoms/CardHeader';
 import {
   type AdminErrorMessage,
   selectEditionDeleteError,
@@ -168,7 +169,7 @@ export function EditionEditForm({ edition }: EditionEditFormProps) {
           isGpxRequired={false}
           gpxErrorKey={gpx.errorKey}
           gpxNote={
-            <div className="font-mono tabular-nums text-[11px] text-ink-3">
+            <MonoNote>
               {t('admin.setup.gpx-current', {
                 distance: t('common.distance', {
                   kilometres: formatKilometres(edition.gpx.distanceMeters),
@@ -177,7 +178,7 @@ export function EditionEditForm({ edition }: EditionEditFormProps) {
                   metres: formatElevationMetres(edition.gpx.elevationGainMeters),
                 }),
               })}
-            </div>
+            </MonoNote>
           }
         />
         <Show when={failure !== null}>

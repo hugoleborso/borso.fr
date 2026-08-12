@@ -10,6 +10,7 @@ import type { RaceEditionDto } from '../../lib/race.types';
 import { selectRunnerStatusKind, selectRunnerStatusLoop } from '../../lib/runner-status.utils';
 import { ButtonLink } from '../atoms/ButtonLink';
 import { CardBody } from '../atoms/Card';
+import { MonoNote } from '../atoms/MonoNote';
 import { Pill } from '../atoms/Pill';
 import { Show } from '../atoms/Show';
 import { formatRank } from '../molecules/leaderboard-chip.utils';
@@ -53,7 +54,7 @@ export function ArchivedEditionCard({ edition, locale }: ArchivedEditionCardProp
           {formatRaceDate(new Date(edition.startsAt), locale)}
         </span>
       </div>
-      <div className="font-mono tabular-nums text-[11px] text-ink-3">
+      <MonoNote>
         {t('archives.summary', {
           distance: t('common.distance', {
             kilometres: formatKilometres(edition.gpx.distanceMeters),
@@ -62,7 +63,7 @@ export function ArchivedEditionCard({ edition, locale }: ArchivedEditionCardProp
             metres: formatElevationMetres(edition.gpx.elevationGainMeters),
           }),
         })}
-      </div>
+      </MonoNote>
       <CardBody padding="none" className="pt-2">
         <Show when={ranked.length === 0}>
           <div className="text-ink-3">{t('archives.standings-unavailable')}</div>

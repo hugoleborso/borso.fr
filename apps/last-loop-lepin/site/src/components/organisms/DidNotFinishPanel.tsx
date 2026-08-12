@@ -10,7 +10,7 @@ import { Card, CardBody } from '../atoms/Card';
 import { ErrorText } from '../atoms/ErrorText';
 import { InitialsAvatar } from '../atoms/InitialsAvatar';
 import { Show } from '../atoms/Show';
-import { CardHeader } from '../molecules/CardHeader';
+import { CardHeader } from '../atoms/CardHeader';
 import { type AdminErrorMessage, selectPunchError } from './admin-errors.core';
 import {
   RUNNER_ROW_CLASS,

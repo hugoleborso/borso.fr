@@ -13,7 +13,7 @@ import { Button } from '../atoms/Button';
 import { Card, CardBody } from '../atoms/Card';
 import { ErrorText } from '../atoms/ErrorText';
 import { Show } from '../atoms/Show';
-import { CardHeader } from '../molecules/CardHeader';
+import { CardHeader } from '../atoms/CardHeader';
 import { type AdminErrorMessage, selectEditionWriteError } from './admin-errors.core';
 import { type EditionStatusTransition, selectNextTransition } from './edition-form.core';
 
