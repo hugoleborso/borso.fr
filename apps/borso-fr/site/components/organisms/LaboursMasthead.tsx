@@ -1,8 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { selectYearButtonColors } from '../../labours/labours-appearance.core';
-
-const YEAR_BUTTON_CLASS_NAME =
-  'm-0 inline-flex min-h-11 min-w-11 cursor-pointer appearance-none items-center justify-center border border-labours-ink px-3.5 py-2 font-labours-sans text-[12px] font-medium tracking-[0.08em]';
+import { BrandWordmark } from '../atoms/BrandWordmark';
+import { YearButton } from '../atoms/YearButton';
 
 interface LaboursMastheadProps {
   availableYears: readonly number[];
@@ -20,31 +18,16 @@ export function LaboursMasthead({
   return (
     <>
       <div className="flex items-center justify-between border-b border-labours-rule pb-3.5">
-        <a
-          className="inline-flex min-h-11 min-w-11 items-center border-b border-labours-ink pb-px font-labours-sans text-[12px] font-semibold tracking-[0.18em] text-labours-ink uppercase"
-          href="/"
-        >
-          {t('common.brand.name')}
-          <span className="text-labours-accent">.</span>
-          {t('common.brand.domain')}
-        </a>
+        <BrandWordmark />
         <div className="flex">
-          {availableYears.map((candidateYear) => {
-            const colors = selectYearButtonColors(candidateYear === selectedYear);
-            return (
-              <button
-                type="button"
-                key={candidateYear}
-                onClick={() => {
-                  onYearSelected(candidateYear);
-                }}
-                className={YEAR_BUTTON_CLASS_NAME}
-                style={{ background: colors.background, color: colors.color }}
-              >
-                {candidateYear}
-              </button>
-            );
-          })}
+          {availableYears.map((candidateYear) => (
+            <YearButton
+              key={candidateYear}
+              year={candidateYear}
+              isSelected={candidateYear === selectedYear}
+              onSelect={onYearSelected}
+            />
+          ))}
         </div>
       </div>
 

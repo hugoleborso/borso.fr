@@ -7,10 +7,7 @@ import {
 import type { ColoredRect } from '../../art/mondrian/painting.utils';
 import type { Palette } from '../../art/mondrian/palettes.utils';
 import { useAnimation } from '../../art/mondrian/use-animation';
-
-const PERCENTAGE_SCALE = 100;
-const HALF = 2;
-const INKBLOOM_EASING = 'cubic-bezier(.2,.7,.2,1)';
+import { MondrianRect } from '../atoms/MondrianRect';
 
 const FRAME_CLASS_NAME =
   "relative block h-full w-full cursor-pointer appearance-none overflow-hidden border-none bg-atelier-frame p-0 shadow-atelier isolate after:pointer-events-none after:absolute after:inset-0 after:z-[5] after:bg-[image:var(--vignette-atelier)] after:content-['']";
@@ -49,25 +46,19 @@ export function MondrianFrame({
     >
       <div className="relative h-full w-full origin-center" ref={setCanvasNode}>
         {rectangles.map((rectangle, rectangleIndex) => (
-          <div
+          <MondrianRect
             key={`${drawKey}-${rectangle.id}`}
-            className="rect pointer-events-none absolute origin-center"
-            style={{
-              left: `${rectangle.x * PERCENTAGE_SCALE}%`,
-              top: `${rectangle.y * PERCENTAGE_SCALE}%`,
-              width: `${rectangle.width * PERCENTAGE_SCALE}%`,
-              height: `${rectangle.height * PERCENTAGE_SCALE}%`,
-              background: rectangle.fill,
-              outline: `${lineWeight}px solid ${palette.line}`,
-              outlineOffset: `-${lineWeight / HALF}px`,
-              animation: `${inkbloom.name} ${inkbloom.durationMs}ms ${INKBLOOM_EASING} both`,
-              animationDelay: `${selectInkbloomDelayMs(
-                rectangleIndex,
-                rectangles.length,
-                rectangle.id,
-                isReducedMotion,
-              )}ms`,
-            }}
+            rectangle={rectangle}
+            lineColor={palette.line}
+            lineWeight={lineWeight}
+            animationName={inkbloom.name}
+            animationDurationMs={inkbloom.durationMs}
+            animationDelayMs={selectInkbloomDelayMs(
+              rectangleIndex,
+              rectangles.length,
+              rectangle.id,
+              isReducedMotion,
+            )}
           />
         ))}
       </div>

@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import {
-  selectFilmstripBarColor,
   selectFilmstripCardBorderClassName,
   selectFilmstripCardColors,
   TRANSPARENT,
@@ -14,6 +13,7 @@ import {
 } from '../../labours/labours.core';
 import type { Month } from '../../labours/labours.types';
 import { ACCENT } from '../../theme/twelve-labours.theme';
+import { ChallengeBarStrip } from '../atoms/ChallengeBarStrip';
 
 const SUMMARY_TITLE_COUNT = 2;
 
@@ -74,15 +74,7 @@ export function FilmstripCard({ month, isActive, isCurrentMonth, onSelect }: Fil
         >
           {summary}
         </div>
-        <div className="mb-2 flex gap-[3px]">
-          {month.challenges.map((challenge) => (
-            <div
-              key={challenge.titleKey}
-              className="h-[3px] flex-1"
-              style={{ background: selectFilmstripBarColor(challenge.status, isActive) }}
-            />
-          ))}
-        </div>
+        <ChallengeBarStrip challenges={month.challenges} isActive={isActive} />
         <div
           className="font-labours-sans text-[10px] tracking-[0.08em]"
           style={{ opacity: colors.secondaryOpacity }}
