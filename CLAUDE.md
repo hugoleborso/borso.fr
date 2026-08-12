@@ -97,7 +97,19 @@ Two ways an agent/session gets read-only AWS access:
   - `AWS_REGION=eu-west-3`
   - `AWS_ACCOUNT_ID=<12-digit account id>`
 
-When `AWS_ACCESS_KEY_ID` is present, the SessionStart hook installs AWS CLI v2 conditionally and `aws ...` works in Bash. The IAM user behind those keys has `ReadOnlyAccess` + an inline deny on every mutation verb (`iam:*`, `cloudformation:Create*/Update*/Delete*`, `s3:Put*/Delete*`, `lambda:*`, `cloudfront:Create*/Update*/Delete*`, `route53:Change*/Create*/Delete*`, `dsql:*`). You can list, describe, and read; you can't change anything.
+When `AWS_ACCESS_KEY_ID` holds a real key id, the SessionStart hook installs AWS CLI v2 and `aws ...` works in Bash. `AI-Dev-ReadOnly` carries `ReadOnlyAccess` + `job-function/ViewOnlyAccess` + the `Explicit-write-deny` inline policy. You can list, describe, and read; you can't change anything.
+
+**The deny list here is unverifiable from a session** — `iam:GetUserPolicy` is itself denied, so nobody with these credentials can read the policy that binds them. What follows was probed verb by verb on 2026-08-11 rather than copied from the policy:
+
+| Denied (explicit) | Works |
+| --- | --- |
+| `iam:*` — including `GetRole`, `ListRoles`, `ListOpenIDConnectProviders` | `cloudformation:Describe*/List*/GetTemplate`, `s3:ListBuckets`, `ssm:GetParametersByPath`, `cloudfront:List*`, `lambda:ListFunctions`, `logs:Describe*/GetLogEvents`, `acm:List*`, `secretsmanager:ListSecrets` |
+| `dsql:*` | |
+| `s3:PutObject` | |
+
+`secretsmanager:GetSecretValue` fails differently — *"no identity-based policy allows"*, an absence of grant rather than an explicit deny, which is `ReadOnlyAccess` behaving normally. An earlier revision of this file claimed `lambda:*` was denied; `lambda:ListFunctions` returns 64 functions, so the real policy denies mutating Lambda verbs only. Treat the table as verified samples, not as the policy.
+
+**`iam:*` being denied does not block trust-policy debugging.** `aws cloudformation get-template --stack-name borso-shared` returns every role's full `AssumeRolePolicyDocument`, and it reflects the *deployed* stack rather than the checked-out branch — which is what you want when a workflow's OIDC assume-role is failing. See [`docs/knowledge/github-oidc-sub-claim-per-trigger.md`](./docs/knowledge/github-oidc-sub-claim-per-trigger.md).
 
 Full setup including key rotation: [`docs/aws-setup.md#12`](./docs/aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
 

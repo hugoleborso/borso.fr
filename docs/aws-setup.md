@@ -198,7 +198,9 @@ Skip this if you only run Claude Code locally — Pattern A in [`local-dev.md`](
 
 For remote (claude.ai/code) sessions, `aws sso login` doesn't work because there's no browser. The simplest path is a dedicated IAM user with long-lived access keys, scoped strictly read-only. Trade-off: long-lived keys are visible to anyone with edit access on the Claude Code project environment; Anthropic does not yet offer encrypted-at-rest secrets storage. The IAM scope is what bounds the blast radius if a key leaks.
 
-> **Does not currently work on claude.ai/code.** Remote sessions arrive with both credential variables set to the literal string `proxy-injected`, and `AWS_REGION` / `AWS_ACCOUNT_ID` unset entirely. Every `aws` call therefore fails with `InvalidClientTokenId`, which reads exactly like an expired key and is not one. Verified 2026-08-11 against a live session; the account's key was Active throughout. `scripts/install-repo-deps.sh` now detects the placeholder and says so in the SessionStart banner instead of installing a CLI that cannot authenticate. **Treat the rest of this section as the setup that exists in the account, not as a capability a web session has.** Local sessions are unaffected — use `aws sso login --profile borso-claude` per [`local-dev.md`](./local-dev.md#pattern-a--local-claude-code-session-terminal).
+> **Check the credentials before trusting them.** This works — a session on 2026-08-11 authenticated as `arn:aws:iam::…:user/AI-Dev-ReadOnly` and read CloudFormation, S3, SSM, CloudFront, Lambda, Logs and ACM. But *another* session the same day received the literal string `proxy-injected` in both credential variables, with `AWS_REGION` and `AWS_ACCOUNT_ID` unset, so every call failed with `InvalidClientTokenId` — which reads exactly like an expired key and is not one. The account's key was `Active` throughout both.
+>
+> So an auth failure here is ambiguous by default, and the cheap disambiguation is one command: a real id is 20 chars starting `AKIA`, and the secret is 40. `scripts/install-repo-deps.sh` now checks that shape and prints an explicit "AWS unavailable" line to the SessionStart banner rather than installing a CLI that cannot authenticate. **Read the banner before diagnosing the account.**
 
 ### 12.1 The IAM user
 
@@ -238,7 +240,31 @@ aws --profile borso-admin iam put-user-policy \
   --policy-document file:///path/to/deny.json
 ```
 
-Note what step 2's deny costs: it starts with `iam:*`, which blocks `iam:GetRole` as surely as `iam:CreateRole`. A session cannot read a trust policy to debug an OIDC `sub` claim — that has to come from a workflow run log instead. Deliberate, and worth knowing before planning a debug session around it.
+### What these credentials can actually do
+
+Probed verb by verb on 2026-08-11, because the inline deny cannot be read by the user it binds (`iam:GetUserPolicy` is inside `iam:*`). These are verified samples, not the policy text:
+
+| Works | Denied |
+| --- | --- |
+| `cloudformation` describe / list / **get-template** | `iam:*` — `GetRole`, `ListRoles`, `ListOpenIDConnectProviders` alike |
+| `s3api list-buckets` (20) | `dsql:*` |
+| `ssm get-parameters-by-path /borso/shared` (12) | `s3:PutObject` (explicit deny; probe confirmed no object created) |
+| `cloudfront list-distributions` (10) | |
+| `lambda list-functions` (64) | |
+| `logs` describe + `get-log-events` | |
+| `acm list-certificates`, both regions | |
+| `secretsmanager list-secrets` | `secretsmanager:GetSecretValue` — *absence of grant*, not explicit deny |
+
+That last row is `ReadOnlyAccess` behaving normally: the AWS-managed policy excludes secret values. The inline deny and the managed allow do separate jobs, and the error wording tells you which one refused.
+
+**`iam:*` being denied does not block trust-policy debugging.** The detour is CloudFormation:
+
+```bash
+aws cloudformation get-template --stack-name borso-shared \
+  --query 'TemplateBody.Resources.*.Properties.AssumeRolePolicyDocument'
+```
+
+That returns every deploy role's full trust document. It is arguably *better* than `iam:GetRole` for this purpose, because it reflects the deployed stack rather than the checked-out branch — which is exactly the distinction that matters when a workflow's assume-role is failing and you need to know what the account currently believes.
 
 ### 12.2 Issue an access key
 

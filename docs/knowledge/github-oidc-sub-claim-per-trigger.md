@@ -70,13 +70,35 @@ aws iam get-role --role-name PreviewDeployRole \
   jq '.Statement[].Condition'
 ```
 
-**Local shells only, with an admin profile.** Two things stop this working from a
-Claude Code session, and both were learned the hard way: `AI-Dev-ReadOnly`'s
-inline deny starts with `iam:*`, which blocks `iam:GetRole` as surely as
-`iam:CreateRole`; and a remote session receives no AWS credentials at all. So
-when a `sub` claim needs checking from a session, read it off the workflow run
-instead — the failing job's log names the event, and the event determines the
-claim per the table above. See [`docs/aws-setup.md` §12](../aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
+**That command needs an admin profile.** `AI-Dev-ReadOnly`'s inline deny starts
+with `iam:*`, so a session using those credentials cannot call `iam:GetRole` at
+all — verified 2026-08-11, along with `ListRoles` and
+`ListOpenIDConnectProviders`.
+
+**Use CloudFormation instead. It works with the read-only credentials, and it is
+the better source anyway:**
+
+```bash
+aws cloudformation get-template --stack-name borso-shared \
+  --query 'TemplateBody.Resources.*.Properties.AssumeRolePolicyDocument'
+```
+
+The deployed template carries every role's full trust document. On 2026-08-11 it
+returned, directly and without inference:
+
+```
+PreviewDeployRole      repo:hugoleborso/borso.fr:pull_request
+                       repo:hugoleborso/borso.fr:ref:refs/heads/main
+ProdDeployRole         repo:hugoleborso/borso.fr:environment:prod
+SharedInfraDeployRole  repo:hugoleborso/borso.fr:environment:prod-shared
+```
+
+Better than `iam:GetRole` for this job, because `get-template` reflects the
+**deployed** stack rather than the checked-out branch. When an assume-role is
+failing, the question is what the account currently believes, not what `main`
+says it should — and those differ for exactly as long as a merged fix sits
+undeployed. That gap is what made this bug survive: see
+[`an-approval-gate-that-only-existed-in-a-comment.md`](../dantotsus/an-approval-gate-that-only-existed-in-a-comment.md).
 
 ## See also
 
