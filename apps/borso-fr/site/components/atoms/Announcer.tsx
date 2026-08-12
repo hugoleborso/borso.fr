@@ -5,7 +5,7 @@ interface AnnouncerProps {
 // @FollowsBlueprint atom-plain
 export function Announcer({ message }: AnnouncerProps) {
   return (
-    <div className="visually-hidden" aria-live="polite" aria-atomic="true">
+    <div className="sr-only" aria-live="polite" aria-atomic="true">
       {message}
     </div>
   );

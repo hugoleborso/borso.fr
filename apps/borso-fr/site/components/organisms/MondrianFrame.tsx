@@ -12,6 +12,9 @@ const PERCENTAGE_SCALE = 100;
 const HALF = 2;
 const INKBLOOM_EASING = 'cubic-bezier(.2,.7,.2,1)';
 
+const FRAME_CLASS_NAME =
+  "relative block h-full w-full cursor-pointer appearance-none overflow-hidden border-none bg-atelier-frame p-0 shadow-atelier isolate after:pointer-events-none after:absolute after:inset-0 after:z-[5] after:bg-[image:var(--vignette-atelier)] after:content-['']";
+
 interface MondrianFrameProps {
   rectangles: readonly ColoredRect[];
   palette: Palette;
@@ -39,16 +42,16 @@ export function MondrianFrame({
   return (
     <button
       type="button"
-      className="frame"
+      className={FRAME_CLASS_NAME}
       style={{ background: palette.bg }}
       onClick={onCompose}
       aria-label={t('mondrian.stage.frame-label')}
     >
-      <div className="canvas" ref={setCanvasNode}>
+      <div className="relative h-full w-full origin-center" ref={setCanvasNode}>
         {rectangles.map((rectangle, rectangleIndex) => (
           <div
             key={`${drawKey}-${rectangle.id}`}
-            className="rect"
+            className="rect pointer-events-none absolute origin-center"
             style={{
               left: `${rectangle.x * PERCENTAGE_SCALE}%`,
               top: `${rectangle.y * PERCENTAGE_SCALE}%`,

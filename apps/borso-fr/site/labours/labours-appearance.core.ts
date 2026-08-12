@@ -49,9 +49,6 @@ export interface TagColors {
 
 export const TRANSPARENT = 'transparent';
 
-/** The value CSS gives a border that is not drawn at all. */
-export const NO_BORDER = 'none';
-
 const STATUS_FOREGROUND: Readonly<Record<ChallengeStatus, string>> = {
   done: INK,
   partial: WARNING_INK,
@@ -164,22 +161,23 @@ export function selectFilmstripCardColors(isActive: boolean): FilmstripCardColor
   return FILMSTRIP_CARD_COLORS[`${isActive}`];
 }
 
+/** The cover sits in a column of its own, and only once the page is wide enough. */
 const FEATURED_ARTICLE_CLASS: Readonly<Record<`${boolean}`, string>> = {
-  true: 'twelve-travaux-featured',
-  false: 'twelve-travaux-featured twelve-travaux-featured--no-cover',
+  true: 'grid-cols-1 labours-stack:grid-cols-[320px_minmax(0,1fr)]',
+  false: 'grid-cols-1 labours-stack:grid-cols-[minmax(0,1fr)]',
 };
 
 export function selectFeaturedArticleClassName(hasCover: boolean): string {
   return FEATURED_ARTICLE_CLASS[`${hasCover}`];
 }
 
-const FILMSTRIP_CARD_CLASS: Readonly<Record<`${boolean}`, string>> = {
-  true: 'twelve-travaux-filmstrip-card is-active',
-  false: 'twelve-travaux-filmstrip-card',
+const FILMSTRIP_CARD_BORDER_CLASS: Readonly<Record<`${boolean}`, string>> = {
+  true: 'border-labours-ink',
+  false: 'border-labours-dash-rule hover:border-labours-ink',
 };
 
-export function selectFilmstripCardClassName(isActive: boolean): string {
-  return FILMSTRIP_CARD_CLASS[`${isActive}`];
+export function selectFilmstripCardBorderClassName(isActive: boolean): string {
+  return FILMSTRIP_CARD_BORDER_CLASS[`${isActive}`];
 }
 
 const YEAR_BUTTON_COLORS: Readonly<Record<`${boolean}`, { background: string; color: string }>> = {

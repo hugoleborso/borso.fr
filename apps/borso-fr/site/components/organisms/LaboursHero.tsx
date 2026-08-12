@@ -7,20 +7,8 @@ import {
   selectCompletionRatio,
 } from '../../labours/labours.core';
 import type { Edition } from '../../labours/labours.types';
-import {
-  ACCENT,
-  INK,
-  MUTED,
-  NOTE_INK,
-  RULE,
-  SANS_FAMILY,
-  SERIF_FAMILY,
-  STRIPE_LIGHT,
-} from '../../theme/twelve-labours.theme';
 import { MiniStat } from '../atoms/MiniStat';
 import { ProgressBar } from '../atoms/ProgressBar';
-
-const EDITION_PROGRESS_HEIGHT_PX = 10;
 
 interface LaboursHeroProps {
   edition: Edition;
@@ -33,104 +21,35 @@ export function LaboursHero({ edition, year }: LaboursHeroProps) {
   const score = deriveEditionScore(edition);
 
   return (
-    <div
-      className="twelve-travaux-hero"
-      style={{
-        gap: 48,
-        padding: '40px 0 32px',
-        borderBottom: `1px solid ${RULE}`,
-        alignItems: 'end',
-      }}
-    >
+    <div className="grid grid-cols-1 items-end gap-12 border-b border-labours-rule pt-10 pb-8 labours-stack:grid-cols-[1.4fr_1fr]">
       <div>
-        <div
-          style={{
-            fontFamily: SANS_FAMILY,
-            fontWeight: 600,
-            fontSize: 12,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
-            color: MUTED,
-            marginBottom: 10,
-          }}
-        >
+        <div className="mb-2.5 font-labours-sans text-[12px] font-semibold tracking-[0.22em] text-labours-muted uppercase">
           {t('twelve-labours.hero.edition-label')}
         </div>
-        <h2
-          className="twelve-travaux-hero-year"
-          style={{
-            fontFamily: SERIF_FAMILY,
-            fontWeight: 400,
-            lineHeight: 0.82,
-            margin: 0,
-            letterSpacing: '-0.045em',
-            color: INK,
-          }}
-        >
+        <h2 className="m-0 font-labours-serif text-[140px] leading-[0.82] font-normal tracking-[-0.045em] text-labours-ink labours-display:text-[220px]">
           {year}
         </h2>
-        <div
-          style={{
-            fontFamily: SERIF_FAMILY,
-            fontStyle: 'italic',
-            fontSize: 30,
-            color: INK,
-            marginTop: 18,
-            maxWidth: 520,
-            lineHeight: 1.2,
-          }}
-        >
+        <div className="mt-[18px] max-w-[520px] font-labours-serif text-[30px] leading-[1.2] text-labours-ink italic">
           {t(edition.titleKey)}
-          <span style={{ color: ACCENT }}>.</span>
+          <span className="text-labours-accent">.</span>
         </div>
-        <div
-          style={{
-            fontFamily: SANS_FAMILY,
-            fontSize: 14,
-            color: NOTE_INK,
-            marginTop: 12,
-            maxWidth: 520,
-            lineHeight: 1.5,
-          }}
-        >
+        <div className="mt-3 max-w-[520px] font-labours-sans text-[14px] leading-[1.5] text-labours-note-ink">
           {t(edition.subtitleKey)}
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <div
-            style={{
-              fontFamily: SANS_FAMILY,
-              fontWeight: 500,
-              fontSize: 11,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              color: MUTED,
-            }}
-          >
+      <div className="flex flex-col gap-3.5">
+        <div className="flex items-baseline justify-between">
+          <div className="font-labours-sans text-[11px] font-medium tracking-[0.18em] text-labours-muted uppercase">
             {t('twelve-labours.hero.tally-label')}
           </div>
-          <div style={{ fontFamily: SERIF_FAMILY, fontSize: 72, lineHeight: 0.9, color: INK }}>
+          <div className="font-labours-serif text-[72px] leading-[0.9] text-labours-ink">
             {formatScore(score.completed)}
-            <span style={{ color: ACCENT }}>/</span>
+            <span className="text-labours-accent">/</span>
             {score.total}
           </div>
         </div>
-        <ProgressBar
-          ratio={selectCompletionRatio(score)}
-          heightPx={EDITION_PROGRESS_HEIGHT_PX}
-          trackColor={STRIPE_LIGHT}
-          fillColor={INK}
-          markerColor={ACCENT}
-        />
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 12,
-            marginTop: 6,
-          }}
-        >
+        <ProgressBar ratio={selectCompletionRatio(score)} tone="edition" />
+        <div className="mt-1.5 grid grid-cols-3 gap-3">
           <MiniStat
             label={t('twelve-labours.stats.daily')}
             value={countChallengesOfKind(edition, 'daily')}

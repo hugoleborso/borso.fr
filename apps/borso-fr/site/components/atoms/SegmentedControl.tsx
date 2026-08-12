@@ -1,14 +1,27 @@
+import clsx from 'clsx';
+
 export type SegmentedControlLayout = 'four' | 'five' | 'auto';
 
+/**
+ * Below its own breakpoint each row folds into two columns, and the fieldset
+ * re-draws the inner borders, because a segment cannot know how many siblings
+ * it has or which of them ended up on the last line.
+ */
 const LAYOUT_CLASS_BY_LAYOUT: Readonly<Record<SegmentedControlLayout, string>> = {
-  four: ' four',
-  five: ' five',
-  auto: '',
+  four: 'grid-cols-[repeat(2,1fr)] [&>button:nth-child(2)]:border-r-0 [&>button:nth-child(-n+2)]:border-b atelier-quad:grid-cols-[repeat(4,1fr)] atelier-quad:[&>button:nth-child(2)]:border-r atelier-quad:[&>button:nth-child(-n+2)]:border-b-0',
+  five: 'grid-cols-[repeat(2,1fr)] [&>button:last-child]:col-span-full [&>button:nth-child(2n)]:border-r-0 [&>button:nth-child(-n+4)]:border-b atelier-quint:grid-cols-[repeat(5,1fr)] atelier-quint:[&>button:last-child]:col-span-1 atelier-quint:[&>button:nth-child(2n)]:border-r atelier-quint:[&>button:nth-child(-n+4)]:border-b-0',
+  auto: 'grid-cols-[repeat(2,1fr)]',
 };
 
+const SEGMENTS_CLASS_NAME = 'm-0 grid gap-0 border border-atelier-rule-strong p-0';
+
+const SEGMENT_CLASS_NAME =
+  'cursor-pointer border-r border-b-atelier-rule border-r-atelier-rule px-1 py-2.5 font-atelier-serif text-[12px] italic transition-[background-color,color] duration-[160ms] last:border-r-0 focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-atelier-ink atelier-roomy:px-1.5 atelier-roomy:text-[14px] [@media(hover:none)]:min-h-11';
+
+/** The selected segment keeps its fill under the pointer, so it carries no hover. */
 const SELECTED_CLASS_BY_SELECTION: Readonly<Record<`${boolean}`, string>> = {
-  true: ' on',
-  false: '',
+  true: 'bg-atelier-ink text-atelier-paper',
+  false: 'bg-transparent text-atelier-ink-soft hover:bg-atelier-ink/[0.04]',
 };
 
 export interface SegmentedControlOption<Value extends string> {
@@ -33,15 +46,15 @@ export function SegmentedControl<Value extends string>({
   legend,
 }: SegmentedControlProps<Value>) {
   return (
-    <fieldset className={`segments${LAYOUT_CLASS_BY_LAYOUT[layout]}`}>
-      <legend className="visually-hidden">{legend}</legend>
+    <fieldset className={clsx(SEGMENTS_CLASS_NAME, LAYOUT_CLASS_BY_LAYOUT[layout])}>
+      <legend className="sr-only">{legend}</legend>
       {options.map((option) => {
         const isSelected = option.value === value;
         return (
           <button
             type="button"
             key={option.value}
-            className={`seg${SELECTED_CLASS_BY_SELECTION[`${isSelected}`]}`}
+            className={clsx(SEGMENT_CLASS_NAME, SELECTED_CLASS_BY_SELECTION[`${isSelected}`])}
             onClick={() => onValueChange(option.value)}
             aria-pressed={isSelected}
           >

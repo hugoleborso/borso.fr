@@ -1,0 +1,125 @@
+/*
+ * borso.fr — design tokens bridged to Tailwind v4 through `@theme`.
+ *
+ * The application ships three pages that share nothing but this file, so the
+ * tokens carry the page they belong to in their name: `apex-` is the landing
+ * page, `atelier-` is the Mondrian generator, `labours-` is the twelve
+ * labours. A colour is declared once here and read either as a utility
+ * (`bg-labours-paper`) or, where a value is picked at runtime, through the
+ * matching constant in `site/theme/twelve-labours.theme.ts`, which holds the
+ * `var()` reference rather than a second copy of the hex.
+ *
+ * `--color-atelier-*` are rewritten on `:root` at runtime by
+ * `site/art/mondrian/paper-theme.ts`, which is what repaints the page when the
+ * reader picks a palette.
+ */
+
+@import 'tailwindcss';
+
+@theme {
+  /* Landing page — night sky behind the WebGL galaxy. */
+  --color-apex-bg: #05070d;
+  --color-apex-fg: #f5f5f0;
+  --color-apex-fg-dim: rgba(245, 245, 240, 0.65);
+  --color-apex-accent: #9bb6ff;
+  --font-apex-display: 'Major Mono Display', ui-monospace, monospace;
+  --font-apex-mono: 'Space Mono', ui-monospace, monospace;
+
+  /* Mondrian generator — printed paper and ink. */
+  --color-atelier-paper: #f4ede0;
+  --color-atelier-paper-deep: #ebe2d1;
+  --color-atelier-ink: #1a1714;
+  --color-atelier-ink-soft: #2c2620;
+  --color-atelier-rule: rgba(26, 23, 20, 0.18);
+  --color-atelier-rule-strong: rgba(26, 23, 20, 0.42);
+  --color-atelier-gold: #b08842;
+  --color-atelier-frame: #fafafa;
+  --font-atelier-serif: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  --font-atelier-serif-soft: 'Cormorant Garamond', Georgia, serif;
+  --font-atelier-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --shadow-atelier:
+    0 30px 80px -40px rgba(26, 23, 20, 0.35), 0 4px 18px -8px rgba(26, 23, 20, 0.18);
+
+  /* Twelve labours — newsprint. */
+  --color-labours-accent: #e85a25;
+  --color-labours-ink: #171410;
+  --color-labours-paper: #f4ede1;
+  --color-labours-muted: #8a8175;
+  --color-labours-rule: #1a1815;
+  --color-labours-stripe: #d6cdb8;
+  --color-labours-dash-rule: #c8bea4;
+  --color-labours-proof: #e6dcc4;
+  --color-labours-warning-ink: #a86b16;
+  --color-labours-failure-ink: #9a3b2c;
+  --color-labours-note-ink: #3a3530;
+  --color-labours-active-rule: #3a3530;
+  --color-labours-success-bar: #7ee29a;
+  --color-labours-warning-bar: #e8b76a;
+  --color-labours-failure-bar: #e89090;
+  --color-labours-abandoned-bar-dark: #5a5852;
+  --color-labours-abandoned-bar-light: #bcb3a0;
+  --font-labours-sans: 'Space Grotesk', sans-serif;
+  --font-labours-serif: 'Instrument Serif', serif;
+
+  /*
+   * Grain and glow are tiled SVG filters rather than colours, so they have no
+   * Tailwind namespace and are read back as `bg-[image:var(--grain-apex)]`.
+   */
+  --grain-apex: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.45 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  --grain-atelier: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.09  0 0 0 0 0.07  0 0 0 0 0.07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --glow-atelier:
+    radial-gradient(1200px 600px at 80% -10%, rgba(176, 136, 66, 0.06), transparent 60%),
+    radial-gradient(900px 500px at 0% 100%, rgba(26, 23, 20, 0.04), transparent 60%);
+  --sheen-atelier: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 35%);
+  --vignette-atelier: radial-gradient(120% 120% at 50% 0%, transparent 65%, rgba(0, 0, 0, 0.06));
+
+  --animate-welcome-in: fadeUp 1.2s ease-out 0.2s both;
+  --animate-title-in: fadeUp 1.2s ease-out 0.5s both;
+
+  /*
+   * The four extra breakpoints are the widths the two designs already switched
+   * at, kept to the pixel so the migration to Tailwind moved no layout.
+   */
+  --breakpoint-labours-stack: 761px;
+  --breakpoint-labours-display: 901px;
+  --breakpoint-atelier-quad: 381px;
+  --breakpoint-atelier-quint: 481px;
+  --breakpoint-atelier-roomy: 521px;
+  --breakpoint-atelier-desk: 961px;
+}
+
+/*
+ * `inkbloom` is started from an inline `animation` shorthand, because each
+ * rectangle carries its own delay, so Tailwind never sees a utility that would
+ * pull the keyframes in for it.
+ */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes inkbloom {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes inkbloom-reduced {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

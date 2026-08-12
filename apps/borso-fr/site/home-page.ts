@@ -11,7 +11,6 @@ import {
 import { home } from './i18n/fr.json';
 
 const BODY_MENU_OPEN_CLASS = 'menu-open';
-const OPEN_CLASS = 'is-open';
 const ANIMATE_IN_CLASS = 'animate-in';
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
@@ -41,8 +40,6 @@ function isMenuOpen(): boolean {
 
 function applyMenuState(isOpen: boolean): void {
   document.body.classList.toggle(BODY_MENU_OPEN_CLASS, isOpen);
-  burger.classList.toggle(OPEN_CLASS, isOpen);
-  menu.classList.toggle(OPEN_CLASS, isOpen);
   burger.setAttribute('aria-expanded', String(isOpen));
   burger.setAttribute('aria-label', home.menu[selectBurgerLabelKey(isOpen)]);
   menu.setAttribute('aria-hidden', String(!isOpen));

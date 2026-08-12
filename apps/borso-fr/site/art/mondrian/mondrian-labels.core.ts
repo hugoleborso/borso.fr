@@ -48,9 +48,10 @@ export function selectRailToggleLabelKey(isRailOpen: boolean): TranslationKey {
   return RAIL_LABEL_KEY[`${isRailOpen}`];
 }
 
+/** Below the desk breakpoint the rail is a drawer parked above the viewport. */
 const RAIL_CLASS_NAME: Readonly<Record<`${boolean}`, string>> = {
-  true: 'rail open',
-  false: 'rail',
+  true: 'translate-y-0',
+  false: '-translate-y-[101%]',
 };
 
 export function selectRailClassName(isRailOpen: boolean): string {

@@ -13,7 +13,6 @@ import {
   selectFeaturedMonth,
 } from '../labours/labours.core';
 import { LABOURS } from '../labours/labours';
-import { INK, MUTED, PAPER, RULE, SANS_FAMILY } from '../theme/twelve-labours.theme';
 
 const TODAY = new Date();
 
@@ -32,17 +31,7 @@ export function App() {
   const featuredMonth = selectFeaturedMonth(edition, selectedMonthNumber);
 
   return (
-    <div
-      className="twelve-travaux-page"
-      style={{
-        width: '100%',
-        minHeight: '100%',
-        background: PAPER,
-        color: INK,
-        fontFamily: SANS_FAMILY,
-        boxSizing: 'border-box',
-      }}
-    >
+    <div className="min-h-full w-full bg-labours-paper px-5 pt-6 pb-8 font-labours-sans text-labours-ink labours-stack:px-12 labours-stack:pt-9 labours-stack:pb-12">
       <LaboursMasthead
         availableYears={AVAILABLE_YEARS}
         selectedYear={year}
@@ -63,19 +52,7 @@ export function App() {
         onMonthSelected={setSelectedMonthNumber}
       />
 
-      <div
-        style={{
-          marginTop: 36,
-          paddingTop: 14,
-          borderTop: `1px solid ${RULE}`,
-          display: 'flex',
-          justifyContent: 'space-between',
-          fontFamily: SANS_FAMILY,
-          fontSize: 11,
-          color: MUTED,
-          letterSpacing: '0.06em',
-        }}
-      >
+      <div className="mt-9 flex justify-between border-t border-labours-rule pt-3.5 font-labours-sans text-[11px] tracking-[0.06em] text-labours-muted">
         <span>{t('twelve-labours.footer.credit')}</span>
       </div>
     </div>

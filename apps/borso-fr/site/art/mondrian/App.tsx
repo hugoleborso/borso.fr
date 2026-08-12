@@ -23,6 +23,9 @@ import {
 import { buildTitle } from './titles.utils';
 import { useIsReducedMotion } from './use-reduced-motion';
 
+const RAIL_TOGGLE_CLASS_NAME =
+  'fixed top-4 right-4 z-30 block min-h-11 cursor-pointer border border-atelier-ink bg-atelier-paper px-3.5 py-2.5 font-atelier-serif text-[14px] text-atelier-ink italic focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-atelier-ink atelier-desk:hidden';
+
 const DEFAULT_COMPLEXITY = 22;
 const DEFAULT_LINE_WEIGHT = 6;
 const DEFAULT_BALANCE = 0.5;
@@ -76,10 +79,10 @@ export function App() {
   };
 
   return (
-    <div className="app">
+    <div className="grid min-h-[100dvh] grid-cols-1 atelier-desk:grid-cols-[clamp(320px,26vw,400px)_1fr]">
       <button
         type="button"
-        className="rail-toggle"
+        className={RAIL_TOGGLE_CLASS_NAME}
         onClick={() => {
           setIsRailOpen((wasOpen) => !wasOpen);
         }}

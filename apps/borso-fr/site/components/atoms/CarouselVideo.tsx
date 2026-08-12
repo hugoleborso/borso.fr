@@ -1,13 +1,11 @@
-import type { CSSProperties } from 'react';
-
 interface CarouselVideoProps {
   source: string;
   alternativeText: string;
-  style: CSSProperties;
+  className: string;
 }
 
 // @FollowsBlueprint atom-plain
-export function CarouselVideo({ source, alternativeText, style }: CarouselVideoProps) {
+export function CarouselVideo({ source, alternativeText, className }: CarouselVideoProps) {
   return (
     <video
       src={source}
@@ -15,7 +13,7 @@ export function CarouselVideo({ source, alternativeText, style }: CarouselVideoP
       controls
       playsInline
       preload="metadata"
-      style={style}
+      className={className}
     >
       <track kind="captions" />
     </video>

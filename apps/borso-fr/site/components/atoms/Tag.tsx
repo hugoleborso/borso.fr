@@ -1,16 +1,14 @@
-import { SANS_FAMILY } from '../../theme/twelve-labours.theme';
+import clsx from 'clsx';
 
 export type TagSize = 'regular' | 'large';
 
-interface TagSizing {
-  fontSize: number;
-  padding: string;
-}
-
-const SIZING_BY_SIZE: Readonly<Record<TagSize, TagSizing>> = {
-  regular: { fontSize: 10, padding: '3px 7px' },
-  large: { fontSize: 12, padding: '5px 10px' },
+const SIZING_BY_SIZE: Readonly<Record<TagSize, string>> = {
+  regular: 'text-[10px] px-[7px] py-[3px]',
+  large: 'text-[12px] px-2.5 py-[5px]',
 };
+
+const TAG_CLASS_NAME =
+  'inline-flex items-center gap-1.5 border font-labours-sans font-medium tracking-[0.16em] uppercase';
 
 interface TagProps {
   label: string;
@@ -22,23 +20,10 @@ interface TagProps {
 
 // @FollowsBlueprint atom-plain
 export function Tag({ label, foreground, background, borderColor, size }: TagProps) {
-  const sizing = SIZING_BY_SIZE[size];
   return (
     <span
-      style={{
-        fontFamily: SANS_FAMILY,
-        fontWeight: 500,
-        fontSize: sizing.fontSize,
-        letterSpacing: '0.16em',
-        textTransform: 'uppercase',
-        padding: sizing.padding,
-        background,
-        color: foreground,
-        border: `1px solid ${borderColor}`,
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-      }}
+      className={clsx(TAG_CLASS_NAME, SIZING_BY_SIZE[size])}
+      style={{ background, color: foreground, borderColor }}
     >
       {label}
     </span>

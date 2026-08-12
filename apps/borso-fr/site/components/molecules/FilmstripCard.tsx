@@ -1,7 +1,8 @@
+import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import {
   selectFilmstripBarColor,
-  selectFilmstripCardClassName,
+  selectFilmstripCardBorderClassName,
   selectFilmstripCardColors,
   TRANSPARENT,
 } from '../../labours/labours-appearance.core';
@@ -12,10 +13,12 @@ import {
   formatScore,
 } from '../../labours/labours.core';
 import type { Month } from '../../labours/labours.types';
-import { ACCENT, SANS_FAMILY, SERIF_FAMILY } from '../../theme/twelve-labours.theme';
+import { ACCENT } from '../../theme/twelve-labours.theme';
 
 const SUMMARY_TITLE_COUNT = 2;
-const CURRENT_MONTH_DOT_SIZE_PX = 6;
+
+const CARD_CLASS_NAME =
+  'flex h-full cursor-pointer appearance-none flex-col border p-0 text-left transition-all duration-150';
 
 const CURRENT_MONTH_DOT_BACKGROUND: Readonly<Record<`${boolean}`, string>> = {
   true: ACCENT,
@@ -43,83 +46,46 @@ export function FilmstripCard({ month, isActive, isCurrentMonth, onSelect }: Fil
     <button
       type="button"
       onClick={onSelect}
-      className={selectFilmstripCardClassName(isActive)}
+      className={clsx(CARD_CLASS_NAME, selectFilmstripCardBorderClassName(isActive))}
       style={{ background: colors.background, color: colors.color }}
     >
       <div
-        style={{
-          padding: '14px 14px 10px',
-          borderBottom: `1px solid ${colors.innerRuleColor}`,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
+        className="flex items-center justify-between border-b px-3.5 pt-3.5 pb-2.5"
+        style={{ borderBottomColor: colors.innerRuleColor }}
       >
         <span
-          style={{
-            fontFamily: SANS_FAMILY,
-            fontWeight: 600,
-            fontSize: 10,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            opacity: colors.secondaryOpacity,
-          }}
+          className="font-labours-sans text-[10px] font-semibold tracking-[0.18em] uppercase"
+          style={{ opacity: colors.secondaryOpacity }}
         >
           {formatMonthNumber(month.monthNumber)}
         </span>
         <span
-          style={{
-            width: CURRENT_MONTH_DOT_SIZE_PX,
-            height: CURRENT_MONTH_DOT_SIZE_PX,
-            borderRadius: '50%',
-            background: CURRENT_MONTH_DOT_BACKGROUND[`${isCurrentMonth}`],
-          }}
+          className="h-1.5 w-1.5 rounded-full"
+          style={{ background: CURRENT_MONTH_DOT_BACKGROUND[`${isCurrentMonth}`] }}
         />
       </div>
-      <div style={{ padding: '12px 14px 14px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div
-          style={{
-            fontFamily: SERIF_FAMILY,
-            fontSize: 24,
-            lineHeight: 0.95,
-            letterSpacing: '-0.01em',
-            marginBottom: 8,
-          }}
-        >
+      <div className="flex flex-1 flex-col px-3.5 pt-3 pb-3.5">
+        <div className="mb-2 font-labours-serif text-[24px] leading-[0.95] tracking-[-0.01em]">
           {t(month.nameKey)}
         </div>
         <div
-          style={{
-            fontFamily: SANS_FAMILY,
-            fontSize: 10,
-            letterSpacing: '0.04em',
-            opacity: colors.secondaryOpacity,
-            lineHeight: 1.4,
-            flex: 1,
-            marginBottom: 12,
-          }}
+          className="mb-3 flex-1 font-labours-sans text-[10px] leading-[1.4] tracking-[0.04em]"
+          style={{ opacity: colors.secondaryOpacity }}
         >
           {summary}
         </div>
-        <div style={{ display: 'flex', gap: 3, marginBottom: 8 }}>
+        <div className="mb-2 flex gap-[3px]">
           {month.challenges.map((challenge) => (
             <div
               key={challenge.titleKey}
-              style={{
-                flex: 1,
-                height: 3,
-                background: selectFilmstripBarColor(challenge.status, isActive),
-              }}
+              className="h-[3px] flex-1"
+              style={{ background: selectFilmstripBarColor(challenge.status, isActive) }}
             />
           ))}
         </div>
         <div
-          style={{
-            fontFamily: SANS_FAMILY,
-            fontSize: 10,
-            opacity: colors.secondaryOpacity,
-            letterSpacing: '0.08em',
-          }}
+          className="font-labours-sans text-[10px] tracking-[0.08em]"
+          style={{ opacity: colors.secondaryOpacity }}
         >
           {formatScore(score.completed)}/{score.total}
         </div>

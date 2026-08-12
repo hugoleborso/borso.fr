@@ -37,12 +37,12 @@ describe('selectRailToggleLabelKey', () => {
 });
 
 describe('selectRailClassName', () => {
-  it('marks an open rail', () => {
-    expect(selectRailClassName(true)).toBe('rail open');
+  it('slides an open rail into the viewport', () => {
+    expect(selectRailClassName(true)).toBe('translate-y-0');
   });
 
-  it('leaves a closed rail unmarked', () => {
-    expect(selectRailClassName(false)).toBe('rail');
+  it('parks a closed rail above the viewport', () => {
+    expect(selectRailClassName(false)).toBe('-translate-y-[101%]');
   });
 });
 

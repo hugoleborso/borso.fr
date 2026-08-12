@@ -1,28 +1,19 @@
-import type { ComponentType, CSSProperties } from 'react';
+import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type MediaProofType, selectMediaProofType } from '../../labours/labours-appearance.core';
 import { selectProofLabel } from '../../labours/labours.core';
 import type { Proof } from '../../labours/labours.types';
-import { PROOF_BACKGROUND } from '../../theme/twelve-labours.theme';
 import { CarouselImage } from '../atoms/CarouselImage';
 import { CarouselVideo } from '../atoms/CarouselVideo';
 
-const CAROUSEL_ITEM_HEIGHT_PX = 220;
 const DECORATIVE_ALTERNATIVE_TEXT = '';
 
-const CAROUSEL_ITEM_STYLE: CSSProperties = {
-  display: 'block',
-  height: CAROUSEL_ITEM_HEIGHT_PX,
-  width: 'auto',
-  flexShrink: 0,
-  background: PROOF_BACKGROUND,
-  scrollSnapAlign: 'start',
-};
+const CAROUSEL_ITEM_CLASS_NAME = 'block h-[220px] w-auto shrink-0 snap-start bg-labours-proof';
 
 interface CarouselMediaProps {
   source: string;
   alternativeText: string;
-  style: CSSProperties;
+  className: string;
 }
 
 const MEDIA_COMPONENT: Readonly<Record<MediaProofType, ComponentType<CarouselMediaProps>>> = {
@@ -40,6 +31,10 @@ export function ProofMedia({ proof }: ProofMediaProps) {
   const Media = MEDIA_COMPONENT[selectMediaProofType(proof.type)];
   const alternativeText = selectProofLabel(proof, t) ?? DECORATIVE_ALTERNATIVE_TEXT;
   return (
-    <Media source={proof.value} alternativeText={alternativeText} style={CAROUSEL_ITEM_STYLE} />
+    <Media
+      source={proof.value}
+      alternativeText={alternativeText}
+      className={CAROUSEL_ITEM_CLASS_NAME}
+    />
   );
 }

@@ -1,56 +1,48 @@
-const PERCENTAGE_SCALE = 100;
-const MARKER_OVERHANG_PX = 3;
-const MARKER_WIDTH_PX = 2;
+import clsx from 'clsx';
 
-/** A marker the same colour as nothing, so the bar renders without one. */
-export const NO_MARKER_COLOR = 'transparent';
+const PERCENTAGE_SCALE = 100;
+
+const FILL_CLASS_NAME =
+  'absolute top-0 bottom-0 left-0 transition-[width] duration-1000 ease-[cubic-bezier(.2,.7,.3,1)]';
+const MARKER_CLASS_NAME = 'absolute -top-[3px] -bottom-[3px] w-0.5';
+
+export type ProgressBarTone = 'edition' | 'month';
+
+interface ProgressBarAppearance {
+  track: string;
+  fill: string;
+  marker: string;
+}
+
+/** The edition bar carries a marker at the fill's edge; the month bar does not. */
+const APPEARANCE_BY_TONE: Readonly<Record<ProgressBarTone, ProgressBarAppearance>> = {
+  edition: {
+    track: 'relative h-2.5 overflow-hidden bg-labours-stripe',
+    fill: 'bg-labours-ink',
+    marker: 'bg-labours-accent',
+  },
+  month: {
+    track: 'relative h-2 overflow-hidden bg-labours-stripe',
+    fill: 'bg-labours-accent',
+    marker: 'bg-transparent',
+  },
+};
 
 interface ProgressBarProps {
   ratio: number;
-  heightPx: number;
-  trackColor: string;
-  fillColor: string;
-  markerColor?: string;
+  tone: ProgressBarTone;
 }
 
 // @FollowsBlueprint atom-plain
-export function ProgressBar({
-  ratio,
-  heightPx,
-  trackColor,
-  fillColor,
-  markerColor = NO_MARKER_COLOR,
-}: ProgressBarProps) {
+export function ProgressBar({ ratio, tone }: ProgressBarProps) {
+  const appearance = APPEARANCE_BY_TONE[tone];
   const filledPercentage = `${ratio * PERCENTAGE_SCALE}%`;
   return (
-    <div
-      style={{
-        height: heightPx,
-        background: trackColor,
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
+    <div className={appearance.track}>
+      <div className={clsx(FILL_CLASS_NAME, appearance.fill)} style={{ width: filledPercentage }} />
       <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: filledPercentage,
-          background: fillColor,
-          transition: 'width 1s cubic-bezier(.2,.7,.3,1)',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          left: filledPercentage,
-          top: -MARKER_OVERHANG_PX,
-          bottom: -MARKER_OVERHANG_PX,
-          width: MARKER_WIDTH_PX,
-          background: markerColor,
-        }}
+        className={clsx(MARKER_CLASS_NAME, appearance.marker)}
+        style={{ left: filledPercentage }}
       />
     </div>
   );

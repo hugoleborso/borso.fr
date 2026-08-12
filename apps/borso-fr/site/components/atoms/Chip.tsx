@@ -1,12 +1,12 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 export interface ChipProps {
   address: string;
-  style: CSSProperties;
+  className: string;
   children: ReactNode;
 }
 
 // @FollowsBlueprint atom-plain
-export function Chip({ style, children }: ChipProps) {
-  return <span style={style}>{children}</span>;
+export function Chip({ className, children }: ChipProps) {
+  return <span className={className}>{children}</span>;
 }

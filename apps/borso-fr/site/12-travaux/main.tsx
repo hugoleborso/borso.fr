@@ -1,8 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../i18n/i18n';
+import '../styles/tokens.css';
 import { App } from './App';
-import './styles.css';
 
 // @FollowsBlueprint site-entrypoint
 const rootElement = document.getElementById('root');

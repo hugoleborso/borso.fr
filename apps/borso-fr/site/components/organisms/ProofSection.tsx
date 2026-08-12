@@ -1,27 +1,12 @@
-import type { ComponentType, CSSProperties } from 'react';
+import type { ComponentType } from 'react';
 import { buildProofKey, type ProofSectionKind } from '../../labours/labours.core';
 import type { Challenge, Proof } from '../../labours/labours.types';
 import { ProofChip } from '../molecules/ProofChip';
 import { ProofMedia } from '../molecules/ProofMedia';
 
-const SECTION_MARGIN_TOP_PX = 12;
-
-const SECTION_STYLE: Readonly<Record<ProofSectionKind, CSSProperties>> = {
-  media: {
-    display: 'flex',
-    flexDirection: 'row',
-    gap: 8,
-    overflowX: 'auto',
-    scrollSnapType: 'x mandatory',
-    paddingBottom: 4,
-    marginTop: SECTION_MARGIN_TOP_PX,
-  },
-  chip: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: SECTION_MARGIN_TOP_PX,
-  },
+const SECTION_CLASS_NAME: Readonly<Record<ProofSectionKind, string>> = {
+  media: 'mt-3 flex snap-x snap-mandatory flex-row gap-2 overflow-x-auto pb-1',
+  chip: 'mt-3 flex flex-wrap gap-1.5',
 };
 
 const PROOF_COMPONENT: Readonly<Record<ProofSectionKind, ComponentType<{ proof: Proof }>>> = {
@@ -39,7 +24,7 @@ interface ProofSectionProps {
 export function ProofSection({ challenge, kind, proofs }: ProofSectionProps) {
   const ProofItem = PROOF_COMPONENT[kind];
   return (
-    <div style={SECTION_STYLE[kind]}>
+    <div className={SECTION_CLASS_NAME[kind]}>
       {proofs.map((proof) => (
         <ProofItem key={buildProofKey(challenge, proof)} proof={proof} />
       ))}

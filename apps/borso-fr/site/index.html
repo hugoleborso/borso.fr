@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" class="h-full">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -12,28 +12,44 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Space+Mono:wght@400&display=swap"
     />
-
-    <link rel="stylesheet" href="./style.css" />
   </head>
-  <body>
-    <div id="bg-canvas-wrap"></div>
-    <div id="bg-grain"></div>
+  <body
+    class="h-full overflow-hidden bg-apex-bg font-apex-mono leading-[normal] text-apex-fg antialiased [text-rendering:optimizeLegibility] selection:bg-apex-accent selection:text-apex-bg"
+  >
+    <div
+      id="bg-canvas-wrap"
+      class="pointer-events-none fixed inset-0 z-0 h-screen w-screen overflow-hidden bg-apex-bg"
+    ></div>
+    <div
+      id="bg-grain"
+      class="pointer-events-none fixed inset-0 z-[1] bg-[image:var(--grain-apex)] opacity-[0.12] mix-blend-overlay"
+    ></div>
 
-    <main class="stage">
-      <div class="welcome">Bienvenue sur</div>
-      <h1 class="title">borso.fr</h1>
+    <main
+      class="pointer-events-none absolute inset-0 z-[2] flex flex-col items-center justify-center gap-2.5 px-6 text-center transition-[opacity,scale] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none [.menu-open_&]:scale-[0.94] [.menu-open_&]:opacity-[0.32]"
+    >
+      <div
+        class="text-[clamp(14px,1.6vw,20px)] tracking-[0.04em] text-apex-fg motion-reduce:animate-none [.animate-in_&]:animate-welcome-in"
+      >
+        Bienvenue sur
+      </div>
+      <h1
+        class="font-apex-display text-[clamp(56px,11vw,168px)] leading-none font-normal uppercase text-apex-fg motion-reduce:animate-none [.animate-in_&]:animate-title-in"
+      >
+        borso.fr
+      </h1>
     </main>
 
     <button
       id="burger"
-      class="burger"
+      class="group fixed top-6 right-6 z-50 flex h-11 w-11 cursor-pointer appearance-none items-center justify-center rounded-full border-0 bg-transparent text-apex-fg transition-colors duration-[250ms] [-webkit-tap-highlight-color:transparent] hover:bg-apex-fg/8 motion-reduce:transition-none"
       type="button"
       aria-label="Ouvrir le menu"
       aria-expanded="false"
       aria-controls="menu"
     >
       <svg
-        class="burger-icon burger-icon--lines"
+        class="group-aria-expanded:hidden"
         width="22"
         height="22"
         viewBox="0 0 22 22"
@@ -59,7 +75,7 @@
         />
       </svg>
       <svg
-        class="burger-icon burger-icon--cross"
+        class="hidden group-aria-expanded:block"
         width="22"
         height="22"
         viewBox="0 0 22 22"
@@ -86,23 +102,78 @@
       </svg>
     </button>
 
-    <nav id="menu" class="menu" aria-hidden="true">
-      <ul>
-        <li><a href="family/mom.html">Maman</a></li>
-        <li><a href="family/les-filles.html">Les sœurs</a></li>
-        <li><a href="art/mondrian/">Art</a></li>
-        <li>
-          <button id="date-request-trigger" class="menu-link--deprecated" type="button">
+    <nav
+      id="menu"
+      class="group pointer-events-none fixed top-0 right-0 bottom-0 left-0 z-40 flex flex-col items-center justify-center bg-apex-bg/65 px-6 opacity-0 backdrop-blur-[12px] transition-opacity duration-[350ms] aria-[hidden=false]:pointer-events-auto aria-[hidden=false]:opacity-100 sm:left-auto sm:items-end sm:bg-transparent sm:pr-14 sm:opacity-100 sm:backdrop-blur-none"
+      aria-hidden="true"
+    >
+      <ul
+        class="flex flex-col items-center gap-6 text-center sm:items-stretch sm:gap-[18px] sm:text-right"
+      >
+        <li
+          class="translate-x-3 opacity-0 transition-[opacity,translate] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none group-aria-[hidden=false]:translate-x-0 group-aria-[hidden=false]:opacity-100"
+        >
+          <a
+            class="relative inline-flex max-w-[18ch] min-h-11 min-w-11 items-center py-1.5 text-[22px] tracking-[0.02em] text-balance text-apex-fg-dim transition-colors duration-[250ms] after:absolute after:right-0 after:bottom-0.5 after:h-px after:w-0 after:bg-apex-fg after:transition-[width] after:duration-[350ms] after:ease-[cubic-bezier(0.2,0.8,0.2,1)] after:content-[''] hover:text-apex-fg hover:after:w-full motion-reduce:transition-none motion-reduce:after:transition-none sm:text-[clamp(15px,1.4vw,18px)]"
+            href="family/mom.html"
+            >Maman</a
+          >
+        </li>
+        <li
+          class="translate-x-3 opacity-0 transition-[opacity,translate] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none group-aria-[hidden=false]:translate-x-0 group-aria-[hidden=false]:opacity-100"
+        >
+          <a
+            class="relative inline-flex max-w-[18ch] min-h-11 min-w-11 items-center py-1.5 text-[22px] tracking-[0.02em] text-balance text-apex-fg-dim transition-colors duration-[250ms] after:absolute after:right-0 after:bottom-0.5 after:h-px after:w-0 after:bg-apex-fg after:transition-[width] after:duration-[350ms] after:ease-[cubic-bezier(0.2,0.8,0.2,1)] after:content-[''] hover:text-apex-fg hover:after:w-full motion-reduce:transition-none motion-reduce:after:transition-none sm:text-[clamp(15px,1.4vw,18px)]"
+            href="family/les-filles.html"
+            >Les sœurs</a
+          >
+        </li>
+        <li
+          class="translate-x-3 opacity-0 transition-[opacity,translate] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none group-aria-[hidden=false]:translate-x-0 group-aria-[hidden=false]:opacity-100"
+        >
+          <a
+            class="relative inline-flex max-w-[18ch] min-h-11 min-w-11 items-center py-1.5 text-[22px] tracking-[0.02em] text-balance text-apex-fg-dim transition-colors duration-[250ms] after:absolute after:right-0 after:bottom-0.5 after:h-px after:w-0 after:bg-apex-fg after:transition-[width] after:duration-[350ms] after:ease-[cubic-bezier(0.2,0.8,0.2,1)] after:content-[''] hover:text-apex-fg hover:after:w-full motion-reduce:transition-none motion-reduce:after:transition-none sm:text-[clamp(15px,1.4vw,18px)]"
+            href="art/mondrian/"
+            >Art</a
+          >
+        </li>
+        <li
+          class="translate-x-3 opacity-0 transition-[opacity,translate] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none group-aria-[hidden=false]:translate-x-0 group-aria-[hidden=false]:opacity-100"
+        >
+          <button
+            id="date-request-trigger"
+            class="relative inline-flex max-w-[18ch] min-h-11 min-w-11 cursor-pointer appearance-none items-center border-0 bg-transparent py-1.5 text-[22px] tracking-[0.02em] text-balance text-apex-fg-dim line-through transition-colors duration-[250ms] [-webkit-tap-highlight-color:transparent] hover:text-apex-fg motion-reduce:transition-none sm:text-[clamp(15px,1.4vw,18px)]"
+            type="button"
+          >
             Demande de date
           </button>
         </li>
-        <li><a href="12-travaux/">Les 12 travaux de Borso</a></li>
+        <li
+          class="translate-x-3 opacity-0 transition-[opacity,translate] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none group-aria-[hidden=false]:translate-x-0 group-aria-[hidden=false]:opacity-100"
+        >
+          <a
+            class="relative inline-flex max-w-[18ch] min-h-11 min-w-11 items-center py-1.5 text-[22px] tracking-[0.02em] text-balance text-apex-fg-dim transition-colors duration-[250ms] after:absolute after:right-0 after:bottom-0.5 after:h-px after:w-0 after:bg-apex-fg after:transition-[width] after:duration-[350ms] after:ease-[cubic-bezier(0.2,0.8,0.2,1)] after:content-[''] hover:text-apex-fg hover:after:w-full motion-reduce:transition-none motion-reduce:after:transition-none sm:text-[clamp(15px,1.4vw,18px)]"
+            href="12-travaux/"
+            >Les 12 travaux de Borso</a
+          >
+        </li>
       </ul>
     </nav>
 
-    <dialog id="date-request-dialog" class="date-request-dialog">
-      <p>La demande de date n’est plus disponible sur borso.fr - bisous quand même</p>
-      <button id="date-request-close" class="date-request-close" type="button">Fermer</button>
+    <dialog
+      id="date-request-dialog"
+      class="m-auto max-w-[min(30rem,calc(100vw-48px))] rounded-[10px] border border-apex-fg/20 bg-apex-bg px-8 py-9 text-center font-apex-mono text-apex-fg backdrop:bg-apex-bg/65 backdrop:backdrop-blur-[12px]"
+    >
+      <p class="text-[clamp(15px,1.4vw,18px)] leading-[1.7] tracking-[0.02em]">
+        La demande de date n’est plus disponible sur borso.fr - bisous quand même
+      </p>
+      <button
+        id="date-request-close"
+        class="mt-7 cursor-pointer appearance-none rounded-full border border-apex-fg/30 bg-transparent px-6 py-2.5 font-apex-mono text-[14px] tracking-[0.04em] text-apex-fg-dim transition-colors duration-[250ms] [-webkit-tap-highlight-color:transparent] hover:border-apex-fg hover:bg-apex-fg/8 hover:text-apex-fg"
+        type="button"
+      >
+        Fermer
+      </button>
     </dialog>
 
     <script type="module" src="./main.tsx"></script>
