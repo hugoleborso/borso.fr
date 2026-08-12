@@ -22,7 +22,8 @@
         "site/12-travaux/main.tsx",
         "site/**/*.utils.test.ts"
       ],
-      "project": ["bin/**/*.ts", "site/**/*.ts", "site/**/*.tsx"]
+      "project": ["bin/**/*.ts", "site/**/*.ts", "site/**/*.tsx"],
+      "ignoreDependencies": ["tailwindcss"]
     },
     "apps/borsouvertures": {
       "entry": ["bin/app.ts", "site/**/*.utils.test.ts"],
@@ -42,7 +43,8 @@
         "site/src/**/*.tsx",
         "api/src/**/*.ts",
         "test/**/*.ts"
-      ]
+      ],
+      "ignoreDependencies": ["tailwindcss"]
     },
     "apps/pragma": {
       "entry": [

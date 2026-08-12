@@ -259,12 +259,13 @@ export default tseslint.config(
     },
   },
 
-  // Only pragma uses Tailwind. The rule's reason is that Tailwind's scanner
-  // never sees a class assembled at runtime, and that does not hold for the
-  // three applications shipping plain CSS, where a concatenated class name
-  // works correctly. Widen this as another application adopts Tailwind.
+  // The rule's reason is that Tailwind's scanner never sees a class assembled
+  // at runtime, so it holds exactly for the applications on Tailwind and not
+  // for one shipping plain CSS, where a concatenated class name works.
+  // borsouvertures is the last one still on plain CSS and is deliberately
+  // absent here; add it the moment it adopts Tailwind.
   {
-    files: ['apps/pragma/site/**/*.{ts,tsx}'],
+    files: ['apps/{pragma,borso-fr,last-loop-lepin}/site/**/*.{ts,tsx}'],
     plugins: { borso: borsoPlugin },
     rules: { 'borso/no-string-concatenated-class-names': 'error' },
   },

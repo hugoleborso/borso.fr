@@ -17,9 +17,9 @@ that ground.
 
 | Files | Blueprints | Followers | Unmarked | Marked |
 |-------|------------|-----------|----------|--------|
-| 887 | 145 | 794 | 75 | ██████████████████░░ 92% |
+| 894 | 145 | 800 | 78 | ██████████████████░░ 91% |
 
-Of those files, 278 are tests and 609 are the code
+Of those files, 279 are tests and 615 are the code
 they cover.
 
 ## Coverage by application
@@ -27,18 +27,18 @@ they cover.
 | Application | Files | Blueprints | Followers | Unmarked | Marked |
 |-------------|-------|------------|-----------|----------|--------|
 | borso-fr | 84 | 8 | 73 | 9 | ██████████████████░░ 89% |
-| borsouvertures | 135 | 22 | 132 | 7 | ███████████████████░ 95% |
+| borsouvertures | 137 | 22 | 134 | 7 | ███████████████████░ 95% |
 | eslint-rules | 59 | 3 | 54 | 2 | ███████████████████░ 97% |
-| infra-cdk | 46 | 9 | 37 | 8 | █████████████████░░░ 83% |
+| infra-cdk | 47 | 9 | 38 | 9 | ████████████████░░░░ 81% |
 | infra-shared | 8 | 1 | 5 | 2 | ███████████████░░░░░ 75% |
-| last-loop-lepin | 245 | 58 | 248 | 16 | ███████████████████░ 93% |
-| pragma | 310 | 44 | 245 | 31 | ██████████████████░░ 90% |
+| last-loop-lepin | 248 | 58 | 250 | 18 | ███████████████████░ 93% |
+| pragma | 311 | 44 | 246 | 31 | ██████████████████░░ 90% |
 
 ## Coverage by layer
 
 | Layer | Files | Blueprints | Followers | Unmarked | Marked |
 |-------|-------|------------|-----------|----------|--------|
-| atom | 66 | 7 | 59 | 6 | ██████████████████░░ 91% |
+| atom | 68 | 7 | 61 | 7 | ██████████████████░░ 90% |
 | config | 14 | 1 | 5 | 8 | █████████░░░░░░░░░░░ 43% |
 | construct | 7 | 2 | 5 | 1 | █████████████████░░░ 86% |
 | controller | 39 | 6 | 37 | 0 | ████████████████████ 100% |
@@ -48,16 +48,16 @@ they cover.
 | i18n | 30 | 6 | 25 | 0 | ████████████████████ 100% |
 | lint-rule | 59 | 3 | 54 | 2 | ███████████████████░ 97% |
 | middleware | 3 | 2 | 0 | 1 | █████████████░░░░░░░ 67% |
-| molecule | 83 | 9 | 83 | 1 | ████████████████████ 99% |
-| organism | 104 | 19 | 100 | 1 | ████████████████████ 99% |
+| molecule | 78 | 9 | 78 | 1 | ████████████████████ 99% |
+| organism | 124 | 19 | 117 | 4 | ███████████████████░ 97% |
 | query | 31 | 5 | 31 | 1 | ███████████████████░ 97% |
 | repository | 19 | 7 | 25 | 0 | ████████████████████ 100% |
-| route | 76 | 5 | 69 | 3 | ███████████████████░ 96% |
+| route | 63 | 5 | 58 | 1 | ████████████████████ 98% |
 | schema | 16 | 4 | 9 | 5 | ██████████████░░░░░░ 69% |
 | service | 24 | 8 | 31 | 2 | ██████████████████░░ 92% |
 | types | 8 | 2 | 2 | 4 | ██████████░░░░░░░░░░ 50% |
-| unknown | 122 | 31 | 67 | 36 | ██████████████░░░░░░ 70% |
-| utils | 104 | 13 | 94 | 1 | ████████████████████ 99% |
+| unknown | 123 | 31 | 68 | 37 | ██████████████░░░░░░ 70% |
+| utils | 106 | 13 | 96 | 1 | ████████████████████ 99% |
 
 ## Coverage by application and layer
 
@@ -81,11 +81,11 @@ they cover.
 | borsouvertures | site | route | 4 | 0 | 4 | 0 | ████████████████████ 100% |
 | borsouvertures | site | types | 1 | 1 | 0 | 0 | ████████████████████ 100% |
 | borsouvertures | site | unknown | 20 | 7 | 7 | 6 | ██████████████░░░░░░ 70% |
-| borsouvertures | site | utils | 28 | 4 | 25 | 0 | ████████████████████ 100% |
+| borsouvertures | site | utils | 30 | 4 | 27 | 0 | ████████████████████ 100% |
 | eslint-rules | tooling | lint-rule | 59 | 3 | 54 | 2 | ███████████████████░ 97% |
 | infra-cdk | infra | config | 1 | 0 | 1 | 0 | ████████████████████ 100% |
 | infra-cdk | infra | construct | 7 | 2 | 5 | 1 | █████████████████░░░ 86% |
-| infra-cdk | infra | unknown | 28 | 5 | 21 | 7 | ███████████████░░░░░ 75% |
+| infra-cdk | infra | unknown | 29 | 5 | 22 | 8 | ██████████████░░░░░░ 72% |
 | infra-cdk | infra | utils | 10 | 2 | 10 | 0 | ████████████████████ 100% |
 | infra-shared | infra | config | 1 | 0 | 1 | 0 | ████████████████████ 100% |
 | infra-shared | infra | unknown | 7 | 1 | 4 | 2 | ██████████████░░░░░░ 71% |
@@ -100,11 +100,11 @@ they cover.
 | last-loop-lepin | api | types | 4 | 0 | 1 | 3 | █████░░░░░░░░░░░░░░░ 25% |
 | last-loop-lepin | api | unknown | 6 | 4 | 4 | 0 | ████████████████████ 100% |
 | last-loop-lepin | api | utils | 6 | 2 | 3 | 1 | █████████████████░░░ 83% |
-| last-loop-lepin | site | atom | 13 | 2 | 11 | 0 | ████████████████████ 100% |
+| last-loop-lepin | site | atom | 15 | 2 | 13 | 1 | ███████████████████░ 93% |
 | last-loop-lepin | site | config | 4 | 0 | 1 | 3 | █████░░░░░░░░░░░░░░░ 25% |
 | last-loop-lepin | site | i18n | 8 | 1 | 7 | 0 | ████████████████████ 100% |
 | last-loop-lepin | site | molecule | 17 | 3 | 14 | 0 | ████████████████████ 100% |
-| last-loop-lepin | site | organism | 61 | 11 | 56 | 0 | ████████████████████ 100% |
+| last-loop-lepin | site | organism | 62 | 11 | 56 | 1 | ████████████████████ 98% |
 | last-loop-lepin | site | query | 5 | 1 | 7 | 0 | ████████████████████ 100% |
 | last-loop-lepin | site | route | 9 | 1 | 8 | 1 | ██████████████████░░ 89% |
 | last-loop-lepin | site | types | 1 | 1 | 0 | 0 | ████████████████████ 100% |
@@ -124,10 +124,10 @@ they cover.
 | pragma | site | config | 4 | 1 | 0 | 3 | █████░░░░░░░░░░░░░░░ 25% |
 | pragma | site | core | 2 | 0 | 2 | 0 | ████████████████████ 100% |
 | pragma | site | i18n | 8 | 0 | 8 | 0 | ████████████████████ 100% |
-| pragma | site | molecule | 37 | 5 | 32 | 1 | ███████████████████░ 97% |
-| pragma | site | organism | 12 | 4 | 7 | 1 | ██████████████████░░ 92% |
+| pragma | site | molecule | 32 | 5 | 27 | 1 | ███████████████████░ 97% |
+| pragma | site | organism | 31 | 4 | 24 | 3 | ██████████████████░░ 90% |
 | pragma | site | query | 26 | 4 | 24 | 1 | ███████████████████░ 96% |
-| pragma | site | route | 63 | 4 | 57 | 2 | ███████████████████░ 97% |
+| pragma | site | route | 50 | 4 | 46 | 0 | ████████████████████ 100% |
 | pragma | site | unknown | 17 | 5 | 2 | 10 | ████████░░░░░░░░░░░░ 41% |
 | pragma | site | utils | 24 | 1 | 23 | 0 | ████████████████████ 100% |
 
@@ -157,12 +157,13 @@ they cover.
 - `apps/borso-fr/site/theme/twelve-labours.theme.ts`
 - `apps/borso-fr/stryker.config.js`
 
-### infra-cdk / infra / unknown — 7 unmarked
+### infra-cdk / infra / unknown — 8 unmarked
 
 - `infra/cdk/src/index.ts`
 - `infra/cdk/src/internal/cf-host-routing-function.code.js`
 - `infra/cdk/src/internal/cf-static-site-index-rewrite.code.js`
 - `infra/cdk/src/internal/oidc.ts`
+- `infra/cdk/src/internal/shared-ssm.ts`
 - `infra/cdk/test/unit/fixtures/handler.ts`
 - `infra/cdk/test/unit/helpers/migration-runner-mock.ts`
 - `infra/cdk/test/unit/helpers/template.ts`
@@ -209,6 +210,12 @@ they cover.
 - `apps/pragma/vite.config.ts`
 - `apps/pragma/vitest.mutation.config.ts`
 
+### pragma / site / organism — 3 unmarked
+
+- `apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx`
+- `apps/pragma/site/src/components/organisms/orphan-member-warn.ts`
+- `apps/pragma/site/src/components/organisms/useNavBadges.ts`
+
 ### last-loop-lepin / site / unknown — 2 unmarked
 
 - `apps/last-loop-lepin/commitlint.config.js`
@@ -223,11 +230,6 @@ they cover.
 
 - `apps/pragma/api/src/instruments/instruments.schema.ts`
 - `apps/pragma/api/src/members/members.schema.ts`
-
-### pragma / site / route — 2 unmarked
-
-- `apps/pragma/site/src/routes/setlists/SetlistEntriesList.tsx`
-- `apps/pragma/site/src/routes/setlists/orphan-member-warn.ts`
 
 ### infra-shared / infra / unknown — 2 unmarked
 
@@ -263,6 +265,14 @@ they cover.
 
 - `apps/last-loop-lepin/api/src/runner/runner.environment.test.ts`
 
+### last-loop-lepin / site / atom — 1 unmarked
+
+- `apps/last-loop-lepin/site/src/components/atoms/button-styles.ts`
+
+### last-loop-lepin / site / organism — 1 unmarked
+
+- `apps/last-loop-lepin/site/src/components/organisms/navigation-styles.ts`
+
 ### last-loop-lepin / site / route — 1 unmarked
 
 - `apps/last-loop-lepin/site/src/routes/NotFoundPage.tsx`
@@ -282,10 +292,6 @@ they cover.
 ### pragma / site / molecule — 1 unmarked
 
 - `apps/pragma/site/src/components/molecules/setlist-entry-form.ts`
-
-### pragma / site / organism — 1 unmarked
-
-- `apps/pragma/site/src/components/organisms/useNavBadges.ts`
 
 ### pragma / site / query — 1 unmarked
 
