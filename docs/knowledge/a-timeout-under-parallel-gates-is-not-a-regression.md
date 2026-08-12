@@ -52,19 +52,27 @@ Three tells that you are looking at contention rather than a defect:
 
 ## Corollaries
 
-- **30 s was still not enough for the app stack tests.** A later push failed on
-  `pragma app stack > declares no Secrets Manager resources` timing out at 30 s.
-  Re-run alone, that file takes about 15 s, so half the budget was already spent
-  before any contention; under the full parallel wave the pragma `core` suite
-  went from about 110 s to 235 s and the budget ran out. Both full-stack apps'
-  `core` projects are now at **60 s**. Set the budget against the busiest
-  machine the gate runs on, not the quietest, and treat "passes alone with half
-  the budget left" as already too close.
+- **Raising the timeout twice was the wrong fix; the third look found the real
+  one.** A push failed on a stack test at 30 s, so the budget went to 60 s. The
+  next push failed on the same kind of test at 60 s. A number that needs raising
+  twice is not a budget, it is a symptom: `synthAppStack` was being called
+  **twelve times per file** while producing only two distinct templates, so each
+  suite synthesised the same app six times over. Caching by stage took the
+  pragma file from 16.4 s to 5.15 s, and the last-loop-lepin file with it. The
+  budget stays at 60 s as headroom for genuinely CPU-bound work, but it is no
+  longer what keeps the gate green.
+
+  The general rule: **when a timeout needs raising a second time, stop raising it
+  and go and count how often the slow thing runs.** Cost per call is rarely the
+  problem; number of calls usually is.
 - **A CPU-bound test needs an explicit `testTimeout`.** CDK synth, esbuild
   bundling and anything spawning a subprocess should not sit on the 5-second
   default in a repo whose gates run in parallel. `infra/cdk` and `infra/shared`
-  use `testTimeout: 30_000`; both full-stack apps' `core` projects, which
-  synthesize a whole CDK app twice per test, use `60_000`.
+  use `testTimeout: 30_000`; both full-stack apps' `core` projects use `60_000`.
+- **Synthesize once per distinct result, not once per assertion.** A `Template`
+  is immutable once built, so a suite asserting twenty things about two stacks
+  needs two synths. Both app stack suites cache by stage; copy that in any new
+  one.
 - **Never stop a process by pattern.** In a sandbox where several agents
   share a machine, the only safe target is a PID you started.
 - **Re-read before reporting.** A poll result is a snapshot; if it says
