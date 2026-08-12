@@ -1,5 +1,5 @@
 /**
- * Pure validation helpers for the FileDrop molecule. Centralises the
+ * Pure validation helpers for the chord-chart upload. Centralises the
  * accepted MIME list, the 10 MiB ceiling, the MIME→chart-kind projection that
  * the song form consumes, and the message each rejection reason shows.
  */

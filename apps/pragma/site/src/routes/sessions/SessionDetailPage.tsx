@@ -23,7 +23,7 @@ import { formatSessionDate } from '../../lib/formatters.utils';
 import { useMembersList } from '../../lib/queries/members';
 import { useSession, useSessionsList, useUpdateSession } from '../../lib/queries/sessions';
 import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists';
-import { SetlistEditor } from '../setlists/SetlistEditor';
+import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
 import { ConcertReadView } from './ConcertReadView';
 import { parseFriendsCounts } from './friends-count.core';

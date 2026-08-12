@@ -36,23 +36,23 @@ import { CSS } from '@dnd-kit/utilities';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { composeClassName } from '../../components/atoms/class-name.utils';
-import { Icon } from '../../components/atoms/Icon';
+import { composeClassName } from '../atoms/class-name.utils';
+import { Icon } from '../atoms/Icon';
 import {
   LineupEditor,
   type LineupEditorInstrument,
   type LineupRecord,
-} from '../../components/molecules/LineupEditor';
-import { MemberChip } from '../../components/molecules/MemberChip';
-import { SetlistEntryDetailsFields } from '../../components/molecules/SetlistEntryDetailsFields';
+} from '../molecules/LineupEditor';
+import { MemberChip } from '../molecules/MemberChip';
+import { SetlistEntryDetailsFields } from '../molecules/SetlistEntryDetailsFields';
 import {
   ENERGY_MAX,
   ENERGY_MIN,
   type SetlistEntryFormValues,
   useSetlistEntryForm,
-} from '../../components/molecules/setlist-entry-form';
+} from '../molecules/setlist-entry-form';
 import { selectMasteryColor } from './mastery-color.core';
-import { type LineupMember, MemberLineup } from '../../components/molecules/MemberLineup';
+import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
 
 const ENERGY_DEFAULT = 5;
 

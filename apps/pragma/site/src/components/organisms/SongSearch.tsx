@@ -41,7 +41,7 @@ export interface SongSearchProps {
   readonly className?: string;
 }
 
-// @FollowsBlueprint molecule-local-state
+// @FollowsBlueprint organism-query-owning
 export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');

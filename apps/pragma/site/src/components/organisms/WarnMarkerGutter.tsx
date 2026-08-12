@@ -12,7 +12,7 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon } from '../../components/atoms/Icon';
+import { Icon } from '../atoms/Icon';
 
 const ROW_HEIGHT_PX = 84;
 const ROW_GAP_PX = 8;

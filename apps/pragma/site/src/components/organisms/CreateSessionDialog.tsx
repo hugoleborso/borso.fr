@@ -2,7 +2,7 @@
  * Modal that asks the operator for the fields the back-end requires
  * before a session can be created — date is mandatory (Zod
  * `z.string().datetime()` on both branches of `sessionCreateSchema`),
- * concerts additionally need a non-empty venue. The molecule owns its
+ * concerts additionally need a non-empty venue. The dialog owns its
  * own form state via `useForm`; the parent supplies the kind, open
  * state, and the `onCreated` callback that fires once the mutation
  * resolves. The parent renders the dialog only while it should be
@@ -54,7 +54,7 @@ const practiceFormSchema = z.object({
   preparedConcertId: z.string().uuid().nullable(),
 });
 
-// @FollowsBlueprint molecule-dialog-form
+// @FollowsBlueprint organism-form
 export function CreateSessionDialog({
   kind,
   onClose,

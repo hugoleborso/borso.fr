@@ -6,7 +6,7 @@
 import { useTranslation } from 'react-i18next';
 import { Input } from '../../components/atoms/Input';
 import { composeClassName } from '../../components/atoms/class-name.utils';
-import { FileDrop } from '../../components/molecules/FileDrop';
+import { FileDrop } from '../../components/organisms/FileDrop';
 
 export type SongChartKind = 'none' | 'chordpro' | 'pdf' | 'image';
 

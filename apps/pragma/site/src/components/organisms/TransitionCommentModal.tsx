@@ -11,7 +11,7 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../components/atoms/Button';
+import { Button } from '../atoms/Button';
 import { ApiError } from '../../lib/api';
 import { useSaveTransitionComment, useTransitionComment } from '../../lib/queries/transitions';
 

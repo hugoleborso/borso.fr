@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { composeClassName } from '../../components/atoms/class-name.utils';
-import { CreateSessionDialog } from '../../components/molecules/CreateSessionDialog';
+import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api';
 import { formatSessionDate } from '../../lib/formatters.utils';

@@ -27,10 +27,10 @@ import {
 } from '@dnd-kit/sortable';
 import type { JSX } from 'react';
 import { useState } from 'react';
-import type { LineupEditorInstrument } from '../../components/molecules/LineupEditor';
-import type { LineupMember } from '../../components/molecules/MemberLineup';
+import type { LineupEditorInstrument } from '../molecules/LineupEditor';
+import type { LineupMember } from '../molecules/MemberLineup';
 import { warnIfOrphanMemberIds } from './orphan-member-warn';
-import { SetlistEntryDragPreview } from '../../components/molecules/SetlistEntryDragPreview';
+import { SetlistEntryDragPreview } from '../molecules/SetlistEntryDragPreview';
 import { SetlistEntryRow } from './SetlistEntryRow';
 import {
   compactLineup,

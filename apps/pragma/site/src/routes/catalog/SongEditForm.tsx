@@ -15,7 +15,7 @@ import { Card } from '../../components/atoms/Card';
 import { Icon } from '../../components/atoms/Icon';
 import { Input } from '../../components/atoms/Input';
 import { PageHeader } from '../../components/molecules/PageHeader';
-import { SongSearch } from '../../components/molecules/SongSearch';
+import { SongSearch } from '../../components/organisms/SongSearch';
 import { deriveTonality } from '../../lib/tonality-bridge';
 import { SongChartFields } from './SongChartFields';
 import { SongChordPreview } from './SongChordPreview';

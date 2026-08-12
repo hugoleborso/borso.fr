@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists';
-import { SetlistEditor } from './SetlistEditor';
+import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 
 // @FollowsBlueprint route-detail-page
 export function SetlistEditorPage(): JSX.Element {
