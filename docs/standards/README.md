@@ -47,7 +47,7 @@ ones we intended. The [`/blueprint`](../../.claude/skills/blueprint/SKILL.md)
 skill creates, indexes, and validates them.
 
 The index answers which patterns exist, and
-[`blueprint-coverage.md`](../../.claude/skills/blueprint/blueprint-coverage.md)
+[`blueprint-coverage.html`](../../.claude/skills/blueprint/blueprint-coverage.html)
 answers which code carries one, bucketed by application and layer. Read it
 before adding a blueprint: a layer sitting at nought per cent is either a
 pattern nobody has written down yet or a layer whose files are genuinely all

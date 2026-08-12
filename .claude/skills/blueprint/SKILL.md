@@ -71,7 +71,7 @@ Completion criterion: the new entry appears in `blueprint-index.md` with all fou
 
 1. Run `pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts`.
 2. Show the script output and the repository totals from the regenerated
-   [`blueprint-coverage.md`](./blueprint-coverage.md).
+   [`blueprint-coverage.html`](./blueprint-coverage.html).
 3. Name the three largest unmarked buckets, because those are where the next
    blueprint is worth writing.
 
@@ -112,7 +112,7 @@ Report as:
 
 ## Scripts
 
-`blueprint-indexing.ts` scans `apps/`, `infra/`, and `eslint-rules/` and writes `blueprint-index.md`. `blueprint-heatmap.ts` scans the same tree and writes `blueprint-coverage.md`, which buckets every file by application and layer and reports how much of each bucket carries a marker. `blueprint-utils.ts` holds the project and layer inference, which reads this repository's layout of `apps/<slug>/api`, `apps/<slug>/site`, `infra/<package>`, and `eslint-rules/`, and reports a test in the layer of the code it covers.
+`blueprint-indexing.ts` scans `apps/`, `infra/`, and `eslint-rules/` and writes `blueprint-index.md`. `blueprint-heatmap.ts` scans the same tree and writes `blueprint-coverage.html`, a colour grid of application against layer showing how much of each bucket carries a marker. `blueprint-utils.ts` holds the project and layer inference, which reads this repository's layout of `apps/<slug>/api`, `apps/<slug>/site`, `infra/<package>`, and `eslint-rules/`, and reports a test in the layer of the code it covers.
 
 The upstream skill also ships `blueprint-extract.ts`, which is not ported here, so `/blueprint extract` does not exist.
 

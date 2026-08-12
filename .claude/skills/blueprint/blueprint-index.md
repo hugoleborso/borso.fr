@@ -57,7 +57,7 @@ blueprint when the code you are writing has none of its own.
 
 A test is reported in the layer of the code it covers, so `punch.core.test.ts`
 reads as `core`. How much of each layer carries a marker is in
-[`blueprint-coverage.md`](./blueprint-coverage.md).
+[`blueprint-coverage.html`](./blueprint-coverage.html).
 
 ## Blueprints
 

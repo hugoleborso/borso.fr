@@ -9,7 +9,7 @@
  * "which code carries one". Every source file is bucketed by application and
  * layer, then counted as carrying a `@Blueprint`, carrying a
  * `@FollowsBlueprint`, or carrying neither, and the result is written to
- * `blueprint-coverage.md`.
+ * `blueprint-coverage.html`, a colour grid of application against layer.
  *
  * Adapted from the `blueprint` skill in pernod-ricard-rgm/pr-aquila-ap-v2.
  */
@@ -17,6 +17,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { renderCoveragePage } from './blueprint-coverage-page.js';
 import {
   extractFollowsBlueprint,
   inferApplication,
@@ -29,7 +30,7 @@ import {
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const REPOSITORY_ROOT = path.resolve(scriptDirectory, '../../..');
 const SCAN_DIRECTORY_NAMES = ['apps', 'infra', 'eslint-rules'];
-const OUTPUT_FILE = path.join(scriptDirectory, 'blueprint-coverage.md');
+const OUTPUT_FILE = path.join(scriptDirectory, 'blueprint-coverage.html');
 const SKIPPED_DIRECTORY_NAMES = new Set([
   'node_modules',
   'dist',
@@ -49,8 +50,6 @@ const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js'];
 const LAYER_EXCLUDED_FROM_COVERAGE = 'declaration';
 
 const BLUEPRINT_ID_PATTERN = /@Blueprint\s+(\S+)/g;
-const COVERAGE_BAR_SEGMENTS = 20;
-const PERCENTAGE_SCALE = 100;
 
 interface MarkedFile {
   readonly filePath: string;
@@ -60,17 +59,6 @@ interface MarkedFile {
   readonly isTest: boolean;
   readonly blueprintCount: number;
   readonly followerCount: number;
-}
-
-interface CoverageBucket {
-  readonly application: string;
-  readonly project: BlueprintProject;
-  readonly layer: string;
-  files: number;
-  blueprints: number;
-  followers: number;
-  markedFiles: number;
-  readonly unmarkedPaths: string[];
 }
 
 function listSourceFiles(directory: string): string[] {
@@ -109,13 +97,23 @@ function bucketKeyOf(file: MarkedFile): string {
   return `${file.application}|${file.project}|${file.layer}`;
 }
 
-function collectBuckets(files: readonly MarkedFile[]): Map<string, CoverageBucket> {
-  const buckets = new Map<string, CoverageBucket>();
+/** The tally as it is being built, before it is handed to the renderer. */
+interface BucketTally {
+  application: string;
+  layer: string;
+  files: number;
+  blueprints: number;
+  followers: number;
+  markedFiles: number;
+  unmarkedPaths: string[];
+}
+
+function collectBuckets(files: readonly MarkedFile[]): Map<string, BucketTally> {
+  const buckets = new Map<string, BucketTally>();
   for (const file of files) {
     const key = bucketKeyOf(file);
     const existing = buckets.get(key) ?? {
       application: file.application,
-      project: file.project,
       layer: file.layer,
       files: 0,
       blueprints: 0,
@@ -136,134 +134,17 @@ function collectBuckets(files: readonly MarkedFile[]): Map<string, CoverageBucke
   return buckets;
 }
 
-function toPercentage(marked: number, total: number): number {
-  return total === 0 ? PERCENTAGE_SCALE : Math.round((marked / total) * PERCENTAGE_SCALE);
-}
-
-function toCoverageBar(marked: number, total: number): string {
-  const percentage = toPercentage(marked, total);
-  const filled = Math.round((percentage / PERCENTAGE_SCALE) * COVERAGE_BAR_SEGMENTS);
-  return `${'█'.repeat(filled)}${'░'.repeat(COVERAGE_BAR_SEGMENTS - filled)} ${percentage}%`;
-}
-
-function isCounted(bucket: CoverageBucket): boolean {
+function isCounted(bucket: BucketTally): boolean {
   return bucket.layer !== LAYER_EXCLUDED_FROM_COVERAGE;
 }
 
-function sumBy(
-  buckets: readonly CoverageBucket[],
-  read: (bucket: CoverageBucket) => number,
-): number {
-  return buckets.reduce((total, bucket) => total + read(bucket), 0);
-}
-
-function toGroupedRows(
-  buckets: readonly CoverageBucket[],
-  groupOf: (bucket: CoverageBucket) => string,
-): string {
-  const groups = new Map<string, CoverageBucket[]>();
-  for (const bucket of buckets) {
-    const group = groupOf(bucket);
-    groups.set(group, [...(groups.get(group) ?? []), bucket]);
-  }
-  return [...groups.entries()]
-    .sort(([first], [second]) => first.localeCompare(second))
-    .map(([group, members]) => {
-      const files = sumBy(members, (bucket) => bucket.files);
-      const marked = sumBy(members, (bucket) => bucket.markedFiles);
-      return `| ${group} | ${files} | ${sumBy(members, (bucket) => bucket.blueprints)} | ${sumBy(members, (bucket) => bucket.followers)} | ${files - marked} | ${toCoverageBar(marked, files)} |`;
-    })
-    .join('\n');
-}
-
-function toGridRows(buckets: readonly CoverageBucket[]): string {
-  return [...buckets]
-    .sort(
-      (first, second) =>
-        first.application.localeCompare(second.application) ||
-        first.project.localeCompare(second.project) ||
-        first.layer.localeCompare(second.layer),
-    )
-    .map(
-      (bucket) =>
-        `| ${bucket.application} | ${bucket.project} | ${bucket.layer} | ${bucket.files} | ${bucket.blueprints} | ${bucket.followers} | ${bucket.files - bucket.markedFiles} | ${toCoverageBar(bucket.markedFiles, bucket.files)} |`,
-    )
-    .join('\n');
-}
-
-function toUnmarkedSection(buckets: readonly CoverageBucket[]): string {
-  const withGaps = [...buckets]
-    .filter((bucket) => bucket.unmarkedPaths.length > 0)
-    .sort((first, second) => second.unmarkedPaths.length - first.unmarkedPaths.length);
-  if (withGaps.length === 0) {
-    return 'Every file in a covered layer carries a blueprint or a follower marker.';
-  }
-  return withGaps
-    .map((bucket) => {
-      const heading = `### ${bucket.application} / ${bucket.project} / ${bucket.layer} — ${bucket.unmarkedPaths.length} unmarked`;
-      const list = [...bucket.unmarkedPaths].sort().map((filePath) => `- \`${filePath}\``);
-      return [heading, '', ...list].join('\n');
-    })
-    .join('\n\n');
-}
-
-function generateMarkdown(files: readonly MarkedFile[]): string {
+function generatePage(files: readonly MarkedFile[]): string {
   const allBuckets = [...collectBuckets(files).values()];
   const counted = allBuckets.filter((bucket) => isCounted(bucket));
-  const declarationFiles = sumBy(
-    allBuckets.filter((bucket) => !isCounted(bucket)),
-    (bucket) => bucket.files,
-  );
-  const totalFiles = sumBy(counted, (bucket) => bucket.files);
-  const totalMarked = sumBy(counted, (bucket) => bucket.markedFiles);
-  const testFiles = files.filter((file) => file.isTest).length;
-
-  return `# Blueprint coverage
-
-Auto-generated by \`.claude/skills/blueprint/blueprint-heatmap.ts\`. Do not edit
-by hand. Run \`/blueprint heatmap\` after adding or changing an annotation.
-
-Where [\`blueprint-index.md\`](./blueprint-index.md) answers which patterns
-exist, this answers which code carries one. A file counts as marked when it
-holds a \`@Blueprint\` block or a \`// @FollowsBlueprint\` comment, so an
-unmarked file is either a pattern nobody has written down yet or code that no
-existing pattern fits.
-
-Ambient declaration files are excluded from every percentage below, because
-there is no shape to copy in one. ${declarationFiles} file(s) are excluded on
-that ground.
-
-## Repository totals
-
-| Files | Blueprints | Followers | Unmarked | Marked |
-|-------|------------|-----------|----------|--------|
-| ${totalFiles} | ${sumBy(counted, (bucket) => bucket.blueprints)} | ${sumBy(counted, (bucket) => bucket.followers)} | ${totalFiles - totalMarked} | ${toCoverageBar(totalMarked, totalFiles)} |
-
-Of those files, ${testFiles} are tests and ${totalFiles - testFiles} are the code
-they cover.
-
-## Coverage by application
-
-| Application | Files | Blueprints | Followers | Unmarked | Marked |
-|-------------|-------|------------|-----------|----------|--------|
-${toGroupedRows(counted, (bucket) => bucket.application)}
-
-## Coverage by layer
-
-| Layer | Files | Blueprints | Followers | Unmarked | Marked |
-|-------|-------|------------|-----------|----------|--------|
-${toGroupedRows(counted, (bucket) => bucket.layer)}
-
-## Coverage by application and layer
-
-| Application | Project | Layer | Files | Blueprints | Followers | Unmarked | Marked |
-|-------------|---------|-------|-------|------------|-----------|----------|--------|
-${toGridRows(counted)}
-
-## Unmarked files
-
-${toUnmarkedSection(counted)}
-`;
+  const declarationFiles = allBuckets
+    .filter((bucket) => !isCounted(bucket))
+    .reduce((total, bucket) => total + bucket.files, 0);
+  return renderCoveragePage(counted, declarationFiles, files.filter((file) => file.isTest).length);
 }
 
 function main(): void {
@@ -279,12 +160,12 @@ function main(): void {
     `Scanned ${markedFiles.length} source files: ${blueprints} blueprint(s), ${followers} follower(s).\n`,
   );
 
-  const markdown = generateMarkdown(markedFiles);
+  const page = generatePage(markedFiles);
   const relativeOutput = path.relative(REPOSITORY_ROOT, OUTPUT_FILE);
 
   if (isCheckOnly) {
     const onDisk = fs.existsSync(OUTPUT_FILE) ? fs.readFileSync(OUTPUT_FILE, 'utf8') : '';
-    if (onDisk !== markdown) {
+    if (onDisk !== page) {
       process.stderr.write(
         `${relativeOutput} is out of date. Run \`pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts\`.\n`,
       );
@@ -295,7 +176,7 @@ function main(): void {
     return;
   }
 
-  fs.writeFileSync(OUTPUT_FILE, markdown, 'utf8');
+  fs.writeFileSync(OUTPUT_FILE, page, 'utf8');
   process.stdout.write(`Wrote ${relativeOutput}\n`);
 }
 
