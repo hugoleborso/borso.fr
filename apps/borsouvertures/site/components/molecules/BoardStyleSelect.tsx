@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Select } from '@/components/atoms/Select';
 import { setBoardStyle } from '@/state/appState';
 import { type BoardThemeId, boardThemes, toBoardThemeId } from '@/theme/boardThemes.utils';
 
@@ -9,21 +10,16 @@ interface BoardStyleSelectProps {
 // @FollowsBlueprint molecule-presentational
 export function BoardStyleSelect({ boardStyle }: BoardStyleSelectProps) {
   const { t } = useTranslation();
+  const label = t('top-bar.board-style.label');
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <span>{t('top-bar.board-style.label')}</span>
-      <select
-        className="min-h-11 px-[0.6rem] py-[0.4rem] rounded-lg border border-edge bg-field text-ink"
-        aria-label={t('top-bar.board-style.label')}
+      <span>{label}</span>
+      <Select
         value={boardStyle}
-        onChange={(event) => setBoardStyle(toBoardThemeId(event.target.value, boardStyle))}
-      >
-        {boardThemes.map((theme) => (
-          <option key={theme.id} value={theme.id}>
-            {t(theme.nameKey)}
-          </option>
-        ))}
-      </select>
+        ariaLabel={label}
+        options={boardThemes.map((theme) => ({ value: theme.id, label: t(theme.nameKey) }))}
+        onSelect={(value) => setBoardStyle(toBoardThemeId(value, boardStyle))}
+      />
     </div>
   );
 }

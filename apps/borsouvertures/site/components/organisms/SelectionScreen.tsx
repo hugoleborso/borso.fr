@@ -9,7 +9,7 @@ import { setView, useAppState } from '@/state/appState';
 import type { Mode } from '@/state/persistedState.utils';
 import { OpeningFlowSelector } from './OpeningFlowSelector';
 import { SelectionAutoOpponentRow } from './SelectionAutoOpponentRow';
-import { SessionStartHint } from './SessionStartHint';
+import { SessionStartHint } from '@/components/atoms/SessionStartHint';
 
 // @FollowsBlueprint component-lookup-table
 const AUTO_OPPONENT_ROW_BY_MODE: ComponentByKind<Mode, { isAutoOpponentEnabled: boolean }> = {
