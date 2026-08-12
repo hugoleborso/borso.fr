@@ -10,6 +10,7 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PickRowButton } from '../atoms/PickRowButton';
 
 export interface SetlistSongPickerProps {
   readonly songs: readonly { id: string; title: string }[];
@@ -29,13 +30,7 @@ export function SetlistSongPicker(props: SetlistSongPickerProps): JSX.Element {
           .toSorted((left, right) => left.title.localeCompare(right.title))
           .map((song) => (
             <li key={song.id}>
-              <button
-                type="button"
-                onClick={() => props.onPick(song.id)}
-                className="w-full text-left bg-transparent border-0 text-[13px] text-ink-700 hover:bg-bg-elev px-2 py-1 rounded-md cursor-pointer transition-colors"
-              >
-                + {song.title}
-              </button>
+              <PickRowButton label={`+ ${song.title}`} onPick={() => props.onPick(song.id)} />
             </li>
           ))}
       </ul>

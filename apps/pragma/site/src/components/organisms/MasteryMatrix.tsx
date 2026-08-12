@@ -32,17 +32,27 @@ import {
   type Row,
   useReactTable,
 } from '@tanstack/react-table';
-import type { JSX, MouseEvent, WheelEvent } from 'react';
+import type { JSX } from 'react';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api';
-import { cellKey, clampScore, columnAverage, rowAverage } from '../../lib/mastery-matrix.utils';
+import {
+  cellKey,
+  clampScore,
+  columnAverage,
+  MASTERY_SCORE_MAX,
+  MASTERY_SCORE_MIN,
+  rowAverage,
+} from '../../lib/mastery-matrix.utils';
 import { readableForeground } from '../../lib/member-color.utils';
 import {
   useDeleteMasteryDefault,
   useMasteryDefaults,
   useSaveMasteryDefault,
 } from '../../lib/queries/mastery';
+import { Avatar } from '../atoms/Avatar';
+import { memberInitial } from '../atoms/member-palette.utils';
+import { ScoreInput } from '../atoms/ScoreInput';
 
 export interface MasteryMatrixMember {
   readonly id: string;
@@ -130,15 +140,13 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
       header: () => null,
       cell: ({ row }) => (
         <>
-          <span
-            className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-semibold mr-2 align-middle"
-            style={{
-              background: row.original.member.color,
-              color: readableForeground(row.original.member.color),
-            }}
-          >
-            {row.original.member.firstName.slice(0, 1).toUpperCase()}
-          </span>
+          <Avatar
+            size="xs"
+            className="mr-2 align-middle"
+            initials={memberInitial(row.original.member.firstName)}
+            color={row.original.member.color}
+            style={{ color: readableForeground(row.original.member.color) }}
+          />
           <span className="align-middle text-ink-900">{row.original.member.firstName}</span>
         </>
       ),
@@ -149,31 +157,23 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
       cell: ({ row }: { row: Row<MatrixRow> }) => {
         const memberId = row.original.member.id;
         const value = scores[cellKey(memberId, instrument.id)] ?? 0;
-        const onWheel = (event: WheelEvent<HTMLInputElement>): void => {
-          event.preventDefault();
-          const delta = event.deltaY < 0 ? 1 : -1;
-          const next = clampScore(value + delta);
-          if (next === value) return;
-          writeScore(memberId, instrument.id, next);
-        };
-        const onContextMenu = (event: MouseEvent<HTMLInputElement>): void => {
-          event.preventDefault();
-          clearScore(memberId, instrument.id);
-        };
         return (
-          <input
-            type="number"
-            min={0}
-            max={10}
+          <ScoreInput
             value={value}
-            aria-label={`${row.original.member.firstName} ${instrument.name}`}
-            onWheel={onWheel}
-            onContextMenu={onContextMenu}
-            onChange={(event) => {
-              const parsed = clampScore(Number(event.target.value));
-              writeScore(memberId, instrument.id, parsed);
+            minimum={MASTERY_SCORE_MIN}
+            maximum={MASTERY_SCORE_MAX}
+            label={`${row.original.member.firstName} ${instrument.name}`}
+            onStep={(step) => {
+              const next = clampScore(value + step);
+              if (next === value) return;
+              writeScore(memberId, instrument.id, next);
             }}
-            className="w-12 text-center bg-bg-elev border border-line rounded-sm text-xs py-1 outline-none focus:border-ink-700 font-mono"
+            onType={(typedValue) => {
+              writeScore(memberId, instrument.id, clampScore(typedValue));
+            }}
+            onClear={() => {
+              clearScore(memberId, instrument.id);
+            }}
           />
         );
       },

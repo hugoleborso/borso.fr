@@ -14,10 +14,12 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+import { Avatar } from '../../components/atoms/Avatar';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Input } from '../../components/atoms/Input';
+import { memberInitial } from '../../components/atoms/member-palette.utils';
 import { readableForeground } from '../../lib/member-color.utils';
 
 export interface ConcertEditFormMember {
@@ -131,15 +133,12 @@ export function ConcertEditForm({
                 <div className="flex flex-col gap-2">
                   {members.map((member) => (
                     <div key={member.id} className="flex items-center gap-2.5">
-                      <span
-                        className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-semibold"
-                        style={{
-                          background: member.color,
-                          color: readableForeground(member.color),
-                        }}
-                      >
-                        {member.firstName.slice(0, 1).toUpperCase()}
-                      </span>
+                      <Avatar
+                        size="xs"
+                        initials={memberInitial(member.firstName)}
+                        color={member.color}
+                        style={{ color: readableForeground(member.color) }}
+                      />
                       <span className="flex-1 text-[13px] text-ink-700">{member.firstName}</span>
                       <input
                         type="number"

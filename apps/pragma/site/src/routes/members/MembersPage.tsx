@@ -11,6 +11,8 @@
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Avatar } from '../../components/atoms/Avatar';
+import { memberInitial } from '../../components/atoms/member-palette.utils';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { MasteryMatrix } from '../../components/organisms/MasteryMatrix';
 import { ApiError } from '../../lib/api';
@@ -124,13 +126,13 @@ export function MembersPage(): JSX.Element {
               key={member.id}
               className="flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors"
             >
-              <span
-                className="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold"
-                style={{ background: member.color, color: readableForeground(member.color) }}
+              <Avatar
+                size="md"
                 aria-hidden="true"
-              >
-                {member.firstName.slice(0, 1).toUpperCase()}
-              </span>
+                initials={memberInitial(member.firstName)}
+                color={member.color}
+                style={{ color: readableForeground(member.color) }}
+              />
               <button
                 type="button"
                 className="flex-1 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
