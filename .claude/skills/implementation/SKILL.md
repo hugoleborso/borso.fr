@@ -1,6 +1,6 @@
 ---
 name: implementation
-description: Execute the engineering plan in `plan.md`, enforcing the repo's clean-code rules and test-coverage rules as the code is written rather than discovered after the fact by `/technical-validation`. Use when the user says "/implementation", "implement the plan", "ship the feature", "write the code", or as the natural next step after `/technical-conception`. Loads `spec.md` + `plan.md`, walks the plan's table row-by-row, splits pure helpers into `*.utils.ts` with sibling `*.utils.test.ts` at 100% coverage, applies CLAUDE.md "Clean code" rules (named constants, no abbreviations, type-assertion ban, comments document WHY only), composes with technical sub-skills (`/vite`, `/three-js`, `/controller`, `/database`, …) for domain-specific guidance, and runs pre-flight gates before push. Reads the standard at `.claude/skills/implementation/standard.md` before starting.
+description: Execute the engineering plan in `plan.md`, enforcing the repo's clean-code rules and test-coverage rules as the code is written rather than discovered after the fact by `/technical-validation`. Use when the user says "/implementation", "implement the plan", "ship the feature", "write the code", or as the natural next step after `/technical-conception`. Loads `spec.md` + `plan.md`, opens the blueprint for every layer the plan touches and marks new code `// @FollowsBlueprint`, walks the plan's table row-by-row, splits pure helpers into `*.utils.ts` with sibling `*.utils.test.ts` at 100% coverage, applies CLAUDE.md "Clean code" rules (named constants, no abbreviations, type-assertion ban, comments document WHY only), composes with technical sub-skills (`/vite`, `/three-js`, `/controller`, `/database`, …) for domain-specific guidance, and runs pre-flight gates before push. Reads the standard at `.claude/skills/implementation/standard.md` before starting.
 ---
 
 # Implementation skill
@@ -34,6 +34,18 @@ The plan's *Inventory the technical surface* step (from `/technical-conception`)
 If a needed sub-skill doesn't exist, write the slice yourself and add a one-line `Missing technical skill: /<name>` row to the plan's *Missing technical skills* section so the loop catches it.
 
 The seed library for these sub-skills is patterns.dev (<https://www.patterns.dev/ai/skills/>) — copy a relevant skill in, then rewrite to the repo's conventions before adding to `.claude/skills/`.
+
+## Open the blueprint for the layer before you write the file
+
+Every layer this repository writes has a canonical example marked in place with a `@Blueprint` JSDoc block, and [`blueprint-index.md`](../blueprint/blueprint-index.md) maps identifier to file and line. Before creating a controller, a service, a repository, a schema, a core module, a query module, an atom, a molecule, an organism, a route, a CDK construct or a test, read the index and open the blueprint for that layer. Copy its shape.
+
+Mark what you write. A new file that follows a blueprint carries `// @FollowsBlueprint <id>` on the line directly above the declaration, one identifier per line, never at the top of the file. That marker is what makes adoption countable: [`blueprint-coverage.html`](../blueprint/blueprint-coverage.html) reports the share of each application and layer carrying one, and an unmarked file reads to the next author as a layer with no settled pattern.
+
+The blueprint and the standard are two halves of the same answer. [`docs/standards/`](../../../docs/standards/README.md) states the rule; the blueprint is the working instance of it. Read the rule, then copy the instance. When the two disagree the standard wins and the blueprint is stale, so fix the blueprint in the same change.
+
+When the layer genuinely has no blueprint, write the file against the standard and propose the blueprint in the same change rather than handing the next author the same gap. Run `/blueprint create` for the annotation and `/blueprint index` afterwards.
+
+Both generators take `--check` and both run in pre-commit and in CI, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a generated file left stale fails the gate rather than reaching review.
 
 ## Load-bearing rules (enforced as you write)
 
@@ -106,11 +118,13 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
 1. **Read** `spec.md` and `plan.md` end-to-end. Build a mental model.
 1a. **Verify the plan has no open questions left unanswered.** Grep `plan.md` for "Open question", "TBD", "?", "decide", "still need". Any open item is a **stop-and-ask** — the implementer must surface it to the user and get an explicit answer *before walking the table*. Open questions in the plan are a common source of bias-laundered implementation defects: the implementer picks one of the answers themselves, the validator then validates against that silently-chosen answer, and the spec-vs-implementation gap is invisible.
 2. **Inventory** technical surfaces. For each, invoke the matching sub-skill via `Skill` if one exists. Note any missing. **When a third-party library appears in the inventory, spend a minute on its current docs/changelog before re-implementing any of its capabilities** — many "I'll just write a quick X" moments dissolve when you discover the library already ships X natively. See [`docs/knowledge/audit-imported-deps-and-patterns-when-planning.md`](../../../docs/knowledge/audit-imported-deps-and-patterns-when-planning.md).
+2a. **Read `blueprint-index.md`** and open the blueprint for every layer the code map touches.
 3. **Walk the plan's "How each spec decision becomes code" table top-down.** For each row:
    a. Open the file the row points at (or create it).
-   b. Apply the change.
+   b. Apply the change, copying the shape of that layer's blueprint.
    c. If the change is a pure helper, the file ends in `.utils.ts`; write the matching `.utils.test.ts` alongside it.
-   d. Update local commits as you go — do not save the diff for one giant commit.
+   d. Mark the declaration `// @FollowsBlueprint <id>`.
+   e. Update local commits as you go — do not save the diff for one giant commit.
 3a. **Re-walk the plan's §3 Code-quality self-check section bullet by bullet.** Each bullet names a repo-rule risk the plan author flagged for *this* feature ("rename `y` → `candidateYear` in App.tsx's year-switch", "extract `pickDefaultMonth` to `data.utils.ts` so clock-dependent flows are testable", "no `useEffect` to derive `selected`", …). The plan-author wrote them because they predicted this implementation would slip on them. Verify each against the diff. An unchecked bullet is a blocker — fix the diff before running pre-flight gates; `/technical-validation` will FAIL on it otherwise. See [`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md) for the precedent.
 4. **Run the plan's pre-flight gates** in order. Fix issues, do not bypass.
 5. **Run `/visual-validation`** for UI work. Read the report; the verdict must be PASS before push.
@@ -118,7 +132,7 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
 7. **Push.** The branch's CI is the last gate; the local gates are stricter.
 8. **Open the PR.** A **FAIL** validator verdict is fix-required — do not open a PR while the latest validation report is FAIL. A **PASS_EXCEPT_UNVERIFIABLE** verdict is mergeable, but the PR description must include a `## Validation gaps` section listing the UNVERIFIABLE rows verbatim with the one-line reason + report-path link. **PASS** ships without per-row disclosure. Either way, the PR description includes a `## Visual evidence` section with the screenshots from the latest visual-validation report — see `/visual-validation`'s "Visual evidence in the PR body" section for the SHA-pinned-raw-URL generator. Reviewers read the PR description, not the validation report; the gap and the visuals have to be up-front.
 
-> **The skill ends here.** Once the PR is open, the implementation skill is done. Preview deploys run automatically on PR push; prod app deploys run automatically in CI on merge to `main` — no approval, since only Hugo can merge (see CLAUDE.md "Deployments"). Claude never runs `pnpm ... run deploy` locally — the workflow does. After the PR merges, the agent only reminds Hugo to approve a pending deploy when the diff touched `infra/shared/**` (the `prod-shared` environment still requires a reviewer).
+> **The skill ends here.** Once the PR is open, the implementation skill is done. Preview deploys run automatically on PR push; prod app deploys run automatically in CI on merge to `main` — no approval, since only Hugo can merge (see CLAUDE.md "Deployments"). Claude never runs `pnpm ... run deploy` locally — the workflow does. After the PR merges, the agent asks Hugo to dispatch `shared-deploy` when the merge moved the committed `borso-shared` template snapshot, because that workflow is `workflow_dispatch` only and nothing queues it.
 
 ## Failure modes to avoid
 
@@ -126,6 +140,8 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
 - **Naming a pure helper `something.ts`** — it isn't covered, the technical-validator FAILs the row, and you're rewriting filenames in a follow-up commit.
 - **"I'll add tests later"** — repo rule says no. The next commit is the test, not "later".
 - **Stuffing utilities into a file that also has DOM/network code** — split. The pure half is `<name>.utils.ts`; the rest stays in `<name>.ts`. Mixed files cannot be coverage-gated cleanly.
+- **Writing a file for a layer without opening that layer's blueprint** — the file invents a shape the repository already settled, and the review is spent re-deriving a decision instead of reading the change.
+- **Leaving a new file unmarked** — the coverage grid reports the layer as having no adopted pattern, so the next author reads a real pattern as an absent one.
 - **Skipping a sub-skill that exists** — domain knowledge in the sub-skill goes unenforced; defects predicted by it ship anyway.
 - **Bypassing a hook** with `--no-verify` — repo rule says never. Fix the hook failure.
 - **Deferring the test-runner setup** — if the workspace has no Vitest yet, set it up *as part of this implementation*. Otherwise the implementation lands without coverage and the next session inherits a broken gate.
@@ -135,7 +151,7 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
 ## Repo-specific notes
 
 - pnpm always; no npm/yarn.
-- Conventional-commit scopes: `borso-fr`, `borsouvertures`, `infra`, `ci`, `docs`, `deps`. Multi-commit per feature is fine; small, focused commits beat one giant landing.
+- Conventional-commit scopes: `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `infra`, `ci`, `docs`, `deps`, `meta`. Multi-commit per feature is fine; small, focused commits beat one giant landing.
 - `infra/cdk` and `infra/shared` are 100%-coverage gated by hook; their pre-commit runs `test:coverage` before letting the commit through.
 - Reports from validators land at `docs/features/<app>/<slug>/validation/`; commit them alongside the implementation diff in the same PR.
 
