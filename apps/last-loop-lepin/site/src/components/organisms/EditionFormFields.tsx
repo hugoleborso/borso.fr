@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { FormField } from '../molecules/FormField';
 import { type GpxErrorKey, GpxFileField } from '../molecules/GpxFileField';
 
-const HINT_STYLE = { fontSize: 11 } as const;
-const ROW_STYLE = { gap: 'var(--d-3)' } as const;
 const WIDE_FIELD_STYLE = { flex: 1 } as const;
 const INTERVAL_FIELD_STYLE = { flex: '0 0 140px' } as const;
 
@@ -80,7 +78,7 @@ export function EditionFormFields({
         onBlur={displayName.onBlur}
         required
       />
-      <div className="row" style={ROW_STYLE}>
+      <div className="flex items-center gap-3">
         <FormField
           id={`${idPrefix}-start`}
           label={t('admin.setup.starts-at')}
@@ -124,7 +122,7 @@ export function EditionFormFields({
         required={isGpxRequired}
         errorKey={gpxErrorKey}
       />
-      <div className="muted mono" style={HINT_STYLE}>
+      <div className="font-mono tabular-nums text-[11px] text-ink-3">
         {t('admin.setup.sun-hint')}
       </div>
     </>

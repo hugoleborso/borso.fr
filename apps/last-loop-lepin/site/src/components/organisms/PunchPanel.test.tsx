@@ -83,7 +83,7 @@ describe('PunchPanel', () => {
     });
     await user.click(screen.getByRole('button', { name: /Alice/ }));
     expect(registerPunch).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('button', { name: /Alice/ }).className).toContain('punched');
+    expect(screen.getByRole('button', { name: /Alice/ }).dataset.tone).toBe('punched');
   });
 
   /**
@@ -98,12 +98,12 @@ describe('PunchPanel', () => {
       { wrapper: Wrapper },
     );
     await user.click(screen.getByRole('button', { name: /Alice/ }));
-    expect(screen.getByRole('button', { name: /Alice/ }).className).toContain('punched');
+    expect(screen.getByRole('button', { name: /Alice/ }).dataset.tone).toBe('punched');
 
     rerender(
       <PunchPanel edition={EDITION} ranked={[ALICE]} now={new Date(RACE_START_MS + HOUR_MS)} />,
     );
-    expect(screen.getByRole('button', { name: /Alice/ }).className).not.toContain('punched');
+    expect(screen.getByRole('button', { name: /Alice/ }).dataset.tone).not.toBe('punched');
   });
 
   it('keeps showing a runner the server already credited as punched', () => {
@@ -111,6 +111,6 @@ describe('PunchPanel', () => {
     render(<PunchPanel edition={EDITION} ranked={[credited]} now={new Date(RACE_START_MS)} />, {
       wrapper: Wrapper,
     });
-    expect(screen.getByRole('button', { name: /Alice/ }).className).toContain('punched');
+    expect(screen.getByRole('button', { name: /Alice/ }).dataset.tone).toBe('punched');
   });
 });

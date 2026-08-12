@@ -25,12 +25,7 @@ const PASTILLE_SHADOW_ID = 'elevation-pastille-shadow';
 const EMPTY_ELEVATIONS: readonly number[] = [];
 
 const FRAME_STYLE = { minHeight: MIN_HEIGHT_PX } as const;
-const PLACEHOLDER_STYLE = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  height: MIN_HEIGHT_PX,
-} as const;
+const PLACEHOLDER_STYLE = { height: MIN_HEIGHT_PX } as const;
 
 /**
  * The loop's elevation curve with one pastille per running runner, placed by
@@ -54,9 +49,9 @@ export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps
   const pastilles = listElevationPastilles(edition, ranked, now.getTime(), geometry, VIEWBOX_WIDTH);
 
   return (
-    <div className="card-body flush elevation-profile" style={FRAME_STYLE}>
+    <div className="flex flex-col flex-1 overflow-auto p-0 bg-bg-elev" style={FRAME_STYLE}>
       <Show when={!hasSamples}>
-        <div className="muted" style={PLACEHOLDER_STYLE}>
+        <div className="flex items-center justify-center text-ink-3" style={PLACEHOLDER_STYLE}>
           {t('elevation.unavailable')}
         </div>
       </Show>
@@ -68,11 +63,12 @@ export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps
           preserveAspectRatio="xMidYMid meet"
           width="100%"
           height="100%"
+          className="block"
         >
           <defs>
             <linearGradient id={GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--accent, #f43f5e)" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="var(--accent, #f43f5e)" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
             </linearGradient>
             <filter id={PASTILLE_SHADOW_ID} x="-50%" y="-50%" width="200%" height="200%">
               <feDropShadow dx="0" dy="1" stdDeviation="1.2" floodOpacity="0.35" />
@@ -82,7 +78,7 @@ export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps
           <polyline
             points={geometry.linePolylinePoints}
             fill="none"
-            stroke="var(--accent, #f43f5e)"
+            stroke="var(--color-accent)"
             strokeWidth="2"
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -90,7 +86,7 @@ export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps
           {pastilles.map((pastille) => (
             <g
               key={pastille.runnerKey}
-              className="runner-pastille"
+              className="transition-transform duration-[600ms] ease-out"
               transform={`translate(${pastille.centerX} ${pastille.centerY})`}
               filter={`url(#${PASTILLE_SHADOW_ID})`}
             >
@@ -99,7 +95,7 @@ export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps
                 cy={0}
                 r={AVATAR_RADIUS_PX}
                 fill={pastille.backgroundColor}
-                stroke="var(--bg)"
+                stroke="var(--color-bg)"
                 strokeWidth="2"
                 data-runner-slug={pastille.runnerSlug}
               />
@@ -110,7 +106,7 @@ export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps
                 dominantBaseline="central"
                 fontSize={AVATAR_FONT_PX}
                 fontWeight="700"
-                fill="var(--accent-ink, #111)"
+                fill="var(--color-accent-ink)"
               >
                 {pastille.initials}
               </text>

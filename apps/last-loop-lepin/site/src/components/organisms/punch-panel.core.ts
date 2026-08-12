@@ -117,8 +117,14 @@ export function listPunchTiles(
   return tiles;
 }
 
-export function composePunchTileClassName(isPunched: boolean, isLate: boolean): string {
-  const punchedModifier = isPunched ? ' punched' : '';
-  const lateModifier = isLate ? ' late' : '';
-  return `punch-tile${punchedModifier}${lateModifier}`;
+/**
+ * How a tile reads. A punched runner is never also late, because `listPunchTiles`
+ * only marks a tile late while it is unpunched, so the three states are exclusive.
+ */
+export type PunchTileTone = 'pending' | 'punched' | 'late';
+
+export function selectPunchTileTone(isPunched: boolean, isLate: boolean): PunchTileTone {
+  if (isPunched) return 'punched';
+  if (isLate) return 'late';
+  return 'pending';
 }

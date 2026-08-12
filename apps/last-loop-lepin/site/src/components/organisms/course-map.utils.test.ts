@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LatLngDto, RankedRunnerDto } from '../../lib/race.types';
+import { MAP_AVATAR_CLASS } from '../../lib/runner-avatar.utils';
 import {
   avatarHtmlWithPhoto,
   escapeHtml,
@@ -380,7 +381,8 @@ describe('avatarHtmlWithPhoto', () => {
     expect(html).toContain('src="https://photos-cdn.borso.fr/lepin-2026/borso/abc.jpg"');
     expect(html).toContain('data-runner-slug="borso"');
     expect(html).toContain('onerror=');
-    expect(html).toContain('runner-avatar--initials');
+    expect(html).toContain('this.parentNode.innerHTML=&quot;&lt;span');
+    expect(html).toContain(MAP_AVATAR_CLASS);
   });
 
   it('renders the initials span directly when photoUrl is null', () => {
@@ -390,7 +392,7 @@ describe('avatarHtmlWithPhoto', () => {
       slug: 'carla',
     });
     expect(html).not.toContain('<img');
-    expect(html).toContain('runner-avatar--initials');
+    expect(html).toContain(MAP_AVATAR_CLASS);
     expect(html).toContain('CA');
     expect(html).toContain('data-runner-slug="carla"');
   });

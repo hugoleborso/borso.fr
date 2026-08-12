@@ -6,7 +6,7 @@ import {
   selectEditionPanelTab,
   isRaceOverInPractice,
   isTabBlockedByMissingEdition,
-  selectTabClassName,
+  selectTabState,
 } from './admin-tabs.core';
 
 // @FollowsBlueprint test-pure-unit
@@ -22,13 +22,13 @@ describe('ADMIN_TABS', () => {
   });
 });
 
-describe('selectTabClassName', () => {
+describe('selectTabState', () => {
   it('marks the tab in view as active', () => {
-    expect(selectTabClassName('punch', 'punch')).toBe('active');
+    expect(selectTabState('punch', 'punch')).toBe('active');
   });
 
-  it('leaves the other tabs bare', () => {
-    expect(selectTabClassName('punch', 'setup')).toBe('');
+  it('leaves the other tabs inactive', () => {
+    expect(selectTabState('punch', 'setup')).toBe('inactive');
   });
 });
 

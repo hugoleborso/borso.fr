@@ -1,3 +1,5 @@
+import { FILE_INPUT_CLASS } from './Input';
+
 interface FileInputProps {
   readonly id: string;
   readonly onFileChange: (file: File | null) => void;
@@ -12,7 +14,7 @@ export function FileInput({ id, onFileChange, accept, capture, required = false 
     <input
       id={id}
       type="file"
-      className="input"
+      className={FILE_INPUT_CLASS}
       accept={accept}
       capture={capture}
       required={required}

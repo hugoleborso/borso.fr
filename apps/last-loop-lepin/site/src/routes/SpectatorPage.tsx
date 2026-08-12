@@ -17,6 +17,7 @@ import {
   selectRacingEdition,
 } from '../components/organisms/spectator.core';
 import { UpcomingEditionCard } from '../components/organisms/UpcomingEditionCard';
+import { ButtonLink } from '../components/atoms/ButtonLink';
 import { Card, CardBody } from '../components/atoms/Card';
 import { Show } from '../components/atoms/Show';
 import { CardHeader } from '../components/molecules/CardHeader';
@@ -28,9 +29,17 @@ import { useStandings } from '../lib/queries/standings';
 import type { RankedRunnerDto } from '../lib/race.types';
 import { countRunnersInRace } from '../lib/runner-status.utils';
 
-const BANNER_STYLE = { justifyContent: 'space-between' } as const;
 const EMPTY_RANKED: readonly RankedRunnerDto[] = [];
 const EMPTY_FASTEST_LAP: readonly { readonly runnerSlug: string }[] = [];
+
+/**
+ * The two by two spectator grid. It stacks below 901px, which is where the
+ * standings chips stop fitting beside the track, and the two cards that swap
+ * places on the way down carry an explicit order so the small screen reads
+ * countdown, track, elevation, standings.
+ */
+const SPECTATOR_GRID_CLASS =
+  'grid grid-cols-[minmax(0,1fr)] gap-4 flex-initial min-h-0 min-[901px]:grid-cols-[minmax(280px,2fr)_minmax(0,1fr)] min-[901px]:grid-rows-[auto_1fr] min-[901px]:flex-1';
 
 /**
  * The public race screen: countdown, track, standings, elevation profile.
@@ -56,9 +65,11 @@ export function SpectatorPage() {
   return (
     <>
       <Show when={currentEdition.isError}>
-        <div className="main">
+        <div className="flex flex-col gap-4 p-6 min-h-0">
           <Card>
-            <CardBody modifier="error-text">{t('spectator.server-unreachable')}</CardBody>
+            <CardBody className="font-mono text-[12px] text-danger">
+              {t('spectator.server-unreachable')}
+            </CardBody>
           </Card>
         </div>
       </Show>
@@ -70,53 +81,59 @@ export function SpectatorPage() {
         />
       </Show>
       {listPresent(selectRacingEdition(edition)).map((raceEdition) => (
-        <div className="main" key={raceEdition.slug}>
+        <div className="flex flex-col gap-4 p-6 min-h-0" key={raceEdition.slug}>
           <Show when={isRaceOver(raceEdition, standings.data?.standings.raceEnded === true)}>
-            <div className="banner row" style={BANNER_STYLE}>
+            <div className="flex items-center justify-between gap-3 px-5 py-3 text-center font-mono text-[12px] bg-warn/20 text-warn border-b border-warn/40">
               <span>{t('spectator.race-over')}</span>
-              <a
-                className="btn btn-sm"
+              <ButtonLink
+                size="small"
                 href={apiUrl(`/api/standings/${encodeURIComponent(raceEdition.slug)}/csv`)}
               >
                 {t('spectator.download-standings-csv')}
-              </a>
+              </ButtonLink>
             </div>
           </Show>
           <CorrectionBanner
             correctedAt={readCorrectionInstant(standings.data?.mostRecentCorrectionAt ?? null)}
           />
-          <div className="spectator-layout">
-            <Card modifier="countdown-card">
+          <div className={SPECTATOR_GRID_CLASS}>
+            <Card>
               <CardHeader
                 title={t('spectator.next-top-title')}
-                hint={<span className="muted mono">{raceEdition.displayName}</span>}
+                hint={
+                  <span className="font-mono tabular-nums text-ink-3">
+                    {raceEdition.displayName}
+                  </span>
+                }
               />
-              <CardBody modifier="col">
+              <CardBody className="flex flex-col gap-3">
                 <NextLoopCountdown edition={raceEdition} label="" />
                 <InRaceCounter ranked={ranked} />
               </CardBody>
             </Card>
-            <Card modifier="map-card">
+            <Card>
               <CardHeader
                 title={t('spectator.track-title')}
                 hint={
-                  <span className="muted mono">
+                  <span className="font-mono tabular-nums text-ink-3">
                     {t('spectator.in-race-count', { runners: countRunnersInRace(ranked) })}
                   </span>
                 }
               />
               <CourseMap edition={raceEdition} ranked={ranked} now={now} />
             </Card>
-            <Card modifier="classement-card">
+            <Card className="order-4 min-h-0 min-[901px]:order-0">
               <CardHeader
                 title={t('spectator.standings-title')}
                 hint={
                   <Show when={raceEdition.status === 'live'}>
-                    <span className="live-pill">{t('spectator.live')}</span>
+                    <span className="inline-flex items-center gap-2 py-[5px] pl-2 pr-2.5 rounded-full border border-accent/35 bg-accent/14 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-accent before:content-[''] before:w-[7px] before:h-[7px] before:rounded-full before:bg-accent before:animate-live-pulse">
+                      {t('spectator.live')}
+                    </span>
                   </Show>
                 }
               />
-              <CardBody modifier="flush">
+              <CardBody padding="none">
                 <Leaderboard
                   ranked={ranked}
                   fastestLapSlugs={collectFastestLapSlugs(
@@ -127,11 +144,11 @@ export function SpectatorPage() {
                 />
               </CardBody>
             </Card>
-            <Card modifier="profile-card">
+            <Card className="order-3 min-h-0 min-[901px]:order-0">
               <CardHeader
                 title={t('spectator.elevation-title')}
                 hint={
-                  <span className="muted mono">
+                  <span className="font-mono tabular-nums text-ink-3">
                     {t('common.elevation-gain', {
                       metres: formatElevationMetres(raceEdition.gpx.elevationGainMeters),
                     })}

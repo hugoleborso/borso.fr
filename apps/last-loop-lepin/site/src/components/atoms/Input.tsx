@@ -1,3 +1,13 @@
+export const INPUT_CLASS =
+  'w-full min-h-11 px-3 py-2.5 rounded-lg border border-line bg-bg font-mono text-[13px] text-ink';
+
+/**
+ * Tailwind's preflight strips the file picker's native button chrome, which
+ * would otherwise leave "Choose file" as bare text, so the button is drawn
+ * here in the application's own palette.
+ */
+export const FILE_INPUT_CLASS = `${INPUT_CLASS} file:mr-3 file:-ml-1 file:px-2.5 file:py-1 file:rounded-md file:border file:border-line file:bg-bg-elev file:text-[12px] file:font-medium file:text-ink file:cursor-pointer`;
+
 export type InputKind = 'text' | 'password' | 'number' | 'datetime-local';
 
 interface InputProps {
@@ -35,7 +45,7 @@ export function Input({
   return (
     <input
       id={id}
-      className="input"
+      className={INPUT_CLASS}
       type={type}
       value={value}
       onChange={(event) => {

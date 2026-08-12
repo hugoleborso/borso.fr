@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { type ReactNode, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getCurrentTime, readServerTime, subscribeClock } from '../clock-store';
@@ -12,11 +13,16 @@ import {
   isTabBlockedByMissingEdition,
   selectEditionNeedingFinish,
   selectEditionPanelTab,
-  selectTabClassName,
+  selectTabState,
 } from '../components/organisms/admin-tabs.core';
 import { CorrectionPanel } from '../components/organisms/CorrectionPanel';
 import { DidNotFinishPanel } from '../components/organisms/DidNotFinishPanel';
 import { FinishRacePrompt } from '../components/organisms/FinishRacePrompt';
+import {
+  NAVIGATION_ITEM_CLASS,
+  NAVIGATION_ITEM_CLASS_BY_STATE,
+  NAVIGATION_LIST_CLASS,
+} from '../components/organisms/navigation-styles';
 import { PunchPanel } from '../components/organisms/PunchPanel';
 import { RunnerAdminPanel } from '../components/organisms/RunnerAdminPanel';
 import { SetupPanel } from '../components/organisms/SetupPanel';
@@ -26,7 +32,6 @@ import { useStandings } from '../lib/queries/standings';
 import type { RaceEditionDto, RankedRunnerDto } from '../lib/race.types';
 import { countRunnersInRace } from '../lib/runner-status.utils';
 
-const NAV_STYLE = { marginLeft: 0 } as const;
 const EMPTY_RANKED: readonly RankedRunnerDto[] = [];
 
 interface EditionTabProps {
@@ -69,7 +74,7 @@ export function AdminPage() {
   return (
     <>
       <Show when={!isAuthenticated}>
-        <div className="main">
+        <div className="flex flex-col gap-4 p-6 min-h-0">
           <AdminLoginForm
             onAuthenticated={() => {
               setAuthenticated(true);
@@ -78,7 +83,7 @@ export function AdminPage() {
         </div>
       </Show>
       <Show when={isAuthenticated}>
-        <div className="main col">
+        <div className="flex flex-col gap-3 p-6 min-h-0">
           {listPresent(
             selectEditionNeedingFinish(edition, ranked.length, countRunnersInRace(ranked)),
           ).map((closingEdition) => (
@@ -88,12 +93,15 @@ export function AdminPage() {
               totalRunners={ranked.length}
             />
           ))}
-          <nav className="nav" style={NAV_STYLE}>
+          <nav className={NAVIGATION_LIST_CLASS}>
             {ADMIN_TABS.map((entry) => (
               <button
                 key={entry.name}
                 type="button"
-                className={selectTabClassName(tab, entry.name)}
+                className={clsx(
+                  NAVIGATION_ITEM_CLASS,
+                  NAVIGATION_ITEM_CLASS_BY_STATE[selectTabState(tab, entry.name)],
+                )}
                 onClick={() => {
                   setTab(entry.name);
                 }}
@@ -109,7 +117,7 @@ export function AdminPage() {
 
           <Show when={isTabBlockedByMissingEdition(tab, edition !== null)}>
             <Card>
-              <CardBody modifier="muted">{t('admin.no-active-edition')}</CardBody>
+              <CardBody className="text-ink-3">{t('admin.no-active-edition')}</CardBody>
             </Card>
           </Show>
 

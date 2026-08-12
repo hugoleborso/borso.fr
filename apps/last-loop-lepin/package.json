@@ -33,8 +33,10 @@
     "@borso/infra": "workspace:*",
     "@hono/zod-validator": "^0.4.0",
     "@sentry/react": "^8.50.0",
+    "@tailwindcss/vite": "4.3.0",
     "@tanstack/react-form": "1.32.0",
     "@tanstack/react-query": "5.100.10",
+    "clsx": "2.1.1",
     "drizzle-orm": "^0.36.0",
     "hono": "^4.6.0",
     "i18next": "^23.16.8",
@@ -43,6 +45,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-i18next": "^15.4.0",
+    "tailwindcss": "^4",
     "zod": "^3.24.0"
   },
   "devDependencies": {

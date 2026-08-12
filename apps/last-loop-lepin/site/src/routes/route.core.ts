@@ -37,10 +37,12 @@ export function parseRoute(pathname: string): Route {
   return { name: 'runner', runnerSlug };
 }
 
-/** The class the navigation bar puts on the link for the page in view. */
-export function selectNavigationClassName(pathname: string, target: RouteName): string {
+/** How a navigation entry reads: the page in view is active, every other is not. */
+export type NavigationItemState = 'active' | 'inactive';
+
+export function selectNavigationState(pathname: string, target: RouteName): NavigationItemState {
   if (parseRoute(pathname).name === target) return 'active';
-  return '';
+  return 'inactive';
 }
 
 export function composeRunnerPath(runnerSlug: string): string {

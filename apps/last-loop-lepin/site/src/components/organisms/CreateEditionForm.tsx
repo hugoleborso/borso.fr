@@ -20,7 +20,6 @@ import { EditionFormFields } from './EditionFormFields';
 import { useGpxFile } from './useGpxFile';
 
 const ID_PREFIX = 'create';
-const ACTIONS_STYLE = { gap: 'var(--d-2)', flexWrap: 'wrap' } as const;
 
 interface CreateEditionFormProps {
   readonly currentEdition: RaceEditionDto | null;
@@ -75,9 +74,12 @@ export function CreateEditionForm({
 
   return (
     <Card>
-      <CardHeader title={t(titleKey)} hint={<span className="muted mono">{t(hintKey)}</span>} />
+      <CardHeader
+        title={t(titleKey)}
+        hint={<span className="font-mono tabular-nums text-ink-3">{t(hintKey)}</span>}
+      />
       <form
-        className="card-body col"
+        className="flex flex-col gap-3 flex-1 overflow-auto px-5 py-4"
         onSubmit={(event) => {
           event.preventDefault();
           void form.handleSubmit();
@@ -140,7 +142,7 @@ export function CreateEditionForm({
         <Show when={failure !== null}>
           <ErrorText>{t(failure?.key ?? 'common.error-detail', failure?.parameters)}</ErrorText>
         </Show>
-        <div className="row" style={ACTIONS_STYLE}>
+        <div className="flex flex-wrap items-center gap-2">
           <Button type="submit" variant="primary" disabled={createEdition.isPending}>
             {t(
               selectLabel(

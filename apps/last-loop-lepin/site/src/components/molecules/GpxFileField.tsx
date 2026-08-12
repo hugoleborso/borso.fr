@@ -5,8 +5,6 @@ import { FileInput } from '../atoms/FileInput';
 import { Label } from '../atoms/Label';
 import { Show } from '../atoms/Show';
 
-const HINT_STYLE = { fontSize: 11 } as const;
-
 /** The three ways reading a picked GPX file can fail. */
 export type GpxErrorKey =
   'admin.setup.gpx-missing' | 'admin.setup.gpx-empty' | 'admin.setup.gpx-unreadable';
@@ -43,11 +41,11 @@ export function GpxFileField({
 }: GpxFileFieldProps) {
   const { t } = useTranslation();
   return (
-    <div className="field">
+    <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       <FileInput id={id} onFileChange={onFileChange} required={required} />
       <Show when={file !== null}>
-        <div className="muted mono" style={HINT_STYLE}>
+        <div className="font-mono tabular-nums text-[11px] text-ink-3">
           {t('admin.setup.gpx-file-summary', {
             name: file?.name ?? '',
             kilobytes: formatKilobytes(file?.size ?? 0),

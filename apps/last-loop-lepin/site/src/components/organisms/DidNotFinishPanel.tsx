@@ -13,15 +13,17 @@ import { Show } from '../atoms/Show';
 import { CardHeader } from '../molecules/CardHeader';
 import { type AdminErrorMessage, selectPunchError } from './admin-errors.core';
 import {
+  RUNNER_ROW_CLASS,
+  RUNNER_ROW_DETAIL_CLASS,
+  RUNNER_ROW_NAME_CLASS,
+  RUNNER_ROW_RANK_CLASS,
+} from './leaderboard.utils';
+import {
   selectMissedLoop,
   selectOutAtLoop,
   selectOutReasonKey,
   splitByDidNotFinish,
 } from './did-not-finish.core';
-
-const SECTION_STYLE = { gap: 'var(--d-4)' } as const;
-const HINT_STYLE = { fontSize: 12 } as const;
-const ACTIONS_STYLE = { gap: 'var(--d-2)', flexWrap: 'wrap' } as const;
 
 interface DidNotFinishPanelProps {
   readonly edition: RaceEditionDto;
@@ -38,13 +40,13 @@ interface RunnerRowProps {
 function RunnerRow({ entry, loopLabel, note, children }: RunnerRowProps) {
   const avatar = initialsAvatar(entry.runner.displayName);
   return (
-    <div className="leaderboard-row">
-      <span className="rank mono">{loopLabel}</span>
-      <div className="row">
+    <div className={RUNNER_ROW_CLASS}>
+      <span className={RUNNER_ROW_RANK_CLASS}>{loopLabel}</span>
+      <div className="flex items-center gap-3 min-w-0">
         <InitialsAvatar initials={avatar.initials} backgroundColor={avatar.backgroundColor} />
-        <span className="runner-name">{entry.runner.displayName}</span>
+        <span className={RUNNER_ROW_NAME_CLASS}>{entry.runner.displayName}</span>
       </div>
-      <span className="loop-info">{note}</span>
+      <span className={RUNNER_ROW_DETAIL_CLASS}>{note}</span>
       {children}
     </div>
   );
@@ -137,24 +139,24 @@ export function DidNotFinishPanel({ edition, ranked }: DidNotFinishPanelProps) {
   const failureText = t(failure?.key ?? 'common.error-detail', failure?.parameters);
 
   return (
-    <div className="col" style={SECTION_STYLE}>
+    <div className="flex flex-col gap-4">
       <Card>
         <CardHeader
           title={t('admin.did-not-finish.pending-title')}
           hint={
-            <span className="muted mono">
+            <span className="font-mono tabular-nums text-ink-3">
               {t('admin.did-not-finish.pending-count', {
                 runners: lists.awaitingConfirmation.length,
               })}
             </span>
           }
         />
-        <CardBody modifier="col">
+        <CardBody className="flex flex-col gap-3">
           <Show when={failure !== null}>
             <ErrorText>{failureText}</ErrorText>
           </Show>
           <Show when={lists.awaitingConfirmation.length === 0}>
-            <div className="muted">{t('admin.did-not-finish.pending-empty')}</div>
+            <div className="text-ink-3">{t('admin.did-not-finish.pending-empty')}</div>
           </Show>
           {lists.awaitingConfirmation.map((entry) => (
             <RunnerRow
@@ -163,7 +165,7 @@ export function DidNotFinishPanel({ edition, ranked }: DidNotFinishPanelProps) {
               loopLabel={t('common.loop-short', { loop: selectOutAtLoop(entry) })}
               note={t('admin.did-not-finish.missed-top', { loop: selectOutAtLoop(entry) })}
             >
-              <div className="row" style={ACTIONS_STYLE}>
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   size="small"
                   onClick={() => {
@@ -194,17 +196,15 @@ export function DidNotFinishPanel({ edition, ranked }: DidNotFinishPanelProps) {
         <CardHeader
           title={t('admin.did-not-finish.reinstate-title')}
           hint={
-            <span className="muted mono">
+            <span className="font-mono tabular-nums text-ink-3">
               {t('admin.did-not-finish.reinstate-count', { runners: lists.allOut.length })}
             </span>
           }
         />
-        <CardBody modifier="col">
-          <div className="muted" style={HINT_STYLE}>
-            {t('admin.did-not-finish.reinstate-hint')}
-          </div>
+        <CardBody className="flex flex-col gap-3">
+          <div className="text-[12px] text-ink-3">{t('admin.did-not-finish.reinstate-hint')}</div>
           <Show when={lists.allOut.length === 0}>
-            <div className="muted">{t('admin.did-not-finish.reinstate-empty')}</div>
+            <div className="text-ink-3">{t('admin.did-not-finish.reinstate-empty')}</div>
           </Show>
           {lists.allOut.map((entry) => (
             <RunnerRow
@@ -234,17 +234,15 @@ export function DidNotFinishPanel({ edition, ranked }: DidNotFinishPanelProps) {
         <CardHeader
           title={t('admin.did-not-finish.withdrawal-title')}
           hint={
-            <span className="muted mono">
+            <span className="font-mono tabular-nums text-ink-3">
               {t('admin.did-not-finish.in-race-count', { runners: lists.stillRunning.length })}
             </span>
           }
         />
-        <CardBody modifier="col">
-          <div className="muted" style={HINT_STYLE}>
-            {t('admin.did-not-finish.withdrawal-hint')}
-          </div>
+        <CardBody className="flex flex-col gap-3">
+          <div className="text-[12px] text-ink-3">{t('admin.did-not-finish.withdrawal-hint')}</div>
           <Show when={lists.stillRunning.length === 0}>
-            <div className="muted">{t('admin.did-not-finish.withdrawal-empty')}</div>
+            <div className="text-ink-3">{t('admin.did-not-finish.withdrawal-empty')}</div>
           </Show>
           {lists.stillRunning.map((entry) => (
             <RunnerRow

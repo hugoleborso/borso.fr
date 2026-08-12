@@ -30,18 +30,20 @@ export function LeaderboardChip({ entry, hasFastestLap, locale }: LeaderboardChi
       <Show when={hasFastestLap}>
         <FastestLapBadge title={t('leaderboard.fastest-lap')} />
       </Show>
-      <div className="leaderboard-chip__head">
-        <span className="leaderboard-chip__rank mono">
+      <div className="flex items-center gap-3 min-w-0">
+        <span className="min-w-5 text-right font-mono tabular-nums text-[14px] text-ink-3">
           {formatRank(entry.rank, t('common.ex-aequo'))}
         </span>
         <RunnerAvatar runner={entry.runner} size={AVATAR_SIZE_PX} surface="leaderboard" />
-        <span className="leaderboard-chip__name">{entry.runner.displayName}</span>
+        <span className="flex-1 min-w-0 truncate text-[14px] font-medium text-ink">
+          {entry.runner.displayName}
+        </span>
       </div>
-      <div className="leaderboard-chip__foot">
+      <div className="flex items-center justify-between gap-3">
         <Pill tone={statusKind}>
           {t(STATUS_KEY_BY_KIND[statusKind], { loop: selectRunnerStatusLoop(entry.status) })}
         </Pill>
-        <span className="leaderboard-chip__time mono">
+        <span className="font-mono tabular-nums text-[12px] text-ink-3">
           {formatLastEventTime(entry.lastFinishedAt, locale, t('common.empty-value'))}
         </span>
       </div>

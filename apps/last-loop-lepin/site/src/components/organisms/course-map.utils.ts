@@ -8,7 +8,11 @@
  */
 
 import { haversineDistanceMeters } from '../../lib/haversine.utils';
-import { buildRunnerAvatar } from '../../lib/runner-avatar.utils';
+import {
+  buildRunnerAvatar,
+  MAP_AVATAR_CLASS,
+  MAP_AVATAR_PHOTO_CLASS,
+} from '../../lib/runner-avatar.utils';
 import type { LatLngDto, RankedRunnerDto } from '../../lib/race.types';
 
 const ORIGIN: LatLngDto = { lat: 0, lng: 0 };
@@ -163,7 +167,7 @@ function initialsSpanHtml(
   fallbackInitials: string,
   fallbackBg: string,
 ): string {
-  return `<span class="runner-avatar runner-avatar--initials map-avatar" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px;background:${escapeHtml(fallbackBg)}">${escapeHtml(fallbackInitials)}</span>`;
+  return `<span class="${MAP_AVATAR_CLASS}" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px;background:${escapeHtml(fallbackBg)}">${escapeHtml(fallbackInitials)}</span>`;
 }
 
 /**
@@ -198,7 +202,7 @@ export function avatarHtmlWithPhoto(input: AvatarHtmlInput): string {
   // The browser decodes `&quot;` back to `"` when reading the attribute,
   // then JS evaluates the string literal as written.
   const escapedFallbackJson = escapeHtml(JSON.stringify(fallbackHtml));
-  return `<span class="runner-avatar map-avatar" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px"><img class="runner-avatar--photo" src="${escapeHtml(avatar.url)}" alt="${escapeHtml(input.displayName)}" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px" onerror="this.parentNode.innerHTML=${escapedFallbackJson}"></span>`;
+  return `<span class="${MAP_AVATAR_CLASS}" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px"><img class="${MAP_AVATAR_PHOTO_CLASS}" src="${escapeHtml(avatar.url)}" alt="${escapeHtml(input.displayName)}" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px" onerror="this.parentNode.innerHTML=${escapedFallbackJson}"></span>`;
 }
 
 /**

@@ -18,10 +18,11 @@ function readSelectedLanguage(value: string): SupportedLanguage {
 export function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
   return (
-    <label className="language-switcher" htmlFor={SELECT_ID}>
-      <span className="visually-hidden">{t('nav.language')}</span>
+    <label className="inline-flex items-center" htmlFor={SELECT_ID}>
+      <span className="sr-only">{t('nav.language')}</span>
       <select
         id={SELECT_ID}
+        className="px-2.5 py-1.5 rounded-lg border border-line bg-bg-elev text-[13px] font-medium text-ink-2"
         value={readSelectedLanguage(i18n.language)}
         onChange={(event) => {
           changeLanguage(readSelectedLanguage(event.target.value));

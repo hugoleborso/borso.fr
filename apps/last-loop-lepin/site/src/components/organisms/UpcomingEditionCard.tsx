@@ -12,11 +12,6 @@ import { CardHeader } from '../molecules/CardHeader';
 import { Countdown } from '../molecules/Countdown';
 import { selectDistanceLabelKey } from './upcoming-edition.core';
 
-const TITLE_STYLE = { fontSize: 18 } as const;
-const LIST_STYLE = { listStyle: 'none', padding: 0, margin: 0 } as const;
-const ARCHIVE_ROW_STYLE = { padding: '8px 0', borderBottom: '1px solid var(--line-soft)' } as const;
-const ARCHIVE_DATE_STYLE = { marginLeft: 8 } as const;
-
 interface UpcomingEditionCardProps {
   readonly upcoming: RaceEditionDto | null;
   readonly archives: readonly RaceEditionDto[];
@@ -31,20 +26,22 @@ interface UpcomingEditionCardProps {
 export function UpcomingEditionCard({ upcoming, archives, locale }: UpcomingEditionCardProps) {
   const { t } = useTranslation();
   return (
-    <div className="main col">
+    <div className="flex flex-col gap-3 p-6 min-h-0">
       <Card>
         <CardHeader
           title={t('spectator.next-edition-title')}
-          hint={<span className="muted mono">{t('spectator.location')}</span>}
+          hint={
+            <span className="font-mono tabular-nums text-ink-3">{t('spectator.location')}</span>
+          }
         />
-        <CardBody modifier="col">
+        <CardBody className="flex flex-col gap-3">
           <Show when={upcoming === null}>
-            <div className="muted">{t('spectator.no-announced-edition')}</div>
+            <div className="text-ink-3">{t('spectator.no-announced-edition')}</div>
           </Show>
           {listPresent(upcoming).map((edition) => (
-            <div key={edition.slug} className="col">
-              <strong style={TITLE_STYLE}>{edition.displayName}</strong>
-              <span className="muted">
+            <div key={edition.slug} className="flex flex-col gap-3">
+              <strong className="text-[18px]">{edition.displayName}</strong>
+              <span className="text-ink-3">
                 {t('spectator.start-line', {
                   date: formatRaceDate(new Date(edition.startsAt), locale),
                   distance: t(selectDistanceLabelKey(edition), {
@@ -67,20 +64,20 @@ export function UpcomingEditionCard({ upcoming, archives, locale }: UpcomingEdit
         <CardHeader
           title={t('spectator.archives-title')}
           hint={
-            <span className="muted mono">
+            <span className="font-mono tabular-nums text-ink-3">
               {t('spectator.edition-count', { count: archives.length })}
             </span>
           }
         />
         <CardBody>
           <Show when={archives.length === 0}>
-            <div className="muted">{t('spectator.no-archived-edition')}</div>
+            <div className="text-ink-3">{t('spectator.no-archived-edition')}</div>
           </Show>
-          <ul style={LIST_STYLE}>
+          <ul>
             {archives.map((edition) => (
-              <li key={edition.slug} style={ARCHIVE_ROW_STYLE}>
+              <li key={edition.slug} className="py-2 border-b border-line-soft">
                 <strong>{edition.displayName}</strong>
-                <span className="muted" style={ARCHIVE_DATE_STYLE}>
+                <span className="ml-2 text-ink-3">
                   {formatRaceDate(new Date(edition.startsAt), locale)}
                 </span>
               </li>

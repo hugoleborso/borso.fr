@@ -6,6 +6,7 @@
  */
 
 import type { RaceEditionDto } from '../../lib/race.types';
+import type { NavigationItemState } from '../../routes/route.core';
 
 export type AdminTabName = 'setup' | 'runners' | 'punch' | 'did-not-finish' | 'corrections';
 
@@ -32,9 +33,9 @@ export const ADMIN_TABS: readonly AdminTab[] = [
 
 export const DEFAULT_ADMIN_TAB: AdminTabName = 'punch';
 
-export function selectTabClassName(currentTab: AdminTabName, tab: AdminTabName): string {
+export function selectTabState(currentTab: AdminTabName, tab: AdminTabName): NavigationItemState {
   if (currentTab === tab) return 'active';
-  return '';
+  return 'inactive';
 }
 
 /** The setup tab is the only one that works without an edition to act on. */

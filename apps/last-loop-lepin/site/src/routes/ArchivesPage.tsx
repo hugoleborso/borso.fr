@@ -14,18 +14,18 @@ export function ArchivesPage() {
   const archives = listArchivedEditions(editionList.data?.editions ?? []);
 
   return (
-    <div className="main col">
+    <div className="flex flex-col gap-3 p-6 min-h-0">
       <Card>
         <CardHeader
           title={t('archives.title')}
           hint={
-            <span className="muted mono">
+            <span className="font-mono tabular-nums text-ink-3">
               {t('archives.edition-count', { count: archives.length })}
             </span>
           }
         />
         <Show when={archives.length === 0}>
-          <CardBody modifier="muted">{t('archives.empty')}</CardBody>
+          <CardBody className="text-ink-3">{t('archives.empty')}</CardBody>
         </Show>
         {archives.map((edition) => (
           <ArchivedEditionCard key={edition.slug} edition={edition} locale={i18n.language} />

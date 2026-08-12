@@ -8,19 +8,20 @@ import {
 import { useStandings } from '../../lib/queries/standings';
 import type { RaceEditionDto } from '../../lib/race.types';
 import { selectRunnerStatusKind, selectRunnerStatusLoop } from '../../lib/runner-status.utils';
+import { ButtonLink } from '../atoms/ButtonLink';
 import { CardBody } from '../atoms/Card';
 import { Pill } from '../atoms/Pill';
 import { Show } from '../atoms/Show';
 import { formatRank } from '../molecules/leaderboard-chip.utils';
+import {
+  RUNNER_ROW_CLASS,
+  RUNNER_ROW_DETAIL_CLASS,
+  RUNNER_ROW_NAME_CLASS,
+  RUNNER_ROW_RANK_CLASS,
+} from './leaderboard.utils';
 import { composeRunnerPath } from '../../routes/route.core';
 
 const PODIUM_SIZE = 5;
-const CARD_STYLE = { borderBottom: '1px solid var(--line-soft)' } as const;
-const HEAD_ROW_STYLE = { justifyContent: 'space-between' } as const;
-const SUMMARY_STYLE = { fontSize: 11 } as const;
-const PODIUM_STYLE = { paddingTop: 'var(--d-2)' } as const;
-const LIST_STYLE = { listStyle: 'none', padding: 0, margin: 0 } as const;
-const DOWNLOADS_STYLE = { gap: 'var(--d-3)', marginTop: 'var(--d-2)' } as const;
 
 const STATUS_KEY_BY_KIND = {
   'in-race': 'archives.still-running',
@@ -45,12 +46,14 @@ export function ArchivedEditionCard({ edition, locale }: ArchivedEditionCardProp
   const ranked = standings.data?.standings.ranked ?? [];
 
   return (
-    <CardBody modifier="col" style={CARD_STYLE}>
-      <div className="row" style={HEAD_ROW_STYLE}>
+    <CardBody className="flex flex-col gap-3 border-b border-line-soft">
+      <div className="flex items-center justify-between gap-3">
         <strong>{edition.displayName}</strong>
-        <span className="muted mono">{formatRaceDate(new Date(edition.startsAt), locale)}</span>
+        <span className="font-mono tabular-nums text-ink-3">
+          {formatRaceDate(new Date(edition.startsAt), locale)}
+        </span>
       </div>
-      <div className="muted mono" style={SUMMARY_STYLE}>
+      <div className="font-mono tabular-nums text-[11px] text-ink-3">
         {t('archives.summary', {
           distance: t('common.distance', {
             kilometres: formatKilometres(edition.gpx.distanceMeters),
@@ -60,20 +63,22 @@ export function ArchivedEditionCard({ edition, locale }: ArchivedEditionCardProp
           }),
         })}
       </div>
-      <CardBody modifier="flush" style={PODIUM_STYLE}>
+      <CardBody padding="none" className="pt-2">
         <Show when={ranked.length === 0}>
-          <div className="muted">{t('archives.standings-unavailable')}</div>
+          <div className="text-ink-3">{t('archives.standings-unavailable')}</div>
         </Show>
-        <ul style={LIST_STYLE}>
+        <ul>
           {ranked.slice(0, PODIUM_SIZE).map((entry) => {
             const statusKind = selectRunnerStatusKind(entry.status);
             return (
-              <li key={entry.runner.slug} className="leaderboard-row">
-                <span className="rank mono">{formatRank(entry.rank, t('common.ex-aequo'))}</span>
-                <a href={composeRunnerPath(entry.runner.slug)} className="runner-name">
+              <li key={entry.runner.slug} className={RUNNER_ROW_CLASS}>
+                <span className={RUNNER_ROW_RANK_CLASS}>
+                  {formatRank(entry.rank, t('common.ex-aequo'))}
+                </span>
+                <a href={composeRunnerPath(entry.runner.slug)} className={RUNNER_ROW_NAME_CLASS}>
                   {entry.runner.displayName}
                 </a>
-                <span className="loop-info">
+                <span className={RUNNER_ROW_DETAIL_CLASS}>
                   {t(LOOP_KEY_BY_KIND[statusKind], { loop: selectRunnerStatusLoop(entry.status) })}
                 </span>
                 <Pill tone={statusKind}>{t(STATUS_KEY_BY_KIND[statusKind])}</Pill>
@@ -82,19 +87,19 @@ export function ArchivedEditionCard({ edition, locale }: ArchivedEditionCardProp
           })}
         </ul>
       </CardBody>
-      <div className="row" style={DOWNLOADS_STYLE}>
-        <a
-          className="btn btn-sm"
+      <div className="flex items-center gap-3 mt-2">
+        <ButtonLink
+          size="small"
           href={apiUrl(`/api/standings/${encodeURIComponent(edition.slug)}/csv`)}
         >
           {t('archives.standings-csv')}
-        </a>
-        <a
-          className="btn btn-sm"
+        </ButtonLink>
+        <ButtonLink
+          size="small"
           href={apiUrl(`/api/standings/${encodeURIComponent(edition.slug)}/laps.csv`)}
         >
           {t('archives.laps-csv')}
-        </a>
+        </ButtonLink>
       </div>
     </CardBody>
   );

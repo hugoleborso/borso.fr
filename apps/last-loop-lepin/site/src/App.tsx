@@ -27,7 +27,7 @@ export function App() {
   const Page = PAGE_BY_ROUTE[route.name];
 
   return (
-    <div className="app">
+    <div className="grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_1fr] min-h-screen bg-bg">
       <NavigationBar />
       <Page runnerSlug={route.runnerSlug} />
     </div>

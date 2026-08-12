@@ -29,8 +29,6 @@ import { EditionFormFields } from './EditionFormFields';
 import { useGpxFile } from './useGpxFile';
 
 const ID_PREFIX = 'setup';
-const ACTIONS_STYLE = { gap: 'var(--d-2)', flexWrap: 'wrap' } as const;
-const NOTE_STYLE = { fontSize: 11 } as const;
 
 interface EditionEditFormProps {
   readonly edition: RaceEditionDto;
@@ -105,10 +103,12 @@ export function EditionEditForm({ edition }: EditionEditFormProps) {
     <Card>
       <CardHeader
         title={t('admin.setup.edit-title')}
-        hint={<span className="muted mono">{t('admin.setup.hint-editing')}</span>}
+        hint={
+          <span className="font-mono tabular-nums text-ink-3">{t('admin.setup.hint-editing')}</span>
+        }
       />
       <form
-        className="card-body col"
+        className="flex flex-col gap-3 flex-1 overflow-auto px-5 py-4"
         onSubmit={(event) => {
           event.preventDefault();
           void form.handleSubmit();
@@ -168,7 +168,7 @@ export function EditionEditForm({ edition }: EditionEditFormProps) {
           isGpxRequired={false}
           gpxErrorKey={gpx.errorKey}
           gpxNote={
-            <div className="muted mono" style={NOTE_STYLE}>
+            <div className="font-mono tabular-nums text-[11px] text-ink-3">
               {t('admin.setup.gpx-current', {
                 distance: t('common.distance', {
                   kilometres: formatKilometres(edition.gpx.distanceMeters),
@@ -183,7 +183,7 @@ export function EditionEditForm({ edition }: EditionEditFormProps) {
         <Show when={failure !== null}>
           <ErrorText>{t(failure?.key ?? 'common.error-detail', failure?.parameters)}</ErrorText>
         </Show>
-        <div className="row" style={ACTIONS_STYLE}>
+        <div className="flex flex-wrap items-center gap-2">
           <Button type="submit" variant="primary" disabled={isBusy}>
             {t(
               selectLabel(

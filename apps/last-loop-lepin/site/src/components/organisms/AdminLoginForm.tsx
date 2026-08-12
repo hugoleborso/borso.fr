@@ -43,16 +43,16 @@ export function AdminLoginForm({ onAuthenticated }: AdminLoginFormProps) {
   });
 
   return (
-    <Card modifier="pin-form">
+    <Card className="max-w-[360px] mx-auto my-[10vh] gap-3">
       <CardHeader title={t('admin.title')} />
-      <CardBody modifier="col">
+      <CardBody className="flex flex-col gap-3">
         <form
           onSubmit={(event) => {
             event.preventDefault();
             void form.handleSubmit();
           }}
         >
-          <div className="field">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor={PIN_INPUT_ID}>{t('admin.pin-label')}</Label>
             <form.Field name="pin">
               {(field) => (

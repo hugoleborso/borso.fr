@@ -19,30 +19,42 @@ export function Countdown({ targetEpochMs, label }: CountdownProps) {
   const now = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
   const display = projectCountdownDisplay(targetEpochMs - now);
   return (
-    <div className="countdown countdown-flap" role="timer" aria-live="off">
+    <div
+      className="flex flex-col items-center gap-3 py-3 text-center font-mono tabular-nums text-[clamp(28px,8vw,56px)] font-bold text-ink [overflow-wrap:anywhere]"
+      role="timer"
+      aria-live="off"
+    >
       <Show when={label.length > 0}>
-        <small>{label}</small>
+        <small className="block text-[11px] font-medium uppercase tracking-[0.12em] text-ink-3">
+          {label}
+        </small>
       </Show>
       <div
-        className="flap-row"
+        className="flex items-center gap-3"
         role="img"
         aria-label={`${label} ${display.accessibleValue}`.trim()}
       >
-        <span className="flap-pair">
+        <span className="flex gap-2">
           {display.leftDigits.map((digit, index) => (
             <FlapDigit key={`left-${index}`} digit={digit} />
           ))}
         </span>
-        <span className="flap-colon" aria-hidden>
+        <span
+          className="font-mono text-[clamp(28px,7vw,56px)] leading-none text-ink-mute translate-y-[-6%]"
+          aria-hidden
+        >
           :
         </span>
-        <span className="flap-pair">
+        <span className="flex gap-2">
           {display.rightDigits.map((digit, index) => (
             <FlapDigit key={`right-${index}`} digit={digit} />
           ))}
         </span>
       </div>
-      <small className="flap-format mono" aria-hidden>
+      <small
+        className="block font-mono tabular-nums text-[11px] font-medium uppercase tracking-[0.18em] text-ink-3"
+        aria-hidden
+      >
         {display.format}
       </small>
     </div>

@@ -22,7 +22,7 @@ const TILE_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · &copy; <a href="https://carto.com/attributions">CARTO</a>';
 const TILE_SUBDOMAINS = 'abcd';
 const MAXIMUM_ZOOM = 20;
-const TRACK_COLOR = 'var(--accent, #f43f5e)';
+const TRACK_COLOR = 'var(--color-accent)';
 const TRACK_WEIGHT = 4;
 const TRACK_OPACITY = 0.9;
 const FIT_BOUNDS_PADDING: L.PointTuple = [24, 24];
@@ -30,13 +30,15 @@ const START_ICON_SIZE: L.PointTuple = [16, 16];
 const START_ICON_ANCHOR: L.PointTuple = [8, 8];
 const RUNNER_ICON_SIZE: L.PointTuple = [28, 28];
 const RUNNER_ICON_ANCHOR: L.PointTuple = [14, 14];
+const START_DOT_CLASS =
+  'block w-3.5 h-3.5 rounded-full bg-ink border-2 border-bg shadow-[0_0_0_1px_var(--color-ink)]';
 const PROJECTION_BREADCRUMB_CATEGORY = 'course_map';
 const PROJECTION_BREADCRUMB_MESSAGE = 'course_map_projection_mode';
 
 const FOOTER_STYLE = {
-  padding: 'var(--d-3) var(--d-5)',
+  padding: '12px 20px',
   fontSize: 12,
-  borderTop: '1px solid var(--line-soft)',
+  borderTop: '1px solid var(--color-line-soft)',
 } as const;
 
 const MAP_FRAME_STYLE = {
@@ -86,8 +88,8 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
       }).addTo(map);
       L.marker([startLat, startLng], {
         icon: L.divIcon({
-          className: 'map-start-icon',
-          html: '<span class="map-start-dot"></span>',
+          className: 'bg-transparent border-0',
+          html: `<span class="${START_DOT_CLASS}"></span>`,
           iconSize: START_ICON_SIZE,
           iconAnchor: START_ICON_ANCHOR,
         }),
@@ -116,7 +118,7 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
       for (const marker of listRunnerMarkers(edition, ranked, now.getTime())) {
         L.marker([marker.position.lat, marker.position.lng], {
           icon: L.divIcon({
-            className: 'map-runner-icon',
+            className: 'bg-transparent border-0',
             html: marker.avatarHtml,
             iconSize: RUNNER_ICON_SIZE,
             iconAnchor: RUNNER_ICON_ANCHOR,
@@ -137,10 +139,12 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
   return (
     <>
       <Show when={points.length === 0}>
-        <div className="card-body muted">{t('course-map.track-pending')}</div>
+        <div className="flex-1 overflow-auto px-5 py-4 text-ink-3">
+          {t('course-map.track-pending')}
+        </div>
       </Show>
       <Show when={points.length > 0}>
-        <div className="card-body flush" style={MAP_FRAME_STYLE}>
+        <div className="flex-1 overflow-auto p-0" style={MAP_FRAME_STYLE}>
           <div
             ref={attachMap}
             className="course-map"
@@ -148,7 +152,7 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
             aria-label={t('course-map.aria-label', { distance })}
             style={MAP_CANVAS_STYLE}
           />
-          <div className="muted mono" style={FOOTER_STYLE}>
+          <div className="font-mono tabular-nums text-ink-3" style={FOOTER_STYLE}>
             {t('course-map.summary', { distance, elevation })}
           </div>
         </div>

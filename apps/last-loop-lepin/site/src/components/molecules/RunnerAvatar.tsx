@@ -1,6 +1,11 @@
 import * as Sentry from '@sentry/react';
 import { useState } from 'react';
-import { buildRunnerAvatar, type RunnerAvatarSurface } from '../../lib/runner-avatar.utils';
+import {
+  buildRunnerAvatar,
+  RUNNER_AVATAR_INITIALS_CLASS,
+  RUNNER_AVATAR_PHOTO_CLASS,
+  type RunnerAvatarSurface,
+} from '../../lib/runner-avatar.utils';
 import { InitialsAvatar } from '../atoms/InitialsAvatar';
 import { selectRunnerAvatarView } from './runner-avatar-view.utils';
 
@@ -38,7 +43,7 @@ export function RunnerAvatar({ runner, size, surface }: RunnerAvatarProps) {
   const PHOTO_BY_VIEW = {
     photo: (
       <img
-        className="runner-avatar runner-avatar--photo"
+        className={RUNNER_AVATAR_PHOTO_CLASS}
         src={view.photoUrl}
         alt={runner.displayName}
         data-runner-slug={runner.slug}
@@ -58,7 +63,7 @@ export function RunnerAvatar({ runner, size, surface }: RunnerAvatarProps) {
       <InitialsAvatar
         initials={view.initials}
         backgroundColor={view.backgroundColor}
-        className="runner-avatar runner-avatar--initials"
+        className={RUNNER_AVATAR_INITIALS_CLASS}
         style={boxStyle}
         runnerSlug={runner.slug}
         surface={surface}

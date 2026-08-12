@@ -15,11 +15,7 @@ import { CardHeader } from '../molecules/CardHeader';
 import { type AdminErrorMessage, selectPunchError } from './admin-errors.core';
 import { countValidPunches } from './runner-loop-history.core';
 import { selectPunchTone, selectToggledRunner } from './correction-panel.core';
-
-const ROW_STYLE = { gap: 'var(--d-2)' } as const;
-const TOGGLE_STYLE = { justifyContent: 'space-between' } as const;
-const LIST_STYLE = { listStyle: 'none', padding: 0, margin: 0 } as const;
-const EMPTY_ROW_STYLE = { padding: '6px 0' } as const;
+import { RUNNER_ROW_CLASS, RUNNER_ROW_RANK_CLASS } from './leaderboard.utils';
 
 interface CorrectionPanelProps {
   readonly edition: RaceEditionDto;
@@ -54,24 +50,26 @@ function RunnerPunches({ runner, editionSlug, isOpen, onToggle, onFailure }: Run
   }
 
   return (
-    <div className="col" style={ROW_STYLE}>
-      <Button onClick={onToggle} style={TOGGLE_STYLE}>
+    <div className="flex flex-col gap-2">
+      <Button onClick={onToggle} justify="between">
         <span>{runner.displayName}</span>
-        <span className="muted mono">
+        <span className="font-mono tabular-nums text-ink-3">
           {t('admin.corrections.loop-count', { count: countValidPunches(rows) })}
         </span>
       </Button>
       <Show when={isOpen}>
-        <ul style={LIST_STYLE}>
+        <ul>
           <Show when={rows.length === 0}>
-            <li className="muted" style={EMPTY_ROW_STYLE}>
-              {t('admin.corrections.no-punch')}
-            </li>
+            <li className="py-1.5 text-ink-3">{t('admin.corrections.no-punch')}</li>
           </Show>
           {rows.map((punch) => (
-            <li key={punch.id} className="leaderboard-row">
-              <span className="rank mono">{t('common.loop-short', { loop: punch.loopIndex })}</span>
-              <span className="muted mono">{formatHourMinute(new Date(punch.finishedAt))}</span>
+            <li key={punch.id} className={RUNNER_ROW_CLASS}>
+              <span className={RUNNER_ROW_RANK_CLASS}>
+                {t('common.loop-short', { loop: punch.loopIndex })}
+              </span>
+              <span className="font-mono tabular-nums text-ink-3">
+                {formatHourMinute(new Date(punch.finishedAt))}
+              </span>
               <Pill tone={selectPunchTone(punch.voidedAt)}>
                 {t(
                   selectLabel(
@@ -94,7 +92,7 @@ function RunnerPunches({ runner, editionSlug, isOpen, onToggle, onFailure }: Run
                 </Button>
               </Show>
               <Show when={punch.voidedAt !== null}>
-                <span className="muted mono">{t('common.empty-value')}</span>
+                <span className="font-mono tabular-nums text-ink-3">{t('common.empty-value')}</span>
               </Show>
             </li>
           ))}
@@ -117,14 +115,16 @@ export function CorrectionPanel({ edition }: CorrectionPanelProps) {
     <Card>
       <CardHeader
         title={t('admin.corrections.title')}
-        hint={<span className="muted mono">{t('admin.corrections.hint')}</span>}
+        hint={
+          <span className="font-mono tabular-nums text-ink-3">{t('admin.corrections.hint')}</span>
+        }
       />
-      <CardBody modifier="col">
+      <CardBody className="flex flex-col gap-3">
         <Show when={failure !== null}>
           <ErrorText>{t(failure?.key ?? 'common.error-detail', failure?.parameters)}</ErrorText>
         </Show>
         <Show when={runners.length === 0}>
-          <div className="muted">{t('admin.corrections.empty')}</div>
+          <div className="text-ink-3">{t('admin.corrections.empty')}</div>
         </Show>
         {runners.map((runner) => (
           <RunnerPunches

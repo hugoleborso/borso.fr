@@ -17,8 +17,6 @@ import { CardHeader } from '../molecules/CardHeader';
 import { type AdminErrorMessage, selectEditionWriteError } from './admin-errors.core';
 import { type EditionStatusTransition, selectNextTransition } from './edition-form.core';
 
-const ACTIONS_STYLE = { gap: 'var(--d-2)', flexWrap: 'wrap' } as const;
-
 const TITLE_KEY_BY_STATUS = {
   setup: 'admin.setup.current-edition-title',
   live: 'admin.setup.current-edition-title',
@@ -79,7 +77,7 @@ export function StartedEditionCard({ edition, locale }: StartedEditionCardProps)
       <CardHeader
         title={t(TITLE_KEY_BY_STATUS[edition.status])}
         hint={
-          <span className="muted mono">
+          <span className="font-mono tabular-nums text-ink-3">
             {t('admin.setup.edition-summary', {
               name: edition.displayName,
               status: edition.status,
@@ -87,8 +85,8 @@ export function StartedEditionCard({ edition, locale }: StartedEditionCardProps)
           </span>
         }
       />
-      <CardBody modifier="col">
-        <div className="muted mono">
+      <CardBody className="flex flex-col gap-3">
+        <div className="font-mono tabular-nums text-ink-3">
           {t('admin.setup.distance-line', {
             distance: t('common.distance', {
               kilometres: formatKilometres(edition.gpx.distanceMeters),
@@ -98,7 +96,7 @@ export function StartedEditionCard({ edition, locale }: StartedEditionCardProps)
             }),
           })}
         </div>
-        <div className="muted mono">
+        <div className="font-mono tabular-nums text-ink-3">
           {t('admin.setup.sun-line', {
             sunrise: formatTimeOfDay(new Date(edition.sunriseAt), locale),
             sunset: formatTimeOfDay(new Date(edition.sunsetAt), locale),
@@ -107,7 +105,7 @@ export function StartedEditionCard({ edition, locale }: StartedEditionCardProps)
         <Show when={failure !== null}>
           <ErrorText>{t(failure?.key ?? 'common.error-detail', failure?.parameters)}</ErrorText>
         </Show>
-        <div className="row" style={ACTIONS_STYLE}>
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="primary"
             onClick={applyTransition}

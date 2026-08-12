@@ -38,7 +38,7 @@ export function FormField({
   style,
 }: FormFieldProps) {
   return (
-    <div className="field" style={style}>
+    <div className="flex flex-col gap-1.5" style={style}>
       <Label htmlFor={id}>{label}</Label>
       <Input
         id={id}

@@ -26,7 +26,10 @@ export function CorrectionBanner({ correctedAt }: CorrectionBannerProps) {
           key={correctionTime.getTime()}
           when={isCorrectionBannerVisible(correctionTime, nowMs)}
         >
-          <div className="banner" role="status">
+          <div
+            className="px-5 py-3 text-center font-mono text-[12px] bg-warn/20 text-warn border-b border-warn/40"
+            role="status"
+          >
             {t('correction-banner.message', { time: formatHourMinute(correctionTime) })}
           </div>
         </Show>

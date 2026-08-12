@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { composeRunnerPath, parseRoute, selectNavigationClassName } from './route.core';
+import { composeRunnerPath, parseRoute, selectNavigationState } from './route.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('parseRoute', () => {
@@ -32,17 +32,17 @@ describe('parseRoute', () => {
   });
 });
 
-describe('selectNavigationClassName', () => {
+describe('selectNavigationState', () => {
   it('marks the link of the page in view as active', () => {
-    expect(selectNavigationClassName('/archives', 'archives')).toBe('active');
+    expect(selectNavigationState('/archives', 'archives')).toBe('active');
   });
 
   it('marks the root as the spectator link', () => {
-    expect(selectNavigationClassName('/', 'spectator')).toBe('active');
+    expect(selectNavigationState('/', 'spectator')).toBe('active');
   });
 
-  it('leaves the other links bare', () => {
-    expect(selectNavigationClassName('/admin', 'archives')).toBe('');
+  it('leaves the other links inactive', () => {
+    expect(selectNavigationState('/admin', 'archives')).toBe('inactive');
   });
 });
 

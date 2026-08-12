@@ -42,16 +42,11 @@ function ConfirmBody({ runner, onConfirm, onClose }: BodyProps) {
           loop: selectTargetLoopIndex(runner),
         })}
       </p>
-      <div className="self-punch-modal__actions">
+      <div className="flex justify-end gap-2">
         <Button onClick={onClose}>{t('common.action.cancel')}</Button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={onConfirm}
-          data-testid="self-punch-confirm"
-        >
+        <Button variant="primary" onClick={onConfirm} testId="self-punch-confirm">
           {t('self-punch.confirm-action')}
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -188,32 +183,32 @@ export function SelfPunchModal({ runner, editionSlug, onClose }: SelfPunchModalP
   const Body = BODY_BY_STATE[state.kind];
 
   return (
-    <div className="self-punch-modal-backdrop">
+    <div className="fixed inset-0 z-1000 flex items-center justify-center p-4 bg-bg/80 backdrop-blur-[6px]">
       <button
         type="button"
-        className="self-punch-modal-dismiss"
+        className="absolute inset-0 p-0 bg-transparent border-0"
         aria-label={t('self-punch.dismiss')}
         onClick={onClose}
       />
       <div
-        className="self-punch-modal"
+        className="relative z-1 flex flex-col gap-4 w-full max-w-[420px] p-5 rounded-xl border border-line bg-bg-elev shadow-[0_12px_40px_rgba(0,0,0,0.45)]"
         role="dialog"
         aria-modal="true"
         aria-label={t('self-punch.dialog-label')}
       >
-        <div className="self-punch-modal__head">
+        <div className="flex items-center gap-3">
           <RunnerAvatar runner={runner.runner} size={AVATAR_SIZE_PX} surface="modal" />
-          <div className="self-punch-modal__head-text">
+          <div className="flex flex-col gap-1 min-w-0">
             <strong>{runner.runner.displayName}</strong>
             <Show when={runner.runner.bib !== null}>
-              <span className="muted mono">#{runner.runner.bib}</span>
+              <span className="font-mono tabular-nums text-ink-3">#{runner.runner.bib}</span>
             </Show>
-            <a className="muted" href={composeRunnerPath(runner.runner.slug)}>
+            <a className="text-ink-3" href={composeRunnerPath(runner.runner.slug)}>
               {t('self-punch.profile-link')}
             </a>
           </div>
         </div>
-        <div className="self-punch-modal__body">
+        <div className="flex flex-col gap-3">
           <Body
             runner={runner}
             state={state}
