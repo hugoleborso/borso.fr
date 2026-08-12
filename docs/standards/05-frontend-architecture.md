@@ -70,6 +70,15 @@ imports a molecule, calls a query hook, or holds flow state is an organism.
 A component that imports a sibling from its own folder is usually wrong,
 because the sibling normally belongs one folder down.
 
+Read the answer in both directions. A file sitting in `molecules/` or
+`organisms/` that imports no component is not the thing its folder says it is:
+either it renders one element and owns no composition, in which case it is an
+atom and moves down, or it renders raw markup where an atom belongs, in which
+case the primitive it inlined moves out to `atoms/` and it composes it. Both
+cases read the same from the folder tree, as a populated bucket whose atoms do
+not exist, which is exactly what the review the tree is supposed to support
+cannot see.
+
 ## Layouts we do not use
 
 We do not use a flat `components/` folder, a `ui/` folder that holds
@@ -117,6 +126,10 @@ Write the mobile layout first, and then opt into the desktop layout with `lg:`.
 - `borso/atomic-design-import-direction`, a custom ESLint rule, which fails
   when an atom imports from `molecules/` or `organisms/`, or a molecule imports
   from `organisms/`.
+- `borso/atomic-design-composition`, a custom ESLint rule, which fails when a
+  file in `molecules/` or `organisms/` renders markup and imports no component
+  at all. The direction rule keeps the dependency arrow pointing one way, and
+  this one asks that the arrow exist.
 - `borso/no-flat-components-folder`, a custom ESLint rule, which fails on a
   component placed directly under `components/`.
 - `borso/no-query-hooks-outside-organisms`, a custom ESLint rule, which rejects

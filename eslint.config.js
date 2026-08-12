@@ -250,6 +250,7 @@ export default tseslint.config(
     rules: {
       'borso/no-use-effect': 'error',
       'borso/no-server-state-in-use-state': 'error',
+      'borso/atomic-design-composition': 'error',
       'borso/atomic-design-import-direction': 'error',
       'borso/no-flat-components-folder': 'error',
       'borso/no-query-hooks-outside-organisms': 'error',

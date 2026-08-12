@@ -1,3 +1,4 @@
+import atomicDesignComposition from './atomic-design-composition.js';
 import atomicDesignImportDirection from './atomic-design-import-direction.js';
 import conditionsLiveInPureFunctions from './conditions-live-in-pure-functions.js';
 import functionNamesAreVerbPhrases from './function-names-are-verb-phrases.js';
@@ -40,6 +41,7 @@ import testFileHasSiblingSource from './test-file-has-sibling-source.js';
 export const borsoPlugin = {
   meta: { name: 'borso' },
   rules: {
+    'atomic-design-composition': atomicDesignComposition,
     'atomic-design-import-direction': atomicDesignImportDirection,
     'conditions-live-in-pure-functions': conditionsLiveInPureFunctions,
     'function-names-are-verb-phrases': functionNamesAreVerbPhrases,

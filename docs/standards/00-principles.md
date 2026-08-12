@@ -75,6 +75,14 @@ styling goes through Tailwind utility classes every time. Where a standard
 names a library, the library is the only option, and adding a second one is a
 decision that needs an [architecture decision record](../adr/README.md).
 
+## A standard states the rule, never its history
+
+Write what the code has to look like today. A reader does not need to know that
+a check was missing, that a path was wrong, or which review turned the rule up,
+and every sentence of that kind is one more sentence between them and the rule.
+The history belongs in `git log`, in the pull request, and in
+[the dantotsus](../dantotsus/) when it cost us something.
+
 ## How these documents are written
 
 The prose follows the rules in

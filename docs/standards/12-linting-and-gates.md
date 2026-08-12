@@ -63,6 +63,7 @@ git.
 | `borso/no-controller-imports-outside-service`          | [04](./04-backend-architecture.md)                         |
 | `borso/no-array-methods-in-controllers`                | [04](./04-backend-architecture.md)                         |
 | `borso/no-database-client-outside-repository`          | [04](./04-backend-architecture.md), [11](./11-database.md) |
+| `borso/atomic-design-composition`                      | [05](./05-frontend-architecture.md)                        |
 | `borso/atomic-design-import-direction`                 | [05](./05-frontend-architecture.md)                        |
 | `borso/no-query-hooks-outside-organisms`               | [05](./05-frontend-architecture.md)                        |
 | `borso/no-direct-api-fetch-in-site`                    | [06](./06-data-fetching.md)                                |

@@ -93,8 +93,6 @@ and `lg:` for wider screens. See
   index rather than walking the filesystem, because `coverage/` and
   `.stryker-tmp/` are gitignored and both contain CSS.
 
-This entry named that check for months before it existed, and the two
-applications it named a path for did not use that path. If you add a rule here,
-add the thing that enforces it in the same change, or write that it is reviewed
-by hand. See
+Add the thing that enforces a rule in the same change that states it, or write
+that the rule is reviewed by hand. See
 [an approval gate that only existed in a comment](../dantotsus/an-approval-gate-that-only-existed-in-a-comment.md).
