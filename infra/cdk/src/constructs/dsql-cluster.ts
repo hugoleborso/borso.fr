@@ -27,7 +27,6 @@ function grantDsqlConnect(grantable: IGrantable, clusterArn: string): void {
  * {@link lookupDsqlCluster} (when a preview / integ stack references the
  * existing prod-owned cluster via SSM).
  *
- * @beta
  */
 export interface IDsqlCluster {
   readonly clusterArn: string;
@@ -36,7 +35,6 @@ export interface IDsqlCluster {
   grantConnect(grantable: IGrantable): void;
 }
 
-/** @beta */
 export interface DsqlClusterProps {
   readonly app: string;
   /**
@@ -62,7 +60,6 @@ export interface DsqlClusterProps {
  * schema (`prod`) and preview schemas (`pr_<n>`); see {@link DsqlSchema}
  * and {@link lookupDsqlCluster}.
  *
- * @beta
  */
 export class DsqlCluster extends Construct implements IDsqlCluster {
   public readonly clusterArn: string;
@@ -116,7 +113,6 @@ export class DsqlCluster extends Construct implements IDsqlCluster {
  * `PreviewableApp.database.cluster` — that gives you a cross-stack
  * reference, deterministic deploy order via CDK, and no SSM ceremony.
  *
- * @beta
  */
 export function lookupDsqlCluster(scope: Construct, app: string): IDsqlCluster {
   validateAppSlug(app);

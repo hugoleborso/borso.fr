@@ -49,7 +49,6 @@ function resolveRunnerEntry(): string {
 }
 /* v8 ignore stop */
 
-/** @beta */
 export interface DsqlSchemaCloneFromConfig {
   /**
    * Source schema in the SAME cluster to clone structure + data from.
@@ -84,7 +83,6 @@ export interface DsqlSchemaCloneFromConfig {
   readonly tablesToReplace?: readonly string[];
 }
 
-/** @beta */
 export interface DsqlSchemaProps {
   readonly app: string;
   readonly stage: Stage;
@@ -167,8 +165,6 @@ function assertCredentialTablesDecided(
  * `DsqlCluster` the same stack creates. For preview/integ stacks, pass
  * `lookupDsqlCluster(scope, app)` — the cluster is owned by the app's
  * prod stack and shared across stages.
- *
- * @beta
  *
  * @Blueprint cdk-custom-resource
  * @BlueprintName CDK Custom Resource

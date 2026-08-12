@@ -13,7 +13,6 @@
  * docs/dantotsus/the-nightly-sweeper-never-had-permission-to-run.md and
  * docs/knowledge/github-oidc-sub-claim-per-trigger.md.
  *
- * @beta
  */
 
 import { FederatedPrincipal } from 'aws-cdk-lib/aws-iam';

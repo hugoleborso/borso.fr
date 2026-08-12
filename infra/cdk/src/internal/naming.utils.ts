@@ -4,7 +4,6 @@
  * Constructs MUST route every name through here so the conventions stay
  * consistent and enforceable by IAM policies.
  *
- * @beta
  */
 
 /**

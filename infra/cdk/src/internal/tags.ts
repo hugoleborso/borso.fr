@@ -18,7 +18,6 @@ const STAGE_ONLY_TAGS: Readonly<Record<Stage, Readonly<Record<string, string>>>>
  * IAM policies on the integ + preview roles are scoped to these tags;
  * dropping or renaming a tag breaks deploys, so don't.
  *
- * @beta
  */
 export interface StandardTagOptions {
   readonly app: string;
@@ -40,7 +39,6 @@ export interface StandardTag {
  * `CfnResource` has to carry the same tags in its own properties. Both callers
  * read them from here so the two forms cannot drift apart.
  *
- * @beta
  */
 export function standardTagPairs(opts: StandardTagOptions): readonly StandardTag[] {
   const prNumberTags =

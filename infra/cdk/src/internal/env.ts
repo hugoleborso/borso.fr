@@ -5,7 +5,6 @@
  * with an actionable error when it isn't — apps should never reach into
  * `process.env` directly when a helper exists for the value.
  *
- * @beta
  */
 
 import { assertDeployStage, type Stage } from './naming.utils.js';

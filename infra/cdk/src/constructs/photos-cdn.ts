@@ -26,8 +26,6 @@ import { applyStandardTags } from '../internal/tags.js';
 const PHOTOS_CACHE_MAX_AGE_SECONDS = 86_400;
 
 /**
- * @beta
- *
  * Inputs for {@link PhotosCdn}. The construct does NOT create the S3 bucket
  * (the bucket lifecycle — `RETAIN` on prod vs. `DESTROY` on previews — lives
  * with the app stack, which owns the user-generated-content trade-off).
@@ -63,8 +61,6 @@ export interface PhotosCdnProps {
  * `https://<hostname>/<photoKey>`, 24h cache (spec Q.O.D. row 7). The
  * bucket stays private — only the OAC service principal can read it; the
  * distribution does the public-facing read.
- *
- * @beta
  *
  * @Blueprint reusable-cdk-construct
  * @BlueprintName Reusable CDK Construct

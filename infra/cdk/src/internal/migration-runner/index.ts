@@ -19,7 +19,6 @@
  *                       when the source schema doesn't exist (first-ever
  *                       deploy of an app).
  *
- * @internal
  */
 
 import { DsqlSigner } from '@aws-sdk/dsql-signer';

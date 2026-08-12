@@ -36,9 +36,6 @@ import {
 import { SHARED_SSM_PARAMETERS } from '../internal/shared-ssm.js';
 import { applyStandardTags } from '../internal/tags.js';
 
-/**
- * @beta
- */
 export interface StaticSiteProps {
   /** App slug, kebab-case (e.g. "borso-fr"). */
   readonly app: string;
@@ -94,7 +91,6 @@ export interface StaticSiteProps {
  *   key prefix; URL is served by the shared previews distribution via
  *   host-based routing (see `cf-host-routing-function.ts`).
  *
- * @beta
  */
 export class StaticSite extends Construct {
   public readonly url: string;

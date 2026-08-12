@@ -2,7 +2,6 @@ import { Stack, type StackProps } from 'aws-cdk-lib';
 import type { Construct } from 'constructs';
 import { DsqlCluster, type IDsqlCluster } from './dsql-cluster.js';
 
-/** @beta */
 export interface DsqlClusterStackProps extends StackProps {
   /** App slug (e.g. "borso-fr"). Drives cluster tags + SSM paths. */
   readonly app: string;
@@ -27,7 +26,6 @@ export interface DsqlClusterStackProps extends StackProps {
  * Expose the cluster via `.cluster: IDsqlCluster` for callers (typically
  * `PreviewableApp.database.cluster`).
  *
- * @beta
  */
 export class DsqlClusterStack extends Stack {
   public readonly cluster: IDsqlCluster;

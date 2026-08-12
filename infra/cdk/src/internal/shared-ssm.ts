@@ -5,7 +5,6 @@
  * here read them at synth time. Both sides import this table, so renaming a
  * key is a type error on the writer and on every reader at once.
  *
- * @beta
  */
 export const SHARED_SSM_PARAMETERS = {
   oidcProviderArn: '/borso/shared/oidc-provider-arn',

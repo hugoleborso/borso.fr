@@ -20,7 +20,6 @@ import { DsqlSchema, type DsqlSchemaCloneFromConfig } from './dsql-schema.js';
 import { LambdaApi } from './lambda-api.js';
 import { StaticSite } from './static-site.js';
 
-/** @beta */
 export interface PreviewableAppProps {
   readonly app: string;
   readonly stage: Stage;
@@ -94,7 +93,6 @@ export interface PreviewableAppProps {
  *
  * Cert ARN + hosted zone come from SSM, seeded by `SharedStack`.
  *
- * @beta
  */
 export class PreviewableApp extends Construct {
   public readonly site: StaticSite;

@@ -7,7 +7,6 @@
  * so it can be syntax-highlighted, lint-checked, and unit-tested as real
  * JS instead of an unparsed template literal.
  *
- * @beta
  */
 
 import { readFileSync } from 'node:fs';
