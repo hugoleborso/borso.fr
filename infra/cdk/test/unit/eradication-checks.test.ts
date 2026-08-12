@@ -14,8 +14,10 @@ import { describe, expect, it } from 'vitest';
  */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(HERE, '../../../..');
 const CONSTRUCTS_DIR = path.resolve(HERE, '../../src/constructs');
 const INTERNAL_DIR = path.resolve(HERE, '../../src/internal');
+const SHARED_LIB_DIR = path.resolve(HERE, '../../../shared/lib');
 
 function readStripped(filePath: string): string {
   const source = fs.readFileSync(filePath, 'utf-8');
@@ -76,6 +78,29 @@ describe('eradication: no RemovalPolicy.RETAIN on static-site buckets', () => {
 
   it('does not reference RemovalPolicy.RETAIN', () => {
     expect(stripped).not.toMatch(/RemovalPolicy\.RETAIN/);
+  });
+});
+
+// @FollowsBlueprint test-source-invariant
+describe('eradication: shared SSM parameter names live in one module', () => {
+  // The names used to be retyped in three constructs and again in the
+  // shared stack that writes them, so a rename in the writer left a
+  // reader pointing at a path nobody publishes — a failure that surfaces
+  // only at runtime, since a missing SSM path synthesizes fine.
+  const SHARED_SSM_PREFIX = '/borso/shared/';
+  const OWNING_MODULE = path.join(INTERNAL_DIR, 'shared-ssm.ts');
+  const scannedFiles = [CONSTRUCTS_DIR, INTERNAL_DIR, SHARED_LIB_DIR]
+    .flatMap((dir) =>
+      fs
+        .readdirSync(dir)
+        .filter((name) => name.endsWith('.ts'))
+        .map((name) => path.join(dir, name)),
+    )
+    .filter((file) => file !== OWNING_MODULE)
+    .map((file) => path.relative(REPO_ROOT, file));
+
+  it.each(scannedFiles)('%s', (file) => {
+    expect(readStripped(path.join(REPO_ROOT, file))).not.toContain(SHARED_SSM_PREFIX);
   });
 });
 

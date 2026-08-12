@@ -9,6 +9,7 @@ import {
   type Stage,
   validateAppSlug,
 } from '../internal/naming.utils.js';
+import { SHARED_SSM_PARAMETERS } from '../internal/shared-ssm.js';
 import {
   selectSameOriginApiDomainName,
   selectTestSeedEnvironment,
@@ -18,12 +19,6 @@ import type { IDsqlCluster } from './dsql-cluster.js';
 import { DsqlSchema, type DsqlSchemaCloneFromConfig } from './dsql-schema.js';
 import { LambdaApi } from './lambda-api.js';
 import { StaticSite } from './static-site.js';
-
-const SHARED_SSM = {
-  hostedZoneId: '/borso/shared/hosted-zone-id',
-  hostedZoneName: '/borso/shared/hosted-zone-name',
-  certPreviewRegionalArn: '/borso/shared/cert-preview-borso-fr-regional-arn',
-} as const;
 
 /** @beta */
 export interface PreviewableAppProps {
@@ -226,9 +221,15 @@ function resolveApiCustomDomain(
     hostname,
     certificateArn: StringParameter.valueForStringParameter(
       scope,
-      SHARED_SSM.certPreviewRegionalArn,
+      SHARED_SSM_PARAMETERS.certPreviewRegionalArn,
     ),
-    hostedZoneId: StringParameter.valueForStringParameter(scope, SHARED_SSM.hostedZoneId),
-    hostedZoneName: StringParameter.valueForStringParameter(scope, SHARED_SSM.hostedZoneName),
+    hostedZoneId: StringParameter.valueForStringParameter(
+      scope,
+      SHARED_SSM_PARAMETERS.hostedZoneId,
+    ),
+    hostedZoneName: StringParameter.valueForStringParameter(
+      scope,
+      SHARED_SSM_PARAMETERS.hostedZoneName,
+    ),
   };
 }

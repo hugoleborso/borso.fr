@@ -32,3 +32,4 @@ export { frontendOrigin, isProductionStage, type Stage } from './internal/naming
 export type { GithubSubject, SubjectKind } from './internal/oidc.js';
 // Lower-level helpers needed by infra/shared/ (sibling workspace).
 export { GITHUB_OIDC_ISSUER, githubActionsPrincipal, githubSubClaims } from './internal/oidc.js';
+export { SHARED_SSM_PARAMETERS } from './internal/shared-ssm.js';

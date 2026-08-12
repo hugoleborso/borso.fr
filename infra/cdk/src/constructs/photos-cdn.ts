@@ -20,14 +20,8 @@ import {
   type Stage,
   validateAppSlug,
 } from '../internal/naming.utils.js';
+import { SHARED_SSM_PARAMETERS } from '../internal/shared-ssm.js';
 import { applyStandardTags } from '../internal/tags.js';
-
-const SHARED_SSM = {
-  hostedZoneId: '/borso/shared/hosted-zone-id',
-  hostedZoneName: '/borso/shared/hosted-zone-name',
-  certBorsoFrArn: '/borso/shared/cert-borso-fr-arn',
-  certPreviewArn: '/borso/shared/cert-preview-borso-fr-arn',
-} as const;
 
 const PHOTOS_CACHE_MAX_AGE_SECONDS = 86_400;
 
@@ -89,8 +83,8 @@ export class PhotosCdn extends Construct {
     this.hostname = props.hostname;
 
     const certSsmPath = isProductionStage(props.stage)
-      ? SHARED_SSM.certBorsoFrArn
-      : SHARED_SSM.certPreviewArn;
+      ? SHARED_SSM_PARAMETERS.certBorsoFrArn
+      : SHARED_SSM_PARAMETERS.certPreviewArn;
     const certArn = StringParameter.valueForStringParameter(this, certSsmPath);
     const certificate = Certificate.fromCertificateArn(this, 'Cert', certArn);
 
@@ -120,8 +114,14 @@ export class PhotosCdn extends Construct {
       priceClass: PriceClass.PRICE_CLASS_100,
     });
 
-    const zoneName = StringParameter.valueForStringParameter(this, SHARED_SSM.hostedZoneName);
-    const zoneId = StringParameter.valueForStringParameter(this, SHARED_SSM.hostedZoneId);
+    const zoneName = StringParameter.valueForStringParameter(
+      this,
+      SHARED_SSM_PARAMETERS.hostedZoneName,
+    );
+    const zoneId = StringParameter.valueForStringParameter(
+      this,
+      SHARED_SSM_PARAMETERS.hostedZoneId,
+    );
     const zone = HostedZone.fromHostedZoneAttributes(this, 'Zone', {
       hostedZoneId: zoneId,
       zoneName,
