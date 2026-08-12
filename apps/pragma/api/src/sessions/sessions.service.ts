@@ -18,13 +18,18 @@ import {
   type SessionRow,
   updateSession,
 } from './sessions.repository';
-import type { sessionCreateSchema, sessionUpdateSchema } from './sessions.schema';
+import {
+  type SessionPersistedUpdate,
+  type sessionCreateSchema,
+  sessionPersistedUpdateSchema,
+  type sessionUpdateSchema,
+} from './sessions.schema';
 
 type SessionCreateInput = z.infer<typeof sessionCreateSchema>;
 type SessionUpdateInput = z.infer<typeof sessionUpdateSchema>;
 
-function valuesFromUpdate(input: SessionUpdateInput): Record<string, unknown> {
-  const updates: Record<string, unknown> = {};
+function valuesFromUpdate(input: SessionUpdateInput): SessionPersistedUpdate {
+  const updates: SessionPersistedUpdate = {};
   if (input.date !== undefined) updates.date = new Date(input.date);
   if ('venue' in input && input.venue !== undefined) updates.venue = input.venue;
   if ('capacity' in input && input.capacity !== undefined) updates.capacity = input.capacity;
@@ -35,7 +40,7 @@ function valuesFromUpdate(input: SessionUpdateInput): Record<string, unknown> {
   if ('preparedConcertId' in input && input.preparedConcertId !== undefined) {
     updates.preparedConcertId = input.preparedConcertId;
   }
-  return updates;
+  return sessionPersistedUpdateSchema.parse(updates);
 }
 
 export async function getSessions(): Promise<SessionRow[]> {

@@ -169,6 +169,42 @@ describe('setlists controller (back-e2e)', () => {
     expect(updated.entry.notes).toBe('go!');
   });
 
+  it('writes a lineup override on an entry and clears it again', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, songIds } = await seed(app, cookieHeader);
+    const memberId = crypto.randomUUID();
+    const instrumentId = crypto.randomUUID();
+    const created = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+        method: 'POST',
+        body: { songId: songIds[0] },
+        cookieHeader,
+      }),
+      singleEntryEnvelope,
+    );
+    const withOverride = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries/${created.entry.id}`, {
+        method: 'PUT',
+        body: { lineupOverride: { [memberId]: instrumentId }, keyOverride: 'Bb' },
+        cookieHeader,
+      }),
+      singleEntryEnvelope,
+    );
+    expect(withOverride.entry.lineupOverride).toEqual({ [memberId]: instrumentId });
+    expect(withOverride.entry.keyOverride).toBe('Bb');
+
+    const cleared = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries/${created.entry.id}`, {
+        method: 'PUT',
+        body: { lineupOverride: null, keyOverride: null },
+        cookieHeader,
+      }),
+      singleEntryEnvelope,
+    );
+    expect(cleared.entry.lineupOverride).toBeNull();
+    expect(cleared.entry.keyOverride).toBeNull();
+  });
+
   it('rejects the creation of a second setlist on the same session', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const sessionResponse = await jsonRequest(app, '/api/sessions', {

@@ -30,13 +30,17 @@ export const sessionTable = pgTable('session', {
 // it as TEXT — see docs/knowledge/dsql-postgres-compat-gaps.md §1).
 export const friendsCountSchema = z.record(z.string().uuid(), z.number().int().min(0).max(1_000));
 
+const VENUE_MAX = 256;
+const CAPACITY_MAX = 100_000;
+const GEAR_MAX = 2_048;
+
 export const concertCreateSchema = z
   .object({
     kind: z.literal('concert'),
     date: z.string().datetime(),
-    venue: z.string().trim().min(1).max(256),
-    capacity: z.number().int().min(0).max(100_000),
-    gear: z.string().max(2_048).default(''),
+    venue: z.string().trim().min(1).max(VENUE_MAX),
+    capacity: z.number().int().min(0).max(CAPACITY_MAX),
+    gear: z.string().max(GEAR_MAX).default(''),
     friendsCountPerMember: friendsCountSchema.default({}),
   })
   .strict();
@@ -61,5 +65,24 @@ export const practiceUpdateSchema = practiceCreateSchema
   .partial()
   .extend({ kind: z.literal('practice').optional() });
 export const sessionUpdateSchema = z.union([concertUpdateSchema, practiceUpdateSchema]);
+
+/**
+ * The columns a patch is allowed to write, after the service has turned the
+ * request body into what the row holds. It is a separate schema from
+ * `sessionUpdateSchema` because `date` has already become a `Date` by then,
+ * and `z.date()` rejects the `Invalid Date` a malformed string would produce.
+ */
+export const sessionPersistedUpdateSchema = z
+  .object({
+    date: z.date(),
+    venue: z.string().trim().min(1).max(VENUE_MAX),
+    capacity: z.number().int().min(0).max(CAPACITY_MAX),
+    gear: z.string().max(GEAR_MAX),
+    friendsCountPerMember: friendsCountSchema,
+    preparedConcertId: z.string().uuid().nullable(),
+  })
+  .partial();
+
+export type SessionPersistedUpdate = z.infer<typeof sessionPersistedUpdateSchema>;
 
 export const sessionIdParamSchema = z.object({ id: z.string().uuid() });

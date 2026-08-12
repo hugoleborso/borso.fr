@@ -49,6 +49,13 @@ export const setlistEntryCreateSchema = z.object({
 
 export const setlistEntryUpdateSchema = setlistEntryCreateSchema.partial();
 
+/**
+ * An entry patch needs no reshaping between the request body and the row, so
+ * the schema the controller validates against is also what the repository
+ * writes, and this type is how it travels there.
+ */
+export type SetlistEntryPersistedUpdate = z.infer<typeof setlistEntryUpdateSchema>;
+
 export const setlistReorderSchema = z.object({
   entryIds: z.array(z.string().uuid()).min(1),
 });

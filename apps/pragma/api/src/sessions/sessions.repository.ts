@@ -13,7 +13,7 @@ import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { setlistEntryTable, setlistTable } from '../setlists/setlists.schema';
 import { encodeSessionInsert, type SessionInsertShape } from './sessions.core';
-import { friendsCountSchema, sessionTable } from './sessions.schema';
+import { friendsCountSchema, type SessionPersistedUpdate, sessionTable } from './sessions.schema';
 
 export interface SessionRow {
   id: string;
@@ -70,31 +70,10 @@ function rowToSession(row: SessionRawRow): SessionRow {
 
 type SessionUpdateEncoded = Partial<typeof sessionTable.$inferInsert>;
 
-function encodeUpdate(updates: Record<string, unknown>): SessionUpdateEncoded {
-  const encoded: SessionUpdateEncoded = {};
-  if ('date' in updates && updates.date instanceof Date) encoded.date = updates.date;
-  if ('venue' in updates) {
-    const value = updates.venue;
-    encoded.venue = value === null || typeof value === 'string' ? value : null;
-  }
-  if ('capacity' in updates) {
-    const value = updates.capacity;
-    encoded.capacity = value === null || typeof value === 'number' ? value : null;
-  }
-  if ('gear' in updates) {
-    const value = updates.gear;
-    encoded.gear = value === null || typeof value === 'string' ? value : null;
-  }
-  if ('preparedConcertId' in updates) {
-    const value = updates.preparedConcertId;
-    encoded.preparedConcertId = value === null || typeof value === 'string' ? value : null;
-  }
-  if ('friendsCountPerMember' in updates) {
-    const value = updates.friendsCountPerMember;
-    encoded.friendsCountPerMember =
-      value === null || value === undefined ? null : JSON.stringify(value);
-  }
-  return encoded;
+function encodeUpdate(updates: SessionPersistedUpdate): SessionUpdateEncoded {
+  const { friendsCountPerMember, ...columns } = updates;
+  if (friendsCountPerMember === undefined) return columns;
+  return { ...columns, friendsCountPerMember: JSON.stringify(friendsCountPerMember) };
 }
 
 export async function listSessions(): Promise<SessionRow[]> {
@@ -129,7 +108,7 @@ export async function insertSession(values: SessionInsertShape): Promise<Session
 
 export async function updateSession(
   id: string,
-  updates: Record<string, unknown>,
+  updates: SessionPersistedUpdate,
 ): Promise<SessionRow | null> {
   const database = getDatabase();
   const [row] = await database
