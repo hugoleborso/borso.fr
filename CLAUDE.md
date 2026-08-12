@@ -93,7 +93,7 @@ Two ways an agent/session gets read-only AWS access:
 
 - **Local Claude Code** (terminal): your shell already has `borso-admin` and `borso-claude` AWS SSO profiles configured (see [`docs/aws-setup.md#3`](./docs/aws-setup.md#3-configure-sso-profiles-locally)). Run `aws sso login --profile borso-claude` once per session — creds expire hourly.
 - **Claude Code on the web** (claude.ai/code): set these in the project's environment-configuration UI:
-  - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — long-lived keys for the `claude-readonly` IAM user (rotate every 90 days).
+  - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — long-lived keys for the `AI-Dev-ReadOnly` IAM user. **Currently these arrive as the literal string `proxy-injected`, so no `aws` call works from a web session.** When you see `InvalidClientTokenId`, check the variable's value before concluding anything about the account — the key is almost certainly fine, and IAM access keys never expire on their own.
   - `AWS_REGION=eu-west-3`
   - `AWS_ACCOUNT_ID=<12-digit account id>`
 

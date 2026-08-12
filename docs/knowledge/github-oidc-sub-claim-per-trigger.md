@@ -70,8 +70,13 @@ aws iam get-role --role-name PreviewDeployRole \
   jq '.Statement[].Condition'
 ```
 
-Read-only, so it works with the `claude-readonly` credentials described in
-[`docs/aws-setup.md`](../aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
+**Local shells only, with an admin profile.** Two things stop this working from a
+Claude Code session, and both were learned the hard way: `AI-Dev-ReadOnly`'s
+inline deny starts with `iam:*`, which blocks `iam:GetRole` as surely as
+`iam:CreateRole`; and a remote session receives no AWS credentials at all. So
+when a `sub` claim needs checking from a session, read it off the workflow run
+instead — the failing job's log names the event, and the event determines the
+claim per the table above. See [`docs/aws-setup.md` §12](../aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
 
 ## See also
 
