@@ -78,6 +78,9 @@ jobs:
       # gets caught before merge. Rung-2 eradication (paired with the
       # hook) of docs/dantotsus/dsql-alter-table-only-add-column.md.
       - run: ./scripts/check-migration-sql-dsql-compat.sh
+      # One stylesheet per application, mirroring the pre-commit hook so a push
+      # made with hooks skipped still gets caught.
+      - run: ./scripts/check-single-stylesheet.sh
       # Blueprint annotations, mirroring the pre-commit hook so a push made
       # with hooks skipped still gets caught. Fails on a blueprint missing one
       # of its four tags, a duplicated identifier, a follower naming a

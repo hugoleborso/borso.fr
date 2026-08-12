@@ -27,7 +27,15 @@ for app_dir in apps/*/; do
   # Tracked files only. `coverage/` and `.stryker-tmp/` are both generated and
   # gitignored, and both contain CSS, so a filesystem walk would count reports
   # and mutation sandboxes as application stylesheets.
-  stylesheets="$(git ls-files -- "${app_dir}site" | { /usr/bin/grep -E '\.css$' || true; })"
+  #
+  # `git ls-files` reads the index, which still lists a file deleted in the
+  # working tree but not yet staged, so the deletions are subtracted. Without
+  # that, running this by hand mid-migration reports stylesheets that are
+  # already gone from disk.
+  tracked="$(git ls-files -- "${app_dir}site" | { /usr/bin/grep -E '\.css$' || true; })"
+  removed="$(git ls-files --deleted -- "${app_dir}site" | { /usr/bin/grep -E '\.css$' || true; })"
+  stylesheets="$(/usr/bin/comm -23 <(printf '%s\n' "$tracked" | sort) \
+    <(printf '%s\n' "$removed" | sort) | { /usr/bin/grep -E '\.css$' || true; })"
   [ -n "$stylesheets" ] || continue
 
   count="$(printf '%s\n' "$stylesheets" | wc -l | tr -d ' ')"

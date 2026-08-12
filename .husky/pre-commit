@@ -55,6 +55,13 @@ if [ -n "$staged_lintable" ]; then
   pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts --check
 fi
 
+# One stylesheet per application. A second CSS file is how an application
+# drifts back to global class names, because the first rule that does not fit a
+# utility goes there and the rest follow. A git-index read of four directories,
+# so it costs nothing and belongs on the commit.
+echo "[pre-commit] checking each app ships one stylesheet"
+scripts/check-single-stylesheet.sh
+
 # A non-module <script src> tag ships un-bundled and 404s in preview and
 # production. A grep over the app HTML, so it costs nothing and belongs on the
 # commit rather than the push. Rung-2 eradication of
