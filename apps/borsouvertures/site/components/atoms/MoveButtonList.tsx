@@ -1,4 +1,7 @@
+import { BUTTON_CLASS } from './buttonStyles';
 import { describeMoveInStandardNotation } from './moveNotation.utils';
+
+const MOVE_BUTTON_CLASS = BUTTON_CLASS + ' font-mono text-[0.95rem] tabular-nums';
 
 interface MoveButtonListProps {
   /** UCI moves the user can play at the current ply. */
@@ -16,9 +19,9 @@ interface MoveButtonListProps {
 // @FollowsBlueprint atom-plain
 export function MoveButtonList({ candidates, fen, onPick }: MoveButtonListProps) {
   return (
-    <div className="panel move-button-list">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2 p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
       {candidates.map((uci) => (
-        <button key={uci} type="button" className="btn move-button" onClick={() => onPick(uci)}>
+        <button key={uci} type="button" className={MOVE_BUTTON_CLASS} onClick={() => onPick(uci)}>
           {describeMoveInStandardNotation(uci, fen)}
         </button>
       ))}

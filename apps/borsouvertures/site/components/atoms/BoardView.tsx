@@ -51,7 +51,10 @@ export function BoardView({
   const { theme } = getBoardAppearance(boardStyleId);
   const namedPieces = useMemo(() => buildNamedPieces(t), [t]);
   return (
-    <div className="panel board-container" style={{ width: `${boardWidth}px` }}>
+    <div
+      className="flex justify-center self-start p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]"
+      style={{ width: `${boardWidth}px` }}
+    >
       <Chessboard
         options={{
           id: 'bors-board',

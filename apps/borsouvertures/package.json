@@ -20,12 +20,14 @@
   },
   "dependencies": {
     "@borso/infra": "workspace:*",
+    "@tailwindcss/vite": "4.3.0",
     "chess.js": "^1.0.0",
     "i18next": "^23.16.8",
     "react": "^19.0.0",
     "react-chessboard": "^5.4.0",
     "react-dom": "^19.0.0",
     "react-i18next": "^15.4.0",
+    "tailwindcss": "^4",
     "workbox-window": "^7.4.0"
   },
   "devDependencies": {

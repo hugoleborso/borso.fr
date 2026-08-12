@@ -17,8 +17,8 @@ export function LearnOutOfBookModal() {
       closeLabel={t('common.action.close')}
       onClose={learnTreeMachine.dismissOutOfBook}
     >
-      <p>{t('learn.out-of-book.message')}</p>
-      <div className="controls-row modal-actions">
+      <p className="my-4">{t('learn.out-of-book.message')}</p>
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <Button
           label={t('learn.out-of-book.try-again')}
           onActivate={learnTreeMachine.dismissOutOfBook}

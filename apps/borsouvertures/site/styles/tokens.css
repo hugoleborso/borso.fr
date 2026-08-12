@@ -1,0 +1,92 @@
+/*
+ * Borsouvertures — design tokens bridged to Tailwind v4 through `@theme`.
+ *
+ * Every variable declared here becomes a utility automatically:
+ * `--color-panel` → `bg-panel` / `text-panel` / `border-panel`,
+ * `--breakpoint-triple` → the `triple:` responsive prefix.
+ *
+ * `static` keeps every variable in the built stylesheet even when no utility
+ * references it, because the gradients are read back through
+ * `bg-[image:var(--gradient-…)]` and the page background is read from the
+ * `@layer base` rule below, neither of which the class scanner treats as a
+ * utility that pulls its variable in.
+ */
+
+@import 'tailwindcss';
+
+@theme static {
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Two extra breakpoints for the widths this layout switches at: 601px is
+     where the shell regains its full padding, 900px is where the opening
+     picker becomes three columns. */
+  --breakpoint-roomy: 601px;
+  --breakpoint-triple: 900px;
+
+  --color-page: #0b0b0b;
+  --color-ink: #f5f5f5;
+  --color-accent: #a47dff;
+  --color-accent-deep: #6c63ff;
+  --color-celebrate: #ffd84a;
+  --color-modal: #101010;
+  --color-field: rgba(0, 0, 0, 0.4);
+
+  --color-panel: rgba(255, 255, 255, 0.04);
+  --color-panel-line: rgba(255, 255, 255, 0.08);
+  --color-raised: rgba(255, 255, 255, 0.08);
+  --color-raised-hover: rgba(255, 255, 255, 0.12);
+  --color-sunken: rgba(255, 255, 255, 0.03);
+  --color-sunken-hover: rgba(255, 255, 255, 0.05);
+  --color-edge: rgba(255, 255, 255, 0.15);
+  --color-card-line: rgba(255, 255, 255, 0.12);
+  --color-card-line-hover: rgba(255, 255, 255, 0.25);
+
+  --gradient-accent: linear-gradient(135deg, var(--color-accent-deep), var(--color-accent));
+  --gradient-card-active: linear-gradient(
+    135deg,
+    rgba(164, 125, 255, 0.2),
+    rgba(108, 99, 255, 0.08)
+  );
+  --gradient-track: linear-gradient(135deg, rgba(164, 125, 255, 0.4), rgba(108, 99, 255, 0.25));
+  --gradient-celebrate: linear-gradient(135deg, rgba(255, 215, 0, 0.32), rgba(108, 99, 255, 0.28));
+  --gradient-page:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.05), transparent 35%),
+    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.04), transparent 30%),
+    var(--color-page);
+
+  --animate-celebrate-pulse: celebrate-pulse 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes celebrate-pulse {
+  from {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  to {
+    transform: scale(1.012);
+    filter: brightness(1.08);
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    background-color: var(--color-page);
+  }
+
+  body {
+    min-height: 100vh;
+    background: var(--gradient-page);
+    color: var(--color-ink);
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  /* Tailwind's preflight gives a button the default arrow cursor. */
+  button {
+    cursor: pointer;
+  }
+}

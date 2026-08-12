@@ -23,10 +23,12 @@ interface LearnDrillPanelProps {
 export function LearnDrillPanel({ variationName, areArrowsRevealed }: LearnDrillPanelProps) {
   const { t } = useTranslation();
   return (
-    <div className="panel">
-      <h2>{t('learn.title', { variation: variationName })}</h2>
-      <p>{t('learn.description')}</p>
-      <div className="controls-row">
+    <div className="p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
+      <h2 className="my-[1.17rem] text-[1.17rem] font-bold">
+        {t('learn.title', { variation: variationName })}
+      </h2>
+      <p className="my-4">{t('learn.description')}</p>
+      <div className="flex flex-wrap items-center gap-3">
         <Button label={t('learn.reset')} onActivate={learnTreeMachine.reset} />
         <Button
           label={t(ARROW_LABEL_KEY_BY_VISIBILITY[`${areArrowsRevealed}`])}

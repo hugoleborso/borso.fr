@@ -1,8 +1,10 @@
+import { ACTIVE_BUTTON_CLASS, BUTTON_CLASS } from './buttonStyles';
+
 export type ButtonVariant = 'default' | 'primary';
 
 const CLASS_BY_VARIANT: Record<ButtonVariant, string> = {
-  default: 'btn',
-  primary: 'btn active',
+  default: BUTTON_CLASS,
+  primary: ACTIVE_BUTTON_CLASS,
 };
 
 interface ButtonProps {

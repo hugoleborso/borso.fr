@@ -12,7 +12,7 @@ export function PlayOutOfBookModal() {
       closeLabel={t('common.action.close')}
       onClose={playMachine.dismissOutOfBook}
     >
-      <div className="controls-row modal-actions between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <Button label={t('play.out-of-book.try-again')} onActivate={playMachine.dismissOutOfBook} />
         <Button
           label={t('play.out-of-book.show-moves')}

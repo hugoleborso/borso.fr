@@ -52,8 +52,8 @@ export function CompactOpeningFlow(props: OpeningPanelProps) {
   const BackButton = BACK_BUTTON_BY_STEP[step];
 
   return (
-    <div className="selector-columns">
-      <div className="selector-back">
+    <div className="grid grid-cols-1 gap-3 triple:grid-cols-3">
+      <div className="mb-2">
         <BackButton
           label={t('common.action.back')}
           onActivate={() => setStep(PREVIOUS_STEP_BY_STEP[step])}

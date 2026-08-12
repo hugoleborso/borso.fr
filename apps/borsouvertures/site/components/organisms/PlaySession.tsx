@@ -69,8 +69,8 @@ export function PlaySession({
   const OutOfBookModal = OUT_OF_BOOK_MODAL_BY_STATE[`${snapshot.outOfBookOpen}`];
 
   return (
-    <div className="play-grid">
-      <div className="board-area">
+    <div className="grid gap-4 lg:grid-cols-[1.3fr_0.9fr] lg:items-start">
+      <div className="flex flex-col items-center justify-center lg:block lg:row-span-2 lg:justify-self-start">
         <CompletedBanner lineLabel={lineLabel} />
         <BoardView
           orientation={side}
@@ -82,7 +82,7 @@ export function PlaySession({
           boardWidth={boardWidth}
         />
       </div>
-      <div className="play-aside">
+      <div className="flex flex-col gap-4">
         <PlayBookPanel
           isUndoAllowed={isUndoAllowed(snapshot.playedMovesUci.length, isAutoOpponentEnabled)}
         />

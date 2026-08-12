@@ -9,12 +9,12 @@ export function TopBar() {
   const { t } = useTranslation();
   const { mode, boardStyle } = useAppState();
   return (
-    <header className="panel controls-row topbar">
-      <div className="topbar-left">
-        <h1 className="brand-title">{t('top-bar.brand')}</h1>
+    <header className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
+      <div className="flex flex-wrap items-center gap-3 min-w-0">
+        <h1 className="text-[1rem] font-bold roomy:text-[1.2rem]">{t('top-bar.brand')}</h1>
         <ModeToggle mode={mode} />
       </div>
-      <div className="controls-row">
+      <div className="flex flex-wrap items-center gap-3">
         <BoardStyleSelect boardStyle={boardStyle} />
         <LanguageSwitcher />
       </div>

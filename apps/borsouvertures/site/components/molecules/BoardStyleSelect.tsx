@@ -10,10 +10,10 @@ interface BoardStyleSelectProps {
 export function BoardStyleSelect({ boardStyle }: BoardStyleSelectProps) {
   const { t } = useTranslation();
   return (
-    <div className="controls-row">
+    <div className="flex flex-wrap items-center gap-3">
       <span>{t('top-bar.board-style.label')}</span>
       <select
-        className="select"
+        className="min-h-11 px-[0.6rem] py-[0.4rem] rounded-lg border border-edge bg-field text-ink"
         aria-label={t('top-bar.board-style.label')}
         value={boardStyle}
         onChange={(event) => setBoardStyle(toBoardThemeId(event.target.value, boardStyle))}

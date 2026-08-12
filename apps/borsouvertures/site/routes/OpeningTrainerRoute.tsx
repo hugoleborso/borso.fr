@@ -6,9 +6,9 @@ import { TrainerScreens } from './TrainerScreens';
 // @FollowsBlueprint organism-shell
 export function OpeningTrainerRoute() {
   return (
-    <div className="app-shell">
+    <div className="flex flex-col min-h-screen gap-4 p-2 roomy:p-6">
       <TopBar />
-      <main className="app-main">
+      <main className="flex flex-col gap-4">
         <Suspense fallback={<OpeningsLoadingPanel />}>
           <TrainerScreens />
         </Suspense>

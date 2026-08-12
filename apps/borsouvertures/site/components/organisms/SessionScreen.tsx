@@ -14,8 +14,6 @@ import { PlaySession } from './PlaySession';
 import { PlaySessionControl } from './PlaySessionControl';
 import type { SessionBodyProps, SessionModeControlProps } from './session.types';
 
-const CONTROLS_ROW_STYLE = { justifyContent: 'space-between' } as const;
-
 // @FollowsBlueprint component-lookup-table
 const SESSION_BODY_BY_MODE: ComponentByKind<Mode, SessionBodyProps> = {
   learn: LearnTreeSession,
@@ -50,8 +48,8 @@ export function SessionScreen({ openings }: SessionScreenProps) {
 
   return (
     <>
-      <div className="controls-row" style={CONTROLS_ROW_STYLE}>
-        <div className="controls-row">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button label={t('session.change-selection')} onActivate={() => setView('select')} />
           <ShowMovesToggle areMovesShown={areMovesShown} onToggle={setAreMovesShown} />
           <SessionControl visualization={visualization} isAutoOpponentEnabled={playAutoOpponent} />

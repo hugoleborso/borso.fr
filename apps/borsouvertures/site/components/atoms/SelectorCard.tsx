@@ -9,10 +9,16 @@ export interface SelectorCardProps {
   onSelect: () => void;
 }
 
+const CARD_BASE =
+  'flex w-full items-center gap-3 p-[0.65rem] rounded-[10px] border text-left ' +
+  'transition-[border-color,background] duration-120 ease-[ease] ' +
+  'disabled:cursor-not-allowed disabled:opacity-50';
+
 // @FollowsBlueprint component-lookup-table
 const CARD_CLASS_BY_ACTIVE: ValueByFlag<string> = {
-  true: 'selector-card active',
-  false: 'selector-card',
+  true: CARD_BASE + ' border-accent bg-[image:var(--gradient-card-active)]',
+  false:
+    CARD_BASE + ' border-card-line bg-sunken hover:border-card-line-hover hover:bg-sunken-hover',
 };
 
 // @FollowsBlueprint atom-plain
@@ -21,8 +27,8 @@ export function SelectorCard({ label, meta, board, isActive, onSelect }: Selecto
     <button type="button" className={CARD_CLASS_BY_ACTIVE[`${isActive}`]} onClick={onSelect}>
       {board}
       <div>
-        <div className="title">{label}</div>
-        <div className="meta">{meta}</div>
+        <div className="font-semibold">{label}</div>
+        <div className="text-[0.85rem] opacity-80">{meta}</div>
       </div>
     </button>
   );

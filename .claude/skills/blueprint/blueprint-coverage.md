@@ -17,9 +17,9 @@ that ground.
 
 | Files | Blueprints | Followers | Unmarked | Marked |
 |-------|------------|-----------|----------|--------|
-| 894 | 145 | 800 | 78 | ██████████████████░░ 91% |
+| 895 | 145 | 800 | 79 | ██████████████████░░ 91% |
 
-Of those files, 279 are tests and 615 are the code
+Of those files, 279 are tests and 616 are the code
 they cover.
 
 ## Coverage by application
@@ -27,7 +27,7 @@ they cover.
 | Application | Files | Blueprints | Followers | Unmarked | Marked |
 |-------------|-------|------------|-----------|----------|--------|
 | borso-fr | 84 | 8 | 73 | 9 | ██████████████████░░ 89% |
-| borsouvertures | 137 | 22 | 134 | 7 | ███████████████████░ 95% |
+| borsouvertures | 138 | 22 | 134 | 8 | ███████████████████░ 94% |
 | eslint-rules | 59 | 3 | 54 | 2 | ███████████████████░ 97% |
 | infra-cdk | 47 | 9 | 38 | 9 | ████████████████░░░░ 81% |
 | infra-shared | 8 | 1 | 5 | 2 | ███████████████░░░░░ 75% |
@@ -38,7 +38,7 @@ they cover.
 
 | Layer | Files | Blueprints | Followers | Unmarked | Marked |
 |-------|-------|------------|-----------|----------|--------|
-| atom | 68 | 7 | 61 | 7 | ██████████████████░░ 90% |
+| atom | 69 | 7 | 61 | 8 | ██████████████████░░ 88% |
 | config | 14 | 1 | 5 | 8 | █████████░░░░░░░░░░░ 43% |
 | construct | 7 | 2 | 5 | 1 | █████████████████░░░ 86% |
 | controller | 39 | 6 | 37 | 0 | ████████████████████ 100% |
@@ -72,7 +72,7 @@ they cover.
 | borso-fr | site | types | 1 | 0 | 1 | 0 | ████████████████████ 100% |
 | borso-fr | site | unknown | 22 | 2 | 14 | 8 | █████████████░░░░░░░ 64% |
 | borso-fr | site | utils | 10 | 1 | 10 | 0 | ████████████████████ 100% |
-| borsouvertures | site | atom | 23 | 2 | 27 | 0 | ████████████████████ 100% |
+| borsouvertures | site | atom | 24 | 2 | 27 | 1 | ███████████████████░ 96% |
 | borsouvertures | site | config | 2 | 0 | 1 | 1 | ██████████░░░░░░░░░░ 50% |
 | borsouvertures | site | core | 10 | 0 | 10 | 0 | ████████████████████ 100% |
 | borsouvertures | site | i18n | 8 | 5 | 4 | 0 | ████████████████████ 100% |
@@ -244,6 +244,10 @@ they cover.
 ### borso-fr / site / config — 1 unmarked
 
 - `apps/borso-fr/vite.config.ts`
+
+### borsouvertures / site / atom — 1 unmarked
+
+- `apps/borsouvertures/site/components/atoms/buttonStyles.ts`
 
 ### borsouvertures / site / config — 1 unmarked
 

@@ -71,8 +71,8 @@ export function LearnDrill({ target, side, boardStyle, visualization }: LearnDri
   const OutOfBookModal = OUT_OF_BOOK_MODAL_BY_STATE[`${snapshot.outOfBookOpen}`];
 
   return (
-    <div className="layout">
-      <div className="board-area">
+    <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+      <div className="flex flex-col items-center justify-center lg:block lg:row-span-2 lg:justify-self-start">
         <ClearedBanner openingId={opening.id} variationId={variation.id} />
         <BoardView
           orientation={side}
@@ -84,7 +84,7 @@ export function LearnDrill({ target, side, boardStyle, visualization }: LearnDri
           boardWidth={boardWidth}
         />
       </div>
-      <div className="play-aside">
+      <div className="flex flex-col gap-4">
         <LearnDrillPanel
           variationName={variation.name}
           areArrowsRevealed={snapshot.showRevealedArrows}

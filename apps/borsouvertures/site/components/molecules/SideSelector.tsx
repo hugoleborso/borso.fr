@@ -14,7 +14,7 @@ interface SideSelectorProps {
 export function SideSelector({ side }: SideSelectorProps) {
   const { t } = useTranslation();
   return (
-    <div className="controls-row">
+    <div className="flex flex-wrap items-center gap-3">
       <span>{t('selection.side.label')}</span>
       <ToggleSlider
         isOn={side === 'black'}

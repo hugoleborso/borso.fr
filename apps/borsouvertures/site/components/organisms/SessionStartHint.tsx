@@ -1,8 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { Mode } from '@/state/persistedState.utils';
 
-const HINT_STYLE = { marginTop: '0.5rem', opacity: 0.8 } as const;
-
 // @FollowsBlueprint core-label-key
 const HINT_KEY_BY_MODE: Record<Mode, 'selection.hint.learn' | 'selection.hint.play'> = {
   learn: 'selection.hint.learn',
@@ -17,5 +15,5 @@ interface SessionStartHintProps {
 // @FollowsBlueprint organism-presentational
 export function SessionStartHint({ mode }: SessionStartHintProps) {
   const { t } = useTranslation();
-  return <p style={HINT_STYLE}>{t(HINT_KEY_BY_MODE[mode])}</p>;
+  return <p className="mt-2 mb-4 opacity-80">{t(HINT_KEY_BY_MODE[mode])}</p>;
 }

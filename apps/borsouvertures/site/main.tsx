@@ -3,7 +3,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import '@/i18n/i18n';
 import { OpeningTrainerRoute } from '@/routes/OpeningTrainerRoute';
-import './index.css';
+import './styles/tokens.css';
 
 registerSW();
 

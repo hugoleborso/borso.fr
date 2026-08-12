@@ -259,13 +259,11 @@ export default tseslint.config(
     },
   },
 
-  // The rule's reason is that Tailwind's scanner never sees a class assembled
-  // at runtime, so it holds exactly for the applications on Tailwind and not
-  // for one shipping plain CSS, where a concatenated class name works.
-  // borsouvertures is the last one still on plain CSS and is deliberately
-  // absent here; add it the moment it adopts Tailwind.
+  // Tailwind's scanner never sees a class assembled at runtime, so a
+  // concatenated class name silently ships without its styles. Every
+  // application is on Tailwind now, so the rule applies to all of them.
   {
-    files: ['apps/{pragma,borso-fr,last-loop-lepin}/site/**/*.{ts,tsx}'],
+    files: ['apps/*/site/**/*.{ts,tsx}'],
     plugins: { borso: borsoPlugin },
     rules: { 'borso/no-string-concatenated-class-names': 'error' },
   },
