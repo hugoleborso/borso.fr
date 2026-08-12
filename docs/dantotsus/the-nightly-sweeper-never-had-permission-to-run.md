@@ -91,10 +91,38 @@ have been written against a pull-request-only role.
 - **Code:** commit `2c7e27a` — `githubActionsPrincipal` takes a list of
   subjects; `PreviewDeployRole` names both the pull-request claim and the
   default-branch claim.
-- **Operator action:** required. The fix is inert until `infra/shared` is
-  deployed — dispatch `shared-deploy` with `action=deploy` and
-  `confirm=deploy-shared-infra`. The nightly sweep keeps failing until
-  then.
+- **Operator action:** done. `shared-deploy`
+  [run 8](https://github.com/hugoleborso/borso.fr/actions/runs/31406952157)
+  deployed it on 2026-08-10 at 16:05 UTC.
+
+### Confirmed in production
+
+The next scheduled run,
+[31459042008](https://github.com/hugoleborso/borso.fr/actions/runs/31459042008)
+on 2026-08-11 at 04:37 UTC, is the first green `schedule` run in this
+workflow's history. It authenticated, enumerated every stack, and exited 0
+in 13 seconds:
+
+```
+[active] keeping pragma-pr-46 (PR #46 is OPEN)
+[active] keeping borsouvertures-pr-46 (PR #46 is OPEN)
+…16 stacks, all belonging to open pull requests, all kept…
+```
+
+**It destroyed nothing, which is the correct outcome and worth stating so
+nobody later reads the empty sweep as a second bug.** Every stack in the
+account belonged to an open pull request. The stacks for the pull requests
+that closed the previous day were already gone, torn down by
+`preview.yml`'s close handler — the path that always worked, because it
+runs on `pull_request`. This sweeper is the backstop for what that handler
+misses, and on its first working night there was nothing for it to catch.
+
+The verification took two attempts. The first check-in was armed for 03:30
+UTC because the cron reads `17 3 * * *`; the run had not fired. Scheduled
+workflows on this repository have fired between 04:18 and 06:02 every day
+observed — one to nearly three hours late — so the declared time is not
+when anything happens. See
+[`docs/knowledge/github-scheduled-workflows-fire-late.md`](../knowledge/github-scheduled-workflows-fire-late.md).
 
 ## Eradication (mandatory — code-level)
 

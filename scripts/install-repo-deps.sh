@@ -82,8 +82,24 @@ log "building @borso/infra (its dist is what app cdk typechecks resolve)"
 pnpm --filter @borso/infra run build ||
   note_missing '@borso/infra dist' "@borso/infra did not build. Every app cdk typecheck and cdk/test/stack.test.ts will fail on \"Cannot find module '@borso/infra'\" until you run: pnpm --filter @borso/infra run build"
 
-# 4. AWS CLI v2 — only if the session has AWS creds configured (cloud sessions).
-# Local sessions without AWS_ACCESS_KEY_ID set don't pay this install cost.
+# 4. AWS CLI v2 — only if the session has AWS creds that can actually authenticate.
+#
+# The gate used to be `[ -n "$AWS_ACCESS_KEY_ID" ]`, which a placeholder satisfies.
+# Remote sessions arrive with the literal string `proxy-injected` in both credential
+# variables, so every one of them installed the CLI, printed its version into the
+# SessionStart banner, and handed the agent a tool whose every call fails with
+# `InvalidClientTokenId`. One session read that error as an expired key and spent four
+# messages diagnosing an account that was never broken.
+#
+# An IAM access key id is 16-128 chars beginning `AKIA` (user) or `ASIA` (temporary).
+# Checking the shape costs nothing and turns a misleading tool into an explicit
+# "AWS is unavailable here" line in the banner.
+looks_like_aws_access_key() {
+  case "${1:-}" in
+    AKIA* | ASIA*) [ "${#1}" -ge 16 ] ;;
+    *) return 1 ;;
+  esac
+}
 install_aws_cli() {
   local arch awscli_url tmp
   arch=$(uname -m)
@@ -101,13 +117,19 @@ install_aws_cli() {
   return $status
 }
 
-if [ -n "${AWS_ACCESS_KEY_ID:-}" ] && ! command -v aws >/dev/null 2>&1; then
-  log "AWS_ACCESS_KEY_ID is set but aws CLI is missing; installing AWS CLI v2"
-  if install_aws_cli; then
+if looks_like_aws_access_key "${AWS_ACCESS_KEY_ID:-}"; then
+  if command -v aws >/dev/null 2>&1; then
     log "aws: $(aws --version)"
   else
-    note_missing aws "AWS CLI v2 did not install on $(uname -m). Every 'aws ...' read in a session will fail until it does."
+    log "AWS_ACCESS_KEY_ID looks like a real key but aws CLI is missing; installing AWS CLI v2"
+    if install_aws_cli; then
+      log "aws: $(aws --version)"
+    else
+      note_missing aws "AWS CLI v2 did not install on $(uname -m). Every 'aws ...' read in a session will fail until it does."
+    fi
   fi
+elif [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then
+  log "AWS unavailable: AWS_ACCESS_KEY_ID is set to '${AWS_ACCESS_KEY_ID}', which is not an access key id (expected AKIA…/ASIA…). Do not diagnose the AWS account from this — no aws command in this session can authenticate, and nothing is wrong with the account's keys."
 fi
 
 # 5. actionlint — workflow linter, used by the pre-push hook to catch

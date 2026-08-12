@@ -70,8 +70,27 @@ aws iam get-role --role-name PreviewDeployRole \
   jq '.Statement[].Condition'
 ```
 
-Read-only, so it works with the `claude-readonly` credentials described in
-[`docs/aws-setup.md`](../aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
+**That command needs an admin profile.** `AI-Dev-ReadOnly`'s inline deny starts
+with `iam:*`, so a session using those credentials cannot call `iam:GetRole`,
+`ListRoles` or `ListOpenIDConnectProviders`.
+
+**Use CloudFormation instead. It works with the read-only credentials, and it is
+the better source anyway:**
+
+```bash
+aws cloudformation get-template --stack-name borso-shared \
+  --query 'TemplateBody.Resources.*.Properties.AssumeRolePolicyDocument'
+```
+
+The deployed template carries every deploy role's full trust document, listing
+each accepted sub claim verbatim.
+
+Better than `iam:GetRole` for this job, because `get-template` reflects the
+**deployed** stack rather than the checked-out branch. When an assume-role is
+failing, the question is what the account currently believes, not what `main`
+says it should — and those differ for exactly as long as a merged fix sits
+undeployed. That gap is what let this bug survive six nights: see
+[`the-nightly-sweeper-never-had-permission-to-run.md`](../dantotsus/the-nightly-sweeper-never-had-permission-to-run.md).
 
 ## See also
 

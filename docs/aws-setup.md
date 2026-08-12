@@ -198,31 +198,73 @@ Skip this if you only run Claude Code locally — Pattern A in [`local-dev.md`](
 
 For remote (claude.ai/code) sessions, `aws sso login` doesn't work because there's no browser. The simplest path is a dedicated IAM user with long-lived access keys, scoped strictly read-only. Trade-off: long-lived keys are visible to anyone with edit access on the Claude Code project environment; Anthropic does not yet offer encrypted-at-rest secrets storage. The IAM scope is what bounds the blast radius if a key leaks.
 
-### 12.1 Create the IAM user
+> **A session may arrive with placeholder credentials.** Both variables can hold a literal placeholder instead of a key, in which case every call fails with `InvalidClientTokenId` — which is indistinguishable from a deleted or deactivated key, and has nothing to do with the account. A real key id is 20 chars starting `AKIA`; the secret is 40. `scripts/install-repo-deps.sh` checks that shape and prints `AWS unavailable` to the SessionStart banner instead of installing a CLI that cannot authenticate. Check the banner, and the variable, before touching IAM.
+
+### 12.1 The IAM user
+
+The account already has this user:
+
+| | |
+| --- | --- |
+| User name | `AI-Dev-ReadOnly` |
+| Attached | `ReadOnlyAccess` **and** `job-function/ViewOnlyAccess` |
+| Inline policy | `Explicit-write-deny` |
+
+**Read the account before acting on that table.** It has drifted before — a stale user name here reads back as `NoSuchEntity`, which looks like a deleted user and isn't.
 
 ```bash
-aws --profile borso-admin iam create-user --user-name claude-readonly
+aws --profile borso-admin iam list-users --query 'Users[].UserName' --output table
+aws --profile borso-admin iam list-attached-user-policies --user-name AI-Dev-ReadOnly
+aws --profile borso-admin iam list-user-policies --user-name AI-Dev-ReadOnly
+```
+
+To recreate it from scratch:
+
+```bash
+aws --profile borso-admin iam create-user --user-name AI-Dev-ReadOnly
 
 aws --profile borso-admin iam attach-user-policy \
-  --user-name claude-readonly \
+  --user-name AI-Dev-ReadOnly \
   --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
+aws --profile borso-admin iam attach-user-policy \
+  --user-name AI-Dev-ReadOnly \
+  --policy-arn arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
 
-# Reuse the deny inline policy from step 2 (the ClaudeDev permission set).
+# Same JSON as step 2, so the read-only guarantee stays in sync between the SSO
+# permission set and this user.
 aws --profile borso-admin iam put-user-policy \
-  --user-name claude-readonly \
-  --policy-name ClaudeDevDeny \
+  --user-name AI-Dev-ReadOnly \
+  --policy-name Explicit-write-deny \
   --policy-document file:///path/to/deny.json
 ```
 
-The `deny.json` content is the same JSON from step 2 — keep it identical so the read-only guarantee stays in sync between the SSO permission set and this user.
+### What these credentials can do
+
+Describe/list across CloudFormation, S3, SSM, CloudFront, Lambda, Logs, ACM and Secrets Manager metadata. Mutations are denied, and so is `iam:*` — which means **no session can read the inline deny policy that binds it** (`iam:GetUserPolicy` is inside the deny). Any list of denied verbs, including the one in step 2, is therefore unverifiable from a session and drifts silently. Probe the specific call you need rather than trusting a written list.
+
+Two error shapes, worth telling apart:
+
+- **explicit deny** → the inline policy refused (`iam:*`, `dsql:*`, writes).
+- **"no identity-based policy allows"** → nothing granted it. `secretsmanager:GetSecretValue` lands here: `ReadOnlyAccess` excludes secret values by design.
+
+**`iam:*` being denied does not block trust-policy debugging.** Use CloudFormation:
+
+```bash
+aws cloudformation get-template --stack-name borso-shared \
+  --query 'TemplateBody.Resources.*.Properties.AssumeRolePolicyDocument'
+```
+
+Every deploy role's full trust document, and a better source than `iam:GetRole` would be: it reflects the *deployed* stack rather than the checked-out branch. When a workflow's assume-role is failing, what the account currently believes is the question — and the two differ for exactly as long as a merged fix sits undeployed.
 
 ### 12.2 Issue an access key
 
 ```bash
-aws --profile borso-admin iam create-access-key --user-name claude-readonly
+aws --profile borso-admin iam create-access-key --user-name AI-Dev-ReadOnly
 ```
 
-Copy the `AccessKeyId` and `SecretAccessKey` from the response. Store them somewhere you can retrieve later (1Password, etc.) in case you need to re-paste them after a rotation.
+Copy the `AccessKeyId` and `SecretAccessKey` from the response. The secret is shown once and never again, so store it somewhere retrievable (1Password, etc.) in case you need to re-paste it after a rotation.
+
+IAM caps a user at two access keys. If this returns `LimitExceeded`, delete or deactivate the spare first — `iam list-access-keys --user-name AI-Dev-ReadOnly` shows both with their status.
 
 ### 12.3 Configure the Claude Code on the web environment
 
@@ -239,9 +281,22 @@ These get exported into every cloud session for the project. The repo's `scripts
 
 ### 12.4 Rotation + revocation
 
-- **Rotate every 90 days.** Issue a new key, update env vars in claude.ai/code, deactivate the old key, then delete it after a few days of cooldown.
-- **If a key leaks**: `aws iam delete-access-key --user-name claude-readonly --access-key-id …` immediately, then update env vars.
-- **If the IAM user gets compromised somehow**: `aws iam delete-user --user-name claude-readonly` and start over. The blast radius is whatever `ReadOnlyAccess` minus the deny policy allows — destructive ops are blocked even if a key leaks.
+**Access keys never expire on their own.** An `InvalidClientTokenId` means the key was deleted, was deactivated, or the value in the environment is wrong — never that it aged out. Diagnose before rotating; the answer is usually not a new key:
+
+```bash
+aws --profile borso-admin iam list-access-keys --user-name AI-Dev-ReadOnly \
+  --query 'AccessKeyMetadata[].[AccessKeyId,Status,CreateDate]' --output table
+```
+
+- `Status: Inactive` → `iam update-access-key … --status Active`, nothing else needed.
+- `AccessKeyId` differs from the one in the environment → the environment is stale, the key is fine.
+- Environment holds something that is not an `AKIA…` id at all → see the note at the top of §12; the session was never given credentials and the account is healthy.
+
+Then:
+
+- **Rotate on a cadence you choose** — 90 days is a habit, not an expiry. Issue a new key, update env vars in claude.ai/code, deactivate the old key, delete it after a few days of cooldown.
+- **If a key leaks**: `aws iam delete-access-key --user-name AI-Dev-ReadOnly --access-key-id …` immediately, then update env vars.
+- **If the IAM user gets compromised somehow**: `aws iam delete-user --user-name AI-Dev-ReadOnly` and start over. The blast radius is whatever `ReadOnlyAccess` + `ViewOnlyAccess` minus `Explicit-write-deny` allows — destructive ops are blocked even if a key leaks.
 
 ### 12.5 Why not a stronger setup
 

@@ -93,11 +93,13 @@ Two ways an agent/session gets read-only AWS access:
 
 - **Local Claude Code** (terminal): your shell already has `borso-admin` and `borso-claude` AWS SSO profiles configured (see [`docs/aws-setup.md#3`](./docs/aws-setup.md#3-configure-sso-profiles-locally)). Run `aws sso login --profile borso-claude` once per session — creds expire hourly.
 - **Claude Code on the web** (claude.ai/code): set these in the project's environment-configuration UI:
-  - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — long-lived keys for the `claude-readonly` IAM user (rotate every 90 days).
+  - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — long-lived keys for the `AI-Dev-ReadOnly` IAM user.
   - `AWS_REGION=eu-west-3`
   - `AWS_ACCOUNT_ID=<12-digit account id>`
 
-When `AWS_ACCESS_KEY_ID` is present, the SessionStart hook installs AWS CLI v2 conditionally and `aws ...` works in Bash. The IAM user behind those keys has `ReadOnlyAccess` + an inline deny on every mutation verb (`iam:*`, `cloudformation:Create*/Update*/Delete*`, `s3:Put*/Delete*`, `lambda:*`, `cloudfront:Create*/Update*/Delete*`, `route53:Change*/Create*/Delete*`, `dsql:*`). You can list, describe, and read; you can't change anything.
+The SessionStart hook installs AWS CLI v2 when the key id looks real, and prints `AWS unavailable` when it doesn't. **Read that line before diagnosing anything** — a session can arrive with placeholder credentials, and the resulting `InvalidClientTokenId` is indistinguishable from a broken account. Access keys never expire on their own.
+
+Reads work; writes are denied. **`iam:*` is denied too, so no session can read the policy that binds it** — never trust a written list of its verbs, here or anywhere, and probe the one call you need instead. For trust policies specifically, `aws cloudformation get-template --stack-name borso-shared` returns every role's `AssumeRolePolicyDocument` and reflects the *deployed* account rather than the checked-out branch — see [`docs/knowledge/github-oidc-sub-claim-per-trigger.md`](./docs/knowledge/github-oidc-sub-claim-per-trigger.md).
 
 Full setup including key rotation: [`docs/aws-setup.md#12`](./docs/aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
 

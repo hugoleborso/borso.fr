@@ -98,10 +98,12 @@ Cons: requires `aws sso login` before each Claude session that needs AWS — eas
 
 SSO doesn't work in remote sessions (no browser). Use a dedicated IAM user with long-lived access keys, configured in claude.ai/code's environment configuration UI — full setup steps live in [`aws-setup.md` §12](./aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws). Summary:
 
-- Dedicated IAM user `claude-readonly` with `ReadOnlyAccess` + the same deny inline policy as the `ClaudeDev` permission set.
+**A session may arrive with placeholder credentials instead of keys**, in which case every call fails with `InvalidClientTokenId` — indistinguishable from a broken account, and unrelated to it. A real key id is 20 chars starting `AKIA`; the SessionStart banner says `AWS unavailable` when it isn't. Check that before touching IAM.
+
+- Dedicated IAM user `AI-Dev-ReadOnly` with `ReadOnlyAccess` + `job-function/ViewOnlyAccess` + the `Explicit-write-deny` inline policy (same JSON as the `ClaudeDev` permission set).
 - Long-lived access key, stored in claude.ai/code's per-project environment config (out of git, but visible to anyone with project-edit access — Anthropic does not yet offer encrypted-at-rest secrets).
-- `scripts/install-repo-deps.sh` detects `AWS_ACCESS_KEY_ID` and installs AWS CLI v2 conditionally — local sessions without these vars don't pay that install cost.
-- Rotate the key every 90 days; revoke immediately on suspected leak.
+- `scripts/install-repo-deps.sh` installs AWS CLI v2 only when `AWS_ACCESS_KEY_ID` looks like a real key id (`AKIA…`/`ASIA…`); on a placeholder it prints an "AWS unavailable" line to the banner instead.
+- Access keys never expire — an auth failure means deleted, deactivated, or a wrong value in the environment. Diagnose before rotating; see [`aws-setup.md` §12.4](./aws-setup.md#124-rotation--revocation).
 
 Long-lived keys can still leak; the deny policy limits blast radius but doesn't eliminate it. Move to a bootstrap-key + Secrets Manager pattern if compliance ever matters.
 

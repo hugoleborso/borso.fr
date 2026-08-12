@@ -8,7 +8,7 @@
 #   APP=last-loop-lepin REGION=eu-west-3 ./scripts/dsql-shell.sh
 #
 # Defaults assume the borso-readonly profile is already exported in the
-# shell (or that AWS_ACCESS_KEY_ID/SECRET are set for `claude-readonly`).
+# shell (or that AWS_ACCESS_KEY_ID/SECRET are set for `AI-Dev-ReadOnly`).
 set -euo pipefail
 
 APP="${APP:-last-loop-lepin}"
