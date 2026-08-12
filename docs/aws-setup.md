@@ -198,13 +198,11 @@ Skip this if you only run Claude Code locally — Pattern A in [`local-dev.md`](
 
 For remote (claude.ai/code) sessions, `aws sso login` doesn't work because there's no browser. The simplest path is a dedicated IAM user with long-lived access keys, scoped strictly read-only. Trade-off: long-lived keys are visible to anyone with edit access on the Claude Code project environment; Anthropic does not yet offer encrypted-at-rest secrets storage. The IAM scope is what bounds the blast radius if a key leaks.
 
-> **Check the credentials before trusting them.** This works — a session on 2026-08-11 authenticated as `arn:aws:iam::…:user/AI-Dev-ReadOnly` and read CloudFormation, S3, SSM, CloudFront, Lambda, Logs and ACM. But *another* session the same day received the literal string `proxy-injected` in both credential variables, with `AWS_REGION` and `AWS_ACCOUNT_ID` unset, so every call failed with `InvalidClientTokenId` — which reads exactly like an expired key and is not one. The account's key was `Active` throughout both.
->
-> So an auth failure here is ambiguous by default, and the cheap disambiguation is one command: a real id is 20 chars starting `AKIA`, and the secret is 40. `scripts/install-repo-deps.sh` now checks that shape and prints an explicit "AWS unavailable" line to the SessionStart banner rather than installing a CLI that cannot authenticate. **Read the banner before diagnosing the account.**
+> **A session may arrive with placeholder credentials.** Both variables can hold a literal placeholder instead of a key, in which case every call fails with `InvalidClientTokenId` — which is indistinguishable from a deleted or deactivated key, and has nothing to do with the account. A real key id is 20 chars starting `AKIA`; the secret is 40. `scripts/install-repo-deps.sh` checks that shape and prints `AWS unavailable` to the SessionStart banner instead of installing a CLI that cannot authenticate. Check the banner, and the variable, before touching IAM.
 
 ### 12.1 The IAM user
 
-The account already has this user. Its real configuration, read back from IAM on 2026-08-11:
+The account already has this user:
 
 | | |
 | --- | --- |
@@ -212,7 +210,7 @@ The account already has this user. Its real configuration, read back from IAM on
 | Attached | `ReadOnlyAccess` **and** `job-function/ViewOnlyAccess` |
 | Inline policy | `Explicit-write-deny` |
 
-Earlier revisions of this page named the user `claude-readonly` and the inline policy `ClaudeDevDeny`, and listed only `ReadOnlyAccess`. None of those matched the account. A session following the old text got `NoSuchEntity` and concluded the user had been deleted — **read the account before acting on this table.**
+**Read the account before acting on that table.** It has drifted before — a stale user name here reads back as `NoSuchEntity`, which looks like a deleted user and isn't.
 
 ```bash
 aws --profile borso-admin iam list-users --query 'Users[].UserName' --output table
@@ -240,31 +238,23 @@ aws --profile borso-admin iam put-user-policy \
   --policy-document file:///path/to/deny.json
 ```
 
-### What these credentials can actually do
+### What these credentials can do
 
-Probed verb by verb on 2026-08-11, because the inline deny cannot be read by the user it binds (`iam:GetUserPolicy` is inside `iam:*`). These are verified samples, not the policy text:
+Describe/list across CloudFormation, S3, SSM, CloudFront, Lambda, Logs, ACM and Secrets Manager metadata. Mutations are denied, and so is `iam:*` — which means **no session can read the inline deny policy that binds it** (`iam:GetUserPolicy` is inside the deny). Any list of denied verbs, including the one in step 2, is therefore unverifiable from a session and drifts silently. Probe the specific call you need rather than trusting a written list.
 
-| Works | Denied |
-| --- | --- |
-| `cloudformation` describe / list / **get-template** | `iam:*` — `GetRole`, `ListRoles`, `ListOpenIDConnectProviders` alike |
-| `s3api list-buckets` (20) | `dsql:*` |
-| `ssm get-parameters-by-path /borso/shared` (12) | `s3:PutObject` (explicit deny; probe confirmed no object created) |
-| `cloudfront list-distributions` (10) | |
-| `lambda list-functions` (64) | |
-| `logs` describe + `get-log-events` | |
-| `acm list-certificates`, both regions | |
-| `secretsmanager list-secrets` | `secretsmanager:GetSecretValue` — *absence of grant*, not explicit deny |
+Two error shapes, worth telling apart:
 
-That last row is `ReadOnlyAccess` behaving normally: the AWS-managed policy excludes secret values. The inline deny and the managed allow do separate jobs, and the error wording tells you which one refused.
+- **explicit deny** → the inline policy refused (`iam:*`, `dsql:*`, writes).
+- **"no identity-based policy allows"** → nothing granted it. `secretsmanager:GetSecretValue` lands here: `ReadOnlyAccess` excludes secret values by design.
 
-**`iam:*` being denied does not block trust-policy debugging.** The detour is CloudFormation:
+**`iam:*` being denied does not block trust-policy debugging.** Use CloudFormation:
 
 ```bash
 aws cloudformation get-template --stack-name borso-shared \
   --query 'TemplateBody.Resources.*.Properties.AssumeRolePolicyDocument'
 ```
 
-That returns every deploy role's full trust document. It is arguably *better* than `iam:GetRole` for this purpose, because it reflects the deployed stack rather than the checked-out branch — which is exactly the distinction that matters when a workflow's assume-role is failing and you need to know what the account currently believes.
+Every deploy role's full trust document, and a better source than `iam:GetRole` would be: it reflects the *deployed* stack rather than the checked-out branch. When a workflow's assume-role is failing, what the account currently believes is the question — and the two differ for exactly as long as a merged fix sits undeployed.
 
 ### 12.2 Issue an access key
 

@@ -98,7 +98,7 @@ Cons: requires `aws sso login` before each Claude session that needs AWS — eas
 
 SSO doesn't work in remote sessions (no browser). Use a dedicated IAM user with long-lived access keys, configured in claude.ai/code's environment configuration UI — full setup steps live in [`aws-setup.md` §12](./aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws). Summary:
 
-**Verify the credentials arrived before trusting an auth error.** This works — one session on 2026-08-11 authenticated as `AI-Dev-ReadOnly` and read CloudFormation, S3, SSM, CloudFront, Lambda and Logs. Another the same day got the literal string `proxy-injected` in both credential variables and failed every call with `InvalidClientTokenId`, which looks exactly like an expired key and is not one. A real key id is 20 chars starting `AKIA`; the SessionStart banner now says outright when it isn't.
+**A session may arrive with placeholder credentials instead of keys**, in which case every call fails with `InvalidClientTokenId` — indistinguishable from a broken account, and unrelated to it. A real key id is 20 chars starting `AKIA`; the SessionStart banner says `AWS unavailable` when it isn't. Check that before touching IAM.
 
 - Dedicated IAM user `AI-Dev-ReadOnly` with `ReadOnlyAccess` + `job-function/ViewOnlyAccess` + the `Explicit-write-deny` inline policy (same JSON as the `ClaudeDev` permission set).
 - Long-lived access key, stored in claude.ai/code's per-project environment config (out of git, but visible to anyone with project-edit access — Anthropic does not yet offer encrypted-at-rest secrets).

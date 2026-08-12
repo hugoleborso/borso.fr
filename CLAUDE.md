@@ -93,23 +93,13 @@ Two ways an agent/session gets read-only AWS access:
 
 - **Local Claude Code** (terminal): your shell already has `borso-admin` and `borso-claude` AWS SSO profiles configured (see [`docs/aws-setup.md#3`](./docs/aws-setup.md#3-configure-sso-profiles-locally)). Run `aws sso login --profile borso-claude` once per session — creds expire hourly.
 - **Claude Code on the web** (claude.ai/code): set these in the project's environment-configuration UI:
-  - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — long-lived keys for the `AI-Dev-ReadOnly` IAM user. **Currently these arrive as the literal string `proxy-injected`, so no `aws` call works from a web session.** When you see `InvalidClientTokenId`, check the variable's value before concluding anything about the account — the key is almost certainly fine, and IAM access keys never expire on their own.
+  - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — long-lived keys for the `AI-Dev-ReadOnly` IAM user.
   - `AWS_REGION=eu-west-3`
   - `AWS_ACCOUNT_ID=<12-digit account id>`
 
-When `AWS_ACCESS_KEY_ID` holds a real key id, the SessionStart hook installs AWS CLI v2 and `aws ...` works in Bash. `AI-Dev-ReadOnly` carries `ReadOnlyAccess` + `job-function/ViewOnlyAccess` + the `Explicit-write-deny` inline policy. You can list, describe, and read; you can't change anything.
+The SessionStart hook installs AWS CLI v2 when the key id looks real, and prints `AWS unavailable` when it doesn't. **Read that line before diagnosing anything** — a session can arrive with placeholder credentials, and the resulting `InvalidClientTokenId` is indistinguishable from a broken account. Access keys never expire on their own.
 
-**The deny list here is unverifiable from a session** — `iam:GetUserPolicy` is itself denied, so nobody with these credentials can read the policy that binds them. What follows was probed verb by verb on 2026-08-11 rather than copied from the policy:
-
-| Denied (explicit) | Works |
-| --- | --- |
-| `iam:*` — including `GetRole`, `ListRoles`, `ListOpenIDConnectProviders` | `cloudformation:Describe*/List*/GetTemplate`, `s3:ListBuckets`, `ssm:GetParametersByPath`, `cloudfront:List*`, `lambda:ListFunctions`, `logs:Describe*/GetLogEvents`, `acm:List*`, `secretsmanager:ListSecrets` |
-| `dsql:*` | |
-| `s3:PutObject` | |
-
-`secretsmanager:GetSecretValue` fails differently — *"no identity-based policy allows"*, an absence of grant rather than an explicit deny, which is `ReadOnlyAccess` behaving normally. An earlier revision of this file claimed `lambda:*` was denied; `lambda:ListFunctions` returns 64 functions, so the real policy denies mutating Lambda verbs only. Treat the table as verified samples, not as the policy.
-
-**`iam:*` being denied does not block trust-policy debugging.** `aws cloudformation get-template --stack-name borso-shared` returns every role's full `AssumeRolePolicyDocument`, and it reflects the *deployed* stack rather than the checked-out branch — which is what you want when a workflow's OIDC assume-role is failing. See [`docs/knowledge/github-oidc-sub-claim-per-trigger.md`](./docs/knowledge/github-oidc-sub-claim-per-trigger.md).
+Reads work; writes are denied. **`iam:*` is denied too, so no session can read the policy that binds it** — never trust a written list of its verbs, here or anywhere, and probe the one call you need instead. For trust policies specifically, `aws cloudformation get-template --stack-name borso-shared` returns every role's `AssumeRolePolicyDocument` and reflects the *deployed* account rather than the checked-out branch — see [`docs/knowledge/github-oidc-sub-claim-per-trigger.md`](./docs/knowledge/github-oidc-sub-claim-per-trigger.md).
 
 Full setup including key rotation: [`docs/aws-setup.md#12`](./docs/aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
 
