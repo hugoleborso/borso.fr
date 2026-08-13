@@ -6,6 +6,7 @@ const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url))
 const workspaceAliases = {
   '@site': fromHere('./site/src'),
   '@api': fromHere('./api/src'),
+  '@domain': fromHere('./domain'),
 };
 
 /**
@@ -31,6 +32,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: [
+        'domain/**/*.core.ts',
         'api/src/**/*.core.ts',
         'api/src/**/*.utils.ts',
         'site/src/**/*.core.ts',
@@ -45,6 +47,7 @@ export default defineConfig({
           name: 'core',
           environment: 'jsdom',
           include: [
+            'domain/**/*.core.test.ts',
             'api/src/**/*.core.test.ts',
             'api/src/**/*.utils.test.ts',
             'cdk/test/**/*.test.ts',

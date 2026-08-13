@@ -7,11 +7,12 @@
  * `selectedMemberId === null` is the "all members" pass-through: every
  * entry is visible and no per-entry instrument chip is produced.
  *
- * Resolution rule mirrors the BE `resolveLineup` helper — the override
- * wins per key over the song default; an absent key falls back to the
- * default's value for that key.
+ * The resolution rule itself is `resolveLineup` in `domain/`, shared with the
+ * back end, so the override winning per key over the song default is decided
+ * in one place rather than written out again here.
  */
 
+import { resolveLineup } from '@domain/lineup.core';
 import type { SetlistEditorEntry, SetlistEditorSong } from './setlist-editor.utils';
 
 export interface FilterableEntry extends SetlistEditorEntry {
@@ -48,10 +49,7 @@ function resolveInstrumentForMember(
   songsById: Readonly<Record<string, SetlistEditorSong>>,
   memberId: string,
 ): string | null {
-  if (entry.lineupOverride !== null && memberId in entry.lineupOverride) {
-    return entry.lineupOverride[memberId] ?? null;
-  }
   const song = songsById[entry.songId];
   if (song === undefined) return null;
-  return song.defaultLineup[memberId] ?? null;
+  return resolveLineup(song.defaultLineup, entry.lineupOverride)[memberId] ?? null;
 }

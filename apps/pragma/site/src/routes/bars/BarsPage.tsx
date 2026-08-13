@@ -6,7 +6,7 @@
  *
  * HTML5 drag suffices for the kanban — the design bundle's "handle
  * pattern" applies to mobile setlist reorder, not the desktop kanban.
- * The stale-bar banner + per-row badge fire from `stale-bar.utils`.
+ * The stale-bar banner + per-row badge fire from `domain/bar-staleness.core`.
  */
 
 import type { JSX } from 'react';
@@ -20,7 +20,7 @@ import { BarsList, type BarsListRow } from '../../components/organisms/BarsList'
 import { ApiError } from '../../lib/api';
 import { isPositiveCount } from '../../lib/counts.utils';
 import { useBarsList, useCreateBar, useDeleteBar, useUpdateBar } from '../../lib/queries/bars';
-import { countStale, isStale } from '../../lib/stale-bar.utils';
+import { countStale, isStale } from '@domain/bar-staleness.core';
 import { BarForm } from './BarForm';
 import {
   BAR_STATUS_KEY,

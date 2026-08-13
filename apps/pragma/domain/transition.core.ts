@@ -19,11 +19,8 @@
  *     anchor; useful for the side-gutter tooltip.
  */
 
-import { instrumentedMembers } from '../helpers/lineup/instrumented-members.core';
+import { type InstrumentId, instrumentedMembers, type Lineup, type MemberId } from './lineup.core';
 
-export type MemberId = string;
-export type InstrumentId = string;
-export type Lineup = Readonly<Record<MemberId, InstrumentId | null>>;
 export type InstrumentMap = Readonly<Record<InstrumentId, { readonly isHarmonic: boolean }>>;
 
 export type TransitionVerdict =

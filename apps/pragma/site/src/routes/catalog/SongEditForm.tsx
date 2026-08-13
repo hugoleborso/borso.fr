@@ -16,7 +16,7 @@ import { Icon } from '../../components/atoms/Icon';
 import { Input } from '../../components/atoms/Input';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SongSearch } from '../../components/organisms/SongSearch';
-import { deriveTonality } from '../../lib/tonality-bridge';
+import { deriveTonality } from '@domain/tonality.core';
 import { SongChartFields } from './SongChartFields';
 import { SongChordPreview } from './SongChordPreview';
 import { SongExternalLinks } from './SongExternalLinks';

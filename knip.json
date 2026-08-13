@@ -52,12 +52,14 @@
         "cdk/bin/cdk.ts",
         "api/src/main.ts",
         "api/src/**/*.test.ts",
+        "domain/**/*.core.test.ts",
         "site/src/**/*.utils.test.ts",
         "site/src/**/*.core.test.ts",
         "test/**/*.ts"
       ],
       "project": [
         "cdk/**/*.ts",
+        "domain/**/*.ts",
         "site/src/**/*.ts",
         "site/src/**/*.tsx",
         "api/src/**/*.ts",

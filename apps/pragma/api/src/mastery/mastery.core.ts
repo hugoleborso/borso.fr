@@ -19,7 +19,7 @@
  * Pure functions over plain objects. No I/O.
  */
 
-import { instrumentedMembers } from '../helpers/lineup/instrumented-members.core';
+import { instrumentedMembers } from '@domain/lineup.core';
 
 export type MemberId = string;
 export type InstrumentId = string;

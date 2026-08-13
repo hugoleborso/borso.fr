@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countStale, isStale, STALE_BAR_DEFAULT_THRESHOLD_DAYS } from './bars.core';
+import { countStale, isStale, STALE_BAR_DEFAULT_THRESHOLD_DAYS } from './bar-staleness.core';
 
 const NOW = new Date('2026-05-20T00:00:00.000Z');
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -8,6 +8,21 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 describe('isStale', () => {
   it('treats null lastInteractionAt as stale (no interaction ever logged)', () => {
     expect(isStale({ lastInteractionAt: null }, NOW)).toBe(true);
+  });
+
+  it('treats null lastInteractionAt as stale even when the epoch itself would look fresh', () => {
+    const daysAfterEpoch = new Date(4 * DAY_MS);
+    expect(isStale({ lastInteractionAt: null }, daysAfterEpoch)).toBe(true);
+  });
+
+  it('reads the ISO string an API response carries as well as the Date the database returns', () => {
+    const yesterday = new Date(NOW.getTime() - 1 * DAY_MS);
+    expect(isStale({ lastInteractionAt: yesterday.toISOString() }, NOW)).toBe(false);
+    expect(isStale({ lastInteractionAt: yesterday }, NOW)).toBe(false);
+  });
+
+  it('treats a malformed ISO string as stale', () => {
+    expect(isStale({ lastInteractionAt: 'not a date' }, NOW)).toBe(true);
   });
 
   it('returns false for a touch from yesterday', () => {
@@ -53,5 +68,13 @@ describe('countStale', () => {
     ];
     expect(countStale(bars, NOW, 3)).toBe(2);
     expect(countStale(bars, NOW, 100)).toBe(0);
+  });
+
+  it('counts ISO strings the same way it counts dates', () => {
+    const bars = [
+      { lastInteractionAt: new Date(NOW.getTime() - 5 * DAY_MS).toISOString() },
+      { lastInteractionAt: new Date(NOW.getTime() - 90 * DAY_MS).toISOString() },
+    ];
+    expect(countStale(bars, NOW)).toBe(1);
   });
 });

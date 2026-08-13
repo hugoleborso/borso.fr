@@ -9,7 +9,7 @@
  * the list is a `DndContext` wrapping a `SortableContext`, each row is
  * a sortable node grabbed by its handle, and the drop is committed via
  * the optimistic `useReorderSetlist` mutation. Transition warnings are
- * computed by `transition.core.ts` between each consecutive pair; a
+ * computed by `domain/transition.core.ts` between each consecutive pair; a
  * warned pair carries a circular orange marker in the side gutter
  * (`WarnMarkerGutter`), which opens the TransitionCommentModal.
  *
@@ -20,7 +20,7 @@
  * `prominentMemberInstrument` chip describing what they play here.
  */
 
-import { evaluateTransition } from '@api/setlists/transition.core';
+import { evaluateTransition } from '@domain/transition.core';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
