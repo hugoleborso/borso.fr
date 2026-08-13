@@ -173,6 +173,7 @@ export function useAppendSetlistEntry() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useUpdateSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -217,6 +218,7 @@ export function useUpdateSetlistEntry() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useDeleteSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -254,6 +256,7 @@ export function useDeleteSetlistEntry() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useReorderSetlist() {
   const queryClient = useQueryClient();
   return useMutation({

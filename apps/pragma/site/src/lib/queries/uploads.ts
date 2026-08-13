@@ -18,6 +18,7 @@ export const uploadKeys = {
   signedGet: (objectKey: string) => [...uploadKeys.all, 'sign-get', objectKey] as const,
 };
 
+// @FollowsBlueprint query-uncached-mutation
 export function useSignChartUpload() {
   return useMutation({
     mutationFn: async (variables: Parameters<typeof api.api.uploads.sign.$post>[0]['json']) => {

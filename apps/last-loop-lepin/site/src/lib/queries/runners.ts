@@ -61,6 +61,7 @@ export function useRunner(editionSlug: string, runnerSlug: string) {
   });
 }
 
+// @FollowsBlueprint query-pessimistic-mutation
 export function useCreateRunner() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -81,6 +82,7 @@ export function useCreateRunner() {
  * file straight to the returned URL, which is the one request in this site
  * that does not go through the Hono client.
  */
+// @FollowsBlueprint query-uncached-mutation
 export function usePresignRunnerPhoto() {
   return useMutation({
     mutationFn: async (variables: PresignRunnerPhotoVariables) => {

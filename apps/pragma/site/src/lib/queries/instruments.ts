@@ -67,6 +67,7 @@ export function useCreateInstrument() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useUpdateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -109,6 +110,7 @@ export function useUpdateInstrument() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useDeleteInstrument() {
   const queryClient = useQueryClient();
   return useMutation({

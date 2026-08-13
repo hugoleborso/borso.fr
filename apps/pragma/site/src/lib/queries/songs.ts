@@ -167,6 +167,7 @@ export function useCreateSong() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useUpdateSong() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -217,6 +218,7 @@ export function useUpdateSong() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useDeleteSong() {
   const queryClient = useQueryClient();
   return useMutation({

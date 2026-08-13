@@ -98,6 +98,7 @@ export function useCreateBar() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useUpdateBar() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -136,6 +137,7 @@ export function useUpdateBar() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useDeleteBar() {
   const queryClient = useQueryClient();
   return useMutation({

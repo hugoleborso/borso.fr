@@ -65,6 +65,7 @@ export function useSaveMasteryDefault() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useDeleteMasteryDefault() {
   const queryClient = useQueryClient();
   return useMutation({

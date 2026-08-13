@@ -100,6 +100,7 @@ export function useCreateMember() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useUpdateMember() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -143,6 +144,7 @@ export function useUpdateMember() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useDeleteMember() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -176,6 +178,7 @@ export function useDeleteMember() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useAssignMemberInstruments() {
   const queryClient = useQueryClient();
   return useMutation({
