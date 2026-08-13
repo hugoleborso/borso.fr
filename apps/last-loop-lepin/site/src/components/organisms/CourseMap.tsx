@@ -1,10 +1,10 @@
-import * as Sentry from '@sentry/react';
 import L from 'leaflet';
 import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatElevationMetres, formatKilometres } from '../../lib/formatters.utils';
 import { listPresent } from '../../lib/optional.utils';
 import type { RaceEditionDto, RankedRunnerDto } from '../../lib/race.types';
+import { recordDiagnosticEvent } from '../../observability/sentry';
 import { Show } from '../atoms/Show';
 import { listRunnerMarkers, selectProjectionMode } from './course-map-markers.core';
 
@@ -32,8 +32,6 @@ const RUNNER_ICON_SIZE: L.PointTuple = [28, 28];
 const RUNNER_ICON_ANCHOR: L.PointTuple = [14, 14];
 const START_DOT_CLASS =
   'block w-3.5 h-3.5 rounded-full bg-ink border-2 border-bg shadow-[0_0_0_1px_var(--color-ink)]';
-const PROJECTION_BREADCRUMB_CATEGORY = 'course_map';
-const PROJECTION_BREADCRUMB_MESSAGE = 'course_map_projection_mode';
 
 const FOOTER_STYLE = {
   padding: '12px 20px',
@@ -110,10 +108,8 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
   useEffect(() => {
     for (const layer of listPresent(runnerLayerRef.current)) {
       layer.clearLayers();
-      Sentry.addBreadcrumb({
-        category: PROJECTION_BREADCRUMB_CATEGORY,
-        message: PROJECTION_BREADCRUMB_MESSAGE,
-        data: { mode: selectProjectionMode(edition.gpx.trackJson.pointTimeFractions) },
+      recordDiagnosticEvent('course_map', 'runner_positions_projected', {
+        mode: selectProjectionMode(edition.gpx.trackJson.pointTimeFractions),
       });
       for (const marker of listRunnerMarkers(edition, ranked, now.getTime())) {
         L.marker([marker.position.lat, marker.position.lng], {

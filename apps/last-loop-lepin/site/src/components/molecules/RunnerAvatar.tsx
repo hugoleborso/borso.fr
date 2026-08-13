@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react';
 import { useState } from 'react';
 import {
   buildRunnerAvatar,
@@ -6,6 +5,7 @@ import {
   RUNNER_AVATAR_PHOTO_CLASS,
   type RunnerAvatarSurface,
 } from '../../lib/runner-avatar.utils';
+import { recordDiagnosticEvent } from '../../observability/sentry';
 import { InitialsAvatar } from '../atoms/InitialsAvatar';
 import { selectRunnerAvatarView } from './runner-avatar-view.utils';
 
@@ -18,9 +18,6 @@ interface RunnerAvatarProps {
   readonly size: number;
   readonly surface: RunnerAvatarSurface;
 }
-
-const SENTRY_BREADCRUMB_CATEGORY = 'runner_photo';
-const SENTRY_BREADCRUMB_MESSAGE = 'runner_photo_load_failed';
 
 /**
  * Avatar surface used by the leaderboard, the map, the elevation profile, and
@@ -50,10 +47,9 @@ export function RunnerAvatar({ runner, size, surface }: RunnerAvatarProps) {
         data-surface={surface}
         style={boxStyle}
         onError={() => {
-          Sentry.addBreadcrumb({
-            category: SENTRY_BREADCRUMB_CATEGORY,
-            message: SENTRY_BREADCRUMB_MESSAGE,
-            data: { runnerSlug: runner.slug, surface },
+          recordDiagnosticEvent('runner_photo', 'runner_photo_load_failed', {
+            runnerSlug: runner.slug,
+            surface,
           });
           setPhotoFailed(true);
         }}

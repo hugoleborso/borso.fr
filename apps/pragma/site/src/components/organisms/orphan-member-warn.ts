@@ -7,8 +7,6 @@
  * editor re-renders dozens of times. The pure half (`findOrphanMemberIds`)
  * lives in `setlist-editor.utils.ts`; the side-effecty wrapper lives
  * here so the utils file stays free of `console.warn`.
- *
- * Will become a Sentry breadcrumb once the observability baseline lands.
  */
 
 import { findOrphanMemberIds, selectUnwarnedMemberIds } from './setlist-editor.utils';

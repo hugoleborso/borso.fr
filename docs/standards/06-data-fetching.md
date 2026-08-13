@@ -127,8 +127,23 @@ A table, a grid, or a matrix uses `@tanstack/react-table` in its headless form,
 so that sorting, filtering, and virtualisation come from the library. A
 hand-rolled `<table>` with manual sort and filter state is banned.
 
+## Reporting goes through one adapter
+
+A reporting client, e.g. Sentry, is imported in exactly one module per
+application, under `site/src/observability/`, and every component calls a
+function that module exports.
+
+The vocabulary is the reason. A breadcrumb carries a category, a level and a
+message, and when each call site picks its own, two screens report the same
+thing under two spellings and the dashboard cannot group them. The adapter
+fixes those in one place and takes the event name as a closed union, so a name
+that does not exist is a type error rather than an event nobody finds.
+
 ## Enforced by
 
+- `borso/no-vendor-sdk-outside-adapter`, a custom ESLint rule, which rejects an
+  import of a reporting SDK from anywhere under `site/` other than
+  `observability/`.
 - `borso/no-direct-api-fetch-in-site`, a custom ESLint rule, which rejects a
   `fetch` call whose URL literal starts with `/api/`.
 - `borso/no-api-anchor-in-site`, a custom ESLint rule, which rejects a JSX

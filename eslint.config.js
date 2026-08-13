@@ -255,6 +255,7 @@ export default tseslint.config(
       'borso/no-flat-components-folder': 'error',
       'borso/no-query-hooks-outside-organisms': 'error',
       'borso/no-component-css-imports': 'error',
+      'borso/no-vendor-sdk-outside-adapter': 'error',
       'borso/no-literal-jsx-text': 'error',
       'borso/no-dynamic-translation-keys': 'error',
     },

@@ -23,6 +23,7 @@ import noServerStateInUseState from './no-server-state-in-use-state.js';
 import noStringConcatenatedClassNames from './no-string-concatenated-class-names.js';
 import noTypeAssertionExceptUnknown from './no-type-assertion-except-unknown.js';
 import noUseEffect from './no-use-effect.js';
+import noVendorSdkOutsideAdapter from './no-vendor-sdk-outside-adapter.js';
 import pureFunctionsLiveInCoreFiles from './pure-functions-live-in-core-files.js';
 import testFileHasSiblingSource from './test-file-has-sibling-source.js';
 
@@ -66,6 +67,7 @@ export const borsoPlugin = {
     'no-string-concatenated-class-names': noStringConcatenatedClassNames,
     'no-type-assertion-except-unknown': noTypeAssertionExceptUnknown,
     'no-use-effect': noUseEffect,
+    'no-vendor-sdk-outside-adapter': noVendorSdkOutsideAdapter,
     'pure-functions-live-in-core-files': pureFunctionsLiveInCoreFiles,
     'test-file-has-sibling-source': testFileHasSiblingSource,
   },
