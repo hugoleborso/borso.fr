@@ -1,10 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import {
-  testDatabase,
-  seedAdminCredentials,
-  truncateAllTables,
-} from '../../../test/database-utils';
+import { seedAdminCredentials, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 import { findValidSession } from './auth.repository';
 
@@ -52,8 +48,8 @@ describe('admin auth controller', () => {
   });
 
   beforeEach(async () => {
-    await truncateAllTables(testDatabase());
-    await seedAdminCredentials(testDatabase());
+    await truncateAllTables();
+    await seedAdminCredentials();
   });
 
   it('returns 200 and sets the lastloop_admin cookie with SameSite=Lax on a correct PIN', async () => {
@@ -72,7 +68,7 @@ describe('admin auth controller', () => {
     const sessionId = readCookieValue(response.headers.get('set-cookie'), 'lastloop_admin');
     expect(sessionId).not.toBeNull();
     if (sessionId === null) throw new Error('session cookie missing');
-    const session = await findValidSession(testDatabase(), sessionId, new Date());
+    const session = await findValidSession(sessionId, new Date());
     expect(session?.id).toBe(sessionId);
   });
 
@@ -121,6 +117,6 @@ describe('admin auth controller', () => {
     });
     expect(logoutResponse.status).toBe(200);
     expect(logoutResponse.headers.get('set-cookie')).toMatch(/lastloop_admin=;/);
-    expect(await findValidSession(testDatabase(), sessionId, new Date())).toBeNull();
+    expect(await findValidSession(sessionId, new Date())).toBeNull();
   });
 });

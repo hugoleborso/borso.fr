@@ -1,5 +1,5 @@
 import { and, eq, isNull } from 'drizzle-orm';
-import type { Database } from '../database/client';
+import { getDatabase } from '../database/client';
 import { loopPunchesTable, manualDidNotFinishesTable } from './punch.schema';
 import type { LoopPunch, ManualDidNotFinish, PunchSource } from './punch.types';
 
@@ -61,8 +61,8 @@ export class PunchConflictError extends Error {
   }
 }
 
-export async function insertPunch(database: Database, punch: LoopPunch): Promise<void> {
-  await database.insert(loopPunchesTable).values({
+export async function insertPunch(punch: LoopPunch): Promise<void> {
+  await getDatabase().insert(loopPunchesTable).values({
     id: punch.id,
     editionSlug: punch.editionSlug,
     runnerSlug: punch.runnerSlug,
@@ -80,12 +80,11 @@ export async function insertPunch(database: Database, punch: LoopPunch): Promise
 }
 
 export async function findActivePunchForLoop(
-  database: Database,
   editionSlug: string,
   runnerSlug: string,
   loopIndex: number,
 ): Promise<LoopPunch | null> {
-  const rows = await database
+  const rows = await getDatabase()
     .select()
     .from(loopPunchesTable)
     .where(
@@ -101,19 +100,16 @@ export async function findActivePunchForLoop(
   return first === undefined ? null : rowToLoopPunch(first);
 }
 
-export async function listPunchesForEdition(
-  database: Database,
-  editionSlug: string,
-): Promise<readonly LoopPunch[]> {
-  const rows = await database
+export async function listPunchesForEdition(editionSlug: string): Promise<readonly LoopPunch[]> {
+  const rows = await getDatabase()
     .select()
     .from(loopPunchesTable)
     .where(eq(loopPunchesTable.editionSlug, editionSlug));
   return rows.map(rowToLoopPunch);
 }
 
-export async function findPunchById(database: Database, id: string): Promise<LoopPunch | null> {
-  const rows = await database
+export async function findPunchById(id: string): Promise<LoopPunch | null> {
+  const rows = await getDatabase()
     .select()
     .from(loopPunchesTable)
     .where(eq(loopPunchesTable.id, id))
@@ -123,30 +119,22 @@ export async function findPunchById(database: Database, id: string): Promise<Loo
 }
 
 export async function markPunchCorrected(
-  database: Database,
   id: string,
   finishedAt: Date,
   correctedAt: Date,
 ): Promise<void> {
-  await database
+  await getDatabase()
     .update(loopPunchesTable)
     .set({ finishedAt, correctedAt })
     .where(eq(loopPunchesTable.id, id));
 }
 
-export async function markPunchVoided(
-  database: Database,
-  id: string,
-  voidedAt: Date,
-): Promise<void> {
-  await database.update(loopPunchesTable).set({ voidedAt }).where(eq(loopPunchesTable.id, id));
+export async function markPunchVoided(id: string, voidedAt: Date): Promise<void> {
+  await getDatabase().update(loopPunchesTable).set({ voidedAt }).where(eq(loopPunchesTable.id, id));
 }
 
-export async function insertManualDidNotFinish(
-  database: Database,
-  didNotFinish: ManualDidNotFinish,
-): Promise<void> {
-  await database.insert(manualDidNotFinishesTable).values(didNotFinish);
+export async function insertManualDidNotFinish(didNotFinish: ManualDidNotFinish): Promise<void> {
+  await getDatabase().insert(manualDidNotFinishesTable).values(didNotFinish);
 }
 
 /**
@@ -155,11 +143,10 @@ export async function insertManualDidNotFinish(
  * `in-race` once their DNF marker is gone and the catch-up punch lands.
  */
 export async function deleteManualDidNotFinish(
-  database: Database,
   editionSlug: string,
   runnerSlug: string,
 ): Promise<void> {
-  await database
+  await getDatabase()
     .delete(manualDidNotFinishesTable)
     .where(
       and(
@@ -174,21 +161,17 @@ export async function deleteManualDidNotFinish(
  * Used by the test seeding endpoint, which rebuilds a fixture from a clean
  * slate so a previous fixture's rows cannot leak into the next standings.
  */
-export async function deleteAllEditionPunchesAndDidNotFinishes(
-  database: Database,
-  editionSlug: string,
-): Promise<void> {
-  await database.delete(loopPunchesTable).where(eq(loopPunchesTable.editionSlug, editionSlug));
-  await database
+export async function deleteAllEditionPunchesAndDidNotFinishes(editionSlug: string): Promise<void> {
+  await getDatabase().delete(loopPunchesTable).where(eq(loopPunchesTable.editionSlug, editionSlug));
+  await getDatabase()
     .delete(manualDidNotFinishesTable)
     .where(eq(manualDidNotFinishesTable.editionSlug, editionSlug));
 }
 
 export async function listManualDidNotFinishesForEdition(
-  database: Database,
   editionSlug: string,
 ): Promise<readonly ManualDidNotFinish[]> {
-  const rows = await database
+  const rows = await getDatabase()
     .select()
     .from(manualDidNotFinishesTable)
     .where(eq(manualDidNotFinishesTable.editionSlug, editionSlug));

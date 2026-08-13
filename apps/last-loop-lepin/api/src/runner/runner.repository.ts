@@ -1,10 +1,10 @@
 import { and, eq } from 'drizzle-orm';
-import type { Database } from '../database/client';
+import { getDatabase } from '../database/client';
 import { runnersTable } from './runner.schema';
 import type { Runner } from './runner.types';
 
-export async function insertRunner(database: Database, runner: Runner): Promise<void> {
-  await database.insert(runnersTable).values(runner);
+export async function insertRunner(runner: Runner): Promise<void> {
+  await getDatabase().insert(runnersTable).values(runner);
 }
 
 /**
@@ -13,16 +13,12 @@ export async function insertRunner(database: Database, runner: Runner): Promise<
  * replays the same roster on every fixture switch.
  */
 // @FollowsBlueprint repository-idempotent-upsert
-export async function upsertRunner(database: Database, runner: Runner): Promise<void> {
-  await database.insert(runnersTable).values(runner).onConflictDoNothing();
+export async function upsertRunner(runner: Runner): Promise<void> {
+  await getDatabase().insert(runnersTable).values(runner).onConflictDoNothing();
 }
 
-export async function findRunner(
-  database: Database,
-  editionSlug: string,
-  runnerSlug: string,
-): Promise<Runner | null> {
-  const rows = await database
+export async function findRunner(editionSlug: string, runnerSlug: string): Promise<Runner | null> {
+  const rows = await getDatabase()
     .select()
     .from(runnersTable)
     .where(and(eq(runnersTable.editionSlug, editionSlug), eq(runnersTable.slug, runnerSlug)))
@@ -31,9 +27,6 @@ export async function findRunner(
 }
 
 // @FollowsBlueprint repository-query
-export async function listRunnersForEdition(
-  database: Database,
-  editionSlug: string,
-): Promise<readonly Runner[]> {
-  return database.select().from(runnersTable).where(eq(runnersTable.editionSlug, editionSlug));
+export async function listRunnersForEdition(editionSlug: string): Promise<readonly Runner[]> {
+  return getDatabase().select().from(runnersTable).where(eq(runnersTable.editionSlug, editionSlug));
 }

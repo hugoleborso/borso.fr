@@ -1,4 +1,3 @@
-import type { Database } from '../database/client';
 import { type GpxTrack, parseGpx } from '../helpers/gpx/gpx.core';
 import { computeSunriseSunset } from '../helpers/sun/sun.core';
 import {
@@ -11,8 +10,6 @@ import {
   upsertEdition,
 } from './edition.repository';
 import type { GpxMetadata, RaceEdition } from './edition.types';
-
-export { getDatabase } from '../database/client';
 
 const DEFAULT_INTERVAL_MINUTES = 60;
 
@@ -70,14 +67,11 @@ export interface CreateEditionInput {
 }
 
 // @FollowsBlueprint service-orchestration
-export async function createEdition(
-  database: Database,
-  input: CreateEditionInput,
-): Promise<RaceEdition> {
+export async function createEdition(input: CreateEditionInput): Promise<RaceEdition> {
   if (input.startsAt.getTime() >= input.endsAt.getTime()) {
     throw new Error('startsAt must precede endsAt');
   }
-  const existing = await findEditionBySlug(database, input.slug);
+  const existing = await findEditionBySlug(input.slug);
   if (existing !== null) {
     throw new EditionAlreadyExistsError(`edition "${input.slug}" already exists`);
   }
@@ -101,25 +95,22 @@ export async function createEdition(
     },
     status: 'setup',
   };
-  await insertEdition(database, edition);
+  await insertEdition(edition);
   return edition;
 }
 
-export async function getEdition(database: Database, slug: string): Promise<RaceEdition> {
-  const edition = await findEditionBySlug(database, slug);
+export async function getEdition(slug: string): Promise<RaceEdition> {
+  const edition = await findEditionBySlug(slug);
   if (edition === null) throw new EditionNotFoundError(`edition "${slug}" not found`);
   return edition;
 }
 
-export async function getEditionOrNull(
-  database: Database,
-  slug: string,
-): Promise<RaceEdition | null> {
-  return findEditionBySlug(database, slug);
+export async function getEditionOrNull(slug: string): Promise<RaceEdition | null> {
+  return findEditionBySlug(slug);
 }
 
-export async function getAllEditions(database: Database): Promise<readonly RaceEdition[]> {
-  return listEditions(database);
+export async function getAllEditions(): Promise<readonly RaceEdition[]> {
+  return listEditions();
 }
 
 export interface CreateEditionFromIsoInput {
@@ -132,10 +123,9 @@ export interface CreateEditionFromIsoInput {
 }
 
 export async function createEditionFromInput(
-  database: Database,
   input: CreateEditionFromIsoInput,
 ): Promise<RaceEdition> {
-  return createEdition(database, {
+  return createEdition({
     slug: input.slug,
     displayName: input.displayName,
     startsAt: new Date(input.startsAt),
@@ -154,11 +144,10 @@ export interface ReplaceEditionFromIsoInput {
 }
 
 export async function replaceEditionFromInput(
-  database: Database,
   slug: string,
   input: ReplaceEditionFromIsoInput,
 ): Promise<RaceEdition> {
-  return replaceSetupEdition(database, slug, {
+  return replaceSetupEdition(slug, {
     displayName: input.displayName,
     startsAt: new Date(input.startsAt),
     endsAt: new Date(input.endsAt),
@@ -167,8 +156,8 @@ export async function replaceEditionFromInput(
   });
 }
 
-export async function getCurrentEdition(database: Database): Promise<RaceEdition | null> {
-  const editions = await listEditions(database);
+export async function getCurrentEdition(): Promise<RaceEdition | null> {
+  const editions = await listEditions();
   const live = editions.find((edition) => edition.status === 'live');
   if (live !== undefined) return live;
   const nextSetup = editions
@@ -182,13 +171,12 @@ export async function getCurrentEdition(database: Database): Promise<RaceEdition
 }
 
 export async function transitionEditionStatus(
-  database: Database,
   slug: string,
   status: RaceEdition['status'],
 ): Promise<void> {
-  const edition = await getEdition(database, slug);
+  const edition = await getEdition(slug);
   if (edition.status === status) return;
-  await updateEditionStatus(database, slug, status);
+  await updateEditionStatus(slug, status);
 }
 
 export interface UpdateSetupEditionInput {
@@ -214,14 +202,13 @@ export interface UpdateSetupEditionInput {
  */
 // @FollowsBlueprint service-orchestration
 export async function replaceSetupEdition(
-  database: Database,
   slug: string,
   input: UpdateSetupEditionInput,
 ): Promise<RaceEdition> {
   if (input.startsAt.getTime() >= input.endsAt.getTime()) {
     throw new Error('startsAt must precede endsAt');
   }
-  const existing = await getEdition(database, slug);
+  const existing = await getEdition(slug);
   if (existing.status !== 'setup') throw new EditionNotInSetupError(slug);
   const newTrack =
     input.gpxXml === undefined || input.gpxXml.length === 0 ? null : parseGpx(input.gpxXml);
@@ -248,14 +235,14 @@ export async function replaceSetupEdition(
             startLatLng: newTrack.startLatLng,
           },
   };
-  await updateEditionSetup(database, slug, replaced);
+  await updateEditionSetup(slug, replaced);
   return replaced;
 }
 
-export async function removeSetupEdition(database: Database, slug: string): Promise<void> {
-  const existing = await getEdition(database, slug);
+export async function removeSetupEdition(slug: string): Promise<void> {
+  const existing = await getEdition(slug);
   if (existing.status !== 'setup') throw new EditionNotInSetupError(slug);
-  await deleteEdition(database, slug);
+  await deleteEdition(slug);
 }
 
 /**
@@ -263,8 +250,8 @@ export async function removeSetupEdition(database: Database, slug: string): Prom
  * Exposed for the test seeding endpoint, which rebuilds its fixture edition
  * from scratch on every call.
  */
-export async function seedEdition(database: Database, edition: RaceEdition): Promise<void> {
-  await upsertEdition(database, edition);
+export async function seedEdition(edition: RaceEdition): Promise<void> {
+  await upsertEdition(edition);
 }
 
 export { computeSunriseSunset } from '../helpers/sun/sun.core';

@@ -4,7 +4,6 @@ import { requireAdminSession } from '../auth/auth.middleware';
 import { createRunnerInputSchema } from './runner.schema';
 import {
   createRunnerAsDto,
-  getDatabase,
   getRunnerAsDto,
   listPunchesForRunner,
   listRunnersAsDto,
@@ -15,13 +14,12 @@ import {
 // @FollowsBlueprint controller-public-router
 const runnerRouter = new Hono()
   .get('/editions/:editionSlug/runners', async (context) => {
-    const runners = await listRunnersAsDto(getDatabase(), context.req.param('editionSlug'));
+    const runners = await listRunnersAsDto(context.req.param('editionSlug'));
     return context.json({ runners });
   })
   .get('/editions/:editionSlug/runners/:runnerSlug', async (context) => {
     try {
       const runner = await getRunnerAsDto(
-        getDatabase(),
         context.req.param('editionSlug'),
         context.req.param('runnerSlug'),
       );
@@ -33,7 +31,6 @@ const runnerRouter = new Hono()
   })
   .get('/editions/:editionSlug/runners/:runnerSlug/punches', async (context) => {
     const punches = await listPunchesForRunner(
-      getDatabase(),
       context.req.param('editionSlug'),
       context.req.param('runnerSlug'),
     );
@@ -45,7 +42,7 @@ const adminRunnerRouter = new Hono()
   .use('*', requireAdminSession)
   .post('/', zValidator('json', createRunnerInputSchema), async (context) => {
     try {
-      const runner = await createRunnerAsDto(getDatabase(), context.req.valid('json'));
+      const runner = await createRunnerAsDto(context.req.valid('json'));
       return context.json({ runner }, 201);
     } catch (error) {
       if (error instanceof RunnerAlreadyExistsError)

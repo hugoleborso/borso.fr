@@ -5,7 +5,6 @@ import { AUTH_COOKIE_NAME } from './auth.middleware';
 import { loginInputSchema } from './auth.schema';
 import {
   AuthDeniedError,
-  getDatabase,
   httpStatusForAuthDenial,
   login,
   logout,
@@ -29,11 +28,7 @@ const authRouter = new Hono()
   .post('/login', zValidator('json', loginInputSchema), async (context) => {
     const ipAddress = readClientIp(context.req.header('x-forwarded-for'));
     try {
-      const result = await login(
-        getDatabase(),
-        { pin: context.req.valid('json').pin, ipAddress },
-        new Date(),
-      );
+      const result = await login({ pin: context.req.valid('json').pin, ipAddress }, new Date());
       setCookie(context, AUTH_COOKIE_NAME, result.sessionId, {
         httpOnly: true,
         secure: process.env.STAGE !== 'dev',
@@ -55,7 +50,7 @@ const authRouter = new Hono()
   .post('/logout', async (context) => {
     const sessionId = getCookie(context, AUTH_COOKIE_NAME);
     if (sessionId !== undefined) {
-      await logout(getDatabase(), sessionId);
+      await logout(sessionId);
     }
     deleteCookie(context, AUTH_COOKIE_NAME, { path: '/' });
     return context.json({ ok: true });

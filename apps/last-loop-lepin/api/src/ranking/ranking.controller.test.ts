@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { truncateAllTables } from '../../../test/database-utils';
 import { makeEdition, makePunch, makeRunner } from '../../../test/fixtures';
 import { createApp } from '../app';
 import { insertEdition } from '../edition/edition.repository';
@@ -36,11 +36,10 @@ describe('ranking controller', () => {
   });
 
   beforeEach(async () => {
-    const database = testDatabase();
-    await truncateAllTables(database);
-    await insertEdition(database, makeEdition({ status: 'live' }));
-    await insertRunner(database, makeRunner('alice'));
-    await insertRunner(database, makeRunner('bob'));
+    await truncateAllTables();
+    await insertEdition(makeEdition({ status: 'live' }));
+    await insertRunner(makeRunner('alice'));
+    await insertRunner(makeRunner('bob'));
   });
 
   it('returns 404 on unknown edition', async () => {
@@ -58,13 +57,12 @@ describe('ranking controller', () => {
   });
 
   it('marks identical loop+time entries as ex-aequo after race end', async () => {
-    const database = testDatabase();
-    await truncateAllTables(database);
-    await insertEdition(database, makeEdition({ status: 'live' }));
-    await insertRunner(database, makeRunner('alice'));
-    await insertRunner(database, makeRunner('bob'));
-    await insertPunch(database, makePunch('alice', 1, '2026-09-19T06:55:00.000+02:00'));
-    await insertPunch(database, makePunch('bob', 1, '2026-09-19T06:55:00.000+02:00'));
+    await truncateAllTables();
+    await insertEdition(makeEdition({ status: 'live' }));
+    await insertRunner(makeRunner('alice'));
+    await insertRunner(makeRunner('bob'));
+    await insertPunch(makePunch('alice', 1, '2026-09-19T06:55:00.000+02:00'));
+    await insertPunch(makePunch('bob', 1, '2026-09-19T06:55:00.000+02:00'));
 
     vi.setSystemTime(new Date('2026-09-19T22:30:00+02:00'));
     const response = await app.request('/api/standings/lepin-2026');
@@ -74,13 +72,12 @@ describe('ranking controller', () => {
   });
 
   it('puts late DNF runners after the survivors', async () => {
-    const database = testDatabase();
-    await truncateAllTables(database);
-    await insertEdition(database, makeEdition({ status: 'live' }));
-    await insertRunner(database, makeRunner('alice'));
-    await insertRunner(database, makeRunner('bob'));
-    await insertPunch(database, makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
-    await insertPunch(database, makePunch('alice', 2, '2026-09-19T07:55:00+02:00'));
+    await truncateAllTables();
+    await insertEdition(makeEdition({ status: 'live' }));
+    await insertRunner(makeRunner('alice'));
+    await insertRunner(makeRunner('bob'));
+    await insertPunch(makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
+    await insertPunch(makePunch('alice', 2, '2026-09-19T07:55:00+02:00'));
 
     vi.setSystemTime(new Date('2026-09-19T08:30:00+02:00'));
     const response = await app.request('/api/standings/lepin-2026');
@@ -95,10 +92,9 @@ describe('ranking controller', () => {
     const savedCdnHost = process.env.PHOTOS_CDN_HOST;
     process.env.PHOTOS_CDN_HOST = 'photos-cdn.test.example';
     try {
-      const database = testDatabase();
-      await truncateAllTables(database);
-      await insertEdition(database, makeEdition({ status: 'live' }));
-      await insertRunner(database, makeRunner('borso', { photoKey: 'lepin-2026/borso/x.jpg' }));
+      await truncateAllTables();
+      await insertEdition(makeEdition({ status: 'live' }));
+      await insertRunner(makeRunner('borso', { photoKey: 'lepin-2026/borso/x.jpg' }));
       vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
       const response = await app.request('/api/standings/lepin-2026');
       const body = standingsResponseSchema.parse(await response.json());
@@ -116,13 +112,12 @@ describe('ranking controller', () => {
 
   it('surfaces fastestLap on the response body and matches the seeded record holder', async () => {
     // Alice loop 1 = 55 min, Bob loop 1 = 58 min → Alice holds at 55 min.
-    const database = testDatabase();
-    await truncateAllTables(database);
-    await insertEdition(database, makeEdition({ status: 'live' }));
-    await insertRunner(database, makeRunner('alice'));
-    await insertRunner(database, makeRunner('bob'));
-    await insertPunch(database, makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
-    await insertPunch(database, makePunch('bob', 1, '2026-09-19T06:58:00+02:00'));
+    await truncateAllTables();
+    await insertEdition(makeEdition({ status: 'live' }));
+    await insertRunner(makeRunner('alice'));
+    await insertRunner(makeRunner('bob'));
+    await insertPunch(makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
+    await insertPunch(makePunch('bob', 1, '2026-09-19T06:58:00+02:00'));
 
     vi.setSystemTime(new Date('2026-09-19T07:30:00+02:00'));
     const response = await app.request('/api/standings/lepin-2026');
@@ -131,13 +126,12 @@ describe('ranking controller', () => {
   });
 
   it('exposes GET /standings/:slug/laps.csv with a header row and one row per runner', async () => {
-    const database = testDatabase();
-    await truncateAllTables(database);
-    await insertEdition(database, makeEdition({ status: 'finished' }));
-    await insertRunner(database, makeRunner('alice', { bib: 1 }));
-    await insertRunner(database, makeRunner('bob', { bib: 2 }));
-    await insertPunch(database, makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
-    await insertPunch(database, makePunch('bob', 1, '2026-09-19T06:58:00+02:00'));
+    await truncateAllTables();
+    await insertEdition(makeEdition({ status: 'finished' }));
+    await insertRunner(makeRunner('alice', { bib: 1 }));
+    await insertRunner(makeRunner('bob', { bib: 2 }));
+    await insertPunch(makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
+    await insertPunch(makePunch('bob', 1, '2026-09-19T06:58:00+02:00'));
 
     vi.setSystemTime(new Date('2026-09-21T12:00:00+02:00'));
     const response = await app.request('/api/standings/lepin-2026/laps.csv');

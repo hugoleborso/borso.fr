@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { truncateAllTables } from '../../../test/database-utils';
 import { makeEdition, makeRunner } from '../../../test/fixtures';
 import { createApp } from '../app';
 import { insertEdition } from '../edition/edition.repository';
@@ -39,10 +39,9 @@ describe('self-punch controller (public, no admin middleware)', () => {
   });
 
   beforeEach(async () => {
-    const database = testDatabase();
-    await truncateAllTables(database);
-    await insertEdition(database, makeEdition({ status: 'live' }));
-    await insertRunner(database, makeRunner('alice'));
+    await truncateAllTables();
+    await insertEdition(makeEdition({ status: 'live' }));
+    await insertRunner(makeRunner('alice'));
   });
 
   async function postSelfPunch(
@@ -106,7 +105,7 @@ describe('self-punch controller (public, no admin middleware)', () => {
     // Plant an admin punch via the same controller surface so the conflict is
     // observable end-to-end.
     const { adminSessionCookie } = await import('../../../test/database-utils');
-    const cookie = await adminSessionCookie(testDatabase());
+    const cookie = await adminSessionCookie();
     const adminResponse = await app.request('/api/admin/punches', {
       method: 'POST',
       headers: {

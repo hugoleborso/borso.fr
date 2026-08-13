@@ -6,7 +6,7 @@
  */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 import { findEditionBySlug } from '../edition/edition.repository';
 import { listRunnersForEdition } from '../runner/runner.repository';
@@ -37,7 +37,7 @@ describe('__test/test-seed.controller', () => {
   });
 
   beforeEach(async () => {
-    await truncateAllTables(testDatabase());
+    await truncateAllTables();
   });
 
   it('returns 400 on an unknown fixture name', async () => {
@@ -48,20 +48,16 @@ describe('__test/test-seed.controller', () => {
   it('seeds the race-down-to-one-survivor fixture (edition + roster + alice punches)', async () => {
     const response = await seed('race-down-to-one-survivor');
     expect(response.status).toBe(200);
-
-    const database = testDatabase();
-    const edition = await findEditionBySlug(database, 'lepin-2026');
+    const edition = await findEditionBySlug('lepin-2026');
     expect(edition).not.toBeNull();
-    const runners = await listRunnersForEdition(database, 'lepin-2026');
+    const runners = await listRunnersForEdition('lepin-2026');
     expect(runners.length).toBeGreaterThanOrEqual(3);
   });
 
   it('seeds the race-finished fixture (edition + runners + manual DNF)', async () => {
     const response = await seed('race-finished');
     expect(response.status).toBe(200);
-
-    const database = testDatabase();
-    const edition = await findEditionBySlug(database, 'lepin-2026');
+    const edition = await findEditionBySlug('lepin-2026');
     expect(edition).not.toBeNull();
   });
 });

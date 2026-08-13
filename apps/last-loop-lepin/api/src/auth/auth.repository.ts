@@ -1,5 +1,5 @@
 import { and, eq, gt, lt } from 'drizzle-orm';
-import type { Database } from '../database/client';
+import { getDatabase } from '../database/client';
 import { adminCredentialsTable, adminSessionsTable, authAttemptsTable } from './auth.schema';
 
 const ADMIN_CREDENTIAL_ROW_ID = 1;
@@ -10,11 +10,8 @@ export interface RateLimitBucket {
   readonly windowStartedAt: Date;
 }
 
-export async function findBucket(
-  database: Database,
-  ipAddress: string,
-): Promise<RateLimitBucket | null> {
-  const rows = await database
+export async function findBucket(ipAddress: string): Promise<RateLimitBucket | null> {
+  const rows = await getDatabase()
     .select()
     .from(authAttemptsTable)
     .where(eq(authAttemptsTable.ipAddress, ipAddress))
@@ -23,8 +20,8 @@ export async function findBucket(
 }
 
 // @FollowsBlueprint repository-idempotent-upsert
-export async function upsertBucket(database: Database, bucket: RateLimitBucket): Promise<void> {
-  await database
+export async function upsertBucket(bucket: RateLimitBucket): Promise<void> {
+  await getDatabase()
     .insert(authAttemptsTable)
     .values(bucket)
     .onConflictDoUpdate({
@@ -39,8 +36,8 @@ export async function upsertBucket(database: Database, bucket: RateLimitBucket):
  * deployed but unbootstrapped — `auth.service` translates it into the
  * `misconfigured` AuthDeniedError so the caller gets a clean 500.
  */
-export async function findAdminPinHash(database: Database): Promise<string | null> {
-  const rows = await database
+export async function findAdminPinHash(): Promise<string | null> {
+  const rows = await getDatabase()
     .select({ scryptHash: adminCredentialsTable.scryptHash })
     .from(adminCredentialsTable)
     .where(eq(adminCredentialsTable.id, ADMIN_CREDENTIAL_ROW_ID))
@@ -53,8 +50,8 @@ export interface AdminSession {
   readonly expiresAt: Date;
 }
 
-export async function createSession(database: Database, session: AdminSession): Promise<void> {
-  await database.insert(adminSessionsTable).values(session);
+export async function createSession(session: AdminSession): Promise<void> {
+  await getDatabase().insert(adminSessionsTable).values(session);
 }
 
 /**
@@ -64,12 +61,8 @@ export async function createSession(database: Database, session: AdminSession): 
  * read-path query cheap (single PK lookup + timestamp comparison).
  */
 // @FollowsBlueprint repository-query
-export async function findValidSession(
-  database: Database,
-  id: string,
-  now: Date,
-): Promise<AdminSession | null> {
-  const rows = await database
+export async function findValidSession(id: string, now: Date): Promise<AdminSession | null> {
+  const rows = await getDatabase()
     .select({ id: adminSessionsTable.id, expiresAt: adminSessionsTable.expiresAt })
     .from(adminSessionsTable)
     .where(and(eq(adminSessionsTable.id, id), gt(adminSessionsTable.expiresAt, now)))
@@ -77,8 +70,8 @@ export async function findValidSession(
   return rows[0] ?? null;
 }
 
-export async function deleteSession(database: Database, id: string): Promise<void> {
-  await database.delete(adminSessionsTable).where(eq(adminSessionsTable.id, id));
+export async function deleteSession(id: string): Promise<void> {
+  await getDatabase().delete(adminSessionsTable).where(eq(adminSessionsTable.id, id));
 }
 
 /**
@@ -86,6 +79,6 @@ export async function deleteSession(database: Database, id: string): Promise<voi
  * `now`. Called opportunistically from the login path so the table
  * doesn't grow unbounded; no scheduled job needed.
  */
-export async function purgeExpiredSessions(database: Database, now: Date): Promise<void> {
-  await database.delete(adminSessionsTable).where(lt(adminSessionsTable.expiresAt, now));
+export async function purgeExpiredSessions(now: Date): Promise<void> {
+  await getDatabase().delete(adminSessionsTable).where(lt(adminSessionsTable.expiresAt, now));
 }

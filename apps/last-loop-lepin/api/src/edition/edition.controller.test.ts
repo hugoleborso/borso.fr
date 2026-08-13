@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { adminSessionCookie, testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { adminSessionCookie, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 
 const editionEnvelopeSchema = z.object({
@@ -26,7 +26,7 @@ const MINIMAL_GPX = `<?xml version="1.0" encoding="UTF-8"?>
 </trkseg></trk></gpx>`;
 
 async function adminCookie(): Promise<string> {
-  return adminSessionCookie(testDatabase());
+  return adminSessionCookie();
 }
 
 // @FollowsBlueprint test-back-e2e
@@ -34,7 +34,7 @@ describe('admin edition controller', () => {
   const app = createApp();
 
   beforeEach(async () => {
-    await truncateAllTables(testDatabase());
+    await truncateAllTables();
   });
 
   async function postEdition(

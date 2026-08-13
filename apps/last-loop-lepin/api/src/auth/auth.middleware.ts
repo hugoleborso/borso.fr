@@ -1,7 +1,7 @@
 import type { MiddlewareHandler } from 'hono';
 import { deleteCookie, getCookie } from 'hono/cookie';
 import { isRequestOriginRejected } from './auth.core';
-import { getDatabase, verifySession } from './auth.service';
+import { verifySession } from './auth.service';
 
 const ADMIN_COOKIE_NAME = 'lastloop_admin';
 
@@ -18,7 +18,7 @@ export const requireAdminSession: MiddlewareHandler = async (context, next) => {
   if (sessionId === undefined) {
     return context.json({ error: 'admin session required' }, 401);
   }
-  const session = await verifySession(getDatabase(), sessionId, new Date());
+  const session = await verifySession(sessionId, new Date());
   if (session === null) {
     deleteCookie(context, ADMIN_COOKIE_NAME, { path: '/' });
     return context.json({ error: 'invalid session' }, 401);

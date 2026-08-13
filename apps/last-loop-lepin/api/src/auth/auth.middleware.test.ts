@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { truncateAllTables } from '../../../test/database-utils';
 import { AUTH_COOKIE_NAME, requireAdminSession } from './auth.middleware';
 import { createSession } from './auth.repository';
 
@@ -43,7 +43,7 @@ describe('auth.middleware', () => {
   });
 
   beforeEach(async () => {
-    await truncateAllTables(testDatabase());
+    await truncateAllTables();
   });
 
   it('returns 401 when no cookie is present', async () => {
@@ -62,7 +62,7 @@ describe('auth.middleware', () => {
 
   it('returns 401 + clears the cookie when the session has expired', async () => {
     const now = new Date();
-    await createSession(testDatabase(), {
+    await createSession({
       id: 'expired-id',
       expiresAt: new Date(now.getTime() - 60_000),
     });
@@ -76,7 +76,7 @@ describe('auth.middleware', () => {
 
   it('lets a GET through when the cookie maps to a live session', async () => {
     const now = new Date();
-    await createSession(testDatabase(), {
+    await createSession({
       id: 'live-id',
       expiresAt: new Date(now.getTime() + 60_000),
     });
@@ -90,7 +90,7 @@ describe('auth.middleware', () => {
 
   it('rejects state-changing requests with a missing Origin header (403)', async () => {
     const now = new Date();
-    await createSession(testDatabase(), {
+    await createSession({
       id: 'live-id-2',
       expiresAt: new Date(now.getTime() + 60_000),
     });
@@ -104,7 +104,7 @@ describe('auth.middleware', () => {
 
   it('rejects state-changing requests with a foreign Origin header (403)', async () => {
     const now = new Date();
-    await createSession(testDatabase(), {
+    await createSession({
       id: 'live-id-3',
       expiresAt: new Date(now.getTime() + 60_000),
     });
@@ -121,7 +121,7 @@ describe('auth.middleware', () => {
 
   it('lets state-changing requests through when Origin matches ALLOWED_ORIGIN', async () => {
     const now = new Date();
-    await createSession(testDatabase(), {
+    await createSession({
       id: 'live-id-4',
       expiresAt: new Date(now.getTime() + 60_000),
     });

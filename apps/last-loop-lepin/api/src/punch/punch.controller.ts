@@ -10,7 +10,6 @@ import {
 import {
   catchupPunch,
   correctPunch,
-  getDatabase,
   PunchConflictError,
   PunchNotFoundError,
   PunchRejectedError,
@@ -30,7 +29,7 @@ const adminPunchRouter = new Hono()
   .post('/punches', zValidator('json', createPunchInputSchema), async (context) => {
     const input = context.req.valid('json');
     try {
-      const punch = await registerPunch(getDatabase(), input, new Date());
+      const punch = await registerPunch(input, new Date());
       return context.json({ punch }, 201);
     } catch (error) {
       if (error instanceof PunchConflictError) {
@@ -46,7 +45,7 @@ const adminPunchRouter = new Hono()
     const id = context.req.param('id');
     const { finishedAt } = context.req.valid('json');
     try {
-      const punch = await correctPunch(getDatabase(), id, finishedAt, new Date());
+      const punch = await correctPunch(id, finishedAt, new Date());
       return context.json({ punch });
     } catch (error) {
       if (error instanceof PunchNotFoundError) return context.json({ error: error.message }, 404);
@@ -55,7 +54,7 @@ const adminPunchRouter = new Hono()
   })
   .delete('/punches/:id', async (context) => {
     try {
-      const punch = await voidPunch(getDatabase(), context.req.param('id'), new Date());
+      const punch = await voidPunch(context.req.param('id'), new Date());
       return context.json({ punch });
     } catch (error) {
       if (error instanceof PunchNotFoundError) return context.json({ error: error.message }, 404);
@@ -64,13 +63,13 @@ const adminPunchRouter = new Hono()
   })
   .post('/dnfs', zValidator('json', createDidNotFinishInputSchema), async (context) => {
     const input = context.req.valid('json');
-    const didNotFinish = await recordManualDidNotFinish(getDatabase(), input, new Date());
+    const didNotFinish = await recordManualDidNotFinish(input, new Date());
     return context.json({ dnf: didNotFinish }, 201);
   })
   .post('/punches/catchup', zValidator('json', catchupPunchInputSchema), async (context) => {
     const input = context.req.valid('json');
     try {
-      const punch = await catchupPunch(getDatabase(), input, new Date());
+      const punch = await catchupPunch(input, new Date());
       return context.json({ punch }, 201);
     } catch (error) {
       if (error instanceof PunchConflictError) {
