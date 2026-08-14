@@ -16,6 +16,7 @@
 
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
+import { type LevelLayout, layoutLevel } from './architecture-layout';
 import { renderArchitecturePage } from './architecture-page';
 import {
   type ArchitectureFile,
@@ -641,7 +642,7 @@ function readFlag(name: string): string | null {
   return process.argv[index + 1] ?? null;
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const isCheck = process.argv.includes('--check');
   /**
    * `--app-root` points the scan at another checkout of the same application,
@@ -695,8 +696,15 @@ function main(): void {
     (file) => file.blueprints.length === 0 && file.followsBlueprints.length === 0,
   );
 
+  const layouts = new Map<string, LevelLayout>();
+  for (const level of levels) {
+    if (level.id === 'code') continue;
+    layouts.set(level.id, await layoutLevel(level));
+  }
+
   const page = renderArchitecturePage({
     manifest: pragmaManifest,
+    layouts,
     levels,
     slices,
     blueprints,
@@ -741,4 +749,4 @@ function main(): void {
   );
 }
 
-main();
+await main();

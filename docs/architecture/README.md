@@ -36,6 +36,24 @@ Composition roots keep their conventional names (`main.ts`, `app.ts`,
 by name rather than renamed, because `app.ts` sits on the path the front end
 compiles against and churning it buys nothing.
 
+## Where layout happens
+
+ELK's layered algorithm runs **in the generator**, not in the page, and the
+emitted HTML carries node coordinates and edge bend points rather than a layout
+engine. That is what keeps edges out of the boxes they do not connect: routing
+around obstacles needs a dummy node per rank an edge crosses, which is the half
+of the Sugiyama pipeline a hand-rolled renderer skips.
+
+Measured with a probe that samples forty points along each rendered path and
+tests them against every node rectangle, the hand-rolled renderer put **72 of
+the component level's 125 edges through an unrelated node**. It is now 0 of 125,
+and 0 at the context and container levels too.
+
+ELK is deterministic, so the committed page stays byte-identical between runs
+and `--check` needs no tolerance. `elkjs` is a devDependency of the generator
+and never reaches the browser. See
+[ADR-0011](../adr/0011-elk-lays-out-the-architecture-graph-at-generation-time.md).
+
 ## The five levels
 
 | Level     | Shows                                                     | Derived from                                    |

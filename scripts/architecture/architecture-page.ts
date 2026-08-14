@@ -11,6 +11,7 @@
  */
 
 import { GRAPH_RUNTIME_SCRIPT, GRAPH_STYLES } from './architecture-graph-view';
+import type { LevelLayout } from './architecture-layout';
 import type { ArchitectureFile } from './architecture-model';
 import type { BlueprintEntry, ContextSlice, GraphLevel } from './architecture-graph';
 import type { ArchitectureManifest } from './pragma.manifest';
@@ -22,6 +23,7 @@ export interface RenderInput {
   readonly blueprints: readonly BlueprintEntry[];
   readonly files: readonly ArchitectureFile[];
   readonly unmarkedCount: number;
+  readonly layouts: ReadonlyMap<string, LevelLayout>;
 }
 
 function escapeHtml(text: string): string {
@@ -56,23 +58,32 @@ function embedJson(value: unknown): string {
   return JSON.stringify(value).replaceAll('<', String.raw`\u003c`);
 }
 
-function renderGraph(level: GraphLevel): string {
-  const nodeIds = new Set(level.nodes.map((node) => node.id));
+function renderGraph(level: GraphLevel, layout: LevelLayout): string {
+  const placed = new Map(layout.nodes.map((node) => [node.id, node]));
   const payload = {
     level: level.id,
     title: level.title,
-    nodes: level.nodes.map((node) => ({
-      id: node.id,
-      label: node.label,
-      sublabel:
-        node.fileCount > 0 ? `${node.fileCount} file${node.fileCount === 1 ? '' : 's'}` : '',
-      detail: node.detail,
-      group: node.group ?? '',
-      tone: toneOf(node.kind),
-    })),
-    edges: level.edges
-      .filter((edge) => nodeIds.has(edge.from) && nodeIds.has(edge.to))
-      .map((edge) => ({ from: edge.from, to: edge.to, kind: edge.kind, label: edge.label })),
+    width: layout.width,
+    height: layout.height,
+    nodes: level.nodes.flatMap((node) => {
+      const box = placed.get(node.id);
+      if (box === undefined) return [];
+      return [
+        {
+          id: node.id,
+          label: node.label,
+          sublabel:
+            node.fileCount > 0 ? `${node.fileCount} file${node.fileCount === 1 ? '' : 's'}` : '',
+          detail: node.detail,
+          tone: toneOf(node.kind),
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+        },
+      ];
+    }),
+    edges: layout.edges,
   };
   return `
       <div class="graph" data-level="${escapeHtml(level.id)}">
@@ -207,7 +218,7 @@ function renderBlueprints(blueprints: readonly BlueprintEntry[]): string {
 }
 
 export function renderArchitecturePage(input: RenderInput): string {
-  const { manifest, levels, slices, blueprints, files, unmarkedCount } = input;
+  const { manifest, levels, slices, blueprints, files, unmarkedCount, layouts } = input;
   const fileRows = files
     .map(
       (
@@ -249,7 +260,7 @@ export function renderArchitecturePage(input: RenderInput): string {
         </table>
       </div>`
           : `
-      ${renderGraph(level)}
+      ${renderGraph(level, layouts.get(level.id) ?? { nodes: [], edges: [], width: 0, height: 0 })}
       <div class="cards">${renderNodeCards(level)}</div>`
       }
     </section>`,

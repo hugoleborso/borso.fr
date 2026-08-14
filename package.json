@@ -25,6 +25,7 @@
     "@swmansion/argent": "0.19.0",
     "@vitest/eslint-plugin": "1.6.26",
     "agent-browser": "0.33.2",
+    "elkjs": "0.12.0",
     "esbuild": "^0.24.0",
     "eslint": "10.8.1",
     "eslint-config-prettier": "10.1.8",
