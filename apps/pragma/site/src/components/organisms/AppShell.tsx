@@ -41,15 +41,15 @@ import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon, type IconName } from '../atoms/Icon';
 import { isPositiveCount } from '../../lib/counts.utils';
-import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog';
+import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { MEMBER_PALETTE, memberInitial } from '../atoms/member-palette.utils';
 import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
 import { OfflineBanner } from '../molecules/OfflineBanner';
-import { BREAKPOINT_BELOW_LG, useIsMediaQueryMatching } from '../molecules/useIsMediaQueryMatching';
-import { useIsOnline } from '../molecules/useOnlineStatus';
+import { BREAKPOINT_BELOW_LG, useIsMediaQueryMatching } from '../molecules/media-query-matching.hook';
+import { useIsOnline } from '../molecules/online-status.hook';
 import { BottomTabBar } from './BottomTabBar';
 import { isNavDestinationActive } from './nav-active.core';
-import { useNavBadges } from './useNavBadges';
+import { useNavigationBadges } from './navigation-badges.hook';
 
 interface NavItem {
   to: string;
@@ -83,7 +83,7 @@ export function AppShell(): JSX.Element {
   const isOnline = useIsOnline();
   const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
-  const badges = useNavBadges();
+  const badges = useNavigationBadges();
 
   const closeMobileNav = (): void => setIsMobileNavOpen(false);
 

@@ -32,7 +32,7 @@
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog';
+import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { Button } from '../atoms/Button';
 import { composeClassName } from '../atoms/class-name.utils';
 import {

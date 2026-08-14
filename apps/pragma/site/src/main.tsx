@@ -6,10 +6,10 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
-import './i18n/i18n';
+import './i18n/i18n.setup';
 import './styles/tokens.css';
-import { queryClient } from './lib/query-client';
-import { registerServiceWorker } from './sw/register-sw';
+import { queryClient } from './lib/query-client.setup';
+import { registerServiceWorker } from './sw/service-worker.setup';
 
 registerServiceWorker();
 

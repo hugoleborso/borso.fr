@@ -8,7 +8,7 @@
  */
 
 import type { InferResponseType } from 'hono/client';
-import type { api } from '../api';
+import type { api } from '../api.client';
 
 type SessionsListShape = InferResponseType<typeof api.api.sessions.$get>;
 type SessionRow = SessionsListShape['sessions'][number];

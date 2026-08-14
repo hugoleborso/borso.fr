@@ -24,9 +24,9 @@ import { useParams } from 'react-router-dom';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SongNotes } from '../../components/molecules/SongNotes';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
-import { openDialogOnAttach } from '../../lib/modal-dialog';
-import { useNavigateTo } from '../../lib/navigation';
-import { useSong } from '../../lib/queries/songs';
+import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
+import { useNavigateTo } from '../../lib/navigation.hook';
+import { useSong } from '../../lib/queries/songs.queries';
 import { selectChordProText } from './chart-kind.utils';
 import { selectMissingSongMessageKey } from './missing-song.core';
 import {

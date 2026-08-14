@@ -8,7 +8,7 @@ import {
   useCreateInstrument,
   useDeleteInstrument,
   useUpdateInstrument,
-} from './instruments';
+} from './instruments.queries';
 import {
   createIsolatedQueryClient,
   createMutateSlot,
@@ -17,7 +17,7 @@ import {
   jsonResponse,
   mountWithClient,
   stubFetch,
-} from './test-helpers';
+} from './queries.test-utils';
 
 interface OptimisticListShape {
   instruments: { id: string; name: string; isHarmonic: boolean }[];

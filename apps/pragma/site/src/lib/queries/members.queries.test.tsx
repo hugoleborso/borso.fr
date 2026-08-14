@@ -6,14 +6,14 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { instrumentKeys } from './instruments';
+import { instrumentKeys } from './instruments.queries';
 import {
   memberKeys,
   useAssignMemberInstruments,
   useCreateMember,
   useDeleteMember,
   useUpdateMember,
-} from './members';
+} from './members.queries';
 import {
   createIsolatedQueryClient,
   createMutateSlot,
@@ -22,7 +22,7 @@ import {
   jsonResponse,
   mountWithClient,
   stubFetch,
-} from './test-helpers';
+} from './queries.test-utils';
 
 interface OptimisticMembersList {
   members: { id: string; firstName: string; color: string; avatarS3Key: string | null }[];

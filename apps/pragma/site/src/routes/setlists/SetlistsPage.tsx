@@ -10,10 +10,10 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '../../components/atoms/Icon';
 import { PageHeader } from '../../components/molecules/PageHeader';
-import { ApiError } from '../../lib/api';
+import { ApiError } from '../../lib/api.client';
 import { formatSessionDate } from '../../lib/formatters.utils';
-import { useSessionsList } from '../../lib/queries/sessions';
-import { useSetlistsBySessionIds } from '../../lib/queries/setlists';
+import { useSessionsList } from '../../lib/queries/sessions.queries';
+import { useSetlistsBySessionIds } from '../../lib/queries/setlists.queries';
 
 // @FollowsBlueprint route-list-page
 export function SetlistsPage(): JSX.Element {

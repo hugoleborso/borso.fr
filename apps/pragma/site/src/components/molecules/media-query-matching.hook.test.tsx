@@ -8,7 +8,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { BREAKPOINT_LG, BREAKPOINT_MD, useIsMediaQueryMatching } from './useIsMediaQueryMatching';
+import { BREAKPOINT_LG, BREAKPOINT_MD, useIsMediaQueryMatching } from './media-query-matching.hook';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;

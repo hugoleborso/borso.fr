@@ -9,7 +9,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import type { JSX } from 'react';
 import { act } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { useIsOnline } from './useOnlineStatus';
+import { useIsOnline } from './online-status.hook';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;

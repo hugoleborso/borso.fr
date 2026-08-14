@@ -17,7 +17,7 @@ import {
   KEY_OVERRIDE_MAX,
   NOTES_MAX,
   type SetlistEntryForm,
-} from './setlist-entry-form';
+} from './setlist-entry-form.hook';
 
 const FIELD_CLASS = composeClassName(inputVariants({ size: 'sm' }), 'font-mono');
 const LABEL_CLASS = 'flex flex-col gap-1 text-xs tracking-wider uppercase text-ink-400 font-medium';

@@ -8,7 +8,7 @@
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import '../../i18n/i18n';
+import '../../i18n/i18n.setup';
 import {
   LineupEditor,
   type LineupEditorInstrument,

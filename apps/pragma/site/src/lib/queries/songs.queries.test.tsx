@@ -7,7 +7,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { songKeys, useCreateSong, useDeleteSong, useUpdateSong } from './songs';
+import { songKeys, useCreateSong, useDeleteSong, useUpdateSong } from './songs.queries';
 import {
   createIsolatedQueryClient,
   createMutateSlot,
@@ -16,7 +16,7 @@ import {
   jsonResponse,
   mountWithClient,
   stubFetch,
-} from './test-helpers';
+} from './queries.test-utils';
 
 interface OptimisticListShape {
   songs: { id: string; title: string }[];

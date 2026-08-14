@@ -22,8 +22,8 @@ import { Button } from '../../components/atoms/Button';
 import { BackLink } from '../../components/molecules/BackLink';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { formatSessionDate } from '../../lib/formatters.utils';
-import { useSession } from '../../lib/queries/sessions';
-import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists';
+import { useSession } from '../../lib/queries/sessions.queries';
+import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists.queries';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 
 // @FollowsBlueprint route-detail-page

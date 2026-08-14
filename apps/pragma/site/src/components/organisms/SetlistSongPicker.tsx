@@ -20,9 +20,9 @@
 
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api';
-import { openDialogOnAttach } from '../../lib/modal-dialog';
-import { useCreateSong } from '../../lib/queries/songs';
+import { ApiError } from '../../lib/api.client';
+import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
+import { useCreateSong } from '../../lib/queries/songs.queries';
 import { Button } from '../atoms/Button';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';

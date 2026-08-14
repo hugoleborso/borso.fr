@@ -11,8 +11,8 @@
 
 import type { JSX } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useSessionProbe } from '../../lib/queries/auth';
-import { hasSessionMarker } from '../../lib/session-marker';
+import { useSessionProbe } from '../../lib/queries/auth.queries';
+import { hasSessionMarker } from '../../lib/session-marker.adapter';
 import { selectSessionGateState, type SessionGateState } from './session-gate.core';
 
 function CheckingSession(): JSX.Element {

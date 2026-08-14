@@ -19,8 +19,8 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError, api } from '../api';
-import { forgetSessionMarker, rememberSessionMarker } from '../session-marker';
+import { ApiError, api } from '../api.client';
+import { forgetSessionMarker, rememberSessionMarker } from '../session-marker.adapter';
 
 export const authKeys = {
   all: ['auth'] as const,

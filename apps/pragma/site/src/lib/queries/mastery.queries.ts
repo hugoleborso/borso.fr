@@ -10,7 +10,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api } from '../api';
+import { ApiError, api } from '../api.client';
 import { upsertMasteryDefault, withoutMasteryDefault } from './mastery.utils';
 import { isLastPendingMutation } from './optimistic.utils';
 

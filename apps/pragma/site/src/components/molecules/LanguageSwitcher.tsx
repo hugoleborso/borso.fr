@@ -7,7 +7,7 @@
  */
 
 import { useTranslation } from 'react-i18next';
-import { browserStorage } from '../../i18n/i18n';
+import { browserStorage } from '../../i18n/i18n.setup';
 import { SUPPORTED_LOCALES, type SupportedLocale } from '../../i18n/i18n.utils';
 import { writePersistedLocale } from '../../i18n/locale-storage.utils';
 import { composeClassName } from '../atoms/class-name.utils';

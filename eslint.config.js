@@ -355,6 +355,7 @@ export default tseslint.config(
       'apps/*/api/src/**/*.s3.ts',
       'apps/*/api/src/uploads/uploads.repository.ts',
       'apps/*/site/src/*-store.ts',
+      'apps/*/site/src/**/*.store.ts',
       'apps/*/test/**/*.ts',
     ],
     rules: { 'unicorn/no-top-level-assignment-in-function': 'off' },

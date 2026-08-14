@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ApiError } from './api';
+import { ApiError } from './api.client';
 import { selectMissingRecordReason } from './missing-record.utils';
 
 describe('selectMissingRecordReason', () => {

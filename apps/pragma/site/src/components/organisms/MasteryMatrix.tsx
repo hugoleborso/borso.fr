@@ -37,7 +37,7 @@ import {
 import type { JSX } from 'react';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api';
+import { ApiError } from '../../lib/api.client';
 import {
   cellKey,
   clampScore,
@@ -52,7 +52,7 @@ import {
   useDeleteMasteryDefault,
   useMasteryDefaults,
   useSaveMasteryDefault,
-} from '../../lib/queries/mastery';
+} from '../../lib/queries/mastery.queries';
 import { Avatar } from '../atoms/Avatar';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';

@@ -8,7 +8,7 @@
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ApiError, api } from '../api';
+import { ApiError, api } from '../api.client';
 
 const SIGNED_URL_STALE_MS = 4 * 60 * 1000;
 const SIGNED_URL_GC_MS = 5 * 60 * 1000;

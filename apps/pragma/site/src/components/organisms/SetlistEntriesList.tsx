@@ -29,7 +29,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import type { LineupEditorInstrument } from '../molecules/LineupEditor';
 import type { LineupMember } from '../molecules/MemberLineup';
-import { warnIfOrphanMemberIds } from './orphan-member-warn';
+import { warnIfOrphanMemberIds } from './orphan-member-warn.adapter';
 import { SetlistEntryDragPreview } from '../molecules/SetlistEntryDragPreview';
 import { SetlistEntryRow } from './SetlistEntryRow';
 import {

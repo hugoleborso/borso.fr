@@ -10,8 +10,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api, isResponseSuccessful } from '../api';
-import { instrumentKeys } from './instruments';
+import { ApiError, api, isResponseSuccessful } from '../api.client';
+import { instrumentKeys } from './instruments.queries';
 import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 
 type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;

@@ -9,21 +9,21 @@
  */
 
 import { useMemo, useSyncExternalStore } from 'react';
-import { getCurrentTime, readServerTime, subscribeClock } from '../../clock-store';
-import { useBarsList } from '../../lib/queries/bars';
-import { useSessionsList } from '../../lib/queries/sessions';
-import { useSongsList } from '../../lib/queries/songs';
+import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
+import { useBarsList } from '../../lib/queries/bars.queries';
+import { useSessionsList } from '../../lib/queries/sessions.queries';
+import { useSongsList } from '../../lib/queries/songs.queries';
 import { selectUpcomingConcerts } from '../../lib/upcoming-concerts.core';
 
-export type NavBadgeMap = Readonly<Record<string, number | undefined>>;
+export type NavigationBadgeMap = Readonly<Record<string, number | undefined>>;
 
-export function useNavBadges(): NavBadgeMap {
+export function useNavigationBadges(): NavigationBadgeMap {
   const songs = useSongsList();
   const sessions = useSessionsList();
   const bars = useBarsList();
   const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
 
-  return useMemo<NavBadgeMap>(() => {
+  return useMemo<NavigationBadgeMap>(() => {
     const songsReady = songs.data?.songs.filter((song) => song.status === 'concert_ready').length;
     const upcomingSessions = sessions.data?.sessions;
     const upcomingConcerts =

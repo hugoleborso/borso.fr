@@ -11,7 +11,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api } from '../api';
+import { ApiError, api } from '../api.client';
 import { isLastPendingMutation } from './optimistic.utils';
 
 export const transitionKeys = {

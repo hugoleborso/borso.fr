@@ -10,7 +10,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api, isResponseSuccessful } from '../api';
+import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 
 export const barKeys = {

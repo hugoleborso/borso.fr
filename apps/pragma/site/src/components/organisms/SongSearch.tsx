@@ -12,9 +12,9 @@
 
 import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api';
+import { ApiError } from '../../lib/api.client';
 import { debounce } from '../../lib/debounce.utils';
-import { useSongSearch } from '../../lib/queries/songs';
+import { useSongSearch } from '../../lib/queries/songs.queries';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';

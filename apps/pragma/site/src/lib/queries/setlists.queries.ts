@@ -13,7 +13,7 @@
  */
 
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError, api, isResponseSuccessful } from '../api';
+import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { isLastPendingMutation } from './optimistic.utils';
 import {
   appendOptimisticEntry,

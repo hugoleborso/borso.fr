@@ -15,8 +15,8 @@ import {
   jsonResponse,
   mountWithClient,
   stubFetch,
-} from './test-helpers';
-import { transitionKeys, useSaveTransitionComment } from './transitions';
+} from './queries.test-utils';
+import { transitionKeys, useSaveTransitionComment } from './transitions.queries';
 
 interface OptimisticPairCache {
   comment: { songAId: string; songBId: string; comment: string; updatedAt: string };

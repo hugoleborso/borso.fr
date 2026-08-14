@@ -12,7 +12,7 @@
 
 import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api, isResponseSuccessful } from '../api';
+import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
 import { buildOptimisticSong, mergeSongUpdate } from './song-cache.core';
 import { didLastSongWriteFail, selectSongThatLostItsLastWrite } from './song-write-failure.core';

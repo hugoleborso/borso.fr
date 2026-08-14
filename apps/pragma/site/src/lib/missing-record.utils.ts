@@ -6,7 +6,7 @@
  * derived here and the route maps it to its own wording.
  */
 
-import { ApiError } from './api';
+import { ApiError } from './api.client';
 
 export type MissingRecordReason = 'not-found' | 'load-failed';
 

@@ -10,8 +10,8 @@
 
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api';
-import { useSignChartUpload } from '../../lib/queries/uploads';
+import { ApiError } from '../../lib/api.client';
+import { useSignChartUpload } from '../../lib/queries/uploads.queries';
 import { composeClassName } from '../atoms/class-name.utils';
 import {
   FILE_DROP_MAX_MEBIBYTES,

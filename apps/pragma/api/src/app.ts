@@ -46,7 +46,7 @@ import { buildMembersRouter } from './members/members.controller';
 import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
-import { buildTransitionCommentsRouter } from './transitions/transition-comments.controller';
+import { buildTransitionCommentsRouter } from './transitions/transitions.controller';
 import { buildUploadsRouter } from './uploads/uploads.controller';
 
 export interface CreateAppOptions {

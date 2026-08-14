@@ -25,9 +25,9 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
-import { ApiError } from '../../lib/api';
-import { useNavigateTo } from '../../lib/navigation';
-import { useCreateSong, useDeleteSong, useSong, useUpdateSong } from '../../lib/queries/songs';
+import { ApiError } from '../../lib/api.client';
+import { useNavigateTo } from '../../lib/navigation.hook';
+import { useCreateSong, useDeleteSong, useSong, useUpdateSong } from '../../lib/queries/songs.queries';
 import { selectMissingSongMessageKey } from './missing-song.core';
 import { SongEditForm } from './SongEditForm';
 import {

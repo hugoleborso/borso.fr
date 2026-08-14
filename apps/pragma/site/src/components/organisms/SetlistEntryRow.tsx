@@ -56,7 +56,7 @@ import {
   ENERGY_MIN,
   type SetlistEntryFormValues,
   useSetlistEntryForm,
-} from '../molecules/setlist-entry-form';
+} from '../molecules/setlist-entry-form.hook';
 import { selectMasteryColor } from './mastery-color.core';
 import {
   ENERGY_DEFAULT,
