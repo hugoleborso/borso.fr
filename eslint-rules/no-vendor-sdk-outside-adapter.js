@@ -1,3 +1,4 @@
+import { onEveryModuleSource } from './module-source.js';
 import { isSiteFile, toPosixPath } from './site-paths.js';
 
 /**
@@ -54,21 +55,15 @@ export default {
     ) {
       return {};
     }
-    return {
-      ImportDeclaration(node) {
-        const source = node.source.value;
-        if (typeof source !== 'string') {
-          return;
-        }
-        const vendor = readVendor(source);
-        if (vendor !== null) {
-          context.report({
-            node: node.source,
-            messageId: 'vendorSdkOutsideAdapter',
-            data: { vendor },
-          });
-        }
-      },
-    };
+    return onEveryModuleSource((source, node) => {
+      const vendor = readVendor(source);
+      if (vendor !== null) {
+        context.report({
+          node: node.source,
+          messageId: 'vendorSdkOutsideAdapter',
+          data: { vendor },
+        });
+      }
+    });
   },
 };

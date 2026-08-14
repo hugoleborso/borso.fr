@@ -1,3 +1,4 @@
+import { onEveryModuleSource } from './module-source.js';
 import { isTestPath } from './impurity.js';
 
 /**
@@ -47,16 +48,10 @@ export default {
     if (isTestPath(context.filename)) {
       return {};
     }
-    return {
-      ImportDeclaration(node) {
-        const source = node.source.value;
-        if (typeof source !== 'string') {
-          return;
-        }
-        if (CROSS_SLICE_REPOSITORY_PATTERN.test(source)) {
-          context.report({ node: node.source, messageId: 'crossSliceRepository' });
-        }
-      },
-    };
+    return onEveryModuleSource((source, node) => {
+      if (CROSS_SLICE_REPOSITORY_PATTERN.test(source)) {
+        context.report({ node: node.source, messageId: 'crossSliceRepository' });
+      }
+    });
   },
 };
