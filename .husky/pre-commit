@@ -70,6 +70,12 @@ scripts/check-single-stylesheet.sh
 echo "[pre-commit] checking each VITE_ variable a site reads is wired"
 scripts/check-frontend-env-vars.sh
 
+# A manifest naming an icon that is not there installs a grey square, and the
+# build, the tests, the linter and the page all keep passing. A JSON parse plus
+# a handful of stat calls, so it costs nothing and belongs on the commit.
+echo "[pre-commit] checking each manifest names icons that ship"
+scripts/check-pwa-assets.sh
+
 # A pure module whose only consumer is its own test scores 100% on the coverage
 # and mutation gates while running nowhere, and knip cannot see it because every
 # test file is a knip entry point. A git-index read plus a grep, so it costs
