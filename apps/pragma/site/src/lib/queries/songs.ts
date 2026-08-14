@@ -11,10 +11,11 @@
  */
 
 import { normalizeLineup } from '@domain/lineup.core';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
 import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
+import { didLastSongWriteFail } from './song-write-failure.core';
 
 export const songKeys = {
   all: ['songs'] as const,
@@ -237,6 +238,21 @@ export function useUpdateSong() {
       void queryClient.invalidateQueries({ queryKey: songKeys.list() });
     },
   });
+}
+
+/**
+ * Whether the last write aimed at this song failed, so a page showing the song
+ * can say the values it renders are the ones `onError` put back.
+ */
+export function useDidLastSongWriteFail(songId: string): boolean {
+  const entries = useMutationState({
+    filters: { mutationKey: songKeys.all },
+    select: (mutation) => ({
+      variables: mutation.state.variables,
+      status: mutation.state.status,
+    }),
+  });
+  return didLastSongWriteFail(entries, songId);
 }
 
 // @FollowsBlueprint query-optimistic-mutation

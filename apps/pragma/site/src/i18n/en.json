@@ -143,7 +143,8 @@
     "notesStructurePlaceholder": "intro ×4 · verse · chorus · bridge · chorus ×2",
     "notesGimmicksPlaceholder": "Full stop before the last chorus, counted out loud.",
     "notesFreePlaceholder": "Anything the band should remember.",
-    "createSearched": "Create “{{title}}”"
+    "createSearched": "Create “{{title}}”",
+    "lastSaveFailed": "The last save did not go through — what you read below is the song as it was before the edit."
   },
   "mastery": {
     "title": "Mastery matrix",

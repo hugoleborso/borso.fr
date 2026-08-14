@@ -10,6 +10,12 @@
  *
  * A `?title=` parameter prefills the title, which is how the catalog hands
  * over what the operator typed in the search box before finding nothing.
+ *
+ * An update is fired without being awaited: the caches already hold the new
+ * values, so the operator reads the edited song straight away instead of
+ * watching a spinner, and a write that then fails is surfaced on the song page
+ * they landed on. A create is awaited, because the route it navigates to needs
+ * the id only the server can issue.
  */
 
 import type { JSX } from 'react';
@@ -65,7 +71,7 @@ export function SongEditPage(): JSX.Element {
         const created = await createSong.mutateAsync(payload);
         navigateTo(`/catalog/${created.song.id}`, { replace: true });
       } else {
-        await updateSong.mutateAsync({ id: songId, ...payload });
+        updateSong.mutate({ id: songId, ...payload });
         navigateTo(`/catalog/${songId}`);
       }
     } catch (error) {

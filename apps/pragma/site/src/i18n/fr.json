@@ -143,7 +143,8 @@
     "notesStructurePlaceholder": "intro ×4 · couplet · refrain · pont · refrain ×2",
     "notesGimmicksPlaceholder": "Break complet avant le dernier refrain, compté à voix haute.",
     "notesFreePlaceholder": "Tout ce que le groupe doit retenir.",
-    "createSearched": "Créer « {{title}} »"
+    "createSearched": "Créer « {{title}} »",
+    "lastSaveFailed": "Le dernier enregistrement n'est pas passé — ce que tu lis ci-dessous, c'est le morceau tel qu'il était avant la modification."
   },
   "mastery": {
     "title": "Matrice de maîtrise",

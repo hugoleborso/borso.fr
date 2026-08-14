@@ -40,4 +40,5 @@ serving this branch's build: `https://pragma-pr-50.preview.borso.fr` answers
 | `members` | The band directory and the mastery matrix. |
 | `scene` | The stage view, structure and gimmick notes above the chart. |
 | `nav-drawer` | The More tab's drawer, where the admin pages live on a phone, sitting above the tab bar with its own close button. |
+| `song-save-failed` | Saving the song no longer waits for the round trip, so a write that fails after the operator has left the form says so on the song page they landed on. Shot with the `PUT` aborted in the browser. |
 | `fr-setlist` | The same editor in French, which is the language the band reads it in. |

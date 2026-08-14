@@ -35,7 +35,7 @@ import { resolveEmbed } from '../../lib/embed.utils';
 import { useInstrumentsList } from '../../lib/queries/instruments';
 import { useMasteryDefaults } from '../../lib/queries/mastery';
 import { useMembersList } from '../../lib/queries/members';
-import { useSong, useUpdateSong } from '../../lib/queries/songs';
+import { useDidLastSongWriteFail, useSong, useUpdateSong } from '../../lib/queries/songs';
 import { useSignedChartUrl } from '../../lib/queries/uploads';
 import { extractChartKind, selectChordProText } from './chart-kind.utils';
 import { buildMasteryKey, buildSongLineupRows } from './song-lineup.core';
@@ -54,6 +54,7 @@ export function SongDetailPage(): JSX.Element {
   const instrumentsQuery = useInstrumentsList();
   const masteryQuery = useMasteryDefaults();
   const updateSong = useUpdateSong();
+  const hasFailedWrite = useDidLastSongWriteFail(songId ?? '');
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
 
   const song = songQuery.data?.song ?? null;
@@ -180,6 +181,16 @@ export function SongDetailPage(): JSX.Element {
           {error}
         </p>
       )}
+
+      {hasFailedWrite ? (
+        <p
+          className="text-danger text-sm border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
+          role="alert"
+        >
+          <Icon name="warn" size={14} />
+          {t('catalog.lastSaveFailed')}
+        </p>
+      ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
         <div className="flex flex-col gap-4 min-w-0">
