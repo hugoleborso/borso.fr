@@ -30,6 +30,16 @@ createRuleTester(atomFile).run('atomic-design-import-direction (atom)', rule, {
       code: "import type { MemberChipProps } from '../molecules/MemberChip';",
       errors: [{ messageId: 'wrongDirection' }],
     },
+    // A re-export is an import and an export in one statement, so it creates
+    // the same coupling through a path the importing side no longer shows.
+    {
+      code: "export { SearchBar } from '../molecules/SearchBar';",
+      errors: [{ messageId: 'wrongDirection' }],
+    },
+    {
+      code: "export * from '../organisms/CatalogGrid';",
+      errors: [{ messageId: 'wrongDirection' }],
+    },
   ],
 });
 

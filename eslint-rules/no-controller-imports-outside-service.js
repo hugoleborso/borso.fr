@@ -1,3 +1,5 @@
+import { onEveryModuleSource } from './module-source.js';
+
 /**
  * Ported from `biome-plugins/no-controller-imports-outside-service.grit`.
  *
@@ -42,16 +44,10 @@ export default {
     if (!context.filename.endsWith('.controller.ts')) {
       return {};
     }
-    return {
-      ImportDeclaration(node) {
-        const source = node.source.value;
-        if (typeof source !== 'string') {
-          return;
-        }
-        if (FORBIDDEN_SOURCE_PATTERNS.some((pattern) => pattern.test(source))) {
-          context.report({ node: node.source, messageId: 'forbiddenImport' });
-        }
-      },
-    };
+    return onEveryModuleSource((source, node) => {
+      if (FORBIDDEN_SOURCE_PATTERNS.some((pattern) => pattern.test(source))) {
+        context.report({ node: node.source, messageId: 'forbiddenImport' });
+      }
+    });
   },
 };

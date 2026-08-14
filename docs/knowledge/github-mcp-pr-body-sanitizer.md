@@ -39,8 +39,60 @@ Concrete reference points as of 2026-05-20:
 
 ## Confirmed sanitizer behaviours
 
-_(None at the moment — entries land here only after the
-verification procedure above produces a reproducible diff.)_
+### Markdown links come back wrapped in double backticks — sometimes
+
+Observed 2026-08-13 on PR #46, three times, through two different
+tools. What was sent:
+
+```markdown
+[ADR-0010](https://github.com/hugoleborso/borso.fr/blob/<branch>/docs/adr/0010-….md)
+```
+
+What `pull_request_read method: get` returned for the stored body:
+
+```markdown
+[ADR-0010](``https://github.com/hugoleborso/borso.fr/blob/<branch>/docs/adr/0010-….md``)
+```
+
+The backticks are inside the parentheses, so the link is dead: GitHub
+renders the literal text rather than an anchor. Two replies posted with
+`add_reply_to_pull_request_comment` were hit the same way, one of them
+also pulling the sentence's trailing comma inside the backticks.
+
+**The trigger is the URL's length.** Other links in the very same
+bodies came through untouched, so it is not "all links" nor "all `.md`
+targets". Sorting six samples from two PRs by URL length separates them
+perfectly:
+
+| Length | Verdict | Tail of the URL |
+|--------|---------|-----------------|
+| 156 | mangled | `…/dantotsus/a-lint-rule-that-knew-only-one-of-three-spellings.md` |
+| 156 | mangled | `…/dantotsus/a-feature-that-was-never-switched-on-in-any-stage.md` |
+| 151 | mangled | `…/adr/0010-pragma-domain-folder-for-cross-boundary-rules.md` |
+| 149 | survived | `…/dantotsus/three-green-gates-on-code-that-ran-nowhere.md` |
+| 135 | survived | `…/knowledge/github-mcp-pr-body-sanitizer.md` |
+| 120 | survived | `…/standards/00-principles.md` |
+
+Everything at or above 151 characters was wrapped; everything at or
+below 149 survived. Six samples put the threshold somewhere around 150
+and do not pin it exactly, so treat ~150 as the working number rather
+than the specification.
+
+**Mitigation, in order of preference:**
+
+1. **Shorten the URL below the threshold.** On a long-lived agent
+   branch this is nearly free: `claude/blueprints-creation-followers-am3mxz`
+   is 42 characters against `main`'s 4, so linking a merged file through
+   `/blob/main/…` rather than `/blob/<branch>/…` takes 38 characters off
+   every link in the body and puts all six samples above safely under.
+2. **Write the bare URL** with no markdown link. GitHub autolinks it and
+   a bare URL has survived every observation, at any length.
+3. **Read the stored body back** after posting anything long and
+   labelled, and repair it — the round-trip loop above, one call.
+
+_Untested here: whether `<details>` and `![alt](url)` are affected. The
+2026-05-20 retraction above stands for those until someone re-runs the
+procedure on them._
 
 ## Why this entry still exists
 

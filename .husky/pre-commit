@@ -62,6 +62,22 @@ fi
 echo "[pre-commit] checking each app ships one stylesheet"
 scripts/check-single-stylesheet.sh
 
+# A `VITE_*` variable a site reads and no workflow sets is a feature that never
+# runs, in every stage, silently: Vite substitutes `undefined` at build time and
+# nothing fails. A git-index read plus a grep over the workflows, so it costs
+# nothing and belongs on the commit. Rung-2 eradication of
+# docs/dantotsus/a-feature-that-was-never-switched-on-in-any-stage.md.
+echo "[pre-commit] checking each VITE_ variable a site reads is wired"
+scripts/check-frontend-env-vars.sh
+
+# A pure module whose only consumer is its own test scores 100% on the coverage
+# and mutation gates while running nowhere, and knip cannot see it because every
+# test file is a knip entry point. A git-index read plus a grep, so it costs
+# nothing and belongs on the commit. Rung-2 eradication of
+# docs/dantotsus/three-green-gates-on-code-that-ran-nowhere.md.
+echo "[pre-commit] checking each pure module has a caller"
+scripts/check-pure-modules-have-callers.sh
+
 # A non-module <script src> tag ships un-bundled and 404s in preview and
 # production. A grep over the app HTML, so it costs nothing and belongs on the
 # commit rather than the push. Rung-2 eradication of

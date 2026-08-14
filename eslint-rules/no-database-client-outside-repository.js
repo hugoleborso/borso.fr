@@ -1,4 +1,5 @@
 import { isTestPath } from './impurity.js';
+import { isTypeOnlyModuleSource, onEveryModuleSource } from './module-source.js';
 import { toPosixPath } from './site-paths.js';
 
 /**
@@ -43,21 +44,6 @@ const REPOSITORY_FILE_PATTERN = /\.repository\.tsx?$/;
 
 const DATABASE_CLIENT_FILE_PATTERN = /(^|\/)database\/client\.tsx?$/;
 
-/**
- * An import declaration carries `importKind`, a re-export carries `exportKind`,
- * and the specifiers of either can be individually marked `type`.
- */
-function isTypeOnly(node) {
-  if (node.importKind === 'type' || node.exportKind === 'type') {
-    return true;
-  }
-  const specifiers = node.specifiers ?? [];
-  const valueSpecifiers = specifiers.filter(
-    (specifier) => (specifier.importKind ?? specifier.exportKind ?? 'value') === 'value',
-  );
-  return specifiers.length > 0 && valueSpecifiers.length === 0;
-}
-
 // @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
@@ -76,21 +62,11 @@ export default {
     ) {
       return {};
     }
-    function reportWhenClientIsReached(node) {
-      const source = node.source?.value;
-      if (typeof source !== 'string' || !DATABASE_CLIENT_PATTERN.test(source)) {
-        return;
-      }
-      if (isTypeOnly(node)) {
+    return onEveryModuleSource((source, node) => {
+      if (!DATABASE_CLIENT_PATTERN.test(source) || isTypeOnlyModuleSource(node)) {
         return;
       }
       context.report({ node: node.source, messageId: 'databaseClientOutsideRepository' });
-    }
-
-    return {
-      ImportDeclaration: reportWhenClientIsReached,
-      ExportNamedDeclaration: reportWhenClientIsReached,
-      ExportAllDeclaration: reportWhenClientIsReached,
-    };
+    });
   },
 };

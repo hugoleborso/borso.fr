@@ -162,6 +162,22 @@ The pre-commit hook runs `eslint --cache` and `prettier --check` on the staged
 files, and it runs the coverage suite for `infra/cdk` or `infra/shared` when
 either one changed.
 
+It also runs the cheap whole-repository checks, each a git-index read plus a
+grep, and each guarding a class no linter sees because the evidence lives in
+two files at once:
+
+| Script | Fails when |
+|--------|------------|
+| `check-single-stylesheet.sh` | an application ships a second `.css` file |
+| `check-migration-sql-dsql-compat.sh` | a migration uses SQL Aurora DSQL rejects |
+| `check-frontend-env-vars.sh` | a site reads a `VITE_*` variable no workflow sets, so the code behind it never runs |
+| `check-pure-modules-have-callers.sh` | a `*.core.ts` or `*.utils.ts` is reached only from its own test, where coverage and mutation both score it at full marks while it runs nowhere |
+
+The last two carry an allowlist keyed by variable or by path, and every entry
+in one states its reason. That is deliberate: both checks describe situations
+that can be legitimate, and writing the reason down is what separates a
+decision from an oversight.
+
 The pre-push hook runs `knip` for dead code, `actionlint` for the workflows,
 the mutation tests for the workspaces whose pure files changed, the check for
 non-module script tags, and the check for pnpm reserved script names in the
