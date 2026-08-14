@@ -5,8 +5,11 @@
  * bottom-aligned "me" chip.
  *
  * Under the `lg` breakpoint the 232px sidebar gives way to a bottom tab bar
- * carrying the four pages the band uses on stage, plus a "more" tab that opens
- * the same sidebar as a slide-over for the admin pages.
+ * carrying the four pages the band uses on stage, plus a "more" tab that
+ * toggles the same sidebar as a slide-over for the admin pages. The slide-over
+ * sits above the tab bar rather than beside it: both are fixed, so at equal
+ * stacking the bar painted over the drawer's last rows and swallowed the taps
+ * meant for them.
  *
  * The browser's online status and the viewport width are both read
  * through `useSyncExternalStore` hooks, so this file holds no effect.
@@ -64,69 +67,84 @@ export function AppShell(): JSX.Element {
 
   const closeMobileNav = (): void => setIsMobileNavOpen(false);
 
-  const renderSidebar = (variant: 'desktop' | 'mobile'): JSX.Element => (
-    <nav
-      className={composeClassName(
-        'px-3.5 py-4 flex flex-col gap-3.5 bg-bg-sunk',
-        variant === 'desktop'
-          ? 'w-[232px] min-w-[232px] border-r border-line h-full'
-          : 'w-72 max-w-[80vw] h-full border-r border-line-strong shadow-2xl',
-      )}
-    >
-      <div className="font-display italic text-[30px] leading-none tracking-[-0.01em] text-ink-900 px-2 pt-1.5 pb-1">
-        {t('appName')}
-        <div className="font-sans not-italic text-[9px] tracking-[0.18em] uppercase text-ink-500 mt-0.5">
-          {t('appWordmark')}
+  const renderSidebar = (variant: 'desktop' | 'mobile'): JSX.Element => {
+    const isSlideOver = variant === 'mobile';
+    return (
+      <nav
+        className={composeClassName(
+          'px-3.5 py-4 flex flex-col gap-3.5 bg-bg-sunk',
+          variant === 'desktop'
+            ? 'w-[232px] min-w-[232px] border-r border-line h-full'
+            : 'w-72 max-w-[80vw] h-full border-r border-line-strong shadow-2xl',
+        )}
+      >
+        <div className="flex items-start justify-between gap-2 px-2 pt-1.5 pb-1">
+          <div className="font-display italic text-[30px] leading-none tracking-[-0.01em] text-ink-900">
+            {t('appName')}
+            <div className="font-sans not-italic text-[9px] tracking-[0.18em] uppercase text-ink-500 mt-0.5">
+              {t('appWordmark')}
+            </div>
+          </div>
+          {isSlideOver ? (
+            <button
+              type="button"
+              onClick={closeMobileNav}
+              aria-label={t('nav.closeMenu')}
+              className="inline-flex items-center justify-center w-11 h-11 -mr-2 -mt-1 rounded-md text-ink-500 hover:text-ink-900 bg-transparent border-0 cursor-pointer"
+            >
+              <Icon name="close" size={18} />
+            </button>
+          ) : null}
         </div>
-      </div>
 
-      <div className="flex flex-col gap-px">
-        {PRIMARY_NAV.map((item) => (
-          <SidebarLink
-            key={item.to}
-            item={item}
-            label={t(item.labelKey)}
-            badge={badges[item.to]}
-            isActive={isNavDestinationActive(location.pathname, item.to)}
-            onClick={closeMobileNav}
-          />
-        ))}
-      </div>
-
-      <div className="font-sans text-[10px] tracking-[0.14em] uppercase text-ink-400 px-2.5 pt-1.5 pb-0.5">
-        {t('nav.administrationSection')}
-      </div>
-      <div className="flex flex-col gap-px">
-        {ADMIN_NAV.map((item) => (
-          <SidebarLink
-            key={item.to}
-            item={item}
-            label={t(item.labelKey)}
-            badge={badges[item.to]}
-            isActive={isNavDestinationActive(location.pathname, item.to)}
-            onClick={closeMobileNav}
-          />
-        ))}
-      </div>
-
-      <div className="mt-auto flex flex-col gap-2">
-        <div className="border-t border-line pt-2">
-          <LanguageSwitcher />
+        <div className="flex flex-col gap-px">
+          {PRIMARY_NAV.map((item) => (
+            <SidebarLink
+              key={item.to}
+              item={item}
+              label={t(item.labelKey)}
+              badge={badges[item.to]}
+              isActive={isNavDestinationActive(location.pathname, item.to)}
+              onClick={closeMobileNav}
+            />
+          ))}
         </div>
-        <div className="flex items-center gap-2.5 p-2 rounded-md border border-line bg-bg-elev">
-          <Avatar
-            initials={memberInitial(t('shell.meName'))}
-            color={MEMBER_PALETTE.teal}
-            size="md"
-          />
-          <div className="min-w-0">
-            <div className="text-[13px] font-medium truncate">{t('shell.meName')}</div>
-            <div className="text-[10.5px] text-ink-500 truncate">{t('shell.meVersion')}</div>
+
+        <div className="font-sans text-[10px] tracking-[0.14em] uppercase text-ink-400 px-2.5 pt-1.5 pb-0.5">
+          {t('nav.administrationSection')}
+        </div>
+        <div className="flex flex-col gap-px">
+          {ADMIN_NAV.map((item) => (
+            <SidebarLink
+              key={item.to}
+              item={item}
+              label={t(item.labelKey)}
+              badge={badges[item.to]}
+              isActive={isNavDestinationActive(location.pathname, item.to)}
+              onClick={closeMobileNav}
+            />
+          ))}
+        </div>
+
+        <div className="mt-auto flex flex-col gap-2">
+          <div className="border-t border-line pt-2">
+            <LanguageSwitcher />
+          </div>
+          <div className="flex items-center gap-2.5 p-2 rounded-md border border-line bg-bg-elev">
+            <Avatar
+              initials={memberInitial(t('shell.meName'))}
+              color={MEMBER_PALETTE.teal}
+              size="md"
+            />
+            <div className="min-w-0">
+              <div className="text-[13px] font-medium truncate">{t('shell.meName')}</div>
+              <div className="text-[10.5px] text-ink-500 truncate">{t('shell.meVersion')}</div>
+            </div>
           </div>
         </div>
-      </div>
-    </nav>
-  );
+      </nav>
+    );
+  };
 
   return (
     <div className="h-screen flex bg-bg text-ink-900">
@@ -136,7 +154,7 @@ export function AppShell(): JSX.Element {
       {/* Mobile slide-over — rendered only when open to keep the
           tree light when the user is on desktop. */}
       {isNarrow && isMobileNavOpen ? (
-        <div className="fixed inset-0 z-40 flex">
+        <div className="fixed inset-0 z-50 flex">
           <div
             className="absolute inset-0 bg-[rgba(20,16,12,0.5)]"
             aria-hidden="true"
@@ -156,7 +174,8 @@ export function AppShell(): JSX.Element {
           tabs={PRIMARY_NAV}
           badges={badges}
           activePath={location.pathname}
-          onOpenMore={() => setIsMobileNavOpen(true)}
+          isMoreOpen={isMobileNavOpen}
+          onToggleMore={() => setIsMobileNavOpen((isOpen) => !isOpen)}
         />
       ) : null}
     </div>

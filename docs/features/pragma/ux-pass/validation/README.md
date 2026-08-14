@@ -21,7 +21,7 @@ serving this branch's build: `https://pragma-pr-50.preview.borso.fr` answers
 | `lineup-editor` | Giving Léa a second instrument on one song. The row picks up the override badge and the strip below it recomputes, now naming her guitar among the carriers. |
 | `transition-note` | Writing the note on a gap and seeing it land inline on the strip, where the band reads it. |
 | `member-filter` | Filtering the set to one member on a desktop: each visible row hoists what that person plays there, `GUITARE + CHANT` included. |
-| `mobile-nav` | The bottom tab bar carrying the four stage pages, and the More tab opening the drawer that holds the admin ones. |
+| `mobile-nav` | The bottom tab bar carrying the four stage pages, and the More tab opening the drawer that holds the admin ones — then closing it, since More is a toggle. |
 
 ## Screenshots
 
@@ -39,5 +39,5 @@ serving this branch's build: `https://pragma-pr-50.preview.borso.fr` answers
 | `instruments` | The instrument families the transition rule reads. |
 | `members` | The band directory and the mastery matrix. |
 | `scene` | The stage view, structure and gimmick notes above the chart. |
-| `nav-drawer` | The More tab's drawer, where the admin pages live on a phone. |
+| `nav-drawer` | The More tab's drawer, where the admin pages live on a phone, sitting above the tab bar with its own close button. |
 | `fr-setlist` | The same editor in French, which is the language the band reads it in. |

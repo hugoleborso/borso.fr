@@ -4,6 +4,10 @@
  * pages. It replaces reaching for a hamburger at the top of a screen the
  * hand is holding from the bottom.
  *
+ * The more tab is a toggle, and says so through `aria-expanded` and through
+ * the glyph it carries, because a button that only opens leaves the second
+ * tap doing nothing and reads as broken.
+ *
  * Hidden from `lg` up, where the sidebar is already visible.
  */
 
@@ -27,7 +31,8 @@ export interface BottomTabBarProps {
   readonly tabs: readonly BottomTab[];
   readonly badges: Readonly<Record<string, number | undefined>>;
   readonly activePath: string;
-  readonly onOpenMore: () => void;
+  readonly isMoreOpen: boolean;
+  readonly onToggleMore: () => void;
 }
 
 const TAB_CLASS =
@@ -65,13 +70,15 @@ export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
       })}
       <button
         type="button"
-        onClick={props.onOpenMore}
+        onClick={props.onToggleMore}
+        aria-expanded={props.isMoreOpen}
         className={composeClassName(
           TAB_CLASS,
-          'text-ink-500 bg-transparent border-0 cursor-pointer',
+          'bg-transparent border-0 cursor-pointer',
+          props.isMoreOpen ? 'text-accent' : 'text-ink-500',
         )}
       >
-        <Icon name="menu" size={19} />
+        <Icon name={props.isMoreOpen ? 'close' : 'menu'} size={19} />
         <span>{t('nav.more')}</span>
       </button>
     </nav>

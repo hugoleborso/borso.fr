@@ -15,7 +15,8 @@
       "en": "EN"
     },
     "bottomBar": "Main sections",
-    "more": "More"
+    "more": "More",
+    "closeMenu": "Close menu"
   },
   "shell": {
     "meName": "Hugo",
