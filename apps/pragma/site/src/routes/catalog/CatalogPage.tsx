@@ -30,6 +30,7 @@ import { useSongsList } from '../../lib/queries/songs';
 import {
   buildNewSongPath,
   type CatalogStatusFilter,
+  selectCatalogEmptyMessageKey,
   compactLineup,
   countSongsWithStatus,
   selectVisibleSongs,
@@ -177,7 +178,9 @@ export function CatalogPage(): JSX.Element {
       {isLoading && <p className="text-ink-400 text-sm italic">{t('common.loading')}</p>}
       {!isLoading && cards.length === 0 && (
         <div className="flex flex-col items-start gap-3 py-8">
-          <p className="text-ink-400 text-sm italic m-0">{t('catalog.emptyList')}</p>
+          <p className="text-ink-400 text-sm italic m-0">
+            {t(selectCatalogEmptyMessageKey(search))}
+          </p>
           <Link to={buildNewSongPath(search)}>
             <Button variant="accent" type="button">
               <Icon name="plus" size={14} />

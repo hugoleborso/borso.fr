@@ -3,6 +3,7 @@ import {
   type CatalogSong,
   buildNewSongPath,
   compactLineup,
+  selectCatalogEmptyMessageKey,
   countSongsWithStatus,
   isMatchingSearch,
   isMatchingStatusFilter,
@@ -112,5 +113,15 @@ describe('buildNewSongPath', () => {
 
   it('carries what was typed so the title is not typed twice', () => {
     expect(buildNewSongPath(' Slow Burn ')).toBe('/catalog/new?title=Slow%20Burn');
+  });
+});
+
+describe('selectCatalogEmptyMessageKey', () => {
+  it('says the catalog is empty when nothing was searched', () => {
+    expect(selectCatalogEmptyMessageKey('  ')).toBe('catalog.emptyList');
+  });
+
+  it('says the search matched nothing when something was', () => {
+    expect(selectCatalogEmptyMessageKey('Bohemian')).toBe('catalog.emptySearch');
   });
 });

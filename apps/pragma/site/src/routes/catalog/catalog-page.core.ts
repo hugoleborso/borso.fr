@@ -71,3 +71,14 @@ export function buildNewSongPath(search: string): string {
   if (title.length === 0) return NEW_SONG_PATH;
   return `${NEW_SONG_PATH}?title=${encodeURIComponent(title)}`;
 }
+
+/**
+ * What the empty grid says. "No songs yet" is true of an empty catalog and
+ * false of a search that matched nothing, and the second is the case the
+ * operator is far more often looking at.
+ */
+export function selectCatalogEmptyMessageKey(
+  search: string,
+): 'catalog.emptyList' | 'catalog.emptySearch' {
+  return search.trim().length === 0 ? 'catalog.emptyList' : 'catalog.emptySearch';
+}
