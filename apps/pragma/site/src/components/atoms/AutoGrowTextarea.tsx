@@ -7,9 +7,13 @@
  *
  * `rows` still sets the floor: `scrollHeight` never reports less than the box
  * the row count reserves, so an empty field keeps the height it was given.
+ *
+ * `measureAutoGrowBox` sets the ceiling, and hands the box back its own scroll
+ * once the content passes it.
  */
 
 import type { JSX, TextareaHTMLAttributes } from 'react';
+import { measureAutoGrowBox } from './auto-grow-textarea.utils';
 import { composeClassName } from './class-name.utils';
 import { type InputVariantProps, inputVariants } from './input.variants';
 
@@ -19,7 +23,9 @@ export interface AutoGrowTextareaProps
 function fitToContent(element: HTMLTextAreaElement | null): void {
   if (element === null) return;
   element.style.setProperty('height', 'auto');
-  element.style.setProperty('height', `${element.scrollHeight}px`);
+  const box = measureAutoGrowBox(element.scrollHeight, window.innerHeight);
+  element.style.setProperty('height', `${box.heightPx}px`);
+  element.style.setProperty('overflow-y', box.overflowY);
 }
 
 // @FollowsBlueprint atom-variant
@@ -38,7 +44,7 @@ export function AutoGrowTextarea({
       }}
       className={composeClassName(
         inputVariants({ size }),
-        'resize-none overflow-hidden',
+        'resize-none overflow-x-hidden',
         className,
       )}
       {...rest}

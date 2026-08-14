@@ -5,6 +5,10 @@
  *
  * `tone` picks the palette rather than the layout: the same block appears on
  * the cream detail page and on the black stage view.
+ *
+ * A pasted link is one unbreakable word, and the detail page clips what
+ * overflows, so the note text breaks mid-word rather than running past the
+ * card and off the screen.
  */
 
 import type { JSX } from 'react';
@@ -51,7 +55,7 @@ export function SongNotes({ song, tone = 'light', className }: SongNotesProps): 
           </span>
           <p
             className={composeClassName(
-              'm-0 text-[13px] leading-relaxed whitespace-pre-wrap',
+              'm-0 text-[13px] leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]',
               TEXT_CLASS_BY_TONE[tone],
             )}
           >

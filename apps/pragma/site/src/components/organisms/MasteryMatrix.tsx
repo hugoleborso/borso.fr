@@ -55,6 +55,7 @@ import {
 } from '../../lib/queries/mastery';
 import { Avatar } from '../atoms/Avatar';
 import { composeClassName } from '../atoms/class-name.utils';
+import { Icon } from '../atoms/Icon';
 import { memberInitial } from '../atoms/member-palette.utils';
 import { ScoreInput } from '../atoms/ScoreInput';
 
@@ -88,6 +89,16 @@ interface MatrixRow {
 const STICKY_ROW_HEADER_CLASS = 'sticky left-0 z-10 bg-bg-elev';
 
 /**
+ * A sticky column has to leave the grid room to travel underneath it. Left
+ * free, the name column takes the width of the longest first name — one
+ * 61-character name grew it until it met the sticky average column and no
+ * score box anywhere in the grid could be tapped at any scroll position. The
+ * cell content is what a table's automatic layout measures, so the budget is
+ * spent on an inner box that clips, not on the cell.
+ */
+const STICKY_ROW_HEADER_BUDGET_CLASS = 'flex items-center max-w-[7rem] sm:max-w-[12rem]';
+
+/**
  * The per-member average is anchored to the right edge the way the name is
  * anchored to the left, so the column the operator reads the row for is on
  * screen at rest instead of past the fold, and the instrument columns visibly
@@ -104,6 +115,15 @@ const STICKY_AVERAGE_CLASS = 'sticky right-0 z-10 bg-bg-elev border-l border-lin
 const MATRIX_SCROLLER_CLASS =
   'overflow-x-scroll [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-bg-sunk ' +
   '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-line-strong';
+
+/**
+ * A styled `::-webkit-scrollbar` reserves no layout space here — the track
+ * measures zero — and iOS Safari draws no persistent scrollbar at all, so on a
+ * phone the drawn one is not a cue anybody sees. The sentence is, and it costs
+ * one line above the grid.
+ */
+const MATRIX_SCROLL_HINT_CLASS =
+  'sm:hidden text-xs text-ink-400 m-0 mb-2 flex items-center gap-1.5';
 
 const DECIMALS = 1;
 const RIGHT_MOUSE_BUTTON = 2;
@@ -169,16 +189,18 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
       id: 'member',
       header: () => null,
       cell: ({ row }) => (
-        <>
+        <span className={STICKY_ROW_HEADER_BUDGET_CLASS}>
           <Avatar
             size="xs"
-            className="mr-2 align-middle"
+            className="mr-2 shrink-0"
             initials={memberInitial(row.original.member.firstName)}
             color={row.original.member.color}
             style={{ color: readableForeground(row.original.member.color) }}
           />
-          <span className="align-middle text-ink-900">{row.original.member.firstName}</span>
-        </>
+          <span className="truncate text-ink-900" title={row.original.member.firstName}>
+            {row.original.member.firstName}
+          </span>
+        </span>
       ),
     };
     const instrumentColumns: ColumnDef<MatrixRow>[] = instruments.map((instrument) => ({
@@ -241,110 +263,118 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
       {members.length === 0 || instruments.length === 0 ? (
         <p className="text-sm text-ink-400 italic">{t('mastery.noData')}</p>
       ) : (
-        <div className={MATRIX_SCROLLER_CLASS}>
-          <table className="w-full border-collapse text-[12.5px]">
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header, headerIndex) => {
-                    const isLast = headerIndex === headerGroup.headers.length - 1;
-                    const isFirst = headerIndex === 0;
-                    const className = isFirst
-                      ? STICKY_ROW_HEADER_CLASS
-                      : isLast
-                        ? composeClassName(
-                            'text-right font-medium text-xs tracking-wider uppercase text-ink-500 px-3 py-3 border-b border-line',
-                            STICKY_AVERAGE_CLASS,
-                          )
-                        : 'text-center font-medium text-xs tracking-wider uppercase text-ink-500 px-2 py-3 border-b border-line align-bottom';
-                    return (
-                      <th key={header.id} className={className}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    );
-                  })}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-[rgba(26,22,18,0.02)]">
-                  {row.getVisibleCells().map((cell, cellIndex) => {
-                    const isFirst = cellIndex === 0;
-                    const isLast = cellIndex === row.getVisibleCells().length - 1;
-                    if (isFirst) {
+        <>
+          <p className={MATRIX_SCROLL_HINT_CLASS}>
+            <Icon name="drag" size={12} />
+            {t('members.masteryMatrixScrollHint')}
+          </p>
+          <div className={MATRIX_SCROLLER_CLASS}>
+            <table className="w-full border-collapse text-[12.5px]">
+              <thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header, headerIndex) => {
+                      const isLast = headerIndex === headerGroup.headers.length - 1;
+                      const isFirst = headerIndex === 0;
+                      const className = isFirst
+                        ? STICKY_ROW_HEADER_CLASS
+                        : isLast
+                          ? composeClassName(
+                              'text-right font-medium text-xs tracking-wider uppercase text-ink-500 px-3 py-3 border-b border-line',
+                              STICKY_AVERAGE_CLASS,
+                            )
+                          : 'text-center font-medium text-xs tracking-wider uppercase text-ink-500 px-2 py-3 border-b border-line align-bottom';
                       return (
-                        <th
-                          key={cell.id}
-                          scope="row"
-                          className={composeClassName(
-                            'text-left px-3 py-2 border-b border-line',
-                            STICKY_ROW_HEADER_CLASS,
-                          )}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        <th key={header.id} className={className}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
                         </th>
                       );
-                    }
-                    if (isLast) {
+                    })}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-[rgba(26,22,18,0.02)]">
+                    {row.getVisibleCells().map((cell, cellIndex) => {
+                      const isFirst = cellIndex === 0;
+                      const isLast = cellIndex === row.getVisibleCells().length - 1;
+                      if (isFirst) {
+                        return (
+                          <th
+                            key={cell.id}
+                            scope="row"
+                            className={composeClassName(
+                              'text-left px-3 py-2 border-b border-line',
+                              STICKY_ROW_HEADER_CLASS,
+                            )}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </th>
+                        );
+                      }
+                      if (isLast) {
+                        return (
+                          <td
+                            key={cell.id}
+                            className={composeClassName(
+                              'text-right px-3 py-1 border-b border-line font-mono text-ink-500',
+                              STICKY_AVERAGE_CLASS,
+                            )}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        );
+                      }
+                      const instrumentId = cell.column.id.replace('inst:', '');
                       return (
                         <td
                           key={cell.id}
-                          className={composeClassName(
-                            'text-right px-3 py-1 border-b border-line font-mono text-ink-500',
-                            STICKY_AVERAGE_CLASS,
-                          )}
+                          className="px-1 py-1 border-b border-line"
+                          onAuxClick={(event) => {
+                            if (event.button !== RIGHT_MOUSE_BUTTON) return;
+                            event.preventDefault();
+                            clearScore(row.original.member.id, instrumentId);
+                          }}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       );
-                    }
-                    const instrumentId = cell.column.id.replace('inst:', '');
+                    })}
+                  </tr>
+                ))}
+                <tr className="bg-bg-sunk">
+                  <th
+                    scope="row"
+                    className={composeClassName(
+                      'text-left px-3 py-3 font-medium text-ink-500 text-xs tracking-wider uppercase',
+                      STICKY_ROW_HEADER_CLASS,
+                      'bg-bg-sunk',
+                    )}
+                  >
+                    {t('members.columnAverage')}
+                  </th>
+                  {instruments.map((instrument) => {
+                    const average = columnAverage(instrument.id, memberIds, scores);
                     return (
                       <td
-                        key={cell.id}
-                        className="px-1 py-1 border-b border-line"
-                        onAuxClick={(event) => {
-                          if (event.button !== RIGHT_MOUSE_BUTTON) return;
-                          event.preventDefault();
-                          clearScore(row.original.member.id, instrumentId);
-                        }}
+                        key={instrument.id}
+                        className="text-center px-1 py-3 font-mono text-ink-500"
                       >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {average === null ? '—' : average.toFixed(DECIMALS)}
                       </td>
                     );
                   })}
+                  <td
+                    className={composeClassName('px-3 py-3', STICKY_AVERAGE_CLASS, 'bg-bg-sunk')}
+                  />
                 </tr>
-              ))}
-              <tr className="bg-bg-sunk">
-                <th
-                  scope="row"
-                  className={composeClassName(
-                    'text-left px-3 py-3 font-medium text-ink-500 text-xs tracking-wider uppercase',
-                    STICKY_ROW_HEADER_CLASS,
-                    'bg-bg-sunk',
-                  )}
-                >
-                  {t('members.columnAverage')}
-                </th>
-                {instruments.map((instrument) => {
-                  const average = columnAverage(instrument.id, memberIds, scores);
-                  return (
-                    <td
-                      key={instrument.id}
-                      className="text-center px-1 py-3 font-mono text-ink-500"
-                    >
-                      {average === null ? '—' : average.toFixed(DECIMALS)}
-                    </td>
-                  );
-                })}
-                <td className={composeClassName('px-3 py-3', STICKY_AVERAGE_CLASS, 'bg-bg-sunk')} />
-              </tr>
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </section>
   );

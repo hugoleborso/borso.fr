@@ -6,7 +6,10 @@
  * readable column and thumb-sized controls rather than a five-cell grid
  * squeezed into 375 px. The energy control and the key / capo / notes panel sit
  * below the title row rather than inside it, so they span the card instead of
- * the 189 px the position, the drag handle and the action stack leave.
+ * the 189 px the position, the drag handle and the action stack leave. The
+ * title wraps into that column rather than being cut off at one line: the
+ * action stack is 132 px tall beside it, so a second line costs no height, and
+ * on stage a half-read title is worth nothing.
  *
  * Each row owns a small `useForm` instance — the parent
  * (`SetlistEditor`) doesn't centralise per-row state. The form is never
@@ -55,9 +58,13 @@ import {
   useSetlistEntryForm,
 } from '../molecules/setlist-entry-form';
 import { selectMasteryColor } from './mastery-color.core';
+import {
+  ENERGY_DEFAULT,
+  isEnergyStored,
+  selectEnergyAppearance,
+} from './setlist-entry-energy.core';
 import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
 
-const ENERGY_DEFAULT = 5;
 const ENERGY_STEP = 1;
 const ICON_BUTTON_CLASS =
   'w-11 h-11 sm:w-9 sm:h-9 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
@@ -173,7 +180,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                 </span>
               </div>
             ) : null}
-            <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 truncate">
+            <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 [overflow-wrap:anywhere]">
               {props.title}
             </div>
             <div className="flex items-center gap-2 text-xs text-ink-500 mt-0.5 flex-wrap">
@@ -237,58 +244,70 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           </div>
         </div>
         <form.Field name="energy">
-          {(field) => (
-            <div className="flex items-center gap-2 max-w-full sm:max-w-[340px]">
-              <span className="text-xs font-mono uppercase tracking-wider text-ink-400 shrink-0">
-                {t('setlist.energy')}
-              </span>
-              <input
-                type="range"
-                min={ENERGY_MIN}
-                max={ENERGY_MAX}
-                value={field.state.value}
-                onChange={(event) => {
-                  const next = Number(event.target.value);
-                  field.handleChange(next);
-                  publishEnergy(next);
-                }}
-                onBlur={field.handleBlur}
-                aria-label={t('setlist.energy')}
-                className="flex-1 min-w-0 h-11 accent-accent"
-              />
-              <button
-                type="button"
-                className={ENERGY_STEP_BUTTON_CLASS}
-                disabled={field.state.value <= ENERGY_MIN}
-                aria-label={t('setlist.energyDown')}
-                onClick={() => {
-                  const next = field.state.value - ENERGY_STEP;
-                  field.handleChange(next);
-                  publishEnergy(next);
-                }}
-              >
-                −
-              </button>
-              <span className="font-mono text-xs text-ink-500 min-w-[18px] shrink-0 text-center">
-                {field.state.meta.isDirty || props.energy !== null || props.baseEnergy !== null
-                  ? field.state.value
-                  : '—'}
-              </span>
-              <button
-                type="button"
-                className={ENERGY_STEP_BUTTON_CLASS}
-                disabled={field.state.value >= ENERGY_MAX}
-                aria-label={t('setlist.energyUp')}
-                onClick={() => {
-                  const next = field.state.value + ENERGY_STEP;
-                  field.handleChange(next);
-                  publishEnergy(next);
-                }}
-              >
-                +
-              </button>
-            </div>
-          )}
+          {(field) => {
+            const appearance = selectEnergyAppearance(
+              isEnergyStored({
+                isEdited: field.state.meta.isDirty,
+                entryEnergy: props.energy,
+                songEnergy: props.baseEnergy,
+              }),
+            );
+            return (
+              <div className="flex items-center gap-2 max-w-full sm:max-w-[340px]">
+                <span className="text-xs font-mono uppercase tracking-wider text-ink-400 shrink-0">
+                  {t('setlist.energy')}
+                </span>
+                <input
+                  type="range"
+                  min={ENERGY_MIN}
+                  max={ENERGY_MAX}
+                  value={field.state.value}
+                  onChange={(event) => {
+                    const next = Number(event.target.value);
+                    field.handleChange(next);
+                    publishEnergy(next);
+                  }}
+                  onBlur={field.handleBlur}
+                  aria-label={t('setlist.energy')}
+                  className={composeClassName('flex-1 min-w-0 h-11', appearance.sliderClassName)}
+                />
+                <button
+                  type="button"
+                  className={ENERGY_STEP_BUTTON_CLASS}
+                  disabled={field.state.value <= ENERGY_MIN}
+                  aria-label={t('setlist.energyDown')}
+                  onClick={() => {
+                    const next = field.state.value - ENERGY_STEP;
+                    field.handleChange(next);
+                    publishEnergy(next);
+                  }}
+                >
+                  −
+                </button>
+                <span
+                  className={composeClassName(
+                    'font-mono text-xs min-w-[18px] shrink-0 text-center',
+                    appearance.readoutClassName,
+                  )}
+                >
+                  {field.state.value}
+                </span>
+                <button
+                  type="button"
+                  className={ENERGY_STEP_BUTTON_CLASS}
+                  disabled={field.state.value >= ENERGY_MAX}
+                  aria-label={t('setlist.energyUp')}
+                  onClick={() => {
+                    const next = field.state.value + ENERGY_STEP;
+                    field.handleChange(next);
+                    publishEnergy(next);
+                  }}
+                >
+                  +
+                </button>
+              </div>
+            );
+          }}
         </form.Field>
         {moreOpen ? (
           <SetlistEntryDetailsFields

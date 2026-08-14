@@ -79,6 +79,7 @@
     "deleteConfirm": "Supprimer ce membre ? Ses niveaux de maîtrise partent avec lui.",
     "masteryMatrixTitle": "Matrice de maîtrise",
     "masteryMatrixSubtitle": "Touche une case pour saisir une note, vide-la pour l'effacer. À la souris : molette pour ±1, clic-droit pour vider. Moyennes en ligne = musicalité du membre ; en colonne = effectif sur l'instrument.",
+    "masteryMatrixScrollHint": "Fais glisser la grille sur le côté pour atteindre chaque instrument.",
     "rowAverage": "Moy.",
     "columnAverage": "Moy."
   },

@@ -180,7 +180,7 @@ export function SessionDetailPage(): JSX.Element {
             </Button>
           ) : null}
           {setlist === null ? null : (
-            <Link to="/setlists">
+            <Link to={`/sessions/${session.id}/setlist`}>
               <Button variant="accent" type="button">
                 <Icon name="setlist" size={14} />
                 {t('sessions.setlist')}
