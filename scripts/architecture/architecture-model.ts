@@ -43,6 +43,12 @@ export interface ExportedSymbol {
   readonly tables: readonly string[];
   /** Endpoints this symbol calls through the typed client. */
   readonly apiCalls: readonly ApiCall[];
+  /** Blueprint declared directly above this symbol, if any. */
+  readonly blueprints: readonly string[];
+  /** Blueprint this symbol is marked as following. */
+  readonly followsBlueprints: readonly string[];
+  /** The declaration's own source, leading comment included. */
+  readonly source: string;
 }
 
 export interface CallSymbol {
@@ -309,6 +315,23 @@ function readImports(
 
 const TABLE_IDENTIFIER_PATTERN = /^[a-z][A-Za-z]*Table$/;
 
+/**
+ * A declaration long enough to fill a modal twice is not read, it is scrolled
+ * past, and every extra line is carried in the committed page. The cap keeps
+ * the common case whole and says so when it cuts.
+ */
+const MAXIMUM_SOURCE_LINES = 80;
+
+function captureSource(node: ts.Node, sourceFile: ts.SourceFile): string {
+  const full = node.getFullText(sourceFile).replace(/^\n+/, '');
+  const lines = full.split('\n');
+  if (lines.length <= MAXIMUM_SOURCE_LINES) return full.trimEnd();
+  return [
+    ...lines.slice(0, MAXIMUM_SOURCE_LINES),
+    `// … ${lines.length - MAXIMUM_SOURCE_LINES} more lines`,
+  ].join('\n');
+}
+
 function readExportedSymbols(
   sourceFile: ts.SourceFile,
   importLookup: Map<string, CallSymbol>,
@@ -343,6 +366,9 @@ function readExportedSymbols(
       dependsOnExternal: ownExternals.length > 0 ? ownExternals : [...fileExternals],
       tables: [...tables],
       apiCalls: readApiCallsIn(node, sourceFile, clientIdentifier),
+      blueprints: matchAll(BLUEPRINT_TAG, leadingText),
+      followsBlueprints: matchAll(FOLLOWS_BLUEPRINT_TAG, leadingText),
+      source: captureSource(node, sourceFile),
     });
   };
 

@@ -98,6 +98,12 @@ is entirely about S3. A tag deeper in the file belongs to the one declaration it
 sits above, which is how a delete avoids claiming it calls MusicBrainz just
 because a sibling function in the same service does.
 
+Each block carries its layer and, where the code is marked, the blueprint it
+follows. Clicking a block opens the function's own source, with its
+`path:line`, so the question a block raises — *what does this actually do* — is
+answered without leaving the page. Sources are keyed once and shared across the
+46 graphs, because the same service appears in several flows.
+
 Endpoints behind no action are listed under the graph. Some are deliberate, and
 the rest are the back end of a feature whose front end does not exist yet; the
 generator reports the fact and does not guess which.

@@ -29,6 +29,7 @@ import { type ArchitectureManifest, pragmaManifest } from './pragma.manifest';
 
 const REPOSITORY_ROOT = resolve(import.meta.dirname, '../..');
 const OUTPUT_DIRECTORY = join(REPOSITORY_ROOT, 'docs/architecture');
+const JOURNEY_NODE_HEIGHT = 56;
 const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'cdk.out', '.git', '__fixtures__']);
 const SOURCE_PATTERN = /\.tsx?$/;
 
@@ -64,6 +65,12 @@ export interface GraphNode {
   readonly blueprints: readonly string[];
   readonly followsBlueprints: readonly string[];
   readonly fileCount: number;
+  /** The layer this node's code sits in, shown on the block itself. */
+  readonly layer?: string;
+  /** `path:line`, so a reader can open the real thing. */
+  readonly location?: string;
+  /** Key into the shared source map, when this node is a function. */
+  readonly sourceKey?: string;
 }
 
 export interface GraphEdge {
@@ -708,13 +715,18 @@ async function main(): Promise<void> {
   for (const [id, graph] of journeys.graphs) {
     journeyLayouts.set(
       id,
-      await layoutLevel({
-        id: `journey-${id}`,
-        title: id,
-        summary: '',
-        nodes: graph.nodes,
-        edges: graph.edges,
-      }),
+      // A journey block carries a second line, the layer and the blueprint, so
+      // it needs more room than a node that shows only a name.
+      await layoutLevel(
+        {
+          id: `journey-${id}`,
+          title: id,
+          summary: '',
+          nodes: graph.nodes,
+          edges: graph.edges,
+        },
+        JOURNEY_NODE_HEIGHT,
+      ),
     );
   }
 

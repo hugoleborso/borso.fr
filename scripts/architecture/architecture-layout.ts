@@ -82,7 +82,10 @@ const LAYOUT_OPTIONS: Readonly<Record<string, string>> = {
   'elk.padding': '[top=28,left=28,bottom=28,right=28]',
 };
 
-export async function layoutLevel(level: GraphLevel): Promise<LevelLayout> {
+export async function layoutLevel(
+  level: GraphLevel,
+  nodeHeight: number = NODE_HEIGHT,
+): Promise<LevelLayout> {
   const nodeIds = new Set(level.nodes.map((node) => node.id));
   const usableEdges = level.edges.filter(
     (edge) => nodeIds.has(edge.from) && nodeIds.has(edge.to) && edge.from !== edge.to,
@@ -95,7 +98,7 @@ export async function layoutLevel(level: GraphLevel): Promise<LevelLayout> {
     children: level.nodes.map((node) => ({
       id: node.id,
       width: nodeWidth(node.label),
-      height: NODE_HEIGHT,
+      height: nodeHeight,
     })),
     edges: usableEdges.map((edge, index) => ({
       id: `edge-${index}`,
@@ -111,7 +114,7 @@ export async function layoutLevel(level: GraphLevel): Promise<LevelLayout> {
     x: round(child.x ?? 0),
     y: round(child.y ?? 0),
     width: round(child.width ?? NODE_MIN_WIDTH),
-    height: round(child.height ?? NODE_HEIGHT),
+    height: round(child.height ?? nodeHeight),
   }));
 
   const edges: RoutedEdge[] = (laidOut.edges ?? []).map((routed, index) => {

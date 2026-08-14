@@ -82,6 +82,7 @@ function walkSymbol(
   fileByPath: ReadonlyMap<string, ArchitectureFile>,
   seen: Set<string>,
   depth: number,
+  sources: Map<string, SourceEntry>,
 ): WalkResult {
   const key = `${filePath}#${symbolName}`;
   const result: WalkResult = { nodes: [], edges: [] };
@@ -93,15 +94,26 @@ function walkSymbol(
   const exported = file.exports.find((each) => each.name === symbolName);
   if (exported === undefined) return result;
 
+  const blueprint = [...exported.blueprints, ...exported.followsBlueprints][0] ?? '';
+  sources.set(key, {
+    name: symbolName,
+    layer: file.layer,
+    location: `${file.path}:${exported.line}`,
+    blueprint,
+    code: exported.source,
+  });
   result.nodes.push({
     id: key,
     label: symbolName,
     kind: `step-${file.layer}`,
     detail: `${file.layer} · ${file.path}:${exported.line}`,
     group: file.layer,
-    blueprints: [],
-    followsBlueprints: [],
+    blueprints: exported.blueprints,
+    followsBlueprints: exported.followsBlueprints,
     fileCount: 0,
+    layer: file.layer,
+    location: `${file.path}:${exported.line}`,
+    sourceKey: key,
   });
 
   for (const table of exported.tables) {
@@ -114,6 +126,7 @@ function walkSymbol(
       blueprints: [],
       followsBlueprints: [],
       fileCount: 0,
+      layer: 'table',
     });
     result.edges.push({ from: key, to: `table:${table}`, label: 'writes', kind: 'import' });
   }
@@ -127,6 +140,7 @@ function walkSymbol(
       blueprints: [],
       followsBlueprints: [],
       fileCount: 0,
+      layer: 'external',
     });
     result.edges.push({ from: key, to: `external:${external}`, label: '', kind: 'import' });
   }
@@ -139,7 +153,7 @@ function walkSymbol(
     // tables are already drawn as their own leaves, and walking into one would
     // draw it twice under two different names.
     if (target.layer === 'schema') continue;
-    const nested = walkSymbol(call.name, call.file, fileByPath, seen, depth + 1);
+    const nested = walkSymbol(call.name, call.file, fileByPath, seen, depth + 1, sources);
     if (nested.nodes.length === 0) continue;
     result.edges.push({ from: key, to: `${call.file}#${call.name}`, label: '', kind: 'import' });
     result.nodes.push(...nested.nodes);
@@ -160,13 +174,28 @@ function dedupeEdges(edges: readonly GraphEdge[]): GraphEdge[] {
   return [...byKey.values()];
 }
 
+export interface SourceEntry {
+  readonly name: string;
+  readonly layer: string;
+  readonly location: string;
+  readonly blueprint: string;
+  readonly code: string;
+}
+
 export interface JourneyModel {
   readonly features: readonly JourneyFeature[];
   readonly graphs: ReadonlyMap<string, JourneyGraph>;
+  /**
+   * Every function drawn in any journey, keyed once. The same service appears
+   * in several flows, and carrying its source in each would multiply the page
+   * by however many actions reach it.
+   */
+  readonly sources: ReadonlyMap<string, SourceEntry>;
 }
 
 export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel {
   const fileByPath = new Map(files.map((file) => [file.path, file]));
+  const sources = new Map<string, SourceEntry>();
 
   const routeOwner = new Map<string, { file: ArchitectureFile; symbol: string }[]>();
   const compositionRoot = files.find((file) => file.path.endsWith('/api/src/app.ts'));
@@ -230,17 +259,38 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
       const edges: GraphEdge[] = [];
 
       for (const trigger of triggers.slice(0, MAXIMUM_TRIGGERS_SHOWN)) {
+        // The component that triggers the action is a file rather than one
+        // function, so the block opens whichever export carries the file's own
+        // name — the component itself — and falls back to the first export when
+        // the two do not match.
+        const componentName = componentLabel(trigger);
+        const componentExport =
+          trigger.exports.find((each) => each.name === componentName) ?? trigger.exports[0];
+        const triggerKey = `ui:${trigger.path}`;
+        if (componentExport !== undefined) {
+          sources.set(triggerKey, {
+            name: componentExport.name,
+            layer: trigger.layer,
+            location: `${trigger.path}:${componentExport.line}`,
+            blueprint:
+              [...componentExport.blueprints, ...componentExport.followsBlueprints][0] ?? '',
+            code: componentExport.source,
+          });
+        }
         nodes.push({
-          id: `ui:${trigger.path}`,
+          id: triggerKey,
           label: componentLabel(trigger),
           kind: 'step-ui',
           detail: `${trigger.layer} · ${trigger.path}`,
           group: 'ui',
-          blueprints: [],
-          followsBlueprints: [],
+          blueprints: trigger.blueprints,
+          followsBlueprints: trigger.followsBlueprints,
           fileCount: 0,
+          layer: trigger.layer,
+          location: trigger.path,
+          ...(componentExport === undefined ? {} : { sourceKey: triggerKey }),
         });
-        edges.push({ from: `ui:${trigger.path}`, to: hookNodeId, label: '', kind: 'import' });
+        edges.push({ from: triggerKey, to: hookNodeId, label: '', kind: 'import' });
       }
       if (triggers.length > MAXIMUM_TRIGGERS_SHOWN) {
         const remaining = triggers.length - MAXIMUM_TRIGGERS_SHOWN;
@@ -260,15 +310,26 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
         edges.push({ from: `ui:more:${actionId}`, to: hookNodeId, label: '', kind: 'import' });
       }
 
+      const hookBlueprint = [...exported.blueprints, ...exported.followsBlueprints][0] ?? '';
+      sources.set(hookNodeId, {
+        name: exported.name,
+        layer: module.layer,
+        location: `${module.path}:${exported.line}`,
+        blueprint: hookBlueprint,
+        code: exported.source,
+      });
       nodes.push({
         id: hookNodeId,
         label: exported.name,
         kind: 'step-hook',
-        detail: `${module.path}:${exported.line}`,
+        detail: `${module.layer} · ${module.path}:${exported.line}`,
         group: 'hook',
-        blueprints: [],
-        followsBlueprints: [],
+        blueprints: exported.blueprints,
+        followsBlueprints: exported.followsBlueprints,
         fileCount: 0,
+        layer: module.layer,
+        location: `${module.path}:${exported.line}`,
+        sourceKey: hookNodeId,
       });
       nodes.push({
         id: endpointId,
@@ -279,13 +340,14 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
         blueprints: [],
         followsBlueprints: [],
         fileCount: 0,
+        layer: 'http',
       });
       edges.push({ from: hookNodeId, to: endpointId, label: 'over HTTPS', kind: 'http' });
 
       const owners = routeOwner.get(`${call.method} ${call.path}`) ?? [];
       const seen = new Set<string>();
       for (const owner of owners) {
-        const walked = walkSymbol(owner.symbol, owner.file.path, fileByPath, seen, 0);
+        const walked = walkSymbol(owner.symbol, owner.file.path, fileByPath, seen, 0, sources);
         if (walked.nodes.length === 0) continue;
         edges.push({
           from: endpointId,
@@ -332,5 +394,5 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
     });
   }
 
-  return { features, graphs };
+  return { features, graphs, sources };
 }

@@ -56,8 +56,29 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     return parts.join(' ');
   };
 
+  /**
+   * Show one function's source.
+   *
+   * A block names a function, and the question a reader has next is what it
+   * does. The dialog is native, so Escape and the backdrop close it without
+   * any handling here.
+   */
+  const openCode = (entry) => {
+    const dialog = document.getElementById('code-modal');
+    if (!dialog || !entry) return;
+    dialog.querySelector('[data-code-name]').textContent = entry.name;
+    dialog.querySelector('[data-code-layer]').textContent = entry.layer;
+    const blueprintSlot = dialog.querySelector('[data-code-blueprint]');
+    blueprintSlot.textContent = entry.blueprint || 'no blueprint';
+    blueprintSlot.classList.toggle('absent', !entry.blueprint);
+    dialog.querySelector('[data-code-location]').textContent = entry.location;
+    dialog.querySelector('[data-code-body]').textContent = entry.code;
+    dialog.showModal();
+  };
+
   function buildScene(host, data) {
     const width = data.width;
+    const sources = data.sources || {};
     const height = data.height;
     const placed = new Map(data.nodes.map((node) => [node.id, node]));
     const edges = data.edges;
@@ -132,12 +153,18 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
         x: box.x, y: box.y, width: 4, height: box.height, rx: 2, class: 'node-stripe',
       }));
       const label = svgElement('text', {
-        x: box.x + 14, y: box.y + (node.sublabel ? 20 : 27), class: 'node-label',
+        x: box.x + 14,
+        y: box.y + (node.sublabel ? box.height / 2 - 4 : box.height / 2 + 4),
+        class: 'node-label',
       });
       label.textContent = node.label;
       group.appendChild(label);
       if (node.sublabel) {
-        const sub = svgElement('text', { x: box.x + 14, y: box.y + 34, class: 'node-sub' });
+        const sub = svgElement('text', {
+          x: box.x + 14,
+          y: box.y + box.height / 2 + 13,
+          class: 'node-sub',
+        });
         sub.textContent = node.sublabel;
         group.appendChild(sub);
       }
@@ -178,8 +205,16 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       element.addEventListener('mouseleave', () => { if (pinned === null) clearFocus(); });
       element.addEventListener('focus', () => { if (pinned === null) focusNode(id); });
       element.addEventListener('blur', () => { if (pinned === null) clearFocus(); });
+      const nodeData = placed.get(id);
+      const entry = nodeData && nodeData.sourceKey ? sources[nodeData.sourceKey] : null;
+      if (entry) element.classList.add('has-code');
       const toggle = (event) => {
         event.stopPropagation();
+        if (entry) {
+          focusNode(id);
+          openCode(entry);
+          return;
+        }
         if (pinned === id) { pinned = null; clearFocus(); return; }
         pinned = id;
         focusNode(id);
@@ -354,6 +389,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       current = buildScene(host, {
         level: data.level,
         title: data.title,
+        sources: data.sources,
         width: graph.width,
         height: graph.height,
         nodes: graph.nodes,
@@ -588,6 +624,60 @@ export const GRAPH_STYLES = String.raw`
     background: var(--accent-soft);
   }
   .journey-action[aria-pressed='true'] .journey-action-name { color: var(--accent); }
+
+  .node.has-code { cursor: zoom-in; }
+
+  dialog.code-modal {
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--ink);
+    padding: 0;
+    width: min(78ch, 94vw);
+    max-height: 86vh;
+    overflow: hidden;
+  }
+  dialog.code-modal::backdrop { background: rgb(0 0 0 / 45%); }
+  .code-modal-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    flex-wrap: wrap;
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-sunk);
+  }
+  .code-modal-head h3 { margin: 0; font: 600 .95rem/1.3 var(--font-mono); }
+  .code-chip {
+    font: 500 .64rem/1.5 var(--font-mono);
+    padding: .1rem .45rem;
+    border-radius: 5px;
+    background: var(--chip);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .code-chip.layer { background: var(--accent-soft); color: var(--accent); }
+  .code-chip.absent { opacity: .65; font-style: italic; }
+  .code-modal-head .loc { flex: 1 1 100%; overflow-wrap: anywhere; }
+  .code-modal-close {
+    margin-left: auto;
+    font: 500 .74rem/1 var(--font-mono);
+    background: var(--panel);
+    color: var(--muted);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: .3rem .55rem;
+    cursor: pointer;
+  }
+  .code-modal pre {
+    margin: 0;
+    padding: 1rem;
+    overflow: auto;
+    max-height: 68vh;
+    font: .76rem/1.55 var(--font-mono);
+    white-space: pre;
+    tab-size: 2;
+  }
 
   .orphan-routes { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
   .orphan-routes li {

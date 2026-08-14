@@ -150,13 +150,15 @@ function renderJourneys(
       nodes: layout.nodes.flatMap((placed) => {
         const source = journeys.graphs.get(id)?.nodes.find((node) => node.id === placed.id);
         if (source === undefined) return [];
+        const blueprint = [...source.blueprints, ...source.followsBlueprints][0] ?? '';
         return [
           {
             id: placed.id,
             label: source.label,
-            sublabel: '',
+            sublabel: [source.layer ?? '', blueprint].filter((part) => part !== '').join(' · '),
             detail: source.detail,
             tone: source.kind,
+            sourceKey: source.sourceKey ?? '',
             x: placed.x,
             y: placed.y,
             width: placed.width,
@@ -171,6 +173,7 @@ function renderJourneys(
   const payload = {
     level: 'journey',
     title: 'User action',
+    sources: Object.fromEntries(journeys.sources),
     features: journeys.features.map((feature) => ({
       id: feature.id,
       label: feature.label,
@@ -686,6 +689,17 @@ ${GRAPH_STYLES}
   </section>
 </main>
 
+<dialog class="code-modal" id="code-modal">
+  <div class="code-modal-head">
+    <h3 data-code-name></h3>
+    <span class="code-chip layer" data-code-layer></span>
+    <span class="code-chip" data-code-blueprint></span>
+    <button type="button" class="code-modal-close" data-code-close>Close</button>
+    <span class="loc" data-code-location></span>
+  </div>
+  <pre><code data-code-body></code></pre>
+</dialog>
+
 <script>
   const tabs = [...document.querySelectorAll('nav.levels button')];
   const panels = [...document.querySelectorAll('section.level')];
@@ -710,6 +724,14 @@ ${GRAPH_STYLES}
   }
   search?.addEventListener('input', applyFilters);
   layerFilter?.addEventListener('change', applyFilters);
+
+  const codeModal = document.getElementById('code-modal');
+  codeModal?.querySelector('[data-code-close]')?.addEventListener('click', () => codeModal.close());
+  // A native dialog fills its whole box, so a click on the backdrop reports the
+  // dialog itself as the target; anything inside reports a child.
+  codeModal?.addEventListener('click', (event) => {
+    if (event.target === codeModal) codeModal.close();
+  });
 </script>
 <script>${GRAPH_RUNTIME_SCRIPT}</script>
 `;
