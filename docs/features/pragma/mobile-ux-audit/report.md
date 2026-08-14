@@ -10,9 +10,11 @@ the change.
 The app is close to clean on a phone, and it is not proven clean. The auditor
 reported 63 findings across the three rounds, 60 of them were fixed and measured
 again after the fix, and every blocker and every major finding raised in any
-round is now closed. Three minor findings were skipped in round one, two of the
-three came back in round two and were fixed there, and one is still open, which
-is the missing cue that the member filter strip on the setlist scrolls sideways.
+round is now closed. Three minor findings were skipped in round one and two of
+the three came back in round two and were fixed there; the last one, the missing
+cue that the member filter strip on the setlist scrolls sideways, was left open
+because nobody had re-measured the strip after the round two toolbar fix. It has
+been measured since, and it is closed — see note S3.
 The app cannot be called proven clean for two reasons. First, every round found
 defects the round before it had missed, and one of those defects was created by a
 round one fix, because the radio labels grew an 8px wider hit box than their
@@ -57,7 +59,7 @@ grading.
 | 26 | 1 | /sessions/:id/setlist | The page scrolled behind an open sheet, and the transition note modal answered neither Escape nor a backdrop tap | Major | Fixed in 068e5d5 |
 | 27 | 1 | /sessions/:id/setlist | Drag handle, row icon buttons, energy slider and member pills were all under the 44px floor | Minor | Fixed in 068e5d5 |
 | 28 | 1 | /bars | An empty kanban board was 1758px tall | Minor | Fixed in 068e5d5, by hiding the board below the lg breakpoint |
-| 29 | 1 | /sessions/:id/setlist | The last member filter pill sat almost entirely off the right edge | Minor | Skipped, see note S3, still open |
+| 29 | 1 | /sessions/:id/setlist | The last member filter pill sat almost entirely off the right edge | Minor | Skipped in round one, closed by the round two toolbar fix, see note S3 |
 | 30 | 1 | /sessions/:id/setlist | The pinned toolbar took 188px of a 667px screen | Minor | Skipped, see note S2, then fixed in round two |
 | 31 | 1 | /bars | Two invisible unlabelled sort buttons, and City and Capacity shown nowhere on a phone | Minor | Fixed in 068e5d5 |
 | 32 | 1 | /sessions | Labels and chips printed below 12px | Minor | Fixed in 068e5d5 |
@@ -122,16 +124,20 @@ split the toolbar so that only the energy curve stays pinned and the member pill
 scroll away with the page, which took the pinned band to 51px and the chrome to
 25.2%.
 
-**S3, the last member filter pill on the setlist editor.** Still open. The fixer
-skipped it because the pill strip is already a horizontal scroller, with
-scrollWidth 435 against clientWidth 328, so the pill is reachable by the gesture
+**S3, the last member filter pill on the setlist editor.** Closed, by
+measurement rather than by a fix. The strip no longer scrolls at all: it is
+`flex flex-wrap gap-2`, its `scrollWidth` and `clientWidth` are both 343, and at
+375px the five pills sit on two rows — All members / Hugo / Léa, then Marc /
+Sarah — each 44px tall and each fully inside the viewport. There is no hidden
+pill left to cue. What follows is why it was skipped at the time.
+
+The fixer skipped it because the strip was then a horizontal scroller, with
+scrollWidth 435 against clientWidth 328, so the pill was reachable by the gesture
 the strip is built for, unlike the /catalog filter group which sat inside an
-overflow hidden parent and genuinely could not be panned. What is missing is a
+overflow hidden parent and genuinely could not be panned. What was missing was a
 stronger cue that the strip scrolls, and the fixer left the design of that cue to
 the operator rather than inventing one. The round two toolbar fix then wrapped the
-pills onto two rows, and round three drove the member filter without reporting
-anything about it, so the original symptom may no longer exist, but nobody
-measured the pill rect again to confirm.
+pills onto two rows, which removed the scroller and the need for a cue with it.
 
 ### Notes on the two fixes that departed from the suggested remedy
 
