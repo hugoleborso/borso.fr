@@ -1,15 +1,10 @@
 /**
- * One row of the setlist editor. Mirrors the prototype's `.sl-row`
- * (design-bundle/styles.css lines 312-336): a five-cell grid with
- *  - position number (mono),
- *  - drag handle (icon button carrying dnd-kit's sortable listeners —
- *    grabbing it drags the whole card, which translates under the
- *    pointer while its neighbours shift to open the drop gap),
- *  - song title (font-display italic) + submeta (artist · tonality ·
- *    mastery) + member-chip lineup,
- *  - energy slider (1-10) + numeric tag,
- *  - actions menu (Lineup button + delete + a "more" toggle that
- *    reveals an inline editor for keyOverride / capo / notes).
+ * One row of the setlist editor: the position, a drag handle, the song and
+ * who plays what on it, the energy slider, and the row actions.
+ *
+ * The layout stacks under `sm` and spreads out above it, so a phone gets one
+ * readable column and thumb-sized controls rather than a five-cell grid
+ * squeezed into 375 px.
  *
  * Each row owns a small `useForm` instance — the parent
  * (`SetlistEditor`) doesn't centralise per-row state. The form is never
@@ -19,21 +14,21 @@
  * effect. There is no `onSubmit` and no submit button anywhere in the row.
  *
  * The list item itself is the dnd-kit sortable node, so the whole row
- * (optional transition warning + card) is what reorders. While the row
- * is the one being dragged it dims into a placeholder so the operator
- * can read the gap opening between the other cards.
+ * (the transition strip that precedes it, plus the card) is what reorders.
+ * While the row is the one being dragged it dims into a placeholder so the
+ * operator can read the gap opening between the other cards.
  *
  * The `Lineup` button opens the `<LineupEditor surface='setlist-entry'>`
  * modal; saving the modal calls `onUpdate(entryId, { lineupOverride })`.
  * When the entry carries a non-null override, a small `lineup.override`
  * badge sits above the title. In single-member filter mode, the parent
- * passes a `prominentMemberInstrument` chip that hoists the filtered
- * member's instrument above the title.
+ * passes a `prominentMemberInstrument` chip that hoists what the filtered
+ * member plays here above the title.
  */
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { composeClassName } from '../atoms/class-name.utils';
@@ -43,6 +38,7 @@ import {
   type LineupEditorInstrument,
   type LineupRecord,
 } from '../molecules/LineupEditor';
+import { toLineupPayload } from '../molecules/lineup-editor.core';
 import { MemberChip } from '../molecules/MemberChip';
 import { SetlistEntryDetailsFields } from '../molecules/SetlistEntryDetailsFields';
 import {
@@ -55,11 +51,13 @@ import { selectMasteryColor } from './mastery-color.core';
 import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
 
 const ENERGY_DEFAULT = 5;
+const ICON_BUTTON_CLASS =
+  'w-11 h-9 sm:w-9 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
 
 export interface ProminentMemberInstrument {
   readonly memberName: string;
   readonly memberColor: string;
-  readonly instrumentName: string;
+  readonly instrumentNames: readonly string[];
 }
 
 export interface SetlistEntryRowProps {
@@ -75,17 +73,16 @@ export interface SetlistEntryRowProps {
   readonly baseEnergy: number | null;
   readonly notes: string;
   readonly currentSongId: string;
-  readonly lineup: Readonly<Record<string, string>>;
+  readonly lineup: Readonly<Record<string, readonly string[]>>;
   readonly resolvedLineupForEdit: LineupRecord;
   readonly songDefaultLineup: LineupRecord;
   readonly hasOverride: boolean;
   readonly members: readonly LineupMember[];
   readonly instruments: readonly LineupEditorInstrument[];
   readonly prominentMemberInstrument: ProminentMemberInstrument | null;
-  readonly showTransitionWarningBefore: boolean;
+  readonly transitionBefore: ReactNode;
   readonly onUpdate: (entryId: string, patch: Record<string, unknown>) => void;
   readonly onRemove: (entryId: string) => void;
-  readonly onOpenTransitionBefore: () => void;
 }
 
 // @FollowsBlueprint organism-form
@@ -109,39 +106,31 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   };
   const form = useSetlistEntryForm(defaultValues);
   const saveLineupOverride = (lineup: LineupRecord | null, wasReset: boolean): void => {
-    props.onUpdate(props.entryId, { lineupOverride: wasReset ? null : lineup });
+    props.onUpdate(props.entryId, {
+      lineupOverride: wasReset || lineup === null ? null : toLineupPayload(lineup),
+    });
   };
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={composeClassName('flex flex-col gap-1', isDragging && 'opacity-40')}
+      className={composeClassName('flex flex-col gap-1.5', isDragging && 'opacity-40')}
     >
-      {props.showTransitionWarningBefore ? (
-        <button
-          type="button"
-          className="lg:hidden inline-flex items-center gap-1.5 text-[11px] font-medium text-warn bg-warn-soft self-start px-2 py-1 rounded-md cursor-pointer border-0"
-          aria-label={t('setlist.openTransitionComment')}
-          onClick={props.onOpenTransitionBefore}
-        >
-          <Icon name="warn" size={12} />
-          {t('setlist.transitionWarning')}
-        </button>
-      ) : null}
-      <div className="grid grid-cols-[32px_auto_1fr_auto_auto] items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-3 transition-colors hover:border-line-strong">
-        <span className="font-mono text-[11px] text-ink-400 text-right">
+      {props.transitionBefore}
+      <div className="flex items-start gap-2 sm:gap-3 bg-bg-elev border border-line rounded-md px-2 sm:px-3 py-2.5 transition-colors hover:border-line-strong">
+        <span className="font-mono text-[11px] text-ink-400 pt-2 w-6 text-right shrink-0">
           {String(props.position).padStart(2, '0')}
         </span>
         <button
           type="button"
-          className="flex items-center justify-center w-6 h-6 text-ink-300 cursor-grab bg-transparent border-0 hover:text-ink-500 active:cursor-grabbing touch-none"
+          className="flex items-center justify-center w-8 h-9 shrink-0 text-ink-300 cursor-grab bg-transparent border-0 hover:text-ink-500 active:cursor-grabbing touch-none"
           aria-label={t('setlist.dragHandle')}
           {...attributes}
           {...listeners}
         >
           <Icon name="drag" size={16} />
         </button>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {props.prominentMemberInstrument === null ? null : (
             <div className="flex items-center gap-2 mb-1">
               <MemberChip
@@ -150,7 +139,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                 size="sm"
               />
               <span className="text-xs font-mono uppercase tracking-wider text-ink-700 bg-bg-sunk px-2 py-0.5 rounded">
-                {props.prominentMemberInstrument.instrumentName}
+                {props.prominentMemberInstrument.instrumentNames.join(' + ')}
               </span>
             </div>
           )}
@@ -161,7 +150,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               </span>
             </div>
           ) : null}
-          <div className="font-display italic text-[20px] leading-tight text-ink-900 truncate">
+          <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 truncate">
             {props.title}
           </div>
           <div className="flex items-center gap-2 text-[11.5px] text-ink-500 mt-0.5 flex-wrap">
@@ -193,21 +182,11 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               instruments={props.instruments}
             />
           </div>
-          {moreOpen ? (
-            <SetlistEntryDetailsFields
-              form={form}
-              onPatch={(patch) => props.onUpdate(props.entryId, patch)}
-            />
-          ) : null}
-        </div>
-        <div className="flex items-center gap-2">
           <form.Field name="energy">
             {(field) => (
-              <>
-                <span className="font-mono text-[11px] uppercase tracking-wider text-ink-500 min-w-[22px] text-center">
-                  {field.state.meta.isDirty || props.energy !== null || props.baseEnergy !== null
-                    ? field.state.value
-                    : '—'}
+              <div className="flex items-center gap-2 mt-2 max-w-[240px]">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-ink-400">
+                  {t('setlist.energy')}
                 </span>
                 <input
                   type="range"
@@ -221,38 +200,49 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                   }}
                   onBlur={field.handleBlur}
                   aria-label={t('setlist.energy')}
-                  className="w-22 accent-accent"
-                  style={{ width: 88 }}
+                  className="flex-1 h-6 accent-accent"
                 />
-              </>
+                <span className="font-mono text-[11px] text-ink-500 min-w-[18px] text-right">
+                  {field.state.meta.isDirty || props.energy !== null || props.baseEnergy !== null
+                    ? field.state.value
+                    : '—'}
+                </span>
+              </div>
             )}
           </form.Field>
+          {moreOpen ? (
+            <SetlistEntryDetailsFields
+              form={form}
+              onPatch={(patch) => props.onUpdate(props.entryId, patch)}
+            />
+          ) : null}
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col sm:flex-row items-center gap-0.5 shrink-0">
           <button
             type="button"
             onClick={() => setLineupEditorOpen(true)}
             aria-label={t('lineup.edit')}
-            className="px-2 h-7 inline-flex items-center justify-center text-[11px] text-ink-500 hover:text-ink-900 cursor-pointer bg-transparent border border-line rounded-md"
+            title={t('lineup.edit')}
+            className={ICON_BUTTON_CLASS}
           >
-            {t('lineup.edit')}
+            <Icon name="members" size={15} />
           </button>
           <button
             type="button"
             onClick={() => setMoreOpen((current) => !current)}
             aria-label={t('common.edit')}
             aria-expanded={moreOpen}
-            className="w-7 h-7 inline-flex items-center justify-center text-ink-400 hover:text-ink-900 cursor-pointer bg-transparent border-0"
+            className={ICON_BUTTON_CLASS}
           >
-            <Icon name="more" size={14} />
+            <Icon name="more" size={15} />
           </button>
           <button
             type="button"
             onClick={() => props.onRemove(props.entryId)}
             aria-label={t('setlist.removeEntry')}
-            className="w-7 h-7 inline-flex items-center justify-center text-ink-400 hover:text-danger cursor-pointer bg-transparent border-0"
+            className={composeClassName(ICON_BUTTON_CLASS, 'hover:text-danger')}
           >
-            ×
+            <Icon name="trash" size={14} />
           </button>
         </div>
       </div>

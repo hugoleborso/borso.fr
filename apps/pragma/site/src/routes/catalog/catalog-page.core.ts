@@ -4,6 +4,8 @@
  * which lineup entries carry a real instrument.
  */
 
+import type { Lineup } from '@domain/lineup.core';
+
 export const CATALOG_STATUS_FILTERS = ['all', 'concert_ready', 'rehearsed', 'wip', 'idea'] as const;
 
 export type CatalogStatusFilter = (typeof CATALOG_STATUS_FILTERS)[number];
@@ -48,13 +50,24 @@ export function selectVisibleSongs<Song extends CatalogSong>(
   );
 }
 
-/** A lineup slot with no instrument means "not playing", which the card omits. */
-export function compactLineup(lineup: Record<string, string | null>): Record<string, string> {
-  const compacted: Record<string, string> = {};
-  for (const [memberId, instrumentId] of Object.entries(lineup)) {
-    if (instrumentId !== null && instrumentId !== '') {
-      compacted[memberId] = instrumentId;
-    }
+/** A member holding no instrument sits the song out, which the card omits. */
+export function compactLineup(lineup: Lineup): Record<string, readonly string[]> {
+  const compacted: Record<string, readonly string[]> = {};
+  for (const [memberId, instrumentIds] of Object.entries(lineup)) {
+    if (instrumentIds.length > 0) compacted[memberId] = instrumentIds;
   }
   return compacted;
+}
+
+const NEW_SONG_PATH = '/catalog/new';
+
+/**
+ * Where the create button goes. What the operator typed in the search box is
+ * the title they were looking for and did not find, so it travels to the form
+ * rather than being typed twice.
+ */
+export function buildNewSongPath(search: string): string {
+  const title = search.trim();
+  if (title.length === 0) return NEW_SONG_PATH;
+  return `${NEW_SONG_PATH}?title=${encodeURIComponent(title)}`;
 }

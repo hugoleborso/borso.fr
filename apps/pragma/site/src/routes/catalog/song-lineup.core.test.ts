@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildMasteryKey,
   buildSongLineupRows,
+  flattenMasteryRows,
   isMasteryBarFilled,
   MASTERY_BAR_COUNT,
 } from './song-lineup.core';
@@ -40,28 +41,17 @@ describe('isMasteryBarFilled', () => {
 });
 
 describe('buildSongLineupRows', () => {
-  it('reads a sitting-out member as unrated, not as playing an instrument keyed "null"', () => {
-    const rows = buildSongLineupRows(
-      { ana: null },
-      MEMBERS,
-      INSTRUMENTS,
-      new Map([['ana::null', 9]]),
-    );
+  it('reads a sitting-out member as holding nothing', () => {
+    const rows = buildSongLineupRows({ ana: [] }, MEMBERS, INSTRUMENTS, new Map());
 
     expect(rows).toStrictEqual([
-      {
-        memberId: 'ana',
-        memberName: 'Ana',
-        memberColor: '#111111',
-        instrumentName: null,
-        masteryScore: null,
-      },
+      { memberId: 'ana', memberName: 'Ana', memberColor: '#111111', instruments: [] },
     ]);
   });
 
   it('resolves the member, the instrument and the mastery score', () => {
     const rows = buildSongLineupRows(
-      { ana: 'guitar' },
+      { ana: ['guitar'] },
       MEMBERS,
       INSTRUMENTS,
       new Map([['ana::guitar', 7]]),
@@ -72,38 +62,73 @@ describe('buildSongLineupRows', () => {
         memberId: 'ana',
         memberName: 'Ana',
         memberColor: '#111111',
-        instrumentName: 'Guitar',
-        masteryScore: 7,
+        instruments: [{ instrumentId: 'guitar', instrumentName: 'Guitar', masteryScore: 7 }],
       },
     ]);
   });
 
-  it('drops a member who is no longer in the band', () => {
-    const rows = buildSongLineupRows({ ghost: 'guitar' }, MEMBERS, INSTRUMENTS, new Map());
-
-    expect(rows).toStrictEqual([]);
-  });
-
-  it('reads an unknown instrument and an unrated pair as absent', () => {
-    const rows = buildSongLineupRows({ bruno: 'kazoo' }, MEMBERS, INSTRUMENTS, new Map());
-
-    expect(rows[0]?.instrumentName).toBeNull();
-    expect(rows[0]?.masteryScore).toBeNull();
-  });
-
-  it('reads a member with no instrument assigned as unrated', () => {
+  it('carries every instrument a member holds, each with its own score', () => {
     const rows = buildSongLineupRows(
-      { ana: null },
+      { ana: ['guitar', 'bass'] },
       MEMBERS,
       INSTRUMENTS,
       new Map([['ana::guitar', 7]]),
     );
 
-    expect(rows[0]?.instrumentName).toBeNull();
-    expect(rows[0]?.masteryScore).toBeNull();
+    expect(rows[0]?.instruments).toStrictEqual([
+      { instrumentId: 'guitar', instrumentName: 'Guitar', masteryScore: 7 },
+      { instrumentId: 'bass', instrumentName: 'Bass', masteryScore: null },
+    ]);
+  });
+
+  it('drops a member who is no longer in the band', () => {
+    const rows = buildSongLineupRows({ ghost: ['guitar'] }, MEMBERS, INSTRUMENTS, new Map());
+
+    expect(rows).toStrictEqual([]);
+  });
+
+  it('drops an instrument the band no longer has', () => {
+    const rows = buildSongLineupRows({ bruno: ['kazoo'] }, MEMBERS, INSTRUMENTS, new Map());
+
+    expect(rows[0]?.instruments).toStrictEqual([]);
   });
 
   it('leaves an empty lineup empty', () => {
     expect(buildSongLineupRows({}, MEMBERS, INSTRUMENTS, new Map())).toStrictEqual([]);
+  });
+});
+
+describe('flattenMasteryRows', () => {
+  it('answers one row per instrument held, carrying the member', () => {
+    const rows = buildSongLineupRows(
+      { ana: ['guitar', 'bass'] },
+      MEMBERS,
+      INSTRUMENTS,
+      new Map([['ana::guitar', 7]]),
+    );
+
+    expect(flattenMasteryRows(rows)).toStrictEqual([
+      {
+        memberId: 'ana',
+        memberName: 'Ana',
+        memberColor: '#111111',
+        instrumentId: 'guitar',
+        instrumentName: 'Guitar',
+        masteryScore: 7,
+      },
+      {
+        memberId: 'ana',
+        memberName: 'Ana',
+        memberColor: '#111111',
+        instrumentId: 'bass',
+        instrumentName: 'Bass',
+        masteryScore: null,
+      },
+    ]);
+  });
+
+  it('answers nothing for a member holding nothing', () => {
+    const rows = buildSongLineupRows({ ana: [] }, MEMBERS, INSTRUMENTS, new Map());
+    expect(flattenMasteryRows(rows)).toStrictEqual([]);
   });
 });

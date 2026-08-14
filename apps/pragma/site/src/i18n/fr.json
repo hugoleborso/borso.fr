@@ -10,12 +10,12 @@
     "members": "Membres",
     "instruments": "Instruments",
     "administrationSection": "Administration",
-    "openMenu": "Ouvrir le menu",
-    "closeMenu": "Fermer le menu",
     "language": {
       "fr": "FR",
       "en": "EN"
-    }
+    },
+    "bottomBar": "Sections principales",
+    "more": "Plus"
   },
   "shell": {
     "meName": "Hugo",
@@ -44,7 +44,6 @@
     "offlineTitle": "Mode hors-ligne",
     "offlineHint": "catalogue, accords et setlist du prochain concert disponibles. Toute modification est désactivée.",
     "search": "Chercher",
-    "filters": "Filtres",
     "all": "Toutes",
     "actions": "Actions"
   },
@@ -54,13 +53,16 @@
   },
   "instruments": {
     "title": "Instruments",
-    "subtitle": "Les instruments harmoniques entrent dans l'analyse de transition.",
+    "subtitle": "La famille d’un instrument alimente l’analyse des transitions.",
     "name": "Nom",
-    "isHarmonic": "Harmonique (compte pour l'analyse de transition)",
-    "harmonic": "harmonique",
-    "percussive": "percussif",
     "newTitle": "Nouvel instrument",
-    "editTitle": "Modifier l'instrument"
+    "editTitle": "Modifier l'instrument",
+    "family": "Famille",
+    "familyHint": "Un instrument harmonique porte les accords : celui qui en garde un peut tenir une transition.",
+    "familyHarmonic": "harmonique",
+    "familyPercussive": "percussif",
+    "familyVocal": "chant",
+    "familyOther": "autre"
   },
   "members": {
     "title": "Membres",
@@ -131,7 +133,15 @@
     "duration": "Durée",
     "mbid": "Identifiant MusicBrainz",
     "isrcs": "ISRC",
-    "tags": "Tags"
+    "tags": "Tags",
+    "notesTitle": "Notes",
+    "notesStructure": "Structure",
+    "notesGimmicks": "Gimmicks",
+    "notesFree": "Notes libres",
+    "notesStructurePlaceholder": "intro ×4 · couplet · refrain · pont · refrain ×2",
+    "notesGimmicksPlaceholder": "Break complet avant le dernier refrain, compté à voix haute.",
+    "notesFreePlaceholder": "Tout ce que le groupe doit retenir.",
+    "createSearched": "Créer « {{title}} »"
   },
   "mastery": {
     "title": "Matrice de maîtrise",
@@ -184,14 +194,22 @@
     "capo": "Capo",
     "notes": "Notes",
     "energy": "Énergie",
-    "transitionWarning": "Transition à risque",
     "openTransitionComment": "Voir / commenter la transition",
     "transitionCommentTitle": "Commentaire de transition",
     "missingSessionId": "Identifiant de session manquant.",
     "noSetlistYet": "Aucune setlist créée pour cette session.",
     "createForSession": "Créer une setlist",
     "copyOrder": "Copier l'ordre",
-    "orderCopied": "Copié !"
+    "orderCopied": "Copié !",
+    "emptyList": "Aucun morceau dans ce set pour l’instant.",
+    "addSongDone": "Terminé ({{count}})",
+    "addSongSearchPlaceholder": "Chercher un morceau, ou taper un nouveau titre",
+    "addSongNoMatch": "Aucun morceau ne correspond.",
+    "addSongCreate": "Créer « {{title}} » et l’ajouter",
+    "transitionCovered": "Transition tenue",
+    "transitionRisky": "Transition risquée",
+    "transitionNobody": "personne ne garde d’instrument entre ces deux morceaux",
+    "transitionAddNote": "Ajouter une note sur cette transition"
   },
   "scene": {
     "title": "Mode Scène",
@@ -243,6 +261,8 @@
     "cancel": "Annuler",
     "allMembers": "Tous les membres",
     "emptyForMember": "Rien à jouer ce soir.",
-    "filterByMember": "Filtrer par membre"
+    "filterByMember": "Filtrer par membre",
+    "multiInstrumentHint": "Touchez chaque instrument tenu par la personne sur ce morceau. Deux à la fois, c’est possible.",
+    "instruments": "Instruments"
   }
 }

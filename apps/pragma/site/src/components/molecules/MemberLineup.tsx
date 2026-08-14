@@ -1,9 +1,9 @@
 /**
  * MemberLineup — row of bare MemberChips (no name labels) shown on
- * a SongCard's footer. Maps a lineup record (memberId → instrumentId
- * mapping) to a set of chips, using the resolved member's name and
- * colour. Caller injects the members + instruments to keep this
- * molecule free of data-fetching concerns.
+ * a SongCard's footer. Maps a lineup record (the instruments each member
+ * holds) to a set of chips, using the resolved member's name and colour, and
+ * naming every instrument in the chip's tooltip. Caller injects the members
+ * and instruments to keep this molecule free of data-fetching concerns.
  */
 
 import { MemberChip } from './MemberChip';
@@ -20,7 +20,7 @@ export interface LineupInstrument {
 }
 
 export interface MemberLineupProps {
-  lineup: Record<string, string>;
+  lineup: Record<string, readonly string[]>;
   members: readonly LineupMember[];
   instruments: readonly LineupInstrument[];
 }
@@ -29,11 +29,14 @@ export interface MemberLineupProps {
 export function MemberLineup({ lineup, members, instruments }: MemberLineupProps): JSX.Element {
   return (
     <span className="inline-flex gap-1 flex-wrap">
-      {Object.entries(lineup).map(([memberId, instrumentId]) => {
+      {Object.entries(lineup).map(([memberId, instrumentIds]) => {
         const member = members.find((candidate) => candidate.id === memberId);
         if (!member) return null;
-        const instrument = instruments.find((candidate) => candidate.id === instrumentId);
-        const title = instrument ? `${member.name} — ${instrument.name}` : member.name;
+        const names = instrumentIds.flatMap((instrumentId) => {
+          const instrument = instruments.find((candidate) => candidate.id === instrumentId);
+          return instrument === undefined ? [] : [instrument.name];
+        });
+        const title = names.length > 0 ? `${member.name} — ${names.join(' + ')}` : member.name;
         return (
           <MemberChip
             key={memberId}

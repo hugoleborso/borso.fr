@@ -21,6 +21,7 @@ import {
   type EntriesCache,
   removeEntryById,
   reorderEntriesByIds,
+  toEntryPatch,
 } from './setlists.utils';
 
 interface OptimisticContext {
@@ -197,7 +198,10 @@ export function useUpdateSetlistEntry() {
       const previous = snapshotEntries(queryClient, variables.setlistId);
       if (previous !== undefined) {
         const { setlistId: _setlistId, entryId, ...patch } = variables;
-        queryClient.setQueryData<EntriesCache>(key, applyEntryPatch(previous, entryId, patch));
+        queryClient.setQueryData<EntriesCache>(
+          key,
+          applyEntryPatch(previous, entryId, toEntryPatch(patch)),
+        );
       }
       return { previous };
     },

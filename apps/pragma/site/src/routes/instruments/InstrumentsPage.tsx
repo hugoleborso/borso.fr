@@ -9,6 +9,7 @@
  * state stays in `useState` because it's UI state, not server state.
  */
 
+import { INSTRUMENT_FAMILIES, type InstrumentFamily } from '@domain/instrument.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useState } from 'react';
@@ -16,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '../../components/atoms/Badge';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
+import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Input } from '../../components/atoms/Input';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api';
@@ -25,14 +27,18 @@ import {
   useInstrumentsList,
   useUpdateInstrument,
 } from '../../lib/queries/instruments';
-import { selectInstrumentDeletionEffect } from './instruments-page.core';
+import {
+  INSTRUMENT_FAMILY_LABEL_KEY,
+  selectInstrumentDeletionEffect,
+} from './instruments-page.core';
 
 interface SelectedInstrument {
   id: string;
   name: string;
-  isHarmonic: boolean;
+  family: InstrumentFamily;
 }
 
+const DEFAULT_NEW_INSTRUMENT_FAMILY: InstrumentFamily = 'harmonic';
 const INSTRUMENT_NAME_MIN_LENGTH = 1;
 const INSTRUMENT_NAME_MAX_LENGTH = 64;
 
@@ -46,18 +52,17 @@ export function InstrumentsPage(): JSX.Element {
   const [selected, setSelected] = useState<SelectedInstrument | null>(null);
 
   const form = useForm({
-    defaultValues: { name: selected?.name ?? '', isHarmonic: selected?.isHarmonic ?? false },
+    defaultValues: {
+      name: selected?.name ?? '',
+      family: selected?.family ?? DEFAULT_NEW_INSTRUMENT_FAMILY,
+    },
     onSubmit: async ({ value }) => {
       const trimmed = value.name.trim();
       if (trimmed.length === 0) return;
       if (selected === null) {
-        await create.mutateAsync({ name: trimmed, isHarmonic: value.isHarmonic });
+        await create.mutateAsync({ name: trimmed, family: value.family });
       } else {
-        await update.mutateAsync({
-          id: selected.id,
-          name: trimmed,
-          isHarmonic: value.isHarmonic,
-        });
+        await update.mutateAsync({ id: selected.id, name: trimmed, family: value.family });
       }
       setSelected(null);
       form.reset();
@@ -67,7 +72,7 @@ export function InstrumentsPage(): JSX.Element {
   const selectInstrument = (row: SelectedInstrument): void => {
     setSelected(row);
     form.setFieldValue('name', row.name);
-    form.setFieldValue('isHarmonic', row.isHarmonic);
+    form.setFieldValue('family', row.family);
   };
 
   const clearSelection = (): void => {
@@ -117,9 +122,7 @@ export function InstrumentsPage(): JSX.Element {
                 >
                   {row.name}
                 </button>
-                <Badge tone="mono">
-                  {row.isHarmonic ? t('instruments.harmonic') : t('instruments.percussive')}
-                </Badge>
+                <Badge tone="mono">{t(INSTRUMENT_FAMILY_LABEL_KEY[row.family])}</Badge>
                 <button
                   type="button"
                   className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
@@ -163,19 +166,32 @@ export function InstrumentsPage(): JSX.Element {
                 />
               )}
             </form.Field>
-            <form.Field name="isHarmonic">
+            <span className="text-[11px] tracking-wider uppercase text-ink-400 font-medium">
+              {t('instruments.family')}
+            </span>
+            <form.Field name="family">
               {(field) => (
-                <label className="flex items-center gap-2 text-sm text-ink-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={field.state.value}
-                    onChange={(event) => field.handleChange(event.target.checked)}
-                    onBlur={field.handleBlur}
-                  />
-                  {t('instruments.isHarmonic')}
-                </label>
+                <div className="flex flex-wrap gap-1.5" role="group">
+                  {INSTRUMENT_FAMILIES.map((family) => (
+                    <button
+                      key={family}
+                      type="button"
+                      aria-pressed={field.state.value === family}
+                      onClick={() => field.handleChange(family)}
+                      className={composeClassName(
+                        'min-h-10 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors',
+                        field.state.value === family
+                          ? 'bg-accent-soft border-accent text-accent font-medium'
+                          : 'bg-bg border-line text-ink-500 hover:border-line-strong',
+                      )}
+                    >
+                      {t(INSTRUMENT_FAMILY_LABEL_KEY[family])}
+                    </button>
+                  ))}
+                </div>
               )}
             </form.Field>
+            <p className="text-[11.5px] text-ink-500 m-0">{t('instruments.familyHint')}</p>
             <div className="flex gap-2 mt-2">
               <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
                 {([canSubmit, isSubmitting]) => (

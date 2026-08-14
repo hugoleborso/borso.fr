@@ -153,7 +153,7 @@ describe('songs controller (back-e2e)', () => {
     ).member.id;
     const instrumentResponse = await jsonRequest(app, '/api/instruments', {
       method: 'POST',
-      body: { name: 'Voice', isHarmonic: false },
+      body: { name: 'Voice', family: 'vocal' },
       cookieHeader,
     });
     const instrumentId = (

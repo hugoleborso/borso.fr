@@ -1,8 +1,8 @@
 /**
  * UI test for LineupEditor — covers the modal-open behaviour
- * (`<dialog>.open`), the supplied prefilled values, the save payload
- * (all-null selection collapses to `null`), the Save callback shape,
- * the Reset-to-default callback, and the Cancel close.
+ * (`<dialog>.open`), the instruments each member is shown holding, the save
+ * payload (a selection where nobody plays collapses to `null`), the Save
+ * callback shape, the Reset-to-default callback, and the Cancel close.
  */
 
 import { act, type ReactNode } from 'react';
@@ -61,12 +61,32 @@ function findButtonByText(container: HTMLElement, label: string): HTMLButtonElem
   return buttons.find((button) => button.textContent.trim() === label) ?? null;
 }
 
-function findInstrumentSelectFor(container: HTMLElement, memberId: string): HTMLSelectElement {
-  const select = container.querySelector(`#lineup-editor-instrument-${memberId}`);
-  if (!(select instanceof HTMLSelectElement)) {
-    throw new TypeError(`no select found for member ${memberId}`);
+function findInstrumentToggles(container: HTMLElement, memberName: string): HTMLButtonElement[] {
+  const group = container.querySelector(`[aria-label="${memberName} — Instruments"]`);
+  if (!(group instanceof HTMLElement)) {
+    throw new TypeError(`no instrument group found for ${memberName}`);
   }
-  return select;
+  return Array.from(group.querySelectorAll('button'));
+}
+
+function findInstrumentToggle(
+  container: HTMLElement,
+  memberName: string,
+  instrumentName: string,
+): HTMLButtonElement {
+  const toggle = findInstrumentToggles(container, memberName).find(
+    (button) => button.textContent.trim() === instrumentName,
+  );
+  if (toggle === undefined) {
+    throw new TypeError(`no ${instrumentName} toggle found for ${memberName}`);
+  }
+  return toggle;
+}
+
+function heldInstrumentNames(container: HTMLElement, memberName: string): string[] {
+  return findInstrumentToggles(container, memberName)
+    .filter((button) => button.getAttribute('aria-pressed') === 'true')
+    .map((button) => button.textContent.trim());
 }
 
 // @FollowsBlueprint test-component-render
@@ -119,8 +139,8 @@ describe('LineupEditor', () => {
     expect(dialog?.hasAttribute('open')).toBe(true);
   });
 
-  it('prefills each select with the supplied lineup value', () => {
-    const currentLineup: LineupRecord = { [HUGO.id]: GUITAR.id, [PAULINE.id]: BASS.id };
+  it('shows each member holding what the supplied lineup gives them', () => {
+    const currentLineup: LineupRecord = { [HUGO.id]: [GUITAR.id], [PAULINE.id]: [BASS.id] };
     renderEditor(
       root,
       <LineupEditor
@@ -133,11 +153,27 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    expect(findInstrumentSelectFor(container, HUGO.id).value).toBe(GUITAR.id);
-    expect(findInstrumentSelectFor(container, PAULINE.id).value).toBe(BASS.id);
+    expect(heldInstrumentNames(container, HUGO.name)).toEqual([GUITAR.name]);
+    expect(heldInstrumentNames(container, PAULINE.name)).toEqual([BASS.name]);
   });
 
-  it('exposes the "not playing" option plus every instrument and the null fallback', () => {
+  it('shows a member holding two instruments at once', () => {
+    renderEditor(
+      root,
+      <LineupEditor
+        open
+        surface="song"
+        members={[HUGO]}
+        instruments={[GUITAR, BASS, DRUMS]}
+        currentLineup={{ [HUGO.id]: [DRUMS.id, GUITAR.id] }}
+        onSave={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(heldInstrumentNames(container, HUGO.name)).toEqual([GUITAR.name, DRUMS.name]);
+  });
+
+  it('offers every instrument as a toggle, none of them held to begin with', () => {
     renderEditor(
       root,
       <LineupEditor
@@ -150,9 +186,11 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    const select = findInstrumentSelectFor(container, HUGO.id);
-    const optionValues = Array.from(select.options).map((option) => option.value);
-    expect(optionValues).toEqual(['', GUITAR.id, BASS.id, DRUMS.id]);
+    const toggleNames = findInstrumentToggles(container, HUGO.name).map((button) =>
+      button.textContent.trim(),
+    );
+    expect(toggleNames).toEqual([GUITAR.name, BASS.name, DRUMS.name]);
+    expect(heldInstrumentNames(container, HUGO.name)).toEqual([]);
   });
 
   it('passes the edited lineup to onSave (wasReset=false) and closes the modal', async () => {
@@ -170,20 +208,18 @@ describe('LineupEditor', () => {
         onClose={onClose}
       />,
     );
-    const hugoSelect = findInstrumentSelectFor(container, HUGO.id);
     await act(async () => {
-      hugoSelect.value = GUITAR.id;
-      hugoSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      findInstrumentToggle(container, HUGO.name, GUITAR.name).click();
     });
     await act(async () => {
       const form = container.querySelector('form');
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
-    expect(onSave).toHaveBeenCalledWith({ [HUGO.id]: GUITAR.id }, false);
+    expect(onSave).toHaveBeenCalledWith({ [HUGO.id]: [GUITAR.id], [PAULINE.id]: [] }, false);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('collapses an all-not-playing selection to null on save (no empty record)', async () => {
+  it('collapses a selection where nobody plays to null on save', async () => {
     const onSave = vi.fn();
     renderEditor(
       root,
@@ -192,15 +228,13 @@ describe('LineupEditor', () => {
         surface="song"
         members={[HUGO, PAULINE]}
         instruments={[GUITAR]}
-        currentLineup={{ [HUGO.id]: GUITAR.id }}
+        currentLineup={{ [HUGO.id]: [GUITAR.id] }}
         onSave={onSave}
         onClose={vi.fn()}
       />,
     );
-    const hugoSelect = findInstrumentSelectFor(container, HUGO.id);
     await act(async () => {
-      hugoSelect.value = '';
-      hugoSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      findInstrumentToggle(container, HUGO.name, GUITAR.name).click();
     });
     await act(async () => {
       const form = container.querySelector('form');
@@ -219,13 +253,13 @@ describe('LineupEditor', () => {
         surface="setlist-entry"
         members={[HUGO]}
         instruments={[GUITAR, BASS]}
-        currentLineup={{ [HUGO.id]: BASS.id }}
-        defaultLineup={{ [HUGO.id]: GUITAR.id }}
+        currentLineup={{ [HUGO.id]: [BASS.id] }}
+        defaultLineup={{ [HUGO.id]: [GUITAR.id] }}
         onSave={onSave}
         onClose={onClose}
       />,
     );
-    expect(findInstrumentSelectFor(container, HUGO.id).value).toBe(BASS.id);
+    expect(heldInstrumentNames(container, HUGO.name)).toEqual([BASS.name]);
     const resetButton = findButtonByText(container, RESET_BUTTON_TEXT_EN);
     expect(resetButton).not.toBeNull();
     await act(async () => {
@@ -233,13 +267,13 @@ describe('LineupEditor', () => {
     });
     expect(onSave).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
-    expect(findInstrumentSelectFor(container, HUGO.id).value).toBe(GUITAR.id);
+    expect(heldInstrumentNames(container, HUGO.name)).toEqual([GUITAR.name]);
     expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(true);
     await act(async () => {
       const form = container.querySelector('form');
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
-    expect(onSave).toHaveBeenCalledWith({ [HUGO.id]: GUITAR.id }, true);
+    expect(onSave).toHaveBeenCalledWith({ [HUGO.id]: [GUITAR.id] }, true);
   });
 
   it('omits the Reset button when defaultLineup is not supplied (song surface)', () => {

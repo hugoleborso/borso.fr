@@ -1,7 +1,8 @@
 /**
  * PageHeader — the editorial `.ph` block from the prototype.
  *  - optional `crumb` (uppercase letterspaced label),
- *  - serif italic display H1,
+ *  - serif italic display H1, scaled down under `sm` so a phone keeps the
+ *    title to two lines rather than five,
  *  - dense, ink-500 subtitle,
  *  - right-side actions slot (typically Buttons).
  */
@@ -27,11 +28,11 @@ export function PageHeader({
   className,
 }: PageHeaderProps): JSX.Element {
   return (
-    <header className={composeClassName('mb-5', className)}>
+    <header className={composeClassName('mb-4 sm:mb-5', className)}>
       {crumb !== undefined && crumb !== null && <Crumb className="mb-2">{crumb}</Crumb>}
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 className="font-display italic text-[56px] leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 mb-1">
+          <h1 className="font-display italic text-[34px] sm:text-[44px] lg:text-[56px] leading-[0.98] sm:leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 mb-1">
             {title}
           </h1>
           {subtitle !== undefined && subtitle !== null && (

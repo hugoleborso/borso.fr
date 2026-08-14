@@ -2,9 +2,18 @@
  * Repository for the instruments bounded context — the only file that
  * touches the DB client for this domain. Holds Drizzle queries and
  * transactions; the service orchestrates business rules above it.
+ *
+ * The table carries two columns for one fact: `family`, which the
+ * product reads, and the legacy `is_harmonic` boolean, which Aurora
+ * DSQL refuses to drop (docs/knowledge/dsql-postgres-compat-gaps.md
+ * §10). Every write sets both from the family so the boolean never
+ * contradicts it, and every read resolves the family through
+ * `resolveInstrumentFamily`, which falls back to the boolean for rows
+ * written before the column existed.
  */
 
 import { eq } from 'drizzle-orm';
+import { type InstrumentFamily, resolveInstrumentFamily } from '@domain/instrument.core';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { instrumentTable } from './instruments.schema';
@@ -12,7 +21,14 @@ import { instrumentTable } from './instruments.schema';
 export interface InstrumentRow {
   id: string;
   name: string;
+  family: InstrumentFamily;
+}
+
+interface InstrumentRawRow {
+  id: string;
+  name: string;
   isHarmonic: boolean;
+  family: string | null;
 }
 
 /**
@@ -25,34 +41,54 @@ const PROJECTION = {
   id: instrumentTable.id,
   name: instrumentTable.name,
   isHarmonic: instrumentTable.isHarmonic,
+  family: instrumentTable.family,
 } as const;
+
+function rowToInstrument(row: InstrumentRawRow): InstrumentRow {
+  return {
+    id: row.id,
+    name: row.name,
+    family: resolveInstrumentFamily(row.family, row.isHarmonic),
+  };
+}
+
+function encodeFamily(family: InstrumentFamily): { family: string; isHarmonic: boolean } {
+  return { family, isHarmonic: family === 'harmonic' };
+}
 
 export async function listInstruments(): Promise<InstrumentRow[]> {
   const database = getDatabase();
-  return await database.select(PROJECTION).from(instrumentTable);
+  const rows = await database.select(PROJECTION).from(instrumentTable);
+  return rows.map((row) => rowToInstrument(row));
 }
 
 export async function insertInstrument(input: {
   name: string;
-  isHarmonic: boolean;
+  family: InstrumentFamily;
 }): Promise<InstrumentRow> {
   const database = getDatabase();
-  const [row] = await database.insert(instrumentTable).values(input).returning(PROJECTION);
+  const [row] = await database
+    .insert(instrumentTable)
+    .values({ name: input.name, ...encodeFamily(input.family) })
+    .returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
-  return row;
+  return rowToInstrument(row);
 }
 
 export async function updateInstrument(
   id: string,
-  updates: Partial<{ name: string; isHarmonic: boolean }>,
+  updates: Partial<{ name: string; family: InstrumentFamily }>,
 ): Promise<InstrumentRow | null> {
   const database = getDatabase();
   const [row] = await database
     .update(instrumentTable)
-    .set(updates)
+    .set({
+      ...(updates.name === undefined ? {} : { name: updates.name }),
+      ...(updates.family === undefined ? {} : encodeFamily(updates.family)),
+    })
     .where(eq(instrumentTable.id, id))
     .returning(PROJECTION);
-  return row ?? null;
+  return row === undefined ? null : rowToInstrument(row);
 }
 
 export async function deleteInstrument(id: string): Promise<DeletionOutcome> {

@@ -12,6 +12,7 @@ import { instrumentTable } from '../instruments/instruments.schema';
 import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.schema';
 import { defaultLineupSchema, songTable } from '../songs/songs.schema';
 import { scrubMemberFromLineup } from './lineup-scrub.core';
+import { type InstrumentFamily, resolveInstrumentFamily } from '@domain/instrument.core';
 import { memberInstrumentTable, memberTable } from './members.schema';
 
 export interface MemberRow {
@@ -24,7 +25,7 @@ export interface MemberRow {
 export interface MemberInstrumentRow {
   id: string;
   name: string;
-  isHarmonic: boolean;
+  family: InstrumentFamily;
 }
 
 // @FollowsBlueprint repository-projection
@@ -39,7 +40,21 @@ const INSTRUMENT_PROJECTION = {
   id: instrumentTable.id,
   name: instrumentTable.name,
   isHarmonic: instrumentTable.isHarmonic,
+  family: instrumentTable.family,
 } as const;
+
+function rowToMemberInstrument(row: {
+  id: string;
+  name: string;
+  isHarmonic: boolean;
+  family: string | null;
+}): MemberInstrumentRow {
+  return {
+    id: row.id,
+    name: row.name,
+    family: resolveInstrumentFamily(row.family, row.isHarmonic),
+  };
+}
 
 export async function listMembers(): Promise<MemberRow[]> {
   const database = getDatabase();
@@ -136,11 +151,12 @@ async function scrubMemberFromSetlistOverrides(
 
 export async function listInstrumentsForMember(memberId: string): Promise<MemberInstrumentRow[]> {
   const database = getDatabase();
-  return await database
+  const rows = await database
     .select(INSTRUMENT_PROJECTION)
     .from(memberInstrumentTable)
     .innerJoin(instrumentTable, eq(memberInstrumentTable.instrumentId, instrumentTable.id))
     .where(eq(memberInstrumentTable.memberId, memberId));
+  return rows.map((row) => rowToMemberInstrument(row));
 }
 
 export async function areInstrumentsKnown(instrumentIds: readonly string[]): Promise<boolean> {

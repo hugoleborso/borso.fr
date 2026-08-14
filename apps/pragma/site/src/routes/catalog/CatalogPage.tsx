@@ -28,6 +28,7 @@ import { useMasteryDefaults } from '../../lib/queries/mastery';
 import { useMembersList } from '../../lib/queries/members';
 import { useSongsList } from '../../lib/queries/songs';
 import {
+  buildNewSongPath,
   type CatalogStatusFilter,
   compactLineup,
   countSongsWithStatus,
@@ -150,18 +151,12 @@ export function CatalogPage(): JSX.Element {
         title={t('catalog.title')}
         subtitle={subtitle}
         actions={
-          <>
-            <Button variant="default">
-              <Icon name="filter" size={14} />
-              {t('common.filters')}
+          <Link to="/catalog/new" className="hidden sm:inline-flex">
+            <Button variant="accent" type="button">
+              <Icon name="plus" size={14} />
+              {t('catalog.newSong')}
             </Button>
-            <Link to="/catalog/new">
-              <Button variant="accent" type="button">
-                <Icon name="plus" size={14} />
-                {t('catalog.newSong')}
-              </Button>
-            </Link>
-          </>
+          </Link>
         }
       />
 
@@ -181,9 +176,27 @@ export function CatalogPage(): JSX.Element {
       )}
       {isLoading && <p className="text-ink-400 text-sm italic">{t('common.loading')}</p>}
       {!isLoading && cards.length === 0 && (
-        <p className="text-ink-400 text-sm italic">{t('catalog.emptyList')}</p>
+        <div className="flex flex-col items-start gap-3 py-8">
+          <p className="text-ink-400 text-sm italic m-0">{t('catalog.emptyList')}</p>
+          <Link to={buildNewSongPath(search)}>
+            <Button variant="accent" type="button">
+              <Icon name="plus" size={14} />
+              {search.trim().length === 0
+                ? t('catalog.newSong')
+                : t('catalog.createSearched', { title: search.trim() })}
+            </Button>
+          </Link>
+        </div>
       )}
       {!isLoading && cards.length > 0 && <CatalogGrid songs={cards} />}
+
+      <Link
+        to={buildNewSongPath(search)}
+        aria-label={t('catalog.newSong')}
+        className="sm:hidden fixed right-4 bottom-20 z-30 w-14 h-14 rounded-full bg-accent text-bg-elev shadow-lg inline-flex items-center justify-center no-underline"
+      >
+        <Icon name="plus" size={22} />
+      </Link>
     </div>
   );
 }

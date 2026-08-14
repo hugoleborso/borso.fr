@@ -4,8 +4,9 @@
  * wordmark, two nav sections (main and administration), and a
  * bottom-aligned "me" chip.
  *
- * Under the `lg` breakpoint the 232px sidebar is replaced by a
- * slide-over panel opened from a hamburger button.
+ * Under the `lg` breakpoint the 232px sidebar gives way to a bottom tab bar
+ * carrying the four pages the band uses on stage, plus a "more" tab that opens
+ * the same sidebar as a slide-over for the admin pages.
  *
  * The browser's online status and the viewport width are both read
  * through `useSyncExternalStore` hooks, so this file holds no effect.
@@ -25,6 +26,8 @@ import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
 import { OfflineBanner } from '../molecules/OfflineBanner';
 import { BREAKPOINT_BELOW_LG, useIsMediaQueryMatching } from '../molecules/useIsMediaQueryMatching';
 import { useIsOnline } from '../molecules/useOnlineStatus';
+import { BottomTabBar } from './BottomTabBar';
+import { isNavDestinationActive } from './nav-active.core';
 import { useNavBadges } from './useNavBadges';
 
 interface NavItem {
@@ -84,7 +87,7 @@ export function AppShell(): JSX.Element {
             item={item}
             label={t(item.labelKey)}
             badge={badges[item.to]}
-            isActive={location.pathname.startsWith(item.to)}
+            isActive={isNavDestinationActive(location.pathname, item.to)}
             onClick={closeMobileNav}
           />
         ))}
@@ -100,7 +103,7 @@ export function AppShell(): JSX.Element {
             item={item}
             label={t(item.labelKey)}
             badge={badges[item.to]}
-            isActive={location.pathname.startsWith(item.to)}
+            isActive={isNavDestinationActive(location.pathname, item.to)}
             onClick={closeMobileNav}
           />
         ))}
@@ -143,23 +146,19 @@ export function AppShell(): JSX.Element {
         </div>
       ) : null}
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
-        {isNarrow ? (
-          <button
-            type="button"
-            onClick={() => setIsMobileNavOpen(true)}
-            aria-label={t('nav.openMenu')}
-            className="lg:hidden sticky top-0 z-30 inline-flex items-center gap-2 px-4 py-3 text-ink-700 bg-bg/90 backdrop-blur border-b border-line w-full text-left cursor-pointer"
-          >
-            <Icon name="menu" size={18} />
-            <span className="font-display italic text-xl text-ink-900 leading-none">
-              {t('appName')}
-            </span>
-          </button>
-        ) : null}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden relative pb-16 lg:pb-0">
         <OfflineBanner isVisible={!isOnline} />
         <Outlet />
       </main>
+
+      {isNarrow ? (
+        <BottomTabBar
+          tabs={PRIMARY_NAV}
+          badges={badges}
+          activePath={location.pathname}
+          onOpenMore={() => setIsMobileNavOpen(true)}
+        />
+      ) : null}
     </div>
   );
 }

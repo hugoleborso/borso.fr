@@ -1,14 +1,14 @@
 /**
- * Translations between a lineup record (`memberId -> instrumentId or
- * null`) and the flat string form the lineup editor holds.
+ * Translations between a lineup record (`memberId -> the instruments they
+ * hold`) and the form values the lineup editor holds.
  *
- * A selection where nobody plays anything collapses to `null`, because
- * the API treats a non-null lineup as "this entry overrides the song
- * default" and an empty object would claim an override that says
- * nothing.
+ * A member holding nothing sits the song out, and a selection where nobody
+ * holds anything collapses to `null`, because the API treats a non-null
+ * lineup as "this entry overrides the song default" and an empty object would
+ * claim an override that says nothing.
  */
 
-export type LineupRecord = Readonly<Record<string, string | null>>;
+export type LineupRecord = Readonly<Record<string, readonly string[]>>;
 
 export interface LineupEditorMember {
   readonly id: string;
@@ -16,9 +16,7 @@ export interface LineupEditorMember {
   readonly color: string;
 }
 
-export const NOT_PLAYING_OPTION_VALUE = '';
-
-export type LineupFormValues = Record<string, string>;
+export type LineupFormValues = Record<string, string[]>;
 
 // @FollowsBlueprint core-form-schema
 export function lineupToFormValues(
@@ -27,18 +25,41 @@ export function lineupToFormValues(
 ): LineupFormValues {
   const values: LineupFormValues = {};
   for (const member of members) {
-    values[member.id] = lineup[member.id] ?? NOT_PLAYING_OPTION_VALUE;
+    values[member.id] = [...(lineup[member.id] ?? [])];
   }
   return values;
 }
 
 export function formValuesToLineup(values: LineupFormValues): LineupRecord | null {
   let hasAnyAssignment = false;
-  const lineup: Record<string, string | null> = {};
-  for (const [memberId, instrumentId] of Object.entries(values)) {
-    if (instrumentId === NOT_PLAYING_OPTION_VALUE) continue;
-    lineup[memberId] = instrumentId;
-    hasAnyAssignment = true;
+  const lineup: Record<string, readonly string[]> = {};
+  for (const [memberId, instrumentIds] of Object.entries(values)) {
+    lineup[memberId] = instrumentIds;
+    if (instrumentIds.length > 0) hasAnyAssignment = true;
   }
   return hasAnyAssignment ? lineup : null;
+}
+
+/** Adding an instrument the member does not hold, or dropping one they do. */
+export function toggleInstrumentHeld(
+  instrumentIds: readonly string[],
+  instrumentId: string,
+): string[] {
+  if (instrumentIds.includes(instrumentId)) {
+    return instrumentIds.filter((current) => current !== instrumentId);
+  }
+  return [...instrumentIds, instrumentId];
+}
+
+/**
+ * The lineup as the API takes it. The editor holds readonly lists, and the
+ * request body is a mutable record, so the copy happens once here rather than
+ * at each of the two call sites.
+ */
+export function toLineupPayload(lineup: LineupRecord | null): Record<string, string[]> {
+  const payload: Record<string, string[]> = {};
+  for (const [memberId, instrumentIds] of Object.entries(lineup ?? {})) {
+    payload[memberId] = [...instrumentIds];
+  }
+  return payload;
 }

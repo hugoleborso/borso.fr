@@ -10,6 +10,7 @@
 
 import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
 
 export const SONG_STATUSES = ['idea', 'wip', 'rehearsed', 'concert_ready'] as const;
 export const LINK_PROVIDERS = ['spotify', 'deezer', 'youtube', 'other'] as const;
@@ -47,6 +48,13 @@ export const songTable = pgTable('song', {
   isrcs: text('isrcs'),
   // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
   tags: text('tags'),
+  // The three note fields the band fills in. Nullable at the database
+  // level because DSQL §10 forbids NOT NULL / DEFAULT on ADD COLUMN;
+  // the repository writes '' rather than null and the read path
+  // narrows null → ''.
+  structureNotes: text('structure_notes'),
+  gimmickNotes: text('gimmick_notes'),
+  notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 });
 
@@ -62,7 +70,17 @@ export const chordChartSchema = z.union([
   z.object({ kind: z.literal('image'), s3Key: z.string().min(1).max(512) }),
 ]);
 
-export const defaultLineupSchema = z.record(z.string().uuid(), z.string().uuid().nullable());
+/**
+ * A stored lineup value is a list of instrument ids. Rows written before one
+ * member could hold two instruments carry a single id or a null instead, so
+ * the schema accepts all three shapes and `normalizeLineup` hands back lists;
+ * nothing has to rewrite the JSON already in the column.
+ */
+const storedLineupValueSchema = z.union([z.array(z.string().uuid()), z.string().uuid(), z.null()]);
+
+export const defaultLineupSchema = z
+  .record(z.string().uuid(), storedLineupValueSchema)
+  .transform((stored: Record<string, StoredLineupValue>) => normalizeLineup(stored));
 
 const SONG_STRING_FIELD_MAX = 256;
 const SONG_ISRC_MAX = 32;
@@ -70,6 +88,7 @@ const SONG_ISRCS_MAX = 8;
 const SONG_TAG_MAX = 64;
 const SONG_TAGS_MAX = 16;
 const SONG_DURATION_MAX_SECONDS = 24 * 60 * 60;
+const SONG_NOTE_MAX = 4_096;
 
 const songBaseSchema = z.object({
   title: z.string().trim().min(1).max(256),
@@ -86,6 +105,9 @@ const songBaseSchema = z.object({
   durationSeconds: z.number().int().min(0).max(SONG_DURATION_MAX_SECONDS).nullable().default(null),
   isrcs: z.array(z.string().max(SONG_ISRC_MAX)).max(SONG_ISRCS_MAX).default([]),
   tags: z.array(z.string().max(SONG_TAG_MAX)).max(SONG_TAGS_MAX).default([]),
+  structureNotes: z.string().max(SONG_NOTE_MAX).default(''),
+  gimmickNotes: z.string().max(SONG_NOTE_MAX).default(''),
+  notes: z.string().max(SONG_NOTE_MAX).default(''),
 });
 
 export const songCreateInputSchema = songBaseSchema;

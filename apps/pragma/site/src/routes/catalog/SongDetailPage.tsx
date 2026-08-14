@@ -23,7 +23,9 @@ import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
 import { ChartKindIcon } from '../../components/molecules/ChartKindIcon';
 import { LineupEditor, type LineupRecord } from '../../components/molecules/LineupEditor';
+import { toLineupPayload } from '../../components/molecules/lineup-editor.core';
 import { SongEmbed } from '../../components/molecules/SongEmbed';
+import { SongNotes } from '../../components/molecules/SongNotes';
 import { StatusChip } from '../../components/molecules/StatusChip';
 import { UploadedChartPreview } from '../../components/molecules/UploadedChartPreview';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
@@ -37,6 +39,7 @@ import { useSong, useUpdateSong } from '../../lib/queries/songs';
 import { useSignedChartUrl } from '../../lib/queries/uploads';
 import { extractChartKind, selectChordProText } from './chart-kind.utils';
 import { buildMasteryKey, buildSongLineupRows } from './song-lineup.core';
+import { selectSongNoteSections } from './song-notes.core';
 import { buildTonalityLabel } from './tonality-label.utils';
 
 const NO_ROWS: readonly never[] = [];
@@ -103,7 +106,7 @@ export function SongDetailPage(): JSX.Element {
 
   const saveSongLineup = (lineup: LineupRecord | null): void => {
     if (song === null) return;
-    updateSong.mutate({ id: song.id, defaultLineup: lineup ?? {} });
+    updateSong.mutate({ id: song.id, defaultLineup: toLineupPayload(lineup) });
   };
 
   if (isLoading) {
@@ -225,6 +228,8 @@ export function SongDetailPage(): JSX.Element {
             </Card>
           )}
 
+          <SongNotesCard song={song} />
+
           {song.links.length > 0 ? (
             <Card>
               <div className={composeClassName(labelClass, 'mb-2.5')}>
@@ -272,5 +277,27 @@ export function SongDetailPage(): JSX.Element {
         onClose={() => setLineupEditorOpen(false)}
       />
     </section>
+  );
+}
+
+interface SongNotesCardProps {
+  readonly song: {
+    readonly structureNotes: string;
+    readonly gimmickNotes: string;
+    readonly notes: string;
+  };
+}
+
+function SongNotesCard({ song }: SongNotesCardProps): JSX.Element | null {
+  const { t } = useTranslation();
+  const sections = selectSongNoteSections(song);
+  if (sections.length === 0) return null;
+  return (
+    <Card>
+      <div className="text-[11px] tracking-wider uppercase text-ink-400 font-medium mb-2.5">
+        {t('catalog.notesTitle')}
+      </div>
+      <SongNotes song={song} />
+    </Card>
   );
 }

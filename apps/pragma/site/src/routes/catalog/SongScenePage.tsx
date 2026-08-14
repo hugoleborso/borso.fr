@@ -13,6 +13,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
+import { SongNotes } from '../../components/molecules/SongNotes';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { ApiError } from '../../lib/api';
 import { openDialogOnAttach } from '../../lib/modal-dialog';
@@ -65,17 +66,17 @@ export function SongScenePage(): JSX.Element {
       ref={openDialogOnAttach}
       onClose={leaveScene}
       aria-label={song.title}
-      className="fixed inset-0 z-50 m-0 w-screen h-screen max-w-none max-h-none border-0 bg-[#0d0a07] text-[#f1e9d8] overflow-y-auto p-10 grid grid-rows-[auto_1fr]"
+      className="fixed inset-0 z-50 m-0 w-screen h-screen max-w-none max-h-none border-0 bg-[#0d0a07] text-[#f1e9d8] overflow-y-auto p-4 sm:p-10 flex flex-col"
       style={{ fontSize: `${fontSizePx}px` }}
     >
-      <header className="flex items-center gap-4 mb-6 pb-4 border-b border-[rgba(255,255,255,0.08)]">
+      <header className="flex items-center gap-2 sm:gap-4 mb-5 pb-4 border-b border-[rgba(255,255,255,0.08)] flex-wrap">
         <button type="button" className={SCENE_BUTTON_CLASS} onClick={leaveScene}>
           ← {t('common.back')}
         </button>
-        <h2 className="font-display italic text-4xl text-[#f1e9d8] m-0 flex-1 truncate">
+        <h2 className="font-display italic text-2xl sm:text-4xl text-[#f1e9d8] m-0 flex-1 min-w-0 truncate">
           {song.title}
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           <button
             type="button"
             className={SCENE_BUTTON_CLASS}
@@ -113,6 +114,7 @@ export function SongScenePage(): JSX.Element {
           </button>
         </div>
       </header>
+      <SongNotes song={song} tone="dark" className="mb-5" />
       {chordproText === null ? (
         <p className="text-center font-display italic text-2xl text-[rgba(241,233,216,0.5)] py-20">
           {t('scene.noChordpro')}

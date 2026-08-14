@@ -5,10 +5,13 @@
  * data shape the catalog list endpoint already returns.
  *
  * `meanMasteryForSong` returns the average mastery default across the
- * song's lineup. Members with a null instrument (absent for this song)
- * are skipped. Returns null if the lineup is empty or no defaults are
- * known for any of the (member, instrument) pairs.
+ * song's lineup, one score per instrument held — a member on drums and
+ * vocals counts twice. Members sitting the song out are skipped.
+ * Returns null if the lineup is empty or no defaults are known for any
+ * of the (member, instrument) pairs.
  */
+
+import { type Lineup, memberInstrumentPairs } from '@domain/lineup.core';
 
 export interface MasteryDefaultRow {
   readonly memberId: string;
@@ -18,7 +21,7 @@ export interface MasteryDefaultRow {
 
 // @FollowsBlueprint utils-pure-module
 export function meanMasteryForSong(
-  defaultLineup: Readonly<Record<string, string | null>>,
+  defaultLineup: Lineup,
   defaults: readonly MasteryDefaultRow[],
 ): number | null {
   const lookup = new Map<string, number>();
@@ -27,8 +30,7 @@ export function meanMasteryForSong(
   }
   let sum = 0;
   let count = 0;
-  for (const [memberId, instrumentId] of Object.entries(defaultLineup)) {
-    if (instrumentId === null) continue;
+  for (const [memberId, instrumentId] of memberInstrumentPairs(defaultLineup)) {
     const score = lookup.get(`${memberId}::${instrumentId}`);
     if (score === undefined) continue;
     sum += score;

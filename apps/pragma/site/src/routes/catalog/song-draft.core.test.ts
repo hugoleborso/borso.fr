@@ -28,6 +28,9 @@ const API_SONG: Song = {
   durationSeconds: 210,
   isrcs: ['ISRC1'],
   tags: ['rock'],
+  structureNotes: 'intro ×4',
+  gimmickNotes: 'break avant le dernier refrain',
+  notes: '',
 };
 
 // @FollowsBlueprint test-pure-unit
@@ -76,6 +79,9 @@ describe('songFromApi', () => {
       durationSeconds: 210,
       isrcs: ['ISRC1'],
       tags: ['rock'],
+      structureNotes: 'intro ×4',
+      gimmickNotes: 'break avant le dernier refrain',
+      notes: '',
     });
   });
 
@@ -163,6 +169,9 @@ describe('payloadFromDraft', () => {
       album: 'Embers',
       durationSeconds: null,
       isrcs: [],
+      structureNotes: '',
+      gimmickNotes: '',
+      notes: '',
       tags: [],
     });
   });

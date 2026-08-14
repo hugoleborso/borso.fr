@@ -45,6 +45,9 @@ export const songSchema = z.object({
   durationSeconds: z.number().nullable().default(null),
   isrcs: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
+  structureNotes: z.string().default(''),
+  gimmickNotes: z.string().default(''),
+  notes: z.string().default(''),
 });
 export const singleSongSchema = z.object({ song: songSchema });
 
@@ -68,6 +71,9 @@ export interface SongDraftState {
   durationSeconds: number | null;
   isrcs: string[];
   tags: string[];
+  structureNotes: string;
+  gimmickNotes: string;
+  notes: string;
 }
 
 export const BLANK_SONG_DRAFT: SongDraftState = {
@@ -87,6 +93,9 @@ export const BLANK_SONG_DRAFT: SongDraftState = {
   durationSeconds: null,
   isrcs: [],
   tags: [],
+  structureNotes: '',
+  gimmickNotes: '',
+  notes: '',
 };
 
 export function songFromApi(song: Song): SongDraftState {
@@ -107,6 +116,9 @@ export function songFromApi(song: Song): SongDraftState {
     durationSeconds: song.durationSeconds,
     isrcs: song.isrcs,
     tags: song.tags,
+    structureNotes: song.structureNotes,
+    gimmickNotes: song.gimmickNotes,
+    notes: song.notes,
   };
 }
 
@@ -131,6 +143,9 @@ export interface SongSavePayload {
   readonly durationSeconds: number | null;
   readonly isrcs: string[];
   readonly tags: string[];
+  readonly structureNotes: string;
+  readonly gimmickNotes: string;
+  readonly notes: string;
 }
 
 // @FollowsBlueprint core-form-schema
@@ -153,6 +168,9 @@ export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null 
     durationSeconds: draft.durationSeconds,
     isrcs: draft.isrcs,
     tags: draft.tags,
+    structureNotes: draft.structureNotes,
+    gimmickNotes: draft.gimmickNotes,
+    notes: draft.notes,
   };
 }
 

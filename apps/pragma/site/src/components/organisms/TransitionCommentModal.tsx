@@ -20,6 +20,8 @@ const COMMENT_MAX_LENGTH = 4_096;
 export interface TransitionCommentModalProps {
   readonly songAId: string;
   readonly songBId: string;
+  readonly songATitle: string;
+  readonly songBTitle: string;
   readonly onClose: () => void;
 }
 
@@ -27,6 +29,8 @@ export interface TransitionCommentModalProps {
 export function TransitionCommentModal({
   songAId,
   songBId,
+  songATitle,
+  songBTitle,
   onClose,
 }: TransitionCommentModalProps): JSX.Element {
   const { t } = useTranslation();
@@ -58,9 +62,12 @@ export function TransitionCommentModal({
       aria-modal="true"
     >
       <div className="bg-bg-elev border border-line-strong rounded-lg p-6 w-full max-w-[480px] shadow-[0_18px_50px_rgba(26,22,18,0.18)]">
-        <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-4">
+        <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-1">
           {t('setlist.transitionCommentTitle')}
         </h3>
+        <p className="text-[12px] text-ink-500 m-0 mb-4">
+          {songATitle} <span className="text-ink-300">▸</span> {songBTitle}
+        </p>
         {displayError === null ? null : (
           <p className="text-danger text-sm mb-3" role="alert">
             {displayError}

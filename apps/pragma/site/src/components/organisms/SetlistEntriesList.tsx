@@ -4,8 +4,8 @@
  * the `noExcessiveLinesPerFile` cap. The parent owns the data,
  * mutations, and the modal state — this component composes the
  * derived row props (resolved lineup, prominent member chip in
- * single-member mode, override badge, transition-warning hint) and
- * emits intent through the supplied callbacks.
+ * single-member mode, override badge, the transition strip that
+ * precedes each row) and emits intent through the supplied callbacks.
  */
 
 import {
@@ -40,6 +40,8 @@ import {
   type SetlistEditorSong,
   tonalityLabelFor,
 } from './setlist-editor.utils';
+import { TransitionStrip } from './TransitionStrip';
+import { type TransitionView, transitionPairKey } from './transition-view.core';
 
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
 const DRAG_TOUCH_DELAY_MS = 200;
@@ -57,10 +59,12 @@ export interface SetlistEntriesListProps {
   readonly entries: readonly ListEntry[];
   readonly visibleEntries: readonly ListEntry[];
   readonly songsById: Readonly<Record<string, SetlistEditorSong & { baseEnergy: number | null }>>;
-  readonly transitions: readonly ('safe' | 'warn')[];
+  readonly transitionViews: readonly TransitionView[];
+  readonly transitionNotesByPair: Readonly<Record<string, string>>;
+  readonly meanMasteryBySongId: Readonly<Record<string, number | null>>;
   readonly inFilteredMode: boolean;
   readonly selectedMemberId: string | null;
-  readonly filteredInstrumentByEntryId: Readonly<Record<string, string | undefined>>;
+  readonly filteredInstrumentIdsByEntryId: Readonly<Record<string, readonly string[] | undefined>>;
   readonly lineupMembers: readonly LineupMember[];
   readonly instruments: readonly LineupEditorInstrument[];
   readonly membersById: Readonly<Record<string, { firstName: string; color: string }>>;
@@ -99,6 +103,23 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
     props.onReorder(next);
   };
 
+  const renderTransitionBefore = (fullIndex: number): JSX.Element | null => {
+    if (props.inFilteredMode) return null;
+    const view = props.transitionViews[fullIndex - 1];
+    const leftEntry = props.entries[fullIndex - 1];
+    const rightEntry = props.entries[fullIndex];
+    if (view === undefined || leftEntry === undefined || rightEntry === undefined) return null;
+    return (
+      <TransitionStrip
+        view={view}
+        note={
+          props.transitionNotesByPair[transitionPairKey(leftEntry.songId, rightEntry.songId)] ?? ''
+        }
+        onOpenNote={() => props.onOpenTransition(leftEntry.songId, rightEntry.songId)}
+      />
+    );
+  };
+
   return (
     <DndContext
       sensors={sensors}
@@ -117,11 +138,8 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
             const lineupRaw = lineupOf(entry, props.songsById);
             warnIfOrphanMemberIds(lineupRaw, props.knownMemberIds, entry.songId);
             const fullIndex = props.entries.indexOf(entry);
-            const previousKind = props.inFilteredMode
-              ? undefined
-              : props.transitions[fullIndex - 1];
             const prominent = prominentMemberInstrumentFor(
-              props.filteredInstrumentByEntryId[entry.id],
+              props.filteredInstrumentIdsByEntryId[entry.id],
               props.selectedMemberId,
               props.membersById,
               props.instrumentsById,
@@ -134,7 +152,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 title={song?.title ?? entry.songId.slice(0, 8)}
                 artist={song?.artist ?? ''}
                 tonalityLabel={tonalityLabelFor(song)}
-                meanMastery={null}
+                meanMastery={props.meanMasteryBySongId[entry.songId] ?? null}
                 keyOverride={entry.keyOverride}
                 capo={entry.capo}
                 energy={entry.energy}
@@ -148,14 +166,9 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 members={props.lineupMembers}
                 instruments={props.instruments}
                 prominentMemberInstrument={prominent}
-                showTransitionWarningBefore={previousKind === 'warn'}
+                transitionBefore={renderTransitionBefore(fullIndex)}
                 onUpdate={props.onUpdate}
                 onRemove={props.onRemove}
-                onOpenTransitionBefore={() => {
-                  const leftEntry = props.entries[fullIndex - 1];
-                  if (leftEntry === undefined) return;
-                  props.onOpenTransition(leftEntry.songId, entry.songId);
-                }}
               />
             );
           })}

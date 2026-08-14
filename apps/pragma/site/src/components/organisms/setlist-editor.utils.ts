@@ -1,8 +1,11 @@
 /**
  * Pure helpers for the SetlistEditor. Extracted so the parent stays
- * under the file-length cap and so the lineup / tonality / mastery
+ * under the file-length cap and so the lineup / tonality / instrument
  * derivations stay easy to cover at 100%.
  */
+
+import type { InstrumentFamily } from '@domain/instrument.core';
+import { type Lineup, resolveLineup } from '@domain/lineup.core';
 
 export interface SetlistEditorSong {
   readonly id: string;
@@ -10,18 +13,18 @@ export interface SetlistEditorSong {
   readonly artist: string;
   readonly tonalityStart?: string | null;
   readonly tonalityEnd?: string | null;
-  readonly defaultLineup: Readonly<Record<string, string | null>>;
+  readonly defaultLineup: Lineup;
 }
 
 export interface SetlistEditorInstrument {
   readonly id: string;
   readonly name: string;
-  readonly isHarmonic: boolean;
+  readonly family: InstrumentFamily;
 }
 
 export interface SetlistEditorEntry {
   readonly songId: string;
-  readonly lineupOverride: Readonly<Record<string, string | null>> | null;
+  readonly lineupOverride: Lineup | null;
 }
 
 export function tonalityLabelFor(song: SetlistEditorSong | undefined): string | null {
@@ -62,32 +65,27 @@ export function formatSetlistOrder(
     .join('\n');
 }
 
-export function instrumentHarmonicMap(
+export function instrumentFamilyMap(
   instruments: readonly SetlistEditorInstrument[],
-): Record<string, { isHarmonic: boolean }> {
-  const out: Record<string, { isHarmonic: boolean }> = {};
-  for (const row of instruments) out[row.id] = { isHarmonic: row.isHarmonic };
+): Record<string, { family: InstrumentFamily }> {
+  const out: Record<string, { family: InstrumentFamily }> = {};
+  for (const row of instruments) out[row.id] = { family: row.family };
   return out;
 }
 
 export function lineupOf(
   entry: SetlistEditorEntry,
   songsById: Readonly<Record<string, SetlistEditorSong>>,
-): Record<string, string | null> {
-  if (entry.lineupOverride !== null) return { ...entry.lineupOverride };
+): Lineup {
   const song = songsById[entry.songId];
-  if (song === undefined) return {};
-  return { ...song.defaultLineup };
+  return resolveLineup(song?.defaultLineup ?? {}, entry.lineupOverride);
 }
 
-export function compactLineup(
-  lineup: Readonly<Record<string, string | null>>,
-): Record<string, string> {
-  const result: Record<string, string> = {};
-  for (const [memberId, instrumentId] of Object.entries(lineup)) {
-    if (instrumentId !== null && instrumentId !== '') {
-      result[memberId] = instrumentId;
-    }
+/** The lineup without the members sitting the song out, which is what a chip row draws. */
+export function compactLineup(lineup: Lineup): Record<string, readonly string[]> {
+  const result: Record<string, readonly string[]> = {};
+  for (const [memberId, instrumentIds] of Object.entries(lineup)) {
+    if (instrumentIds.length > 0) result[memberId] = instrumentIds;
   }
   return result;
 }
@@ -95,7 +93,7 @@ export function compactLineup(
 export interface ProminentMemberInstrumentResolution {
   readonly memberName: string;
   readonly memberColor: string;
-  readonly instrumentName: string;
+  readonly instrumentNames: readonly string[];
 }
 
 interface NameableMember {
@@ -113,10 +111,7 @@ interface NameableInstrument {
  * cascade-scrub (R1 in the lineup-editor plan). Pure so the caller
  * owns when and how to surface the warning.
  */
-export function findOrphanMemberIds(
-  lineup: Readonly<Record<string, string | null>>,
-  knownMemberIds: ReadonlySet<string>,
-): string[] {
+export function findOrphanMemberIds(lineup: Lineup, knownMemberIds: ReadonlySet<string>): string[] {
   const orphans: string[] = [];
   for (const memberId of Object.keys(lineup)) {
     if (!knownMemberIds.has(memberId)) orphans.push(memberId);
@@ -136,18 +131,34 @@ export function selectUnwarnedMemberIds(
 }
 
 export function prominentMemberInstrumentFor(
-  instrumentId: string | undefined,
+  instrumentIds: readonly string[] | undefined,
   selectedMemberId: string | null,
   membersById: Readonly<Record<string, NameableMember>>,
   instrumentsById: Readonly<Record<string, NameableInstrument>>,
 ): ProminentMemberInstrumentResolution | null {
-  if (instrumentId === undefined || selectedMemberId === null) return null;
+  if (instrumentIds === undefined || instrumentIds.length === 0) return null;
+  if (selectedMemberId === null) return null;
   const member = membersById[selectedMemberId];
-  const instrument = instrumentsById[instrumentId];
-  if (member === undefined || instrument === undefined) return null;
+  if (member === undefined) return null;
+  const instrumentNames = instrumentIds.flatMap((instrumentId) => {
+    const instrument = instrumentsById[instrumentId];
+    return instrument === undefined ? [] : [instrument.name];
+  });
+  if (instrumentNames.length === 0) return null;
   return {
     memberName: member.firstName,
     memberColor: member.color,
-    instrumentName: instrument.name,
+    instrumentNames,
   };
+}
+
+/** The instrument names a lineup gives one member, for a chip's tooltip. */
+export function instrumentNamesFor(
+  instrumentIds: readonly string[],
+  instrumentsById: Readonly<Record<string, NameableInstrument>>,
+): string[] {
+  return instrumentIds.flatMap((instrumentId) => {
+    const instrument = instrumentsById[instrumentId];
+    return instrument === undefined ? [] : [instrument.name];
+  });
 }

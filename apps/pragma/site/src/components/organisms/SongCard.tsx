@@ -26,7 +26,7 @@ export interface SongCardProps {
   chartKind: ChartKind;
   baseEnergy: number | null;
   meanMastery: number | null;
-  defaultLineup: Record<string, string>;
+  defaultLineup: Record<string, readonly string[]>;
   members: readonly LineupMember[];
   instruments: readonly LineupInstrument[];
 }

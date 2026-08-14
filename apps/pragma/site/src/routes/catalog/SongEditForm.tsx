@@ -22,6 +22,7 @@ import { SongChordPreview } from './SongChordPreview';
 import { SongExternalLinks } from './SongExternalLinks';
 import { SongLinkAdder } from './SongLinkAdder';
 import { SongMusicBrainzPanel } from './SongMusicBrainzPanel';
+import { SongNotesFields } from './SongNotesFields';
 import {
   applyExternalPickToDraft,
   detectProvider,
@@ -270,6 +271,23 @@ export function SongEditForm({
                 onTonalityStartChange={(value) => form.setFieldValue('tonalityStart', value)}
                 onTonalityEndChange={(value) => form.setFieldValue('tonalityEnd', value)}
                 onBaseEnergyChange={(value) => form.setFieldValue('baseEnergy', value)}
+              />
+            )}
+          </form.Subscribe>
+
+          <form.Subscribe
+            selector={(state) =>
+              [state.values.structureNotes, state.values.gimmickNotes, state.values.notes] as const
+            }
+          >
+            {([structureValue, gimmickValue, notesValue]) => (
+              <SongNotesFields
+                structureNotes={structureValue}
+                gimmickNotes={gimmickValue}
+                notes={notesValue}
+                onStructureChange={(value) => form.setFieldValue('structureNotes', value)}
+                onGimmickChange={(value) => form.setFieldValue('gimmickNotes', value)}
+                onNotesChange={(value) => form.setFieldValue('notes', value)}
               />
             )}
           </form.Subscribe>

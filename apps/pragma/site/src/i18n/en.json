@@ -10,12 +10,12 @@
     "members": "Members",
     "instruments": "Instruments",
     "administrationSection": "Administration",
-    "openMenu": "Open menu",
-    "closeMenu": "Close menu",
     "language": {
       "fr": "FR",
       "en": "EN"
-    }
+    },
+    "bottomBar": "Main sections",
+    "more": "More"
   },
   "shell": {
     "meName": "Hugo",
@@ -44,7 +44,6 @@
     "offlineTitle": "Offline mode",
     "offlineHint": "catalog, charts and the next-concert setlist remain available. All edits are disabled.",
     "search": "Search",
-    "filters": "Filters",
     "all": "All",
     "actions": "Actions"
   },
@@ -54,13 +53,16 @@
   },
   "instruments": {
     "title": "Instruments",
-    "subtitle": "Harmonic instruments feed the transition analysis.",
+    "subtitle": "The family of an instrument feeds the transition analysis.",
     "name": "Name",
-    "isHarmonic": "Harmonic (counts for transition analysis)",
-    "harmonic": "harmonic",
-    "percussive": "percussive",
     "newTitle": "New instrument",
-    "editTitle": "Edit instrument"
+    "editTitle": "Edit instrument",
+    "family": "Family",
+    "familyHint": "A harmonic instrument carries the chords, so whoever keeps one can hold a transition.",
+    "familyHarmonic": "harmonic",
+    "familyPercussive": "percussive",
+    "familyVocal": "vocal",
+    "familyOther": "other"
   },
   "members": {
     "title": "Members",
@@ -131,7 +133,15 @@
     "duration": "Duration",
     "mbid": "MusicBrainz ID",
     "isrcs": "ISRCs",
-    "tags": "Tags"
+    "tags": "Tags",
+    "notesTitle": "Notes",
+    "notesStructure": "Structure",
+    "notesGimmicks": "Gimmicks",
+    "notesFree": "Notes",
+    "notesStructurePlaceholder": "intro ×4 · verse · chorus · bridge · chorus ×2",
+    "notesGimmicksPlaceholder": "Full stop before the last chorus, counted out loud.",
+    "notesFreePlaceholder": "Anything the band should remember.",
+    "createSearched": "Create “{{title}}”"
   },
   "mastery": {
     "title": "Mastery matrix",
@@ -184,14 +194,22 @@
     "capo": "Capo",
     "notes": "Notes",
     "energy": "Energy",
-    "transitionWarning": "Risky transition",
     "openTransitionComment": "View / comment the transition",
     "transitionCommentTitle": "Transition comment",
     "missingSessionId": "Missing session id.",
     "noSetlistYet": "No setlist created for this session yet.",
     "createForSession": "Create a setlist",
     "copyOrder": "Copy order",
-    "orderCopied": "Copied!"
+    "orderCopied": "Copied!",
+    "emptyList": "No song in this set yet.",
+    "addSongDone": "Done ({{count}})",
+    "addSongSearchPlaceholder": "Search a song, or type a new title",
+    "addSongNoMatch": "No song matches.",
+    "addSongCreate": "Create “{{title}}” and add it",
+    "transitionCovered": "Transition held",
+    "transitionRisky": "Risky transition",
+    "transitionNobody": "nobody keeps an instrument across these two songs",
+    "transitionAddNote": "Add a note on this transition"
   },
   "scene": {
     "title": "Scene Mode",
@@ -243,6 +261,8 @@
     "cancel": "Cancel",
     "allMembers": "All members",
     "emptyForMember": "Nothing to play tonight.",
-    "filterByMember": "Filter by member"
+    "filterByMember": "Filter by member",
+    "multiInstrumentHint": "Tap every instrument a member holds on this song. Two at once is fine.",
+    "instruments": "Instruments"
   }
 }

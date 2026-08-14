@@ -15,7 +15,7 @@ const entrySchema = z.object({
   setlistId: z.string().uuid(),
   songId: z.string().uuid(),
   position: z.number().int(),
-  lineupOverride: z.record(z.string(), z.string().nullable()).nullable(),
+  lineupOverride: z.record(z.string(), z.array(z.string())).nullable(),
   energy: z.number().int().nullable(),
   keyOverride: z.string().nullable(),
   capo: z.number().int().nullable(),
@@ -185,12 +185,12 @@ describe('setlists controller (back-e2e)', () => {
     const withOverride = await readJson(
       await jsonRequest(app, `/api/setlists/${setlistId}/entries/${created.entry.id}`, {
         method: 'PUT',
-        body: { lineupOverride: { [memberId]: instrumentId }, keyOverride: 'Bb' },
+        body: { lineupOverride: { [memberId]: [instrumentId] }, keyOverride: 'Bb' },
         cookieHeader,
       }),
       singleEntryEnvelope,
     );
-    expect(withOverride.entry.lineupOverride).toEqual({ [memberId]: instrumentId });
+    expect(withOverride.entry.lineupOverride).toEqual({ [memberId]: [instrumentId] });
     expect(withOverride.entry.keyOverride).toBe('Bb');
 
     const cleared = await readJson(

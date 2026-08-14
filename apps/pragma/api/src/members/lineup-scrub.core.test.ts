@@ -15,35 +15,37 @@ describe('scrubMemberFromLineup', () => {
   });
 
   it('returns a copy unchanged when the target member is absent', () => {
-    const lineup = { [OTHER_MEMBER_ID]: GUITAR_ID };
+    const lineup = { [OTHER_MEMBER_ID]: [GUITAR_ID] };
     const scrubbed = scrubMemberFromLineup(lineup, TARGET_MEMBER_ID);
-    expect(scrubbed).toEqual({ [OTHER_MEMBER_ID]: GUITAR_ID });
+    expect(scrubbed).toEqual({ [OTHER_MEMBER_ID]: [GUITAR_ID] });
     expect(scrubbed).not.toBe(lineup);
   });
 
   it('removes the target member when present alone', () => {
-    expect(scrubMemberFromLineup({ [TARGET_MEMBER_ID]: GUITAR_ID }, TARGET_MEMBER_ID)).toEqual({});
+    expect(scrubMemberFromLineup({ [TARGET_MEMBER_ID]: [GUITAR_ID] }, TARGET_MEMBER_ID)).toEqual(
+      {},
+    );
   });
 
   it('preserves the order of remaining members when the target sits in the middle', () => {
     const lineup = {
-      [OTHER_MEMBER_ID]: GUITAR_ID,
-      [TARGET_MEMBER_ID]: BASS_ID,
-      [THIRD_MEMBER_ID]: DRUMS_ID,
+      [OTHER_MEMBER_ID]: [GUITAR_ID],
+      [TARGET_MEMBER_ID]: [BASS_ID],
+      [THIRD_MEMBER_ID]: [DRUMS_ID],
     };
     expect(scrubMemberFromLineup(lineup, TARGET_MEMBER_ID)).toEqual({
-      [OTHER_MEMBER_ID]: GUITAR_ID,
-      [THIRD_MEMBER_ID]: DRUMS_ID,
+      [OTHER_MEMBER_ID]: [GUITAR_ID],
+      [THIRD_MEMBER_ID]: [DRUMS_ID],
     });
   });
 
-  it('removes the target member even when their instrument is null (sitting out)', () => {
+  it('removes the target member even when they sit the song out', () => {
     const lineup = {
-      [TARGET_MEMBER_ID]: null,
-      [OTHER_MEMBER_ID]: GUITAR_ID,
+      [TARGET_MEMBER_ID]: [],
+      [OTHER_MEMBER_ID]: [GUITAR_ID],
     };
     expect(scrubMemberFromLineup(lineup, TARGET_MEMBER_ID)).toEqual({
-      [OTHER_MEMBER_ID]: GUITAR_ID,
+      [OTHER_MEMBER_ID]: [GUITAR_ID],
     });
   });
 });

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { selectAdminCredentialsState, selectInstrumentIds } from './test-seed.core';
+import {
+  buildSeedLineup,
+  selectAdminCredentialsState,
+  selectInstrumentIds,
+} from './test-seed.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('selectInstrumentIds', () => {
@@ -31,5 +35,36 @@ describe('selectAdminCredentialsState', () => {
 
   it('reports already-set when the row was there', () => {
     expect(selectAdminCredentialsState('already-bootstrapped')).toBe('already-set');
+  });
+});
+
+describe('buildSeedLineup', () => {
+  const memberIdByName = new Map([
+    ['Hugo', 'hugo-id'],
+    ['Léa', 'lea-id'],
+  ]);
+  const instrumentIdByName = new Map([
+    ['Batterie', 'drums-id'],
+    ['Chant', 'vocals-id'],
+  ]);
+
+  it('writes one entry per member, holding every instrument named', () => {
+    expect(
+      buildSeedLineup(
+        { Hugo: ['Batterie', 'Chant'], Léa: ['Chant'] },
+        memberIdByName,
+        instrumentIdByName,
+      ),
+    ).toEqual({ 'hugo-id': ['drums-id', 'vocals-id'], 'lea-id': ['vocals-id'] });
+  });
+
+  it('drops a member the fixture never created', () => {
+    expect(buildSeedLineup({ Marc: ['Chant'] }, memberIdByName, instrumentIdByName)).toEqual({});
+  });
+
+  it('keeps a member holding nothing the fixture knows, as sitting out', () => {
+    expect(buildSeedLineup({ Hugo: ['Théremine'] }, memberIdByName, instrumentIdByName)).toEqual({
+      'hugo-id': [],
+    });
   });
 });

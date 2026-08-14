@@ -9,15 +9,14 @@
  * input.
  */
 
+import type { Lineup } from '@domain/lineup.core';
+
 // @FollowsBlueprint core-projection
-export function scrubMemberFromLineup(
-  lineup: Readonly<Record<string, string | null>>,
-  memberId: string,
-): Record<string, string | null> {
-  const scrubbed: Record<string, string | null> = {};
-  for (const [currentMemberId, instrumentId] of Object.entries(lineup)) {
+export function scrubMemberFromLineup(lineup: Lineup, memberId: string): Lineup {
+  const scrubbed: Record<string, readonly string[]> = {};
+  for (const [currentMemberId, instrumentIds] of Object.entries(lineup)) {
     if (currentMemberId === memberId) continue;
-    scrubbed[currentMemberId] = instrumentId;
+    scrubbed[currentMemberId] = instrumentIds;
   }
   return scrubbed;
 }

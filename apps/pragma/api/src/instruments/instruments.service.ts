@@ -6,6 +6,7 @@
  * any setlist") have a single place to land.
  */
 
+import type { InstrumentFamily } from '@domain/instrument.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteInstrument,
@@ -26,7 +27,7 @@ export async function getInstrumentsSorted(): Promise<InstrumentRow[]> {
 
 export async function createInstrument(input: {
   name: string;
-  isHarmonic: boolean;
+  family: InstrumentFamily;
 }): Promise<InstrumentRow> {
   return await insertInstrument(input);
 }
@@ -37,11 +38,11 @@ export type PatchInstrumentResult =
 // @FollowsBlueprint service-crud-update
 export async function patchInstrument(
   id: string,
-  input: { name?: string; isHarmonic?: boolean },
+  input: { name?: string; family?: InstrumentFamily },
 ): Promise<PatchInstrumentResult> {
-  const updates: Partial<{ name: string; isHarmonic: boolean }> = {};
+  const updates: Partial<{ name: string; family: InstrumentFamily }> = {};
   if (input.name !== undefined) updates.name = input.name;
-  if (input.isHarmonic !== undefined) updates.isHarmonic = input.isHarmonic;
+  if (input.family !== undefined) updates.family = input.family;
   if (Object.keys(updates).length === 0) return { kind: 'empty' };
   const instrument = await updateInstrument(id, updates);
   if (instrument === null) return { kind: 'not-found' };
