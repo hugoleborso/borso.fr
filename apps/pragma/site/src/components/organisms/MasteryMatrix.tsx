@@ -51,6 +51,7 @@ import {
   useSaveMasteryDefault,
 } from '../../lib/queries/mastery';
 import { Avatar } from '../atoms/Avatar';
+import { composeClassName } from '../atoms/class-name.utils';
 import { memberInitial } from '../atoms/member-palette.utils';
 import { ScoreInput } from '../atoms/ScoreInput';
 
@@ -74,6 +75,14 @@ interface MasteryMatrixProps {
 interface MatrixRow {
   readonly member: MasteryMatrixMember;
 }
+
+/**
+ * The matrix is wider than a phone, so the member's name has to stay put while
+ * the instrument columns scroll under it — otherwise you scroll to reach the
+ * last instrument and no longer know whose score you are typing. It carries
+ * its own background because the cells travel underneath it.
+ */
+const STICKY_ROW_HEADER_CLASS = 'sticky left-0 z-10 bg-bg-elev';
 
 const DECIMALS = 1;
 const RIGHT_MOUSE_BUTTON = 2;
@@ -217,10 +226,10 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
                   const isLast = headerIndex === headerGroup.headers.length - 1;
                   const isFirst = headerIndex === 0;
                   const className = isFirst
-                    ? ''
+                    ? STICKY_ROW_HEADER_CLASS
                     : isLast
-                      ? 'text-right font-medium text-[10.5px] tracking-wider uppercase text-ink-500 px-4 py-3 border-b border-line'
-                      : 'text-center font-medium text-[10.5px] tracking-wider uppercase text-ink-500 px-2 py-3 border-b border-line align-bottom';
+                      ? 'text-right font-medium text-xs tracking-wider uppercase text-ink-500 px-4 py-3 border-b border-line'
+                      : 'text-center font-medium text-xs tracking-wider uppercase text-ink-500 px-2 py-3 border-b border-line align-bottom';
                   return (
                     <th key={header.id} className={className}>
                       {header.isPlaceholder
@@ -243,7 +252,10 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
                       <th
                         key={cell.id}
                         scope="row"
-                        className="text-left px-3 py-2 border-b border-line"
+                        className={composeClassName(
+                          'text-left px-3 py-2 border-b border-line',
+                          STICKY_ROW_HEADER_CLASS,
+                        )}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </th>
@@ -279,7 +291,11 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
             <tr className="bg-bg-sunk">
               <th
                 scope="row"
-                className="text-left px-3 py-3 font-medium text-ink-500 text-[10.5px] tracking-wider uppercase"
+                className={composeClassName(
+                  'text-left px-3 py-3 font-medium text-ink-500 text-xs tracking-wider uppercase',
+                  STICKY_ROW_HEADER_CLASS,
+                  'bg-bg-sunk',
+                )}
               >
                 {t('members.columnAverage')}
               </th>

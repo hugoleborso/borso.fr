@@ -9,11 +9,12 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { composeClassName } from '../../components/atoms/class-name.utils';
+import { inputVariants } from '../../components/atoms/input.variants';
 
 const NOTE_MAX_LENGTH = 4_096;
-const FIELD_CLASS =
-  'w-full bg-bg-elev border border-line rounded-md px-3 py-2 text-[13px] text-ink-900 outline-none focus:border-ink-700 resize-y';
-const LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
+const FIELD_CLASS = composeClassName(inputVariants({ size: 'md' }), 'resize-y');
+const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
 interface SongNotesFieldsProps {
   readonly structureNotes: string;

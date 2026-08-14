@@ -19,7 +19,7 @@ import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon, type IconName } from '../atoms/Icon';
 import { isPositiveCount } from '../../lib/counts.utils';
-import { isNavDestinationActive } from './nav-active.core';
+import { isMoreTabActive, isNavDestinationActive } from './nav-active.core';
 
 export interface BottomTab {
   readonly to: string;
@@ -31,16 +31,18 @@ export interface BottomTabBarProps {
   readonly tabs: readonly BottomTab[];
   readonly badges: Readonly<Record<string, number | undefined>>;
   readonly activePath: string;
+  readonly moreDestinations: readonly string[];
   readonly isMoreOpen: boolean;
   readonly onToggleMore: () => void;
 }
 
 const TAB_CLASS =
-  'relative flex-1 flex flex-col items-center justify-center gap-0.5 min-h-14 text-[10px] no-underline';
+  'relative flex-1 flex flex-col items-center justify-center gap-0.5 min-h-14 text-xs no-underline';
 
 // @FollowsBlueprint organism-presentational
 export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
   const { t } = useTranslation();
+  const isMoreActive = isMoreTabActive(props.activePath, props.moreDestinations, props.isMoreOpen);
   return (
     <nav
       className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch bg-bg-elev border-t border-line pb-[env(safe-area-inset-bottom)]"
@@ -72,10 +74,11 @@ export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
         type="button"
         onClick={props.onToggleMore}
         aria-expanded={props.isMoreOpen}
+        aria-current={isMoreActive ? 'page' : undefined}
         className={composeClassName(
           TAB_CLASS,
           'bg-transparent border-0 cursor-pointer',
-          props.isMoreOpen ? 'text-accent' : 'text-ink-500',
+          isMoreActive ? 'text-accent' : 'text-ink-500',
         )}
       >
         <Icon name={props.isMoreOpen ? 'close' : 'menu'} size={19} />

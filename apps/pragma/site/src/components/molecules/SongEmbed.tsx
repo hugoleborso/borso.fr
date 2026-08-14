@@ -15,15 +15,14 @@ import { OembedFrame } from '../atoms/OembedFrame';
 interface SongEmbedProps {
   readonly embed: EmbedResult;
   readonly title: string;
-  readonly iframeClassName?: string;
 }
 
-const DEFAULT_IFRAME_CLASS = 'rounded-md';
+const IFRAME_CLASS = 'rounded-md';
 
 const LINK_CLASS = 'text-accent hover:underline break-all';
 
 // @FollowsBlueprint molecule-presentational
-export function SongEmbed({ embed, title, iframeClassName }: SongEmbedProps): JSX.Element {
+export function SongEmbed({ embed, title }: SongEmbedProps): JSX.Element {
   if (embed.kind === 'oembed') {
     return (
       <OembedFrame
@@ -31,7 +30,7 @@ export function SongEmbed({ embed, title, iframeClassName }: SongEmbedProps): JS
         title={title}
         width={embed.width}
         height={embed.height}
-        className={iframeClassName ?? DEFAULT_IFRAME_CLASS}
+        className={IFRAME_CLASS}
       />
     );
   }

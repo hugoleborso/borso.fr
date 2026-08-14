@@ -1,6 +1,13 @@
 /**
  * The full edit form rendered by SongEditPage — owns the TanStack
- * Form instance and every subscription against it. Split out of
+ * Form instance and every subscription against it.
+ *
+ * Delete sits below a rule, apart from Save, and asks first: the two used to
+ * be 8px apart on the same row, and the write has no undo.
+ *
+ * The list of external links renders under the field that adds them. It used
+ * to sit above the card, roughly a screen away, so on a phone adding a link
+ * looked like it had done nothing. Split out of
  * SongEditPage so the route file stays focused on data-fetch +
  * navigation, while the form file stays under the per-file line cap.
  */
@@ -14,11 +21,14 @@ import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { Icon } from '../../components/atoms/Icon';
 import { Input } from '../../components/atoms/Input';
+import { inputVariants } from '../../components/atoms/input.variants';
+import { BackLink } from '../../components/molecules/BackLink';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SongSearch } from '../../components/organisms/SongSearch';
 import { deriveTonality } from '@domain/tonality.core';
 import { SongChartFields } from './SongChartFields';
 import { SongChordPreview } from './SongChordPreview';
+import { SongDeleteAction } from './SongDeleteAction';
 import { SongExternalLinks } from './SongExternalLinks';
 import { SongLinkAdder } from './SongLinkAdder';
 import { SongMusicBrainzPanel } from './SongMusicBrainzPanel';
@@ -96,17 +106,11 @@ export function SongEditForm({
     );
   };
 
-  const labelClass = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
+  const labelClass = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
-      <Link
-        to="/catalog"
-        className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900 transition-colors no-underline"
-      >
-        <Icon name="chevL" size={14} />
-        {t('catalog.backToCatalog')}
-      </Link>
+      <BackLink to="/catalog" label={t('catalog.backToCatalog')} />
       <form.Subscribe selector={(state) => [state.values.artist, state.values.title] as const}>
         {([artistValue, titleValue]) => (
           <PageHeader
@@ -139,10 +143,6 @@ export function SongEditForm({
           <SongChordPreview chartKind={chartKindValue} chordproText={chordproValue} />
         )}
       </form.Subscribe>
-
-      <form.Field name="links">
-        {(field) => <SongExternalLinks links={field.state.value} onRemove={removeLink} />}
-      </form.Field>
 
       <Card>
         <form
@@ -230,7 +230,7 @@ export function SongEditForm({
                   if (parsed.success) field.handleChange(parsed.data);
                 }}
                 onBlur={field.handleBlur}
-                className="w-full bg-bg-elev border border-line text-ink-900 rounded-md px-3 py-2 text-[13px] outline-none focus:border-ink-700"
+                className={inputVariants({ size: 'md' })}
               >
                 {songStatuses.map((status) => (
                   <option key={status} value={status}>
@@ -292,7 +292,11 @@ export function SongEditForm({
             )}
           </form.Subscribe>
 
-          <SongLinkAdder newLinkUrl={newLinkUrl} setNewLinkUrl={setNewLinkUrl} onAdd={addLink} />
+          <SongLinkAdder newLinkUrl={newLinkUrl} setNewLinkUrl={setNewLinkUrl} onAdd={addLink}>
+            <form.Field name="links">
+              {(field) => <SongExternalLinks links={field.state.value} onRemove={removeLink} />}
+            </form.Field>
+          </SongLinkAdder>
 
           <div className="flex gap-2 mt-3">
             <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
@@ -302,13 +306,8 @@ export function SongEditForm({
                 </Button>
               )}
             </form.Subscribe>
-            {isNew ? null : (
-              <Button type="button" variant="ghost" onClick={() => void onDelete()}>
-                <Icon name="trash" size={14} />
-                {t('common.delete')}
-              </Button>
-            )}
           </div>
+          {isNew ? null : <SongDeleteAction onDelete={onDelete} />}
         </form>
       </Card>
     </section>

@@ -1,7 +1,7 @@
 import '@fontsource/instrument-serif/400.css';
 import '@fontsource/instrument-serif/400-italic.css';
-import '@fontsource-variable/geist';
-import '@fontsource-variable/jetbrains-mono';
+import '@fontsource-variable/geist/index.css';
+import '@fontsource-variable/jetbrains-mono/index.css';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

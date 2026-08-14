@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Card } from '../../components/atoms/Card';
 import { composeClassName } from '../../components/atoms/class-name.utils';
+import { inputVariants } from '../../components/atoms/input.variants';
 import { formatSessionDate } from '../../lib/formatters.utils';
 
 export interface PracticeReadViewSession {
@@ -25,7 +26,7 @@ export interface PracticeReadViewProps {
   readonly language: string;
 }
 
-const LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
 // @FollowsBlueprint organism-presentational
 export function PracticeReadView({
@@ -41,7 +42,7 @@ export function PracticeReadView({
       <div className={composeClassName(LABEL_CLASS, 'mb-2.5')}>{t('sessions.preparedConcert')}</div>
       <select
         id="practice-prepared-concert"
-        className="w-full bg-bg-elev border border-line text-ink-900 rounded-md px-3 py-2 text-[13px] outline-none focus:border-ink-700"
+        className={inputVariants({ size: 'md' })}
         value={session.preparedConcertId ?? ''}
         onChange={(event) => {
           const next = event.target.value.length === 0 ? null : event.target.value;

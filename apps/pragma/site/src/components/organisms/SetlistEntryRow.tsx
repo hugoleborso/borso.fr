@@ -18,6 +18,10 @@
  * While the row is the one being dragged it dims into a placeholder so the
  * operator can read the gap opening between the other cards.
  *
+ * Removing a row asks first. The write has no undo, and the readout at the
+ * end of the energy slider used to sit under the remove button, so aiming at
+ * the number deleted the song.
+ *
  * The `Lineup` button opens the `<LineupEditor surface='setlist-entry'>`
  * modal; saving the modal calls `onUpdate(entryId, { lineupOverride })`.
  * When the entry carries a non-null override, a small `lineup.override`
@@ -40,6 +44,7 @@ import {
 } from '../molecules/LineupEditor';
 import { toLineupPayload } from '../molecules/lineup-editor.core';
 import { MemberChip } from '../molecules/MemberChip';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { SetlistEntryDetailsFields } from '../molecules/SetlistEntryDetailsFields';
 import {
   ENERGY_MAX,
@@ -52,7 +57,7 @@ import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
 
 const ENERGY_DEFAULT = 5;
 const ICON_BUTTON_CLASS =
-  'w-11 h-9 sm:w-9 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
+  'w-11 h-11 sm:w-9 sm:h-9 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
 
 export interface ProminentMemberInstrument {
   readonly memberName: string;
@@ -90,6 +95,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
   const [moreOpen, setMoreOpen] = useState<boolean>(false);
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
+  const [isRemovalPending, setIsRemovalPending] = useState<boolean>(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: props.entryId,
   });
@@ -118,12 +124,12 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     >
       {props.transitionBefore}
       <div className="flex items-start gap-2 sm:gap-3 bg-bg-elev border border-line rounded-md px-2 sm:px-3 py-2.5 transition-colors hover:border-line-strong">
-        <span className="font-mono text-[11px] text-ink-400 pt-2 w-6 text-right shrink-0">
+        <span className="font-mono text-xs text-ink-400 pt-3 w-6 text-right shrink-0">
           {String(props.position).padStart(2, '0')}
         </span>
         <button
           type="button"
-          className="flex items-center justify-center w-8 h-9 shrink-0 text-ink-300 cursor-grab bg-transparent border-0 hover:text-ink-500 active:cursor-grabbing touch-none"
+          className="flex items-center justify-center w-11 h-11 sm:w-8 sm:h-9 shrink-0 text-ink-300 cursor-grab bg-transparent border-0 hover:text-ink-500 active:cursor-grabbing touch-none"
           aria-label={t('setlist.dragHandle')}
           {...attributes}
           {...listeners}
@@ -145,7 +151,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           )}
           {props.hasOverride ? (
             <div className="mb-1">
-              <span className="inline-block whitespace-nowrap text-[10px] uppercase tracking-wider text-accent bg-accent-soft px-1.5 py-0.5 rounded font-medium">
+              <span className="inline-block whitespace-nowrap text-xs uppercase tracking-wider text-accent bg-accent-soft px-1.5 py-0.5 rounded font-medium">
                 {t('lineup.override')}
               </span>
             </div>
@@ -153,12 +159,12 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 truncate">
             {props.title}
           </div>
-          <div className="flex items-center gap-2 text-[11.5px] text-ink-500 mt-0.5 flex-wrap">
+          <div className="flex items-center gap-2 text-xs text-ink-500 mt-0.5 flex-wrap">
             <span>{props.artist}</span>
             {props.tonalityLabel === null ? null : (
               <>
                 <span className="text-ink-300">·</span>
-                <span className="font-mono text-[10.5px] uppercase tracking-wider">
+                <span className="font-mono text-xs uppercase tracking-wider">
                   {props.tonalityLabel}
                 </span>
               </>
@@ -167,7 +173,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               <>
                 <span className="text-ink-300">·</span>
                 <span
-                  className="font-mono inline-flex items-center gap-1 text-[10.5px]"
+                  className="font-mono inline-flex items-center gap-1 text-xs"
                   style={{ color: selectMasteryColor(props.meanMastery) }}
                 >
                   <Icon name="star" size={11} />
@@ -184,8 +190,8 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           </div>
           <form.Field name="energy">
             {(field) => (
-              <div className="flex items-center gap-2 mt-2 max-w-[240px]">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-ink-400">
+              <div className="flex items-center gap-2 mt-2 max-w-full sm:max-w-[280px]">
+                <span className="text-xs font-mono uppercase tracking-wider text-ink-400">
                   {t('setlist.energy')}
                 </span>
                 <input
@@ -200,9 +206,9 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                   }}
                   onBlur={field.handleBlur}
                   aria-label={t('setlist.energy')}
-                  className="flex-1 h-6 accent-accent"
+                  className="flex-1 min-w-0 h-11 accent-accent"
                 />
-                <span className="font-mono text-[11px] text-ink-500 min-w-[18px] text-right">
+                <span className="font-mono text-xs text-ink-500 min-w-[18px] shrink-0 text-right">
                   {field.state.meta.isDirty || props.energy !== null || props.baseEnergy !== null
                     ? field.state.value
                     : '—'}
@@ -238,7 +244,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           </button>
           <button
             type="button"
-            onClick={() => props.onRemove(props.entryId)}
+            onClick={() => setIsRemovalPending(true)}
             aria-label={t('setlist.removeEntry')}
             className={composeClassName(ICON_BUTTON_CLASS, 'hover:text-danger')}
           >
@@ -256,6 +262,17 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         onSave={saveLineupOverride}
         onClose={() => setLineupEditorOpen(false)}
       />
+      {isRemovalPending ? (
+        <ConfirmDialog
+          question={t('setlist.removeConfirm', { title: props.title })}
+          confirmLabel={t('setlist.removeEntry')}
+          onConfirm={() => {
+            setIsRemovalPending(false);
+            props.onRemove(props.entryId);
+          }}
+          onCancel={() => setIsRemovalPending(false)}
+        />
+      ) : null}
     </li>
   );
 }

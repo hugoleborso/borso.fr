@@ -4,9 +4,16 @@
  * (`lead | contacted | booked | played | cold`); drag a card between
  * columns to update its `status` via the bar-update mutation.
  *
- * HTML5 drag suffices for the kanban — the design bundle's "handle
- * pattern" applies to mobile setlist reorder, not the desktop kanban.
- * The stale-bar banner + per-row badge fire from `domain/bar-staleness.core`.
+ * The kanban moves cards with HTML5 drag and drop, which touch input does not
+ * fire, so it is a desktop-only view: below `lg` the toggle is hidden and
+ * `selectVisibleBarsView` forces the list, whose form carries the status
+ * field. The stale-bar banner + per-row badge fire from
+ * `domain/bar-staleness.core`.
+ *
+ * Deleting a bar asks first — it takes the contact details and the follow-up
+ * history with it and there is no undo — and a successful write bumps the
+ * counter feeding the form's key, so the blank form remounts empty rather than
+ * keeping what it just submitted and writing it twice.
  */
 
 import type { JSX } from 'react';
@@ -14,7 +21,12 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
+import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import {
+  BREAKPOINT_BELOW_LG,
+  useIsMediaQueryMatching,
+} from '../../components/molecules/useIsMediaQueryMatching';
 import { BarsKanban } from '../../components/organisms/BarsKanban';
 import { BarsList, type BarsListRow } from '../../components/organisms/BarsList';
 import { ApiError } from '../../lib/api';
@@ -33,6 +45,7 @@ import {
 import {
   applyBarWriteIntent,
   type BarRow,
+  buildBarFormKey,
   type BarsView,
   buildKanbanCardsByStatus,
   groupBarsByStatus,
@@ -41,6 +54,7 @@ import {
   selectFormAfterDeletion,
   selectFormForBar,
   selectToggleState,
+  selectVisibleBarsView,
   sortBarsByName,
 } from './bars-page.core';
 
@@ -56,7 +70,10 @@ export function BarsPage(): JSX.Element {
   const { t } = useTranslation();
   const [view, setView] = useState<BarsView>('list');
   const [formInitial, setFormInitial] = useState<BarFormInitial>(BLANK_BAR_FORM);
+  const [writeCount, setWriteCount] = useState<number>(0);
+  const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
   const barsQuery = useBarsList();
   const createBar = useCreateBar();
   const updateBar = useUpdateBar();
@@ -98,7 +115,10 @@ export function BarsPage(): JSX.Element {
 
   const saveBar = (id: string | null, payload: BarFormSubmitPayload): void => {
     const mutationOptions = {
-      onSuccess: () => setFormInitial(BLANK_BAR_FORM),
+      onSuccess: () => {
+        setFormInitial(BLANK_BAR_FORM);
+        setWriteCount((current) => current + 1);
+      },
       onError: reportError,
     };
     applyBarWriteIntent(selectBarWriteIntent(id, payload), {
@@ -138,10 +158,10 @@ export function BarsPage(): JSX.Element {
           bars={listRows}
           statusLabel={(status) => t(BAR_STATUS_KEY[status])}
           onSelect={selectBar}
-          onRemove={removeBar}
+          onRemove={setPendingDeletionId}
         />
         <BarForm
-          key={formInitial.id ?? 'new'}
+          key={buildBarFormKey(formInitial, writeCount)}
           initial={formInitial}
           onSubmit={saveBar}
           onCancel={() => setFormInitial(BLANK_BAR_FORM)}
@@ -165,12 +185,12 @@ export function BarsPage(): JSX.Element {
         title={t('bars.title')}
         subtitle={t('bars.subtitle')}
         actions={
-          <div className="inline-flex gap-1 p-[3px] bg-bg-sunk rounded-lg">
+          <div className="hidden lg:inline-flex gap-1 p-[3px] bg-bg-sunk rounded-lg">
             <button
               type="button"
               onClick={() => setView('list')}
               className={composeClassName(
-                'px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors',
+                'inline-flex items-center min-h-11 px-3 rounded-md text-xs font-medium cursor-pointer transition-colors',
                 VIEW_TOGGLE_CLASS[selectToggleState(view, 'list')],
               )}
             >
@@ -180,7 +200,7 @@ export function BarsPage(): JSX.Element {
               type="button"
               onClick={() => setView('kanban')}
               className={composeClassName(
-                'px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors',
+                'inline-flex items-center min-h-11 px-3 rounded-md text-xs font-medium cursor-pointer transition-colors',
                 VIEW_TOGGLE_CLASS[selectToggleState(view, 'kanban')],
               )}
             >
@@ -208,7 +228,18 @@ export function BarsPage(): JSX.Element {
         </div>
       ) : null}
 
-      {panelByView[view]}
+      {panelByView[selectVisibleBarsView(view, isNarrow)]}
+      {pendingDeletionId === null ? null : (
+        <ConfirmDialog
+          question={t('bars.deleteConfirm')}
+          confirmLabel={t('common.delete')}
+          onConfirm={() => {
+            removeBar(pendingDeletionId);
+            setPendingDeletionId(null);
+          }}
+          onCancel={() => setPendingDeletionId(null)}
+        />
+      )}
     </section>
   );
 }

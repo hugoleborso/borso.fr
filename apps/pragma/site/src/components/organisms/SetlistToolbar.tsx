@@ -37,7 +37,7 @@ export function SetlistToolbar(props: SetlistToolbarProps): JSX.Element {
   return (
     <div className="sticky top-0 z-20 -mx-4 sm:-mx-9 px-4 sm:px-9 pt-2 pb-3 bg-bg/95 backdrop-blur border-b border-line flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <span className="text-[10.5px] font-mono uppercase tracking-wider text-ink-400">
+        <span className="text-xs font-mono uppercase tracking-wider text-ink-400">
           {t('setlist.energy')}
         </span>
         <div className="flex items-center gap-2">

@@ -12,11 +12,11 @@ import { Link } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { composeClassName } from '../../components/atoms/class-name.utils';
+import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api';
 import { formatSessionDate } from '../../lib/formatters.utils';
-import { openDialogOnAttach } from '../../lib/modal-dialog';
 import { useNavigateTo } from '../../lib/navigation';
 import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions';
 
@@ -93,7 +93,7 @@ export function SessionsPage(): JSX.Element {
                   to={`/sessions/${session.id}`}
                   className="block bg-bg-elev border border-line rounded-md px-4 py-3 pr-12 hover:border-line-strong transition-colors"
                 >
-                  <div className="text-[10.5px] font-mono uppercase tracking-wider text-ink-400 mb-1">
+                  <div className="text-xs font-mono uppercase tracking-wider text-ink-400 mb-1">
                     {isConcert ? '♪' : '⟳'}{' '}
                     {t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
                   </div>
@@ -136,23 +136,12 @@ export function SessionsPage(): JSX.Element {
       )}
 
       {pendingDeletion === null ? null : (
-        <dialog
-          ref={openDialogOnAttach}
-          onClose={() => setPendingDeletion(null)}
-          className="m-auto w-[calc(100vw-2rem)] sm:w-[26rem] max-w-[26rem] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
-        >
-          <div className="p-4 flex flex-col gap-3">
-            <p className="text-[13px] text-ink-700 m-0">{t('sessions.delete.confirm')}</p>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={() => setPendingDeletion(null)}>
-                {t('common.cancel')}
-              </Button>
-              <Button type="button" variant="danger" onClick={() => confirmDelete(pendingDeletion)}>
-                {t('sessions.delete.button')}
-              </Button>
-            </div>
-          </div>
-        </dialog>
+        <ConfirmDialog
+          question={t('sessions.delete.confirm')}
+          confirmLabel={t('sessions.delete.button')}
+          onConfirm={() => confirmDelete(pendingDeletion)}
+          onCancel={() => setPendingDeletion(null)}
+        />
       )}
     </section>
   );

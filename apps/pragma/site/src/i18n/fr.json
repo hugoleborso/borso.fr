@@ -60,6 +60,7 @@
     "editTitle": "Modifier l'instrument",
     "family": "Famille",
     "familyHint": "Un instrument harmonique porte les accords : celui qui en garde un peut tenir une transition.",
+    "deleteConfirm": "Supprimer cet instrument ? Il quitte tous les line-ups qui l'utilisent.",
     "familyHarmonic": "harmonique",
     "familyPercussive": "percussif",
     "familyVocal": "chant",
@@ -74,6 +75,7 @@
     "newTitle": "Nouveau membre",
     "editTitle": "Modifier le membre",
     "noInstrumentsYet": "Aucun instrument assigné",
+    "deleteConfirm": "Supprimer ce membre ? Ses niveaux de maîtrise partent avec lui.",
     "masteryMatrixTitle": "Matrice de maîtrise",
     "masteryMatrixSubtitle": "Clic pour éditer ; molette pour ±1 ; clic-droit pour vider. Moyennes en ligne = musicalité du membre ; en colonne = effectif sur l'instrument.",
     "rowAverage": "Moy.",
@@ -120,6 +122,7 @@
     "mastery": "Maîtrise",
     "playedRecently": "Joué récemment",
     "backToCatalog": "Catalogue",
+    "deleteConfirm": "Supprimer ce morceau ? Sa grille, ses notes et ses liens partent avec.",
     "uploadPrompt": "Dépose un fichier ou clique pour choisir",
     "uploadHint": "PDF, PNG, JPEG, WebP ou HEIC — jusqu'à {{maxMb}} Mo",
     "uploadInProgress": "Envoi en cours…",
@@ -212,7 +215,9 @@
     "transitionCovered": "Transition tenue",
     "transitionRisky": "Transition risquée",
     "transitionNobody": "personne ne garde d’instrument entre ces deux morceaux",
-    "transitionAddNote": "Ajouter une note sur cette transition"
+    "transitionAddNote": "Ajouter une note sur cette transition",
+    "crumb": "Setlist",
+    "removeConfirm": "Retirer « {{title}} » de ce set ?"
   },
   "scene": {
     "title": "Mode Scène",
@@ -243,7 +248,9 @@
     "notes": "Notes",
     "newBar": "Nouveau bar",
     "staleBanner": "{{count}} bars n'ont pas été relancés depuis +60 jours — un petit coup de fil ?",
-    "staleBadge": "À relancer"
+    "staleBadge": "À relancer",
+    "staleColumn": "Relance",
+    "deleteConfirm": "Supprimer ce bar ? Ses contacts et son historique partent avec."
   },
   "fileDrop": {
     "remove": "Retirer"

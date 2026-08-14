@@ -7,6 +7,9 @@
  * write applies its change to the list cache optimistically and rolls
  * that change back if the request fails. The selected-instrument-for-edit
  * state stays in `useState` because it's UI state, not server state.
+ *
+ * Deleting an instrument asks first: it leaves every lineup that holds it and
+ * there is no undo.
  */
 
 import { INSTRUMENT_FAMILIES, type InstrumentFamily } from '@domain/instrument.core';
@@ -19,6 +22,7 @@ import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Input } from '../../components/atoms/Input';
+import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api';
 import {
@@ -50,6 +54,7 @@ export function InstrumentsPage(): JSX.Element {
   const update = useUpdateInstrument();
   const remove = useDeleteInstrument();
   const [selected, setSelected] = useState<SelectedInstrument | null>(null);
+  const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
@@ -117,7 +122,7 @@ export function InstrumentsPage(): JSX.Element {
               >
                 <button
                   type="button"
-                  className="flex-1 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
+                  className="flex-1 min-h-11 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
                   onClick={() => selectInstrument(row)}
                 >
                   {row.name}
@@ -126,7 +131,7 @@ export function InstrumentsPage(): JSX.Element {
                 <button
                   type="button"
                   className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
-                  onClick={() => removeInstrument(row.id)}
+                  onClick={() => setPendingDeletionId(row.id)}
                   aria-label={t('common.delete')}
                 >
                   ×
@@ -147,7 +152,7 @@ export function InstrumentsPage(): JSX.Element {
             className="flex flex-col gap-2.5"
           >
             <label
-              className="text-[11px] tracking-wider uppercase text-ink-400 font-medium"
+              className="text-xs tracking-wider uppercase text-ink-400 font-medium"
               htmlFor="instrument-name"
             >
               {t('instruments.name')}
@@ -166,7 +171,7 @@ export function InstrumentsPage(): JSX.Element {
                 />
               )}
             </form.Field>
-            <span className="text-[11px] tracking-wider uppercase text-ink-400 font-medium">
+            <span className="text-xs tracking-wider uppercase text-ink-400 font-medium">
               {t('instruments.family')}
             </span>
             <form.Field name="family">
@@ -179,7 +184,7 @@ export function InstrumentsPage(): JSX.Element {
                       aria-pressed={field.state.value === family}
                       onClick={() => field.handleChange(family)}
                       className={composeClassName(
-                        'min-h-10 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors',
+                        'inline-flex items-center min-h-11 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors',
                         field.state.value === family
                           ? 'bg-accent-soft border-accent text-accent font-medium'
                           : 'bg-bg border-line text-ink-500 hover:border-line-strong',
@@ -191,7 +196,7 @@ export function InstrumentsPage(): JSX.Element {
                 </div>
               )}
             </form.Field>
-            <p className="text-[11.5px] text-ink-500 m-0">{t('instruments.familyHint')}</p>
+            <p className="text-xs text-ink-500 m-0">{t('instruments.familyHint')}</p>
             <div className="flex gap-2 mt-2">
               <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
                 {([canSubmit, isSubmitting]) => (
@@ -209,6 +214,17 @@ export function InstrumentsPage(): JSX.Element {
           </form>
         </Card>
       </div>
+      {pendingDeletionId === null ? null : (
+        <ConfirmDialog
+          question={t('instruments.deleteConfirm')}
+          confirmLabel={t('common.delete')}
+          onConfirm={() => {
+            removeInstrument(pendingDeletionId);
+            setPendingDeletionId(null);
+          }}
+          onCancel={() => setPendingDeletionId(null)}
+        />
+      )}
     </section>
   );
 }

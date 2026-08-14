@@ -14,7 +14,9 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
+import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Input } from '../../components/atoms/Input';
+import { inputVariants } from '../../components/atoms/input.variants';
 import {
   BAR_NAME_MAX_LENGTH,
   BAR_NOTES_MAX_LENGTH,
@@ -36,11 +38,9 @@ interface BarFormProps {
   readonly onCancel: () => void;
 }
 
-const FIELD_LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
-const TEXTAREA_CLASS =
-  'w-full bg-bg-elev border border-line rounded-md px-3 py-2 text-xs font-mono text-ink-700 outline-none focus:border-ink-700 resize-y';
-const SELECT_CLASS =
-  'w-full bg-bg-elev border border-line text-ink-900 rounded-md px-3 py-2 text-[13px] outline-none focus:border-ink-700';
+const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const TEXTAREA_CLASS = composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y');
+const SELECT_CLASS = inputVariants({ size: 'md' });
 const NOTES_ROWS = 4;
 
 interface CancelButtonProps {

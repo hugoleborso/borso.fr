@@ -47,6 +47,18 @@
   --color-member-plum: #8a4870;
   --color-member-sage: #6e8a48;
 
+  /*
+   * Stage view — the near-black surface the band reads from while playing.
+   * It does not follow the OS colour scheme: the screen is black because a
+   * lit phone in a dark room is what the eye can read, so these four are
+   * fixed. Every one of them clears WCAG AA (4.5:1) against --color-stage-bg,
+   * which the cream palette's ink and accent do not.
+   */
+  --color-stage-bg: #0d0a07;
+  --color-stage-ink: #f1e9d8;
+  --color-stage-ink-dim: #b8ae9a;
+  --color-stage-chord: #7fb0f0;
+
   /* Status-chip swatches (song states) */
   --color-status-wip-bg: #efe3c7;
   --color-status-wip-fg: #6b5012;

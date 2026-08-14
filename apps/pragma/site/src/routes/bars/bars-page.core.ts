@@ -149,3 +149,28 @@ export function selectFormAfterDeletion(
 ): BarFormInitial {
   return current.id === deletedBarId ? blank : current;
 }
+
+/**
+ * The React key of the bar form.
+ *
+ * Selecting another bar remounts the form, which is how the fields pick up the
+ * new values. Creating one used to leave the key at its blank value, so the
+ * form kept everything just submitted and a second tap on Save wrote a
+ * duplicate record. The counter the page bumps on every successful write is
+ * what makes the blank form a different form from the one that produced it.
+ */
+export function buildBarFormKey(initial: BarFormInitial, writeCount: number): string {
+  return `${initial.id ?? 'new'}-${writeCount}`;
+}
+
+/**
+ * Which of the two panels the page actually shows.
+ *
+ * The kanban board moves cards with HTML5 drag and drop, and touch input never
+ * fires those events, so on a phone the board renders a reordering affordance
+ * no finger can use — and five empty 480px columns to scroll past. The list,
+ * whose form carries a status field, is the path that works by touch.
+ */
+export function selectVisibleBarsView(chosen: BarsView, isNarrow: boolean): BarsView {
+  return isNarrow ? 'list' : chosen;
+}

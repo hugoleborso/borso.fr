@@ -39,7 +39,7 @@ export function LanguageSwitcher(): JSX.Element {
             onClick={() => selectLocale(locale)}
             aria-pressed={isActive}
             className={composeClassName(
-              'px-2.5 py-1 rounded-full text-[11px] font-medium uppercase tracking-[0.08em] border transition-colors cursor-pointer',
+              'inline-flex items-center justify-center min-w-11 min-h-11 px-3 rounded-full text-xs font-medium uppercase tracking-[0.08em] border transition-colors cursor-pointer',
               isActive
                 ? 'border-accent text-accent bg-bg-elev'
                 : 'border-line text-ink-500 hover:text-ink-700 hover:border-line-strong',

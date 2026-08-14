@@ -26,7 +26,7 @@ export interface ConcertReadViewProps {
   readonly friendsTotal: number;
 }
 
-const LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
 // @FollowsBlueprint organism-presentational
 export function ConcertReadView({
@@ -45,7 +45,7 @@ export function ConcertReadView({
         <Card>
           <div className="flex items-center justify-between mb-3">
             <div className={LABEL_CLASS}>{t('sessions.friendsCountPerMember')}</div>
-            <span className="font-mono text-[11px] uppercase tracking-wider text-ink-500">
+            <span className="font-mono text-xs uppercase tracking-wider text-ink-500">
               Σ {friendsTotal}
             </span>
           </div>
@@ -69,7 +69,7 @@ export function ConcertReadView({
                       }}
                     />
                   </div>
-                  <span className="font-mono text-[11px] text-ink-500 min-w-[28px] text-right">
+                  <span className="font-mono text-xs text-ink-500 min-w-[28px] text-right">
                     {count}
                   </span>
                 </div>

@@ -24,12 +24,12 @@ export interface SongNotesProps {
 
 const LABEL_CLASS_BY_TONE = {
   light: 'text-ink-400',
-  dark: 'text-[rgba(241,233,216,0.5)]',
+  dark: 'text-stage-ink-dim',
 } as const;
 
 const TEXT_CLASS_BY_TONE = {
   light: 'text-ink-700',
-  dark: 'text-[rgba(241,233,216,0.9)]',
+  dark: 'text-stage-ink',
 } as const;
 
 // @FollowsBlueprint molecule-presentational
@@ -43,7 +43,7 @@ export function SongNotes({ song, tone = 'light', className }: SongNotesProps): 
         <div key={section.kind} className="flex flex-col gap-1">
           <span
             className={composeClassName(
-              'text-[10.5px] tracking-wider uppercase font-medium',
+              'text-xs tracking-wider uppercase font-medium',
               LABEL_CLASS_BY_TONE[tone],
             )}
           >

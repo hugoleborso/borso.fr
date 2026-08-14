@@ -45,7 +45,7 @@ interface ConcertEditFormProps {
 const FRIENDS_PER_MEMBER_MAX = 1_000;
 const VENUE_MAX = 256;
 const GEAR_MAX = 2_048;
-const LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
 const concertFormSchema = z.object({
   venue: z.string().max(VENUE_MAX),

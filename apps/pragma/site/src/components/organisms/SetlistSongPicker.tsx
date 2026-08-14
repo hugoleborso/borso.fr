@@ -132,7 +132,7 @@ function SetlistSongPickerContent({ songs, onPick, onClose }: SetlistSongPickerP
               />
               <span className="min-w-0 flex-1">
                 <span className="block text-[14px] text-ink-900 truncate">{song.title}</span>
-                <span className="block text-[11.5px] text-ink-500 truncate">{song.artist}</span>
+                <span className="block text-xs text-ink-500 truncate">{song.artist}</span>
               </span>
               <StatusChip status={song.status} />
             </button>

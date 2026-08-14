@@ -24,7 +24,7 @@ import { MemberChip } from '../molecules/MemberChip';
 const FILLED_BAR_OPACITY = 0.85;
 const EMPTY_BAR_OPACITY = 1;
 const EMPTY_BAR_COLOR = 'var(--color-bg-sunk)';
-const LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
 interface SongDetailSidebarProps {
   readonly lineupRows: readonly SongLineupRow[];
@@ -63,7 +63,7 @@ export function SongDetailSidebar(props: SongDetailSidebarProps): JSX.Element {
             >
               <MemberChip memberName={row.memberName} memberColor={row.memberColor} />
               <span className="text-[12.5px] text-ink-900 flex-1">{row.memberName}</span>
-              <span className="font-mono text-[10.5px] uppercase tracking-wider text-ink-500 text-right">
+              <span className="font-mono text-xs uppercase tracking-wider text-ink-500 text-right">
                 {row.instruments.length === 0
                   ? '—'
                   : row.instruments.map((instrument) => instrument.instrumentName).join(' + ')}
@@ -100,7 +100,7 @@ export function SongDetailSidebar(props: SongDetailSidebarProps): JSX.Element {
                   />
                 ))}
               </div>
-              <span className="font-mono text-[11px] text-ink-400 min-w-[24px] text-right">
+              <span className="font-mono text-xs text-ink-400 min-w-[24px] text-right">
                 {row.masteryScore === null ? '—' : `${row.masteryScore}/${MASTERY_BAR_COUNT}`}
               </span>
             </div>

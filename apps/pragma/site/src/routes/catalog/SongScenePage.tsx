@@ -28,7 +28,7 @@ import {
 } from './scene-view.core';
 
 const SCENE_BUTTON_CLASS =
-  'bg-[rgba(255,255,255,0.08)] text-[#f1e9d8] border border-[rgba(255,255,255,0.14)] px-3 py-1.5 rounded-md text-sm cursor-pointer hover:bg-[rgba(255,255,255,0.14)] transition-colors';
+  'inline-flex items-center justify-center min-w-11 min-h-11 bg-[rgba(255,255,255,0.08)] text-stage-ink border border-[rgba(255,255,255,0.14)] px-3 rounded-md text-sm cursor-pointer hover:bg-[rgba(255,255,255,0.14)] transition-colors';
 
 // @FollowsBlueprint route-detail-page
 export function SongScenePage(): JSX.Element {
@@ -66,7 +66,7 @@ export function SongScenePage(): JSX.Element {
       ref={openDialogOnAttach}
       onClose={leaveScene}
       aria-label={song.title}
-      className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-[#0d0a07] text-[#f1e9d8] overflow-y-auto p-4 sm:p-10 flex flex-col"
+      className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-stage-bg text-stage-ink overflow-y-auto p-4 sm:p-10 flex flex-col"
       style={{ fontSize: `${fontSizePx}px` }}
     >
       <header className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-5 pb-4 border-b border-[rgba(255,255,255,0.08)]">
@@ -74,7 +74,7 @@ export function SongScenePage(): JSX.Element {
           <button type="button" className={SCENE_BUTTON_CLASS} onClick={leaveScene}>
             ← {t('common.back')}
           </button>
-          <h2 className="font-display italic text-2xl sm:text-4xl text-[#f1e9d8] m-0 min-w-0 truncate">
+          <h2 className="font-display italic text-2xl sm:text-4xl text-stage-ink m-0 min-w-0 truncate">
             {song.title}
           </h2>
         </div>
@@ -87,7 +87,7 @@ export function SongScenePage(): JSX.Element {
           >
             -1
           </button>
-          <span className="font-mono text-sm text-[rgba(241,233,216,0.7)] px-2">
+          <span className="font-mono text-sm text-stage-ink-dim px-2">
             {formatSemitoneOffset(semitones)}
           </span>
           <button
@@ -118,11 +118,11 @@ export function SongScenePage(): JSX.Element {
       </header>
       <SongNotes song={song} tone="dark" className="mb-5" />
       {chordproText === null ? (
-        <p className="text-center font-display italic text-2xl text-[rgba(241,233,216,0.5)] py-20">
+        <p className="text-center font-display italic text-2xl text-stage-ink-dim py-20">
           {t('scene.noChordpro')}
         </p>
       ) : (
-        <ChordChartViewer source={chordproText} semitones={semitones} />
+        <ChordChartViewer source={chordproText} semitones={semitones} tone="dark" />
       )}
     </dialog>
   );

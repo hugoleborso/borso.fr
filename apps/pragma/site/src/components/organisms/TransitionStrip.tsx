@@ -42,7 +42,7 @@ export function TransitionStrip({ view, note, onOpenNote }: TransitionStripProps
       <div className="flex items-center gap-2 flex-wrap">
         <span
           className={composeClassName(
-            'inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider',
+            'inline-flex items-center gap-1 text-xs font-mono uppercase tracking-wider',
             isRisky ? 'text-warn font-semibold' : 'text-ink-400',
           )}
         >
@@ -50,7 +50,7 @@ export function TransitionStrip({ view, note, onOpenNote }: TransitionStripProps
           {isRisky ? t('setlist.transitionRisky') : t('setlist.transitionCovered')}
         </span>
         {view.carriers.length === 0 ? (
-          <span className="text-[11.5px] italic text-ink-500">{t('setlist.transitionNobody')}</span>
+          <span className="text-xs italic text-ink-500">{t('setlist.transitionNobody')}</span>
         ) : (
           <span className="flex items-center gap-1.5 flex-wrap">
             {view.carriers.map((carrier) => (
@@ -68,8 +68,8 @@ export function TransitionStrip({ view, note, onOpenNote }: TransitionStripProps
                   memberColor={carrier.memberColor}
                   size="sm"
                 />
-                <span className="text-[11px] text-ink-700">{carrier.memberName}</span>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-ink-400">
+                <span className="text-xs text-ink-700">{carrier.memberName}</span>
+                <span className="text-xs font-mono uppercase tracking-wider text-ink-400">
                   {carrier.instrumentNames.join(' + ')}
                 </span>
               </span>
@@ -77,7 +77,7 @@ export function TransitionStrip({ view, note, onOpenNote }: TransitionStripProps
           </span>
         )}
       </div>
-      <span className="flex items-start gap-1.5 text-[11.5px]">
+      <span className="flex items-start gap-1.5 text-xs">
         <Icon name="text" size={11} className="mt-0.5 shrink-0 text-ink-300" />
         <span className={hasNote ? 'text-ink-700' : 'text-ink-400 italic'}>
           {hasNote ? note : t('setlist.transitionAddNote')}

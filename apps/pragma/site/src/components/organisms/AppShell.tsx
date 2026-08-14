@@ -17,6 +17,16 @@
  * last rows stay under the tab bar however far you scroll. `100dvh` follows the
  * address bar.
  *
+ * The scroll container's bottom padding follows the home indicator, because
+ * the tab bar's own height does: the bar pads itself by
+ * `env(safe-area-inset-bottom)`, so a fixed 64px here left the last row of a
+ * page under the bar on any handset reporting a non-zero inset.
+ *
+ * While a `<dialog>` inside it is open the container stops scrolling, so a
+ * drag on an open sheet moves the sheet rather than the page behind it. A
+ * native modal dialog freezes the *document*, and the document is not what
+ * scrolls here.
+ *
  * The browser's online status and the viewport width are both read
  * through `useSyncExternalStore` hooks, so this file holds no effect.
  */
@@ -56,6 +66,8 @@ const ADMIN_NAV: readonly NavItem[] = [
   { to: '/members', labelKey: 'nav.members', icon: 'members' },
   { to: '/instruments', labelKey: 'nav.instruments', icon: 'instr' },
 ];
+
+const ADMIN_NAV_DESTINATIONS: readonly string[] = ADMIN_NAV.map((item) => item.to);
 
 /**
  * @Blueprint organism-shell
@@ -116,7 +128,7 @@ export function AppShell(): JSX.Element {
           ))}
         </div>
 
-        <div className="font-sans text-[10px] tracking-[0.14em] uppercase text-ink-400 px-2.5 pt-1.5 pb-0.5">
+        <div className="font-sans text-xs tracking-[0.14em] uppercase text-ink-400 px-2.5 pt-1.5 pb-0.5">
           {t('nav.administrationSection')}
         </div>
         <div className="flex flex-col gap-px">
@@ -144,7 +156,7 @@ export function AppShell(): JSX.Element {
             />
             <div className="min-w-0">
               <div className="text-[13px] font-medium truncate">{t('shell.meName')}</div>
-              <div className="text-[10.5px] text-ink-500 truncate">{t('shell.meVersion')}</div>
+              <div className="text-xs text-ink-500 truncate">{t('shell.meVersion')}</div>
             </div>
           </div>
         </div>
@@ -170,7 +182,7 @@ export function AppShell(): JSX.Element {
         </div>
       ) : null}
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden relative pb-16 lg:pb-0">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden [&:has(dialog[open])]:overflow-hidden relative pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
         <OfflineBanner isVisible={!isOnline} />
         <Outlet />
       </main>
@@ -180,6 +192,7 @@ export function AppShell(): JSX.Element {
           tabs={PRIMARY_NAV}
           badges={badges}
           activePath={location.pathname}
+          moreDestinations={ADMIN_NAV_DESTINATIONS}
           isMoreOpen={isMobileNavOpen}
           onToggleMore={() => setIsMobileNavOpen((isOpen) => !isOpen)}
         />
@@ -203,7 +216,7 @@ function SidebarLink({ item, label, badge, isActive, onClick }: SidebarLinkProps
       to={item.to}
       onClick={onClick}
       className={composeClassName(
-        'flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13.5px] border border-transparent',
+        'flex items-center gap-2.5 min-h-11 px-2.5 py-2 rounded-md text-[13.5px] border border-transparent',
         'hover:bg-[rgba(26,22,18,0.04)] transition-colors',
         isActive ? 'bg-bg-elev text-ink-900 border-line' : 'text-ink-700',
       )}

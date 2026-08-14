@@ -25,7 +25,7 @@ export interface MemberFilterPillsProps {
 }
 
 const PILL_BASE_CLASS =
-  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-line transition-colors cursor-pointer whitespace-nowrap';
+  'inline-flex shrink-0 items-center gap-1.5 min-h-11 px-3 rounded-full text-xs font-medium border border-line transition-colors cursor-pointer whitespace-nowrap';
 const PILL_INACTIVE_CLASS = 'bg-bg-elev text-ink-500 hover:text-ink-900 hover:border-line-strong';
 const PILL_ACTIVE_CLASS = 'bg-ink-900 text-bg-elev border-ink-900';
 

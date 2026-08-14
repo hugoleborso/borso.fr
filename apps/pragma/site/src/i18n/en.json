@@ -60,6 +60,7 @@
     "editTitle": "Edit instrument",
     "family": "Family",
     "familyHint": "A harmonic instrument carries the chords, so whoever keeps one can hold a transition.",
+    "deleteConfirm": "Delete this instrument? It leaves every lineup that uses it.",
     "familyHarmonic": "harmonic",
     "familyPercussive": "percussive",
     "familyVocal": "vocal",
@@ -74,6 +75,7 @@
     "newTitle": "New member",
     "editTitle": "Edit member",
     "noInstrumentsYet": "No instruments assigned",
+    "deleteConfirm": "Delete this member? Their mastery scores go with them.",
     "masteryMatrixTitle": "Mastery matrix",
     "masteryMatrixSubtitle": "Click to edit; scroll to adjust ±1; right-click to clear. Row averages = per-member musicianship; column averages = per-instrument bench strength.",
     "rowAverage": "Avg",
@@ -120,6 +122,7 @@
     "mastery": "Mastery",
     "playedRecently": "Played recently",
     "backToCatalog": "Catalog",
+    "deleteConfirm": "Delete this song? Its chart, notes and links go with it.",
     "uploadPrompt": "Drop a file or click to pick",
     "uploadHint": "PDF, PNG, JPEG, WebP or HEIC up to {{maxMb}} MB",
     "uploadInProgress": "Uploading…",
@@ -212,7 +215,9 @@
     "transitionCovered": "Transition held",
     "transitionRisky": "Risky transition",
     "transitionNobody": "nobody keeps an instrument across these two songs",
-    "transitionAddNote": "Add a note on this transition"
+    "transitionAddNote": "Add a note on this transition",
+    "crumb": "Setlist",
+    "removeConfirm": "Remove “{{title}}” from this set?"
   },
   "scene": {
     "title": "Scene Mode",
@@ -243,7 +248,9 @@
     "notes": "Notes",
     "newBar": "New bar",
     "staleBanner": "{{count}} bars haven't been touched in 60+ days — give them a poke.",
-    "staleBadge": "Stale"
+    "staleBadge": "Stale",
+    "staleColumn": "Follow-up",
+    "deleteConfirm": "Delete this bar? Its contact details and history go with it."
   },
   "fileDrop": {
     "remove": "Remove"

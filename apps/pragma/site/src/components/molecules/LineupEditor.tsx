@@ -9,6 +9,10 @@
  * also sings — and because a toggle is a thumb-sized target where a native
  * select on a phone is a scroll wheel.
  *
+ * The header is pinned to the top of the sheet and the action row to the
+ * bottom of it, because at 667 px the sheet's own scroll put Save and Cancel
+ * below the fold with nothing on screen saying they were there.
+ *
  * On Save, the molecule normalises a selection where nobody plays to
  * `null` so the BE never persists an override that says nothing — the
  * override-vs-default badge is binary on non-null.
@@ -25,7 +29,7 @@
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { openDialogOnAttach } from '../../lib/modal-dialog';
+import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog';
 import { Button } from '../atoms/Button';
 import { composeClassName } from '../atoms/class-name.utils';
 import {
@@ -101,7 +105,7 @@ function LineupEditorContent({
 
   return (
     <dialog
-      ref={openDialogOnAttach}
+      ref={openDismissibleDialogOnAttach}
       onClose={onClose}
       className="m-auto w-[calc(100vw-1.5rem)] sm:w-[30rem] max-w-[30rem] max-h-[85vh] overflow-y-auto rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
     >
@@ -113,19 +117,20 @@ function LineupEditorContent({
           size="sm"
           onClick={onClose}
           aria-label={t('common.cancel')}
+          className="min-w-11"
         >
           ×
         </Button>
       </div>
       <form
-        className="flex flex-col gap-3 p-4"
+        className="flex flex-col gap-3 p-4 pb-0"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
       >
-        <p className="text-[11.5px] text-ink-500 m-0">{t('lineup.multiInstrumentHint')}</p>
+        <p className="text-xs text-ink-500 m-0">{t('lineup.multiInstrumentHint')}</p>
         <ul className="flex flex-col gap-3 m-0 p-0 list-none">
           {members.map((member) => (
             <li key={member.id} className="flex flex-col gap-1.5">
@@ -153,7 +158,7 @@ function LineupEditorContent({
                             )
                           }
                           className={composeClassName(
-                            'min-h-9 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors',
+                            'inline-flex items-center min-h-11 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors',
                             isHeld
                               ? 'bg-accent-soft border-accent text-accent font-medium'
                               : 'bg-bg border-line text-ink-500 hover:border-line-strong',
@@ -164,7 +169,7 @@ function LineupEditorContent({
                       );
                     })}
                     {field.state.value.length === 0 ? (
-                      <span className="self-center text-[11.5px] italic text-ink-400 pl-1">
+                      <span className="self-center text-xs italic text-ink-400 pl-1">
                         {t('lineup.notPlaying')}
                       </span>
                     ) : null}
@@ -174,7 +179,7 @@ function LineupEditorContent({
             </li>
           ))}
         </ul>
-        <div className="flex flex-wrap gap-2 mt-2 justify-between">
+        <div className="sticky bottom-0 z-10 -mx-4 px-4 py-3 mt-2 flex flex-wrap gap-2 justify-between border-t border-line bg-bg-elev">
           {defaultLineup === undefined ? (
             <span />
           ) : (

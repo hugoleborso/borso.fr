@@ -44,6 +44,7 @@ const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = [
   'sessions.setlist', // "setlist" is the word French musicians use
   'sessions.title', // same word, same spelling
   'setlist.capo', // guitar jargon, used as-is in French
+  'setlist.crumb', // the band says "setlist" in both languages
   'setlist.notes', // same word, same spelling
   'setlist.title', // "setlist" is the word French musicians use
   'shell.meName', // a first name

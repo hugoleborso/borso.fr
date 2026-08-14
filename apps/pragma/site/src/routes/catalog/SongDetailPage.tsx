@@ -21,6 +21,7 @@ import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
+import { BackLink } from '../../components/molecules/BackLink';
 import { ChartKindIcon } from '../../components/molecules/ChartKindIcon';
 import { LineupEditor, type LineupRecord } from '../../components/molecules/LineupEditor';
 import { toLineupPayload } from '../../components/molecules/lineup-editor.core';
@@ -124,21 +125,15 @@ export function SongDetailPage(): JSX.Element {
   const chartKind = extractChartKind(song.chart ?? null);
   const chordProText = selectChordProText(song.chart ?? null);
   const tonality = buildTonalityLabel(song.tonalityStart, song.tonalityEnd);
-  const labelClass = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
+  const labelClass = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
-      <Link
-        to="/catalog"
-        className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900 transition-colors no-underline"
-      >
-        <Icon name="chevL" size={14} />
-        {t('catalog.backToCatalog')}
-      </Link>
+      <BackLink to="/catalog" label={t('catalog.backToCatalog')} />
 
       <header className="flex items-end justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <div className="text-[11px] tracking-wider uppercase text-ink-500 mb-1">
+          <div className="text-xs tracking-wider uppercase text-ink-500 mb-1">
             {song.artist.length > 0 ? song.artist : t('catalog.crumb')}
           </div>
           <h1 className="font-display italic text-[40px] sm:text-[56px] leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 mb-2">
@@ -255,13 +250,9 @@ export function SongDetailPage(): JSX.Element {
                       className="bg-bg border border-line rounded-md p-2 flex items-start gap-2"
                     >
                       <div className="flex-1 min-w-0">
-                        <SongEmbed
-                          embed={embed}
-                          title={`${link.provider}-${link.url}`}
-                          iframeClassName="rounded-md max-w-full"
-                        />
+                        <SongEmbed embed={embed} title={`${link.provider}-${link.url}`} />
                         {link.comment.length > 0 ? (
-                          <div className="text-[11px] text-ink-500 mt-1">{link.comment}</div>
+                          <div className="text-xs text-ink-500 mt-1">{link.comment}</div>
                         ) : null}
                       </div>
                     </li>
@@ -305,7 +296,7 @@ function SongNotesCard({ song }: SongNotesCardProps): JSX.Element | null {
   if (sections.length === 0) return null;
   return (
     <Card>
-      <div className="text-[11px] tracking-wider uppercase text-ink-400 font-medium mb-2.5">
+      <div className="text-xs tracking-wider uppercase text-ink-400 font-medium mb-2.5">
         {t('catalog.notesTitle')}
       </div>
       <SongNotes song={song} />

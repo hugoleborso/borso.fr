@@ -7,9 +7,11 @@ import {
   groupBarsByStatus,
   selectBarWriteIntent,
   selectDragDropIntent,
+  buildBarFormKey,
   selectFormAfterDeletion,
   selectFormForBar,
   selectToggleState,
+  selectVisibleBarsView,
   sortBarsByName,
 } from './bars-page.core';
 
@@ -177,5 +179,30 @@ describe('selectFormAfterDeletion', () => {
 
   it('keeps the form when another bar is deleted', () => {
     expect(selectFormAfterDeletion(editing, 'bar-2', BLANK_BAR_FORM)).toBe(editing);
+  });
+});
+
+describe('buildBarFormKey', () => {
+  it('keys an existing bar on its identifier', () => {
+    expect(buildBarFormKey({ ...BLANK_BAR_FORM, id: 'bar-1' }, 0)).toBe('bar-1-0');
+  });
+
+  it('gives the blank form a new key after each write, so it remounts empty', () => {
+    expect(buildBarFormKey(BLANK_BAR_FORM, 0)).toBe('new-0');
+    expect(buildBarFormKey(BLANK_BAR_FORM, 1)).toBe('new-1');
+  });
+});
+
+describe('selectVisibleBarsView', () => {
+  it('honours the chosen view on a wide viewport', () => {
+    expect(selectVisibleBarsView('kanban', false)).toBe('kanban');
+  });
+
+  it('falls back to the list on a narrow one, where drag and drop cannot fire', () => {
+    expect(selectVisibleBarsView('kanban', true)).toBe('list');
+  });
+
+  it('leaves the list alone either way', () => {
+    expect(selectVisibleBarsView('list', true)).toBe('list');
   });
 });

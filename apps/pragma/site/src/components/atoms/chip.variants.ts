@@ -7,7 +7,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 // @FollowsBlueprint atom-variant
 export const chipVariants = cva(
-  'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-medium leading-none border',
+  'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium leading-none border',
   {
     variants: {
       tone: {
