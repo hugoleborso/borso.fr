@@ -6,12 +6,15 @@
  * them, which is why the page carries no layout engine. See ADR-0011.
  */
 
+import { NODE_LINE_HEIGHT } from './architecture-layout';
+
 export const GRAPH_RUNTIME_SCRIPT = String.raw`
 (() => {
   const ZOOM_MIN = 0.3;
   const ZOOM_MAX = 2.6;
   const ZOOM_STEP = 0.0016;
   const CORNER_RADIUS = 9;
+  const ROW_PITCH = ${NODE_LINE_HEIGHT};
 
   const svgElement = (name, attributes) => {
     const element = document.createElementNS('http://www.w3.org/2000/svg', name);
@@ -56,6 +59,94 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     return parts.join(' ');
   };
 
+  const KEYWORDS = new Set([
+    'as', 'async', 'await', 'break', 'case', 'catch', 'class', 'const', 'continue', 'default',
+    'delete', 'do', 'else', 'enum', 'export', 'extends', 'false', 'finally', 'for', 'from',
+    'function', 'if', 'implements', 'import', 'in', 'instanceof', 'interface', 'let', 'new',
+    'null', 'of', 'readonly', 'return', 'satisfies', 'static', 'switch', 'this', 'throw', 'true',
+    'try', 'type', 'typeof', 'undefined', 'var', 'void', 'while', 'yield',
+  ]);
+
+  // This whole script is emitted from a template literal, so a backtick written
+  // here would close it two files upstream rather than land in the page.
+  const QUOTES = { template: String.fromCharCode(96) };
+
+  const escapeText = (text) =>
+    text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+
+  const span = (className, text) =>
+    className === '' ? escapeText(text) : '<span class="tok-' + className + '">' + escapeText(text) + '</span>';
+
+  /**
+   * Colour one snippet of TypeScript.
+   *
+   * A scanner rather than one pattern per token type: a URL inside a string
+   * contains a comment opener and an apostrophe inside a comment opens a
+   * string, so whichever of the two a regular expression matched first would
+   * swallow the rest of the file. Walking left to right, each construct ends
+   * where its own rules say it ends. The page cannot reach a highlighting
+   * library — its content policy allows no other origin — and the alternative
+   * is inlining one for a snippet of at most eighty lines.
+   */
+  const highlight = (code) => {
+    let out = '';
+    let index = 0;
+    while (index < code.length) {
+      const character = code[index];
+      const pair = code.slice(index, index + 2);
+      if (pair === '//') {
+        const newline = code.indexOf('\n', index);
+        const stop = newline === -1 ? code.length : newline;
+        out += span('comment', code.slice(index, stop));
+        index = stop;
+        continue;
+      }
+      if (pair === '/*') {
+        const closer = code.indexOf('*/', index + 2);
+        const stop = closer === -1 ? code.length : closer + 2;
+        out += span('comment', code.slice(index, stop));
+        index = stop;
+        continue;
+      }
+      if (character === "'" || character === '"' || character === QUOTES.template) {
+        let cursor = index + 1;
+        while (cursor < code.length) {
+          if (code[cursor] === '\\') { cursor += 2; continue; }
+          if (code[cursor] === character) { cursor += 1; break; }
+          cursor += 1;
+        }
+        out += span('string', code.slice(index, cursor));
+        index = cursor;
+        continue;
+      }
+      if (character >= '0' && character <= '9') {
+        let cursor = index;
+        while (cursor < code.length && /[\w.]/.test(code[cursor])) cursor += 1;
+        out += span('number', code.slice(index, cursor));
+        index = cursor;
+        continue;
+      }
+      if (/[A-Za-z_$]/.test(character)) {
+        let cursor = index;
+        while (cursor < code.length && /[\w$]/.test(code[cursor])) cursor += 1;
+        const word = code.slice(index, cursor);
+        let after = cursor;
+        while (after < code.length && code[after] === ' ') after += 1;
+        const kind = KEYWORDS.has(word)
+          ? 'keyword'
+          : /^[A-Z]/.test(word)
+            ? 'type'
+            : code[after] === '(' ? 'call' : '';
+        out += span(kind, word);
+        index = cursor;
+        continue;
+      }
+      out += escapeText(character);
+      index += 1;
+    }
+    return out;
+  };
+
   /**
    * Show one function's source.
    *
@@ -71,8 +162,16 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     const blueprintSlot = dialog.querySelector('[data-code-blueprint]');
     blueprintSlot.textContent = entry.blueprint || 'no blueprint';
     blueprintSlot.classList.toggle('absent', !entry.blueprint);
+    const metricSlot = dialog.querySelector('[data-code-metrics]');
+    if (metricSlot) {
+      const counts = [entry.lines + ' lines', 'cx ' + entry.complexity];
+      if (entry.disables > 0) {
+        counts.push(entry.disables + ' disable' + (entry.disables === 1 ? '' : 's'));
+      }
+      metricSlot.textContent = counts.join(' · ');
+    }
     dialog.querySelector('[data-code-location]').textContent = entry.location;
-    dialog.querySelector('[data-code-body]').textContent = entry.code;
+    dialog.querySelector('[data-code-body]').innerHTML = highlight(entry.code);
     dialog.showModal();
   };
 
@@ -152,22 +251,25 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       group.appendChild(svgElement('rect', {
         x: box.x, y: box.y, width: 4, height: box.height, rx: 2, class: 'node-stripe',
       }));
+      // The name sits on the first row and every fact about the block on its
+      // own row under it, at the pitch the generator sized the box with.
+      const lines = node.lines || [];
       const label = svgElement('text', {
         x: box.x + 14,
-        y: box.y + (node.sublabel ? box.height / 2 - 4 : box.height / 2 + 4),
+        y: box.y + (lines.length === 0 ? box.height / 2 + 4 : 21),
         class: 'node-label',
       });
       label.textContent = node.label;
       group.appendChild(label);
-      if (node.sublabel) {
+      lines.forEach((line, index) => {
         const sub = svgElement('text', {
           x: box.x + 14,
-          y: box.y + box.height / 2 + 13,
+          y: box.y + 21 + ROW_PITCH * (index + 1),
           class: 'node-sub',
         });
-        sub.textContent = node.sublabel;
+        sub.textContent = line;
         group.appendChild(sub);
-      }
+      });
       const title = svgElement('title', {});
       title.textContent = node.detail || node.label;
       group.appendChild(title);
@@ -678,6 +780,15 @@ export const GRAPH_STYLES = String.raw`
     white-space: pre;
     tab-size: 2;
   }
+
+  /* The token colours reuse the layer palette, so the modal follows the page
+     into dark mode without a second set of variables. */
+  .tok-comment { color: var(--muted); font-style: italic; }
+  .tok-string { color: var(--layer-service); }
+  .tok-number { color: var(--layer-data); }
+  .tok-keyword { color: var(--layer-edge); }
+  .tok-type { color: var(--layer-route); }
+  .tok-call { color: var(--layer-pure); }
 
   .orphan-routes { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
   .orphan-routes li {

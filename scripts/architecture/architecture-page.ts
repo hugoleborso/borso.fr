@@ -75,8 +75,7 @@ function renderGraph(level: GraphLevel, layout: LevelLayout): string {
         {
           id: node.id,
           label: node.label,
-          sublabel:
-            node.fileCount > 0 ? `${node.fileCount} file${node.fileCount === 1 ? '' : 's'}` : '',
+          lines: node.lines ?? [],
           detail: node.detail,
           tone: toneOf(node.kind),
           x: box.x,
@@ -150,12 +149,11 @@ function renderJourneys(
       nodes: layout.nodes.flatMap((placed) => {
         const source = journeys.graphs.get(id)?.nodes.find((node) => node.id === placed.id);
         if (source === undefined) return [];
-        const blueprint = [...source.blueprints, ...source.followsBlueprints][0] ?? '';
         return [
           {
             id: placed.id,
             label: source.label,
-            sublabel: [source.layer ?? '', blueprint].filter((part) => part !== '').join(' · '),
+            lines: source.lines ?? [],
             detail: source.detail,
             tone: source.kind,
             sourceKey: source.sourceKey ?? '',
@@ -694,10 +692,11 @@ ${GRAPH_STYLES}
     <h3 data-code-name></h3>
     <span class="code-chip layer" data-code-layer></span>
     <span class="code-chip" data-code-blueprint></span>
+    <span class="code-chip metric" data-code-metrics></span>
     <button type="button" class="code-modal-close" data-code-close>Close</button>
     <span class="loc" data-code-location></span>
   </div>
-  <pre><code data-code-body></code></pre>
+  <pre><code class="code-body" data-code-body></code></pre>
 </dialog>
 
 <script>

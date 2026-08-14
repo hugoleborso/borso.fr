@@ -40,18 +40,44 @@ export interface LevelLayout {
   readonly height: number;
 }
 
-export const NODE_HEIGHT = 46;
+/** The box a node with a name and nothing under it needs. */
+const NODE_BASE_HEIGHT = 34;
+/** Added per line printed under the name, matching the renderer's row pitch. */
+export const NODE_LINE_HEIGHT = 14;
 const NODE_MIN_WIDTH = 138;
-const NODE_MAX_WIDTH = 240;
-const CHARACTER_WIDTH = 7.2;
+// Measured in the page with `getComputedTextLength`: 7.513 px per character for
+// the name and 6.315 for the lines under it. The estimate carries headroom
+// because the box is sized here and the text is measured by whichever monospace
+// face the reader's machine resolves.
+const LABEL_CHARACTER_WIDTH = 7.7;
+const LINE_CHARACTER_WIDTH = 6.5;
 const LABEL_PADDING = 28;
 
-/** The box a node needs, from its label, matched by the renderer's type size. */
-export function nodeWidth(label: string): number {
-  return Math.max(
-    NODE_MIN_WIDTH,
-    Math.min(NODE_MAX_WIDTH, label.length * CHARACTER_WIDTH + LABEL_PADDING),
-  );
+/**
+ * The box a piece of text needs, matched by the renderer's type size.
+ *
+ * There is no ceiling. A capped width clips whatever runs past it, silently and
+ * only in the page, which is how a route as long as
+ * `DELETE /api/mastery/defaults/:memberId/:instrumentId` came to sit outside its
+ * own block. A box wide enough for its content is visible; a clipped one is not.
+ */
+function textWidth(text: string, characterWidth: number): number {
+  return Math.max(NODE_MIN_WIDTH, text.length * characterWidth + LABEL_PADDING);
+}
+
+/**
+ * A block prints its name and then a line per fact about it, so the box is as
+ * wide as the widest of them and as tall as their count. Sizing on the name
+ * alone is what let a blueprint name run past the edge.
+ */
+function nodeBox(label: string, lines: readonly string[]): { width: number; height: number } {
+  return {
+    width: Math.max(
+      textWidth(label, LABEL_CHARACTER_WIDTH),
+      ...lines.map((line) => textWidth(line, LINE_CHARACTER_WIDTH)),
+    ),
+    height: NODE_BASE_HEIGHT + NODE_LINE_HEIGHT * lines.length,
+  };
 }
 
 /**
@@ -79,26 +105,32 @@ const LAYOUT_OPTIONS: Readonly<Record<string, string>> = {
   // BRANDES_KOEPF's 3007x1087, and the shorter canvas fits the stage without
   // scrolling vertically as well as sideways.
   'elk.layered.nodePlacement.strategy': 'SIMPLE',
+  'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
   'elk.padding': '[top=28,left=28,bottom=28,right=28]',
 };
 
-export async function layoutLevel(
-  level: GraphLevel,
-  nodeHeight: number = NODE_HEIGHT,
-): Promise<LevelLayout> {
+export async function layoutLevel(level: GraphLevel): Promise<LevelLayout> {
   const nodeIds = new Set(level.nodes.map((node) => node.id));
   const usableEdges = level.edges.filter(
     (edge) => nodeIds.has(edge.from) && nodeIds.has(edge.to) && edge.from !== edge.to,
   );
 
+  // Model order is a tiebreaker once crossings are minimised, so sorting the
+  // input by kind pulls blocks of one kind together inside a column: the
+  // external systems land beside each other instead of interleaved with the
+  // browser APIs they happen to share a rank with.
+  const orderedNodes = [...level.nodes].sort((left, right) => {
+    const byKind = left.kind.localeCompare(right.kind);
+    return byKind === 0 ? left.label.localeCompare(right.label) : byKind;
+  });
+
   const elk = new ELK();
   const graph: ElkNode = {
     id: 'root',
     layoutOptions: { ...LAYOUT_OPTIONS },
-    children: level.nodes.map((node) => ({
+    children: orderedNodes.map((node) => ({
       id: node.id,
-      width: nodeWidth(node.label),
-      height: nodeHeight,
+      ...nodeBox(node.label, node.lines ?? []),
     })),
     edges: usableEdges.map((edge, index) => ({
       id: `edge-${index}`,
@@ -114,7 +146,7 @@ export async function layoutLevel(
     x: round(child.x ?? 0),
     y: round(child.y ?? 0),
     width: round(child.width ?? NODE_MIN_WIDTH),
-    height: round(child.height ?? nodeHeight),
+    height: round(child.height ?? NODE_BASE_HEIGHT),
   }));
 
   const edges: RoutedEdge[] = (laidOut.edges ?? []).map((routed, index) => {

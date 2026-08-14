@@ -21,15 +21,17 @@ import { type LevelLayout, layoutLevel } from './architecture-layout';
 import { renderArchitecturePage } from './architecture-page';
 import {
   type ArchitectureFile,
+  type NodeMetrics,
+  aggregateMetrics,
   buildArchitectureFile,
   isTestFile,
+  metricLines,
   readApiPathStrings,
 } from './architecture-model';
 import { type ArchitectureManifest, pragmaManifest } from './pragma.manifest';
 
 const REPOSITORY_ROOT = resolve(import.meta.dirname, '../..');
 const OUTPUT_DIRECTORY = join(REPOSITORY_ROOT, 'docs/architecture');
-const JOURNEY_NODE_HEIGHT = 56;
 const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'cdk.out', '.git', '__fixtures__']);
 const SOURCE_PATTERN = /\.tsx?$/;
 
@@ -71,6 +73,10 @@ export interface GraphNode {
   readonly location?: string;
   /** Key into the shared source map, when this node is a function. */
   readonly sourceKey?: string;
+  /** Size and shape of the code behind this node. */
+  readonly metrics?: NodeMetrics;
+  /** Lines the block prints, longest first, so the layout can size the box. */
+  readonly lines?: readonly string[];
 }
 
 export interface GraphEdge {
@@ -147,6 +153,7 @@ function buildContextLevel(
       blueprints: [],
       followsBlueprints: [],
       fileCount: 0,
+      lines: ['actor'],
     })),
     {
       id: 'system',
@@ -157,6 +164,8 @@ function buildContextLevel(
       blueprints: [],
       followsBlueprints: [],
       fileCount: files.length,
+      metrics: aggregateMetrics(files),
+      lines: metricLines(aggregateMetrics(files), `${files.length} files`),
     },
     ...manifest.externals
       .filter((external) => referenced.has(external.id))
@@ -169,6 +178,7 @@ function buildContextLevel(
         blueprints: [],
         followsBlueprints: [],
         fileCount: files.filter((file) => file.dependsOnExternal.includes(external.id)).length,
+        lines: [external.technology],
       })),
   ];
 
@@ -208,6 +218,7 @@ function buildContainerLevel(
 
   const nodes: GraphNode[] = manifest.containers.map((container) => {
     const owned = files.filter((file) => containerIdOf(file) === container.id);
+    const metrics = aggregateMetrics(owned);
     return {
       id: container.id,
       label: container.name,
@@ -217,6 +228,11 @@ function buildContainerLevel(
       blueprints: owned.flatMap((file) => file.blueprints),
       followsBlueprints: owned.flatMap((file) => file.followsBlueprints),
       fileCount: owned.length,
+      metrics,
+      lines:
+        owned.length === 0
+          ? [container.technology.split(',')[0] ?? '']
+          : metricLines(metrics, `${metrics.files} files`),
     };
   });
 
@@ -299,6 +315,7 @@ function buildComponentLevel(
     const [containerId, contextName] = id.split('::');
     const layers = [...new Set(owned.map((file) => file.layer))].sort();
     const routeCount = owned.reduce((total, file) => total + file.routes.length, 0);
+    const metrics = aggregateMetrics(owned);
     return {
       id,
       label: contextName ?? id,
@@ -310,6 +327,11 @@ function buildComponentLevel(
       blueprints: owned.flatMap((file) => file.blueprints),
       followsBlueprints: owned.flatMap((file) => file.followsBlueprints),
       fileCount: owned.length,
+      metrics,
+      lines: metricLines(
+        metrics,
+        `${metrics.files} files${routeCount > 0 ? ` · ${routeCount} routes` : ''}`,
+      ),
     };
   });
 
@@ -715,18 +737,13 @@ async function main(): Promise<void> {
   for (const [id, graph] of journeys.graphs) {
     journeyLayouts.set(
       id,
-      // A journey block carries a second line, the layer and the blueprint, so
-      // it needs more room than a node that shows only a name.
-      await layoutLevel(
-        {
-          id: `journey-${id}`,
-          title: id,
-          summary: '',
-          nodes: graph.nodes,
-          edges: graph.edges,
-        },
-        JOURNEY_NODE_HEIGHT,
-      ),
+      await layoutLevel({
+        id: `journey-${id}`,
+        title: id,
+        summary: '',
+        nodes: graph.nodes,
+        edges: graph.edges,
+      }),
     );
   }
 

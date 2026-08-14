@@ -98,15 +98,47 @@ is entirely about S3. A tag deeper in the file belongs to the one declaration it
 sits above, which is how a delete avoids claiming it calls MusicBrainz just
 because a sibling function in the same service does.
 
-Each block carries its layer and, where the code is marked, the blueprint it
-follows. Clicking a block opens the function's own source, with its
-`path:line`, so the question a block raises — *what does this actually do* — is
-answered without leaving the page. Sources are keyed once and shared across the
-46 graphs, because the same service appears in several flows.
+Each block carries its layer, the blueprint it follows where the code is marked,
+and how big and how tangled the thing behind it is. Clicking a block opens the
+function's own source, highlighted, with its `path:line`, so the question a
+block raises — *what does this actually do* — is answered without leaving the
+page. Sources are keyed once and shared across the 46 graphs, because the same
+service appears in several flows.
 
 Endpoints behind no action are listed under the graph. Some are deliberate, and
 the rest are the back end of a feature whose front end does not exist yet; the
 generator reports the fact and does not guess which.
+
+## What a block says
+
+Every block on every level prints the same three rows: the name, what it is,
+then how big and how tangled it is.
+
+| Row     | On a level 3.5 block          | On a level 1–3 block                    |
+| ------- | ----------------------------- | --------------------------------------- |
+| Name    | The function or component     | The container, context or system        |
+| What    | Layer, and the blueprint      | File count, and routes where there are any |
+| Counts  | Lines, `cx`, and disables     | The same, summed over the files it holds |
+
+`cx` is cognitive complexity by the
+[SonarSource rules](https://www.sonarsource.com/resources/cognitive-complexity/):
+nesting-weighted rather than path-counting, so a triple-nested `if` costs more
+than three flat ones, and a sequence of one boolean operator costs one however
+long it is. It is a reading-difficulty number, not a testing-effort one.
+
+The disable count appears only when a block's code carries an
+`eslint-disable`, since the interesting case is the one that has any.
+
+The box is sized from the text it prints and has no ceiling: a capped width
+clips whatever runs past it, silently and only in the page, which is how a route
+as long as `DELETE /api/mastery/defaults/:memberId/:instrumentId` came to sit
+outside its own block. A probe walks all 49 graphs and reports 0 blocks whose
+text leaves its box, alongside 0 edges through an unrelated one.
+
+Blocks of one kind sit together. ELK treats input order as a tiebreaker once
+crossings are minimised, so the generator hands it nodes sorted by kind, and the
+external systems land beside each other instead of interleaved with the browser
+APIs they share a rank with.
 
 ## The two hand-written inputs
 

@@ -49,6 +49,12 @@ export interface ExportedSymbol {
   readonly followsBlueprints: readonly string[];
   /** The declaration's own source, leading comment included. */
   readonly source: string;
+  /** Lines the declaration spans, comment included. */
+  readonly lineCount: number;
+  /** Cognitive complexity, by the SonarSource rules. */
+  readonly complexity: number;
+  /** `eslint-disable` directives inside the declaration. */
+  readonly lintExceptions: number;
 }
 
 export interface CallSymbol {
@@ -89,6 +95,10 @@ export interface ArchitectureFile {
   readonly context: string;
   readonly feature: string | null;
   readonly lineCount: number;
+  /** Cognitive complexity of the whole file. */
+  readonly complexity: number;
+  /** `eslint-disable` directives anywhere in the file. */
+  readonly lintExceptions: number;
   readonly blueprints: readonly string[];
   readonly followsBlueprints: readonly string[];
   readonly dependsOnExternal: readonly string[];
@@ -110,6 +120,44 @@ export interface RouteMount {
   readonly basePath: string;
   readonly routerFactory: string;
   readonly targetFile: string | null;
+}
+
+/** Size and shape of whatever code a block stands for, one file or many. */
+export interface NodeMetrics {
+  readonly lines: number;
+  readonly complexity: number;
+  readonly disables: number;
+  readonly files: number;
+}
+
+export function symbolMetrics(symbol: ExportedSymbol): NodeMetrics {
+  return {
+    lines: symbol.lineCount,
+    complexity: symbol.complexity,
+    disables: symbol.lintExceptions,
+    files: 1,
+  };
+}
+
+export function aggregateMetrics(files: readonly ArchitectureFile[]): NodeMetrics {
+  return {
+    lines: files.reduce((total, file) => total + file.lineCount, 0),
+    complexity: files.reduce((total, file) => total + file.complexity, 0),
+    disables: files.reduce((total, file) => total + file.lintExceptions, 0),
+    files: files.length,
+  };
+}
+
+/** The lines a block prints under its name. */
+export function metricLines(metrics: NodeMetrics, first: string): string[] {
+  const counts = [
+    `${metrics.lines} lines`,
+    `cx ${metrics.complexity}`,
+    ...(metrics.disables > 0
+      ? [`${metrics.disables} disable${metrics.disables === 1 ? '' : 's'}`]
+      : []),
+  ].join(' · ');
+  return first === '' ? [counts] : [first, counts];
 }
 
 /**
@@ -322,6 +370,86 @@ const TABLE_IDENTIFIER_PATTERN = /^[a-z][A-Za-z]*Table$/;
  */
 const MAXIMUM_SOURCE_LINES = 80;
 
+/**
+ * Cognitive complexity, as SonarSource defines it rather than as McCabe does.
+ *
+ * The difference is the one that matters for reading code: a flat sequence of
+ * five guard clauses is easy and scores five in McCabe, while one `if` nested
+ * five deep is hard and scores the same. Here every structure that breaks the
+ * linear flow costs one, and costs one more for each level it is nested inside,
+ * so the second case scores far higher. A sequence of the same boolean operator
+ * costs one however long it is, because `a && b && c` is one idea.
+ *
+ * `else` and `else if` take the flat increment without the nesting penalty, and
+ * a function declared inside another raises the nesting level for its body
+ * without scoring on its own.
+ */
+function cognitiveComplexity(root: ts.Node): number {
+  let total = 0;
+
+  const isNesting = (node: ts.Node): boolean =>
+    ts.isIfStatement(node) ||
+    ts.isForStatement(node) ||
+    ts.isForInStatement(node) ||
+    ts.isForOfStatement(node) ||
+    ts.isWhileStatement(node) ||
+    ts.isDoStatement(node) ||
+    ts.isCatchClause(node) ||
+    ts.isSwitchStatement(node) ||
+    ts.isConditionalExpression(node);
+
+  const isNestingOrFunction = (node: ts.Node): boolean =>
+    isNesting(node) ||
+    ts.isFunctionDeclaration(node) ||
+    ts.isFunctionExpression(node) ||
+    ts.isArrowFunction(node) ||
+    ts.isMethodDeclaration(node);
+
+  const visit = (node: ts.Node, nesting: number): void => {
+    let hasScored = false;
+
+    if (ts.isIfStatement(node)) {
+      // An `else if` arrives as an if inside the else branch; it takes the flat
+      // increment, which is why the parent check matters here.
+      const isElseIf =
+        node.parent !== undefined &&
+        ts.isIfStatement(node.parent) &&
+        node.parent.elseStatement === node;
+      total += isElseIf ? 1 : 1 + nesting;
+      hasScored = true;
+      if (node.elseStatement !== undefined && !ts.isIfStatement(node.elseStatement)) {
+        total += 1;
+      }
+    } else if (isNesting(node)) {
+      total += 1 + nesting;
+      hasScored = true;
+    } else if (ts.isBinaryExpression(node)) {
+      const operator = node.operatorToken.kind;
+      const isLogical =
+        operator === ts.SyntaxKind.AmpersandAmpersandToken ||
+        operator === ts.SyntaxKind.BarBarToken ||
+        operator === ts.SyntaxKind.QuestionQuestionToken;
+      const parentIsSameOperator =
+        node.parent !== undefined &&
+        ts.isBinaryExpression(node.parent) &&
+        node.parent.operatorToken.kind === operator;
+      if (isLogical && !parentIsSameOperator) total += 1;
+    }
+
+    const nextNesting = isNestingOrFunction(node) ? nesting + 1 : nesting;
+    ts.forEachChild(node, (child) => {
+      visit(child, hasScored || isNestingOrFunction(node) ? nextNesting : nesting);
+    });
+  };
+
+  ts.forEachChild(root, (child) => {
+    visit(child, 0);
+  });
+  return total;
+}
+
+const LINT_DISABLE_PATTERN = /eslint-disable(-next-line|-line)?/g;
+
 function captureSource(node: ts.Node, sourceFile: ts.SourceFile): string {
   const full = node.getFullText(sourceFile).replace(/^\n+/, '');
   const lines = full.split('\n');
@@ -369,6 +497,9 @@ function readExportedSymbols(
       blueprints: matchAll(BLUEPRINT_TAG, leadingText),
       followsBlueprints: matchAll(FOLLOWS_BLUEPRINT_TAG, leadingText),
       source: captureSource(node, sourceFile),
+      lineCount: node.getFullText(sourceFile).replace(/^\n+/, '').split('\n').length,
+      complexity: cognitiveComplexity(node),
+      lintExceptions: (node.getFullText(sourceFile).match(LINT_DISABLE_PATTERN) ?? []).length,
     });
   };
 
@@ -609,6 +740,8 @@ export function buildArchitectureFile(
     context: inferContext(relativePath, container),
     feature: featureMatch === null ? null : featureMatch[1],
     lineCount: text.split('\n').length,
+    complexity: cognitiveComplexity(sourceFile),
+    lintExceptions: (text.match(LINT_DISABLE_PATTERN) ?? []).length,
     blueprints: matchAll(BLUEPRINT_TAG, text),
     followsBlueprints: matchAll(FOLLOWS_BLUEPRINT_TAG, text),
     dependsOnExternal: matchAll(DEPENDS_ON_EXTERNAL_TAG, text),
