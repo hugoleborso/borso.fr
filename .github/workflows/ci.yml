@@ -81,6 +81,13 @@ jobs:
       # One stylesheet per application, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.
       - run: ./scripts/check-single-stylesheet.sh
+      # Every `VITE_` variable a site reads is set by a workflow or written
+      # down as deliberately unset, mirroring the pre-commit hook so a push
+      # made with hooks skipped still gets caught.
+      - run: ./scripts/check-frontend-env-vars.sh
+      # A pure module reached only from its own test passes coverage and
+      # mutation at full marks while running nowhere, and knip cannot see it.
+      - run: ./scripts/check-pure-modules-have-callers.sh
       # Blueprint annotations, mirroring the pre-commit hook so a push made
       # with hooks skipped still gets caught. Fails on a blueprint missing one
       # of its four tags, a duplicated identifier, a follower naming a
