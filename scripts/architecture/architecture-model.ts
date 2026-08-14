@@ -41,6 +41,8 @@ export interface ExportedSymbol {
   readonly dependsOnExternal: readonly string[];
   /** Drizzle tables this symbol references by name. */
   readonly tables: readonly string[];
+  /** Endpoints this symbol calls through the typed client. */
+  readonly apiCalls: readonly ApiCall[];
 }
 
 export interface CallSymbol {
@@ -311,6 +313,7 @@ function readExportedSymbols(
   sourceFile: ts.SourceFile,
   importLookup: Map<string, CallSymbol>,
   fileExternals: readonly string[],
+  clientIdentifier: string | null,
 ): ExportedSymbol[] {
   const symbols: ExportedSymbol[] = [];
 
@@ -339,6 +342,7 @@ function readExportedSymbols(
       callSymbols,
       dependsOnExternal: ownExternals.length > 0 ? ownExternals : [...fileExternals],
       tables: [...tables],
+      apiCalls: readApiCallsIn(node, sourceFile, clientIdentifier),
     });
   };
 
@@ -440,7 +444,11 @@ function readRoutesAndMounts(
  * this way means the front-to-back edges come from the calls themselves, not
  * from matching a query module's name against a bounded context.
  */
-function readApiCalls(sourceFile: ts.SourceFile, clientIdentifier: string | null): ApiCall[] {
+function readApiCallsIn(
+  root: ts.Node,
+  sourceFile: ts.SourceFile,
+  clientIdentifier: string | null,
+): ApiCall[] {
   if (clientIdentifier === null) return [];
   const calls: ApiCall[] = [];
 
@@ -480,8 +488,13 @@ function readApiCalls(sourceFile: ts.SourceFile, clientIdentifier: string | null
     }
     ts.forEachChild(node, visit);
   };
-  visit(sourceFile);
+  visit(root);
   return calls;
+}
+
+/** Every endpoint the file calls, wherever in it the call sits. */
+function readApiCalls(sourceFile: ts.SourceFile, clientIdentifier: string | null): ApiCall[] {
+  return readApiCallsIn(sourceFile, sourceFile, clientIdentifier);
 }
 
 const API_PATH_STRING = /['"`](\/api\/[A-Za-z0-9\-_/:]*)['"`]/g;
@@ -573,7 +586,7 @@ export function buildArchitectureFile(
     blueprints: matchAll(BLUEPRINT_TAG, text),
     followsBlueprints: matchAll(FOLLOWS_BLUEPRINT_TAG, text),
     dependsOnExternal: matchAll(DEPENDS_ON_EXTERNAL_TAG, text),
-    exports: readExportedSymbols(sourceFile, importLookup, headerExternals),
+    exports: readExportedSymbols(sourceFile, importLookup, headerExternals, clientBinding ?? null),
     imports,
     routes,
     tables: readTables(imports),

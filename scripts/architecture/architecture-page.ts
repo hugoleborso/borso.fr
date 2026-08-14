@@ -11,6 +11,7 @@
  */
 
 import { GRAPH_RUNTIME_SCRIPT, GRAPH_STYLES } from './architecture-graph-view';
+import type { JourneyModel } from './architecture-journeys';
 import type { LevelLayout } from './architecture-layout';
 import type { ArchitectureFile } from './architecture-model';
 import type { BlueprintEntry, ContextSlice, GraphLevel } from './architecture-graph';
@@ -24,6 +25,8 @@ export interface RenderInput {
   readonly files: readonly ArchitectureFile[];
   readonly unmarkedCount: number;
   readonly layouts: ReadonlyMap<string, LevelLayout>;
+  readonly journeys: JourneyModel;
+  readonly journeyLayouts: ReadonlyMap<string, LevelLayout>;
 }
 
 function escapeHtml(text: string): string {
@@ -105,6 +108,110 @@ function renderGraph(level: GraphLevel, layout: LevelLayout): string {
       </div>`;
 }
 
+/**
+ * The journey level: pick a feature, then an action, and see its flow.
+ *
+ * Every graph is laid out at generation time like the others, so switching
+ * between them is a redraw of ready coordinates rather than a layout run.
+ */
+function renderUnreachedByAction(journeys: JourneyModel, slices: readonly ContextSlice[]): string {
+  const behindAnAction = new Set(
+    journeys.features.flatMap((feature) =>
+      feature.actions.map((action) => `${action.method} ${action.path}`),
+    ),
+  );
+  const orphans = slices
+    .flatMap((slice) =>
+      slice.routes.map((route) => ({
+        id: `${route.method} ${route.path}`,
+        context: slice.context,
+      })),
+    )
+    .filter((route) => !behindAnAction.has(route.id))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  if (orphans.length === 0) return '';
+  return `<ul class="orphan-routes">${orphans
+    .map(
+      (route) =>
+        `<li><code>${escapeHtml(route.id)}</code><span class="loc">${escapeHtml(route.context)}</span></li>`,
+    )
+    .join('')}</ul>`;
+}
+
+function renderJourneys(
+  journeys: JourneyModel,
+  journeyLayouts: ReadonlyMap<string, LevelLayout>,
+): string {
+  const graphs: Record<string, unknown> = {};
+  for (const [id, layout] of journeyLayouts) {
+    graphs[id] = {
+      width: layout.width,
+      height: layout.height,
+      nodes: layout.nodes.flatMap((placed) => {
+        const source = journeys.graphs.get(id)?.nodes.find((node) => node.id === placed.id);
+        if (source === undefined) return [];
+        return [
+          {
+            id: placed.id,
+            label: source.label,
+            sublabel: '',
+            detail: source.detail,
+            tone: source.kind,
+            x: placed.x,
+            y: placed.y,
+            width: placed.width,
+            height: placed.height,
+          },
+        ];
+      }),
+      edges: layout.edges,
+    };
+  }
+
+  const payload = {
+    level: 'journey',
+    title: 'User action',
+    features: journeys.features.map((feature) => ({
+      id: feature.id,
+      label: feature.label,
+      actions: feature.actions.map((action) => ({
+        id: action.id,
+        label: action.label,
+        method: action.method,
+        path: action.path,
+      })),
+    })),
+    graphs,
+  };
+
+  return `
+      <div class="graph journey" data-level="journey">
+        <div class="journey-picker">
+          <span class="journey-picker-label">Feature</span>
+          <div class="journey-features">
+            ${journeys.features
+              .map(
+                (feature) =>
+                  `<button type="button" class="journey-feature" data-feature-id="${escapeHtml(feature.id)}" aria-pressed="false">${escapeHtml(feature.label)}</button>`,
+              )
+              .join('')}
+          </div>
+          <span class="journey-picker-label">Action</span>
+          <div class="journey-actions" data-journey-actions></div>
+        </div>
+        <div class="graph-bar">
+          <span class="graph-hint">tap to trace · drag to pan · pinch or scroll to zoom</span>
+          <span class="graph-controls">
+            <button type="button" data-graph-zoom-out aria-label="Zoom out">&minus;</button>
+            <button type="button" data-graph-zoom-in aria-label="Zoom in">+</button>
+            <button type="button" data-graph-reset>Fit</button>
+          </span>
+        </div>
+        <div class="graph-stage"></div>
+        <script type="application/json">${embedJson(payload)}</script>
+      </div>`;
+}
+
 function renderNodeCards(level: GraphLevel): string {
   return level.nodes
     .map(
@@ -133,81 +240,6 @@ function renderNodeCards(level: GraphLevel): string {
     .join('');
 }
 
-function renderSlices(slices: readonly ContextSlice[]): string {
-  return slices
-    .map((slice) => {
-      const routes = slice.routes
-        .map(
-          (route) => `
-        <details class="route">
-          <summary>
-            <code class="method method-${escapeHtml(route.method.toLowerCase())}">${escapeHtml(route.method)}</code>
-            <code class="path">${escapeHtml(route.path)}</code>
-            <span class="route-meta">${route.steps.length} step${route.steps.length === 1 ? '' : 's'}${
-              route.tables.length > 0
-                ? ` · ${route.tables.length} table${route.tables.length === 1 ? '' : 's'}`
-                : ''
-            }${route.externals.length > 0 ? ' · external' : ''}${
-              route.callers.length + route.urlCallers.length > 0
-                ? ` · ${route.callers.length + route.urlCallers.length} caller${
-                    route.callers.length + route.urlCallers.length === 1 ? '' : 's'
-                  }`
-                : ' · no caller'
-            }</span>
-          </summary>
-          <div class="route-body">
-            <ol class="chain">
-              ${route.steps
-                .map(
-                  (step) =>
-                    `<li><span class="layer layer-${escapeHtml(step.layer)}">${escapeHtml(step.layer)}</span><code>${escapeHtml(step.label)}</code><span class="loc">${escapeHtml(step.file)}:${step.line}</span></li>`,
-                )
-                .join('')}
-            </ol>
-            ${
-              route.tables.length > 0
-                ? `<p class="reaches"><strong>Tables</strong> ${route.tables.map((table) => `<code>${escapeHtml(table)}</code>`).join(' ')}</p>`
-                : ''
-            }
-            ${
-              route.externals.length > 0
-                ? `<p class="reaches"><strong>External</strong> ${route.externals.map((external) => `<code>${escapeHtml(external)}</code>`).join(' ')}</p>`
-                : ''
-            }
-            ${
-              route.callers.length > 0
-                ? `<p class="reaches"><strong>Called from</strong> ${route.callers.map((caller) => `<code>${escapeHtml(caller)}</code>`).join(' ')}</p>`
-                : ''
-            }
-            ${
-              route.urlCallers.length > 0
-                ? `<p class="reaches"><strong>Fetched by URL from</strong> ${route.urlCallers.map((caller) => `<code>${escapeHtml(caller)}</code>`).join(' ')}</p>`
-                : ''
-            }
-            ${
-              route.callers.length === 0 && route.urlCallers.length === 0
-                ? '<p class="reaches unreached"><strong>Called from</strong> nothing in this application reaches this route, through either the typed client or a URL string</p>'
-                : ''
-            }
-          </div>
-        </details>`,
-        )
-        .join('');
-      return `
-      <section class="slice" data-slice="${escapeHtml(slice.context)}">
-        <h3>${escapeHtml(slice.context)} ${slice.mountPath === null ? '' : `<code class="mount">${escapeHtml(slice.mountPath)}</code>`}</h3>
-        <p class="slice-files">${slice.files
-          .map(
-            (file) =>
-              `<span class="layer layer-${escapeHtml(file.layer)}">${escapeHtml(file.layer)}</span>`,
-          )
-          .join('')}</p>
-        ${routes === '' ? '<p class="empty">No HTTP routes in this context.</p>' : routes}
-      </section>`;
-    })
-    .join('');
-}
-
 function renderBlueprints(blueprints: readonly BlueprintEntry[]): string {
   return blueprints
     .map(
@@ -222,7 +254,17 @@ function renderBlueprints(blueprints: readonly BlueprintEntry[]): string {
 }
 
 export function renderArchitecturePage(input: RenderInput): string {
-  const { manifest, levels, slices, blueprints, files, unmarkedCount, layouts } = input;
+  const {
+    manifest,
+    levels,
+    slices,
+    blueprints,
+    files,
+    unmarkedCount,
+    layouts,
+    journeys,
+    journeyLayouts,
+  } = input;
   const fileRows = files
     .map(
       (
@@ -610,7 +652,7 @@ ${GRAPH_STYLES}
         `<button role="tab" data-target="level-${escapeHtml(level.id)}" aria-selected="${index === 0}">${escapeHtml(level.title)}</button>`,
     )
     .join('')}
-  <button role="tab" data-target="level-slice" aria-selected="false">Level 3.5 — Slices</button>
+  <button role="tab" data-target="level-slice" aria-selected="false">Level 3.5 — User actions</button>
   ${levels
     .slice(3)
     .map(
@@ -625,10 +667,11 @@ ${GRAPH_STYLES}
   ${levelSections}
 
   <section class="level" id="level-slice" hidden>
-    <h2>Level 3.5 — Slices</h2>
-    <p class="summary">One bounded context walked end to end. Each route expands into the chain of functions it actually calls, taken from the identifiers each handler references, down to the tables and external systems it reaches, and back up to the front-end modules that call the endpoint. This is the level at which you can decide whether a slice does what its name claims without opening a file.</p>
-    <p class="note">Callers are counted two ways: through the typed Hono client, where the call is read off the property chain, and by URL string, which is how the service worker reaches the API. A route with neither is either deliberately back-end-only, such as the admin bootstrap and the test seed, or dead. The generator reports the fact and does not guess which.</p>
-    ${renderSlices(slices)}
+    <h2>Level 3.5 — User actions</h2>
+    <p class="summary">One thing a band member does, drawn end to end: the components that trigger it, the endpoint it reaches, and every function behind that endpoint down to the tables and external systems. An action is an exported hook in a query module, so the names are the ones whoever wrote them chose, and the chain comes from the calls as written.</p>
+    ${renderJourneys(journeys, journeyLayouts)}
+    <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>
+    ${renderUnreachedByAction(journeys, slices)}
   </section>
 
   <section class="level" id="level-patterns" hidden>

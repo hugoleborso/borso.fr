@@ -16,6 +16,7 @@
 
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
+import { buildJourneys } from './architecture-journeys';
 import { type LevelLayout, layoutLevel } from './architecture-layout';
 import { renderArchitecturePage } from './architecture-page';
 import {
@@ -702,9 +703,26 @@ async function main(): Promise<void> {
     layouts.set(level.id, await layoutLevel(level));
   }
 
+  const journeys = buildJourneys(files);
+  const journeyLayouts = new Map<string, LevelLayout>();
+  for (const [id, graph] of journeys.graphs) {
+    journeyLayouts.set(
+      id,
+      await layoutLevel({
+        id: `journey-${id}`,
+        title: id,
+        summary: '',
+        nodes: graph.nodes,
+        edges: graph.edges,
+      }),
+    );
+  }
+
   const page = renderArchitecturePage({
     manifest: pragmaManifest,
     layouts,
+    journeys,
+    journeyLayouts,
     levels,
     slices,
     blueprints,
@@ -742,7 +760,7 @@ async function main(): Promise<void> {
     `Scanned ${files.length} files: ${levels[3]?.edges.length ?? 0} import edges, ${slices.reduce(
       (total, slice) => total + slice.routes.length,
       0,
-    )} routes, ${blueprints.length} blueprints, ${unmarked.length} unmarked files.`,
+    )} routes, ${journeys.features.reduce((total, feature) => total + feature.actions.length, 0)} user actions, ${blueprints.length} blueprints, ${unmarked.length} unmarked files.`,
   );
   console.log(
     `Wrote ${relative(REPOSITORY_ROOT, pagePath)} and ${relative(REPOSITORY_ROOT, modelPath)}`,

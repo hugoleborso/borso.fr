@@ -56,10 +56,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     return parts.join(' ');
   };
 
-  function renderGraph(host) {
-    const payload = host.querySelector('script[type="application/json"]');
-    if (!payload) return;
-    const data = JSON.parse(payload.textContent);
+  function buildScene(host, data) {
     const width = data.width;
     const height = data.height;
     const placed = new Map(data.nodes.map((node) => [node.id, node]));
@@ -315,16 +312,8 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     svg.addEventListener('pointerup', releasePointer);
     svg.addEventListener('pointercancel', releasePointer);
 
-    for (const [selector, factor] of [
-      ['[data-graph-zoom-in]', 1 / 1.35],
-      ['[data-graph-zoom-out]', 1.35],
-    ]) {
-      const button = host.querySelector(selector);
-      if (button) button.addEventListener('click', () => zoomCentre(factor));
-    }
-
     const stage = host.querySelector('.graph-stage');
-    stage.appendChild(svg);
+    stage.replaceChildren(svg);
 
     /**
      * Give the stage the height the fitted graph actually needs.
@@ -345,8 +334,97 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     };
     sizeStage();
     window.addEventListener('resize', sizeStage);
-    const resetButton = host.querySelector('[data-graph-reset]');
-    if (resetButton) resetButton.addEventListener('click', fit);
+
+    return { fit, zoomCentre };
+  }
+
+  /**
+   * A host either carries one graph or a set of them keyed by id. The journey
+   * level is the second kind: the reader picks a feature and an action, and the
+   * scene is rebuilt for that selection. Controls are wired once, against
+   * whichever scene is current, so switching never stacks a second listener.
+   */
+  function renderGraph(host) {
+    const payload = host.querySelector('script[type="application/json"]');
+    if (!payload) return;
+    const data = JSON.parse(payload.textContent);
+    let current = null;
+
+    const show = (graph) => {
+      current = buildScene(host, {
+        level: data.level,
+        title: data.title,
+        width: graph.width,
+        height: graph.height,
+        nodes: graph.nodes,
+        edges: graph.edges,
+      });
+    };
+
+    for (const [selector, action] of [
+      ['[data-graph-reset]', () => current && current.fit()],
+      ['[data-graph-zoom-in]', () => current && current.zoomCentre(1 / 1.35)],
+      ['[data-graph-zoom-out]', () => current && current.zoomCentre(1.35)],
+    ]) {
+      const button = host.querySelector(selector);
+      if (button) button.addEventListener('click', action);
+    }
+
+    if (!data.graphs) {
+      show(data);
+      return;
+    }
+
+    const actionList = host.querySelector('[data-journey-actions]');
+    const selectAction = (actionId) => {
+      const graph = data.graphs[actionId];
+      if (!graph) return;
+      for (const button of host.querySelectorAll('[data-action-id]')) {
+        button.setAttribute('aria-pressed', String(button.dataset.actionId === actionId));
+      }
+      show(graph);
+    };
+
+    const selectFeature = (featureId) => {
+      for (const button of host.querySelectorAll('[data-feature-id]')) {
+        button.setAttribute('aria-pressed', String(button.dataset.featureId === featureId));
+      }
+      const feature = data.features.find((each) => each.id === featureId);
+      if (!feature || !actionList) return;
+      actionList.replaceChildren();
+      const entries = [
+        { id: feature.id + ':__all__', label: 'Everything in ' + feature.label, meta: feature.actions.length + ' actions' },
+        ...feature.actions.map((action) => ({
+          id: action.id,
+          label: action.label,
+          meta: action.method + ' ' + action.path,
+        })),
+      ];
+      for (const entry of entries) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'journey-action';
+        button.dataset.actionId = entry.id;
+        button.setAttribute('aria-pressed', 'false');
+        const name = document.createElement('span');
+        name.className = 'journey-action-name';
+        name.textContent = entry.label;
+        const meta = document.createElement('span');
+        meta.className = 'journey-action-meta';
+        meta.textContent = entry.meta;
+        button.append(name, meta);
+        button.addEventListener('click', () => selectAction(entry.id));
+        actionList.appendChild(button);
+      }
+      const first = entries[1] || entries[0];
+      if (first) selectAction(first.id);
+    };
+
+    for (const button of host.querySelectorAll('[data-feature-id]')) {
+      button.addEventListener('click', () => selectFeature(button.dataset.featureId));
+    }
+    const firstFeature = data.features[0];
+    if (firstFeature) selectFeature(firstFeature.id);
   }
 
   for (const host of document.querySelectorAll('.graph')) renderGraph(host);
@@ -437,4 +515,95 @@ export const GRAPH_STYLES = String.raw`
   .node-domain .node-stripe { fill: var(--layer-pure); }
   .node-infrastructure .node-stripe { fill: var(--layer-data); }
   .node-external .node-body { stroke-dasharray: 4 3; }
+
+  /* The journey level colours a node by what it is in the flow, so the reader
+     can see the shape — screen, hook, wire, service, data — before reading a
+     single label. */
+  .node-step-ui .node-stripe { fill: var(--layer-route); }
+  .node-step-hook .node-stripe { fill: var(--layer-service); }
+  .node-step-endpoint .node-stripe { fill: var(--accent); }
+  .node-step-endpoint .node-body { stroke: var(--accent); stroke-width: 1.6; }
+  .node-step-controller .node-stripe { fill: var(--layer-route); }
+  .node-step-service .node-stripe { fill: var(--layer-service); }
+  .node-step-repository .node-stripe { fill: var(--layer-data); }
+  .node-step-database .node-stripe { fill: var(--layer-data); }
+  .node-step-core .node-stripe,
+  .node-step-utils .node-stripe { fill: var(--layer-pure); }
+  .node-step-table .node-stripe { fill: var(--layer-data); }
+  .node-step-table .node-body { fill: var(--layer-data-bg); }
+  .node-step-external .node-stripe { fill: var(--signal); }
+  .node-step-external .node-body { stroke-dasharray: 4 3; }
+
+  .journey-picker {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    padding: .8rem .9rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-sunk);
+  }
+  .journey-picker-label {
+    font: 600 .64rem/1.4 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+  .journey-features, .journey-actions { display: flex; gap: .35rem; flex-wrap: wrap; }
+  .journey-feature {
+    font: 500 .74rem/1 var(--font-mono);
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    padding: .35rem .7rem;
+    cursor: pointer;
+  }
+  .journey-feature[aria-pressed='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--panel);
+  }
+  .journey-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .15rem;
+    font: inherit;
+    text-align: left;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: .4rem .6rem;
+    cursor: pointer;
+    max-width: 100%;
+  }
+  .journey-action-name { font: 600 .78rem/1.3 var(--font-sans); color: var(--ink); }
+  .journey-action-meta {
+    font: .64rem/1.3 var(--font-mono);
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+  .journey-action[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .journey-action[aria-pressed='true'] .journey-action-name { color: var(--accent); }
+
+  .orphan-routes { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+  .orphan-routes li {
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    flex-wrap: wrap;
+    background: var(--signal-soft);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: .25rem .5rem;
+    /* A route path is one unbroken token, and the longest here is wider than a
+       phone column, so it has to be allowed to break mid-string. */
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .orphan-routes code { color: var(--signal); font-weight: 600; overflow-wrap: anywhere; }
 `;

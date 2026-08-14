@@ -67,32 +67,40 @@ buttons do the same thing for anyone not using a wheel or a touchscreen.
 | 1 Context | Actors, the system, external systems                      | The manifest, cross-checked against tags        |
 | 2 Container | Deployable and build-time units and the edges between them | Container of each file, plus real imports      |
 | 3 Component | Bounded contexts and front-end areas                     | Folder, or a `@Feature` tag when one is present |
-| **3.5 Slice** | One context walked end to end                        | Hono call chain, then identifier references     |
+| **3.5 User action** | One thing a person does, walked end to end     | Query hooks, then identifier references         |
 | 4 Code    | Every file and every import                               | The module graph                                |
 
 ### Why 3.5 exists
 
-Component is too coarse to trust and code is too fine to read. Level 3.5 takes
-one bounded context and walks each HTTP route through the service and repository
-functions it actually calls, down to the tables and external systems it reaches,
-then back up to the front-end modules that call the endpoint.
+Component is too coarse to trust and code is too fine to read. What sits
+between them is not another slice of the API, though: the first version of this
+level listed a bounded context's HTTP routes, which is the API's own shape.
+Nobody appends a row to `setlist_entry`; they add a song to a setlist.
 
-It is the level at which you can decide whether a slice does what its name
-claims without opening a file, which is what you need when reviewing code an
-agent wrote. The chain is real: routes come from the Hono chain as written,
-each step from the identifiers that function references, and the tables from
-imports that resolve to a schema module.
+So the unit is a **user action**, and the level draws one flow per action: the
+components that trigger it, the hook, the endpoint, and every function behind
+that endpoint down to the tables and external systems. Pick a feature, then an
+action, or take **Everything in <feature>** to see where its actions meet.
+
+An action is an exported hook in a `*.queries.ts` module that calls one
+endpoint. Those are the application's user-facing operations, already named by
+whoever wrote them, so `useAppendSetlistEntry` reads as *Append setlist entry*
+without anyone maintaining a list. There are 37 of them across 9 features.
+
+The chain is real: the triggers come from imports of that hook, the endpoint
+from the call on the typed client, and each back-end step from the identifiers
+that function references. A service two actions share is one node in both, so
+the place two flows meet is visible.
 
 Attribution is per symbol, not per file. A file-level `@DependsOnExternal` in
 the header applies to every export, because a repository holding the S3 client
 is entirely about S3. A tag deeper in the file belongs to the one declaration it
-sits above, which is how `DELETE /api/songs/:id` avoids claiming it calls
-MusicBrainz just because a sibling function in the same service does.
+sits above, which is how a delete avoids claiming it calls MusicBrainz just
+because a sibling function in the same service does.
 
-Callers are counted two ways: through the typed Hono client, read off the
-property chain, and by URL string, which is how the service worker reaches the
-API. A route with neither is reported as unreached, and the generator does not
-guess whether that means deliberate or dead.
+Endpoints behind no action are listed under the graph. Some are deliberate, and
+the rest are the back end of a feature whose front end does not exist yet; the
+generator reports the fact and does not guess which.
 
 ## The two hand-written inputs
 
