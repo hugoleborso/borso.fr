@@ -60,6 +60,19 @@ active page.
 
 ## argent
 
+**Use [`scripts/argent.sh`](../../scripts/argent.sh) rather than the steps below.**
+It encodes every one of them:
+
+```bash
+scripts/argent.sh start http://localhost:5174/   # browser + server + open, ~5s
+scripts/argent.sh describe                       # frames as normalised [0,1] boxes
+scripts/argent.sh tap 0.5 0.95                   # a real tap at a frame's centre
+scripts/argent.sh run keyboard --text "hello"    # --udid is filled in for you
+scripts/argent.sh stop
+```
+
+The rest of this section is what the script does and why, for the day it breaks.
+
 Argent does not launch a browser for you. It probes CDP ports, so a Chromium has
 to be running first, and the tool-server has to be told which port to probe.
 

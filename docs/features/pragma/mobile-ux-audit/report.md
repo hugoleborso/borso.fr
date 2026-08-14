@@ -5,6 +5,17 @@ server. Each round swept every route, reported what a person holding a phone
 would hit, and was followed by a fix commit that re-measured each symptom after
 the change.
 
+> **No touch event was sent in any round.** Every interaction below is a
+> synthetic click through `agent-browser`, because the auditors were told
+> argent's `gesture-tap` was broken on this Chromium — a claim this repository
+> carried and which turned out to be wrong. So the geometry, the computed
+> styles, the contrast ratios and the `elementFromPoint` hit-testing all stand
+> as measured, and nothing here is evidence about swipe, pinch, momentum
+> scrolling or what the software keyboard covers. A later spot-check with real
+> taps through [`scripts/argent.sh`](../../../../scripts/argent.sh) found the
+> More toggle, tab navigation, the bottom-anchored scene control and the
+> dead-link notice all behaving as claimed — four surfaces, not a sweep.
+
 ## Verdict
 
 The app is close to clean on a phone, and it is not proven clean. The auditor

@@ -55,7 +55,7 @@ Two failure modes to watch for:
 - [`commitlint-header-100-char-cap.md`](./commitlint-header-100-char-cap.md) — `header-max-length` is hard-capped at 100 chars regardless of scope-enum richness.
 - [`gate-timings-before-and-after.md`](./gate-timings-before-and-after.md) — what every gate costs, measured: ESLint is 23x slower than biome cold and identical warm; CI went from a 97 s median to ~180 s cache-cold; test suites roughly doubled.
 - [`a-timeout-under-parallel-gates-is-not-a-regression.md`](./a-timeout-under-parallel-gates-is-not-a-regression.md) — four cores, gates in parallel: three CDK timeouts read as a vitest 4 regression and were contention. Re-run the suite alone before blaming a version; three tells for spotting it; why CPU-bound tests need an explicit `testTimeout`.
-- [`agentic-device-testing.md`](./agentic-device-testing.md) — `@swmansion/argent` drives real iOS Simulators / Android emulators / TVs; why a 375 px Chromium resize is not a phone test; what the web sandbox cannot run (no `/dev/kvm`, no Xcode).
+- [`agentic-device-testing.md`](./agentic-device-testing.md) — `@swmansion/argent` drives real iOS Simulators / Android emulators / TVs; why a 375 px Chromium resize is not a phone test; what the web sandbox cannot run (no `/dev/kvm`, no Xcode); `scripts/argent.sh` is the way in, and its touch gestures do work here.
 - [`agent-browser-cli-quirks.md`](./agent-browser-cli-quirks.md) — `--executable-path` ignored once daemon runs; `screenshot` takes positional path, not `--output`; Chromium provisioning can fail behind proxies.
 - [`zsh-read-p-coprocess-quirk.md`](./zsh-read-p-coprocess-quirk.md) — `read -rsp "prompt: " var` is bash-only ; zsh reads `-p` as a coprocess flag and errors. Use `printf` + `stty -echo` + `read -r` for portable interactive prompts.
 - [`aws-dsql-cli-token-flag-name.md`](./aws-dsql-cli-token-flag-name.md) — `aws dsql generate-db-connect-admin-auth-token` wants `--hostname <endpoint>` ; the older `--identifier <cluster-id>` form is rejected.
@@ -94,7 +94,7 @@ Two failure modes to watch for:
 
 ### Validation tooling
 
-- [`agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md) — `agent-browser set device` does not propagate `matchMedia('(pointer: coarse)')`; touch-affordance assertions land UNVERIFIABLE without a workaround.
+- [`agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md) — `agent-browser set device` does not propagate `matchMedia('(pointer: coarse)')`; touch-affordance assertions land UNVERIFIABLE without a workaround, or go through `scripts/argent.sh`, which sends real touch.
 - [`agent-browser-cdp-click-no-op-on-react-onclick.md`](./agent-browser-cdp-click-no-op-on-react-onclick.md) — CDP `click @ref` doesn't reliably fire React `onClick`; fall back to `element.click()` via `agent-browser eval`.
 - [`visual-validator-image-size-limit.md`](./visual-validator-image-size-limit.md) — past ~20 high-res screenshots, the validator's API session crashes on the per-image 2000 px ceiling; cap screenshots at 10 and prefer viewport over full-page.
 - [`visual-validation-skill-vs-agent-browser-direct.md`](./visual-validation-skill-vs-agent-browser-direct.md) — `/visual-validation` is the feature-gate skill (full spec walk, separate agent, committed evidence); for single-fix iteration use `agent-browser` directly in the main session — minutes vs seconds.
