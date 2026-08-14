@@ -59,28 +59,36 @@ renders the literal text rather than an anchor. Two replies posted with
 `add_reply_to_pull_request_comment` were hit the same way, one of them
 also pulling the sentence's trailing comma inside the backticks.
 
-**The trigger is not isolated.** In the same three bodies, these came
-through untouched:
+**The trigger is the URL's length.** Other links in the very same
+bodies came through untouched, so it is not "all links" nor "all `.md`
+targets". Sorting six samples from two PRs by URL length separates them
+perfectly:
 
-```markdown
-[`blueprint-coverage.html`](https://…/blueprint-coverage.html)
-[`scripts/check-single-stylesheet.sh`](https://…/check-single-stylesheet.sh)
-[standard 00](https://…/docs/standards/00-principles.md)
-```
+| Length | Verdict | Tail of the URL |
+|--------|---------|-----------------|
+| 156 | mangled | `…/dantotsus/a-lint-rule-that-knew-only-one-of-three-spellings.md` |
+| 156 | mangled | `…/dantotsus/a-feature-that-was-never-switched-on-in-any-stage.md` |
+| 151 | mangled | `…/adr/0010-pragma-domain-folder-for-cross-boundary-rules.md` |
+| 149 | survived | `…/dantotsus/three-green-gates-on-code-that-ran-nowhere.md` |
+| 135 | survived | `…/knowledge/github-mcp-pr-body-sanitizer.md` |
+| 120 | survived | `…/standards/00-principles.md` |
 
-So it is not "all links", not "all `.md` targets", and not "all
-plain-text link labels" — `[standard 00](…00-principles.md)` survived
-while `[ADR-0010](…0010-….md)` did not. Three samples are not enough to
-name the rule, and this entry's own procedure says not to claim one
-without reproducing it. What is confirmed is the *effect*, with the
-stored bodies as evidence.
+Everything at or above 151 characters was wrapped; everything at or
+below 149 survived. Six samples put the threshold somewhere around 150
+and do not pin it exactly, so treat ~150 as the working number rather
+than the specification.
 
-**Mitigation, cheap and reliable:** in agent-authored PR bodies and
-review replies, write the bare URL on its own rather than a markdown
-link when the link matters. GitHub autolinks it, and a bare URL has
-been observed to survive every time. When a labelled link is worth it,
-read the stored body back afterwards and repair it if the backticks
-appeared — that is the round-trip loop above, and it takes one call.
+**Mitigation, in order of preference:**
+
+1. **Shorten the URL below the threshold.** On a long-lived agent
+   branch this is nearly free: `claude/blueprints-creation-followers-am3mxz`
+   is 42 characters against `main`'s 4, so linking a merged file through
+   `/blob/main/…` rather than `/blob/<branch>/…` takes 38 characters off
+   every link in the body and puts all six samples above safely under.
+2. **Write the bare URL** with no markdown link. GitHub autolinks it and
+   a bare URL has survived every observation, at any length.
+3. **Read the stored body back** after posting anything long and
+   labelled, and repair it — the round-trip loop above, one call.
 
 _Untested here: whether `<details>` and `![alt](url)` are affected. The
 2026-05-20 retraction above stands for those until someone re-runs the
