@@ -54,6 +54,12 @@ and `--check` needs no tolerance. `elkjs` is a devDependency of the generator
 and never reaches the browser. See
 [ADR-0011](../adr/0011-elk-lays-out-the-architecture-graph-at-generation-time.md).
 
+Each diagram opens showing the whole graph: the canvas is fitted to the stage,
+and the stage takes the height that fitted graph needs rather than a fixed one,
+so a wide level does not sit as a strip inside an empty box. From there, pinch
+or scroll to zoom, drag to pan, and **Fit** returns to the whole. The zoom
+buttons do the same thing for anyone not using a wheel or a touchscreen.
+
 ## The five levels
 
 | Level     | Shows                                                     | Derived from                                    |

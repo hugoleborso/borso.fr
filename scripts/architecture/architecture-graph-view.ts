@@ -66,8 +66,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     const edges = data.edges;
 
     const svg = svgElement('svg', {
-      width: width,
-      height: height,
       viewBox: '0 0 ' + width + ' ' + height,
       role: 'img',
       'aria-label': data.title || 'architecture graph',
@@ -201,45 +199,152 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       svg.setAttribute('viewBox', view.x + ' ' + view.y + ' ' + view.width + ' ' + view.height);
     };
     const fit = () => {
-      view.x = 0; view.y = 0; view.width = width; view.height = height;
+      view.x = 0;
+      view.y = 0;
+      view.width = width;
+      view.height = height;
       applyView();
     };
 
-    svg.addEventListener('wheel', (event) => {
-      event.preventDefault();
-      const rect = svg.getBoundingClientRect();
-      const ratioX = (event.clientX - rect.left) / rect.width;
-      const ratioY = (event.clientY - rect.top) / rect.height;
-      const factor = Math.exp(event.deltaY * ZOOM_STEP);
-      const nextWidth = Math.min(width / ZOOM_MIN, Math.max(width / ZOOM_MAX, view.width * factor));
-      const scale = nextWidth / view.width;
-      view.x += (view.width - nextWidth) * ratioX;
-      view.y += (view.height - view.height * scale) * ratioY;
-      view.width = nextWidth;
-      view.height *= scale;
-      applyView();
-    }, { passive: false });
+    /**
+     * A client point in the graph's own coordinates.
+     *
+     * The canvas is letterboxed inside the stage whenever their aspect ratios
+     * differ, so mapping a finger or a cursor by the element's bounding box
+     * would drift by the size of the letterbox. The screen transform knows
+     * about that, and about the current viewBox, so zooming stays anchored on
+     * the point the user actually touched.
+     */
+    const toGraphPoint = (clientX, clientY) => {
+      const matrix = svg.getScreenCTM();
+      if (matrix === null) return null;
+      const point = svg.createSVGPoint();
+      point.x = clientX;
+      point.y = clientY;
+      return point.matrixTransform(matrix.inverse());
+    };
 
-    let dragging = null;
+    /** Zoom by the given factor while holding the given client point still. */
+    const zoomAround = (factor, clientX, clientY) => {
+      const anchor = toGraphPoint(clientX, clientY);
+      if (anchor === null) return;
+      const nextWidth = Math.min(width / ZOOM_MIN, Math.max(width / ZOOM_MAX, view.width * factor));
+      const applied = nextWidth / view.width;
+      view.x = anchor.x - (anchor.x - view.x) * applied;
+      view.y = anchor.y - (anchor.y - view.y) * applied;
+      view.width = nextWidth;
+      view.height *= applied;
+      applyView();
+    };
+
+    const zoomCentre = (factor) => {
+      const rect = svg.getBoundingClientRect();
+      zoomAround(factor, rect.left + rect.width / 2, rect.top + rect.height / 2);
+    };
+
+    svg.addEventListener(
+      'wheel',
+      (event) => {
+        event.preventDefault();
+        zoomAround(Math.exp(event.deltaY * ZOOM_STEP), event.clientX, event.clientY);
+      },
+      { passive: false },
+    );
+
+    /**
+     * One pointer pans, two pinch. Pointer events cover mouse, pen and touch,
+     * so the same handler serves a trackpad drag and a thumb and forefinger;
+     * touch-action none on the canvas is what stops the browser taking the
+     * gesture for page scrolling first.
+     */
+    const active = new Map();
+    let pinchDistance = 0;
+
+    const pointerPair = () => {
+      const points = [...active.values()];
+      return points.length < 2 ? null : points;
+    };
+    const distanceBetween = (pair) => Math.hypot(pair[0].x - pair[1].x, pair[0].y - pair[1].y);
+
     svg.addEventListener('pointerdown', (event) => {
-      dragging = { x: event.clientX, y: event.clientY };
-      svg.setPointerCapture(event.pointerId);
+      active.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      // Capture keeps a drag alive when the finger leaves the canvas. It throws
+      // for a pointer id the element never really received, so a failure here
+      // must not take the gesture down with it.
+      try {
+        svg.setPointerCapture(event.pointerId);
+      } catch {
+        /* the gesture still works without capture */
+      }
+      const pair = pointerPair();
+      pinchDistance = pair === null ? 0 : distanceBetween(pair);
       svg.classList.add('grabbing');
     });
+
     svg.addEventListener('pointermove', (event) => {
-      if (!dragging) return;
+      const previous = active.get(event.pointerId);
+      if (previous === undefined) return;
+      active.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      const pair = pointerPair();
+      if (pair !== null) {
+        const distance = distanceBetween(pair);
+        if (pinchDistance > 0 && distance > 0) {
+          zoomAround(
+            pinchDistance / distance,
+            (pair[0].x + pair[1].x) / 2,
+            (pair[0].y + pair[1].y) / 2,
+          );
+        }
+        pinchDistance = distance;
+        return;
+      }
+
       const rect = svg.getBoundingClientRect();
-      view.x -= ((event.clientX - dragging.x) / rect.width) * view.width;
-      view.y -= ((event.clientY - dragging.y) / rect.height) * view.height;
-      dragging = { x: event.clientX, y: event.clientY };
+      if (rect.width === 0 || rect.height === 0) return;
+      view.x -= ((event.clientX - previous.x) / rect.width) * view.width;
+      view.y -= ((event.clientY - previous.y) / rect.height) * view.height;
       applyView();
     });
-    const endDrag = () => { dragging = null; svg.classList.remove('grabbing'); };
-    svg.addEventListener('pointerup', endDrag);
-    svg.addEventListener('pointercancel', endDrag);
+
+    const releasePointer = (event) => {
+      active.delete(event.pointerId);
+      pinchDistance = 0;
+      if (active.size === 0) svg.classList.remove('grabbing');
+    };
+    svg.addEventListener('pointerup', releasePointer);
+    svg.addEventListener('pointercancel', releasePointer);
+
+    for (const [selector, factor] of [
+      ['[data-graph-zoom-in]', 1 / 1.35],
+      ['[data-graph-zoom-out]', 1.35],
+    ]) {
+      const button = host.querySelector(selector);
+      if (button) button.addEventListener('click', () => zoomCentre(factor));
+    }
 
     const stage = host.querySelector('.graph-stage');
     stage.appendChild(svg);
+
+    /**
+     * Give the stage the height the fitted graph actually needs.
+     *
+     * A fixed height letterboxes every graph whose shape does not match it, and
+     * the component level is four times wider than it is tall: in a phone-width
+     * column it fitted to a strip a tenth of the box, with the rest empty. The
+     * clamp keeps a very wide graph from becoming a hairline and a very tall
+     * one from running off the screen.
+     */
+    const MINIMUM_STAGE_HEIGHT = 150;
+    const sizeStage = () => {
+      const available = stage.clientWidth;
+      if (available === 0 || width === 0) return;
+      const maximum = Math.round(window.innerHeight * 0.72);
+      const fitted = (available * height) / width;
+      stage.style.height = Math.round(Math.max(MINIMUM_STAGE_HEIGHT, Math.min(maximum, fitted))) + 'px';
+    };
+    sizeStage();
+    window.addEventListener('resize', sizeStage);
     const resetButton = host.querySelector('[data-graph-reset]');
     if (resetButton) resetButton.addEventListener('click', fit);
   }
@@ -266,32 +371,42 @@ export const GRAPH_STYLES = String.raw`
     background: var(--panel-sunk);
   }
   .graph-hint { font: .7rem/1.4 var(--font-mono); color: var(--muted); }
-  .graph-bar button {
-    font: 500 .7rem/1 var(--font-mono);
-    color: var(--muted);
-    background: var(--panel);
-    border: 1px solid var(--line-strong);
-    border-radius: 6px;
-    padding: .35rem .6rem;
-    cursor: pointer;
-    margin-left: auto;
-  }
-  .graph-bar button:hover { color: var(--ink); }
+
   .graph-legend { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; }
   .graph-legend span { font: .66rem/1.4 var(--font-mono); color: var(--muted); display: inline-flex; align-items: center; gap: .3rem; }
   .legend-line { width: 20px; height: 0; border-top: 2px solid var(--muted); display: inline-block; }
   .legend-line.type { border-top-style: dashed; }
   .legend-line.http { border-top-color: var(--accent); border-top-width: 3px; }
   /*
-     The canvas keeps its natural size and the stage scrolls. Scaling a thirty
-     node graph down to the container width is what made the component level
-     unreadable: every label shrank so the whole thing could be seen at once,
-     which is the one thing a reader does not need.
+     The stage has a height and the canvas fits inside it, so a level opens
+     showing the whole graph. Reading it then means zooming: scroll or pinch,
+     or the two buttons. touch-action none is what lets a pinch reach the
+     canvas rather than being taken by the page first.
   */
-  .graph-stage { overflow: auto; max-height: 66vh; }
-  .graph svg { display: block; touch-action: none; cursor: grab; }
+  /* The height is set per graph from its own aspect ratio; this is the value
+     before the script runs and the floor a very wide graph lands on. */
+  .graph-stage { height: 300px; overflow: hidden; }
+  .graph svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+  }
   .graph svg.grabbing { cursor: grabbing; }
-
+  .graph-controls { display: flex; gap: .3rem; margin-left: auto; }
+  .graph-controls button {
+    font: 500 .72rem/1 var(--font-mono);
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: .35rem .55rem;
+    cursor: pointer;
+    min-width: 2rem;
+  }
+  .graph-controls button:hover { color: var(--ink); border-color: var(--accent); }
   .edge { fill: none; stroke: var(--line-strong); stroke-width: 1.6; opacity: .55; transition: stroke .12s, opacity .12s; }
   .edge-type { stroke-dasharray: 5 4; }
   .edge-http { stroke: var(--accent); stroke-width: 2.6; }

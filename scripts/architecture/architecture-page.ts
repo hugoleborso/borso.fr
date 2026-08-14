@@ -88,13 +88,17 @@ function renderGraph(level: GraphLevel, layout: LevelLayout): string {
   return `
       <div class="graph" data-level="${escapeHtml(level.id)}">
         <div class="graph-bar">
-          <span class="graph-hint">hover to trace · click to pin · drag to pan · scroll to zoom</span>
+          <span class="graph-hint">tap to trace · drag to pan · pinch or scroll to zoom</span>
           <span class="graph-legend">
             <span><i class="legend-line"></i>imports</span>
             <span><i class="legend-line type"></i>types only</span>
             <span><i class="legend-line http"></i>over HTTP</span>
           </span>
-          <button type="button" data-graph-reset>Reset view</button>
+          <span class="graph-controls">
+            <button type="button" data-graph-zoom-out aria-label="Zoom out">&minus;</button>
+            <button type="button" data-graph-zoom-in aria-label="Zoom in">+</button>
+            <button type="button" data-graph-reset>Fit</button>
+          </span>
         </div>
         <div class="graph-stage"></div>
         <script type="application/json">${embedJson(payload)}</script>
