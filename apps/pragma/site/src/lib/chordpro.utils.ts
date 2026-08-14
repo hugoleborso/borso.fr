@@ -121,6 +121,122 @@ export function readTitle(lines: readonly ChordProLine[]): string | null {
   return null;
 }
 
+export type ChordProSectionKind = 'verse' | 'chorus' | 'bridge' | 'tab' | 'body';
+
+/** Every section kind that carries a heading on screen. */
+export type LabelledSectionKind = Exclude<ChordProSectionKind, 'body'>;
+
+/** An unmarked stretch of chart, between or before the marked blocks. */
+export interface BodySection {
+  readonly kind: 'body';
+  readonly label: null;
+  readonly ordinal: null;
+  readonly lines: readonly ChordProLine[];
+}
+
+export interface LabelledSection {
+  readonly kind: LabelledSectionKind;
+  /** The directive argument, e.g. `{start_of_verse: Intro riff}`. */
+  readonly label: string | null;
+  /** Rank among the sections sharing this kind, counting from one. */
+  readonly ordinal: number;
+  readonly lines: readonly ChordProLine[];
+}
+
+export type ChordProSection = BodySection | LabelledSection;
+
+const BODY_SECTION_KIND = 'body';
+const FIRST_ORDINAL = 1;
+
+// ChordPro spells every section marker in full and abbreviated.
+const SECTION_START_DIRECTIVES = new Map<string, ChordProSectionKind>([
+  ['start_of_verse', 'verse'],
+  ['sov', 'verse'],
+  ['start_of_chorus', 'chorus'],
+  ['soc', 'chorus'],
+  ['start_of_bridge', 'bridge'],
+  ['sob', 'bridge'],
+  ['start_of_tab', 'tab'],
+  ['sot', 'tab'],
+]);
+
+const SECTION_END_DIRECTIVES = new Set([
+  'end_of_verse',
+  'eov',
+  'end_of_chorus',
+  'eoc',
+  'end_of_bridge',
+  'eob',
+  'end_of_tab',
+  'eot',
+]);
+
+interface AccumulatingSection {
+  readonly kind: ChordProSectionKind;
+  readonly label: string | null;
+  readonly lines: ChordProLine[];
+}
+
+function openSection(kind: ChordProSectionKind, label: string | null): AccumulatingSection {
+  return { kind, label, lines: [] };
+}
+
+function hasRenderableLine(lines: readonly ChordProLine[]): boolean {
+  return lines.some((line) => line.kind !== 'blank');
+}
+
+const NO_SECTION_SEEN_YET = 0;
+
+function rankByKind(sections: readonly AccumulatingSection[]): readonly ChordProSection[] {
+  const seenPerKind = new Map<LabelledSectionKind, number>();
+  return sections.map((section) => {
+    const { kind, label, lines } = section;
+    if (kind === BODY_SECTION_KIND) return { kind, label: null, ordinal: null, lines };
+    const ordinal = (seenPerKind.get(kind) ?? NO_SECTION_SEEN_YET) + FIRST_ORDINAL;
+    seenPerKind.set(kind, ordinal);
+    return { kind, label, ordinal, lines };
+  });
+}
+
+/**
+ * Groups parsed lines into the verse / chorus / bridge blocks a reader
+ * scans for on stage. Lines outside any marker collect into `body`
+ * sections, which are dropped when they hold nothing but blanks so the
+ * gap between two marked blocks does not render as an empty heading.
+ * A section left unclosed at the end of the source is still returned.
+ */
+export function groupChordProSections(lines: readonly ChordProLine[]): readonly ChordProSection[] {
+  const closed: AccumulatingSection[] = [];
+  let current = openSection(BODY_SECTION_KIND, null);
+  const closeCurrent = (): void => {
+    if (current.kind !== BODY_SECTION_KIND || hasRenderableLine(current.lines)) {
+      closed.push(current);
+    }
+    current = openSection(BODY_SECTION_KIND, null);
+  };
+  for (const line of lines) {
+    // Stryker disable next-line ConditionalExpression: equivalent mutant. This
+    // narrows the union so `line.name` type-checks; at runtime every other line
+    // kind lacks `name`, so both marker lookups miss and the line is pushed
+    // either way.
+    if (line.kind === 'directive') {
+      const startedKind = SECTION_START_DIRECTIVES.get(line.name);
+      if (startedKind !== undefined) {
+        closeCurrent();
+        current = openSection(startedKind, line.value.length > 0 ? line.value : null);
+        continue;
+      }
+      if (SECTION_END_DIRECTIVES.has(line.name)) {
+        closeCurrent();
+        continue;
+      }
+    }
+    current.lines.push(line);
+  }
+  closeCurrent();
+  return rankByKind(closed);
+}
+
 /**
  * Transposes a single chord by an integer number of semitones. Only
  * the chord root is shifted; the suffix (m, 7, maj7, sus2, …) stays
@@ -200,4 +316,19 @@ export function transposeLines(
       ),
     };
   });
+}
+
+/** A `body` run is an unmarked stretch of chart, so it carries no heading. */
+export function hasSectionHeading(section: ChordProSection): section is LabelledSection {
+  return section.kind !== BODY_SECTION_KIND;
+}
+
+/**
+ * Names a section for the reader. The first block of a kind stays
+ * unnumbered, because "Chorus" reads better than "Chorus 1" on a chart
+ * carrying a single chorus; every later block takes its rank.
+ */
+export function buildSectionHeading(displayName: string, ordinal: number): string {
+  if (ordinal <= FIRST_ORDINAL) return displayName;
+  return `${displayName} ${ordinal}`;
 }
