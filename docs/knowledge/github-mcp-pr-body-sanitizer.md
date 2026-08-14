@@ -39,8 +39,52 @@ Concrete reference points as of 2026-05-20:
 
 ## Confirmed sanitizer behaviours
 
-_(None at the moment — entries land here only after the
-verification procedure above produces a reproducible diff.)_
+### Markdown links come back wrapped in double backticks — sometimes
+
+Observed 2026-08-13 on PR #46, three times, through two different
+tools. What was sent:
+
+```markdown
+[ADR-0010](https://github.com/hugoleborso/borso.fr/blob/<branch>/docs/adr/0010-….md)
+```
+
+What `pull_request_read method: get` returned for the stored body:
+
+```markdown
+[ADR-0010](``https://github.com/hugoleborso/borso.fr/blob/<branch>/docs/adr/0010-….md``)
+```
+
+The backticks are inside the parentheses, so the link is dead: GitHub
+renders the literal text rather than an anchor. Two replies posted with
+`add_reply_to_pull_request_comment` were hit the same way, one of them
+also pulling the sentence's trailing comma inside the backticks.
+
+**The trigger is not isolated.** In the same three bodies, these came
+through untouched:
+
+```markdown
+[`blueprint-coverage.html`](https://…/blueprint-coverage.html)
+[`scripts/check-single-stylesheet.sh`](https://…/check-single-stylesheet.sh)
+[standard 00](https://…/docs/standards/00-principles.md)
+```
+
+So it is not "all links", not "all `.md` targets", and not "all
+plain-text link labels" — `[standard 00](…00-principles.md)` survived
+while `[ADR-0010](…0010-….md)` did not. Three samples are not enough to
+name the rule, and this entry's own procedure says not to claim one
+without reproducing it. What is confirmed is the *effect*, with the
+stored bodies as evidence.
+
+**Mitigation, cheap and reliable:** in agent-authored PR bodies and
+review replies, write the bare URL on its own rather than a markdown
+link when the link matters. GitHub autolinks it, and a bare URL has
+been observed to survive every time. When a labelled link is worth it,
+read the stored body back afterwards and repair it if the backticks
+appeared — that is the round-trip loop above, and it takes one call.
+
+_Untested here: whether `<details>` and `![alt](url)` are affected. The
+2026-05-20 retraction above stands for those until someone re-runs the
+procedure on them._
 
 ## Why this entry still exists
 
