@@ -4,9 +4,9 @@
  */
 
 import { useTranslation } from 'react-i18next';
+import { AutoGrowTextarea } from '../../components/atoms/AutoGrowTextarea';
 import { Input } from '../../components/atoms/Input';
 import { composeClassName } from '../../components/atoms/class-name.utils';
-import { inputVariants } from '../../components/atoms/input.variants';
 import { FileDrop } from '../../components/organisms/FileDrop';
 
 export type SongChartKind = 'none' | 'chordpro' | 'pdf' | 'image';
@@ -133,19 +133,6 @@ const CHORDPRO_MAX_LENGTH = 64_000;
 const CHORDPRO_ROWS = 10;
 
 /**
- * Grows the chart box to the height of the chart it holds, so the page is the
- * only thing that scrolls. A fixed ten rows showed about half of a short chart
- * through a nested scroll region, and the drag that would reach the rest moved
- * the box instead of the page — iOS Safari draws no resize grabber, so on a
- * phone there was no way to make the box taller.
- */
-function fitToContent(element: HTMLTextAreaElement | null): void {
-  if (element === null) return;
-  element.style.setProperty('height', 'auto');
-  element.style.setProperty('height', `${element.scrollHeight}px`);
-}
-
-/**
  * The editor the selected chart variant needs, or nothing when the song
  * carries no chart. One guard per variant, so the fieldset above holds no
  * condition of its own.
@@ -158,17 +145,10 @@ function SongChartEditor(props: SongChartFieldsProps): JSX.Element | null {
 
   if (props.chartKind === 'chordpro') {
     return (
-      <textarea
-        ref={fitToContent}
+      <AutoGrowTextarea
         value={props.chordproText}
-        onChange={(event) => {
-          props.onChordproChange(event.target.value);
-          fitToContent(event.currentTarget);
-        }}
-        className={composeClassName(
-          inputVariants({ size: 'md' }),
-          'mt-3 font-mono resize-none overflow-hidden',
-        )}
+        onChange={(event) => props.onChordproChange(event.target.value)}
+        className="mt-3 font-mono"
         rows={CHORDPRO_ROWS}
         maxLength={CHORDPRO_MAX_LENGTH}
       />

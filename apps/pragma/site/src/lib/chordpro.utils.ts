@@ -96,6 +96,12 @@ export function isTitleDirective(directiveName: string): boolean {
   return TITLE_DIRECTIVE_NAMES.has(directiveName);
 }
 
+const KEY_DIRECTIVE_NAMES = new Set(['key', 'k']);
+
+function isKeyDirective(directiveName: string): boolean {
+  return KEY_DIRECTIVE_NAMES.has(directiveName);
+}
+
 /**
  * Returns the title declared via `{title: ...}` or `{t: ...}` if any.
  */
@@ -167,12 +173,23 @@ export function transposeChord(chord: string, semitones: number): string {
   return `${NOTES_SHARP[next]}${suffix}`;
 }
 
+function transposeDirective(line: DirectiveLine, semitones: number): DirectiveLine {
+  if (!isKeyDirective(line.name)) return line;
+  return { kind: 'directive', name: line.name, value: transposeChord(line.value, semitones) };
+}
+
+/**
+ * Shifts every chord the chart draws, including the one the `{key: …}`
+ * directive prints above them: a key label left at its written value while the
+ * chords move says the song is in a key the chart no longer plays.
+ */
 export function transposeLines(
   lines: readonly ChordProLine[],
   semitones: number,
 ): readonly ChordProLine[] {
   if (semitones === 0) return lines;
   return lines.map((line) => {
+    if (line.kind === 'directive') return transposeDirective(line, semitones);
     if (line.kind !== 'chord-line') return line;
     return {
       kind: 'chord-line',

@@ -53,6 +53,17 @@ export interface LineupEditorInstrument {
 
 export type LineupEditorSurface = 'song' | 'setlist-entry';
 
+/**
+ * The scrollbar is drawn rather than left to the platform's overlay one, which
+ * only appears once a scroll is already under way. A band long enough to
+ * overflow the sheet showed its last instrument chip sliced by the action row
+ * with nothing on screen saying the list continued.
+ */
+const MEMBER_SCROLLER_CLASS =
+  'flex-1 overflow-y-auto flex flex-col gap-3 p-4 pb-8 ' +
+  '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-bg-sunk ' +
+  '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-line-strong';
+
 export interface LineupEditorProps {
   readonly open: boolean;
   readonly surface: LineupEditorSurface;
@@ -110,7 +121,7 @@ function LineupEditorContent({
     <dialog
       ref={openDismissibleDialogOnAttach}
       onClose={onClose}
-      className="m-auto w-[calc(100vw-1.5rem)] sm:w-[30rem] max-w-[30rem] max-h-[85vh] flex flex-col overflow-hidden rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
+      className="m-auto w-[calc(100vw-1.5rem)] sm:w-[30rem] max-w-[30rem] max-h-[calc(100dvh-1.5rem)] flex flex-col overflow-hidden rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
     >
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-line bg-bg-elev">
         <h2 className="font-display italic text-xl text-ink-900 m-0">{modalTitle}</h2>
@@ -133,7 +144,7 @@ function LineupEditorContent({
           void form.handleSubmit();
         }}
       >
-        <div className="flex-1 overflow-y-auto flex flex-col gap-3 p-4">
+        <div className={MEMBER_SCROLLER_CLASS}>
           <p className="text-xs text-ink-500 m-0">{t('lineup.multiInstrumentHint')}</p>
           <ul className="flex flex-col gap-3 m-0 p-0 list-none">
             {members.map((member) => (

@@ -35,6 +35,18 @@ import { Icon } from '../atoms/Icon';
 
 const MOBILE_HIDDEN_COLUMN_IDS = new Set(['city', 'capacity']);
 
+/**
+ * The name button stretches over the whole row through an `::after` overlay, so
+ * the status badge and the staleness cell open the bar like the name does
+ * instead of being a dead strip a finger lands on. The delete button is lifted
+ * above the overlay by its own stacking context.
+ */
+const ROW_OPENING_BUTTON_CLASS =
+  'flex flex-col items-start justify-center w-full min-h-11 text-left text-[13.5px] text-ink-900 ' +
+  'cursor-pointer bg-transparent border-0 p-0 after:absolute after:inset-0';
+
+const ROW_OVERLAY_ESCAPING_CLASS = 'relative z-10';
+
 const SORT_ARROW_ROTATION_BY_DIRECTION = {
   asc: '-rotate-90',
   desc: 'rotate-90',
@@ -73,7 +85,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         cell: ({ row }) => (
           <button
             type="button"
-            className="flex flex-col items-start justify-center w-full min-h-11 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0 p-0"
+            className={ROW_OPENING_BUTTON_CLASS}
             onClick={() => onSelect(row.original.id)}
           >
             {row.original.name}
@@ -124,7 +136,10 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         cell: ({ row }) => (
           <button
             type="button"
-            className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
+            className={composeClassName(
+              'inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1',
+              ROW_OVERLAY_ESCAPING_CLASS,
+            )}
             onClick={() => onRemove(row.original.id)}
             aria-label={t('common.delete')}
           >
@@ -186,7 +201,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
           key={row.id}
           aria-current={row.original.isBeingEdited}
           className={composeClassName(
-            'flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors',
+            'relative flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors',
             row.original.isStale && 'border-warn/40',
             row.original.isBeingEdited && 'ring-2 ring-accent',
           )}

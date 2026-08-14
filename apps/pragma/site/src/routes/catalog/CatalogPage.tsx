@@ -145,20 +145,22 @@ export function CatalogPage(): JSX.Element {
     ready: readyCount,
   });
 
+  const newSongControl = (
+    <Link to={buildNewSongPath(search)} className="no-underline self-center justify-self-center">
+      <Button variant="accent" type="button">
+        <Icon name="plus" size={14} />
+        {t('catalog.newSong')}
+      </Button>
+    </Link>
+  );
+
   return (
     <div className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
       <PageHeader
         crumb={t('catalog.crumb')}
         title={t('catalog.title')}
         subtitle={subtitle}
-        actions={
-          <Link to={buildNewSongPath(search)} className="no-underline">
-            <Button variant="accent" type="button">
-              <Icon name="plus" size={14} />
-              {t('catalog.newSong')}
-            </Button>
-          </Link>
-        }
+        actions={newSongControl}
       />
 
       <div className="flex gap-3.5 items-center mb-5 flex-wrap">
@@ -191,7 +193,7 @@ export function CatalogPage(): JSX.Element {
           </Link>
         </div>
       )}
-      {!isLoading && cards.length > 0 && <CatalogGrid songs={cards} />}
+      {!isLoading && cards.length > 0 && <CatalogGrid songs={cards} trailing={newSongControl} />}
     </div>
   );
 }

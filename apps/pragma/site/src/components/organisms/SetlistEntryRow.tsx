@@ -4,7 +4,9 @@
  *
  * The layout stacks under `sm` and spreads out above it, so a phone gets one
  * readable column and thumb-sized controls rather than a five-cell grid
- * squeezed into 375 px.
+ * squeezed into 375 px. The energy control and the key / capo / notes panel sit
+ * below the title row rather than inside it, so they span the card instead of
+ * the 189 px the position, the drag handle and the action stack leave.
  *
  * Each row owns a small `useForm` instance — the parent
  * (`SetlistEditor`) doesn't centralise per-row state. The form is never
@@ -18,9 +20,9 @@
  * While the row is the one being dragged it dims into a placeholder so the
  * operator can read the gap opening between the other cards.
  *
- * Removing a row asks first. The write has no undo, and the readout at the
- * end of the energy slider used to sit under the remove button, so aiming at
- * the number deleted the song.
+ * Removing a row asks first, and a rule separates it from Lineup and Edit: the
+ * write has no undo, and a destructive target one pixel row away from an
+ * ordinary one is a slip waiting to happen.
  *
  * The `Lineup` button opens the `<LineupEditor surface='setlist-entry'>`
  * modal; saving the modal calls `onUpdate(entryId, { lineupOverride })`.
@@ -56,8 +58,19 @@ import { selectMasteryColor } from './mastery-color.core';
 import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
 
 const ENERGY_DEFAULT = 5;
+const ENERGY_STEP = 1;
 const ICON_BUTTON_CLASS =
   'w-11 h-11 sm:w-9 sm:h-9 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
+
+/**
+ * Nine intervals over the width a phone leaves this row is about twelve pixels
+ * per energy point, which is a drag nobody lands on the first try. The pair of
+ * steppers is the exact way to move one point; the slider stays for the long
+ * jumps.
+ */
+const ENERGY_STEP_BUTTON_CLASS =
+  'w-11 h-11 sm:w-9 sm:h-9 shrink-0 inline-flex items-center justify-center rounded-md border border-line ' +
+  'text-ink-700 bg-bg-elev cursor-pointer hover:border-line-strong disabled:opacity-40 disabled:cursor-not-allowed';
 
 export interface ProminentMemberInstrument {
   readonly memberName: string;
@@ -116,6 +129,9 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
       lineupOverride: wasReset || lineup === null ? null : toLineupPayload(lineup),
     });
   };
+  const publishEnergy = (next: number): void => {
+    props.onUpdate(props.entryId, { energy: next });
+  };
   return (
     <li
       ref={setNodeRef}
@@ -123,134 +139,163 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
       className={composeClassName('flex flex-col gap-1.5', isDragging && 'opacity-40')}
     >
       {props.transitionBefore}
-      <div className="flex items-start gap-2 sm:gap-3 bg-bg-elev border border-line rounded-md px-2 sm:px-3 py-2.5 transition-colors hover:border-line-strong">
-        <span className="font-mono text-xs text-ink-400 pt-3 w-6 text-right shrink-0">
-          {String(props.position).padStart(2, '0')}
-        </span>
-        <button
-          type="button"
-          className="flex items-center justify-center w-11 h-11 sm:w-8 sm:h-9 shrink-0 text-ink-300 cursor-grab bg-transparent border-0 hover:text-ink-500 active:cursor-grabbing touch-none"
-          aria-label={t('setlist.dragHandle')}
-          {...attributes}
-          {...listeners}
-        >
-          <Icon name="drag" size={16} />
-        </button>
-        <div className="min-w-0 flex-1">
-          {props.prominentMemberInstrument === null ? null : (
-            <div className="flex items-center gap-2 mb-1">
-              <MemberChip
-                memberName={props.prominentMemberInstrument.memberName}
-                memberColor={props.prominentMemberInstrument.memberColor}
-                size="sm"
-              />
-              <span className="text-xs font-mono uppercase tracking-wider text-ink-700 bg-bg-sunk px-2 py-0.5 rounded">
-                {props.prominentMemberInstrument.instrumentNames.join(' + ')}
-              </span>
-            </div>
-          )}
-          {props.hasOverride ? (
-            <div className="mb-1">
-              <span className="inline-block whitespace-nowrap text-xs uppercase tracking-wider text-accent bg-accent-soft px-1.5 py-0.5 rounded font-medium">
-                {t('lineup.override')}
-              </span>
-            </div>
-          ) : null}
-          <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 truncate">
-            {props.title}
-          </div>
-          <div className="flex items-center gap-2 text-xs text-ink-500 mt-0.5 flex-wrap">
-            <span>{props.artist}</span>
-            {props.tonalityLabel === null ? null : (
-              <>
-                <span className="text-ink-300">·</span>
-                <span className="font-mono text-xs uppercase tracking-wider">
-                  {props.tonalityLabel}
-                </span>
-              </>
-            )}
-            {props.meanMastery === null ? null : (
-              <>
-                <span className="text-ink-300">·</span>
-                <span
-                  className="font-mono inline-flex items-center gap-1 text-xs"
-                  style={{ color: selectMasteryColor(props.meanMastery) }}
-                >
-                  <Icon name="star" size={11} />
-                  {props.meanMastery.toFixed(1)}
-                </span>
-              </>
-            )}
-            <span className="text-ink-300">·</span>
-            <MemberLineup
-              lineup={props.lineup}
-              members={props.members}
-              instruments={props.instruments}
-            />
-          </div>
-          <form.Field name="energy">
-            {(field) => (
-              <div className="flex items-center gap-2 mt-2 max-w-full sm:max-w-[280px]">
-                <span className="text-xs font-mono uppercase tracking-wider text-ink-400">
-                  {t('setlist.energy')}
-                </span>
-                <input
-                  type="range"
-                  min={ENERGY_MIN}
-                  max={ENERGY_MAX}
-                  value={field.state.value}
-                  onChange={(event) => {
-                    const next = Number(event.target.value);
-                    field.handleChange(next);
-                    props.onUpdate(props.entryId, { energy: next });
-                  }}
-                  onBlur={field.handleBlur}
-                  aria-label={t('setlist.energy')}
-                  className="flex-1 min-w-0 h-11 accent-accent"
+      <div className="flex flex-col gap-2 bg-bg-elev border border-line rounded-md px-2 sm:px-3 py-2.5 transition-colors hover:border-line-strong">
+        <div className="flex items-start gap-2 sm:gap-3">
+          <span className="font-mono text-xs text-ink-400 pt-3 w-6 text-right shrink-0">
+            {String(props.position).padStart(2, '0')}
+          </span>
+          <button
+            type="button"
+            className="flex items-center justify-center w-11 h-11 sm:w-8 sm:h-9 shrink-0 text-ink-300 cursor-grab bg-transparent border-0 hover:text-ink-500 active:cursor-grabbing touch-none"
+            aria-label={t('setlist.dragHandle')}
+            {...attributes}
+            {...listeners}
+          >
+            <Icon name="drag" size={16} />
+          </button>
+          <div className="min-w-0 flex-1">
+            {props.prominentMemberInstrument === null ? null : (
+              <div className="flex items-center gap-2 mb-1">
+                <MemberChip
+                  memberName={props.prominentMemberInstrument.memberName}
+                  memberColor={props.prominentMemberInstrument.memberColor}
+                  size="sm"
                 />
-                <span className="font-mono text-xs text-ink-500 min-w-[18px] shrink-0 text-right">
-                  {field.state.meta.isDirty || props.energy !== null || props.baseEnergy !== null
-                    ? field.state.value
-                    : '—'}
+                <span className="text-xs font-mono uppercase tracking-wider text-ink-700 bg-bg-sunk px-2 py-0.5 rounded">
+                  {props.prominentMemberInstrument.instrumentNames.join(' + ')}
                 </span>
               </div>
             )}
-          </form.Field>
-          {moreOpen ? (
-            <SetlistEntryDetailsFields
-              form={form}
-              onPatch={(patch) => props.onUpdate(props.entryId, patch)}
-            />
-          ) : null}
+            {props.hasOverride ? (
+              <div className="mb-1">
+                <span className="inline-block whitespace-nowrap text-xs uppercase tracking-wider text-accent bg-accent-soft px-1.5 py-0.5 rounded font-medium">
+                  {t('lineup.override')}
+                </span>
+              </div>
+            ) : null}
+            <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 truncate">
+              {props.title}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-ink-500 mt-0.5 flex-wrap">
+              <span>{props.artist}</span>
+              {props.tonalityLabel === null ? null : (
+                <>
+                  <span className="text-ink-300">·</span>
+                  <span className="font-mono text-xs uppercase tracking-wider">
+                    {props.tonalityLabel}
+                  </span>
+                </>
+              )}
+              {props.meanMastery === null ? null : (
+                <>
+                  <span className="text-ink-300">·</span>
+                  <span
+                    className="font-mono inline-flex items-center gap-1 text-xs"
+                    style={{ color: selectMasteryColor(props.meanMastery) }}
+                  >
+                    <Icon name="star" size={11} />
+                    {props.meanMastery.toFixed(1)}
+                  </span>
+                </>
+              )}
+              <span className="text-ink-300">·</span>
+              <MemberLineup
+                lineup={props.lineup}
+                members={props.members}
+                instruments={props.instruments}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-2 shrink-0 sm:self-start">
+            <button
+              type="button"
+              onClick={() => setLineupEditorOpen(true)}
+              aria-label={t('lineup.edit')}
+              title={t('lineup.edit')}
+              className={ICON_BUTTON_CLASS}
+            >
+              <Icon name="members" size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setMoreOpen((current) => !current)}
+              aria-label={t('common.edit')}
+              aria-expanded={moreOpen}
+              className={ICON_BUTTON_CLASS}
+            >
+              <Icon name="more" size={15} />
+            </button>
+            <span className="w-6 h-px sm:w-px sm:h-6 bg-line shrink-0" />
+            <button
+              type="button"
+              onClick={() => setIsRemovalPending(true)}
+              aria-label={t('setlist.removeEntry')}
+              className={composeClassName(ICON_BUTTON_CLASS, 'hover:text-danger')}
+            >
+              <Icon name="trash" size={14} />
+            </button>
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-0.5 shrink-0">
-          <button
-            type="button"
-            onClick={() => setLineupEditorOpen(true)}
-            aria-label={t('lineup.edit')}
-            title={t('lineup.edit')}
-            className={ICON_BUTTON_CLASS}
-          >
-            <Icon name="members" size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setMoreOpen((current) => !current)}
-            aria-label={t('common.edit')}
-            aria-expanded={moreOpen}
-            className={ICON_BUTTON_CLASS}
-          >
-            <Icon name="more" size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsRemovalPending(true)}
-            aria-label={t('setlist.removeEntry')}
-            className={composeClassName(ICON_BUTTON_CLASS, 'hover:text-danger')}
-          >
-            <Icon name="trash" size={14} />
-          </button>
-        </div>
+        <form.Field name="energy">
+          {(field) => (
+            <div className="flex items-center gap-2 max-w-full sm:max-w-[340px]">
+              <span className="text-xs font-mono uppercase tracking-wider text-ink-400 shrink-0">
+                {t('setlist.energy')}
+              </span>
+              <input
+                type="range"
+                min={ENERGY_MIN}
+                max={ENERGY_MAX}
+                value={field.state.value}
+                onChange={(event) => {
+                  const next = Number(event.target.value);
+                  field.handleChange(next);
+                  publishEnergy(next);
+                }}
+                onBlur={field.handleBlur}
+                aria-label={t('setlist.energy')}
+                className="flex-1 min-w-0 h-11 accent-accent"
+              />
+              <button
+                type="button"
+                className={ENERGY_STEP_BUTTON_CLASS}
+                disabled={field.state.value <= ENERGY_MIN}
+                aria-label={t('setlist.energyDown')}
+                onClick={() => {
+                  const next = field.state.value - ENERGY_STEP;
+                  field.handleChange(next);
+                  publishEnergy(next);
+                }}
+              >
+                −
+              </button>
+              <span className="font-mono text-xs text-ink-500 min-w-[18px] shrink-0 text-center">
+                {field.state.meta.isDirty || props.energy !== null || props.baseEnergy !== null
+                  ? field.state.value
+                  : '—'}
+              </span>
+              <button
+                type="button"
+                className={ENERGY_STEP_BUTTON_CLASS}
+                disabled={field.state.value >= ENERGY_MAX}
+                aria-label={t('setlist.energyUp')}
+                onClick={() => {
+                  const next = field.state.value + ENERGY_STEP;
+                  field.handleChange(next);
+                  publishEnergy(next);
+                }}
+              >
+                +
+              </button>
+            </div>
+          )}
+        </form.Field>
+        {moreOpen ? (
+          <SetlistEntryDetailsFields
+            form={form}
+            onPatch={(patch) => props.onUpdate(props.entryId, patch)}
+          />
+        ) : null}
       </div>
       <LineupEditor
         open={lineupEditorOpen}

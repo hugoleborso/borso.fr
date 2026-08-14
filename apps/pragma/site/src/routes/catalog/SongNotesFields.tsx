@@ -9,11 +9,9 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { composeClassName } from '../../components/atoms/class-name.utils';
-import { inputVariants } from '../../components/atoms/input.variants';
+import { AutoGrowTextarea } from '../../components/atoms/AutoGrowTextarea';
 
 const NOTE_MAX_LENGTH = 4_096;
-const FIELD_CLASS = composeClassName(inputVariants({ size: 'md' }), 'resize-y');
 const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
 interface SongNotesFieldsProps {
@@ -37,38 +35,35 @@ export function SongNotesFields(props: SongNotesFieldsProps): JSX.Element {
       <label className={LABEL_CLASS} htmlFor="song-structure-notes">
         {t('catalog.notesStructure')}
       </label>
-      <textarea
+      <AutoGrowTextarea
         id="song-structure-notes"
         value={props.structureNotes}
         onChange={(event) => props.onStructureChange(event.target.value)}
         rows={STRUCTURE_ROWS}
         maxLength={NOTE_MAX_LENGTH}
         placeholder={t('catalog.notesStructurePlaceholder')}
-        className={FIELD_CLASS}
       />
       <label className={LABEL_CLASS} htmlFor="song-gimmick-notes">
         {t('catalog.notesGimmicks')}
       </label>
-      <textarea
+      <AutoGrowTextarea
         id="song-gimmick-notes"
         value={props.gimmickNotes}
         onChange={(event) => props.onGimmickChange(event.target.value)}
         rows={GIMMICK_ROWS}
         maxLength={NOTE_MAX_LENGTH}
         placeholder={t('catalog.notesGimmicksPlaceholder')}
-        className={FIELD_CLASS}
       />
       <label className={LABEL_CLASS} htmlFor="song-free-notes">
         {t('catalog.notesFree')}
       </label>
-      <textarea
+      <AutoGrowTextarea
         id="song-free-notes"
         value={props.notes}
         onChange={(event) => props.onNotesChange(event.target.value)}
         rows={NOTES_ROWS}
         maxLength={NOTE_MAX_LENGTH}
         placeholder={t('catalog.notesFreePlaceholder')}
-        className={FIELD_CLASS}
       />
     </div>
   );

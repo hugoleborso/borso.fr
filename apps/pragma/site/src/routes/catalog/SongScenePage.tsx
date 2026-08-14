@@ -34,6 +34,8 @@ import {
   clampSemitoneOffset,
   formatSemitoneOffset,
   SCENE_FONT_SIZE_DEFAULT_PX,
+  SCENE_FONT_SIZE_MAX_PX,
+  SCENE_FONT_SIZE_MIN_PX,
   SCENE_FONT_SIZE_STEP_PX,
   SCENE_TRANSPOSE_MAX_SEMITONES,
   SCENE_TRANSPOSE_MIN_SEMITONES,
@@ -137,6 +139,7 @@ export function SongScenePage(): JSX.Element {
               type="button"
               className={SCENE_BUTTON_CLASS}
               onClick={() => stepFontSize(-SCENE_FONT_SIZE_STEP_PX)}
+              disabled={fontSizePx <= SCENE_FONT_SIZE_MIN_PX}
               aria-label={t('scene.zoomOut')}
             >
               A−
@@ -145,6 +148,7 @@ export function SongScenePage(): JSX.Element {
               type="button"
               className={SCENE_BUTTON_CLASS}
               onClick={() => stepFontSize(SCENE_FONT_SIZE_STEP_PX)}
+              disabled={fontSizePx >= SCENE_FONT_SIZE_MAX_PX}
               aria-label={t('scene.zoomIn')}
             >
               A+

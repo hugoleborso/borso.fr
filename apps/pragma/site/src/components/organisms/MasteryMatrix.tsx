@@ -88,15 +88,22 @@ interface MatrixRow {
 const STICKY_ROW_HEADER_CLASS = 'sticky left-0 z-10 bg-bg-elev';
 
 /**
- * The grid is wider than a phone by about 140 px, and a bare
- * `overflow-x-auto` reserves no scrollbar track at this height, so the last
- * instrument column and the per-member average were simply absent with
- * nothing saying they existed. The right edge fades to say the grid
- * continues; the matching right padding means the faded band lands on empty
- * space once the operator has scrolled to the end, rather than over a column.
+ * The per-member average is anchored to the right edge the way the name is
+ * anchored to the left, so the column the operator reads the row for is on
+ * screen at rest instead of past the fold, and the instrument columns visibly
+ * travel underneath it — which is what says the grid scrolls sideways.
+ */
+const STICKY_AVERAGE_CLASS = 'sticky right-0 z-10 bg-bg-elev border-l border-line';
+
+/**
+ * The grid is wider than a phone by about 160 px. The scrollbar is drawn
+ * rather than left to the platform's overlay one, which only appears once a
+ * scroll is already under way, so the instrument column past the right edge
+ * had nothing on screen saying it existed.
  */
 const MATRIX_SCROLLER_CLASS =
-  'overflow-x-auto pr-6 [mask-image:linear-gradient(to_right,black_calc(100%_-_1.5rem),transparent)]';
+  'overflow-x-scroll [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-bg-sunk ' +
+  '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-line-strong';
 
 const DECIMALS = 1;
 const RIGHT_MOUSE_BUTTON = 2;
@@ -245,7 +252,10 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
                     const className = isFirst
                       ? STICKY_ROW_HEADER_CLASS
                       : isLast
-                        ? 'text-right font-medium text-xs tracking-wider uppercase text-ink-500 px-4 py-3 border-b border-line'
+                        ? composeClassName(
+                            'text-right font-medium text-xs tracking-wider uppercase text-ink-500 px-3 py-3 border-b border-line',
+                            STICKY_AVERAGE_CLASS,
+                          )
                         : 'text-center font-medium text-xs tracking-wider uppercase text-ink-500 px-2 py-3 border-b border-line align-bottom';
                     return (
                       <th key={header.id} className={className}>
@@ -282,7 +292,10 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
                       return (
                         <td
                           key={cell.id}
-                          className="text-right px-4 py-1 border-b border-line font-mono text-ink-500"
+                          className={composeClassName(
+                            'text-right px-3 py-1 border-b border-line font-mono text-ink-500',
+                            STICKY_AVERAGE_CLASS,
+                          )}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
@@ -327,7 +340,7 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
                     </td>
                   );
                 })}
-                <td className="px-4 py-3" />
+                <td className={composeClassName('px-3 py-3', STICKY_AVERAGE_CLASS, 'bg-bg-sunk')} />
               </tr>
             </tbody>
           </table>

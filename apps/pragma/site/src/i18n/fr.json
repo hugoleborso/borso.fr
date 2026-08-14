@@ -203,6 +203,8 @@
     "capo": "Capo",
     "notes": "Notes",
     "energy": "Énergie",
+    "energyDown": "Un point d'énergie en moins",
+    "energyUp": "Un point d'énergie en plus",
     "openTransitionComment": "Voir / commenter la transition",
     "transitionCommentTitle": "Commentaire de transition",
     "missingSessionId": "Identifiant de session manquant.",

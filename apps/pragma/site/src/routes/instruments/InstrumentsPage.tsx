@@ -42,6 +42,16 @@ interface SelectedInstrument {
   family: InstrumentFamily;
 }
 
+/**
+ * The name button stretches over the whole row through an `::after` overlay, so
+ * the family badge and the space beside it open the instrument like the name
+ * does instead of being a dead strip a finger lands on. The delete button sits
+ * above the overlay on its own layer.
+ */
+const ROW_OPENING_BUTTON_CLASS =
+  'flex-1 min-h-11 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0 ' +
+  'after:absolute after:inset-0';
+
 const DEFAULT_NEW_INSTRUMENT_FAMILY: InstrumentFamily = 'harmonic';
 const INSTRUMENT_NAME_MIN_LENGTH = 1;
 const INSTRUMENT_NAME_MAX_LENGTH = 64;
@@ -118,11 +128,11 @@ export function InstrumentsPage(): JSX.Element {
             .map((row) => (
               <li
                 key={row.id}
-                className="flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors"
+                className="relative flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors"
               >
                 <button
                   type="button"
-                  className="flex-1 min-h-11 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
+                  className={ROW_OPENING_BUTTON_CLASS}
                   onClick={() => selectInstrument(row)}
                 >
                   {row.name}
@@ -130,7 +140,7 @@ export function InstrumentsPage(): JSX.Element {
                 <Badge tone="mono">{t(INSTRUMENT_FAMILY_LABEL_KEY[row.family])}</Badge>
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
+                  className="relative z-10 inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
                   onClick={() => setPendingDeletionId(row.id)}
                   aria-label={t('common.delete')}
                 >
