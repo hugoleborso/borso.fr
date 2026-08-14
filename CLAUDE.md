@@ -112,6 +112,16 @@ Reads work; writes are denied. **`iam:*` is denied too, so no session can read t
 
 Full setup including key rotation: [`docs/aws-setup.md#12`](./docs/aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
 
+## Architecture map
+
+[`docs/architecture/`](./docs/architecture/README.md) holds a generated, browsable map of `pragma` at five levels: the four C4 levels plus **3.5**, which walks one bounded context from each HTTP route through the service and repository functions it calls, down to the tables and external systems it reaches, and back up to the front-end modules that call the endpoint. Read 3.5 when you need to trust a slice you did not write without opening every file in it.
+
+Nothing about a node's position is authored. Position comes from the path and the file-name suffix, edges come from real imports, and routes come from the Hono call chain as written; the layer inference is the one the blueprint scripts use, so the two cannot disagree. **Every file in `apps/pragma/` must therefore end in a suffix that names its layer** — beyond the table in [`01. Naming`](./docs/standards/01-naming.md), that means `.queries.ts`, `.hook.ts`, `.store.ts`, `.adapter.ts`, `.client.ts`, `.setup.ts` and `.variants.ts`. Composition roots keep their conventional names and are recognised by filename.
+
+Two tags carry what a path cannot: `@DependsOnExternal <id>` names an external system and is cross-checked against `scripts/architecture/pragma.manifest.ts` in both directions, and `@Feature <id>` groups front-end files by feature. Pre-commit runs the generator with `--check` on any commit touching `apps/pragma/`, and a pull request gets one comment saying what moved against its target branch.
+
+Blueprints are an overlay on this map, never the substrate: a blueprint says *which example this copies*, a position says *where it sits*, and blueprint coverage is partial by design.
+
 ## Dantotsus, knowledge, and ADRs
 
 Three complementary folders, one purpose: keep the team's mental model ahead of the codebase's failure modes and the *why* of past trade-offs.
