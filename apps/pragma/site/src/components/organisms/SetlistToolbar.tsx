@@ -16,8 +16,8 @@ import { Icon } from '../atoms/Icon';
 import { EnergySparkline } from '../molecules/EnergySparkline';
 import { type FilterPillMember, MemberFilterPills } from '../molecules/MemberFilterPills';
 
-const ENERGY_HEIGHT_COMPACT_PX = 56;
-const ENERGY_HEIGHT_PX = 120;
+const ENERGY_HEIGHT_COMPACT_PX = 44;
+const ENERGY_HEIGHT_PX = 72;
 
 export interface SetlistToolbarProps {
   readonly energyValues: readonly (number | null)[];

@@ -46,7 +46,7 @@ export function TransitionStrip({ view, note, onOpenNote }: TransitionStripProps
             isRisky ? 'text-warn font-semibold' : 'text-ink-400',
           )}
         >
-          <Icon name={isRisky ? 'warn' : 'chevR'} size={11} />
+          <Icon name={isRisky ? 'warn' : 'check'} size={11} />
           {isRisky ? t('setlist.transitionRisky') : t('setlist.transitionCovered')}
         </span>
         {view.carriers.length === 0 ? (

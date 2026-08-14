@@ -51,7 +51,7 @@ export function SongDetailSidebar(props: SongDetailSidebarProps): JSX.Element {
           <span>{t('catalog.defaultLineup')}</span>
           <Button type="button" variant="ghost" size="sm" onClick={props.onEditDefaultLineup}>
             <Icon name="edit" size={12} />
-            {t('lineup.editDefault')}
+            {t('common.edit')}
           </Button>
         </div>
         <div className="flex flex-col gap-1.5">

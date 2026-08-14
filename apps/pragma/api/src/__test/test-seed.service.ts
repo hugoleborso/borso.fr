@@ -117,7 +117,7 @@ const SEED_SONGS: readonly SeedSong[] = [
     status: 'rehearsed',
     tonalityStart: 'E',
     baseEnergy: 9,
-    lineup: { Hugo: ['Batterie'], Léa: ['Chant'], Sarah: ['Clavier', 'Chant'] },
+    lineup: { Hugo: ['Batterie'], Léa: ['Chant'], Sarah: ['Chant'] },
     structureNotes: 'attaque directe sur le refrain, pas d’intro',
     gimmickNotes: 'Marc ne joue pas : il change de basse pendant le morceau.',
     notes: 'Enchaînement délicat, personne ne garde d’instrument harmonique avant.',

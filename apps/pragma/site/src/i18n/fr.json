@@ -247,7 +247,6 @@
   },
   "lineup": {
     "edit": "Lineup",
-    "editDefault": "Modifier le lineup par défaut",
     "modal": {
       "title": {
         "song": "Lineup par défaut",
