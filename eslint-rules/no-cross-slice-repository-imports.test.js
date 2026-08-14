@@ -25,6 +25,16 @@ createRuleTester(serviceFile, { jsx: false }).run('no-cross-slice-repository-imp
       code: "import { insertPunch } from '../punch/punch.repository';",
       errors: [{ messageId: 'crossSliceRepository' }],
     },
+    // A re-export hands the other slice's repository to everyone downstream
+    // through a path this rule would not otherwise see.
+    {
+      code: "export { insertPunch } from '../punch/punch.repository';",
+      errors: [{ messageId: 'crossSliceRepository' }],
+    },
+    {
+      code: "export * from '../punch/punch.repository';",
+      errors: [{ messageId: 'crossSliceRepository' }],
+    },
     {
       code: "import type { PunchRow } from '../../punch/punch.repository';",
       errors: [{ messageId: 'crossSliceRepository' }],

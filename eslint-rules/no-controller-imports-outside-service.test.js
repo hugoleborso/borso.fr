@@ -18,6 +18,11 @@ createRuleTester(controllerFile).run('no-controller-imports-outside-service', ru
       code: "import { findSongById } from './songs.repository';",
       errors: [{ messageId: 'forbiddenImport' }],
     },
+    // A re-export reaches past the service just as an import does.
+    {
+      code: "export { findSongById } from './songs.repository';",
+      errors: [{ messageId: 'forbiddenImport' }],
+    },
     {
       code: "import { transposeChart } from './tonality.core';",
       errors: [{ messageId: 'forbiddenImport' }],

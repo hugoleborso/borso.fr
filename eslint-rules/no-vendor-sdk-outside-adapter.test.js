@@ -26,6 +26,12 @@ createRuleTester(moleculeFile).run('no-vendor-sdk-outside-adapter (component)', 
       code: "import posthog from 'posthog-js';",
       errors: [{ messageId: 'vendorSdkOutsideAdapter' }],
     },
+    // A re-export puts the SDK one hop from every component that reads this
+    // file, which is the coupling the adapter exists to prevent.
+    {
+      code: "export { addBreadcrumb } from '@sentry/react';",
+      errors: [{ messageId: 'vendorSdkOutsideAdapter' }],
+    },
   ],
 });
 

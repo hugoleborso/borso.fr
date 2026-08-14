@@ -1,3 +1,4 @@
+import { onEveryModuleSource } from './module-source.js';
 import { readComponentBucket } from './site-paths.js';
 
 /**
@@ -56,21 +57,15 @@ export default {
     if (forbiddenBuckets === undefined) {
       return {};
     }
-    return {
-      ImportDeclaration(node) {
-        const source = node.source.value;
-        if (typeof source !== 'string') {
-          return;
-        }
-        const importedBucket = forbiddenBuckets.find((bucket) => isImportOfBucket(source, bucket));
-        if (importedBucket !== undefined) {
-          context.report({
-            node: node.source,
-            messageId: 'wrongDirection',
-            data: { importingBucket, importedBucket },
-          });
-        }
-      },
-    };
+    return onEveryModuleSource((source, node) => {
+      const importedBucket = forbiddenBuckets.find((bucket) => isImportOfBucket(source, bucket));
+      if (importedBucket !== undefined) {
+        context.report({
+          node: node.source,
+          messageId: 'wrongDirection',
+          data: { importingBucket, importedBucket },
+        });
+      }
+    });
   },
 };
