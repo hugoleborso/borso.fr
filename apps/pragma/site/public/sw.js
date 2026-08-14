@@ -18,7 +18,7 @@
  * touching the shell.
  */
 
-const CACHE_VERSION = 'pragma-v2';
+const CACHE_VERSION = 'pragma-v3';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 const SHELL_ASSETS = ['/', '/index.html', '/manifest.webmanifest'];
@@ -106,9 +106,34 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Application shell: cache-first, fall back to network.
+  // Application shell: network-first, falling back to the cache.
+  //
+  // Not cache-first. `index.html` names the hashed bundle of one build, so
+  // serving it from the cache pins the whole app to the build that installed
+  // the worker: a new deploy is never picked up, because this file is what
+  // decides, and it rarely changes. Network-first keeps the shell current and
+  // still answers offline. A navigation that is not itself cached falls back
+  // to the cached entry point, so a deep link opens offline too.
   if (request.mode === 'navigate' || SHELL_ASSETS.includes(url.pathname)) {
-    event.respondWith(caches.match(request).then((cached) => cached ?? fetch(request)));
+    event.respondWith(
+      (async () => {
+        try {
+          const response = await fetch(request);
+          if (response.ok) {
+            const cache = await caches.open(SHELL_CACHE);
+            await cache.put(request, response.clone());
+          }
+          return response;
+        } catch (error) {
+          const cached = await caches.match(request);
+          if (cached !== undefined) return cached;
+          if (request.mode !== 'navigate') throw error;
+          const entryPoint = (await caches.match('/index.html')) ?? (await caches.match('/'));
+          if (entryPoint !== undefined) return entryPoint;
+          throw error;
+        }
+      })(),
+    );
     return;
   }
 
@@ -129,8 +154,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static asset under /assets (Vite's hashed bundle path): cache-first.
-  if (url.pathname.startsWith('/assets/')) {
+  // Hashed bundle under /assets, and the icons a home screen reads:
+  // cache-first, since neither changes under a fixed URL.
+  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/')) {
     event.respondWith(
       caches.match(request).then(async (cached) => {
         if (cached !== undefined) return cached;

@@ -83,6 +83,15 @@ for manifest in apps/*/site/public/manifest.webmanifest; do
     failed=1
   fi
 
+  while read -r favicon; do
+    [ -n "$favicon" ] || continue
+    if [ ! -f "${public_dir}${favicon}" ]; then
+      printf '\033[31m[pwa-assets] FAIL\033[0m %s: favicon points at %s, which is not in %s\n' \
+        "$app" "$favicon" "$public_dir"
+      failed=1
+    fi
+  done <<< "$(sed -n 's/.*rel="icon"[^>]*href="\([^"]*\)".*/\1/p' "$html")"
+
   apple_icon="$(sed -n 's/.*rel="apple-touch-icon"[^>]*href="\([^"]*\)".*/\1/p' "$html" | head -1)"
   if [ -z "$apple_icon" ]; then
     printf '\033[31m[pwa-assets] FAIL\033[0m %s: index.html has no apple-touch-icon, so iOS\n' "$app"
