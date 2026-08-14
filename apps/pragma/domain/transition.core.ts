@@ -63,11 +63,9 @@ function withinFamilies(
   instruments: InstrumentFamilyMap,
   families: readonly InstrumentFamily[],
 ): readonly InstrumentId[] {
-  return instrumentIds.filter((instrumentId) => {
-    const family = instruments[instrumentId]?.family;
-    if (family === undefined) return false;
-    return families.includes(family);
-  });
+  return instrumentIds.filter((instrumentId) =>
+    families.some((family) => instruments[instrumentId]?.family === family),
+  );
 }
 
 // @FollowsBlueprint core-decision
