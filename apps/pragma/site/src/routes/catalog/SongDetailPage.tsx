@@ -197,7 +197,7 @@ export function SongDetailPage(): JSX.Element {
                 <span className="flex-1" />
                 <Link
                   to={`/catalog/${song.id}/scene`}
-                  className="inline-flex items-center gap-1 text-xs text-ink-500 hover:text-ink-900 no-underline"
+                  className="inline-flex items-center gap-1 min-h-11 px-2 -mr-1 rounded-md text-xs text-ink-500 hover:text-ink-900 no-underline"
                 >
                   <Icon name="play" size={12} />
                   {t('catalog.openScene')}

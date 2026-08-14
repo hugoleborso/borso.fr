@@ -46,7 +46,8 @@
     "offlineHint": "catalogue, accords et setlist du prochain concert disponibles. Toute modification est désactivée.",
     "search": "Chercher",
     "all": "Toutes",
-    "actions": "Actions"
+    "actions": "Actions",
+    "loadFailed": "Impossible de charger cette page. Vérifie la connexion, puis réessaie."
   },
   "scaffold": {
     "title": "Pragma — squelette prêt",
@@ -122,6 +123,7 @@
     "mastery": "Maîtrise",
     "playedRecently": "Joué récemment",
     "backToCatalog": "Catalogue",
+    "songNotFound": "Ce morceau n'est plus au catalogue.",
     "deleteConfirm": "Supprimer ce morceau ? Sa grille, ses notes et ses liens partent avec.",
     "uploadPrompt": "Dépose un fichier ou clique pour choisir",
     "uploadHint": "PDF, PNG, JPEG, WebP ou HEIC — jusqu'à {{maxMb}} Mo",
@@ -160,6 +162,7 @@
     "newSession": "Nouvelle session",
     "kindConcert": "Concert",
     "kindPractice": "Répétition",
+    "sessionNotFound": "Cette session n'est plus au planning.",
     "date": "Date",
     "venue": "Lieu",
     "capacity": "Jauge",
@@ -217,7 +220,15 @@
     "transitionNobody": "personne ne garde d’instrument entre ces deux morceaux",
     "transitionAddNote": "Ajouter une note sur cette transition",
     "crumb": "Setlist",
-    "removeConfirm": "Retirer « {{title}} » de ce set ?"
+    "removeConfirm": "Retirer « {{title}} » de ce set ?",
+    "failure": {
+      "load": "Impossible de charger ce set. Vérifie la connexion et réessaie.",
+      "add": "Le morceau n’a pas été ajouté. Vérifie la connexion et réessaie.",
+      "remove": "Le morceau n’a pas été retiré. Vérifie la connexion et réessaie.",
+      "reorder": "Le nouvel ordre n’a pas été enregistré. Vérifie la connexion et réessaie.",
+      "update": "La modification n’a pas été enregistrée. Vérifie la connexion et réessaie.",
+      "copyOrder": "L’ordre de passage n’a pas pu être copié dans le presse-papier."
+    }
   },
   "scene": {
     "title": "Mode Scène",

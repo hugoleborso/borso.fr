@@ -3,9 +3,15 @@
  * Renders the ordered entries; each row carries an inline display
  * (title, artist, tonality, mastery, lineup, energy slider).
  *
- * The energy curve, the member filter and the two set-level actions sit in
- * `SetlistToolbar`, pinned to the top of the page, so the curve stays in view
- * while rows move under it.
+ * The energy curve and the member filter sit in `SetlistToolbar`, pinned to
+ * the top of the page, so the curve stays in view while rows move under it.
+ * The two set-level actions sit in a `BottomActionBar` instead, within thumb
+ * reach and clear of the tab bar.
+ *
+ * A failure names the action that failed rather than echoing what threw: the
+ * only thing an `ApiError` here carries is a string like `reorder 500`, which
+ * told the operator nothing and read as a bug. The message is painted in the
+ * pinned toolbar, so it is on screen wherever the set is scrolled to.
  *
  * Reordering uses dnd-kit's sortable list (see `SetlistEntriesList`):
  * the list is a `DndContext` wrapping a `SortableContext`, each row is
@@ -28,7 +34,6 @@ import { evaluateTransition } from '@domain/transition.core';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api';
 import { meanMasteryForSong } from '../../lib/mastery-aggregate.utils';
 import { useInstrumentsList } from '../../lib/queries/instruments';
 import { useMasteryDefaults } from '../../lib/queries/mastery';
@@ -42,6 +47,9 @@ import {
 } from '../../lib/queries/setlists';
 import { useSongsList } from '../../lib/queries/songs';
 import { useTransitionCommentsList } from '../../lib/queries/transitions';
+import { Button } from '../atoms/Button';
+import { Icon } from '../atoms/Icon';
+import { BottomActionBar } from '../molecules/BottomActionBar';
 import { BREAKPOINT_BELOW_LG, useIsMediaQueryMatching } from '../molecules/useIsMediaQueryMatching';
 import { SetlistEntriesList } from './SetlistEntriesList';
 import { SetlistSongPicker } from './SetlistSongPicker';
@@ -57,6 +65,14 @@ interface SetlistEditorProps {
 
 const NO_ROWS: readonly never[] = [];
 const COPIED_FEEDBACK_MS = 2000;
+
+type SetlistFailureKey =
+  | 'setlist.failure.load'
+  | 'setlist.failure.add'
+  | 'setlist.failure.remove'
+  | 'setlist.failure.reorder'
+  | 'setlist.failure.update'
+  | 'setlist.failure.copyOrder';
 
 // @FollowsBlueprint organism-query-owning
 export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
@@ -77,7 +93,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     songAId: string;
     songBId: string;
   } | null>(null);
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [failureKey, setFailureKey] = useState<SetlistFailureKey | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [orderCopied, setOrderCopied] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -157,8 +173,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   );
   const knownMemberIds = useMemo(() => new Set(members.map((member) => member.id)), [members]);
 
-  const recordError = (error: Error): void =>
-    setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
+  const failWith = (key: SetlistFailureKey) => (): void => setFailureKey(key);
 
   const addEntry = (songId: string): void => {
     const song = songsById[songId];
@@ -169,20 +184,26 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         energy: song?.baseEnergy ?? null,
         optimisticId: crypto.randomUUID(),
       },
-      { onError: recordError },
+      { onError: failWith('setlist.failure.add') },
     );
   };
 
   const removeSetlistEntry = (entryId: string): void => {
-    removeEntry.mutate({ setlistId, entryId }, { onError: recordError });
+    removeEntry.mutate({ setlistId, entryId }, { onError: failWith('setlist.failure.remove') });
   };
 
   const reorderSetlistEntries = (orderedEntryIds: readonly string[]): void => {
-    reorder.mutate({ setlistId, entryIds: [...orderedEntryIds] }, { onError: recordError });
+    reorder.mutate(
+      { setlistId, entryIds: [...orderedEntryIds] },
+      { onError: failWith('setlist.failure.reorder') },
+    );
   };
 
   const updateSetlistEntry = (entryId: string, patch: Record<string, unknown>): void => {
-    updateEntry.mutate({ setlistId, entryId, ...patch }, { onError: recordError });
+    updateEntry.mutate(
+      { setlistId, entryId, ...patch },
+      { onError: failWith('setlist.failure.update') },
+    );
   };
 
   const copyOrderToClipboard = async (): Promise<void> => {
@@ -191,7 +212,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
       setOrderCopied(true);
       window.setTimeout(() => setOrderCopied(false), COPIED_FEEDBACK_MS);
     } catch {
-      setLocalError('clipboard-error');
+      setFailureKey('setlist.failure.copyOrder');
     }
   };
 
@@ -199,8 +220,8 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     return <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
 
-  const queryError = entriesQuery.error instanceof ApiError ? entriesQuery.error.message : null;
-  const displayError = localError ?? queryError;
+  const displayFailureKey =
+    failureKey ?? (entriesQuery.error === null ? null : 'setlist.failure.load');
   const isInFilteredMode = selectedMemberId !== null;
   const visibleEntries = filtered.visibleEntries;
 
@@ -211,17 +232,9 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         isCompact={isNarrow}
         members={lineupMembers}
         selectedMemberId={selectedMemberId}
-        entryCount={entries.length}
-        isOrderCopied={orderCopied}
+        failureMessage={displayFailureKey === null ? null : t(displayFailureKey)}
         onSelectMember={setSelectedMemberId}
-        onAddSong={() => setPickerOpen(true)}
-        onCopyOrder={() => void copyOrderToClipboard()}
       />
-      {displayError === null ? null : (
-        <p className="text-danger text-sm" role="alert">
-          {displayError}
-        </p>
-      )}
       {isInFilteredMode && visibleEntries.length === 0 ? (
         <p className="text-ink-500 italic text-sm py-6 text-center">{t('lineup.emptyForMember')}</p>
       ) : (
@@ -249,6 +262,21 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
       {entries.length === 0 ? (
         <p className="text-ink-500 italic text-sm py-6 text-center">{t('setlist.emptyList')}</p>
       ) : null}
+      <BottomActionBar>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => void copyOrderToClipboard()}
+          disabled={entries.length === 0}
+        >
+          <Icon name={orderCopied ? 'check' : 'text'} size={14} />
+          {orderCopied ? t('setlist.orderCopied') : t('setlist.copyOrder')}
+        </Button>
+        <Button variant="accent" size="sm" onClick={() => setPickerOpen(true)}>
+          <Icon name="plus" size={14} />
+          {t('setlist.addSong')}
+        </Button>
+      </BottomActionBar>
       <SetlistSongPicker
         open={pickerOpen}
         songs={songs}

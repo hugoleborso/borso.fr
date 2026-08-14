@@ -30,8 +30,14 @@ interface SongChartFieldsProps {
 }
 
 const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+/**
+ * No negative margin pulling the padding back out: the tap box is what the
+ * layout reserves, and `px-2 -mx-2` grew it eight pixels past the slot, so two
+ * neighbours in this row overlapped by four pixels and the later one won the
+ * hit test on the earlier one's right edge.
+ */
 const RADIO_LABEL_CLASS =
-  'inline-flex items-center gap-2 min-h-11 px-2 -mx-2 rounded-md text-sm text-ink-700 cursor-pointer';
+  'inline-flex items-center gap-2 min-h-11 px-2 rounded-md text-sm text-ink-700 cursor-pointer';
 const RADIO_INPUT_CLASS = 'w-5 h-5 accent-accent';
 
 // @FollowsBlueprint organism-presentational
@@ -127,6 +133,19 @@ const CHORDPRO_MAX_LENGTH = 64_000;
 const CHORDPRO_ROWS = 10;
 
 /**
+ * Grows the chart box to the height of the chart it holds, so the page is the
+ * only thing that scrolls. A fixed ten rows showed about half of a short chart
+ * through a nested scroll region, and the drag that would reach the rest moved
+ * the box instead of the page — iOS Safari draws no resize grabber, so on a
+ * phone there was no way to make the box taller.
+ */
+function fitToContent(element: HTMLTextAreaElement | null): void {
+  if (element === null) return;
+  element.style.setProperty('height', 'auto');
+  element.style.setProperty('height', `${element.scrollHeight}px`);
+}
+
+/**
  * The editor the selected chart variant needs, or nothing when the song
  * carries no chart. One guard per variant, so the fieldset above holds no
  * condition of its own.
@@ -140,9 +159,16 @@ function SongChartEditor(props: SongChartFieldsProps): JSX.Element | null {
   if (props.chartKind === 'chordpro') {
     return (
       <textarea
+        ref={fitToContent}
         value={props.chordproText}
-        onChange={(event) => props.onChordproChange(event.target.value)}
-        className={composeClassName(inputVariants({ size: 'md' }), 'mt-3 font-mono resize-y')}
+        onChange={(event) => {
+          props.onChordproChange(event.target.value);
+          fitToContent(event.currentTarget);
+        }}
+        className={composeClassName(
+          inputVariants({ size: 'md' }),
+          'mt-3 font-mono resize-none overflow-hidden',
+        )}
         rows={CHORDPRO_ROWS}
         maxLength={CHORDPRO_MAX_LENGTH}
       />

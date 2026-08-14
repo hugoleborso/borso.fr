@@ -9,9 +9,12 @@
  * also sings — and because a toggle is a thumb-sized target where a native
  * select on a phone is a scroll wheel.
  *
- * The header is pinned to the top of the sheet and the action row to the
- * bottom of it, because at 667 px the sheet's own scroll put Save and Cancel
- * below the fold with nothing on screen saying they were there.
+ * Only the member list scrolls: the sheet is a flex column whose middle band
+ * is the scroll container, so the title stays at the top and Save and Cancel
+ * at the bottom whatever the band's size. They were sticky instead, which
+ * keeps them on screen but paints them over whatever the sheet has not
+ * scrolled past — the last member's bottom instrument chip was three quarters
+ * behind the action row and swallowed every tap aimed at it.
  *
  * On Save, the molecule normalises a selection where nobody plays to
  * `null` so the BE never persists an override that says nothing — the
@@ -107,9 +110,9 @@ function LineupEditorContent({
     <dialog
       ref={openDismissibleDialogOnAttach}
       onClose={onClose}
-      className="m-auto w-[calc(100vw-1.5rem)] sm:w-[30rem] max-w-[30rem] max-h-[85vh] overflow-y-auto rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
+      className="m-auto w-[calc(100vw-1.5rem)] sm:w-[30rem] max-w-[30rem] max-h-[85vh] flex flex-col overflow-hidden rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
     >
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-line bg-bg-elev">
+      <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-line bg-bg-elev">
         <h2 className="font-display italic text-xl text-ink-900 m-0">{modalTitle}</h2>
         <Button
           type="button"
@@ -123,63 +126,65 @@ function LineupEditorContent({
         </Button>
       </div>
       <form
-        className="flex flex-col gap-3 p-4 pb-0"
+        className="flex min-h-0 flex-1 flex-col"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
       >
-        <p className="text-xs text-ink-500 m-0">{t('lineup.multiInstrumentHint')}</p>
-        <ul className="flex flex-col gap-3 m-0 p-0 list-none">
-          {members.map((member) => (
-            <li key={member.id} className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2">
-                <MemberChip memberName={member.name} memberColor={member.color} size="sm" />
-                <span className="text-[13px] text-ink-900 font-medium">{member.name}</span>
-              </div>
-              <form.Field name={member.id}>
-                {(field) => (
-                  <div
-                    className="flex flex-wrap gap-1.5"
-                    role="group"
-                    aria-label={`${member.name} — ${t('lineup.instruments')}`}
-                  >
-                    {instruments.map((instrument) => {
-                      const isHeld = field.state.value.includes(instrument.id);
-                      return (
-                        <button
-                          key={instrument.id}
-                          type="button"
-                          aria-pressed={isHeld}
-                          onClick={() =>
-                            field.handleChange(
-                              toggleInstrumentHeld(field.state.value, instrument.id),
-                            )
-                          }
-                          className={composeClassName(
-                            'inline-flex items-center min-h-11 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors',
-                            isHeld
-                              ? 'bg-accent-soft border-accent text-accent font-medium'
-                              : 'bg-bg border-line text-ink-500 hover:border-line-strong',
-                          )}
-                        >
-                          {instrument.name}
-                        </button>
-                      );
-                    })}
-                    {field.state.value.length === 0 ? (
-                      <span className="self-center text-xs italic text-ink-400 pl-1">
-                        {t('lineup.notPlaying')}
-                      </span>
-                    ) : null}
-                  </div>
-                )}
-              </form.Field>
-            </li>
-          ))}
-        </ul>
-        <div className="sticky bottom-0 z-10 -mx-4 px-4 py-3 mt-2 flex flex-wrap gap-2 justify-between border-t border-line bg-bg-elev">
+        <div className="flex-1 overflow-y-auto flex flex-col gap-3 p-4">
+          <p className="text-xs text-ink-500 m-0">{t('lineup.multiInstrumentHint')}</p>
+          <ul className="flex flex-col gap-3 m-0 p-0 list-none">
+            {members.map((member) => (
+              <li key={member.id} className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2">
+                  <MemberChip memberName={member.name} memberColor={member.color} size="sm" />
+                  <span className="text-[13px] text-ink-900 font-medium">{member.name}</span>
+                </div>
+                <form.Field name={member.id}>
+                  {(field) => (
+                    <div
+                      className="flex flex-wrap gap-1.5"
+                      role="group"
+                      aria-label={`${member.name} — ${t('lineup.instruments')}`}
+                    >
+                      {instruments.map((instrument) => {
+                        const isHeld = field.state.value.includes(instrument.id);
+                        return (
+                          <button
+                            key={instrument.id}
+                            type="button"
+                            aria-pressed={isHeld}
+                            onClick={() =>
+                              field.handleChange(
+                                toggleInstrumentHeld(field.state.value, instrument.id),
+                              )
+                            }
+                            className={composeClassName(
+                              'inline-flex items-center min-h-11 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors',
+                              isHeld
+                                ? 'bg-accent-soft border-accent text-accent font-medium'
+                                : 'bg-bg border-line text-ink-500 hover:border-line-strong',
+                            )}
+                          >
+                            {instrument.name}
+                          </button>
+                        );
+                      })}
+                      {field.state.value.length === 0 ? (
+                        <span className="self-center text-xs italic text-ink-400 pl-1">
+                          {t('lineup.notPlaying')}
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+                </form.Field>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="shrink-0 px-4 py-3 flex flex-wrap gap-2 justify-between border-t border-line bg-bg-elev">
           {defaultLineup === undefined ? (
             <span />
           ) : (

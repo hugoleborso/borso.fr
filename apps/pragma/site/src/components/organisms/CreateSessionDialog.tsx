@@ -17,6 +17,7 @@ import { ApiError } from '../../lib/api';
 import { openDialogOnAttach } from '../../lib/modal-dialog';
 import { useCreateSession } from '../../lib/queries/sessions';
 import { Button } from '../atoms/Button';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
 import {
@@ -179,7 +180,7 @@ export function CreateSessionDialog({
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
-              className="w-full bg-bg-elev border border-line rounded-md px-3 py-2 text-xs font-mono text-ink-700 outline-none focus:border-ink-700 resize-y"
+              className={composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y')}
               rows={3}
               maxLength={GEAR_MAX}
             />
@@ -304,6 +305,7 @@ export function CreateSessionDialog({
           size="sm"
           onClick={onClose}
           aria-label={t('common.cancel')}
+          className="min-w-11"
         >
           ×
         </Button>

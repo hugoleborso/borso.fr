@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   clampSceneFontSize,
+  clampSemitoneOffset,
   formatSemitoneOffset,
   SCENE_FONT_SIZE_MAX_PX,
   SCENE_FONT_SIZE_MIN_PX,
+  SCENE_TRANSPOSE_MAX_SEMITONES,
+  SCENE_TRANSPOSE_MIN_SEMITONES,
 } from './scene-view.core';
 
 // @FollowsBlueprint test-pure-unit
@@ -18,6 +21,21 @@ describe('clampSceneFontSize', () => {
 
   it('clamps above the ceiling', () => {
     expect(clampSceneFontSize(400)).toBe(SCENE_FONT_SIZE_MAX_PX);
+  });
+});
+
+describe('clampSemitoneOffset', () => {
+  it('keeps an offset inside the range that changes the chart', () => {
+    expect(clampSemitoneOffset(0)).toBe(0);
+    expect(clampSemitoneOffset(-3)).toBe(-3);
+  });
+
+  it('stops one step short of the octave going up', () => {
+    expect(clampSemitoneOffset(12)).toBe(SCENE_TRANSPOSE_MAX_SEMITONES);
+  });
+
+  it('stops one step short of the octave going down', () => {
+    expect(clampSemitoneOffset(-12)).toBe(SCENE_TRANSPOSE_MIN_SEMITONES);
   });
 });
 

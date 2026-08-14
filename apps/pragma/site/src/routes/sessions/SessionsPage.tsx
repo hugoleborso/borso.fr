@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { composeClassName } from '../../components/atoms/class-name.utils';
+import { BottomActionBar } from '../../components/molecules/BottomActionBar';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
@@ -46,22 +47,18 @@ export function SessionsPage(): JSX.Element {
 
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
-      <PageHeader
-        title={t('sessions.title')}
-        subtitle={t('sessions.subtitle')}
-        actions={
-          <>
-            <Button variant="accent" onClick={() => setCreating('concert')}>
-              <Icon name="plus" size={14} />
-              {t('sessions.kindConcert')}
-            </Button>
-            <Button variant="default" onClick={() => setCreating('practice')}>
-              <Icon name="plus" size={14} />
-              {t('sessions.kindPractice')}
-            </Button>
-          </>
-        }
-      />
+      <PageHeader title={t('sessions.title')} subtitle={t('sessions.subtitle')} />
+
+      <BottomActionBar>
+        <Button variant="default" onClick={() => setCreating('practice')}>
+          <Icon name="plus" size={14} />
+          {t('sessions.kindPractice')}
+        </Button>
+        <Button variant="accent" onClick={() => setCreating('concert')}>
+          <Icon name="plus" size={14} />
+          {t('sessions.kindConcert')}
+        </Button>
+      </BottomActionBar>
 
       {error === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">

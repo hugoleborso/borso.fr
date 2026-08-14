@@ -2,8 +2,12 @@
  * Sticky pill row on the setlist editor — one pill per band member
  * plus a leading "All members" pill. Tapping a member pill enters
  * single-member mode; tapping "All members" returns to the full
- * setlist. The row scrolls horizontally on narrow viewports so the
- * sticky behaviour stays one line tall.
+ * setlist.
+ *
+ * The row wraps rather than scrolling sideways: four members and the
+ * "All members" pill need 455 px against a 343 px viewport, and a
+ * sideways scroll with no fade and no scrollbar left the last member
+ * off screen, so filtering by that person looked impossible.
  */
 
 import type { JSX } from 'react';
@@ -40,7 +44,7 @@ export function MemberFilterPills({
   const isAllActive = selectedMemberId === null;
   return (
     <div
-      className={composeClassName('flex gap-2 overflow-x-auto whitespace-nowrap py-2', className)}
+      className={composeClassName('flex flex-wrap gap-2', className)}
       role="tablist"
       aria-label={t('lineup.filterByMember')}
     >

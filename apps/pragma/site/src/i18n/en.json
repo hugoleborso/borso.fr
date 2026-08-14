@@ -46,7 +46,8 @@
     "offlineHint": "catalog, charts and the next-concert setlist remain available. All edits are disabled.",
     "search": "Search",
     "all": "All",
-    "actions": "Actions"
+    "actions": "Actions",
+    "loadFailed": "This page could not be loaded. Check the connection, then try again."
   },
   "scaffold": {
     "title": "Pragma — scaffold ready",
@@ -122,6 +123,7 @@
     "mastery": "Mastery",
     "playedRecently": "Played recently",
     "backToCatalog": "Catalog",
+    "songNotFound": "This song is no longer in the catalog.",
     "deleteConfirm": "Delete this song? Its chart, notes and links go with it.",
     "uploadPrompt": "Drop a file or click to pick",
     "uploadHint": "PDF, PNG, JPEG, WebP or HEIC up to {{maxMb}} MB",
@@ -160,6 +162,7 @@
     "newSession": "New session",
     "kindConcert": "Concert",
     "kindPractice": "Practice",
+    "sessionNotFound": "This session is no longer in the schedule.",
     "date": "Date",
     "venue": "Venue",
     "capacity": "Capacity",
@@ -217,7 +220,15 @@
     "transitionNobody": "nobody keeps an instrument across these two songs",
     "transitionAddNote": "Add a note on this transition",
     "crumb": "Setlist",
-    "removeConfirm": "Remove “{{title}}” from this set?"
+    "removeConfirm": "Remove “{{title}}” from this set?",
+    "failure": {
+      "load": "Could not load this set. Check the connection and try again.",
+      "add": "The song was not added. Check the connection and try again.",
+      "remove": "The song was not removed. Check the connection and try again.",
+      "reorder": "The new order was not saved. Check the connection and try again.",
+      "update": "The change was not saved. Check the connection and try again.",
+      "copyOrder": "The running order could not be copied to the clipboard."
+    }
   },
   "scene": {
     "title": "Scene Mode",

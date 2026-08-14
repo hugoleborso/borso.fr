@@ -3,6 +3,11 @@
  * showing a label + mono count. Matches the prototype's
  * Statuses row on the Catalog screen. Selection is exclusive
  * (radio-like): exactly one option is active at a time.
+ *
+ * The row wraps rather than scrolling sideways: at 375 px the five
+ * statuses and their counts need 457 px, and a sideways scroll with no
+ * fade, no arrow and no scrollbar left the last status entirely off
+ * screen and unreachable, which reads as a filter the app does not have.
  */
 
 import { composeClassName } from '../atoms/class-name.utils';
@@ -30,7 +35,7 @@ export function FilterPillGroup<TValue extends string>({
   return (
     <div
       className={composeClassName(
-        'flex max-w-full gap-1 p-[3px] bg-bg-sunk rounded-lg overflow-x-auto',
+        'flex flex-wrap max-w-full gap-1 p-[3px] bg-bg-sunk rounded-lg',
         className,
       )}
       role="tablist"

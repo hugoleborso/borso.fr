@@ -10,6 +10,12 @@
  *
  * The created song is a stub — title only — because the point is to get
  * the setlist written; the catalog page fills the rest in later.
+ *
+ * The create action sits directly under the search field, and the field
+ * is wrapped in a form so the keyboard's own return key runs it. In the
+ * sheet's footer it was 447 px below the last line of content, which on
+ * a phone is behind the keyboard the title was just typed with, and
+ * pressing return did nothing at all.
  */
 
 import { type JSX, useState } from 'react';
@@ -92,7 +98,14 @@ function SetlistSongPickerContent({ songs, onPick, onClose }: SetlistSongPickerP
           {t(closeLabelKey, { count: addedCount })}
         </Button>
       </div>
-      <div className="px-4 pt-3 pb-2">
+      <form
+        className="flex flex-col gap-2 px-4 pt-3 pb-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!isOfferingCreate) return;
+          void createAndAddSong();
+        }}
+      >
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none">
             <Icon name="search" />
@@ -106,7 +119,13 @@ function SetlistSongPickerContent({ songs, onPick, onClose }: SetlistSongPickerP
             className="pl-9"
           />
         </div>
-      </div>
+        {isOfferingCreate ? (
+          <Button type="submit" variant="accent" disabled={createSong.isPending}>
+            <Icon name="plus" size={14} />
+            {t('setlist.addSongCreate', { title: query.trim() })}
+          </Button>
+        ) : null}
+      </form>
       {localError === null ? null : (
         <p className="px-4 text-danger text-sm" role="alert">
           {localError}
@@ -142,19 +161,6 @@ function SetlistSongPickerContent({ songs, onPick, onClose }: SetlistSongPickerP
           <li className="px-3 py-4 text-sm italic text-ink-400">{t('setlist.addSongNoMatch')}</li>
         ) : null}
       </ul>
-      {isOfferingCreate ? (
-        <div className="border-t border-line p-3">
-          <Button
-            type="button"
-            variant="accent"
-            onClick={() => void createAndAddSong()}
-            disabled={createSong.isPending}
-          >
-            <Icon name="plus" size={14} />
-            {t('setlist.addSongCreate', { title: query.trim() })}
-          </Button>
-        </div>
-      ) : null}
     </dialog>
   );
 }
