@@ -1,0 +1,6255 @@
+{
+  "application": "pragma",
+  "containers": [
+    {
+      "id": "api",
+      "name": "HTTP API",
+      "fileCount": 62
+    },
+    {
+      "id": "database",
+      "name": "Application database",
+      "fileCount": 0
+    },
+    {
+      "id": "domain",
+      "name": "Shared domain rules",
+      "fileCount": 5
+    },
+    {
+      "id": "infrastructure",
+      "name": "Infrastructure definition",
+      "fileCount": 2
+    },
+    {
+      "id": "service-worker",
+      "name": "Service worker",
+      "fileCount": 0
+    },
+    {
+      "id": "site",
+      "name": "Single page application",
+      "fileCount": 174
+    },
+    {
+      "id": "uploads-bucket",
+      "name": "Chord chart bucket",
+      "fileCount": 0
+    }
+  ],
+  "externals": [
+    {
+      "id": "aws-dsql",
+      "name": "Aurora DSQL",
+      "reachedFrom": [
+        "apps/pragma/api/src/database/client.ts"
+      ]
+    },
+    {
+      "id": "aws-s3",
+      "name": "Amazon S3",
+      "reachedFrom": [
+        "apps/pragma/api/src/uploads/uploads.repository.ts"
+      ]
+    },
+    {
+      "id": "browser-dialog",
+      "name": "HTMLDialogElement",
+      "reachedFrom": [
+        "apps/pragma/site/src/lib/modal-dialog.adapter.ts"
+      ]
+    },
+    {
+      "id": "browser-local-storage",
+      "name": "localStorage",
+      "reachedFrom": [
+        "apps/pragma/site/src/i18n/i18n.setup.ts",
+        "apps/pragma/site/src/lib/session-marker.adapter.ts"
+      ]
+    },
+    {
+      "id": "browser-media-query",
+      "name": "matchMedia",
+      "reachedFrom": [
+        "apps/pragma/site/src/components/molecules/media-query-matching.hook.ts"
+      ]
+    },
+    {
+      "id": "browser-network-status",
+      "name": "navigator.onLine",
+      "reachedFrom": [
+        "apps/pragma/site/src/components/molecules/online-status.hook.ts"
+      ]
+    },
+    {
+      "id": "browser-service-worker",
+      "name": "Service worker registration",
+      "reachedFrom": [
+        "apps/pragma/site/src/sw/service-worker.setup.ts"
+      ]
+    },
+    {
+      "id": "deezer",
+      "name": "Deezer",
+      "reachedFrom": [
+        "apps/pragma/site/src/lib/embed.utils.ts"
+      ]
+    },
+    {
+      "id": "musicbrainz",
+      "name": "MusicBrainz",
+      "reachedFrom": [
+        "apps/pragma/api/src/songs/songs.service.ts"
+      ]
+    },
+    {
+      "id": "soundcloud",
+      "name": "SoundCloud",
+      "reachedFrom": [
+        "apps/pragma/site/src/lib/embed.utils.ts"
+      ]
+    },
+    {
+      "id": "soundslice",
+      "name": "Soundslice",
+      "reachedFrom": [
+        "apps/pragma/site/src/lib/embed.utils.ts"
+      ]
+    },
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "reachedFrom": [
+        "apps/pragma/site/src/lib/embed.utils.ts"
+      ]
+    },
+    {
+      "id": "vimeo",
+      "name": "Vimeo",
+      "reachedFrom": [
+        "apps/pragma/site/src/lib/embed.utils.ts"
+      ]
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "reachedFrom": [
+        "apps/pragma/site/src/lib/embed.utils.ts"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "apps/pragma/api/src/__test/test-seed.controller.ts",
+      "container": "api",
+      "layer": "controller",
+      "context": "__test",
+      "feature": null,
+      "exports": [
+        "buildTestSeedRouter"
+      ],
+      "imports": [
+        "apps/pragma/api/src/__test/test-seed.service.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "controller-dispatch"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/__test/test-seed.core.ts",
+      "container": "api",
+      "layer": "core",
+      "context": "__test",
+      "feature": null,
+      "exports": [
+        "buildSeedLineup",
+        "selectAdminCredentialsState",
+        "selectInstrumentIds"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-projection",
+        "core-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/__test/test-seed.repository.ts",
+      "container": "api",
+      "layer": "repository",
+      "context": "__test",
+      "feature": null,
+      "exports": [
+        "deleteAllDomainRows"
+      ],
+      "imports": [
+        "apps/pragma/api/src/bars/bars.schema.ts",
+        "apps/pragma/api/src/database/client.ts",
+        "apps/pragma/api/src/instruments/instruments.schema.ts",
+        "apps/pragma/api/src/mastery/mastery.schema.ts",
+        "apps/pragma/api/src/members/members.schema.ts",
+        "apps/pragma/api/src/sessions/sessions.schema.ts",
+        "apps/pragma/api/src/setlists/setlists.schema.ts",
+        "apps/pragma/api/src/songs/songs.schema.ts",
+        "apps/pragma/api/src/transitions/transitions.schema.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "repository-query"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/__test/test-seed.service.ts",
+      "container": "api",
+      "layer": "service",
+      "context": "__test",
+      "feature": null,
+      "exports": [
+        "seedPreviewFixture"
+      ],
+      "imports": [
+        "apps/pragma/api/src/__test/test-seed.core.ts",
+        "apps/pragma/api/src/__test/test-seed.repository.ts",
+        "apps/pragma/api/src/auth/auth.service.ts",
+        "apps/pragma/api/src/instruments/instruments.service.ts",
+        "apps/pragma/api/src/members/members.service.ts",
+        "apps/pragma/api/src/sessions/sessions.service.ts",
+        "apps/pragma/api/src/setlists/setlists.service.ts",
+        "apps/pragma/api/src/songs/songs.service.ts",
+        "apps/pragma/api/src/transitions/transitions.service.ts",
+        "apps/pragma/domain/instrument.core.ts",
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/app.ts",
+      "container": "api",
+      "layer": "entrypoint",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "createApp"
+      ],
+      "imports": [
+        "apps/pragma/api/src/__test/test-seed.controller.ts",
+        "apps/pragma/api/src/auth/auth.controller.ts",
+        "apps/pragma/api/src/bars/bars.controller.ts",
+        "apps/pragma/api/src/instruments/instruments.controller.ts",
+        "apps/pragma/api/src/mastery/mastery.controller.ts",
+        "apps/pragma/api/src/members/members.controller.ts",
+        "apps/pragma/api/src/sessions/sessions.controller.ts",
+        "apps/pragma/api/src/setlists/setlists.controller.ts",
+        "apps/pragma/api/src/songs/songs.controller.ts",
+        "apps/pragma/api/src/transitions/transitions.controller.ts",
+        "apps/pragma/api/src/uploads/uploads.controller.ts"
+      ],
+      "blueprints": [
+        "api-composition-root"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/auth/auth.controller.ts",
+      "container": "api",
+      "layer": "controller",
+      "context": "auth",
+      "feature": null,
+      "exports": [
+        "buildAuthRouter"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/auth.schema.ts",
+        "apps/pragma/api/src/auth/auth.service.ts",
+        "apps/pragma/api/src/auth/rate-limit.utils.ts",
+        "apps/pragma/api/src/auth/session-cookie.utils.ts",
+        "apps/pragma/api/src/auth/shared-password.middleware.ts"
+      ],
+      "blueprints": [
+        "controller-split-routers"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/auth/auth.repository.ts",
+      "container": "api",
+      "layer": "repository",
+      "context": "auth",
+      "feature": null,
+      "exports": [
+        "insertInitialAppConfig",
+        "loadAppConfig",
+        "updateAppConfig"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/auth.schema.ts",
+        "apps/pragma/api/src/database/client.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "repository-query"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/auth/auth.schema.ts",
+      "container": "api",
+      "layer": "schema",
+      "context": "auth",
+      "feature": null,
+      "exports": [
+        "appConfigTable",
+        "authAttemptTable",
+        "credentialsSchema"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "schema-table-and-input"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/auth/auth.service.ts",
+      "container": "api",
+      "layer": "service",
+      "context": "auth",
+      "feature": null,
+      "exports": [
+        "attemptLogin",
+        "bootstrapAuth",
+        "getAppConfig",
+        "rotatePassword"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/auth.repository.ts",
+        "apps/pragma/api/src/auth/ip-hash.utils.ts",
+        "apps/pragma/api/src/auth/rate-limit.utils.ts",
+        "apps/pragma/api/src/auth/session-cookie.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/auth/ip-hash.utils.ts",
+      "container": "api",
+      "layer": "utils",
+      "context": "auth",
+      "feature": null,
+      "exports": [
+        "UNKNOWN_IP_PLACEHOLDER",
+        "hashIp",
+        "readClientIp"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/auth/rate-limit.utils.ts",
+      "container": "api",
+      "layer": "utils",
+      "context": "auth",
+      "feature": null,
+      "exports": [
+        "RATE_LIMIT_MAX_ATTEMPTS",
+        "RATE_LIMIT_WINDOW_MS",
+        "createBucketStore",
+        "isRateLimited",
+        "recordAttempt"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/auth/session-cookie.utils.ts",
+      "container": "api",
+      "layer": "utils",
+      "context": "auth",
+      "feature": null,
+      "exports": [
+        "SESSION_COOKIE_NAME",
+        "SESSION_TTL_MS",
+        "buildCookie",
+        "verifyCookie"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/auth/shared-password.middleware.ts",
+      "container": "api",
+      "layer": "middleware",
+      "context": "auth",
+      "feature": null,
+      "exports": [
+        "requireSharedPasswordSession"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/auth.service.ts",
+        "apps/pragma/api/src/auth/session-cookie.utils.ts"
+      ],
+      "blueprints": [
+        "middleware-session-gate"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/bars/bars.controller.ts",
+      "container": "api",
+      "layer": "controller",
+      "context": "bars",
+      "feature": null,
+      "exports": [
+        "buildBarsRouter"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/shared-password.middleware.ts",
+        "apps/pragma/api/src/bars/bars.schema.ts",
+        "apps/pragma/api/src/bars/bars.service.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "controller-dispatch"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/bars/bars.repository.ts",
+      "container": "api",
+      "layer": "repository",
+      "context": "bars",
+      "feature": null,
+      "exports": [
+        "deleteBar",
+        "findBarById",
+        "insertBar",
+        "listBars",
+        "updateBar"
+      ],
+      "imports": [
+        "apps/pragma/api/src/bars/bars.schema.ts",
+        "apps/pragma/api/src/database/client.ts",
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "repository-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/bars/bars.schema.ts",
+      "container": "api",
+      "layer": "schema",
+      "context": "bars",
+      "feature": null,
+      "exports": [
+        "BAR_STATUSES",
+        "barCreateSchema",
+        "barIdParamSchema",
+        "barTable",
+        "barUpdateSchema"
+      ],
+      "imports": [],
+      "blueprints": [
+        "schema-table-and-input"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/bars/bars.service.ts",
+      "container": "api",
+      "layer": "service",
+      "context": "bars",
+      "feature": null,
+      "exports": [
+        "createBar",
+        "getBarById",
+        "getBarsSortedByName",
+        "patchBar",
+        "removeBar"
+      ],
+      "imports": [
+        "apps/pragma/api/src/bars/bars.repository.ts",
+        "apps/pragma/api/src/bars/bars.schema.ts",
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts"
+      ],
+      "blueprints": [
+        "service-crud-update"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/database/client.ts",
+      "container": "api",
+      "layer": "database",
+      "context": "database",
+      "feature": null,
+      "exports": [
+        "getDatabase"
+      ],
+      "imports": [
+        "apps/pragma/api/src/database/schema.ts"
+      ],
+      "blueprints": [
+        "database-client"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/database/schema.ts",
+      "container": "api",
+      "layer": "database",
+      "context": "database",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "database-schema-barrel"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+      "container": "api",
+      "layer": "core",
+      "context": "helpers",
+      "feature": null,
+      "exports": [
+        "selectDeletionOutcome"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "helper-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/instruments/instruments.controller.ts",
+      "container": "api",
+      "layer": "controller",
+      "context": "instruments",
+      "feature": null,
+      "exports": [
+        "buildInstrumentsRouter"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/shared-password.middleware.ts",
+        "apps/pragma/api/src/instruments/instruments.schema.ts",
+        "apps/pragma/api/src/instruments/instruments.service.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "controller-dispatch"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/instruments/instruments.repository.ts",
+      "container": "api",
+      "layer": "repository",
+      "context": "instruments",
+      "feature": null,
+      "exports": [
+        "deleteInstrument",
+        "insertInstrument",
+        "listInstruments",
+        "updateInstrument"
+      ],
+      "imports": [
+        "apps/pragma/api/src/database/client.ts",
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/instruments/instruments.schema.ts",
+        "apps/pragma/domain/instrument.core.ts"
+      ],
+      "blueprints": [
+        "repository-projection"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/instruments/instruments.schema.ts",
+      "container": "api",
+      "layer": "schema",
+      "context": "instruments",
+      "feature": null,
+      "exports": [
+        "createInstrumentSchema",
+        "instrumentFamilySchema",
+        "instrumentIdParamSchema",
+        "instrumentTable",
+        "updateInstrumentSchema"
+      ],
+      "imports": [
+        "apps/pragma/domain/instrument.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/instruments/instruments.service.ts",
+      "container": "api",
+      "layer": "service",
+      "context": "instruments",
+      "feature": null,
+      "exports": [
+        "createInstrument",
+        "getInstrumentsSorted",
+        "patchInstrument",
+        "removeInstrument"
+      ],
+      "imports": [
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/instruments/instruments.repository.ts",
+        "apps/pragma/domain/instrument.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "service-crud-update"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/main.dev.ts",
+      "container": "api",
+      "layer": "entrypoint",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/pragma/api/src/app.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "api-dev-entrypoint"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/main.ts",
+      "container": "api",
+      "layer": "entrypoint",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "handler"
+      ],
+      "imports": [
+        "apps/pragma/api/src/app.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "api-lambda-entrypoint"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/mastery/mastery.controller.ts",
+      "container": "api",
+      "layer": "controller",
+      "context": "mastery",
+      "feature": null,
+      "exports": [
+        "buildMasteryRouter"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/shared-password.middleware.ts",
+        "apps/pragma/api/src/mastery/mastery.schema.ts",
+        "apps/pragma/api/src/mastery/mastery.service.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "controller-dispatch"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/mastery/mastery.core.ts",
+      "container": "api",
+      "layer": "core",
+      "context": "mastery",
+      "feature": null,
+      "exports": [
+        "effective",
+        "isRedundantOverride",
+        "meanForSong"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-decision"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/mastery/mastery.repository.ts",
+      "container": "api",
+      "layer": "repository",
+      "context": "mastery",
+      "feature": null,
+      "exports": [
+        "deleteMasteryDefault",
+        "deleteMasteryOverride",
+        "listMasteryDefaults",
+        "listMasteryOverridesForSong",
+        "upsertMasteryDefault",
+        "upsertMasteryOverride"
+      ],
+      "imports": [
+        "apps/pragma/api/src/database/client.ts",
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/mastery/mastery.schema.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "repository-idempotent-upsert",
+        "repository-query"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/mastery/mastery.schema.ts",
+      "container": "api",
+      "layer": "schema",
+      "context": "mastery",
+      "feature": null,
+      "exports": [
+        "masteryDefaultPathSchema",
+        "masteryDefaultRowSchema",
+        "masteryDefaultTable",
+        "masteryOverridePathSchema",
+        "masteryOverrideRowSchema",
+        "masteryOverrideTable",
+        "masterySongIdParamSchema"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "schema-table-and-input"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/mastery/mastery.service.ts",
+      "container": "api",
+      "layer": "service",
+      "context": "mastery",
+      "feature": null,
+      "exports": [
+        "getMasteryDefaults",
+        "getMasteryOverridesForSong",
+        "removeMasteryDefault",
+        "removeMasteryOverride",
+        "saveMasteryDefault",
+        "saveMasteryOverride"
+      ],
+      "imports": [
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/mastery/mastery.repository.ts"
+      ],
+      "blueprints": [
+        "service-passthrough"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/members/lineup-scrub.core.ts",
+      "container": "api",
+      "layer": "core",
+      "context": "members",
+      "feature": null,
+      "exports": [
+        "scrubMemberFromLineup"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/members/member-palette.utils.ts",
+      "container": "api",
+      "layer": "utils",
+      "context": "members",
+      "feature": null,
+      "exports": [
+        "MEMBER_PALETTE",
+        "pickNextPaletteHex",
+        "pickPaletteHex"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/members/members.controller.ts",
+      "container": "api",
+      "layer": "controller",
+      "context": "members",
+      "feature": null,
+      "exports": [
+        "buildMembersRouter"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/shared-password.middleware.ts",
+        "apps/pragma/api/src/members/members.schema.ts",
+        "apps/pragma/api/src/members/members.service.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "controller-dispatch"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/members/members.repository.ts",
+      "container": "api",
+      "layer": "repository",
+      "context": "members",
+      "feature": null,
+      "exports": [
+        "areInstrumentsKnown",
+        "deleteMemberWithLinks",
+        "findMemberById",
+        "insertMember",
+        "listInstrumentsForMember",
+        "listMembers",
+        "replaceMemberInstruments",
+        "updateMember"
+      ],
+      "imports": [
+        "apps/pragma/api/src/database/client.ts",
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/instruments/instruments.schema.ts",
+        "apps/pragma/api/src/members/lineup-scrub.core.ts",
+        "apps/pragma/api/src/members/members.schema.ts",
+        "apps/pragma/api/src/setlists/setlists.schema.ts",
+        "apps/pragma/api/src/songs/songs.schema.ts",
+        "apps/pragma/domain/instrument.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "repository-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/members/members.schema.ts",
+      "container": "api",
+      "layer": "schema",
+      "context": "members",
+      "feature": null,
+      "exports": [
+        "avatarS3KeySchema",
+        "colorSchema",
+        "createMemberSchema",
+        "firstNameSchema",
+        "memberIdParamSchema",
+        "memberInstrumentAssignmentSchema",
+        "memberInstrumentTable",
+        "memberTable",
+        "updateMemberSchema"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/members/members.service.ts",
+      "container": "api",
+      "layer": "service",
+      "context": "members",
+      "feature": null,
+      "exports": [
+        "assignInstrumentsToMember",
+        "createMember",
+        "getMemberInstruments",
+        "getMembersSortedByFirstName",
+        "patchMember",
+        "removeMember"
+      ],
+      "imports": [
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/members/member-palette.utils.ts",
+        "apps/pragma/api/src/members/members.repository.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "service-crud-update"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/sessions/offline-manifest.core.ts",
+      "container": "api",
+      "layer": "core",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "buildNextSessionOfflineManifest"
+      ],
+      "imports": [],
+      "blueprints": [
+        "core-projection"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/sessions/sessions.controller.ts",
+      "container": "api",
+      "layer": "controller",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "buildOfflineManifestRouter",
+        "buildSessionsRouter"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/shared-password.middleware.ts",
+        "apps/pragma/api/src/sessions/sessions.schema.ts",
+        "apps/pragma/api/src/sessions/sessions.service.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "controller-dispatch"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/sessions/sessions.core.ts",
+      "container": "api",
+      "layer": "core",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "buildSessionInsertShape",
+        "encodeSessionInsert"
+      ],
+      "imports": [
+        "apps/pragma/api/src/sessions/sessions.schema.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/sessions/sessions.repository.ts",
+      "container": "api",
+      "layer": "repository",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "deleteSessionWithCascade",
+        "findSessionById",
+        "insertSession",
+        "listSessions",
+        "updateSession"
+      ],
+      "imports": [
+        "apps/pragma/api/src/database/client.ts",
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/sessions/sessions.core.ts",
+        "apps/pragma/api/src/sessions/sessions.schema.ts",
+        "apps/pragma/api/src/setlists/setlists.schema.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "repository-json-column",
+        "repository-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/sessions/sessions.schema.ts",
+      "container": "api",
+      "layer": "schema",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "concertCreateSchema",
+        "concertUpdateSchema",
+        "friendsCountSchema",
+        "practiceCreateSchema",
+        "practiceUpdateSchema",
+        "sessionCreateSchema",
+        "sessionIdParamSchema",
+        "sessionPersistedUpdateSchema",
+        "sessionTable",
+        "sessionUpdateSchema"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "schema-table-and-input"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/sessions/sessions.service.ts",
+      "container": "api",
+      "layer": "service",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "createSession",
+        "getNextSessionOfflineManifest",
+        "getSessionById",
+        "getSessions",
+        "patchSession",
+        "removeSession"
+      ],
+      "imports": [
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/sessions/offline-manifest.core.ts",
+        "apps/pragma/api/src/sessions/sessions.core.ts",
+        "apps/pragma/api/src/sessions/sessions.repository.ts",
+        "apps/pragma/api/src/sessions/sessions.schema.ts",
+        "apps/pragma/api/src/songs/songs.service.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "service-crud-update",
+        "service-read-model"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/setlists/setlists.controller.ts",
+      "container": "api",
+      "layer": "controller",
+      "context": "setlists",
+      "feature": null,
+      "exports": [
+        "buildSetlistsRouter"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/shared-password.middleware.ts",
+        "apps/pragma/api/src/setlists/setlists.schema.ts",
+        "apps/pragma/api/src/setlists/setlists.service.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "controller-dispatch"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/setlists/setlists.repository.ts",
+      "container": "api",
+      "layer": "repository",
+      "context": "setlists",
+      "feature": null,
+      "exports": [
+        "deleteEntry",
+        "findSetlistBySession",
+        "insertEntry",
+        "insertSetlist",
+        "listEntries",
+        "listEntryIds",
+        "setEntryPosition",
+        "updateEntry"
+      ],
+      "imports": [
+        "apps/pragma/api/src/database/client.ts",
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/setlists/setlists.schema.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "repository-json-column",
+        "repository-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/setlists/setlists.schema.ts",
+      "container": "api",
+      "layer": "schema",
+      "context": "setlists",
+      "feature": null,
+      "exports": [
+        "lineupOverrideSchema",
+        "setlistBySessionParamSchema",
+        "setlistCreateSchema",
+        "setlistEntryCreateSchema",
+        "setlistEntryIdParamSchema",
+        "setlistEntryTable",
+        "setlistEntryUpdateSchema",
+        "setlistIdParamSchema",
+        "setlistReorderSchema",
+        "setlistTable"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "schema-table-and-input"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/setlists/setlists.service.ts",
+      "container": "api",
+      "layer": "service",
+      "context": "setlists",
+      "feature": null,
+      "exports": [
+        "appendEntry",
+        "createSetlistForSession",
+        "getEntries",
+        "getSetlistBySession",
+        "patchEntry",
+        "removeEntryAndCompact",
+        "reorderEntries"
+      ],
+      "imports": [
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/setlists/setlists.repository.ts",
+        "apps/pragma/api/src/setlists/setlists.schema.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "service-crud-update"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/songs/musicbrainz.core.ts",
+      "container": "api",
+      "layer": "core",
+      "context": "songs",
+      "feature": null,
+      "exports": [
+        "expiredSearchCacheKeys",
+        "mapMusicBrainzRecordings"
+      ],
+      "imports": [],
+      "blueprints": [
+        "core-parse-untrusted"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/songs/songs.controller.ts",
+      "container": "api",
+      "layer": "controller",
+      "context": "songs",
+      "feature": null,
+      "exports": [
+        "buildSongsRouter"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/shared-password.middleware.ts",
+        "apps/pragma/api/src/songs/songs.schema.ts",
+        "apps/pragma/api/src/songs/songs.service.ts"
+      ],
+      "blueprints": [
+        "controller-dispatch"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/songs/songs.repository.ts",
+      "container": "api",
+      "layer": "repository",
+      "context": "songs",
+      "feature": null,
+      "exports": [
+        "deleteSongWithCascade",
+        "findSongById",
+        "insertSong",
+        "listSongsNewestFirst",
+        "updateSong"
+      ],
+      "imports": [
+        "apps/pragma/api/src/database/client.ts",
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/mastery/mastery.schema.ts",
+        "apps/pragma/api/src/setlists/setlists.schema.ts",
+        "apps/pragma/api/src/songs/songs.schema.ts"
+      ],
+      "blueprints": [
+        "repository-json-column"
+      ],
+      "followsBlueprints": [
+        "repository-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/songs/songs.schema.ts",
+      "container": "api",
+      "layer": "schema",
+      "context": "songs",
+      "feature": null,
+      "exports": [
+        "ENERGY_MAX",
+        "ENERGY_MIN",
+        "LINK_PROVIDERS",
+        "SONG_STATUSES",
+        "chordChartSchema",
+        "defaultLineupSchema",
+        "externalSearchQuerySchema",
+        "songCreateInputSchema",
+        "songExternalLinkSchema",
+        "songIdParamSchema",
+        "songIsrcsRowSchema",
+        "songLinksRowSchema",
+        "songTable",
+        "songTagsRowSchema",
+        "songUpdateInputSchema"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "schema-table-and-input"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/songs/songs.service.ts",
+      "container": "api",
+      "layer": "service",
+      "context": "songs",
+      "feature": null,
+      "exports": [
+        "createSong",
+        "getSongById",
+        "getSongs",
+        "patchSong",
+        "removeSong",
+        "searchExternal"
+      ],
+      "imports": [
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/songs/musicbrainz.core.ts",
+        "apps/pragma/api/src/songs/songs.repository.ts",
+        "apps/pragma/api/src/songs/songs.schema.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "service-crud-update"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/transitions/transitions.controller.ts",
+      "container": "api",
+      "layer": "controller",
+      "context": "transitions",
+      "feature": null,
+      "exports": [
+        "buildTransitionCommentsRouter"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/shared-password.middleware.ts",
+        "apps/pragma/api/src/transitions/transitions.schema.ts",
+        "apps/pragma/api/src/transitions/transitions.service.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "controller-dispatch"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/transitions/transitions.repository.ts",
+      "container": "api",
+      "layer": "repository",
+      "context": "transitions",
+      "feature": null,
+      "exports": [
+        "deleteTransitionComment",
+        "findTransitionComment",
+        "listTransitionComments",
+        "upsertTransitionComment"
+      ],
+      "imports": [
+        "apps/pragma/api/src/database/client.ts",
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/transitions/transitions.schema.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "repository-idempotent-upsert",
+        "repository-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/transitions/transitions.schema.ts",
+      "container": "api",
+      "layer": "schema",
+      "context": "transitions",
+      "feature": null,
+      "exports": [
+        "transitionCommentBodySchema",
+        "transitionCommentTable",
+        "transitionPairParamSchema"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "schema-table-and-input"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/transitions/transitions.service.ts",
+      "container": "api",
+      "layer": "service",
+      "context": "transitions",
+      "feature": null,
+      "exports": [
+        "getTransitionComment",
+        "getTransitionComments",
+        "removeTransitionComment",
+        "saveTransitionComment"
+      ],
+      "imports": [
+        "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/transitions/transitions.repository.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "service-passthrough"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/uploads/uploads.controller.ts",
+      "container": "api",
+      "layer": "controller",
+      "context": "uploads",
+      "feature": null,
+      "exports": [
+        "buildUploadsRouter"
+      ],
+      "imports": [
+        "apps/pragma/api/src/auth/shared-password.middleware.ts",
+        "apps/pragma/api/src/uploads/uploads.schema.ts",
+        "apps/pragma/api/src/uploads/uploads.service.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "controller-dispatch"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/uploads/uploads.core.ts",
+      "container": "api",
+      "layer": "core",
+      "context": "uploads",
+      "feature": null,
+      "exports": [
+        "buildChartObjectKey",
+        "extensionForContentType"
+      ],
+      "imports": [
+        "apps/pragma/api/src/uploads/uploads.types.ts",
+        "apps/pragma/api/src/uploads/uploads.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-lookup-table"
+      ]
+    },
+    {
+      "path": "apps/pragma/api/src/uploads/uploads.repository.ts",
+      "container": "api",
+      "layer": "repository",
+      "context": "uploads",
+      "feature": null,
+      "exports": [
+        "UploadsConfigError",
+        "presignGetObject",
+        "presignPutObject"
+      ],
+      "imports": [],
+      "blueprints": [
+        "repository-external-service"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/uploads/uploads.schema.ts",
+      "container": "api",
+      "layer": "schema",
+      "context": "uploads",
+      "feature": null,
+      "exports": [
+        "signGetInputSchema",
+        "signUploadInputSchema"
+      ],
+      "imports": [
+        "apps/pragma/api/src/uploads/uploads.types.ts"
+      ],
+      "blueprints": [
+        "schema-input-only"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/uploads/uploads.service.ts",
+      "container": "api",
+      "layer": "service",
+      "context": "uploads",
+      "feature": null,
+      "exports": [
+        "mintChartGetUrl",
+        "mintChartUpload"
+      ],
+      "imports": [
+        "apps/pragma/api/src/uploads/uploads.core.ts",
+        "apps/pragma/api/src/uploads/uploads.repository.ts",
+        "apps/pragma/api/src/uploads/uploads.types.ts",
+        "apps/pragma/api/src/uploads/uploads.types.ts"
+      ],
+      "blueprints": [
+        "service-clock-injected"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/api/src/uploads/uploads.types.ts",
+      "container": "api",
+      "layer": "types",
+      "context": "uploads",
+      "feature": null,
+      "exports": [
+        "ALLOWED_UPLOAD_CONTENT_TYPES",
+        "CHART_OBJECT_PREFIX",
+        "MAX_UPLOAD_BYTES",
+        "UPLOAD_URL_EXPIRES_SECONDS"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/cdk/bin/cdk.ts",
+      "container": "cdk",
+      "layer": "entrypoint",
+      "context": "cdk",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [
+        "cdk-app-entrypoint"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/cdk/lib/stack.ts",
+      "container": "cdk",
+      "layer": "entrypoint",
+      "context": "cdk",
+      "feature": null,
+      "exports": [
+        "buildPragmaAppStack"
+      ],
+      "imports": [],
+      "blueprints": [
+        "app-cdk-stack"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/domain/bar-staleness.core.ts",
+      "container": "domain",
+      "layer": "core",
+      "context": "domain",
+      "feature": null,
+      "exports": [
+        "STALE_BAR_DEFAULT_THRESHOLD_DAYS",
+        "countStale",
+        "isStale"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-decision"
+      ]
+    },
+    {
+      "path": "apps/pragma/domain/instrument.core.ts",
+      "container": "domain",
+      "layer": "core",
+      "context": "domain",
+      "feature": null,
+      "exports": [
+        "DEFAULT_INSTRUMENT_FAMILY",
+        "INSTRUMENT_FAMILIES",
+        "familyFromHarmonicFlag",
+        "isInstrumentFamily",
+        "resolveInstrumentFamily"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/domain/lineup.core.ts",
+      "container": "domain",
+      "layer": "core",
+      "context": "domain",
+      "feature": null,
+      "exports": [
+        "instrumentedMembers",
+        "instrumentsHeldBy",
+        "memberInstrumentPairs",
+        "normalizeLineup",
+        "resolveLineup"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-projection",
+        "core-projection",
+        "core-projection",
+        "core-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/domain/tonality.core.ts",
+      "container": "domain",
+      "layer": "core",
+      "context": "domain",
+      "feature": null,
+      "exports": [
+        "deriveTonality"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/domain/transition.core.ts",
+      "container": "domain",
+      "layer": "core",
+      "context": "domain",
+      "feature": null,
+      "exports": [
+        "evaluateTransition"
+      ],
+      "imports": [
+        "apps/pragma/domain/instrument.core.ts",
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-decision"
+      ]
+    },
+    {
+      "path": "apps/pragma/drizzle.config.ts",
+      "container": "site",
+      "layer": "config",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/App.tsx",
+      "container": "site",
+      "layer": "entrypoint",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "App"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/organisms/AppShell.tsx",
+        "apps/pragma/site/src/components/organisms/RequireSession.tsx",
+        "apps/pragma/site/src/routes/Login.tsx",
+        "apps/pragma/site/src/routes/bars/BarsPage.tsx",
+        "apps/pragma/site/src/routes/catalog/CatalogPage.tsx",
+        "apps/pragma/site/src/routes/catalog/SongDetailPage.tsx",
+        "apps/pragma/site/src/routes/catalog/SongEditPage.tsx",
+        "apps/pragma/site/src/routes/catalog/SongScenePage.tsx",
+        "apps/pragma/site/src/routes/instruments/InstrumentsPage.tsx",
+        "apps/pragma/site/src/routes/members/MembersPage.tsx",
+        "apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx",
+        "apps/pragma/site/src/routes/sessions/SessionsPage.tsx",
+        "apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx",
+        "apps/pragma/site/src/routes/setlists/SetlistsPage.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/clock.store.ts",
+      "container": "site",
+      "layer": "store",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "getCurrentTime",
+        "readServerTime",
+        "subscribeClock"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "external-store-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/auto-grow-textarea.utils.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "measureAutoGrowBox"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "AutoGrowTextarea"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/auto-grow-textarea.utils.ts",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/input.variants.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-variant"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/Avatar.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "Avatar"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/avatar.variants.ts",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/avatar.variants.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "avatarVariants"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-variant"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/Badge.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "Badge"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/badge.variants.ts",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/badge.variants.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "badgeVariants"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-variant"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/Button.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "Button"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/button.variants.ts",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/button.variants.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "buttonVariants"
+      ],
+      "imports": [],
+      "blueprints": [
+        "atom-variant"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/Card.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "Card"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/card.variants.ts",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/card.variants.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "cardVariants"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-variant"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/Chip.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "Chip"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/chip.variants.ts",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/chip.variants.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "chipVariants"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-variant"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "composeClassName"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/Crumb.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "Crumb"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [
+        "atom-plain"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/DocumentFrame.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "DocumentFrame"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/ExternalLink.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "ExternalLink"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/HintText.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "HintText"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-lookup-variants"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/Icon.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "Icon"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [
+        "atom-icon-registry"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/Input.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "Input"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/input.variants.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/input.variants.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "inputVariants"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-variant"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/member-palette.utils.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "MEMBER_PALETTE",
+        "memberInitial",
+        "paletteColorFromHex",
+        "paletteKeyFromHex",
+        "parseHexTriplet"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/OembedFrame.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "OembedFrame"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/PreviewImage.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "PreviewImage"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/PulsingDot.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "PulsingDot"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/ScoreInput.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [
+        "ScoreInput"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain",
+        "component-lookup-table"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/BackLink.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "BackLink"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Icon.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/BottomActionBar.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "BottomActionBar"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/ChartKindIcon.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "ChartKindIcon"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Icon.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "ConfirmDialog"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/lib/modal-dialog.adapter.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/energy-sparkline.utils.ts",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "buildSparklinePath"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/EnergyBadge.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "EnergyBadge"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Badge.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/EnergySparkline.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "EnergySparkline"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/molecules/energy-sparkline.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/file-drop.utils.ts",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "ALLOWED_IMAGE_MIMES",
+        "ALLOWED_PDF_MIME",
+        "FILE_DROP_ACCEPT_ATTRIBUTE",
+        "FILE_DROP_MAX_BYTES",
+        "FILE_DROP_MAX_MEBIBYTES",
+        "selectRejectionMessageKey",
+        "validateChartFile"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/FileDropZone.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "FileDropZone"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/file-drop.utils.ts"
+      ],
+      "blueprints": [
+        "molecule-local-state"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/FilterPillGroup.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "FilterPillGroup"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/LanguageSwitcher.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "LanguageSwitcher"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/i18n/i18n.setup.ts",
+        "apps/pragma/site/src/i18n/i18n.utils.ts",
+        "apps/pragma/site/src/i18n/locale-storage.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/lineup-editor.core.ts",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "formValuesToLineup",
+        "lineupToFormValues",
+        "toLineupPayload",
+        "toggleInstrumentHeld"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-form-schema"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/LineupEditor.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "LineupEditor"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/MemberChip.tsx",
+        "apps/pragma/site/src/components/molecules/lineup-editor.core.ts",
+        "apps/pragma/site/src/lib/modal-dialog.adapter.ts"
+      ],
+      "blueprints": [
+        "molecule-dialog-form"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/MasteryBadge.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "MasteryBadge"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Badge.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/media-query-matching.hook.ts",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "BREAKPOINT_BELOW_LG",
+        "BREAKPOINT_LG",
+        "BREAKPOINT_MD",
+        "useIsMediaQueryMatching"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "hook-external-store"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/MemberChip.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "MemberChip"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Avatar.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/member-palette.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/MemberFilterPills.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "MemberFilterPills"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/MemberChip.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/MemberLineup.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "MemberLineup"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/molecules/MemberChip.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "NotFoundNotice"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/OfflineBanner.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "OfflineBanner"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/PulsingDot.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/online-status.hook.ts",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "useIsOnline"
+      ],
+      "imports": [],
+      "blueprints": [
+        "hook-external-store"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/PageHeader.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "PageHeader"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Crumb.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/SearchBar.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "SearchBar"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/setlist-entry-form.hook.ts",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "CAPO_MAX",
+        "CAPO_MIN",
+        "ENERGY_MAX",
+        "ENERGY_MIN",
+        "KEY_OVERRIDE_MAX",
+        "NOTES_MAX",
+        "setlistEntryFormSchema",
+        "useSetlistEntryForm"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/SetlistEntryDetailsFields.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "SetlistEntryDetailsFields"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/input.variants.ts",
+        "apps/pragma/site/src/components/molecules/setlist-entry-form.hook.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/SetlistEntryDragPreview.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "SetlistEntryDragPreview"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Icon.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/SongEmbed.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "SongEmbed"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/ExternalLink.tsx",
+        "apps/pragma/site/src/components/atoms/OembedFrame.tsx",
+        "apps/pragma/site/src/lib/embed.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/SongNotes.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "SongNotes"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/routes/catalog/song-notes.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/StatusChip.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "StatusChip"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Chip.tsx"
+      ],
+      "blueprints": [
+        "molecule-presentational"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/UploadedChartPreview.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "UploadedChartPreview"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/DocumentFrame.tsx",
+        "apps/pragma/site/src/components/atoms/HintText.tsx",
+        "apps/pragma/site/src/components/atoms/PreviewImage.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/AppShell.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "AppShell"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Avatar.tsx",
+        "apps/pragma/site/src/components/atoms/Badge.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/member-palette.utils.ts",
+        "apps/pragma/site/src/components/molecules/LanguageSwitcher.tsx",
+        "apps/pragma/site/src/components/molecules/OfflineBanner.tsx",
+        "apps/pragma/site/src/components/molecules/media-query-matching.hook.ts",
+        "apps/pragma/site/src/components/molecules/online-status.hook.ts",
+        "apps/pragma/site/src/components/organisms/BottomTabBar.tsx",
+        "apps/pragma/site/src/components/organisms/nav-active.core.ts",
+        "apps/pragma/site/src/components/organisms/navigation-badges.hook.ts",
+        "apps/pragma/site/src/lib/counts.utils.ts",
+        "apps/pragma/site/src/lib/modal-dialog.adapter.ts"
+      ],
+      "blueprints": [
+        "organism-shell"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/BarsKanban.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "BarsKanban"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Badge.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/lib/formatters.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/BarsList.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "BarsList"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Badge.tsx",
+        "apps/pragma/site/src/components/atoms/Chip.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/lib/formatters.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-table"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/BottomTabBar.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "BottomTabBar"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Badge.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/organisms/nav-active.core.ts",
+        "apps/pragma/site/src/lib/counts.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/CatalogGrid.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "CatalogGrid"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/organisms/SongCard.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "ChordChartViewer"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/lib/chordpro.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/create-session-dialog.utils.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "dateTimeLocalToIso",
+        "defaultDateTimeLocal",
+        "filterFutureConcerts",
+        "formatDateTimeLocal"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/CreateSessionDialog.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "CreateSessionDialog"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/input.variants.ts",
+        "apps/pragma/site/src/components/organisms/create-session-dialog.utils.ts",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/modal-dialog.adapter.ts",
+        "apps/pragma/site/src/lib/queries/sessions.queries.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-form"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/FileDrop.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "FileDrop"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/FileDropZone.tsx",
+        "apps/pragma/site/src/components/molecules/file-drop.utils.ts",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/queries/uploads.queries.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-query-owning"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/mastery-color.core.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "selectMasteryColor"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-appearance"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/MasteryMatrix.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "MasteryMatrix"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Avatar.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/ScoreInput.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/member-palette.utils.ts",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/mastery-matrix.utils.ts",
+        "apps/pragma/site/src/lib/member-color.utils.ts",
+        "apps/pragma/site/src/lib/queries/mastery.queries.ts"
+      ],
+      "blueprints": [
+        "organism-table"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/nav-active.core.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "isMoreTabActive",
+        "isNavDestinationActive"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-decision"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/navigation-badges.hook.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "useNavigationBadges"
+      ],
+      "imports": [
+        "apps/pragma/site/src/clock.store.ts",
+        "apps/pragma/site/src/lib/queries/bars.queries.ts",
+        "apps/pragma/site/src/lib/queries/sessions.queries.ts",
+        "apps/pragma/site/src/lib/queries/songs.queries.ts",
+        "apps/pragma/site/src/lib/upcoming-concerts.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/orphan-member-warn.adapter.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "warnIfOrphanMemberIds"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts",
+        "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/RequireSession.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "RequireSession"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/organisms/session-gate.core.ts",
+        "apps/pragma/site/src/lib/queries/auth.queries.ts",
+        "apps/pragma/site/src/lib/session-marker.adapter.ts"
+      ],
+      "blueprints": [
+        "organism-query-owning"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/session-gate.core.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "selectSessionGateState"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "compactLineup",
+        "findOrphanMemberIds",
+        "formatSetlistOrder",
+        "instrumentFamilyMap",
+        "instrumentNamesFor",
+        "lineupOf",
+        "prominentMemberInstrumentFor",
+        "selectUnwarnedMemberIds",
+        "tonalityLabelFor"
+      ],
+      "imports": [
+        "apps/pragma/domain/instrument.core.ts",
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "ENERGY_DEFAULT",
+        "isEnergyStored",
+        "selectEnergyAppearance"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-appearance",
+        "core-appearance"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/setlist-filter.core.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "filterEntriesForMember"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts",
+        "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "SetlistEditor"
+      ],
+      "imports": [
+        "apps/pragma/domain/transition.core.ts",
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/molecules/BottomActionBar.tsx",
+        "apps/pragma/site/src/components/molecules/media-query-matching.hook.ts",
+        "apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx",
+        "apps/pragma/site/src/components/organisms/SetlistSongPicker.tsx",
+        "apps/pragma/site/src/components/organisms/SetlistToolbar.tsx",
+        "apps/pragma/site/src/components/organisms/TransitionCommentModal.tsx",
+        "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
+        "apps/pragma/site/src/components/organisms/setlist-filter.core.ts",
+        "apps/pragma/site/src/components/organisms/transition-view.core.ts",
+        "apps/pragma/site/src/lib/mastery-aggregate.utils.ts",
+        "apps/pragma/site/src/lib/queries/instruments.queries.ts",
+        "apps/pragma/site/src/lib/queries/mastery.queries.ts",
+        "apps/pragma/site/src/lib/queries/members.queries.ts",
+        "apps/pragma/site/src/lib/queries/setlists.queries.ts",
+        "apps/pragma/site/src/lib/queries/songs.queries.ts",
+        "apps/pragma/site/src/lib/queries/transitions.queries.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-query-owning"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "SetlistEntriesList"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/molecules/LineupEditor.tsx",
+        "apps/pragma/site/src/components/molecules/MemberLineup.tsx",
+        "apps/pragma/site/src/components/molecules/SetlistEntryDragPreview.tsx",
+        "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx",
+        "apps/pragma/site/src/components/organisms/TransitionStrip.tsx",
+        "apps/pragma/site/src/components/organisms/orphan-member-warn.adapter.ts",
+        "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
+        "apps/pragma/site/src/components/organisms/transition-view.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "SetlistEntryRow"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
+        "apps/pragma/site/src/components/molecules/LineupEditor.tsx",
+        "apps/pragma/site/src/components/molecules/MemberChip.tsx",
+        "apps/pragma/site/src/components/molecules/MemberLineup.tsx",
+        "apps/pragma/site/src/components/molecules/SetlistEntryDetailsFields.tsx",
+        "apps/pragma/site/src/components/molecules/lineup-editor.core.ts",
+        "apps/pragma/site/src/components/molecules/setlist-entry-form.hook.ts",
+        "apps/pragma/site/src/components/organisms/mastery-color.core.ts",
+        "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-form"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SetlistSongPicker.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "SetlistSongPicker"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/StatusChip.tsx",
+        "apps/pragma/site/src/components/organisms/song-picker.core.ts",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/modal-dialog.adapter.ts",
+        "apps/pragma/site/src/lib/queries/songs.queries.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-query-owning"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SetlistToolbar.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "SetlistToolbar"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/molecules/EnergySparkline.tsx",
+        "apps/pragma/site/src/components/molecules/MemberFilterPills.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/song-picker.core.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "filterPickableSongs",
+        "selectPickerCloseLabelKey",
+        "shouldOfferCreatingSong"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SongCard.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "SongCard"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/molecules/ChartKindIcon.tsx",
+        "apps/pragma/site/src/components/molecules/EnergyBadge.tsx",
+        "apps/pragma/site/src/components/molecules/MasteryBadge.tsx",
+        "apps/pragma/site/src/components/molecules/MemberLineup.tsx",
+        "apps/pragma/site/src/components/molecules/StatusChip.tsx",
+        "apps/pragma/site/src/routes/catalog/tonality-label.utils.ts"
+      ],
+      "blueprints": [
+        "organism-presentational"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SongDetailSidebar.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "SongDetailSidebar"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/MemberChip.tsx",
+        "apps/pragma/site/src/routes/catalog/song-lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SongSearch.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "SongSearch"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/debounce.utils.ts",
+        "apps/pragma/site/src/lib/queries/songs.queries.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-query-owning"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/transition-view.core.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "buildTransitionView",
+        "indexTransitionComments",
+        "transitionPairKey"
+      ],
+      "imports": [
+        "apps/pragma/domain/transition.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/TransitionCommentModal.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "TransitionCommentModal"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/input.variants.ts",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/modal-dialog.adapter.ts",
+        "apps/pragma/site/src/lib/queries/transitions.queries.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-query-owning"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/TransitionStrip.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "TransitionStrip"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/MemberChip.tsx",
+        "apps/pragma/site/src/components/organisms/transition-view.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/i18n/i18n-parity.core.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "i18n",
+      "feature": null,
+      "exports": [
+        "diffCatalogs",
+        "isInParity",
+        "listIdenticalValueKeys"
+      ],
+      "imports": [
+        "apps/pragma/site/src/i18n/i18n.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "i18n-parity-gate"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/i18n/i18n.setup.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "i18n",
+      "feature": null,
+      "exports": [
+        "browserStorage"
+      ],
+      "imports": [
+        "apps/pragma/site/src/i18n/en.json",
+        "apps/pragma/site/src/i18n/fr.json",
+        "apps/pragma/site/src/i18n/i18n.utils.ts",
+        "apps/pragma/site/src/i18n/locale-storage.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "i18n-setup"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/i18n/i18n.utils.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "i18n",
+      "feature": null,
+      "exports": [
+        "DEFAULT_LOCALE",
+        "SUPPORTED_LOCALES",
+        "detectInitialLocale",
+        "flattenKeys"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "i18n-key-walk"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/i18n/locale-storage.utils.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "i18n",
+      "feature": null,
+      "exports": [
+        "LOCALE_STORAGE_KEY",
+        "readPersistedLocale",
+        "writePersistedLocale"
+      ],
+      "imports": [
+        "apps/pragma/site/src/i18n/i18n.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "injected-storage-slice"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/i18n/react-i18next.d.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "i18n",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/pragma/site/src/i18n/en.json"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "i18n-typed-keys"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/api.client.ts",
+      "container": "site",
+      "layer": "client",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "ApiError",
+        "api",
+        "isResponseSuccessful"
+      ],
+      "imports": [
+        "apps/pragma/api/src/app.ts"
+      ],
+      "blueprints": [
+        "typed-api-client"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/lib/chordpro.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "directiveLines",
+        "isTitleDirective",
+        "parseChordPro",
+        "parseChordProLine",
+        "readTitle",
+        "transposeChord",
+        "transposeLines"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/counts.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "isPositiveCount"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/debounce.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "debounce"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/embed.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "resolveEmbed"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/form-submit.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "isSubmitDisabled",
+        "isSubmitDisabledWhilePending"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/formatters.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "formatCapacity",
+        "formatSessionDate"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-formatter"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/mastery-aggregate.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "meanMasteryForSong"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/mastery-matrix.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "MASTERY_SCORE_MAX",
+        "MASTERY_SCORE_MIN",
+        "cellKey",
+        "clampScore",
+        "columnAverage",
+        "rowAverage",
+        "selectScoreEditIntent"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/member-color.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "READABLE_THRESHOLD",
+        "foregroundForLuminance",
+        "parseHex",
+        "readableForeground",
+        "relativeLuminance"
+      ],
+      "imports": [],
+      "blueprints": [
+        "utils-pure-module"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/lib/missing-record.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "selectMissingRecordReason"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/api.client.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/lib/modal-dialog.adapter.ts",
+      "container": "site",
+      "layer": "adapter",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "openDialogOnAttach",
+        "openDismissibleDialogOnAttach"
+      ],
+      "imports": [],
+      "blueprints": [
+        "ref-callback-browser-api"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/lib/navigation.hook.ts",
+      "container": "site",
+      "layer": "hook",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "useNavigateTo"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/auth.queries.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "authKeys",
+        "useLogin",
+        "useSessionProbe"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/session-marker.adapter.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "query-pessimistic-mutation"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/bars.queries.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "barKeys",
+        "useBarsList",
+        "useCreateBar",
+        "useDeleteBar",
+        "useUpdateBar"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/queries/optimistic.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "query-optimistic-mutation",
+        "query-optimistic-mutation",
+        "query-optimistic-mutation"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/instruments.queries.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "instrumentKeys",
+        "useCreateInstrument",
+        "useDeleteInstrument",
+        "useInstrumentsList",
+        "useUpdateInstrument"
+      ],
+      "imports": [
+        "apps/pragma/domain/instrument.core.ts",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/queries/optimistic.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "query-optimistic-mutation",
+        "query-optimistic-mutation",
+        "query-optimistic-mutation"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/mastery.queries.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "masteryKeys",
+        "useDeleteMasteryDefault",
+        "useMasteryDefaults",
+        "useSaveMasteryDefault"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/queries/mastery.utils.ts",
+        "apps/pragma/site/src/lib/queries/optimistic.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "query-optimistic-mutation",
+        "query-optimistic-mutation"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/mastery.utils.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "upsertMasteryDefault",
+        "withoutMasteryDefault"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/members.queries.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "memberKeys",
+        "useAssignMemberInstruments",
+        "useCreateMember",
+        "useDeleteMember",
+        "useMemberInstruments",
+        "useMembersList",
+        "useUpdateMember"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/queries/instruments.queries.ts",
+        "apps/pragma/site/src/lib/queries/optimistic.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "query-module",
+        "query-optimistic-mutation",
+        "query-optimistic-mutation",
+        "query-optimistic-mutation",
+        "query-optimistic-mutation"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/optimistic-session.core.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "buildOptimisticSession"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/api.client.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "dto-mapper"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/optimistic.utils.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "LAST_PENDING_MUTATION_COUNT",
+        "isLastPendingMutation",
+        "replaceEntityById"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/sessions.queries.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "sessionKeys",
+        "useCreateSession",
+        "useDeleteSession",
+        "useSession",
+        "useSessionsList",
+        "useUpdateSession"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/queries/optimistic-session.core.ts",
+        "apps/pragma/site/src/lib/queries/optimistic.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "query-optimistic-mutation",
+        "query-optimistic-mutation",
+        "query-optimistic-mutation"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/setlists.queries.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "setlistKeys",
+        "useAppendSetlistEntry",
+        "useCreateSetlist",
+        "useDeleteSetlistEntry",
+        "useReorderSetlist",
+        "useSetlistBySession",
+        "useSetlistEntries",
+        "useSetlistsBySessionIds",
+        "useUpdateSetlistEntry"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/queries/optimistic.utils.ts",
+        "apps/pragma/site/src/lib/queries/setlists.utils.ts"
+      ],
+      "blueprints": [
+        "query-pessimistic-mutation"
+      ],
+      "followsBlueprints": [
+        "query-optimistic-mutation",
+        "query-optimistic-mutation",
+        "query-optimistic-mutation",
+        "query-optimistic-mutation"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/setlists.utils.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "appendOptimisticEntry",
+        "applyEntryPatch",
+        "removeEntryById",
+        "reorderEntriesByIds",
+        "toEntryPatch"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/song-write-failure.core.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "didLastSongWriteFail"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/songs.queries.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "songKeys",
+        "useCreateSong",
+        "useDeleteSong",
+        "useDidLastSongWriteFail",
+        "useSong",
+        "useSongSearch",
+        "useSongsList",
+        "useUpdateSong"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/queries/optimistic.utils.ts",
+        "apps/pragma/site/src/lib/queries/song-write-failure.core.ts"
+      ],
+      "blueprints": [
+        "query-module",
+        "query-optimistic-mutation"
+      ],
+      "followsBlueprints": [
+        "query-optimistic-mutation",
+        "query-optimistic-mutation"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/transitions.queries.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "transitionKeys",
+        "useSaveTransitionComment",
+        "useTransitionComment",
+        "useTransitionCommentsList"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/queries/optimistic.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "query-optimistic-mutation"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/queries/uploads.queries.ts",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "uploadKeys",
+        "useSignChartUpload",
+        "useSignedChartUrl"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/api.client.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "query-module",
+        "query-uncached-mutation"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/lib/query-client.setup.ts",
+      "container": "site",
+      "layer": "setup",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "queryClient"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/lib/session-marker.adapter.ts",
+      "container": "site",
+      "layer": "adapter",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "forgetSessionMarker",
+        "hasSessionMarker",
+        "rememberSessionMarker"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/lib/upcoming-concerts.core.ts",
+      "container": "site",
+      "layer": "core",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "selectUpcomingConcerts"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/main.tsx",
+      "container": "site",
+      "layer": "entrypoint",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/pragma/site/src/App.tsx",
+        "apps/pragma/site/src/i18n/i18n.setup.ts",
+        "apps/pragma/site/src/lib/query-client.setup.ts",
+        "apps/pragma/site/src/styles/tokens.css",
+        "apps/pragma/site/src/sw/service-worker.setup.ts"
+      ],
+      "blueprints": [
+        "site-entrypoint"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/routes/bars/bar-form.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "bars",
+      "feature": null,
+      "exports": [
+        "BAR_NAME_MAX_LENGTH",
+        "BAR_NOTES_MAX_LENGTH",
+        "BAR_STATUSES",
+        "BAR_STATUS_KEY",
+        "BLANK_BAR_FORM",
+        "barFormValuesSchema",
+        "buildBarFormInitial",
+        "buildBarPayloadFromFormValues",
+        "parseBarStatus",
+        "selectBarFormTitleKind"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-form-schema"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/bars/BarForm.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "bars",
+      "feature": null,
+      "exports": [
+        "BarForm"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/input.variants.ts",
+        "apps/pragma/site/src/routes/bars/bar-form.core.ts"
+      ],
+      "blueprints": [
+        "route-form"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/routes/bars/bars-page.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "bars",
+      "feature": null,
+      "exports": [
+        "applyBarWriteIntent",
+        "buildBarFormKey",
+        "buildKanbanCardsByStatus",
+        "groupBarsByStatus",
+        "isBarBeingEdited",
+        "selectBarWriteIntent",
+        "selectDragDropIntent",
+        "selectFormAfterDeletion",
+        "selectFormForBar",
+        "selectToggleState",
+        "selectVisibleBarsView",
+        "sortBarsByName"
+      ],
+      "imports": [
+        "apps/pragma/site/src/routes/bars/bar-form.core.ts"
+      ],
+      "blueprints": [
+        "core-view-intent"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/routes/bars/BarsPage.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "bars",
+      "feature": null,
+      "exports": [
+        "BarsPage"
+      ],
+      "imports": [
+        "apps/pragma/domain/bar-staleness.core.ts",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
+        "apps/pragma/site/src/components/molecules/PageHeader.tsx",
+        "apps/pragma/site/src/components/molecules/media-query-matching.hook.ts",
+        "apps/pragma/site/src/components/organisms/BarsKanban.tsx",
+        "apps/pragma/site/src/components/organisms/BarsList.tsx",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/counts.utils.ts",
+        "apps/pragma/site/src/lib/queries/bars.queries.ts",
+        "apps/pragma/site/src/routes/bars/BarForm.tsx",
+        "apps/pragma/site/src/routes/bars/bar-form.core.ts",
+        "apps/pragma/site/src/routes/bars/bars-page.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-list-page"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/catalog-page.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "CATALOG_STATUS_FILTERS",
+        "buildNewSongPath",
+        "compactLineup",
+        "countSongsWithStatus",
+        "isMatchingSearch",
+        "isMatchingStatusFilter",
+        "selectCatalogEmptyMessageKey",
+        "selectVisibleSongs",
+        "sortSongsByTitle"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/CatalogPage.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "CatalogPage"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/molecules/FilterPillGroup.tsx",
+        "apps/pragma/site/src/components/molecules/PageHeader.tsx",
+        "apps/pragma/site/src/components/molecules/SearchBar.tsx",
+        "apps/pragma/site/src/components/organisms/CatalogGrid.tsx",
+        "apps/pragma/site/src/components/organisms/SongCard.tsx",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/mastery-aggregate.utils.ts",
+        "apps/pragma/site/src/lib/queries/instruments.queries.ts",
+        "apps/pragma/site/src/lib/queries/mastery.queries.ts",
+        "apps/pragma/site/src/lib/queries/members.queries.ts",
+        "apps/pragma/site/src/lib/queries/songs.queries.ts",
+        "apps/pragma/site/src/routes/catalog/catalog-page.core.ts",
+        "apps/pragma/site/src/routes/catalog/chart-kind.utils.ts"
+      ],
+      "blueprints": [
+        "route-list-page"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/chart-kind.utils.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "extractChartKind",
+        "selectChordProText"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-lookup-table"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/missing-song.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "selectMissingSongMessageKey"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/missing-record.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/scene-view.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SCENE_FONT_SIZE_DEFAULT_PX",
+        "SCENE_FONT_SIZE_MAX_PX",
+        "SCENE_FONT_SIZE_MIN_PX",
+        "SCENE_FONT_SIZE_STEP_PX",
+        "SCENE_TRANSPOSE_MAX_SEMITONES",
+        "SCENE_TRANSPOSE_MIN_SEMITONES",
+        "clampSceneFontSize",
+        "clampSemitoneOffset",
+        "formatSemitoneOffset"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/song-draft.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "BLANK_SONG_DRAFT",
+        "SONG_STATUS_LABEL_KEY",
+        "applyExternalPickToDraft",
+        "chartFromDraft",
+        "detectProvider",
+        "linkProviders",
+        "linkSchema",
+        "payloadFromDraft",
+        "singleSongSchema",
+        "songFromApi",
+        "songSchema",
+        "songStatuses"
+      ],
+      "imports": [
+        "apps/pragma/site/src/routes/catalog/SongChartFields.tsx",
+        "apps/pragma/site/src/routes/catalog/SongExternalLinks.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-form-schema"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/song-duration.utils.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "formatDuration"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-formatter"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/song-lineup.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "MASTERY_BAR_COUNT",
+        "buildMasteryKey",
+        "buildSongLineupRows",
+        "flattenMasteryRows",
+        "isMasteryBarFilled"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/song-notes.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SONG_NOTE_LABEL_KEY",
+        "selectSongNoteSections"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-projection"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/SongChartFields.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SongChartFields"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/organisms/FileDrop.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/SongChordPreview.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SongChordPreview"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/SongDeleteAction.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SongDeleteAction"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/SongDetailPage.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SongDetailPage"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/BackLink.tsx",
+        "apps/pragma/site/src/components/molecules/ChartKindIcon.tsx",
+        "apps/pragma/site/src/components/molecules/LineupEditor.tsx",
+        "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx",
+        "apps/pragma/site/src/components/molecules/SongEmbed.tsx",
+        "apps/pragma/site/src/components/molecules/SongNotes.tsx",
+        "apps/pragma/site/src/components/molecules/StatusChip.tsx",
+        "apps/pragma/site/src/components/molecules/UploadedChartPreview.tsx",
+        "apps/pragma/site/src/components/molecules/lineup-editor.core.ts",
+        "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx",
+        "apps/pragma/site/src/components/organisms/SongDetailSidebar.tsx",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/embed.utils.ts",
+        "apps/pragma/site/src/lib/queries/instruments.queries.ts",
+        "apps/pragma/site/src/lib/queries/mastery.queries.ts",
+        "apps/pragma/site/src/lib/queries/members.queries.ts",
+        "apps/pragma/site/src/lib/queries/songs.queries.ts",
+        "apps/pragma/site/src/lib/queries/uploads.queries.ts",
+        "apps/pragma/site/src/routes/catalog/chart-kind.utils.ts",
+        "apps/pragma/site/src/routes/catalog/missing-song.core.ts",
+        "apps/pragma/site/src/routes/catalog/song-lineup.core.ts",
+        "apps/pragma/site/src/routes/catalog/song-notes.core.ts",
+        "apps/pragma/site/src/routes/catalog/tonality-label.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-detail-page"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/SongEditForm.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SongEditForm"
+      ],
+      "imports": [
+        "apps/pragma/domain/tonality.core.ts",
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/input.variants.ts",
+        "apps/pragma/site/src/components/molecules/BackLink.tsx",
+        "apps/pragma/site/src/components/molecules/PageHeader.tsx",
+        "apps/pragma/site/src/components/organisms/SongSearch.tsx",
+        "apps/pragma/site/src/routes/catalog/SongChartFields.tsx",
+        "apps/pragma/site/src/routes/catalog/SongChordPreview.tsx",
+        "apps/pragma/site/src/routes/catalog/SongDeleteAction.tsx",
+        "apps/pragma/site/src/routes/catalog/SongExternalLinks.tsx",
+        "apps/pragma/site/src/routes/catalog/SongLinkAdder.tsx",
+        "apps/pragma/site/src/routes/catalog/SongMusicBrainzPanel.tsx",
+        "apps/pragma/site/src/routes/catalog/SongNotesFields.tsx",
+        "apps/pragma/site/src/routes/catalog/song-draft.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-form"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/SongEditPage.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SongEditPage"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/navigation.hook.ts",
+        "apps/pragma/site/src/lib/queries/songs.queries.ts",
+        "apps/pragma/site/src/routes/catalog/SongEditForm.tsx",
+        "apps/pragma/site/src/routes/catalog/missing-song.core.ts",
+        "apps/pragma/site/src/routes/catalog/song-draft.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-detail-page"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/SongExternalLinks.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SongExternalLinks"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/molecules/SongEmbed.tsx",
+        "apps/pragma/site/src/lib/embed.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/SongLinkAdder.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SongLinkAdder"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/SongMusicBrainzPanel.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SongMusicBrainzPanel"
+      ],
+      "imports": [
+        "apps/pragma/site/src/routes/catalog/song-duration.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/SongNotesFields.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SongNotesFields"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/SongScenePage.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "SongScenePage"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx",
+        "apps/pragma/site/src/components/molecules/SongNotes.tsx",
+        "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx",
+        "apps/pragma/site/src/lib/modal-dialog.adapter.ts",
+        "apps/pragma/site/src/lib/navigation.hook.ts",
+        "apps/pragma/site/src/lib/queries/songs.queries.ts",
+        "apps/pragma/site/src/routes/catalog/chart-kind.utils.ts",
+        "apps/pragma/site/src/routes/catalog/missing-song.core.ts",
+        "apps/pragma/site/src/routes/catalog/scene-view.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-detail-page"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/catalog/tonality-label.utils.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "catalog",
+      "feature": null,
+      "exports": [
+        "buildTonalityLabel"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-formatter"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/instruments/instruments-page.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "instruments",
+      "feature": null,
+      "exports": [
+        "INSTRUMENT_FAMILY_LABEL_KEY",
+        "selectInstrumentDeletionEffect"
+      ],
+      "imports": [
+        "apps/pragma/domain/instrument.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/instruments/InstrumentsPage.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "instruments",
+      "feature": null,
+      "exports": [
+        "InstrumentsPage"
+      ],
+      "imports": [
+        "apps/pragma/domain/instrument.core.ts",
+        "apps/pragma/site/src/components/atoms/Badge.tsx",
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
+        "apps/pragma/site/src/components/molecules/PageHeader.tsx",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/queries/instruments.queries.ts",
+        "apps/pragma/site/src/routes/instruments/instruments-page.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-list-page"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/login.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "routes",
+      "feature": null,
+      "exports": [
+        "DEFAULT_POST_LOGIN_PATH",
+        "UNKNOWN_LOGIN_ERROR_KEY",
+        "selectLoginErrorMessageKey",
+        "selectPostLoginPath"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-label-key"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/Login.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "routes",
+      "feature": null,
+      "exports": [
+        "Login"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/navigation.hook.ts",
+        "apps/pragma/site/src/lib/queries/auth.queries.ts",
+        "apps/pragma/site/src/routes/login.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-form"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/members/MemberEditForm.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "members",
+      "feature": null,
+      "exports": [
+        "MemberEditForm"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/lib/form-submit.utils.ts",
+        "apps/pragma/site/src/routes/members/members-page.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-form"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/members/members-page.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "members",
+      "feature": null,
+      "exports": [
+        "DEFAULT_MEMBER_COLOR",
+        "applyMemberWriteIntent",
+        "buildMemberFormKey",
+        "buildMemberFormValues",
+        "selectInstrumentListState",
+        "selectMemberFormMode",
+        "selectMemberWriteIntent",
+        "selectSelectionAfterDeletion",
+        "sortInstrumentsByName",
+        "sortMembersByFirstName",
+        "toggleInstrumentAssignment"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/members/MembersPage.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "members",
+      "feature": null,
+      "exports": [
+        "MembersPage"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Avatar.tsx",
+        "apps/pragma/site/src/components/atoms/member-palette.utils.ts",
+        "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
+        "apps/pragma/site/src/components/molecules/PageHeader.tsx",
+        "apps/pragma/site/src/components/organisms/MasteryMatrix.tsx",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/member-color.utils.ts",
+        "apps/pragma/site/src/lib/queries/instruments.queries.ts",
+        "apps/pragma/site/src/lib/queries/members.queries.ts",
+        "apps/pragma/site/src/routes/members/MemberEditForm.tsx",
+        "apps/pragma/site/src/routes/members/members-page.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-list-page"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/sessions/ConcertEditForm.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "ConcertEditForm"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Avatar.tsx",
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/input.variants.ts",
+        "apps/pragma/site/src/components/atoms/member-palette.utils.ts",
+        "apps/pragma/site/src/lib/member-color.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-form"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/sessions/ConcertReadView.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "ConcertReadView"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/MemberChip.tsx",
+        "apps/pragma/site/src/routes/sessions/friends-count.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/sessions/friends-count.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "computeSharePercent",
+        "isCapacityKnown",
+        "parseFriendsCounts"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-parse-untrusted"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/sessions/missing-session.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "selectMissingSessionMessageKey"
+      ],
+      "imports": [
+        "apps/pragma/site/src/lib/missing-record.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/routes/sessions/PracticeReadView.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "PracticeReadView"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/input.variants.ts",
+        "apps/pragma/site/src/lib/formatters.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "SessionDetailPage"
+      ],
+      "imports": [
+        "apps/pragma/site/src/clock.store.ts",
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/molecules/BackLink.tsx",
+        "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx",
+        "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/counts.utils.ts",
+        "apps/pragma/site/src/lib/formatters.utils.ts",
+        "apps/pragma/site/src/lib/queries/members.queries.ts",
+        "apps/pragma/site/src/lib/queries/sessions.queries.ts",
+        "apps/pragma/site/src/lib/queries/setlists.queries.ts",
+        "apps/pragma/site/src/lib/upcoming-concerts.core.ts",
+        "apps/pragma/site/src/routes/sessions/ConcertEditForm.tsx",
+        "apps/pragma/site/src/routes/sessions/ConcertReadView.tsx",
+        "apps/pragma/site/src/routes/sessions/PracticeReadView.tsx",
+        "apps/pragma/site/src/routes/sessions/friends-count.core.ts",
+        "apps/pragma/site/src/routes/sessions/missing-session.core.ts"
+      ],
+      "blueprints": [
+        "route-detail-page"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/routes/sessions/SessionsPage.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "sessions",
+      "feature": null,
+      "exports": [
+        "SessionsPage"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/BottomActionBar.tsx",
+        "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
+        "apps/pragma/site/src/components/molecules/PageHeader.tsx",
+        "apps/pragma/site/src/components/organisms/CreateSessionDialog.tsx",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/formatters.utils.ts",
+        "apps/pragma/site/src/lib/navigation.hook.ts",
+        "apps/pragma/site/src/lib/queries/sessions.queries.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-list-page"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "setlists",
+      "feature": null,
+      "exports": [
+        "SetlistEditorPage"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/molecules/BackLink.tsx",
+        "apps/pragma/site/src/components/molecules/PageHeader.tsx",
+        "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
+        "apps/pragma/site/src/lib/formatters.utils.ts",
+        "apps/pragma/site/src/lib/queries/sessions.queries.ts",
+        "apps/pragma/site/src/lib/queries/setlists.queries.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-detail-page"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/routes/setlists/SetlistsPage.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "setlists",
+      "feature": null,
+      "exports": [
+        "SetlistsPage"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/molecules/PageHeader.tsx",
+        "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/formatters.utils.ts",
+        "apps/pragma/site/src/lib/queries/sessions.queries.ts",
+        "apps/pragma/site/src/lib/queries/setlists.queries.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-list-page"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/sw/manifest.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "sw",
+      "feature": null,
+      "exports": [
+        "buildOfflineManifest",
+        "manifestUrls",
+        "pickNextSession"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/sw/service-worker.setup.ts",
+      "container": "site",
+      "layer": "setup",
+      "context": "sw",
+      "feature": null,
+      "exports": [
+        "registerServiceWorker"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/sw/sw-cache.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "sw",
+      "feature": null,
+      "exports": [
+        "isReadableApiPath"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/types.d.ts",
+      "container": "site",
+      "layer": "declaration",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/vite.config.ts",
+      "container": "site",
+      "layer": "config",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/vitest.config.ts",
+      "container": "site",
+      "layer": "config",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [
+        "workspace-test-config"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/vitest.mutation.config.ts",
+      "container": "site",
+      "layer": "config",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    }
+  ],
+  "routes": [
+    {
+      "id": "DELETE /api/bars/:id",
+      "context": "bars",
+      "steps": [
+        "schema:barIdParamSchema",
+        "service:removeBar",
+        "repository:deleteBar",
+        "database:getDatabase",
+        "schema:barTable",
+        "core:selectDeletionOutcome"
+      ],
+      "tables": [
+        "barTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "DELETE /api/instruments/:id",
+      "context": "instruments",
+      "steps": [
+        "schema:instrumentIdParamSchema",
+        "service:removeInstrument",
+        "repository:deleteInstrument",
+        "database:getDatabase",
+        "schema:instrumentTable",
+        "core:selectDeletionOutcome"
+      ],
+      "tables": [
+        "instrumentTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "DELETE /api/mastery/defaults/:memberId/:instrumentId",
+      "context": "mastery",
+      "steps": [
+        "schema:masteryDefaultPathSchema",
+        "service:removeMasteryDefault",
+        "repository:deleteMasteryDefault",
+        "database:getDatabase",
+        "schema:masteryDefaultTable",
+        "core:selectDeletionOutcome"
+      ],
+      "tables": [
+        "masteryDefaultTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "DELETE /api/mastery/overrides/:memberId/:instrumentId/:songId",
+      "context": "mastery",
+      "steps": [
+        "schema:masteryOverridePathSchema",
+        "service:removeMasteryOverride",
+        "repository:deleteMasteryOverride",
+        "database:getDatabase",
+        "schema:masteryOverrideTable",
+        "core:selectDeletionOutcome"
+      ],
+      "tables": [
+        "masteryOverrideTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 0,
+      "unreached": true
+    },
+    {
+      "id": "DELETE /api/members/:id",
+      "context": "members",
+      "steps": [
+        "schema:memberIdParamSchema",
+        "service:removeMember",
+        "repository:deleteMemberWithLinks",
+        "database:getDatabase",
+        "schema:memberInstrumentTable",
+        "schema:memberTable",
+        "core:selectDeletionOutcome"
+      ],
+      "tables": [
+        "memberInstrumentTable",
+        "memberTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "DELETE /api/sessions/:id",
+      "context": "sessions",
+      "steps": [
+        "schema:sessionIdParamSchema",
+        "service:removeSession",
+        "repository:deleteSessionWithCascade",
+        "database:getDatabase",
+        "schema:setlistTable",
+        "schema:setlistEntryTable",
+        "schema:sessionTable",
+        "core:selectDeletionOutcome"
+      ],
+      "tables": [
+        "sessionTable",
+        "setlistEntryTable",
+        "setlistTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "DELETE /api/setlists/:id/entries/:entryId",
+      "context": "setlists",
+      "steps": [
+        "schema:setlistEntryIdParamSchema",
+        "service:removeEntryAndCompact",
+        "repository:deleteEntry",
+        "database:getDatabase",
+        "schema:setlistEntryTable",
+        "core:selectDeletionOutcome",
+        "repository:listEntries",
+        "repository:setEntryPosition"
+      ],
+      "tables": [
+        "setlistEntryTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "DELETE /api/songs/:id",
+      "context": "songs",
+      "steps": [
+        "schema:songIdParamSchema",
+        "service:removeSong",
+        "repository:deleteSongWithCascade",
+        "database:getDatabase",
+        "schema:masteryOverrideTable",
+        "schema:setlistEntryTable",
+        "schema:songTable",
+        "core:selectDeletionOutcome"
+      ],
+      "tables": [
+        "masteryOverrideTable",
+        "setlistEntryTable",
+        "songTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "DELETE /api/transition-comments/:a/:b",
+      "context": "transitions",
+      "steps": [
+        "schema:transitionPairParamSchema",
+        "service:removeTransitionComment",
+        "repository:deleteTransitionComment",
+        "database:getDatabase",
+        "schema:transitionCommentTable",
+        "core:selectDeletionOutcome"
+      ],
+      "tables": [
+        "transitionCommentTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 0,
+      "unreached": true
+    },
+    {
+      "id": "GET /api/bars",
+      "context": "bars",
+      "steps": [
+        "service:getBarsSortedByName",
+        "repository:listBars",
+        "database:getDatabase",
+        "schema:barTable"
+      ],
+      "tables": [
+        "barTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/bars/:id",
+      "context": "bars",
+      "steps": [
+        "schema:barIdParamSchema",
+        "service:getBarById",
+        "repository:findBarById",
+        "database:getDatabase",
+        "schema:barTable"
+      ],
+      "tables": [
+        "barTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 0,
+      "unreached": true
+    },
+    {
+      "id": "GET /api/instruments",
+      "context": "instruments",
+      "steps": [
+        "service:getInstrumentsSorted",
+        "repository:listInstruments",
+        "database:getDatabase",
+        "schema:instrumentTable"
+      ],
+      "tables": [
+        "instrumentTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 7,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/mastery/defaults",
+      "context": "mastery",
+      "steps": [
+        "service:getMasteryDefaults",
+        "repository:listMasteryDefaults",
+        "database:getDatabase",
+        "schema:masteryDefaultTable"
+      ],
+      "tables": [
+        "masteryDefaultTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/mastery/overrides/:songId",
+      "context": "mastery",
+      "steps": [
+        "schema:masterySongIdParamSchema",
+        "service:getMasteryOverridesForSong",
+        "repository:listMasteryOverridesForSong",
+        "database:getDatabase",
+        "schema:masteryOverrideTable"
+      ],
+      "tables": [
+        "masteryOverrideTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 0,
+      "unreached": true
+    },
+    {
+      "id": "GET /api/members",
+      "context": "members",
+      "steps": [
+        "service:getMembersSortedByFirstName",
+        "repository:listMembers",
+        "database:getDatabase",
+        "schema:memberTable"
+      ],
+      "tables": [
+        "memberTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 3,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/members/:id/instruments",
+      "context": "members",
+      "steps": [
+        "schema:memberIdParamSchema",
+        "service:getMemberInstruments",
+        "repository:listInstrumentsForMember",
+        "database:getDatabase",
+        "schema:memberInstrumentTable",
+        "schema:instrumentTable"
+      ],
+      "tables": [
+        "instrumentTable",
+        "memberInstrumentTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/offline-manifest",
+      "context": "sessions",
+      "steps": [
+        "service:getNextSessionOfflineManifest",
+        "service:getSongs",
+        "repository:listSongsNewestFirst",
+        "database:getDatabase",
+        "schema:songTable",
+        "core:buildNextSessionOfflineManifest"
+      ],
+      "tables": [
+        "songTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 2,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/sessions",
+      "context": "sessions",
+      "steps": [
+        "service:getSessions",
+        "repository:listSessions",
+        "database:getDatabase",
+        "schema:sessionTable"
+      ],
+      "tables": [
+        "sessionTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 4,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/sessions/:id",
+      "context": "sessions",
+      "steps": [
+        "schema:sessionIdParamSchema",
+        "service:getSessionById",
+        "repository:findSessionById",
+        "database:getDatabase",
+        "schema:sessionTable"
+      ],
+      "tables": [
+        "sessionTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/setlists/:id/entries",
+      "context": "setlists",
+      "steps": [
+        "schema:setlistIdParamSchema",
+        "service:getEntries",
+        "repository:listEntries",
+        "database:getDatabase",
+        "schema:setlistEntryTable"
+      ],
+      "tables": [
+        "setlistEntryTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/setlists/by-session/:sessionId",
+      "context": "setlists",
+      "steps": [
+        "schema:setlistBySessionParamSchema",
+        "service:getSetlistBySession",
+        "repository:findSetlistBySession",
+        "database:getDatabase",
+        "schema:setlistTable"
+      ],
+      "tables": [
+        "setlistTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/songs",
+      "context": "songs",
+      "steps": [
+        "service:getSongs",
+        "repository:listSongsNewestFirst",
+        "database:getDatabase",
+        "schema:songTable"
+      ],
+      "tables": [
+        "songTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 3,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/songs/:id",
+      "context": "songs",
+      "steps": [
+        "schema:songIdParamSchema",
+        "service:getSongById",
+        "repository:findSongById",
+        "database:getDatabase",
+        "schema:songTable"
+      ],
+      "tables": [
+        "songTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/songs/search",
+      "context": "songs",
+      "steps": [
+        "schema:externalSearchQuerySchema",
+        "service:searchExternal",
+        "core:mapMusicBrainzRecordings"
+      ],
+      "tables": [],
+      "externals": [
+        "musicbrainz"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/transition-comments",
+      "context": "transitions",
+      "steps": [
+        "service:getTransitionComments",
+        "repository:listTransitionComments",
+        "database:getDatabase",
+        "schema:transitionCommentTable"
+      ],
+      "tables": [
+        "transitionCommentTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "GET /api/transition-comments/:a/:b",
+      "context": "transitions",
+      "steps": [
+        "schema:transitionPairParamSchema",
+        "service:getTransitionComment",
+        "repository:findTransitionComment",
+        "database:getDatabase",
+        "schema:transitionCommentTable"
+      ],
+      "tables": [
+        "transitionCommentTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "POST /api/__test/seed",
+      "context": "__test",
+      "steps": [
+        "service:seedPreviewFixture",
+        "repository:deleteAllDomainRows",
+        "database:getDatabase",
+        "schema:setlistEntryTable",
+        "schema:setlistTable",
+        "schema:sessionTable",
+        "schema:memberInstrumentTable",
+        "schema:masteryOverrideTable",
+        "schema:masteryDefaultTable",
+        "schema:transitionCommentTable",
+        "schema:barTable",
+        "schema:songTable",
+        "schema:memberTable",
+        "schema:instrumentTable",
+        "service:bootstrapAuth",
+        "repository:loadAppConfig",
+        "schema:appConfigTable",
+        "repository:insertInitialAppConfig",
+        "core:selectAdminCredentialsState"
+      ],
+      "tables": [
+        "appConfigTable",
+        "barTable",
+        "instrumentTable",
+        "masteryDefaultTable",
+        "masteryOverrideTable",
+        "memberInstrumentTable",
+        "memberTable",
+        "sessionTable",
+        "setlistEntryTable",
+        "setlistTable",
+        "songTable",
+        "transitionCommentTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "POST /api/admin/rotate-password",
+      "context": "auth",
+      "steps": [
+        "schema:credentialsSchema",
+        "service:rotatePassword",
+        "repository:loadAppConfig",
+        "database:getDatabase",
+        "schema:appConfigTable",
+        "repository:updateAppConfig"
+      ],
+      "tables": [
+        "appConfigTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 0,
+      "unreached": true
+    },
+    {
+      "id": "POST /api/admin/set-password",
+      "context": "auth",
+      "steps": [
+        "schema:credentialsSchema",
+        "service:bootstrapAuth",
+        "repository:loadAppConfig",
+        "database:getDatabase",
+        "schema:appConfigTable",
+        "repository:insertInitialAppConfig"
+      ],
+      "tables": [
+        "appConfigTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 0,
+      "unreached": true
+    },
+    {
+      "id": "POST /api/auth/login",
+      "context": "auth",
+      "steps": [
+        "schema:credentialsSchema",
+        "service:attemptLogin",
+        "utils:hashIp",
+        "utils:readClientIp",
+        "utils:recordAttempt",
+        "utils:isRateLimited",
+        "repository:loadAppConfig",
+        "database:getDatabase",
+        "schema:appConfigTable",
+        "utils:buildCookie",
+        "utils:SESSION_TTL_MS",
+        "utils:SESSION_COOKIE_NAME"
+      ],
+      "tables": [
+        "appConfigTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "POST /api/bars",
+      "context": "bars",
+      "steps": [
+        "schema:barCreateSchema",
+        "service:createBar",
+        "repository:insertBar",
+        "database:getDatabase",
+        "schema:barTable"
+      ],
+      "tables": [
+        "barTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "POST /api/instruments",
+      "context": "instruments",
+      "steps": [
+        "schema:createInstrumentSchema",
+        "service:createInstrument",
+        "repository:insertInstrument",
+        "database:getDatabase",
+        "schema:instrumentTable"
+      ],
+      "tables": [
+        "instrumentTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 6,
+      "unreached": false
+    },
+    {
+      "id": "POST /api/members",
+      "context": "members",
+      "steps": [
+        "schema:createMemberSchema",
+        "service:createMember",
+        "repository:listMembers",
+        "database:getDatabase",
+        "schema:memberTable",
+        "utils:pickNextPaletteHex",
+        "repository:insertMember"
+      ],
+      "tables": [
+        "memberTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 3,
+      "unreached": false
+    },
+    {
+      "id": "POST /api/sessions",
+      "context": "sessions",
+      "steps": [
+        "schema:sessionCreateSchema",
+        "service:createSession",
+        "repository:insertSession",
+        "database:getDatabase",
+        "schema:sessionTable",
+        "core:encodeSessionInsert",
+        "core:buildSessionInsertShape"
+      ],
+      "tables": [
+        "sessionTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 4,
+      "unreached": false
+    },
+    {
+      "id": "POST /api/setlists",
+      "context": "setlists",
+      "steps": [
+        "schema:setlistCreateSchema",
+        "service:createSetlistForSession",
+        "repository:findSetlistBySession",
+        "database:getDatabase",
+        "schema:setlistTable",
+        "repository:insertSetlist"
+      ],
+      "tables": [
+        "setlistTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "POST /api/setlists/:id/entries",
+      "context": "setlists",
+      "steps": [
+        "schema:setlistIdParamSchema",
+        "schema:setlistEntryCreateSchema",
+        "service:appendEntry",
+        "repository:listEntries",
+        "database:getDatabase",
+        "schema:setlistEntryTable",
+        "repository:insertEntry"
+      ],
+      "tables": [
+        "setlistEntryTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "POST /api/songs",
+      "context": "songs",
+      "steps": [
+        "schema:songCreateInputSchema",
+        "service:createSong",
+        "repository:insertSong",
+        "database:getDatabase",
+        "schema:songTable"
+      ],
+      "tables": [
+        "songTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 3,
+      "unreached": false
+    },
+    {
+      "id": "POST /api/uploads/sign",
+      "context": "uploads",
+      "steps": [
+        "schema:signUploadInputSchema",
+        "types:ALLOWED_UPLOAD_CONTENT_TYPES",
+        "types:MAX_UPLOAD_BYTES",
+        "service:mintChartUpload",
+        "core:buildChartObjectKey",
+        "types:CHART_OBJECT_PREFIX",
+        "repository:presignPutObject",
+        "types:UPLOAD_URL_EXPIRES_SECONDS"
+      ],
+      "tables": [],
+      "externals": [
+        "aws-s3"
+      ],
+      "callerCount": 2,
+      "unreached": false
+    },
+    {
+      "id": "POST /api/uploads/sign-get",
+      "context": "uploads",
+      "steps": [
+        "schema:signGetInputSchema",
+        "service:mintChartGetUrl",
+        "repository:presignGetObject",
+        "types:UPLOAD_URL_EXPIRES_SECONDS"
+      ],
+      "tables": [],
+      "externals": [
+        "aws-s3"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "PUT /api/bars/:id",
+      "context": "bars",
+      "steps": [
+        "schema:barIdParamSchema",
+        "schema:barUpdateSchema",
+        "service:patchBar",
+        "repository:updateBar",
+        "database:getDatabase",
+        "schema:barTable"
+      ],
+      "tables": [
+        "barTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "PUT /api/instruments/:id",
+      "context": "instruments",
+      "steps": [
+        "schema:instrumentIdParamSchema",
+        "schema:updateInstrumentSchema",
+        "service:patchInstrument",
+        "repository:updateInstrument",
+        "database:getDatabase",
+        "schema:instrumentTable"
+      ],
+      "tables": [
+        "instrumentTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "PUT /api/mastery/defaults",
+      "context": "mastery",
+      "steps": [
+        "schema:masteryDefaultRowSchema",
+        "service:saveMasteryDefault",
+        "repository:upsertMasteryDefault",
+        "database:getDatabase",
+        "schema:masteryDefaultTable"
+      ],
+      "tables": [
+        "masteryDefaultTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "PUT /api/mastery/overrides",
+      "context": "mastery",
+      "steps": [
+        "schema:masteryOverrideRowSchema",
+        "service:saveMasteryOverride",
+        "repository:upsertMasteryOverride",
+        "database:getDatabase",
+        "schema:masteryOverrideTable"
+      ],
+      "tables": [
+        "masteryOverrideTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 0,
+      "unreached": true
+    },
+    {
+      "id": "PUT /api/members/:id",
+      "context": "members",
+      "steps": [
+        "schema:memberIdParamSchema",
+        "schema:updateMemberSchema",
+        "service:patchMember",
+        "repository:updateMember",
+        "database:getDatabase",
+        "schema:memberTable"
+      ],
+      "tables": [
+        "memberTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "PUT /api/members/:id/instruments",
+      "context": "members",
+      "steps": [
+        "schema:memberIdParamSchema",
+        "schema:memberInstrumentAssignmentSchema",
+        "service:assignInstrumentsToMember",
+        "repository:findMemberById",
+        "database:getDatabase",
+        "schema:memberTable",
+        "repository:areInstrumentsKnown",
+        "schema:instrumentTable",
+        "repository:replaceMemberInstruments",
+        "schema:memberInstrumentTable"
+      ],
+      "tables": [
+        "instrumentTable",
+        "memberInstrumentTable",
+        "memberTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "PUT /api/sessions/:id",
+      "context": "sessions",
+      "steps": [
+        "schema:sessionIdParamSchema",
+        "schema:sessionUpdateSchema",
+        "service:patchSession",
+        "repository:updateSession",
+        "database:getDatabase",
+        "schema:sessionTable"
+      ],
+      "tables": [
+        "sessionTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "PUT /api/setlists/:id/entries/:entryId",
+      "context": "setlists",
+      "steps": [
+        "schema:setlistEntryIdParamSchema",
+        "schema:setlistEntryUpdateSchema",
+        "service:patchEntry",
+        "repository:updateEntry",
+        "database:getDatabase",
+        "schema:setlistEntryTable"
+      ],
+      "tables": [
+        "setlistEntryTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "PUT /api/setlists/:id/reorder",
+      "context": "setlists",
+      "steps": [
+        "schema:setlistIdParamSchema",
+        "schema:setlistReorderSchema",
+        "service:reorderEntries",
+        "repository:listEntryIds",
+        "database:getDatabase",
+        "schema:setlistEntryTable",
+        "repository:setEntryPosition"
+      ],
+      "tables": [
+        "setlistEntryTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "PUT /api/songs/:id",
+      "context": "songs",
+      "steps": [
+        "schema:songIdParamSchema",
+        "schema:songUpdateInputSchema",
+        "service:patchSong",
+        "repository:updateSong",
+        "database:getDatabase",
+        "schema:songTable"
+      ],
+      "tables": [
+        "songTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    },
+    {
+      "id": "PUT /api/transition-comments/:a/:b",
+      "context": "transitions",
+      "steps": [
+        "schema:transitionPairParamSchema",
+        "schema:transitionCommentBodySchema",
+        "service:saveTransitionComment",
+        "repository:upsertTransitionComment",
+        "database:getDatabase",
+        "schema:transitionCommentTable"
+      ],
+      "tables": [
+        "transitionCommentTable"
+      ],
+      "externals": [
+        "aws-dsql"
+      ],
+      "callerCount": 1,
+      "unreached": false
+    }
+  ],
+  "blueprints": [
+    {
+      "id": "api-composition-root",
+      "file": "apps/pragma/api/src/app.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "api-dev-entrypoint",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "api-lambda-entrypoint",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "app-cdk-stack",
+      "file": "apps/pragma/cdk/lib/stack.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "atom-icon-registry",
+      "file": "apps/pragma/site/src/components/atoms/Icon.tsx",
+      "followerCount": 0
+    },
+    {
+      "id": "atom-lookup-variants",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "atom-plain",
+      "file": "apps/pragma/site/src/components/atoms/Crumb.tsx",
+      "followerCount": 6
+    },
+    {
+      "id": "atom-variant",
+      "file": "apps/pragma/site/src/components/atoms/button.variants.ts",
+      "followerCount": 6
+    },
+    {
+      "id": "cdk-app-entrypoint",
+      "file": "apps/pragma/cdk/bin/cdk.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "component-lookup-table",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "controller-dispatch",
+      "file": "apps/pragma/api/src/songs/songs.controller.ts",
+      "followerCount": 9
+    },
+    {
+      "id": "controller-split-routers",
+      "file": "apps/pragma/api/src/auth/auth.controller.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "core-appearance",
+      "file": "",
+      "followerCount": 3
+    },
+    {
+      "id": "core-decision",
+      "file": "",
+      "followerCount": 4
+    },
+    {
+      "id": "core-form-schema",
+      "file": "",
+      "followerCount": 3
+    },
+    {
+      "id": "core-label-key",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "core-lookup-table",
+      "file": "",
+      "followerCount": 2
+    },
+    {
+      "id": "core-parse-untrusted",
+      "file": "apps/pragma/api/src/songs/musicbrainz.core.ts",
+      "followerCount": 1
+    },
+    {
+      "id": "core-projection",
+      "file": "apps/pragma/api/src/sessions/offline-manifest.core.ts",
+      "followerCount": 9
+    },
+    {
+      "id": "core-view-intent",
+      "file": "apps/pragma/site/src/routes/bars/bars-page.core.ts",
+      "followerCount": 3
+    },
+    {
+      "id": "core-view-projection",
+      "file": "",
+      "followerCount": 8
+    },
+    {
+      "id": "database-client",
+      "file": "apps/pragma/api/src/database/client.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "database-schema-barrel",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "dto-mapper",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "external-store-module",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "helper-module",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "hook-external-store",
+      "file": "apps/pragma/site/src/components/molecules/online-status.hook.ts",
+      "followerCount": 1
+    },
+    {
+      "id": "i18n-key-walk",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "i18n-parity-gate",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "i18n-setup",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "i18n-typed-keys",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "injected-storage-slice",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "middleware-session-gate",
+      "file": "apps/pragma/api/src/auth/shared-password.middleware.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "molecule-dialog-form",
+      "file": "apps/pragma/site/src/components/molecules/LineupEditor.tsx",
+      "followerCount": 0
+    },
+    {
+      "id": "molecule-local-state",
+      "file": "apps/pragma/site/src/components/molecules/FileDropZone.tsx",
+      "followerCount": 0
+    },
+    {
+      "id": "molecule-presentational",
+      "file": "apps/pragma/site/src/components/molecules/StatusChip.tsx",
+      "followerCount": 22
+    },
+    {
+      "id": "organism-form",
+      "file": "",
+      "followerCount": 2
+    },
+    {
+      "id": "organism-presentational",
+      "file": "apps/pragma/site/src/components/organisms/SongCard.tsx",
+      "followerCount": 15
+    },
+    {
+      "id": "organism-query-owning",
+      "file": "apps/pragma/site/src/components/organisms/RequireSession.tsx",
+      "followerCount": 5
+    },
+    {
+      "id": "organism-shell",
+      "file": "apps/pragma/site/src/components/organisms/AppShell.tsx",
+      "followerCount": 0
+    },
+    {
+      "id": "organism-table",
+      "file": "apps/pragma/site/src/components/organisms/MasteryMatrix.tsx",
+      "followerCount": 1
+    },
+    {
+      "id": "query-module",
+      "file": "apps/pragma/site/src/lib/queries/songs.queries.ts",
+      "followerCount": 2
+    },
+    {
+      "id": "query-optimistic-mutation",
+      "file": "apps/pragma/site/src/lib/queries/songs.queries.ts",
+      "followerCount": 22
+    },
+    {
+      "id": "query-pessimistic-mutation",
+      "file": "apps/pragma/site/src/lib/queries/setlists.queries.ts",
+      "followerCount": 1
+    },
+    {
+      "id": "query-uncached-mutation",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "ref-callback-browser-api",
+      "file": "apps/pragma/site/src/lib/modal-dialog.adapter.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "repository-external-service",
+      "file": "apps/pragma/api/src/uploads/uploads.repository.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "repository-idempotent-upsert",
+      "file": "",
+      "followerCount": 2
+    },
+    {
+      "id": "repository-json-column",
+      "file": "apps/pragma/api/src/songs/songs.repository.ts",
+      "followerCount": 2
+    },
+    {
+      "id": "repository-projection",
+      "file": "apps/pragma/api/src/instruments/instruments.repository.ts",
+      "followerCount": 6
+    },
+    {
+      "id": "repository-query",
+      "file": "",
+      "followerCount": 3
+    },
+    {
+      "id": "route-detail-page",
+      "file": "apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx",
+      "followerCount": 4
+    },
+    {
+      "id": "route-form",
+      "file": "apps/pragma/site/src/routes/bars/BarForm.tsx",
+      "followerCount": 4
+    },
+    {
+      "id": "route-list-page",
+      "file": "apps/pragma/site/src/routes/catalog/CatalogPage.tsx",
+      "followerCount": 5
+    },
+    {
+      "id": "schema-input-only",
+      "file": "apps/pragma/api/src/uploads/uploads.schema.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "schema-table-and-input",
+      "file": "apps/pragma/api/src/bars/bars.schema.ts",
+      "followerCount": 6
+    },
+    {
+      "id": "service-clock-injected",
+      "file": "apps/pragma/api/src/uploads/uploads.service.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "service-crud-update",
+      "file": "apps/pragma/api/src/bars/bars.service.ts",
+      "followerCount": 5
+    },
+    {
+      "id": "service-passthrough",
+      "file": "apps/pragma/api/src/mastery/mastery.service.ts",
+      "followerCount": 1
+    },
+    {
+      "id": "service-read-model",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "site-entrypoint",
+      "file": "apps/pragma/site/src/main.tsx",
+      "followerCount": 0
+    },
+    {
+      "id": "typed-api-client",
+      "file": "apps/pragma/site/src/lib/api.client.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "utils-formatter",
+      "file": "",
+      "followerCount": 3
+    },
+    {
+      "id": "utils-pure-module",
+      "file": "apps/pragma/site/src/lib/member-color.utils.ts",
+      "followerCount": 24
+    },
+    {
+      "id": "workspace-test-config",
+      "file": "apps/pragma/vitest.config.ts",
+      "followerCount": 0
+    }
+  ]
+}

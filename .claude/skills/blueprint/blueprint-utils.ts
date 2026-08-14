@@ -11,9 +11,11 @@
  * `infra/`, and the custom lint rules under `eslint-rules/`.
  */
 
-export type BlueprintProject = 'api' | 'site' | 'infra' | 'tooling';
+export type BlueprintProject = 'api' | 'site' | 'domain' | 'cdk' | 'infra' | 'tooling';
 
 const API_PATH_SEGMENT = '/api/src/';
+const DOMAIN_PATH_SEGMENT = '/domain/';
+const CDK_PATH_SEGMENT = '/cdk/';
 const TOOLING_PATH_PREFIX = 'eslint-rules/';
 
 export function inferProject(filePath: string): BlueprintProject {
@@ -25,6 +27,12 @@ export function inferProject(filePath: string): BlueprintProject {
   }
   if (filePath.includes(API_PATH_SEGMENT)) {
     return 'api';
+  }
+  if (filePath.includes(DOMAIN_PATH_SEGMENT)) {
+    return 'domain';
+  }
+  if (filePath.includes(CDK_PATH_SEGMENT)) {
+    return 'cdk';
   }
   return 'site';
 }
@@ -52,8 +60,30 @@ const LAYER_BY_FILE_SUFFIX: readonly (readonly [string, string])[] = [
   ['.utils.ts', 'utils'],
   ['.types.ts', 'types'],
   ['.environment.ts', 'environment'],
+  ['.queries.ts', 'query'],
+  ['.hook.ts', 'hook'],
+  ['.store.ts', 'store'],
+  ['.adapter.ts', 'adapter'],
+  ['.client.ts', 'client'],
+  ['.setup.ts', 'setup'],
+  ['.variants.ts', 'variants'],
   ['.d.ts', 'declaration'],
   ['.config.ts', 'config'],
+];
+
+/**
+ * Composition roots, which are named by convention rather than by suffix. Each
+ * entry is matched against the end of the path, so `main.ts` only counts as an
+ * entry point where it sits directly under a container's source root.
+ */
+const ENTRY_POINT_PATH_SUFFIXES: readonly string[] = [
+  '/api/src/app.ts',
+  '/api/src/main.ts',
+  '/api/src/main.dev.ts',
+  '/site/src/main.tsx',
+  '/site/src/App.tsx',
+  '/cdk/bin/cdk.ts',
+  '/cdk/lib/stack.ts',
 ];
 
 const LAYER_BY_PATH_SEGMENT: readonly (readonly [string, string])[] = [
@@ -70,7 +100,7 @@ const LAYER_BY_PATH_SEGMENT: readonly (readonly [string, string])[] = [
 
 const TEST_FILE_PATTERN = /\.test\.(ts|tsx|js)$/;
 const TEST_HELPER_PATTERN =
-  /(\.test-utils\.ts|^apps\/[^/]+\/test\/|\/test\/(unit\/)?(fixtures|helpers)\/)/;
+  /(\.test-utils\.tsx?|^apps\/[^/]+\/test\/|\/test\/(unit\/)?(fixtures|helpers)\/)/;
 
 /** Whether the file is a test rather than the code under test. */
 export function isTestFile(filePath: string): boolean {
@@ -84,6 +114,11 @@ export function isTestFile(filePath: string): boolean {
  */
 export function inferLayer(filePath: string): string {
   const pathWithoutTestSuffix = filePath.replace(TEST_FILE_PATTERN, '.$1');
+  for (const entryPointSuffix of ENTRY_POINT_PATH_SUFFIXES) {
+    if (pathWithoutTestSuffix.endsWith(entryPointSuffix)) {
+      return 'entrypoint';
+    }
+  }
   for (const [segment, layer] of LAYER_BY_PATH_SEGMENT) {
     if (pathWithoutTestSuffix.includes(segment)) {
       return layer;

@@ -6,6 +6,8 @@
  * `navigator.language` > fallback (FR). The localStorage entry is
  * written by the in-app `LanguageSwitcher` molecule so a manual switch
  * survives a refresh.
+ *
+ * @DependsOnExternal browser-local-storage
  */
 
 import i18next from 'i18next';

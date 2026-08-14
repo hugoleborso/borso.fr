@@ -1,0 +1,115 @@
+# What a pull request does to pragma's architecture, said in one comment.
+#
+# `architecture-graph.ts --check` already fails a commit whose generated page is
+# stale, so the page in the branch is always current. What that gate cannot do
+# is say what changed, because a generated HTML file diffs badly and the JSON
+# model diffs as a wall of lines. This workflow answers that: it builds the
+# model for the merge base and for the head, and reports the difference as
+# routes, externals and layers rather than as text.
+#
+# The target branch does not need to carry the generator. The script runs at the
+# head revision against a worktree of the base, through `--app-root`, so a
+# branch opened before this workflow existed still gets a comparison.
+
+name: architecture
+
+on:
+  pull_request:
+    paths:
+      - 'apps/pragma/**'
+      - 'scripts/architecture/**'
+      - '.claude/skills/blueprint/blueprint-utils.ts'
+      - '.github/workflows/architecture.yml'
+
+concurrency:
+  group: architecture-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  architecture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # The head model is the committed one, and regenerating it here is also
+      # how a stale page gets caught on a push that skipped the hook.
+      - name: Build the head model
+        run: pnpm exec tsx scripts/architecture/architecture-graph.ts
+
+      - name: Fail when the committed page is stale
+        run: pnpm exec tsx scripts/architecture/architecture-graph.ts --check
+
+      # A worktree of the merge base, scanned by the head revision's generator.
+      # The merge base rather than the branch tip, so the comparison describes
+      # this pull request and not whatever else landed on the target meanwhile.
+      - name: Build the target-branch model
+        run: |
+          set -euo pipefail
+          base_sha="$(git merge-base "origin/${{ github.base_ref }}" HEAD)"
+          echo "Comparing against $base_sha on ${{ github.base_ref }}"
+          git worktree add --detach ../architecture-base "$base_sha"
+          pnpm exec tsx scripts/architecture/architecture-graph.ts \
+            --app-root ../architecture-base/apps/pragma \
+            --out /tmp/architecture-base
+
+      - name: Diff the two models
+        run: |
+          set -euo pipefail
+          pnpm exec tsx scripts/architecture/architecture-diff.ts \
+            /tmp/architecture-base/pragma-architecture.json \
+            docs/architecture/pragma-architecture.json > /tmp/architecture-diff.md
+          cat /tmp/architecture-diff.md >> "$GITHUB_STEP_SUMMARY"
+
+      # The page is the browsable half. A workflow artifact is a download rather
+      # than a link, which is the tradeoff for not publishing the repository to
+      # Pages; the same file is committed under docs/architecture/ either way.
+      - name: Upload the browsable page
+        uses: actions/upload-artifact@v4
+        with:
+          name: pragma-architecture
+          path: |
+            docs/architecture/pragma-architecture.html
+            docs/architecture/pragma-architecture.json
+          retention-days: 30
+
+      # One comment per pull request, rewritten in place. A new comment per push
+      # would bury the conversation under a report nobody asked to re-read.
+      - name: Comment the architecture diff
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const marker = '<!-- pragma-architecture-diff -->';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              marker,
+              fs.readFileSync('/tmp/architecture-diff.md', 'utf8').trim(),
+              '',
+              `[Browse the full map](${runUrl}#artifacts) — download the \`pragma-architecture\` artifact and open \`pragma-architecture.html\`.`,
+            ].join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

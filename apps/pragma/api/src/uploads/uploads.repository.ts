@@ -5,6 +5,8 @@
  *  - `presignPutObject` — short-lived PUT URL pinned to a content type.
  *  - `presignGetObject` — short-lived GET URL the FE renders the
  *    uploaded chart from (no public bucket policy, no CloudFront).
+ *
+ * @DependsOnExternal aws-s3
  */
 
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';

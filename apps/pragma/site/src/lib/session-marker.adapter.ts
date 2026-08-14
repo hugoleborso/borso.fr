@@ -12,6 +12,8 @@
  *
  * It is a hint and never an authorisation. Every gated request is still
  * checked by the API against the signed cookie.
+ *
+ * @DependsOnExternal browser-local-storage
  */
 
 const SESSION_MARKER_KEY = 'pragma.session-seen';

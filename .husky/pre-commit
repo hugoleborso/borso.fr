@@ -55,6 +55,17 @@ if [ -n "$staged_lintable" ]; then
   pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts --check
 fi
 
+# The architecture page, whenever pragma changed. The generator derives the
+# graph from paths, imports and the Hono call chain, so a rename or a new route
+# moves the page without anyone editing it, and a stale page is a diagram that
+# lies. It also refuses a `@DependsOnExternal` naming an external system the
+# manifest does not declare, and a declared external no file reaches, because
+# either half alone is how a context diagram drifts from the code.
+if git diff --cached --name-only | grep -q '^apps/pragma/'; then
+  echo "[pre-commit] checking the pragma architecture page"
+  pnpm exec tsx scripts/architecture/architecture-graph.ts --check
+fi
+
 # One stylesheet per application. A second CSS file is how an application
 # drifts back to global class names, because the first rule that does not fit a
 # utility goes there and the rest follow. A git-index read of four directories,

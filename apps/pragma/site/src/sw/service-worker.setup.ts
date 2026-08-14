@@ -6,6 +6,8 @@
  * Registration is skipped in dev (Vite's HMR conflicts with caching).
  * Errors are logged but never rethrown — the app still works without
  * a SW, the offline cache simply doesn't fill.
+ *
+ * @DependsOnExternal browser-service-worker
  */
 
 const SERVICE_WORKER_URL = '/sw.js';

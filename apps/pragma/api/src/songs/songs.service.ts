@@ -124,6 +124,9 @@ export interface SearchExternalOptions {
   readonly state?: ExternalSearchState;
 }
 
+/**
+ * @DependsOnExternal musicbrainz
+ */
 export async function searchExternal(
   query: string,
   options: SearchExternalOptions = {},

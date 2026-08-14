@@ -24,6 +24,7 @@ const TYPESCRIPT_FILES = ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'];
 const UNPROJECTED_TYPESCRIPT_FILES = [
   'vitest.config.ts',
   '.claude/skills/**/*.ts',
+  'scripts/**/*.ts',
   'apps/*/vitest.mutation.config.ts',
   'apps/*/bin/*.ts',
   'apps/*/scripts/*.ts',
@@ -463,7 +464,8 @@ export default tseslint.config(
   {
     files: [
       'eslint-rules/**/*.js',
-      'scripts/**/*.{js,mjs}',
+      'scripts/**/*.{js,mjs,ts}',
+      '.claude/skills/**/*.ts',
       '*.config.{js,ts}',
       'apps/*/scripts/**/*.{ts,mjs}',
       'apps/*/api/src/main.dev.ts',

@@ -1,6 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignore": ["docs/**"],
   "ignoreExportsUsedInFile": true,
   "workspaces": {
     ".": {
@@ -12,8 +11,8 @@
         "agent-browser",
         "esbuild"
       ],
-      "entry": [".claude/skills/blueprint/blueprint-*.ts"],
-      "project": [".claude/skills/blueprint/**/*.ts"]
+      "entry": [".claude/skills/blueprint/blueprint-*.ts", "scripts/architecture/*.ts"],
+      "project": [".claude/skills/blueprint/**/*.ts", "scripts/**/*.ts"]
     },
     "apps/borso-fr": {
       "entry": [

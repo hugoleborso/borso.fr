@@ -6,6 +6,8 @@
  *
  * `subscribe` and `getSnapshot` are module-level constants, so React
  * receives the same identities on every render and never resubscribes.
+ *
+ * @DependsOnExternal browser-network-status
  */
 
 import { useSyncExternalStore } from 'react';

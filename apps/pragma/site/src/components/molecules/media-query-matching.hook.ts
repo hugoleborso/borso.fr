@@ -9,6 +9,8 @@
  * hands React the same two function identities and React does not
  * resubscribe. See
  * docs/dantotsus/usesyncexternal-store-subscribe-must-be-stable.md.
+ *
+ * @DependsOnExternal browser-media-query
  */
 
 import { useSyncExternalStore } from 'react';
