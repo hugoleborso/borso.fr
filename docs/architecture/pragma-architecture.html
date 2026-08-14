@@ -140,7 +140,6 @@
     padding: 1rem;
     margin-bottom: 1.75rem;
   }
-  pre.mermaid { margin: 0; font-family: var(--font-mono); font-size: .74rem; color: var(--muted); white-space: pre; }
 
   .cards { display: grid; grid-template-columns: 1fr; gap: .7rem; }
   @media (min-width: 620px) { .cards { grid-template-columns: repeat(2, 1fr); } }
@@ -153,8 +152,13 @@
     display: flex;
     flex-direction: column;
     gap: .4rem;
+    /* A grid item defaults to min-width:auto, so the nowrap kind tag in the
+       header sets a floor wider than the track's share and pushes the whole
+       page sideways. */
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
-  .card header { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+  .card header { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
   .card h4 { margin: 0; font: 600 .88rem/1.3 var(--font-mono); }
   .card p { margin: 0; font-size: .81rem; color: var(--muted); }
   .tag {
@@ -309,6 +313,81 @@
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   }
+
+  .graph {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 1.75rem;
+    overflow: hidden;
+  }
+  .graph-bar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    padding: .6rem .9rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-sunk);
+  }
+  .graph-hint { font: .7rem/1.4 var(--font-mono); color: var(--muted); }
+  .graph-bar button {
+    font: 500 .7rem/1 var(--font-mono);
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: .35rem .6rem;
+    cursor: pointer;
+    margin-left: auto;
+  }
+  .graph-bar button:hover { color: var(--ink); }
+  .graph-legend { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; }
+  .graph-legend span { font: .66rem/1.4 var(--font-mono); color: var(--muted); display: inline-flex; align-items: center; gap: .3rem; }
+  .legend-line { width: 20px; height: 0; border-top: 2px solid var(--muted); display: inline-block; }
+  .legend-line.type { border-top-style: dashed; }
+  .legend-line.http { border-top-color: var(--accent); border-top-width: 3px; }
+  /*
+     The canvas keeps its natural size and the stage scrolls. Scaling a thirty
+     node graph down to the container width is what made the component level
+     unreadable: every label shrank so the whole thing could be seen at once,
+     which is the one thing a reader does not need.
+  */
+  .graph-stage { overflow: auto; max-height: 66vh; }
+  .graph svg { display: block; touch-action: none; cursor: grab; }
+  .graph svg.grabbing { cursor: grabbing; }
+
+  .edge { fill: none; stroke: var(--line-strong); stroke-width: 1.6; opacity: .55; transition: stroke .12s, opacity .12s; }
+  .edge-type { stroke-dasharray: 5 4; }
+  .edge-http { stroke: var(--accent); stroke-width: 2.6; }
+  .marker-import, .marker-type { fill: var(--line-strong); }
+  .marker-http { fill: var(--accent); }
+  .marker-lit { fill: var(--accent); }
+  .edges .dim { opacity: .07; }
+  .edges .lit { stroke: var(--accent); stroke-width: 2.6; opacity: 1; }
+
+  .node { cursor: pointer; }
+  .node-body { fill: var(--panel); stroke: var(--line-strong); stroke-width: 1; transition: opacity .12s; }
+  .node-stripe { fill: var(--muted); }
+  .node-label { font: 600 12.5px var(--font-mono); fill: var(--ink); }
+  .node-sub { font: 10.5px var(--font-mono); fill: var(--muted); }
+  .node:hover .node-body, .node:focus-visible .node-body { stroke: var(--accent); stroke-width: 2; }
+  .node:focus-visible { outline: none; }
+  .nodes .dim { opacity: .22; }
+  .nodes .lit .node-body { stroke: var(--accent); stroke-width: 2; }
+
+  .node-actor .node-stripe { fill: var(--layer-pure); }
+  .node-system .node-stripe { fill: var(--accent); }
+  .node-external .node-stripe { fill: var(--signal); }
+  .node-browser .node-stripe { fill: var(--layer-route); }
+  .node-aws .node-stripe { fill: var(--layer-data); }
+  .node-build .node-stripe { fill: var(--muted); }
+  .node-api .node-stripe { fill: var(--layer-service); }
+  .node-site .node-stripe { fill: var(--layer-route); }
+  .node-domain .node-stripe { fill: var(--layer-pure); }
+  .node-infrastructure .node-stripe { fill: var(--layer-data); }
+  .node-external .node-body { stroke-dasharray: 4 3; }
+
 </style>
 
 <header class="top"><div class="wrap">
@@ -337,48 +416,20 @@
       <h2>Level 1 — Context</h2>
       <p class="summary">Who uses the system and what it depends on. Every external here is declared in the manifest and referenced by at least one @DependsOnExternal tag in the code; the generator fails if either half is missing.</p>
       
-      <div class="diagram-scroll"><pre class="mermaid">flowchart LR
-  subgraph npeople[&quot;People&quot;]
-    nband_member([Band member])
-  end
-  subgraph nsystem[&quot;System&quot;]
-    nsystem[&quot;Pragma&quot;]
-  end
-  subgraph nthird_party[&quot;Third party&quot;]
-    nmusicbrainz[&quot;MusicBrainz&quot;]
-    nyoutube[&quot;YouTube&quot;]
-    nspotify[&quot;Spotify&quot;]
-    nvimeo[&quot;Vimeo&quot;]
-    nsoundcloud[&quot;SoundCloud&quot;]
-    ndeezer[&quot;Deezer&quot;]
-    nsoundslice[&quot;Soundslice&quot;]
-  end
-  subgraph naws[&quot;AWS&quot;]
-    naws_dsql[&quot;Aurora DSQL&quot;]
-    naws_s3[&quot;Amazon S3&quot;]
-  end
-  subgraph nbrowser_platform[&quot;Browser platform&quot;]
-    nbrowser_local_storage[&quot;localStorage&quot;]
-    nbrowser_media_query[&quot;matchMedia&quot;]
-    nbrowser_network_status[&quot;navigator.onLine&quot;]
-    nbrowser_service_worker[&quot;Service worker registration&quot;]
-    nbrowser_dialog[&quot;HTMLDialogElement&quot;]
-  end
-  nband_member --&gt;|Manages the catalogue, sessions and setlists| nsystem
-  nsystem --&gt;|HTTPS, public web service| nmusicbrainz
-  nsystem --&gt;|iframe embed| nyoutube
-  nsystem --&gt;|iframe embed| nspotify
-  nsystem --&gt;|iframe embed| nvimeo
-  nsystem --&gt;|iframe embed| nsoundcloud
-  nsystem --&gt;|iframe embed| ndeezer
-  nsystem --&gt;|iframe embed| nsoundslice
-  nsystem --&gt;|AWS SDK signer plus Postgres wire protocol| naws_dsql
-  nsystem --&gt;|AWS SDK, presigned URLs| naws_s3
-  nsystem --&gt;|Browser storage API| nbrowser_local_storage
-  nsystem --&gt;|Browser layout API| nbrowser_media_query
-  nsystem --&gt;|Browser network API| nbrowser_network_status
-  nsystem --&gt;|Browser service worker API| nbrowser_service_worker
-  nsystem --&gt;|Browser dialog API| nbrowser_dialog</pre></div>
+      
+      <div class="graph" data-level="context">
+        <div class="graph-bar">
+          <span class="graph-hint">hover to trace · click to pin · drag to pan · scroll to zoom</span>
+          <span class="graph-legend">
+            <span><i class="legend-line"></i>imports</span>
+            <span><i class="legend-line type"></i>types only</span>
+            <span><i class="legend-line http"></i>over HTTP</span>
+          </span>
+          <button type="button" data-graph-reset>Reset view</button>
+        </div>
+        <div class="graph-stage"></div>
+        <script type="application/json">{"level":"context","title":"Level 1 — Context","nodes":[{"id":"band-member","label":"Band member","sublabel":"","detail":"Signs in with the shared password and works the catalogue, the setlists and the sessions. Every human user holds this one role, because the application has no per-user accounts.","group":"people","tone":"actor"},{"id":"system","label":"Pragma","sublabel":"243 files","detail":"Band enterprise resource planning: song catalogue, member instrument mastery, rehearsal and concert sessions, setlists, and a venue pipeline.","group":"system","tone":"system"},{"id":"musicbrainz","label":"MusicBrainz","sublabel":"1 file","detail":"HTTPS, public web service. Song metadata lookup used to enrich a catalogue entry with recording id, album, duration, tags and ISRCs.","group":"third-party","tone":"external"},{"id":"youtube","label":"YouTube","sublabel":"1 file","detail":"iframe embed. Renders a reference recording inside a song page.","group":"third-party","tone":"external"},{"id":"spotify","label":"Spotify","sublabel":"1 file","detail":"iframe embed. Renders a reference recording inside a song page.","group":"third-party","tone":"external"},{"id":"vimeo","label":"Vimeo","sublabel":"1 file","detail":"iframe embed. Renders a reference recording inside a song page.","group":"third-party","tone":"external"},{"id":"soundcloud","label":"SoundCloud","sublabel":"1 file","detail":"iframe embed. Renders a reference recording inside a song page.","group":"third-party","tone":"external"},{"id":"deezer","label":"Deezer","sublabel":"1 file","detail":"iframe embed. Renders a reference recording inside a song page.","group":"third-party","tone":"external"},{"id":"soundslice","label":"Soundslice","sublabel":"1 file","detail":"iframe embed. Renders an interactive chord or tab chart inside a song page.","group":"third-party","tone":"external"},{"id":"aws-dsql","label":"Aurora DSQL","sublabel":"1 file","detail":"AWS SDK signer plus Postgres wire protocol. Connection tokens are minted per connection by the signer rather than held, so a warm Lambda never carries an expired password.","group":"aws","tone":"aws"},{"id":"aws-s3","label":"Amazon S3","sublabel":"1 file","detail":"AWS SDK, presigned URLs. Object storage for chord charts, reached only through presigned URLs.","group":"aws","tone":"aws"},{"id":"browser-local-storage","label":"localStorage","sublabel":"2 files","detail":"Browser storage API. Holds the chosen locale and the marker saying this browser has signed in before. Never holds an authorisation.","group":"browser-platform","tone":"browser"},{"id":"browser-media-query","label":"matchMedia","sublabel":"1 file","detail":"Browser layout API. Breakpoint reads, subscribed through useSyncExternalStore rather than copied into state.","group":"browser-platform","tone":"browser"},{"id":"browser-network-status","label":"navigator.onLine","sublabel":"1 file","detail":"Browser network API. Drives the offline banner.","group":"browser-platform","tone":"browser"},{"id":"browser-service-worker","label":"Service worker registration","sublabel":"1 file","detail":"Browser service worker API. Registers the offline cache at boot, and is skipped in development.","group":"browser-platform","tone":"browser"},{"id":"browser-dialog","label":"HTMLDialogElement","sublabel":"1 file","detail":"Browser dialog API. Opens a native modal where it is rendered, through a ref callback rather than an effect.","group":"browser-platform","tone":"browser"}],"edges":[{"from":"band-member","to":"system","kind":"uses","label":"Manages the catalogue, sessions and setlists"},{"from":"system","to":"musicbrainz","kind":"depends","label":"HTTPS, public web service"},{"from":"system","to":"youtube","kind":"depends","label":"iframe embed"},{"from":"system","to":"spotify","kind":"depends","label":"iframe embed"},{"from":"system","to":"vimeo","kind":"depends","label":"iframe embed"},{"from":"system","to":"soundcloud","kind":"depends","label":"iframe embed"},{"from":"system","to":"deezer","kind":"depends","label":"iframe embed"},{"from":"system","to":"soundslice","kind":"depends","label":"iframe embed"},{"from":"system","to":"aws-dsql","kind":"depends","label":"AWS SDK signer plus Postgres wire protocol"},{"from":"system","to":"aws-s3","kind":"depends","label":"AWS SDK, presigned URLs"},{"from":"system","to":"browser-local-storage","kind":"depends","label":"Browser storage API"},{"from":"system","to":"browser-media-query","kind":"depends","label":"Browser layout API"},{"from":"system","to":"browser-network-status","kind":"depends","label":"Browser network API"},{"from":"system","to":"browser-service-worker","kind":"depends","label":"Browser service worker API"},{"from":"system","to":"browser-dialog","kind":"depends","label":"Browser dialog API"}]}</script>
+      </div>
       <div class="cards">
       <article class="card" data-group="people">
         <header>
@@ -513,52 +564,20 @@
       <h2>Level 2 — Containers</h2>
       <p class="summary">The deployable and build-time units, and how they reach each other. Import edges are real module imports; the HTTP edge exists because front-end modules call the typed client.</p>
       
-      <div class="diagram-scroll"><pre class="mermaid">flowchart LR
-  subgraph nbrowser[&quot;Browser&quot;]
-    nsite[&quot;Single page application&quot;]
-    nservice_worker[&quot;Service worker&quot;]
-  end
-  subgraph naws[&quot;AWS&quot;]
-    napi[&quot;HTTP API&quot;]
-    ndatabase[&quot;Application database&quot;]
-    nuploads_bucket[&quot;Chord chart bucket&quot;]
-  end
-  subgraph nbuild[&quot;Build time&quot;]
-    ndomain[&quot;Shared domain rules&quot;]
-    ninfrastructure[&quot;Infrastructure definition&quot;]
-  end
-  subgraph nthird_party[&quot;Third party&quot;]
-    nmusicbrainz[&quot;MusicBrainz&quot;]
-    nyoutube[&quot;YouTube&quot;]
-    nspotify[&quot;Spotify&quot;]
-    nvimeo[&quot;Vimeo&quot;]
-    nsoundcloud[&quot;SoundCloud&quot;]
-    ndeezer[&quot;Deezer&quot;]
-    nsoundslice[&quot;Soundslice&quot;]
-  end
-  subgraph nbrowser_platform[&quot;Browser platform&quot;]
-    nbrowser_local_storage[&quot;localStorage&quot;]
-    nbrowser_media_query[&quot;matchMedia&quot;]
-    nbrowser_network_status[&quot;navigator.onLine&quot;]
-    nbrowser_dialog[&quot;HTMLDialogElement&quot;]
-  end
-  napi -.-&gt;|compiles against| ndomain
-  napi --&gt;|AWS SDK signer plus Postgres wire protocol| ndatabase
-  napi --&gt;|HTTPS, public web service| nmusicbrainz
-  napi --&gt;|AWS SDK, presigned URLs| nuploads_bucket
-  nsite --&gt;|Browser layout API| nbrowser_media_query
-  nsite --&gt;|Browser network API| nbrowser_network_status
-  nsite --&gt;|imports| ndomain
-  nsite --&gt;|Browser storage API| nbrowser_local_storage
-  nsite -.-&gt;|compiles against| napi
-  nsite --&gt;|iframe embed| nyoutube
-  nsite --&gt;|iframe embed| nspotify
-  nsite --&gt;|iframe embed| nvimeo
-  nsite --&gt;|iframe embed| nsoundcloud
-  nsite --&gt;|iframe embed| ndeezer
-  nsite --&gt;|iframe embed| nsoundslice
-  nsite --&gt;|Browser dialog API| nbrowser_dialog
-  nsite --&gt;|Browser service worker API| nservice_worker</pre></div>
+      
+      <div class="graph" data-level="container">
+        <div class="graph-bar">
+          <span class="graph-hint">hover to trace · click to pin · drag to pan · scroll to zoom</span>
+          <span class="graph-legend">
+            <span><i class="legend-line"></i>imports</span>
+            <span><i class="legend-line type"></i>types only</span>
+            <span><i class="legend-line http"></i>over HTTP</span>
+          </span>
+          <button type="button" data-graph-reset>Reset view</button>
+        </div>
+        <div class="graph-stage"></div>
+        <script type="application/json">{"level":"container","title":"Level 2 — Containers","nodes":[{"id":"site","label":"Single page application","sublabel":"174 files","detail":"React 19, Vite, TanStack Query, Tailwind. The whole user interface. Reads and writes through the typed Hono RPC client, and holds no server state of its own outside the query cache.","group":"browser","tone":"site"},{"id":"service-worker","label":"Service worker","sublabel":"","detail":"Plain browser script, no bundler. Caches the shell and the offline manifest so a rehearsal in a basement still renders. Ships as-is from site/public/sw.js.","group":"browser","tone":"site"},{"id":"api","label":"HTTP API","sublabel":"62 files","detail":"Hono on AWS Lambda. Every domain endpoint, gated by a shared-password session cookie. Its inferred router type is the contract the single page application compiles against.","group":"aws","tone":"api"},{"id":"domain","label":"Shared domain rules","sublabel":"5 files","detail":"TypeScript module, no runtime of its own. The rules both sides read, reachable through @domain/*. Compiled into each side rather than deployed, and carrying only rules with a real caller on both.","group":"build","tone":"build"},{"id":"database","label":"Application database","sublabel":"","detail":"Aurora DSQL, Postgres wire protocol, Drizzle. One schema per stage inside a cluster shared across stages. Holds the catalogue, the mastery matrix, the sessions and the venue pipeline, plus the admin credentials row.","group":"aws","tone":"api"},{"id":"uploads-bucket","label":"Chord chart bucket","sublabel":"","detail":"Amazon S3, presigned PUT and GET. Holds uploaded chord charts. The browser transfers bytes directly against a presigned URL, so no chart passes through the API.","group":"aws","tone":"api"},{"id":"infrastructure","label":"Infrastructure definition","sublabel":"2 files","detail":"AWS CDK. Composes the shared constructs into this application stack. Build-time only, never reached at runtime.","group":"build","tone":"build"},{"id":"musicbrainz","label":"MusicBrainz","sublabel":"","detail":"HTTPS, public web service. Song metadata lookup used to enrich a catalogue entry with recording id, album, duration, tags and ISRCs.","group":"third-party","tone":"external"},{"id":"youtube","label":"YouTube","sublabel":"","detail":"iframe embed. Renders a reference recording inside a song page.","group":"third-party","tone":"external"},{"id":"spotify","label":"Spotify","sublabel":"","detail":"iframe embed. Renders a reference recording inside a song page.","group":"third-party","tone":"external"},{"id":"vimeo","label":"Vimeo","sublabel":"","detail":"iframe embed. Renders a reference recording inside a song page.","group":"third-party","tone":"external"},{"id":"soundcloud","label":"SoundCloud","sublabel":"","detail":"iframe embed. Renders a reference recording inside a song page.","group":"third-party","tone":"external"},{"id":"deezer","label":"Deezer","sublabel":"","detail":"iframe embed. Renders a reference recording inside a song page.","group":"third-party","tone":"external"},{"id":"soundslice","label":"Soundslice","sublabel":"","detail":"iframe embed. Renders an interactive chord or tab chart inside a song page.","group":"third-party","tone":"external"},{"id":"browser-local-storage","label":"localStorage","sublabel":"","detail":"Browser storage API. Holds the chosen locale and the marker saying this browser has signed in before. Never holds an authorisation.","group":"browser-platform","tone":"browser"},{"id":"browser-media-query","label":"matchMedia","sublabel":"","detail":"Browser layout API. Breakpoint reads, subscribed through useSyncExternalStore rather than copied into state.","group":"browser-platform","tone":"browser"},{"id":"browser-network-status","label":"navigator.onLine","sublabel":"","detail":"Browser network API. Drives the offline banner.","group":"browser-platform","tone":"browser"},{"id":"browser-dialog","label":"HTMLDialogElement","sublabel":"","detail":"Browser dialog API. Opens a native modal where it is rendered, through a ref callback rather than an effect.","group":"browser-platform","tone":"browser"}],"edges":[{"from":"api","to":"domain","kind":"type","label":"compiles against"},{"from":"api","to":"database","kind":"depends","label":"AWS SDK signer plus Postgres wire protocol"},{"from":"api","to":"domain","kind":"import","label":"imports"},{"from":"api","to":"musicbrainz","kind":"depends","label":"HTTPS, public web service"},{"from":"api","to":"uploads-bucket","kind":"depends","label":"AWS SDK, presigned URLs"},{"from":"site","to":"browser-media-query","kind":"depends","label":"Browser layout API"},{"from":"site","to":"browser-network-status","kind":"depends","label":"Browser network API"},{"from":"site","to":"domain","kind":"import","label":"imports"},{"from":"site","to":"domain","kind":"type","label":"compiles against"},{"from":"site","to":"browser-local-storage","kind":"depends","label":"Browser storage API"},{"from":"site","to":"api","kind":"type","label":"compiles against"},{"from":"site","to":"youtube","kind":"depends","label":"iframe embed"},{"from":"site","to":"spotify","kind":"depends","label":"iframe embed"},{"from":"site","to":"vimeo","kind":"depends","label":"iframe embed"},{"from":"site","to":"soundcloud","kind":"depends","label":"iframe embed"},{"from":"site","to":"deezer","kind":"depends","label":"iframe embed"},{"from":"site","to":"soundslice","kind":"depends","label":"iframe embed"},{"from":"site","to":"browser-dialog","kind":"depends","label":"Browser dialog API"},{"from":"site","to":"service-worker","kind":"depends","label":"Browser service worker API"},{"from":"site","to":"api","kind":"http","label":"JSON over HTTPS, session cookie, typed by the router"}]}</script>
+      </div>
       <div class="cards">
       <article class="card" data-group="browser">
         <header>
@@ -709,168 +728,20 @@
       <h2>Level 3 — Components</h2>
       <p class="summary">Bounded contexts on the back and feature areas on the front, with the import edges between them. A back-end context is a folder under api/src; a front-end one is a @Feature tag, falling back to the folder.</p>
       
-      <div class="diagram-scroll"><pre class="mermaid">flowchart LR
-  subgraph napi[&quot;HTTP API&quot;]
-    napi____test[&quot;__test&quot;]
-    napi__root[&quot;root&quot;]
-    napi__auth[&quot;auth&quot;]
-    napi__bars[&quot;bars&quot;]
-    napi__database[&quot;database&quot;]
-    napi__helpers[&quot;helpers&quot;]
-    napi__instruments[&quot;instruments&quot;]
-    napi__mastery[&quot;mastery&quot;]
-    napi__members[&quot;members&quot;]
-    napi__sessions[&quot;sessions&quot;]
-    napi__setlists[&quot;setlists&quot;]
-    napi__songs[&quot;songs&quot;]
-    napi__transitions[&quot;transitions&quot;]
-    napi__uploads[&quot;uploads&quot;]
-  end
-  subgraph ninfrastructure[&quot;Infrastructure definition&quot;]
-    ninfrastructure__cdk[&quot;cdk&quot;]
-  end
-  subgraph ndomain[&quot;Shared domain rules&quot;]
-    ndomain__domain[&quot;domain&quot;]
-  end
-  subgraph nsite[&quot;Single page application&quot;]
-    nsite__root[&quot;root&quot;]
-    nsite__atoms[&quot;atoms&quot;]
-    nsite__molecules[&quot;molecules&quot;]
-    nsite__organisms[&quot;organisms&quot;]
-    nsite__i18n[&quot;i18n&quot;]
-    nsite__lib[&quot;lib&quot;]
-    nsite__queries[&quot;queries&quot;]
-    nsite__routes[&quot;routes&quot;]
-    nsite__bars[&quot;bars&quot;]
-    nsite__catalog[&quot;catalog&quot;]
-    nsite__instruments[&quot;instruments&quot;]
-    nsite__members[&quot;members&quot;]
-    nsite__sessions[&quot;sessions&quot;]
-    nsite__setlists[&quot;setlists&quot;]
-    nsite__sw[&quot;sw&quot;]
-  end
-  napi____test -.-&gt; ndomain__domain
-  napi____test --&gt; napi__bars
-  napi____test --&gt; napi__database
-  napi____test --&gt; napi__instruments
-  napi____test --&gt; napi__mastery
-  napi____test --&gt; napi__members
-  napi____test --&gt; napi__sessions
-  napi____test --&gt; napi__setlists
-  napi____test --&gt; napi__songs
-  napi____test --&gt; napi__transitions
-  napi____test --&gt; napi__auth
-  napi__root --&gt; napi____test
-  napi__root --&gt; napi__auth
-  napi__root --&gt; napi__bars
-  napi__root --&gt; napi__instruments
-  napi__root --&gt; napi__mastery
-  napi__root --&gt; napi__members
-  napi__root --&gt; napi__sessions
-  napi__root --&gt; napi__setlists
-  napi__root --&gt; napi__songs
-  napi__root --&gt; napi__transitions
-  napi__root --&gt; napi__uploads
-  napi__auth --&gt; napi__database
-  napi__bars --&gt; napi__auth
-  napi__bars --&gt; napi__database
-  napi__bars --&gt; napi__helpers
-  napi__instruments --&gt; napi__auth
-  napi__instruments --&gt; ndomain__domain
-  napi__instruments --&gt; napi__database
-  napi__instruments --&gt; napi__helpers
-  napi__mastery --&gt; napi__auth
-  napi__mastery --&gt; ndomain__domain
-  napi__mastery --&gt; napi__database
-  napi__mastery --&gt; napi__helpers
-  napi__members -.-&gt; ndomain__domain
-  napi__members --&gt; napi__auth
-  napi__members --&gt; napi__database
-  napi__members --&gt; napi__helpers
-  napi__members --&gt; napi__instruments
-  napi__members --&gt; napi__setlists
-  napi__members --&gt; napi__songs
-  napi__sessions --&gt; napi__auth
-  napi__sessions --&gt; napi__database
-  napi__sessions --&gt; napi__helpers
-  napi__sessions --&gt; napi__setlists
-  napi__sessions --&gt; napi__songs
-  napi__setlists --&gt; napi__auth
-  napi__setlists --&gt; napi__database
-  napi__setlists --&gt; napi__helpers
-  napi__setlists --&gt; ndomain__domain
-  napi__songs --&gt; napi__auth
-  napi__songs --&gt; napi__database
-  napi__songs --&gt; napi__helpers
-  napi__songs --&gt; napi__mastery
-  napi__songs --&gt; napi__setlists
-  napi__songs --&gt; ndomain__domain
-  napi__transitions --&gt; napi__auth
-  napi__transitions --&gt; napi__database
-  napi__transitions --&gt; napi__helpers
-  napi__uploads --&gt; napi__auth
-  nsite__root --&gt; nsite__organisms
-  nsite__root --&gt; nsite__bars
-  nsite__root --&gt; nsite__catalog
-  nsite__root --&gt; nsite__instruments
-  nsite__root --&gt; nsite__routes
-  nsite__root --&gt; nsite__members
-  nsite__root --&gt; nsite__sessions
-  nsite__root --&gt; nsite__setlists
-  nsite__molecules --&gt; nsite__atoms
-  nsite__molecules --&gt; nsite__lib
-  nsite__molecules --&gt; nsite__i18n
-  nsite__molecules --&gt; nsite__catalog
-  nsite__organisms --&gt; nsite__atoms
-  nsite__organisms --&gt; nsite__lib
-  nsite__organisms --&gt; nsite__molecules
-  nsite__organisms --&gt; nsite__queries
-  nsite__organisms --&gt; ndomain__domain
-  nsite__organisms --&gt; nsite__catalog
-  nsite__organisms --&gt; nsite__root
-  nsite__lib -.-&gt; napi__root
-  nsite__lib --&gt; ndomain__domain
-  nsite__queries --&gt; nsite__lib
-  nsite__queries -.-&gt; ndomain__domain
-  nsite__root --&gt; nsite__i18n
-  nsite__root --&gt; nsite__lib
-  nsite__root --&gt; nsite__sw
-  nsite__routes --&gt; nsite__atoms
-  nsite__routes --&gt; nsite__lib
-  nsite__routes --&gt; nsite__queries
-  nsite__bars --&gt; nsite__atoms
-  nsite__bars --&gt; nsite__molecules
-  nsite__bars --&gt; nsite__organisms
-  nsite__bars --&gt; nsite__lib
-  nsite__bars --&gt; nsite__queries
-  nsite__bars --&gt; ndomain__domain
-  nsite__catalog --&gt; nsite__atoms
-  nsite__catalog --&gt; nsite__molecules
-  nsite__catalog --&gt; nsite__organisms
-  nsite__catalog --&gt; nsite__lib
-  nsite__catalog --&gt; nsite__queries
-  nsite__catalog --&gt; ndomain__domain
-  nsite__instruments --&gt; ndomain__domain
-  nsite__instruments --&gt; nsite__atoms
-  nsite__instruments --&gt; nsite__molecules
-  nsite__instruments --&gt; nsite__lib
-  nsite__instruments --&gt; nsite__queries
-  nsite__members --&gt; nsite__atoms
-  nsite__members --&gt; nsite__lib
-  nsite__members --&gt; nsite__molecules
-  nsite__members --&gt; nsite__organisms
-  nsite__members --&gt; nsite__queries
-  nsite__sessions --&gt; nsite__atoms
-  nsite__sessions --&gt; nsite__lib
-  nsite__sessions --&gt; nsite__molecules
-  nsite__sessions --&gt; nsite__root
-  nsite__sessions --&gt; nsite__queries
-  nsite__sessions --&gt; nsite__organisms
-  nsite__setlists --&gt; nsite__atoms
-  nsite__setlists --&gt; nsite__molecules
-  nsite__setlists --&gt; nsite__lib
-  nsite__setlists --&gt; nsite__queries
-  nsite__setlists --&gt; nsite__organisms</pre></div>
+      
+      <div class="graph" data-level="component">
+        <div class="graph-bar">
+          <span class="graph-hint">hover to trace · click to pin · drag to pan · scroll to zoom</span>
+          <span class="graph-legend">
+            <span><i class="legend-line"></i>imports</span>
+            <span><i class="legend-line type"></i>types only</span>
+            <span><i class="legend-line http"></i>over HTTP</span>
+          </span>
+          <button type="button" data-graph-reset>Reset view</button>
+        </div>
+        <div class="graph-stage"></div>
+        <script type="application/json">{"level":"component","title":"Level 3 — Components","nodes":[{"id":"api::__test","label":"__test","sublabel":"4 files","detail":"4 files in HTTP API. Layers: controller, core, repository, service. 1 HTTP routes.","group":"api","tone":"api"},{"id":"api::root","label":"root","sublabel":"3 files","detail":"3 files in HTTP API. Layers: entrypoint. 1 HTTP routes.","group":"api","tone":"api"},{"id":"api::auth","label":"auth","sublabel":"8 files","detail":"8 files in HTTP API. Layers: controller, middleware, repository, schema, service, utils. 3 HTTP routes.","group":"api","tone":"api"},{"id":"api::bars","label":"bars","sublabel":"4 files","detail":"4 files in HTTP API. Layers: controller, repository, schema, service. 5 HTTP routes.","group":"api","tone":"api"},{"id":"api::database","label":"database","sublabel":"2 files","detail":"2 files in HTTP API. Layers: database.","group":"api","tone":"api"},{"id":"api::helpers","label":"helpers","sublabel":"1 file","detail":"1 files in HTTP API. Layers: core.","group":"api","tone":"api"},{"id":"api::instruments","label":"instruments","sublabel":"4 files","detail":"4 files in HTTP API. Layers: controller, repository, schema, service. 4 HTTP routes.","group":"api","tone":"api"},{"id":"api::mastery","label":"mastery","sublabel":"5 files","detail":"5 files in HTTP API. Layers: controller, core, repository, schema, service. 6 HTTP routes.","group":"api","tone":"api"},{"id":"api::members","label":"members","sublabel":"6 files","detail":"6 files in HTTP API. Layers: controller, core, repository, schema, service, utils. 6 HTTP routes.","group":"api","tone":"api"},{"id":"api::sessions","label":"sessions","sublabel":"6 files","detail":"6 files in HTTP API. Layers: controller, core, repository, schema, service. 6 HTTP routes.","group":"api","tone":"api"},{"id":"api::setlists","label":"setlists","sublabel":"4 files","detail":"4 files in HTTP API. Layers: controller, repository, schema, service. 7 HTTP routes.","group":"api","tone":"api"},{"id":"api::songs","label":"songs","sublabel":"5 files","detail":"5 files in HTTP API. Layers: controller, core, repository, schema, service. 6 HTTP routes.","group":"api","tone":"api"},{"id":"api::transitions","label":"transitions","sublabel":"4 files","detail":"4 files in HTTP API. Layers: controller, repository, schema, service. 4 HTTP routes.","group":"api","tone":"api"},{"id":"api::uploads","label":"uploads","sublabel":"6 files","detail":"6 files in HTTP API. Layers: controller, core, repository, schema, service, types. 2 HTTP routes.","group":"api","tone":"api"},{"id":"infrastructure::cdk","label":"cdk","sublabel":"2 files","detail":"2 files in Infrastructure definition. Layers: entrypoint.","group":"infrastructure","tone":"infrastructure"},{"id":"domain::domain","label":"domain","sublabel":"5 files","detail":"5 files in Shared domain rules. Layers: core.","group":"domain","tone":"domain"},{"id":"site::root","label":"root","sublabel":"8 files","detail":"8 files in Single page application. Layers: config, declaration, entrypoint, store.","group":"site","tone":"site"},{"id":"site::atoms","label":"atoms","sublabel":"25 files","detail":"25 files in Single page application. Layers: atom.","group":"site","tone":"site"},{"id":"site::molecules","label":"molecules","sublabel":"30 files","detail":"30 files in Single page application. Layers: molecule.","group":"site","tone":"site"},{"id":"site::organisms","label":"organisms","sublabel":"31 files","detail":"31 files in Single page application. Layers: organism.","group":"site","tone":"site"},{"id":"site::i18n","label":"i18n","sublabel":"5 files","detail":"5 files in Single page application. Layers: i18n.","group":"site","tone":"site"},{"id":"site::lib","label":"lib","sublabel":"16 files","detail":"16 files in Single page application. Layers: adapter, client, core, hook, setup, utils. 1 HTTP routes.","group":"site","tone":"site"},{"id":"site::queries","label":"queries","sublabel":"15 files","detail":"15 files in Single page application. Layers: query.","group":"site","tone":"site"},{"id":"site::routes","label":"routes","sublabel":"2 files","detail":"2 files in Single page application. Layers: route.","group":"site","tone":"site"},{"id":"site::bars","label":"bars","sublabel":"4 files","detail":"4 files in Single page application. Layers: route.","group":"site","tone":"site"},{"id":"site::catalog","label":"catalog","sublabel":"21 files","detail":"21 files in Single page application. Layers: route. 1 HTTP routes.","group":"site","tone":"site"},{"id":"site::instruments","label":"instruments","sublabel":"2 files","detail":"2 files in Single page application. Layers: route.","group":"site","tone":"site"},{"id":"site::members","label":"members","sublabel":"3 files","detail":"3 files in Single page application. Layers: route.","group":"site","tone":"site"},{"id":"site::sessions","label":"sessions","sublabel":"7 files","detail":"7 files in Single page application. Layers: route.","group":"site","tone":"site"},{"id":"site::setlists","label":"setlists","sublabel":"2 files","detail":"2 files in Single page application. Layers: route.","group":"site","tone":"site"},{"id":"site::sw","label":"sw","sublabel":"3 files","detail":"3 files in Single page application. Layers: setup, utils.","group":"site","tone":"site"}],"edges":[{"from":"api::__test","to":"domain::domain","kind":"type","label":""},{"from":"api::__test","to":"api::bars","kind":"import","label":""},{"from":"api::__test","to":"api::database","kind":"import","label":""},{"from":"api::__test","to":"api::instruments","kind":"import","label":""},{"from":"api::__test","to":"api::mastery","kind":"import","label":""},{"from":"api::__test","to":"api::members","kind":"import","label":""},{"from":"api::__test","to":"api::sessions","kind":"import","label":""},{"from":"api::__test","to":"api::setlists","kind":"import","label":""},{"from":"api::__test","to":"api::songs","kind":"import","label":""},{"from":"api::__test","to":"api::transitions","kind":"import","label":""},{"from":"api::__test","to":"api::auth","kind":"import","label":""},{"from":"api::root","to":"api::__test","kind":"import","label":""},{"from":"api::root","to":"api::auth","kind":"import","label":""},{"from":"api::root","to":"api::bars","kind":"import","label":""},{"from":"api::root","to":"api::instruments","kind":"import","label":""},{"from":"api::root","to":"api::mastery","kind":"import","label":""},{"from":"api::root","to":"api::members","kind":"import","label":""},{"from":"api::root","to":"api::sessions","kind":"import","label":""},{"from":"api::root","to":"api::setlists","kind":"import","label":""},{"from":"api::root","to":"api::songs","kind":"import","label":""},{"from":"api::root","to":"api::transitions","kind":"import","label":""},{"from":"api::root","to":"api::uploads","kind":"import","label":""},{"from":"api::auth","to":"api::database","kind":"import","label":""},{"from":"api::bars","to":"api::auth","kind":"import","label":""},{"from":"api::bars","to":"api::database","kind":"import","label":""},{"from":"api::bars","to":"api::helpers","kind":"import","label":""},{"from":"api::bars","to":"api::helpers","kind":"type","label":""},{"from":"api::instruments","to":"api::auth","kind":"import","label":""},{"from":"api::instruments","to":"domain::domain","kind":"import","label":""},{"from":"api::instruments","to":"api::database","kind":"import","label":""},{"from":"api::instruments","to":"api::helpers","kind":"import","label":""},{"from":"api::instruments","to":"domain::domain","kind":"type","label":""},{"from":"api::instruments","to":"api::helpers","kind":"type","label":""},{"from":"api::mastery","to":"api::auth","kind":"import","label":""},{"from":"api::mastery","to":"domain::domain","kind":"import","label":""},{"from":"api::mastery","to":"api::database","kind":"import","label":""},{"from":"api::mastery","to":"api::helpers","kind":"import","label":""},{"from":"api::mastery","to":"api::helpers","kind":"type","label":""},{"from":"api::members","to":"domain::domain","kind":"type","label":""},{"from":"api::members","to":"api::auth","kind":"import","label":""},{"from":"api::members","to":"api::database","kind":"import","label":""},{"from":"api::members","to":"api::helpers","kind":"import","label":""},{"from":"api::members","to":"api::instruments","kind":"import","label":""},{"from":"api::members","to":"api::setlists","kind":"import","label":""},{"from":"api::members","to":"api::songs","kind":"import","label":""},{"from":"api::members","to":"domain::domain","kind":"import","label":""},{"from":"api::members","to":"api::helpers","kind":"type","label":""},{"from":"api::sessions","to":"api::auth","kind":"import","label":""},{"from":"api::sessions","to":"api::database","kind":"import","label":""},{"from":"api::sessions","to":"api::helpers","kind":"import","label":""},{"from":"api::sessions","to":"api::setlists","kind":"import","label":""},{"from":"api::sessions","to":"api::songs","kind":"import","label":""},{"from":"api::sessions","to":"api::helpers","kind":"type","label":""},{"from":"api::setlists","to":"api::auth","kind":"import","label":""},{"from":"api::setlists","to":"api::database","kind":"import","label":""},{"from":"api::setlists","to":"api::helpers","kind":"import","label":""},{"from":"api::setlists","to":"domain::domain","kind":"import","label":""},{"from":"api::setlists","to":"api::helpers","kind":"type","label":""},{"from":"api::songs","to":"api::auth","kind":"import","label":""},{"from":"api::songs","to":"api::database","kind":"import","label":""},{"from":"api::songs","to":"api::helpers","kind":"import","label":""},{"from":"api::songs","to":"api::mastery","kind":"import","label":""},{"from":"api::songs","to":"api::setlists","kind":"import","label":""},{"from":"api::songs","to":"domain::domain","kind":"import","label":""},{"from":"api::songs","to":"api::helpers","kind":"type","label":""},{"from":"api::transitions","to":"api::auth","kind":"import","label":""},{"from":"api::transitions","to":"api::database","kind":"import","label":""},{"from":"api::transitions","to":"api::helpers","kind":"import","label":""},{"from":"api::transitions","to":"api::helpers","kind":"type","label":""},{"from":"api::uploads","to":"api::auth","kind":"import","label":""},{"from":"site::root","to":"site::organisms","kind":"import","label":""},{"from":"site::root","to":"site::bars","kind":"import","label":""},{"from":"site::root","to":"site::catalog","kind":"import","label":""},{"from":"site::root","to":"site::instruments","kind":"import","label":""},{"from":"site::root","to":"site::routes","kind":"import","label":""},{"from":"site::root","to":"site::members","kind":"import","label":""},{"from":"site::root","to":"site::sessions","kind":"import","label":""},{"from":"site::root","to":"site::setlists","kind":"import","label":""},{"from":"site::molecules","to":"site::atoms","kind":"import","label":""},{"from":"site::molecules","to":"site::lib","kind":"import","label":""},{"from":"site::molecules","to":"site::i18n","kind":"import","label":""},{"from":"site::molecules","to":"site::lib","kind":"type","label":""},{"from":"site::molecules","to":"site::catalog","kind":"import","label":""},{"from":"site::organisms","to":"site::atoms","kind":"import","label":""},{"from":"site::organisms","to":"site::lib","kind":"import","label":""},{"from":"site::organisms","to":"site::molecules","kind":"import","label":""},{"from":"site::organisms","to":"site::queries","kind":"import","label":""},{"from":"site::organisms","to":"domain::domain","kind":"import","label":""},{"from":"site::organisms","to":"site::molecules","kind":"type","label":""},{"from":"site::organisms","to":"site::catalog","kind":"import","label":""},{"from":"site::organisms","to":"site::root","kind":"import","label":""},{"from":"site::organisms","to":"domain::domain","kind":"type","label":""},{"from":"site::lib","to":"api::root","kind":"type","label":""},{"from":"site::lib","to":"domain::domain","kind":"import","label":""},{"from":"site::queries","to":"site::lib","kind":"import","label":""},{"from":"site::queries","to":"domain::domain","kind":"type","label":""},{"from":"site::queries","to":"site::lib","kind":"type","label":""},{"from":"site::queries","to":"domain::domain","kind":"import","label":""},{"from":"site::root","to":"site::i18n","kind":"import","label":""},{"from":"site::root","to":"site::lib","kind":"import","label":""},{"from":"site::root","to":"site::sw","kind":"import","label":""},{"from":"site::routes","to":"site::atoms","kind":"import","label":""},{"from":"site::routes","to":"site::lib","kind":"import","label":""},{"from":"site::routes","to":"site::queries","kind":"import","label":""},{"from":"site::bars","to":"site::atoms","kind":"import","label":""},{"from":"site::bars","to":"site::molecules","kind":"import","label":""},{"from":"site::bars","to":"site::organisms","kind":"import","label":""},{"from":"site::bars","to":"site::lib","kind":"import","label":""},{"from":"site::bars","to":"site::queries","kind":"import","label":""},{"from":"site::bars","to":"domain::domain","kind":"import","label":""},{"from":"site::catalog","to":"site::atoms","kind":"import","label":""},{"from":"site::catalog","to":"site::molecules","kind":"import","label":""},{"from":"site::catalog","to":"site::organisms","kind":"import","label":""},{"from":"site::catalog","to":"site::organisms","kind":"type","label":""},{"from":"site::catalog","to":"site::lib","kind":"import","label":""},{"from":"site::catalog","to":"site::queries","kind":"import","label":""},{"from":"site::catalog","to":"domain::domain","kind":"import","label":""},{"from":"site::catalog","to":"domain::domain","kind":"type","label":""},{"from":"site::instruments","to":"domain::domain","kind":"import","label":""},{"from":"site::instruments","to":"site::atoms","kind":"import","label":""},{"from":"site::instruments","to":"site::molecules","kind":"import","label":""},{"from":"site::instruments","to":"site::lib","kind":"import","label":""},{"from":"site::instruments","to":"site::queries","kind":"import","label":""},{"from":"site::instruments","to":"domain::domain","kind":"type","label":""},{"from":"site::members","to":"site::atoms","kind":"import","label":""},{"from":"site::members","to":"site::lib","kind":"import","label":""},{"from":"site::members","to":"site::molecules","kind":"import","label":""},{"from":"site::members","to":"site::organisms","kind":"import","label":""},{"from":"site::members","to":"site::queries","kind":"import","label":""},{"from":"site::sessions","to":"site::atoms","kind":"import","label":""},{"from":"site::sessions","to":"site::lib","kind":"import","label":""},{"from":"site::sessions","to":"site::molecules","kind":"import","label":""},{"from":"site::sessions","to":"site::root","kind":"import","label":""},{"from":"site::sessions","to":"site::queries","kind":"import","label":""},{"from":"site::sessions","to":"site::organisms","kind":"import","label":""},{"from":"site::setlists","to":"site::atoms","kind":"import","label":""},{"from":"site::setlists","to":"site::molecules","kind":"import","label":""},{"from":"site::setlists","to":"site::lib","kind":"import","label":""},{"from":"site::setlists","to":"site::queries","kind":"import","label":""},{"from":"site::setlists","to":"site::organisms","kind":"import","label":""}]}</script>
+      </div>
       <div class="cards">
       <article class="card" data-group="api">
         <header>
@@ -4369,4 +4240,398 @@
   }
   search?.addEventListener('input', applyFilters);
   layerFilter?.addEventListener('change', applyFilters);
+</script>
+<script>
+(() => {
+  const MAX_COLUMN_ROWS = 7;
+  const NODE_HEIGHT = 46;
+  const NODE_MIN_WIDTH = 132;
+  const NODE_MAX_WIDTH = 230;
+  const CHARACTER_WIDTH = 7.1;
+  const NODE_PADDING = 26;
+  const LAYER_GAP = 104;
+  const ROW_GAP = 22;
+  const MARGIN = 32;
+  const BARYCENTRE_SWEEPS = 6;
+  const ZOOM_MIN = 0.3;
+  const ZOOM_MAX = 2.6;
+  const ZOOM_STEP = 0.0016;
+
+  const measureWidth = (label) =>
+    Math.max(NODE_MIN_WIDTH, Math.min(NODE_MAX_WIDTH, label.length * CHARACTER_WIDTH + NODE_PADDING));
+
+  /**
+   * Edges that close a cycle are found with a depth-first walk and held aside,
+   * so the layering below runs on an acyclic graph. They are still drawn; only
+   * their direction is ignored while deciding which column a node sits in.
+   */
+  const findBackEdges = (nodeIds, outgoing) => {
+    const state = new Map(nodeIds.map((id) => [id, 0]));
+    const back = new Set();
+    const visit = (id) => {
+      state.set(id, 1);
+      for (const edge of outgoing.get(id) ?? []) {
+        const mark = state.get(edge.to) ?? 0;
+        if (mark === 1) back.add(edge.key);
+        else if (mark === 0) visit(edge.to);
+      }
+      state.set(id, 2);
+    };
+    for (const id of nodeIds) if ((state.get(id) ?? 0) === 0) visit(id);
+    return back;
+  };
+
+  const assignLayers = (nodeIds, forward, backEdges) => {
+    const layer = new Map(nodeIds.map((id) => [id, 0]));
+    // Longest path: relax until stable, bounded by the node count so a graph
+    // whose cycles were not fully broken still terminates.
+    for (let pass = 0; pass < nodeIds.length; pass += 1) {
+      let moved = false;
+      for (const id of nodeIds) {
+        for (const edge of forward.get(id) ?? []) {
+          if (backEdges.has(edge.key)) continue;
+          const candidate = (layer.get(id) ?? 0) + 1;
+          if (candidate > (layer.get(edge.to) ?? 0)) {
+            layer.set(edge.to, candidate);
+            moved = true;
+          }
+        }
+      }
+      if (!moved) break;
+    }
+    return layer;
+  };
+
+  const orderWithinLayers = (columns, incoming, outgoing, positionOf) => {
+    for (let sweep = 0; sweep < BARYCENTRE_SWEEPS; sweep += 1) {
+      const useIncoming = sweep % 2 === 0;
+      for (const column of columns) {
+        const barycentre = new Map();
+        for (const id of column) {
+          const neighbours = (useIncoming ? incoming.get(id) : outgoing.get(id)) ?? [];
+          const places = neighbours
+            .map((edge) => positionOf.get(useIncoming ? edge.from : edge.to))
+            .filter((place) => place !== undefined);
+          barycentre.set(
+            id,
+            places.length === 0
+              ? (positionOf.get(id) ?? 0)
+              : places.reduce((total, place) => total + place, 0) / places.length,
+          );
+        }
+        column.sort((left, right) => (barycentre.get(left) ?? 0) - (barycentre.get(right) ?? 0));
+        column.forEach((id, index) => positionOf.set(id, index));
+      }
+    }
+  };
+
+  function layoutGraph(nodes, edges) {
+    const nodeIds = nodes.map((node) => node.id);
+    const known = new Set(nodeIds);
+    const usable = edges
+      .filter((edge) => known.has(edge.from) && known.has(edge.to) && edge.from !== edge.to)
+      .map((edge, index) => ({ ...edge, key: edge.from + '->' + edge.to + '#' + index }));
+
+    const outgoing = new Map(nodeIds.map((id) => [id, []]));
+    const incoming = new Map(nodeIds.map((id) => [id, []]));
+    for (const edge of usable) {
+      outgoing.get(edge.from).push(edge);
+      incoming.get(edge.to).push(edge);
+    }
+
+    const backEdges = findBackEdges(nodeIds, outgoing);
+    const layer = assignLayers(nodeIds, outgoing, backEdges);
+
+    let columns = [];
+    for (const id of nodeIds) {
+      const index = layer.get(id) ?? 0;
+      while (columns.length <= index) columns.push([]);
+      columns[index].push(id);
+    }
+    const positionOf = new Map();
+    for (const column of columns) column.forEach((id, index) => positionOf.set(id, index));
+    orderWithinLayers(columns, incoming, outgoing, positionOf);
+
+    // A hub with a dozen leaves makes one very tall column, which forces the
+    // whole drawing into a narrow ribbon once it is scaled to fit. Splitting a
+    // long column across several spends the width that would otherwise be
+    // empty on either side.
+    const renderColumns = [];
+    for (const column of columns) {
+      if (column.length <= MAX_COLUMN_ROWS) {
+        renderColumns.push(column);
+        continue;
+      }
+      const slices = Math.ceil(column.length / MAX_COLUMN_ROWS);
+      const perSlice = Math.ceil(column.length / slices);
+      for (let start = 0; start < column.length; start += perSlice) {
+        renderColumns.push(column.slice(start, start + perSlice));
+      }
+    }
+    columns = renderColumns;
+
+    // Within a column, keep nodes of one boundary together. The barycentre pass
+    // above minimises crossings and knows nothing of what a node is, so a fan of
+    // leaves comes out interleaved: a third-party service between two browser
+    // APIs reads as a relationship that does not exist.
+    const groupOf = new Map(nodes.map((node) => [node.id, node.group ?? '']));
+    for (const column of columns) {
+      const orderWas = new Map(column.map((id, index) => [id, index]));
+      column.sort((left, right) => {
+        const byGroup = (groupOf.get(left) ?? '').localeCompare(groupOf.get(right) ?? '');
+        return byGroup === 0 ? orderWas.get(left) - orderWas.get(right) : byGroup;
+      });
+    }
+
+    const widthOfColumn = columns.map((column) =>
+      column.reduce((widest, id) => {
+        const node = nodes.find((each) => each.id === id);
+        return Math.max(widest, measureWidth(node ? node.label : id));
+      }, NODE_MIN_WIDTH),
+    );
+
+    const tallest = Math.max(1, ...columns.map((column) => column.length));
+    const canvasHeight = tallest * NODE_HEIGHT + (tallest - 1) * ROW_GAP + MARGIN * 2;
+
+    const placed = new Map();
+    let cursorX = MARGIN;
+    columns.forEach((column, columnIndex) => {
+      const columnWidth = widthOfColumn[columnIndex];
+      const columnHeight = column.length * NODE_HEIGHT + (column.length - 1) * ROW_GAP;
+      let cursorY = (canvasHeight - columnHeight) / 2;
+      for (const id of column) {
+        placed.set(id, { x: cursorX, y: cursorY, width: columnWidth, height: NODE_HEIGHT });
+        cursorY += NODE_HEIGHT + ROW_GAP;
+      }
+      cursorX += columnWidth + LAYER_GAP;
+    });
+
+    return {
+      placed,
+      edges: usable,
+      width: cursorX - LAYER_GAP + MARGIN,
+      height: canvasHeight,
+    };
+  }
+
+  const svgElement = (name, attributes) => {
+    const element = document.createElementNS('http://www.w3.org/2000/svg', name);
+    for (const [key, value] of Object.entries(attributes)) element.setAttribute(key, String(value));
+    return element;
+  };
+
+  /**
+   * A cubic curve leaving the right edge and arriving at the left edge, so the
+   * arrowhead always meets the target square-on. An edge that goes backwards or
+   * stays inside one column is bowed outwards instead, which keeps it from
+   * lying underneath the boxes it passes.
+   */
+  const edgePath = (from, to) => {
+    const startX = from.x + from.width;
+    const startY = from.y + from.height / 2;
+    const endX = to.x;
+    const endY = to.y + to.height / 2;
+    if (endX > startX) {
+      const grip = Math.max(28, (endX - startX) * 0.45);
+      return 'M' + startX + ',' + startY + ' C' + (startX + grip) + ',' + startY +
+        ' ' + (endX - grip) + ',' + endY + ' ' + endX + ',' + endY;
+    }
+    const bow = 46 + Math.abs(endY - startY) * 0.16;
+    const backStartX = from.x + from.width / 2;
+    const backEndX = to.x + to.width / 2;
+    const lift = Math.min(startY, endY) - bow;
+    return 'M' + backStartX + ',' + from.y + ' C' + backStartX + ',' + lift +
+      ' ' + backEndX + ',' + lift + ' ' + backEndX + ',' + to.y;
+  };
+
+  function renderGraph(host) {
+    const payload = host.querySelector('script[type="application/json"]');
+    if (!payload) return;
+    const data = JSON.parse(payload.textContent);
+    const { placed, edges, width, height } = layoutGraph(data.nodes, data.edges);
+
+    const svg = svgElement('svg', {
+      width: width,
+      height: height,
+      viewBox: '0 0 ' + width + ' ' + height,
+      role: 'img',
+      'aria-label': data.title || 'architecture graph',
+      preserveAspectRatio: 'xMidYMid meet',
+    });
+
+    const defs = svgElement('defs', {});
+    for (const [id, className] of [
+      ['arrow-import', 'marker-import'],
+      ['arrow-type', 'marker-type'],
+      ['arrow-http', 'marker-http'],
+      ['arrow-lit', 'marker-lit'],
+    ]) {
+      const marker = svgElement('marker', {
+        id: id + '-' + data.level,
+        viewBox: '0 0 12 12',
+        refX: 11,
+        refY: 6,
+        markerWidth: 12,
+        markerHeight: 12,
+        orient: 'auto-start-reverse',
+        markerUnits: 'userSpaceOnUse',
+      });
+      const head = svgElement('path', { d: 'M1,1 L11,6 L1,11 Z', class: className });
+      marker.appendChild(head);
+      defs.appendChild(marker);
+    }
+    svg.appendChild(defs);
+
+    const edgeLayer = svgElement('g', { class: 'edges' });
+    const nodeLayer = svgElement('g', { class: 'nodes' });
+    svg.appendChild(edgeLayer);
+    svg.appendChild(nodeLayer);
+
+    const incidentByNode = new Map(data.nodes.map((node) => [node.id, []]));
+    for (const edge of edges) {
+      const from = placed.get(edge.from);
+      const to = placed.get(edge.to);
+      if (!from || !to) continue;
+      const kind = edge.kind === 'type' ? 'type' : edge.kind === 'http' ? 'http' : 'import';
+      const path = svgElement('path', {
+        d: edgePath(from, to),
+        class: 'edge edge-' + kind,
+        'marker-end': 'url(#arrow-' + kind + '-' + data.level + ')',
+      });
+      if (edge.label) {
+        const title = svgElement('title', {});
+        title.textContent = edge.label;
+        path.appendChild(title);
+      }
+      edgeLayer.appendChild(path);
+      incidentByNode.get(edge.from).push(path);
+      incidentByNode.get(edge.to).push(path);
+    }
+
+    const nodeElements = new Map();
+    for (const node of data.nodes) {
+      const box = placed.get(node.id);
+      if (!box) continue;
+      const group = svgElement('g', {
+        class: 'node node-' + (node.tone || 'neutral'),
+        tabindex: '0',
+        role: 'button',
+        'aria-label': node.label + '. ' + (node.detail || ''),
+      });
+      group.appendChild(svgElement('rect', {
+        x: box.x, y: box.y, width: box.width, height: box.height, rx: 8, class: 'node-body',
+      }));
+      group.appendChild(svgElement('rect', {
+        x: box.x, y: box.y, width: 4, height: box.height, rx: 2, class: 'node-stripe',
+      }));
+      const label = svgElement('text', {
+        x: box.x + 14, y: box.y + (node.sublabel ? 20 : 27), class: 'node-label',
+      });
+      label.textContent = node.label;
+      group.appendChild(label);
+      if (node.sublabel) {
+        const sub = svgElement('text', { x: box.x + 14, y: box.y + 34, class: 'node-sub' });
+        sub.textContent = node.sublabel;
+        group.appendChild(sub);
+      }
+      const title = svgElement('title', {});
+      title.textContent = node.detail || node.label;
+      group.appendChild(title);
+      nodeLayer.appendChild(group);
+      nodeElements.set(node.id, group);
+    }
+
+    const clearFocus = () => {
+      svg.classList.remove('focused');
+      for (const element of nodeElements.values()) element.classList.remove('dim', 'lit');
+      for (const path of edgeLayer.children) path.classList.remove('dim', 'lit');
+    };
+
+    const focusNode = (id) => {
+      const neighbours = new Set([id]);
+      for (const edge of edges) {
+        if (edge.from === id) neighbours.add(edge.to);
+        if (edge.to === id) neighbours.add(edge.from);
+      }
+      svg.classList.add('focused');
+      for (const [nodeId, element] of nodeElements) {
+        element.classList.toggle('lit', neighbours.has(nodeId));
+        element.classList.toggle('dim', !neighbours.has(nodeId));
+      }
+      const incident = new Set(incidentByNode.get(id) ?? []);
+      for (const path of edgeLayer.children) {
+        path.classList.toggle('lit', incident.has(path));
+        path.classList.toggle('dim', !incident.has(path));
+      }
+    };
+
+    let pinned = null;
+    for (const [id, element] of nodeElements) {
+      element.addEventListener('mouseenter', () => { if (pinned === null) focusNode(id); });
+      element.addEventListener('mouseleave', () => { if (pinned === null) clearFocus(); });
+      element.addEventListener('focus', () => { if (pinned === null) focusNode(id); });
+      element.addEventListener('blur', () => { if (pinned === null) clearFocus(); });
+      const toggle = (event) => {
+        event.stopPropagation();
+        if (pinned === id) { pinned = null; clearFocus(); return; }
+        pinned = id;
+        focusNode(id);
+      };
+      element.addEventListener('click', toggle);
+      element.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggle(event); }
+      });
+    }
+    svg.addEventListener('click', () => { pinned = null; clearFocus(); });
+
+    const view = { x: 0, y: 0, width, height };
+    const applyView = () => {
+      svg.setAttribute('viewBox', view.x + ' ' + view.y + ' ' + view.width + ' ' + view.height);
+    };
+    const fit = () => {
+      view.x = 0; view.y = 0; view.width = width; view.height = height;
+      applyView();
+    };
+
+    svg.addEventListener('wheel', (event) => {
+      event.preventDefault();
+      const rect = svg.getBoundingClientRect();
+      const ratioX = (event.clientX - rect.left) / rect.width;
+      const ratioY = (event.clientY - rect.top) / rect.height;
+      const factor = Math.exp(event.deltaY * ZOOM_STEP);
+      const nextWidth = Math.min(width / ZOOM_MIN, Math.max(width / ZOOM_MAX, view.width * factor));
+      const scale = nextWidth / view.width;
+      view.x += (view.width - nextWidth) * ratioX;
+      view.y += (view.height - view.height * scale) * ratioY;
+      view.width = nextWidth;
+      view.height *= scale;
+      applyView();
+    }, { passive: false });
+
+    let dragging = null;
+    svg.addEventListener('pointerdown', (event) => {
+      dragging = { x: event.clientX, y: event.clientY };
+      svg.setPointerCapture(event.pointerId);
+      svg.classList.add('grabbing');
+    });
+    svg.addEventListener('pointermove', (event) => {
+      if (!dragging) return;
+      const rect = svg.getBoundingClientRect();
+      view.x -= ((event.clientX - dragging.x) / rect.width) * view.width;
+      view.y -= ((event.clientY - dragging.y) / rect.height) * view.height;
+      dragging = { x: event.clientX, y: event.clientY };
+      applyView();
+    });
+    const endDrag = () => { dragging = null; svg.classList.remove('grabbing'); };
+    svg.addEventListener('pointerup', endDrag);
+    svg.addEventListener('pointercancel', endDrag);
+
+    const stage = host.querySelector('.graph-stage');
+    stage.appendChild(svg);
+    const resetButton = host.querySelector('[data-graph-reset]');
+    if (resetButton) resetButton.addEventListener('click', fit);
+  }
+
+  for (const host of document.querySelectorAll('.graph')) renderGraph(host);
+})();
 </script>

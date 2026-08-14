@@ -1,14 +1,16 @@
 /**
  * Renders the architecture graph as one self-contained page.
  *
- * Diagrams are emitted as mermaid source in `<pre class="mermaid">` blocks,
- * which the artifact viewer renders natively and which stays readable as text
- * anywhere else. The levels that carry too many nodes for an automatic layout
- * to help, meaning code and the slice walk, are rendered as filterable HTML
- * instead, because a reader browsing those wants search and detail rather than
- * a picture.
+ * Each diagram level ships its nodes and edges as JSON and is drawn in the
+ * browser by the layered renderer in `architecture-graph-view.ts`, so the
+ * arrows are real SVG paths with arrowheads that can be hovered, focused,
+ * panned and zoomed. The levels carrying too many nodes for any layout to
+ * help, meaning code and the slice walk, stay as filterable HTML, because a
+ * reader browsing two hundred files wants search and detail rather than a
+ * picture.
  */
 
+import { GRAPH_RUNTIME_SCRIPT, GRAPH_STYLES } from './architecture-graph-view';
 import type { ArchitectureFile } from './architecture-model';
 import type { BlueprintEntry, ContextSlice, GraphLevel } from './architecture-graph';
 import type { ArchitectureManifest } from './pragma.manifest';
@@ -30,53 +32,62 @@ function escapeHtml(text: string): string {
     .replaceAll('"', '&quot;');
 }
 
-/** Mermaid treats quotes, brackets and pipes as syntax, so a label loses them. */
-function mermaidLabel(text: string): string {
-  return text
-    .replaceAll(/["[\]{}|<>()]/g, ' ')
-    .replaceAll(/\s+/g, ' ')
-    .trim();
+/**
+ * The tone drives the colour of a node's left stripe, and it is derived from
+ * the node kind rather than authored, so a new container or boundary picks up a
+ * colour without anyone editing a palette.
+ */
+function toneOf(kind: string): string {
+  if (kind === 'actor' || kind === 'system') return kind;
+  if (kind.startsWith('external-')) {
+    if (kind.endsWith('aws')) return 'aws';
+    if (kind.endsWith('browser-platform')) return 'browser';
+    return 'external';
+  }
+  if (kind === 'container-browser') return 'site';
+  if (kind === 'container-aws') return 'api';
+  if (kind === 'container-build') return 'build';
+  if (kind.startsWith('component-')) return kind.slice('component-'.length);
+  return 'neutral';
 }
 
-function mermaidId(id: string): string {
-  return `n${id.replaceAll(/[^A-Za-z0-9]/g, '_')}`;
+/** JSON embedded in a script tag, with the one sequence that could close it escaped. */
+function embedJson(value: unknown): string {
+  return JSON.stringify(value).replaceAll('<', String.raw`\u003c`);
 }
 
-function renderMermaid(level: GraphLevel, groupTitles: ReadonlyMap<string, string>): string {
-  const lines: string[] = ['flowchart LR'];
-  const byGroup = new Map<string, typeof level.nodes>();
-  for (const node of level.nodes) {
-    const key = node.group ?? '_';
-    byGroup.set(key, [...(byGroup.get(key) ?? []), node]);
-  }
-  for (const [group, nodes] of byGroup) {
-    const hasTitle = group !== '_';
-    if (hasTitle) {
-      lines.push(
-        `  subgraph ${mermaidId(group)}["${mermaidLabel(groupTitles.get(group) ?? group)}"]`,
-      );
-    }
-    for (const node of nodes) {
-      const shape = node.kind === 'actor' ? ['([', '])'] : ['["', '"]'];
-      const label = mermaidLabel(node.label);
-      lines.push(`  ${hasTitle ? '  ' : ''}${mermaidId(node.id)}${shape[0]}${label}${shape[1]}`);
-    }
-    if (hasTitle) lines.push('  end');
-  }
+function renderGraph(level: GraphLevel): string {
   const nodeIds = new Set(level.nodes.map((node) => node.id));
-  const drawn = new Set<string>();
-  for (const edge of level.edges) {
-    if (!nodeIds.has(edge.from) || !nodeIds.has(edge.to)) continue;
-    const key = `${edge.from}->${edge.to}`;
-    if (drawn.has(key)) continue;
-    drawn.add(key);
-    const arrow = edge.kind === 'type' ? '-.->' : '-->';
-    const label = mermaidLabel(edge.label);
-    lines.push(
-      `  ${mermaidId(edge.from)} ${arrow}${label === '' ? '' : `|${label}|`} ${mermaidId(edge.to)}`,
-    );
-  }
-  return lines.join('\n');
+  const payload = {
+    level: level.id,
+    title: level.title,
+    nodes: level.nodes.map((node) => ({
+      id: node.id,
+      label: node.label,
+      sublabel:
+        node.fileCount > 0 ? `${node.fileCount} file${node.fileCount === 1 ? '' : 's'}` : '',
+      detail: node.detail,
+      group: node.group ?? '',
+      tone: toneOf(node.kind),
+    })),
+    edges: level.edges
+      .filter((edge) => nodeIds.has(edge.from) && nodeIds.has(edge.to))
+      .map((edge) => ({ from: edge.from, to: edge.to, kind: edge.kind, label: edge.label })),
+  };
+  return `
+      <div class="graph" data-level="${escapeHtml(level.id)}">
+        <div class="graph-bar">
+          <span class="graph-hint">hover to trace · click to pin · drag to pan · scroll to zoom</span>
+          <span class="graph-legend">
+            <span><i class="legend-line"></i>imports</span>
+            <span><i class="legend-line type"></i>types only</span>
+            <span><i class="legend-line http"></i>over HTTP</span>
+          </span>
+          <button type="button" data-graph-reset>Reset view</button>
+        </div>
+        <div class="graph-stage"></div>
+        <script type="application/json">${embedJson(payload)}</script>
+      </div>`;
 }
 
 function renderNodeCards(level: GraphLevel): string {
@@ -197,18 +208,6 @@ function renderBlueprints(blueprints: readonly BlueprintEntry[]): string {
 
 export function renderArchitecturePage(input: RenderInput): string {
   const { manifest, levels, slices, blueprints, files, unmarkedCount } = input;
-  const groupTitles = new Map<string, string>([
-    ...manifest.containers.map((each) => [each.id, each.name] as const),
-    ['people', 'People'],
-    ['system', 'System'],
-    ['third-party', 'Third party'],
-    ['aws', 'AWS'],
-    ['browser-platform', 'Browser platform'],
-    ['browser', 'Browser'],
-    ['build', 'Build time'],
-    ...manifest.containers.map((each) => [each.id, each.name] as const),
-  ]);
-
   const fileRows = files
     .map(
       (
@@ -250,7 +249,7 @@ export function renderArchitecturePage(input: RenderInput): string {
         </table>
       </div>`
           : `
-      <div class="diagram-scroll"><pre class="mermaid">${escapeHtml(renderMermaid(level, groupTitles))}</pre></div>
+      ${renderGraph(level)}
       <div class="cards">${renderNodeCards(level)}</div>`
       }
     </section>`,
@@ -399,7 +398,6 @@ export function renderArchitecturePage(input: RenderInput): string {
     padding: 1rem;
     margin-bottom: 1.75rem;
   }
-  pre.mermaid { margin: 0; font-family: var(--font-mono); font-size: .74rem; color: var(--muted); white-space: pre; }
 
   .cards { display: grid; grid-template-columns: 1fr; gap: .7rem; }
   @media (min-width: 620px) { .cards { grid-template-columns: repeat(2, 1fr); } }
@@ -412,8 +410,13 @@ export function renderArchitecturePage(input: RenderInput): string {
     display: flex;
     flex-direction: column;
     gap: .4rem;
+    /* A grid item defaults to min-width:auto, so the nowrap kind tag in the
+       header sets a floor wider than the track's share and pushes the whole
+       page sideways. */
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
-  .card header { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+  .card header { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
   .card h4 { margin: 0; font: 600 .88rem/1.3 var(--font-mono); }
   .card p { margin: 0; font-size: .81rem; color: var(--muted); }
   .tag {
@@ -568,6 +571,7 @@ export function renderArchitecturePage(input: RenderInput): string {
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   }
+${GRAPH_STYLES}
 </style>
 
 <header class="top"><div class="wrap">
@@ -649,5 +653,6 @@ export function renderArchitecturePage(input: RenderInput): string {
   search?.addEventListener('input', applyFilters);
   layerFilter?.addEventListener('change', applyFilters);
 </script>
+<script>${GRAPH_RUNTIME_SCRIPT}</script>
 `;
 }
