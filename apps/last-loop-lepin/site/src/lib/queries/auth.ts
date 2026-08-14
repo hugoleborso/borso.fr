@@ -7,6 +7,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 
+// @FollowsBlueprint query-uncached-mutation
 export function useAdminLogin() {
   return useMutation({
     mutationFn: async (variables: { pin: string }) => {

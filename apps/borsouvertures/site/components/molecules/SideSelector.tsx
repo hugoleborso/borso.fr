@@ -3,16 +3,18 @@ import { ToggleSlider } from '@/components/atoms/ToggleSlider';
 import { setSide } from '@/state/appState';
 import type { Side } from '@/state/persistedState.utils';
 
+// @FollowsBlueprint component-lookup-table
 const SIDE_BY_IS_BLACK: Record<`${boolean}`, Side> = { true: 'black', false: 'white' };
 
 interface SideSelectorProps {
   side: Side;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function SideSelector({ side }: SideSelectorProps) {
   const { t } = useTranslation();
   return (
-    <div className="controls-row">
+    <div className="flex flex-wrap items-center gap-3">
       <span>{t('selection.side.label')}</span>
       <ToggleSlider
         isOn={side === 'black'}

@@ -5,6 +5,7 @@ const serviceFile = 'apps/last-loop-lepin/api/src/ranking/ranking.service.ts';
 const repositoryFile = 'apps/last-loop-lepin/api/src/ranking/ranking.repository.ts';
 const testFile = 'apps/last-loop-lepin/api/src/ranking/ranking.service.test.ts';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(serviceFile, { jsx: false }).run('no-cross-slice-repository-imports', rule, {
   valid: [
     // The slice's own repository.

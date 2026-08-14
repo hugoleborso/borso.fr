@@ -27,6 +27,7 @@ export interface MemberInstrumentRow {
   isHarmonic: boolean;
 }
 
+// @FollowsBlueprint repository-projection
 const MEMBER_PROJECTION = {
   id: memberTable.id,
   firstName: memberTable.firstName,

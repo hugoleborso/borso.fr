@@ -4,6 +4,7 @@ import { isCorrectionBannerVisible } from './correction-banner.utils';
 const CORRECTED_AT = new Date('2026-06-13T07:30:00.000Z');
 const CORRECTED_AT_MS = CORRECTED_AT.getTime();
 
+// @FollowsBlueprint test-pure-unit
 describe('isCorrectionBannerVisible', () => {
   it('stays hidden when no correction has landed', () => {
     expect(isCorrectionBannerVisible(null, CORRECTED_AT_MS)).toBe(false);

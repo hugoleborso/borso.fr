@@ -30,6 +30,7 @@ export interface RunnerFormValues {
 
 export const RUNNER_FORM_DEFAULTS: RunnerFormValues = { displayName: '', bib: '' };
 
+// @FollowsBlueprint core-form-schema
 export const runnerFormValuesSchema = z.object({
   displayName: z.string().trim().min(MINIMUM_NAME_LENGTH).max(MAXIMUM_NAME_LENGTH),
   bib: z

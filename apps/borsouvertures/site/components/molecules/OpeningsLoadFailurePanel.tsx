@@ -5,6 +5,7 @@ function reloadPage(): void {
   window.location.reload();
 }
 
+// @FollowsBlueprint molecule-presentational
 export function OpeningsLoadFailurePanel() {
   const { t } = useTranslation();
   return (

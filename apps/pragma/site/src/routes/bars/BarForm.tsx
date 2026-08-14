@@ -68,6 +68,12 @@ const CANCEL_BUTTON_BY_TITLE_KIND: Record<
   existing: CancelBarFormButton,
 };
 
+/**
+ * @Blueprint route-form
+ * @BlueprintName Route Form
+ * @BlueprintUsage Use for any form. One `useForm` call, fields as render props, and no field state in `useState`.
+ * @BlueprintDescription Drives every field through `useForm` from `@tanstack/react-form`, validating on change with the Zod schema the core module also uses to type the values, so the fields and the payload cannot disagree. Each field is a `form.Field` render prop rather than a state variable, the submit button reads `canSubmit` and `isSubmitting` through `form.Subscribe` so only that button re-renders, and the values to payload translation is a pure function in `bar-form.core.ts`.
+ */
 export function BarForm({ initial, onSubmit, onCancel }: BarFormProps): JSX.Element {
   const { t } = useTranslation();
   const defaultValues: BarFormValues = {

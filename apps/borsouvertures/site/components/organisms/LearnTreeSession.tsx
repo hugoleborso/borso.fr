@@ -18,11 +18,13 @@ interface DrillProps {
   visualization: TreeVisualization;
 }
 
+// @FollowsBlueprint component-lookup-table
 const DRILL_BY_READINESS: ComponentByFlag<DrillProps> = {
   true: LearnDrill,
   false: LearnPickPrompt,
 };
 
+// @FollowsBlueprint organism-table-dispatch
 export function LearnTreeSession({
   openings,
   selection,

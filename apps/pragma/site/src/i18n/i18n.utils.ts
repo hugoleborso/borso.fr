@@ -18,6 +18,7 @@ export interface CatalogTree {
   [key: string]: CatalogValue;
 }
 
+// @FollowsBlueprint i18n-key-walk
 export function flattenKeys(tree: CatalogTree, prefix = ''): readonly string[] {
   const keys: string[] = [];
   for (const [key, value] of Object.entries(tree)) {

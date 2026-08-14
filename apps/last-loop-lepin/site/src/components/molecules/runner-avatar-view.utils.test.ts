@@ -13,6 +13,7 @@ const PHOTO_AVATAR = {
   fallback: { initials: 'AL', backgroundColor: 'oklch(0.72 0.14 10)' },
 } as const;
 
+// @FollowsBlueprint test-pure-unit
 describe('selectRunnerAvatarView', () => {
   it('renders initials when the runner has no photo', () => {
     expect(selectRunnerAvatarView(INITIALS_AVATAR, false)).toEqual({

@@ -45,6 +45,7 @@ function collectRoundDescendants(jsxElement, found) {
   return found;
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

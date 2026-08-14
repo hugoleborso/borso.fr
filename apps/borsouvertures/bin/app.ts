@@ -25,6 +25,7 @@ const PROD_DOMAIN = 'borsouvertures.borso.fr';
 const REGION = 'eu-west-3';
 const ASSETS_PATH = './dist';
 
+// @FollowsBlueprint cdk-app-entrypoint
 const account = requireAwsAccount();
 const stage = requireDeployStage();
 if (stage === 'integ') {

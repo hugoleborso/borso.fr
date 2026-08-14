@@ -7,6 +7,7 @@
 
 export type InstrumentDeletionEffect = 'keep-form' | 'clear-form';
 
+// @FollowsBlueprint core-view-intent
 export function selectInstrumentDeletionEffect(
   selectedInstrumentId: string | null,
   deletedInstrumentId: string,

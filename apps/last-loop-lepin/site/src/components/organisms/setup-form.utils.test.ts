@@ -7,6 +7,7 @@ import {
   summariseZodError,
 } from './setup-form.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('isoLocal', () => {
   it('pads month, day, hours, minutes to two digits', () => {
     const date = new Date(2026, 0, 5, 7, 3);

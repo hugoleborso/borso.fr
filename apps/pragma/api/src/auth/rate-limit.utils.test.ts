@@ -7,6 +7,7 @@ import {
   recordAttempt,
 } from './rate-limit.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('rate-limit.utils', () => {
   describe('recordAttempt', () => {
     it('opens a fresh window when no bucket exists', () => {

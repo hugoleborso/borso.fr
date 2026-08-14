@@ -53,6 +53,7 @@ function Probe({ query, sink }: { query: string; sink: (isMatching: boolean) => 
   return null;
 }
 
+// @FollowsBlueprint test-hook-probe
 describe('useIsMediaQueryMatching', () => {
   let container: HTMLDivElement;
   let root: Root;

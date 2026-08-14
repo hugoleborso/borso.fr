@@ -1,12 +1,18 @@
 import type { TranslationKey } from '../i18n/i18n.utils';
 import {
+  ABANDONED_BAR_ON_DARK,
+  ABANDONED_BAR_ON_LIGHT,
   ACCENT,
   ACTIVE_INNER_RULE,
   DASH_RULE,
+  FAILURE_BAR,
   FAILURE_INK,
   INK,
   MUTED,
   PAPER,
+  STRIPE_LIGHT,
+  SUCCESS_BAR,
+  WARNING_BAR,
   WARNING_INK,
 } from '../theme/twelve-labours.theme';
 import type { ChallengeKind, ChallengeStatus, ProofType } from './labours.types';
@@ -20,6 +26,7 @@ const STATUS_LABEL_KEY: Readonly<Record<ChallengeStatus, TranslationKey>> = {
   todo: 'twelve-labours.status.todo',
 };
 
+// @FollowsBlueprint core-label-key
 export function selectStatusLabelKey(status: ChallengeStatus): TranslationKey {
   return STATUS_LABEL_KEY[status];
 }
@@ -40,7 +47,7 @@ export interface TagColors {
   borderColor: string;
 }
 
-const TRANSPARENT = 'transparent';
+export const TRANSPARENT = 'transparent';
 
 const STATUS_FOREGROUND: Readonly<Record<ChallengeStatus, string>> = {
   done: INK,
@@ -53,7 +60,14 @@ const STATUS_FOREGROUND: Readonly<Record<ChallengeStatus, string>> = {
 
 const IN_PROGRESS_STATUS: ChallengeStatus = 'doing';
 
-/** The one status that reverses the tag, so it reads as the live month. */
+/**
+ * The one status that reverses the tag, so it reads as the live month.
+ *
+ * @Blueprint core-appearance
+ * @BlueprintName Appearance Selector Core
+ * @BlueprintUsage Use whenever a component would otherwise branch on a domain status to choose a colour, a class name, or a label key.
+ * @BlueprintDescription Reads the colours out of frozen records keyed by the domain union, with the values imported from the theme module rather than written as hex, and returns the whole set a component applies. The record is typed `Record<ChallengeStatus, …>`, so adding a status is a type error here instead of a missing colour on the page, and the single named exception is compared against a named constant.
+ */
 export function selectStatusTagColors(status: ChallengeStatus): TagColors {
   const foreground = STATUS_FOREGROUND[status];
   if (status === IN_PROGRESS_STATUS) {
@@ -65,12 +79,12 @@ export function selectStatusTagColors(status: ChallengeStatus): TagColors {
 const FILMSTRIP_BAR_COLOR_BY_STATUS: Readonly<
   Record<ChallengeStatus, Readonly<Record<`${boolean}`, string>>>
 > = {
-  done: { true: '#7ee29a', false: '#7ee29a' },
-  partial: { true: '#e8b76a', false: '#e8b76a' },
-  failed: { true: '#e89090', false: '#e89090' },
-  doing: { true: '#e85a25', false: '#e85a25' },
-  abandoned: { true: '#5a5852', false: '#bcb3a0' },
-  todo: { true: '#3a3530', false: '#d6cdb8' },
+  done: { true: SUCCESS_BAR, false: SUCCESS_BAR },
+  partial: { true: WARNING_BAR, false: WARNING_BAR },
+  failed: { true: FAILURE_BAR, false: FAILURE_BAR },
+  doing: { true: ACCENT, false: ACCENT },
+  abandoned: { true: ABANDONED_BAR_ON_DARK, false: ABANDONED_BAR_ON_LIGHT },
+  todo: { true: ACTIVE_INNER_RULE, false: STRIPE_LIGHT },
 };
 
 export function selectFilmstripBarColor(status: ChallengeStatus, isActive: boolean): string {
@@ -147,22 +161,23 @@ export function selectFilmstripCardColors(isActive: boolean): FilmstripCardColor
   return FILMSTRIP_CARD_COLORS[`${isActive}`];
 }
 
+/** The cover sits in a column of its own, and only once the page is wide enough. */
 const FEATURED_ARTICLE_CLASS: Readonly<Record<`${boolean}`, string>> = {
-  true: 'twelve-travaux-featured',
-  false: 'twelve-travaux-featured twelve-travaux-featured--no-cover',
+  true: 'grid-cols-1 labours-stack:grid-cols-[320px_minmax(0,1fr)]',
+  false: 'grid-cols-1 labours-stack:grid-cols-[minmax(0,1fr)]',
 };
 
 export function selectFeaturedArticleClassName(hasCover: boolean): string {
   return FEATURED_ARTICLE_CLASS[`${hasCover}`];
 }
 
-const FILMSTRIP_CARD_CLASS: Readonly<Record<`${boolean}`, string>> = {
-  true: 'twelve-travaux-filmstrip-card is-active',
-  false: 'twelve-travaux-filmstrip-card',
+const FILMSTRIP_CARD_BORDER_CLASS: Readonly<Record<`${boolean}`, string>> = {
+  true: 'border-labours-ink',
+  false: 'border-labours-dash-rule hover:border-labours-ink',
 };
 
-export function selectFilmstripCardClassName(isActive: boolean): string {
-  return FILMSTRIP_CARD_CLASS[`${isActive}`];
+export function selectFilmstripCardBorderClassName(isActive: boolean): string {
+  return FILMSTRIP_CARD_BORDER_CLASS[`${isActive}`];
 }
 
 const YEAR_BUTTON_COLORS: Readonly<Record<`${boolean}`, { background: string; color: string }>> = {

@@ -7,6 +7,7 @@ import { editionSlugSchema } from '../edition/edition.schema';
 // emits FK constraints), and even when accepted, DSQL doesn't enforce
 // them at write time. App-level invariants (don't insert a punch without
 // a runner first) are maintained by the service layer.
+// @FollowsBlueprint schema-dsql-constraints
 export const runnersTable = pgTable(
   'runners',
   {
@@ -19,6 +20,7 @@ export const runnersTable = pgTable(
   (table) => [primaryKey({ columns: [table.editionSlug, table.slug] })],
 );
 
+// @FollowsBlueprint schema-shared-slug
 export const runnerSlugSchema = z
   .string()
   .min(2)

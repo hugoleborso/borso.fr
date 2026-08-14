@@ -12,7 +12,7 @@
  * write and snaps it back.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api';
 import { isLastPendingMutation } from './optimistic.utils';
 import {
@@ -42,18 +42,36 @@ export const setlistKeys = {
 
 const ENTRY_MUTATION_KEY = [...setlistKeys.all, 'entry-mutation'] as const;
 
+const NO_SETLIST_STATUS = 404;
+
+async function fetchSetlistBySession(sessionId: string) {
+  const response = await api.api.setlists['by-session'][':sessionId'].$get({
+    param: { sessionId },
+  });
+  if (response.status === NO_SETLIST_STATUS) return null;
+  if (!response.ok) throw new ApiError(response.status, `setlist ${response.status}`, null);
+  return response.json();
+}
+
 export function useSetlistBySession(sessionId: string, isEnabled = true) {
   return useQuery({
     queryKey: setlistKeys.bySessionId(sessionId),
-    queryFn: async () => {
-      const response = await api.api.setlists['by-session'][':sessionId'].$get({
-        param: { sessionId },
-      });
-      if (response.status === 404) return null;
-      if (!response.ok) throw new ApiError(response.status, `setlist ${response.status}`, null);
-      return response.json();
-    },
+    queryFn: () => fetchSetlistBySession(sessionId),
     enabled: isEnabled,
+  });
+}
+
+/**
+ * One setlist read per session, sharing the key factory and the fetcher with
+ * `useSetlistBySession`, so a page listing many sessions reuses whatever the
+ * detail page already cached instead of declaring its own request.
+ */
+export function useSetlistsBySessionIds(sessionIds: readonly string[]) {
+  return useQueries({
+    queries: sessionIds.map((sessionId) => ({
+      queryKey: setlistKeys.bySessionId(sessionId),
+      queryFn: () => fetchSetlistBySession(sessionId),
+    })),
   });
 }
 
@@ -77,6 +95,11 @@ export function useSetlistEntries(setlistId: string, isEnabled = true) {
  * editor, so a temp-id optimistic record would block on the entries
  * fetch (404) until the real id arrives. The latency is bounded by the
  * single round-trip; optimistic doesn't improve perceived UX here.
+ *
+ * @Blueprint query-pessimistic-mutation
+ * @BlueprintName Pessimistic Mutation
+ * @BlueprintUsage Use for a write whose result the client cannot predict, such as an insert the caller reads an identifier back from.
+ * @BlueprintDescription Holds no `onMutate` and no rollback, and invalidates the affected key in `onSuccess` so the next read comes from the server that issued the row. The header states why the optimistic path is refused here, which is the part a reader needs, because the absence of a snapshot otherwise looks like an omission rather than a decision.
  */
 export function useCreateSetlist() {
   const queryClient = useQueryClient();
@@ -94,6 +117,7 @@ export function useCreateSetlist() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useAppendSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -149,6 +173,7 @@ export function useAppendSetlistEntry() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useUpdateSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -193,6 +218,7 @@ export function useUpdateSetlistEntry() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useDeleteSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -230,6 +256,7 @@ export function useDeleteSetlistEntry() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useReorderSetlist() {
   const queryClient = useQueryClient();
   return useMutation({

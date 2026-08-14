@@ -4,6 +4,7 @@ import { buildProfileGeometry } from './elevation-profile.utils';
 const PROFILE_WIDTH = 200;
 const PROFILE_HEIGHT = 100;
 
+// @FollowsBlueprint test-pure-unit
 describe('buildProfileGeometry', () => {
   it('returns a degenerate geometry for an empty elevations series', () => {
     // Defensive: the caller renders the placeholder before invoking the

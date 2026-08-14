@@ -14,8 +14,7 @@ import { PlaySession } from './PlaySession';
 import { PlaySessionControl } from './PlaySessionControl';
 import type { SessionBodyProps, SessionModeControlProps } from './session.types';
 
-const CONTROLS_ROW_STYLE = { justifyContent: 'space-between' } as const;
-
+// @FollowsBlueprint component-lookup-table
 const SESSION_BODY_BY_MODE: ComponentByKind<Mode, SessionBodyProps> = {
   learn: LearnTreeSession,
   play: PlaySession,
@@ -30,6 +29,12 @@ interface SessionScreenProps {
   openings: Opening[];
 }
 
+/**
+ * @Blueprint organism-table-dispatch
+ * @BlueprintName Organism Dispatching Through A Table
+ * @BlueprintUsage Use for a screen region that owns state and has to choose which child renders the body.
+ * @BlueprintDescription Holds the one piece of local state the region owns, reads the rest from the shared store, and picks both the body and its matching control by indexing two tables with the same mode key, so the pair can never fall out of step. The body is given `key={buildSessionKey(...)}`, so a change of mode, side, selection or scope remounts it and restarts the machine it drives, which is the alternative to an effect that pushes the new scope into a running machine.
+ */
 export function SessionScreen({ openings }: SessionScreenProps) {
   const { t } = useTranslation();
   const { mode, side, boardStyle, selection, playScope, playAutoOpponent, treeVisualizationMode } =
@@ -43,8 +48,8 @@ export function SessionScreen({ openings }: SessionScreenProps) {
 
   return (
     <>
-      <div className="controls-row" style={CONTROLS_ROW_STYLE}>
-        <div className="controls-row">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button label={t('session.change-selection')} onActivate={() => setView('select')} />
           <ShowMovesToggle areMovesShown={areMovesShown} onToggle={setAreMovesShown} />
           <SessionControl visualization={visualization} isAutoOpponentEnabled={playAutoOpponent} />

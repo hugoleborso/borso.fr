@@ -18,6 +18,7 @@ const EMPTY_DETAIL_MESSAGE = {
   parameters: { summary: '', detail: '', name: '', contentType: '', status: '' },
 };
 
+// @FollowsBlueprint test-pure-unit
 describe('selectEditionWriteError', () => {
   it('names a slug collision', () => {
     expect(selectEditionWriteError(new ApiError(409, null)).key).toBe('admin.setup.slug-taken');

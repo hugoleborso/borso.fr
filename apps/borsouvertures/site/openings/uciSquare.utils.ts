@@ -19,6 +19,7 @@ export function isSquare(value: string): boolean {
   return SQUARE_PATTERN.test(value);
 }
 
+// @FollowsBlueprint utils-pure-module
 export function toSquare(value: string): Square {
   if (!isSquare(value)) throw new Error(`Invalid square: ${value}`);
   return value;

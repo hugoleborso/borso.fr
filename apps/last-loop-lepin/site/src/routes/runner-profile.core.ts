@@ -14,6 +14,7 @@ export function isLoadingRunnerProfile(hasFailed: boolean, hasRunner: boolean): 
  * The runner's current rank as it is printed. A runner absent from the
  * standings, e.g. before the first loop closes, shows the empty label.
  */
+// @FollowsBlueprint utils-pure-module
 export function formatCurrentRank(
   rank: number | 'ex-aequo' | undefined,
   exAequoLabel: string,

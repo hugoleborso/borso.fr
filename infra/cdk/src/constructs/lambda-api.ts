@@ -24,7 +24,6 @@ import {
 import { applyStandardTags } from '../internal/tags.js';
 import type { DsqlSchema } from './dsql-schema.js';
 
-/** @beta */
 export interface LambdaApiProps {
   readonly app: string;
   readonly stage: Stage;
@@ -75,10 +74,10 @@ export interface LambdaApiProps {
   readonly cors?: CorsPreflightOptions;
 }
 
+// @FollowsBlueprint reusable-cdk-construct
 /**
  * One HTTP API + one Lambda handling every method + path.
  *
- * @beta
  */
 export class LambdaApi extends Construct {
   public readonly httpApi: HttpApi;

@@ -3,6 +3,7 @@ import { buildOfflineManifest, manifestUrls, pickNextSession } from './manifest.
 
 const NOW = new Date('2026-05-20T00:00:00.000Z');
 
+// @FollowsBlueprint test-pure-unit
 describe('pickNextSession', () => {
   it('returns null for an empty list', () => {
     expect(pickNextSession([], NOW)).toBeNull();

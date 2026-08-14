@@ -20,12 +20,11 @@
  *
  * The matrix reads scores from `useMasteryDefaults()` directly and
  * writes through `useSaveMasteryDefault` / `useDeleteMasteryDefault`.
- * Optimistic UI: each write mutation patches the TanStack Query
- * cache in `onMutate`, rolls back in `onError`, and lets the on-
- * `Success` invalidation reconcile with the server.
+ * Those two hooks own the optimistic update: they patch the TanStack
+ * Query cache in `onMutate`, roll it back in `onError`, and reconcile
+ * in `onSettled`. This component only surfaces the error.
  */
 
-import { useQueryClient } from '@tanstack/react-query';
 import {
   type ColumnDef,
   flexRender,
@@ -33,19 +32,27 @@ import {
   type Row,
   useReactTable,
 } from '@tanstack/react-table';
-import type { JSX, MouseEvent, WheelEvent } from 'react';
+import type { JSX } from 'react';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api';
-import { cellKey, clampScore, columnAverage, rowAverage } from '../../lib/mastery-matrix.utils';
+import {
+  cellKey,
+  clampScore,
+  columnAverage,
+  MASTERY_SCORE_MAX,
+  MASTERY_SCORE_MIN,
+  rowAverage,
+} from '../../lib/mastery-matrix.utils';
 import { readableForeground } from '../../lib/member-color.utils';
 import {
-  masteryKeys,
   useDeleteMasteryDefault,
   useMasteryDefaults,
   useSaveMasteryDefault,
 } from '../../lib/queries/mastery';
-import { upsertMasteryDefault, withoutMasteryDefault } from '../../lib/queries/mastery.utils';
+import { Avatar } from '../atoms/Avatar';
+import { memberInitial } from '../atoms/member-palette.utils';
+import { ScoreInput } from '../atoms/ScoreInput';
 
 export interface MasteryMatrixMember {
   readonly id: string;
@@ -64,10 +71,6 @@ interface MasteryMatrixProps {
   readonly onError: (message: string) => void;
 }
 
-interface MasteryDefaultsResponse {
-  defaults: { memberId: string; instrumentId: string; score: number }[];
-}
-
 interface MatrixRow {
   readonly member: MasteryMatrixMember;
 }
@@ -83,7 +86,6 @@ const RIGHT_MOUSE_BUTTON = 2;
  */
 export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixProps): JSX.Element {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const defaults = useMasteryDefaults();
   const save = useSaveMasteryDefault();
   const remove = useDeleteMasteryDefault();
@@ -104,44 +106,30 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
 
   const writeScore = useCallback(
     (memberId: string, instrumentId: string, score: number): void => {
-      const previous = queryClient.getQueryData<MasteryDefaultsResponse>(masteryKeys.defaults());
-      queryClient.setQueryData<MasteryDefaultsResponse>(masteryKeys.defaults(), (current) => ({
-        defaults: upsertMasteryDefault(current?.defaults ?? [], { memberId, instrumentId, score }),
-      }));
       save.mutate(
         { memberId, instrumentId, score },
         {
           onError: (error) => {
-            if (previous !== undefined) {
-              queryClient.setQueryData(masteryKeys.defaults(), previous);
-            }
             onError(error instanceof ApiError ? error.message : 'unknown-error');
           },
         },
       );
     },
-    [queryClient, save, onError],
+    [save, onError],
   );
 
   const clearScore = useCallback(
     (memberId: string, instrumentId: string): void => {
-      const previous = queryClient.getQueryData<MasteryDefaultsResponse>(masteryKeys.defaults());
-      queryClient.setQueryData<MasteryDefaultsResponse>(masteryKeys.defaults(), (current) => ({
-        defaults: withoutMasteryDefault(current?.defaults ?? [], memberId, instrumentId),
-      }));
       remove.mutate(
         { memberId, instrumentId },
         {
           onError: (error) => {
-            if (previous !== undefined) {
-              queryClient.setQueryData(masteryKeys.defaults(), previous);
-            }
             onError(error instanceof ApiError ? error.message : 'unknown-error');
           },
         },
       );
     },
-    [queryClient, remove, onError],
+    [remove, onError],
   );
 
   const data = useMemo<MatrixRow[]>(() => members.map((member) => ({ member })), [members]);
@@ -152,15 +140,13 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
       header: () => null,
       cell: ({ row }) => (
         <>
-          <span
-            className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-semibold mr-2 align-middle"
-            style={{
-              background: row.original.member.color,
-              color: readableForeground(row.original.member.color),
-            }}
-          >
-            {row.original.member.firstName.slice(0, 1).toUpperCase()}
-          </span>
+          <Avatar
+            size="xs"
+            className="mr-2 align-middle"
+            initials={memberInitial(row.original.member.firstName)}
+            color={row.original.member.color}
+            style={{ color: readableForeground(row.original.member.color) }}
+          />
           <span className="align-middle text-ink-900">{row.original.member.firstName}</span>
         </>
       ),
@@ -171,31 +157,23 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
       cell: ({ row }: { row: Row<MatrixRow> }) => {
         const memberId = row.original.member.id;
         const value = scores[cellKey(memberId, instrument.id)] ?? 0;
-        const onWheel = (event: WheelEvent<HTMLInputElement>): void => {
-          event.preventDefault();
-          const delta = event.deltaY < 0 ? 1 : -1;
-          const next = clampScore(value + delta);
-          if (next === value) return;
-          writeScore(memberId, instrument.id, next);
-        };
-        const onContextMenu = (event: MouseEvent<HTMLInputElement>): void => {
-          event.preventDefault();
-          clearScore(memberId, instrument.id);
-        };
         return (
-          <input
-            type="number"
-            min={0}
-            max={10}
+          <ScoreInput
             value={value}
-            aria-label={`${row.original.member.firstName} ${instrument.name}`}
-            onWheel={onWheel}
-            onContextMenu={onContextMenu}
-            onChange={(event) => {
-              const parsed = clampScore(Number(event.target.value));
-              writeScore(memberId, instrument.id, parsed);
+            minimum={MASTERY_SCORE_MIN}
+            maximum={MASTERY_SCORE_MAX}
+            label={`${row.original.member.firstName} ${instrument.name}`}
+            onStep={(step) => {
+              const next = clampScore(value + step);
+              if (next === value) return;
+              writeScore(memberId, instrument.id, next);
             }}
-            className="w-12 text-center bg-bg-elev border border-line rounded-sm text-xs py-1 outline-none focus:border-ink-700 font-mono"
+            onType={(typedValue) => {
+              writeScore(memberId, instrument.id, clampScore(typedValue));
+            }}
+            onClear={() => {
+              clearScore(memberId, instrument.id);
+            }}
           />
         );
       },

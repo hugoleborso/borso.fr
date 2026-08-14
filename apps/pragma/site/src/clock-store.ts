@@ -40,6 +40,7 @@ function maybeStopInterval(): void {
   intervalId = null;
 }
 
+// @FollowsBlueprint external-store-module
 export function subscribeClock(listener: Listener): () => void {
   listeners.add(listener);
   ensureInterval();

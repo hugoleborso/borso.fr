@@ -10,6 +10,7 @@
 
 const THIN_SPACE = ' ';
 
+// @FollowsBlueprint utils-formatter
 export function formatSessionDate(iso: string, locale: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;

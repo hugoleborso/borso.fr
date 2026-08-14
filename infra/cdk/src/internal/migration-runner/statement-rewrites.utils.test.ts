@@ -6,6 +6,7 @@ import {
   stripUsingClause,
 } from './statement-rewrites.utils.js';
 
+// @FollowsBlueprint test-pure-unit
 describe('makeIdempotent', () => {
   it('adds IF NOT EXISTS to CREATE TABLE', () => {
     expect(makeIdempotent('CREATE TABLE "runners" (id TEXT)')).toBe(

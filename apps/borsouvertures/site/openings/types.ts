@@ -1,3 +1,4 @@
+// @FollowsBlueprint domain-types-module
 export interface Opening {
   id: string;
   name: string;

@@ -56,6 +56,7 @@ function buildPunch(
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('nextHourlyTop', () => {
   it('returns startsAt when now is before the race begins', () => {
     const before = new Date('2026-09-19T05:30:00+02:00');
@@ -99,6 +100,7 @@ describe('nextHourlyTop', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('loopIndexAt', () => {
   it('is 0 before startsAt', () => {
     expect(loopIndexAt(EDITION_2026, new Date('2026-09-19T05:00:00+02:00'))).toBe(0);
@@ -121,6 +123,7 @@ describe('loopIndexAt', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('isRaceEndReached', () => {
   it('false before endsAt', () => {
     expect(isRaceEndReached(EDITION_2026, new Date('2026-09-19T21:59:00+02:00'))).toBe(false);
@@ -135,6 +138,7 @@ describe('isRaceEndReached', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('projectDidNotFinishCandidates', () => {
   it('returns no candidates before the second top', () => {
     const now = new Date('2026-09-19T06:30:00+02:00');
@@ -206,6 +210,7 @@ describe('projectDidNotFinishCandidates', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('totalHourlyTops', () => {
   it('counts boundaries strictly inside the race window', () => {
     expect(totalHourlyTops(EDITION_2026)).toBe(16);

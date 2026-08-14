@@ -64,6 +64,7 @@ function parseJsonPayload(raw: string): SessionPayload | null {
   }
 }
 
+// @FollowsBlueprint utils-pure-module
 export function verifyCookie(
   cookieValue: string,
   hmacKey: Buffer,

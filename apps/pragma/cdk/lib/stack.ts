@@ -43,6 +43,12 @@ export interface BuildPragmaAppStackProps {
   readonly cluster: IDsqlCluster;
 }
 
+/**
+ * @Blueprint app-cdk-stack
+ * @BlueprintName Application CDK Stack
+ * @BlueprintUsage Use for the module that composes the shared constructs into the infrastructure of one application.
+ * @BlueprintDescription A plain function taking its scope in the props rather than a subclass of `Stack`, so the entry point keeps the stack identity and a test can synthesise the composition into a throwaway stack; it declares the resources the application owns itself first, hands them to `PreviewableApp` through conditional spreads so an absent prop is never passed as an explicit `undefined`, and grants the Lambda its bucket access afterwards from the construct's own handler.
+ */
 export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
   const isProduction = isProductionStage(props.stage);
   const uploadsBucket = new Bucket(props.scope, 'UploadsBucket', {

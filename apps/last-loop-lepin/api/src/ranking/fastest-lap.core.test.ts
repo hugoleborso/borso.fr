@@ -43,6 +43,7 @@ function buildPunch(
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('fastestLap', () => {
   it('returns [] when no punches are recorded', () => {
     expect(fastestLap(EDITION, [])).toEqual([]);

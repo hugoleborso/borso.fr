@@ -18,6 +18,7 @@ export interface Selection {
   lineId: SelectionId;
 }
 
+// @FollowsBlueprint utils-pure-module
 export function findOpening(openings: Opening[], openingId?: string | null): Opening | undefined {
   if (openingId === ALL_KEY) return undefined;
   return openings.find((opening) => opening.id === openingId);

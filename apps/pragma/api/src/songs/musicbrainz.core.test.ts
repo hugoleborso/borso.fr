@@ -12,6 +12,7 @@ import {
   mapMusicBrainzRecordings,
 } from './musicbrainz.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('mapMusicBrainzRecordings', () => {
   it('projects every recording onto the ExternalSongHit shape', () => {
     const hits = mapMusicBrainzRecordings(FIXTURE);

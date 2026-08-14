@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-server-state-in-use-state.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester().run('no-server-state-in-use-state', rule, {
   valid: [
     // The replacement.

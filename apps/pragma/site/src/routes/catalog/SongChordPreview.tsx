@@ -16,6 +16,7 @@ interface SongChordPreviewProps {
   readonly chordproText: string;
 }
 
+// @FollowsBlueprint organism-presentational
 export function SongChordPreview({
   chartKind,
   chordproText,

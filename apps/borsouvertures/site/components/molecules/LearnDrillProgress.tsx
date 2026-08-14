@@ -6,10 +6,11 @@ interface LearnDrillProgressProps {
   totalCount: number;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function LearnDrillProgress({ visitedCount, totalCount }: LearnDrillProgressProps) {
   const { t } = useTranslation();
   return (
-    <div className="panel status-grid">
+    <div className="grid grid-cols-2 gap-2 p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
       <StatusItem
         label={t('learn.lines-visited.label')}
         value={t('learn.lines-visited.value', { visited: visitedCount, total: totalCount })}

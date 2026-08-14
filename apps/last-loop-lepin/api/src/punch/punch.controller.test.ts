@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { adminSessionCookie, testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { adminSessionCookie, truncateAllTables } from '../../../test/database-utils';
 import { makeEdition, makeRunner } from '../../../test/fixtures';
 import { createApp } from '../app';
 import { insertEdition } from '../edition/edition.repository';
@@ -22,9 +22,10 @@ const conflictResponseSchema = z.object({
 });
 
 async function adminCookie(): Promise<string> {
-  return adminSessionCookie(testDatabase());
+  return adminSessionCookie();
 }
 
+// @FollowsBlueprint test-back-e2e
 describe('admin punch controller', () => {
   const app = createApp();
 
@@ -37,10 +38,9 @@ describe('admin punch controller', () => {
   });
 
   beforeEach(async () => {
-    const database = testDatabase();
-    await truncateAllTables(database);
-    await insertEdition(database, makeEdition({ status: 'live' }));
-    await insertRunner(database, makeRunner('alice'));
+    await truncateAllTables();
+    await insertEdition(makeEdition({ status: 'live' }));
+    await insertRunner(makeRunner('alice'));
   });
 
   async function postPunch(body: { editionSlug: string; runnerSlug: string }, cookie: string) {

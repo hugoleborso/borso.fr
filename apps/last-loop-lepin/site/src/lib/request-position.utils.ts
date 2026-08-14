@@ -42,6 +42,12 @@ const RESULT_BY_ERROR_CODE: Readonly<Record<number, PositionResult>> = {
  * runner sees an explicit retry rather than an endless spinner. The accuracy
  * is forwarded as it comes; the geofence rule ignores it.
  */
+/**
+ * @Blueprint injected-browser-api
+ * @BlueprintName Injected Browser API Wrapper
+ * @BlueprintUsage Use for wrapping a browser capability that a test has to stand in for, such as geolocation, clipboard, or notifications.
+ * @BlueprintDescription The `Geolocation` object arrives as a parameter rather than being read off `navigator`, so a test passes a stand-in object and the module needs no global stub. The promise always resolves with a member of the `PositionResult` union and never rejects, including when the capability is missing, so the caller switches on `kind` with no try and catch; the browser's numeric error codes are mapped through a frozen record with a named fallback.
+ */
 export function requestPosition(geolocation: Geolocation | undefined): Promise<PositionResult> {
   return new Promise((resolve) => {
     if (geolocation === undefined) {

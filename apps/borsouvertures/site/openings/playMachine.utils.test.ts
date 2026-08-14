@@ -31,6 +31,12 @@ function countNotifications(machine: { subscribe: (listener: () => void) => () =
   return { read: () => calls };
 }
 
+/**
+ * @Blueprint test-machine-transition
+ * @BlueprintName State Machine Transition Test
+ * @BlueprintUsage Use for a hand written machine, to assert each command's effect on the snapshot rather than the calls it made.
+ * @BlueprintDescription Builds the machine with the driver's injected timer and picker, then walks it one command at a time and asserts on `getSnapshot()` after each. Timers are fired by hand through `fireNextTimer`, so the opponent's reply lands at a point the test chose and the suite never waits, and the scheduled delay is asserted against the production default because the driver deliberately leaves `opponentDelayMs` unset. Positions are checked against a `Chess` instance built independently from the same moves, so a bug in the machine's own board handling cannot make the assertion agree with it.
+ */
 describe('createPlayMachine', () => {
   it('returns the INITIAL snapshot before start is called', () => {
     const machine = createPlayMachine();

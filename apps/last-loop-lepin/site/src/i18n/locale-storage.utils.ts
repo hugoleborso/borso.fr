@@ -17,6 +17,7 @@ function isSupportedLanguage(candidate: string | null): candidate is SupportedLa
   return SUPPORTED_LANGUAGES.some((supported) => supported === candidate);
 }
 
+// @FollowsBlueprint injected-storage-slice
 export function readSavedLanguage(storage: LanguageStorage | undefined): SupportedLanguage | null {
   if (storage === undefined) return null;
   const saved = storage.getItem(LANGUAGE_STORAGE_KEY);

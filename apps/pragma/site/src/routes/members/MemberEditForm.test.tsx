@@ -61,6 +61,7 @@ function readFirstNameField(): HTMLInputElement {
   return readInputByLabel(/first name/i);
 }
 
+// @FollowsBlueprint test-component-render
 describe('MemberEditForm', () => {
   afterEach(() => {
     cleanup();

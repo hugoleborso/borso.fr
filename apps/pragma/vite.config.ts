@@ -14,6 +14,7 @@ export default defineConfig({
     alias: {
       '@site': fromHere('./site/src'),
       '@api': fromHere('./api/src'),
+      '@domain': fromHere('./domain'),
     },
   },
   build: {

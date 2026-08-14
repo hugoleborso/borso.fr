@@ -18,6 +18,9 @@ const SINGLE_DECIMAL = 1;
 const FRENCH_LOCALE = 'fr-FR';
 const MINIMUM_PHOTOS_FOR_IMPLICIT_COVER = 2;
 const ONE_COVER = 1;
+const MONTH_NUMBER_DIGITS = 2;
+const MONTH_NUMBER_PAD = '0';
+const NO_LABEL = null;
 
 export interface Score {
   completed: number;
@@ -96,6 +99,18 @@ export function selectCurrentMonthNumber(year: number, today: Date): number | nu
   return today.getMonth() + MONTH_NUMBER_OFFSET_FROM_INDEX;
 }
 
+/**
+ * The years the data module carries, oldest first, which is the order the
+ * masthead offers them in.
+ *
+ * A key that reads as an array index is enumerated in ascending numeric order,
+ * and a year always does, so the keys arrive sorted and sorting them again here
+ * would be dead code.
+ */
+export function listAvailableYears(data: LaboursData): readonly number[] {
+  return Object.keys(data.editions).map(Number);
+}
+
 export function selectDefaultYear(availableYears: readonly number[], fallbackYear: number): number {
   return availableYears.at(-1) ?? fallbackYear;
 }
@@ -104,6 +119,11 @@ export function selectEdition(data: LaboursData, year: number): Edition {
   const edition = data.editions[year];
   if (edition === undefined) throw new Error(`No twelve-labours edition for year ${year}`);
   return edition;
+}
+
+/** A month always reads as two digits, so `3` sits under `11` rather than beside it. */
+export function formatMonthNumber(monthNumber: number): string {
+  return String(monthNumber).padStart(MONTH_NUMBER_DIGITS, MONTH_NUMBER_PAD);
 }
 
 export function selectFeaturedMonth(edition: Edition, monthNumber: number): Month {
@@ -140,6 +160,19 @@ export function listProofLabelKeys(proof: Proof): readonly TranslationKey[] {
   return [proof.labelKey];
 }
 
+/** Resolves a catalogue key to the words a reader sees. */
+export type ProofLabelTranslator = (key: TranslationKey) => string;
+
+/**
+ * The proof's label, or nothing when it carries none. Absence is one value here
+ * so that each caller renders it once: a chip falls back to the proof itself,
+ * and a media element falls back to the empty alternative text that marks it
+ * decorative.
+ */
+export function selectProofLabel(proof: Proof, translate: ProofLabelTranslator): string | null {
+  return listProofLabelKeys(proof).map((key) => translate(key))[0] ?? NO_LABEL;
+}
+
 export type ProofSectionKind = 'media' | 'chip';
 
 export interface ProofSection {
@@ -157,6 +190,7 @@ export function isMediaProof(proof: Proof): boolean {
  * Splits a challenge's proofs into the carousel of media and the row of chips,
  * dropping either section when it would be empty.
  */
+// @FollowsBlueprint core-view-intent
 export function listProofSections(challenge: Challenge): readonly ProofSection[] {
   const proofs = challenge.proofs ?? [];
   const candidates: readonly ProofSection[] = [

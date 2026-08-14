@@ -1,8 +1,8 @@
 /**
  * @borso/infra — internal API consumed by sibling workspace apps.
  *
- * Every export here is `@beta`. Breaking changes are free since the only
- * consumers are in this monorepo.
+ * The package is never published, so a breaking change here is a change to
+ * every call site in this repository and to nothing else.
  */
 
 export type { DsqlClusterProps, IDsqlCluster } from './constructs/dsql-cluster.js';
@@ -32,3 +32,4 @@ export { frontendOrigin, isProductionStage, type Stage } from './internal/naming
 export type { GithubSubject, SubjectKind } from './internal/oidc.js';
 // Lower-level helpers needed by infra/shared/ (sibling workspace).
 export { GITHUB_OIDC_ISSUER, githubActionsPrincipal, githubSubClaims } from './internal/oidc.js';
+export { SHARED_SSM_PARAMETERS } from './internal/shared-ssm.js';

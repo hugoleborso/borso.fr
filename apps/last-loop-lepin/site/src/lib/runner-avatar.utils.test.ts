@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildRunnerAvatar } from './runner-avatar.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('buildRunnerAvatar', () => {
   it('returns kind=photo with the URL and the pre-computed initials fallback when photoUrl is set', () => {
     const result = buildRunnerAvatar({

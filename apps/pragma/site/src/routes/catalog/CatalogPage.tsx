@@ -36,6 +36,12 @@ import {
 } from './catalog-page.core';
 import { extractChartKind } from './chart-kind.utils';
 
+/**
+ * @Blueprint route-list-page
+ * @BlueprintName Route List Page
+ * @BlueprintUsage Use for a route that reads a collection and renders it as a list or a grid.
+ * @BlueprintDescription Calls one query hook per domain it needs, funnels the four errors into a single message and the four loading flags into a single flag, then hands the derivation to `catalog-page.core.ts` so sorting, filtering and counting stay pure and testable. The route owns only the search text and the status filter, and the markup below is one list organism, so the page holds no layout primitive of its own.
+ */
 export function CatalogPage(): JSX.Element {
   const { t } = useTranslation();
   const songsQuery = useSongsList();

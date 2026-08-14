@@ -1,14 +1,14 @@
-import type { CSSProperties, ReactNode } from 'react';
+import clsx from 'clsx';
+import type { ReactNode } from 'react';
+
+const ERROR_TEXT_CLASS = 'font-mono text-[12px] text-danger';
 
 interface ErrorTextProps {
   readonly children: ReactNode;
-  readonly style?: CSSProperties;
+  readonly className?: string;
 }
 
-export function ErrorText({ children, style }: ErrorTextProps) {
-  return (
-    <div className="error-text" style={style}>
-      {children}
-    </div>
-  );
+// @FollowsBlueprint atom-plain
+export function ErrorText({ children, className }: ErrorTextProps) {
+  return <div className={clsx(ERROR_TEXT_CLASS, className)}>{children}</div>;
 }

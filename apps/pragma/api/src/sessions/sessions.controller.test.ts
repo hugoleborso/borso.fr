@@ -28,6 +28,7 @@ const setlistEnvelope = z.object({
 });
 const entriesEnvelope = z.object({ entries: z.array(z.unknown()) });
 
+// @FollowsBlueprint test-back-e2e
 describe('sessions controller (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());
@@ -103,6 +104,77 @@ describe('sessions controller (back-e2e)', () => {
     expect(update.status).toBe(200);
     const updated = await readJson(update, singleEnvelope);
     expect(updated.session.capacity).toBe(120);
+  });
+
+  it('updates the date, the venue, the gear and the friend count in one patch', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const memberId = crypto.randomUUID();
+    const created = await readJson(
+      await jsonRequest(app, '/api/sessions', {
+        method: 'POST',
+        body: {
+          kind: 'concert',
+          date: '2025-09-13T18:30:00Z',
+          venue: 'Place A',
+          capacity: 80,
+          gear: 'Sono maison',
+          friendsCountPerMember: {},
+        },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    const update = await jsonRequest(app, `/api/sessions/${created.session.id}`, {
+      method: 'PUT',
+      body: {
+        date: '2025-10-01T20:00:00Z',
+        venue: 'Place B',
+        gear: 'Backline fournie',
+        friendsCountPerMember: { [memberId]: 4 },
+      },
+      cookieHeader,
+    });
+    expect(update.status).toBe(200);
+    const updated = await readJson(update, singleEnvelope);
+    expect(new Date(updated.session.date).toISOString()).toBe('2025-10-01T20:00:00.000Z');
+    expect(updated.session.venue).toBe('Place B');
+    expect(updated.session.gear).toBe('Backline fournie');
+    expect(updated.session.friendsCountPerMember).toEqual({ [memberId]: 4 });
+  });
+
+  it('moves a practice onto another concert it prepares', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const concert = await readJson(
+      await jsonRequest(app, '/api/sessions', {
+        method: 'POST',
+        body: {
+          kind: 'concert',
+          date: '2025-09-13T18:30:00Z',
+          venue: 'Place A',
+          capacity: 80,
+          friendsCountPerMember: {},
+        },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    const practice = await readJson(
+      await jsonRequest(app, '/api/sessions', {
+        method: 'POST',
+        body: { kind: 'practice', date: '2025-09-08T19:00:00Z' },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    const update = await jsonRequest(app, `/api/sessions/${practice.session.id}`, {
+      method: 'PUT',
+      body: { preparedConcertId: concert.session.id },
+      cookieHeader,
+    });
+    expect(update.status).toBe(200);
+    expect((await readJson(update, singleEnvelope)).session.preparedConcertId).toBe(
+      concert.session.id,
+    );
   });
 
   it('cascades the setlist + entries on session delete', async () => {

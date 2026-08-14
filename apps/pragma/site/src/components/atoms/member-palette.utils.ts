@@ -38,6 +38,7 @@ const PALETTE_RGB: Record<MemberPaletteKey, readonly [number, number, number]> =
 };
 
 /** The three channel bytes of a `#rrggbb` string, or `null` when it is not one. */
+// @FollowsBlueprint utils-pure-module
 export function parseHexTriplet(hex: string): readonly [number, number, number] | null {
   const trimmed = hex.trim();
   if (!HEX_PATTERN.test(trimmed)) return null;

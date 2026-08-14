@@ -32,6 +32,7 @@ export interface GpxTrack {
   readonly pointElevations: readonly number[] | null;
 }
 
+// @FollowsBlueprint named-domain-error
 export class GpxParseError extends Error {
   override readonly name = 'GpxParseError';
 }
@@ -148,6 +149,12 @@ export function buildPointElevations(
  *
  * Throws {@link GpxParseError} when the input is empty, lacks a `<gpx>` or
  * `<trk>` root, or contains no usable `<trkpt>` elements.
+ */
+/**
+ * @Blueprint core-parser-named-error
+ * @BlueprintName Core Parser With A Named Error
+ * @BlueprintUsage Use for a hand written parser. Export its own error type and say in the header why no library does the job.
+ * @BlueprintDescription Parses the file with regular expressions whose delimiters sit in lookarounds so each match types as a plain string, throws the module's own `GpxParseError` for the two inputs it cannot use, and records in the header that the alternative library needs a DOM implementation the Lambda bundle would otherwise carry.
  */
 export function parseGpx(xml: string): GpxTrack {
   if (!isWellFormedXml(xml)) {

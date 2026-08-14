@@ -1,9 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LANGUAGE, listTranslationKeys } from './i18n.utils';
+import { compareTranslationKeys, DEFAULT_LANGUAGE, listTranslationKeys } from './i18n.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('DEFAULT_LANGUAGE', () => {
   it('is French, which is the only language this site renders', () => {
     expect(DEFAULT_LANGUAGE).toBe('fr');
+  });
+});
+
+describe('compareTranslationKeys', () => {
+  it('orders an earlier key before a later one', () => {
+    expect(compareTranslationKeys('apple', 'zebra')).toBeLessThan(0);
+  });
+
+  it('orders a later key after an earlier one', () => {
+    expect(compareTranslationKeys('zebra', 'apple')).toBeGreaterThan(0);
+  });
+
+  it('treats a key as equal to itself', () => {
+    expect(compareTranslationKeys('apple', 'apple')).toBe(0);
   });
 });
 

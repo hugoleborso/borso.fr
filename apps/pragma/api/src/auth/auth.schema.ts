@@ -8,6 +8,7 @@
  */
 
 import { customType, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { z } from 'zod';
 
 // Drizzle ships no first-class `bytea` type; declare one. Stored as
 // raw bytes; read/written as `Buffer` (Node) or `Uint8Array` after
@@ -18,6 +19,7 @@ const bytea = customType<{ data: Buffer; default: false }>({
   },
 });
 
+// @FollowsBlueprint schema-table-and-input
 export const appConfigTable = pgTable('app_config', {
   id: integer('id').primaryKey(),
   passwordHash: text('password_hash').notNull(),
@@ -29,4 +31,11 @@ export const authAttemptTable = pgTable('auth_attempt', {
   ipHash: text('ip_hash').primaryKey(),
   count: integer('count').notNull().default(0),
   windowStartedAt: timestamp('window_started_at', { withTimezone: true, mode: 'date' }).notNull(),
+});
+
+const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MAX_LENGTH = 256;
+
+export const credentialsSchema = z.object({
+  password: z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH),
 });

@@ -9,7 +9,7 @@ import { ErrorText } from '../atoms/ErrorText';
 import { Input } from '../atoms/Input';
 import { Label } from '../atoms/Label';
 import { Show } from '../atoms/Show';
-import { CardHeader } from '../molecules/CardHeader';
+import { CardHeader } from '../atoms/CardHeader';
 import { type AdminErrorMessage, selectAdminLoginError } from './admin-errors.core';
 import { adminLoginSchema, PIN_INPUT_ID } from './admin-login.core';
 
@@ -18,6 +18,7 @@ interface AdminLoginFormProps {
 }
 
 /** PIN entry that opens the organiser screens. */
+// @FollowsBlueprint organism-form
 export function AdminLoginForm({ onAuthenticated }: AdminLoginFormProps) {
   const { t } = useTranslation();
   const [failure, setFailure] = useState<AdminErrorMessage | null>(null);
@@ -42,16 +43,16 @@ export function AdminLoginForm({ onAuthenticated }: AdminLoginFormProps) {
   });
 
   return (
-    <Card modifier="pin-form">
+    <Card className="max-w-[360px] mx-auto my-[10vh] gap-3">
       <CardHeader title={t('admin.title')} />
-      <CardBody modifier="col">
+      <CardBody className="flex flex-col gap-3">
         <form
           onSubmit={(event) => {
             event.preventDefault();
             void form.handleSubmit();
           }}
         >
-          <div className="field">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor={PIN_INPUT_ID}>{t('admin.pin-label')}</Label>
             <form.Field name="pin">
               {(field) => (

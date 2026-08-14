@@ -17,6 +17,7 @@ function fakeFile(type: string, size: number): File {
   return new File([new Uint8Array(size)], 'sample', { type });
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('validateChartFile', () => {
   it('accepts application/pdf as the pdf kind', () => {
     const result = validateChartFile(fakeFile(ALLOWED_PDF_MIME, 1024));

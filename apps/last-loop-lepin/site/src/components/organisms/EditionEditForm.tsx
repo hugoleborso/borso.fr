@@ -13,8 +13,9 @@ import type { RaceEditionDto } from '../../lib/race.types';
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { ErrorText } from '../atoms/ErrorText';
+import { MonoNote } from '../atoms/MonoNote';
 import { Show } from '../atoms/Show';
-import { CardHeader } from '../molecules/CardHeader';
+import { CardHeader } from '../atoms/CardHeader';
 import {
   type AdminErrorMessage,
   selectEditionDeleteError,
@@ -29,8 +30,6 @@ import { EditionFormFields } from './EditionFormFields';
 import { useGpxFile } from './useGpxFile';
 
 const ID_PREFIX = 'setup';
-const ACTIONS_STYLE = { gap: 'var(--d-2)', flexWrap: 'wrap' } as const;
-const NOTE_STYLE = { fontSize: 11 } as const;
 
 interface EditionEditFormProps {
   readonly edition: RaceEditionDto;
@@ -40,6 +39,7 @@ interface EditionEditFormProps {
  * Edit form for an edition still in setup. The slug is the primary key, so it
  * is read only here; leaving the GPX picker empty keeps the persisted track.
  */
+// @FollowsBlueprint organism-form
 export function EditionEditForm({ edition }: EditionEditFormProps) {
   const { t } = useTranslation();
   const gpx = useGpxFile();
@@ -104,10 +104,12 @@ export function EditionEditForm({ edition }: EditionEditFormProps) {
     <Card>
       <CardHeader
         title={t('admin.setup.edit-title')}
-        hint={<span className="muted mono">{t('admin.setup.hint-editing')}</span>}
+        hint={
+          <span className="font-mono tabular-nums text-ink-3">{t('admin.setup.hint-editing')}</span>
+        }
       />
       <form
-        className="card-body col"
+        className="flex flex-col gap-3 flex-1 overflow-auto px-5 py-4"
         onSubmit={(event) => {
           event.preventDefault();
           void form.handleSubmit();
@@ -167,7 +169,7 @@ export function EditionEditForm({ edition }: EditionEditFormProps) {
           isGpxRequired={false}
           gpxErrorKey={gpx.errorKey}
           gpxNote={
-            <div className="muted mono" style={NOTE_STYLE}>
+            <MonoNote>
               {t('admin.setup.gpx-current', {
                 distance: t('common.distance', {
                   kilometres: formatKilometres(edition.gpx.distanceMeters),
@@ -176,13 +178,13 @@ export function EditionEditForm({ edition }: EditionEditFormProps) {
                   metres: formatElevationMetres(edition.gpx.elevationGainMeters),
                 }),
               })}
-            </div>
+            </MonoNote>
           }
         />
         <Show when={failure !== null}>
           <ErrorText>{t(failure?.key ?? 'common.error-detail', failure?.parameters)}</ErrorText>
         </Show>
-        <div className="row" style={ACTIONS_STYLE}>
+        <div className="flex flex-wrap items-center gap-2">
           <Button type="submit" variant="primary" disabled={isBusy}>
             {t(
               selectLabel(

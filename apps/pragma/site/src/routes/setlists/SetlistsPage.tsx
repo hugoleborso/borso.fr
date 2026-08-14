@@ -4,18 +4,18 @@
  * the SetlistEditor for that setlist.
  */
 
-import { useQueries } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '../../components/atoms/Icon';
 import { PageHeader } from '../../components/molecules/PageHeader';
-import { ApiError, api } from '../../lib/api';
+import { ApiError } from '../../lib/api';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useSessionsList } from '../../lib/queries/sessions';
-import { setlistKeys } from '../../lib/queries/setlists';
+import { useSetlistsBySessionIds } from '../../lib/queries/setlists';
 
+// @FollowsBlueprint route-list-page
 export function SetlistsPage(): JSX.Element {
   const { t, i18n } = useTranslation();
   const sessionsQuery = useSessionsList();
@@ -27,19 +27,8 @@ export function SetlistsPage(): JSX.Element {
       .toSorted((left, right) => right.date.localeCompare(left.date));
   }, [sessionsQuery.data]);
 
-  const setlistQueries = useQueries({
-    queries: concerts.map((session) => ({
-      queryKey: setlistKeys.bySessionId(session.id),
-      queryFn: async () => {
-        const response = await api.api.setlists['by-session'][':sessionId'].$get({
-          param: { sessionId: session.id },
-        });
-        if (response.status === 404) return null;
-        if (!response.ok) throw new ApiError(response.status, `setlist ${response.status}`, null);
-        return response.json();
-      },
-    })),
-  });
+  const concertIds = useMemo(() => concerts.map((session) => session.id), [concerts]);
+  const setlistQueries = useSetlistsBySessionIds(concertIds);
 
   const rows = useMemo(
     () =>

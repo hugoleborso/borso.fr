@@ -18,6 +18,7 @@ export interface PageHeaderProps {
   className?: string;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function PageHeader({
   crumb,
   title,

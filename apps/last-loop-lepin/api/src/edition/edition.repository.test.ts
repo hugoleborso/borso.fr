@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { truncateAllTables } from '../../../test/database-utils';
 import { makeEdition } from '../../../test/fixtures';
 import {
   findEditionBySlug,
@@ -8,45 +8,41 @@ import {
   updateEditionStatus,
 } from './edition.repository';
 
+// @FollowsBlueprint test-repository-integration
 describe('edition.repository', () => {
   beforeEach(async () => {
-    await truncateAllTables(testDatabase());
+    await truncateAllTables();
   });
 
   it('insertEdition + findEditionBySlug round-trip', async () => {
-    const database = testDatabase();
-    await insertEdition(database, makeEdition());
-    const found = await findEditionBySlug(database, 'lepin-2026');
+    await insertEdition(makeEdition());
+    const found = await findEditionBySlug('lepin-2026');
     expect(found?.slug).toBe('lepin-2026');
     expect(found?.intervalMinutes).toBe(60);
     expect(found?.gpx.distanceMeters).toBeGreaterThan(0);
   });
 
   it('findEditionBySlug returns null on unknown slug', async () => {
-    const found = await findEditionBySlug(testDatabase(), 'nope');
+    const found = await findEditionBySlug('nope');
     expect(found).toBeNull();
   });
 
   it('listEditions returns all rows', async () => {
-    const database = testDatabase();
-    await insertEdition(database, makeEdition({ slug: 'lepin-a' }));
-    await insertEdition(database, makeEdition({ slug: 'lepin-b' }));
-    const list = await listEditions(database);
+    await insertEdition(makeEdition({ slug: 'lepin-a' }));
+    await insertEdition(makeEdition({ slug: 'lepin-b' }));
+    const list = await listEditions();
     expect(list.map((entry) => entry.slug).toSorted()).toEqual(['lepin-a', 'lepin-b']);
   });
 
   it('updateEditionStatus changes the row', async () => {
-    const database = testDatabase();
-    await insertEdition(database, makeEdition({ status: 'setup' }));
-    await updateEditionStatus(database, 'lepin-2026', 'live');
-    const reloaded = await findEditionBySlug(database, 'lepin-2026');
+    await insertEdition(makeEdition({ status: 'setup' }));
+    await updateEditionStatus('lepin-2026', 'live');
+    const reloaded = await findEditionBySlug('lepin-2026');
     expect(reloaded?.status).toBe('live');
   });
 
   it('persists pointTimeFractions when present and round-trips it', async () => {
-    const database = testDatabase();
     await insertEdition(
-      database,
       makeEdition({
         slug: 'lepin-ttf-roundtrip',
         gpx: {
@@ -64,14 +60,12 @@ describe('edition.repository', () => {
         },
       }),
     );
-    const found = await findEditionBySlug(database, 'lepin-ttf-roundtrip');
+    const found = await findEditionBySlug('lepin-ttf-roundtrip');
     expect(found?.gpx.trackJson.pointTimeFractions).toEqual([0, 0.4, 1]);
   });
 
   it('absent pointTimeFractions stays undefined after a write→read cycle (no `null` leak)', async () => {
-    const database = testDatabase();
     await insertEdition(
-      database,
       makeEdition({
         slug: 'lepin-ttf-absent',
         gpx: {
@@ -82,14 +76,12 @@ describe('edition.repository', () => {
         },
       }),
     );
-    const found = await findEditionBySlug(database, 'lepin-ttf-absent');
+    const found = await findEditionBySlug('lepin-ttf-absent');
     expect(found?.gpx.trackJson.pointTimeFractions).toBeUndefined();
   });
 
   it('persists pointElevations when present and round-trips it', async () => {
-    const database = testDatabase();
     await insertEdition(
-      database,
       makeEdition({
         slug: 'lepin-ele-roundtrip',
         gpx: {
@@ -107,14 +99,12 @@ describe('edition.repository', () => {
         },
       }),
     );
-    const found = await findEditionBySlug(database, 'lepin-ele-roundtrip');
+    const found = await findEditionBySlug('lepin-ele-roundtrip');
     expect(found?.gpx.trackJson.pointElevations).toEqual([400, 450, 500]);
   });
 
   it('absent pointElevations stays undefined after a write→read cycle (no `null` leak)', async () => {
-    const database = testDatabase();
     await insertEdition(
-      database,
       makeEdition({
         slug: 'lepin-ele-absent',
         gpx: {
@@ -125,7 +115,7 @@ describe('edition.repository', () => {
         },
       }),
     );
-    const found = await findEditionBySlug(database, 'lepin-ele-absent');
+    const found = await findEditionBySlug('lepin-ele-absent');
     expect(found?.gpx.trackJson.pointElevations).toBeUndefined();
   });
 });

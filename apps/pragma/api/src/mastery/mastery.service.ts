@@ -14,6 +14,12 @@ import {
   upsertMasteryOverride,
 } from './mastery.repository';
 
+/**
+ * @Blueprint service-passthrough
+ * @BlueprintName Service Passthrough
+ * @BlueprintUsage Use when a slice has no rule to apply yet and the controller still must not import the repository.
+ * @BlueprintDescription Forwards to one repository function with no branching and no reshaping, which keeps the controller-to-repository import ban intact and leaves the first business rule a place to land without moving any caller.
+ */
 export async function getMasteryDefaults(): Promise<MasteryDefaultRow[]> {
   return await listMasteryDefaults();
 }

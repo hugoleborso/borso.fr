@@ -15,6 +15,7 @@ function notifyListeners(): void {
   for (const listener of listeners) listener();
 }
 
+// @FollowsBlueprint external-store-module
 export function subscribeLocation(listener: Listener): () => void {
   listeners.add(listener);
   globalThis.addEventListener('popstate', notifyListeners);

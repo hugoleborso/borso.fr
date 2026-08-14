@@ -21,6 +21,7 @@ function buildEdition(distanceMeters: number): RaceEditionDto {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('selectDistanceLabelKey', () => {
   it('shows the placeholder while no track has been uploaded', () => {
     expect(selectDistanceLabelKey(buildEdition(0))).toBe('spectator.track-pending');

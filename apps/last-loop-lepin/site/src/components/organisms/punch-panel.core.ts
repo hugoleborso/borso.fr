@@ -51,6 +51,12 @@ function overlayFor(overlay: PunchOverlay, loopIndex: number): ReadonlySet<strin
   return overlay.runnerSlugs;
 }
 
+/**
+ * @Blueprint core-optimistic-overlay
+ * @BlueprintName Core Optimistic Overlay
+ * @BlueprintUsage Use for the local state that shows a write as applied before the server confirms it.
+ * @BlueprintDescription Returns a new `PunchOverlay` rather than mutating one, and stamps it with the loop index it belongs to. `overlayFor` reads the set back only when the stored loop still matches the loop being asked about, so an overlay from an earlier loop stops applying on its own and no timer, effect, or reset call has to clear it. The mirror function `withoutPendingPunch` undoes one entry on a rejected write.
+ */
 export function withPendingPunch(
   overlay: PunchOverlay,
   loopIndex: number,
@@ -84,6 +90,12 @@ export interface PunchTile {
  * is still in flight, and as late when the top of the hour is close and the
  * runner has not come through.
  */
+/**
+ * @Blueprint core-view-projection
+ * @BlueprintName Core View Projection
+ * @BlueprintUsage Use for turning fetched data plus the current time into the exact list a component maps over.
+ * @BlueprintDescription Takes the standings, the loop clock and the optimistic overlay, and returns one `PunchTile` per runner still racing, with every derived flag already decided. The component only maps the result, so the rules about what counts as punched and what counts as late are covered by a test that calls this function with values. Time arrives as the already projected `PunchLoopClock` rather than as `new Date()`, which is what keeps the projection deterministic.
+ */
 export function listPunchTiles(
   ranked: readonly RankedRunnerDto[],
   clock: PunchLoopClock,
@@ -105,8 +117,14 @@ export function listPunchTiles(
   return tiles;
 }
 
-export function composePunchTileClassName(isPunched: boolean, isLate: boolean): string {
-  const punchedModifier = isPunched ? ' punched' : '';
-  const lateModifier = isLate ? ' late' : '';
-  return `punch-tile${punchedModifier}${lateModifier}`;
+/**
+ * How a tile reads. A punched runner is never also late, because `listPunchTiles`
+ * only marks a tile late while it is unpunched, so the three states are exclusive.
+ */
+export type PunchTileTone = 'pending' | 'punched' | 'late';
+
+export function selectPunchTileTone(isPunched: boolean, isLate: boolean): PunchTileTone {
+  if (isPunched) return 'punched';
+  if (isLate) return 'late';
+  return 'pending';
 }

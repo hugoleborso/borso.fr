@@ -84,9 +84,20 @@ export function useRunner(runnerId: string) {
 }
 ```
 
-Reads use `useQuery`, and writes use `useMutation`. A mutation either
-invalidates the keys it affected in `onSuccess`, or it applies an optimistic
-update in `onMutate` and rolls back in `onError`.
+Reads use `useQuery`, and writes use `useMutation`.
+
+A mutation is one of three shapes, and it says which by carrying the marker of
+the blueprint it follows. Ask whether the client can name the row the server
+will return.
+
+| It can | Optimistic | `onMutate` writes the predicted state, `onError` restores the snapshot, `onSettled` invalidates once the family has drained. `query-optimistic-mutation`. |
+| It cannot | Pessimistic | No `onMutate`. `onSuccess` invalidates the affected key, and the header says why the optimistic path is refused. `query-pessimistic-mutation`. |
+| No cached query holds the result | Uncached | A `mutationFn` and nothing else, with the header naming whatever does surface the write. `query-uncached-mutation`. |
+
+Reach for pessimistic only when the server computes something, e.g., a parsed
+file, a derived timestamp, a generated identifier. A status change, a delete
+and a reorder are all fully determined by the request, so they are optimistic
+and a spinner on one of them is a defect rather than a style.
 
 ## Do not refetch a write whose result you already hold
 
@@ -127,8 +138,23 @@ A table, a grid, or a matrix uses `@tanstack/react-table` in its headless form,
 so that sorting, filtering, and virtualisation come from the library. A
 hand-rolled `<table>` with manual sort and filter state is banned.
 
+## Reporting goes through one adapter
+
+A reporting client, e.g. Sentry, is imported in exactly one module per
+application, under `site/src/observability/`, and every component calls a
+function that module exports.
+
+The vocabulary is the reason. A breadcrumb carries a category, a level and a
+message, and when each call site picks its own, two screens report the same
+thing under two spellings and the dashboard cannot group them. The adapter
+fixes those in one place and takes the event name as a closed union, so a name
+that does not exist is a type error rather than an event nobody finds.
+
 ## Enforced by
 
+- `borso/no-vendor-sdk-outside-adapter`, a custom ESLint rule, which rejects an
+  import of a reporting SDK from anywhere under `site/` other than
+  `observability/`.
 - `borso/no-direct-api-fetch-in-site`, a custom ESLint rule, which rejects a
   `fetch` call whose URL literal starts with `/api/`.
 - `borso/no-api-anchor-in-site`, a custom ESLint rule, which rejects a JSX

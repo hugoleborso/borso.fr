@@ -10,8 +10,8 @@
     "destroy": "cdk destroy --all --force",
     "typecheck": "tsc --noEmit",
     "lint": "cd ../.. && eslint infra/shared --cache --cache-location node_modules/.cache/eslint",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test": "pnpm --filter @borso/infra run build && vitest run",
+    "test:coverage": "pnpm --filter @borso/infra run build && vitest run --coverage"
   },
   "dependencies": {
     "@borso/infra": "workspace:*"

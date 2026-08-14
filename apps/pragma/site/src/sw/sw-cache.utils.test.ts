@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isReadableApiPath } from './sw-cache.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('sw-cache.utils', () => {
   describe('isReadableApiPath', () => {
     it('caches the catalog list', () => {

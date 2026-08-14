@@ -18,6 +18,7 @@ export interface RunnerPhotoUpload {
   readonly uploadPhoto: (runnerSlug: string, photo: File | null) => Promise<string | null>;
 }
 
+// @FollowsBlueprint hook-stateful-helper
 export function useRunnerPhotoUpload(editionSlug: string): RunnerPhotoUpload {
   const presign = usePresignRunnerPhoto();
 

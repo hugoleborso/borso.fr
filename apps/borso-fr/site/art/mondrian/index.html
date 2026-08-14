@@ -10,8 +10,13 @@
       content="Atelier Borso — un générateur de compositions à la manière de Mondrian et de De Stijl."
     />
   </head>
-  <body>
-    <div id="root"></div>
+  <body
+    class="min-h-[100dvh] overflow-x-hidden bg-atelier-paper bg-[image:var(--glow-atelier)] font-atelier-serif-soft leading-[normal] text-atelier-ink antialiased [text-rendering:optimizeLegibility]"
+  >
+    <div
+      class="pointer-events-none fixed inset-0 z-[1] bg-[image:var(--grain-atelier)] opacity-50 mix-blend-multiply"
+    ></div>
+    <div id="root" class="relative z-[2]"></div>
     <script type="module" src="./main.tsx"></script>
   </body>
 </html>

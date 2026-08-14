@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { TranslationKey } from '../i18n/i18n.utils';
 import {
   buildFilmstripSummary,
   buildProofChipText,
@@ -7,8 +8,10 @@ import {
   countUnfinishedChallenges,
   deriveEditionScore,
   deriveMonthScore,
+  formatMonthNumber,
   formatScore,
   isMediaProof,
+  listAvailableYears,
   listChallengeNoteKeys,
   listMonthCoverImages,
   listProofLabelKeys,
@@ -19,6 +22,7 @@ import {
   selectDefaultYear,
   selectEdition,
   selectFeaturedMonth,
+  selectProofLabel,
 } from './labours.core';
 import type { Challenge, Edition, Month, Proof } from './labours.types';
 
@@ -42,6 +46,11 @@ function photo(value: string): Proof {
   return { type: 'photo', value };
 }
 
+function translate(key: TranslationKey): string {
+  return `translated:${key}`;
+}
+
+// @FollowsBlueprint test-pure-unit
 describe('deriveMonthScore', () => {
   it('counts a completed challenge as one and a partial one as a half', () => {
     expect(deriveMonthScore(month(['done', 'partial', 'failed']))).toEqual({
@@ -168,6 +177,34 @@ describe('selectCurrentMonthNumber', () => {
   });
 });
 
+describe('listAvailableYears', () => {
+  const edition: Edition = {
+    titleKey: 'twelve-labours.edition.2025.title',
+    subtitleKey: 'twelve-labours.edition.2025.subtitle',
+    months: [],
+  };
+
+  it('returns the years as numbers, oldest first', () => {
+    expect(listAvailableYears({ editions: { 2026: edition, 2025: edition } })).toEqual([
+      2025, 2026,
+    ]);
+  });
+
+  it('returns nothing when the data module carries no edition', () => {
+    expect(listAvailableYears({ editions: {} })).toEqual([]);
+  });
+});
+
+describe('formatMonthNumber', () => {
+  it('pads a single digit month so it lines up with a two digit one', () => {
+    expect(formatMonthNumber(3)).toBe('03');
+  });
+
+  it('leaves a two digit month alone', () => {
+    expect(formatMonthNumber(11)).toBe('11');
+  });
+});
+
 describe('selectDefaultYear', () => {
   it('picks the most recent edition, not the second one', () => {
     expect(selectDefaultYear([2024, 2025, 2026], 2030)).toBe(2026);
@@ -290,6 +327,25 @@ describe('listProofLabelKeys', () => {
 
   it('returns nothing when the proof carries no label', () => {
     expect(listProofLabelKeys(photo('/media/one.jpg'))).toEqual([]);
+  });
+});
+
+describe('selectProofLabel', () => {
+  it('translates the label the proof carries', () => {
+    expect(
+      selectProofLabel(
+        {
+          type: 'link',
+          value: 'https://example.test',
+          labelKey: 'twelve-labours.proof-label.strava',
+        },
+        translate,
+      ),
+    ).toBe('translated:twelve-labours.proof-label.strava');
+  });
+
+  it('returns nothing when the proof carries no label, so each caller picks its own fallback', () => {
+    expect(selectProofLabel(photo('/media/one.jpg'), translate)).toBeNull();
   });
 });
 

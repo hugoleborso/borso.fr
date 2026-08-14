@@ -1,8 +1,11 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
 import { requireAdminSession } from '../auth/auth.middleware';
-import { createEditionInputSchema, updateEditionInputSchema } from './edition.schema';
+import {
+  createEditionInputSchema,
+  editionStatusUpdateSchema,
+  updateEditionInputSchema,
+} from './edition.schema';
 import {
   createEditionFromInput,
   EditionAlreadyExistsError,
@@ -10,7 +13,6 @@ import {
   EditionNotInSetupError,
   getAllEditions,
   getCurrentEdition,
-  getDatabase,
   getEdition,
   getEditionOrNull,
   GpxParseError,
@@ -20,20 +22,19 @@ import {
   transitionEditionStatus,
 } from './edition.service';
 
-const statusUpdateSchema = z.object({ status: z.enum(['setup', 'live', 'finished']) });
-
+// @FollowsBlueprint controller-public-router
 const editionRouter = new Hono()
   .get('/', async (context) => {
-    const editions = await getAllEditions(getDatabase());
+    const editions = await getAllEditions();
     return context.json({ editions });
   })
   .get('/current', async (context) => {
-    const edition = await getCurrentEdition(getDatabase());
+    const edition = await getCurrentEdition();
     return context.json({ edition });
   })
   .get('/:slug', async (context) => {
     try {
-      const edition = await getEdition(getDatabase(), context.req.param('slug'));
+      const edition = await getEdition(context.req.param('slug'));
       return context.json({ edition });
     } catch (error) {
       if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);
@@ -41,16 +42,17 @@ const editionRouter = new Hono()
     }
   })
   .get('/:slug/state', async (context) => {
-    const edition = await getEditionOrNull(getDatabase(), context.req.param('slug'));
+    const edition = await getEditionOrNull(context.req.param('slug'));
     if (edition === null) return context.json({ error: 'edition not found' }, 404);
     return context.json({ edition });
   });
 
+// @FollowsBlueprint controller-guarded-router
 const adminEditionRouter = new Hono()
   .use('*', requireAdminSession)
   .post('/', zValidator('json', createEditionInputSchema), async (context) => {
     try {
-      const edition = await createEditionFromInput(getDatabase(), context.req.valid('json'));
+      const edition = await createEditionFromInput(context.req.valid('json'));
       return context.json({ edition }, 201);
     } catch (error) {
       if (error instanceof EditionAlreadyExistsError)
@@ -65,7 +67,6 @@ const adminEditionRouter = new Hono()
   .put('/:slug', zValidator('json', updateEditionInputSchema), async (context) => {
     try {
       const edition = await replaceEditionFromInput(
-        getDatabase(),
         context.req.param('slug'),
         context.req.valid('json'),
       );
@@ -82,9 +83,10 @@ const adminEditionRouter = new Hono()
     }
   })
   .delete('/:slug', async (context) => {
+    const slug = context.req.param('slug');
     try {
-      await removeSetupEdition(getDatabase(), context.req.param('slug'));
-      return context.json({ slug: context.req.param('slug'), deleted: true });
+      await removeSetupEdition(slug);
+      return context.json({ slug, deleted: true });
     } catch (error) {
       if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);
       if (error instanceof EditionNotInSetupError)
@@ -92,11 +94,11 @@ const adminEditionRouter = new Hono()
       throw error;
     }
   })
-  .put('/:slug/status', zValidator('json', statusUpdateSchema), async (context) => {
+  .put('/:slug/status', zValidator('json', editionStatusUpdateSchema), async (context) => {
     const slug = context.req.param('slug');
     const { status } = context.req.valid('json');
     try {
-      await transitionEditionStatus(getDatabase(), slug, status);
+      await transitionEditionStatus(slug, status);
       return context.json({ slug, status });
     } catch (error) {
       if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);

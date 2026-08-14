@@ -67,6 +67,12 @@ const SEED_LIST = {
   ],
 };
 
+/**
+ * @Blueprint test-query-hook
+ * @BlueprintName Query Hook Test
+ * @BlueprintUsage Use for testing a query or mutation hook, including its optimistic write and its rollback.
+ * @BlueprintDescription Mounts a probe component that does nothing but publish the hook's `mutateAsync` into a slot, under a query client created for this test alone so no cache leaks between cases. The transport is a stubbed `fetch` returning a deferred promise, which is what lets the test read the cache while the request is still in flight and assert the optimistic write, then resolve the deferred with a 500 and assert the cache is back to its seeded value.
+ */
 describe('songs mutations — optimistic updates', () => {
   let stub: ReturnType<typeof stubFetch> | null = null;
 

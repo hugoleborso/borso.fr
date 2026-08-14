@@ -31,6 +31,7 @@ function readStatus(): string {
   return screen.getByTestId('status').textContent;
 }
 
+// @FollowsBlueprint test-hook-probe
 describe('useIsOnline', () => {
   afterEach(() => {
     cleanup();

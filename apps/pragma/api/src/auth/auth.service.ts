@@ -18,6 +18,9 @@ import {
   loadAppConfig,
   updateAppConfig,
 } from './auth.repository';
+import { hashIp, readClientIp } from './ip-hash.utils';
+import { type BucketStore, isRateLimited, recordAttempt } from './rate-limit.utils';
+import { buildCookie, SESSION_TTL_MS } from './session-cookie.utils';
 
 const HMAC_KEY_BYTES = 32;
 const ARGON2_SALT_BYTES = 16;
@@ -42,8 +45,38 @@ export async function getAppConfig(): Promise<AppConfig | null> {
   return await loadAppConfig();
 }
 
-export async function isPasswordValid(config: AppConfig, password: string): Promise<boolean> {
-  return await argon2Verify({ password, hash: config.passwordHash });
+export type LoginAttempt =
+  | { kind: 'ok'; cookieValue: string; expiresAt: string }
+  | { kind: 'rate-limited' }
+  | { kind: 'not-bootstrapped' }
+  | { kind: 'invalid-password' };
+
+export interface AttemptLoginParams {
+  readonly password: string;
+  readonly forwardedForHeader: string | undefined;
+  readonly bucketStore: BucketStore;
+  readonly now: Date;
+}
+
+export async function attemptLogin(params: AttemptLoginParams): Promise<LoginAttempt> {
+  const ipHash = hashIp(readClientIp(params.forwardedForHeader));
+  const nowMillis = params.now.getTime();
+  const bucket = recordAttempt(params.bucketStore.read(ipHash), nowMillis);
+  params.bucketStore.write(ipHash, bucket);
+  if (isRateLimited(bucket)) return { kind: 'rate-limited' };
+  const config = await loadAppConfig();
+  if (config === null) return { kind: 'not-bootstrapped' };
+  const isPasswordOk = await argon2Verify({
+    password: params.password,
+    hash: config.passwordHash,
+  });
+  if (!isPasswordOk) return { kind: 'invalid-password' };
+  params.bucketStore.clear(ipHash);
+  return {
+    kind: 'ok',
+    cookieValue: buildCookie(config.hmacKey, nowMillis),
+    expiresAt: new Date(nowMillis + SESSION_TTL_MS).toISOString(),
+  };
 }
 
 export type BootstrapResult = { kind: 'ok' } | { kind: 'already-bootstrapped' };

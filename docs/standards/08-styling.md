@@ -87,5 +87,12 @@ and `lg:` for wider screens. See
   import of a `.css` file from anywhere other than the application entry point.
 - `borso/no-string-concatenated-class-names`, a custom ESLint rule, which
   rejects a template literal in a `className` attribute and points at `clsx`.
-- A check in the pre-commit hook, which fails when an application contains more
-  than one `.css` file under `site/src/`.
+- [`scripts/check-single-stylesheet.sh`](../../scripts/check-single-stylesheet.sh),
+  run by the pre-commit hook and again in CI, which fails when an application
+  ships more than one `.css` file under its site directory. It reads the git
+  index rather than walking the filesystem, because `coverage/` and
+  `.stryker-tmp/` are gitignored and both contain CSS.
+
+Add the thing that enforces a rule in the same change that states it, or write
+that the rule is reviewed by hand. See
+[an approval gate that only existed in a comment](../dantotsus/an-approval-gate-that-only-existed-in-a-comment.md).

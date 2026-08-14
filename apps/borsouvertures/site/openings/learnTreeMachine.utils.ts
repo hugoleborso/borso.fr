@@ -131,6 +131,7 @@ function recordVisitedLeafIfReached(run: LearnTreeRun): void {
  * subscribe via `useSyncExternalStore`; tests drive it directly with injected
  * timers + RNG.
  */
+// @FollowsBlueprint state-machine-module
 export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): LearnTreeMachine {
   const opponentDelayMs = options.opponentDelayMs ?? DEFAULT_OPPONENT_DELAY_MS;
   const pickRandom = options.pickRandom ?? pickRandomCandidate;

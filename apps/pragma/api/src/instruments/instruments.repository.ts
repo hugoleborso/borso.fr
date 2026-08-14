@@ -15,6 +15,12 @@ export interface InstrumentRow {
   isHarmonic: boolean;
 }
 
+/**
+ * @Blueprint repository-projection
+ * @BlueprintName Repository Projection Constant
+ * @BlueprintUsage Use for a repository whose queries all return the same row shape.
+ * @BlueprintDescription Declares the selected columns once as an `as const` object that every select and every `returning` clause reuses, so a new column reaches all four queries at once and the exported row interface has a single object to match rather than four column lists.
+ */
 const PROJECTION = {
   id: instrumentTable.id,
   name: instrumentTable.name,

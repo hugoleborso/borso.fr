@@ -10,6 +10,7 @@ export interface DebouncedFunction<Args extends readonly unknown[]> {
   cancel: () => void;
 }
 
+// @FollowsBlueprint utils-pure-module
 export function debounce<Args extends readonly unknown[]>(
   callback: (...args: Args) => void,
   delayMs: number,

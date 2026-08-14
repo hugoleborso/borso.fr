@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-dynamic-translation-keys.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester().run('no-dynamic-translation-keys', rule, {
   valid: [
     "const title = t('catalog.page-title');",

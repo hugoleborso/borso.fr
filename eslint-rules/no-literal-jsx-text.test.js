@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-literal-jsx-text.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester().run('no-literal-jsx-text', rule, {
   valid: [
     // The replacement.

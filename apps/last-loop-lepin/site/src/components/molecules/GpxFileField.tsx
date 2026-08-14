@@ -3,9 +3,8 @@ import { formatKilobytes } from '../../lib/formatters.utils';
 import { ErrorText } from '../atoms/ErrorText';
 import { FileInput } from '../atoms/FileInput';
 import { Label } from '../atoms/Label';
+import { MonoNote } from '../atoms/MonoNote';
 import { Show } from '../atoms/Show';
-
-const HINT_STYLE = { fontSize: 11 } as const;
 
 /** The three ways reading a picked GPX file can fail. */
 export type GpxErrorKey =
@@ -27,6 +26,12 @@ interface GpxFileFieldProps {
  * identifier and has no entry for `.gpx`, so any value greys every file out in
  * the picker. The API rejects a body that is not GPX with a 400 anyway.
  */
+/**
+ * @Blueprint molecule-field
+ * @BlueprintName Molecule Form Field
+ * @BlueprintUsage Use for one labelled form control with its hint and its error message.
+ * @BlueprintDescription Composes the `Label`, `FileInput` and `ErrorText` atoms into one field, and owns no state: the picked file, whether it is required, and which error to show all arrive as props, so the form that owns the field state decides everything. The hint and the error are gated by `Show` rather than a ternary, and the error is a translation key union rather than a message, so the field never holds a user facing string.
+ */
 export function GpxFileField({
   id,
   label,
@@ -37,16 +42,16 @@ export function GpxFileField({
 }: GpxFileFieldProps) {
   const { t } = useTranslation();
   return (
-    <div className="field">
+    <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       <FileInput id={id} onFileChange={onFileChange} required={required} />
       <Show when={file !== null}>
-        <div className="muted mono" style={HINT_STYLE}>
+        <MonoNote>
           {t('admin.setup.gpx-file-summary', {
             name: file?.name ?? '',
             kilobytes: formatKilobytes(file?.size ?? 0),
           })}
-        </div>
+        </MonoNote>
       </Show>
       <Show when={errorKey !== null}>
         <ErrorText>{t(errorKey ?? 'admin.setup.gpx-unreadable')}</ErrorText>

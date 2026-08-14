@@ -17,6 +17,11 @@ export interface TranslationCatalogue {
 /**
  * Walk a nested catalogue and return every leaf key as a sorted dotted path,
  * e.g. `selection.side.white`. The parity gate compares the two lists.
+ *
+ * @Blueprint i18n-key-walk
+ * @BlueprintName Translation Key Walk
+ * @BlueprintUsage Use to turn a nested catalogue into the flat key list any catalogue check compares.
+ * @BlueprintDescription Recurses the catalogue carrying the path built so far, treating a string value as a leaf to push and any other value as a branch to descend, then sorts through the shared `compareTranslationKeys` so both catalogues are ordered by the same comparison. Passing the prefix down as a defaulted parameter is what keeps the function pure with no accumulator held outside it, and returning `readonly string[]` stops a caller mutating the list the parity gate then reads.
  */
 export function listTranslationKeys(
   catalogue: TranslationCatalogue,
@@ -52,6 +57,7 @@ export function readLanguageFamily(languageTag: string): string {
  * The saved choice wins, then the first browser language we support, then
  * English. Both inputs are arguments, so the decision is pure and tested.
  */
+// @FollowsBlueprint utils-pure-module
 export function selectInitialLanguage(
   savedLanguage: string | null,
   browserLanguages: readonly string[],

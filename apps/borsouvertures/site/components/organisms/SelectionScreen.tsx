@@ -9,8 +9,9 @@ import { setView, useAppState } from '@/state/appState';
 import type { Mode } from '@/state/persistedState.utils';
 import { OpeningFlowSelector } from './OpeningFlowSelector';
 import { SelectionAutoOpponentRow } from './SelectionAutoOpponentRow';
-import { SessionStartHint } from './SessionStartHint';
+import { SessionStartHint } from '@/components/atoms/SessionStartHint';
 
+// @FollowsBlueprint component-lookup-table
 const AUTO_OPPONENT_ROW_BY_MODE: ComponentByKind<Mode, { isAutoOpponentEnabled: boolean }> = {
   play: SelectionAutoOpponentRow,
   learn: EmptySlot,
@@ -30,6 +31,7 @@ interface SelectionScreenProps {
   openings: Opening[];
 }
 
+// @FollowsBlueprint organism-table-dispatch
 export function SelectionScreen({ openings }: SelectionScreenProps) {
   const { t } = useTranslation();
   const { mode, side, selection, playScope, playAutoOpponent } = useAppState();
@@ -39,12 +41,12 @@ export function SelectionScreen({ openings }: SelectionScreenProps) {
 
   return (
     <>
-      <div className="panel">
+      <div className="p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
         <SideSelector side={side} />
         <AutoOpponentRow isAutoOpponentEnabled={playAutoOpponent} />
       </div>
       <OpeningFlowSelector openings={openings} />
-      <div className="panel">
+      <div className="p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
         <Button
           label={t(START_LABEL_KEY_BY_MODE[mode])}
           variant="primary"

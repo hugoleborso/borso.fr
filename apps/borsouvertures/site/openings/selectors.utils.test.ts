@@ -57,6 +57,7 @@ const decoyOpeningNamedAll: Opening = {
   variations: [decoyVariationNamedAll],
 };
 
+// @FollowsBlueprint test-pure-unit
 describe('findOpening', () => {
   it('returns undefined when id is missing', () => {
     expect(findOpening([opening], null)).toBeUndefined();

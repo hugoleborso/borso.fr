@@ -159,6 +159,7 @@ function isShapeBinaryTest(node) {
   );
 }
 
+// @FollowsBlueprint lint-rule-predicate
 /**
  * Asks whether a value is present, or what kind of thing it is, rather than
  * what it means.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { initialsAvatar } from './initials.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('initialsAvatar', () => {
   it('takes the first two letters of a single-word name', () => {
     expect(initialsAvatar('Hugo').initials).toBe('HU');

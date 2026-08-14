@@ -9,6 +9,7 @@ import {
   transposeLines,
 } from './chordpro.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('parseChordProLine', () => {
   it('parses a blank line', () => {
     expect(parseChordProLine('')).toEqual({ kind: 'blank' });

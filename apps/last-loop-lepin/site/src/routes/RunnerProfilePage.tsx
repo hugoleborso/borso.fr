@@ -3,7 +3,12 @@ import { Card, CardBody } from '../components/atoms/Card';
 import { InitialsAvatar } from '../components/atoms/InitialsAvatar';
 import { Pill } from '../components/atoms/Pill';
 import { Show } from '../components/atoms/Show';
-import { CardHeader } from '../components/molecules/CardHeader';
+import { CardHeader } from '../components/atoms/CardHeader';
+import {
+  RUNNER_ROW_CLASS,
+  RUNNER_ROW_DETAIL_CLASS,
+  RUNNER_ROW_RANK_CLASS,
+} from '../components/organisms/leaderboard.utils';
 import {
   countValidPunches,
   listClosedLoops,
@@ -19,9 +24,6 @@ import { selectRunnerStatusKind, selectRunnerStatusLoop } from '../lib/runner-st
 import { formatCurrentRank, isLoadingRunnerProfile } from './runner-profile.core';
 
 const AVATAR_STYLE = { width: 64, height: 64, fontSize: 20 } as const;
-const IDENTITY_ROW_STYLE = { gap: 'var(--d-5)', flexWrap: 'wrap' } as const;
-const NAME_STYLE = { fontSize: 20 } as const;
-const LIST_STYLE = { listStyle: 'none', padding: 0, margin: 0 } as const;
 
 const STATUS_KEY_BY_KIND = {
   'in-race': 'runner-profile.in-race',
@@ -37,6 +39,7 @@ interface RunnerProfilePageProps {
  * closed. The edition comes from the current edition response, so the page
  * follows whichever edition the API says is current.
  */
+// @FollowsBlueprint route-detail-page
 export function RunnerProfilePage({ runnerSlug }: RunnerProfilePageProps) {
   const { t } = useTranslation();
   const currentEdition = useCurrentEdition();
@@ -52,42 +55,44 @@ export function RunnerProfilePage({ runnerSlug }: RunnerProfilePageProps) {
   return (
     <>
       <Show when={runner.isError}>
-        <div className="main">
+        <div className="flex flex-col gap-4 p-6 min-h-0">
           <Card>
-            <CardBody modifier="error-text">{t('runner-profile.not-found')}</CardBody>
+            <CardBody className="font-mono text-[12px] text-danger">
+              {t('runner-profile.not-found')}
+            </CardBody>
           </Card>
         </div>
       </Show>
       <Show when={isLoadingRunnerProfile(runner.isError, runner.data !== undefined)}>
-        <div className="main">
+        <div className="flex flex-col gap-4 p-6 min-h-0">
           <Card>
-            <CardBody modifier="muted">{t('common.loading')}</CardBody>
+            <CardBody className="text-ink-3">{t('common.loading')}</CardBody>
           </Card>
         </div>
       </Show>
       {listPresent(runner.data?.runner).map((profile) => {
         const avatar = initialsAvatar(profile.displayName);
         return (
-          <div className="main col" key={profile.slug}>
+          <div className="flex flex-col gap-3 p-6 min-h-0" key={profile.slug}>
             <Card>
               <CardHeader
                 title={t('runner-profile.title')}
                 hint={
-                  <span className="muted mono">
+                  <span className="font-mono tabular-nums text-ink-3">
                     {currentEdition.data?.edition?.displayName ?? ''}
                   </span>
                 }
               />
-              <CardBody modifier="row" style={IDENTITY_ROW_STYLE}>
+              <CardBody className="flex flex-wrap items-center gap-5">
                 <InitialsAvatar
                   initials={avatar.initials}
                   backgroundColor={avatar.backgroundColor}
                   style={AVATAR_STYLE}
                 />
-                <div className="col">
-                  <strong style={NAME_STYLE}>{profile.displayName}</strong>
+                <div className="flex flex-col gap-3">
+                  <strong className="text-[20px]">{profile.displayName}</strong>
                   <Show when={profile.bib !== null}>
-                    <span className="muted mono">
+                    <span className="font-mono tabular-nums text-ink-3">
                       {t('runner-profile.bib', { bib: profile.bib ?? 0 })}
                     </span>
                   </Show>
@@ -98,7 +103,7 @@ export function RunnerProfilePage({ runnerSlug }: RunnerProfilePageProps) {
                       })}
                     </Pill>
                   ))}
-                  <span className="muted">
+                  <span className="text-ink-3">
                     {t('runner-profile.current-rank', {
                       rank: formatCurrentRank(
                         entry?.rank,
@@ -115,27 +120,27 @@ export function RunnerProfilePage({ runnerSlug }: RunnerProfilePageProps) {
               <CardHeader
                 title={t('runner-profile.loop-history-title')}
                 hint={
-                  <span className="muted mono">
+                  <span className="font-mono tabular-nums text-ink-3">
                     {t('runner-profile.validated-count', { count: countValidPunches(punchRows) })}
                   </span>
                 }
               />
-              <CardBody modifier="flush">
+              <CardBody padding="none">
                 <Show when={loops.length === 0}>
-                  <CardBody modifier="muted">{t('runner-profile.no-loop')}</CardBody>
+                  <div className="px-5 py-4 text-ink-3">{t('runner-profile.no-loop')}</div>
                 </Show>
-                <ul style={LIST_STYLE}>
+                <ul>
                   {loops.map((loop) => (
-                    <li key={loop.loopIndex} className="leaderboard-row">
-                      <span className="rank mono">
+                    <li key={loop.loopIndex} className={RUNNER_ROW_CLASS}>
+                      <span className={RUNNER_ROW_RANK_CLASS}>
                         {t('common.loop-short', { loop: loop.loopIndex })}
                       </span>
-                      <span className="muted mono">
+                      <span className="font-mono tabular-nums text-ink-3">
                         {t('runner-profile.finished-at', {
                           time: formatHourMinute(new Date(loop.finishedAt)),
                         })}
                       </span>
-                      <span className="loop-info">
+                      <span className={RUNNER_ROW_DETAIL_CLASS}>
                         {t('runner-profile.loop-duration', {
                           duration: formatLoopDuration(loop.durationMs),
                         })}

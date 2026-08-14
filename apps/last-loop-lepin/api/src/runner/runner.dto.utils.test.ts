@@ -10,6 +10,7 @@ const SAMPLE_RUNNER: Runner = {
   bib: 1,
 };
 
+// @FollowsBlueprint test-pure-unit
 describe('toRunnerDto', () => {
   it('composes photoUrl from cdnHost + photoKey when both are present', () => {
     const dto = toRunnerDto(SAMPLE_RUNNER, 'photos-cdn.borso.fr');

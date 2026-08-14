@@ -36,6 +36,7 @@ interface BarsKanbanProps<TStatus extends string> {
   readonly onMoveToStatus: (status: TStatus, draggedBarId: string) => void;
 }
 
+// @FollowsBlueprint organism-presentational
 export function BarsKanban<TStatus extends string>(props: BarsKanbanProps<TStatus>): JSX.Element {
   const { t } = useTranslation();
   return (

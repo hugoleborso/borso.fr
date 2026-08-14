@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-string-concatenated-class-names.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester().run('no-string-concatenated-class-names', rule, {
   valid: [
     // The common case.

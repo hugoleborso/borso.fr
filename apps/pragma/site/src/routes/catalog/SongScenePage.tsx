@@ -18,17 +18,18 @@ import { ApiError } from '../../lib/api';
 import { openDialogOnAttach } from '../../lib/modal-dialog';
 import { useNavigateTo } from '../../lib/navigation';
 import { useSong } from '../../lib/queries/songs';
+import { selectChordProText } from './chart-kind.utils';
 import {
   clampSceneFontSize,
   formatSemitoneOffset,
   SCENE_FONT_SIZE_DEFAULT_PX,
   SCENE_FONT_SIZE_STEP_PX,
-  selectChordproText,
 } from './scene-view.core';
 
 const SCENE_BUTTON_CLASS =
   'bg-[rgba(255,255,255,0.08)] text-[#f1e9d8] border border-[rgba(255,255,255,0.14)] px-3 py-1.5 rounded-md text-sm cursor-pointer hover:bg-[rgba(255,255,255,0.14)] transition-colors';
 
+// @FollowsBlueprint route-detail-page
 export function SongScenePage(): JSX.Element {
   const { t } = useTranslation();
   const navigateTo = useNavigateTo();
@@ -51,7 +52,7 @@ export function SongScenePage(): JSX.Element {
     return <p className="px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
 
-  const chordproText = selectChordproText(song.chart);
+  const chordproText = selectChordProText(song.chart);
   const leaveScene = (): void => {
     navigateTo(`/catalog/${song.id}`);
   };

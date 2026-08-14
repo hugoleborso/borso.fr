@@ -42,6 +42,7 @@ function renderRail(): RailSpies {
   return spies;
 }
 
+// @FollowsBlueprint test-component-render
 describe('StudioRail', () => {
   beforeAll(async () => {
     await i18next.changeLanguage('fr');

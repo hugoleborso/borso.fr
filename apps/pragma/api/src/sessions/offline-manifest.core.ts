@@ -38,6 +38,12 @@ function findNextSession(
     })[0];
 }
 
+/**
+ * @Blueprint core-projection
+ * @BlueprintName Core Projection
+ * @BlueprintUsage Use for a read model that turns rows and `now` into the exact payload the caller sends.
+ * @BlueprintDescription Picks the next session by filtering strictly after `now` and sorting by date, then breaking a tie on the identifier so two sessions at the same instant always resolve the same way, and maps the songs to their urls. Pure, so the test pins both the tiebreak and the session starting exactly at `now`.
+ */
 export function buildNextSessionOfflineManifest(
   sessions: readonly OfflineManifestSession[],
   songs: readonly OfflineManifestSong[],

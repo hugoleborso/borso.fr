@@ -9,6 +9,8 @@
 
 import type { JSX } from 'react';
 import type { EmbedResult } from '../../lib/embed.utils';
+import { ExternalLink } from '../atoms/ExternalLink';
+import { OembedFrame } from '../atoms/OembedFrame';
 
 interface SongEmbedProps {
   readonly embed: EmbedResult;
@@ -18,30 +20,20 @@ interface SongEmbedProps {
 
 const DEFAULT_IFRAME_CLASS = 'rounded-md';
 
+const LINK_CLASS = 'text-accent hover:underline break-all';
+
+// @FollowsBlueprint molecule-presentational
 export function SongEmbed({ embed, title, iframeClassName }: SongEmbedProps): JSX.Element {
   if (embed.kind === 'oembed') {
     return (
-      <iframe
-        src={embed.iframeSrc}
+      <OembedFrame
+        source={embed.iframeSrc}
         title={title}
         width={embed.width}
         height={embed.height}
-        loading="lazy"
-        referrerPolicy="no-referrer"
-        allow="encrypted-media; autoplay; clipboard-write; picture-in-picture"
-        allowFullScreen
         className={iframeClassName ?? DEFAULT_IFRAME_CLASS}
       />
     );
   }
-  return (
-    <a
-      href={embed.href}
-      target="_blank"
-      rel="noreferrer noopener"
-      className="text-accent hover:underline break-all"
-    >
-      {embed.href}
-    </a>
-  );
+  return <ExternalLink address={embed.href} className={LINK_CLASS} />;
 }

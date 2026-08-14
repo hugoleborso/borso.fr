@@ -118,6 +118,12 @@ function durationFromLength(lengthMs: number | null | undefined): {
   return { seconds, label: `${minutes}:${paddedSeconds}` };
 }
 
+/**
+ * @Blueprint core-parse-untrusted
+ * @BlueprintName Core Parse Of Untrusted Input
+ * @BlueprintUsage Use for the boundary where a third-party response becomes a typed domain value.
+ * @BlueprintDescription Takes `unknown` and runs `safeParse`, returning an empty list rather than throwing, so a shape change upstream empties the search dropdown instead of failing the request. Every optional field falls back inside the mapper, and a recording with no title is dropped rather than emitted blank.
+ */
 export function mapMusicBrainzRecordings(payload: unknown): ExternalSongHit[] {
   const parsed = responseSchema.safeParse(payload);
   if (!parsed.success) return [];
@@ -158,7 +164,9 @@ export interface ExternalSearchCacheEntry {
  */
 export function expiredSearchCacheKeys(
   cache: ReadonlyMap<string, ExternalSearchCacheEntry>,
-  now: number,
+  nowMillis: number,
 ): readonly string[] {
-  return [...cache].filter(([, entry]) => entry.expiresAt <= now).map(([cacheKey]) => cacheKey);
+  return [...cache]
+    .filter(([, entry]) => entry.expiresAt <= nowMillis)
+    .map(([cacheKey]) => cacheKey);
 }

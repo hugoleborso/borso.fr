@@ -22,6 +22,7 @@ function isAsConst(typeAnnotation) {
   );
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

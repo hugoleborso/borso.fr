@@ -26,6 +26,7 @@ const LOGIN_ERROR_KEY_BY_STATUS: ReadonlyMap<number | null, ParseKeys> = new Map
  * dropped, which reads the same way to the visitor as a status nobody planned
  * for.
  */
+// @FollowsBlueprint core-label-key
 export function selectLoginErrorMessageKey(status: number | null): ParseKeys {
   return LOGIN_ERROR_KEY_BY_STATUS.get(status) ?? UNKNOWN_LOGIN_ERROR_KEY;
 }

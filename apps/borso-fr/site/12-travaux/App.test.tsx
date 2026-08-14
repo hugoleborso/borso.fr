@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { i18next } from '../i18n/i18n';
 import { App } from './App';
 
+// @FollowsBlueprint test-component-render
 describe('the twelve labours page', () => {
   beforeAll(async () => {
     await i18next.changeLanguage('fr');

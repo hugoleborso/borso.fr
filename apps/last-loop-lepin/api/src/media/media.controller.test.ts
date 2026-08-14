@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { adminSessionCookie, testDatabase } from '../../../test/database-utils';
+import { adminSessionCookie } from '../../../test/database-utils';
 import { createApp } from '../app';
 
 const presignResponseSchema = z.object({
@@ -16,9 +16,10 @@ const presignResponseSchema = z.object({
 });
 
 async function adminCookie(): Promise<string> {
-  return adminSessionCookie(testDatabase());
+  return adminSessionCookie();
 }
 
+// @FollowsBlueprint test-back-e2e
 describe('media controller', () => {
   const app = createApp();
 

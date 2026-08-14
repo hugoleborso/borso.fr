@@ -9,6 +9,7 @@ import { uciFromSquare, uciPromotion, uciToSquare } from '@/openings/uciSquare.u
  * only if the opening dataset and the board have drifted apart. The move
  * string itself is then the most useful label we can still show.
  */
+// @FollowsBlueprint utils-pure-module
 export function describeMoveInStandardNotation(uci: string, fen: string): string {
   try {
     const chess = new Chess(fen);

@@ -24,6 +24,7 @@ import {
   reorderEntries,
 } from './setlists.service';
 
+// @FollowsBlueprint controller-dispatch
 export function buildSetlistsRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)

@@ -13,6 +13,7 @@ function changeAutoOpponent(isAutoOpponentEnabled: boolean): void {
   playMachine.setAutoOpponent(isAutoOpponentEnabled);
 }
 
+// @FollowsBlueprint organism-presentational
 export function PlaySessionControl({ isAutoOpponentEnabled }: SessionModeControlProps) {
   return (
     <AutoOpponentToggle

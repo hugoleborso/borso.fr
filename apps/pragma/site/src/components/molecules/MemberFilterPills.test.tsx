@@ -31,6 +31,12 @@ function renderPills(root: Root, node: ReactNode): void {
   });
 }
 
+/**
+ * @Blueprint test-component-render
+ * @BlueprintName Component Render Test
+ * @BlueprintUsage Use for asserting what a user sees and what their click does, rather than what the component called.
+ * @BlueprintDescription Mounts the component for real with `createRoot` inside `act`, imports the application's i18n setup so the assertions read the shipped catalogue instead of a stub, and finds each control by its visible text before reading the aria state a screen reader would announce. A fresh container and root are built and torn down per case, so no test inherits the previous tree.
+ */
 describe('MemberFilterPills', () => {
   let container: HTMLDivElement;
   let root: Root;

@@ -62,6 +62,7 @@ function buildOutRunner(): RankedRunnerDto {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('nextStep — self-punch FSM', () => {
   it('open(in-race runner) → confirm', () => {
     const next = nextStep(initialSelfPunchState, { type: 'open', runner: buildInRaceRunner() });

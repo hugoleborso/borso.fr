@@ -60,6 +60,7 @@ function readBranches(node) {
   return [node.left, node.right];
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

@@ -6,6 +6,7 @@ import {
   selectMenuItemTransitionDelay,
 } from './home-menu.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectMenuItemTransitionDelay', () => {
   it('staggers the items as the menu opens', () => {
     expect(selectMenuItemTransitionDelay(true, 0)).toBe('80ms');

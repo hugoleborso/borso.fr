@@ -1,9 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { Edition } from '../../labours/labours.types';
-import { INK, MUTED, SANS_FAMILY } from '../../theme/twelve-labours.theme';
 import { FilmstripCard } from '../molecules/FilmstripCard';
-
-const FILMSTRIP_MINIMUM_HEIGHT_PX = 200;
 
 interface MonthFilmstripProps {
   edition: Edition;
@@ -12,6 +9,7 @@ interface MonthFilmstripProps {
   onMonthSelected: (monthNumber: number) => void;
 }
 
+// @FollowsBlueprint organism-presentational
 export function MonthFilmstrip({
   edition,
   selectedMonthNumber,
@@ -20,42 +18,16 @@ export function MonthFilmstrip({
 }: MonthFilmstripProps) {
   const { t } = useTranslation();
   return (
-    <div style={{ marginTop: 32 }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'baseline',
-          marginBottom: 14,
-        }}
-      >
-        <div
-          style={{
-            fontFamily: SANS_FAMILY,
-            fontWeight: 600,
-            fontSize: 11,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
-            color: INK,
-          }}
-        >
+    <div className="mt-8">
+      <div className="mb-3.5 flex items-baseline justify-between">
+        <div className="font-labours-sans text-[11px] font-semibold tracking-[0.22em] text-labours-ink uppercase">
           {t('twelve-labours.filmstrip.heading')}
         </div>
-        <div
-          style={{
-            fontFamily: SANS_FAMILY,
-            fontSize: 11,
-            color: MUTED,
-            letterSpacing: '0.04em',
-          }}
-        >
+        <div className="font-labours-sans text-[11px] tracking-[0.04em] text-labours-muted">
           {t('twelve-labours.filmstrip.hint')}
         </div>
       </div>
-      <div
-        className="twelve-travaux-filmstrip"
-        style={{ gap: 8, minHeight: FILMSTRIP_MINIMUM_HEIGHT_PX }}
-      >
+      <div className="grid min-h-[200px] grid-cols-[repeat(12,minmax(160px,1fr))] gap-2 overflow-x-auto pb-2 labours-stack:grid-cols-12 labours-stack:overflow-x-visible labours-stack:pb-0">
         {edition.months.map((month) => (
           <FilmstripCard
             key={month.monthNumber}

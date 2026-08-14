@@ -20,6 +20,7 @@ export interface ChartKindIconProps {
   size?: number;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function ChartKindIcon({ kind, size = 14 }: ChartKindIconProps): JSX.Element {
   const { t } = useTranslation();
   if (kind === null || kind === undefined) {

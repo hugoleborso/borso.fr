@@ -11,6 +11,7 @@ const SRGB_THRESHOLD = 0.03928;
 const SRGB_SCALE = 12.92;
 const LUMINANCE_RED_WEIGHT = 0.2126;
 
+// @FollowsBlueprint test-pure-unit
 describe('member-color.utils', () => {
   describe('parseHex', () => {
     it('parses a 6-digit hex string', () => {

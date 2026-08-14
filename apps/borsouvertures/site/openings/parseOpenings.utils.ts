@@ -7,6 +7,7 @@ import type { Line, Opening, Variation } from './types';
  * both come from outside the type system, so we re-validate at the boundary
  * instead of leaning on a type assertion.
  */
+// @FollowsBlueprint unknown-payload-parser
 export function parseOpenings(value: unknown): Opening[] {
   if (!Array.isArray(value)) throw new Error('openings.json: root is not an array');
   return value.map(parseOpening);

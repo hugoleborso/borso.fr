@@ -13,6 +13,7 @@ import {
   validateAppSlug,
 } from './naming.utils.js';
 
+// @FollowsBlueprint test-pure-unit
 describe('validateAppSlug', () => {
   it.each(['borso-fr', 'test-app', 'app1', 'a-b-c'])('accepts %s', (slug) => {
     expect(() => validateAppSlug(slug)).not.toThrow();

@@ -96,6 +96,7 @@ function listPanelLineEntries(
   return listLineEntries([selectedEntry]);
 }
 
+// @FollowsBlueprint core-view-intent
 export function buildOpeningFlowLists(
   mode: Mode,
   openings: Opening[],

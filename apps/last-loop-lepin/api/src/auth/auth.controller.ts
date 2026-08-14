@@ -5,19 +5,13 @@ import { AUTH_COOKIE_NAME } from './auth.middleware';
 import { loginInputSchema } from './auth.schema';
 import {
   AuthDeniedError,
-  getDatabase,
   httpStatusForAuthDenial,
   login,
   logout,
+  readClientIp,
 } from './auth.service';
 
 const ADMIN_COOKIE_TTL_SECONDS = 12 * 60 * 60;
-
-function readClientIp(headerValue: string | undefined): string {
-  if (headerValue === undefined) return 'unknown';
-  const first = headerValue.split(',')[0];
-  return first === undefined ? 'unknown' : first.trim();
-}
 
 /**
  * `sameSite: 'Lax'` is the deliberate default — `Strict` blocked the
@@ -29,15 +23,12 @@ function readClientIp(headerValue: string | undefined): string {
  * covered. `requireAdminSession` adds an explicit Origin-header check
  * as belt-and-braces for scripted cross-origin requests.
  */
+// @FollowsBlueprint controller-public-router
 const authRouter = new Hono()
   .post('/login', zValidator('json', loginInputSchema), async (context) => {
     const ipAddress = readClientIp(context.req.header('x-forwarded-for'));
     try {
-      const result = await login(
-        getDatabase(),
-        { pin: context.req.valid('json').pin, ipAddress },
-        new Date(),
-      );
+      const result = await login({ pin: context.req.valid('json').pin, ipAddress }, new Date());
       setCookie(context, AUTH_COOKIE_NAME, result.sessionId, {
         httpOnly: true,
         secure: process.env.STAGE !== 'dev',
@@ -59,7 +50,7 @@ const authRouter = new Hono()
   .post('/logout', async (context) => {
     const sessionId = getCookie(context, AUTH_COOKIE_NAME);
     if (sessionId !== undefined) {
-      await logout(getDatabase(), sessionId);
+      await logout(sessionId);
     }
     deleteCookie(context, AUTH_COOKIE_NAME, { path: '/' });
     return context.json({ ok: true });

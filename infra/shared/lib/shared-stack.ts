@@ -1,4 +1,4 @@
-import { HOST_ROUTING_FUNCTION_CODE } from '@borso/infra';
+import { HOST_ROUTING_FUNCTION_CODE, SHARED_SSM_PARAMETERS } from '@borso/infra';
 import { Duration, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
 import { CfnBudget } from 'aws-cdk-lib/aws-budgets';
 import {
@@ -31,8 +31,8 @@ const PREVIEWS_DOMAIN = `*.preview.${HOSTED_ZONE_NAME}`;
 interface SharedStackProps extends StackProps {
   readonly borsoFrCert: ICertificate;
   readonly previewCert: ICertificate;
-  /** Email for budget alerts; defaults to BORSO_BUDGET_EMAIL env var. Mandatory. */
-  readonly budgetEmail?: string;
+  /** Address the three cost alarms notify. Read from the environment by `bin/shared.ts`. */
+  readonly budgetEmail: string;
 }
 
 /**
@@ -45,14 +45,20 @@ interface SharedStackProps extends StackProps {
  *   - GitHub OIDC provider (one per account)
  *   - Previews S3 bucket + CloudFront distribution + host-routing Function
  *   - Three deploy roles (prod / preview / shared-infra) — see deploy-roles.ts
- *   - Cost budgets (€5/€20/€50, mandatory; throws if BORSO_BUDGET_EMAIL absent)
- *   - SSM parameters under /borso/shared/ that constructs read at synth time
+ *   - Cost budgets ($5/$20/$50), notifying `props.budgetEmail`
+ *   - The SSM parameters listed in `SHARED_SSM_PARAMETERS`, which constructs
+ *     read at synth time
  *
  * Does NOT own (anymore):
  *   - DSQL cluster — moved to per-app `DsqlCluster` (lives with the app's
  *     prod stack, shared across stages of the same app via SSM lookup).
  *   - IntegTestRole — there is no integ workflow in the monorepo; preview
  *     deploys cover what integ used to cover.
+ *
+ * @Blueprint shared-account-stack
+ * @BlueprintName Shared Account Stack
+ * @BlueprintUsage Use for a resource that exists once per AWS account and that other stacks need to find.
+ * @BlueprintDescription Creates the account-wide singletons in one `Stack` subclass and publishes every value a downstream stack needs as an SSM parameter under one prefix, so an app construct reads a path at synth time instead of taking a cross-stack export or a hard-coded ARN. Every environment-derived value arrives as a prop from `bin/shared.ts`, so the stack itself never reads `process.env`.
  */
 export class SharedStack extends Stack {
   constructor(scope: Construct, id: string, props: SharedStackProps) {
@@ -152,13 +158,6 @@ export class SharedStack extends Stack {
 
     // === Budgets (mandatory) ===
 
-    const budgetEmail = props.budgetEmail ?? process.env.BORSO_BUDGET_EMAIL;
-    if (!budgetEmail) {
-      throw new Error(
-        'SharedStack: budget email is mandatory. Set BORSO_BUDGET_EMAIL env var or pass props.budgetEmail. ' +
-          'Three monthly cost alarms ($5/$20/$50) will fire to this address at 80% of each threshold.',
-      );
-    }
     // AWS Budgets only accepts USD as the currency unit. The amounts below
     // are dollar thresholds — close enough to euro at the tiny absolute scale
     // we operate at, and AWS rejects any other Unit value at deploy time.
@@ -178,7 +177,7 @@ export class SharedStack extends Stack {
               threshold: 80,
               thresholdType: 'PERCENTAGE',
             },
-            subscribers: [{ subscriptionType: 'EMAIL', address: budgetEmail }],
+            subscribers: [{ subscriptionType: 'EMAIL', address: props.budgetEmail }],
           },
         ],
       });
@@ -187,51 +186,51 @@ export class SharedStack extends Stack {
     // === SSM parameters (consumed by constructs at synth time) ===
 
     new StringParameter(this, 'OidcArnParam', {
-      parameterName: '/borso/shared/oidc-provider-arn',
+      parameterName: SHARED_SSM_PARAMETERS.oidcProviderArn,
       stringValue: oidcProvider.openIdConnectProviderArn,
     });
     new StringParameter(this, 'HostedZoneIdParam', {
-      parameterName: '/borso/shared/hosted-zone-id',
+      parameterName: SHARED_SSM_PARAMETERS.hostedZoneId,
       stringValue: zone.hostedZoneId,
     });
     new StringParameter(this, 'HostedZoneNameParam', {
-      parameterName: '/borso/shared/hosted-zone-name',
+      parameterName: SHARED_SSM_PARAMETERS.hostedZoneName,
       stringValue: HOSTED_ZONE_NAME,
     });
     new StringParameter(this, 'CertBorsoFrParam', {
-      parameterName: '/borso/shared/cert-borso-fr-arn',
+      parameterName: SHARED_SSM_PARAMETERS.certBorsoFrArn,
       stringValue: props.borsoFrCert.certificateArn,
     });
     new StringParameter(this, 'CertPreviewParam', {
-      parameterName: '/borso/shared/cert-preview-borso-fr-arn',
+      parameterName: SHARED_SSM_PARAMETERS.certPreviewArn,
       stringValue: props.previewCert.certificateArn,
     });
     new StringParameter(this, 'CertPreviewRegionalParam', {
-      parameterName: '/borso/shared/cert-preview-borso-fr-regional-arn',
+      parameterName: SHARED_SSM_PARAMETERS.certPreviewRegionalArn,
       stringValue: previewsRegionalCert.certificateArn,
     });
     new StringParameter(this, 'PreviewsBucketParam', {
-      parameterName: '/borso/shared/previews-bucket-name',
+      parameterName: SHARED_SSM_PARAMETERS.previewsBucketName,
       stringValue: previewsBucket.bucketName,
     });
     new StringParameter(this, 'PreviewsDistributionIdParam', {
-      parameterName: '/borso/shared/previews-distribution-id',
+      parameterName: SHARED_SSM_PARAMETERS.previewsDistributionId,
       stringValue: previewsDistribution.distributionId,
     });
     new StringParameter(this, 'PreviewsDistributionDomainParam', {
-      parameterName: '/borso/shared/previews-distribution-domain',
+      parameterName: SHARED_SSM_PARAMETERS.previewsDistributionDomain,
       stringValue: previewsDistribution.distributionDomainName,
     });
     new StringParameter(this, 'ProdDeployRoleArnParam', {
-      parameterName: '/borso/shared/prod-deploy-role-arn',
+      parameterName: SHARED_SSM_PARAMETERS.prodDeployRoleArn,
       stringValue: deployRoles.prod.roleArn,
     });
     new StringParameter(this, 'PreviewDeployRoleArnParam', {
-      parameterName: '/borso/shared/preview-deploy-role-arn',
+      parameterName: SHARED_SSM_PARAMETERS.previewDeployRoleArn,
       stringValue: deployRoles.preview.roleArn,
     });
     new StringParameter(this, 'SharedDeployRoleArnParam', {
-      parameterName: '/borso/shared/shared-deploy-role-arn',
+      parameterName: SHARED_SSM_PARAMETERS.sharedDeployRoleArn,
       stringValue: deployRoles.shared.roleArn,
     });
   }

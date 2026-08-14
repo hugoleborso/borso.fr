@@ -18,6 +18,12 @@ export type ColoredRect = Rect & {
 const MULBERRY32_INCREMENT = 0x6d2b79f5;
 const COLORIZE_SEED_MIX = 0x9e3779b9;
 
+/**
+ * @Blueprint utils-seeded-generator
+ * @BlueprintName Seeded Generator Utility
+ * @BlueprintUsage Use for generative code, so that a module which draws random numbers still lives inside the purity gate.
+ * @BlueprintDescription Turns a seed into a draw function that every generator in the module then takes as an argument, so the randomness arrives as a parameter and `Math.random` is never called here. The same seed always produces the same sequence and therefore the same picture, which is what lets the sibling test assert on exact output and what makes a composition shareable as a URL.
+ */
 export function mulberry32(seed: number): () => number {
   let state = seed >>> 0;
   return () => {

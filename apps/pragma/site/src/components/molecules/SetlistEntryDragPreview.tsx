@@ -20,6 +20,7 @@ export interface SetlistEntryDragPreviewProps {
   readonly artist: string;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function SetlistEntryDragPreview(props: SetlistEntryDragPreviewProps): JSX.Element {
   return (
     <div className="grid grid-cols-[32px_auto_1fr] items-center gap-3 bg-bg-elev border border-line-strong rounded-md px-3 py-3 shadow-[0_12px_32px_rgba(0,0,0,0.28)] cursor-grabbing">

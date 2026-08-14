@@ -15,6 +15,7 @@ import type { Line, Opening, Variation } from './types';
  *     → `null` (the line is the bare opening with no further specifier;
  *       the caller decides whether to show "Mainline" or just dash it out)
  */
+// @FollowsBlueprint utils-pure-module
 export function shortLineName(opening: Opening, variation: Variation, line: Line): string | null {
   const trimmed = stripPrefixes(line.name, opening.name, variation.name);
   return trimmed.length > 0 ? trimmed : null;

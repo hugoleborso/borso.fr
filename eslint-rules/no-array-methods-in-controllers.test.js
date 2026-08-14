@@ -4,6 +4,7 @@ import rule from './no-array-methods-in-controllers.js';
 const controllerFile = 'apps/last-loop-lepin/api/src/punch/punch.controller.ts';
 const serviceFile = 'apps/last-loop-lepin/api/src/punch/punch.service.ts';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(controllerFile, { jsx: false }).run('no-array-methods-in-controllers', rule, {
   valid: [
     'const punch = await punchService.recordPunch(context.req.valid("json"));',

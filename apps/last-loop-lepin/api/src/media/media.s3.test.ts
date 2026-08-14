@@ -1,5 +1,10 @@
 /**
  * @vitest-environment node
+ *
+ * @Blueprint test-node-adapter
+ * @BlueprintName Node Environment Adapter Test
+ * @BlueprintUsage Use for a module that talks to a vendor SDK or reads `process.env`, so it runs under node rather than the default browser-like environment.
+ * @BlueprintDescription Declares `@vitest-environment node` in the file's first docblock, which is the only place vitest reads it, then saves the environment variables the SDK needs into `PRESERVED_ENV`, sets them for the suite and restores them afterwards, so a variable this suite sets cannot leak into another file.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';

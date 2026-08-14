@@ -18,7 +18,13 @@
       "play": "Play"
     },
     "board-style": {
-      "label": "Board style:"
+      "label": "Board style:",
+      "theme": {
+        "lichess": "Lichess",
+        "chesscom": "Chess.com",
+        "nord": "Nord Blue",
+        "sand": "Sand"
+      }
     },
     "language": {
       "aria-label": "Interface language",

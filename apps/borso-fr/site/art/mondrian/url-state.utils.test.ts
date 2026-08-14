@@ -3,6 +3,7 @@ import { buildSearch, freshSeed, isSeedHex, readUrlState, seedToHex } from './ur
 
 const FALLBACK_SEED = 0x0000002a;
 
+// @FollowsBlueprint test-pure-unit
 describe('isSeedHex', () => {
   it('accepts a single hex digit', () => {
     expect(isSeedHex('a')).toBe(true);

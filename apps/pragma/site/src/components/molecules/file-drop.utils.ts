@@ -1,5 +1,5 @@
 /**
- * Pure validation helpers for the FileDrop molecule. Centralises the
+ * Pure validation helpers for the chord-chart upload. Centralises the
  * accepted MIME list, the 10 MiB ceiling, the MIME→chart-kind projection that
  * the song form consumes, and the message each rejection reason shows.
  */
@@ -25,6 +25,7 @@ export type FileValidationResult =
   | { ok: true; kind: FileDropChartKind; contentType: AllowedUploadContentType }
   | { ok: false; reason: FileRejectionReason };
 
+// @FollowsBlueprint utils-pure-module
 export function validateChartFile(file: File): FileValidationResult {
   if (file.size > FILE_DROP_MAX_BYTES) return { ok: false, reason: 'too-large' };
   if (file.type === ALLOWED_PDF_MIME) {

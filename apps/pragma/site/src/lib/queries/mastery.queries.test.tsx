@@ -44,6 +44,7 @@ const SEED = {
   ],
 };
 
+// @FollowsBlueprint test-query-hook
 describe('mastery default mutations — optimistic updates', () => {
   let stub: ReturnType<typeof stubFetch> | null = null;
   beforeEach(() => {

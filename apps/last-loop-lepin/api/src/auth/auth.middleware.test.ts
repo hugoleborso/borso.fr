@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { truncateAllTables } from '../../../test/database-utils';
 import { AUTH_COOKIE_NAME, requireAdminSession } from './auth.middleware';
 import { createSession } from './auth.repository';
 
@@ -14,6 +14,12 @@ function buildGuardedApp() {
 
 const ALLOWED_ORIGIN = 'https://last-loop-lepin.borso.fr';
 
+/**
+ * @Blueprint test-middleware-integration
+ * @BlueprintName Middleware Integration Test
+ * @BlueprintUsage Use for a middleware, so it is exercised through a router of its own rather than through the routes of the real application.
+ * @BlueprintDescription Builds a throwaway Hono app in `buildGuardedApp` that mounts only the middleware plus one read route and one write route, which lets the suite set `ALLOWED_ORIGIN` for itself and cover both the guarded and the open configuration without changing what the deployed application sees.
+ */
 describe('auth.middleware', () => {
   const originalOrigin = process.env.ALLOWED_ORIGIN;
 
@@ -37,7 +43,7 @@ describe('auth.middleware', () => {
   });
 
   beforeEach(async () => {
-    await truncateAllTables(testDatabase());
+    await truncateAllTables();
   });
 
   it('returns 401 when no cookie is present', async () => {
@@ -56,7 +62,7 @@ describe('auth.middleware', () => {
 
   it('returns 401 + clears the cookie when the session has expired', async () => {
     const now = new Date();
-    await createSession(testDatabase(), {
+    await createSession({
       id: 'expired-id',
       expiresAt: new Date(now.getTime() - 60_000),
     });
@@ -70,7 +76,7 @@ describe('auth.middleware', () => {
 
   it('lets a GET through when the cookie maps to a live session', async () => {
     const now = new Date();
-    await createSession(testDatabase(), {
+    await createSession({
       id: 'live-id',
       expiresAt: new Date(now.getTime() + 60_000),
     });
@@ -84,7 +90,7 @@ describe('auth.middleware', () => {
 
   it('rejects state-changing requests with a missing Origin header (403)', async () => {
     const now = new Date();
-    await createSession(testDatabase(), {
+    await createSession({
       id: 'live-id-2',
       expiresAt: new Date(now.getTime() + 60_000),
     });
@@ -98,7 +104,7 @@ describe('auth.middleware', () => {
 
   it('rejects state-changing requests with a foreign Origin header (403)', async () => {
     const now = new Date();
-    await createSession(testDatabase(), {
+    await createSession({
       id: 'live-id-3',
       expiresAt: new Date(now.getTime() + 60_000),
     });
@@ -115,7 +121,7 @@ describe('auth.middleware', () => {
 
   it('lets state-changing requests through when Origin matches ALLOWED_ORIGIN', async () => {
     const now = new Date();
-    await createSession(testDatabase(), {
+    await createSession({
       id: 'live-id-4',
       expiresAt: new Date(now.getTime() + 60_000),
     });

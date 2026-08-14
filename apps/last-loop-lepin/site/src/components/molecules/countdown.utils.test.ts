@@ -5,6 +5,7 @@ const SECOND_MS = 1_000;
 const MINUTE_MS = 60 * SECOND_MS;
 const HOUR_MS = 60 * MINUTE_MS;
 
+// @FollowsBlueprint test-pure-unit
 describe('projectCountdownDisplay', () => {
   it('clamps a duration that has already elapsed to zero', () => {
     const display = projectCountdownDisplay(-5 * MINUTE_MS);

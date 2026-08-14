@@ -16,6 +16,7 @@ function createMemoryStorage(initial: Record<string, string> = {}): LanguageStor
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('readSavedLanguage', () => {
   it('returns null when there is no storage', () => {
     expect(readSavedLanguage(undefined)).toBeNull();

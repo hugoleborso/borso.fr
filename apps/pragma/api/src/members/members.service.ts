@@ -42,6 +42,7 @@ export async function createMember(input: {
   });
 }
 
+// @FollowsBlueprint service-crud-update
 export async function patchMember(
   id: string,
   input: { firstName?: string; color?: string; avatarS3Key?: string | null },

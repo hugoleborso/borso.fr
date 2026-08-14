@@ -4,10 +4,12 @@ import { Construct } from 'constructs';
 import {
   assertDeployStage,
   frontendOrigin,
+  isProductionStage,
   previewApiHostname,
   type Stage,
   validateAppSlug,
 } from '../internal/naming.utils.js';
+import { SHARED_SSM_PARAMETERS } from '../internal/shared-ssm.js';
 import {
   selectSameOriginApiDomainName,
   selectTestSeedEnvironment,
@@ -18,13 +20,6 @@ import { DsqlSchema, type DsqlSchemaCloneFromConfig } from './dsql-schema.js';
 import { LambdaApi } from './lambda-api.js';
 import { StaticSite } from './static-site.js';
 
-const SHARED_SSM = {
-  hostedZoneId: '/borso/shared/hosted-zone-id',
-  hostedZoneName: '/borso/shared/hosted-zone-name',
-  certPreviewRegionalArn: '/borso/shared/cert-preview-borso-fr-regional-arn',
-} as const;
-
-/** @beta */
 export interface PreviewableAppProps {
   readonly app: string;
   readonly stage: Stage;
@@ -75,6 +70,7 @@ export interface PreviewableAppProps {
   };
 }
 
+// @FollowsBlueprint reusable-cdk-construct
 /**
  * High-level construct composing `StaticSite` + optional `LambdaApi` +
  * optional `DsqlSchema`. The DSQL cluster lives in a dedicated
@@ -97,7 +93,6 @@ export interface PreviewableAppProps {
  *
  * Cert ARN + hosted zone come from SSM, seeded by `SharedStack`.
  *
- * @beta
  */
 export class PreviewableApp extends Construct {
   public readonly site: StaticSite;
@@ -130,7 +125,7 @@ export class PreviewableApp extends Construct {
       // `domainName`, but the API's CORS allow-list is computed first — so
       // guard explicitly here. Same error shape as StaticSite's check, so
       // the failure mode looks the same to the operator.
-      if (props.stage === 'prod' && !props.domainName) {
+      if (isProductionStage(props.stage) && !props.domainName) {
         throw new Error('domainName is required for stage="prod".');
       }
       const apiCustomDomain = resolveApiCustomDomain(
@@ -218,15 +213,21 @@ function resolveApiCustomDomain(
       readonly hostedZoneName: string;
     }
   | undefined {
-  if (context.stage === 'prod') return undefined;
+  if (isProductionStage(context.stage)) return undefined;
   const hostname = apiOptions.customDomainHostname ?? previewApiHostname(context);
   return {
     hostname,
     certificateArn: StringParameter.valueForStringParameter(
       scope,
-      SHARED_SSM.certPreviewRegionalArn,
+      SHARED_SSM_PARAMETERS.certPreviewRegionalArn,
     ),
-    hostedZoneId: StringParameter.valueForStringParameter(scope, SHARED_SSM.hostedZoneId),
-    hostedZoneName: StringParameter.valueForStringParameter(scope, SHARED_SSM.hostedZoneName),
+    hostedZoneId: StringParameter.valueForStringParameter(
+      scope,
+      SHARED_SSM_PARAMETERS.hostedZoneId,
+    ),
+    hostedZoneName: StringParameter.valueForStringParameter(
+      scope,
+      SHARED_SSM_PARAMETERS.hostedZoneName,
+    ),
   };
 }

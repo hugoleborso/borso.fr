@@ -11,7 +11,12 @@ import { and, asc, eq } from 'drizzle-orm';
 import type { z } from 'zod';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
-import { lineupOverrideSchema, setlistEntryTable, setlistTable } from './setlists.schema';
+import {
+  lineupOverrideSchema,
+  type SetlistEntryPersistedUpdate,
+  setlistEntryTable,
+  setlistTable,
+} from './setlists.schema';
 
 export type LineupOverride = z.infer<typeof lineupOverrideSchema>;
 
@@ -55,6 +60,7 @@ interface SetlistEntryRawRow {
   notes: string;
 }
 
+// @FollowsBlueprint repository-projection
 const ENTRY_PROJECTION = {
   id: setlistEntryTable.id,
   setlistId: setlistEntryTable.setlistId,
@@ -67,10 +73,8 @@ const ENTRY_PROJECTION = {
   notes: setlistEntryTable.notes,
 } as const;
 
+// @FollowsBlueprint repository-json-column
 function rowToEntry(row: SetlistEntryRawRow): SetlistEntryRow {
-  // lineup_override is stored as JSON-encoded text. The `as unknown`
-  // step is the JSON-parse escape hatch the repo allows; the row Zod
-  // schema does the runtime validation.
   let lineupOverride: LineupOverride | null = null;
   if (row.lineupOverride !== null) {
     const lineupOverrideRaw: unknown = JSON.parse(row.lineupOverride);
@@ -105,29 +109,13 @@ function encodeEntryInsert(values: EntryInsertShape): EntryInsertEncoded {
   };
 }
 
-function encodeEntryUpdate(updates: Record<string, unknown>): EntryUpdateEncoded {
-  const encoded: EntryUpdateEncoded = {};
-  if ('songId' in updates && typeof updates.songId === 'string') encoded.songId = updates.songId;
-  if ('position' in updates && typeof updates.position === 'number')
-    encoded.position = updates.position;
-  if ('energy' in updates) {
-    const value = updates.energy;
-    encoded.energy = value === null || typeof value === 'number' ? value : null;
-  }
-  if ('lineupOverride' in updates) {
-    const value = updates.lineupOverride;
-    encoded.lineupOverride = value === null || value === undefined ? null : JSON.stringify(value);
-  }
-  if ('keyOverride' in updates) {
-    const value = updates.keyOverride;
-    encoded.keyOverride = value === null || typeof value === 'string' ? value : null;
-  }
-  if ('capo' in updates) {
-    const value = updates.capo;
-    encoded.capo = value === null || typeof value === 'number' ? value : null;
-  }
-  if ('notes' in updates && typeof updates.notes === 'string') encoded.notes = updates.notes;
-  return encoded;
+function encodeEntryUpdate(updates: SetlistEntryPersistedUpdate): EntryUpdateEncoded {
+  const { lineupOverride, ...columns } = updates;
+  if (lineupOverride === undefined) return columns;
+  return {
+    ...columns,
+    lineupOverride: lineupOverride === null ? null : JSON.stringify(lineupOverride),
+  };
 }
 
 export async function findSetlistBySession(sessionId: string): Promise<SetlistRow | null> {
@@ -173,7 +161,7 @@ export async function insertEntry(values: EntryInsertShape): Promise<SetlistEntr
 export async function updateEntry(
   setlistId: string,
   entryId: string,
-  updates: Record<string, unknown>,
+  updates: SetlistEntryPersistedUpdate,
 ): Promise<SetlistEntryRow | null> {
   const database = getDatabase();
   const [row] = await database

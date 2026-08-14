@@ -31,6 +31,7 @@ const OTHER_VALID_STATE: PersistedState = {
   treeVisualizationMode: null,
 };
 
+// @FollowsBlueprint test-pure-unit
 describe('parsePersistedState', () => {
   it('returns null for malformed JSON', () => {
     expect(parsePersistedState('{not json')).toBeNull();

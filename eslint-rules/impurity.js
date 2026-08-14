@@ -95,6 +95,7 @@ export const MUTATING_METHOD_NAMES = new Set([
   'unshift',
 ]);
 
+// @FollowsBlueprint lint-rule-predicate
 export function isPureFile(filename) {
   return PURE_FILE_PATTERN.test(filename);
 }

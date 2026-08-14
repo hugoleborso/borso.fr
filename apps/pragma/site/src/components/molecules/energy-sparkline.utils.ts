@@ -20,6 +20,7 @@ export interface SparklineGeometry {
   points: readonly (readonly [number, number])[];
 }
 
+// @FollowsBlueprint utils-pure-module
 export function buildSparklinePath(
   values: readonly (number | null | undefined)[],
   width: number,

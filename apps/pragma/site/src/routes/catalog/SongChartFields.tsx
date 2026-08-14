@@ -6,7 +6,7 @@
 import { useTranslation } from 'react-i18next';
 import { Input } from '../../components/atoms/Input';
 import { composeClassName } from '../../components/atoms/class-name.utils';
-import { FileDrop } from '../../components/molecules/FileDrop';
+import { FileDrop } from '../../components/organisms/FileDrop';
 
 export type SongChartKind = 'none' | 'chordpro' | 'pdf' | 'image';
 
@@ -31,6 +31,7 @@ interface SongChartFieldsProps {
 const LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
 const RADIO_LABEL_CLASS = 'flex items-center gap-2 text-sm text-ink-700 cursor-pointer';
 
+// @FollowsBlueprint organism-presentational
 export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
   const { t } = useTranslation();
   return (

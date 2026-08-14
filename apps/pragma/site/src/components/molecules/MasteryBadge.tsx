@@ -15,6 +15,7 @@ export interface MasteryBadgeProps {
 
 const DECIMAL_PLACES = 1;
 
+// @FollowsBlueprint molecule-presentational
 export function MasteryBadge({ value, className }: MasteryBadgeProps): JSX.Element {
   const { t } = useTranslation();
   const display = value === null || value === undefined ? '—' : value.toFixed(DECIMAL_PLACES);

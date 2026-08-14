@@ -100,6 +100,7 @@ function describeMarkerTitle(
  * runner while the edition is not live, produce no marker, and neither does
  * an edition whose track carries no length.
  */
+// @FollowsBlueprint core-view-projection
 export function listRunnerMarkers(
   edition: RaceEditionDto,
   ranked: readonly RankedRunnerDto[],

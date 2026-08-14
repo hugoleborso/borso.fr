@@ -16,6 +16,7 @@ Routes on `$ARGUMENTS`:
 |------------|-----------|
 | `create` | Create, rest of args = target |
 | `index` | Index |
+| `heatmap` | Heatmap |
 | `validate` | Validate, rest of args = filter |
 | *(empty)* | Ask which operation via AskUserQuestion |
 
@@ -33,7 +34,7 @@ export function recordPunch(...) { ... }
 
 - **pattern-id** is kebab-case, category-prefixed: `controller-create`, `service-orchestration`, `repository-query`, `core-decision`, `query-module`, `atom-variant`, `organism-table`.
 - **Name** is Title Case and matches the category.
-- **Usage** starts with `Use for`.
+- **Usage** starts with `Use`, and answers when to reach for the pattern. `Use for a route that ...` and `Use whenever a component ...` both read correctly.
 - **Description** is a technical summary of the annotated code.
 
 Follower annotation, on the line directly above the declaration:
@@ -65,6 +66,19 @@ Completion criterion: the new entry appears in `blueprint-index.md` with all fou
 
 1. Run `pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts`.
 2. Show the script output and `git diff .claude/skills/blueprint/blueprint-index.md`.
+
+## Heatmap
+
+1. Run `pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts`.
+2. Show the script output and the repository totals from the regenerated
+   [`blueprint-coverage.html`](./blueprint-coverage.html).
+3. Name the three largest unmarked buckets, because those are where the next
+   blueprint is worth writing.
+
+The index answers which patterns exist, and the heatmap answers which code
+carries one. A layer sitting at nought per cent is either a pattern nobody has
+written down or a layer whose files are all one-offs, and the two need
+different responses, so read the unmarked list before adding an annotation.
 
 ## Validate
 
@@ -98,8 +112,8 @@ Report as:
 
 ## Scripts
 
-`blueprint-indexing.ts` scans `apps/` and `infra/` and writes `blueprint-index.md`. `blueprint-utils.ts` holds the project and layer inference, which reads this repository's layout of `apps/<slug>/api`, `apps/<slug>/site`, and `infra/<package>`.
+`blueprint-indexing.ts` scans `apps/`, `infra/`, and `eslint-rules/` and writes `blueprint-index.md`. `blueprint-heatmap.ts` scans the same tree and writes `blueprint-coverage.html`, a colour grid of application against layer showing how much of each bucket carries a marker. `blueprint-utils.ts` holds the project and layer inference, which reads this repository's layout of `apps/<slug>/api`, `apps/<slug>/site`, `infra/<package>`, and `eslint-rules/`, and reports a test in the layer of the code it covers.
 
-The upstream skill also ships `blueprint-heatmap.ts` and `blueprint-extract.ts`. Neither is ported here yet, so `/blueprint heatmap` and `/blueprint extract` do not exist.
+The upstream skill also ships `blueprint-extract.ts`, which is not ported here, so `/blueprint extract` does not exist.
 
 CLAUDE.md keeps skills markdown-only. The index needs a real scan of the source tree, which prose cannot do, so this skill is the documented exception and the two scripts stay beside `SKILL.md` as upstream places them.

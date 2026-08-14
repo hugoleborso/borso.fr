@@ -17,6 +17,7 @@ interface ChipWrapperProps {
   readonly children: ReactNode;
 }
 
+// @FollowsBlueprint component-lookup-table
 const WRAPPER_BY_INTERACTIVITY: Readonly<
   Record<ChipInteractivity, (props: ChipWrapperProps) => ReactNode>
 > = {
@@ -48,6 +49,7 @@ const NO_SELECTION = () => undefined;
  * The standings, laid out as chips flowing down CSS columns, which gives a
  * masonry look without the experimental grid track value.
  */
+// @FollowsBlueprint organism-presentational
 export function Leaderboard({
   ranked,
   fastestLapSlugs = EMPTY_FASTEST_LAP_SLUGS,
@@ -58,9 +60,9 @@ export function Leaderboard({
   const interactivity = selectChipInteractivity(onChipSelect !== undefined);
   const Wrapper = WRAPPER_BY_INTERACTIVITY[interactivity];
   return (
-    <div className="leaderboard-chips">
+    <div className="[column-width:170px] [column-fill:balance] gap-x-2 px-3 py-2">
       <Show when={ranked.length === 0}>
-        <div className="card-body muted">{t('leaderboard.empty')}</div>
+        <div className="px-5 py-4 text-ink-3">{t('leaderboard.empty')}</div>
       </Show>
       {ranked.map((entry) => (
         <Wrapper

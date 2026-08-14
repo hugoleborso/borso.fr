@@ -45,6 +45,12 @@ const ADMIN_NAV: readonly NavItem[] = [
   { to: '/instruments', labelKey: 'nav.instruments', icon: 'instr' },
 ];
 
+/**
+ * @Blueprint organism-shell
+ * @BlueprintName Application Shell Organism
+ * @BlueprintUsage Use for the frame that wraps every routed page: the navigation, the global banners, and the outlet.
+ * @BlueprintDescription Declares the navigation as two readonly arrays of items and maps them, so adding a destination is a data change rather than new markup. The browser's online status and the viewport width both arrive through `useSyncExternalStore` hooks, so the shell holds no effect, and its only state is the mobile panel flag a button writes.
+ */
 export function AppShell(): JSX.Element {
   const { t } = useTranslation();
   const location = useLocation();

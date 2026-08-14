@@ -31,6 +31,7 @@ export interface PracticeInsertShape {
 
 export type SessionInsertShape = ConcertInsertShape | PracticeInsertShape;
 
+// @FollowsBlueprint core-projection
 export function buildSessionInsertShape(input: SessionCreateInput): SessionInsertShape {
   if (input.kind === 'concert') {
     return {

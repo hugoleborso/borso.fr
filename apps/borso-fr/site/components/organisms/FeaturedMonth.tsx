@@ -1,32 +1,25 @@
+import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { selectFeaturedArticleClassName } from '../../labours/labours-appearance.core';
 import {
   deriveMonthScore,
+  formatMonthNumber,
   formatScore,
   listMonthCoverImages,
   selectCompletionRatio,
 } from '../../labours/labours.core';
 import type { Month } from '../../labours/labours.types';
-import {
-  ACCENT,
-  INK,
-  MUTED,
-  RULE,
-  SANS_FAMILY,
-  SERIF_FAMILY,
-  STRIPE_LIGHT,
-} from '../../theme/twelve-labours.theme';
 import { ProgressBar } from '../atoms/ProgressBar';
 import { ChallengeRow } from './ChallengeRow';
 
-const MONTH_NUMBER_DIGITS = 2;
-const MONTH_PROGRESS_HEIGHT_PX = 8;
+const ARTICLE_CLASS_NAME = 'grid gap-12 border-y border-labours-rule pt-8 pb-9';
 
 interface FeaturedMonthProps {
   month: Month;
   year: number;
 }
 
+// @FollowsBlueprint organism-presentational
 export function FeaturedMonth({ month, year }: FeaturedMonthProps) {
   const { t } = useTranslation();
   const score = deriveMonthScore(month);
@@ -35,48 +28,26 @@ export function FeaturedMonth({ month, year }: FeaturedMonthProps) {
 
   return (
     <article
-      className={selectFeaturedArticleClassName(coverImages.length > 0)}
-      style={{
-        borderTop: `1px solid ${RULE}`,
-        borderBottom: `1px solid ${RULE}`,
-        padding: '32px 0 36px',
-        gap: 48,
-      }}
+      className={clsx(ARTICLE_CLASS_NAME, selectFeaturedArticleClassName(coverImages.length > 0))}
     >
       {coverImages.map((coverImage) => (
         <div key={coverImage}>
           <img
             src={coverImage}
             alt={t('twelve-labours.featured.cover-alt', { month: monthName })}
-            style={{ display: 'block', width: '100%', height: 'auto' }}
+            className="block h-auto w-full"
           />
         </div>
       ))}
       <div>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 16,
-          }}
-        >
-          <div
-            style={{
-              fontFamily: SANS_FAMILY,
-              fontWeight: 600,
-              fontSize: 11,
-              letterSpacing: '0.22em',
-              textTransform: 'uppercase',
-              color: ACCENT,
-            }}
-          >
+        <div className="mb-4 flex items-center justify-between">
+          <div className="font-labours-sans text-[11px] font-semibold tracking-[0.22em] text-labours-accent uppercase">
             {t('twelve-labours.featured.label', {
-              month: String(month.monthNumber).padStart(MONTH_NUMBER_DIGITS, '0'),
+              month: formatMonthNumber(month.monthNumber),
               year,
             })}
           </div>
-          <div style={{ fontFamily: SANS_FAMILY, fontSize: 13, color: MUTED }}>
+          <div className="font-labours-sans text-[13px] text-labours-muted">
             {t('twelve-labours.featured.score', {
               count: score.completed,
               completed: formatScore(score.completed),
@@ -85,30 +56,15 @@ export function FeaturedMonth({ month, year }: FeaturedMonthProps) {
           </div>
         </div>
 
-        <h2
-          className="twelve-travaux-month-name"
-          style={{
-            fontFamily: SERIF_FAMILY,
-            fontWeight: 400,
-            lineHeight: 0.88,
-            margin: '0 0 4px',
-            color: INK,
-            letterSpacing: '-0.02em',
-          }}
-        >
+        <h2 className="mt-0 mb-1 font-labours-serif text-[72px] leading-[0.88] font-normal tracking-[-0.02em] text-labours-ink labours-stack:text-[108px]">
           {monthName}.
         </h2>
 
-        <div style={{ margin: '24px 0 32px' }}>
-          <ProgressBar
-            ratio={selectCompletionRatio(score)}
-            heightPx={MONTH_PROGRESS_HEIGHT_PX}
-            trackColor={STRIPE_LIGHT}
-            fillColor={ACCENT}
-          />
+        <div className="mt-6 mb-8">
+          <ProgressBar ratio={selectCompletionRatio(score)} tone="month" />
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="flex flex-col gap-5">
           {month.challenges.map((challenge, index) => (
             <ChallengeRow
               key={challenge.titleKey}

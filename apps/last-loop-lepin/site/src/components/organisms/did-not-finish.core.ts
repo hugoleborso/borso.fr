@@ -19,6 +19,7 @@ export interface DidNotFinishLists {
   readonly stillRunning: readonly RankedRunnerDto[];
 }
 
+// @FollowsBlueprint core-view-projection
 export function splitByDidNotFinish(ranked: readonly RankedRunnerDto[]): DidNotFinishLists {
   const allOut = ranked.filter((entry) => entry.status.kind === 'dnf');
   return {

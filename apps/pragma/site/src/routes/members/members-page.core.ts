@@ -92,6 +92,7 @@ export type MemberWriteIntent =
       readonly color: string;
     };
 
+// @FollowsBlueprint core-view-intent
 export function selectMemberWriteIntent(
   selection: MemberSelection | null,
   values: MemberFormValues,

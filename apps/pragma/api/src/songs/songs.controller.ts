@@ -4,9 +4,13 @@
 
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
-import { songCreateInputSchema, songIdParamSchema, songUpdateInputSchema } from './songs.schema';
+import {
+  externalSearchQuerySchema,
+  songCreateInputSchema,
+  songIdParamSchema,
+  songUpdateInputSchema,
+} from './songs.schema';
 import {
   createSong,
   getSongById,
@@ -15,8 +19,6 @@ import {
   removeSong,
   searchExternal,
 } from './songs.service';
-
-const externalSearchQuerySchema = z.object({ q: z.string().min(1).max(256) });
 
 /**
  * @Blueprint controller-dispatch

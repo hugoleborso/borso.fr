@@ -10,6 +10,7 @@
  * layer.
  */
 
+// @FollowsBlueprint database-schema-barrel
 export { appConfigTable, authAttemptTable } from '../auth/auth.schema';
 export { barTable } from '../bars/bars.schema';
 export { instrumentTable } from '../instruments/instruments.schema';

@@ -1,22 +1,20 @@
-import { App, Stack } from 'aws-cdk-lib';
-import { Match, Template } from 'aws-cdk-lib/assertions';
+import type { Stack } from 'aws-cdk-lib';
+import { Match } from 'aws-cdk-lib/assertions';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { describe, expect, it } from 'vitest';
 import { PhotosCdn } from '../../src/constructs/photos-cdn.js';
-
-function synth(setup: (stack: Stack) => void): Template {
-  const app = new App();
-  const stack = new Stack(app, 'TestStack', {
-    env: { account: '123456789012', region: 'eu-west-3' },
-  });
-  setup(stack);
-  return Template.fromStack(stack);
-}
+import { synthTemplate as synth } from './helpers/template.js';
 
 function buildBucket(stack: Stack): Bucket {
   return new Bucket(stack, 'PhotosBucket', { bucketName: 'test-app-prod-photos' });
 }
 
+/**
+ * @Blueprint test-cdk-synth
+ * @BlueprintName Construct Synthesis Test
+ * @BlueprintUsage Use for every CDK construct. Synthesise once per stage, then assert on the CloudFormation template.
+ * @BlueprintDescription Synthesises the construct into a throwaway stack through the shared `synthTemplate` helper and asserts on the template rather than on the construct object, so the test checks what CloudFormation will actually receive. One describe per stage keeps a single synth shared by its cases, and the suite covers three things a template assertion is uniquely good at: the resources that must exist, the shapes that must be absent (`Match.absent()`, a `not.toContain` on the serialised template), and the props the construct must refuse, including the development stage every construct rejects.
+ */
 describe('PhotosCdn (prod)', () => {
   const tpl = synth((stack) => {
     new PhotosCdn(stack, 'PhotosCdn', {

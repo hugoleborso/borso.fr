@@ -9,6 +9,7 @@ import {
   selectCloneableDataTables,
 } from './clone-from-schema.utils.js';
 
+// @FollowsBlueprint test-pure-unit
 describe('findUndecidedCredentialTables', () => {
   const PRAGMA_MIGRATIONS = [
     'CREATE TABLE "app_config" (id integer PRIMARY KEY, password_hash text NOT NULL);',

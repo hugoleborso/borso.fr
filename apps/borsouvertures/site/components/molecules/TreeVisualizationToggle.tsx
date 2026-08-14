@@ -3,6 +3,7 @@ import { ToggleSlider } from '@/components/atoms/ToggleSlider';
 import type { TreeVisualization } from '@/openings/sessionStart.core';
 import { setTreeVisualizationMode } from '@/state/appState';
 
+// @FollowsBlueprint component-lookup-table
 const VISUALIZATION_BY_USES_BUTTONS: Record<`${boolean}`, TreeVisualization> = {
   true: 'buttons',
   false: 'arrows',
@@ -12,6 +13,7 @@ interface TreeVisualizationToggleProps {
   visualization: TreeVisualization;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function TreeVisualizationToggle({ visualization }: TreeVisualizationToggleProps) {
   const { t } = useTranslation();
   return (

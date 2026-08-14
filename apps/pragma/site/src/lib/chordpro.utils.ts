@@ -62,6 +62,7 @@ function parseDirective(braced: string): DirectiveLine {
   };
 }
 
+// @FollowsBlueprint utils-pure-module
 export function parseChordProLine(line: string): ChordProLine {
   if (line.trim().length === 0) return { kind: 'blank' };
   const trimmed = line.trim();

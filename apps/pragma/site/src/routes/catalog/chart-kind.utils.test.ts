@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { extractChartKind, selectChordProText } from './chart-kind.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('extractChartKind', () => {
   it('returns null for a missing chart (the regression case — API field is `chart`, not `chordChart`)', () => {
     expect(extractChartKind(null)).toBe(null);

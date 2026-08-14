@@ -42,6 +42,7 @@ export function useTransitionComment(songAId: string, songBId: string, isEnabled
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useSaveTransitionComment() {
   const queryClient = useQueryClient();
   return useMutation({

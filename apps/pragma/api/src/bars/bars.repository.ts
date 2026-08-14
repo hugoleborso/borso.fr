@@ -38,6 +38,7 @@ export interface BarRow {
   contactPhone: string | null;
 }
 
+// @FollowsBlueprint repository-projection
 const PROJECTION = {
   id: barTable.id,
   name: barTable.name,

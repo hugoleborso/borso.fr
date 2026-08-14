@@ -4,6 +4,7 @@ import { isPlayScopeResetRequired } from '@/openings/sessionStart.core';
 import { resetPlayScopeAndSelection, setMode } from '@/state/appState';
 import type { Mode } from '@/state/persistedState.utils';
 
+// @FollowsBlueprint component-lookup-table
 const MODE_BY_IS_PLAY: Record<`${boolean}`, Mode> = { true: 'play', false: 'learn' };
 
 function keepPlayScope(): void {
@@ -19,6 +20,7 @@ interface ModeToggleProps {
   mode: Mode;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function ModeToggle({ mode }: ModeToggleProps) {
   const { t } = useTranslation();
 

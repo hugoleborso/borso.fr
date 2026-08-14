@@ -63,6 +63,7 @@ function buildGeometry(edition: RaceEditionDto) {
   );
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('hasElevationSamples', () => {
   it('is false when the track carries no elevations', () => {
     const edition = buildEdition();

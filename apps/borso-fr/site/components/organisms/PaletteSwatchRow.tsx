@@ -11,8 +11,6 @@ import {
 } from '../molecules/EditablePaletteSwatches';
 import { ReadOnlyPaletteSwatches } from '../molecules/ReadOnlyPaletteSwatches';
 
-const SWATCH_ROW_MARGIN_TOP_PX = 18;
-
 const SWATCHES_BY_KIND: Readonly<Record<SwatchRowKind, ComponentType<PaletteSwatchesProps>>> = {
   editable: EditablePaletteSwatches,
   'read-only': ReadOnlyPaletteSwatches,
@@ -25,6 +23,7 @@ interface PaletteSwatchRowProps {
   onCustomColorChange: (slot: CustomColorSlot, nextHex: string) => void;
 }
 
+// @FollowsBlueprint organism-table-dispatch
 export function PaletteSwatchRow({
   paletteKey,
   palette,
@@ -33,7 +32,7 @@ export function PaletteSwatchRow({
 }: PaletteSwatchRowProps) {
   const Swatches = SWATCHES_BY_KIND[selectSwatchRowKind(paletteKey)];
   return (
-    <div className="palette" style={{ marginTop: SWATCH_ROW_MARGIN_TOP_PX }}>
+    <div className="mt-[18px] flex flex-wrap gap-2 atelier-roomy:gap-2.5 [@media(hover:none)]:gap-x-4">
       <Swatches
         palette={palette}
         customColors={customColors}

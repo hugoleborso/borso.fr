@@ -12,6 +12,12 @@ import { toPosixPath } from './site-paths.js';
  * controller that passes one along needs the type. The type carries no query
  * and disappears at compile time, so it is not the client.
  *
+ * A re-export is an import and an export in one statement, so
+ * `export { getDatabase } from '../database/client'` is checked exactly like
+ * the import it contains. Without that, a service could re-export the client
+ * and every controller downstream would import it from a path this rule does
+ * not recognise, which is how a controller ended up opening the database.
+ *
  * What this deliberately allows:
  *
  * - `*.repository.ts`, which is the layer that owns the client, and
@@ -37,16 +43,22 @@ const REPOSITORY_FILE_PATTERN = /\.repository\.tsx?$/;
 
 const DATABASE_CLIENT_FILE_PATTERN = /(^|\/)database\/client\.tsx?$/;
 
-function isTypeOnlyImport(node) {
-  if (node.importKind === 'type') {
+/**
+ * An import declaration carries `importKind`, a re-export carries `exportKind`,
+ * and the specifiers of either can be individually marked `type`.
+ */
+function isTypeOnly(node) {
+  if (node.importKind === 'type' || node.exportKind === 'type') {
     return true;
   }
-  const valueSpecifiers = node.specifiers.filter(
-    (specifier) => (specifier.importKind ?? 'value') === 'value',
+  const specifiers = node.specifiers ?? [];
+  const valueSpecifiers = specifiers.filter(
+    (specifier) => (specifier.importKind ?? specifier.exportKind ?? 'value') === 'value',
   );
-  return node.specifiers.length > 0 && valueSpecifiers.length === 0;
+  return specifiers.length > 0 && valueSpecifiers.length === 0;
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {
@@ -64,17 +76,21 @@ export default {
     ) {
       return {};
     }
+    function reportWhenClientIsReached(node) {
+      const source = node.source?.value;
+      if (typeof source !== 'string' || !DATABASE_CLIENT_PATTERN.test(source)) {
+        return;
+      }
+      if (isTypeOnly(node)) {
+        return;
+      }
+      context.report({ node: node.source, messageId: 'databaseClientOutsideRepository' });
+    }
+
     return {
-      ImportDeclaration(node) {
-        const source = node.source.value;
-        if (typeof source !== 'string' || !DATABASE_CLIENT_PATTERN.test(source)) {
-          return;
-        }
-        if (isTypeOnlyImport(node)) {
-          return;
-        }
-        context.report({ node: node.source, messageId: 'databaseClientOutsideRepository' });
-      },
+      ImportDeclaration: reportWhenClientIsReached,
+      ExportNamedDeclaration: reportWhenClientIsReached,
+      ExportAllDeclaration: reportWhenClientIsReached,
     };
   },
 };

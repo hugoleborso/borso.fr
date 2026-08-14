@@ -6,17 +6,9 @@
 import type { LoopPunch } from '../punch/punch.types';
 import type { Runner } from './runner.types';
 
-const MIN_DISPLAY_NAME_LENGTH = 1;
-const MAX_DISPLAY_NAME_LENGTH = 120;
-const MIN_SLUG_LENGTH = 2;
 const MAX_SLUG_LENGTH = 64;
 const DIACRITIC_PATTERN = /[̀-ͯ]/g;
 const NON_SLUG_PATTERN = /[^a-z0-9]+/g;
-// Interior dashes are what `slugifyDisplayName` produces from a space, so
-// they are valid; leading and trailing ones are checked separately. No `g`
-// flag: `RegExp.prototype.test` on a global pattern carries `lastIndex`
-// between calls and would alternate its verdict on the same slug.
-const INVALID_SLUG_CHARACTER_PATTERN = /[^a-z0-9-]/;
 const TRIM_DASH_PATTERN = /^-+|-+$/g;
 
 /**
@@ -33,49 +25,31 @@ export function slugifyDisplayName(displayName: string): string {
   return dashed.slice(0, MAX_SLUG_LENGTH);
 }
 
-export type RunnerValidationFailure =
-  | 'display-name-empty'
-  | 'display-name-too-long'
-  | 'slug-too-short'
-  | 'slug-too-long'
-  | 'slug-invalid-chars'
-  | 'bib-not-positive'
-  | 'bib-already-taken';
+export type RunnerValidationFailure = 'slug-edge-dash' | 'bib-already-taken';
 
 export type RunnerValidation =
   { readonly ok: true } | { readonly ok: false; readonly reason: RunnerValidationFailure };
 
 /**
- * Validate a runner draft against the rules the controller can't express
- * via Zod alone — namely the per-edition bib uniqueness check, which
- * needs the existing roster.
+ * Validate a runner draft against the two rules `createRunnerInputSchema`
+ * cannot express: a bib no other runner of the edition already holds, and
+ * a slug free of the leading or trailing dash `runnerSlugSchema`'s regex
+ * accepts.
+ *
+ * `createRunner` does not call this yet: whether two runners may share a
+ * bib depends on the relay format, which is undecided.
  */
+// @FollowsBlueprint core-decision
 export function validateRunnerDraft(
-  draft: { readonly displayName: string; readonly slug: string; readonly bib: number | null },
+  draft: { readonly slug: string; readonly bib: number },
   existingRoster: readonly Runner[],
 ): RunnerValidation {
-  const name = draft.displayName.trim();
-  if (name.length < MIN_DISPLAY_NAME_LENGTH) return { ok: false, reason: 'display-name-empty' };
-  if (name.length > MAX_DISPLAY_NAME_LENGTH) return { ok: false, reason: 'display-name-too-long' };
-
-  if (draft.slug.length < MIN_SLUG_LENGTH) return { ok: false, reason: 'slug-too-short' };
-  if (draft.slug.length > MAX_SLUG_LENGTH) return { ok: false, reason: 'slug-too-long' };
-  if (
-    INVALID_SLUG_CHARACTER_PATTERN.test(draft.slug) ||
-    draft.slug.startsWith('-') ||
-    draft.slug.endsWith('-')
-  ) {
-    return { ok: false, reason: 'slug-invalid-chars' };
+  if (draft.slug.startsWith('-') || draft.slug.endsWith('-')) {
+    return { ok: false, reason: 'slug-edge-dash' };
   }
-
-  if (draft.bib !== null) {
-    if (!Number.isInteger(draft.bib) || draft.bib <= 0)
-      return { ok: false, reason: 'bib-not-positive' };
-    if (existingRoster.some((runner) => runner.bib === draft.bib)) {
-      return { ok: false, reason: 'bib-already-taken' };
-    }
+  if (existingRoster.some((runner) => runner.bib === draft.bib)) {
+    return { ok: false, reason: 'bib-already-taken' };
   }
-
   return { ok: true };
 }
 

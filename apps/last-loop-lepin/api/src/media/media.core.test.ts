@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { ALLOWED_PHOTO_CONTENT_TYPES, fileExtensionForContentType } from './media.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('ALLOWED_PHOTO_CONTENT_TYPES', () => {
   it('lists exactly the three image types the presigner accepts', () => {
     expect([...ALLOWED_PHOTO_CONTENT_TYPES]).toEqual(['image/jpeg', 'image/png', 'image/webp']);
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('fileExtensionForContentType', () => {
   it('shortens image/jpeg to jpg rather than jpeg', () => {
     expect(fileExtensionForContentType('image/jpeg')).toBe('jpg');

@@ -10,6 +10,7 @@ export interface StarClock {
  * A paused galaxy keeps the reading it already had, so the stars hold their
  * position instead of jumping when animation resumes.
  */
+// @FollowsBlueprint core-view-projection
 export function selectStarClock(
   isAnimationPaused: boolean,
   timestamp: number,

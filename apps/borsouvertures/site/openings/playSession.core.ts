@@ -13,6 +13,7 @@ export interface BookPosition {
  * `Italian Game: Classical Variation, Greco's Attack`, and `undefined` while
  * the played moves still match several lines.
  */
+// @FollowsBlueprint core-view-intent
 export function selectLineLabel(position: BookPosition): string | undefined {
   const { opening, variation, line } = position;
   if (opening === undefined || variation === undefined || line === undefined) return undefined;

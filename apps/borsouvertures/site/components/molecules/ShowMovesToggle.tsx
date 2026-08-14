@@ -6,6 +6,7 @@ interface ShowMovesToggleProps {
   onToggle: (areMovesShown: boolean) => void;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function ShowMovesToggle({ areMovesShown, onToggle }: ShowMovesToggleProps) {
   const { t } = useTranslation();
   return (

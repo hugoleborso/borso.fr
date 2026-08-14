@@ -9,7 +9,7 @@ import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { ErrorText } from '../atoms/ErrorText';
 import { Show } from '../atoms/Show';
-import { CardHeader } from '../molecules/CardHeader';
+import { CardHeader } from '../atoms/CardHeader';
 import { type AdminErrorMessage, selectEditionWriteError } from './admin-errors.core';
 import {
   buildCreateEditionPayload,
@@ -20,7 +20,6 @@ import { EditionFormFields } from './EditionFormFields';
 import { useGpxFile } from './useGpxFile';
 
 const ID_PREFIX = 'create';
-const ACTIONS_STYLE = { gap: 'var(--d-2)', flexWrap: 'wrap' } as const;
 
 interface CreateEditionFormProps {
   readonly currentEdition: RaceEditionDto | null;
@@ -33,6 +32,12 @@ interface CreateEditionFormProps {
  * Standalone create form, always available so the organiser can register next
  * year's race while the current one is still running. It owns its own field
  * state, so editing the live edition next to it cannot leak values across.
+ */
+/**
+ * @Blueprint organism-form
+ * @BlueprintName Organism Form
+ * @BlueprintUsage Use for a screen region that collects fields and writes them through a mutation.
+ * @BlueprintDescription Holds one `useForm` whose `defaultValues`, `validators` and payload all come from `edition-form.core.ts`, so the schema, the starting values and the request body are pure and tested away from React. Field values are read with `useStore` rather than mirrored into `useState`, the submit handler calls `mutateAsync` directly instead of watching a flag in an effect, and a rejected write becomes a translation key through `selectEditionWriteError`.
  */
 export function CreateEditionForm({
   currentEdition,
@@ -69,9 +74,12 @@ export function CreateEditionForm({
 
   return (
     <Card>
-      <CardHeader title={t(titleKey)} hint={<span className="muted mono">{t(hintKey)}</span>} />
+      <CardHeader
+        title={t(titleKey)}
+        hint={<span className="font-mono tabular-nums text-ink-3">{t(hintKey)}</span>}
+      />
       <form
-        className="card-body col"
+        className="flex flex-col gap-3 flex-1 overflow-auto px-5 py-4"
         onSubmit={(event) => {
           event.preventDefault();
           void form.handleSubmit();
@@ -134,7 +142,7 @@ export function CreateEditionForm({
         <Show when={failure !== null}>
           <ErrorText>{t(failure?.key ?? 'common.error-detail', failure?.parameters)}</ErrorText>
         </Show>
-        <div className="row" style={ACTIONS_STYLE}>
+        <div className="flex flex-wrap items-center gap-2">
           <Button type="submit" variant="primary" disabled={createEdition.isPending}>
             {t(
               selectLabel(

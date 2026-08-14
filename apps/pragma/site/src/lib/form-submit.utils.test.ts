@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isSubmitDisabled, isSubmitDisabledWhilePending } from './form-submit.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('isSubmitDisabled', () => {
   it('is enabled only when the form can submit and is idle', () => {
     expect(isSubmitDisabled(true, false)).toBe(false);

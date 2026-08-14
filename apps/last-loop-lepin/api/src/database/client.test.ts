@@ -11,6 +11,7 @@
 import { describe, expect, it } from 'vitest';
 import { getDatabase, resetDatabaseForTests } from './client';
 
+// @FollowsBlueprint test-node-adapter
 describe('database/client', () => {
   it('throws a clear error when no connection env is configured', () => {
     const databaseUrl = process.env.DATABASE_URL;

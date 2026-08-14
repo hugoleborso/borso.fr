@@ -39,6 +39,7 @@ async function seedTwoSongs(
   };
 }
 
+// @FollowsBlueprint test-back-e2e
 describe('transition-comments controller (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

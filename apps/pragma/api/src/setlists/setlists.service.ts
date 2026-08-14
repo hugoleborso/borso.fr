@@ -18,7 +18,7 @@ import {
   setEntryPosition,
   updateEntry,
 } from './setlists.repository';
-import type { setlistEntryCreateSchema } from './setlists.schema';
+import type { SetlistEntryPersistedUpdate, setlistEntryCreateSchema } from './setlists.schema';
 
 type EntryCreateInput = z.infer<typeof setlistEntryCreateSchema>;
 
@@ -56,10 +56,11 @@ export async function appendEntry(
   });
 }
 
+// @FollowsBlueprint service-crud-update
 export async function patchEntry(
   setlistId: string,
   entryId: string,
-  input: Partial<EntryCreateInput>,
+  input: SetlistEntryPersistedUpdate,
 ): Promise<{ kind: 'ok'; entry: SetlistEntryRow } | { kind: 'empty' } | { kind: 'not-found' }> {
   if (Object.keys(input).length === 0) return { kind: 'empty' };
   const entry = await updateEntry(setlistId, entryId, input);

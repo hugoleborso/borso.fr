@@ -35,6 +35,7 @@ function isDeclaredInScopeChain(scope, name) {
   return false;
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

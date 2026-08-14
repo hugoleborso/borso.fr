@@ -43,13 +43,14 @@ const PAPER_THEMES: Readonly<Record<PaletteKey, PaperTheme>> = {
   },
 };
 
+// @FollowsBlueprint browser-edge-module
 export function applyPaperTheme(key: PaletteKey): void {
   const theme = PAPER_THEMES[key];
   const root = document.documentElement.style;
-  root.setProperty('--paper', theme.paper);
-  root.setProperty('--paper-deep', theme.paperDeep);
-  root.setProperty('--ink', theme.ink);
-  root.setProperty('--ink-soft', theme.inkSoft);
-  root.setProperty('--rule', `rgba(${theme.ruleAlpha},0.18)`);
-  root.setProperty('--rule-strong', `rgba(${theme.ruleAlpha},0.42)`);
+  root.setProperty('--color-atelier-paper', theme.paper);
+  root.setProperty('--color-atelier-paper-deep', theme.paperDeep);
+  root.setProperty('--color-atelier-ink', theme.ink);
+  root.setProperty('--color-atelier-ink-soft', theme.inkSoft);
+  root.setProperty('--color-atelier-rule', `rgba(${theme.ruleAlpha},0.18)`);
+  root.setProperty('--color-atelier-rule-strong', `rgba(${theme.ruleAlpha},0.42)`);
 }

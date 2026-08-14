@@ -56,15 +56,19 @@ No:
 | [0006](./0006-cascade-on-delete-via-json-blob-scrub.md) | Cascade-on-delete via JSON-blob scrub (DSQL no-FK substitute) | accepted | 2026-06-06 |
 | [0007](./0007-eslint-with-type-aware-rules-replaces-biome.md) | ESLint with type-aware rules replaces Biome | accepted | 2026-08-08 |
 | [0008](./0008-purity-enforced-structurally.md) | Purity is enforced by file location, not by review | accepted | 2026-08-08 |
+| [0009](./0009-pragma-previews-clone-production.md) | pragma previews clone production, credentials included | accepted | 2026-08-09 |
+| [0010](./0010-pragma-domain-folder-for-cross-boundary-rules.md) | A `domain/` folder for the rules pragma's two sides share | proposed | 2026-08-13 |
 
 ### Data layer
 
 - 0006 — cascade-on-delete via JSON-blob scrub, the substitute for foreign keys DSQL does not enforce.
+- 0009 — pragma previews clone production, credentials included.
 
 ### App architecture
 
 - 0002, 0003 — react-bits Galaxy integration (see table above).
 - 0004 — shared-password auth for the pragma band ERP (5 trusted members, daily-use tool, friction dominates over attribution).
+- 0010 — a `domain/` folder for the pure rules pragma's front end and back end both read, admitted only with a caller on each side.
 
 ### CDK / infra
 

@@ -14,6 +14,7 @@ afterEach(async () => {
   await i18next.changeLanguage('en');
 });
 
+// @FollowsBlueprint test-component-render
 describe('LanguageSwitcher', () => {
   it('shows both languages the application ships', () => {
     render(<LanguageSwitcher />);

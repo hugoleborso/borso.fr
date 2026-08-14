@@ -21,6 +21,12 @@ function CheckingSession(): JSX.Element {
   );
 }
 
+/**
+ * @Blueprint organism-query-owning
+ * @BlueprintName Organism That Owns A Query
+ * @BlueprintUsage Use for the lowest component allowed to call a query hook, where a screen region needs server data.
+ * @BlueprintDescription Calls the query hook at the organism level rather than in a molecule, hands the three inputs to `selectSessionGateState` in a covered core file, and indexes a frozen table of views with the union it returns, so the component body carries no branch. The probe stays disabled until the browser holds a session marker, so a first time visitor sends no gated request.
+ */
 export function RequireSession(): JSX.Element {
   const location = useLocation();
   const isSessionRemembered = hasSessionMarker();

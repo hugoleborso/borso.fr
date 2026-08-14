@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { listPresent, listWhen } from './optional.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('listPresent', () => {
   it('returns an empty list for null', () => {
     expect(listPresent(null)).toEqual([]);

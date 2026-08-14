@@ -105,6 +105,7 @@ function areTiedForRanking(left: RunnerProgress, right: RunnerProgress): boolean
  * higher; identical loop counts break by earliest finish time. Identical
  * loop AND identical finish ms → both runners receive `rank: 'ex-aequo'`.
  */
+// @FollowsBlueprint core-projection
 export function computeStandings(
   edition: RaceEdition,
   runners: readonly Runner[],
@@ -227,6 +228,7 @@ function formatStandingsRow(entry: Standings['ranked'][number]): string {
   ].join(',');
 }
 
+// @FollowsBlueprint core-serializer
 export function formatStandingsAsCsv(standings: Standings): string {
   const lines = standings.ranked.map(formatStandingsRow);
   return `${CSV_HEADER}\n${lines.join('\n')}\n`;

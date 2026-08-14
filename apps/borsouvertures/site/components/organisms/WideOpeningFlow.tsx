@@ -8,9 +8,10 @@ function stayOnTheSameStep(): void {
   // Intentionally empty.
 }
 
+// @FollowsBlueprint organism-presentational
 export function WideOpeningFlow(props: OpeningPanelProps) {
   return (
-    <div className="selector-columns">
+    <div className="grid grid-cols-1 gap-3 triple:grid-cols-3">
       <OpeningsPanel {...props} onAdvance={stayOnTheSameStep} />
       <VariationsPanel {...props} onAdvance={stayOnTheSameStep} />
       <LinesPanel {...props} onAdvance={stayOnTheSameStep} />

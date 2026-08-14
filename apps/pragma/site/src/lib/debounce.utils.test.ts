@@ -6,6 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { debounce } from './debounce.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('debounce', () => {
   beforeEach(() => {
     vi.useFakeTimers();

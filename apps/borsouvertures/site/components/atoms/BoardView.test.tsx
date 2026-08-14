@@ -27,6 +27,7 @@ beforeEach(async () => {
   await i18next.changeLanguage('en');
 });
 
+// @FollowsBlueprint test-component-render
 describe('BoardView', () => {
   it('names every draggable piece after the piece and the square it stands on', () => {
     renderStartingBoard();

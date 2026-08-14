@@ -65,6 +65,12 @@ export async function createBar(input: BarCreateInput): Promise<BarRow> {
   return await insertBar(valuesFromCreate(input));
 }
 
+/**
+ * @Blueprint service-crud-update
+ * @BlueprintName Service Patch Returning A Union
+ * @BlueprintUsage Use for every partial update, so the controller maps arms to statuses instead of re-deriving why the write failed.
+ * @BlueprintDescription Translates the validated body into the persisted shape, answers `empty` when that shape carries no key, calls the repository once, and answers `not-found` when no row came back. The controller reads `result.kind` and never inspects the request body a second time to tell the two failures apart.
+ */
 export async function patchBar(
   id: string,
   input: BarUpdateInput,

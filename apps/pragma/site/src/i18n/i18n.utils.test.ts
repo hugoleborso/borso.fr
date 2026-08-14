@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_LOCALE, detectInitialLocale, flattenKeys, SUPPORTED_LOCALES } from './i18n.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('i18n.utils', () => {
   describe('constants', () => {
     it('exposes the supported locales', () => {

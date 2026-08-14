@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MonoNote } from '../atoms/MonoNote';
 import { FormField } from '../molecules/FormField';
 import { type GpxErrorKey, GpxFileField } from '../molecules/GpxFileField';
 
-const HINT_STYLE = { fontSize: 11 } as const;
-const ROW_STYLE = { gap: 'var(--d-3)' } as const;
 const WIDE_FIELD_STYLE = { flex: 1 } as const;
 const INTERVAL_FIELD_STYLE = { flex: '0 0 140px' } as const;
 
@@ -42,6 +41,7 @@ interface EditionFormFieldsProps {
  * their own `useForm` instance and pass its bindings in, so their field state
  * never bleeds across.
  */
+// @FollowsBlueprint organism-presentational
 export function EditionFormFields({
   idPrefix,
   slug,
@@ -79,7 +79,7 @@ export function EditionFormFields({
         onBlur={displayName.onBlur}
         required
       />
-      <div className="row" style={ROW_STYLE}>
+      <div className="flex items-center gap-3">
         <FormField
           id={`${idPrefix}-start`}
           label={t('admin.setup.starts-at')}
@@ -123,9 +123,7 @@ export function EditionFormFields({
         required={isGpxRequired}
         errorKey={gpxErrorKey}
       />
-      <div className="muted mono" style={HINT_STYLE}>
-        {t('admin.setup.sun-hint')}
-      </div>
+      <MonoNote>{t('admin.setup.sun-hint')}</MonoNote>
     </>
   );
 }

@@ -5,7 +5,7 @@ import { Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { DsqlClusterStack } from '../../src/constructs/dsql-cluster-stack.js';
 import { PreviewableApp } from '../../src/constructs/previewable-app.js';
-import { isObject, resourcesOfType } from './helpers/template.js';
+import { isObject, resourcesOfType, TEST_ENV as ENV } from './helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ENTRY = path.join(HERE, 'fixtures', 'handler.ts');
@@ -20,8 +20,6 @@ function hasTestSeedFlag(resource: unknown): boolean {
   const variables = environment.Variables;
   return isObject(variables) && variables.ALLOW_TEST_SEED === '1';
 }
-
-const ENV = { account: '123456789012', region: 'eu-west-3' };
 
 interface Stacks {
   readonly app: App;
@@ -45,6 +43,7 @@ function getProperties(resource: unknown): Record<string, unknown> | null {
   return isObject(properties) ? properties : null;
 }
 
+// @FollowsBlueprint test-cdk-synth
 describe('PreviewableApp (prod, full)', () => {
   const { clusterStack, stageStack } = bootstrap('S');
   new PreviewableApp(stageStack, 'App', {
@@ -104,44 +103,52 @@ describe('PreviewableApp (prod, full)', () => {
   });
 });
 
+/*
+ * Constructing a PreviewableApp with a database esbuild-bundles the migration
+ * runner, which is over a megabyte and takes tens of seconds on a loaded
+ * machine. Every other describe in this file builds its stack here, at
+ * collection time, where no per-test timeout applies; these two used to build
+ * theirs inside the `it` and timed out at 30 s whenever the pre-push hook ran
+ * its gates in parallel.
+ */
+const sharedClusterStacks = bootstrap('S');
+new PreviewableApp(sharedClusterStacks.stageStack, 'App', {
+  app: 'test-app',
+  stage: 'preview',
+  prNumber: 5,
+  frontend: { distPath: '.' },
+  database: { migrationsPath: MIGRATIONS, cluster: sharedClusterStacks.clusterStack.cluster },
+});
+const sharedClusterTemplate = Template.fromStack(sharedClusterStacks.stageStack);
+
+const cloneStacks = bootstrap('C');
+new PreviewableApp(cloneStacks.stageStack, 'App', {
+  app: 'test-app',
+  stage: 'preview',
+  prNumber: 6,
+  frontend: { distPath: '.' },
+  database: {
+    migrationsPath: MIGRATIONS,
+    cluster: cloneStacks.clusterStack.cluster,
+    cloneFromSchema: {
+      sourceSchemaName: 'prod',
+      tableBlocklist: ['admin_sessions'],
+      columnsToNullify: { runners: ['photo_key'] },
+    },
+  },
+});
+const cloneTemplate = Template.fromStack(cloneStacks.stageStack);
+
 describe('PreviewableApp (preview with db)', () => {
   it('shares the cluster across stages via cross-stack reference, no SSM ceremony in stage stack', () => {
-    const { clusterStack, stageStack } = bootstrap('S');
-    new PreviewableApp(stageStack, 'App', {
-      app: 'test-app',
-      stage: 'preview',
-      prNumber: 5,
-      frontend: { distPath: '.' },
-      database: { migrationsPath: MIGRATIONS, cluster: clusterStack.cluster },
-    });
-    const stageTpl = Template.fromStack(stageStack);
-
     // Stage stack still has the schema custom resource…
-    stageTpl.resourceCountIs('AWS::CloudFormation::CustomResource', 1);
+    sharedClusterTemplate.resourceCountIs('AWS::CloudFormation::CustomResource', 1);
     // …but no cluster (it lives in the cluster stack).
-    stageTpl.resourceCountIs('AWS::DSQL::Cluster', 0);
+    sharedClusterTemplate.resourceCountIs('AWS::DSQL::Cluster', 0);
   });
 
   it('forwards database.cloneFromSchema to the schema custom resource when set', () => {
-    const { clusterStack, stageStack } = bootstrap('S');
-    new PreviewableApp(stageStack, 'App', {
-      app: 'test-app',
-      stage: 'preview',
-      prNumber: 6,
-      frontend: { distPath: '.' },
-      database: {
-        migrationsPath: MIGRATIONS,
-        cluster: clusterStack.cluster,
-        cloneFromSchema: {
-          sourceSchemaName: 'prod',
-          tableBlocklist: ['admin_sessions'],
-          columnsToNullify: { runners: ['photo_key'] },
-        },
-      },
-    });
-    const customResources = Template.fromStack(stageStack).findResources(
-      'AWS::CloudFormation::CustomResource',
-    );
+    const customResources = cloneTemplate.findResources('AWS::CloudFormation::CustomResource');
     const schemaCustomResource = Object.values(customResources).find(
       (customResource) => getProperties(customResource)?.schemaName === 'pr_6',
     );

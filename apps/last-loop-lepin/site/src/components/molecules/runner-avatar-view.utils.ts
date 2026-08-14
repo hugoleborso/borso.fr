@@ -13,6 +13,7 @@ export interface RunnerAvatarView {
   readonly backgroundColor: string;
 }
 
+// @FollowsBlueprint core-view-intent
 export function selectRunnerAvatarView(
   avatar: RunnerAvatar,
   hasPhotoFailed: boolean,

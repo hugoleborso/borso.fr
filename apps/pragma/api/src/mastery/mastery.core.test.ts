@@ -21,6 +21,7 @@ const OVERRIDES: OverrideMap = {
   },
 };
 
+// @FollowsBlueprint test-pure-unit
 describe('mastery.core', () => {
   describe('effective', () => {
     it('returns the override when present', () => {

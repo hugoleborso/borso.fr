@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import bundledOpeningsJson from './openings.json';
 import { parseOpenings } from './parseOpenings.utils';
 
 const validOpening = {
@@ -37,6 +40,7 @@ function openingWithLineOverrides(overrides: Record<string, unknown>) {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('parseOpenings', () => {
   it('parses a well-formed payload', () => {
     const result = parseOpenings([validOpening]);
@@ -155,6 +159,34 @@ describe('parseOpenings', () => {
     );
     expect(() => parseOpenings([openingWithLineOverrides({ movesUci: 'e2e4' })])).toThrow(
       /line\.movesUci is not an array/,
+    );
+  });
+});
+
+function fromHere(relativePath: string): string {
+  return fileURLToPath(new URL(relativePath, import.meta.url));
+}
+
+describe('the committed openings dataset', () => {
+  it('gives every line an id no sibling line shares', () => {
+    const collisions = parseOpenings(bundledOpeningsJson).flatMap((opening) =>
+      opening.variations.flatMap((variation) => {
+        const counts = new Map<string, number>();
+        for (const line of variation.lines) {
+          counts.set(line.id, (counts.get(line.id) ?? 0) + 1);
+        }
+        return Array.from(counts)
+          .filter(([, count]) => count > 1)
+          .map(([lineId]) => `${opening.id}/${variation.id}/${lineId}`);
+      }),
+    );
+
+    expect(collisions).toEqual([]);
+  });
+
+  it('serves the same bytes it bundles', () => {
+    expect(readFileSync(fromHere('../public/openings.json'), 'utf-8')).toBe(
+      readFileSync(fromHere('./openings.json'), 'utf-8'),
     );
   });
 });

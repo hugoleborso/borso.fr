@@ -7,7 +7,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { computeSunriseSunset, getDatabase, seedEdition } from '../edition/edition.service';
+import { computeSunriseSunset, seedEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
 import {
   clearEditionPunchHistory,
@@ -69,15 +69,15 @@ export interface SeedResult {
  * Rebuild the fixture edition, its roster, and its punch history from a
  * clean slate, then report how many runners the edition ended up with.
  */
+// @FollowsBlueprint service-orchestration
 export async function applySeedFixture(fixture: SeedFixtureName, now: Date): Promise<SeedResult> {
-  const database = getDatabase();
   const plan = planSeedFixture(fixture, now);
 
-  await clearEditionPunchHistory(database, EDITION_SLUG);
-  await seedEdition(database, buildFixtureEdition(plan.raceWindow));
+  await clearEditionPunchHistory(EDITION_SLUG);
+  await seedEdition(buildFixtureEdition(plan.raceWindow));
 
   for (const sample of SAMPLE_RUNNERS) {
-    await seedRunner(database, {
+    await seedRunner({
       editionSlug: EDITION_SLUG,
       slug: sample.slug,
       displayName: sample.displayName,
@@ -87,7 +87,7 @@ export async function applySeedFixture(fixture: SeedFixtureName, now: Date): Pro
   }
 
   for (const punch of plan.punches) {
-    await seedPunch(database, {
+    await seedPunch({
       id: randomUUID(),
       editionSlug: EDITION_SLUG,
       runnerSlug: punch.runnerSlug,
@@ -105,7 +105,7 @@ export async function applySeedFixture(fixture: SeedFixtureName, now: Date): Pro
   }
 
   for (const didNotFinish of plan.didNotFinishes) {
-    await seedManualDidNotFinish(database, {
+    await seedManualDidNotFinish({
       editionSlug: EDITION_SLUG,
       runnerSlug: didNotFinish.runnerSlug,
       outAtLoop: didNotFinish.outAtLoop,
@@ -114,6 +114,6 @@ export async function applySeedFixture(fixture: SeedFixtureName, now: Date): Pro
     });
   }
 
-  const runners = await listRunners(database, EDITION_SLUG);
+  const runners = await listRunners(EDITION_SLUG);
   return { fixture, editionSlug: EDITION_SLUG, runnerCount: runners.length };
 }

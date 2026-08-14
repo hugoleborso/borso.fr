@@ -70,6 +70,12 @@ function update(next: Partial<AppState>): void {
   for (const listener of listeners) listener();
 }
 
+/**
+ * @Blueprint persisted-store-module
+ * @BlueprintName Persisted External Store Module
+ * @BlueprintUsage Use for client state that several unrelated components read and that has to survive a reload.
+ * @BlueprintDescription Keeps the state in one module level holder with a listener set, exposes it through `useSyncExternalStore` with `subscribe` and `readSnapshot` declared at module scope so a render never resubscribes, and funnels every write through a single `update` that replaces the object, mirrors it to storage, then notifies. The replacement is what makes the snapshot comparable by identity, and both storage calls sit inside `try` blocks that swallow the failure, because private browsing and a full quota both throw and the application still works without persistence.
+ */
 export function useAppState(): AppState {
   return useSyncExternalStore(subscribe, readSnapshot);
 }

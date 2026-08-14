@@ -50,6 +50,7 @@ function pickInitials(displayName: string): string {
  * in `displayName` — the same name always yields the same colour and the
  * same initials.
  */
+// @FollowsBlueprint utils-pure-module
 export function initialsAvatar(displayName: string): InitialsAvatar {
   const hash = djb2Hash(displayName);
   const hueDegrees =

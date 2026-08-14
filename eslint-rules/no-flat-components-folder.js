@@ -58,6 +58,7 @@ function isOutsideEveryBucket(filename) {
   return remainingPath.length === 0 || !BUCKETS.has(firstFolder);
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

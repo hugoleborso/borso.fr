@@ -49,6 +49,7 @@ function holdsAWord(text) {
   return letters !== null && letters.length >= MINIMUM_LETTERS_FOR_A_WORD;
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

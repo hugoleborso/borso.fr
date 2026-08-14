@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { truncateAllTables } from '../../../test/database-utils';
 import {
   createEdition,
   EditionAlreadyExistsError,
@@ -24,23 +24,22 @@ function input(slug = 'lepin-svc-1') {
   };
 }
 
+// @FollowsBlueprint test-repository-integration
 describe('edition.service', () => {
   beforeEach(async () => {
-    await truncateAllTables(testDatabase());
+    await truncateAllTables();
   });
 
   it('createEdition parses GPX and computes sunrise/sunset', async () => {
-    const database = testDatabase();
-    const edition = await createEdition(database, input());
+    const edition = await createEdition(input());
     expect(edition.gpx.distanceMeters).toBeGreaterThan(0);
     expect(edition.sunriseAt.getTime()).toBeLessThan(edition.sunsetAt.getTime());
     expect(edition.status).toBe('setup');
   });
 
   it('rejects startsAt >= endsAt', async () => {
-    const database = testDatabase();
     await expect(
-      createEdition(database, {
+      createEdition({
         ...input(),
         endsAt: new Date('2026-09-19T05:00:00+02:00'),
       }),
@@ -48,42 +47,34 @@ describe('edition.service', () => {
   });
 
   it('throws EditionAlreadyExistsError on duplicate slug', async () => {
-    const database = testDatabase();
-    await createEdition(database, input('lepin-svc-dup'));
-    await expect(createEdition(database, input('lepin-svc-dup'))).rejects.toBeInstanceOf(
+    await createEdition(input('lepin-svc-dup'));
+    await expect(createEdition(input('lepin-svc-dup'))).rejects.toBeInstanceOf(
       EditionAlreadyExistsError,
     );
   });
 
   it('getEdition throws EditionNotFoundError for unknown slug', async () => {
-    await expect(getEdition(testDatabase(), 'does-not-exist')).rejects.toBeInstanceOf(
-      EditionNotFoundError,
-    );
+    await expect(getEdition('does-not-exist')).rejects.toBeInstanceOf(EditionNotFoundError);
   });
 
   it('transitionEditionStatus is a no-op when the status is already current', async () => {
-    const database = testDatabase();
-    await createEdition(database, input('lepin-svc-status'));
-    await expect(
-      transitionEditionStatus(database, 'lepin-svc-status', 'setup'),
-    ).resolves.toBeUndefined();
-    const edition = await getEdition(database, 'lepin-svc-status');
+    await createEdition(input('lepin-svc-status'));
+    await expect(transitionEditionStatus('lepin-svc-status', 'setup')).resolves.toBeUndefined();
+    const edition = await getEdition('lepin-svc-status');
     expect(edition.status).toBe('setup');
   });
 
   it('transitionEditionStatus moves setup → live', async () => {
-    const database = testDatabase();
-    await createEdition(database, input('lepin-svc-go-live'));
-    await transitionEditionStatus(database, 'lepin-svc-go-live', 'live');
-    const edition = await getEdition(database, 'lepin-svc-go-live');
+    await createEdition(input('lepin-svc-go-live'));
+    await transitionEditionStatus('lepin-svc-go-live', 'live');
+    const edition = await getEdition('lepin-svc-go-live');
     expect(edition.status).toBe('live');
   });
 
   it('getAllEditions returns the row count', async () => {
-    const database = testDatabase();
-    await createEdition(database, input('lepin-svc-a'));
-    await createEdition(database, input('lepin-svc-b'));
-    const editions = await getAllEditions(database);
+    await createEdition(input('lepin-svc-a'));
+    await createEdition(input('lepin-svc-b'));
+    const editions = await getAllEditions();
     expect(editions.length).toBeGreaterThanOrEqual(2);
   });
 });

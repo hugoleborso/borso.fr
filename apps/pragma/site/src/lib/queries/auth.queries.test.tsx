@@ -27,6 +27,7 @@ function ProbeLogin({
   return null;
 }
 
+// @FollowsBlueprint test-query-hook
 describe('useLogin — session cache reconciliation', () => {
   let stub: ReturnType<typeof stubFetch> | null = null;
   afterEach(() => {

@@ -5,7 +5,6 @@
  * with an actionable error when it isn't — apps should never reach into
  * `process.env` directly when a helper exists for the value.
  *
- * @beta
  */
 
 import { assertDeployStage, type Stage } from './naming.utils.js';
@@ -16,6 +15,7 @@ const ACCOUNT_ENV = 'CDK_DEFAULT_ACCOUNT';
 const ACCOUNT_FALLBACK_ENV = 'AWS_ACCOUNT_ID';
 const DEFAULT_STAGE: Stage = 'prod';
 
+// @FollowsBlueprint environment-reader
 /**
  * Reads `name` from the process environment. Throws if it's missing or
  * empty. The error message names the missing variable so callers (and CI

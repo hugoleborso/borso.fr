@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { EmptySlot } from '@/components/atoms/EmptySlot';
 import { LoadMoreRow } from '@/components/atoms/LoadMoreRow';
+import type { LoadMoreRowProps } from '@/components/atoms/loadMoreRow.types';
 import { MiniBoard } from '@/components/atoms/MiniBoard';
 import { SelectorCard, type SelectorCardProps } from '@/components/atoms/SelectorCard';
 import { SelectorPanel } from '@/components/atoms/SelectorPanel';
@@ -16,9 +17,9 @@ import { buildOpeningPreview } from '@/openings/previews.utils';
 import type { Opening } from '@/openings/types';
 import { setPlayScope, setSelection } from '@/state/appState';
 import type { Mode, PlayScope } from '@/state/persistedState.utils';
-import type { LoadMoreRowProps } from '@/components/atoms/loadMoreRow.types';
 import type { OpeningPanelProps } from './openingPanel.types';
 
+// @FollowsBlueprint component-lookup-table
 const ALL_OPENINGS_CARD_BY_MODE: ComponentByKind<Mode, SelectorCardProps> = {
   play: SelectorCard,
   learn: EmptySlot,
@@ -34,6 +35,7 @@ const OPENING_PICK_BY_MODE: Record<Mode, (opening: Opening, scope: PlayScope) =>
   play: (opening, scope) => setPlayScope(toggleOpeningInPlayScope(scope, opening.id)),
 };
 
+// @FollowsBlueprint molecule-presentational
 export function OpeningsPanel({
   mode,
   openings,

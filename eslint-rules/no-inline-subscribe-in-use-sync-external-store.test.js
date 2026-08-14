@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-inline-subscribe-in-use-sync-external-store.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester().run('no-inline-subscribe-in-use-sync-external-store', rule, {
   valid: [
     'useSyncExternalStore(subscribeToCoarsePointer, readCoarsePointer, readServerFallback);',

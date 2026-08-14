@@ -18,6 +18,7 @@ interface FinishRacePromptProps {
  * Banner offering to close the race once every bib is out. Freezing the
  * standings is irreversible from this screen, so the operator confirms first.
  */
+// @FollowsBlueprint organism-mutation-panel
 export function FinishRacePrompt({ edition, totalRunners }: FinishRacePromptProps) {
   const { t } = useTranslation();
   const [failure, setFailure] = useState<AdminErrorMessage | null>(null);
@@ -39,10 +40,12 @@ export function FinishRacePrompt({ edition, totalRunners }: FinishRacePromptProp
   }
 
   return (
-    <div className="admin-finish-banner">
-      <div className="admin-finish-banner__msg">
+    <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-3 rounded-xl border border-warn-line bg-banner-warn text-ink">
+      <div className="flex flex-col gap-0.5 text-[13px]">
         <strong>{t('admin.finish.title')}</strong>
-        <small>{t('admin.finish.detail', { count: totalRunners })}</small>
+        <small className="text-[11px] text-ink-3">
+          {t('admin.finish.detail', { count: totalRunners })}
+        </small>
         <Show when={failure !== null}>
           <ErrorText>{t(failure?.key ?? 'common.error-detail', failure?.parameters)}</ErrorText>
         </Show>

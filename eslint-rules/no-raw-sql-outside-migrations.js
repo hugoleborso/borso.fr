@@ -41,6 +41,7 @@ function isSqlIdentifier(node) {
   return node.type === 'Identifier' && node.name === SQL_TAG_NAME;
 }
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

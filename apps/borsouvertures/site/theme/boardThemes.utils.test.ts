@@ -9,8 +9,8 @@ describe('boardThemes', () => {
 
 describe('getBoardTheme', () => {
   it('returns the named theme', () => {
-    expect(getBoardTheme('chesscom').name).toBe('Chess.com');
-    expect(getBoardTheme('nord').name).toBe('Nord Blue');
+    expect(getBoardTheme('chesscom').nameKey).toBe('top-bar.board-style.theme.chesscom');
+    expect(getBoardTheme('nord').nameKey).toBe('top-bar.board-style.theme.nord');
     expect(getBoardTheme('lichess').dark).toBe('#b58863');
     expect(getBoardTheme('sand').light).toBe('#f3e9dc');
   });
@@ -27,6 +27,7 @@ describe('isBoardThemeId', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('toBoardThemeId', () => {
   it('returns the value when it names a shipped theme', () => {
     expect(toBoardThemeId('nord', 'chesscom')).toBe('nord');

@@ -78,6 +78,7 @@ function rankedOf(runner: Runner, rank: RankedRunner['rank']): RankedRunner {
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('formatLoopDuration', () => {
   it('returns the empty string for null', () => {
     expect(formatLoopDuration(null)).toBe('');
@@ -116,6 +117,7 @@ describe('formatLoopDuration', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('renderLapsCsv', () => {
   it('emits a header row with bib, slug, name and one column per scheduled loop', () => {
     const csv = renderLapsCsv(EDITION, [], []);

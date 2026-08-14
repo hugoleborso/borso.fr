@@ -11,6 +11,7 @@ import {
   selectPalette,
 } from './palettes.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('PALETTES', () => {
   it('is keyed by every PaletteKey except "custom"', () => {
     const paletteKeys: Exclude<PaletteKey, 'custom'>[] = ['classic', 'muted', 'nocturne', 'garden'];

@@ -46,6 +46,7 @@ const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = [
   'shell.meVersion', // the brand and a version number
 ];
 
+// @FollowsBlueprint test-i18n-parity
 describe('i18n-parity.core', () => {
   it('the shipped catalogs are in parity', () => {
     const diff = diffCatalogs(en, fr);

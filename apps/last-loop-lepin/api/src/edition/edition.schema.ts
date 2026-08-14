@@ -43,6 +43,7 @@ export function isEditionStatus(value: unknown): value is EditionStatus {
   return typeof value === 'string' && editionStatusValues.has(value);
 }
 
+// @FollowsBlueprint schema-dsql-constraints
 export const editionsTable = pgTable('editions', {
   slug: text('slug').primaryKey(),
   displayName: text('display_name').notNull(),
@@ -59,6 +60,12 @@ export const editionsTable = pgTable('editions', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 });
 
+/**
+ * @Blueprint schema-shared-slug
+ * @BlueprintName Shared Slug Schema
+ * @BlueprintUsage Use for an identifier several slices validate, so the owning slice declares the rule once and the others import it.
+ * @BlueprintDescription Declares the edition slug's length and character rules as one exported Zod schema in the slice that owns the table, which `punch.schema.ts` and `runner.schema.ts` then import instead of restating the regular expression.
+ */
 export const editionSlugSchema = z
   .string()
   .min(3)
@@ -84,3 +91,7 @@ export const createEditionInputSchema = z.object({
 export const updateEditionInputSchema = createEditionInputSchema
   .omit({ slug: true })
   .extend({ gpxXml: z.string().min(1).optional() });
+
+export const editionStatusUpdateSchema = z.object({
+  status: z.enum(['setup', 'live', 'finished']),
+});

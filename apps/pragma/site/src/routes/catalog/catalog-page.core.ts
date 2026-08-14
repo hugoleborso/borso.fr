@@ -37,6 +37,7 @@ export function sortSongsByTitle<Song extends CatalogSong>(songs: readonly Song[
   return songs.toSorted((left, right) => left.title.localeCompare(right.title));
 }
 
+// @FollowsBlueprint core-view-projection
 export function selectVisibleSongs<Song extends CatalogSong>(
   songs: readonly Song[],
   status: CatalogStatusFilter,

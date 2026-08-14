@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-api-anchor-in-site.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester().run('no-api-anchor-in-site', rule, {
   valid: [
     'const link = <a href={rankingCsvUrl}>Download</a>;',

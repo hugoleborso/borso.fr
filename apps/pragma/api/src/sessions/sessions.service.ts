@@ -18,13 +18,18 @@ import {
   type SessionRow,
   updateSession,
 } from './sessions.repository';
-import type { sessionCreateSchema, sessionUpdateSchema } from './sessions.schema';
+import {
+  type SessionPersistedUpdate,
+  type sessionCreateSchema,
+  sessionPersistedUpdateSchema,
+  type sessionUpdateSchema,
+} from './sessions.schema';
 
 type SessionCreateInput = z.infer<typeof sessionCreateSchema>;
 type SessionUpdateInput = z.infer<typeof sessionUpdateSchema>;
 
-function valuesFromUpdate(input: SessionUpdateInput): Record<string, unknown> {
-  const updates: Record<string, unknown> = {};
+function valuesFromUpdate(input: SessionUpdateInput): SessionPersistedUpdate {
+  const updates: SessionPersistedUpdate = {};
   if (input.date !== undefined) updates.date = new Date(input.date);
   if ('venue' in input && input.venue !== undefined) updates.venue = input.venue;
   if ('capacity' in input && input.capacity !== undefined) updates.capacity = input.capacity;
@@ -35,7 +40,7 @@ function valuesFromUpdate(input: SessionUpdateInput): Record<string, unknown> {
   if ('preparedConcertId' in input && input.preparedConcertId !== undefined) {
     updates.preparedConcertId = input.preparedConcertId;
   }
-  return updates;
+  return sessionPersistedUpdateSchema.parse(updates);
 }
 
 export async function getSessions(): Promise<SessionRow[]> {
@@ -50,6 +55,7 @@ export async function createSession(input: SessionCreateInput): Promise<SessionR
   return await insertSession(buildSessionInsertShape(input));
 }
 
+// @FollowsBlueprint service-crud-update
 export async function patchSession(
   id: string,
   input: SessionUpdateInput,
@@ -65,6 +71,7 @@ export async function removeSession(id: string): Promise<DeletionOutcome> {
   return await deleteSessionWithCascade(id);
 }
 
+// @FollowsBlueprint service-read-model
 export async function getNextSessionOfflineManifest(now: Date): Promise<OfflineManifestPayload> {
   const [sessions, songs] = await Promise.all([getSessions(), getSongs()]);
   return buildNextSessionOfflineManifest(sessions, songs, now);

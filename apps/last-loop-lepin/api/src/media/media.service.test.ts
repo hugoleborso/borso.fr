@@ -17,6 +17,7 @@ const PRESERVED_ENV: Record<string, string | undefined> = {
   PHOTOS_BUCKET: process.env.PHOTOS_BUCKET,
 };
 
+// @FollowsBlueprint test-node-adapter
 describe('media.service', () => {
   beforeAll(() => {
     process.env.AWS_REGION = 'eu-west-3';

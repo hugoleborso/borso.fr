@@ -33,26 +33,9 @@ import {
   type Stage,
   validateAppSlug,
 } from '../internal/naming.utils.js';
+import { SHARED_SSM_PARAMETERS } from '../internal/shared-ssm.js';
 import { applyStandardTags } from '../internal/tags.js';
 
-/**
- * SSM parameter paths owned by infra/shared/. Constructs read these at synth
- * time. Keep in sync with infra/shared/lib/*.ts.
- */
-const SHARED_SSM = {
-  oidcProviderArn: '/borso/shared/oidc-provider-arn',
-  hostedZoneId: '/borso/shared/hosted-zone-id',
-  hostedZoneName: '/borso/shared/hosted-zone-name',
-  certBorsoFrArn: '/borso/shared/cert-borso-fr-arn',
-  certPreviewArn: '/borso/shared/cert-preview-borso-fr-arn',
-  previewsBucketName: '/borso/shared/previews-bucket-name',
-  previewsDistributionId: '/borso/shared/previews-distribution-id',
-  previewsDistributionDomain: '/borso/shared/previews-distribution-domain',
-} as const;
-
-/**
- * @beta
- */
 export interface StaticSiteProps {
   /** App slug, kebab-case (e.g. "borso-fr"). */
   readonly app: string;
@@ -97,6 +80,7 @@ export interface StaticSiteProps {
   readonly spaFallback?: boolean;
 }
 
+// @FollowsBlueprint reusable-cdk-construct
 /**
  * S3 + CloudFront static-site construct.
  *
@@ -107,7 +91,6 @@ export interface StaticSiteProps {
  *   key prefix; URL is served by the shared previews distribution via
  *   host-based routing (see `cf-host-routing-function.ts`).
  *
- * @beta
  */
 export class StaticSite extends Construct {
   public readonly url: string;
@@ -146,7 +129,10 @@ export class StaticSite extends Construct {
       autoDeleteObjects: true,
     });
 
-    const certArn = StringParameter.valueForStringParameter(this, SHARED_SSM.certBorsoFrArn);
+    const certArn = StringParameter.valueForStringParameter(
+      this,
+      SHARED_SSM_PARAMETERS.certBorsoFrArn,
+    );
     const cert = Certificate.fromCertificateArn(this, 'Cert', certArn);
 
     // Rewrites directory-style URIs to /<dir>/index.html so subpaths like
@@ -249,8 +235,14 @@ export class StaticSite extends Construct {
       memoryLimit: 512,
     });
 
-    const zoneName = StringParameter.valueForStringParameter(this, SHARED_SSM.hostedZoneName);
-    const zoneId = StringParameter.valueForStringParameter(this, SHARED_SSM.hostedZoneId);
+    const zoneName = StringParameter.valueForStringParameter(
+      this,
+      SHARED_SSM_PARAMETERS.hostedZoneName,
+    );
+    const zoneId = StringParameter.valueForStringParameter(
+      this,
+      SHARED_SSM_PARAMETERS.hostedZoneId,
+    );
     const zone = HostedZone.fromHostedZoneAttributes(this, 'Zone', {
       hostedZoneId: zoneId,
       zoneName,
@@ -279,7 +271,7 @@ export class StaticSite extends Construct {
   private buildPreview(props: StaticSiteProps): string {
     const sharedBucketName = StringParameter.valueForStringParameter(
       this,
-      SHARED_SSM.previewsBucketName,
+      SHARED_SSM_PARAMETERS.previewsBucketName,
     );
     const sharedBucket = Bucket.fromBucketName(this, 'SharedPreviewsBucket', sharedBucketName);
     // Look up the shared previews distribution so BucketDeployment can issue
@@ -293,11 +285,11 @@ export class StaticSite extends Construct {
       {
         distributionId: StringParameter.valueForStringParameter(
           this,
-          SHARED_SSM.previewsDistributionId,
+          SHARED_SSM_PARAMETERS.previewsDistributionId,
         ),
         domainName: StringParameter.valueForStringParameter(
           this,
-          SHARED_SSM.previewsDistributionDomain,
+          SHARED_SSM_PARAMETERS.previewsDistributionDomain,
         ),
       },
     );

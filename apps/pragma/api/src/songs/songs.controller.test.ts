@@ -44,6 +44,7 @@ const masteryOverrideSchema = z.object({
 });
 const overridesEnvelope = z.object({ overrides: z.array(masteryOverrideSchema) });
 
+// @FollowsBlueprint test-back-e2e
 describe('songs controller (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

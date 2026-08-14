@@ -14,6 +14,7 @@ const SEED_HEX_PATTERN = /^[0-9a-fA-F]+$/;
  * Randomness is an argument, so the seed picker stays pure and stays under the
  * coverage and mutation gates. Callers pass `Math.random()`.
  */
+// @FollowsBlueprint utils-seeded-generator
 export function freshSeed(randomUnitInterval: number): number {
   return Math.floor(randomUnitInterval * (MAX_SEED + 1));
 }
@@ -32,6 +33,7 @@ function parseSeedHex(input: string | null): number | null {
   return Number.parseInt(input, SEED_RADIX) >>> 0;
 }
 
+// @FollowsBlueprint unknown-payload-parser
 export function readUrlState(
   search: string,
   defaults: { paletteKey: PaletteKey; fallbackSeed: number },

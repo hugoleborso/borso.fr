@@ -14,6 +14,7 @@ export interface TransitionCommentRow {
   updatedAt: Date;
 }
 
+// @FollowsBlueprint repository-projection
 const PROJECTION = {
   songAId: transitionCommentTable.songAId,
   songBId: transitionCommentTable.songBId,
@@ -41,6 +42,7 @@ export async function findTransitionComment(
   return rows[0] ?? null;
 }
 
+// @FollowsBlueprint repository-idempotent-upsert
 export async function upsertTransitionComment(
   songAId: string,
   songBId: string,

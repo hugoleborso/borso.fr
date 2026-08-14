@@ -7,6 +7,9 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DocumentFrame } from '../atoms/DocumentFrame';
+import { HintText } from '../atoms/HintText';
+import { PreviewImage } from '../atoms/PreviewImage';
 
 export interface UploadedChartPreviewProps {
   readonly kind: 'pdf' | 'image';
@@ -16,6 +19,11 @@ export interface UploadedChartPreviewProps {
   readonly errorMessage: string | null;
 }
 
+const DOCUMENT_CLASS = 'w-full h-[720px] border border-line rounded-md';
+
+const IMAGE_CLASS = 'max-w-full rounded-md border border-line';
+
+// @FollowsBlueprint molecule-presentational
 export function UploadedChartPreview({
   kind,
   objectKey,
@@ -26,24 +34,16 @@ export function UploadedChartPreview({
 
   if (errorMessage !== null) {
     return (
-      <p className="text-xs text-danger" role="alert">
+      <HintText tone="danger" role="alert">
         {errorMessage}
-      </p>
+      </HintText>
     );
   }
   if (previewUrl === null) {
-    return <p className="text-xs text-ink-400 italic">{t('common.loading')}</p>;
+    return <HintText tone="muted">{t('common.loading')}</HintText>;
   }
   if (kind === 'pdf') {
-    return (
-      <iframe
-        src={previewUrl}
-        title={objectKey}
-        className="w-full h-[720px] border border-line rounded-md"
-      />
-    );
+    return <DocumentFrame source={previewUrl} title={objectKey} className={DOCUMENT_CLASS} />;
   }
-  return (
-    <img src={previewUrl} alt={objectKey} className="max-w-full rounded-md border border-line" />
-  );
+  return <PreviewImage source={previewUrl} alternativeText={objectKey} className={IMAGE_CLASS} />;
 }

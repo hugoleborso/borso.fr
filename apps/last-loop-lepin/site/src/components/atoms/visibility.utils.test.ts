@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { selectVisibility } from './visibility.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectVisibility', () => {
   it('shows when the claim holds', () => {
     expect(selectVisibility(true)).toBe('shown');

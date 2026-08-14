@@ -56,6 +56,7 @@ describe('linesMatchingPrefix', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('nextMovesAt', () => {
   it('returns the union of distinct next moves across matching lines', () => {
     expect(new Set(nextMovesAt(ITALIAN_MAIN, ['e2e4', 'e7e5', 'g1f3', 'b8c6']))).toEqual(

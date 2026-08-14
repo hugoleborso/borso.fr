@@ -17,6 +17,7 @@ import {
 const SECOND_MS = 1_000;
 const MINUTE_MS = 60 * SECOND_MS;
 
+// @FollowsBlueprint test-pure-unit
 describe('formatHourMinute', () => {
   it('pads the hour and the minute to two digits', () => {
     const instant = new Date(2026, 5, 13, 6, 4);

@@ -74,6 +74,7 @@ export function gatherCandidates(
   return results;
 }
 
+// @FollowsBlueprint utils-pure-module
 export function computeBookState(
   openings: Opening[],
   selection: Selection,

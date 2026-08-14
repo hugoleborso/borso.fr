@@ -20,6 +20,7 @@ const EXACT_CACHEABLE_PATHS = new Set<string>([
   '/api/offline-manifest',
 ]);
 
+// @FollowsBlueprint utils-pure-module
 export function isReadableApiPath(pathname: string): boolean {
   if (EXACT_CACHEABLE_PATHS.has(pathname)) return true;
   if (SONG_DETAIL_PATTERN.test(pathname)) return true;

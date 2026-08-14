@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import type { Database } from '../database/client';
 import { loopIndexAt } from '../edition/edition.core';
 import { getEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
 import { haversineDistanceMeters } from '../helpers/geo/haversine.utils';
 
+// @FollowsBlueprint service-facade-reexport
 export { PunchConflictError } from './punch.repository';
 
 import { type PunchRejectReason, validatePunchTiming } from './punch.core';
@@ -23,12 +23,17 @@ import {
 } from './punch.repository';
 import type { LoopPunch, ManualDidNotFinish } from './punch.types';
 
-export { getDatabase } from '../database/client';
-
+// @FollowsBlueprint named-domain-error
 export class PunchNotFoundError extends Error {
   override readonly name = 'PunchNotFoundError';
 }
 
+/**
+ * @Blueprint named-domain-error
+ * @BlueprintName Named Domain Error
+ * @BlueprintUsage Use for a failure a caller has to tell apart, so the controller matches on the class rather than on the message text.
+ * @BlueprintDescription Subclasses `Error` and overrides `name` with a string literal, because a subclass otherwise inherits `Error.prototype.name` and calls itself `Error`, and carries the machine readable reason as a readonly field so the controller answers with it instead of parsing the message.
+ */
 export class PunchRejectedError extends Error {
   override readonly name = 'PunchRejectedError';
   constructor(public readonly reason: PunchRejectReason) {
@@ -47,7 +52,6 @@ export interface RegisterPunchInput {
  * costs a repository read the other reasons do not need.
  */
 async function buildPunchRejectionError(
-  database: Database,
   edition: RaceEdition,
   input: RegisterPunchInput,
   reason: PunchRejectReason,
@@ -55,12 +59,7 @@ async function buildPunchRejectionError(
 ): Promise<PunchConflictError | PunchRejectedError> {
   if (reason !== 'already-punched-this-loop') return new PunchRejectedError(reason);
   const conflictLoop = Math.max(1, loopIndexAt(edition, now));
-  const existing = await findActivePunchForLoop(
-    database,
-    input.editionSlug,
-    input.runnerSlug,
-    conflictLoop,
-  );
+  const existing = await findActivePunchForLoop(input.editionSlug, input.runnerSlug, conflictLoop);
   if (existing !== null) return new PunchConflictError(existing);
   return new PunchRejectedError(reason);
 }
@@ -71,18 +70,14 @@ async function buildPunchRejectionError(
  * @BlueprintUsage Use for a workflow that reads, decides, then writes. The service is the only impure layer allowed to be interesting.
  * @BlueprintDescription Reads the edition and the runner's existing punches through the repository, hands them to a pure decision function in punch.core.ts, throws a named domain error when the decision rejects, and writes through the repository. The branches live in the core file, so the service reads as a sequence of steps.
  */
-export async function registerPunch(
-  database: Database,
-  input: RegisterPunchInput,
-  now: Date,
-): Promise<LoopPunch> {
-  const edition: RaceEdition = await getEdition(database, input.editionSlug);
-  const existingPunches = await listPunchesForEdition(database, input.editionSlug);
+export async function registerPunch(input: RegisterPunchInput, now: Date): Promise<LoopPunch> {
+  const edition: RaceEdition = await getEdition(input.editionSlug);
+  const existingPunches = await listPunchesForEdition(input.editionSlug);
   const runnerPunches = existingPunches.filter((punch) => punch.runnerSlug === input.runnerSlug);
 
   const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
   if (!validation.ok) {
-    throw await buildPunchRejectionError(database, edition, input, validation.reason, now);
+    throw await buildPunchRejectionError(edition, input, validation.reason, now);
   }
 
   const punch: LoopPunch = {
@@ -107,7 +102,7 @@ export async function registerPunch(
   // flow. The race window between `validatePunchTiming` and `insertPunch`
   // stays narrow in practice (single tap-in per runner from one phone);
   // if it ever matters, the next layer is a `SELECT ... FOR UPDATE`.
-  await insertPunch(database, punch);
+  await insertPunch(punch);
   return punch;
 }
 
@@ -120,12 +115,11 @@ export interface SelfPunchInput {
 }
 
 export async function registerSelfPunch(
-  database: Database,
   input: SelfPunchInput,
   userAgent: string | null,
   now: Date,
 ): Promise<LoopPunch> {
-  const edition: RaceEdition = await getEdition(database, input.editionSlug);
+  const edition: RaceEdition = await getEdition(input.editionSlug);
   const distanceFromCenter =
     input.clientLat === null || input.clientLng === null
       ? null
@@ -134,12 +128,12 @@ export async function registerSelfPunch(
           edition.gpx.startLatLng,
         );
 
-  const existingPunches = await listPunchesForEdition(database, input.editionSlug);
+  const existingPunches = await listPunchesForEdition(input.editionSlug);
   const runnerPunches = existingPunches.filter((punch) => punch.runnerSlug === input.runnerSlug);
 
   const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
   if (!validation.ok) {
-    throw await buildPunchRejectionError(database, edition, input, validation.reason, now);
+    throw await buildPunchRejectionError(edition, input, validation.reason, now);
   }
 
   const punch: LoopPunch = {
@@ -157,26 +151,31 @@ export async function registerSelfPunch(
     distanceFromCenterM: distanceFromCenter,
     userAgent,
   };
-  await insertPunch(database, punch);
+  await insertPunch(punch);
   return punch;
 }
 
+/**
+ * Move an existing punch to a new finishing instant. `finishedAtIso` arrives
+ * as the ISO string the request carried; the service owns the conversion so
+ * the controller stays free of domain types.
+ */
 export async function correctPunch(
-  database: Database,
   id: string,
-  newFinishedAt: Date,
+  finishedAtIso: string,
   now: Date,
 ): Promise<LoopPunch> {
-  const existing = await findPunchById(database, id);
+  const existing = await findPunchById(id);
   if (existing === null) throw new PunchNotFoundError(id);
-  await markPunchCorrected(database, id, newFinishedAt, now);
+  const newFinishedAt = new Date(finishedAtIso);
+  await markPunchCorrected(id, newFinishedAt, now);
   return { ...existing, finishedAt: newFinishedAt, correctedAt: now };
 }
 
-export async function voidPunch(database: Database, id: string, now: Date): Promise<LoopPunch> {
-  const existing = await findPunchById(database, id);
+export async function voidPunch(id: string, now: Date): Promise<LoopPunch> {
+  const existing = await findPunchById(id);
   if (existing === null) throw new PunchNotFoundError(id);
-  await markPunchVoided(database, id, now);
+  await markPunchVoided(id, now);
   return { ...existing, voidedAt: now };
 }
 
@@ -188,27 +187,22 @@ export interface RecordDidNotFinishInput {
 }
 
 export async function recordManualDidNotFinish(
-  database: Database,
   input: RecordDidNotFinishInput,
   now: Date,
 ): Promise<ManualDidNotFinish> {
   const manualDidNotFinish: ManualDidNotFinish = { ...input, decidedAt: now };
-  await insertManualDidNotFinish(database, manualDidNotFinish);
+  await insertManualDidNotFinish(manualDidNotFinish);
   return manualDidNotFinish;
 }
 
-export async function getPunchesForEdition(
-  database: Database,
-  editionSlug: string,
-): Promise<readonly LoopPunch[]> {
-  return listPunchesForEdition(database, editionSlug);
+export async function getPunchesForEdition(editionSlug: string): Promise<readonly LoopPunch[]> {
+  return listPunchesForEdition(editionSlug);
 }
 
 export async function listManualDidNotFinishes(
-  database: Database,
   editionSlug: string,
 ): Promise<readonly ManualDidNotFinish[]> {
-  return listManualDidNotFinishesForEdition(database, editionSlug);
+  return listManualDidNotFinishesForEdition(editionSlug);
 }
 
 export interface CatchupPunchInput {
@@ -235,12 +229,8 @@ export interface CatchupPunchInput {
  *     duplicate the in-race row);
  *   - the requested loop hasn't started yet (`loopIndex` > current).
  */
-export async function catchupPunch(
-  database: Database,
-  input: CatchupPunchInput,
-  now: Date,
-): Promise<LoopPunch> {
-  const edition = await getEdition(database, input.editionSlug);
+export async function catchupPunch(input: CatchupPunchInput, now: Date): Promise<LoopPunch> {
+  const edition = await getEdition(input.editionSlug);
   const intervalMs = edition.intervalMinutes * 60_000;
   const startMs = edition.startsAt.getTime();
   const currentLoopFloor = loopIndexAt(edition, now);
@@ -248,7 +238,6 @@ export async function catchupPunch(
     throw new PunchRejectedError('race-not-started');
   }
   const existing = await findActivePunchForLoop(
-    database,
     input.editionSlug,
     input.runnerSlug,
     input.loopIndex,
@@ -270,8 +259,8 @@ export async function catchupPunch(
     distanceFromCenterM: null,
     userAgent: null,
   };
-  await insertPunch(database, punch);
-  await deleteManualDidNotFinish(database, input.editionSlug, input.runnerSlug);
+  await insertPunch(punch);
+  await deleteManualDidNotFinish(input.editionSlug, input.runnerSlug);
   return punch;
 }
 
@@ -280,20 +269,14 @@ export async function catchupPunch(
  * Exposed for the test seeding endpoint, which starts each fixture from an
  * empty punch history so a previous fixture cannot leak into the standings.
  */
-export async function clearEditionPunchHistory(
-  database: Database,
-  editionSlug: string,
-): Promise<void> {
-  await deleteAllEditionPunchesAndDidNotFinishes(database, editionSlug);
+export async function clearEditionPunchHistory(editionSlug: string): Promise<void> {
+  await deleteAllEditionPunchesAndDidNotFinishes(editionSlug);
 }
 
-export async function seedPunch(database: Database, punch: LoopPunch): Promise<void> {
-  await insertPunch(database, punch);
+export async function seedPunch(punch: LoopPunch): Promise<void> {
+  await insertPunch(punch);
 }
 
-export async function seedManualDidNotFinish(
-  database: Database,
-  didNotFinish: ManualDidNotFinish,
-): Promise<void> {
-  await insertManualDidNotFinish(database, didNotFinish);
+export async function seedManualDidNotFinish(didNotFinish: ManualDidNotFinish): Promise<void> {
+  await insertManualDidNotFinish(didNotFinish);
 }

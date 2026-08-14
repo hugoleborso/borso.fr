@@ -25,6 +25,7 @@ const barSchema = z.object({
 const singleEnvelope = z.object({ bar: barSchema });
 const listEnvelope = z.object({ bars: z.array(barSchema) });
 
+// @FollowsBlueprint test-back-e2e
 describe('bars controller (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

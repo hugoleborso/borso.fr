@@ -161,6 +161,11 @@ function isOpponentToMove(run: PlayRun): boolean {
  * user is still in book; the book engine is the source of truth for "what
  * moves are legal in this scope." The machine is responsible for chess state
  * and timing — it does not invent book logic.
+ *
+ * @Blueprint state-machine-module
+ * @BlueprintName Hand Written State Machine Module
+ * @BlueprintUsage Use for session state that outlives a render, has timers of its own, and would otherwise be a tangle of `useState` and effects.
+ * @BlueprintDescription Returns a closure holding the current run, the last snapshot and a listener set, and exposes `subscribe` and `getSnapshot` so a component can read it with `useSyncExternalStore`. Every command mutates the run then calls `notify`, which recomputes the snapshot once and replaces it, so subscribers compare by identity. Each `start` builds a fresh run object and that object's identity is the run's identity, so a timer scheduled for an earlier run compares `activeRun !== scheduledRun` and returns: a stale reply cannot land on the board after a reset. The impure edges arrive as options with production defaults, which is what makes the whole module drivable from a test with no clock.
  */
 export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine {
   const opponentDelayMs = options.opponentDelayMs ?? DEFAULT_OPPONENT_DELAY_MS;

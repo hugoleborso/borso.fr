@@ -26,6 +26,7 @@ interface SetlistEntryDetailsFieldsProps {
   readonly onPatch: (patch: Record<string, unknown>) => void;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function SetlistEntryDetailsFields({
   form,
   onPatch,

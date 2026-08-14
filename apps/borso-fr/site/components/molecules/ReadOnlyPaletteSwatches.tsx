@@ -3,6 +3,7 @@ import { listDistinctFills } from '../../art/mondrian/palettes.utils';
 import { ReadOnlySwatch } from '../atoms/ReadOnlySwatch';
 import type { PaletteSwatchesProps } from './EditablePaletteSwatches';
 
+// @FollowsBlueprint molecule-presentational
 export function ReadOnlyPaletteSwatches({ palette }: PaletteSwatchesProps) {
   const { t } = useTranslation();
   return (

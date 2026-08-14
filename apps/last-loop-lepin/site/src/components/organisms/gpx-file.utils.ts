@@ -21,6 +21,7 @@ function readPicked(xml: string | null): GpxReadResult {
 }
 
 /** Creating an edition needs a track, so picking no file is an error. */
+// @FollowsBlueprint utils-pure-module
 export function selectRequiredGpxResult(hasFile: boolean, xml: string | null): GpxReadResult {
   if (!hasFile) return { xml: null, errorKey: 'admin.setup.gpx-missing' };
   return readPicked(xml);

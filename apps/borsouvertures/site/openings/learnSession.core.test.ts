@@ -24,6 +24,7 @@ const NOTHING_SELECTED: Selection = {
   lineId: ALL_KEY,
 };
 
+// @FollowsBlueprint test-pure-unit
 describe('findLearnDrillTarget', () => {
   it('returns the placeholder when no opening is selected', () => {
     expect(findLearnDrillTarget(OPENINGS, NOTHING_SELECTED)).toBe(NO_DRILL_TARGET);

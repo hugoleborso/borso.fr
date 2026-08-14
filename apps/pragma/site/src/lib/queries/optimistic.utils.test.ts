@@ -5,6 +5,7 @@ import {
   replaceEntityById,
 } from './optimistic.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('isLastPendingMutation', () => {
   it('treats the lone settling mutation as the last one', () => {
     expect(isLastPendingMutation(LAST_PENDING_MUTATION_COUNT)).toBe(true);

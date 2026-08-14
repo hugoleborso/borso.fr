@@ -9,6 +9,7 @@ import { diffCatalogues, isInParity, listIdenticalValueKeys } from './i18n-parit
  * exceptions are the words below, which read the same in both languages. Adding
  * a key here is a claim a reviewer can check against the comment next to it.
  */
+// @FollowsBlueprint test-i18n-parity
 const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = [
   'common.brand.domain', // the .fr TLD
   'common.brand.name', // the brand, lowercase in both

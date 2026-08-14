@@ -54,6 +54,7 @@ function buildRunner(overrides: Partial<RankedRunnerDto> = {}): RankedRunnerDto 
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('selectProjectionMode', () => {
   it('falls back to the linear projection when the track carries no timings', () => {
     expect(selectProjectionMode(undefined)).toBe('linear-fallback');

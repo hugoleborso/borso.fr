@@ -1,9 +1,25 @@
-import { CfnResource, Fn, Stack } from 'aws-cdk-lib';
+import { CfnResource, Fn } from 'aws-cdk-lib';
 import { type IGrantable, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
-import { dsqlClusterSsmPaths, type Stage, validateAppSlug } from '../internal/naming.utils.js';
-import { applyStandardTags } from '../internal/tags.js';
+import {
+  assertDeployStage,
+  dsqlClusterSsmPaths,
+  type Stage,
+  validateAppSlug,
+} from '../internal/naming.utils.js';
+import { applyStandardTags, standardTagPairs } from '../internal/tags.js';
+
+const DSQL_CONNECT_ACTION = 'dsql:DbConnect';
+
+function grantDsqlConnect(grantable: IGrantable, clusterArn: string): void {
+  grantable.grantPrincipal.addToPrincipalPolicy(
+    new PolicyStatement({
+      actions: [DSQL_CONNECT_ACTION],
+      resources: [clusterArn],
+    }),
+  );
+}
 
 /**
  * Per-app DSQL cluster reference. Implemented by the live {@link DsqlCluster}
@@ -11,7 +27,6 @@ import { applyStandardTags } from '../internal/tags.js';
  * {@link lookupDsqlCluster} (when a preview / integ stack references the
  * existing prod-owned cluster via SSM).
  *
- * @beta
  */
 export interface IDsqlCluster {
   readonly clusterArn: string;
@@ -20,7 +35,6 @@ export interface IDsqlCluster {
   grantConnect(grantable: IGrantable): void;
 }
 
-/** @beta */
 export interface DsqlClusterProps {
   readonly app: string;
   /**
@@ -36,6 +50,7 @@ export interface DsqlClusterProps {
   readonly deletionProtection?: boolean;
 }
 
+// @FollowsBlueprint reusable-cdk-construct
 /**
  * Creates the per-app Aurora DSQL cluster, publishes its ARN + endpoint to
  * `/borso/<app>/dsql-cluster-{arn,endpoint}` in SSM, and exposes
@@ -45,7 +60,6 @@ export interface DsqlClusterProps {
  * schema (`prod`) and preview schemas (`pr_<n>`); see {@link DsqlSchema}
  * and {@link lookupDsqlCluster}.
  *
- * @beta
  */
 export class DsqlCluster extends Construct implements IDsqlCluster {
   public readonly clusterArn: string;
@@ -54,21 +68,16 @@ export class DsqlCluster extends Construct implements IDsqlCluster {
   constructor(scope: Construct, id: string, props: DsqlClusterProps) {
     super(scope, id);
     validateAppSlug(props.app);
+    assertDeployStage(props.stage);
     applyStandardTags(this, props);
 
     const cluster = new CfnResource(this, 'Cluster', {
       type: 'AWS::DSQL::Cluster',
       properties: {
         DeletionProtectionEnabled: props.deletionProtection ?? true,
-        Tags: [
-          { Key: 'Project', Value: 'borso' },
-          { Key: 'App', Value: props.app },
-          { Key: 'Stage', Value: props.stage },
-          { Key: 'ManagedBy', Value: 'cdk' },
-        ],
+        Tags: standardTagPairs(props),
       },
     });
-    const stack = Stack.of(this);
     // The `${...}` placeholders below are CloudFormation intrinsics that
     // CloudFormation resolves at deploy time, so both strings are single
     // quoted on purpose: a JavaScript template literal would substitute them
@@ -89,18 +98,10 @@ export class DsqlCluster extends Construct implements IDsqlCluster {
       parameterName: ssm.endpoint,
       stringValue: this.clusterEndpoint,
     });
-    // Suppress unused-binding warning — kept around for `Stack.of` semantics
-    // even when the cluster ref is what we use directly.
-    void stack;
   }
 
   public grantConnect(grantable: IGrantable): void {
-    grantable.grantPrincipal.addToPrincipalPolicy(
-      new PolicyStatement({
-        actions: ['dsql:DbConnect'],
-        resources: [this.clusterArn],
-      }),
-    );
+    grantDsqlConnect(grantable, this.clusterArn);
   }
 }
 
@@ -112,7 +113,6 @@ export class DsqlCluster extends Construct implements IDsqlCluster {
  * `PreviewableApp.database.cluster` — that gives you a cross-stack
  * reference, deterministic deploy order via CDK, and no SSM ceremony.
  *
- * @beta
  */
 export function lookupDsqlCluster(scope: Construct, app: string): IDsqlCluster {
   validateAppSlug(app);
@@ -123,12 +123,7 @@ export function lookupDsqlCluster(scope: Construct, app: string): IDsqlCluster {
     clusterArn,
     clusterEndpoint,
     grantConnect(grantable: IGrantable) {
-      grantable.grantPrincipal.addToPrincipalPolicy(
-        new PolicyStatement({
-          actions: ['dsql:DbConnect'],
-          resources: [clusterArn],
-        }),
-      );
+      grantDsqlConnect(grantable, clusterArn);
     },
   };
 }

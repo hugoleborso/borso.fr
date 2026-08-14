@@ -37,7 +37,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { testSeedRouter } from './__test/test-seed.controller';
+import { buildTestSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildBarsRouter } from './bars/bars.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
@@ -53,6 +53,12 @@ export interface CreateAppOptions {
   readonly auth?: BuildAuthRouterOptions;
 }
 
+/**
+ * @Blueprint api-composition-root
+ * @BlueprintName Api Composition Root
+ * @BlueprintUsage Use for the single module that mounts every slice router and whose inferred type is the front end's contract.
+ * @BlueprintDescription Chains every `.route()` call in one unbroken expression, because assigning the app to a variable and calling `.route` on it separately drops the accumulated route types that `hc<AppRouter>` reads on the front end. Each slice applies its own gate inside its own chain, and `createApp` mounts the test-seed router outside this expression so it never enters the exported type.
+ */
 function buildAppRouter(options: CreateAppOptions = {}) {
   const { publicRouter, bootstrapRouter, rotateRouter } = buildAuthRouter(options.auth ?? {});
   return new Hono()
@@ -83,7 +89,7 @@ export function createApp(options: CreateAppOptions = {}): Hono {
   const app = buildAppRouter(options);
   const isTestSeedEnabled = process.env[TEST_SEED_FLAG] === TEST_SEED_FLAG_ON;
   if (isTestSeedEnabled) {
-    app.route('/api/__test', testSeedRouter);
+    app.route('/api/__test', buildTestSeedRouter());
   }
   return app;
 }

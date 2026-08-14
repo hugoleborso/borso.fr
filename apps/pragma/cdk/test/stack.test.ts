@@ -28,8 +28,26 @@ const WORKSPACE_ROOT = path.resolve(HERE, '..', '..');
 const FAKE_ASSETS_DIR = path.join(WORKSPACE_ROOT, 'site');
 const FAKE_API_ENTRY = path.join(WORKSPACE_ROOT, 'api', 'src', 'main.ts');
 const FAKE_MIGRATIONS_DIR = path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations');
+const PREVIEW_PR_NUMBER = 1;
 
+/**
+ * Synthesising this app takes seconds, and there are only two distinct results,
+ * so the twelve call sites below share two of them. Without the cache the suite
+ * builds the same two templates six times each, which is what put it over its
+ * per-test budget whenever the pre-push hook ran its gates in parallel.
+ */
+const templateByStage = new Map<string, Template>();
+
+// @FollowsBlueprint test-cdk-synth
 function synthAppStack(stage: 'prod' | 'preview'): Template {
+  const cached = templateByStage.get(stage);
+  if (cached !== undefined) return cached;
+  const synthesized = buildAppStackTemplate(stage);
+  templateByStage.set(stage, synthesized);
+  return synthesized;
+}
+
+function buildAppStackTemplate(stage: 'prod' | 'preview'): Template {
   const app = new App();
   const env = { account: '123456789012', region: 'eu-west-3' };
   const clusterStack = new DsqlClusterStack(app, 'pragma-cluster', {
@@ -40,7 +58,7 @@ function synthAppStack(stage: 'prod' | 'preview'): Template {
   buildPragmaAppStack({
     scope: stack,
     stage,
-    prNumber: stage === 'preview' ? 1 : undefined,
+    ...(stage === 'preview' ? { prNumber: PREVIEW_PR_NUMBER } : {}),
     domainName: stage === 'prod' ? 'pragma.borso.fr' : undefined,
     assetsPath: FAKE_ASSETS_DIR,
     apiEntry: FAKE_API_ENTRY,

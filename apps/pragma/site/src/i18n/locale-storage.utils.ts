@@ -19,6 +19,7 @@ function isSupportedLocale(candidate: string | null): candidate is SupportedLoca
   return SUPPORTED_LOCALES.some((supported) => supported === candidate);
 }
 
+// @FollowsBlueprint injected-storage-slice
 export function readPersistedLocale(storage: LocaleStorage | undefined): SupportedLocale | null {
   if (storage === undefined) return null;
   const stored = storage.getItem(LOCALE_STORAGE_KEY);

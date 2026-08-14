@@ -250,21 +250,22 @@ export default tseslint.config(
     rules: {
       'borso/no-use-effect': 'error',
       'borso/no-server-state-in-use-state': 'error',
+      'borso/atomic-design-composition': 'error',
       'borso/atomic-design-import-direction': 'error',
       'borso/no-flat-components-folder': 'error',
       'borso/no-query-hooks-outside-organisms': 'error',
       'borso/no-component-css-imports': 'error',
+      'borso/no-vendor-sdk-outside-adapter': 'error',
       'borso/no-literal-jsx-text': 'error',
       'borso/no-dynamic-translation-keys': 'error',
     },
   },
 
-  // Only pragma uses Tailwind. The rule's reason is that Tailwind's scanner
-  // never sees a class assembled at runtime, and that does not hold for the
-  // three applications shipping plain CSS, where a concatenated class name
-  // works correctly. Widen this as another application adopts Tailwind.
+  // Tailwind's scanner never sees a class assembled at runtime, so a
+  // concatenated class name silently ships without its styles. Every
+  // application is on Tailwind now, so the rule applies to all of them.
   {
-    files: ['apps/pragma/site/**/*.{ts,tsx}'],
+    files: ['apps/*/site/**/*.{ts,tsx}'],
     plugins: { borso: borsoPlugin },
     rules: { 'borso/no-string-concatenated-class-names': 'error' },
   },

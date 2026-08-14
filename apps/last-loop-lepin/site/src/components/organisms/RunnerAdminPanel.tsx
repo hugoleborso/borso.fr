@@ -12,10 +12,17 @@ import { ErrorText } from '../atoms/ErrorText';
 import { FileInput } from '../atoms/FileInput';
 import { InitialsAvatar } from '../atoms/InitialsAvatar';
 import { Label } from '../atoms/Label';
+import { MonoNote } from '../atoms/MonoNote';
 import { Show } from '../atoms/Show';
-import { CardHeader } from '../molecules/CardHeader';
+import { CardHeader } from '../atoms/CardHeader';
 import { FormField } from '../molecules/FormField';
 import { type AdminErrorMessage, selectRunnerCreateError } from './admin-errors.core';
+import {
+  RUNNER_ROW_CLASS,
+  RUNNER_ROW_DETAIL_CLASS,
+  RUNNER_ROW_NAME_CLASS,
+  RUNNER_ROW_RANK_CLASS,
+} from './leaderboard.utils';
 import {
   readBibNumber,
   RUNNER_FORM_DEFAULTS,
@@ -29,12 +36,8 @@ const NAME_FIELD_ID = 'runner-name';
 const BIB_FIELD_ID = 'runner-bib';
 const PHOTO_FIELD_ID = 'runner-photo';
 const ACCEPTED_PHOTO_TYPES = 'image/jpeg,image/png,image/webp';
-const HINT_STYLE = { fontSize: 11 } as const;
 const NAME_FIELD_STYLE = { flex: 1, minWidth: 180 } as const;
 const BIB_FIELD_STYLE = { width: 80 } as const;
-const ROW_STYLE = { gap: 'var(--d-3)', flexWrap: 'wrap' } as const;
-const ACTION_STYLE = { alignSelf: 'flex-end' } as const;
-const LIST_STYLE = { listStyle: 'none', padding: 0, margin: 0 } as const;
 
 interface RunnerAdminPanelProps {
   readonly edition: RaceEditionDto;
@@ -45,6 +48,7 @@ interface RunnerAdminPanelProps {
  * uploaded to S3 first and the returned object key travels with the runner,
  * so a failed upload never leaves a runner pointing at a missing image.
  */
+// @FollowsBlueprint organism-form
 export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
   const { t } = useTranslation();
   const roster = useRunnerRoster(edition.slug);
@@ -83,16 +87,16 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
     <Card>
       <CardHeader
         title={t('admin.runners.title')}
-        hint={<span className="muted mono">{runners.length}</span>}
+        hint={<span className="font-mono tabular-nums text-ink-3">{runners.length}</span>}
       />
       <form
-        className="card-body col"
+        className="flex flex-col gap-3 flex-1 overflow-auto px-5 py-4"
         onSubmit={(event) => {
           event.preventDefault();
           void form.handleSubmit();
         }}
       >
-        <div className="row" style={ROW_STYLE}>
+        <div className="flex flex-wrap items-center gap-3">
           <form.Field name="displayName">
             {(field) => (
               <FormField
@@ -123,7 +127,7 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
               />
             )}
           </form.Field>
-          <div className="field" style={NAME_FIELD_STYLE}>
+          <div className="flex flex-col gap-1.5" style={NAME_FIELD_STYLE}>
             <Label htmlFor={PHOTO_FIELD_ID}>{t('admin.runners.photo')}</Label>
             <FileInput
               id={PHOTO_FIELD_ID}
@@ -132,38 +136,38 @@ export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
               onFileChange={setPhotoFile}
             />
           </div>
-          <div className="field" style={ACTION_STYLE}>
+          <div className="flex flex-col gap-1.5 self-end">
             <Button type="submit" variant="primary" size="small" disabled={isSending}>
               {t(selectLabel(isSending, 'admin.runners.sending', 'admin.runners.add'))}
             </Button>
           </div>
         </div>
-        <div className="muted mono" style={HINT_STYLE}>
-          {t('admin.runners.photo-hint')}
-        </div>
+        <MonoNote>{t('admin.runners.photo-hint')}</MonoNote>
         <Show when={failure !== null}>
           <ErrorText>{t(failure?.key ?? 'common.error-detail', failure?.parameters)}</ErrorText>
         </Show>
       </form>
-      <CardBody modifier="flush">
+      <CardBody padding="none">
         <Show when={runners.length === 0}>
-          <div className="card-body muted">{t('admin.runners.empty')}</div>
+          <div className="px-5 py-4 text-ink-3">{t('admin.runners.empty')}</div>
         </Show>
-        <ul style={LIST_STYLE}>
+        <ul>
           {runners.map((runner) => {
             const avatar = initialsAvatar(runner.displayName);
             return (
-              <li key={runner.slug} className="leaderboard-row">
-                <span className="rank mono">#{formatBibNumber(runner.bib, BIB_DIGITS)}</span>
-                <div className="row">
+              <li key={runner.slug} className={RUNNER_ROW_CLASS}>
+                <span className={RUNNER_ROW_RANK_CLASS}>
+                  #{formatBibNumber(runner.bib, BIB_DIGITS)}
+                </span>
+                <div className="flex items-center gap-3 min-w-0">
                   <InitialsAvatar
                     initials={avatar.initials}
                     backgroundColor={avatar.backgroundColor}
                   />
-                  <span className="runner-name">{runner.displayName}</span>
+                  <span className={RUNNER_ROW_NAME_CLASS}>{runner.displayName}</span>
                 </div>
-                <span className="loop-info">{runner.slug}</span>
-                <span className="muted mono" />
+                <span className={RUNNER_ROW_DETAIL_CLASS}>{runner.slug}</span>
+                <span />
               </li>
             );
           })}

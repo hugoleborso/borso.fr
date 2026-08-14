@@ -6,6 +6,7 @@ interface AutoOpponentToggleProps {
   onToggle: (isAutoOpponentEnabled: boolean) => void;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function AutoOpponentToggle({ isAutoOpponentEnabled, onToggle }: AutoOpponentToggleProps) {
   const { t } = useTranslation();
   return (

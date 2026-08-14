@@ -1,10 +1,12 @@
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { HOSTED_ZONE_NAME } from '../../lib/certs-stack.js';
 import { SharedStack } from '../../lib/shared-stack.js';
 import { isObject, resourcesOfType, serializeTemplateForSnapshot } from './helpers/template.js';
+
+const BUDGET_EMAIL = 'hugo@example.com';
 
 function synth(opts?: { budgetEmail?: string }): Template {
   const app = new App();
@@ -35,14 +37,15 @@ function synth(opts?: { budgetEmail?: string }): Template {
     crossRegionReferences: true,
     borsoFrCert,
     previewCert,
-    ...(opts?.budgetEmail === undefined ? {} : { budgetEmail: opts.budgetEmail }),
+    budgetEmail: opts?.budgetEmail ?? BUDGET_EMAIL,
   });
   return Template.fromStack(stack);
 }
 
+// @FollowsBlueprint test-cdk-synth
 describe('SharedStack', () => {
   describe('OIDC + roles', () => {
-    const tpl = synth({ budgetEmail: 'hugo@example.com' });
+    const tpl = synth();
 
     it('creates exactly one GitHub OIDC provider (CDK custom resource)', () => {
       tpl.resourceCountIs('Custom::AWSCDKOpenIdConnectProvider', 1);
@@ -99,7 +102,7 @@ describe('SharedStack', () => {
   });
 
   describe('previews CDN', () => {
-    const tpl = synth({ budgetEmail: 'hugo@example.com' });
+    const tpl = synth();
 
     it('creates the previews bucket with public access blocked + 60-day expiry', () => {
       tpl.hasResourceProperties('AWS::S3::Bucket', {
@@ -172,7 +175,7 @@ describe('SharedStack', () => {
   });
 
   describe('DSQL', () => {
-    const tpl = synth({ budgetEmail: 'hugo@example.com' });
+    const tpl = synth();
 
     it('does NOT own a DSQL cluster (clusters are now per-app, owned by prod app stacks)', () => {
       tpl.resourceCountIs('AWS::DSQL::Cluster', 0);
@@ -188,7 +191,7 @@ describe('SharedStack', () => {
   });
 
   describe('SSM parameters', () => {
-    const tpl = synth({ budgetEmail: 'hugo@example.com' });
+    const tpl = synth();
     const expectedParams = [
       '/borso/shared/oidc-provider-arn',
       '/borso/shared/hosted-zone-id',
@@ -217,8 +220,8 @@ describe('SharedStack', () => {
   });
 
   describe('budgets', () => {
-    it('creates 5/20/50 USD budgets when budgetEmail is provided via prop', () => {
-      const tpl = synth({ budgetEmail: 'hugo@example.com' });
+    it('creates 5/20/50 USD budgets notifying the address the entrypoint passed in', () => {
+      const tpl = synth();
       tpl.resourceCountIs('AWS::Budgets::Budget', 3);
       for (const amount of [5, 20, 50]) {
         tpl.hasResourceProperties('AWS::Budgets::Budget', {
@@ -226,35 +229,24 @@ describe('SharedStack', () => {
             BudgetName: `borso-monthly-${amount}usd`,
             BudgetLimit: { Amount: amount, Unit: 'USD' },
           }),
+          NotificationsWithSubscribers: Match.arrayWith([
+            Match.objectLike({
+              Subscribers: [{ SubscriptionType: 'EMAIL', Address: BUDGET_EMAIL }],
+            }),
+          ]),
         });
       }
     });
 
-    it('falls back to BORSO_BUDGET_EMAIL when prop is absent', () => {
-      const original = process.env.BORSO_BUDGET_EMAIL;
-      process.env.BORSO_BUDGET_EMAIL = 'env@example.com';
-      try {
-        const tpl = synth();
-        tpl.resourceCountIs('AWS::Budgets::Budget', 3);
-      } finally {
-        if (original === undefined) {
-          delete process.env.BORSO_BUDGET_EMAIL;
-        } else {
-          process.env.BORSO_BUDGET_EMAIL = original;
-        }
-      }
-    });
-
-    it('throws when neither prop nor env var is set (budget email is mandatory)', () => {
-      const original = process.env.BORSO_BUDGET_EMAIL;
-      delete process.env.BORSO_BUDGET_EMAIL;
-      try {
-        expect(() => synth()).toThrow(/budget email is mandatory/);
-      } finally {
-        if (original !== undefined) {
-          process.env.BORSO_BUDGET_EMAIL = original;
-        }
-      }
+    it('reads no environment variable of its own, so every stage gets the address it was given', () => {
+      const tpl = synth({ budgetEmail: 'other@example.com' });
+      tpl.hasResourceProperties('AWS::Budgets::Budget', {
+        NotificationsWithSubscribers: Match.arrayWith([
+          Match.objectLike({
+            Subscribers: [{ SubscriptionType: 'EMAIL', Address: 'other@example.com' }],
+          }),
+        ]),
+      });
     });
   });
 
@@ -277,28 +269,11 @@ describe('SharedStack', () => {
   });
 
   describe('no role gets AdministratorAccess', () => {
-    const tpl = synth({ budgetEmail: 'hugo@example.com' });
+    const tpl = synth();
 
     it('synthesized template never references the AdministratorAccess managed policy ARN', () => {
       const json = JSON.stringify(tpl.toJSON());
       expect(json).not.toContain(':policy/AdministratorAccess');
     });
-  });
-});
-
-describe('SharedStack — ensure prior env vars do not leak', () => {
-  let original: string | undefined;
-  beforeEach(() => {
-    original = process.env.BORSO_BUDGET_EMAIL;
-    delete process.env.BORSO_BUDGET_EMAIL;
-  });
-  afterEach(() => {
-    if (original !== undefined) {
-      process.env.BORSO_BUDGET_EMAIL = original;
-    }
-  });
-
-  it('synth in a clean env throws (budget email mandatory)', () => {
-    expect(() => synth()).toThrow(/budget email is mandatory/);
   });
 });

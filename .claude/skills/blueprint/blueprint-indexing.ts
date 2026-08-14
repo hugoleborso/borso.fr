@@ -21,11 +21,14 @@ import {
   inferApplication,
   inferLayer,
   inferProject,
+  listAnnotationProblems,
 } from './blueprint-utils.js';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const REPOSITORY_ROOT = path.resolve(scriptDirectory, '../../..');
-const SCAN_DIRECTORIES = [path.join(REPOSITORY_ROOT, 'apps'), path.join(REPOSITORY_ROOT, 'infra')];
+const SCAN_DIRECTORIES = ['apps', 'infra', 'eslint-rules'].map((name) =>
+  path.join(REPOSITORY_ROOT, name),
+);
 const OUTPUT_FILE = path.join(scriptDirectory, 'blueprint-index.md');
 const SKIPPED_DIRECTORY_NAMES = new Set([
   'node_modules',
@@ -33,8 +36,10 @@ const SKIPPED_DIRECTORY_NAMES = new Set([
   'cdk.out',
   'coverage',
   '.stryker-tmp',
+  'migrations',
+  'public',
 ]);
-const SOURCE_EXTENSIONS = ['.ts', '.tsx'];
+const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js'];
 
 const BLUEPRINT_ID_PATTERN = /@Blueprint\s+(\S+)/;
 const BLUEPRINT_NAME_PATTERN = /@BlueprintName\s+(.+)/;
@@ -45,6 +50,7 @@ const ANNOTATION_SEARCH_RADIUS_LINES = 5;
 interface Blueprint {
   readonly id: string;
   readonly name: string;
+  readonly hasName: boolean;
   readonly usage: string;
   readonly description: string;
   readonly filePath: string;
@@ -110,6 +116,7 @@ function extractBlueprints(absolutePath: string): Blueprint[] {
     blueprints.push({
       id,
       name: name === '' ? id : name,
+      hasName: name !== '',
       usage: readTagWithinBlock(lines, index, BLUEPRINT_USAGE_PATTERN),
       description: readTagWithinBlock(lines, index, BLUEPRINT_DESCRIPTION_PATTERN),
       filePath: relativePath,
@@ -233,6 +240,17 @@ blueprint when the code you are writing has none of its own.
 | Layer | File pattern | Holds |
 |-------|--------------|-------|
 | construct | \`src/constructs/**\` | Reusable CDK constructs |
+| config | \`*.config.ts\` | Build, test, and migration tool configuration |
+
+### Tooling, \`eslint-rules/\`
+
+| Layer | File pattern | Holds |
+|-------|--------------|-------|
+| lint-rule | \`eslint-rules/**\` | One custom rule per file, beside its RuleTester suite |
+
+A test is reported in the layer of the code it covers, so \`punch.core.test.ts\`
+reads as \`core\`. How much of each layer carries a marker is in
+[\`blueprint-coverage.html\`](./blueprint-coverage.html).
 
 ## Blueprints
 
@@ -247,23 +265,51 @@ ${orphanedSection}
 }
 
 function main(): void {
+  const isCheckOnly = process.argv.includes('--check');
   const sourceFiles = SCAN_DIRECTORIES.flatMap((directory) =>
     fs.existsSync(directory) ? listSourceFiles(directory) : [],
   );
-  process.stdout.write(`Scanned ${sourceFiles.length} source files.\n`);
 
   const blueprints = sourceFiles.flatMap((file) => extractBlueprints(file));
   const followers = sourceFiles.flatMap((file) => extractFollowers(file));
+  const markdown = generateMarkdown(blueprints, followers);
+  const problems = listAnnotationProblems(blueprints, followers);
 
   process.stdout.write(
-    `Found ${blueprints.length} blueprint(s) and ${followers.length} follower(s).\n`,
+    `Scanned ${sourceFiles.length} source files: ${blueprints.length} blueprint(s), ${followers.length} follower(s).\n`,
   );
+
+  if (isCheckOnly) {
+    const onDisk = fs.existsSync(OUTPUT_FILE) ? fs.readFileSync(OUTPUT_FILE, 'utf8') : '';
+    if (onDisk !== markdown) {
+      problems.push(
+        `${path.relative(REPOSITORY_ROOT, OUTPUT_FILE)} is out of date. Run \`pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts\`.`,
+      );
+    }
+    for (const problem of problems) {
+      process.stderr.write(`  ${problem}\n`);
+    }
+    if (problems.length > 0) {
+      process.stderr.write(`\n${problems.length} blueprint annotation problem(s).\n`);
+      process.exitCode = 1;
+      return;
+    }
+    process.stdout.write('Annotations are complete and the index is up to date.\n');
+    return;
+  }
+
   for (const blueprint of blueprints) {
     process.stdout.write(`  ${blueprint.id}: ${blueprint.name}\n`);
   }
-
-  fs.writeFileSync(OUTPUT_FILE, generateMarkdown(blueprints, followers), 'utf8');
+  fs.writeFileSync(OUTPUT_FILE, markdown, 'utf8');
   process.stdout.write(`Wrote ${path.relative(REPOSITORY_ROOT, OUTPUT_FILE)}\n`);
+  for (const problem of problems) {
+    process.stderr.write(`  ${problem}\n`);
+  }
+  if (problems.length > 0) {
+    process.stderr.write(`\n${problems.length} blueprint annotation problem(s).\n`);
+    process.exitCode = 1;
+  }
 }
 
 main();

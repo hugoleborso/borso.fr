@@ -6,6 +6,7 @@
  * on whether the operator is creating or editing.
  */
 
+// @FollowsBlueprint core-label-key
 export function selectLabel<TLabel extends string>(
   isFirstChoice: boolean,
   firstChoice: TLabel,

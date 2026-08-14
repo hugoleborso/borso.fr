@@ -1,5 +1,4 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import type { Database } from '../database/client';
 import type { AuthDenialReason } from './auth.core';
 import {
   type AdminSession,
@@ -13,8 +12,8 @@ import {
   upsertBucket,
 } from './auth.repository';
 
-export { getDatabase } from '../database/client';
-export { httpStatusForAuthDenial } from './auth.core';
+// @FollowsBlueprint service-facade-reexport
+export { httpStatusForAuthDenial, readClientIp } from './auth.core';
 
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_ATTEMPTS = 5;
@@ -23,6 +22,7 @@ const SCRYPT_PARTS_COUNT = 3;
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const SESSION_ID_BYTES = 32;
 
+// @FollowsBlueprint named-domain-error
 export class AuthDeniedError extends Error {
   override readonly name = 'AuthDeniedError';
   constructor(public readonly reason: AuthDenialReason) {
@@ -43,8 +43,8 @@ function isPinMatchingHash(pin: string, hashedPin: string): boolean {
   return timingSafeEqual(candidateKey, expectedKey);
 }
 
-async function consumeRateLimit(database: Database, ipAddress: string, now: Date): Promise<void> {
-  const existing = await findBucket(database, ipAddress);
+async function consumeRateLimit(ipAddress: string, now: Date): Promise<void> {
+  const existing = await findBucket(ipAddress);
   const windowStartedAt =
     existing !== null && now.getTime() - existing.windowStartedAt.getTime() < RATE_LIMIT_WINDOW_MS
       ? existing.windowStartedAt
@@ -59,11 +59,11 @@ async function consumeRateLimit(database: Database, ipAddress: string, now: Date
     count: previousCount + 1,
     windowStartedAt,
   };
-  await upsertBucket(database, next);
+  await upsertBucket(next);
 }
 
-async function resetRateLimit(database: Database, ipAddress: string, now: Date): Promise<void> {
-  await upsertBucket(database, { ipAddress, count: 0, windowStartedAt: now });
+async function resetRateLimit(ipAddress: string, now: Date): Promise<void> {
+  await upsertBucket({ ipAddress, count: 0, windowStartedAt: now });
 }
 
 export interface LoginInput {
@@ -85,24 +85,21 @@ export interface LoginResult {
  * Throws `AuthDeniedError('misconfigured')` if the operator hasn't seeded
  * the `admin_credentials` row yet.
  */
-export async function login(
-  database: Database,
-  input: LoginInput,
-  now: Date,
-): Promise<LoginResult> {
-  const pinHash = await findAdminPinHash(database);
+// @FollowsBlueprint service-orchestration
+export async function login(input: LoginInput, now: Date): Promise<LoginResult> {
+  const pinHash = await findAdminPinHash();
   if (pinHash === null) {
     throw new AuthDeniedError('misconfigured');
   }
-  await consumeRateLimit(database, input.ipAddress, now);
+  await consumeRateLimit(input.ipAddress, now);
   if (!isPinMatchingHash(input.pin, pinHash)) {
     throw new AuthDeniedError('invalid-pin');
   }
-  await resetRateLimit(database, input.ipAddress, now);
-  await purgeExpiredSessions(database, now);
+  await resetRateLimit(input.ipAddress, now);
+  await purgeExpiredSessions(now);
   const sessionId = randomBytes(SESSION_ID_BYTES).toString('hex');
   const expiresAt = new Date(now.getTime() + SESSION_TTL_MS);
-  await createSession(database, { id: sessionId, expiresAt });
+  await createSession({ id: sessionId, expiresAt });
   return { sessionId, expiresAt };
 }
 
@@ -111,14 +108,10 @@ export async function login(
  * unexpired session; `null` otherwise. The middleware uses the `null`
  * result to issue 401 + clear the cookie.
  */
-export async function verifySession(
-  database: Database,
-  sessionId: string,
-  now: Date,
-): Promise<AdminSession | null> {
-  return findValidSession(database, sessionId, now);
+export async function verifySession(sessionId: string, now: Date): Promise<AdminSession | null> {
+  return findValidSession(sessionId, now);
 }
 
-export async function logout(database: Database, sessionId: string): Promise<void> {
-  await deleteSession(database, sessionId);
+export async function logout(sessionId: string): Promise<void> {
+  await deleteSession(sessionId);
 }

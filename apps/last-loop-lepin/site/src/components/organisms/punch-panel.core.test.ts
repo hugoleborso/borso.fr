@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { RankedRunnerDto } from '../../lib/race.types';
 import {
-  composePunchTileClassName,
+  selectPunchTileTone,
   EMPTY_PUNCH_OVERLAY,
   listPunchTiles,
   projectPunchLoopClock,
@@ -31,6 +31,7 @@ function buildRunner(slug: string, overrides: Partial<RankedRunnerDto> = {}): Ra
   };
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('projectPunchLoopClock', () => {
   it('starts on loop one at the gun', () => {
     const clock = projectPunchLoopClock(RACE_START, 60, RACE_START_MS);
@@ -147,20 +148,20 @@ describe('listPunchTiles', () => {
   });
 });
 
-describe('composePunchTileClassName', () => {
-  it('leaves the tile bare when the runner is neither punched nor late', () => {
-    expect(composePunchTileClassName(false, false)).toBe('punch-tile');
+describe('selectPunchTileTone', () => {
+  it('reads as pending when the runner is neither punched nor late', () => {
+    expect(selectPunchTileTone(false, false)).toBe('pending');
   });
 
-  it('adds the punched modifier', () => {
-    expect(composePunchTileClassName(true, false)).toBe('punch-tile punched');
+  it('reads as punched once the loop is credited', () => {
+    expect(selectPunchTileTone(true, false)).toBe('punched');
   });
 
-  it('adds the late modifier', () => {
-    expect(composePunchTileClassName(false, true)).toBe('punch-tile late');
+  it('reads as late when the top of the hour is close and nobody came through', () => {
+    expect(selectPunchTileTone(false, true)).toBe('late');
   });
 
-  it('adds both modifiers when both hold', () => {
-    expect(composePunchTileClassName(true, true)).toBe('punch-tile punched late');
+  it('lets punched win over late, which listPunchTiles never produces together', () => {
+    expect(selectPunchTileTone(true, true)).toBe('punched');
   });
 });

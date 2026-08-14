@@ -39,6 +39,7 @@ async function postLogin(password: string): Promise<Response> {
   });
 }
 
+// @FollowsBlueprint test-back-e2e
 describe('__test/test-seed.controller (back-e2e)', () => {
   const originalFlag = process.env[TEST_SEED_FLAG];
 

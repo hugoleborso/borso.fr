@@ -24,6 +24,7 @@ export const NO_DRILL_TARGET: LearnDrillTarget = {
   variation: NO_VARIATION,
 };
 
+// @FollowsBlueprint core-view-intent
 export function findLearnDrillTarget(openings: Opening[], selection: Selection): LearnDrillTarget {
   const opening = findOpening(openings, selection.openingId);
   if (opening === undefined) return NO_DRILL_TARGET;

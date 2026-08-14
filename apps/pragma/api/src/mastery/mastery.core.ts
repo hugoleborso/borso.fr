@@ -19,7 +19,7 @@
  * Pure functions over plain objects. No I/O.
  */
 
-import { instrumentedMembers } from '../helpers/lineup/instrumented-members.core';
+import { instrumentedMembers } from '@domain/lineup.core';
 
 export type MemberId = string;
 export type InstrumentId = string;
@@ -36,6 +36,7 @@ export interface MasteryQuery {
   readonly songId: SongId;
 }
 
+// @FollowsBlueprint core-decision
 export function effective(
   defaults: DefaultMap,
   overrides: OverrideMap,

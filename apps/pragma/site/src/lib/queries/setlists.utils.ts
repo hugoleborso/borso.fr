@@ -67,6 +67,7 @@ export interface OptimisticAppendInput {
   readonly lineupOverride?: Record<string, string | null> | null;
 }
 
+// @FollowsBlueprint utils-pure-module
 export function appendOptimisticEntry(
   cache: EntriesCache,
   input: OptimisticAppendInput,

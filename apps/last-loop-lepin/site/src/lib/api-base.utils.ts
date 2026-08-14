@@ -12,6 +12,7 @@ const TRAILING_SLASH = /\/$/;
 const SAME_ORIGIN = '/';
 
 /** Normalise the raw environment value into a base with no trailing slash. */
+// @FollowsBlueprint utils-pure-module
 export function selectApiBase(rawValue: unknown): string {
   if (typeof rawValue !== 'string') return '';
   return rawValue.replace(TRAILING_SLASH, '');

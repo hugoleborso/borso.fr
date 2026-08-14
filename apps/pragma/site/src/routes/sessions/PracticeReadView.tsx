@@ -27,6 +27,7 @@ export interface PracticeReadViewProps {
 
 const LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
 
+// @FollowsBlueprint organism-presentational
 export function PracticeReadView({
   session,
   preparedConcert,

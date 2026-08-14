@@ -46,6 +46,18 @@ so the index shows which patterns have actually been adopted rather than which
 ones we intended. The [`/blueprint`](../../.claude/skills/blueprint/SKILL.md)
 skill creates, indexes, and validates them.
 
+The index answers which patterns exist, and
+[`blueprint-coverage.html`](../../.claude/skills/blueprint/blueprint-coverage.html)
+answers which code carries one, bucketed by application and layer. Read it
+before adding a blueprint: a layer sitting at nought per cent is either a
+pattern nobody has written down yet or a layer whose files are genuinely all
+one-offs, and those two need different responses.
+
+Both files are generated, and the pre-commit hook and CI both run the generator
+in `--check` mode. That fails a blueprint missing one of its four tags, a
+duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not
+exist, and either generated file left stale.
+
 ## How a standard differs from a dantotsu
 
 A standard records what we decided, and a [dantotsu](../dantotsus/) records what

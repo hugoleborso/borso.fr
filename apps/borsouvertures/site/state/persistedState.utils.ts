@@ -43,6 +43,11 @@ export interface PersistedState {
  * `borsouvertures.v0` blob will never be read because the namespace key
  * changed, and any in-place migration logic would cost more than the data is
  * worth for a clan-only app.
+ *
+ * @Blueprint unknown-payload-parser
+ * @BlueprintName Unknown Payload Parser
+ * @BlueprintUsage Use for any boundary where a value arrives as `unknown`, such as storage, a fetch body, or a bundled JSON import.
+ * @BlueprintDescription Annotates the parse result as `const parsed: unknown` rather than asserting a shape onto it, then narrows one field at a time through a small named predicate per field, each returning the typed value or `null`. The returned object is rebuilt field by field from those narrowed values, so TypeScript infers the result type instead of being told it, and a field the payload is missing cannot reach the caller. `treeVisualizationMode` uses `undefined` as its failure marker because `null` is one of its valid values, which is the trap a single nullable sentinel would hide.
  */
 export function parsePersistedState(raw: string): PersistedState | null {
   let record: Record<string, unknown>;

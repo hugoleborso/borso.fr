@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-circle-in-non-uniform-svg.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester().run('no-circle-in-non-uniform-svg', rule, {
   valid: [
     'const chart = <svg viewBox="0 0 100 40"><circle cx="1" cy="1" r="2" /></svg>;',

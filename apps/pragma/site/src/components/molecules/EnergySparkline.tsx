@@ -29,6 +29,7 @@ const DEFAULT_HEIGHT = 64;
 const POINT_DIAMETER_PX = 6;
 const LINE_WIDTH = 2;
 
+// @FollowsBlueprint molecule-presentational
 export function EnergySparkline({
   values,
   height = DEFAULT_HEIGHT,

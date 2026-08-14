@@ -31,12 +31,14 @@ function minutesBetween(left: Date, right: Date): number {
   return Math.abs(left.getTime() - right.getTime()) / 60_000;
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('SunCalculationError', () => {
   it('carries SunCalculationError as its name', () => {
     expect(new SunCalculationError('boom').name).toBe('SunCalculationError');
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('normalizeDegrees', () => {
   it('leaves an angle already inside the turn untouched', () => {
     expect(normalizeDegrees(10)).toBe(10);
@@ -58,6 +60,7 @@ describe('normalizeDegrees', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('normalizeHours', () => {
   it('leaves an hour count already inside the day untouched', () => {
     expect(normalizeHours(10)).toBe(10);
@@ -77,6 +80,7 @@ describe('normalizeHours', () => {
   });
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('polarCrossingFailure', () => {
   it('reports no failure while the sun crosses the horizon', () => {
     expect(polarCrossingFailure(0)).toBeNull();
@@ -108,6 +112,7 @@ describe('polarCrossingFailure', () => {
  * tests above cannot see a coefficient that moves sunrise by seconds, and
  * several of them do exactly that.
  */
+// @FollowsBlueprint test-pure-unit
 describe('computeSunriseSunset golden values', () => {
   const cases: readonly {
     readonly label: string;
@@ -176,6 +181,7 @@ describe('computeSunriseSunset golden values', () => {
   }
 });
 
+// @FollowsBlueprint test-pure-unit
 describe('computeSunriseSunset', () => {
   it('matches known summer solstice times at Lépin', () => {
     const date = new Date(Date.UTC(2026, 5, 21));

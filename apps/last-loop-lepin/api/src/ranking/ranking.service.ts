@@ -1,6 +1,6 @@
+// @FollowsBlueprint service-facade-reexport
 export { EditionNotFoundError } from '../edition/edition.service';
 
-import type { Database } from '../database/client';
 import { getEdition } from '../edition/edition.service';
 import { getPunchesForEdition, listManualDidNotFinishes } from '../punch/punch.service';
 import type { RunnerDto } from '../runner/runner.dto.utils';
@@ -11,8 +11,6 @@ import { renderLapsCsv } from './laps-csv.core';
 import { computeStandings, formatStandingsAsCsv, mostRecentCorrectionAt } from './ranking.core';
 import type { RankedRunner, Standings } from './ranking.types';
 
-export { getDatabase } from '../database/client';
-
 export type RankedRunnerWithDto = Omit<RankedRunner, 'runner'> & { readonly runner: RunnerDto };
 
 export interface SpectatorStandings {
@@ -22,28 +20,33 @@ export interface SpectatorStandings {
   readonly mostRecentCorrectionAt: string | null;
 }
 
+/**
+ * @Blueprint service-read-model
+ * @BlueprintName Service Read Model
+ * @BlueprintUsage Use for a query that assembles a view from several tables. Read everything, then let one pure function decide the shape.
+ * @BlueprintDescription Fetches the edition first because the rest depends on it, then reads runners, punches and did-not-finish rows in a single `Promise.all`, and hands all four plus `now` to `computeStandings`. Nothing is written and no ordering or ranking rule lives here, so the whole projection stays testable without a database.
+ */
 export async function computeStandingsForEdition(
-  database: Database,
   editionSlug: string,
   now: Date,
 ): Promise<Standings> {
-  const edition = await getEdition(database, editionSlug);
+  const edition = await getEdition(editionSlug);
   const [runners, punches, manualDidNotFinishes] = await Promise.all([
-    listRunners(database, editionSlug),
-    getPunchesForEdition(database, editionSlug),
-    listManualDidNotFinishes(database, editionSlug),
+    listRunners(editionSlug),
+    getPunchesForEdition(editionSlug),
+    listManualDidNotFinishes(editionSlug),
   ]);
   return computeStandings(edition, runners, punches, manualDidNotFinishes, now);
 }
 
+// @FollowsBlueprint service-dto-mapping
 export async function getSpectatorStandings(
-  database: Database,
   editionSlug: string,
   now: Date,
 ): Promise<SpectatorStandings> {
   const [standings, punches] = await Promise.all([
-    computeStandingsForEdition(database, editionSlug, now),
-    getPunchesForEdition(database, editionSlug),
+    computeStandingsForEdition(editionSlug, now),
+    getPunchesForEdition(editionSlug),
   ]);
   const cdnHost = readPhotosCdnHost();
   const rankedWithDto: readonly RankedRunnerWithDto[] = standings.ranked.map((entry) => ({
@@ -57,24 +60,17 @@ export async function getSpectatorStandings(
   };
 }
 
-export async function getStandingsCsv(
-  database: Database,
-  editionSlug: string,
-  now: Date,
-): Promise<string> {
-  const standings = await computeStandingsForEdition(database, editionSlug, now);
+export async function getStandingsCsv(editionSlug: string, now: Date): Promise<string> {
+  const standings = await computeStandingsForEdition(editionSlug, now);
   return formatStandingsAsCsv(standings);
 }
 
-export async function getLapsCsv(
-  database: Database,
-  editionSlug: string,
-  now: Date,
-): Promise<string> {
-  const edition = await getEdition(database, editionSlug);
+// @FollowsBlueprint service-read-model
+export async function getLapsCsv(editionSlug: string, now: Date): Promise<string> {
+  const edition = await getEdition(editionSlug);
   const [standings, punches] = await Promise.all([
-    computeStandingsForEdition(database, editionSlug, now),
-    getPunchesForEdition(database, editionSlug),
+    computeStandingsForEdition(editionSlug, now),
+    getPunchesForEdition(editionSlug),
   ]);
   return renderLapsCsv(edition, standings.ranked, punches);
 }

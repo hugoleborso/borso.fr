@@ -38,6 +38,7 @@ export interface OfflineManifest {
  * tie-break by id ascending so callers get a deterministic answer
  * even if two sessions land at the same instant.
  */
+// @FollowsBlueprint utils-pure-module
 export function pickNextSession(
   sessions: readonly OfflineManifestSession[],
   now: Date,

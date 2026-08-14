@@ -32,6 +32,7 @@ interface SongDetailSidebarProps {
 
 const MASTERY_BAR_INDEXES = Array.from({ length: MASTERY_BAR_COUNT }, (_unused, index) => index);
 
+// @FollowsBlueprint organism-presentational
 export function SongDetailSidebar(props: SongDetailSidebarProps): JSX.Element {
   const { t } = useTranslation();
   const hasLineup = props.lineupRows.length > 0;

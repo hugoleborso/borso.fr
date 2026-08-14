@@ -44,6 +44,7 @@ function fenAfter(movesSan: string[]): string {
   return chess.fen();
 }
 
+// @FollowsBlueprint test-pure-unit
 describe('buildOpeningPreview', () => {
   it('uses the main-line variation when present', () => {
     const preview = buildOpeningPreview(opening);

@@ -11,6 +11,7 @@ import { z } from 'zod';
 const SCORE_MIN = 0;
 const SCORE_MAX = 10;
 
+// @FollowsBlueprint schema-table-and-input
 export const masteryDefaultTable = pgTable(
   'mastery_default',
   {

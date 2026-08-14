@@ -186,6 +186,12 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
   size?: number;
 }
 
+/**
+ * @Blueprint atom-icon-registry
+ * @BlueprintName Atom Backed By An Icon Registry
+ * @BlueprintUsage Use for the single icon atom of an application, so every glyph the interface draws has one home.
+ * @BlueprintDescription Keeps every glyph in one `as const` map of SVG bodies and derives the `IconName` union from `keyof typeof ICONS`, so an unknown name is a type error and adding a glyph is one entry rather than a new component. The atom owns the viewBox, the stroke settings and the size, so a caller passes a name instead of markup.
+ */
 export function Icon({ name, size = 16, className, ...rest }: IconProps): JSX.Element {
   return (
     <svg

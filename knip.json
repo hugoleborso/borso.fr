@@ -10,10 +10,9 @@
         "@stryker-mutator/vitest-runner",
         "@swmansion/argent",
         "agent-browser",
-        "esbuild",
-        "tsx"
+        "esbuild"
       ],
-      "entry": [".claude/skills/blueprint/blueprint-indexing.ts"],
+      "entry": [".claude/skills/blueprint/blueprint-*.ts"],
       "project": [".claude/skills/blueprint/**/*.ts"]
     },
     "apps/borso-fr": {
@@ -23,11 +22,13 @@
         "site/12-travaux/main.tsx",
         "site/**/*.utils.test.ts"
       ],
-      "project": ["bin/**/*.ts", "site/**/*.ts", "site/**/*.tsx"]
+      "project": ["bin/**/*.ts", "site/**/*.ts", "site/**/*.tsx"],
+      "ignoreDependencies": ["tailwindcss"]
     },
     "apps/borsouvertures": {
       "entry": ["bin/app.ts", "site/**/*.utils.test.ts"],
-      "project": ["bin/**/*.ts", "scripts/**/*.ts", "site/**/*.ts", "site/**/*.tsx"]
+      "project": ["bin/**/*.ts", "scripts/**/*.ts", "site/**/*.ts", "site/**/*.tsx"],
+      "ignoreDependencies": ["tailwindcss"]
     },
     "apps/last-loop-lepin": {
       "entry": [
@@ -43,19 +44,22 @@
         "site/src/**/*.tsx",
         "api/src/**/*.ts",
         "test/**/*.ts"
-      ]
+      ],
+      "ignoreDependencies": ["tailwindcss"]
     },
     "apps/pragma": {
       "entry": [
         "cdk/bin/cdk.ts",
         "api/src/main.ts",
         "api/src/**/*.test.ts",
+        "domain/**/*.core.test.ts",
         "site/src/**/*.utils.test.ts",
         "site/src/**/*.core.test.ts",
         "test/**/*.ts"
       ],
       "project": [
         "cdk/**/*.ts",
+        "domain/**/*.ts",
         "site/src/**/*.ts",
         "site/src/**/*.tsx",
         "api/src/**/*.ts",

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { formatCapacity, formatSessionDate } from './formatters.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('formatters.utils', () => {
   describe('formatSessionDate', () => {
     it('formats an ISO string in english', () => {

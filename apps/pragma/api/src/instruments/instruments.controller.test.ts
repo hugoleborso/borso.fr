@@ -20,6 +20,12 @@ const instrumentSchema = z.object({
 const singleInstrumentEnvelope = z.object({ instrument: instrumentSchema });
 const instrumentListEnvelope = z.object({ instruments: z.array(instrumentSchema) });
 
+/**
+ * @Blueprint test-back-e2e
+ * @BlueprintName Back End End To End Test
+ * @BlueprintUsage Use for a controller, exercising its routes through the real app against a live database.
+ * @BlueprintDescription Truncates the tables before each case, builds the app and a real session cookie through `buildAuthenticatedApp`, and sends every request through `jsonRequest`, with a first case asserting each verb answers 401 without that cookie. Responses are read through a Zod envelope, so a changed response shape fails the test rather than being read untyped.
+ */
 describe('instruments controller (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveEmbed } from './embed.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('resolveEmbed — YouTube', () => {
   it('extracts the video id from a watch URL', () => {
     const result = resolveEmbed('https://www.youtube.com/watch?v=dQw4w9WgXcQ');

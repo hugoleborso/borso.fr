@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { StatusItem } from '@/components/atoms/StatusItem';
 import type { ValueByFlag } from '@/lib/componentTable.types';
 
+// @FollowsBlueprint component-lookup-table
 const BOOK_STATUS_KEY_BY_IN_BOOK: ValueByFlag<'play.status.in-book' | 'play.status.out-of-book'> = {
   true: 'play.status.in-book',
   false: 'play.status.out-of-book',
@@ -24,6 +25,7 @@ interface PlayStatusPanelProps {
   candidateCount: number;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function PlayStatusPanel({
   isInBook,
   openingName,
@@ -34,14 +36,16 @@ export function PlayStatusPanel({
   const { t } = useTranslation();
   const noValue = t('common.value.none');
   return (
-    <div className="panel">
-      <div className="controls-row" style={{ justifyContent: 'space-between' }}>
+    <div className="p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <span className="pill">{t(BOOK_STATUS_KEY_BY_IN_BOOK[`${isInBook}`])}</span>
+          <span className="inline-block px-[0.55rem] py-1 rounded-full bg-white/10 text-[0.85rem]">
+            {t(BOOK_STATUS_KEY_BY_IN_BOOK[`${isInBook}`])}
+          </span>
         </div>
         <div>{t('play.status.matches', { total: candidateCount })}</div>
       </div>
-      <div className="status-grid" style={{ marginTop: '0.75rem' }}>
+      <div className="grid grid-cols-2 gap-2 mt-3">
         <StatusItem label={t('play.status.opening')} value={openingName ?? noValue} />
         <StatusItem label={t('play.status.variation')} value={variationName ?? noValue} />
         <StatusItem label={t('play.status.line')} value={lineName ?? noValue} />

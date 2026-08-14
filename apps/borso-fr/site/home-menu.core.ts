@@ -32,6 +32,7 @@ const BURGER_LABEL_KEY: Readonly<Record<`${boolean}`, BurgerLabelKey>> = {
   false: 'open-label',
 };
 
+// @FollowsBlueprint core-view-intent
 export function selectBurgerLabelKey(isMenuOpen: boolean): BurgerLabelKey {
   return BURGER_LABEL_KEY[`${isMenuOpen}`];
 }

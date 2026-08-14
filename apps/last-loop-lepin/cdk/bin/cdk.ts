@@ -22,7 +22,6 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   DsqlClusterStack,
-  PreviewableApp,
   requireAwsAccount,
   requireDeployStage,
   requirePrNumber,
@@ -40,6 +39,7 @@ const ASSETS_PATH = path.join(REPO_ROOT_RELATIVE, 'dist');
 const API_ENTRY = path.join(REPO_ROOT_RELATIVE, 'api', 'src', 'main.ts');
 const MIGRATIONS_PATH = path.join(REPO_ROOT_RELATIVE, 'api', 'src', 'database', 'migrations');
 
+// @FollowsBlueprint cdk-app-entrypoint
 const account = requireAwsAccount();
 const stage = requireDeployStage();
 if (stage === 'integ') {
@@ -68,8 +68,3 @@ buildLastLoopLepinAppStack({
   migrationsPath: MIGRATIONS_PATH,
   cluster: clusterStack.cluster,
 });
-
-// `PreviewableApp` is exported for consumers that want to wire side
-// constructs to the produced infra (not used here, but the type import
-// keeps the construct API surface visible to readers).
-void PreviewableApp;

@@ -19,6 +19,16 @@ const POINTER_INACTIVE = 0;
 const POINTER_ACTIVE = 1;
 const CENTRE = 0.5;
 
+/**
+ * `pointer-events-auto` puts back what the mount point turns off, so
+ * `pointermove` still reaches the warp effect while clicks on the canvas
+ * region keep falling through to whatever is stacked below. `touch-none`
+ * stops the browser claiming a finger drag as a scroll or zoom gesture, which
+ * is safe because the page behind cannot scroll.
+ */
+const CANVAS_CONTAINER_CLASS_NAME =
+  'pointer-events-auto absolute inset-0 block h-full w-full touch-none [&>canvas]:h-full [&>canvas]:w-full';
+
 interface Uniform<Value> {
   value: Value;
 }
@@ -114,6 +124,7 @@ interface GalaxyProps {
   isTransparent?: boolean;
 }
 
+// @FollowsBlueprint vendored-third-party
 export function Galaxy({
   focal = [CENTRE, CENTRE],
   rotation = [1.0, 0.0],
@@ -265,5 +276,5 @@ export function Galaxy({
     isTransparent,
   ]);
 
-  return <div ref={containerRef} className="galaxy-container" />;
+  return <div ref={containerRef} className={CANVAS_CONTAINER_CLASS_NAME} />;
 }

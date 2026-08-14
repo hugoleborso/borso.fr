@@ -1,6 +1,7 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-type-assertion-except-unknown.js';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester().run('no-type-assertion-except-unknown', rule, {
   valid: [
     'const parsed = JSON.parse(raw) as unknown;',

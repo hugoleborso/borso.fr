@@ -1,5 +1,11 @@
 import type { Edition } from './labours.types';
 
+/**
+ * @Blueprint data-module
+ * @BlueprintName Hand Edited Data Module
+ * @BlueprintUsage Use for content a person edits and ships in a pull request, where there is no database and no content service behind the page.
+ * @BlueprintDescription Declares the whole edition as one literal annotated with the domain type, so a wrong status or a missing field is a typecheck failure at the point of editing. Every string a reader sees is a `TranslationKey` rather than text, so the catalogue stays the only place copy lives and a key removed from `en.json` breaks the build here instead of rendering raw on the page.
+ */
 export const EDITION_2026: Edition = {
   titleKey: 'twelve-labours.edition.2026.title',
   subtitleKey: 'twelve-labours.edition.2026.subtitle',

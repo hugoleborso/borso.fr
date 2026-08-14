@@ -13,6 +13,7 @@ import {
 } from './mondrian-labels.core';
 import { CUSTOM_DEFAULTS } from './palettes.utils';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectPaletteLabelKey', () => {
   it.each(PALETTE_KEY_LIST)('names a catalogue key for "%s"', (paletteKey) => {
     expect(selectPaletteLabelKey(paletteKey)).toBe(`mondrian.palette.${paletteKey}`);
@@ -36,12 +37,12 @@ describe('selectRailToggleLabelKey', () => {
 });
 
 describe('selectRailClassName', () => {
-  it('marks an open rail', () => {
-    expect(selectRailClassName(true)).toBe('rail open');
+  it('slides an open rail into the viewport', () => {
+    expect(selectRailClassName(true)).toBe('translate-y-0');
   });
 
-  it('leaves a closed rail unmarked', () => {
-    expect(selectRailClassName(false)).toBe('rail');
+  it('parks a closed rail above the viewport', () => {
+    expect(selectRailClassName(false)).toBe('-translate-y-[101%]');
   });
 });
 

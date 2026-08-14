@@ -1,17 +1,12 @@
-import {
-  ACCENT,
-  INK,
-  MUTED,
-  RULE,
-  SANS_FAMILY,
-  SERIF_FAMILY,
-} from '../../theme/twelve-labours.theme';
+import clsx from 'clsx';
 
 export type MiniStatTone = 'ink' | 'accent';
 
+const VALUE_CLASS_NAME = 'font-labours-serif text-[36px] leading-none';
+
 const VALUE_COLOR_BY_TONE: Readonly<Record<MiniStatTone, string>> = {
-  ink: INK,
-  accent: ACCENT,
+  ink: 'text-labours-ink',
+  accent: 'text-labours-accent',
 };
 
 interface MiniStatProps {
@@ -20,32 +15,14 @@ interface MiniStatProps {
   tone: MiniStatTone;
 }
 
+// @FollowsBlueprint atom-plain
 export function MiniStat({ label, value, tone }: MiniStatProps) {
   return (
-    <div style={{ borderTop: `1px solid ${RULE}`, paddingTop: 8 }}>
-      <div
-        style={{
-          fontFamily: SANS_FAMILY,
-          fontWeight: 500,
-          fontSize: 10,
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          color: MUTED,
-          marginBottom: 4,
-        }}
-      >
+    <div className="border-t border-labours-rule pt-2">
+      <div className="mb-1 font-labours-sans text-[10px] font-medium tracking-[0.16em] text-labours-muted uppercase">
         {label}
       </div>
-      <div
-        style={{
-          fontFamily: SERIF_FAMILY,
-          fontSize: 36,
-          lineHeight: 1,
-          color: VALUE_COLOR_BY_TONE[tone],
-        }}
-      >
-        {value}
-      </div>
+      <div className={clsx(VALUE_CLASS_NAME, VALUE_COLOR_BY_TONE[tone])}>{value}</div>
     </div>
   );
 }

@@ -28,6 +28,7 @@ const RUNNING = buildRunner('alice', { kind: 'in-race', lastLoop: 3 });
 const OUT_LATE = buildRunner('bob', { kind: 'dnf', outAtLoop: 2, reason: 'late' });
 const OUT_MANUAL = buildRunner('carla', { kind: 'dnf', outAtLoop: 1, reason: 'manual' });
 
+// @FollowsBlueprint test-pure-unit
 describe('splitByDidNotFinish', () => {
   it('returns three empty lists for an empty field', () => {
     expect(splitByDidNotFinish([])).toEqual({

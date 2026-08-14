@@ -16,6 +16,7 @@ interface PaginatedList<Item> {
  * React's own answer to "reset all state when a prop changes" and needs
  * neither an effect nor state written during render.
  */
+// @FollowsBlueprint hook-effect-free-mount
 export function usePaginatedList<Item>(
   items: readonly Item[],
   pageSize: number = DEFAULT_PAGE_SIZE,

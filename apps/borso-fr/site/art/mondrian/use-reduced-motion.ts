@@ -19,6 +19,7 @@ function isReducedMotionRequestedOnServer(): boolean {
   return false;
 }
 
+// @FollowsBlueprint hook-external-store
 export function useIsReducedMotion(): boolean {
   return useSyncExternalStore(
     subscribeToReducedMotion,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { selectPunchTone, selectToggledRunner } from './correction-panel.core';
 
+// @FollowsBlueprint test-pure-unit
 describe('selectToggledRunner', () => {
   it('opens a runner when nothing is open', () => {
     expect(selectToggledRunner(null, 'alice')).toBe('alice');

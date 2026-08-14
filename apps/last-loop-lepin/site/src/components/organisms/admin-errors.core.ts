@@ -67,6 +67,12 @@ function readStatus(error: unknown): number | null {
 }
 
 /** Why the API refused a create or replace on an edition. */
+/**
+ * @Blueprint core-error-to-key
+ * @BlueprintName Core Error To Translation Key
+ * @BlueprintUsage Use for turning a thrown value into the message a screen shows, without putting a status code in a component.
+ * @BlueprintDescription Takes `unknown`, narrows it with `instanceof ApiError` rather than a type assertion, and returns an `AdminErrorMessage` whose `key` is one of a closed union of translation keys plus the interpolation parameters that key needs. Every path ends in a message, because anything unnamed falls through to `fallbackMessage`, which carries the error's own text under `common.error-detail`. The parameters object is always complete, so a component never has to check which fields a given key uses.
+ */
 export function selectEditionWriteError(error: unknown): AdminErrorMessage {
   if (!(error instanceof ApiError)) return fallbackMessage(error);
   if (error.status === CONFLICT_STATUS) return buildMessage('admin.setup.slug-taken');

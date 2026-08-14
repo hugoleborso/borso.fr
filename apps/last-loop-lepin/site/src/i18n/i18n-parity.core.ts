@@ -14,6 +14,7 @@ export interface CatalogueParityDiff {
   readonly missingInFrench: readonly string[];
 }
 
+// @FollowsBlueprint i18n-parity-gate
 export function diffCatalogues(english: CatalogueTree, french: CatalogueTree): CatalogueParityDiff {
   const englishKeys = new Set(flattenKeys(english));
   const frenchKeys = new Set(flattenKeys(french));

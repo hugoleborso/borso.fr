@@ -5,6 +5,7 @@ const serviceFile = 'apps/last-loop-lepin/api/src/punch/punch.service.ts';
 const repositoryFile = 'apps/last-loop-lepin/api/src/punch/punch.repository.ts';
 const clientFile = 'apps/last-loop-lepin/api/src/database/client.ts';
 
+// @FollowsBlueprint test-lint-rule
 createRuleTester(serviceFile, { jsx: false }).run('no-database-client-outside-repository', rule, {
   valid: [
     // The handle a repository method takes, which every layer passes along.
@@ -16,6 +17,10 @@ createRuleTester(serviceFile, { jsx: false }).run('no-database-client-outside-re
     "import { drizzle } from 'drizzle-orm/node-postgres';",
     // A module whose name merely starts the same way.
     "import { clientVersion } from '../database/client-version';",
+    // A re-export carrying only the type is the type import in another shape.
+    "export type { Database } from '../database/client';",
+    "export { type Database } from '../database/client';",
+    "export { recordPunch } from './punch.repository';",
   ],
   invalid: [
     {
@@ -28,6 +33,16 @@ createRuleTester(serviceFile, { jsx: false }).run('no-database-client-outside-re
     },
     {
       code: "import { getDatabase } from '../../api/src/database/client';",
+      errors: [{ messageId: 'databaseClientOutsideRepository' }],
+    },
+    // A re-export hands the client to every module downstream through a path
+    // this rule would not otherwise see.
+    {
+      code: "export { getDatabase } from '../database/client';",
+      errors: [{ messageId: 'databaseClientOutsideRepository' }],
+    },
+    {
+      code: "export * from '../database/client';",
       errors: [{ messageId: 'databaseClientOutsideRepository' }],
     },
   ],

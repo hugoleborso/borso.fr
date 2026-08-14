@@ -16,6 +16,7 @@ type SessionCreateVariables = Parameters<typeof api.api.sessions.$post>[0]['json
 
 const NO_FRIENDS_COUNTS = {};
 
+// @FollowsBlueprint dto-mapper
 export function buildOptimisticSession(id: string, variables: SessionCreateVariables): SessionRow {
   if (variables.kind === 'concert') {
     return {

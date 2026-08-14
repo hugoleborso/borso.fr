@@ -18,6 +18,7 @@ const MOVE_ANIMATION_MS = 200;
 
 type IsMoveAccepted = (uci: string) => boolean;
 
+// @FollowsBlueprint component-lookup-table
 const DROP_OUTCOME_BY_DECISION: Record<
   BoardDropDecision,
   (isMoveAccepted: IsMoveAccepted, uci: string) => boolean
@@ -36,6 +37,7 @@ interface BoardViewProps {
   boardWidth: number;
 }
 
+// @FollowsBlueprint atom-plain
 export function BoardView({
   orientation,
   fen,
@@ -49,7 +51,10 @@ export function BoardView({
   const { theme } = getBoardAppearance(boardStyleId);
   const namedPieces = useMemo(() => buildNamedPieces(t), [t]);
   return (
-    <div className="panel board-container" style={{ width: `${boardWidth}px` }}>
+    <div
+      className="flex justify-center self-start p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]"
+      style={{ width: `${boardWidth}px` }}
+    >
       <Chessboard
         options={{
           id: 'bors-board',

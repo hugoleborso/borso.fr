@@ -18,6 +18,7 @@ export const uploadKeys = {
   signedGet: (objectKey: string) => [...uploadKeys.all, 'sign-get', objectKey] as const,
 };
 
+// @FollowsBlueprint query-uncached-mutation
 export function useSignChartUpload() {
   return useMutation({
     mutationFn: async (variables: Parameters<typeof api.api.uploads.sign.$post>[0]['json']) => {
@@ -29,6 +30,7 @@ export function useSignChartUpload() {
 }
 
 /** Short lived GET URL for a stored chart, or nothing while there is no chart to sign. */
+// @FollowsBlueprint query-module
 export function useSignedChartUrl(objectKey: string | null) {
   return useQuery({
     queryKey: uploadKeys.signedGet(objectKey ?? ''),

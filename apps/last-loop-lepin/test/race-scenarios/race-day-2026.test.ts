@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { createApp } from '../../api/src/app';
 import { findEditionBySlug, insertEdition } from '../../api/src/edition/edition.repository';
 import { insertRunner } from '../../api/src/runner/runner.repository';
-import { testDatabase, truncateAllTables } from '../database-utils';
+import { truncateAllTables } from '../database-utils';
 import { makeEdition, makeRunner } from '../fixtures';
 
 const standingsEnvelopeSchema = z.object({
@@ -34,6 +34,12 @@ function setHourLocal(hour: number, minute: number): void {
   );
 }
 
+/**
+ * @Blueprint test-scenario-e2e
+ * @BlueprintName Scenario End To End Test
+ * @BlueprintUsage Use for a workflow whose meaning is the order events happen in, walked as one long case rather than split into independent ones.
+ * @BlueprintDescription Fakes the `Date` only, so the database and the router stay real, then moves the clock forward with `vi.setSystemTime` between `app.request` calls and asserts the standings after each step, which is how a rule that only shows up on the third loop gets covered.
+ */
 describe('race day 2026 — end-to-end', () => {
   const app = createApp();
 
@@ -49,25 +55,22 @@ describe('race day 2026 — end-to-end', () => {
   });
 
   beforeEach(async () => {
-    const database = testDatabase();
-    await truncateAllTables(database);
+    await truncateAllTables();
   });
 
   it('seeds the edition + 8 runners the day before', async () => {
     setHourLocal(5, 30);
-    const database = testDatabase();
-    await insertEdition(database, makeEdition({ status: 'setup' }));
-    for (const slug of RUNNERS) await insertRunner(database, makeRunner(slug));
+    await insertEdition(makeEdition({ status: 'setup' }));
+    for (const slug of RUNNERS) await insertRunner(makeRunner(slug));
 
-    const stored = await findEditionBySlug(database, EDITION_SLUG);
+    const stored = await findEditionBySlug(EDITION_SLUG);
     expect(stored?.slug).toBe(EDITION_SLUG);
   });
 
   it('returns the empty standings before any punch', async () => {
     setHourLocal(5, 30);
-    const database = testDatabase();
-    await insertEdition(database, makeEdition({ status: 'live' }));
-    for (const slug of RUNNERS) await insertRunner(database, makeRunner(slug));
+    await insertEdition(makeEdition({ status: 'live' }));
+    for (const slug of RUNNERS) await insertRunner(makeRunner(slug));
 
     setHourLocal(6, 30);
     const response = await app.request(`/api/standings/${EDITION_SLUG}`);
@@ -77,9 +80,8 @@ describe('race day 2026 — end-to-end', () => {
   });
 
   it('marks late runners DNF after the second hourly top', async () => {
-    const database = testDatabase();
-    await insertEdition(database, makeEdition({ status: 'live' }));
-    for (const slug of RUNNERS) await insertRunner(database, makeRunner(slug));
+    await insertEdition(makeEdition({ status: 'live' }));
+    for (const slug of RUNNERS) await insertRunner(makeRunner(slug));
 
     setHourLocal(7, 1);
     const response = await app.request(`/api/standings/${EDITION_SLUG}`);

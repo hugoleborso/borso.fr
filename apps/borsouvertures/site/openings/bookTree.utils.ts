@@ -23,6 +23,7 @@ export function linesMatchingPrefix(variation: Variation, playedMovesUci: string
 }
 
 /** Distinct UCI moves available at the next ply across every still-matching line. */
+// @FollowsBlueprint utils-pure-module
 export function nextMovesAt(variation: Variation, playedMovesUci: string[]): string[] {
   const matching = linesMatchingPrefix(variation, playedMovesUci);
   const nextMoves = new Set<string>();

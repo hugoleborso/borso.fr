@@ -1,23 +1,18 @@
+import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { selectKindLabelKey } from '../../labours/labours-appearance.core';
 import { listChallengeNoteKeys, listProofSections } from '../../labours/labours.core';
 import type { Challenge } from '../../labours/labours.types';
-import {
-  ACCENT,
-  DASH_RULE,
-  INK,
-  MUTED,
-  NOTE_INK,
-  SANS_FAMILY,
-  SERIF_FAMILY,
-} from '../../theme/twelve-labours.theme';
 import { ChallengeStatusTag } from '../molecules/ChallengeStatusTag';
 import { ProofSection } from './ProofSection';
 
-const META_ROW_MARGIN_BOTTOM_PX: Readonly<Record<`${boolean}`, number>> = { true: 10, false: 0 };
-const ROW_BORDER_BOTTOM: Readonly<Record<`${boolean}`, string>> = {
-  true: 'none',
-  false: `1px dashed ${DASH_RULE}`,
+const ROW_CLASS_NAME = 'grid grid-cols-[28px_minmax(0,1fr)] gap-5 pb-5';
+const META_ROW_CLASS_NAME = 'flex flex-wrap items-center gap-2.5';
+
+const META_ROW_MARGIN: Readonly<Record<`${boolean}`, string>> = { true: 'mb-2.5', false: 'mb-0' };
+const ROW_RULE: Readonly<Record<`${boolean}`, string>> = {
+  true: 'border-b-0',
+  false: 'border-b border-dashed border-labours-dash-rule',
 };
 
 interface ChallengeRowProps {
@@ -26,78 +21,31 @@ interface ChallengeRowProps {
   isLastRow: boolean;
 }
 
+// @FollowsBlueprint organism-presentational
 export function ChallengeRow({ challenge, position, isLastRow }: ChallengeRowProps) {
   const { t } = useTranslation();
   const noteKeys = listChallengeNoteKeys(challenge);
   const hasNote = noteKeys.length > 0;
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '28px minmax(0, 1fr)',
-        gap: 20,
-        paddingBottom: 20,
-        borderBottom: ROW_BORDER_BOTTOM[`${isLastRow}`],
-      }}
-    >
-      <div
-        style={{
-          fontFamily: SERIF_FAMILY,
-          fontSize: 32,
-          color: ACCENT,
-          lineHeight: 1,
-          fontStyle: 'italic',
-        }}
-      >
+    <div className={clsx(ROW_CLASS_NAME, ROW_RULE[`${isLastRow}`])}>
+      <div className="font-labours-serif text-[32px] leading-none text-labours-accent italic">
         {position}.
       </div>
       <div>
-        <div
-          style={{
-            fontFamily: SERIF_FAMILY,
-            fontSize: 26,
-            lineHeight: 1.15,
-            color: INK,
-            marginBottom: 8,
-            letterSpacing: '-0.01em',
-          }}
-        >
+        <div className="mb-2 font-labours-serif text-[26px] leading-[1.15] tracking-[-0.01em] text-labours-ink">
           {t(challenge.titleKey)}
         </div>
-        <div
-          style={{
-            display: 'flex',
-            gap: 10,
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            marginBottom: META_ROW_MARGIN_BOTTOM_PX[`${hasNote}`],
-          }}
-        >
+        <div className={clsx(META_ROW_CLASS_NAME, META_ROW_MARGIN[`${hasNote}`])}>
           <ChallengeStatusTag status={challenge.status} size="regular" />
-          <span
-            style={{
-              fontFamily: SANS_FAMILY,
-              fontSize: 11,
-              color: MUTED,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-            }}
-          >
+          <span className="font-labours-sans text-[11px] tracking-[0.12em] text-labours-muted uppercase">
             {t(selectKindLabelKey(challenge.kind))}
           </span>
         </div>
         {noteKeys.map((noteKey) => (
           <div
             key={noteKey}
-            style={{
-              fontFamily: SERIF_FAMILY,
-              fontStyle: 'italic',
-              fontSize: 17,
-              color: NOTE_INK,
-              lineHeight: 1.4,
-              marginBottom: 10,
-            }}
+            className="mb-2.5 font-labours-serif text-[17px] leading-[1.4] text-labours-note-ink italic"
           >
             {t('twelve-labours.featured.note', { note: t(noteKey) })}
           </div>

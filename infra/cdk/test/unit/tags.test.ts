@@ -31,6 +31,7 @@ function tagsOnFirstBucket(stack: Stack): Record<string, string> {
   return {};
 }
 
+// @FollowsBlueprint test-cdk-synth
 describe('applyStandardTags', () => {
   it('applies the base tag set', () => {
     const stack = new Stack(new App(), 'S');

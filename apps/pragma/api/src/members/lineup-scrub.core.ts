@@ -9,6 +9,7 @@
  * input.
  */
 
+// @FollowsBlueprint core-projection
 export function scrubMemberFromLineup(
   lineup: Readonly<Record<string, string | null>>,
   memberId: string,

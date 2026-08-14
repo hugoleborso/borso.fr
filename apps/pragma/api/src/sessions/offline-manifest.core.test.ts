@@ -3,6 +3,7 @@ import { buildNextSessionOfflineManifest } from './offline-manifest.core';
 
 const NOW = new Date('2026-03-01T12:00:00.000Z');
 
+// @FollowsBlueprint test-pure-unit
 describe('buildNextSessionOfflineManifest', () => {
   it('treats a session starting exactly now as past, not upcoming', () => {
     const now = new Date('2025-06-01T20:00:00Z');

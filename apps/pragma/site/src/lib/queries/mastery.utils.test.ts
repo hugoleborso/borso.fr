@@ -4,6 +4,7 @@ import { upsertMasteryDefault, withoutMasteryDefault } from './mastery.utils';
 const ALICE_ON_BASS = { memberId: 'alice', instrumentId: 'bass', score: 4 };
 const BOB_ON_DRUMS = { memberId: 'bob', instrumentId: 'drums', score: 7 };
 
+// @FollowsBlueprint test-pure-unit
 describe('upsertMasteryDefault', () => {
   it('replaces the row for the same member and instrument', () => {
     expect(

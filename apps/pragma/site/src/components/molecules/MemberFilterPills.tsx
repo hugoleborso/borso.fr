@@ -29,6 +29,7 @@ const PILL_BASE_CLASS =
 const PILL_INACTIVE_CLASS = 'bg-bg-elev text-ink-500 hover:text-ink-900 hover:border-line-strong';
 const PILL_ACTIVE_CLASS = 'bg-ink-900 text-bg-elev border-ink-900';
 
+// @FollowsBlueprint molecule-presentational
 export function MemberFilterPills({
   members,
   selectedMemberId,

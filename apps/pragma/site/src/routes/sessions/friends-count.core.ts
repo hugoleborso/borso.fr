@@ -15,6 +15,7 @@ const NO_SHARE_PERCENT = 0;
 const WHOLE_AS_PERCENT = 100;
 const UNKNOWN_CAPACITY = 0;
 
+// @FollowsBlueprint core-parse-untrusted
 export function parseFriendsCounts(raw: unknown): Record<string, number> {
   const parsed = friendsCountShape.safeParse(raw);
   if (!parsed.success) return {};

@@ -7,6 +7,7 @@ function padTwoDigits(value: number): string {
 }
 
 /** An instant as the `datetime-local` input reads it, in local wall time. */
+// @FollowsBlueprint utils-pure-module
 export function isoLocal(date: Date): string {
   const month = padTwoDigits(date.getMonth() + 1);
   const day = padTwoDigits(date.getDate());
@@ -64,6 +65,7 @@ const zodValidationErrorSchema = z.object({
  * — surface the path + message of each issue so the operator sees which
  * field actually failed instead of a generic "données invalides" hint.
  */
+// @FollowsBlueprint core-parse-untrusted
 export function summariseZodError(body: unknown): string | null {
   const parsed = zodValidationErrorSchema.safeParse(body);
   if (!parsed.success) return null;

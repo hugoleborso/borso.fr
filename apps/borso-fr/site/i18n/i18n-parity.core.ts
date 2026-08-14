@@ -1,8 +1,4 @@
-import { type CatalogueTree, listTranslationKeys } from './i18n.utils';
-
-function sortAlphabetically(values: readonly string[]): readonly string[] {
-  return [...values].sort((left, right) => left.localeCompare(right));
-}
+import { type CatalogueTree, compareTranslationKeys, listTranslationKeys } from './i18n.utils';
 
 export interface CatalogueParityDiff {
   readonly missingInEnglish: readonly string[];
@@ -13,7 +9,11 @@ export interface CatalogueParityDiff {
  * The two catalogues carry the exact same leaf set. This returns the two
  * directions of the difference so the sibling test can fail with the precise
  * list rather than a boolean.
+ *
+ * Both lists come out sorted because `listTranslationKeys` sorts and a `Set`
+ * iterates in insertion order, so sorting them again here would be dead code.
  */
+// @FollowsBlueprint i18n-parity-gate
 export function diffCatalogues(english: CatalogueTree, french: CatalogueTree): CatalogueParityDiff {
   const englishKeys = new Set(listTranslationKeys(english));
   const frenchKeys = new Set(listTranslationKeys(french));
@@ -25,10 +25,7 @@ export function diffCatalogues(english: CatalogueTree, french: CatalogueTree): C
   for (const key of englishKeys) {
     if (!frenchKeys.has(key)) missingInFrench.push(key);
   }
-  return {
-    missingInEnglish: sortAlphabetically(missingInEnglish),
-    missingInFrench: sortAlphabetically(missingInFrench),
-  };
+  return { missingInEnglish, missingInFrench };
 }
 
 export function isInParity(diff: CatalogueParityDiff): boolean {
@@ -66,5 +63,5 @@ export function listIdenticalValueKeys(
 ): readonly string[] {
   const identical: string[] = [];
   collectIdenticalValueKeys(english, french, '', identical);
-  return sortAlphabetically(identical);
+  return identical.sort(compareTranslationKeys);
 }

@@ -24,6 +24,7 @@ const HOURS_IN_DAY = 24;
 export const POLAR_NIGHT_MESSAGE = 'Polar night: sun does not rise at this latitude on this date.';
 export const POLAR_DAY_MESSAGE = 'Polar day: sun does not set at this latitude on this date.';
 
+// @FollowsBlueprint named-domain-error
 export class SunCalculationError extends Error {
   override readonly name = 'SunCalculationError';
 }
@@ -133,6 +134,12 @@ function computeUtcHour(
  *
  * Throws {@link SunCalculationError} when the sun does not rise or does not
  * set at the location on the given day (polar latitudes near the solstices).
+ */
+/**
+ * @Blueprint helper-module
+ * @BlueprintName Cross Cutting Helper Module
+ * @BlueprintUsage Use for a rule no single slice owns. Put it under `helpers/<topic>/` and write down the envelope inside which its answers hold.
+ * @BlueprintDescription Lives under `helpers/sun/` because both the edition setup and the timeline read it, takes the moment as a `date` argument so it stays pure, and states in the file header which algorithm it ports and how far the result may sit from the published times, so a caller can judge whether that accuracy is enough.
  */
 export function computeSunriseSunset(coordinates: LatLng, date: Date): SunTimes {
   const dayOfYear = dayOfYearUtc(date);

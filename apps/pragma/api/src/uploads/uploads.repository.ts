@@ -34,6 +34,12 @@ export interface PresignPutParams {
   readonly expiresInSeconds: number;
 }
 
+/**
+ * @Blueprint repository-external-service
+ * @BlueprintName Repository Over An External Service
+ * @BlueprintUsage Use when a slice's data boundary is a vendor SDK rather than a database.
+ * @BlueprintDescription Holds the S3 client in a module-level cache, reads the bucket name at call time so a missing variable raises the slice's own UploadsConfigError instead of failing at import, and returns a plain url string, which keeps the SDK import out of the service and the controller.
+ */
 export async function presignPutObject(params: PresignPutParams): Promise<string> {
   const bucket = readEnv('UPLOADS_BUCKET');
   if (bucket === undefined) throw new UploadsConfigError('UPLOADS_BUCKET not set');

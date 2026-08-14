@@ -8,6 +8,11 @@
  *
  * Do not strip this header — it is the license compliance surface for the
  * react-bits component (see docs/adr/0003-react-bits-galaxy-as-react-component.md).
+ *
+ * @Blueprint vendored-third-party
+ * @BlueprintName Vendored Third Party Source
+ * @BlueprintUsage Use when source written elsewhere is copied into this repository rather than installed as a dependency.
+ * @BlueprintDescription Keeps the copied GLSL byte for byte in its own module, under a header naming the licence identifier, the upstream file it came from, the copyright holder, and the instruction not to remove any of it. Isolating the verbatim text from the code that was retyped is what lets a reader see which lines may be edited, and the header is the compliance surface a licence audit reads, so it belongs beside the source rather than in a separate inventory.
  */
 
 export const VERTEX_SHADER = `

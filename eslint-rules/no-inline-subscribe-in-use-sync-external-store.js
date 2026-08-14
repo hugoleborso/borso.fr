@@ -19,6 +19,7 @@ const INLINE_FUNCTION_TYPES = new Set([
   'FunctionDeclaration',
 ]);
 
+// @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {

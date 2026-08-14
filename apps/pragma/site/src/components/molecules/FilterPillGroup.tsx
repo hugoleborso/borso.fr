@@ -20,6 +20,7 @@ export interface FilterPillGroupProps<TValue extends string> {
   className?: string;
 }
 
+// @FollowsBlueprint molecule-presentational
 export function FilterPillGroup<TValue extends string>({
   options,
   value,

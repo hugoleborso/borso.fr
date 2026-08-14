@@ -20,6 +20,7 @@ const workspaceAliases = {
  * configuration per run, shared by every project in it. See
  * docs/dantotsus/per-file-coverage-gate-was-never-armed.md.
  */
+// @FollowsBlueprint workspace-test-config
 export default defineConfig({
   resolve: { alias: workspaceAliases },
   test: {
@@ -48,13 +49,20 @@ export default defineConfig({
             'site/src/**/*.core.test.ts',
             'site/src/**/*.test.tsx',
           ],
+          // Vitest 4 refuses to schedule two projects that disagree on
+          // `maxWorkers` inside one group, so a run covering both projects
+          // aborts before a single test executes. The two orders put this
+          // project's parallel files first and the serial back-e2e files
+          // after, which is the order they would have taken anyway.
+          sequence: { groupOrder: 0 },
           globalSetup: ['../../scripts/vitest-cdk-outdir-teardown.js'],
           // The CDK snapshot tests in this project synthesize a whole app,
           // twice per test (prod and preview), which does not fit the 5 s
-          // default. infra/cdk gives the same kind of test 30 s for the same
-          // reason; matching it here removes a failure that depended on how
-          // busy the machine was.
-          testTimeout: 30_000,
+          // default. 30 s was enough on an idle machine and not enough under
+          // the pre-push hook, which starts four mutation runs and four test
+          // runs at once. The budget is for the slowest machine the gate runs
+          // on, not the quietest.
+          testTimeout: 60_000,
         },
       },
       {
@@ -74,6 +82,7 @@ export default defineConfig({
           maxWorkers: 1,
           isolate: false,
           fileParallelism: false,
+          sequence: { groupOrder: 1 },
           testTimeout: 30_000,
           hookTimeout: 60_000,
         },

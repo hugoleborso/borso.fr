@@ -15,6 +15,7 @@ import {
   saveTransitionComment,
 } from './transitions.service';
 
+// @FollowsBlueprint controller-dispatch
 export function buildTransitionCommentsRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)
@@ -35,7 +36,7 @@ export function buildTransitionCommentsRouter() {
       async (context) => {
         const { a, b } = context.req.valid('param');
         const { comment } = context.req.valid('json');
-        await saveTransitionComment(a, b, comment);
+        await saveTransitionComment(a, b, comment, new Date());
         return context.json({ songAId: a, songBId: b, comment });
       },
     )

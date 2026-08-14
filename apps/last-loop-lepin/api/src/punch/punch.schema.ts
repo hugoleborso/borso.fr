@@ -21,6 +21,12 @@ import { runnerSlugSchema } from '../runner/runner.schema';
 // indexes (`WHERE not supported for CREATE INDEX`) and a full unique on
 // the same columns would block the void-then-re-punch flow. The
 // re-punch guard now lives entirely in `validatePunchTiming` (app side).
+/**
+ * @Blueprint schema-dsql-constraints
+ * @BlueprintName Schema With DSQL Constraints Written Down
+ * @BlueprintUsage Use for a table on Aurora DSQL, so every constraint the engine refuses is recorded beside the column with the guard that replaces it.
+ * @BlueprintDescription Declares the table without the foreign keys and the partial unique index DSQL rejects, and names in the surrounding comments both what was refused and where the application level replacement lives, so a reader does not take the missing constraint for an oversight and reintroduce it.
+ */
 export const loopPunchesTable = pgTable('loop_punches', {
   id: uuid('id').primaryKey().defaultRandom(),
   editionSlug: text('edition_slug').notNull(),

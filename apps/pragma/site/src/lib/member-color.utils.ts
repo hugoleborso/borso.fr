@@ -39,6 +39,12 @@ export interface Rgb {
   readonly b: number;
 }
 
+/**
+ * @Blueprint utils-pure-module
+ * @BlueprintName Pure Utility Module
+ * @BlueprintUsage Use for deterministic helpers with no side effect, which the coverage gate holds at one hundred percent per file.
+ * @BlueprintDescription Splits one question into layered steps that are each exported and each assertable on their own: parse the hex string into channels or return null, turn channels into a relative luminance, then choose a foreground from that number. Every constant of the formula carries a name, and malformed input returns null rather than throwing, so the caller decides the fallback.
+ */
 export function parseHex(hex: string): Rgb | null {
   const trimmed = hex.trim();
   if (!HEX_PATTERN.test(trimmed)) return null;

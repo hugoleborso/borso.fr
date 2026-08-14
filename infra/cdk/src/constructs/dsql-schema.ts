@@ -49,7 +49,6 @@ function resolveRunnerEntry(): string {
 }
 /* v8 ignore stop */
 
-/** @beta */
 export interface DsqlSchemaCloneFromConfig {
   /**
    * Source schema in the SAME cluster to clone structure + data from.
@@ -84,7 +83,6 @@ export interface DsqlSchemaCloneFromConfig {
   readonly tablesToReplace?: readonly string[];
 }
 
-/** @beta */
 export interface DsqlSchemaProps {
   readonly app: string;
   readonly stage: Stage;
@@ -133,6 +131,7 @@ function readMigrations(dir: string): readonly MigrationFile[] {
   }));
 }
 
+// @FollowsBlueprint reusable-cdk-construct
 /**
  * Fail the synth when a clone config says nothing about a credential-bearing
  * table. pragma shipped a preview that served production's band data behind a
@@ -167,7 +166,10 @@ function assertCredentialTablesDecided(
  * `lookupDsqlCluster(scope, app)` — the cluster is owned by the app's
  * prod stack and shared across stages.
  *
- * @beta
+ * @Blueprint cdk-custom-resource
+ * @BlueprintName CDK Custom Resource
+ * @BlueprintUsage Use when a stack has to reach something CloudFormation has no resource type for, such as a database schema.
+ * @BlueprintDescription Bundles the handler from source with `NodejsFunction`, gives the handler and the `Provider` each their own `LogGroup` with a retention set rather than the default of forever, grants the handler only the action it needs on the one cluster ARN, and passes the work as `CustomResource` properties. The payload carries a content digest of the migration files alongside the files themselves, which is the mechanism that makes CloudFormation fire an Update event when the content changed but no other property did.
  */
 export class DsqlSchema extends Construct {
   public readonly schemaName: string;

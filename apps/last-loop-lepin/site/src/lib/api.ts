@@ -10,11 +10,11 @@
 import type { AppType } from '@api/app';
 import { hc } from 'hono/client';
 import { composeApiOrigin, composeApiUrl, selectApiBase } from './api-base.utils';
+import { readApiBaseSetting } from './environment';
 
 export { ApiError } from './api-error';
 
-const environment: Record<string, unknown> = import.meta.env;
-const API_BASE = selectApiBase(environment.VITE_API_BASE);
+const API_BASE = selectApiBase(readApiBaseSetting());
 
 /**
  * Origin to prepend on a direct navigation link, e.g. an anchor pointing at a
@@ -25,6 +25,7 @@ export function apiUrl(pathname: string): string {
   return composeApiUrl(API_BASE, pathname);
 }
 
+// @FollowsBlueprint typed-api-client
 export const api = hc<AppType>(composeApiOrigin(API_BASE), {
   init: { credentials: 'include' },
 });

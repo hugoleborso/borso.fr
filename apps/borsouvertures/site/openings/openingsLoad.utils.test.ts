@@ -4,6 +4,7 @@ import type { Opening } from './types';
 
 const OPENINGS: Opening[] = [{ id: 'italian', name: 'Italian Game', ecoCodes: [], variations: [] }];
 
+// @FollowsBlueprint test-pure-unit
 describe('selectOpeningsLoad', () => {
   it('reports a successful load with its openings', () => {
     expect(selectOpeningsLoad({ ok: true, openings: OPENINGS })).toEqual({

@@ -14,14 +14,22 @@ import { describe, expect, it } from 'vitest';
  */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(HERE, '../../../..');
 const CONSTRUCTS_DIR = path.resolve(HERE, '../../src/constructs');
 const INTERNAL_DIR = path.resolve(HERE, '../../src/internal');
+const SHARED_LIB_DIR = path.resolve(HERE, '../../../shared/lib');
 
 function readStripped(filePath: string): string {
   const source = fs.readFileSync(filePath, 'utf-8');
   return source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/.*$/gm, ' ');
 }
 
+/**
+ * @Blueprint test-source-invariant
+ * @BlueprintName Source Invariant Test
+ * @BlueprintUsage Use for a dantotsu eradication whose rule is a shape that must never reappear in a file, where no type or lint rule can express it.
+ * @BlueprintDescription Reads the source files off disk, strips block and line comments, and asserts the banned shape is absent from what remains. Stripping first is what lets the same file carry a comment explaining the trap without the explanation tripping the check. The file list is read from the directory rather than hard coded and driven through `it.each`, so a construct added later is covered without anyone remembering to add it, and each describe names the dantotsu it backstops.
+ */
 describe('eradication: no `bundling.nodeModules` in CDK constructs', () => {
   // docs/dantotsus/cdk-nodejsfunction-bundling.md — pure-JS deps belong
   // in esbuild's inline bundle (externalModules: ['@aws-sdk/client-*'],
@@ -34,6 +42,7 @@ describe('eradication: no `bundling.nodeModules` in CDK constructs', () => {
   });
 });
 
+// @FollowsBlueprint test-artifact-audit
 describe('eradication: every app `destroy` script chains the same builds as `deploy`', () => {
   // docs/dantotsus/cdk-destroy-failure-swallowed-by-trailing-or-echo.md
   // — cdk destroy synthesizes the app first, and Source.asset() resolves
@@ -57,6 +66,7 @@ describe('eradication: every app `destroy` script chains the same builds as `dep
   });
 });
 
+// @FollowsBlueprint test-source-invariant
 describe('eradication: no RemovalPolicy.RETAIN on static-site buckets', () => {
   // docs/dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md
   // — the failed-first-deploy orphan trap requires literal bucketName +
@@ -71,6 +81,30 @@ describe('eradication: no RemovalPolicy.RETAIN on static-site buckets', () => {
   });
 });
 
+// @FollowsBlueprint test-source-invariant
+describe('eradication: shared SSM parameter names live in one module', () => {
+  // The names used to be retyped in three constructs and again in the
+  // shared stack that writes them, so a rename in the writer left a
+  // reader pointing at a path nobody publishes — a failure that surfaces
+  // only at runtime, since a missing SSM path synthesizes fine.
+  const SHARED_SSM_PREFIX = '/borso/shared/';
+  const OWNING_MODULE = path.join(INTERNAL_DIR, 'shared-ssm.ts');
+  const scannedFiles = [CONSTRUCTS_DIR, INTERNAL_DIR, SHARED_LIB_DIR]
+    .flatMap((dir) =>
+      fs
+        .readdirSync(dir)
+        .filter((name) => name.endsWith('.ts'))
+        .map((name) => path.join(dir, name)),
+    )
+    .filter((file) => file !== OWNING_MODULE)
+    .map((file) => path.relative(REPO_ROOT, file));
+
+  it.each(scannedFiles)('%s', (file) => {
+    expect(readStripped(path.join(REPO_ROOT, file))).not.toContain(SHARED_SSM_PREFIX);
+  });
+});
+
+// @FollowsBlueprint test-source-invariant
 describe('eradication: cf-host-routing-function uses ES5-only syntax', () => {
   // docs/dantotsus/cloudfront-function-runtime-es5.md — CloudFront
   // Functions runtime 2.0 advertises ES2020 but is unreliable. Stay on

@@ -8,6 +8,7 @@
 
 export type SessionGateState = 'checking' | 'sign-in-required' | 'granted';
 
+// @FollowsBlueprint core-view-intent
 export function selectSessionGateState(
   hasMarker: boolean,
   isProbePending: boolean,
