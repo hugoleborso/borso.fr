@@ -24,10 +24,12 @@ import { useMembersList } from '../../lib/queries/members';
 import { useSession, useSessionsList, useUpdateSession } from '../../lib/queries/sessions';
 import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists';
 import { BackLink } from '../../components/molecules/BackLink';
+import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
 import { ConcertReadView } from './ConcertReadView';
 import { parseFriendsCounts } from './friends-count.core';
+import { selectMissingSessionMessageKey } from './missing-session.core';
 import { PracticeReadView } from './PracticeReadView';
 
 const NO_ROWS: readonly never[] = [];
@@ -123,12 +125,13 @@ export function SessionDetailPage(): JSX.Element {
   if (isLoading) {
     return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
-  const queryError = sessionQuery.error instanceof ApiError ? sessionQuery.error.message : null;
   if (session === null) {
     return (
-      <p className="px-4 sm:px-9 py-7 text-danger text-sm" role="alert">
-        {localError ?? queryError ?? 'not found'}
-      </p>
+      <NotFoundNotice
+        message={t(selectMissingSessionMessageKey(sessionQuery.error))}
+        backTo="/sessions"
+        backLabel={t('sessions.title')}
+      />
     );
   }
 
@@ -136,7 +139,6 @@ export function SessionDetailPage(): JSX.Element {
   const hasGuests = isPositiveCount(friendsTotal);
   const formattedDate = formatSessionDate(session.date, i18n.language);
   const titleText = isConcert ? (session.venue ?? formattedDate) : t('sessions.kindPractice');
-  const displayError = localError ?? queryError;
 
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
@@ -188,9 +190,9 @@ export function SessionDetailPage(): JSX.Element {
         </div>
       </header>
 
-      {displayError === null ? null : (
+      {localError === null ? null : (
         <p className="text-danger text-sm" role="alert">
-          {displayError}
+          {localError}
         </p>
       )}
 

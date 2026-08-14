@@ -7,9 +7,10 @@
  * Under the `lg` breakpoint the 232px sidebar gives way to a bottom tab bar
  * carrying the four pages the band uses on stage, plus a "more" tab that
  * toggles the same sidebar as a slide-over for the admin pages. The slide-over
- * sits above the tab bar rather than beside it: both are fixed, so at equal
- * stacking the bar painted over the drawer's last rows and swallowed the taps
- * meant for them.
+ * is a native modal `<dialog>`, so the browser owns the top layer — which is
+ * above the fixed tab bar with no stacking context to reason about — the focus
+ * trap, and the Escape key, which the hand-rolled panel it replaced ignored
+ * while the confirmation sheet beside it honoured.
  *
  * The frame is `h-dvh`, not `h-screen`. `100vh` on a phone is the height the
  * viewport has once the address bar has scrolled away, so while it is showing,
@@ -40,6 +41,7 @@ import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon, type IconName } from '../atoms/Icon';
 import { isPositiveCount } from '../../lib/counts.utils';
+import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog';
 import { MEMBER_PALETTE, memberInitial } from '../atoms/member-palette.utils';
 import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
 import { OfflineBanner } from '../molecules/OfflineBanner';
@@ -99,7 +101,7 @@ export function AppShell(): JSX.Element {
         <div className="flex items-start justify-between gap-2 px-2 pt-1.5 pb-1">
           <div className="font-display italic text-[30px] leading-none tracking-[-0.01em] text-ink-900">
             {t('appName')}
-            <div className="font-sans not-italic text-[9px] tracking-[0.18em] uppercase text-ink-500 mt-0.5">
+            <div className="font-sans not-italic text-xs tracking-[0.18em] uppercase text-ink-500 mt-0.5">
               {t('appWordmark')}
             </div>
           </div>
@@ -172,14 +174,14 @@ export function AppShell(): JSX.Element {
       {/* Mobile slide-over — rendered only when open to keep the
           tree light when the user is on desktop. */}
       {isNarrow && isMobileNavOpen ? (
-        <div className="fixed inset-0 z-50 flex">
-          <div
-            className="absolute inset-0 bg-[rgba(20,16,12,0.5)]"
-            aria-hidden="true"
-            onClick={closeMobileNav}
-          />
-          <div className="relative z-10">{renderSidebar('mobile')}</div>
-        </div>
+        <dialog
+          ref={openDismissibleDialogOnAttach}
+          onClose={closeMobileNav}
+          aria-label={t('nav.more')}
+          className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-transparent p-0 backdrop:bg-[rgba(20,16,12,0.5)]"
+        >
+          <div className="w-fit h-full">{renderSidebar('mobile')}</div>
+        </dialog>
       ) : null}
 
       <main className="flex-1 overflow-y-auto overflow-x-hidden [&:has(dialog[open])]:overflow-hidden relative pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">

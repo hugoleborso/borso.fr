@@ -141,6 +141,17 @@ export function selectFormForBar(
   return bar === undefined ? current : buildBarFormInitial(bar);
 }
 
+/**
+ * Whether the list row is the bar the form currently holds.
+ *
+ * Under `md` the form sits below the whole list, so a tap on a row changed
+ * nothing a phone could see: the form it filled was off the bottom of the
+ * screen and the row itself looked exactly as it did before.
+ */
+export function isBarBeingEdited(barId: string, form: BarFormInitial): boolean {
+  return form.id === barId;
+}
+
 /** Deleting the bar the form is editing resets the form; any other deletion does not. */
 export function selectFormAfterDeletion(
   current: BarFormInitial,

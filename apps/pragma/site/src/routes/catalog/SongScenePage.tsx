@@ -21,13 +21,14 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
+import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SongNotes } from '../../components/molecules/SongNotes';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
-import { ApiError } from '../../lib/api';
 import { openDialogOnAttach } from '../../lib/modal-dialog';
 import { useNavigateTo } from '../../lib/navigation';
 import { useSong } from '../../lib/queries/songs';
 import { selectChordProText } from './chart-kind.utils';
+import { selectMissingSongMessageKey } from './missing-song.core';
 import {
   clampSceneFontSize,
   clampSemitoneOffset,
@@ -54,17 +55,18 @@ export function SongScenePage(): JSX.Element {
   const [fontSizePx, setFontSizePx] = useState(SCENE_FONT_SIZE_DEFAULT_PX);
 
   const song = songQuery.data?.song ?? null;
-  const error = songQuery.error instanceof ApiError ? songQuery.error.message : null;
 
-  if (error !== null) {
-    return (
-      <p className="px-9 py-7 text-danger text-sm" role="alert">
-        {error}
-      </p>
-    );
+  if (songQuery.isLoading) {
+    return <p className="px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
   if (song === null) {
-    return <p className="px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
+    return (
+      <NotFoundNotice
+        message={t(selectMissingSongMessageKey(songQuery.error))}
+        backTo="/catalog"
+        backLabel={t('catalog.backToCatalog')}
+      />
+    );
   }
 
   const chordproText = selectChordProText(song.chart);

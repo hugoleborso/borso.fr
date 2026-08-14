@@ -17,7 +17,7 @@
  */
 
 import type { JSX } from 'react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
@@ -49,6 +49,7 @@ import {
   type BarsView,
   buildKanbanCardsByStatus,
   groupBarsByStatus,
+  isBarBeingEdited,
   selectBarWriteIntent,
   selectDragDropIntent,
   selectFormAfterDeletion,
@@ -74,6 +75,7 @@ export function BarsPage(): JSX.Element {
   const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
+  const barFormRef = useRef<HTMLDivElement>(null);
   const barsQuery = useBarsList();
   const createBar = useCreateBar();
   const updateBar = useUpdateBar();
@@ -105,8 +107,9 @@ export function BarsPage(): JSX.Element {
         city: bar.city,
         capacity: bar.capacity,
         isStale: isBarStale(bar),
+        isBeingEdited: isBarBeingEdited(bar.id, formInitial),
       })),
-    [sortedBars, isBarStale],
+    [sortedBars, isBarStale, formInitial],
   );
 
   const reportError = (error: Error): void => {
@@ -139,8 +142,15 @@ export function BarsPage(): JSX.Element {
     );
   };
 
+  /**
+   * Under `md` the form sits below the whole list, so on a phone a tap on a row
+   * filled a form several hundred pixels off the bottom of the screen. The
+   * scroll happens here, in the handler the tap runs, rather than in an effect
+   * watching the selection.
+   */
   const selectBar = (barId: string): void => {
     setFormInitial((current) => selectFormForBar(bars, barId, current));
+    barFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const moveBarToStatus = (status: BarStatus, draggedId: string): void => {
@@ -160,12 +170,14 @@ export function BarsPage(): JSX.Element {
           onSelect={selectBar}
           onRemove={setPendingDeletionId}
         />
-        <BarForm
-          key={buildBarFormKey(formInitial, writeCount)}
-          initial={formInitial}
-          onSubmit={saveBar}
-          onCancel={() => setFormInitial(BLANK_BAR_FORM)}
-        />
+        <div ref={barFormRef} className="scroll-mt-4">
+          <BarForm
+            key={buildBarFormKey(formInitial, writeCount)}
+            initial={formInitial}
+            onSubmit={saveBar}
+            onCancel={() => setFormInitial(BLANK_BAR_FORM)}
+          />
+        </div>
       </div>
     ),
     kanban: (

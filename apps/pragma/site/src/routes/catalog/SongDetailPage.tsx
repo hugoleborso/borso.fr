@@ -23,6 +23,7 @@ import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
 import { BackLink } from '../../components/molecules/BackLink';
 import { ChartKindIcon } from '../../components/molecules/ChartKindIcon';
+import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { LineupEditor, type LineupRecord } from '../../components/molecules/LineupEditor';
 import { toLineupPayload } from '../../components/molecules/lineup-editor.core';
 import { SongEmbed } from '../../components/molecules/SongEmbed';
@@ -39,6 +40,7 @@ import { useMembersList } from '../../lib/queries/members';
 import { useDidLastSongWriteFail, useSong, useUpdateSong } from '../../lib/queries/songs';
 import { useSignedChartUrl } from '../../lib/queries/uploads';
 import { extractChartKind, selectChordProText } from './chart-kind.utils';
+import { selectMissingSongMessageKey } from './missing-song.core';
 import { buildMasteryKey, buildSongLineupRows } from './song-lineup.core';
 import { selectSongNoteSections } from './song-notes.core';
 import { buildTonalityLabel } from './tonality-label.utils';
@@ -77,12 +79,8 @@ export function SongDetailPage(): JSX.Element {
     membersQuery.isLoading ||
     instrumentsQuery.isLoading ||
     masteryQuery.isLoading;
-  const error =
-    songQuery.error instanceof ApiError
-      ? songQuery.error.message
-      : (membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error) instanceof ApiError
-        ? 'load-failed'
-        : null;
+  const hasSideLoadFailed =
+    (membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error) !== null;
 
   const masteryLookup = useMemo(() => {
     const lookup = new Map<string, number>();
@@ -116,9 +114,11 @@ export function SongDetailPage(): JSX.Element {
   }
   if (song === null) {
     return (
-      <p className="px-4 sm:px-9 py-7 text-danger text-sm" role="alert">
-        {error ?? 'not-found'}
-      </p>
+      <NotFoundNotice
+        message={t(selectMissingSongMessageKey(songQuery.error))}
+        backTo="/catalog"
+        backLabel={t('catalog.backToCatalog')}
+      />
     );
   }
 
@@ -171,11 +171,11 @@ export function SongDetailPage(): JSX.Element {
         </div>
       </header>
 
-      {error === null ? null : (
+      {hasSideLoadFailed ? (
         <p className="text-danger text-sm" role="alert">
-          {error}
+          {t('common.loadFailed')}
         </p>
-      )}
+      ) : null}
 
       {hasFailedWrite ? (
         <p

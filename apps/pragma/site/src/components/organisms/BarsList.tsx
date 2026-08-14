@@ -8,6 +8,10 @@
  * label). Click on a row's name selects the bar for editing; the
  * `×` action removes it.
  *
+ * The selected row is outlined and carries `aria-current`, because under `md`
+ * the form it fills sits below the entire list: without the outline a tap on a
+ * row changed nothing anybody could see on a phone.
+ *
  * The stale-banner above the list and the kanban view live in the
  * parent (`BarsPage`); this organism owns the list-view shape only.
  */
@@ -43,6 +47,7 @@ export interface BarsListRow {
   readonly city: string | null;
   readonly capacity: number | null;
   readonly isStale: boolean;
+  readonly isBeingEdited: boolean;
 }
 
 interface BarsListProps {
@@ -179,9 +184,11 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
       {table.getRowModel().rows.map((row) => (
         <li
           key={row.id}
+          aria-current={row.original.isBeingEdited}
           className={composeClassName(
             'flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors',
             row.original.isStale && 'border-warn/40',
+            row.original.isBeingEdited && 'ring-2 ring-accent',
           )}
         >
           {row.getVisibleCells().map((cell) => {

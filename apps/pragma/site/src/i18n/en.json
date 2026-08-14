@@ -78,7 +78,7 @@
     "noInstrumentsYet": "No instruments assigned",
     "deleteConfirm": "Delete this member? Their mastery scores go with them.",
     "masteryMatrixTitle": "Mastery matrix",
-    "masteryMatrixSubtitle": "Click to edit; scroll to adjust ±1; right-click to clear. Row averages = per-member musicianship; column averages = per-instrument bench strength.",
+    "masteryMatrixSubtitle": "Tap a cell to type a score, empty it to clear. With a mouse: scroll a cell for ±1, right-click to clear. Row averages = per-member musicianship; column averages = per-instrument bench strength.",
     "rowAverage": "Avg",
     "columnAverage": "Avg"
   },

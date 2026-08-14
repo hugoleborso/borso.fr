@@ -8,6 +8,7 @@ import {
   selectBarWriteIntent,
   selectDragDropIntent,
   buildBarFormKey,
+  isBarBeingEdited,
   selectFormAfterDeletion,
   selectFormForBar,
   selectToggleState,
@@ -167,6 +168,22 @@ describe('selectFormForBar', () => {
 
   it('keeps the current form when the identifier is unknown', () => {
     expect(selectFormForBar(bars, 'missing', BLANK_BAR_FORM)).toBe(BLANK_BAR_FORM);
+  });
+});
+
+describe('isBarBeingEdited', () => {
+  const editing = { ...BLANK_BAR_FORM, id: 'bar-1' };
+
+  it('marks the row the form holds', () => {
+    expect(isBarBeingEdited('bar-1', editing)).toBe(true);
+  });
+
+  it('leaves every other row unmarked', () => {
+    expect(isBarBeingEdited('bar-2', editing)).toBe(false);
+  });
+
+  it('marks no row while the form is blank', () => {
+    expect(isBarBeingEdited('bar-1', BLANK_BAR_FORM)).toBe(false);
   });
 });
 

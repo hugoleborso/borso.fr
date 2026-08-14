@@ -152,7 +152,7 @@ export function CatalogPage(): JSX.Element {
         title={t('catalog.title')}
         subtitle={subtitle}
         actions={
-          <Link to="/catalog/new" className="hidden sm:inline-flex">
+          <Link to={buildNewSongPath(search)} className="no-underline">
             <Button variant="accent" type="button">
               <Icon name="plus" size={14} />
               {t('catalog.newSong')}
@@ -192,14 +192,6 @@ export function CatalogPage(): JSX.Element {
         </div>
       )}
       {!isLoading && cards.length > 0 && <CatalogGrid songs={cards} />}
-
-      <Link
-        to={buildNewSongPath(search)}
-        aria-label={t('catalog.newSong')}
-        className="sm:hidden fixed right-4 bottom-20 z-30 w-14 h-14 rounded-full bg-accent text-bg-elev shadow-lg inline-flex items-center justify-center no-underline"
-      >
-        <Icon name="plus" size={22} />
-      </Link>
     </div>
   );
 }

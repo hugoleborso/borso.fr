@@ -22,9 +22,11 @@ import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { ApiError } from '../../lib/api';
 import { useNavigateTo } from '../../lib/navigation';
 import { useCreateSong, useDeleteSong, useSong, useUpdateSong } from '../../lib/queries/songs';
+import { selectMissingSongMessageKey } from './missing-song.core';
 import { SongEditForm } from './SongEditForm';
 import {
   BLANK_SONG_DRAFT,
@@ -61,7 +63,7 @@ export function SongEditPage(): JSX.Element {
     ? `new:${prefilledTitle}`
     : `${songId}:${songQuery.data?.song.id ?? 'loading'}`;
   const isLoading = !isNew && songQuery.isLoading;
-  const queryError = songQuery.error instanceof ApiError ? songQuery.error.message : null;
+  const isEditingMissingSong = !isNew && !songQuery.isLoading && songQuery.data === undefined;
 
   const saveSong = async (value: SongDraftState): Promise<void> => {
     const payload = payloadFromDraft(value);
@@ -92,6 +94,15 @@ export function SongEditPage(): JSX.Element {
   if (isLoading) {
     return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
+  if (isEditingMissingSong) {
+    return (
+      <NotFoundNotice
+        message={t(selectMissingSongMessageKey(songQuery.error))}
+        backTo="/catalog"
+        backLabel={t('catalog.backToCatalog')}
+      />
+    );
+  }
 
   return (
     <SongEditForm
@@ -103,7 +114,7 @@ export function SongEditPage(): JSX.Element {
       onDelete={removeSong}
       newLinkUrl={newLinkUrl}
       setNewLinkUrl={setNewLinkUrl}
-      error={localError ?? queryError}
+      error={localError}
     />
   );
 }

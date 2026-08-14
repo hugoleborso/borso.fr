@@ -2,7 +2,9 @@
  * Live mastery matrix. Members × instruments grid with three input
  * affordances per cell (spec use case 1bis):
  *
- *   - Click a cell → focus and accept a numeric edit.
+ *   - Tap a cell → focus and accept a numeric edit; emptying the box
+ *     drops the override, which is the only one of the three gestures a
+ *     finger can perform.
  *   - Scroll-wheel on a cell → ±1 (capped to [0, 10]).
  *   - Right-click on a cell → clear the override (fall back to default
  *     of "no score logged"; the row disappears from the API).
@@ -43,6 +45,7 @@ import {
   MASTERY_SCORE_MAX,
   MASTERY_SCORE_MIN,
   rowAverage,
+  selectScoreEditIntent,
 } from '../../lib/mastery-matrix.utils';
 import { readableForeground } from '../../lib/member-color.utils';
 import {
@@ -176,7 +179,7 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
       header: () => instrument.name,
       cell: ({ row }: { row: Row<MatrixRow> }) => {
         const memberId = row.original.member.id;
-        const value = scores[cellKey(memberId, instrument.id)] ?? 0;
+        const value = scores[cellKey(memberId, instrument.id)] ?? null;
         return (
           <ScoreInput
             value={value}
@@ -184,12 +187,17 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
             maximum={MASTERY_SCORE_MAX}
             label={`${row.original.member.firstName} ${instrument.name}`}
             onStep={(step) => {
-              const next = clampScore(value + step);
+              const next = clampScore((value ?? MASTERY_SCORE_MIN) + step);
               if (next === value) return;
               writeScore(memberId, instrument.id, next);
             }}
-            onType={(typedValue) => {
-              writeScore(memberId, instrument.id, clampScore(typedValue));
+            onEdit={(rawValue) => {
+              const applyByIntent = {
+                clear: (): void => clearScore(memberId, instrument.id),
+                write: (): void =>
+                  writeScore(memberId, instrument.id, clampScore(Number(rawValue))),
+              } as const;
+              applyByIntent[selectScoreEditIntent(rawValue)]();
             }}
             onClear={() => {
               clearScore(memberId, instrument.id);
