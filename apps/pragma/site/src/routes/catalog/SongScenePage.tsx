@@ -69,14 +69,16 @@ export function SongScenePage(): JSX.Element {
       className="fixed inset-0 z-50 m-0 w-screen h-screen max-w-none max-h-none border-0 bg-[#0d0a07] text-[#f1e9d8] overflow-y-auto p-4 sm:p-10 flex flex-col"
       style={{ fontSize: `${fontSizePx}px` }}
     >
-      <header className="flex items-center gap-2 sm:gap-4 mb-5 pb-4 border-b border-[rgba(255,255,255,0.08)] flex-wrap">
-        <button type="button" className={SCENE_BUTTON_CLASS} onClick={leaveScene}>
-          ← {t('common.back')}
-        </button>
-        <h2 className="font-display italic text-2xl sm:text-4xl text-[#f1e9d8] m-0 flex-1 min-w-0 truncate">
-          {song.title}
-        </h2>
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+      <header className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-5 pb-4 border-b border-[rgba(255,255,255,0.08)]">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <button type="button" className={SCENE_BUTTON_CLASS} onClick={leaveScene}>
+            ← {t('common.back')}
+          </button>
+          <h2 className="font-display italic text-2xl sm:text-4xl text-[#f1e9d8] m-0 min-w-0 truncate">
+            {song.title}
+          </h2>
+        </div>
+        <div className="flex items-center gap-1.5 sm:gap-2 sm:ml-auto">
           <button
             type="button"
             className={SCENE_BUTTON_CLASS}

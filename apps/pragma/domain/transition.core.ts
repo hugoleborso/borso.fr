@@ -65,7 +65,8 @@ function withinFamilies(
 ): readonly InstrumentId[] {
   return instrumentIds.filter((instrumentId) => {
     const family = instruments[instrumentId]?.family;
-    return family !== undefined && families.includes(family);
+    if (family === undefined) return false;
+    return families.includes(family);
   });
 }
 

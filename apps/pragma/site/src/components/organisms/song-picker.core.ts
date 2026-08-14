@@ -2,7 +2,8 @@
  * What the add-a-song sheet shows for what the operator typed.
  *
  * Two decisions: which songs match the query, and whether to offer creating
- * the song being typed. The offer only makes sense once something is typed and
+ * the song being typed. An empty query matches every song, since every string
+ * contains the empty one, which is how the sheet opens on the whole catalog. The offer only makes sense once something is typed and
  * no song already carries that exact title, otherwise the sheet invites the
  * band to enter the same song twice.
  */
@@ -24,7 +25,6 @@ export function filterPickableSongs<Song extends PickableSong>(
 ): Song[] {
   const needle = normalize(query);
   const sorted = songs.toSorted((left, right) => left.title.localeCompare(right.title));
-  if (needle.length === 0) return sorted;
   return sorted.filter(
     (song) =>
       song.title.toLowerCase().includes(needle) || song.artist.toLowerCase().includes(needle),

@@ -28,7 +28,7 @@ export function familyFromHarmonicFlag(isHarmonic: boolean): InstrumentFamily {
   return isHarmonic ? 'harmonic' : DEFAULT_INSTRUMENT_FAMILY;
 }
 
-export function isInstrumentFamily(candidate: string): candidate is InstrumentFamily {
+export function isInstrumentFamily(candidate: string | null): candidate is InstrumentFamily {
   return INSTRUMENT_FAMILIES.some((family) => family === candidate);
 }
 
@@ -42,6 +42,6 @@ export function resolveInstrumentFamily(
   storedFamily: string | null,
   isHarmonic: boolean,
 ): InstrumentFamily {
-  if (storedFamily !== null && isInstrumentFamily(storedFamily)) return storedFamily;
+  if (isInstrumentFamily(storedFamily)) return storedFamily;
   return familyFromHarmonicFlag(isHarmonic);
 }

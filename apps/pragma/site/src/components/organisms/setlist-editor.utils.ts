@@ -136,7 +136,7 @@ export function prominentMemberInstrumentFor(
   membersById: Readonly<Record<string, NameableMember>>,
   instrumentsById: Readonly<Record<string, NameableInstrument>>,
 ): ProminentMemberInstrumentResolution | null {
-  if (instrumentIds === undefined || instrumentIds.length === 0) return null;
+  if (instrumentIds === undefined) return null;
   if (selectedMemberId === null) return null;
   const member = membersById[selectedMemberId];
   if (member === undefined) return null;
