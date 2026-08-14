@@ -11,6 +11,12 @@
  * stacking the bar painted over the drawer's last rows and swallowed the taps
  * meant for them.
  *
+ * The frame is `h-dvh`, not `h-screen`. `100vh` on a phone is the height the
+ * viewport has once the address bar has scrolled away, so while it is showing,
+ * the scroll container runs past the bottom of what the screen shows and the
+ * last rows stay under the tab bar however far you scroll. `100dvh` follows the
+ * address bar.
+ *
  * The browser's online status and the viewport width are both read
  * through `useSyncExternalStore` hooks, so this file holds no effect.
  */
@@ -147,7 +153,7 @@ export function AppShell(): JSX.Element {
   };
 
   return (
-    <div className="h-screen flex bg-bg text-ink-900">
+    <div className="h-dvh flex bg-bg text-ink-900">
       {/* Desktop sidebar — hidden under the lg breakpoint. */}
       <div className="hidden lg:block">{renderSidebar('desktop')}</div>
 

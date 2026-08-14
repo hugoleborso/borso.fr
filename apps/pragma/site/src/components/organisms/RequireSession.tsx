@@ -17,7 +17,7 @@ import { selectSessionGateState, type SessionGateState } from './session-gate.co
 
 function CheckingSession(): JSX.Element {
   return (
-    <div className="h-screen w-full flex items-center justify-center text-ink-400 text-sm">…</div>
+    <div className="h-dvh w-full flex items-center justify-center text-ink-400 text-sm">…</div>
   );
 }
 

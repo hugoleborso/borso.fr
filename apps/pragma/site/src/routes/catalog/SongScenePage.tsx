@@ -66,7 +66,7 @@ export function SongScenePage(): JSX.Element {
       ref={openDialogOnAttach}
       onClose={leaveScene}
       aria-label={song.title}
-      className="fixed inset-0 z-50 m-0 w-screen h-screen max-w-none max-h-none border-0 bg-[#0d0a07] text-[#f1e9d8] overflow-y-auto p-4 sm:p-10 flex flex-col"
+      className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-[#0d0a07] text-[#f1e9d8] overflow-y-auto p-4 sm:p-10 flex flex-col"
       style={{ fontSize: `${fontSizePx}px` }}
     >
       <header className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-5 pb-4 border-b border-[rgba(255,255,255,0.08)]">
