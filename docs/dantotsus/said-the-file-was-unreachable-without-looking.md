@@ -119,11 +119,18 @@ you can invoke cannot be argued away.
 **Why this is not another knowledge entry.** Because that was tried. The
 capability has been documented since PR #11, thoroughly and correctly, and it
 did not stop the recurrence — a document only reaches an agent who suspects it
-exists, and certainty is the state in which nobody searches. So the eradication
-moves up a rung and also moves *into context*: CLAUDE.md now carries one line
-saying a pasted file is extractable and naming the script, because CLAUDE.md is
-read on every task and a knowledge entry is read on purpose. The existing entry
-stays as the explanation and now links the script.
+exists, and certainty is the state in which nobody searches.
+
+So the eradication is the script, and the discoverability lever is one clause
+inside CLAUDE.md's existing *Verify before asserting* rule rather than a section
+of its own. The first draft did give it a section, and the operator pushed back
+that it was disproportionate. They were right, and the reasoning behind the
+draft was the real problem: *"knowledge failed, so escalate to CLAUDE.md"*
+justifies moving every failed lesson into the one file every task reads, which
+would turn it into the corpus. What generalises is not "pasted files are
+reachable" but "a claim about your own harness is a hypothesis until a command
+answers it" — and that rule was already there, one line up. The existing
+knowledge entry stays as the explanation and now links the script.
 
 **Sibling defects swept:** the same shape landed twice more in the same PR, both
 recorded separately — a tool declared broken and believed for fourteen hours
