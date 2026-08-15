@@ -3526,7 +3526,7 @@
     },
     {
       "path": "apps/last-loop-lepin/vitest.config.ts",
-      "digest": "ca5aa4598bf8",
+      "digest": "21015a21c6e4",
       "container": "site",
       "layer": "config",
       "context": "root",

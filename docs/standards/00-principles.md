@@ -105,3 +105,11 @@ literally.
   would fail every commit for a reason nobody could act on. The page records the
   commit it was read at; regenerate with
   `pnpm exec tsx scripts/standards/hotspots.ts` when the age matters.
+- `reviewer` reads `docs/standards/temporal-coupling.md` before deciding whether
+  a seam is real. It crosses the git history with the module graph and names the
+  pairs that always change together and have no import path between them in
+  either direction, which is a dependency nothing in the code admits to. Pairs
+  the graph does not describe are left out and counted rather than reported,
+  because a connection that never existed cannot be missing. Nothing gates it
+  and nothing checks it is fresh, for the same reason as the page above;
+  regenerate with `pnpm exec tsx scripts/standards/temporal-coupling.ts`.

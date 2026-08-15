@@ -140,6 +140,9 @@ scripts/check-app-registration.sh
 # reads a version field, so two workspaces drifting onto different majors of the
 # same library passes every other gate and surfaces later as a type error in
 # whichever file sits across the seam.
+echo "[pre-commit] checking no file carries a NUL byte"
+scripts/check-no-null-bytes.sh
+
 echo "[pre-commit] checking every shared dependency reads the catalog"
 pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
 

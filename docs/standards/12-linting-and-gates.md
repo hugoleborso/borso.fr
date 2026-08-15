@@ -251,6 +251,11 @@ review.
 - `script:scripts/check-non-module-scripts.sh` fails an application's HTML
   carrying a `<script src>` without `type="module"`, which ships un-bundled and
   404s.
+- `script:scripts/check-no-null-bytes.sh` fails a tracked text file carrying a
+  NUL byte. A NUL is legal inside a string, renders as nothing in an editor,
+  shows as unchanged whitespace in a diff, and passes ESLint, Prettier and
+  `tsc`; it surfaces much later as an `execFileSync` refusing an argument or a
+  separator that silently stopped matching.
 - `generator:scripts/standards/rule-provenance.ts` records which rules were
   written because a defect actually happened, by reading the eradication section
   of every dantotsu, and which were written from principle. It gates nothing:

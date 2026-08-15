@@ -101,6 +101,11 @@ jobs:
       # One version per dependency, written in pnpm-workspace.yaml. Nothing
       # else here reads a version field, so two workspaces drifting onto
       # different majors passes every other gate.
+      # A NUL byte inside a string literal is legal, invisible in every editor
+      # and diff, and accepted by ESLint, Prettier and tsc. It surfaces much
+      # later as an argument execFileSync refuses or a separator that stops
+      # matching.
+      - run: ./scripts/check-no-null-bytes.sh
       - run: pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
       # Every `VITE_` variable a site reads is set by a workflow or written
       # down as deliberately unset, mirroring the pre-commit hook so a push

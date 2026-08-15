@@ -21,6 +21,7 @@ every application the standard covers.
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
+| (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
 ## 01. Naming
 
@@ -196,6 +197,7 @@ every application the standard covers.
 | `scripts/check-frontend-env-vars.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-migration-sql-dsql-compat.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-non-module-scripts.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
+| `scripts/check-no-null-bytes.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/standards/rule-provenance.ts` | generator | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-app-registration.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
@@ -210,13 +212,14 @@ every application the standard covers.
 
 ## What only a reviewer can check
 
-21 claim(s) below hand the check to a person, because no tool can make it.
+22 claim(s) below hand the check to a person, because no tool can make it.
 They are the checklist the standards review agent works from, so the agent
 reviews what lint cannot rather than repeating what lint already did.
 
 ### 00. Principles
 
 - `reviewer` reads `docs/standards/hotspots.md` before deciding which pattern to write down next. It crosses how often each file changes with whether it follows a recorded pattern and whether its path says what it is. Nothing gates it and nothing checks it is fresh: the input is the git history, so the page moves on every commit whether or not any source did, and a staleness gate would fail every commit for a reason nobody could act on. The page records the commit it was read at; regenerate with `pnpm exec tsx scripts/standards/hotspots.ts` when the age matters.
+- `reviewer` reads `docs/standards/temporal-coupling.md` before deciding whether a seam is real. It crosses the git history with the module graph and names the pairs that always change together and have no import path between them in either direction, which is a dependency nothing in the code admits to. Pairs the graph does not describe are left out and counted rather than reported, because a connection that never existed cannot be missing. Nothing gates it and nothing checks it is fresh, for the same reason as the page above; regenerate with `pnpm exec tsx scripts/standards/temporal-coupling.ts`.
 
 ### 01. Naming
 
@@ -276,6 +279,6 @@ reviews what lint cannot rather than repeating what lint already did.
 
 ## Totals
 
-- 75 claim(s) enforced by a tool
-- 21 claim(s) left to a reviewer
+- 76 claim(s) enforced by a tool
+- 22 claim(s) left to a reviewer
 - 0 problem(s)
