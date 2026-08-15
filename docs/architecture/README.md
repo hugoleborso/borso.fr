@@ -318,15 +318,15 @@ pnpm exec tsx scripts/architecture/architecture-graph.ts --app pragma \
 - The typed client is recognised by the binding `api`, which every front end
   here uses. One that named it otherwise would draw no flow, and would say so
   in the title rather than silently.
-- **The Standards tab is one commit behind after a standards edit.** Its
-  version list comes from `git log` on each document, which the generator can
-  only read up to `HEAD`. A commit that edits `docs/standards/**` is therefore
-  not in the page it was generated alongside, and the next run of the gate says
-  the page is stale — naming an application whose code nobody touched. Run the
-  generator and stage the result; the count is then history up to the parent
-  commit, which is the most a pre-commit gate can know. Bytes derived from
-  committed history cannot be byte-stable under a check that runs before the
-  commit exists, so this is a property of the design rather than a bug in it.
+- **The Standards tab is up to one commit behind its own history, and no gate
+  says so.** Its version list comes from `git log`, and a file cannot contain
+  the sha of the commit that adds it, so the newest entry always appears one
+  run later. Those bytes are fenced between `<!--history-->` and
+  `<!--/history-->`, and `--check` compares the page with the fence removed from
+  both sides — everything else is a function of the tree alone and is still
+  compared to the byte. Before the fence the gate failed the commit *after* a
+  standards edit, naming an application whose code nobody touched. See
+  [a generated file cannot contain its own commit](../dantotsus/a-generated-file-cannot-contain-its-own-commit.md).
 - A route handler defined outside the controller file is not followed.
 - The walk stops at depth six, which no chain in pragma currently reaches.
 - `sw.js` is scanned for URL strings only, since it ships as plain script.

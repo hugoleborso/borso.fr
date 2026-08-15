@@ -19,7 +19,11 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { buildJourneys, type SourceEntry } from './architecture-journeys';
 import { type LevelLayout, layoutLevel } from './architecture-layout';
-import { renderArchitectureIndex, renderArchitecturePage } from './architecture-page';
+import {
+  renderArchitectureIndex,
+  renderArchitecturePage,
+  withoutHistory,
+} from './architecture-page';
 import {
   type ArchitectureFile,
   type NodeMetrics,
@@ -1838,11 +1842,20 @@ async function buildApplication(options: BuildOptions): Promise<void> {
   }
 
   if (isCheck) {
-    for (const [path, expected] of [
-      [modelPath, model],
-      [pagePath, page],
+    /**
+     * The model is compared to the byte, because every one of its bytes comes
+     * from the working tree. The page is compared with its git-derived history
+     * region removed from both sides: a page cannot contain the commit that
+     * adds it, so those bytes are one commit behind by construction, and asking
+     * about them fails the commit *after* the one that moved them. See
+     * `withoutHistory`.
+     */
+    for (const [path, expected, comparable] of [
+      [modelPath, model, (text: string) => text],
+      [pagePath, page, withoutHistory],
     ] as const) {
-      if (readSourceOrEmpty(relative(REPOSITORY_ROOT, path)) === expected) continue;
+      const committed = readSourceOrEmpty(relative(REPOSITORY_ROOT, path));
+      if (comparable(committed) === comparable(expected)) continue;
       console.error(
         `  ${relative(REPOSITORY_ROOT, path)} is out of date. Run \`pnpm exec tsx scripts/architecture/architecture-graph.ts\`.`,
       );
