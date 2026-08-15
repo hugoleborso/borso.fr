@@ -7,7 +7,7 @@
  * @BlueprintDescription Declares `@vitest-environment node` in the file's first docblock, which is the only place vitest reads it, then saves the environment variables the SDK needs into `PRESERVED_ENV`, sets them for the suite and restores them afterwards, so a variable this suite sets cannot leak into another file.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createPresignedUpload, MediaConfigError, MediaContentTypeError } from './media.adapter';
 
 const PRESERVED_ENV: Record<string, string | undefined> = {
@@ -82,5 +82,78 @@ describe('media.adapter', () => {
     );
     const fiveMinutesMs = 5 * 60 * 1000;
     expect(presignedUpload.expiresAt.getTime()).toBe(now.getTime() + fiveMinutesMs);
+  });
+  it('falls back to the deployment region when the environment names none', async () => {
+    // The client is cached for the life of the module, so the region is read
+    // exactly once — on a module that has already signed something, the
+    // fallback is unreachable however the environment is set.
+    vi.resetModules();
+    process.env.PHOTOS_BUCKET = 'lastloop-test-bucket';
+    delete process.env.AWS_REGION;
+    const freshModule = await import('./media.adapter');
+    const presignedUpload = await freshModule.createPresignedUpload(
+      { editionSlug: 'lepin-2026', runnerSlug: 'alice', contentType: 'image/jpeg' },
+      new Date(),
+    );
+    expect(presignedUpload.uploadUrl).toContain('eu-west-3');
+    process.env.AWS_REGION = 'eu-west-3';
+  });
+  it('names its own error rather than the vendor when the bucket is missing', async () => {
+    delete process.env.PHOTOS_BUCKET;
+    await expect(
+      createPresignedUpload(
+        { editionSlug: 'lepin-2026', runnerSlug: 'alice', contentType: 'image/jpeg' },
+        new Date(),
+      ),
+    ).rejects.toMatchObject({ name: 'MediaConfigError', message: 'PHOTOS_BUCKET not set' });
+  });
+
+  it('treats an empty bucket name as no bucket at all', async () => {
+    process.env.PHOTOS_BUCKET = '';
+    await expect(
+      createPresignedUpload(
+        { editionSlug: 'lepin-2026', runnerSlug: 'alice', contentType: 'image/jpeg' },
+        new Date(),
+      ),
+    ).rejects.toMatchObject({ name: 'MediaConfigError' });
+    process.env.PHOTOS_BUCKET = 'lastloop-test-bucket';
+  });
+
+  it('names the content type it refused, so the caller can report it', async () => {
+    process.env.PHOTOS_BUCKET = 'lastloop-test-bucket';
+    await expect(
+      createPresignedUpload(
+        { editionSlug: 'lepin-2026', runnerSlug: 'alice', contentType: 'image/heif' },
+        new Date(),
+      ),
+    ).rejects.toMatchObject({
+      name: 'MediaContentTypeError',
+      message: 'unsupported content type: image/heif',
+    });
+  });
+
+  it('signs a URL that expires with the presign window rather than the default', async () => {
+    process.env.PHOTOS_BUCKET = 'lastloop-test-bucket';
+    const presignedUpload = await createPresignedUpload(
+      { editionSlug: 'lepin-2026', runnerSlug: 'alice', contentType: 'image/jpeg' },
+      new Date(),
+    );
+    expect(presignedUpload.uploadUrl).toContain('X-Amz-Expires=300');
+  });
+
+  it('signs against the region the environment names', async () => {
+    vi.resetModules();
+    process.env.PHOTOS_BUCKET = 'lastloop-test-bucket';
+    process.env.AWS_REGION = 'us-east-1';
+    const freshModule = await import('./media.adapter');
+    const presignedUpload = await freshModule.createPresignedUpload(
+      { editionSlug: 'lepin-2026', runnerSlug: 'alice', contentType: 'image/jpeg' },
+      new Date(),
+    );
+    expect(presignedUpload.uploadUrl).toContain('us-east-1');
+    // This is the one test that re-imports the module, so it is the only place
+    // a value computed once at module load can be observed under a mutation.
+    expect(presignedUpload.uploadUrl).toContain('X-Amz-Expires=300');
+    process.env.AWS_REGION = 'eu-west-3';
   });
 });

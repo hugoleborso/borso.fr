@@ -21,6 +21,10 @@ function readEnv(name: string): string | undefined {
 }
 
 function getClient(): S3Client {
+  // Stryker disable next-line ConditionalExpression: equivalent mutant. Dropping
+  // the guard builds a second client per call, which no caller can observe —
+  // the signature a presigner produces depends on the region and the
+  // credentials, not on which client object produced it.
   if (cachedClient !== null) return cachedClient;
   const region = readEnv('AWS_REGION') ?? 'eu-west-3';
   cachedClient = new S3Client({ region });

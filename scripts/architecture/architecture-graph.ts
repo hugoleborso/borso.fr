@@ -46,7 +46,21 @@ import {
 
 const REPOSITORY_ROOT = resolve(import.meta.dirname, '../..');
 const OUTPUT_DIRECTORY = join(REPOSITORY_ROOT, 'docs/architecture');
-const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'cdk.out', '.git', '__fixtures__']);
+const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'cdk.out', '__fixtures__']);
+
+/**
+ * True for a directory holding tooling state rather than application source.
+ *
+ * The named list cannot anticipate the next tool: a Stryker run that is killed
+ * leaves `.stryker-tmp/sandbox-*`, a whole copy of the application, and the
+ * scan counted it as more application — pragma read 501 files instead of 249,
+ * every context appeared twice, and the committed page went stale against a
+ * tree nobody had edited. Every tool in this repository writes its scratch
+ * state to a dot-directory, so that is the rule rather than the roster.
+ */
+function isToolingDirectory(name: string): boolean {
+  return name.startsWith('.') || SKIPPED_DIRECTORIES.has(name);
+}
 const SOURCE_PATTERN = /\.tsx?$/;
 /**
  * The repository a commit link points at. Read from a constant rather than from
@@ -222,7 +236,7 @@ function listSourceFiles(directory: string): string[] {
   const found: string[] = [];
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     if (entry.isDirectory()) {
-      if (SKIPPED_DIRECTORIES.has(entry.name)) continue;
+      if (isToolingDirectory(entry.name)) continue;
       found.push(...listSourceFiles(join(directory, entry.name)));
       continue;
     }

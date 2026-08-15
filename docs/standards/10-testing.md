@@ -79,13 +79,30 @@ SDK clients and the network calls to third-party services.
 
 ## Coverage gate
 
-`vitest run --coverage` fails when any file matching `**/*.core.ts` or
-`**/*.utils.ts` falls below full statement, branch, function, and line
-coverage.
+`vitest run --coverage` fails when any file matching `**/*.core.ts`,
+`**/*.utils.ts` or `**/*.adapter.ts` falls below full statement, branch,
+function, and line coverage.
 
-Files that touch the DOM, the network, React state, or any other side effect
-are out of scope for the gate, and they do not carry the suffix. A file that
-mixes pure helpers with impure code gets split rather than exempted.
+The first two are pure. The third is not, and it is on the list anyway: an
+adapter is the one file in a bounded context that leaves the process
+([ADR-0012](../adr/0012-outbound-calls-live-in-adapter-files.md)), which makes
+it both the highest-risk file in the slice and, by its own blueprint, the
+easiest impure file to drive — the fetcher, the clock and the cache are
+arguments. An adapter that cannot be covered without a mock of its own vendor
+is an adapter missing a seam.
+
+Two branches hide there by construction and are worth naming, because both were
+uncovered on every adapter in this repository until the gate was widened. A
+module-level client cache means the region is read exactly once, so its default
+is unreachable from a module that has already signed something; reach it with
+`vi.resetModules()` and a dynamic import. A rate-limit wait needs
+`vi.useFakeTimers()` and `advanceTimersByTimeAsync`, since the floor is real
+time.
+
+Everything else that touches the DOM, the network, React state, or any other
+side effect is out of scope for the gate, and it does not carry any of the
+three suffixes. A file that mixes pure helpers with impure code gets split
+rather than exempted.
 
 There is no exemption for a small application, because a small pure function is
 exactly the kind that is cheap to cover.

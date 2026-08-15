@@ -29,8 +29,10 @@ export default defineConfig({
       include: [
         'api/src/**/*.core.ts',
         'api/src/**/*.utils.ts',
+        'api/src/**/*.adapter.ts',
         'site/src/**/*.core.ts',
         'site/src/**/*.utils.ts',
+        'site/src/**/*.adapter.ts',
       ],
       thresholds: { perFile: true, statements: 100, branches: 100, functions: 100, lines: 100 },
     },
@@ -43,10 +45,12 @@ export default defineConfig({
           include: [
             'api/src/**/*.core.test.ts',
             'api/src/**/*.utils.test.ts',
+            'api/src/**/*.adapter.test.ts',
             'api/src/database/migrations.audit.test.ts',
             'cdk/test/**/*.test.ts',
             'site/src/**/*.utils.test.ts',
             'site/src/**/*.core.test.ts',
+            'site/src/**/*.adapter.test.ts',
             'site/src/**/*.test.tsx',
           ],
           // Vitest 4 refuses to schedule two projects that disagree on
@@ -71,6 +75,10 @@ export default defineConfig({
           name: 'back-e2e',
           environment: 'node',
           include: ['api/src/**/*.test.ts', 'test/**/*.test.ts'],
+          // An adapter takes its way out of the process as an argument, so it
+          // is driven with a stub and belongs with the fast suite, not behind
+          // a database this project boots.
+          exclude: ['api/src/**/*.adapter.test.ts'],
           globalSetup: ['./test/setup-postgres.ts'],
           // Single shared Postgres across the back-e2e suites means a parallel
           // truncateAllTables() in one test would wipe another's data — race

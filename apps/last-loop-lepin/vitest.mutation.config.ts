@@ -32,8 +32,10 @@ export default defineConfig({
           include: [
             'api/src/**/*.core.test.ts',
             'api/src/**/*.utils.test.ts',
+            'api/src/**/*.adapter.test.ts',
             'site/src/**/*.core.test.ts',
             'site/src/**/*.utils.test.ts',
+            'site/src/**/*.adapter.test.ts',
           ],
         },
       },
