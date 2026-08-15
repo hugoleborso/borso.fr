@@ -46,6 +46,36 @@ describe('makeIdempotent', () => {
       'INSERT INTO "runners" VALUES (1)',
     );
   });
+
+  /**
+   * The rewrites match the first occurrence in the statement, and drizzle puts
+   * a prose header above the DDL. A comment naming the same keywords used to
+   * take the rewrite and leave the statement it described un-idempotent.
+   */
+  it('rewrites the statement and not a comment that names the same keywords', () => {
+    const statement = [
+      '-- We CREATE TABLE here for the first time.',
+      'CREATE TABLE "widget" (id TEXT)',
+    ].join('\n');
+    expect(makeIdempotent(statement)).toBe(
+      [
+        '-- We CREATE TABLE here for the first time.',
+        'CREATE TABLE IF NOT EXISTS "widget" (id TEXT)',
+      ].join('\n'),
+    );
+  });
+
+  it('leaves a statement that is only a comment alone', () => {
+    expect(makeIdempotent('-- CREATE TABLE "widget" (id TEXT)')).toBe(
+      '-- CREATE TABLE "widget" (id TEXT)',
+    );
+  });
+
+  it('rewrites a statement carrying a trailing comment on the same line', () => {
+    expect(makeIdempotent('CREATE SCHEMA "pr_27" -- and CREATE SCHEMA again')).toBe(
+      'CREATE SCHEMA IF NOT EXISTS "pr_27" -- and CREATE SCHEMA again',
+    );
+  });
 });
 
 describe('stripUsingClause', () => {

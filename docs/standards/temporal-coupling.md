@@ -19,7 +19,7 @@ This is a report, not a gate. The input is the history, so it changes on
 every commit whether or not any source moved, and a freshness check on it
 would fail every commit for a reason nobody could act on.
 
-Read at `b5cd7dd`, from the last 400 commit(s).
+Read at `43e56e3`, from the last 400 commit(s).
 
 11 pair(s) are left out because the module graph does not
 describe one of the two files: deleted, renamed, or in a workspace the graph

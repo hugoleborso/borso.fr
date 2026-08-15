@@ -19,7 +19,7 @@ The input is the history, so the page changes on every commit whether or
 not any source moved; a staleness gate would fail every commit for a reason
 nobody could act on. It records the commit it was read at instead.
 
-Read at `b5cd7dd`, from the last 400 commit(s) over 609 tracked source file(s).
+Read at `43e56e3`, from the last 400 commit(s) over 609 tracked source file(s).
 
 ## The files
 
@@ -51,7 +51,7 @@ Read at `b5cd7dd`, from the last 400 commit(s) over 609 tracked source file(s).
 | `apps/borsouvertures/site/src/config/openingsCacheVersion.ts` | 2 | unknown | follows no recorded pattern; the path does not say what the file is | 4 |
 | `apps/last-loop-lepin/api/src/helpers/geo/haversine.utils.ts` | 4 | utils | follows no recorded pattern | 4 |
 
-64 more file(s) score above zero and are not shown.
+65 more file(s) score above zero and are not shown.
 
 ## The next blueprint worth writing
 
@@ -61,7 +61,7 @@ one.
 
 | Layer | Files following nothing | Their commits |
 | --- | --- | --- |
-| config | 9 | 34 |
+| config | 9 | 35 |
 | unknown | 10 | 34 |
 | atom | 9 | 19 |
 | organism | 4 | 17 |
