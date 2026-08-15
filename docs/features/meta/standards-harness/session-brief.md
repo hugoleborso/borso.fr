@@ -172,6 +172,17 @@ takes half an hour.**
    punch-to-punch gap. Both are defensible and only one should carry the word.
 6. **`type-coverage`.** Measured and left out, with the numbers, in the section
    above. One dev dependency and half an hour if you want it.
+7. **`infra/cdk` is coverage-gated and mutated by nothing.** PR 49's fourth
+   round found this and stated it in prose that the merge replaced with typed
+   markers, so it is recorded here instead. Five `.utils.ts` files sit at 100%
+   coverage and the workspace has no Stryker configuration, so no mutant has
+   ever run against them. Measured on the merged tree with a config written for
+   the purpose: **80.84%, 69 survivors, 22 seconds a run** — 36 in
+   `statement-rewrites.utils.ts`, 22 in `naming.utils.ts`, 11 in
+   `clone-from-schema.utils.ts`, and `pending-migrations.utils.ts` and
+   `stage-wiring.utils.ts` already clean. PR 49 measured 90 before its own
+   `test(infra)` commit landed in the same range. The gate is not committed
+   unless it is green, on the same rule that applied to the root config.
 
 ## Vocabulary findings recorded but not acted on
 
