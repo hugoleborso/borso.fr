@@ -3204,7 +3204,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/orphan-member-warn.adapter.ts",
-      "digest": "ceadfa9d7729",
+      "digest": "a3dcc5c53cb3",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3257,18 +3257,18 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
-      "digest": "9b071323abf3",
+      "digest": "e991363fd338",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
       "feature": "setlists",
       "exports": [
         "compactLineup",
-        "findOrphanMemberIds",
         "formatSetlistOrder",
         "instrumentFamilyMap",
         "instrumentNamesFor",
         "lineupOf",
+        "listOrphanMemberIds",
         "prominentMemberInstrumentFor",
         "selectUnwarnedMemberIds",
         "tonalityLabelFor"
@@ -3322,7 +3322,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
-      "digest": "c4f5083449ff",
+      "digest": "31c6727174c9",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3343,7 +3343,7 @@
         "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
         "apps/pragma/site/src/components/organisms/setlist-filter.core.ts",
         "apps/pragma/site/src/components/organisms/transition-view.core.ts",
-        "apps/pragma/site/src/lib/mastery-aggregate.utils.ts",
+        "apps/pragma/site/src/lib/mastery-aggregate.core.ts",
         "apps/pragma/site/src/lib/queries/instruments.queries.ts",
         "apps/pragma/site/src/lib/queries/mastery.queries.ts",
         "apps/pragma/site/src/lib/queries/members.queries.ts",
@@ -3941,10 +3941,10 @@
       ]
     },
     {
-      "path": "apps/pragma/site/src/lib/mastery-aggregate.utils.ts",
+      "path": "apps/pragma/site/src/lib/mastery-aggregate.core.ts",
       "digest": "1b8da27bd444",
       "container": "site",
-      "layer": "utils",
+      "layer": "core",
       "context": "lib",
       "feature": "mastery",
       "exports": [
@@ -4618,7 +4618,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/CatalogPage.tsx",
-      "digest": "5156f16a7299",
+      "digest": "c0e57b09fcfa",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4635,7 +4635,7 @@
         "apps/pragma/site/src/components/organisms/CatalogGrid.tsx",
         "apps/pragma/site/src/components/organisms/SongCard.tsx",
         "apps/pragma/site/src/lib/api.client.ts",
-        "apps/pragma/site/src/lib/mastery-aggregate.utils.ts",
+        "apps/pragma/site/src/lib/mastery-aggregate.core.ts",
         "apps/pragma/site/src/lib/queries/instruments.queries.ts",
         "apps/pragma/site/src/lib/queries/mastery.queries.ts",
         "apps/pragma/site/src/lib/queries/members.queries.ts",

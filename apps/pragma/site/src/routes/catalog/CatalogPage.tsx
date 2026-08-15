@@ -23,7 +23,7 @@ import { SearchBar } from '../../components/molecules/SearchBar';
 import { CatalogGrid } from '../../components/organisms/CatalogGrid';
 import type { SongCardProps } from '../../components/organisms/SongCard';
 import { ApiError } from '../../lib/api.client';
-import { meanDefaultMasteryForSong } from '../../lib/mastery-aggregate.utils';
+import { meanDefaultMasteryForSong } from '../../lib/mastery-aggregate.core';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
 import { useMembersList } from '../../lib/queries/members.queries';

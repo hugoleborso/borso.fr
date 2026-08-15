@@ -127,7 +127,7 @@ function groupBy<Key>(
  * is "how are query modules named here", not "how are the files in this one
  * folder named".
  */
-export function findCaseStyleDivergences(facts: readonly FileFact[]): readonly Divergence[] {
+export function listCaseStyleDivergences(facts: readonly FileFact[]): readonly Divergence[] {
   const divergences: Divergence[] = [];
   for (const [group, layerFacts] of groupBy(facts, readGroupKey)) {
     const pathsByStyle = new Map<string, string[]>();
@@ -151,7 +151,7 @@ export function findCaseStyleDivergences(facts: readonly FileFact[]): readonly D
  * A file that exports a hook and does not say so in its name, beside one that
  * does. Two spellings for the same role is the drift; either alone is a choice.
  */
-export function findHookNamingDivergence(facts: readonly FileFact[]): readonly Divergence[] {
+export function listHookNamingDivergences(facts: readonly FileFact[]): readonly Divergence[] {
   const pathsByShape = new Map<string, string[]>();
   for (const fact of facts) {
     if (!fact.exportsHook) continue;
@@ -194,8 +194,15 @@ export function countSuffixes(facts: readonly FileFact[]): readonly Variant[] {
   return buildVariants(pathsBySuffix);
 }
 
-export function findDivergences(facts: readonly FileFact[]): readonly Divergence[] {
-  return [...findCaseStyleDivergences(facts), ...findHookNamingDivergence(facts)].sort(
+export function listDivergences(facts: readonly FileFact[]): readonly Divergence[] {
+  // Stryker disable next-line MethodExpression: equivalent mutant. Both halves
+  // already arrive ordered, and every case-style key opens with `case-style:`,
+  // which sorts before the one `role-marker:hook` key the second half can
+  // produce, so no input reaches this sort out of order.
+  return [...listCaseStyleDivergences(facts), ...listHookNamingDivergences(facts)].sort(
+    // Stryker disable next-line ArrowFunction: equivalent mutant. Same reason
+    // as the line above: a comparator that ranks everything equal leaves an
+    // already ordered list in place.
     (first, second) => first.key.localeCompare(second.key),
   );
 }
@@ -231,7 +238,7 @@ export interface RatchetFailure {
  * disagrees in three. A count that falls is always allowed, and lowering the
  * baseline is the whole point.
  */
-export function findRatchetFailures(
+export function listRatchetFailures(
   baseline: BaselineCounts,
   current: BaselineCounts,
 ): readonly RatchetFailure[] {
@@ -244,7 +251,7 @@ export function findRatchetFailures(
 }
 
 /** Keys the baseline holds that the tree no longer produces, so it can be trimmed. */
-export function findStaleBaselineKeys(
+export function listStaleBaselineKeys(
   baseline: BaselineCounts,
   current: BaselineCounts,
 ): readonly string[] {

@@ -40,7 +40,7 @@ Read from 610 source file(s).
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| kebab | 32 | `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts`, `apps/borso-fr/site/src/home-menu.core.ts` |
+| kebab | 33 | `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts`, `apps/borso-fr/site/src/home-menu.core.ts` |
 | camel | 5 | `apps/borsouvertures/site/src/openings/learnSession.core.ts`, `apps/borsouvertures/site/src/openings/openingFlow.core.ts`, `apps/borsouvertures/site/src/openings/playScope.core.ts` |
 
 ## How is the name of a entrypoint.tsx file written?
@@ -85,7 +85,7 @@ Read from 610 source file(s).
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| kebab | 41 | `apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts`, `apps/borso-fr/site/src/art/mondrian/painting.utils.ts`, `apps/borso-fr/site/src/art/mondrian/palettes.utils.ts` |
+| kebab | 40 | `apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts`, `apps/borso-fr/site/src/art/mondrian/painting.utils.ts`, `apps/borso-fr/site/src/art/mondrian/palettes.utils.ts` |
 | camel | 12 | `apps/borsouvertures/site/src/openings/bookArrows.utils.ts`, `apps/borsouvertures/site/src/openings/bookEngine.utils.ts`, `apps/borsouvertures/site/src/openings/bookTree.utils.ts` |
 
 ## How does a module that exports a hook say so in its name?
@@ -105,8 +105,8 @@ than 3 files is either a convention nobody wrote down or an accident.
 
 | Suffix | Files |
 | --- | --- |
-| `.utils.ts` | 86 |
-| `.core.ts` | 83 |
+| `.utils.ts` | 85 |
+| `.core.ts` | 84 |
 | `.controller.ts` | 19 |
 | `.service.ts` | 18 |
 | `.schema.ts` | 16 |

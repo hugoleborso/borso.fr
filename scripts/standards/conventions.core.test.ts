@@ -3,11 +3,11 @@ import {
   buildBaseline,
   countMinorityFiles,
   countSuffixes,
-  findCaseStyleDivergences,
-  findDivergences,
-  findHookNamingDivergence,
-  findRatchetFailures,
-  findStaleBaselineKeys,
+  listCaseStyleDivergences,
+  listDivergences,
+  listHookNamingDivergences,
+  listRatchetFailures,
+  listStaleBaselineKeys,
   readCaseStyle,
   readNameStem,
   readNameSuffix,
@@ -53,10 +53,10 @@ describe('readCaseStyle', () => {
   });
 });
 
-describe('findCaseStyleDivergences', () => {
+describe('listCaseStyleDivergences', () => {
   it('finds nothing when a layer agrees', () => {
     const facts = [buildFact('apps/a/x/one-thing.utils.ts'), buildFact('apps/a/x/two.utils.ts')];
-    expect(findCaseStyleDivergences(facts)).toEqual([]);
+    expect(listCaseStyleDivergences(facts)).toEqual([]);
   });
 
   it('reports a layer that uses two case styles, majority first', () => {
@@ -65,12 +65,23 @@ describe('findCaseStyleDivergences', () => {
       buildFact('apps/a/x/another-thing.utils.ts'),
       buildFact('apps/b/x/bookArrows.utils.ts'),
     ];
-    const [divergence] = findCaseStyleDivergences(facts);
+    const [divergence] = listCaseStyleDivergences(facts);
     expect(divergence?.key).toBe('case-style:utils.ts');
     expect(divergence?.variants.map((variant) => [variant.name, variant.count])).toEqual([
       ['kebab', 2],
       ['camel', 1],
     ]);
+  });
+
+  /** The question names the extension, because the answer differs by extension. */
+  it('names the extension in the question it asks about components', () => {
+    const facts = [
+      buildFact('apps/a/x/SongCard.tsx', { layer: 'atom' }),
+      buildFact('apps/a/x/song-card.tsx', { layer: 'atom' }),
+    ];
+    const [divergence] = listCaseStyleDivergences(facts);
+    expect(divergence?.key).toBe('case-style:atom.tsx');
+    expect(divergence?.question).toBe('How is the name of a atom.tsx file written?');
   });
 
   /** A component is PascalCase and a module is kebab-case, and both are right. */
@@ -79,7 +90,7 @@ describe('findCaseStyleDivergences', () => {
       buildFact('apps/a/x/App.tsx', { layer: 'entrypoint' }),
       buildFact('apps/a/x/main.ts', { layer: 'entrypoint' }),
     ];
-    expect(findCaseStyleDivergences(facts)).toEqual([]);
+    expect(listCaseStyleDivergences(facts)).toEqual([]);
   });
 
   it('ignores files whose path gives them no layer', () => {
@@ -87,7 +98,7 @@ describe('findCaseStyleDivergences', () => {
       buildFact('apps/a/x/one.ts', { layer: 'unknown' }),
       buildFact('apps/a/x/twoThings.ts', { layer: 'unknown' }),
     ];
-    expect(findCaseStyleDivergences(facts)).toEqual([]);
+    expect(listCaseStyleDivergences(facts)).toEqual([]);
   });
 
   it('caps the examples it shows', () => {
@@ -95,8 +106,12 @@ describe('findCaseStyleDivergences', () => {
       buildFact(`apps/a/x/${name}.utils.ts`),
     );
     facts.push(buildFact('apps/b/x/bookArrows.utils.ts'));
-    const [divergence] = findCaseStyleDivergences(facts);
-    expect(divergence?.variants[0]?.examples).toHaveLength(3);
+    const [divergence] = listCaseStyleDivergences(facts);
+    expect(divergence?.variants[0]?.examples).toEqual([
+      'apps/a/x/alpha.utils.ts',
+      'apps/a/x/bravo.utils.ts',
+      'apps/a/x/mike.utils.ts',
+    ]);
   });
 
   it('orders two questions by key, so the report is stable', () => {
@@ -106,7 +121,7 @@ describe('findCaseStyleDivergences', () => {
       buildFact('apps/a/x/one-thing.core.ts', { layer: 'core' }),
       buildFact('apps/a/x/bookArrows.core.ts', { layer: 'core' }),
     ];
-    expect(findCaseStyleDivergences(facts).map((divergence) => divergence.key)).toEqual([
+    expect(listCaseStyleDivergences(facts).map((divergence) => divergence.key)).toEqual([
       'case-style:core.ts',
       'case-style:utils.ts',
     ]);
@@ -117,18 +132,18 @@ describe('findCaseStyleDivergences', () => {
       buildFact('apps/a/x/bookArrows.utils.ts'),
       buildFact('apps/a/x/one-thing.utils.ts'),
     ];
-    const [divergence] = findCaseStyleDivergences(facts);
+    const [divergence] = listCaseStyleDivergences(facts);
     expect(divergence?.variants.map((variant) => variant.name)).toEqual(['camel', 'kebab']);
   });
 });
 
-describe('findHookNamingDivergence', () => {
+describe('listHookNamingDivergences', () => {
   it('finds nothing when every hook module is spelled the same way', () => {
     const facts = [
       buildFact('apps/a/x/online-status.hook.ts', { exportsHook: true, layer: 'hook' }),
       buildFact('apps/a/x/nav-badges.hook.ts', { exportsHook: true, layer: 'hook' }),
     ];
-    expect(findHookNamingDivergence(facts)).toEqual([]);
+    expect(listHookNamingDivergences(facts)).toEqual([]);
   });
 
   it('reports the three spellings a hook module can carry', () => {
@@ -138,7 +153,7 @@ describe('findHookNamingDivergence', () => {
       buildFact('apps/a/x/viewport.ts', { exportsHook: true }),
       buildFact('apps/a/x/not-a-hook.ts'),
     ];
-    const [divergence] = findHookNamingDivergence(facts);
+    const [divergence] = listHookNamingDivergences(facts);
     expect(divergence?.key).toBe('role-marker:hook');
     expect(divergence?.variants.map((variant) => variant.name).sort()).toEqual([
       '<name>.hook.ts',
@@ -148,7 +163,7 @@ describe('findHookNamingDivergence', () => {
   });
 
   it('finds nothing when no module exports a hook', () => {
-    expect(findHookNamingDivergence([buildFact('apps/a/x/plain.ts')])).toEqual([]);
+    expect(listHookNamingDivergences([buildFact('apps/a/x/plain.ts')])).toEqual([]);
   });
 });
 
@@ -167,7 +182,7 @@ describe('countSuffixes', () => {
   });
 });
 
-describe('findDivergences', () => {
+describe('listDivergences', () => {
   it('returns both kinds, ordered by key', () => {
     const facts = [
       buildFact('apps/a/x/one-thing.utils.ts'),
@@ -175,7 +190,7 @@ describe('findDivergences', () => {
       buildFact('apps/a/x/online-status.hook.ts', { exportsHook: true }),
       buildFact('apps/a/x/viewport.ts', { exportsHook: true }),
     ];
-    expect(findDivergences(facts).map((divergence) => divergence.key)).toEqual([
+    expect(listDivergences(facts).map((divergence) => divergence.key)).toEqual([
       'case-style:utils.ts',
       'role-marker:hook',
     ]);
@@ -216,35 +231,42 @@ describe('buildBaseline', () => {
   });
 });
 
-describe('findRatchetFailures', () => {
+describe('listRatchetFailures', () => {
   it('allows a count that falls, which is the point of fixing one', () => {
-    expect(findRatchetFailures({ a: 5 }, { a: 3 })).toEqual([]);
+    expect(listRatchetFailures({ a: 5 }, { a: 3 })).toEqual([]);
   });
 
   it('allows a count that holds', () => {
-    expect(findRatchetFailures({ a: 5 }, { a: 5 })).toEqual([]);
+    expect(listRatchetFailures({ a: 5 }, { a: 5 })).toEqual([]);
   });
 
   it('fails a count that rises', () => {
-    expect(findRatchetFailures({ a: 5 }, { a: 6 })).toEqual([{ key: 'a', was: 5, now: 6 }]);
+    expect(listRatchetFailures({ a: 5 }, { a: 6 })).toEqual([{ key: 'a', was: 5, now: 6 }]);
   });
 
   it('fails a question that had one answer and now has two', () => {
-    expect(findRatchetFailures({}, { fresh: 1 })).toEqual([{ key: 'fresh', was: 0, now: 1 }]);
+    expect(listRatchetFailures({}, { fresh: 1 })).toEqual([{ key: 'fresh', was: 0, now: 1 }]);
   });
 
   it('reports failures in key order, so the message is stable', () => {
-    const failures = findRatchetFailures({}, { zebra: 1, alpha: 1 });
+    const failures = listRatchetFailures({}, { zebra: 1, alpha: 1 });
     expect(failures.map((failure) => failure.key)).toEqual(['alpha', 'zebra']);
   });
 });
 
-describe('findStaleBaselineKeys', () => {
+describe('listStaleBaselineKeys', () => {
   it('names a baseline entry the tree no longer produces', () => {
-    expect(findStaleBaselineKeys({ gone: 2, kept: 1 }, { kept: 1 })).toEqual(['gone']);
+    expect(listStaleBaselineKeys({ gone: 2, kept: 1 }, { kept: 1 })).toEqual(['gone']);
+  });
+
+  it('names them in key order, so the message is stable', () => {
+    expect(listStaleBaselineKeys({ zebra: 2, alpha: 1, kept: 1 }, { kept: 1 })).toEqual([
+      'alpha',
+      'zebra',
+    ]);
   });
 
   it('names nothing when the baseline matches the tree', () => {
-    expect(findStaleBaselineKeys({ kept: 1 }, { kept: 1 })).toEqual([]);
+    expect(listStaleBaselineKeys({ kept: 1 }, { kept: 1 })).toEqual([]);
   });
 });

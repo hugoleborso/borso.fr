@@ -25,9 +25,9 @@ import {
   buildBaseline,
   countMinorityFiles,
   countSuffixes,
-  findDivergences,
-  findRatchetFailures,
-  findStaleBaselineKeys,
+  listDivergences,
+  listRatchetFailures,
+  listStaleBaselineKeys,
   type BaselineCounts,
   type FileFact,
 } from './conventions.core';
@@ -77,7 +77,7 @@ const GENERATED_BANNER =
 const RARE_SUFFIX_THRESHOLD = 3;
 
 function renderReport(facts: readonly FileFact[]): string {
-  const divergences = findDivergences(facts);
+  const divergences = listDivergences(facts);
   const suffixes = countSuffixes(facts);
   const lines: string[] = [
     GENERATED_BANNER,
@@ -138,7 +138,7 @@ function renderReport(facts: readonly FileFact[]): string {
 
 function main(): void {
   const facts = readFileFacts();
-  const divergences = findDivergences(facts);
+  const divergences = listDivergences(facts);
   const current = buildBaseline(divergences);
   const rendered = renderReport(facts);
 
@@ -150,8 +150,8 @@ function main(): void {
   }
 
   const baseline = readBaseline();
-  const failures = findRatchetFailures(baseline, current);
-  const stale = findStaleBaselineKeys(baseline, current);
+  const failures = listRatchetFailures(baseline, current);
+  const stale = listStaleBaselineKeys(baseline, current);
 
   if (process.argv.includes('--check')) {
     // The ratchet is reported before staleness. A new spelling and a stale

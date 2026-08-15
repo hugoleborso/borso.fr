@@ -84,10 +84,13 @@ export const ENTRY_POINT_PATH_SUFFIXES: readonly string[] = [
   '/site/src/App.tsx',
   '/cdk/bin/cdk.ts',
   '/cdk/lib/stack.ts',
+  '/bin/app.ts',
+  '/bin/shared.ts',
 ];
 
 export const LAYER_BY_PATH_SEGMENT: readonly (readonly [string, string])[] = [
   ['eslint-rules/', 'lint-rule'],
+  ['infra/shared/lib/', 'stack'],
   ['/components/atoms/', 'atom'],
   ['/components/molecules/', 'molecule'],
   ['/components/organisms/', 'organism'],

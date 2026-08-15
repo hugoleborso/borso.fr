@@ -230,7 +230,7 @@ function hasCreateTableStatement(migrationSql: string, table: string): boolean {
  * `admin_credentials`. Demanding a decision about a table the schema has never
  * heard of would be noise, and noise is what gets a guard deleted.
  */
-export function findUndecidedCredentialTables(
+export function listUndecidedCredentialTables(
   config: CloneDecisionLists,
   migrationSql: readonly string[],
 ): string[] {

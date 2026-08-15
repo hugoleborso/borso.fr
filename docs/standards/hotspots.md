@@ -19,39 +19,39 @@ The input is the history, so the page changes on every commit whether or
 not any source moved; a staleness gate would fail every commit for a reason
 nobody could act on. It records the commit it was read at instead.
 
-Read at `de1174d`, from the last 400 commit(s) over 608 tracked source file(s).
+Read at `db41bae`, from the last 400 commit(s) over 608 tracked source file(s).
 
 ## The files
 
 | File | Commits | Layer | Weak because | Risk |
 | --- | --- | --- | --- | --- |
 | `infra/cdk/src/index.ts` | 11 | unknown | follows no recorded pattern; the path does not say what the file is | 22 |
-| `infra/shared/lib/deploy-roles.ts` | 10 | unknown | follows no recorded pattern; the path does not say what the file is | 20 |
-| `apps/borsouvertures/scripts/build-openings.ts` | 8 | unknown | follows no recorded pattern; the path does not say what the file is | 16 |
+| `apps/borsouvertures/scripts/build-openings.ts` | 9 | unknown | follows no recorded pattern; the path does not say what the file is | 18 |
 | `infra/cdk/src/internal/migration-runner/index.ts` | 15 | unknown | the path does not say what the file is | 15 |
 | `infra/cdk/src/internal/oidc.ts` | 7 | unknown | follows no recorded pattern; the path does not say what the file is | 14 |
 | `infra/cdk/src/internal/env.ts` | 10 | unknown | the path does not say what the file is | 10 |
-| `infra/shared/lib/shared-stack.ts` | 9 | unknown | the path does not say what the file is | 9 |
-| `apps/borso-fr/bin/app.ts` | 7 | unknown | the path does not say what the file is | 7 |
-| `apps/borsouvertures/bin/app.ts` | 7 | unknown | the path does not say what the file is | 7 |
+| `infra/shared/lib/deploy-roles.ts` | 10 | stack | follows no recorded pattern | 10 |
 | `apps/borsouvertures/vite.config.ts` | 7 | config | follows no recorded pattern | 7 |
 | `apps/last-loop-lepin/api/src/auth/auth.middleware.ts` | 7 | middleware | follows no recorded pattern | 7 |
 | `apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx` | 7 | organism | follows no recorded pattern | 7 |
 | `infra/cdk/src/internal/cf-host-routing-function.ts` | 7 | unknown | the path does not say what the file is | 7 |
 | `infra/cdk/src/internal/cf-static-site-index-rewrite.ts` | 7 | unknown | the path does not say what the file is | 7 |
 | `infra/cdk/src/internal/tags.ts` | 7 | unknown | the path does not say what the file is | 7 |
-| `infra/shared/bin/shared.ts` | 7 | unknown | the path does not say what the file is | 7 |
 | `apps/borso-fr/vite.config.ts` | 6 | config | follows no recorded pattern | 6 |
 | `apps/last-loop-lepin/api/src/auth/auth.schema.ts` | 6 | schema | follows no recorded pattern | 6 |
 | `apps/last-loop-lepin/site/src/observability/sentry.ts` | 6 | unknown | the path does not say what the file is | 6 |
 | `infra/cdk/src/constructs/dsql-cluster-stack.ts` | 6 | construct | follows no recorded pattern | 6 |
-| `infra/shared/lib/certs-stack.ts` | 6 | unknown | the path does not say what the file is | 6 |
 | `apps/last-loop-lepin/api/src/database/client.ts` | 5 | database | follows no recorded pattern | 5 |
 | `apps/last-loop-lepin/api/src/ranking/ranking.types.ts` | 5 | types | follows no recorded pattern | 5 |
 | `apps/last-loop-lepin/site/src/clock-store.ts` | 5 | unknown | the path does not say what the file is | 5 |
 | `apps/last-loop-lepin/vite.config.ts` | 5 | config | follows no recorded pattern | 5 |
+| `apps/pragma/site/src/App.tsx` | 5 | entrypoint | follows no recorded pattern | 5 |
+| `apps/pragma/vitest.mutation.config.ts` | 5 | config | follows no recorded pattern | 5 |
+| `apps/borsouvertures/site/src/config/openingsCacheVersion.ts` | 2 | unknown | follows no recorded pattern; the path does not say what the file is | 4 |
+| `apps/last-loop-lepin/api/src/helpers/geo/haversine.utils.ts` | 4 | utils | follows no recorded pattern | 4 |
+| `apps/last-loop-lepin/api/src/punch/punch.types.ts` | 4 | types | follows no recorded pattern | 4 |
 
-70 more file(s) score above zero and are not shown.
+64 more file(s) score above zero and are not shown.
 
 ## The next blueprint worth writing
 
@@ -61,13 +61,13 @@ one.
 
 | Layer | Files following nothing | Their commits |
 | --- | --- | --- |
-| unknown | 11 | 44 |
 | config | 8 | 36 |
+| unknown | 10 | 36 |
 | atom | 9 | 19 |
 | organism | 4 | 16 |
 | types | 4 | 16 |
-| schema | 5 | 15 |
+| schema | 4 | 14 |
 | route | 3 | 10 |
+| stack | 1 | 10 |
 | service | 2 | 8 |
 | middleware | 1 | 7 |
-| utils | 2 | 7 |

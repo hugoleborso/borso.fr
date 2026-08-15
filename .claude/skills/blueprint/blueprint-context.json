@@ -7,12 +7,18 @@
     "/site/src/main.tsx",
     "/site/src/App.tsx",
     "/cdk/bin/cdk.ts",
-    "/cdk/lib/stack.ts"
+    "/cdk/lib/stack.ts",
+    "/bin/app.ts",
+    "/bin/shared.ts"
   ],
   "pathSegments": [
     {
       "segment": "eslint-rules/",
       "layer": "lint-rule"
+    },
+    {
+      "segment": "infra/shared/lib/",
+      "layer": "stack"
     },
     {
       "segment": "/components/atoms/",
@@ -484,19 +490,21 @@
         "followers": 0
       }
     ],
+    "infra/stack": [
+      {
+        "id": "shared-account-stack",
+        "name": "Shared Account Stack",
+        "usage": "Use for a resource that exists once per AWS account and that other stacks need to find.",
+        "path": "infra/shared/lib/shared-stack.ts",
+        "followers": 1
+      }
+    ],
     "infra/unknown": [
       {
         "id": "cloudfront-function-source",
         "name": "CloudFront Function Source",
         "usage": "Use for any code that runs on the CloudFront edge runtime rather than in Node.",
         "path": "infra/cdk/src/internal/cf-static-site-index-rewrite.ts",
-        "followers": 1
-      },
-      {
-        "id": "shared-account-stack",
-        "name": "Shared Account Stack",
-        "usage": "Use for a resource that exists once per AWS account and that other stacks need to find.",
-        "path": "infra/shared/lib/shared-stack.ts",
         "followers": 1
       },
       {

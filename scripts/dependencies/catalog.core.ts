@@ -123,7 +123,7 @@ function findUnusedEntries(
  * Every reason the catalogs and the manifests disagree, in the order a reader
  * should act on them: name a version twice, point at nothing, hold nothing.
  */
-export function findCatalogProblems(
+export function listCatalogProblems(
   manifests: readonly WorkspaceManifest[],
   catalogs: Catalogs,
 ): readonly CatalogProblem[] {

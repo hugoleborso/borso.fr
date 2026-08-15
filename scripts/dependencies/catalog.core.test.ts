@@ -104,7 +104,7 @@ describe('listCatalogProblems', () => {
       buildManifest('apps/pragma', { leaflet: 'workspace:*' }),
       buildManifest('infra/cdk', { leaflet: '^1.9.4' }),
     ];
-    expect(findCatalogProblems(manifests, buildCatalogs({ default: {} }))).toEqual([]);
+    expect(listCatalogProblems(manifests, buildCatalogs({ default: {} }))).toEqual([]);
   });
 
   /** The catalog is for ranges, and a workspace protocol range is not one. */
@@ -114,7 +114,7 @@ describe('listCatalogProblems', () => {
       buildManifest('infra/cdk', { vitest: 'catalog:' }),
       buildManifest('infra/shared', { vitest: 'workspace:*' }),
     ];
-    expect(findCatalogProblems(manifests, catalogs)).toEqual([]);
+    expect(listCatalogProblems(manifests, catalogs)).toEqual([]);
   });
 
   /** A workspace dependency is the same package, not a shared external one. */

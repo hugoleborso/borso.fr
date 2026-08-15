@@ -8,7 +8,7 @@ import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
-import { findUndecidedCredentialTables } from '../internal/migration-runner/clone-from-schema.utils.js';
+import { listUndecidedCredentialTables } from '../internal/migration-runner/clone-from-schema.utils.js';
 import {
   assertDeployStage,
   dsqlSchemaName,
@@ -148,7 +148,7 @@ function assertCredentialTablesDecided(
   migrations: readonly MigrationFile[],
 ): void {
   if (config === undefined) return;
-  const undecided = findUndecidedCredentialTables(
+  const undecided = listUndecidedCredentialTables(
     config,
     migrations.map((migration) => migration.sql),
   );

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { meanDefaultMasteryForSong } from './mastery-aggregate.utils';
+import { meanDefaultMasteryForSong } from './mastery-aggregate.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('meanDefaultMasteryForSong', () => {

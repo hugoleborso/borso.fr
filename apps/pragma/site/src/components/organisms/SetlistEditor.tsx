@@ -35,7 +35,7 @@ import { evaluateTransition } from '@domain/transition.core';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { meanDefaultMasteryForSong } from '../../lib/mastery-aggregate.utils';
+import { meanDefaultMasteryForSong } from '../../lib/mastery-aggregate.core';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
 import { useMembersList } from '../../lib/queries/members.queries';

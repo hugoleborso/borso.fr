@@ -44,16 +44,10 @@ const CACHE_VERSION_RADIX = 36;
 /**
  * The families the trainer teaches, most specific first.
  *
- * Order is load-bearing: a row is assigned to the first entry its name starts
- * with, so `Queen's Gambit` listed above `Queen's Gambit Declined` would take
- * every declined row with it. `assertEveryFamilyMatched` fails the build when
- * a name here wins nothing, which is how the shadowing and two typographic
- * apostrophes below were found after six families had been silently absent.
- *
- * Names are the source dataset's own, exactly. `Giuoco Piano` is not here
- * because lichess titles those rows `Italian Game: Giuoco Piano`, so it is a
- * variation of the Italian Game rather than a family, and it already ships as
- * one.
+ * Order is load-bearing: a row joins the first entry its name starts with, so
+ * `Queen's Gambit` above `Queen's Gambit Declined` would take every declined
+ * row with it. Each name is the source dataset's own, character for character,
+ * including the apostrophe.
  */
 const FAMILIES = [
   "Queen's Gambit Declined",
