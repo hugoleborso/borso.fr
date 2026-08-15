@@ -19,7 +19,7 @@ The input is the history, so the page changes on every commit whether or
 not any source moved; a staleness gate would fail every commit for a reason
 nobody could act on. It records the commit it was read at instead.
 
-Read at `fdaa919`, from the last 400 commit(s) over 610 tracked source file(s).
+Read at `4bd07db`, from the last 400 commit(s) over 610 tracked source file(s).
 
 ## The files
 

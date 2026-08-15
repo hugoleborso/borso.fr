@@ -205,9 +205,7 @@ export function findDivergences(facts: readonly FileFact[]): readonly Divergence
  * the majority spelling. Zero means the group agrees.
  */
 export function countMinorityFiles(divergence: Divergence): number {
-  const [majority, ...rest] = divergence.variants;
-  if (majority === undefined) return 0;
-  return rest.reduce((total, variant) => total + variant.count, 0);
+  return divergence.variants.slice(1).reduce((total, variant) => total + variant.count, 0);
 }
 
 export type BaselineCounts = Readonly<Record<string, number>>;

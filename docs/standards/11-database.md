@@ -62,17 +62,59 @@ list is a statement about that application's tables.
 ## Transactions
 
 A workflow that writes more than one table wraps the writes in one transaction,
-and the transaction lives in the service that owns the workflow, with the
-repository methods taking the transaction as an argument.
+and the repository methods take the transaction as their first argument.
+
+The transaction is opened in the **repository**, not in the service, and the
+reason is the rule two sections up: only a `*.repository.ts` may import the
+database client, so a service cannot write `database.transaction(...)` without
+breaking it. `apps/pragma/api/src/members/members.repository.ts` is the shape:
 
 ```ts
-export async function transferRunnerToEdition(input: TransferInput): Promise<void> {
-  await database.transaction(async (transaction) => {
-    await runnerRepository.updateEdition(input, transaction);
-    await punchRepository.deleteForRunner(input.runnerId, transaction);
+export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome> {
+  const database = getDatabase();
+  return await database.transaction(async (transaction) => {
+    await scrubMemberFromSongDefaults(transaction, id);
+    await scrubMemberFromSetlistOverrides(transaction, id);
+    await transaction.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, id));
+    const deleted = await transaction
+      .delete(memberTable)
+      .where(eq(memberTable.id, id))
+      .returning({ id: memberTable.id });
+    return selectDeletionOutcome(deleted.length);
   });
 }
 ```
+
+`DatabaseExecutor` is the type those helpers take. It is the union of the
+client and a transaction handle, so one query function runs inside or outside a
+transaction without a cast.
+
+When the cascade crosses a **slice boundary** rather than reaching another
+table, the owning repository exports the transaction instead, because
+`borso/no-cross-slice-repository-imports` stops the service calling the other
+slice's repository directly:
+
+```ts
+// shelves.repository.ts
+export async function runInOneTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  const database = getDatabase();
+  return await database.transaction(work);
+}
+
+// shelves.service.ts — the boundary is a service call, inside one transaction
+return await runInOneTransaction(async (executor) => {
+  const detachedBookCount = await detachBooksFromShelf(executor, id);
+  await deleteShelf(executor, id);
+  return { kind: 'ok', detachedBookCount };
+});
+```
+
+Take the executor as a required argument rather than an optional one. An
+optional `executor ?? getDatabase()` adds a branch no test covers and makes
+calling the second half outside the transaction merely discouraged instead of
+impossible.
 
 ## Aurora DSQL constraints
 

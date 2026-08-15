@@ -86,12 +86,17 @@ export function serialiseSealEntry(entry: SealEntry): string {
   });
 }
 
+/**
+ * Every seal a ledger file holds.
+ *
+ * A line that is not one — a blank, a `#` comment, a half-written entry — fails
+ * to parse and is skipped. None of those kinds needs recognising separately,
+ * because none of them is JSON.
+ */
 export function readSealLedger(contents: string): readonly SealEntry[] {
   const entries: SealEntry[] = [];
   for (const line of contents.split('\n')) {
-    const trimmed = line.trim();
-    if (trimmed.length === 0 || trimmed.startsWith('#')) continue;
-    const outcome = parseSealLine(trimmed);
+    const outcome = parseSealLine(line);
     if (outcome.ok) entries.push(outcome.entry);
   }
   return entries;
