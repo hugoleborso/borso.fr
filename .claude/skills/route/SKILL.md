@@ -65,7 +65,7 @@ De-escalating is equally allowed and rarer. A Tier 2 whose spec resolves to "add
 
 Tier 3 means several agents in one checkout, and that has two failure modes this repository has already hit:
 
-- **One git index.** Agents share it. An agent that runs `git add` stages another's half-finished work, and the next commit ships it. Tell every agent: do not commit, do not stage. Collect and commit yourself.
+- **One git index.** Agents share it. An agent that runs `git add` stages another's half-finished work, and the next commit ships it. Tell every agent: do not commit, do not stage. Collect and commit yourself — and while any agent is still running, stage explicit paths rather than `git add -A`, or you will sweep its half-written files into a commit about something else. That is the same failure from the dispatcher's side and it is the easier one to hit, because `git add -A` is the reflex.
 - **Whole-repository generators.** `blueprint-indexing.ts`, `blueprint-heatmap.ts`, `architecture-graph.ts` and `enforcement-ledger.ts` all read the entire tree and all have a `--check` gate. An agent regenerating one of them bakes in every other agent's uncommitted work. Regenerate them once, yourself, after the agents are done.
 
 When agents genuinely need to build in parallel without seeing each other, give them `isolation: "worktree"` instead of a shared checkout.

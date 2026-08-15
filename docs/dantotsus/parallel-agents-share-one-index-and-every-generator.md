@@ -63,6 +63,14 @@ collects the work, regenerates every whole-tree artefact **once**, and commits.
 When agents genuinely must not see each other, they get
 `isolation: "worktree"` instead of a shared checkout.
 
+**And the dispatcher does not run `git add -A` while an agent is still
+running.** That half was missing when this entry was first written, and the
+session that wrote it then swept a running agent's half-finished transaction fix
+into a commit about a generator, three commits later. Telling the agents not to
+stage fixes one side of a shared index; the dispatcher staging everything is the
+same failure from the other side, and it is the easier one to hit because
+`git add -A` is the reflex. Stage explicit paths, or wait.
+
 ## Eradication
 
 Rung 2, a DevX check in the instructions the agents actually read, because the
