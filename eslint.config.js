@@ -240,6 +240,12 @@ export default tseslint.config(
     plugins: { borso: borsoPlugin },
     rules: {
       'borso/no-outbound-call-outside-adapter': 'error',
+      // The other direction of the same dependency. An adapter leaning on a
+      // pure module is the pattern; a pure module leaning on an adapter is a
+      // file that reaches the network while carrying the suffix that promises
+      // it does not, and both pure gates would still pass because the test
+      // stubs the adapter.
+      'borso/no-adapter-import-in-pure-module': 'error',
     },
   },
 

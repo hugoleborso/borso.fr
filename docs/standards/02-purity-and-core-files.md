@@ -155,6 +155,41 @@ api/src/domain/tonality.core.ts
 A horizontal folder forces you to open four directories to understand one
 feature. See [04. Back end architecture](./04-backend-architecture.md).
 
+## An adapter imports pure functions and holds none
+
+The two suffixes meet often, and the dependency between them runs one way.
+
+An adapter is expected to lean on pure logic. It reads its configuration,
+applies whatever the vendor's contract demands — a cache, a rate floor, a
+header, a URL shape — makes the call, and then hands the payload to its sibling
+`.core.ts` to become the domain's own type.
+
+```ts
+// api/src/songs/musicbrainz.adapter.ts
+const body: unknown = await response.json();
+const hits = rankExternalHits(mapMusicBrainzRecordings(body), trimmed);
+```
+
+Both of those are pure functions in `.core.ts` files, tested without a network.
+The adapter's own body is the part that could not have been pure.
+
+What an adapter must not do is *hold* that logic. A branch written inside an
+adapter is a decision behind a network seam: reaching it costs a stubbed
+fetcher, and a surviving mutant there names a line you can only exercise
+through I/O. Move it to the sibling core and call it.
+
+The reverse import is forbidden outright. A `.core.ts` or `.utils.ts` that
+imports an `.adapter.ts` reaches the network while carrying the suffix that
+promises it does not, and neither pure gate would notice: the test stubs the
+adapter, so coverage and mutation both still pass at full marks. When a pure
+function seems to need an adapter, the caller needs both — the service calls the
+adapter, then calls the pure function with what came back.
+
+```
+# Do            service ──> adapter ──> core
+# Don't         core ──> adapter
+```
+
 ## Testing obligation
 
 Every `.core.ts` and `.utils.ts` file ships with a sibling test file, and it
@@ -174,6 +209,10 @@ surviving mutants under Stryker. Both checks run before a push. See
   `Date.now`, a zero argument `new Date()`, `Math.random`, `fetch`,
   `process.env`, `localStorage`, and the console methods inside a `.core.ts` or
   `.utils.ts` file.
+- `borso/no-adapter-import-in-pure-module`, a custom ESLint rule, which fails
+  when a `.core.ts` or `.utils.ts` imports an `.adapter.ts`. The rule above
+  cannot catch it, because it looks for `fetch` and the clock rather than for
+  who was imported.
 - `vitest run --coverage`, with a full coverage threshold scoped to
   `**/*.{core,utils}.ts`.
 - `stryker run`, which fails the push when any mutant survives.

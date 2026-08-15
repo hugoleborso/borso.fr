@@ -104,6 +104,55 @@ side effect is out of scope for the gate, and it does not carry any of the
 three suffixes. A file that mixes pure helpers with impure code gets split
 rather than exempted.
 
+### Which suffix earns a gate
+
+A suffix joins the list when its files hold behaviour that can be wrong without
+the type checker noticing, **and** that can be driven without a live
+dependency. Both halves matter: the first is why the test is worth writing, the
+second is why it can be written at all.
+
+| suffix          | behaviour that can be wrong | drivable without a dependency | gated |
+| --------------- | --------------------------- | ----------------------------- | ----- |
+| `.core.ts`      | yes, it is the rules        | yes, by construction          | yes   |
+| `.utils.ts`     | yes                         | yes, by construction          | yes   |
+| `.adapter.ts`   | yes: cache, rate floor, URL shape, error mapping | yes, the fetcher and clock are arguments | yes |
+| `.controller.ts`| thin by rule, and every one already has a sibling test | no, it is an HTTP surface | no, covered end to end |
+| `.service.ts`   | yes, orchestration          | no, it needs the database     | no, covered end to end |
+| `.repository.ts`| yes, queries                | no, and a mocked query proves nothing | no, covered end to end |
+| `.schema.ts`    | yes, a missing constraint is behaviour | yes, zod parses in process | **not yet — see below** |
+| `.queries.ts`   | yes, optimistic updates     | its pure half already moves to `.core.ts` / `.utils.ts` | no |
+| `.variants.ts`, `.types.ts`, `.d.ts`, `.config.ts` | declarative, the type checker is the test | n/a | no |
+
+`.schema.ts` meets both halves of the criterion and is the one suffix that
+qualifies and is not gated. Its zod validators are behaviour, and they parse in
+process with nothing to stand up. Today they are exercised only end to end:
+measured on 2026-08-15, adding `api/src/**/*.schema.ts` to pragma's coverage
+include reports every one of its ten schema files at 0% statements, because the
+fast suite never imports them. Closing that is sixteen new test files across
+the repository, which is a decision about where test effort goes rather than a
+gap to fill silently.
+
+### An adapter's own obligation
+
+Every `.adapter.ts` ships a sibling `*.adapter.test.ts` that runs under vitest
+in the fast suite, reaches full coverage, and survives Stryker with no
+surviving mutant — the same bar as a pure file, for the file that is least pure.
+
+It is reachable because the blueprint makes it so: the fetcher, the clock and
+the cache are options, so the test drives them with a stub and a fake timer
+rather than a socket. An adapter that cannot be tested this way is missing a
+seam, and adding the seam is the fix.
+
+Two rules follow from having done it:
+
+- **Do not assert through the vendor's own default.** A presigner whose default
+  lifetime is 900 seconds cannot tell a lifetime that was passed from one that
+  was never passed, so the test picks a value the vendor would not choose.
+- **A value computed at module load is only observable in a test that
+  re-imports the module.** Stryker calls these static mutants; a cached client's
+  region default and a module-level constant both live there, and
+  `vi.resetModules()` with a dynamic import is what reaches them.
+
 There is no exemption for a small application, because a small pure function is
 exactly the kind that is cheap to cover.
 

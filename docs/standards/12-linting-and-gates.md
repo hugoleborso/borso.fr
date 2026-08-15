@@ -69,6 +69,7 @@ git.
 | `borso/no-direct-api-fetch-in-site`                    | [06](./06-data-fetching.md)                                |
 | `borso/no-api-anchor-in-site`                          | [06](./06-data-fetching.md)                                |
 | `borso/no-vendor-sdk-outside-adapter`                  | [06](./06-data-fetching.md)                                |
+| `borso/no-adapter-import-in-pure-module`               | [02](./02-purity-and-core-files.md)                        |
 | `borso/no-use-effect`                                  | [07](./07-state-and-effects.md)                            |
 | `borso/no-inline-subscribe-in-use-sync-external-store` | [07](./07-state-and-effects.md)                            |
 | `borso/no-component-css-imports`                       | [08](./08-styling.md)                                      |

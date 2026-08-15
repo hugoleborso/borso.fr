@@ -3,6 +3,7 @@ import atomicDesignImportDirection from './atomic-design-import-direction.js';
 import conditionsLiveInPureFunctions from './conditions-live-in-pure-functions.js';
 import functionNamesAreVerbPhrases from './function-names-are-verb-phrases.js';
 import noAbbreviatedIdentifier from './no-abbreviated-identifier.js';
+import noAdapterImportInPureModule from './no-adapter-import-in-pure-module.js';
 import noApiAnchorInSite from './no-api-anchor-in-site.js';
 import noArrayMethodsInControllers from './no-array-methods-in-controllers.js';
 import noCircleInNonUniformSvg from './no-circle-in-non-uniform-svg.js';
@@ -50,6 +51,7 @@ export const borsoPlugin = {
     'conditions-live-in-pure-functions': conditionsLiveInPureFunctions,
     'function-names-are-verb-phrases': functionNamesAreVerbPhrases,
     'no-abbreviated-identifier': noAbbreviatedIdentifier,
+    'no-adapter-import-in-pure-module': noAdapterImportInPureModule,
     'no-api-anchor-in-site': noApiAnchorInSite,
     'no-array-methods-in-controllers': noArrayMethodsInControllers,
     'no-circle-in-non-uniform-svg': noCircleInNonUniformSvg,
