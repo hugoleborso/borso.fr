@@ -30,8 +30,13 @@ eslint-rules/                 the custom rules, one file each
   index.js                    the plugin object
   <rule-name>.js
   <rule-name>.test.js         a RuleTester suite per rule
-apps/<app>/eslint.config.js   extends the root, adds app specific overrides
 ```
+
+There is no per-application ESLint configuration. The flat config at the root
+reaches every workspace, each application's `lint` script runs `eslint` from
+the root against its own folder, and an application-specific exception is a
+`files:` block in the root file — e.g. the one that lets `borsouvertures` say
+`piece`. One file is the point: a rule cannot be quietly relaxed in a corner.
 
 Every custom rule ships with a `RuleTester` suite, because a lint rule that
 misfires costs more than the rule saves.
@@ -40,7 +45,7 @@ misfires costs more than the rule saves.
 
 The configuration starts from `@eslint/js` recommended,
 `typescript-eslint` strict and stylistic with type checking, the React hooks
-plugin, the React refresh plugin, `eslint-plugin-import` for resolution and
+plugin, the React refresh plugin, `eslint-plugin-import-x` for resolution and
 cycle detection, `eslint-plugin-unicorn` for the naming and correctness rules,
 `eslint-plugin-vitest` on test files, and `eslint-plugin-jsx-a11y` on the front
 ends.
@@ -71,6 +76,13 @@ git.
 | `borso/no-vendor-sdk-outside-adapter`                  | [06](./06-data-fetching.md)                                |
 | `borso/no-adapter-import-in-pure-module`               | [02](./02-purity-and-core-files.md)                        |
 | `borso/no-outbound-call-outside-adapter`               | [06](./06-data-fetching.md), ADR-0012                      |
+| `borso/test-file-has-sibling-source`                   | [10](./10-testing.md)                                      |
+| `borso/no-cross-slice-repository-imports`              | [04](./04-backend-architecture.md)                         |
+| `borso/no-raw-sql-outside-migrations`                  | [11](./11-database.md)                                     |
+| `borso/no-server-state-in-use-state`                   | [06](./06-data-fetching.md)                                |
+| `borso/no-flat-components-folder`                      | [05](./05-frontend-architecture.md)                        |
+| `borso/no-dynamic-translation-keys`                    | [09](./09-i18n.md)                                         |
+| `borso/no-string-concatenated-class-names`             | [08](./08-styling.md)                                      |
 | `borso/no-use-effect`                                  | [07](./07-state-and-effects.md)                            |
 | `borso/no-inline-subscribe-in-use-sync-external-store` | [07](./07-state-and-effects.md)                            |
 | `borso/no-component-css-imports`                       | [08](./08-styling.md)                                      |
@@ -163,8 +175,7 @@ The blueprint for the replacement shape is annotated at
 ## The gates, in the order they run
 
 The pre-commit hook runs `eslint --cache` and `prettier --check` on the staged
-files, and it runs the coverage suite for `infra/cdk` or `infra/shared` when
-either one changed.
+files. It is the cheap hook: nothing in it reads the whole repository's tests.
 
 It also runs the cheap whole-repository checks, each a git-index read plus a
 grep, and each guarding a class no linter sees because the evidence lives in
@@ -176,6 +187,9 @@ two files at once:
 | `check-migration-sql-dsql-compat.sh` | a migration uses SQL Aurora DSQL rejects |
 | `check-frontend-env-vars.sh` | a site reads a `VITE_*` variable no workflow sets, so the code behind it never runs |
 | `check-pure-modules-have-callers.sh` | a `*.core.ts` or `*.utils.ts` is reached only from its own test, where coverage and mutation both score it at full marks while it runs nowhere |
+| `check-pwa-assets.sh` | a web manifest names an icon that does not ship |
+| `check-negative-claims-are-dated.sh` | a document says something "does not work" without a date, so a claim about a vendor ages with nothing to date it against |
+| `check-non-module-scripts.sh` | an application's HTML carries a `<script src>` without `type="module"`, which Vite does not bundle |
 
 The last two carry an allowlist keyed by variable or by path, and every entry
 in one states its reason. That is deliberate: both checks describe situations
@@ -183,12 +197,19 @@ that can be legitimate, and writing the reason down is what separates a
 decision from an oversight.
 
 The pre-push hook runs `knip` for dead code, `actionlint` for the workflows,
-the mutation tests for the workspaces whose pure files changed, the check for
-non-module script tags, and the check for pnpm reserved script names in the
-workflows.
+the coverage suite for `infra/cdk` or `infra/shared` when either one changed,
+the tests each changed application's diff reaches, and the mutation tests for
+the gated files that changed.
+
+The two greps on the workflows — non-module script tags and pnpm reserved
+script names — are in pre-commit, with the other whole-repository checks. This
+paragraph placed all four in the wrong hook until 2026-08-15, which matters
+because "why did that fail" starts with knowing which hook to read.
 
 CI runs the same checks on every workspace the change touched, plus
-`tsc --noEmit`, the full test suites, and a CDK synth.
+`tsc --noEmit`, `pnpm -r build`, and the full test suites with coverage. It does
+**not** synthesize the CDK stacks, and it does not run the mutation gate; the
+unscoped mutation run is `full-suite.yml` on `main`.
 
 ## Suppressing a rule
 

@@ -2070,7 +2070,7 @@
     },
     {
       "path": "apps/borsouvertures/vitest.config.ts",
-      "digest": "0087a17af656",
+      "digest": "45d68018d7ca",
       "container": "site",
       "layer": "config",
       "context": "root",

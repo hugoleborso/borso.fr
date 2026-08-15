@@ -8,7 +8,7 @@ export default defineConfig({
     include: ['site/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
-      include: ['site/**/*.{core,utils}.ts', 'site/**/*.adapter.ts'],
+      include: ['site/**/*.{core,utils,adapter,schema}.ts'],
       thresholds: {
         perFile: true,
         statements: 100,

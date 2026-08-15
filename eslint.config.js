@@ -239,7 +239,10 @@ export default tseslint.config(
     // `SITE_FILES` rather than `site/src/**`: two of the four applications keep
     // their sources directly under `site/`, so the narrower glob matched no file
     // in either of them and both rules were silent on half the repository.
-    files: ['apps/*/api/src/**/*.ts', ...SITE_FILES],
+    // `domain/` is the third place: it holds the rules both sides read
+    // (ADR-0010), its files are gated for coverage and mutation like any other
+    // pure module, and it sits under neither `api/src` nor `site`.
+    files: ['apps/*/api/src/**/*.ts', 'apps/*/domain/**/*.ts', ...SITE_FILES],
     plugins: { borso: borsoPlugin },
     rules: {
       'borso/no-outbound-call-outside-adapter': 'error',
@@ -407,6 +410,11 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       ...jsxA11y.flatConfigs.recommended.rules,
+      // The plugin ships this one at `warn`, and no gate here passes
+      // `--max-warnings`, so a stale dependency array failed nothing. Standard
+      // 07 leans on it: an effect that survives review is allowed through a
+      // disable comment, and this is what makes the comment necessary.
+      'react-hooks/exhaustive-deps': 'error',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'borso/no-direct-api-fetch-in-site': 'error',
       'borso/no-api-anchor-in-site': 'error',

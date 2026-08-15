@@ -201,5 +201,9 @@ return value, and any surprising edge case.
   `payload`, `output`, `obj`, `arr`, `val`, `tmp`, `temp`, `item` or `items`. A
   `for (const entry of …)` head and a destructuring pattern are out of scope,
   matching the two exceptions above.
-- `no-magic-numbers` from ESLint core, with `0`, `1`, and `-1` allowed.
-- Reviewer judgement for anything a dictionary cannot catch.
+- Reviewer judgement for anything a dictionary cannot catch, which includes
+  the magic-number rule above. `no-magic-numbers` is **not** enabled:
+  `{ ignore: [0, 1, -1] }` reports 1928 sites across the repository (measured
+  2026-08-15), so turning it on is a decision about 1928 edits rather than a
+  configuration line, and this section listed it as enforced for months while
+  it was off.

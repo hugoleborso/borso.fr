@@ -22,7 +22,7 @@ export default defineConfig({
     include: ['site/**/*.test.ts', 'site/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
-      include: ['site/**/*.utils.ts', 'site/**/*.core.ts', 'site/**/*.adapter.ts'],
+      include: ['site/**/*.{core,utils,adapter,schema}.ts'],
       thresholds: {
         perFile: true,
         statements: 100,

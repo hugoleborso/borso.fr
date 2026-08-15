@@ -194,8 +194,13 @@ adapter, then calls the pure function with what came back.
 
 Every `.core.ts` and `.utils.ts` file ships with a sibling test file, and it
 has to reach full statement, branch, function, and line coverage, with zero
-surviving mutants under Stryker. Both checks run before a push. See
-[10. Testing](./10-testing.md).
+surviving mutants under Stryker.
+
+The two checks run at different moments, and the split is deliberate rather
+than an oversight: **mutation runs before a push**, scoped to the files the
+push changed, and **coverage runs in CI**, because a per-file threshold needs
+the whole suite that covers those files and would score every untouched file
+at zero over a changed-only selection. See [10. Testing](./10-testing.md).
 
 ## Enforced by
 
@@ -214,5 +219,7 @@ surviving mutants under Stryker. Both checks run before a push. See
   cannot catch it, because it looks for `fetch` and the clock rather than for
   who was imported.
 - `vitest run --coverage`, with a full coverage threshold scoped to
-  `**/*.{core,utils}.ts`.
-- `stryker run`, which fails the push when any mutant survives.
+  `**/*.{core,utils,adapter,schema}.ts`, run in CI per changed application.
+- `stryker run`, which fails the push when any mutant survives. Scoped to
+  `apps/`: `infra/cdk`'s five `.utils.ts` files are coverage-gated and are not
+  mutated by any configuration.

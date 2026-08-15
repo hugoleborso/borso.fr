@@ -4,7 +4,9 @@
 
 Vitest runs every test in this repository. Every `.core.ts` and `.utils.ts`
 file reaches full coverage and survives mutation testing with no surviving
-mutants, and both checks run before a push.
+mutants. Mutation runs before a push, scoped to what the push changed;
+coverage runs in CI, because a per-file threshold cannot be read off a
+changed-only selection.
 
 ## Reason
 
@@ -20,9 +22,14 @@ a specific missing assertion rather than a general worry.
 Requiring the two checks only on pure files keeps the cost bounded, because
 pure files run in milliseconds with no database and no browser.
 
-## The three test projects
+## The test projects
 
-Each application defines its Vitest projects in `vitest.workspace.ts`.
+A full-stack application defines its Vitest projects in its own
+`vitest.config.ts`. There is no `vitest.workspace.ts` anywhere in the
+repository, and the absence is load-bearing: Vitest 3 scanned a config's own
+directory for one and let it override the `include` written in the config,
+which is how a mutation gate once ran over zero mutants. See
+[the dantotsu](../dantotsus/a-mutation-config-a-workspace-file-overruled.md).
 
 The `core` project runs the pure tests plus the CDK snapshot tests, it needs no
 services, and it runs on every commit.
@@ -32,6 +39,10 @@ The `back-e2e` project runs the API against a real Postgres started by
 Docker, so the gate runs anywhere.
 
 The `site` project runs component tests in jsdom with Testing Library.
+
+A front-end-only application (`borsouvertures`, `borso-fr`) defines no projects
+at all — one `include` covers its whole suite, because it has no service to
+start and no second environment to separate.
 
 ## What to test at each level
 
@@ -119,7 +130,7 @@ second is why it can be written at all.
 | `.controller.ts`| thin by rule, and every one already has a sibling test | no, it is an HTTP surface | no, covered end to end |
 | `.service.ts`   | yes, orchestration          | no, it needs the database     | no, covered end to end |
 | `.repository.ts`| yes, queries                | no, and a mocked query proves nothing | no, covered end to end |
-| `.schema.ts`    | yes, a missing constraint is behaviour | yes, zod parses in process | yes |
+| `.schema.ts`    | yes, a missing constraint is behaviour | yes, zod parses in process | coverage only, `api/src` |
 | `.queries.ts`   | yes, optimistic updates     | its pure half already moves to `.core.ts` / `.utils.ts` | no |
 | `.variants.ts`, `.types.ts`, `.d.ts`, `.config.ts` | declarative, the type checker is the test | n/a | no |
 
@@ -166,9 +177,20 @@ exactly the kind that is cheap to cover.
 
 ## Mutation gate
 
-`pnpm run test:mutation` runs Stryker over the same file set, and it fails when
-any mutant survives. The pre-push hook runs it, and CI runs it again on the
-changed workspaces.
+`pnpm run test:mutation` runs Stryker over `.core.ts`, `.utils.ts` and
+`.adapter.ts` — the coverage list minus `.schema.ts`, which is not mutated
+anywhere — and it fails when any mutant survives, except a **static** mutant, one in code that runs once at
+module load. `stryker.shared.js` sets `ignoreStatic: true`, so a static mutant
+is reported and does not fail the gate on its own. The two named below are
+worth killing anyway; the gate will not make you.
+
+**Where it runs, exactly.** The pre-push hook runs it, scoped with `--mutate`
+to the changed gated files, and skippable with `SKIP_MUTATION_GATE=1`. Pull
+request CI does **not** run it — `ci.yml` has no Stryker step. The unscoped run
+is [`full-suite.yml`](../../.github/workflows/full-suite.yml), which triggers on
+push to `main`, i.e. after the merge. So a surviving mutant is caught before a
+push or after a merge, and never in between; that is the cost of not paying for
+a full mutation run on every pull request.
 
 When a mutant survives, the fix is a new assertion, and it is not an exclusion.
 Add a Stryker disable comment only for a mutant that is genuinely equivalent,
