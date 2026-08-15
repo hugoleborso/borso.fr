@@ -23,19 +23,26 @@ Ultimate Guitar forbids extraction in its terms and disallows its search paths
 in robots.txt, and it is tempting to assume every chord site is the same. It is
 not, and assuming it cost this repository a whole round of work.
 
-Checked directly, `boiteachansons.net`, `tabs4acoustic.com`, `cifraclub.com.br`,
-`chordu.com`, `e-chords.com`, `chordsworld.com` and `guitartabsexplorer.com` all
-disallow only admin, cache, API and print paths. Their song pages are not
-disallowed to anyone.
+Checked directly, `cifraclub.com.br`, `e-chords.com`, `chordu.com`,
+`chordsworld.com`, `guitartabsexplorer.com`, `lacuerda.net` and
+`tabs4acoustic.com` disallow only admin, cache, API and print paths. Their song
+pages are open to every agent.
 
-Two sites go the other way and name the agent: `hooktheory.com` and
-`guitar-uke.com` both carry an explicit `Disallow: /` for **ClaudeBot**
-alongside GPTBot and CCBot, and Hooktheory adds an `ai-train=no` signal. A
-`User-agent: *` block that looks permissive can still be overridden by a
-named-agent block further down, so read the whole file, not the first stanza.
+Three sites go the other way and name the agent. `hooktheory.com` and
+`guitar-uke.com` carry an explicit `Disallow: /` for **ClaudeBot** alongside
+GPTBot and CCBot. So does **`boiteachansons.net`**, which blocks `ClaudeBot`,
+`Claude-Web`, `Claude-SearchBot` and `anthropic-ai` site-wide.
 
-So the rule is per-domain: fetch `/robots.txt`, look for your own agent by
-name, and take only the chord symbols.
+**Read the whole file.** All three put a permissive `User-agent: *` stanza
+first and the named-agent blocks far below it. Stopping at the first stanza
+says boiteachansons is open; it is closed to us. That misreading put two grids
+into the catalogue that had to be pulled back out afterwards, and delegating
+the same wrong list to thirteen sub-agents multiplied it. When you hand a
+domain list to another agent, the list is a claim you are making, so verify
+each entry yourself first.
+
+So the rule is per-domain: fetch `/robots.txt`, read it to the end, look for
+your own agent by name, and take only the chord symbols.
 
 ## The sources that work
 
@@ -139,6 +146,7 @@ Watch for a page whose stated key contradicts its own chart: Cifra Club's
 
 ## Coverage actually reached
 
-47 of 50 songs: 45 transcriptions, 2 audio drafts. The 3 misses are two medleys
-and the band's own composition, none of which exists outside the band's own
+47 of 50 songs: 45 site transcriptions, 2 audio drafts kept because their
+site source turned out to be off limits. The 3 misses are two medleys and the
+band's own composition, none of which exists outside the band's own
 arrangement.
