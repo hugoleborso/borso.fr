@@ -11,6 +11,7 @@ import noControllerImportsOutsideService from './no-controller-imports-outside-s
 import noCrossSliceRepositoryImports from './no-cross-slice-repository-imports.js';
 import noDatabaseClientOutsideRepository from './no-database-client-outside-repository.js';
 import noDirectApiFetchInSite from './no-direct-api-fetch-in-site.js';
+import noDiscardedAwaitBeforeNavigation from './no-discarded-await-before-navigation.js';
 import noDynamicTranslationKeys from './no-dynamic-translation-keys.js';
 import noFlatComponentsFolder from './no-flat-components-folder.js';
 import noFrenchIdentifiers from './no-french-identifiers.js';
@@ -55,6 +56,7 @@ export const borsoPlugin = {
     'no-cross-slice-repository-imports': noCrossSliceRepositoryImports,
     'no-database-client-outside-repository': noDatabaseClientOutsideRepository,
     'no-direct-api-fetch-in-site': noDirectApiFetchInSite,
+    'no-discarded-await-before-navigation': noDiscardedAwaitBeforeNavigation,
     'no-dynamic-translation-keys': noDynamicTranslationKeys,
     'no-flat-components-folder': noFlatComponentsFolder,
     'no-french-identifiers': noFrenchIdentifiers,

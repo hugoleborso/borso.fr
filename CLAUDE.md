@@ -50,6 +50,8 @@ Two tools, and the question decides which:
 - **Layout, content, styles, contrast, anything you measure** → `agent-browser`, the Playwright-backed CLI. This is what [`/visual-validation`](./.claude/skills/visual-validation/SKILL.md) drives.
 - **Touch behaviour — is this reachable with a thumb, does the tap land, what does the keyboard cover, does the swipe work** → [`scripts/argent.sh`](./scripts/argent.sh). `start`, then `describe`, `tap <x> <y>`, `run <anything>`, `stop`. It boots a Chromium of argent's own and a tool-server off port 3001, because both are traps that read as application bugs.
 
+**A file the human pasted into the chat is on this disk.** `scripts/session-attachments.sh list` shows it, `extract <dir>` writes it out. Never answer that you cannot reach an attachment, and never work from a description of one — that has produced a hand-drawn replacement of a logo that was sitting in the transcript. See [`docs/dantotsus/said-the-file-was-unreachable-without-looking.md`](./docs/dantotsus/said-the-file-was-unreachable-without-looking.md).
+
 **A synthetic click is not a tap, and `agent-browser set device` does not give you a coarse pointer.** A phone pass driven only by clicks reports no touch findings because it sent no touch events — that has already happened here, twice, across six audit rounds. If the task says phone, `scripts/argent.sh` is in the loop. Full recipe and traps: [`docs/knowledge/driving-previews-with-agent-browser-and-argent.md`](./docs/knowledge/driving-previews-with-agent-browser-and-argent.md).
 
 ## Conventions

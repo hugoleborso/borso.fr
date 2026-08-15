@@ -84,6 +84,7 @@ export function SongEditPage(): JSX.Element {
   const removeSong = async (): Promise<void> => {
     if (songId === undefined || isNew) return;
     try {
+      // eslint-disable-next-line borso/no-discarded-await-before-navigation -- a delete is the one write where waiting is the point: the operator should not walk away believing a song is gone until the server says so, and this form's error line is the only place a failed delete can be reported, since /catalog shows the row returning but says nothing.
       await deleteSong.mutateAsync({ id: songId });
       navigateTo('/catalog', { replace: true });
     } catch (error) {

@@ -258,6 +258,7 @@ export default tseslint.config(
       'borso/no-vendor-sdk-outside-adapter': 'error',
       'borso/no-literal-jsx-text': 'error',
       'borso/no-dynamic-translation-keys': 'error',
+      'borso/no-discarded-await-before-navigation': 'error',
     },
   },
 
