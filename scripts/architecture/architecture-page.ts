@@ -212,6 +212,29 @@ function journeyStatusOf(location: string | undefined, code: StatusByNode | unde
   return code.get(location.slice(0, location.lastIndexOf(':'))) ?? '';
 }
 
+/**
+ * How many actions this level actually found, beside its own title.
+ *
+ * The coverage figure below is built from three walks, and two of them draw a
+ * file without needing an action at all. So an application whose query modules
+ * the walk could not recognise still reported ninety-odd percent, and the one
+ * number that would have said "I could not see anything here" was the one
+ * nobody printed. See docs/dantotsus/the-map-recognised-modules-by-their-names.md.
+ */
+function renderActionCount(journeys: JourneyModel, routeTotal: number): string {
+  const total = journeys.features.reduce((count, feature) => count + feature.actions.length, 0);
+  const flows = journeys.features
+    .filter((feature) => !feature.id.startsWith('shell') && feature.id !== 'request')
+    .reduce((count, feature) => count + feature.actions.length, 0);
+  if (flows > 0) return ` <span class="level-count">${flows} of ${total} are data flows</span>`;
+  // No routes at all is a site without an API, and drawing no data flow is the
+  // right answer. Routes with no flow is the reader failing to see them.
+  if (routeTotal === 0) {
+    return ' <span class="level-count">no API, so every block below is what the pages render</span>';
+  }
+  return ` <span class="level-count flagged">no data flow found, though the API has ${routeTotal} routes — the walk could not read this application</span>`;
+}
+
 function renderJourneys(
   journeys: JourneyModel,
   journeyLayouts: ReadonlyMap<string, LevelLayout>,
@@ -947,7 +970,7 @@ ${PAGE_STYLES}
   ${levelSections}
 
   <section class="level" id="level-slice" hidden>
-    <h2>Level 3.5 — User actions</h2>
+    <h2>Level 3.5 — User actions${renderActionCount(journeys, routeTotal)}</h2>
     <p class="summary">One thing a person does, drawn end to end: the components that trigger it, the endpoint it reaches, and every function behind that endpoint down to the tables and external systems. An action is an exported hook in a query module, so the names are the ones whoever wrote them chose, and the chain comes from the calls as written. Picking a feature rather than an action draws what that feature is made of, down to the atoms its pages render. Two journeys are not data flows and are listed with the rest: <b>shell</b>, opening the application, and <b>request</b>, arriving at the API before a route is chosen.</p>
     ${renderJourneys(journeys, journeyLayouts, statuses?.get('code'))}
     <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>

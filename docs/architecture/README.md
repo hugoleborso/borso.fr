@@ -309,8 +309,15 @@ pnpm exec tsx scripts/architecture/architecture-graph.ts --app pragma \
 
 ## Known limits
 
-- An application with no query modules has an empty level 3.5, because a user
-  action is an exported hook in one of them. Today only pragma has any.
+- A data flow needs an exported hook in a query module that calls the typed
+  client, so an application without one draws no flow. Level 3.5's title says
+  which of the two reasons applies: no API at all, or an API whose routes the
+  walk could not reach. The second is a reader failure and is styled as one —
+  see
+  [the map recognised modules by their names](../dantotsus/the-map-recognised-modules-by-their-names.md).
+- The typed client is recognised by the binding `api`, which every front end
+  here uses. One that named it otherwise would draw no flow, and would say so
+  in the title rather than silently.
 - A route handler defined outside the controller file is not followed.
 - The walk stops at depth six, which no chain in pragma currently reaches.
 - `sw.js` is scanned for URL strings only, since it ships as plain script.

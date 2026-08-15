@@ -3567,8 +3567,8 @@
         "editionsTable"
       ],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "DELETE /api/admin/punches/:id",
@@ -3585,8 +3585,8 @@
         "loopPunchesTable"
       ],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "GET /api/editions",
@@ -3601,7 +3601,7 @@
         "editionsTable"
       ],
       "externals": [],
-      "callerCount": 1,
+      "callerCount": 2,
       "unreached": false
     },
     {
@@ -3619,8 +3619,8 @@
         "runnersTable"
       ],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "GET /api/editions/:editionSlug/runners/:runnerSlug",
@@ -3633,8 +3633,8 @@
       ],
       "tables": [],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "GET /api/editions/:editionSlug/runners/:runnerSlug/punches",
@@ -3650,8 +3650,8 @@
         "loopPunchesTable"
       ],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "GET /api/editions/:slug",
@@ -3699,8 +3699,8 @@
         "editionsTable"
       ],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "GET /api/standings/:editionSlug",
@@ -3719,8 +3719,8 @@
         "loopPunchesTable"
       ],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "GET /api/standings/:editionSlug/csv",
@@ -3813,8 +3813,8 @@
         "adminSessionsTable"
       ],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "POST /api/admin/auth/logout",
@@ -3849,8 +3849,8 @@
         "manualDidNotFinishesTable"
       ],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "POST /api/admin/editions",
@@ -3862,7 +3862,7 @@
       ],
       "tables": [],
       "externals": [],
-      "callerCount": 1,
+      "callerCount": 2,
       "unreached": false
     },
     {
@@ -3880,8 +3880,8 @@
       "externals": [
         "aws-s3"
       ],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "POST /api/admin/punches",
@@ -3907,8 +3907,8 @@
         "loopPunchesTable"
       ],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "POST /api/admin/punches/catchup",
@@ -3937,8 +3937,8 @@
         "manualDidNotFinishesTable"
       ],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "POST /api/admin/runners",
@@ -3953,7 +3953,7 @@
       ],
       "tables": [],
       "externals": [],
-      "callerCount": 1,
+      "callerCount": 2,
       "unreached": false
     },
     {
@@ -3981,7 +3981,7 @@
         "loopPunchesTable"
       ],
       "externals": [],
-      "callerCount": 1,
+      "callerCount": 2,
       "unreached": false
     },
     {
@@ -3995,8 +3995,8 @@
       ],
       "tables": [],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "PUT /api/admin/editions/:slug/status",
@@ -4013,8 +4013,8 @@
         "editionsTable"
       ],
       "externals": [],
-      "callerCount": 0,
-      "unreached": true
+      "callerCount": 1,
+      "unreached": false
     },
     {
       "id": "PUT /api/admin/punches/:id",

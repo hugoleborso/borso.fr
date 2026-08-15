@@ -53,6 +53,7 @@ export interface JourneyGraph {
 }
 
 const QUERIES_SUFFIX = '.queries.ts';
+const QUERY_LAYER = 'query';
 const MAXIMUM_WALK_DEPTH = 6;
 /** A bound on the upward walk, so a cycle in the import graph cannot spin. */
 const MAXIMUM_SCREEN_WALK_STEPS = 500;
@@ -704,12 +705,19 @@ export function buildJourneys(
   const features: JourneyFeature[] = [];
   const graphs = new Map<string, JourneyGraph>();
 
+  // The layer rather than the suffix. Both name the same modules once an
+  // application has been renamed, but an application that has not yet been
+  // reported no user action at all while its query modules sat in plain sight
+  // — and the level still headlined a coverage figure, which reads as "we
+  // looked" rather than as "we could not look".
   const queryModules = files
-    .filter((file) => file.path.endsWith(QUERIES_SUFFIX))
+    .filter((file) => file.layer === QUERY_LAYER)
     .sort((left, right) => left.path.localeCompare(right.path));
 
   for (const module of queryModules) {
-    const featureId = fileLabel(module.path).replace(QUERIES_SUFFIX, '');
+    const featureId = fileLabel(module.path)
+      .replace(QUERIES_SUFFIX, '')
+      .replace(/\.tsx?$/, '');
     const actions: JourneyAction[] = [];
     const featureNodes: GraphNode[] = [];
     const featureEdges: GraphEdge[] = [];
@@ -726,7 +734,7 @@ export function buildJourneys(
       const triggers = files.filter(
         (file) =>
           file.container === 'site' &&
-          !file.path.endsWith(QUERIES_SUFFIX) &&
+          file.layer !== QUERY_LAYER &&
           file.imports.some(
             (edge) => edge.targetFile === module.path && edge.namedBindings.includes(exported.name),
           ),

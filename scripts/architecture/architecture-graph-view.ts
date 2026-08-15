@@ -1095,6 +1095,14 @@ export const GRAPH_STYLES = String.raw`
   .diff-legend .removed { background: var(--layer-edge-bg); border: 2px dashed var(--layer-edge); }
   .diff-legend span { color: var(--muted); opacity: .8; }
 
+  .level-count {
+    font: 500 .72rem/1.4 var(--font-mono);
+    color: var(--muted);
+    vertical-align: middle;
+    margin-left: .5rem;
+  }
+  .level-count.flagged { color: var(--signal); }
+
   .diff-counts {
     display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .9rem;
     margin: .5rem 0 0; padding: 0; list-style: none;

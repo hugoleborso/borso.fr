@@ -236,6 +236,8 @@ export interface ApiCall {
 }
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx'] as const;
+/** The name every front end in this repository reads its typed Hono client through. */
+const API_CLIENT_BINDING = 'api';
 /** Enough of a sha1 to keep collisions out of a tree of a few hundred files. */
 const DIGEST_LENGTH = 12;
 const INDEX_BASENAMES = ['index.ts', 'index.tsx'] as const;
@@ -852,10 +854,17 @@ export function buildArchitectureFile(
   const featureMatch = FEATURE_TAG.exec(text);
   const localAliases = buildLocalAliases(sourceFile, importLookup);
   const { routes, mounts } = readRoutesAndMounts(sourceFile, importLookup, localAliases);
+  // The typed client is recognised by the binding a caller reads it through,
+  // not by the file it came from. Requiring `.client.ts` described the one
+  // application that had already been renamed: the other calls the same
+  // `api.api.x.$get()` chains through `lib/api.ts`, so every hook in it
+  // resolved no endpoint and the whole application reported no user action.
+  // A local module exporting something else called `api` is harmless here,
+  // because a call is only read when the chain ends in a `$method`.
   const clientBinding = imports
-    .filter((edge) => edge.targetFile?.endsWith('.client.ts') === true)
+    .filter((edge) => edge.targetFile !== null)
     .flatMap((edge) => edge.namedBindings)
-    .find((binding) => binding === 'api');
+    .find((binding) => binding === API_CLIENT_BINDING);
 
   return {
     path: relativePath,
