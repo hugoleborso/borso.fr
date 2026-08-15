@@ -84,6 +84,58 @@ export function buildCloneInsertSql(
   );
 }
 
+export interface ColumnDefinition {
+  readonly name: string;
+  readonly type: string;
+}
+
+/**
+ * A type name read back out of the catalogue, so it carries a length or a
+ * precision but never an expression. Anything outside that shape is a column
+ * this reconciliation refuses to copy rather than interpolate blindly.
+ */
+const TYPE_PATTERN = /^[A-Za-z][A-Za-z0-9 ]*(\(\d+(, ?\d+)?\))?( with(out)? time zone)?$/;
+
+/**
+ * Columns the source table has and the target table does not.
+ *
+ * `CREATE TABLE IF NOT EXISTS … (LIKE …)` can only create. A preview schema
+ * that already exists therefore keeps whatever shape it was created with, and
+ * a column production gained since then never arrives — until the clone's
+ * INSERT names it and Aurora DSQL answers `column "family" of relation
+ * "instrument" does not exist`. The structural step has to reconcile, not just
+ * create.
+ */
+export function selectMissingColumns(
+  sourceColumns: readonly ColumnDefinition[],
+  targetColumnNames: readonly string[],
+): ColumnDefinition[] {
+  const present = new Set(targetColumnNames);
+  return sourceColumns.filter((column) => !present.has(column.name));
+}
+
+/**
+ * `ALTER TABLE target.table ADD COLUMN name type`.
+ *
+ * No constraint clause, and none is possible: Aurora DSQL accepts `ADD COLUMN`
+ * only in its bare form (dsql-postgres-compat-gaps §10). A column that is NOT
+ * NULL in production therefore arrives nullable in the preview, which is the
+ * same compromise every migration in this repository already makes.
+ */
+export function buildAddColumnSql(
+  targetSchema: string,
+  table: string,
+  column: ColumnDefinition,
+): string {
+  assertIdentifier(targetSchema, 'schema');
+  assertIdentifier(table, 'table');
+  assertIdentifier(column.name, 'column');
+  if (!TYPE_PATTERN.test(column.type)) {
+    throw new Error(`buildAddColumnSql: refusing to build with type "${column.type}".`);
+  }
+  return `ALTER TABLE ${quote(targetSchema)}.${quote(table)} ADD COLUMN IF NOT EXISTS ${quote(column.name)} ${column.type}`;
+}
+
 /**
  * `DELETE FROM target.table` — run immediately before the clone INSERT for a
  * table the source must own outright.

@@ -24,11 +24,14 @@
 import { DsqlSigner } from '@aws-sdk/dsql-signer';
 import postgres from 'postgres';
 import {
+  buildAddColumnSql,
   buildCloneInsertSql,
   buildReplaceBeforeCloneSql,
+  type ColumnDefinition,
   isReplacedBeforeClone,
   buildCreateTableLikeSql,
   selectCloneableDataTables,
+  selectMissingColumns,
 } from './clone-from-schema.utils.js';
 import { selectPendingMigrations } from './pending-migrations.utils.js';
 import { splitStatements } from './statement-rewrites.utils.js';
@@ -125,6 +128,43 @@ async function listColumns(
 }
 
 /**
+ * Columns with the type they would need to be recreated with.
+ *
+ * `data_type` alone loses the length of a `character varying` and the
+ * precision of a `numeric`, so the two modifiers information_schema carries
+ * separately are folded back in here.
+ */
+async function listColumnDefinitions(
+  sql: postgres.Sql,
+  schemaName: string,
+  tableName: string,
+): Promise<readonly ColumnDefinition[]> {
+  const rows = await sql.unsafe<
+    {
+      column_name: string;
+      data_type: string;
+      character_maximum_length: number | null;
+      numeric_precision: number | null;
+      numeric_scale: number | null;
+    }[]
+  >(
+    `SELECT column_name, data_type, character_maximum_length, numeric_precision, numeric_scale FROM information_schema.columns WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_name = '${tableName.replace(/'/g, "''")}' ORDER BY ordinal_position`,
+  );
+  return rows.map((row) => {
+    if (row.character_maximum_length !== null) {
+      return { name: row.column_name, type: `${row.data_type}(${row.character_maximum_length})` };
+    }
+    if (row.data_type === 'numeric' && row.numeric_precision !== null) {
+      return {
+        name: row.column_name,
+        type: `numeric(${row.numeric_precision},${row.numeric_scale ?? 0})`,
+      };
+    }
+    return { name: row.column_name, type: row.data_type };
+  });
+}
+
+/**
  * Clone the structure + data of every table in `sourceSchemaName` into
  * `targetSchemaName`, in the spirit of Neon's branch databases. Implements
  * the "clone then apply migrations" pattern: structure via
@@ -164,6 +204,16 @@ async function cloneFromSchema(
   // so `CREATE TABLE IF NOT EXISTS` makes it a no-op there.
   for (const table of sourceTables) {
     await sql.unsafe(buildCreateTableLikeSql(config.sourceSchemaName, targetSchemaName, table));
+    // `IF NOT EXISTS` makes the create a no-op on a target that already has
+    // the table, so a column production gained since this preview was first
+    // deployed would never arrive, and the data step below would then name it
+    // in an INSERT against a table that does not have it. Reconcile instead of
+    // only creating.
+    const sourceColumns = await listColumnDefinitions(sql, config.sourceSchemaName, table);
+    const targetColumns = await listColumns(sql, targetSchemaName, table);
+    for (const column of selectMissingColumns(sourceColumns, targetColumns)) {
+      await sql.unsafe(buildAddColumnSql(targetSchemaName, table, column));
+    }
   }
 
   // Data step — blocklisted (runtime state) tables keep their shape and lose

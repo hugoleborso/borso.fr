@@ -20,7 +20,10 @@ import { composeClassName } from '../atoms/class-name.utils';
 import { inputVariants } from '../atoms/input.variants';
 import { ApiError } from '../../lib/api.client';
 import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
-import { useSaveTransitionComment, useTransitionComment } from '../../lib/queries/transitions.queries';
+import {
+  useSaveTransitionComment,
+  useTransitionComment,
+} from '../../lib/queries/transitions.queries';
 
 const COMMENT_MAX_LENGTH = 4_096;
 

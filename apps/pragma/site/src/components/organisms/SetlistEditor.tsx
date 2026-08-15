@@ -50,7 +50,10 @@ import { useTransitionCommentsList } from '../../lib/queries/transitions.queries
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { BottomActionBar } from '../molecules/BottomActionBar';
-import { BREAKPOINT_BELOW_LG, useIsMediaQueryMatching } from '../molecules/media-query-matching.hook';
+import {
+  BREAKPOINT_BELOW_LG,
+  useIsMediaQueryMatching,
+} from '../molecules/media-query-matching.hook';
 import { SetlistEntriesList } from './SetlistEntriesList';
 import { SetlistSongPicker } from './SetlistSongPicker';
 import { SetlistToolbar } from './SetlistToolbar';
