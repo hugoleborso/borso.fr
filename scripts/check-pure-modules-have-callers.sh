@@ -31,7 +31,6 @@ cd "$(dirname "$0")/.."
 #     is open with the operator rather than settled here.
 declare -A ALLOWED_TEST_ONLY=(
   [apps/borso-fr/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
-  [apps/borsolivres/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
   [apps/borsouvertures/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
   [apps/last-loop-lepin/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
   [apps/pragma/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"

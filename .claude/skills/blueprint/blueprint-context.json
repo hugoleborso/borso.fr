@@ -145,17 +145,17 @@
   "blueprints": {
     "api/adapter": [
       {
-        "id": "adapter-rate-limited-fetch",
-        "name": "Adapter Over A Rate-Limited Web Service",
-        "usage": "Use for the one file in a bounded context that calls a third-party HTTP service with a published rate limit.",
-        "path": "apps/pragma/api/src/songs/musicbrainz.adapter.ts",
-        "followers": 1
-      },
-      {
         "id": "external-service-adapter",
         "name": "External Service Adapter",
         "usage": "Use for the one file in a slice that talks to a third party SDK, so no other file imports the vendor package.",
         "path": "apps/last-loop-lepin/api/src/media/media.adapter.ts",
+        "followers": 0
+      },
+      {
+        "id": "adapter-rate-limited-fetch",
+        "name": "Adapter Over A Rate-Limited Web Service",
+        "usage": "Use for the one file in a bounded context that calls a third-party HTTP service with a published rate limit.",
+        "path": "apps/pragma/api/src/songs/musicbrainz.adapter.ts",
         "followers": 0
       },
       {
@@ -179,7 +179,7 @@
         "name": "Public Controller Router",
         "usage": "Use for a router that is deliberately left ungated, so the reason is written where a reviewer looking for the missing guard will find it.",
         "path": "apps/last-loop-lepin/api/src/punch/self-punch.controller.ts",
-        "followers": 7
+        "followers": 5
       },
       {
         "id": "controller-guarded-router",
@@ -216,27 +216,27 @@
         "name": "Core Decision Function",
         "usage": "Use for every business rule. Take the data and `now` as arguments, return a decision, touch nothing else.",
         "path": "apps/last-loop-lepin/api/src/punch/punch.core.ts",
-        "followers": 10
+        "followers": 9
       },
       {
         "id": "core-lookup-table",
         "name": "Core Lookup Table",
         "usage": "Use for a total mapping from a domain union onto values, so a new case is a type error rather than a missing branch.",
         "path": "apps/last-loop-lepin/api/src/auth/auth.core.ts",
-        "followers": 6
-      },
-      {
-        "id": "core-parse-untrusted",
-        "name": "Core Parse Of Untrusted Input",
-        "usage": "Use for the boundary where a third-party response becomes a typed domain value.",
-        "path": "apps/pragma/api/src/songs/musicbrainz.core.ts",
-        "followers": 3
+        "followers": 5
       },
       {
         "id": "helper-module",
         "name": "Cross Cutting Helper Module",
         "usage": "Use for a rule no single slice owns. Put it under `helpers/<topic>/` and write down the envelope inside which its answers hold.",
         "path": "apps/last-loop-lepin/api/src/helpers/sun/sun.core.ts",
+        "followers": 2
+      },
+      {
+        "id": "core-parse-untrusted",
+        "name": "Core Parse Of Untrusted Input",
+        "usage": "Use for the boundary where a third-party response becomes a typed domain value.",
+        "path": "apps/pragma/api/src/songs/musicbrainz.core.ts",
         "followers": 2
       },
       {
@@ -260,14 +260,14 @@
         "name": "Database Schema Barrel",
         "usage": "Use for the one module the migration tool reads, so every table is named in a single place while each declaration stays inside the slice that owns it.",
         "path": "apps/last-loop-lepin/api/src/database/schema.ts",
-        "followers": 2
+        "followers": 1
       },
       {
         "id": "database-client",
         "name": "Database Client Singleton",
         "usage": "Use for the one module a repository imports to reach the database.",
         "path": "apps/pragma/api/src/database/client.ts",
-        "followers": 1
+        "followers": 0
       }
     ],
     "api/entrypoint": [
@@ -276,21 +276,21 @@
         "name": "API Development Entrypoint",
         "usage": "Use for the local server of an API whose deployed form is a Lambda, so both start from the same composition root.",
         "path": "apps/last-loop-lepin/api/src/main.dev.ts",
-        "followers": 2
+        "followers": 1
       },
       {
         "id": "api-lambda-entrypoint",
         "name": "API Lambda Entrypoint",
         "usage": "Use for the Lambda handler of a Hono API. Build the app once, export the adapted handler, declare no route here.",
         "path": "apps/last-loop-lepin/api/src/main.ts",
-        "followers": 2
+        "followers": 1
       },
       {
         "id": "api-composition-root",
         "name": "Api Composition Root",
         "usage": "Use for the single module that mounts every slice router and whose inferred type is the front end's contract.",
         "path": "apps/pragma/api/src/app.ts",
-        "followers": 2
+        "followers": 1
       }
     ],
     "api/environment": [
@@ -317,14 +317,14 @@
         "name": "Repository Query",
         "usage": "Use for data access. Drizzle queries and transactions only, and the single file allowed to import the database client for its slice.",
         "path": "apps/last-loop-lepin/api/src/punch/punch.repository.ts",
-        "followers": 8
+        "followers": 6
       },
       {
         "id": "repository-projection",
         "name": "Repository Projection Constant",
         "usage": "Use for a repository whose queries all return the same row shape.",
         "path": "apps/pragma/api/src/instruments/instruments.repository.ts",
-        "followers": 8
+        "followers": 6
       },
       {
         "id": "repository-idempotent-upsert",
@@ -334,18 +334,18 @@
         "followers": 4
       },
       {
-        "id": "repository-row-mapper",
-        "name": "Repository Row Mapper",
-        "usage": "Use for a column wider than the domain type, so the narrowing happens once at the data boundary instead of at every read site.",
-        "path": "apps/last-loop-lepin/api/src/punch/punch.repository.ts",
-        "followers": 2
-      },
-      {
         "id": "repository-json-column",
         "name": "Repository Json Column Boundary",
         "usage": "Use for a column holding json as text, which is what Aurora DSQL forces because it has no jsonb type.",
         "path": "apps/pragma/api/src/songs/songs.repository.ts",
         "followers": 2
+      },
+      {
+        "id": "repository-row-mapper",
+        "name": "Repository Row Mapper",
+        "usage": "Use for a column wider than the domain type, so the narrowing happens once at the data boundary instead of at every read site.",
+        "path": "apps/last-loop-lepin/api/src/punch/punch.repository.ts",
+        "followers": 1
       }
     ],
     "api/schema": [
@@ -354,7 +354,7 @@
         "name": "Schema With Table And Input",
         "usage": "Use for a slice that owns a table, so its Drizzle definition and its Zod input schemas live in one file.",
         "path": "apps/pragma/api/src/bars/bars.schema.ts",
-        "followers": 8
+        "followers": 6
       },
       {
         "id": "schema-dsql-constraints",
@@ -384,28 +384,28 @@
         "name": "Named Domain Error",
         "usage": "Use for a failure a caller has to tell apart, so the controller matches on the class rather than on the message text.",
         "path": "apps/last-loop-lepin/api/src/punch/punch.service.ts",
-        "followers": 15
+        "followers": 14
       },
       {
         "id": "service-orchestration",
         "name": "Service Orchestration",
         "usage": "Use for a workflow that reads, decides, then writes. The service is the only impure layer allowed to be interesting.",
         "path": "apps/last-loop-lepin/api/src/punch/punch.service.ts",
-        "followers": 7
+        "followers": 5
       },
       {
         "id": "service-crud-update",
         "name": "Service Patch Returning A Union",
         "usage": "Use for every partial update, so the controller maps arms to statuses instead of re-deriving why the write failed.",
         "path": "apps/pragma/api/src/bars/bars.service.ts",
-        "followers": 6
+        "followers": 5
       },
       {
         "id": "service-facade-reexport",
         "name": "Service Facade Re-export",
         "usage": "Use for an error another module raises that the controller has to catch, so the controller still imports one module per slice.",
         "path": "apps/last-loop-lepin/api/src/edition/edition.service.ts",
-        "followers": 5
+        "followers": 4
       },
       {
         "id": "service-read-model",
@@ -598,7 +598,7 @@
         "name": "Workspace Test Configuration",
         "usage": "Use for the vitest configuration of a full stack workspace, where fast pure tests and serial database tests have to share one run.",
         "path": "apps/pragma/vitest.config.ts",
-        "followers": 6
+        "followers": 5
       }
     ],
     "site/core": [
@@ -632,35 +632,35 @@
         "name": "Catalogue Parity Gate",
         "usage": "Use in every application shipping two catalogues, to fail the build on a key or a translation that was never written.",
         "path": "apps/borsouvertures/site/src/i18n/i18n-parity.core.ts",
-        "followers": 4
+        "followers": 3
       },
       {
         "id": "i18n-key-walk",
         "name": "Translation Key Walk",
         "usage": "Use to turn a nested catalogue into the flat key list any catalogue check compares.",
         "path": "apps/borsouvertures/site/src/i18n/i18n.utils.ts",
-        "followers": 4
+        "followers": 3
       },
       {
         "id": "i18n-typed-keys",
         "name": "Typed Translation Keys Declaration",
         "usage": "Use once per application, so an unknown or renamed translation key fails the typecheck instead of rendering as itself.",
         "path": "apps/borsouvertures/site/src/i18n/react-i18next.d.ts",
-        "followers": 4
+        "followers": 3
       },
       {
         "id": "i18n-setup",
         "name": "i18n Runtime Setup",
         "usage": "Use for the module that builds the translation instance and keeps the document in step with the active language.",
         "path": "apps/last-loop-lepin/site/src/i18n/i18n.ts",
-        "followers": 4
+        "followers": 3
       },
       {
         "id": "injected-storage-slice",
         "name": "Injected Storage Slice",
         "usage": "Use when a module reads or writes a browser storage API and its logic still has to be testable without a browser.",
         "path": "apps/borsouvertures/site/src/i18n/locale-storage.utils.ts",
-        "followers": 3
+        "followers": 2
       }
     ],
     "site/molecule": [
@@ -1084,7 +1084,7 @@
         "name": "Back End End To End Test",
         "usage": "Use for a controller, exercising its routes through the real app against a live database.",
         "path": "apps/pragma/api/src/instruments/instruments.controller.test.ts",
-        "followers": 22
+        "followers": 20
       }
     ],
     "test/api/database": [
@@ -1093,7 +1093,7 @@
         "name": "Test Artifact Audit",
         "usage": "Use for a check on a generated file that ships, so the assertion is made about the file rather than about the objects that produced it.",
         "path": "apps/last-loop-lepin/api/src/database/migrations.audit.test.ts",
-        "followers": 3
+        "followers": 2
       }
     ],
     "test/api/middleware": [
@@ -1120,7 +1120,7 @@
         "name": "Pure Unit Test",
         "usage": "Use for every `*.core.ts` and `*.utils.ts` file, which the per-file coverage gate holds at 100 percent.",
         "path": "apps/pragma/domain/transition.core.test.ts",
-        "followers": 195
+        "followers": 191
       }
     ],
     "test/infra/unknown": [
@@ -1170,7 +1170,7 @@
         "name": "Catalogue Parity Test",
         "usage": "Use as the sibling test of the parity gate, so an untranslated string cannot merge.",
         "path": "apps/borsouvertures/site/src/i18n/i18n-parity.core.test.ts",
-        "followers": 4
+        "followers": 3
       }
     ],
     "test/site/molecule": [
@@ -1200,13 +1200,6 @@
         "followers": 4
       },
       {
-        "id": "test-database-isolation",
-        "name": "Test Database Isolation",
-        "usage": "Use for giving every suite a clean database without rebuilding the schema, which is the expensive step.",
-        "path": "apps/last-loop-lepin/test/database-utils.ts",
-        "followers": 2
-      },
-      {
         "id": "test-fixtures-object-mother",
         "name": "Test Fixture Object Mother",
         "usage": "Use for building a complete valid domain object in one call, so a test states only the field its assertion is about.",
@@ -1221,10 +1214,10 @@
         "followers": 1
       },
       {
-        "id": "test-global-setup",
-        "name": "Test Global Setup",
-        "usage": "Use for the vitest `globalSetup` of a suite that needs a real database, with a paired teardown that releases whatever the setup started.",
-        "path": "apps/last-loop-lepin/test/setup-postgres.ts",
+        "id": "test-database-isolation",
+        "name": "Test Database Isolation",
+        "usage": "Use for giving every suite a clean database without rebuilding the schema, which is the expensive step.",
+        "path": "apps/last-loop-lepin/test/database-utils.ts",
         "followers": 1
       },
       {
@@ -1232,6 +1225,13 @@
         "name": "Scenario End To End Test",
         "usage": "Use for a workflow whose meaning is the order events happen in, walked as one long case rather than split into independent ones.",
         "path": "apps/last-loop-lepin/test/race-scenarios/race-day-2026.test.ts",
+        "followers": 0
+      },
+      {
+        "id": "test-global-setup",
+        "name": "Test Global Setup",
+        "usage": "Use for the vitest `globalSetup` of a suite that needs a real database, with a paired teardown that releases whatever the setup started.",
+        "path": "apps/last-loop-lepin/test/setup-postgres.ts",
         "followers": 0
       }
     ],

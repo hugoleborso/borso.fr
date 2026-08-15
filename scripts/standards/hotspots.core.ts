@@ -117,6 +117,7 @@ const LAYER_GAPS_SHOWN = 10;
 export function renderHotspotReport(
   histories: readonly FileHistory[],
   commitsRead: number,
+  headRevision: string,
 ): string {
   const hotspots = rankHotspots(histories);
   const gaps = rankLayerGaps(histories);
@@ -137,10 +138,12 @@ export function renderHotspotReport(
     'not appear, because the pattern is doing its job. So does a file that',
     'follows nothing and nobody touches.',
     '',
-    'This is a report, not a gate. A build cannot fail because a file was edited',
-    'often, and a threshold on churn would be met by splitting the file.',
+    'This is a report, not a gate, and there is no freshness check on it either.',
+    'The input is the history, so the page changes on every commit whether or',
+    'not any source moved; a staleness gate would fail every commit for a reason',
+    'nobody could act on. It records the commit it was read at instead.',
     '',
-    `Read from the last ${String(commitsRead)} commit(s) over ${String(histories.length)} tracked source file(s).`,
+    `Read at \`${headRevision}\`, from the last ${String(commitsRead)} commit(s) over ${String(histories.length)} tracked source file(s).`,
     '',
   ];
 

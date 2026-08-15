@@ -97,11 +97,11 @@ literally.
 
 ## Enforced by
 
-- `generator:scripts/standards/hotspots.ts` crosses how often each file changes
-  with whether it follows a recorded pattern and whether its path says what it
-  is, and names the layer a blueprint would repay next. It is a report, not a
-  gate: a build cannot fail because a file was edited often, and a threshold on
-  churn would be met by splitting the file. The `--check` refuses only a stale
-  page.
-- `reviewer` reads that page before deciding which pattern to write down next,
-  because the ranking is an argument rather than an answer.
+- `reviewer` reads `docs/standards/hotspots.md` before deciding which pattern to
+  write down next. It crosses how often each file changes with whether it
+  follows a recorded pattern and whether its path says what it is. Nothing gates
+  it and nothing checks it is fresh: the input is the git history, so the page
+  moves on every commit whether or not any source did, and a staleness gate
+  would fail every commit for a reason nobody could act on. The page records the
+  commit it was read at; regenerate with
+  `pnpm exec tsx scripts/standards/hotspots.ts` when the age matters.

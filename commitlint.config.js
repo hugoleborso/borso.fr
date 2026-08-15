@@ -16,7 +16,6 @@ export default {
       'always',
       [
         'borso-fr',
-        'borsolivres',
         'borsouvertures',
         'last-loop-lepin',
         'pragma',

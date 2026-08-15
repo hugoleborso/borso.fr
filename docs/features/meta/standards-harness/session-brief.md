@@ -78,6 +78,23 @@ Second round:
 - Prose follows `/plain-writing`; documents an agent reads also follow
   `/writing-for-agents`.
 
+## Mutation testing of the harness itself
+
+The root `stryker.config.js` is new. Every application has held its pure modules
+at zero surviving mutants for months; the generators under `scripts/` were never
+mutated, because the pre-push wave iterates `apps/*` and the root is not one of
+them. Run for the first time they scored **77.40% with 193 survivors**, at
+100% statement, branch, function and line coverage.
+
+That is the gap mutation testing exists to expose, and this repository already
+has a dantotsu named *a green mutation gate is not a green coverage gate*. Most
+survivors are in the render functions, where a mutant changes prose and no test
+asserts on that prose.
+
+If the hardening pass did not finish, **the root config is the thing to remove
+or finish**, and the number above is the honest measurement to start from. Do
+not lower the threshold and do not narrow the mutate glob.
+
 ## Open questions for the operator
 
 1. Translation keys: the standard says lower case with hyphens, `pragma` ships

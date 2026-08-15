@@ -20,7 +20,6 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `scripts/standards/hotspots.ts` | generator | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
 ## 01. Naming
@@ -29,13 +28,13 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `borso/no-abbreviated-identifier` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
-| `borso/function-names-are-verb-phrases` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
-| `borso/no-french-identifiers` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
-| `borso/no-step-named-value` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
-| `unicorn/consistent-boolean-name` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
-| `unicorn/catch-error-name` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
-| `no-magic-numbers` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `borso/no-abbreviated-identifier` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `borso/function-names-are-verb-phrases` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `borso/no-french-identifiers` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `borso/no-step-named-value` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `unicorn/consistent-boolean-name` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
+| `unicorn/catch-error-name` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
+| `no-magic-numbers` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
@@ -48,10 +47,10 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `borso/pure-functions-live-in-core-files` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
-| `borso/conditions-live-in-pure-functions` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
-| `borso/no-impure-calls-in-core-files` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
-| `unicorn/consistent-function-scoping` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
+| `borso/pure-functions-live-in-core-files` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `borso/conditions-live-in-pure-functions` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `borso/no-impure-calls-in-core-files` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `unicorn/consistent-function-scoping` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
 | `vitest-coverage` | gate | yes | .github/workflows/ci.yml, .github/workflows/full-suite.yml |
 | `stryker` | gate | yes | .husky/pre-push, .github/workflows/full-suite.yml |
 | `scripts/check-pure-modules-have-callers.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
@@ -63,9 +62,9 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `@typescript-eslint/no-explicit-any` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
-| `borso/no-type-assertion-except-unknown` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
-| `@typescript-eslint/no-unsafe-argument` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `@typescript-eslint/no-explicit-any` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
+| `borso/no-type-assertion-except-unknown` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
+| `@typescript-eslint/no-unsafe-argument` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
 | `typecheck` | gate | yes | .github/workflows/ci.yml |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
@@ -76,14 +75,14 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `borso/no-controller-imports-outside-service` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
-| `borso/no-cross-slice-repository-imports` | ESLint rule | yes | borsolivres/api, last-loop-lepin/api, pragma/api |
-| `borso/no-database-client-outside-repository` | ESLint rule | yes | borsolivres/api, last-loop-lepin/api, pragma/api |
-| `borso/no-array-methods-in-controllers` | ESLint rule | yes | borsolivres/api, last-loop-lepin/api, pragma/api |
-| `borso/no-outbound-call-outside-adapter` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api |
-| `borso/no-horizontal-folders-in-api` | ESLint rule | yes | borsolivres/api, last-loop-lepin/api, pragma/api |
-| `borso/conditions-live-in-pure-functions` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
-| `no-restricted-imports` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-controller-imports-outside-service` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
+| `borso/no-cross-slice-repository-imports` | ESLint rule | yes | last-loop-lepin/api, pragma/api |
+| `borso/no-database-client-outside-repository` | ESLint rule | yes | last-loop-lepin/api, pragma/api |
+| `borso/no-array-methods-in-controllers` | ESLint rule | yes | last-loop-lepin/api, pragma/api |
+| `borso/no-outbound-call-outside-adapter` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api |
+| `borso/no-horizontal-folders-in-api` | ESLint rule | yes | last-loop-lepin/api, pragma/api |
+| `borso/conditions-live-in-pure-functions` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `no-restricted-imports` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
@@ -93,11 +92,11 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `borso/atomic-design-import-direction` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/atomic-design-composition` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/no-flat-components-folder` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/no-components-outside-buckets` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/no-query-hooks-outside-organisms` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/atomic-design-import-direction` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/atomic-design-composition` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-flat-components-folder` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-components-outside-buckets` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-query-hooks-outside-organisms` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
 | `scripts/check-pwa-assets.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
@@ -109,13 +108,13 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `borso/no-vendor-sdk-outside-adapter` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/no-direct-api-fetch-in-site` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/no-api-anchor-in-site` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/no-server-state-in-use-state` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/no-discarded-await-before-navigation` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `@typescript-eslint/no-unsafe-assignment` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
-| `no-restricted-imports` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-vendor-sdk-outside-adapter` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-direct-api-fetch-in-site` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-api-anchor-in-site` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-server-state-in-use-state` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-discarded-await-before-navigation` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `@typescript-eslint/no-unsafe-assignment` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `no-restricted-imports` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
@@ -125,10 +124,10 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `borso/no-use-effect` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `react-hooks/rules-of-hooks` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `react-hooks/exhaustive-deps` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/no-inline-subscribe-in-use-sync-external-store` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
+| `borso/no-use-effect` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `react-hooks/rules-of-hooks` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `react-hooks/exhaustive-deps` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-inline-subscribe-in-use-sync-external-store` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
 ## 08. Styling
@@ -137,9 +136,9 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `borso/no-component-css-imports` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/no-string-concatenated-class-names` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/no-circle-in-non-uniform-svg` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-component-css-imports` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-string-concatenated-class-names` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-circle-in-non-uniform-svg` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
 | `scripts/check-single-stylesheet.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-stylesheet-contents.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
@@ -150,10 +149,10 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `borso/no-literal-jsx-text` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `borso/no-dynamic-translation-keys` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
-| `i18n-parity.core.test.ts` | test gate | yes | apps/borso-fr/site/src/i18n/i18n-parity.core.test.ts, apps/borsolivres/site/src/i18n/i18n-parity.core.test.ts, apps/borsouvertures/site/src/i18n/i18n-parity.core.test.ts, apps/last-loop-lepin/site/src/i18n/i18n-parity.core.test.ts, apps/pragma/site/src/i18n/i18n-parity.core.test.ts |
-| `react-i18next.d.ts` | type declaration | yes | apps/borso-fr/site/src/i18n/react-i18next.d.ts, apps/borsolivres/site/src/i18n/react-i18next.d.ts, apps/borsouvertures/site/src/i18n/react-i18next.d.ts, apps/last-loop-lepin/site/src/i18n/react-i18next.d.ts, apps/pragma/site/src/i18n/react-i18next.d.ts |
+| `borso/no-literal-jsx-text` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `borso/no-dynamic-translation-keys` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
+| `i18n-parity.core.test.ts` | test gate | yes | apps/borso-fr/site/src/i18n/i18n-parity.core.test.ts, apps/borsouvertures/site/src/i18n/i18n-parity.core.test.ts, apps/last-loop-lepin/site/src/i18n/i18n-parity.core.test.ts, apps/pragma/site/src/i18n/i18n-parity.core.test.ts |
+| `react-i18next.d.ts` | type declaration | yes | apps/borso-fr/site/src/i18n/react-i18next.d.ts, apps/borsouvertures/site/src/i18n/react-i18next.d.ts, apps/last-loop-lepin/site/src/i18n/react-i18next.d.ts, apps/pragma/site/src/i18n/react-i18next.d.ts |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
 ## 10. Testing
@@ -164,7 +163,7 @@ every application the standard covers.
 | --- | --- | --- | --- |
 | `vitest-coverage` | gate | yes | .github/workflows/ci.yml, .github/workflows/full-suite.yml |
 | `stryker` | gate | yes | .husky/pre-push, .github/workflows/full-suite.yml |
-| `borso/test-file-has-sibling-source` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `borso/test-file-has-sibling-source` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
 ## 11. Database
@@ -173,9 +172,9 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `borso/no-database-client-outside-repository` | ESLint rule | yes | borsolivres/api, last-loop-lepin/api, pragma/api |
-| `borso/no-raw-sql-outside-migrations` | ESLint rule | yes | borsolivres/api, last-loop-lepin/api, pragma/api |
-| `migrations.audit.test.ts` | test gate | yes | apps/borsolivres/api/src/database/migrations.audit.test.ts, apps/last-loop-lepin/api/src/database/migrations.audit.test.ts, apps/pragma/api/src/database/migrations.audit.test.ts |
+| `borso/no-database-client-outside-repository` | ESLint rule | yes | last-loop-lepin/api, pragma/api |
+| `borso/no-raw-sql-outside-migrations` | ESLint rule | yes | last-loop-lepin/api, pragma/api |
+| `migrations.audit.test.ts` | test gate | yes | apps/last-loop-lepin/api/src/database/migrations.audit.test.ts, apps/pragma/api/src/database/migrations.audit.test.ts |
 | `vitest-back-e2e` | gate | yes | .github/workflows/ci.yml, .github/workflows/full-suite.yml |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
@@ -192,7 +191,7 @@ every application the standard covers.
 | `knip` | gate | yes | .husky/pre-push, .github/workflows/ci.yml |
 | `actionlint` | gate | yes | .husky/pre-push |
 | `commitlint` | gate | yes | .husky/commit-msg |
-| `@eslint-community/eslint-comments/require-description` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
+| `@eslint-community/eslint-comments/require-description` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
 | `scripts/check-frontend-env-vars.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-migration-sql-dsql-compat.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-non-module-scripts.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
@@ -208,7 +207,7 @@ reviews what lint cannot rather than repeating what lint already did.
 
 ### 00. Principles
 
-- `reviewer` reads that page before deciding which pattern to write down next, because the ranking is an argument rather than an answer.
+- `reviewer` reads `docs/standards/hotspots.md` before deciding which pattern to write down next. It crosses how often each file changes with whether it follows a recorded pattern and whether its path says what it is. Nothing gates it and nothing checks it is fresh: the input is the git history, so the page moves on every commit whether or not any source did, and a staleness gate would fail every commit for a reason nobody could act on. The page records the commit it was read at; regenerate with `pnpm exec tsx scripts/standards/hotspots.ts` when the age matters.
 
 ### 01. Naming
 
@@ -268,6 +267,6 @@ reviews what lint cannot rather than repeating what lint already did.
 
 ## Totals
 
-- 74 claim(s) enforced by a tool
+- 73 claim(s) enforced by a tool
 - 21 claim(s) left to a reviewer
 - 0 problem(s)

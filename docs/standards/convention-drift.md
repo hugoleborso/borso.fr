@@ -14,7 +14,7 @@ at twenty files.
 `convention-baseline.json` holds the current count per question and the
 gate fails only on an increase. Fixing one and running `--accept` lowers it.
 
-Read from 634 source file(s).
+Read from 610 source file(s).
 
 ## How is the name of a atom.ts file written?
 
@@ -40,7 +40,7 @@ Read from 634 source file(s).
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| kebab | 34 | `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts`, `apps/borso-fr/site/src/home-menu.core.ts` |
+| kebab | 32 | `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts`, `apps/borso-fr/site/src/home-menu.core.ts` |
 | camel | 5 | `apps/borsouvertures/site/src/openings/learnSession.core.ts`, `apps/borsouvertures/site/src/openings/openingFlow.core.ts`, `apps/borsouvertures/site/src/openings/playScope.core.ts` |
 
 ## How is the name of a entrypoint.tsx file written?
@@ -105,20 +105,20 @@ than 3 files is either a convention nobody wrote down or an accident.
 
 | Suffix | Files |
 | --- | --- |
-| `.utils.ts` | 88 |
-| `.core.ts` | 86 |
-| `.controller.ts` | 21 |
-| `.service.ts` | 20 |
-| `.config.ts` | 18 |
-| `.schema.ts` | 18 |
-| `.repository.ts` | 16 |
+| `.utils.ts` | 86 |
+| `.core.ts` | 83 |
+| `.controller.ts` | 19 |
+| `.service.ts` | 18 |
+| `.schema.ts` | 16 |
+| `.config.ts` | 14 |
+| `.repository.ts` | 14 |
 | `.types.ts` | 11 |
-| `.adapter.ts` | 10 |
 | `.queries.ts` | 10 |
+| `.adapter.ts` | 9 |
 | `.variants.ts` | 6 |
 | `.hook.ts` | 5 |
-| `.setup.ts` | 4 |
-| `.dev.ts` | 3 |
+| `.setup.ts` | 3 |
+| `.dev.ts` | 2 — rare |
 | `.middleware.ts` | 2 — rare |
 | `.client.ts` | 1 — rare |
 | `.environment.ts` | 1 — rare |

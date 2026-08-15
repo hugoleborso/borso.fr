@@ -4,19 +4,12 @@
   "workspaces": {
     ".": {
       "ignoreBinaries": ["typecheck", "build"],
-      "ignoreDependencies": [
-        "@stryker-mutator/core",
-        "@stryker-mutator/vitest-runner",
-        "@swmansion/argent",
-        "agent-browser",
-        "esbuild"
-      ],
+      "ignoreDependencies": ["@swmansion/argent", "agent-browser", "esbuild"],
       "entry": [
         ".claude/skills/blueprint/blueprint-*.ts",
         "scripts/architecture/*.ts",
-        "scripts/blueprints/blueprint-defects.ts",
-        "scripts/standards/enforcement-ledger.ts",
-        "scripts/standards/seal.ts",
+        "scripts/blueprints/*.ts",
+        "scripts/standards/*.ts",
         "scripts/**/*.test.ts"
       ],
       "project": [".claude/skills/blueprint/**/*.ts", "scripts/**/*.ts"]

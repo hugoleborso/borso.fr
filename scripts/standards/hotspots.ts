@@ -5,20 +5,20 @@
  *
  * Usage:
  *   pnpm exec tsx scripts/standards/hotspots.ts [--commits <n>]
- *   pnpm exec tsx scripts/standards/hotspots.ts --check
  *
- * `--check` only verifies the page is not stale. There is no ratchet and no
- * threshold, because the input is history: the same source that was fine
- * yesterday scores higher today for no reason anyone controls, and a gate on
- * that would fail commits for the wrong reason.
+ * There is no `--check`, no ratchet and no threshold, and that is not an
+ * oversight. The input is the git history, so the page changes on every commit
+ * whether or not any source moved. A freshness gate on it would fail every
+ * commit for a reason nobody could act on, and a threshold on churn would be
+ * met by splitting the file. The page instead records the commit it was read
+ * at, so a reader can see how old it is and regenerate when that matters.
  *
  * The window is a commit count rather than a date so the report is reproducible
- * from a checkout without a clock. `--check` uses the same default the writer
- * does, or the page would go stale on every commit.
+ * from a checkout without a clock.
  */
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { inferLayer, isTestFile } from '../../.claude/skills/blueprint/blueprint-utils.js';
 import { renderHotspotReport, type FileHistory } from './hotspots.core';
@@ -90,20 +90,15 @@ function readHistories(commitWindow: number): readonly FileHistory[] {
 
 function main(): void {
   const commitWindow = readCommitWindow();
-  const rendered = renderHotspotReport(readHistories(commitWindow), countCommitsRead(commitWindow));
-
-  if (process.argv.includes('--check')) {
-    const onDisk = existsSync(REPORT_PATH) ? readFileSync(REPORT_PATH, 'utf8') : '';
-    if (onDisk !== rendered) {
-      console.error(
-        '  docs/standards/hotspots.md is out of date. Run `pnpm exec tsx scripts/standards/hotspots.ts`.',
-      );
-      process.exitCode = 1;
-      return;
-    }
-    console.log('hotspots.md is up to date.');
-    return;
-  }
+  const headRevision = execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
+    cwd: REPOSITORY_ROOT,
+    encoding: 'utf8',
+  }).trim();
+  const rendered = renderHotspotReport(
+    readHistories(commitWindow),
+    countCommitsRead(commitWindow),
+    headRevision,
+  );
 
   writeFileSync(REPORT_PATH, rendered);
   console.log(`Wrote docs/standards/hotspots.md from the last ${String(commitWindow)} commit(s).`);

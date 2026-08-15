@@ -14,16 +14,18 @@ A file that changes constantly and follows a blueprint scores zero and does
 not appear, because the pattern is doing its job. So does a file that
 follows nothing and nobody touches.
 
-This is a report, not a gate. A build cannot fail because a file was edited
-often, and a threshold on churn would be met by splitting the file.
+This is a report, not a gate, and there is no freshness check on it either.
+The input is the history, so the page changes on every commit whether or
+not any source moved; a staleness gate would fail every commit for a reason
+nobody could act on. It records the commit it was read at instead.
 
-Read from the last 400 commit(s) over 634 tracked source file(s).
+Read at `fdaa919`, from the last 400 commit(s) over 610 tracked source file(s).
 
 ## The files
 
 | File | Commits | Layer | Weak because | Risk |
 | --- | --- | --- | --- | --- |
-| `infra/cdk/src/index.ts` | 15 | unknown | follows no recorded pattern; the path does not say what the file is | 30 |
+| `infra/cdk/src/index.ts` | 14 | unknown | follows no recorded pattern; the path does not say what the file is | 28 |
 | `infra/shared/lib/deploy-roles.ts` | 13 | unknown | follows no recorded pattern; the path does not say what the file is | 26 |
 | `apps/borsouvertures/scripts/build-openings.ts` | 10 | unknown | follows no recorded pattern; the path does not say what the file is | 20 |
 | `infra/cdk/src/internal/oidc.ts` | 10 | unknown | follows no recorded pattern; the path does not say what the file is | 20 |
@@ -31,7 +33,6 @@ Read from the last 400 commit(s) over 634 tracked source file(s).
 | `infra/cdk/src/internal/env.ts` | 12 | unknown | the path does not say what the file is | 12 |
 | `infra/shared/lib/shared-stack.ts` | 12 | unknown | the path does not say what the file is | 12 |
 | `apps/borso-fr/bin/app.ts` | 10 | unknown | the path does not say what the file is | 10 |
-| `infra/cdk/src/constructs/dsql-cluster-stack.ts` | 10 | construct | follows no recorded pattern | 10 |
 | `infra/cdk/src/internal/cf-host-routing-function.ts` | 10 | unknown | the path does not say what the file is | 10 |
 | `infra/cdk/src/internal/cf-static-site-index-rewrite.ts` | 10 | unknown | the path does not say what the file is | 10 |
 | `infra/cdk/src/internal/tags.ts` | 10 | unknown | the path does not say what the file is | 10 |
@@ -39,6 +40,7 @@ Read from the last 400 commit(s) over 634 tracked source file(s).
 | `apps/borso-fr/vite.config.ts` | 9 | config | follows no recorded pattern | 9 |
 | `apps/borsouvertures/bin/app.ts` | 9 | unknown | the path does not say what the file is | 9 |
 | `apps/borsouvertures/vite.config.ts` | 9 | config | follows no recorded pattern | 9 |
+| `infra/cdk/src/constructs/dsql-cluster-stack.ts` | 9 | construct | follows no recorded pattern | 9 |
 | `infra/shared/lib/certs-stack.ts` | 9 | unknown | the path does not say what the file is | 9 |
 | `apps/last-loop-lepin/api/src/auth/auth.middleware.ts` | 7 | middleware | follows no recorded pattern | 7 |
 | `apps/last-loop-lepin/api/src/auth/auth.schema.ts` | 6 | schema | follows no recorded pattern | 6 |
@@ -49,7 +51,7 @@ Read from the last 400 commit(s) over 634 tracked source file(s).
 | `apps/last-loop-lepin/vite.config.ts` | 5 | config | follows no recorded pattern | 5 |
 | `apps/pragma/site/src/App.tsx` | 5 | entrypoint | follows no recorded pattern | 5 |
 
-76 more file(s) score above zero and are not shown.
+73 more file(s) score above zero and are not shown.
 
 ## The next blueprint worth writing
 
@@ -59,13 +61,13 @@ one.
 
 | Layer | Files following nothing | Their commits |
 | --- | --- | --- |
-| unknown | 13 | 58 |
-| config | 11 | 42 |
+| unknown | 13 | 57 |
+| config | 8 | 39 |
 | atom | 9 | 18 |
 | types | 4 | 16 |
 | schema | 5 | 15 |
-| construct | 1 | 10 |
 | organism | 4 | 10 |
+| construct | 1 | 9 |
 | route | 3 | 8 |
 | service | 2 | 8 |
 | middleware | 1 | 7 |

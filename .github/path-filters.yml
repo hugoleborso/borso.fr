@@ -17,7 +17,6 @@
 # declares as `apps/*` — no install needed to know the slugs.
 
 borso-fr: 'apps/borso-fr/**'
-borsolivres: 'apps/borsolivres/**'
 borsouvertures: 'apps/borsouvertures/**'
 last-loop-lepin: 'apps/last-loop-lepin/**'
 pragma: 'apps/pragma/**'

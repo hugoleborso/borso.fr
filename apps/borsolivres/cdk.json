@@ -1,6 +1,0 @@
-{
-  "app": "tsx cdk/bin/cdk.ts",
-  "context": {
-    "@aws-cdk/aws-iam:minimizePolicies": true
-  }
-}
