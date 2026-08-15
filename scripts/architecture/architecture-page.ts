@@ -850,7 +850,7 @@ ${PAGE_STYLES}
         `<button role="tab" data-target="level-${escapeHtml(level.id)}" aria-selected="false">${escapeHtml(level.title)}</button>`,
     )
     .join('')}
-  <button role="tab" data-target="level-patterns" aria-selected="false">Patterns</button>
+  <button role="tab" data-target="level-patterns" aria-selected="false">Blueprints</button>
   <button role="tab" data-target="level-standards" aria-selected="false">Standards</button>
 </div></nav>
 
@@ -870,8 +870,8 @@ ${PAGE_STYLES}
   </section>
 
   <section class="level" id="level-patterns" hidden>
-    <h2>Patterns and standards</h2>
-    <p class="summary">The blueprint overlay. A blueprint is a canonical example marked in place; followers carry its id. Coverage is partial by design, so this view sits beside the position graph rather than inside it: position says where a node is, a pattern says which example it copies.</p>
+    <h2>Blueprints</h2>
+    <p class="summary">One canonical example per pattern, marked in the code it is an example of. A file declares one with a <code>@Blueprint</code> block; every file that copies it carries <code>// @FollowsBlueprint &lt;id&gt;</code>, and those are the followers counted here. Declarations are repository-wide and followers are per application, so a blueprint declared for another application still appears when a file here follows it. Coverage is partial by design, which is why this sits beside the graphs rather than inside them: a position says where a node is, a blueprint says which example it copies. Clicking a row opens the declaring file.</p>
     <div class="table-scroll">
       <table class="clickable">
         <thead><tr><th>Blueprint</th><th>Declared in</th><th>Last change</th><th class="num">Followers</th><th>Following files</th></tr></thead>

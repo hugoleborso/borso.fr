@@ -128,12 +128,15 @@ block raises — *what does this actually do* — is answered without leaving th
 page. Sources are keyed once and shared across the 47 graphs, because the same
 service appears in several flows.
 
-Level 4 and the pattern list open the same dialog: a row is a file, clicking it
-shows that file's source highlighted. The pattern list also carries, per
+Level 4 and the Blueprints tab open the same dialog: a row is a file, clicking
+it shows that file's source highlighted. Blueprints also carries, per
 blueprint, the commit that last touched the declaring file, how many commits it
-has, the followers behind a toggle, and a link to the diff. Standards sit under
-the patterns, because a blueprint says which example to copy and a standard says
-what the rule is.
+has, the followers behind a toggle, and a link to the diff.
+
+Standards have a tab of their own, because they are a different thing: a
+blueprint says which example to copy and a standard says what the rule is. That
+tab carries each document's whole history, so picking two commits shows what the
+repository decided in between.
 
 A blueprint is looked for across the whole repository, not just this
 application: they are declared once and followed everywhere, so half the list
@@ -223,7 +226,8 @@ Blueprints are an overlay, not the substrate. A blueprint answers *which
 example does this copy*; a position answers *where does this sit*. Coverage is
 partial by design — 25 of pragma's files carry no marker — so it can never be
 the thing that places a node. The page shows blueprint counts on each node and
-lists every pattern with its followers under **Patterns**.
+lists every pattern with its followers under **Blueprints**, which is a tab
+of its own now that the standards have theirs.
 
 ## On a pull request
 
@@ -246,7 +250,7 @@ again, with each block coloured by what this branch did to it** — green for on
 the target branch did not have, amber for one whose contents moved, red and
 struck through for one it had and this branch does not. A block that is gone is
 drawn rather than omitted, because a diagram cannot show a deletion by leaving
-it out. The Patterns table and the level 4 rows carry the same three colours.
+it out. The Blueprints table and the level 4 rows carry the same three colours.
 It is uploaded with the maps and never committed, because it describes a branch
 rather than the repository.
 

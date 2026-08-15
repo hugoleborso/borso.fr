@@ -94,8 +94,8 @@ describe.
 | `@DependsOnExternal <id>` | Yes | Level 1 draws the actor and the system alone, and no third party appears anywhere |
 | An `.adapter.ts` per outbound call | Yes | The tag is the only evidence an external exists, so a `fetch` written without one makes level 1 quietly wrong (ADR-0012) |
 | `@Feature <id>` | Yes | Level 3 falls back to the folder, which mixes the granularity axis with the feature axis on the front end |
-| Blueprints | Yes | Blocks carry no pattern pill, and the Patterns tab is empty |
-| Standards documents | Yes | Nothing on the map changes; they are what makes the conventions above hold |
+| Blueprints | Yes | Blocks carry no pattern pill, and the Blueprints tab is empty |
+| Standards documents | Yes | The Standards tab is empty. Nothing else on the map changes; they are what makes the conventions above hold |
 | `*.queries.ts` modules | Yes | Level 3.5 has no user actions, because an action is an exported hook in one of them |
 | A Hono API | Yes | No routes, no endpoints on 3.5; the map stops at level 3 in practice |
 | `urlOnlyScripts` | Yes | A route reached only by a plain script, such as a service worker fetching by URL string, reads as unreached |

@@ -1186,7 +1186,7 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
     ['component', statusesBetween(base.component, head.component)],
     ['code', statusesBetween(base.code, head.code)],
     // A pattern gained, lost, or with a different declaring file or follower
-    // count is an architectural change like any other, so the Patterns table
+    // count is an architectural change like any other, so the Blueprints table
     // carries the same three colours as the graphs.
     ['blueprint', statusesBetween(base.blueprint, head.blueprint)],
   ]);
