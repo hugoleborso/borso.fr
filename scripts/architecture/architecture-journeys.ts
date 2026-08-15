@@ -426,6 +426,17 @@ function isFrontEndModule(file: ArchitectureFile): boolean {
  * construction. Adding it here rather than to each action keeps a single action
  * readable and lets the feature's own view answer "what is this made of".
  */
+/**
+ * A node's `location` is `<path>:<line>`, and only the path names a file. The
+ * line half must not reach a set of drawn files: it would never match a real
+ * path, so it costs nothing, and it reads as a bug every time.
+ */
+function filePathOf(location: string | undefined): string[] {
+  if (location === undefined) return [];
+  const [filePath] = location.split(':');
+  return filePath === undefined ? [] : [filePath];
+}
+
 function addComposition(
   nodes: GraphNode[],
   edges: GraphEdge[],
@@ -434,7 +445,7 @@ function addComposition(
 ): void {
   const drawn = new Set(
     nodes.flatMap((node) =>
-      node.id.startsWith('ui:') ? [node.id.slice('ui:'.length)] : (node.location?.split(':') ?? []),
+      node.id.startsWith('ui:') ? [node.id.slice('ui:'.length)] : filePathOf(node.location),
     ),
   );
   const seeds = nodes
@@ -1010,7 +1021,7 @@ export function buildJourneys(
         if (node.sourceKey !== undefined && node.sourceKey.startsWith('ui:')) {
           return [node.sourceKey.slice('ui:'.length)];
         }
-        return node.location === undefined ? [] : [node.location.split(':')[0] ?? ''];
+        return filePathOf(node.location);
       }),
     ),
   );

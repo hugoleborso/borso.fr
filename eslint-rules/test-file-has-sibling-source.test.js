@@ -17,12 +17,16 @@ const sourceWithoutSiblingTest = pureFile(
 );
 const siblingTestItself = pureFile('apps/last-loop-lepin/api/src/ranking/ranking.core.test.ts');
 const impureSource = pureFile('apps/last-loop-lepin/api/src/ranking/ranking.service.ts');
+const adapterWithSiblingTest = pureFile('apps/pragma/api/src/songs/musicbrainz.adapter.ts');
+const adapterWithoutSiblingTest = pureFile('apps/pragma/api/src/songs/imaginary.adapter.ts');
 
 // @FollowsBlueprint test-lint-rule
 createRuleTester(sourceWithSiblingTest, { jsx: false }).run('test-file-has-sibling-source', rule, {
   valid: [
     { code: 'export const metres = 1;' },
     { code: 'export const metres = 1;', filename: coreWithSiblingTest },
+    // An adapter is gated too, though it is the opposite of pure.
+    { code: 'export const search = () => null;', filename: adapterWithSiblingTest },
     // The sibling itself, which has no sibling of its own.
     { code: 'export const cases = [];', filename: siblingTestItself },
     // A file the coverage and mutation gates do not cover.
@@ -34,6 +38,11 @@ createRuleTester(sourceWithSiblingTest, { jsx: false }).run('test-file-has-sibli
     {
       code: 'export const ranking = [];',
       filename: sourceWithoutSiblingTest,
+      errors: [{ messageId: 'missingSiblingTest' }],
+    },
+    {
+      code: 'export const search = () => null;',
+      filename: adapterWithoutSiblingTest,
       errors: [{ messageId: 'missingSiblingTest' }],
     },
     {

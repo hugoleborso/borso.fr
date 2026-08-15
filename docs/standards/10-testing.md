@@ -179,4 +179,7 @@ e.g., a change that cannot alter behaviour, and say why on the line.
 - `vitest run --coverage`, with per-file thresholds in each `vitest.config.ts`.
 - `stryker run`, in the pre-push hook and in CI.
 - `borso/test-file-has-sibling-source`, a custom ESLint rule, which fails when
-  a `.core.ts` or `.utils.ts` file has no sibling test file.
+  a `.core.ts`, `.utils.ts` or `.adapter.ts` file has no sibling test file. The
+  three suffixes are the ones the coverage and mutation gates cover, and both
+  gates pass a file nothing imports, so the missing suite is invisible in the
+  numbers until this rule names it.

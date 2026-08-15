@@ -105,6 +105,14 @@ that belongs to that protocol, and the parse of the response into a type the
 domain owns. It is not: business rules, database access, or anything a `.core.ts`
 should hold.
 
+The suffix says which layer a file is; it does not say which folder it sits in.
+Almost always the answer is "beside the bounded context that owns it", which is
+the vertical-slice rule. The reporting client is the exception, because its call
+sites are every screen rather than one context, so it stays confined to
+`site/src/observability/` by `borso/no-vendor-sdk-outside-adapter` and carries
+the suffix as well. Two rules, one file, no contradiction — see
+[06](../standards/06-data-fetching.md).
+
 ## Consequences
 
 **Two that are bad, named on purpose:**

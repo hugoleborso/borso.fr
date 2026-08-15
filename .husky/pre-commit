@@ -61,7 +61,12 @@ fi
 # diagram that lies. It also refuses a `@DependsOnExternal` naming an external
 # system the manifest does not declare, and a declared external no file reaches,
 # because either half alone is how a context diagram drifts from the code.
-if git diff --cached --name-only | grep -qE '^(apps/|scripts/architecture/)'; then
+# The three paths are the ones .github/workflows/architecture.yml watches, and
+# the two lists have to stay the same: a commit that changed only
+# blueprint-utils.ts, whose layer table the generator reads, used to reach CI
+# with a page nothing had regenerated.
+if git diff --cached --name-only |
+  grep -qE '^(apps/|scripts/architecture/|\.claude/skills/blueprint/blueprint-utils\.ts$)'; then
   echo "[pre-commit] checking the architecture pages"
   pnpm exec tsx scripts/architecture/architecture-graph.ts --check
 fi

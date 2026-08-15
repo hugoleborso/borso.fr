@@ -12,6 +12,7 @@
  */
 
 const PURE_FILE_PATTERN = /\.(core|utils)\.tsx?$/;
+const TESTED_FILE_PATTERN = /\.(core|utils|adapter)\.tsx?$/;
 const TEST_FILE_PATTERN = /\.(test|spec|test-utils)\.[jt]sx?$/;
 const TEST_HARNESS_FOLDER_PATTERN = /(^|\/)test\//;
 const CONTROLLER_FILE_PATTERN = /\.controller\.ts$/;
@@ -98,6 +99,19 @@ export const MUTATING_METHOD_NAMES = new Set([
 // @FollowsBlueprint lint-rule-predicate
 export function isPureFile(filename) {
   return PURE_FILE_PATTERN.test(filename);
+}
+
+/**
+ * A file the coverage gate and the mutation gate both cover, which is the pure
+ * files plus `.adapter.ts`. An adapter is not pure — that is what it is for —
+ * so it stays out of `isPureFile`, and the purity rules keep meaning what they
+ * meant. The two questions are separate because the gates ask "is this file
+ * tested to the line" and the purity rules ask "may this file touch the world".
+ *
+ * See docs/standards/10-testing.md.
+ */
+export function isGatedFile(filename) {
+  return TESTED_FILE_PATTERN.test(filename);
 }
 
 export function isTestFile(filename) {
