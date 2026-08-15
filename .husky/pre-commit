@@ -140,6 +140,11 @@ scripts/check-app-registration.sh
 # reads a version field, so two workspaces drifting onto different majors of the
 # same library passes every other gate and surfaces later as a type error in
 # whichever file sits across the seam.
+# Each term in an application's vocabulary names the folder that owns it, and
+# that folder gets renamed by changes with no reason to open the vocabulary.
+echo "[pre-commit] checking each vocabulary term names a folder that exists"
+scripts/check-vocabulary-paths.sh
+
 echo "[pre-commit] checking no file carries a NUL byte"
 scripts/check-no-null-bytes.sh
 

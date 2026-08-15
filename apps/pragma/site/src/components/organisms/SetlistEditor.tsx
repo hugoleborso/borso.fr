@@ -35,7 +35,7 @@ import { evaluateTransition } from '@domain/transition.core';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { meanMasteryForSong } from '../../lib/mastery-aggregate.utils';
+import { meanDefaultMasteryForSong } from '../../lib/mastery-aggregate.utils';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
@@ -136,7 +136,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const meanMasteryBySongId = useMemo(() => {
     const out: Record<string, number | null> = {};
     for (const song of songs)
-      out[song.id] = meanMasteryForSong(song.defaultLineup, masteryDefaults);
+      out[song.id] = meanDefaultMasteryForSong(song.defaultLineup, masteryDefaults);
     return out;
   }, [songs, masteryDefaults]);
 

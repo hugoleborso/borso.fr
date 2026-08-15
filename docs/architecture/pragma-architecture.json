@@ -3322,7 +3322,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
-      "digest": "a35166337a72",
+      "digest": "c4f5083449ff",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3942,13 +3942,13 @@
     },
     {
       "path": "apps/pragma/site/src/lib/mastery-aggregate.utils.ts",
-      "digest": "e90f53511941",
+      "digest": "1b8da27bd444",
       "container": "site",
       "layer": "utils",
       "context": "lib",
       "feature": "mastery",
       "exports": [
-        "meanMasteryForSong"
+        "meanDefaultMasteryForSong"
       ],
       "imports": [
         "apps/pragma/domain/lineup.core.ts"
@@ -4618,7 +4618,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/CatalogPage.tsx",
-      "digest": "5b467d334846",
+      "digest": "5156f16a7299",
       "container": "site",
       "layer": "route",
       "context": "catalog",

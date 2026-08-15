@@ -357,18 +357,18 @@
         "followers": 6
       },
       {
+        "id": "schema-shared-slug",
+        "name": "Shared Slug Schema",
+        "usage": "Use for an identifier several slices validate, so the owning slice declares the rule once and the others import it.",
+        "path": "apps/last-loop-lepin/api/src/edition/edition.schema.ts",
+        "followers": 2
+      },
+      {
         "id": "schema-dsql-constraints",
         "name": "Schema With DSQL Constraints Written Down",
         "usage": "Use for a table on Aurora DSQL, so every constraint the engine refuses is recorded beside the column with the guard that replaces it.",
         "path": "apps/last-loop-lepin/api/src/punch/punch.schema.ts",
         "followers": 2
-      },
-      {
-        "id": "schema-shared-slug",
-        "name": "Shared Slug Schema",
-        "usage": "Use for an identifier several slices validate, so the owning slice declares the rule once and the others import it.",
-        "path": "apps/last-loop-lepin/api/src/edition/edition.schema.ts",
-        "followers": 1
       },
       {
         "id": "schema-input-only",

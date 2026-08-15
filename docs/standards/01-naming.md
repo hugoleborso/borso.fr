@@ -187,6 +187,33 @@ explaining, the code is unclear, so rewrite the code.
 JSDoc is welcome on an exported function, where it documents the arguments, the
 return value, and any surprising edge case.
 
+## The application's own words
+
+Every rule above is about the *shape* of a name. None of them can tell you that
+the band calls it a bar and not a venue, or that the race calls it a loop and
+not a lap. That question has no rule, and it is the one that decides whether two
+people writing in the same folder agree.
+
+So each application with a domain of its own carries an `apps/<app>/VOCABULARY.md`:
+one section per noun the application talks about, saying what it is, which
+bounded context owns it, the invariants that hold, and the word it is most often
+confused with. Read it before naming a new type, column, function or file, and
+add to it when a new noun appears.
+
+It closes the same gap the English-only rule leaves open. The rule says not to
+write `porteurTonal`, and it cannot say what to write instead; the vocabulary
+can, because the word already exists somewhere in the tree.
+
+The last section of each file, *Words we do not use*, is the part that pays off
+fastest. It names the term a reader would reach for and the term this
+application actually uses, which is exactly the substitution a new contributor
+gets wrong.
+
+Writing one is also a diagnostic. Drafting the first two turned up one rule
+implemented twice under two names with two different answers, one schema
+restating a shared validator with weaker bounds, and three nouns carrying two
+meanings each. None of that is visible from any one file.
+
 ## Enforced by
 
 - `eslint:borso/no-abbreviated-identifier` rejects a dictionary of known
@@ -211,6 +238,12 @@ return value, and any surprising edge case.
   parameter or class field default, and an object property, whose key or
   parameter name is the name the rule asks for. Off in a test file, where a
   fixture literal belongs next to the assertion that gives it meaning.
+- `script:scripts/check-vocabulary-paths.sh` fails a `VOCABULARY.md` whose term
+  points at a folder that is not there. That line is the only mechanically
+  checkable fact in the document, and the one that rots first, because a slice
+  gets renamed by a change with no reason to open the vocabulary.
+- `reviewer` checks that a definition in a `VOCABULARY.md` is still true, which
+  is prose against code and therefore nothing a rule can do.
 - `reviewer` checks that a verb keeps the promise the table above makes, so a
   `find…` returns `null` when the thing is absent and a `get…` throws.
 - `reviewer` checks that a boolean name is not negated, because `isNotReady`

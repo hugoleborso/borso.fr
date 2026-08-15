@@ -36,6 +36,8 @@ every application the standard covers.
 | `unicorn/consistent-boolean-name` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
 | `unicorn/catch-error-name` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
 | `no-magic-numbers` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `scripts/check-vocabulary-paths.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
+| (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
@@ -212,7 +214,7 @@ every application the standard covers.
 
 ## What only a reviewer can check
 
-22 claim(s) below hand the check to a person, because no tool can make it.
+23 claim(s) below hand the check to a person, because no tool can make it.
 They are the checklist the standards review agent works from, so the agent
 reviews what lint cannot rather than repeating what lint already did.
 
@@ -223,6 +225,7 @@ reviews what lint cannot rather than repeating what lint already did.
 
 ### 01. Naming
 
+- `reviewer` checks that a definition in a `VOCABULARY.md` is still true, which is prose against code and therefore nothing a rule can do.
 - `reviewer` checks that a verb keeps the promise the table above makes, so a `find…` returns `null` when the thing is absent and a `get…` throws.
 - `reviewer` checks that a boolean name is not negated, because `isNotReady` reads as a double negative inside a `!`.
 - `reviewer` checks that a comment documents something the code cannot say, and is not a restatement, a history note, or a description of what the code does not do.
@@ -279,6 +282,6 @@ reviews what lint cannot rather than repeating what lint already did.
 
 ## Totals
 
-- 76 claim(s) enforced by a tool
-- 22 claim(s) left to a reviewer
+- 77 claim(s) enforced by a tool
+- 23 claim(s) left to a reviewer
 - 0 problem(s)

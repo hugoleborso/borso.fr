@@ -1,14 +1,16 @@
 /**
- * Front-end port of the mastery aggregation logic. The API ships
- * `mastery.core.ts` with `meanForSong`, but the front-end can't import
- * across workspaces; this utility mirrors the rule against the same
- * data shape the catalog list endpoint already returns.
+ * The average mastery a song's default lineup holds, from the defaults alone.
  *
- * `meanMasteryForSong` returns the average mastery default across the
- * song's lineup, one score per instrument held — a member on drums and
- * vocals counts twice. Members sitting the song out are skipped.
- * Returns null if the lineup is empty or no defaults are known for any
- * of the (member, instrument) pairs.
+ * The name says `Default` because that is the whole difference from the back
+ * end's `meanForSong` in `api/src/mastery/mastery.core.ts`, which averages the
+ * *effective* score, meaning the per-song override where one exists and the
+ * default otherwise. The two therefore disagree on any song that carries an
+ * override. This one reads what the catalog list endpoint ships, which is
+ * defaults only.
+ *
+ * One score per instrument held, so a member on drums and vocals counts twice.
+ * Members sitting the song out are skipped. Null when the lineup is empty or
+ * nothing is known about any of its pairs.
  * @Feature mastery
  */
 
@@ -21,7 +23,7 @@ export interface MasteryDefaultRow {
 }
 
 // @FollowsBlueprint utils-pure-module
-export function meanMasteryForSong(
+export function meanDefaultMasteryForSong(
   defaultLineup: Lineup,
   defaults: readonly MasteryDefaultRow[],
 ): number | null {

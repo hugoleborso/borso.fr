@@ -636,7 +636,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/media/media.schema.ts",
-      "digest": "b3bf455ed3f8",
+      "digest": "8d4a3f0896b0",
       "container": "api",
       "layer": "schema",
       "context": "media",
@@ -645,10 +645,14 @@
         "presignInputSchema"
       ],
       "imports": [
-        "apps/last-loop-lepin/api/src/media/media.core.ts"
+        "apps/last-loop-lepin/api/src/edition/edition.schema.ts",
+        "apps/last-loop-lepin/api/src/media/media.core.ts",
+        "apps/last-loop-lepin/api/src/runner/runner.schema.ts"
       ],
       "blueprints": [],
-      "followsBlueprints": []
+      "followsBlueprints": [
+        "schema-shared-slug"
+      ]
     },
     {
       "path": "apps/last-loop-lepin/api/src/media/media.service.ts",
@@ -3870,6 +3874,8 @@
       "context": "media",
       "steps": [
         "schema:presignInputSchema",
+        "schema:editionSlugSchema",
+        "schema:runnerSlugSchema",
         "core:PHOTO_CONTENT_TYPES",
         "service:presignRunnerPhotoUpload",
         "adapter:createPresignedUpload",
@@ -4380,7 +4386,7 @@
     {
       "id": "schema-shared-slug",
       "file": "apps/last-loop-lepin/api/src/edition/edition.schema.ts",
-      "followerCount": 1
+      "followerCount": 2
     },
     {
       "id": "service-dto-mapping",

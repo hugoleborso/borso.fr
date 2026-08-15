@@ -91,9 +91,65 @@ has a dantotsu named *a green mutation gate is not a green coverage gate*. Most
 survivors are in the render functions, where a mutant changes prose and no test
 asserts on that prose.
 
-If the hardening pass did not finish, **the root config is the thing to remove
-or finish**, and the number above is the honest measurement to start from. Do
-not lower the threshold and do not narrow the mutate glob.
+The hardening pass finished. The unscoped root run is **100.00 with zero
+survivors over 916 mutants in 64 seconds**, and the gate that was missing is now
+wired: `pnpm run test:coverage` at the root in CI, a `tooling` gate in pre-push
+whenever `scripts/` or `eslint-rules/` changes, and an unscoped `tooling` job in
+`full-suite.yml`. Before that, the root's declared 100% per-file coverage
+threshold applied to nothing, because CI ran the suite without `--coverage`.
+
+## The practitioner research, and what was taken from it
+
+A subagent surveyed what other people build for codebase consistency, with
+sources. Six items were ranked worth building. What happened to each:
+
+| Item | Verdict | Where it landed |
+| --- | --- | --- |
+| Temporal coupling from git history, filtered against the module graph | Built | `scripts/standards/temporal-coupling.ts`, cited by standard 00 |
+| Point the defect machinery at the rules before writing rule 37 | Already built | `scripts/standards/rule-provenance.ts`, 11 of 34 rules came from a defect |
+| One version per dependency, via pnpm catalogs | Built | `pnpm-workspace.yaml` plus `scripts/dependencies/check-dependency-catalog.ts`, standard 13 |
+| `type-coverage` with a ratcheted floor | **Rejected**, see below | nothing |
+| Banned external imports per folder | Already built | `no-restricted-imports` overrides in `eslint.config.js` |
+| A per-application domain vocabulary | Built | `apps/<app>/VOCABULARY.md` |
+
+### Why type coverage was rejected, with the measurement
+
+The argument for it is good: this repository reports zero written `any` and zero
+type assertions, so the only `any` left is the kind nobody wrote, and that is a
+number which can degrade while all 34 rules stay green.
+
+It was measured rather than assumed. A probe over each workspace's TypeScript
+program, counting identifiers whose type carries the `Any` flag:
+
+| Workspace | Typed | `any` identifiers |
+| --- | --- | --- |
+| `apps/pragma` | 98.92% | 507 of 47099 |
+| `apps/last-loop-lepin` | 99.60% | 120 of 29860 |
+| `apps/borso-fr` | 99.45% | 51 of 9308 |
+| `apps/borsouvertures` | 99.54% | 52 of 11411 |
+| `infra/cdk` | 99.14% | 59 of 6875 |
+| `infra/shared` | 99.11% | 9 of 1010 |
+
+The first run read 96.6% for `pragma` and every one of its worst files was a
+`.tsx`. Reading the actual identifiers showed them all to be JSX intrinsic tag
+names, `div` and `span`, which resolve to `any` and mean nothing. Excluding
+those moved the number two points. Reading the next worst file, `infra/cdk/src/internal/migration-runner/index.ts`,
+showed sixteen more artefacts: namespace qualifiers in type references such as
+the `postgres` in `postgres.Sql`, and type-only import specifiers.
+
+So the metric needs a list of exclusions before it says anything, and each
+exclusion is a judgement nobody would review. A gate whose number moves for
+reasons the reader has to discount is worse than no gate, which is the argument
+this repository's own `rule-provenance.md` makes: 11 of 34 rules exist because
+something went wrong, and a 35th mechanism with no defect behind it, guarding a
+number already above 99%, is the case the research's own "case against" section
+argues against.
+
+Adopting the `type-coverage` package instead would buy years of those
+exclusions for one dev dependency and about half an hour. That is an ADR
+trigger, the number is currently healthy, and no entry in the dantotsu corpus
+traces to an implicit `any`. **Recommendation: leave it. Say the word and it
+takes half an hour.**
 
 ## Open questions for the operator
 
