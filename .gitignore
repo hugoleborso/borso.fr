@@ -32,11 +32,16 @@ node_modules/.cache
 .stryker-tmp
 reports
 
-# The architecture maps are generated, and nothing reads the committed copy.
-# `pages.yml` regenerates them before publishing, so a stale file cannot reach
-# the site, and `architecture.yml` regenerates them before diffing a pull
-# request. Committing them cost 9.3 MB rewritten in full on every change, and
-# bought a byte gate whose only subject was its own output. The model beside
-# each page is committed: it is small, it diffs as prose, and every byte of it
-# comes from the working tree.
+# Every architecture page, of both kinds, for the same reason: it is generated,
+# and whoever reads it builds it first.
+#
+# `<app>-diff.html` describes a branch rather than the repository, so there is
+# no revision it would be true at. `<app>-architecture.html` and `index.html`
+# describe the repository, but `pages.yml` regenerates before publishing and
+# `architecture.yml` regenerates before diffing a pull request, so no consumer
+# ever opened the committed bytes — they cost 9.3 MB rewritten in full on every
+# change, and bought a byte gate whose only subject was its own output.
+#
+# The model beside each page is committed: it is small, it diffs as prose, and
+# every byte of it comes from the working tree, so a gate on it means something.
 docs/architecture/*.html

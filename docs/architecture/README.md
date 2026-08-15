@@ -258,8 +258,9 @@ that only moved, red and struck through for one it had and this branch does
 not. A block that is gone is drawn rather than omitted, because a diagram
 cannot show a deletion by leaving it out. The Blueprints table, the level 4
 rows and the level 3.5 steps carry the same four colours. It is uploaded with
-the maps and never committed, because it describes a branch rather than the
-repository.
+the maps, and like them it is never committed — with the extra reason that it
+describes a branch rather than the repository, so there is no revision it would
+be true at.
 
 Four properties make those colours mean something, and each exists because its
 absence made the page lie:
