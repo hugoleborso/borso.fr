@@ -213,6 +213,203 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     }
   };
 
+
+  /**
+   * A line diff, by longest common subsequence.
+   *
+   * The page cannot reach a diff library, and the inputs are two versions of
+   * one markdown document — a few hundred lines each — so the quadratic table
+   * is nothing. Equal runs are collapsed to a context window, because a rule
+   * that gained a paragraph should not be read as a document that changed
+   * everywhere.
+   */
+  const CONTEXT_LINES = 3;
+
+  const diffLines = (before, after) => {
+    const rows = before.length;
+    const columns = after.length;
+    const table = [];
+    for (let row = 0; row <= rows; row += 1) table.push(new Uint32Array(columns + 1));
+    for (let row = rows - 1; row >= 0; row -= 1) {
+      for (let column = columns - 1; column >= 0; column -= 1) {
+        table[row][column] =
+          before[row] === after[column]
+            ? table[row + 1][column + 1] + 1
+            : Math.max(table[row + 1][column], table[row][column + 1]);
+      }
+    }
+    const out = [];
+    let row = 0;
+    let column = 0;
+    while (row < rows && column < columns) {
+      if (before[row] === after[column]) {
+        out.push({ kind: 'same', text: before[row], before: row + 1, after: column + 1 });
+        row += 1;
+        column += 1;
+      } else if (table[row + 1][column] >= table[row][column + 1]) {
+        out.push({ kind: 'removed', text: before[row], before: row + 1, after: null });
+        row += 1;
+      } else {
+        out.push({ kind: 'added', text: after[column], before: null, after: column + 1 });
+        column += 1;
+      }
+    }
+    while (row < rows) { out.push({ kind: 'removed', text: before[row], before: row + 1, after: null }); row += 1; }
+    while (column < columns) { out.push({ kind: 'added', text: after[column], before: null, after: column + 1 }); column += 1; }
+    return out;
+  };
+
+  /** Drop the long equal runs, keeping a few lines either side of each change. */
+  const collapseDiff = (rows) => {
+    const keep = new Array(rows.length).fill(false);
+    rows.forEach((row, index) => {
+      if (row.kind === 'same') return;
+      for (let near = index - CONTEXT_LINES; near <= index + CONTEXT_LINES; near += 1) {
+        if (near >= 0 && near < rows.length) keep[near] = true;
+      }
+    });
+    const out = [];
+    let skipped = 0;
+    rows.forEach((row, index) => {
+      if (keep[index]) {
+        if (skipped > 0) { out.push({ kind: 'gap', text: skipped + ' unchanged lines' }); skipped = 0; }
+        out.push(row);
+        return;
+      }
+      skipped += 1;
+    });
+    if (skipped > 0) out.push({ kind: 'gap', text: skipped + ' unchanged lines' });
+    return out;
+  };
+
+  /**
+   * The standards view: a document, its commits, and the diff between two.
+   *
+   * The whole text at every commit is already in the page, so choosing a pair
+   * is a redraw. Clicking a commit moves the right-hand end of the range and
+   * pushes the old one left, which is what makes stepping through the history
+   * one click rather than two.
+   */
+  const wireStandards = () => {
+    const host = document.querySelector('[data-standards]');
+    if (!host) return;
+    const data = JSON.parse(host.querySelector('script[type="application/json"]').textContent);
+    const timeline = host.querySelector('[data-standard-timeline]');
+    const diffHost = host.querySelector('[data-standard-diff]');
+    const ruleHost = host.querySelector('[data-standard-rule]');
+    const rangeHost = host.querySelector('[data-standard-range]');
+    let documentIndex = 0;
+    let fromIndex = 0;
+    let toIndex = 0;
+
+    const renderDiff = () => {
+      const document_ = data.documents[documentIndex];
+      const versions = document_.versions;
+      diffHost.replaceChildren();
+      if (versions.length === 0) {
+        diffHost.innerHTML = '<p class="standard-empty">No commit history for this document.</p>';
+        return;
+      }
+      // Newest first in the data; a range reads oldest to newest.
+      const older = versions[Math.max(fromIndex, toIndex)];
+      const newer = versions[Math.min(fromIndex, toIndex)];
+      rangeHost.textContent =
+        older === newer
+          ? 'showing ' + newer.sha + ' as it stood'
+          : older.sha + ' \u2192 ' + newer.sha;
+      const rows =
+        older === newer
+          ? newer.text.split('\n').map((text, index) => ({ kind: 'same', text, before: index + 1, after: index + 1 }))
+          : collapseDiff(diffLines(older.text.split('\n'), newer.text.split('\n')));
+      const added = rows.filter((row) => row.kind === 'added').length;
+      const removed = rows.filter((row) => row.kind === 'removed').length;
+      const summary = document.createElement('p');
+      summary.className = 'standard-diff-summary';
+      summary.textContent =
+        older === newer
+          ? rows.length + ' lines'
+          : '+' + added + ' \u2212' + removed + ' across ' + rows.length + ' shown lines';
+      diffHost.appendChild(summary);
+      const table = document.createElement('div');
+      table.className = 'diff-rows';
+      for (const row of rows) {
+        const line = document.createElement('div');
+        line.className = 'diff-row diff-' + row.kind;
+        const gutter = document.createElement('span');
+        gutter.className = 'diff-gutter';
+        gutter.textContent =
+          row.kind === 'gap' ? '' : (row.before === null ? '' : String(row.before)) + ' ' + (row.after === null ? '' : String(row.after));
+        const text = document.createElement('span');
+        text.className = 'diff-text';
+        text.textContent = row.kind === 'gap' ? '\u22ef ' + row.text : row.text;
+        line.append(gutter, text);
+        table.appendChild(line);
+      }
+      diffHost.appendChild(table);
+    };
+
+    const renderTimeline = () => {
+      const document_ = data.documents[documentIndex];
+      ruleHost.textContent = document_.rule;
+      timeline.replaceChildren();
+      document_.versions.forEach((version, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'commit';
+        const isEnd = index === fromIndex || index === toIndex;
+        const low = Math.min(fromIndex, toIndex);
+        const high = Math.max(fromIndex, toIndex);
+        button.classList.toggle('selected', isEnd);
+        button.classList.toggle('within', index > low && index < high);
+        button.setAttribute('aria-pressed', String(isEnd));
+        const sha = document.createElement('code');
+        sha.textContent = version.sha;
+        const date = document.createElement('span');
+        date.className = 'commit-date';
+        date.textContent = version.date;
+        const subject = document.createElement('span');
+        subject.className = 'commit-subject';
+        subject.textContent = version.subject;
+        const link = document.createElement('a');
+        link.className = 'commit-link';
+        link.href = 'https://github.com/' + data.repositorySlug + '/commit/' + version.sha;
+        link.target = '_blank';
+        link.rel = 'noreferrer';
+        link.textContent = 'on GitHub';
+        button.append(sha, date, subject);
+        button.addEventListener('click', () => {
+          fromIndex = toIndex;
+          toIndex = index;
+          renderTimeline();
+          renderDiff();
+        });
+        const cell = document.createElement('div');
+        cell.className = 'commit-cell';
+        cell.append(button, link);
+        timeline.appendChild(cell);
+      });
+    };
+
+    for (const choice of host.querySelectorAll('[data-standard-index]')) {
+      choice.addEventListener('click', () => {
+        documentIndex = Number(choice.dataset.standardIndex);
+        const versions = data.documents[documentIndex].versions;
+        toIndex = 0;
+        fromIndex = versions.length > 1 ? 1 : 0;
+        for (const other of host.querySelectorAll('[data-standard-index]')) {
+          other.setAttribute('aria-pressed', String(other === choice));
+        }
+        renderTimeline();
+        renderDiff();
+      });
+    }
+
+    const first = data.documents[0];
+    fromIndex = first && first.versions.length > 1 ? 1 : 0;
+    renderTimeline();
+    renderDiff();
+  };
+
   function buildScene(host, data) {
     const width = data.width;
     const sources = data.sources || {};
@@ -278,7 +475,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     for (const node of data.nodes) {
       const box = node;
       const group = svgElement('g', {
-        class: 'node node-' + (node.tone || 'neutral'),
+        class: 'node node-' + (node.tone || 'neutral') + (node.status ? ' node-' + node.status : ''),
         tabindex: '0',
         role: 'button',
         'aria-label': node.label + '. ' + (node.detail || ''),
@@ -652,6 +849,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
 
   for (const host of document.querySelectorAll('.graph')) renderGraph(host);
   wirePageSources();
+  wireStandards();
 })();
 `;
 
@@ -824,6 +1022,32 @@ export const GRAPH_STYLES = String.raw`
   }
   .journey-action[aria-pressed='true'] .journey-action-name { color: var(--accent); }
 
+  /* The diff page paints what a branch did: green for a block the target
+     branch did not have, amber for one whose contents moved, red for one it had
+     and this branch does not. Everything else keeps its layer colour, so the
+     change reads against an unchanged map rather than against nothing. */
+  .node-added .node-body { stroke: var(--layer-service); stroke-width: 2.4; fill: var(--layer-service-bg); }
+  .node-added .node-stripe { fill: var(--layer-service); }
+  .node-changed .node-body { stroke: var(--signal); stroke-width: 2.4; fill: var(--signal-soft); }
+  .node-changed .node-stripe { fill: var(--signal); }
+  .node-removed .node-body { stroke: var(--layer-edge); stroke-width: 2.4; fill: var(--layer-edge-bg); stroke-dasharray: 5 3; }
+  .node-removed .node-stripe { fill: var(--layer-edge); }
+  .node-removed .node-label { text-decoration: line-through; }
+
+  .diff-legend {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem;
+    margin: .2rem 0 0; font: .75rem/1.6 var(--font-mono); color: var(--muted);
+  }
+  .diff-legend .swatch { width: .8rem; height: .8rem; border-radius: 3px; display: inline-block; margin-right: .3rem; vertical-align: -1px; }
+  .diff-legend .added { background: var(--layer-service-bg); border: 2px solid var(--layer-service); }
+  .diff-legend .changed { background: var(--signal-soft); border: 2px solid var(--signal); }
+  .diff-legend .removed { background: var(--layer-edge-bg); border: 2px dashed var(--layer-edge); }
+  .diff-legend span { color: var(--muted); opacity: .8; }
+
+  tr.row-added td { background: var(--layer-service-bg); }
+  tr.row-changed td { background: var(--signal-soft); }
+  tr.row-removed td { background: var(--layer-edge-bg); text-decoration: line-through; }
+
   .node.has-code { cursor: zoom-in; }
   tr.has-code, li.has-code { cursor: zoom-in; }
   tr.has-code:hover td { background: var(--accent-soft); }
@@ -966,6 +1190,48 @@ export const GRAPH_STYLES = String.raw`
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
   }
   .coverage-missing > ul li { min-width: 0; overflow-wrap: anywhere; }
+
+  .standards { display: grid; gap: 1rem; }
+  .standard-picker { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .8rem .9rem; }
+  .standard-list { display: grid; gap: .3rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); margin-top: .45rem; }
+  .standard-choice {
+    display: grid; gap: .1rem; text-align: left; cursor: pointer; min-width: 0;
+    background: var(--panel-sunk); border: 1px solid var(--line); border-radius: 7px; padding: .4rem .55rem;
+  }
+  .standard-choice:hover { border-color: var(--accent); }
+  .standard-choice[aria-pressed='true'] { border-color: var(--accent); background: var(--accent-soft); }
+  .standard-title { font: 600 .78rem/1.4 var(--font-mono); color: var(--ink); overflow-wrap: anywhere; }
+  .standard-count { font: .66rem/1.5 var(--font-mono); color: var(--muted); }
+  .standard-body { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1rem; min-width: 0; }
+  .standard-rule { margin: 0 0 .8rem; color: var(--muted); font-size: .82rem; line-height: 1.6; }
+  .standard-timeline-head { display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; justify-content: space-between; }
+  .standard-range { font: 600 .72rem/1.5 var(--font-mono); color: var(--accent); }
+  .standard-timeline { display: flex; gap: .5rem; overflow-x: auto; padding: .5rem 0 .7rem; }
+  .commit-cell { display: grid; gap: .2rem; min-width: 13rem; }
+  .commit {
+    display: grid; gap: .1rem; text-align: left; cursor: pointer;
+    background: var(--panel-sunk); border: 1px solid var(--line); border-radius: 7px; padding: .45rem .55rem;
+  }
+  .commit:hover { border-color: var(--accent); }
+  .commit.within { border-color: var(--accent); opacity: .75; }
+  .commit.selected { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+  .commit code { font: 600 .74rem/1.5 var(--font-mono); color: var(--accent); }
+  .commit-date { font: .66rem/1.5 var(--font-mono); color: var(--muted); }
+  .commit-subject { font: .68rem/1.45 var(--font-mono); color: var(--muted); overflow-wrap: anywhere; }
+  .commit-link { font: .64rem/1.5 var(--font-mono); color: var(--muted); text-decoration: none; padding-left: .1rem; }
+  .commit-link:hover { color: var(--accent); text-decoration: underline; }
+  .standard-diff-summary { margin: 0 0 .5rem; font: 600 .74rem/1.5 var(--font-mono); color: var(--muted); }
+  .diff-rows { border: 1px solid var(--line); border-radius: 8px; overflow: auto; max-height: 34rem; }
+  .diff-row { display: grid; grid-template-columns: 5.5rem 1fr; font: .74rem/1.6 var(--font-mono); }
+  .diff-gutter { color: var(--muted); text-align: right; padding: 0 .5rem; opacity: .7; user-select: none; white-space: nowrap; }
+  .diff-text { padding: 0 .6rem; white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+  .diff-added { background: var(--layer-service-bg); }
+  .diff-added .diff-text { color: var(--layer-service); }
+  .diff-removed { background: var(--layer-edge-bg); }
+  .diff-removed .diff-text { color: var(--layer-edge); }
+  .diff-gap { background: var(--panel-sunk); }
+  .diff-gap .diff-text { color: var(--muted); font-style: italic; }
+  .standard-empty { color: var(--muted); font-size: .8rem; }
 
   .orphan-routes { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
   .orphan-routes li {

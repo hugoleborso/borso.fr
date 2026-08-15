@@ -21,6 +21,7 @@ import type {
   GraphLevel,
   LevelCoverage,
   StandardEntry,
+  StatusByNode,
 } from './architecture-graph';
 import type { ArchitectureManifest } from './architecture-manifest';
 
@@ -38,6 +39,8 @@ export interface RenderInput {
   /** Last commit per blueprint or standard file, keyed by repo-relative path. */
   readonly histories: Readonly<Record<string, FileHistory>>;
   readonly repositorySlug: string;
+  /** Present only on the diff page: what this branch did to each block. */
+  readonly statuses?: ReadonlyMap<string, StatusByNode>;
   readonly unmarkedCount: number;
   readonly layouts: ReadonlyMap<string, LevelLayout>;
   readonly journeys: JourneyModel;
@@ -76,7 +79,11 @@ function embedJson(value: unknown): string {
   return JSON.stringify(value).replaceAll('<', String.raw`\u003c`);
 }
 
-function renderGraph(level: GraphLevel, layout: LevelLayout): string {
+function renderGraph(
+  level: GraphLevel,
+  layout: LevelLayout,
+  statuses: StatusByNode | undefined,
+): string {
   const placed = new Map(layout.nodes.map((node) => [node.id, node]));
   const payload = {
     level: level.id,
@@ -95,6 +102,7 @@ function renderGraph(level: GraphLevel, layout: LevelLayout): string {
           chips: node.chips ?? [],
           detail: node.detail,
           tone: toneOf(node.kind),
+          status: statuses?.get(node.id) ?? '',
           x: box.x,
           y: box.y,
           width: box.width,
@@ -320,11 +328,19 @@ function renderBlueprints(
   histories: Readonly<Record<string, FileHistory>>,
   repositorySlug: string,
   applicationPrefix: string,
+  statuses: StatusByNode | undefined,
 ): string {
-  return blueprints
+  // A pattern the target branch had and this one does not still needs a row,
+  // because a table cannot show a deletion by leaving the row out.
+  const noFollowers: readonly string[] = [];
+  const removed = [...(statuses ?? new Map())]
+    .filter(([, status]) => status === 'removed')
+    .map(([id]) => ({ id, file: '', followers: noFollowers }));
+  return [...blueprints, ...removed]
+    .sort((left, right) => left.id.localeCompare(right.id))
     .map(
       (blueprint) => `
-      <tr${blueprint.file === '' ? '' : ` data-source-key="file:${escapeHtml(blueprint.file)}" tabindex="0"`}>
+      <tr class="row-${escapeHtml(statuses?.get(blueprint.id) ?? '')}"${blueprint.file === '' ? '' : ` data-source-key="file:${escapeHtml(blueprint.file)}" tabindex="0"`}>
         <td><code>${escapeHtml(blueprint.id)}</code></td>
         <td class="loc">${
           blueprint.file === ''
@@ -348,21 +364,51 @@ function renderBlueprints(
     .join('');
 }
 
-function renderStandards(
-  standards: readonly StandardEntry[],
-  histories: Readonly<Record<string, FileHistory>>,
-  repositorySlug: string,
-): string {
-  return standards
-    .map(
-      (standard) => `
-      <tr>
-        <td><a href="https://github.com/${escapeHtml(repositorySlug)}/blob/main/${escapeHtml(standard.path)}" target="_blank" rel="noreferrer">${escapeHtml(standard.title)}</a></td>
-        <td>${escapeHtml(standard.rule)}</td>
-        ${renderHistoryCell(standard.path, histories, repositorySlug)}
-      </tr>`,
-    )
-    .join('');
+/**
+ * The standards, each with its own history and a diff between any two commits.
+ *
+ * A rule that changed is more interesting than a rule that exists. The whole
+ * text at every commit ships with the page — thirteen documents and their
+ * history is about 150 KB — so picking two commits is a redraw rather than a
+ * request, which is the only kind of interaction this page can have.
+ */
+function renderStandards(standards: readonly StandardEntry[], repositorySlug: string): string {
+  const payload = {
+    repositorySlug,
+    documents: standards.map((standard) => ({
+      path: standard.path,
+      title: standard.title,
+      rule: standard.rule,
+      versions: standard.versions,
+    })),
+  };
+  return `
+    <div class="standards" data-standards>
+      <div class="standard-picker">
+        <span class="journey-picker-label">Document</span>
+        <div class="standard-list">
+          ${standards
+            .map(
+              (standard, index) =>
+                `<button type="button" class="standard-choice" data-standard-index="${index}" aria-pressed="${index === 0}">
+                  <span class="standard-title">${escapeHtml(standard.title)}</span>
+                  <span class="standard-count">${standard.versions.length} version${standard.versions.length === 1 ? '' : 's'}</span>
+                </button>`,
+            )
+            .join('')}
+        </div>
+      </div>
+      <div class="standard-body">
+        <p class="standard-rule" data-standard-rule></p>
+        <div class="standard-timeline-head">
+          <span class="journey-picker-label">History — click one commit, then another, to diff them</span>
+          <span class="standard-range" data-standard-range></span>
+        </div>
+        <div class="standard-timeline" data-standard-timeline></div>
+        <div class="standard-diff" data-standard-diff></div>
+      </div>
+      <script type="application/json">${embedJson(payload)}</script>
+    </div>`;
 }
 
 const PAGE_STYLES = String.raw`
@@ -696,6 +742,7 @@ export function renderArchitecturePage(input: RenderInput): string {
     standards,
     histories,
     repositorySlug,
+    statuses,
     unmarkedCount,
     layouts,
     journeys,
@@ -706,7 +753,7 @@ export function renderArchitecturePage(input: RenderInput): string {
     .map(
       (
         file,
-      ) => `<tr data-container="${escapeHtml(file.container)}" data-layer="${escapeHtml(file.layer)}" data-context="${escapeHtml(file.feature ?? file.context)}" data-source-key="file:${escapeHtml(file.path)}" tabindex="0">
+      ) => `<tr class="row-${escapeHtml(statuses?.get('code')?.get(file.path) ?? '')}" data-container="${escapeHtml(file.container)}" data-layer="${escapeHtml(file.layer)}" data-context="${escapeHtml(file.feature ?? file.context)}" data-source-key="file:${escapeHtml(file.path)}" tabindex="0">
         <td class="loc">${escapeHtml(file.path.replace(applicationPrefix, ''))}</td>
         <td><span class="layer layer-${escapeHtml(file.layer)}">${escapeHtml(file.layer)}</span></td>
         <td>${escapeHtml(file.feature ?? file.context)}</td>
@@ -747,7 +794,11 @@ export function renderArchitecturePage(input: RenderInput): string {
         applicationPrefix,
       )}`
           : `
-      ${renderGraph(level, layouts.get(level.id) ?? { nodes: [], edges: [], width: 0, height: 0 })}
+      ${renderGraph(
+        level,
+        layouts.get(level.id) ?? { nodes: [], edges: [], width: 0, height: 0 },
+        statuses?.get(level.id),
+      )}
       <details class="cards-panel">
         <summary>${level.nodes.length} block${level.nodes.length === 1 ? '' : 's'} in detail</summary>
         <div class="cards">${renderNodeCards(level)}</div>
@@ -761,11 +812,17 @@ export function renderArchitecturePage(input: RenderInput): string {
     )
     .join('');
 
-  return `<title>${escapeHtml(manifest.name)} architecture</title>
+  const isDiff = statuses !== undefined;
+  return `<title>${escapeHtml(manifest.name)} architecture${isDiff ? ' diff' : ''}</title>
 ${PAGE_STYLES}
 
 <header class="top"><div class="wrap">
-  <h1>${escapeHtml(manifest.name)} architecture</h1>
+  <h1>${escapeHtml(manifest.name)} architecture${isDiff ? ' — what this branch moved' : ''}</h1>
+  ${
+    isDiff
+      ? `<p class="diff-legend"><i class="swatch added"></i>added<i class="swatch changed"></i>changed<i class="swatch removed"></i>gone on this branch<span>Everything else is the same map, unchanged.</span></p>`
+      : ''
+  }
   <p class="lede">${escapeHtml(manifest.description)}</p>
   <ul class="stats">
     <li><b>${files.length}</b>source files</li>
@@ -794,6 +851,7 @@ ${PAGE_STYLES}
     )
     .join('')}
   <button role="tab" data-target="level-patterns" aria-selected="false">Patterns</button>
+  <button role="tab" data-target="level-standards" aria-selected="false">Standards</button>
 </div></nav>
 
 <main class="wrap">
@@ -817,17 +875,15 @@ ${PAGE_STYLES}
     <div class="table-scroll">
       <table class="clickable">
         <thead><tr><th>Blueprint</th><th>Declared in</th><th>Last change</th><th class="num">Followers</th><th>Following files</th></tr></thead>
-        <tbody>${renderBlueprints(blueprints, histories, repositorySlug, applicationPrefix)}</tbody>
+        <tbody>${renderBlueprints(blueprints, histories, repositorySlug, applicationPrefix, statuses?.get('blueprint'))}</tbody>
       </table>
     </div>
-    <h3 class="standards-heading">Standards</h3>
-    <p class="summary">A blueprint says which example to copy; a standard says what the rule is and which gate holds it. These are the repository's, not this application's, so a change here moves every application at once.</p>
-    <div class="table-scroll">
-      <table>
-        <thead><tr><th>Standard</th><th>Rule</th><th>Last change</th></tr></thead>
-        <tbody>${renderStandards(standards, histories, repositorySlug)}</tbody>
-      </table>
-    </div>
+  </section>
+
+  <section class="level" id="level-standards" hidden>
+    <h2>Standards</h2>
+    <p class="summary">What the rules are, and what they were. A blueprint says which example to copy; a standard says what the rule is and which gate holds it. These belong to the repository rather than to this application, so a change here moves every application at once — which is why the history matters more than the current text.</p>
+    ${renderStandards(standards, repositorySlug)}
   </section>
 </main>
 

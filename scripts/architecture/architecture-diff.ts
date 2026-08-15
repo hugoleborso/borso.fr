@@ -21,44 +21,13 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { z } from 'zod';
 
-const routeSchema = z.object({
-  id: z.string(),
-  context: z.string(),
-  steps: z.array(z.string()),
-  tables: z.array(z.string()),
-  externals: z.array(z.string()),
-  callerCount: z.number(),
-  unreached: z.boolean(),
-});
-
-const fileSchema = z.object({
-  path: z.string(),
-  container: z.string(),
-  layer: z.string(),
-  context: z.string(),
-  feature: z.string().nullable(),
-  exports: z.array(z.string()),
-  imports: z.array(z.string()),
-  blueprints: z.array(z.string()),
-  followsBlueprints: z.array(z.string()),
-});
-
-const architectureModelSchema = z.object({
-  application: z.string(),
-  containers: z.array(z.object({ id: z.string(), name: z.string(), fileCount: z.number() })),
-  externals: z.array(
-    z.object({ id: z.string(), name: z.string(), reachedFrom: z.array(z.string()) }),
-  ),
-  files: z.array(fileSchema),
-  routes: z.array(routeSchema),
-  blueprints: z.array(z.object({ id: z.string(), file: z.string(), followerCount: z.number() })),
-});
-
-type ArchitectureModel = z.infer<typeof architectureModelSchema>;
-type RouteEntry = z.infer<typeof routeSchema>;
-type FileEntry = z.infer<typeof fileSchema>;
+import {
+  architectureModelSchema,
+  type ArchitectureModel,
+  type FileEntry,
+  type RouteEntry,
+} from './architecture-model-json';
 
 /**
  * The models this reads are written by `architecture-graph.ts` one job earlier,

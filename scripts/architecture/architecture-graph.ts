@@ -37,6 +37,7 @@ import {
   ROUTE_ICON,
   SIZE_ICON,
 } from './architecture-icons';
+import { type ArchitectureModel, architectureModelSchema } from './architecture-model-json';
 import {
   ARCHITECTURE_MANIFESTS,
   type ArchitectureManifest,
@@ -55,6 +56,8 @@ const SOURCE_PATTERN = /\.tsx?$/;
 const REPOSITORY_SLUG = 'hugoleborso/borso.fr';
 /** Lines of a file the modal shows before it stops. */
 const MAXIMUM_MODAL_LINES = 400;
+/** A document's whole history is small; this only stops a runaway read. */
+const MAXIMUM_GIT_OUTPUT_BYTES = 8 * 1024 * 1024;
 
 /** The standard documents in a directory, or none when it is not there. */
 function listStandardFileNames(directory: string): string[] {
@@ -107,18 +110,65 @@ function readFileHistory(repositoryRelativePath: string, root: string): FileHist
   }
 }
 
+export interface StandardVersion {
+  readonly sha: string;
+  readonly date: string;
+  readonly subject: string;
+  /** The document as it stood at that commit. */
+  readonly text: string;
+}
+
 export interface StandardEntry {
   readonly path: string;
   readonly title: string;
   readonly rule: string;
+  /** Every commit that touched it, newest first, with the text at each. */
+  readonly versions: readonly StandardVersion[];
+}
+
+/** A git read, or the empty string when git has nothing to say about the path. */
+function readGitOutput(root: string, argumentList: readonly string[]): string {
+  try {
+    return execFileSync('git', [...argumentList], {
+      cwd: root,
+      encoding: 'utf8',
+      maxBuffer: MAXIMUM_GIT_OUTPUT_BYTES,
+    });
+  } catch {
+    return '';
+  }
+}
+
+/** Commits touching a path, newest first, with the file's text at each. */
+function readVersions(repositoryRelativePath: string, root: string): StandardVersion[] {
+  const log = readGitOutput(root, [
+    'log',
+    '--format=%h|%ad|%s',
+    '--date=short',
+    '--',
+    repositoryRelativePath,
+  ]);
+  return log
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .map((line) => {
+      const [sha = '', date = '', ...subject] = line.split('|');
+      return {
+        sha,
+        date,
+        subject: subject.join('|'),
+        text: readGitOutput(root, ['show', `${sha}:${repositoryRelativePath}`]),
+      };
+    });
 }
 
 /**
- * The written rules, listed beside the patterns.
+ * The written rules, each with its whole history.
  *
- * A blueprint says which example to copy and a standard says what the rule is;
- * the page carried the first and not the second, which left the map showing the
- * shape of the code with no way to reach the reason it has that shape.
+ * A blueprint says which example to copy and a standard says what the rule is,
+ * and a rule that changed is more interesting than a rule that exists: the page
+ * carries every version so a reader can pick two commits and see what the
+ * repository decided in between, without leaving for a git client.
  */
 function listStandards(root: string): StandardEntry[] {
   const directory = 'docs/standards';
@@ -133,7 +183,7 @@ function listStandards(root: string): StandardEntry[] {
       ruleIndex === -1
         ? ''
         : (lines.slice(ruleIndex + 1).find((line) => line.trim() !== '') ?? '').trim();
-    return { path, title, rule };
+    return { path, title, rule, versions: readVersions(path, root) };
   });
 }
 
@@ -250,6 +300,17 @@ const CONTAINER_BY_SOURCE: Readonly<Record<string, string>> = {
 function containerIdOf(file: ArchitectureFile): string {
   return CONTAINER_BY_SOURCE[file.container] ?? file.container;
 }
+
+export type NodeStatus = 'added' | 'changed' | 'removed';
+
+/**
+ * What a branch did to each block, keyed by node id and level.
+ *
+ * The diff page is the map with these applied, because a list of paths answers
+ * "what changed" and a coloured graph answers "what changed *where*", which is
+ * the question a reviewer actually has.
+ */
+export type StatusByNode = ReadonlyMap<string, NodeStatus>;
 
 export interface LayerCoverage {
   readonly layer: string;
@@ -1007,6 +1068,184 @@ function readFlag(name: string): string | null {
   return process.argv[index + 1] ?? null;
 }
 
+/**
+ * The node ids each level would have drawn for a scanned tree.
+ *
+ * Rebuilt from the committed model of the target branch rather than kept
+ * alongside it, so a branch opened before any of this existed still compares.
+ */
+function nodeIdentitiesOf(model: ArchitectureModel): {
+  context: Map<string, string>;
+  container: Map<string, string>;
+  blueprint: Map<string, string>;
+  component: Map<string, string>;
+  code: Map<string, string>;
+} {
+  const context = new Map<string, string>();
+  for (const external of model.externals) context.set(external.id, external.reachedFrom.join());
+  const container = new Map<string, string>();
+  for (const each of model.containers) container.set(each.id, String(each.fileCount));
+  const blueprint = new Map<string, string>();
+  for (const each of model.blueprints) blueprint.set(each.id, `${each.file}|${each.followerCount}`);
+  const component = new Map<string, string[]>();
+  const code = new Map<string, string>();
+  for (const file of model.files) {
+    const id = `${CONTAINER_BY_SOURCE[file.container] ?? file.container}::${file.feature ?? file.context}`;
+    component.set(id, [...(component.get(id) ?? []), file.path]);
+    code.set(file.path, `${file.container}/${file.layer}`);
+  }
+  return {
+    context,
+    container,
+    blueprint,
+    component: new Map([...component].map(([id, paths]) => [id, paths.sort().join()])),
+    code,
+  };
+}
+
+/**
+ * Added, changed or removed per node, by comparing two models' identities.
+ *
+ * A block is changed when the thing behind it changed — the files a context
+ * holds, the count a container reports — not when a line moved inside a file.
+ */
+function statusesBetween(
+  base: ReadonlyMap<string, string>,
+  head: ReadonlyMap<string, string>,
+): Map<string, NodeStatus> {
+  const statuses = new Map<string, NodeStatus>();
+  for (const [id, signature] of head) {
+    const before = base.get(id);
+    if (before === undefined) statuses.set(id, 'added');
+    else if (before !== signature) statuses.set(id, 'changed');
+  }
+  for (const id of base.keys()) {
+    if (!head.has(id)) statuses.set(id, 'removed');
+  }
+  return statuses;
+}
+
+/** A block for something the target branch had and this one does not. */
+function ghostNode(id: string, label: string, kind: string, detail: string): GraphNode {
+  return {
+    id,
+    label,
+    kind,
+    detail,
+    group: null,
+    blueprints: [],
+    followsBlueprints: [],
+    fileCount: 0,
+    icon: '🪦',
+    lines: ['gone on this branch'],
+  };
+}
+
+interface DiffPageOptions {
+  readonly diffBase: string;
+  readonly manifest: ArchitectureManifest;
+  readonly headModel: string;
+  readonly levels: readonly GraphLevel[];
+  readonly pageSources: Readonly<Record<string, SourceEntry>>;
+  readonly standards: readonly StandardEntry[];
+  readonly histories: Readonly<Record<string, FileHistory>>;
+  readonly journeys: ReturnType<typeof buildJourneys>;
+  readonly journeyLayouts: ReadonlyMap<string, LevelLayout>;
+  readonly slices: readonly ContextSlice[];
+  readonly blueprints: readonly BlueprintEntry[];
+  readonly files: readonly ArchitectureFile[];
+  readonly coverage: readonly LevelCoverage[];
+  readonly unmarkedCount: number;
+  readonly outputDirectory: string;
+}
+
+/**
+ * The map again, with what this branch did to it.
+ *
+ * A list of paths answers "what changed" and a coloured graph answers "what
+ * changed *where*", which is the question a reviewer has. Blocks the target
+ * branch had and this one does not are drawn as their own nodes rather than
+ * left out, because a diagram cannot show a deletion by omitting it.
+ */
+async function writeDiffPage(options: DiffPageOptions): Promise<void> {
+  const basePath = join(options.diffBase, `${options.manifest.application}-architecture.json`);
+  const baseText = readSourceOrEmpty(basePath, '/');
+  if (baseText === '') {
+    console.error(`  ${basePath} is not there, so no diff page for this application.`);
+    return;
+  }
+  const baseParsed: unknown = JSON.parse(baseText);
+  const headParsed: unknown = JSON.parse(options.headModel);
+  const baseModel = architectureModelSchema.parse(baseParsed);
+  const base = nodeIdentitiesOf(baseModel);
+  const head = nodeIdentitiesOf(architectureModelSchema.parse(headParsed));
+
+  const statuses = new Map<string, StatusByNode>([
+    ['context', statusesBetween(base.context, head.context)],
+    ['container', statusesBetween(base.container, head.container)],
+    ['component', statusesBetween(base.component, head.component)],
+    ['code', statusesBetween(base.code, head.code)],
+    // A pattern gained, lost, or with a different declaring file or follower
+    // count is an architectural change like any other, so the Patterns table
+    // carries the same three colours as the graphs.
+    ['blueprint', statusesBetween(base.blueprint, head.blueprint)],
+  ]);
+
+  const externalName = new Map(baseModel.externals.map((each) => [each.id, each.name]));
+  const containerName = new Map(baseModel.containers.map((each) => [each.id, each.name]));
+  const diffLevels = options.levels.map((level) => {
+    const removed = [...(statuses.get(level.id) ?? new Map())]
+      .filter(([, status]) => status === 'removed')
+      .map(([id]) => id);
+    if (level.id === 'code' || removed.length === 0) return level;
+    const ghosts = removed.map((id) =>
+      level.id === 'context'
+        ? ghostNode(
+            id,
+            externalName.get(id) ?? id,
+            'external-third-party',
+            'Removed on this branch',
+          )
+        : level.id === 'container'
+          ? ghostNode(id, containerName.get(id) ?? id, 'container-build', 'Removed on this branch')
+          : ghostNode(
+              id,
+              id.split('::')[1] ?? id,
+              `component-${id.split('::')[0] ?? 'unknown'}`,
+              'Removed on this branch',
+            ),
+    );
+    return { ...level, nodes: [...level.nodes, ...ghosts] };
+  });
+
+  const diffLayouts = new Map<string, LevelLayout>();
+  for (const level of diffLevels) {
+    if (level.id === 'code') continue;
+    diffLayouts.set(level.id, await layoutLevel(level));
+  }
+
+  writeFileSync(
+    join(options.outputDirectory, `${options.manifest.application}-diff.html`),
+    renderArchitecturePage({
+      manifest: options.manifest,
+      sources: options.pageSources,
+      standards: options.standards,
+      histories: options.histories,
+      repositorySlug: REPOSITORY_SLUG,
+      layouts: diffLayouts,
+      journeys: options.journeys,
+      journeyLayouts: options.journeyLayouts,
+      levels: diffLevels,
+      slices: options.slices,
+      blueprints: options.blueprints,
+      files: options.files,
+      coverage: options.coverage,
+      unmarkedCount: options.unmarkedCount,
+      statuses,
+    }),
+  );
+}
+
 interface BuildOptions {
   readonly manifest: ArchitectureManifest;
   readonly applicationRoot: string;
@@ -1015,10 +1254,13 @@ interface BuildOptions {
   readonly isCheck: boolean;
   /** True when scanning a checkout other than this one, which softens the gates. */
   readonly isForeignTree: boolean;
+  /** Directory holding the target branch's models, when a diff page is wanted. */
+  readonly diffBase: string | null;
 }
 
 async function buildApplication(options: BuildOptions): Promise<void> {
-  const { manifest, applicationRoot, scanRoot, outputDirectory, isCheck, isForeignTree } = options;
+  const { manifest, applicationRoot, scanRoot, outputDirectory, isCheck, isForeignTree, diffBase } =
+    options;
 
   const files = listSourceFiles(applicationRoot)
     .map((absolutePath) => relative(scanRoot, absolutePath))
@@ -1139,6 +1381,8 @@ async function buildApplication(options: BuildOptions): Promise<void> {
     if (history !== null) histories[path] = history;
   }
 
+  const model = `${JSON.stringify(buildModelJson(files, manifest, slices, blueprints), null, 2)}\n`;
+
   const page = renderArchitecturePage({
     manifest,
     sources: pageSources,
@@ -1159,7 +1403,26 @@ async function buildApplication(options: BuildOptions): Promise<void> {
   mkdirSync(outputDirectory, { recursive: true });
   const pagePath = join(outputDirectory, `${manifest.application}-architecture.html`);
   const modelPath = join(outputDirectory, `${manifest.application}-architecture.json`);
-  const model = `${JSON.stringify(buildModelJson(files, manifest, slices, blueprints), null, 2)}\n`;
+
+  if (diffBase !== null) {
+    await writeDiffPage({
+      diffBase,
+      manifest,
+      headModel: model,
+      levels,
+      pageSources,
+      standards,
+      histories,
+      journeys,
+      journeyLayouts,
+      slices,
+      blueprints,
+      files,
+      coverage,
+      unmarkedCount: unmarked.length,
+      outputDirectory,
+    });
+  }
 
   if (isCheck) {
     for (const [path, expected] of [
@@ -1205,6 +1468,8 @@ async function main(): Promise<void> {
   const applicationRootFlag = readFlag('--app-root');
   const outputDirectory = readFlag('--out') ?? OUTPUT_DIRECTORY;
   const requested = readFlag('--app');
+  /** Where the target branch's models sit, when a coloured diff page is wanted. */
+  const diffBase = readFlag('--diff-base');
   if (requested !== null && manifestFor(requested) === undefined) {
     console.error(
       `  --app ${requested} has no manifest. Known: ${ARCHITECTURE_MANIFESTS.map((each) => each.application).join(', ')}.`,
@@ -1229,6 +1494,7 @@ async function main(): Promise<void> {
       outputDirectory,
       isCheck,
       isForeignTree: true,
+      diffBase: null,
     });
     return;
   }
@@ -1241,6 +1507,7 @@ async function main(): Promise<void> {
       outputDirectory,
       isCheck,
       isForeignTree: false,
+      diffBase,
     });
   }
 

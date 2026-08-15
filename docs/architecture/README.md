@@ -241,15 +241,23 @@ are fatal for the tree being committed and only a warning when scanning another
 checkout, because a branch that adds an external system would otherwise fail on
 the target branch not having it yet.
 
-The same comparison is also written as a page, `<app>-diff.html`, with a count
-strip saying what moved against the target and one section per kind of change.
+The same comparison is also written as a page, `<app>-diff.html`: **the map
+again, with each block coloured by what this branch did to it** — green for one
+the target branch did not have, amber for one whose contents moved, red and
+struck through for one it had and this branch does not. A block that is gone is
+drawn rather than omitted, because a diagram cannot show a deletion by leaving
+it out. The Patterns table and the level 4 rows carry the same three colours.
 It is uploaded with the maps and never committed, because it describes a branch
 rather than the repository.
 
-The page itself is uploaded as a workflow artifact, and the same file is
-committed here. Publishing to GitHub Pages would turn it into a plain link
-instead of a download, and needs Pages enabled on the repository, which is a
-setting this repository cannot check for itself.
+[`pages.yml`](../../.github/workflows/pages.yml) publishes the maps to GitHub
+Pages on every push to `main`, so a link opens the map instead of downloading an
+artifact. It needs one repository setting no workflow can make or read: Settings
+→ Pages → Build and deployment → Source set to **GitHub Actions**. Until that is
+set the workflow fails on its deploy step and nothing else changes.
+
+The page is also uploaded as a workflow artifact, and the same file is committed
+here.
 
 To reproduce a comparison locally:
 

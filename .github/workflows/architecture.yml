@@ -79,8 +79,11 @@ jobs:
             printf '## %s\n\n' "$app" >> /tmp/architecture-diff.md
             pnpm exec tsx scripts/architecture/architecture-diff.ts \
               "/tmp/architecture-base/$app-architecture.json" \
-              "docs/architecture/$app-architecture.json" \
-              --html "docs/architecture/$app-diff.html" >> /tmp/architecture-diff.md
+              "docs/architecture/$app-architecture.json" >> /tmp/architecture-diff.md
+            # The same comparison as a map rather than a list: the head model's
+            # own graphs, with each block coloured by what this branch did to it.
+            pnpm exec tsx scripts/architecture/architecture-graph.ts \
+              --app "$app" --diff-base /tmp/architecture-base
             printf '\n' >> /tmp/architecture-diff.md
           done
           cat /tmp/architecture-diff.md >> "$GITHUB_STEP_SUMMARY"
