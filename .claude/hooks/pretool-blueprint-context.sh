@@ -83,6 +83,11 @@ CONTEXT=$(jq -r --arg path "$RELATIVE" '
       + "\nRead the example before writing, and mark the new file "
       + "`// @FollowsBlueprint <id>` when it copies one. The pre-commit gate "
       + "rejects a marker naming a blueprint that does not exist.\n"
+      + "\nCopy the code, not the `@Blueprint` JSDoc block. A second file "
+      + "declaring the same id fails the gate, and an agent copying the "
+      + "example literally has already done this. The declaration stays in "
+      + "the one file that is the blueprint; the copy carries the one-line "
+      + "marker instead.\n"
       + (($root.standardByLayer[$layer] // "") | if length > 0 then "\nThe rule this layer answers to: `" + . + "`.\n" else "" end)
     end
 ' "$LOOKUP" 2>/dev/null) || exit 0
