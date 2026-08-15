@@ -3,10 +3,19 @@
 #
 # Flow:
 #   detect → which apps changed in this PR (or all, if infra/cdk changed)
-#   deploy → matrix per affected app, cdk deploy <app>-pr-<n>, sticky
-#            comment the preview URL on the PR
+#   deploy → matrix per affected app, skip the ones whose inputs are
+#            already deployed, otherwise cdk deploy <app>-pr-<n> and
+#            sticky comment the preview URL on the PR
 #   teardown → on PR close, iterate every app and cdk destroy. Failures
 #              are swallowed (the stack might never have existed).
+#
+# `detect` answers "what does this pull request touch", not "what changed
+# since this preview was last built": dorny/paths-filter on a pull_request
+# event diffs against the base branch, so a pull request that renamed a file
+# in all four apps re-entered the matrix for all four on every later push,
+# including pushes that only moved a markdown file. That is the right answer
+# to the question the job asks, and the wrong one to ask, so the matrix asks
+# the second question itself — see the fingerprint step in `deploy`.
 #
 # concurrency: never cancel in-flight deploys mid-CFN-transaction or
 # you orphan stack state. Each PR has its own concurrency group.
@@ -93,21 +102,119 @@ jobs:
       VITE_STAGE: preview
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @borso/infra build
+      # Digest of everything this app's preview is built from. Tree hashes
+      # are exact: `HEAD:apps/<app>` changes if and only if some byte under
+      # that directory changed. The list is the deploy's input surface —
+      # the app, the constructs it composes, the dependency versions, the
+      # Node version, and this file, which bakes VITE_API_BASE into the
+      # bundle. Adding an input to the build without adding it here is the
+      # failure mode: the preview would then go stale silently.
+      - id: fingerprint
+        env:
+          APP: ${{ matrix.app }}
+        run: |
+          set -euo pipefail
+          # Each hash is assigned before it is digested, because a command
+          # group swallows the exit status of everything but its last member:
+          # `{ git rev-parse <missing>; git hash-object <file>; }` returns 0
+          # and digests one line less, which is a different-but-valid digest
+          # rather than the failure it is.
+          trees=$(git rev-parse "HEAD:apps/${APP}" HEAD:infra/cdk)
+          files=$(git hash-object pnpm-lock.yaml .nvmrc .github/workflows/preview.yml)
+          digest=$(printf '%s\n%s\n' "$trees" "$files" | sha256sum | cut -d' ' -f1)
+          echo "[fingerprint] ${APP} @ ${digest}"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+      # What is actually deployed, read from the GitHub Deployment the last
+      # successful run of this job opened: its payload carries the digest and
+      # the commit it was built from. A deployment whose statuses never
+      # reached `success` is ignored, so a failed deploy cannot claim its
+      # inputs are live. Any error here yields an empty digest, which means
+      # deploy — the check can only ever remove work, never skip wrongly.
+      - id: deployed
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const environment = `preview-${{ matrix.app }}-pr-${{ github.event.pull_request.number }}`;
+            try {
+              const { data: deployments } = await github.rest.repos.listDeployments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                environment,
+                per_page: 20,
+              });
+              for (const deployment of deployments) {
+                const { data: statuses } = await github.rest.repos.listDeploymentStatuses({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  deployment_id: deployment.id,
+                  per_page: 100,
+                });
+                if (!statuses.some((status) => status.state === 'success')) continue;
+                const payload =
+                  typeof deployment.payload === 'string'
+                    ? JSON.parse(deployment.payload || '{}')
+                    : deployment.payload;
+                core.setOutput('fingerprint', payload?.fingerprint ?? '');
+                core.setOutput('sha', payload?.sha ?? '');
+                core.info(`last successful deploy of ${environment}: ${payload?.sha ?? 'unknown sha'}`);
+                return;
+              }
+              core.info(`no successful deploy recorded for ${environment}`);
+            } catch (error) {
+              core.warning(`could not read deployments for ${environment}: ${error.message}`);
+            }
+            core.setOutput('fingerprint', '');
+      # Two conditions have to hold to skip: the inputs match what was last
+      # deployed, and the stack is still standing in a state that serves it.
+      # The second is what makes the skip safe against an account someone
+      # changed out of band — a deleted or rolled-back stack redeploys even
+      # though the repository says nothing moved.
+      - id: plan
+        env:
+          APP: ${{ matrix.app }}
+          CURRENT_FINGERPRINT: ${{ steps.fingerprint.outputs.digest }}
+          DEPLOYED_FINGERPRINT: ${{ steps.deployed.outputs.fingerprint }}
+        run: |
+          set -uo pipefail
+          if [ -z "$CURRENT_FINGERPRINT" ] || [ "$DEPLOYED_FINGERPRINT" != "$CURRENT_FINGERPRINT" ]; then
+            echo "[plan] inputs differ from the last successful deploy; deploying"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          stack="${APP}-pr-${PR_NUMBER}"
+          stack_status=$(aws cloudformation describe-stacks --stack-name "$stack" \
+            --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo MISSING)
+          case "$stack_status" in
+            CREATE_COMPLETE|UPDATE_COMPLETE)
+              echo "[plan] $stack is $stack_status and already serves this build; skipping"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "[plan] $stack is $stack_status; deploying"
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+      - if: steps.plan.outputs.skip != 'true'
+        uses: pnpm/action-setup@v4
+      - if: steps.plan.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.plan.outputs.skip != 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.plan.outputs.skip != 'true'
+        run: pnpm --filter @borso/infra build
       # Open a GitHub Deployment so the PR sidebar shows the native
       # "Deployments" panel (Vercel/Netlify-style). Marked transient +
-      # non-production so closing the PR auto-deactivates it.
+      # non-production so closing the PR auto-deactivates it. The payload is
+      # what the next run reads to decide whether it has anything to do.
       - id: deployment
+        if: steps.plan.outputs.skip != 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -121,6 +228,10 @@ jobs:
               transient_environment: true,
               production_environment: false,
               description: `Preview of ${{ matrix.app }} for PR #${{ github.event.pull_request.number }}`,
+              payload: {
+                fingerprint: '${{ steps.fingerprint.outputs.digest }}',
+                sha: context.payload.pull_request.head.sha,
+              },
             });
             await github.rest.repos.createDeploymentStatus({
               owner: context.repo.owner,
@@ -134,8 +245,10 @@ jobs:
       # ROLLBACK_COMPLETE, orphan log groups, orphan named buckets).
       # Idempotent — no-op on a clean account.
       - name: Preflight recovery
+        if: steps.plan.outputs.skip != 'true'
         run: ./scripts/preflight-preview-recovery.sh "${{ matrix.app }}" "$PR_NUMBER"
-      - run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
+      - if: steps.plan.outputs.skip != 'true'
+        run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
       # Auto-seed the preview so it lands populated. The `__test/seed`
       # endpoint is mounted by PreviewableApp on every non-prod API Lambda
       # (see infra/cdk/src/constructs/previewable-app.ts; commit a232c58);
@@ -158,6 +271,7 @@ jobs:
       # the preview validation, not by the workflow. `pragma` takes no
       # parameter, so an empty query string is right for it.
       - name: Auto-seed preview (non-prod fixture)
+        if: steps.plan.outputs.skip != 'true'
         shell: bash
         env:
           APP: ${{ matrix.app }}
@@ -201,19 +315,31 @@ jobs:
               exit 1
               ;;
           esac
+      # A skipped app still refreshes its comment, so a reader can tell a
+      # preview that is current from one that never got built.
       - id: meta
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: echo "short_sha=${HEAD_SHA::7}" >> "$GITHUB_OUTPUT"
+          DEPLOYED_SHA: ${{ steps.deployed.outputs.sha }}
+          SKIPPED: ${{ steps.plan.outputs.skip }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [ "$SKIPPED" = "true" ]; then
+            note="Unchanged — <code>${HEAD_SHA::7}</code> touches nothing this app is built from, so the preview built at <code>${DEPLOYED_SHA::7}</code> still stands"
+          else
+            note="Updated from <code>${HEAD_SHA::7}</code>"
+          fi
+          echo "note=$note · <a href=\"$RUN_URL\">build log</a>" >> "$GITHUB_OUTPUT"
       - uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: preview-${{ matrix.app }}
           message: |
-            ### Preview deployed — `${{ matrix.app }}`
+            ### Preview — `${{ matrix.app }}`
 
             <${{ env.PREVIEW_URL }}>
 
-            <sub>Updated from <code>${{ steps.meta.outputs.short_sha }}</code> · <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">build log</a></sub>
+            <sub>${{ steps.meta.outputs.note }}</sub>
       # Close the GitHub Deployment with the final state. Runs whether
       # the deploy step succeeded or failed so the PR panel never gets
       # stuck in "in_progress".
