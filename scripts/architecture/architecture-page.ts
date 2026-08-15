@@ -15,7 +15,7 @@ import type { JourneyModel } from './architecture-journeys';
 import type { LevelLayout } from './architecture-layout';
 import type { ArchitectureFile } from './architecture-model';
 import type { BlueprintEntry, ContextSlice, GraphLevel } from './architecture-graph';
-import type { ArchitectureManifest } from './pragma.manifest';
+import type { ArchitectureManifest } from './architecture-manifest';
 
 export interface RenderInput {
   readonly manifest: ArchitectureManifest;
@@ -75,7 +75,9 @@ function renderGraph(level: GraphLevel, layout: LevelLayout): string {
         {
           id: node.id,
           label: node.label,
+          icon: node.icon ?? '',
           lines: node.lines ?? [],
+          chips: node.chips ?? [],
           detail: node.detail,
           tone: toneOf(node.kind),
           x: box.x,
@@ -153,7 +155,9 @@ function renderJourneys(
           {
             id: placed.id,
             label: source.label,
+            icon: source.icon ?? '',
             lines: source.lines ?? [],
+            chips: source.chips ?? [],
             detail: source.detail,
             tone: source.kind,
             sourceKey: source.sourceKey ?? '',
@@ -254,67 +258,7 @@ function renderBlueprints(blueprints: readonly BlueprintEntry[]): string {
     .join('');
 }
 
-export function renderArchitecturePage(input: RenderInput): string {
-  const {
-    manifest,
-    levels,
-    slices,
-    blueprints,
-    files,
-    unmarkedCount,
-    layouts,
-    journeys,
-    journeyLayouts,
-  } = input;
-  const fileRows = files
-    .map(
-      (
-        file,
-      ) => `<tr data-container="${escapeHtml(file.container)}" data-layer="${escapeHtml(file.layer)}" data-context="${escapeHtml(file.feature ?? file.context)}">
-        <td class="loc">${escapeHtml(file.path.replace('apps/pragma/', ''))}</td>
-        <td><span class="layer layer-${escapeHtml(file.layer)}">${escapeHtml(file.layer)}</span></td>
-        <td>${escapeHtml(file.feature ?? file.context)}</td>
-        <td class="num">${file.lineCount}</td>
-        <td class="num">${file.exports.length}</td>
-        <td class="num">${file.imports.filter((edge) => edge.targetFile !== null).length}</td>
-        <td>${file.blueprints.map((id) => `<code class="bp-chip declares">${escapeHtml(id)}</code>`).join('')}${file.followsBlueprints.map((id) => `<code class="bp-chip">${escapeHtml(id)}</code>`).join('')}</td>
-      </tr>`,
-    )
-    .join('');
-
-  const layers = [...new Set(files.map((file) => file.layer))].sort();
-  const routeTotal = slices.reduce((total, slice) => total + slice.routes.length, 0);
-
-  const levelSections = levels
-    .map(
-      (level, index) => `
-    <section class="level" id="level-${escapeHtml(level.id)}" ${index === 0 ? '' : 'hidden'}>
-      <h2>${escapeHtml(level.title)}</h2>
-      <p class="summary">${escapeHtml(level.summary)}</p>
-      ${
-        level.id === 'code'
-          ? `
-      <div class="filters">
-        <input type="search" id="file-search" placeholder="Filter files by path, layer or context" />
-        <select id="layer-filter"><option value="">Every layer</option>${layers
-          .map((layer) => `<option value="${escapeHtml(layer)}">${escapeHtml(layer)}</option>`)
-          .join('')}</select>
-      </div>
-      <div class="table-scroll">
-        <table id="file-table">
-          <thead><tr><th>File</th><th>Layer</th><th>Context</th><th class="num">Lines</th><th class="num">Exports</th><th class="num">Imports</th><th>Blueprint</th></tr></thead>
-          <tbody>${fileRows}</tbody>
-        </table>
-      </div>`
-          : `
-      ${renderGraph(level, layouts.get(level.id) ?? { nodes: [], edges: [], width: 0, height: 0 })}
-      <div class="cards">${renderNodeCards(level)}</div>`
-      }
-    </section>`,
-    )
-    .join('');
-
-  return `<title>Pragma Architecture</title>
+const PAGE_STYLES = String.raw`
 <style>
   /*
     Colour carries one meaning on this page: which layer a thing belongs to.
@@ -629,11 +573,76 @@ export function renderArchitecturePage(input: RenderInput): string {
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   }
-${GRAPH_STYLES}
+__GRAPH_STYLES__
 </style>
+`.replace('__GRAPH_STYLES__', () => GRAPH_STYLES);
+
+export function renderArchitecturePage(input: RenderInput): string {
+  const {
+    manifest,
+    levels,
+    slices,
+    blueprints,
+    files,
+    unmarkedCount,
+    layouts,
+    journeys,
+    journeyLayouts,
+  } = input;
+  const applicationPrefix = `apps/${manifest.application}/`;
+  const fileRows = files
+    .map(
+      (
+        file,
+      ) => `<tr data-container="${escapeHtml(file.container)}" data-layer="${escapeHtml(file.layer)}" data-context="${escapeHtml(file.feature ?? file.context)}">
+        <td class="loc">${escapeHtml(file.path.replace(applicationPrefix, ''))}</td>
+        <td><span class="layer layer-${escapeHtml(file.layer)}">${escapeHtml(file.layer)}</span></td>
+        <td>${escapeHtml(file.feature ?? file.context)}</td>
+        <td class="num">${file.lineCount}</td>
+        <td class="num">${file.exports.length}</td>
+        <td class="num">${file.imports.filter((edge) => edge.targetFile !== null).length}</td>
+        <td>${file.blueprints.map((id) => `<code class="bp-chip declares">${escapeHtml(id)}</code>`).join('')}${file.followsBlueprints.map((id) => `<code class="bp-chip">${escapeHtml(id)}</code>`).join('')}</td>
+      </tr>`,
+    )
+    .join('');
+
+  const layers = [...new Set(files.map((file) => file.layer))].sort();
+  const routeTotal = slices.reduce((total, slice) => total + slice.routes.length, 0);
+
+  const levelSections = levels
+    .map(
+      (level, index) => `
+    <section class="level" id="level-${escapeHtml(level.id)}" ${index === 0 ? '' : 'hidden'}>
+      <h2>${escapeHtml(level.title)}</h2>
+      <p class="summary">${escapeHtml(level.summary)}</p>
+      ${
+        level.id === 'code'
+          ? `
+      <div class="filters">
+        <input type="search" id="file-search" placeholder="Filter files by path, layer or context" />
+        <select id="layer-filter"><option value="">Every layer</option>${layers
+          .map((layer) => `<option value="${escapeHtml(layer)}">${escapeHtml(layer)}</option>`)
+          .join('')}</select>
+      </div>
+      <div class="table-scroll">
+        <table id="file-table">
+          <thead><tr><th>File</th><th>Layer</th><th>Context</th><th class="num">Lines</th><th class="num">Exports</th><th class="num">Imports</th><th>Blueprint</th></tr></thead>
+          <tbody>${fileRows}</tbody>
+        </table>
+      </div>`
+          : `
+      ${renderGraph(level, layouts.get(level.id) ?? { nodes: [], edges: [], width: 0, height: 0 })}
+      <div class="cards">${renderNodeCards(level)}</div>`
+      }
+    </section>`,
+    )
+    .join('');
+
+  return `<title>${escapeHtml(manifest.name)} architecture</title>
+${PAGE_STYLES}
 
 <header class="top"><div class="wrap">
-  <h1>Pragma architecture</h1>
+  <h1>${escapeHtml(manifest.name)} architecture</h1>
   <p class="lede">${escapeHtml(manifest.description)}</p>
   <ul class="stats">
     <li><b>${files.length}</b>source files</li>
@@ -669,7 +678,7 @@ ${GRAPH_STYLES}
 
   <section class="level" id="level-slice" hidden>
     <h2>Level 3.5 — User actions</h2>
-    <p class="summary">One thing a band member does, drawn end to end: the components that trigger it, the endpoint it reaches, and every function behind that endpoint down to the tables and external systems. An action is an exported hook in a query module, so the names are the ones whoever wrote them chose, and the chain comes from the calls as written.</p>
+    <p class="summary">One thing a person does, drawn end to end: the components that trigger it, the endpoint it reaches, and every function behind that endpoint down to the tables and external systems. An action is an exported hook in a query module, so the names are the ones whoever wrote them chose, and the chain comes from the calls as written.</p>
     ${renderJourneys(journeys, journeyLayouts)}
     <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>
     ${renderUnreachedByAction(journeys, slices)}
@@ -733,5 +742,72 @@ ${GRAPH_STYLES}
   });
 </script>
 <script>${GRAPH_RUNTIME_SCRIPT}</script>
+`;
+}
+
+/**
+ * The landing page for the folder, one card per application.
+ *
+ * Each map is a page of its own so it can be published on its own, which leaves
+ * a reader arriving at the folder with nowhere to start unless something lists
+ * them.
+ */
+export function renderArchitectureIndex(manifests: readonly ArchitectureManifest[]): string {
+  const cards = manifests
+    .map(
+      (manifest) => `
+      <a class="app-card" href="./${escapeHtml(manifest.application)}-architecture.html">
+        <h2>${escapeHtml(manifest.name)}</h2>
+        <p>${escapeHtml(manifest.description)}</p>
+        <ul class="app-facts">
+          ${manifest.containers
+            .map(
+              (container) =>
+                `<li><span class="app-icon">${container.icon}</span>${escapeHtml(container.name)}</li>`,
+            )
+            .join('')}
+        </ul>
+      </a>`,
+    )
+    .join('');
+
+  return `<title>Architecture maps</title>
+${PAGE_STYLES}
+<style>
+  .app-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+  .app-card {
+    display: block;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    color: inherit;
+    text-decoration: none;
+    min-width: 0;
+  }
+  .app-card:hover { border-color: var(--accent); }
+  .app-card h2 { margin: 0 0 .35rem; font-size: 1rem; }
+  .app-card p { margin: 0 0 .6rem; color: var(--muted); font-size: .82rem; line-height: 1.5; }
+  .app-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
+  .app-facts li {
+    font: .68rem/1.6 var(--font-mono);
+    background: var(--panel-sunk);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: .1rem .4rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .app-icon { margin-right: .3rem; }
+</style>
+
+<header class="top"><div class="wrap">
+  <h1>Architecture maps</h1>
+  <p class="lede">One generated map per application, at five levels each, from the same generator and the same rules. Position comes from the path, edges come from real imports, and nothing on a map is authored by hand except the manifest each application carries.</p>
+</div></header>
+
+<main class="wrap">
+  <div class="app-grid">${cards}</div>
+</main>
 `;
 }

@@ -6,7 +6,7 @@
  * them, which is why the page carries no layout engine. See ADR-0011.
  */
 
-import { NODE_LINE_HEIGHT } from './architecture-layout';
+import { CHIP_ROW_HEIGHT, NODE_LINE_HEIGHT } from './architecture-layout';
 
 export const GRAPH_RUNTIME_SCRIPT = String.raw`
 (() => {
@@ -15,6 +15,13 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
   const ZOOM_STEP = 0.0016;
   const CORNER_RADIUS = 9;
   const ROW_PITCH = ${NODE_LINE_HEIGHT};
+  const CHIP_ROW_HEIGHT = ${CHIP_ROW_HEIGHT};
+  const ICON_WIDTH = 22;
+  const CHIP_PADDING = 16;
+  const CHIP_GAP = 6;
+  const CHIP_ROW_MAX_WIDTH = 320;
+  const CHIP_CHARACTER_WIDTH = 6.5;
+  const DRAG_SLOP = 5;
 
   const svgElement = (name, attributes) => {
     const element = document.createElementNS('http://www.w3.org/2000/svg', name);
@@ -252,11 +259,20 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
         x: box.x, y: box.y, width: 4, height: box.height, rx: 2, class: 'node-stripe',
       }));
       // The name sits on the first row and every fact about the block on its
-      // own row under it, at the pitch the generator sized the box with.
+      // own row under it, at the pitch the generator sized the box with, then
+      // the pills. The generator decided the wrapping, so the two agree.
       const lines = node.lines || [];
+      const chips = node.chips || [];
+      const bare = lines.length === 0 && chips.length === 0;
+      const labelY = box.y + (bare ? box.height / 2 + 4 : 21);
+      if (node.icon) {
+        const icon = svgElement('text', { x: box.x + 13, y: labelY, class: 'node-icon' });
+        icon.textContent = node.icon;
+        group.appendChild(icon);
+      }
       const label = svgElement('text', {
-        x: box.x + 14,
-        y: box.y + (lines.length === 0 ? box.height / 2 + 4 : 21),
+        x: box.x + (node.icon ? 13 + ICON_WIDTH : 14),
+        y: labelY,
         class: 'node-label',
       });
       label.textContent = node.label;
@@ -270,6 +286,26 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
         sub.textContent = line;
         group.appendChild(sub);
       });
+      let chipY = box.y + 21 + ROW_PITCH * lines.length + 6;
+      let chipX = box.x + 14;
+      let usedInRow = 0;
+      for (const chip of chips) {
+        const width = ICON_WIDTH + chip.text.length * CHIP_CHARACTER_WIDTH + CHIP_PADDING;
+        if (usedInRow > 0 && usedInRow + CHIP_GAP + width > CHIP_ROW_MAX_WIDTH) {
+          chipY += CHIP_ROW_HEIGHT;
+          chipX = box.x + 14;
+          usedInRow = 0;
+        }
+        group.appendChild(svgElement('rect', {
+          x: chipX, y: chipY, width, height: 17, rx: 5,
+          class: 'node-chip node-chip-' + (chip.tone || 'plain'),
+        }));
+        const text = svgElement('text', { x: chipX + 8, y: chipY + 12, class: 'node-chip-text' });
+        text.textContent = chip.icon + ' ' + chip.text;
+        group.appendChild(text);
+        chipX += width + CHIP_GAP;
+        usedInRow += (usedInRow > 0 ? CHIP_GAP : 0) + width;
+      }
       const title = svgElement('title', {});
       title.textContent = node.detail || node.label;
       group.appendChild(title);
@@ -392,6 +428,8 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
      * gesture for page scrolling first.
      */
     const active = new Map();
+    const origins = new Map();
+    const captured = new Set();
     let pinchDistance = 0;
 
     const pointerPair = () => {
@@ -402,14 +440,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
 
     svg.addEventListener('pointerdown', (event) => {
       active.set(event.pointerId, { x: event.clientX, y: event.clientY });
-      // Capture keeps a drag alive when the finger leaves the canvas. It throws
-      // for a pointer id the element never really received, so a failure here
-      // must not take the gesture down with it.
-      try {
-        svg.setPointerCapture(event.pointerId);
-      } catch {
-        /* the gesture still works without capture */
-      }
+      origins.set(event.pointerId, { x: event.clientX, y: event.clientY });
       const pair = pointerPair();
       pinchDistance = pair === null ? 0 : distanceBetween(pair);
       svg.classList.add('grabbing');
@@ -419,6 +450,24 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       const previous = active.get(event.pointerId);
       if (previous === undefined) return;
       active.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      // Capture keeps a drag alive when the finger leaves the canvas, and it
+      // retargets the click that ends the gesture to the canvas. Taking it on
+      // the first press is what stopped a tap on a block from reaching the
+      // block; taking it once the pointer has actually travelled leaves a tap
+      // alone and still holds a real drag. It throws for a pointer id the
+      // element never really received, so a failure must not take the gesture
+      // down with it.
+      const origin = origins.get(event.pointerId);
+      if (!captured.has(event.pointerId) && origin !== undefined &&
+          Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > DRAG_SLOP) {
+        captured.add(event.pointerId);
+        try {
+          svg.setPointerCapture(event.pointerId);
+        } catch {
+          /* the gesture still works without capture */
+        }
+      }
 
       const pair = pointerPair();
       if (pair !== null) {
@@ -443,6 +492,8 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
 
     const releasePointer = (event) => {
       active.delete(event.pointerId);
+      origins.delete(event.pointerId);
+      captured.delete(event.pointerId);
       pinchDistance = 0;
       if (active.size === 0) svg.classList.remove('grabbing');
     };
@@ -637,6 +688,13 @@ export const GRAPH_STYLES = String.raw`
   .node-stripe { fill: var(--muted); }
   .node-label { font: 600 12.5px var(--font-mono); fill: var(--ink); }
   .node-sub { font: 10.5px var(--font-mono); fill: var(--muted); }
+  .node-icon { font: 13px var(--font-sans); }
+  .node-chip { fill: var(--chip); stroke: var(--line); stroke-width: 1; }
+  .node-chip-text { font: 10px var(--font-mono); fill: var(--muted); }
+  .node-chip-blueprint { fill: var(--accent-soft); stroke: var(--accent); }
+  .node-chip-complexity { fill: var(--layer-pure-bg); stroke: var(--layer-pure); }
+  .node-chip-size { fill: var(--layer-route-bg); stroke: var(--layer-route); }
+  .node-chip-warn { fill: var(--signal-soft); stroke: var(--signal); }
   .node:hover .node-body, .node:focus-visible .node-body { stroke: var(--accent); stroke-width: 2; }
   .node:focus-visible { outline: none; }
   .nodes .dim { opacity: .22; }

@@ -1,61 +1,20 @@
 /**
- * The hand-written half of pragma's architecture model.
- *
- * Everything a file path can carry is derived by `architecture-model.ts`. What
- * remains are the facts no single source file owns: who uses the system, which
- * runtime containers it deploys into, and what each external system actually
- * is. Those are declared here and cross-checked against the code, so a declared
- * external with no `@DependsOnExternal` referencing it, or a tag naming an
- * external that is not declared, fails the generator.
+ * The hand-written half of pragma's architecture model. Types and the register
+ * of applications live in `../architecture-manifest.ts`.
  */
 
-export interface ManifestActor {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-}
-
-export interface ManifestContainer {
-  readonly id: string;
-  readonly name: string;
-  readonly technology: string;
-  readonly description: string;
-  /** The `container` value `architecture-model.ts` infers for this one's code. */
-  readonly sourceContainer: string | null;
-  readonly runtime: 'browser' | 'aws' | 'build';
-}
-
-export interface ManifestExternal {
-  readonly id: string;
-  readonly name: string;
-  readonly technology: string;
-  readonly description: string;
-  readonly boundary: 'third-party' | 'aws' | 'browser-platform';
-  /**
-   * The container this external actually is, when the system owns it. Aurora
-   * DSQL reached through the signer is the application database rather than a
-   * third party, and the container diagram should draw it as one box.
-   */
-  readonly realisedBy?: string;
-}
-
-export interface ArchitectureManifest {
-  readonly application: string;
-  readonly name: string;
-  readonly description: string;
-  readonly actors: readonly ManifestActor[];
-  readonly containers: readonly ManifestContainer[];
-  readonly externals: readonly ManifestExternal[];
-}
+import type { ArchitectureManifest } from '../architecture-manifest';
 
 export const pragmaManifest: ArchitectureManifest = {
   application: 'pragma',
   name: 'Pragma',
+  urlOnlyScripts: ['apps/pragma/site/public/sw.js'],
   description:
     'Band enterprise resource planning: song catalogue, member instrument mastery, rehearsal and concert sessions, setlists, and a venue pipeline.',
   actors: [
     {
       id: 'band-member',
+      icon: '🧑‍🎤',
       name: 'Band member',
       description:
         'Signs in with the shared password and works the catalogue, the setlists and the sessions. Every human user holds this one role, because the application has no per-user accounts.',
@@ -64,6 +23,8 @@ export const pragmaManifest: ArchitectureManifest = {
   containers: [
     {
       id: 'site',
+      hosting: 'CloudFront in front of an S3 origin, with /api/* routed to the API in prod',
+      icon: '🖥️',
       name: 'Single page application',
       technology: 'React 19, Vite, TanStack Query, Tailwind',
       description:
@@ -73,6 +34,8 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'service-worker',
+      hosting: 'Served from the same origin as the site',
+      icon: '📴',
       name: 'Service worker',
       technology: 'Plain browser script, no bundler',
       description:
@@ -82,6 +45,8 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'api',
+      hosting: 'Lambda behind an API Gateway HTTP API, eu-west-3',
+      icon: '🔌',
       name: 'HTTP API',
       technology: 'Hono on AWS Lambda',
       description:
@@ -91,6 +56,8 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'domain',
+      hosting: 'Compiled into both sides, deployed on neither',
+      icon: '🧩',
       name: 'Shared domain rules',
       technology: 'TypeScript module, no runtime of its own',
       description:
@@ -100,6 +67,8 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'database',
+      hosting: 'Aurora DSQL, eu-west-3, one cluster per application',
+      icon: '🗄️',
       name: 'Application database',
       technology: 'Aurora DSQL, Postgres wire protocol, Drizzle',
       description:
@@ -109,6 +78,8 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'uploads-bucket',
+      hosting: 'S3, eu-west-3',
+      icon: '🪣',
       name: 'Chord chart bucket',
       technology: 'Amazon S3, presigned PUT and GET',
       description:
@@ -118,6 +89,8 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'infrastructure',
+      hosting: 'Runs in CI, never at runtime',
+      icon: '🏗️',
       name: 'Infrastructure definition',
       technology: 'AWS CDK',
       description:
@@ -129,6 +102,7 @@ export const pragmaManifest: ArchitectureManifest = {
   externals: [
     {
       id: 'musicbrainz',
+      icon: '🎼',
       name: 'MusicBrainz',
       technology: 'HTTPS, public web service',
       description:
@@ -137,6 +111,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'youtube',
+      icon: '▶️',
       name: 'YouTube',
       technology: 'iframe embed',
       description: 'Renders a reference recording inside a song page.',
@@ -144,6 +119,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'spotify',
+      icon: '🎧',
       name: 'Spotify',
       technology: 'iframe embed',
       description: 'Renders a reference recording inside a song page.',
@@ -151,6 +127,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'vimeo',
+      icon: '🎬',
       name: 'Vimeo',
       technology: 'iframe embed',
       description: 'Renders a reference recording inside a song page.',
@@ -158,6 +135,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'soundcloud',
+      icon: '☁️',
       name: 'SoundCloud',
       technology: 'iframe embed',
       description: 'Renders a reference recording inside a song page.',
@@ -165,6 +143,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'deezer',
+      icon: '🎵',
       name: 'Deezer',
       technology: 'iframe embed',
       description: 'Renders a reference recording inside a song page.',
@@ -172,6 +151,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'soundslice',
+      icon: '🎸',
       name: 'Soundslice',
       technology: 'iframe embed',
       description: 'Renders an interactive chord or tab chart inside a song page.',
@@ -179,6 +159,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'aws-dsql',
+      icon: '🗄️',
       name: 'Aurora DSQL',
       technology: 'AWS SDK signer plus Postgres wire protocol',
       description:
@@ -188,6 +169,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'aws-s3',
+      icon: '🪣',
       name: 'Amazon S3',
       technology: 'AWS SDK, presigned URLs',
       description: 'Object storage for chord charts, reached only through presigned URLs.',
@@ -196,6 +178,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'browser-local-storage',
+      icon: '💾',
       name: 'localStorage',
       technology: 'Browser storage API',
       description:
@@ -204,6 +187,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'browser-media-query',
+      icon: '📐',
       name: 'matchMedia',
       technology: 'Browser layout API',
       description:
@@ -212,6 +196,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'browser-network-status',
+      icon: '📶',
       name: 'navigator.onLine',
       technology: 'Browser network API',
       description: 'Drives the offline banner.',
@@ -219,6 +204,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'browser-service-worker',
+      icon: '📴',
       name: 'Service worker registration',
       technology: 'Browser service worker API',
       description: 'Registers the offline cache at boot, and is skipped in development.',
@@ -227,6 +213,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'browser-dialog',
+      icon: '🪟',
       name: 'HTMLDialogElement',
       technology: 'Browser dialog API',
       description:

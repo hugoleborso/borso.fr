@@ -65,18 +65,61 @@ function textWidth(text: string, characterWidth: number): number {
   return Math.max(NODE_MIN_WIDTH, text.length * characterWidth + LABEL_PADDING);
 }
 
+/** An emoji is about two monospace characters wide, plus the gap after it. */
+const ICON_WIDTH = 22;
+/** The pill's own padding, and the gap to the next pill. */
+const CHIP_PADDING = 16;
+const CHIP_GAP = 6;
+export const CHIP_ROW_HEIGHT = 22;
+/** Pills wrap rather than widening the box past a column of readable text. */
+const CHIP_ROW_MAX_WIDTH = 320;
+
+export function chipWidth(text: string): number {
+  return ICON_WIDTH + text.length * LINE_CHARACTER_WIDTH + CHIP_PADDING;
+}
+
+/** How the pills wrap, decided here so the box and the drawing agree. */
+export function chipRows(chips: readonly { readonly text: string }[]): number[][] {
+  const rows: number[][] = [];
+  let current: number[] = [];
+  let used = 0;
+  for (const chip of chips) {
+    const width = chipWidth(chip.text);
+    if (current.length > 0 && used + CHIP_GAP + width > CHIP_ROW_MAX_WIDTH) {
+      rows.push(current);
+      current = [];
+      used = 0;
+    }
+    current.push(width);
+    used += (current.length > 1 ? CHIP_GAP : 0) + width;
+  }
+  if (current.length > 0) rows.push(current);
+  return rows;
+}
+
+function rowWidth(row: readonly number[]): number {
+  return row.reduce((total, width) => total + width, 0) + CHIP_GAP * Math.max(0, row.length - 1);
+}
+
 /**
- * A block prints its name and then a line per fact about it, so the box is as
- * wide as the widest of them and as tall as their count. Sizing on the name
- * alone is what let a blueprint name run past the edge.
+ * A block prints its name, a line per fact about it, then a row of pills, so
+ * the box is as wide as the widest of them and as tall as their count. Sizing
+ * on the name alone is what let a blueprint name run past the edge.
  */
-function nodeBox(label: string, lines: readonly string[]): { width: number; height: number } {
+function nodeBox(
+  label: string,
+  hasIcon: boolean,
+  lines: readonly string[],
+  chips: readonly { readonly text: string }[],
+): { width: number; height: number } {
+  const rows = chipRows(chips);
   return {
     width: Math.max(
-      textWidth(label, LABEL_CHARACTER_WIDTH),
+      textWidth(label, LABEL_CHARACTER_WIDTH) + (hasIcon ? ICON_WIDTH : 0),
       ...lines.map((line) => textWidth(line, LINE_CHARACTER_WIDTH)),
+      ...rows.map((row) => rowWidth(row) + LABEL_PADDING),
     ),
-    height: NODE_BASE_HEIGHT + NODE_LINE_HEIGHT * lines.length,
+    height: NODE_BASE_HEIGHT + NODE_LINE_HEIGHT * lines.length + CHIP_ROW_HEIGHT * rows.length,
   };
 }
 
@@ -130,7 +173,7 @@ export async function layoutLevel(level: GraphLevel): Promise<LevelLayout> {
     layoutOptions: { ...LAYOUT_OPTIONS },
     children: orderedNodes.map((node) => ({
       id: node.id,
-      ...nodeBox(node.label, node.lines ?? []),
+      ...nodeBox(node.label, node.icon !== undefined, node.lines ?? [], node.chips ?? []),
     })),
     edges: usableEdges.map((edge, index) => ({
       id: `edge-${index}`,

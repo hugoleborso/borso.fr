@@ -1,0 +1,1913 @@
+{
+  "application": "borsouvertures",
+  "containers": [
+    {
+      "id": "infrastructure",
+      "name": "Infrastructure definition",
+      "fileCount": 0
+    },
+    {
+      "id": "site",
+      "name": "Single page application",
+      "fileCount": 103
+    }
+  ],
+  "externals": [],
+  "files": [
+    {
+      "path": "apps/borsouvertures/bin/app.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "cdk-app-entrypoint"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/scripts/build-openings.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/boardDrop.utils.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "buildDroppedUci",
+        "selectBoardDropDecision"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/boardPieces.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "buildNamedPieces"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "core-label-key"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/BoardView.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "BoardView"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/boardDrop.utils.ts",
+        "apps/borsouvertures/site/components/atoms/boardPieces.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain",
+        "component-lookup-table"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/Button.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "Button"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/buttonStyles.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-lookup-variants"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/buttonStyles.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ACTIVE_BUTTON_CLASS",
+        "BUTTON_CLASS"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "EmptySlot"
+      ],
+      "imports": [],
+      "blueprints": [
+        "atom-null-render"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/ErrorPanel.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ErrorPanel"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/buttonStyles.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/InlineBanner.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "InlineBanner"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/buttonStyles.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/LoadingPanel.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LoadingPanel"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/LoadMoreRow.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LoadMoreRow"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/buttonStyles.ts",
+        "apps/borsouvertures/site/components/atoms/loadMoreRow.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/loadMoreRow.types.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "shared-props-shape"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/MiniBoard.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "MiniBoard"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/Modal.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "Modal"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/buttonStyles.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain",
+        "ref-callback-browser-api"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/MoveButtonList.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "MoveButtonList"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/buttonStyles.ts",
+        "apps/borsouvertures/site/components/atoms/moveNotation.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/moveNotation.utils.ts",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "describeMoveInStandardNotation"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/Select.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "Select"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/SelectorCard.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "SelectorCard"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain",
+        "component-lookup-table"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/SelectorPanel.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "SelectorPanel"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/SessionStartHint.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "SessionStartHint"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain",
+        "core-label-key"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/StatusItem.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "StatusItem"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ToggleSlider"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain",
+        "component-lookup-table"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/AutoOpponentToggle.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "AutoOpponentToggle"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/BoardStyleSelect.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "BoardStyleSelect"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/LanguageSwitcher.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LanguageSwitcher"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/LearnClearedBanner.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LearnClearedBanner"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/LearnDrillPanel.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LearnDrillPanel"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/LearnDrillProgress.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LearnDrillProgress"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/LearnOutOfBookModal.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LearnOutOfBookModal"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/LearnPickPrompt.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LearnPickPrompt"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/LinesPanel.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LinesPanel"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/ModeToggle.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ModeToggle"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [
+        "shared-props-shape"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/OpeningsLoadFailurePanel.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "OpeningsLoadFailurePanel"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/OpeningsLoadingPanel.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "OpeningsLoadingPanel"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/OpeningsPanel.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "OpeningsPanel"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/PlayBookPanel.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "PlayBookPanel"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/PlayCompletedBanner.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "PlayCompletedBanner"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/PlayOutOfBookModal.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "PlayOutOfBookModal"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/PlayStatusPanel.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "PlayStatusPanel"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/ShowMovesToggle.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ShowMovesToggle"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/SideSelector.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "SideSelector"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/TreeVisualizationToggle.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "TreeVisualizationToggle"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/molecules/VariationsPanel.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "VariationsPanel"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/CompactOpeningFlow.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "CompactOpeningFlow"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "organism-table-dispatch"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/LearnDrill.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LearnDrill"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "organism-machine-bound"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/LearnSessionControl.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LearnSessionControl"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/organisms/session.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/LearnTreeSession.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LearnTreeSession"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/organisms/LearnDrill.tsx",
+        "apps/borsouvertures/site/components/organisms/session.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "organism-table-dispatch"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/OpeningFlowSelector.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "OpeningFlowSelector"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/organisms/CompactOpeningFlow.tsx",
+        "apps/borsouvertures/site/components/organisms/WideOpeningFlow.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "organism-table-dispatch"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/PlaySession.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "PlaySession"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/organisms/session.types.ts"
+      ],
+      "blueprints": [
+        "organism-machine-bound"
+      ],
+      "followsBlueprints": [
+        "component-lookup-table"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/PlaySessionControl.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "PlaySessionControl"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/organisms/session.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/SelectionAutoOpponentRow.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "SelectionAutoOpponentRow"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/SelectionScreen.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "SelectionScreen"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/organisms/OpeningFlowSelector.tsx",
+        "apps/borsouvertures/site/components/organisms/SelectionAutoOpponentRow.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table",
+        "organism-table-dispatch"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/session.types.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "shared-props-shape"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/SessionScreen.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "SessionScreen"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/components/organisms/LearnSessionControl.tsx",
+        "apps/borsouvertures/site/components/organisms/LearnTreeSession.tsx",
+        "apps/borsouvertures/site/components/organisms/PlaySession.tsx",
+        "apps/borsouvertures/site/components/organisms/PlaySessionControl.tsx",
+        "apps/borsouvertures/site/components/organisms/session.types.ts"
+      ],
+      "blueprints": [
+        "organism-table-dispatch"
+      ],
+      "followsBlueprints": [
+        "component-lookup-table"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/TopBar.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "TopBar"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/components/organisms/WideOpeningFlow.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "WideOpeningFlow"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/config/openingsCacheVersion.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "OPENINGS_CACHE_VERSION"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/i18n/i18n-parity.core.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "areCataloguesInParity",
+        "diffCatalogues",
+        "listIdenticalValueKeys"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/i18n/i18n.utils.ts"
+      ],
+      "blueprints": [
+        "i18n-parity-gate"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/i18n/i18n.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "readBrowserStorage"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/i18n/en.json",
+        "apps/borsouvertures/site/i18n/fr.json",
+        "apps/borsouvertures/site/i18n/i18n.utils.ts",
+        "apps/borsouvertures/site/i18n/locale-storage.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "i18n-setup"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/i18n/i18n.utils.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "FALLBACK_LANGUAGE",
+        "SUPPORTED_LANGUAGES",
+        "compareTranslationKeys",
+        "isSupportedLanguage",
+        "listTranslationKeys",
+        "readLanguageFamily",
+        "selectInitialLanguage"
+      ],
+      "imports": [],
+      "blueprints": [
+        "i18n-key-walk"
+      ],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/i18n/locale-storage.utils.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LANGUAGE_STORAGE_KEY",
+        "readSavedLanguage",
+        "writeSavedLanguage"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/i18n/i18n.utils.ts"
+      ],
+      "blueprints": [
+        "injected-storage-slice"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/i18n/react-i18next.d.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/borsouvertures/site/i18n/en.json"
+      ],
+      "blueprints": [
+        "i18n-typed-keys"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/lib/componentTable.types.ts",
+      "container": "site",
+      "layer": "types",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [
+        "component-lookup-table"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/lib/usePaginatedList.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "DEFAULT_PAGE_SIZE",
+        "usePaginatedList"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "hook-effect-free-mount"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/lib/useSessionStart.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "useSessionStart"
+      ],
+      "imports": [],
+      "blueprints": [
+        "hook-effect-free-mount"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/lib/viewport.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "useBoardWidth",
+        "useIsCompactViewport",
+        "useViewportWidth"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/lib/viewport.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "hook-external-store"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/lib/viewport.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "isCompactViewport",
+        "selectBoardWidth"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/main.tsx",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/borsouvertures/site/styles/tokens.css"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "site-entrypoint"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/bookArrows.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "selectVisibleBookMoves"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-branchless-list"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/bookEngine.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "computeBookState",
+        "gatherCandidates"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/bookTree.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "isVariationCleared",
+        "leafReachedAt",
+        "linesMatchingPrefix",
+        "nextMovesAt"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/learnSession.core.ts",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "NO_DRILL_TARGET",
+        "findLearnDrillTarget",
+        "isLearnDrillReady"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/learnTreeMachine.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "createLearnTreeMachine"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/bookTree.utils.ts",
+        "apps/borsouvertures/site/openings/machineEffects.ts",
+        "apps/borsouvertures/site/openings/types.ts",
+        "apps/borsouvertures/site/openings/uciSquare.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "state-machine-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/lineDisplay.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "shortLineName"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/loadOpenings.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "loadOpenings"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/openings.json",
+        "apps/borsouvertures/site/openings/parseOpenings.utils.ts",
+        "apps/borsouvertures/site/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/machineEffects.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "pickRandomCandidate",
+        "scheduleTimeoutCallback"
+      ],
+      "imports": [],
+      "blueprints": [
+        "machine-impure-edge"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/machineInstances.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "learnTreeMachine",
+        "playMachine"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/learnTreeMachine.utils.ts",
+        "apps/borsouvertures/site/openings/playMachine.utils.ts"
+      ],
+      "blueprints": [
+        "machine-singleton"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/openingFlow.core.ts",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "buildOpeningFlowLists"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/openingIds.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "buildLineId",
+        "toSlug"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/openingsLoad.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "selectOpeningsLoad"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/openingsResource.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "readOpeningsRequest"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/loadOpenings.ts",
+        "apps/borsouvertures/site/openings/openingsLoad.utils.ts"
+      ],
+      "blueprints": [
+        "route-suspense-resource"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/parseOpenings.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "parseOpenings"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "unknown-payload-parser"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/playMachine.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "createPlayMachine"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/bookEngine.utils.ts",
+        "apps/borsouvertures/site/openings/machineEffects.ts",
+        "apps/borsouvertures/site/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/openings/types.ts",
+        "apps/borsouvertures/site/openings/uciSquare.utils.ts"
+      ],
+      "blueprints": [
+        "state-machine-module"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/playScope.core.ts",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "EMPTY_PLAY_SCOPE",
+        "FULL_SELECTION",
+        "buildLineSelection",
+        "buildOpeningSelection",
+        "buildVariationSelection",
+        "clearLinesFromPlayScope",
+        "clearOpeningsFromPlayScope",
+        "clearVariationsFromPlayScope",
+        "isLineActive",
+        "isOpeningActive",
+        "isVariationActive",
+        "toggleLineInPlayScope",
+        "toggleOpeningInPlayScope",
+        "toggleVariationInPlayScope"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/selectors.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/playSession.core.ts",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "isUndoAllowed",
+        "selectCompletionMessageKey",
+        "selectLineLabel"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/lineDisplay.utils.ts",
+        "apps/borsouvertures/site/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/previews.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "buildLinePreview",
+        "buildOpeningPreview",
+        "buildVariationPreview"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/selectors.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ALL_KEY",
+        "findLine",
+        "findOpening",
+        "findVariation",
+        "listLines",
+        "listVariations"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/sessionStart.core.ts",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "buildSessionKey",
+        "isLearnSessionReady",
+        "isPlayScopeResetRequired",
+        "isPlaySessionReady",
+        "isSessionStartAllowed",
+        "selectTreeVisualization"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/openings/selectors.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/types.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "domain-types-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/uciSquare.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "isPromotionPiece",
+        "isSquare",
+        "parsePromotion",
+        "toSquare",
+        "uciFromSquare",
+        "uciPromotion",
+        "uciToArrow",
+        "uciToSquare"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/routes/OpeningTrainerRoute.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "OpeningTrainerRoute"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/routes/TrainerScreens.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-shell"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/routes/trainerScreen.core.ts",
+      "container": "site",
+      "layer": "route",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "selectTrainerScreenKind"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/routes/TrainerScreens.tsx",
+      "container": "site",
+      "layer": "route",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "TrainerScreens"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/routes/trainerScreen.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/state/appState.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "resetPlayScopeAndSelection",
+        "setBoardStyle",
+        "setMode",
+        "setPlayAutoOpponent",
+        "setPlayScope",
+        "setSelection",
+        "setSide",
+        "setTreeVisualizationMode",
+        "setView",
+        "startPlayWithVariation",
+        "useAppState"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
+      ],
+      "blueprints": [
+        "persisted-store-module"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/state/persistedState.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "parsePersistedState",
+        "stringifyPersistedState"
+      ],
+      "imports": [],
+      "blueprints": [
+        "unknown-payload-parser"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/test-setup.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/theme/boardAppearance.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "getBoardAppearance"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-appearance"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/theme/boardThemes.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "boardThemes",
+        "getBoardTheme",
+        "isBoardThemeId",
+        "toBoardThemeId"
+      ],
+      "imports": [],
+      "blueprints": [
+        "satisfies-over-assertion"
+      ],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/vite-env.d.ts",
+      "container": "site",
+      "layer": "declaration",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/vite.config.ts",
+      "container": "site",
+      "layer": "config",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/borsouvertures/site/config/openingsCacheVersion.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/vitest.config.ts",
+      "container": "site",
+      "layer": "config",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "workspace-test-config"
+      ]
+    }
+  ],
+  "routes": [],
+  "blueprints": [
+    {
+      "id": "atom-lookup-variants",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "atom-null-render",
+      "file": "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
+      "followerCount": 0
+    },
+    {
+      "id": "atom-plain",
+      "file": "",
+      "followerCount": 14
+    },
+    {
+      "id": "cdk-app-entrypoint",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "component-lookup-table",
+      "file": "apps/borsouvertures/site/lib/componentTable.types.ts",
+      "followerCount": 21
+    },
+    {
+      "id": "core-appearance",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "core-label-key",
+      "file": "",
+      "followerCount": 2
+    },
+    {
+      "id": "core-view-intent",
+      "file": "",
+      "followerCount": 7
+    },
+    {
+      "id": "domain-types-module",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "hook-effect-free-mount",
+      "file": "apps/borsouvertures/site/lib/useSessionStart.ts",
+      "followerCount": 1
+    },
+    {
+      "id": "hook-external-store",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "i18n-key-walk",
+      "file": "apps/borsouvertures/site/i18n/i18n.utils.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "i18n-parity-gate",
+      "file": "apps/borsouvertures/site/i18n/i18n-parity.core.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "i18n-setup",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "i18n-typed-keys",
+      "file": "apps/borsouvertures/site/i18n/react-i18next.d.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "injected-storage-slice",
+      "file": "apps/borsouvertures/site/i18n/locale-storage.utils.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "machine-impure-edge",
+      "file": "apps/borsouvertures/site/openings/machineEffects.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "machine-singleton",
+      "file": "apps/borsouvertures/site/openings/machineInstances.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "molecule-presentational",
+      "file": "",
+      "followerCount": 21
+    },
+    {
+      "id": "organism-machine-bound",
+      "file": "apps/borsouvertures/site/components/organisms/PlaySession.tsx",
+      "followerCount": 1
+    },
+    {
+      "id": "organism-presentational",
+      "file": "",
+      "followerCount": 5
+    },
+    {
+      "id": "organism-shell",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "organism-table-dispatch",
+      "file": "apps/borsouvertures/site/components/organisms/SessionScreen.tsx",
+      "followerCount": 4
+    },
+    {
+      "id": "persisted-store-module",
+      "file": "apps/borsouvertures/site/state/appState.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "ref-callback-browser-api",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "route-suspense-resource",
+      "file": "apps/borsouvertures/site/openings/openingsResource.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "satisfies-over-assertion",
+      "file": "apps/borsouvertures/site/theme/boardThemes.utils.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "shared-props-shape",
+      "file": "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
+      "followerCount": 2
+    },
+    {
+      "id": "site-entrypoint",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "state-machine-module",
+      "file": "apps/borsouvertures/site/openings/playMachine.utils.ts",
+      "followerCount": 1
+    },
+    {
+      "id": "unknown-payload-parser",
+      "file": "apps/borsouvertures/site/state/persistedState.utils.ts",
+      "followerCount": 1
+    },
+    {
+      "id": "utils-branchless-list",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "utils-pure-module",
+      "file": "",
+      "followerCount": 12
+    },
+    {
+      "id": "workspace-test-config",
+      "file": "",
+      "followerCount": 1
+    }
+  ]
+}

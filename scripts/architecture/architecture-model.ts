@@ -148,18 +148,6 @@ export function aggregateMetrics(files: readonly ArchitectureFile[]): NodeMetric
   };
 }
 
-/** The lines a block prints under its name. */
-export function metricLines(metrics: NodeMetrics, first: string): string[] {
-  const counts = [
-    `${metrics.lines} lines`,
-    `cx ${metrics.complexity}`,
-    ...(metrics.disables > 0
-      ? [`${metrics.disables} disable${metrics.disables === 1 ? '' : 's'}`]
-      : []),
-  ].join(' · ');
-  return first === '' ? [counts] : [first, counts];
-}
-
 /**
  * Names bound by a destructuring whose initialiser calls an import, so that
  * `const { publicRouter } = buildAuthRouter()` resolves `publicRouter` back to

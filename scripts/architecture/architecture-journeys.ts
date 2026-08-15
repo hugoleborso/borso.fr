@@ -15,13 +15,17 @@
  * calls and the imports are all read from the source.
  */
 
-import type { GraphEdge, GraphNode } from './architecture-graph';
 import {
-  type ArchitectureFile,
-  type ExportedSymbol,
-  metricLines,
-  symbolMetrics,
-} from './architecture-model';
+  BLUEPRINT_ICON,
+  COMPLEXITY_ICON,
+  DISABLE_ICON,
+  type GraphEdge,
+  type GraphNode,
+  LAYER_GROUP_ICON,
+  type NodeChip,
+  SIZE_ICON,
+} from './architecture-graph';
+import { type ArchitectureFile, type ExportedSymbol, symbolMetrics } from './architecture-model';
 
 export interface JourneyAction {
   readonly id: string;
@@ -72,10 +76,25 @@ interface WalkResult {
   readonly edges: GraphEdge[];
 }
 
-/** The layer, the blueprint when there is one, then the counts. */
-function symbolLines(layer: string, blueprint: string, symbol: ExportedSymbol): string[] {
-  const heading = [layer, blueprint].filter((part) => part !== '').join(' · ');
-  return metricLines(symbolMetrics(symbol), heading);
+/** The pills a function block prints: its pattern, its size, its shape. */
+function symbolChips(blueprint: string, symbol: ExportedSymbol): NodeChip[] {
+  const metrics = symbolMetrics(symbol);
+  return [
+    ...(blueprint === ''
+      ? []
+      : [{ icon: BLUEPRINT_ICON, text: blueprint, tone: 'blueprint' as const }]),
+    { icon: SIZE_ICON, text: `${metrics.lines} lines`, tone: 'size' as const },
+    { icon: COMPLEXITY_ICON, text: `cx ${metrics.complexity}`, tone: 'complexity' as const },
+    ...(metrics.disables > 0
+      ? [
+          {
+            icon: DISABLE_ICON,
+            text: `${metrics.disables} disable${metrics.disables === 1 ? '' : 's'}`,
+            tone: 'warn' as const,
+          },
+        ]
+      : []),
+  ];
 }
 
 function sourceEntry(
@@ -138,7 +157,9 @@ function walkSymbol(
     location: `${file.path}:${exported.line}`,
     sourceKey: key,
     metrics: symbolMetrics(exported),
-    lines: symbolLines(file.layer, blueprint, exported),
+    icon: LAYER_GROUP_ICON[file.layer] ?? '\u{1F4C4}',
+    lines: [file.layer],
+    chips: symbolChips(blueprint, exported),
   });
 
   for (const table of exported.tables) {
@@ -152,6 +173,7 @@ function walkSymbol(
       followsBlueprints: [],
       fileCount: 0,
       layer: 'table',
+      icon: '\u{1F5C4}',
       lines: ['database table'],
     });
     result.edges.push({ from: key, to: `table:${table}`, label: 'writes', kind: 'import' });
@@ -167,6 +189,7 @@ function walkSymbol(
       followsBlueprints: [],
       fileCount: 0,
       layer: 'external',
+      icon: '\u{1F310}',
       lines: ['external system'],
     });
     result.edges.push({ from: key, to: `external:${external}`, label: '', kind: 'import' });
@@ -321,16 +344,14 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
           fileCount: 0,
           layer: trigger.layer,
           location: trigger.path,
+          icon: LAYER_GROUP_ICON[trigger.layer] ?? '\u{1F5A5}',
+          lines: [trigger.layer],
           ...(componentExport === undefined
-            ? {
-                lines: [
-                  [trigger.layer, triggerBlueprint].filter((part) => part !== '').join(' · '),
-                ],
-              }
+            ? {}
             : {
                 sourceKey: triggerKey,
                 metrics: symbolMetrics(componentExport),
-                lines: symbolLines(trigger.layer, triggerBlueprint, componentExport),
+                chips: symbolChips(triggerBlueprint, componentExport),
               }),
         });
         edges.push({ from: triggerKey, to: hookNodeId, label: '', kind: 'import' });
@@ -368,7 +389,9 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
         location: `${module.path}:${exported.line}`,
         sourceKey: hookNodeId,
         metrics: symbolMetrics(exported),
-        lines: symbolLines(module.layer, hookBlueprint, exported),
+        icon: LAYER_GROUP_ICON[module.layer] ?? '\u{1FA9D}',
+        lines: [module.layer],
+        chips: symbolChips(hookBlueprint, exported),
       });
       nodes.push({
         id: endpointId,
@@ -380,6 +403,7 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
         followsBlueprints: [],
         fileCount: 0,
         layer: 'http',
+        icon: '\u{1F50C}',
         lines: ['HTTP endpoint'],
       });
       edges.push({ from: hookNodeId, to: endpointId, label: 'over HTTPS', kind: 'http' });

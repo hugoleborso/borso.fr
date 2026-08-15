@@ -18,17 +18,20 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { buildJourneys } from './architecture-journeys';
 import { type LevelLayout, layoutLevel } from './architecture-layout';
-import { renderArchitecturePage } from './architecture-page';
+import { renderArchitectureIndex, renderArchitecturePage } from './architecture-page';
 import {
   type ArchitectureFile,
   type NodeMetrics,
   aggregateMetrics,
   buildArchitectureFile,
   isTestFile,
-  metricLines,
   readApiPathStrings,
 } from './architecture-model';
-import { type ArchitectureManifest, pragmaManifest } from './pragma.manifest';
+import {
+  ARCHITECTURE_MANIFESTS,
+  type ArchitectureManifest,
+  manifestFor,
+} from './architecture-manifest';
 
 const REPOSITORY_ROOT = resolve(import.meta.dirname, '../..');
 const OUTPUT_DIRECTORY = join(REPOSITORY_ROOT, 'docs/architecture');
@@ -75,8 +78,51 @@ export interface GraphNode {
   readonly sourceKey?: string;
   /** Size and shape of the code behind this node. */
   readonly metrics?: NodeMetrics;
-  /** Lines the block prints, longest first, so the layout can size the box. */
+  /** Emoji drawn before the name, so a block is sorted before it is read. */
+  readonly icon?: string;
+  /** Plain rows printed under the name. */
   readonly lines?: readonly string[];
+  /** Pills printed under the rows: blueprint, size, complexity. */
+  readonly chips?: readonly NodeChip[];
+}
+
+export interface NodeChip {
+  readonly icon: string;
+  readonly text: string;
+  /** Drives the pill's colour, and is a class name in the page. */
+  readonly tone: 'plain' | 'blueprint' | 'complexity' | 'size' | 'warn';
+}
+
+export const BLUEPRINT_ICON = '📘';
+export const SIZE_ICON = '📏';
+export const COMPLEXITY_ICON = '🧮';
+export const DISABLE_ICON = '🚫';
+export const FILE_ICON = '🗂️';
+export const ROUTE_ICON = '🔌';
+
+/**
+ * The pills a block prints for the code behind it.
+ *
+ * `total` distinguishes a sum from a reading of one function: a container
+ * showing `cx 2313` is the complexity of everything inside it added up, which
+ * says nothing about any one file, and a block that does not say so invites the
+ * number to be read as a single measurement.
+ */
+function metricChips(metrics: NodeMetrics, isAggregate: boolean): NodeChip[] {
+  const suffix = isAggregate ? ' total' : '';
+  return [
+    { icon: SIZE_ICON, text: `${metrics.lines} lines${suffix}`, tone: 'size' },
+    { icon: COMPLEXITY_ICON, text: `cx ${metrics.complexity}${suffix}`, tone: 'complexity' },
+    ...(metrics.disables > 0
+      ? [
+          {
+            icon: DISABLE_ICON,
+            text: `${metrics.disables} disable${metrics.disables === 1 ? '' : 's'}`,
+            tone: 'warn' as const,
+          },
+        ]
+      : []),
+  ];
 }
 
 export interface GraphEdge {
@@ -138,11 +184,19 @@ function validateExternals(
   return problems;
 }
 
+/** What "outside" means for each kind of external, spelled out on the block. */
+const BOUNDARY_LABEL: Readonly<Record<string, string>> = {
+  'third-party': 'a third party',
+  aws: 'an AWS service this account owns',
+  'browser-platform': 'a browser API',
+};
+
 function buildContextLevel(
   files: readonly ArchitectureFile[],
   manifest: ArchitectureManifest,
 ): GraphLevel {
   const referenced = new Set(files.flatMap((file) => file.dependsOnExternal));
+  const systemMetrics = aggregateMetrics(files);
   const nodes: GraphNode[] = [
     ...manifest.actors.map((actor) => ({
       id: actor.id,
@@ -153,7 +207,8 @@ function buildContextLevel(
       blueprints: [],
       followsBlueprints: [],
       fileCount: 0,
-      lines: ['actor'],
+      icon: actor.icon,
+      lines: ['outside the system'],
     })),
     {
       id: 'system',
@@ -164,8 +219,13 @@ function buildContextLevel(
       blueprints: [],
       followsBlueprints: [],
       fileCount: files.length,
-      metrics: aggregateMetrics(files),
-      lines: metricLines(aggregateMetrics(files), `${files.length} files`),
+      metrics: systemMetrics,
+      icon: '🎯',
+      lines: ['inside — this repository builds it'],
+      chips: [
+        { icon: FILE_ICON, text: `${files.length} files`, tone: 'plain' },
+        ...metricChips(systemMetrics, true),
+      ],
     },
     ...manifest.externals
       .filter((external) => referenced.has(external.id))
@@ -178,7 +238,15 @@ function buildContextLevel(
         blueprints: [],
         followsBlueprints: [],
         fileCount: files.filter((file) => file.dependsOnExternal.includes(external.id)).length,
-        lines: [external.technology],
+        icon: external.icon,
+        lines: [`outside — ${BOUNDARY_LABEL[external.boundary]}`, external.technology],
+        chips: [
+          {
+            icon: FILE_ICON,
+            text: `reached from ${files.filter((file) => file.dependsOnExternal.includes(external.id)).length} files`,
+            tone: 'plain' as const,
+          },
+        ],
       })),
   ];
 
@@ -186,7 +254,7 @@ function buildContextLevel(
     ...manifest.actors.map((actor) => ({
       from: actor.id,
       to: 'system',
-      label: 'Manages the catalogue, sessions and setlists',
+      label: 'uses',
       kind: 'uses',
     })),
     ...manifest.externals
@@ -229,10 +297,18 @@ function buildContainerLevel(
       followsBlueprints: owned.flatMap((file) => file.followsBlueprints),
       fileCount: owned.length,
       metrics,
-      lines:
+      icon: container.icon,
+      lines: [
+        container.technology,
+        ...(container.hosting === undefined ? [] : [container.hosting]),
+      ],
+      chips:
         owned.length === 0
-          ? [container.technology.split(',')[0] ?? '']
-          : metricLines(metrics, `${metrics.files} files`),
+          ? [{ icon: FILE_ICON, text: 'no source in this repository', tone: 'plain' as const }]
+          : [
+              { icon: FILE_ICON, text: `${metrics.files} files`, tone: 'plain' as const },
+              ...metricChips(metrics, true),
+            ],
     };
   });
 
@@ -248,6 +324,8 @@ function buildContainerLevel(
       blueprints: [],
       followsBlueprints: [],
       fileCount: 0,
+      icon: external.icon,
+      lines: [`outside — ${BOUNDARY_LABEL[external.boundary] ?? external.boundary}`],
     }));
 
   const edges: GraphEdge[] = [];
@@ -277,11 +355,15 @@ function buildContainerLevel(
       });
     }
   }
-  if (files.some((file) => file.apiCalls.length > 0)) {
+  if (
+    files.some((file) => file.apiCalls.length > 0) &&
+    containerIds.has('site') &&
+    containerIds.has('api')
+  ) {
     edges.push({
       from: 'site',
       to: 'api',
-      label: 'JSON over HTTPS, session cookie, typed by the router',
+      label: 'JSON over HTTPS, typed by the router',
       kind: 'http',
     });
   }
@@ -295,6 +377,48 @@ function buildContainerLevel(
     edges: uniqueEdges(edges),
   };
 }
+
+/** The folder a group of files shares, which is what names the block. */
+function commonFolder(files: readonly ArchitectureFile[], applicationPrefix: string): string {
+  const folders = files.map((file) => file.path.split('/').slice(0, -1));
+  const first = folders[0] ?? [];
+  let shared = first.length;
+  for (const folder of folders) {
+    let index = 0;
+    while (index < shared && folder[index] === first[index]) index += 1;
+    shared = index;
+  }
+  return `${first.slice(0, shared).join('/')}/`.replace(applicationPrefix, '');
+}
+
+/** One emoji per family of layers, so a block reads before it is read. */
+export const LAYER_GROUP_ICON: Readonly<Record<string, string>> = {
+  adapter: '🔗',
+  atom: '⚛️',
+  client: '🔗',
+  config: '⚙️',
+  controller: '🚦',
+  core: '🧠',
+  database: '🗄️',
+  declaration: '📄',
+  entrypoint: '🚀',
+  environment: '⚙️',
+  hook: '🪝',
+  i18n: '🌍',
+  middleware: '🚧',
+  molecule: '🧬',
+  organism: '🦴',
+  query: '📡',
+  repository: '🗄️',
+  route: '🧭',
+  schema: '📐',
+  service: '⚙️',
+  setup: '🚀',
+  store: '📦',
+  types: '📐',
+  utils: '🧰',
+  variants: '🎨',
+};
 
 function buildComponentLevel(
   files: readonly ArchitectureFile[],
@@ -311,14 +435,27 @@ function buildComponentLevel(
   }
 
   const containerName = new Map(manifest.containers.map((each) => [each.id, each.name]));
+  // A context is named after its folder, and `root` or `lib` occurs under more
+  // than one container. Two blocks reading `root` is the diagram failing to say
+  // which is which, so the container joins the name where the name repeats.
+  const nameCount = new Map<string, number>();
+  for (const id of grouped.keys()) {
+    const name = id.split('::')[1] ?? id;
+    nameCount.set(name, (nameCount.get(name) ?? 0) + 1);
+  }
+  const applicationPrefix = `apps/${manifest.application}/`;
   const nodes: GraphNode[] = [...grouped.entries()].map(([id, owned]) => {
     const [containerId, contextName] = id.split('::');
     const layers = [...new Set(owned.map((file) => file.layer))].sort();
     const routeCount = owned.reduce((total, file) => total + file.routes.length, 0);
     const metrics = aggregateMetrics(owned);
+    const name = contextName ?? id;
+    const blueprintIds = [
+      ...new Set(owned.flatMap((file) => [...file.blueprints, ...file.followsBlueprints])),
+    ].sort();
     return {
       id,
-      label: contextName ?? id,
+      label: (nameCount.get(name) ?? 0) > 1 ? `${containerId} · ${name}` : name,
       kind: `component-${containerId ?? 'unknown'}`,
       detail: `${owned.length} files in ${containerName.get(containerId ?? '') ?? containerId}. Layers: ${layers.join(', ')}.${
         routeCount > 0 ? ` ${routeCount} HTTP routes.` : ''
@@ -328,10 +465,20 @@ function buildComponentLevel(
       followsBlueprints: owned.flatMap((file) => file.followsBlueprints),
       fileCount: owned.length,
       metrics,
-      lines: metricLines(
-        metrics,
-        `${metrics.files} files${routeCount > 0 ? ` · ${routeCount} routes` : ''}`,
-      ),
+      icon: LAYER_GROUP_ICON[layers[0] ?? ''] ?? '📁',
+      lines: [commonFolder(owned, applicationPrefix), layers.join(', ')],
+      chips: [
+        { icon: FILE_ICON, text: `${metrics.files} files`, tone: 'plain' },
+        ...(routeCount > 0
+          ? [{ icon: ROUTE_ICON, text: `${routeCount} routes`, tone: 'plain' as const }]
+          : []),
+        ...metricChips(metrics, true),
+        ...blueprintIds.map((each) => ({
+          icon: BLUEPRINT_ICON,
+          text: each,
+          tone: 'blueprint' as const,
+        })),
+      ],
     };
   });
 
@@ -672,22 +819,18 @@ function readFlag(name: string): string | null {
   return process.argv[index + 1] ?? null;
 }
 
-async function main(): Promise<void> {
-  const isCheck = process.argv.includes('--check');
-  /**
-   * `--app-root` points the scan at another checkout of the same application,
-   * which is how the pull-request workflow models the target branch: it runs
-   * this script, at this revision, against a worktree of the merge base. The
-   * target branch does not have to carry the generator for its graph to exist.
-   */
-  const applicationRootFlag = readFlag('--app-root');
-  const applicationRoot =
-    applicationRootFlag === null
-      ? join(REPOSITORY_ROOT, 'apps', pragmaManifest.application)
-      : resolve(applicationRootFlag);
-  const scanRoot =
-    applicationRootFlag === null ? REPOSITORY_ROOT : resolve(applicationRoot, '../..');
-  const outputDirectory = readFlag('--out') ?? OUTPUT_DIRECTORY;
+interface BuildOptions {
+  readonly manifest: ArchitectureManifest;
+  readonly applicationRoot: string;
+  readonly scanRoot: string;
+  readonly outputDirectory: string;
+  readonly isCheck: boolean;
+  /** True when scanning a checkout other than this one, which softens the gates. */
+  readonly isForeignTree: boolean;
+}
+
+async function buildApplication(options: BuildOptions): Promise<void> {
+  const { manifest, applicationRoot, scanRoot, outputDirectory, isCheck, isForeignTree } = options;
 
   const files = listSourceFiles(applicationRoot)
     .map((absolutePath) => relative(scanRoot, absolutePath))
@@ -695,14 +838,14 @@ async function main(): Promise<void> {
     .sort()
     .map((path) => buildArchitectureFile(join(scanRoot, path), scanRoot, applicationRoot));
 
-  const problems = validateExternals(files, pragmaManifest);
+  const problems = validateExternals(files, manifest);
   if (problems.length > 0) {
     for (const problem of problems) console.error(`  ${problem}`);
     // A scan of another checkout is modelling the target branch, which predates
     // whichever tag or manifest entry this branch adds. Failing there would
     // report every new external as a broken build rather than as the change it
     // is, so the mismatch is only fatal for the tree being committed.
-    if (applicationRootFlag === null) {
+    if (!isForeignTree) {
       console.error(`${problems.length} architecture manifest problem(s).`);
       process.exit(1);
     }
@@ -712,14 +855,18 @@ async function main(): Promise<void> {
   }
 
   const levels = [
-    buildContextLevel(files, pragmaManifest),
-    buildContainerLevel(files, pragmaManifest),
-    buildComponentLevel(files, pragmaManifest),
+    buildContextLevel(files, manifest),
+    buildContainerLevel(files, manifest),
+    buildComponentLevel(files, manifest),
     buildCodeLevel(files),
   ];
-  const serviceWorkerPath = 'apps/pragma/site/public/sw.js';
-  const serviceWorkerUrls = readApiPathStrings(readSourceOrEmpty(serviceWorkerPath, scanRoot));
-  const slices = buildSlices(files, new Map([[serviceWorkerPath, serviceWorkerUrls]]));
+  const urlOnlyScripts = new Map(
+    (manifest.urlOnlyScripts ?? []).map((path) => [
+      path,
+      readApiPathStrings(readSourceOrEmpty(path, scanRoot)),
+    ]),
+  );
+  const slices = buildSlices(files, urlOnlyScripts);
   const blueprints = buildBlueprintOverlay(files);
 
   const unmarked = files.filter(
@@ -748,7 +895,7 @@ async function main(): Promise<void> {
   }
 
   const page = renderArchitecturePage({
-    manifest: pragmaManifest,
+    manifest,
     layouts,
     journeys,
     journeyLayouts,
@@ -760,25 +907,23 @@ async function main(): Promise<void> {
   });
 
   mkdirSync(outputDirectory, { recursive: true });
-  const pagePath = join(outputDirectory, 'pragma-architecture.html');
-  const modelPath = join(outputDirectory, 'pragma-architecture.json');
-  const model = `${JSON.stringify(buildModelJson(files, pragmaManifest, slices, blueprints), null, 2)}\n`;
+  const pagePath = join(outputDirectory, `${manifest.application}-architecture.html`);
+  const modelPath = join(outputDirectory, `${manifest.application}-architecture.json`);
+  const model = `${JSON.stringify(buildModelJson(files, manifest, slices, blueprints), null, 2)}\n`;
 
   if (isCheck) {
-    if (readSourceOrEmpty(relative(REPOSITORY_ROOT, modelPath)) !== model) {
+    for (const [path, expected] of [
+      [modelPath, model],
+      [pagePath, page],
+    ] as const) {
+      if (readSourceOrEmpty(relative(REPOSITORY_ROOT, path)) === expected) continue;
       console.error(
-        `  ${relative(REPOSITORY_ROOT, modelPath)} is out of date. Run \`pnpm exec tsx scripts/architecture/architecture-graph.ts\`.`,
-      );
-      process.exit(1);
-    }
-    if (readSourceOrEmpty(relative(REPOSITORY_ROOT, pagePath)) !== page) {
-      console.error(
-        `  ${relative(REPOSITORY_ROOT, pagePath)} is out of date. Run \`pnpm exec tsx scripts/architecture/architecture-graph.ts\`.`,
+        `  ${relative(REPOSITORY_ROOT, path)} is out of date. Run \`pnpm exec tsx scripts/architecture/architecture-graph.ts\`.`,
       );
       process.exit(1);
     }
     console.log(
-      `Scanned ${files.length} files across ${levels.length} levels and ${slices.length} slices. The page is up to date.`,
+      `${manifest.application}: ${files.length} files across ${levels.length} levels and ${slices.length} slices. Up to date.`,
     );
     return;
   }
@@ -786,13 +931,77 @@ async function main(): Promise<void> {
   writeFileSync(pagePath, page);
   writeFileSync(modelPath, model);
   console.log(
-    `Scanned ${files.length} files: ${levels[3]?.edges.length ?? 0} import edges, ${slices.reduce(
+    `${manifest.application}: ${files.length} files, ${levels[3]?.edges.length ?? 0} import edges, ${slices.reduce(
       (total, slice) => total + slice.routes.length,
       0,
     )} routes, ${journeys.features.reduce((total, feature) => total + feature.actions.length, 0)} user actions, ${blueprints.length} blueprints, ${unmarked.length} unmarked files.`,
   );
+}
+
+async function main(): Promise<void> {
+  const isCheck = process.argv.includes('--check');
+  /**
+   * `--app-root` points the scan at another checkout of one application, which
+   * is how the pull-request workflow models the target branch: it runs this
+   * script, at this revision, against a worktree of the merge base. The target
+   * branch does not have to carry the generator for its graph to exist.
+   */
+  const applicationRootFlag = readFlag('--app-root');
+  const outputDirectory = readFlag('--out') ?? OUTPUT_DIRECTORY;
+  const requested = readFlag('--app');
+  if (requested !== null && manifestFor(requested) === undefined) {
+    console.error(
+      `  --app ${requested} has no manifest. Known: ${ARCHITECTURE_MANIFESTS.map((each) => each.application).join(', ')}.`,
+    );
+    process.exit(1);
+  }
+  const selected = ARCHITECTURE_MANIFESTS.filter(
+    (manifest) => requested === null || manifest.application === requested,
+  );
+
+  if (applicationRootFlag !== null) {
+    const manifest = selected[0];
+    if (selected.length !== 1 || manifest === undefined) {
+      console.error('  --app-root scans one application, so it needs --app <slug>.');
+      process.exit(1);
+    }
+    const applicationRoot = resolve(applicationRootFlag);
+    await buildApplication({
+      manifest,
+      applicationRoot,
+      scanRoot: resolve(applicationRoot, '../..'),
+      outputDirectory,
+      isCheck,
+      isForeignTree: true,
+    });
+    return;
+  }
+
+  for (const manifest of selected) {
+    await buildApplication({
+      manifest,
+      applicationRoot: join(REPOSITORY_ROOT, 'apps', manifest.application),
+      scanRoot: REPOSITORY_ROOT,
+      outputDirectory,
+      isCheck,
+      isForeignTree: false,
+    });
+  }
+
+  const indexPath = join(outputDirectory, 'index.html');
+  const index = renderArchitectureIndex(ARCHITECTURE_MANIFESTS);
+  if (isCheck) {
+    if (readSourceOrEmpty(relative(REPOSITORY_ROOT, indexPath)) !== index) {
+      console.error(
+        `  ${relative(REPOSITORY_ROOT, indexPath)} is out of date. Run \`pnpm exec tsx scripts/architecture/architecture-graph.ts\`.`,
+      );
+      process.exit(1);
+    }
+    return;
+  }
+  writeFileSync(indexPath, index);
   console.log(
-    `Wrote ${relative(REPOSITORY_ROOT, pagePath)} and ${relative(REPOSITORY_ROOT, modelPath)}`,
+    `Wrote ${relative(REPOSITORY_ROOT, outputDirectory)}/ for ${selected.length} app(s).`,
   );
 }
 

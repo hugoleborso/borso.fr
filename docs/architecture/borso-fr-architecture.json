@@ -1,0 +1,1466 @@
+{
+  "application": "borso-fr",
+  "containers": [
+    {
+      "id": "infrastructure",
+      "name": "Infrastructure definition",
+      "fileCount": 0
+    },
+    {
+      "id": "site",
+      "name": "Static site",
+      "fileCount": 70
+    }
+  ],
+  "externals": [],
+  "files": [
+    {
+      "path": "apps/borso-fr/bin/app.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "cdk-app-entrypoint"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/12-travaux/App.tsx",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "App"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/organisms/FeaturedMonth.tsx",
+        "apps/borso-fr/site/components/organisms/LaboursHero.tsx",
+        "apps/borso-fr/site/components/organisms/LaboursMasthead.tsx",
+        "apps/borso-fr/site/components/organisms/MonthFilmstrip.tsx",
+        "apps/borso-fr/site/labours/labours.core.ts",
+        "apps/borso-fr/site/labours/labours.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/12-travaux/main.tsx",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/borso-fr/site/12-travaux/App.tsx",
+        "apps/borso-fr/site/i18n/i18n.ts",
+        "apps/borso-fr/site/styles/tokens.css"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "site-entrypoint"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/animation.core.ts",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ANIMATION_MODE_LIST",
+        "isAnimationMode",
+        "isCascadeMode",
+        "isTransformAnimated",
+        "selectCanvasTransform",
+        "selectInkbloomAnimation",
+        "selectInkbloomDelayMs"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-lookup-table"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/App.tsx",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "App"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/animation.core.ts",
+        "apps/borso-fr/site/art/mondrian/cascade-timer.ts",
+        "apps/borso-fr/site/art/mondrian/composition-url.ts",
+        "apps/borso-fr/site/art/mondrian/download.ts",
+        "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+        "apps/borso-fr/site/art/mondrian/painting.utils.ts",
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/art/mondrian/paper-theme.ts",
+        "apps/borso-fr/site/art/mondrian/titles.utils.ts",
+        "apps/borso-fr/site/art/mondrian/use-reduced-motion.ts",
+        "apps/borso-fr/site/components/atoms/Announcer.tsx",
+        "apps/borso-fr/site/components/organisms/CompositionStage.tsx",
+        "apps/borso-fr/site/components/organisms/StudioRail.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/cascade-timer.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "applyCascade",
+        "startCascade",
+        "stopCascade"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/composition-url.ts"
+      ],
+      "blueprints": [
+        "browser-edge-module"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/composition-url.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "INITIAL_STATE",
+        "changePaletteInUrl",
+        "composeNewSeed",
+        "mirrorResolvedStateIntoUrl",
+        "readCurrentPaletteKey",
+        "refreshSeedInPlace",
+        "useCompositionState"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/art/mondrian/url-state.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "browser-edge-module",
+        "hook-external-store"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/download.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "downloadCompositionPng"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/painting.utils.ts",
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/art/mondrian/url-state.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "browser-edge-module"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/keyboard.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "isComposeKeyEvent"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "injected-browser-api"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/main.tsx",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/App.tsx",
+        "apps/borso-fr/site/art/mondrian/composition-url.ts",
+        "apps/borso-fr/site/art/mondrian/keyboard.utils.ts",
+        "apps/borso-fr/site/art/mondrian/paper-theme.ts",
+        "apps/borso-fr/site/i18n/i18n.ts",
+        "apps/borso-fr/site/styles/tokens.css"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "site-entrypoint"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "CUSTOM_COLOR_SLOTS",
+        "PALETTE_KEY_LIST",
+        "formatBalancePercentage",
+        "formatWorkNumber",
+        "selectAnimationLabelKey",
+        "selectPaletteLabelKey",
+        "selectRailClassName",
+        "selectRailToggleLabelKey",
+        "selectSwatchRowKind"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/animation.core.ts",
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/i18n/i18n.utils.ts"
+      ],
+      "blueprints": [
+        "core-label-key"
+      ],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/painting.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "chooseJitteredSplitFraction",
+        "colorize",
+        "computeSplitWeight",
+        "generateLayout",
+        "isNeutralDraw",
+        "isSplittable",
+        "mulberry32",
+        "pickSplitFraction",
+        "pickSplittableEntry",
+        "pickUniform",
+        "selectNeutralProbability",
+        "shouldSplitVertically",
+        "splitPaletteFills",
+        "splitRect"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/i18n/i18n.utils.ts"
+      ],
+      "blueprints": [
+        "utils-seeded-generator"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "CUSTOM_DEFAULTS",
+        "PALETTES",
+        "buildCustomPalette",
+        "isPaletteKey",
+        "listDistinctFills",
+        "selectPalette"
+      ],
+      "imports": [
+        "apps/borso-fr/site/i18n/i18n.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/paper-theme.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "applyPaperTheme"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "browser-edge-module"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/titles.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "TITLE_ADJECTIVES",
+        "TITLE_NOUNS",
+        "buildTitle",
+        "composeSubject",
+        "dominantColorNameKey",
+        "pickFromNonEmptyList"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/painting.utils.ts",
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/i18n/i18n.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-seeded-generator"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/url-state.utils.ts",
+      "container": "site",
+      "layer": "utils",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "buildSearch",
+        "freshSeed",
+        "isSeedHex",
+        "readUrlState",
+        "seedToHex"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "unknown-payload-parser",
+        "utils-seeded-generator"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/use-animation.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "useAnimation"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/animation.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "lint-exception"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/art/mondrian/use-reduced-motion.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "useIsReducedMotion"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "hook-external-store"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/Announcer.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "Announcer"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/BrandWordmark.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "BrandWordmark"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/CarouselImage.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "CarouselImage"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/CarouselVideo.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "CarouselVideo"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/ChallengeBarStrip.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ChallengeBarStrip"
+      ],
+      "imports": [
+        "apps/borso-fr/site/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/Chip.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "Chip"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/ChipLink.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ChipLink"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/atoms/Chip.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/ControlField.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ControlField"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/EditableSwatch.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "EditableSwatch"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/atoms/ReadOnlySwatch.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/MiniStat.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "MiniStat"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/MondrianRect.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "MondrianRect"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/painting.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/ProgressBar.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ProgressBar"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/ReadOnlySwatch.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ReadOnlySwatch",
+        "SWATCH_CLASS_NAME"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/SegmentedControl.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "SegmentedControl"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/Tag.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "Tag"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/atoms/YearButton.tsx",
+      "container": "site",
+      "layer": "atom",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "YearButton"
+      ],
+      "imports": [
+        "apps/borso-fr/site/labours/labours-appearance.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/molecules/ChallengeStatusTag.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ChallengeStatusTag"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/atoms/Tag.tsx",
+        "apps/borso-fr/site/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/molecules/EditablePaletteSwatches.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "EditablePaletteSwatches"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/components/atoms/EditableSwatch.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/molecules/FilmstripCard.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "FilmstripCard"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/atoms/ChallengeBarStrip.tsx",
+        "apps/borso-fr/site/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/labours/labours.core.ts",
+        "apps/borso-fr/site/labours/labours.types.ts",
+        "apps/borso-fr/site/theme/twelve-labours.theme.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/molecules/ProofChip.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ProofChip"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/atoms/Chip.tsx",
+        "apps/borso-fr/site/components/atoms/ChipLink.tsx",
+        "apps/borso-fr/site/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/labours/labours.core.ts",
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/molecules/ProofMedia.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ProofMedia"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/atoms/CarouselImage.tsx",
+        "apps/borso-fr/site/components/atoms/CarouselVideo.tsx",
+        "apps/borso-fr/site/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/labours/labours.core.ts",
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/molecules/ReadOnlyPaletteSwatches.tsx",
+      "container": "site",
+      "layer": "molecule",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ReadOnlyPaletteSwatches"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/components/atoms/ReadOnlySwatch.tsx",
+        "apps/borso-fr/site/components/molecules/EditablePaletteSwatches.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/ChallengeRow.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ChallengeRow"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/molecules/ChallengeStatusTag.tsx",
+        "apps/borso-fr/site/components/organisms/ProofSection.tsx",
+        "apps/borso-fr/site/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/labours/labours.core.ts",
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/CompositionStage.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "CompositionStage"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/animation.core.ts",
+        "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+        "apps/borso-fr/site/art/mondrian/painting.utils.ts",
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/art/mondrian/url-state.utils.ts",
+        "apps/borso-fr/site/components/organisms/MondrianFrame.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/FeaturedMonth.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "FeaturedMonth"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/atoms/ProgressBar.tsx",
+        "apps/borso-fr/site/components/organisms/ChallengeRow.tsx",
+        "apps/borso-fr/site/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/labours/labours.core.ts",
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/galaxy-clock.core.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "easeTowards",
+        "selectStarClock"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-projection"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/galaxy-shaders.ts",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "FRAGMENT_SHADER",
+        "VERTEX_SHADER"
+      ],
+      "imports": [],
+      "blueprints": [
+        "vendored-third-party"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/Galaxy.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "Galaxy"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/organisms/galaxy-clock.core.ts",
+        "apps/borso-fr/site/components/organisms/galaxy-shaders.ts"
+      ],
+      "blueprints": [
+        "lint-exception"
+      ],
+      "followsBlueprints": [
+        "vendored-third-party"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/LaboursHero.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LaboursHero"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/atoms/MiniStat.tsx",
+        "apps/borso-fr/site/components/atoms/ProgressBar.tsx",
+        "apps/borso-fr/site/labours/labours.core.ts",
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/LaboursMasthead.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LaboursMasthead"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/atoms/BrandWordmark.tsx",
+        "apps/borso-fr/site/components/atoms/YearButton.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/MondrianFrame.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "MondrianFrame"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/animation.core.ts",
+        "apps/borso-fr/site/art/mondrian/painting.utils.ts",
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/art/mondrian/use-animation.ts",
+        "apps/borso-fr/site/components/atoms/MondrianRect.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/MonthFilmstrip.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "MonthFilmstrip"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/molecules/FilmstripCard.tsx",
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/PaletteSwatchRow.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "PaletteSwatchRow"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/components/molecules/EditablePaletteSwatches.tsx",
+        "apps/borso-fr/site/components/molecules/ReadOnlyPaletteSwatches.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-table-dispatch"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/ProofSection.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ProofSection"
+      ],
+      "imports": [
+        "apps/borso-fr/site/components/molecules/ProofChip.tsx",
+        "apps/borso-fr/site/components/molecules/ProofMedia.tsx",
+        "apps/borso-fr/site/labours/labours.core.ts",
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-table-dispatch"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/components/organisms/StudioRail.tsx",
+      "container": "site",
+      "layer": "organism",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "StudioRail"
+      ],
+      "imports": [
+        "apps/borso-fr/site/art/mondrian/animation.core.ts",
+        "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/components/atoms/ControlField.tsx",
+        "apps/borso-fr/site/components/atoms/SegmentedControl.tsx",
+        "apps/borso-fr/site/components/organisms/PaletteSwatchRow.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/home-menu.core.ts",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "canAnimateIn",
+        "isMenuOpenAfterKey",
+        "selectBurgerLabelKey",
+        "selectMenuItemTransitionDelay"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/home-page.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/borso-fr/site/home-menu.core.ts",
+        "apps/borso-fr/site/i18n/fr.json"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/i18n/i18n-parity.core.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "diffCatalogues",
+        "isInParity",
+        "listIdenticalValueKeys"
+      ],
+      "imports": [
+        "apps/borso-fr/site/i18n/i18n.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "i18n-parity-gate"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/i18n/i18n.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/borso-fr/site/i18n/fr.json",
+        "apps/borso-fr/site/i18n/i18n.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "i18n-setup"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/i18n/i18n.utils.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "DEFAULT_LANGUAGE",
+        "compareTranslationKeys",
+        "listTranslationKeys"
+      ],
+      "imports": [
+        "apps/borso-fr/site/i18n/en.json"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "i18n-key-walk"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/i18n/react-i18next.d.ts",
+      "container": "site",
+      "layer": "i18n",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/borso-fr/site/i18n/en.json"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "i18n-typed-keys"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/labours/labours-2025.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "EDITION_2025"
+      ],
+      "imports": [
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "data-module"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/labours/labours-2026.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "EDITION_2026"
+      ],
+      "imports": [
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [
+        "data-module"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/labours/labours-appearance.core.ts",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "TRANSPARENT",
+        "selectFeaturedArticleClassName",
+        "selectFilmstripBarColor",
+        "selectFilmstripCardBorderClassName",
+        "selectFilmstripCardColors",
+        "selectKindLabelKey",
+        "selectMediaProofType",
+        "selectProofChipShape",
+        "selectProofIcon",
+        "selectStatusLabelKey",
+        "selectStatusTagColors",
+        "selectYearButtonColors"
+      ],
+      "imports": [
+        "apps/borso-fr/site/i18n/i18n.utils.ts",
+        "apps/borso-fr/site/labours/labours.types.ts",
+        "apps/borso-fr/site/theme/twelve-labours.theme.ts"
+      ],
+      "blueprints": [
+        "core-appearance"
+      ],
+      "followsBlueprints": [
+        "core-label-key"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/labours/labours.core.ts",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "buildFilmstripSummary",
+        "buildProofChipText",
+        "buildProofKey",
+        "countChallengesOfKind",
+        "countUnfinishedChallenges",
+        "deriveEditionScore",
+        "deriveMonthScore",
+        "formatMonthNumber",
+        "formatScore",
+        "isMediaProof",
+        "listAvailableYears",
+        "listChallengeNoteKeys",
+        "listMonthCoverImages",
+        "listProofLabelKeys",
+        "listProofSections",
+        "selectCompletionRatio",
+        "selectCurrentMonthNumber",
+        "selectDefaultMonthNumber",
+        "selectDefaultYear",
+        "selectEdition",
+        "selectFeaturedMonth",
+        "selectProofLabel"
+      ],
+      "imports": [
+        "apps/borso-fr/site/i18n/i18n.utils.ts",
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/labours/labours.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "LABOURS"
+      ],
+      "imports": [
+        "apps/borso-fr/site/labours/labours-2025.ts",
+        "apps/borso-fr/site/labours/labours-2026.ts",
+        "apps/borso-fr/site/labours/labours.types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "data-module"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/labours/labours.types.ts",
+      "container": "site",
+      "layer": "types",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/borso-fr/site/i18n/i18n.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "domain-types-module"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/main.tsx",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [
+        "apps/borso-fr/site/components/organisms/Galaxy.tsx",
+        "apps/borso-fr/site/styles/tokens.css"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/test-setup.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/theme/twelve-labours.theme.ts",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "ABANDONED_BAR_ON_DARK",
+        "ABANDONED_BAR_ON_LIGHT",
+        "ACCENT",
+        "ACTIVE_INNER_RULE",
+        "DASH_RULE",
+        "FAILURE_BAR",
+        "FAILURE_INK",
+        "INK",
+        "MUTED",
+        "PAPER",
+        "STRIPE_LIGHT",
+        "SUCCESS_BAR",
+        "WARNING_BAR",
+        "WARNING_INK"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/vite.config.ts",
+      "container": "site",
+      "layer": "config",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/vitest.config.ts",
+      "container": "site",
+      "layer": "config",
+      "context": "root",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "workspace-test-config"
+      ]
+    }
+  ],
+  "routes": [],
+  "blueprints": [
+    {
+      "id": "atom-plain",
+      "file": "",
+      "followerCount": 16
+    },
+    {
+      "id": "browser-edge-module",
+      "file": "apps/borso-fr/site/art/mondrian/cascade-timer.ts",
+      "followerCount": 3
+    },
+    {
+      "id": "cdk-app-entrypoint",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "core-appearance",
+      "file": "apps/borso-fr/site/labours/labours-appearance.core.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "core-label-key",
+      "file": "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+      "followerCount": 1
+    },
+    {
+      "id": "core-lookup-table",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "core-view-intent",
+      "file": "",
+      "followerCount": 3
+    },
+    {
+      "id": "core-view-projection",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "data-module",
+      "file": "apps/borso-fr/site/labours/labours-2026.ts",
+      "followerCount": 2
+    },
+    {
+      "id": "domain-types-module",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "hook-external-store",
+      "file": "",
+      "followerCount": 2
+    },
+    {
+      "id": "i18n-key-walk",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "i18n-parity-gate",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "i18n-setup",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "i18n-typed-keys",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "injected-browser-api",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "lint-exception",
+      "file": "apps/borso-fr/site/components/organisms/Galaxy.tsx",
+      "followerCount": 1
+    },
+    {
+      "id": "molecule-presentational",
+      "file": "",
+      "followerCount": 6
+    },
+    {
+      "id": "organism-presentational",
+      "file": "",
+      "followerCount": 8
+    },
+    {
+      "id": "organism-table-dispatch",
+      "file": "",
+      "followerCount": 2
+    },
+    {
+      "id": "site-entrypoint",
+      "file": "",
+      "followerCount": 2
+    },
+    {
+      "id": "unknown-payload-parser",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "utils-pure-module",
+      "file": "",
+      "followerCount": 1
+    },
+    {
+      "id": "utils-seeded-generator",
+      "file": "apps/borso-fr/site/art/mondrian/painting.utils.ts",
+      "followerCount": 2
+    },
+    {
+      "id": "vendored-third-party",
+      "file": "apps/borso-fr/site/components/organisms/galaxy-shaders.ts",
+      "followerCount": 1
+    },
+    {
+      "id": "workspace-test-config",
+      "file": "",
+      "followerCount": 1
+    }
+  ]
+}

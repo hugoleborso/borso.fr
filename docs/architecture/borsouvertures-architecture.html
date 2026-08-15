@@ -1,0 +1,2405 @@
+<title>Borsouvertures architecture</title>
+
+<style>
+  /*
+    Colour carries one meaning on this page: which layer a thing belongs to.
+    The chrome is therefore achromatic and cool, so a controller blue or a
+    repository amber is never competing with a decorative accent. Navy marks
+    the active level and links; amber is reserved for a route nothing reaches.
+    Monospace carries structure, because the subject is source files.
+  */
+  :root {
+    color-scheme: light dark;
+    --ground: #eef0f4;
+    --panel: #ffffff;
+    --panel-sunk: #f5f7fa;
+    --ink: #15181d;
+    --muted: #5b626e;
+    --line: #d8dce4;
+    --line-strong: #b9c1cd;
+    --accent: #1f3a5f;
+    --accent-soft: #dfe6f0;
+    --signal: #b45309;
+    --signal-soft: #fdf1e0;
+    --layer-route: #1e40af; --layer-route-bg: #dde7fb;
+    --layer-service: #166534; --layer-service-bg: #dcf3e4;
+    --layer-data: #92400e; --layer-data-bg: #fbeed8;
+    --layer-pure: #5b21b6; --layer-pure-bg: #e9e3fb;
+    --layer-edge: #9f1239; --layer-edge-bg: #fbdfe5;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --ground: #0f1216;
+      --panel: #161b22;
+      --panel-sunk: #1b212a;
+      --ink: #e6e9ee;
+      --muted: #98a1b0;
+      --line: #262d36;
+      --line-strong: #3a434f;
+      --accent: #8fb2dd;
+      --accent-soft: #1b2735;
+      --signal: #e0a355;
+      --signal-soft: #2c2317;
+      --layer-route: #9dc0f5; --layer-route-bg: #17263f;
+      --layer-service: #8fdcab; --layer-service-bg: #102a1b;
+      --layer-data: #edc07a; --layer-data-bg: #2f2413;
+      --layer-pure: #c3b1f5; --layer-pure-bg: #241d3a;
+      --layer-edge: #f3a1b3; --layer-edge-bg: #341620;
+    }
+  }
+  :root[data-theme='dark'] {
+    --ground: #0f1216;
+    --panel: #161b22;
+    --panel-sunk: #1b212a;
+    --ink: #e6e9ee;
+    --muted: #98a1b0;
+    --line: #262d36;
+    --line-strong: #3a434f;
+    --accent: #8fb2dd;
+    --accent-soft: #1b2735;
+    --signal: #e0a355;
+    --signal-soft: #2c2317;
+    --layer-route: #9dc0f5; --layer-route-bg: #17263f;
+    --layer-service: #8fdcab; --layer-service-bg: #102a1b;
+    --layer-data: #edc07a; --layer-data-bg: #2f2413;
+    --layer-pure: #c3b1f5; --layer-pure-bg: #241d3a;
+    --layer-edge: #f3a1b3; --layer-edge-bg: #341620;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 15px/1.6 var(--font-sans);
+    padding-bottom: 5rem;
+  }
+  .wrap { max-width: 76rem; margin: 0 auto; padding: 0 1.25rem; }
+
+  header.top { border-bottom: 1px solid var(--line); padding: 2.5rem 0 1.5rem; }
+  h1 {
+    font: 600 clamp(1.3rem, 3.5vw, 1.8rem)/1.2 var(--font-mono);
+    margin: 0 0 .5rem;
+    letter-spacing: -.02em;
+    text-wrap: balance;
+  }
+  .lede { color: var(--muted); max-width: 62ch; margin: 0 0 1.5rem; }
+  .stats { display: flex; flex-wrap: wrap; gap: 1rem 2.25rem; padding: 0; margin: 0; list-style: none; }
+  .stats li {
+    font: .7rem/1.4 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+  }
+  .stats b {
+    display: block;
+    font: 600 1.5rem/1.1 var(--font-mono);
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.02em;
+  }
+  .stats li.flagged b { color: var(--signal); }
+
+  nav.levels {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--ground);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2rem;
+  }
+  nav.levels .wrap { display: flex; gap: .15rem; overflow-x: auto; padding-top: .55rem; padding-bottom: .55rem; }
+  nav.levels button {
+    flex: 0 0 auto;
+    font: 500 .78rem/1 var(--font-mono);
+    letter-spacing: .01em;
+    color: var(--muted);
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: .5rem .75rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  nav.levels button:hover { color: var(--ink); background: var(--panel-sunk); }
+  nav.levels button[aria-selected='true'] {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--line-strong);
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  h2 { font: 600 1.15rem/1.3 var(--font-mono); margin: 0 0 .5rem; letter-spacing: -.01em; }
+  h3 { font: 600 .95rem/1.3 var(--font-mono); margin: 0 0 .4rem; }
+  .summary { color: var(--muted); max-width: 74ch; margin: 0 0 1.5rem; font-size: .89rem; }
+
+  .diagram-scroll, .table-scroll {
+    overflow-x: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .cards { display: grid; grid-template-columns: 1fr; gap: .7rem; }
+  @media (min-width: 620px) { .cards { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1000px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: .85rem .95rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    /* A grid item defaults to min-width:auto, so the nowrap kind tag in the
+       header sets a floor wider than the track's share and pushes the whole
+       page sideways. */
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .card header { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
+  .card h4 { margin: 0; font: 600 .88rem/1.3 var(--font-mono); }
+  .card p { margin: 0; font-size: .81rem; color: var(--muted); }
+  .tag {
+    font: .64rem/1.4 var(--font-mono);
+    color: var(--muted);
+    background: var(--panel-sunk);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: .1rem .45rem;
+    white-space: nowrap;
+  }
+  .bp { display: flex; gap: .35rem; flex-wrap: wrap; }
+  .bp span {
+    font: .64rem/1.4 var(--font-mono);
+    padding: .1rem .45rem;
+    border-radius: 4px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  table { border-collapse: collapse; width: 100%; font-size: .81rem; }
+  th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th {
+    font: 600 .66rem/1.4 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    position: sticky;
+    top: 0;
+    background: var(--panel);
+  }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr:hover { background: var(--panel-sunk); }
+  code, .loc { font-family: var(--font-mono); font-size: .76rem; }
+  .loc { color: var(--muted); }
+
+  .filters { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .9rem; }
+  .filters input, .filters select {
+    font: .83rem/1.4 var(--font-sans);
+    padding: .42rem .6rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--ink);
+  }
+  .filters input { flex: 1 1 18rem; }
+
+  .layer {
+    display: inline-block;
+    font: 500 .64rem/1.5 var(--font-mono);
+    padding: .08rem .4rem;
+    border-radius: 4px;
+    background: var(--panel-sunk);
+    color: var(--muted);
+    margin: 0 .2rem .2rem 0;
+    white-space: nowrap;
+  }
+  .layer-controller, .layer-route, .layer-entrypoint { background: var(--layer-route-bg); color: var(--layer-route); }
+  .layer-service, .layer-query, .layer-hook { background: var(--layer-service-bg); color: var(--layer-service); }
+  .layer-repository, .layer-database, .layer-schema, .layer-store { background: var(--layer-data-bg); color: var(--layer-data); }
+  .layer-core, .layer-utils, .layer-types { background: var(--layer-pure-bg); color: var(--layer-pure); }
+  .layer-adapter, .layer-client, .layer-middleware { background: var(--layer-edge-bg); color: var(--layer-edge); }
+
+  .slice {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: .95rem 1.1rem;
+    margin-bottom: .8rem;
+  }
+  .slice h3 { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; }
+  .mount {
+    background: var(--panel-sunk);
+    border: 1px solid var(--line);
+    padding: .08rem .4rem;
+    border-radius: 4px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .slice-files { margin: 0 0 .6rem; }
+
+  details.route { border-top: 1px solid var(--line); padding: .45rem 0 .2rem; }
+  details.route summary {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    list-style: none;
+  }
+  details.route summary::-webkit-details-marker { display: none; }
+  details.route[open] summary { margin-bottom: .3rem; }
+  .method {
+    font: 700 .66rem/1.5 var(--font-mono);
+    padding: .1rem .4rem;
+    border-radius: 4px;
+    background: var(--panel-sunk);
+    min-width: 3.6rem;
+    text-align: center;
+  }
+  .method-get { color: var(--layer-route); background: var(--layer-route-bg); }
+  .method-post { color: var(--layer-service); background: var(--layer-service-bg); }
+  .method-put { color: var(--layer-data); background: var(--layer-data-bg); }
+  .method-delete { color: var(--layer-edge); background: var(--layer-edge-bg); }
+  .path { font-weight: 600; }
+  .route-meta { font: .72rem/1.4 var(--font-mono); color: var(--muted); margin-left: auto; }
+  details.route:has(.unreached) { border-left: 2px solid var(--signal); padding-left: .6rem; }
+  details.route:has(.unreached) .route-meta { color: var(--signal); }
+  .route-body { padding: .3rem 0 .5rem; }
+
+  ol.chain { list-style: none; margin: 0 0 .5rem; padding: 0; display: flex; flex-direction: column; gap: .1rem; }
+  ol.chain li {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .18rem 0 .18rem .85rem;
+    border-left: 2px solid var(--line-strong);
+    flex-wrap: wrap;
+  }
+  ol.chain code { font-weight: 600; }
+  .reaches { margin: .25rem 0; font-size: .79rem; color: var(--muted); }
+  .reaches strong {
+    color: var(--ink);
+    font: 600 .66rem/1.5 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-right: .4rem;
+  }
+  .unreached { color: var(--signal); background: var(--signal-soft); border-radius: 5px; padding: .3rem .5rem; }
+  .unreached strong { color: var(--signal); }
+  .empty { color: var(--muted); font-size: .82rem; margin: .4rem 0 0; }
+
+  .bp-chip {
+    display: inline-block;
+    font: .64rem/1.5 var(--font-mono);
+    padding: .06rem .35rem;
+    border-radius: 4px;
+    background: var(--panel-sunk);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    margin: 0 .2rem .2rem 0;
+  }
+  .bp-chip.declares { background: var(--accent-soft); border-color: var(--line-strong); color: var(--accent); font-weight: 600; }
+  .note {
+    font-size: .82rem;
+    color: var(--muted);
+    border-left: 2px solid var(--line-strong);
+    padding: .35rem 0 .35rem .85rem;
+    margin: 1.25rem 0;
+    max-width: 70ch;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+
+  .graph {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 1.75rem;
+    overflow: hidden;
+  }
+  .graph-bar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    padding: .6rem .9rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-sunk);
+  }
+  .graph-hint { font: .7rem/1.4 var(--font-mono); color: var(--muted); }
+
+  .graph-legend { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; }
+  .graph-legend span { font: .66rem/1.4 var(--font-mono); color: var(--muted); display: inline-flex; align-items: center; gap: .3rem; }
+  .legend-line { width: 20px; height: 0; border-top: 2px solid var(--muted); display: inline-block; }
+  .legend-line.type { border-top-style: dashed; }
+  .legend-line.http { border-top-color: var(--accent); border-top-width: 3px; }
+  /*
+     The stage has a height and the canvas fits inside it, so a level opens
+     showing the whole graph. Reading it then means zooming: scroll or pinch,
+     or the two buttons. touch-action none is what lets a pinch reach the
+     canvas rather than being taken by the page first.
+  */
+  /* The height is set per graph from its own aspect ratio; this is the value
+     before the script runs and the floor a very wide graph lands on. */
+  .graph-stage { height: 300px; overflow: hidden; }
+  .graph svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+  }
+  .graph svg.grabbing { cursor: grabbing; }
+  .graph-controls { display: flex; gap: .3rem; margin-left: auto; }
+  .graph-controls button {
+    font: 500 .72rem/1 var(--font-mono);
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: .35rem .55rem;
+    cursor: pointer;
+    min-width: 2rem;
+  }
+  .graph-controls button:hover { color: var(--ink); border-color: var(--accent); }
+  .edge { fill: none; stroke: var(--line-strong); stroke-width: 1.6; opacity: .55; transition: stroke .12s, opacity .12s; }
+  .edge-type { stroke-dasharray: 5 4; }
+  .edge-http { stroke: var(--accent); stroke-width: 2.6; }
+  .marker-import, .marker-type { fill: var(--line-strong); }
+  .marker-http { fill: var(--accent); }
+  .marker-lit { fill: var(--accent); }
+  .edges .dim { opacity: .07; }
+  .edges .lit { stroke: var(--accent); stroke-width: 2.6; opacity: 1; }
+
+  .node { cursor: pointer; }
+  .node-body { fill: var(--panel); stroke: var(--line-strong); stroke-width: 1; transition: opacity .12s; }
+  .node-stripe { fill: var(--muted); }
+  .node-label { font: 600 12.5px var(--font-mono); fill: var(--ink); }
+  .node-sub { font: 10.5px var(--font-mono); fill: var(--muted); }
+  .node-icon { font: 13px var(--font-sans); }
+  .node-chip { fill: var(--chip); stroke: var(--line); stroke-width: 1; }
+  .node-chip-text { font: 10px var(--font-mono); fill: var(--muted); }
+  .node-chip-blueprint { fill: var(--accent-soft); stroke: var(--accent); }
+  .node-chip-complexity { fill: var(--layer-pure-bg); stroke: var(--layer-pure); }
+  .node-chip-size { fill: var(--layer-route-bg); stroke: var(--layer-route); }
+  .node-chip-warn { fill: var(--signal-soft); stroke: var(--signal); }
+  .node:hover .node-body, .node:focus-visible .node-body { stroke: var(--accent); stroke-width: 2; }
+  .node:focus-visible { outline: none; }
+  .nodes .dim { opacity: .22; }
+  .nodes .lit .node-body { stroke: var(--accent); stroke-width: 2; }
+
+  .node-actor .node-stripe { fill: var(--layer-pure); }
+  .node-system .node-stripe { fill: var(--accent); }
+  .node-external .node-stripe { fill: var(--signal); }
+  .node-browser .node-stripe { fill: var(--layer-route); }
+  .node-aws .node-stripe { fill: var(--layer-data); }
+  .node-build .node-stripe { fill: var(--muted); }
+  .node-api .node-stripe { fill: var(--layer-service); }
+  .node-site .node-stripe { fill: var(--layer-route); }
+  .node-domain .node-stripe { fill: var(--layer-pure); }
+  .node-infrastructure .node-stripe { fill: var(--layer-data); }
+  .node-external .node-body { stroke-dasharray: 4 3; }
+
+  /* The journey level colours a node by what it is in the flow, so the reader
+     can see the shape — screen, hook, wire, service, data — before reading a
+     single label. */
+  .node-step-ui .node-stripe { fill: var(--layer-route); }
+  .node-step-hook .node-stripe { fill: var(--layer-service); }
+  .node-step-endpoint .node-stripe { fill: var(--accent); }
+  .node-step-endpoint .node-body { stroke: var(--accent); stroke-width: 1.6; }
+  .node-step-controller .node-stripe { fill: var(--layer-route); }
+  .node-step-service .node-stripe { fill: var(--layer-service); }
+  .node-step-repository .node-stripe { fill: var(--layer-data); }
+  .node-step-database .node-stripe { fill: var(--layer-data); }
+  .node-step-core .node-stripe,
+  .node-step-utils .node-stripe { fill: var(--layer-pure); }
+  .node-step-table .node-stripe { fill: var(--layer-data); }
+  .node-step-table .node-body { fill: var(--layer-data-bg); }
+  .node-step-external .node-stripe { fill: var(--signal); }
+  .node-step-external .node-body { stroke-dasharray: 4 3; }
+
+  .journey-picker {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    padding: .8rem .9rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-sunk);
+  }
+  .journey-picker-label {
+    font: 600 .64rem/1.4 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+  .journey-features, .journey-actions { display: flex; gap: .35rem; flex-wrap: wrap; }
+  .journey-feature {
+    font: 500 .74rem/1 var(--font-mono);
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    padding: .35rem .7rem;
+    cursor: pointer;
+  }
+  .journey-feature[aria-pressed='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--panel);
+  }
+  .journey-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .15rem;
+    font: inherit;
+    text-align: left;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: .4rem .6rem;
+    cursor: pointer;
+    max-width: 100%;
+  }
+  .journey-action-name { font: 600 .78rem/1.3 var(--font-sans); color: var(--ink); }
+  .journey-action-meta {
+    font: .64rem/1.3 var(--font-mono);
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+  .journey-action[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .journey-action[aria-pressed='true'] .journey-action-name { color: var(--accent); }
+
+  .node.has-code { cursor: zoom-in; }
+
+  dialog.code-modal {
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--ink);
+    padding: 0;
+    width: min(78ch, 94vw);
+    max-height: 86vh;
+    overflow: hidden;
+  }
+  dialog.code-modal::backdrop { background: rgb(0 0 0 / 45%); }
+  .code-modal-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    flex-wrap: wrap;
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-sunk);
+  }
+  .code-modal-head h3 { margin: 0; font: 600 .95rem/1.3 var(--font-mono); }
+  .code-chip {
+    font: 500 .64rem/1.5 var(--font-mono);
+    padding: .1rem .45rem;
+    border-radius: 5px;
+    background: var(--chip);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .code-chip.layer { background: var(--accent-soft); color: var(--accent); }
+  .code-chip.absent { opacity: .65; font-style: italic; }
+  .code-modal-head .loc { flex: 1 1 100%; overflow-wrap: anywhere; }
+  .code-modal-close {
+    margin-left: auto;
+    font: 500 .74rem/1 var(--font-mono);
+    background: var(--panel);
+    color: var(--muted);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: .3rem .55rem;
+    cursor: pointer;
+  }
+  .code-modal pre {
+    margin: 0;
+    padding: 1rem;
+    overflow: auto;
+    max-height: 68vh;
+    font: .76rem/1.55 var(--font-mono);
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  /* The token colours reuse the layer palette, so the modal follows the page
+     into dark mode without a second set of variables. */
+  .tok-comment { color: var(--muted); font-style: italic; }
+  .tok-string { color: var(--layer-service); }
+  .tok-number { color: var(--layer-data); }
+  .tok-keyword { color: var(--layer-edge); }
+  .tok-type { color: var(--layer-route); }
+  .tok-call { color: var(--layer-pure); }
+
+  .orphan-routes { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+  .orphan-routes li {
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    flex-wrap: wrap;
+    background: var(--signal-soft);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: .25rem .5rem;
+    /* A route path is one unbroken token, and the longest here is wider than a
+       phone column, so it has to be allowed to break mid-string. */
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .orphan-routes code { color: var(--signal); font-weight: 600; overflow-wrap: anywhere; }
+
+</style>
+
+
+<header class="top"><div class="wrap">
+  <h1>Borsouvertures architecture</h1>
+  <p class="lede">Chess openings trainer: learn an opening or play within one, over a bundled book, with an offline-capable service worker.</p>
+  <ul class="stats">
+    <li><b>103</b>source files</li>
+    <li><b>2</b>containers</li>
+    <li><b>0</b>bounded contexts</li>
+    <li><b>0</b>HTTP routes</li>
+    <li><b>34</b>blueprints</li>
+    <li class="flagged"><b>7</b>files with no pattern marker</li>
+  </ul>
+</div></header>
+
+<nav class="levels"><div class="wrap" role="tablist">
+  <button role="tab" data-target="level-context" aria-selected="true">Level 1 — Context</button><button role="tab" data-target="level-container" aria-selected="false">Level 2 — Containers</button><button role="tab" data-target="level-component" aria-selected="false">Level 3 — Components</button>
+  <button role="tab" data-target="level-slice" aria-selected="false">Level 3.5 — User actions</button>
+  <button role="tab" data-target="level-code" aria-selected="false">Level 4 — Code</button>
+  <button role="tab" data-target="level-patterns" aria-selected="false">Patterns</button>
+</div></nav>
+
+<main class="wrap">
+  
+    <section class="level" id="level-context" >
+      <h2>Level 1 — Context</h2>
+      <p class="summary">Who uses the system and what it depends on. Every external here is declared in the manifest and referenced by at least one @DependsOnExternal tag in the code; the generator fails if either half is missing.</p>
+      
+      
+      <div class="graph" data-level="context">
+        <div class="graph-bar">
+          <span class="graph-hint">tap to trace · drag to pan · pinch or scroll to zoom</span>
+          <span class="graph-legend">
+            <span><i class="legend-line"></i>imports</span>
+            <span><i class="legend-line type"></i>types only</span>
+            <span><i class="legend-line http"></i>over HTTP</span>
+          </span>
+          <span class="graph-controls">
+            <button type="button" data-graph-zoom-out aria-label="Zoom out">&minus;</button>
+            <button type="button" data-graph-zoom-in aria-label="Zoom in">+</button>
+            <button type="button" data-graph-reset>Fit</button>
+          </span>
+        </div>
+        <div class="graph-stage"></div>
+        <script type="application/json">{"level":"context","title":"Level 1 — Context","width":592.5,"height":148,"nodes":[{"id":"player","label":"Player","icon":"♟️","lines":["outside the system"],"chips":[],"detail":"Trains an opening and plays lines inside it. Nothing here signs in, so every human user holds this one role.","tone":"actor","x":28,"y":50,"width":160,"height":48},{"id":"system","label":"Borsouvertures","icon":"🎯","lines":["inside — this repository builds it"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"}],"detail":"Chess openings trainer: learn an opening or play within one, over a bundled book, with an offline-capable service worker.","tone":"system","x":292,"y":28,"width":272.5,"height":92}],"edges":[{"from":"player","to":"system","kind":"uses","label":"uses","points":[{"x":188,"y":74},{"x":292,"y":74}]}]}</script>
+      </div>
+      <div class="cards">
+      <article class="card" data-group="people">
+        <header>
+          <h4>Player</h4>
+          <span class="tag tag-actor">actor</span>
+        </header>
+        <p>Trains an opening and plays lines inside it. Nothing here signs in, so every human user holds this one role.</p>
+        
+      </article>
+      <article class="card" data-group="system">
+        <header>
+          <h4>Borsouvertures</h4>
+          <span class="tag tag-system">system</span>
+        </header>
+        <p>Chess openings trainer: learn an opening or play within one, over a bundled book, with an offline-capable service worker.</p>
+        
+      </article></div>
+    </section>
+    <section class="level" id="level-container" hidden>
+      <h2>Level 2 — Containers</h2>
+      <p class="summary">The deployable and build-time units, and how they reach each other. Import edges are real module imports; the HTTP edge exists because front-end modules call the typed client.</p>
+      
+      
+      <div class="graph" data-level="container">
+        <div class="graph-bar">
+          <span class="graph-hint">tap to trace · drag to pan · pinch or scroll to zoom</span>
+          <span class="graph-legend">
+            <span><i class="legend-line"></i>imports</span>
+            <span><i class="legend-line type"></i>types only</span>
+            <span><i class="legend-line http"></i>over HTTP</span>
+          </span>
+          <span class="graph-controls">
+            <button type="button" data-graph-zoom-out aria-label="Zoom out">&minus;</button>
+            <button type="button" data-graph-zoom-in aria-label="Zoom in">+</button>
+            <button type="button" data-graph-reset>Fit</button>
+          </span>
+        </div>
+        <div class="graph-stage"></div>
+        <script type="application/json">{"level":"container","title":"Level 2 — Containers","width":513,"height":266,"nodes":[{"id":"site","label":"Single page application","icon":"🖥️","lines":["React 19, Vite, Tailwind","CloudFront in front of an S3 origin, alias borsouvertures.borso.fr"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"}],"detail":"React 19, Vite, Tailwind. The whole trainer. The openings book ships as a static JSON asset rather than coming from a server, so the application has no back end of its own.","tone":"site","x":28,"y":132,"width":457,"height":106},{"id":"infrastructure","label":"Infrastructure definition","icon":"🏗️","lines":["AWS CDK, the shared StaticSite construct","Runs in CI, never at runtime"],"chips":[{"icon":"🗂️","text":"no source in this repository","tone":"plain"}],"detail":"AWS CDK, the shared StaticSite construct. One StaticSite from @borso/infra, in eu-west-3. Build-time only, never reached at runtime.","tone":"build","x":28,"y":28,"width":288,"height":84}],"edges":[]}</script>
+      </div>
+      <div class="cards">
+      <article class="card" data-group="browser">
+        <header>
+          <h4>Single page application</h4>
+          <span class="tag tag-container">container-browser</span>
+        </header>
+        <p>React 19, Vite, Tailwind. The whole trainer. The openings book ships as a static JSON asset rather than coming from a server, so the application has no back end of its own.</p>
+        <p class="bp"><span class="bp-declares">17 blueprints</span><span class="bp-follows">103 followers</span></p>
+      </article>
+      <article class="card" data-group="build">
+        <header>
+          <h4>Infrastructure definition</h4>
+          <span class="tag tag-container">container-build</span>
+        </header>
+        <p>AWS CDK, the shared StaticSite construct. One StaticSite from @borso/infra, in eu-west-3. Build-time only, never reached at runtime.</p>
+        
+      </article></div>
+    </section>
+    <section class="level" id="level-component" hidden>
+      <h2>Level 3 — Components</h2>
+      <p class="summary">Bounded contexts on the back and feature areas on the front, with the import edges between them. A back-end context is a folder under api/src; a front-end one is a @Feature tag, falling back to the folder.</p>
+      
+      
+      <div class="graph" data-level="component">
+        <div class="graph-bar">
+          <span class="graph-hint">tap to trace · drag to pan · pinch or scroll to zoom</span>
+          <span class="graph-legend">
+            <span><i class="legend-line"></i>imports</span>
+            <span><i class="legend-line type"></i>types only</span>
+            <span><i class="legend-line http"></i>over HTTP</span>
+          </span>
+          <span class="graph-controls">
+            <button type="button" data-graph-zoom-out aria-label="Zoom out">&minus;</button>
+            <button type="button" data-graph-zoom-in aria-label="Zoom in">+</button>
+            <button type="button" data-graph-reset>Fit</button>
+          </span>
+        </div>
+        <div class="graph-stage"></div>
+        <script type="application/json">{"level":"component","title":"Level 3 — Components","width":649.5,"height":734,"nodes":[{"id":"site::root","label":"root","icon":"⚛️","lines":["","atom, config, core, declaration, i18n, molecule, organism, route, types, unknown, utils"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"},{"icon":"📘","text":"atom-lookup-variants","tone":"blueprint"},{"icon":"📘","text":"atom-null-render","tone":"blueprint"},{"icon":"📘","text":"atom-plain","tone":"blueprint"},{"icon":"📘","text":"cdk-app-entrypoint","tone":"blueprint"},{"icon":"📘","text":"component-lookup-table","tone":"blueprint"},{"icon":"📘","text":"core-appearance","tone":"blueprint"},{"icon":"📘","text":"core-label-key","tone":"blueprint"},{"icon":"📘","text":"core-view-intent","tone":"blueprint"},{"icon":"📘","text":"domain-types-module","tone":"blueprint"},{"icon":"📘","text":"hook-effect-free-mount","tone":"blueprint"},{"icon":"📘","text":"hook-external-store","tone":"blueprint"},{"icon":"📘","text":"i18n-key-walk","tone":"blueprint"},{"icon":"📘","text":"i18n-parity-gate","tone":"blueprint"},{"icon":"📘","text":"i18n-setup","tone":"blueprint"},{"icon":"📘","text":"i18n-typed-keys","tone":"blueprint"},{"icon":"📘","text":"injected-storage-slice","tone":"blueprint"},{"icon":"📘","text":"machine-impure-edge","tone":"blueprint"},{"icon":"📘","text":"machine-singleton","tone":"blueprint"},{"icon":"📘","text":"molecule-presentational","tone":"blueprint"},{"icon":"📘","text":"organism-machine-bound","tone":"blueprint"},{"icon":"📘","text":"organism-presentational","tone":"blueprint"},{"icon":"📘","text":"organism-shell","tone":"blueprint"},{"icon":"📘","text":"organism-table-dispatch","tone":"blueprint"},{"icon":"📘","text":"persisted-store-module","tone":"blueprint"},{"icon":"📘","text":"ref-callback-browser-api","tone":"blueprint"},{"icon":"📘","text":"route-suspense-resource","tone":"blueprint"},{"icon":"📘","text":"satisfies-over-assertion","tone":"blueprint"},{"icon":"📘","text":"shared-props-shape","tone":"blueprint"},{"icon":"📘","text":"site-entrypoint","tone":"blueprint"},{"icon":"📘","text":"state-machine-module","tone":"blueprint"},{"icon":"📘","text":"unknown-payload-parser","tone":"blueprint"},{"icon":"📘","text":"utils-branchless-list","tone":"blueprint"},{"icon":"📘","text":"utils-pure-module","tone":"blueprint"},{"icon":"📘","text":"workspace-test-config","tone":"blueprint"}],"detail":"103 files in Single page application. Layers: atom, config, core, declaration, i18n, molecule, organism, route, types, unknown, utils.","tone":"site","x":28,"y":28,"width":593.5,"height":678}],"edges":[]}</script>
+      </div>
+      <div class="cards">
+      <article class="card" data-group="site">
+        <header>
+          <h4>root</h4>
+          <span class="tag tag-component">component-site</span>
+        </header>
+        <p>103 files in Single page application. Layers: atom, config, core, declaration, i18n, molecule, organism, route, types, unknown, utils.</p>
+        <p class="bp"><span class="bp-declares">17 blueprints</span><span class="bp-follows">103 followers</span></p>
+      </article></div>
+    </section>
+    <section class="level" id="level-code" hidden>
+      <h2>Level 4 — Code</h2>
+      <p class="summary">Every source file and every import between them. Filter by container and layer; the graph is the real module graph, not a drawing of it.</p>
+      
+      <div class="filters">
+        <input type="search" id="file-search" placeholder="Filter files by path, layer or context" />
+        <select id="layer-filter"><option value="">Every layer</option><option value="atom">atom</option><option value="config">config</option><option value="core">core</option><option value="declaration">declaration</option><option value="i18n">i18n</option><option value="molecule">molecule</option><option value="organism">organism</option><option value="route">route</option><option value="types">types</option><option value="unknown">unknown</option><option value="utils">utils</option></select>
+      </div>
+      <div class="table-scroll">
+        <table id="file-table">
+          <thead><tr><th>File</th><th>Layer</th><th>Context</th><th class="num">Lines</th><th class="num">Exports</th><th class="num">Imports</th><th>Blueprint</th></tr></thead>
+          <tbody><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">bin/app.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">47</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">cdk-app-entrypoint</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">scripts/build-openings.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">179</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+        <td></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/BoardView.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">82</td>
+        <td class="num">1</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/Button.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">35</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">atom-lookup-variants</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/EmptySlot.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">14</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip declares">atom-null-render</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/ErrorPanel.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">25</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/InlineBanner.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">44</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/LoadMoreRow.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">14</td>
+        <td class="num">1</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/LoadingPanel.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">17</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/MiniBoard.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">43</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/Modal.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">47</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">ref-callback-browser-api</code><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/MoveButtonList.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">31</td>
+        <td class="num">1</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/Select.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">33</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/SelectorCard.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">36</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/SelectorPanel.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">21</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/SessionStartHint.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">20</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">core-label-key</code><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/StatusItem.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">15</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/ToggleSlider.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">65</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">atom-plain</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/boardDrop.utils.ts</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">16</td>
+        <td class="num">2</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">core-view-intent</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/boardPieces.tsx</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">52</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">core-label-key</code><code class="bp-chip">component-lookup-table</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/buttonStyles.ts</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">15</td>
+        <td class="num">2</td>
+        <td class="num">0</td>
+        <td></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/loadMoreRow.types.ts</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">6</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">shared-props-shape</code></td>
+      </tr><tr data-container="site" data-layer="atom" data-context="root">
+        <td class="loc">site/components/atoms/moveNotation.utils.ts</td>
+        <td><span class="layer layer-atom">atom</span></td>
+        <td>root</td>
+        <td class="num">25</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/AutoOpponentToggle.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">22</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/BoardStyleSelect.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">26</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/LanguageSwitcher.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">34</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/LearnClearedBanner.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">25</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/LearnDrillPanel.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">41</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/LearnDrillProgress.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">21</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/LearnOutOfBookModal.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">35</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/LearnPickPrompt.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">10</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/LinesPanel.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">79</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/ModeToggle.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">43</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/OpeningsLoadFailurePanel.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">20</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/OpeningsLoadingPanel.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">9</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/OpeningsPanel.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">84</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/PlayBookPanel.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">23</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/PlayCompletedBanner.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">24</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/PlayOutOfBookModal.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">26</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/PlayStatusPanel.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">60</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/ShowMovesToggle.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">22</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/SideSelector.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">29</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/TreeVisualizationToggle.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">31</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/VariationsPanel.tsx</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">91</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">molecule-presentational</code></td>
+      </tr><tr data-container="site" data-layer="molecule" data-context="root">
+        <td class="loc">site/components/molecules/openingPanel.types.ts</td>
+        <td><span class="layer layer-molecule">molecule</span></td>
+        <td>root</td>
+        <td class="num">25</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip declares">shared-props-shape</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/CompactOpeningFlow.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">66</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">organism-table-dispatch</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/LearnDrill.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">106</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">organism-machine-bound</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/LearnSessionControl.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">8</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">organism-presentational</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/LearnTreeSession.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">47</td>
+        <td class="num">1</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">organism-table-dispatch</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/OpeningFlowSelector.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">48</td>
+        <td class="num">1</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">organism-table-dispatch</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/PlaySession.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">101</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip declares">organism-machine-bound</code><code class="bp-chip">component-lookup-table</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/PlaySessionControl.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">25</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">organism-presentational</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/SelectionAutoOpponentRow.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">20</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">organism-presentational</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/SelectionScreen.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">61</td>
+        <td class="num">1</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip">component-lookup-table</code><code class="bp-chip">organism-table-dispatch</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/SessionScreen.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">72</td>
+        <td class="num">1</td>
+        <td class="num">5</td>
+        <td><code class="bp-chip declares">organism-table-dispatch</code><code class="bp-chip">component-lookup-table</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/TopBar.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">24</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">organism-presentational</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/WideOpeningFlow.tsx</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">21</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">organism-presentational</code></td>
+      </tr><tr data-container="site" data-layer="organism" data-context="root">
+        <td class="loc">site/components/organisms/session.types.ts</td>
+        <td><span class="layer layer-organism">organism</span></td>
+        <td>root</td>
+        <td class="num">26</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">shared-props-shape</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/config/openingsCacheVersion.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">3</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td></td>
+      </tr><tr data-container="site" data-layer="i18n" data-context="root">
+        <td class="loc">site/i18n/i18n-parity.core.ts</td>
+        <td><span class="layer layer-i18n">i18n</span></td>
+        <td>root</td>
+        <td class="num">74</td>
+        <td class="num">3</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip declares">i18n-parity-gate</code></td>
+      </tr><tr data-container="site" data-layer="i18n" data-context="root">
+        <td class="loc">site/i18n/i18n.ts</td>
+        <td><span class="layer layer-i18n">i18n</span></td>
+        <td>root</td>
+        <td class="num">53</td>
+        <td class="num">1</td>
+        <td class="num">4</td>
+        <td><code class="bp-chip">i18n-setup</code></td>
+      </tr><tr data-container="site" data-layer="i18n" data-context="root">
+        <td class="loc">site/i18n/i18n.utils.ts</td>
+        <td><span class="layer layer-i18n">i18n</span></td>
+        <td>root</td>
+        <td class="num">71</td>
+        <td class="num">7</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip declares">i18n-key-walk</code><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="i18n" data-context="root">
+        <td class="loc">site/i18n/locale-storage.utils.ts</td>
+        <td><span class="layer layer-i18n">i18n</span></td>
+        <td>root</td>
+        <td class="num">33</td>
+        <td class="num">3</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip declares">injected-storage-slice</code></td>
+      </tr><tr data-container="site" data-layer="i18n" data-context="root">
+        <td class="loc">site/i18n/react-i18next.d.ts</td>
+        <td><span class="layer layer-i18n">i18n</span></td>
+        <td>root</td>
+        <td class="num">21</td>
+        <td class="num">0</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip declares">i18n-typed-keys</code></td>
+      </tr><tr data-container="site" data-layer="types" data-context="root">
+        <td class="loc">site/lib/componentTable.types.ts</td>
+        <td><span class="layer layer-types">types</span></td>
+        <td>root</td>
+        <td class="num">22</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip declares">component-lookup-table</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/lib/usePaginatedList.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">32</td>
+        <td class="num">2</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">hook-effect-free-mount</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/lib/useSessionStart.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">22</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip declares">hook-effect-free-mount</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/lib/viewport.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">36</td>
+        <td class="num">3</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">hook-external-store</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/lib/viewport.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">29</td>
+        <td class="num">2</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/main.tsx</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">19</td>
+        <td class="num">0</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">site-entrypoint</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/bookArrows.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">14</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">utils-branchless-list</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/bookEngine.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">128</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/bookTree.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">69</td>
+        <td class="num">4</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="core" data-context="root">
+        <td class="loc">site/openings/learnSession.core.ts</td>
+        <td><span class="layer layer-core">core</span></td>
+        <td>root</td>
+        <td class="num">39</td>
+        <td class="num">3</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip">core-view-intent</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/learnTreeMachine.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">244</td>
+        <td class="num">1</td>
+        <td class="num">4</td>
+        <td><code class="bp-chip">state-machine-module</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/lineDisplay.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">42</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/openings/loadOpenings.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">40</td>
+        <td class="num">1</td>
+        <td class="num">3</td>
+        <td></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/openings/machineEffects.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">23</td>
+        <td class="num">2</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip declares">machine-impure-edge</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/openings/machineInstances.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">20</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip declares">machine-singleton</code></td>
+      </tr><tr data-container="site" data-layer="core" data-context="root">
+        <td class="loc">site/openings/openingFlow.core.ts</td>
+        <td><span class="layer layer-core">core</span></td>
+        <td>root</td>
+        <td class="num">126</td>
+        <td class="num">1</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip">core-view-intent</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/openingIds.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">41</td>
+        <td class="num">2</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/openingsLoad.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">21</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/openings/openingsResource.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">24</td>
+        <td class="num">1</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip declares">route-suspense-resource</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/parseOpenings.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">61</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">unknown-payload-parser</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/playMachine.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">301</td>
+        <td class="num">1</td>
+        <td class="num">5</td>
+        <td><code class="bp-chip declares">state-machine-module</code></td>
+      </tr><tr data-container="site" data-layer="core" data-context="root">
+        <td class="loc">site/openings/playScope.core.ts</td>
+        <td><span class="layer layer-core">core</span></td>
+        <td>root</td>
+        <td class="num">114</td>
+        <td class="num">14</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">core-view-intent</code></td>
+      </tr><tr data-container="site" data-layer="core" data-context="root">
+        <td class="loc">site/openings/playSession.core.ts</td>
+        <td><span class="layer layer-core">core</span></td>
+        <td>root</td>
+        <td class="num">38</td>
+        <td class="num">3</td>
+        <td class="num">2</td>
+        <td><code class="bp-chip">core-view-intent</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/previews.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">57</td>
+        <td class="num">3</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/selectors.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">47</td>
+        <td class="num">6</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="core" data-context="root">
+        <td class="loc">site/openings/sessionStart.core.ts</td>
+        <td><span class="layer layer-core">core</span></td>
+        <td>root</td>
+        <td class="num">81</td>
+        <td class="num">6</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">core-view-intent</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/openings/types.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">22</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">domain-types-module</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/openings/uciSquare.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">64</td>
+        <td class="num">8</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="route" data-context="root">
+        <td class="loc">site/routes/OpeningTrainerRoute.tsx</td>
+        <td><span class="layer layer-route">route</span></td>
+        <td>root</td>
+        <td class="num">19</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">organism-shell</code></td>
+      </tr><tr data-container="site" data-layer="route" data-context="root">
+        <td class="loc">site/routes/TrainerScreens.tsx</td>
+        <td><span class="layer layer-route">route</span></td>
+        <td>root</td>
+        <td class="num">28</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip">component-lookup-table</code></td>
+      </tr><tr data-container="site" data-layer="route" data-context="root">
+        <td class="loc">site/routes/trainerScreen.core.ts</td>
+        <td><span class="layer layer-route">route</span></td>
+        <td>root</td>
+        <td class="num">17</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">core-view-intent</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/state/appState.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">127</td>
+        <td class="num">11</td>
+        <td class="num">1</td>
+        <td><code class="bp-chip declares">persisted-store-module</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/state/persistedState.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">167</td>
+        <td class="num">2</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip declares">unknown-payload-parser</code></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/test-setup.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">7</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+        <td></td>
+      </tr><tr data-container="site" data-layer="unknown" data-context="root">
+        <td class="loc">site/theme/boardAppearance.ts</td>
+        <td><span class="layer layer-unknown">unknown</span></td>
+        <td>root</td>
+        <td class="num">18</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">core-appearance</code></td>
+      </tr><tr data-container="site" data-layer="utils" data-context="root">
+        <td class="loc">site/theme/boardThemes.utils.ts</td>
+        <td><span class="layer layer-utils">utils</span></td>
+        <td>root</td>
+        <td class="num">81</td>
+        <td class="num">4</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip declares">satisfies-over-assertion</code><code class="bp-chip">utils-pure-module</code></td>
+      </tr><tr data-container="site" data-layer="declaration" data-context="root">
+        <td class="loc">site/vite-env.d.ts</td>
+        <td><span class="layer layer-declaration">declaration</span></td>
+        <td>root</td>
+        <td class="num">3</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+        <td></td>
+      </tr><tr data-container="site" data-layer="config" data-context="root">
+        <td class="loc">vite.config.ts</td>
+        <td><span class="layer layer-config">config</span></td>
+        <td>root</td>
+        <td class="num">74</td>
+        <td class="num">0</td>
+        <td class="num">1</td>
+        <td></td>
+      </tr><tr data-container="site" data-layer="config" data-context="root">
+        <td class="loc">vitest.config.ts</td>
+        <td><span class="layer layer-config">config</span></td>
+        <td>root</td>
+        <td class="num">36</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+        <td><code class="bp-chip">workspace-test-config</code></td>
+      </tr></tbody>
+        </table>
+      </div>
+    </section>
+
+  <section class="level" id="level-slice" hidden>
+    <h2>Level 3.5 — User actions</h2>
+    <p class="summary">One thing a person does, drawn end to end: the components that trigger it, the endpoint it reaches, and every function behind that endpoint down to the tables and external systems. An action is an exported hook in a query module, so the names are the ones whoever wrote them chose, and the chain comes from the calls as written.</p>
+    
+      <div class="graph journey" data-level="journey">
+        <div class="journey-picker">
+          <span class="journey-picker-label">Feature</span>
+          <div class="journey-features">
+            
+          </div>
+          <span class="journey-picker-label">Action</span>
+          <div class="journey-actions" data-journey-actions></div>
+        </div>
+        <div class="graph-bar">
+          <span class="graph-hint">tap to trace · drag to pan · pinch or scroll to zoom</span>
+          <span class="graph-controls">
+            <button type="button" data-graph-zoom-out aria-label="Zoom out">&minus;</button>
+            <button type="button" data-graph-zoom-in aria-label="Zoom in">+</button>
+            <button type="button" data-graph-reset>Fit</button>
+          </span>
+        </div>
+        <div class="graph-stage"></div>
+        <script type="application/json">{"level":"journey","title":"User action","sources":{},"features":[],"graphs":{}}</script>
+      </div>
+    <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>
+    
+  </section>
+
+  <section class="level" id="level-patterns" hidden>
+    <h2>Patterns</h2>
+    <p class="summary">The blueprint overlay. A blueprint is a canonical example marked in place; followers carry its id. Coverage is partial by design, so this view sits beside the position graph rather than inside it: position says where a node is, a pattern says which example it copies.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Blueprint</th><th>Declared in</th><th class="num">Followers</th></tr></thead>
+        <tbody>
+      <tr>
+        <td><code>atom-lookup-variants</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>atom-null-render</code></td>
+        <td class="loc">apps/borsouvertures/site/components/atoms/EmptySlot.tsx</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td><code>atom-plain</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">14</td>
+      </tr>
+      <tr>
+        <td><code>cdk-app-entrypoint</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>component-lookup-table</code></td>
+        <td class="loc">apps/borsouvertures/site/lib/componentTable.types.ts</td>
+        <td class="num">21</td>
+      </tr>
+      <tr>
+        <td><code>core-appearance</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>core-label-key</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td><code>core-view-intent</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">7</td>
+      </tr>
+      <tr>
+        <td><code>domain-types-module</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>hook-effect-free-mount</code></td>
+        <td class="loc">apps/borsouvertures/site/lib/useSessionStart.ts</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>hook-external-store</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>i18n-key-walk</code></td>
+        <td class="loc">apps/borsouvertures/site/i18n/i18n.utils.ts</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td><code>i18n-parity-gate</code></td>
+        <td class="loc">apps/borsouvertures/site/i18n/i18n-parity.core.ts</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td><code>i18n-setup</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>i18n-typed-keys</code></td>
+        <td class="loc">apps/borsouvertures/site/i18n/react-i18next.d.ts</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td><code>injected-storage-slice</code></td>
+        <td class="loc">apps/borsouvertures/site/i18n/locale-storage.utils.ts</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td><code>machine-impure-edge</code></td>
+        <td class="loc">apps/borsouvertures/site/openings/machineEffects.ts</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td><code>machine-singleton</code></td>
+        <td class="loc">apps/borsouvertures/site/openings/machineInstances.ts</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td><code>molecule-presentational</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">21</td>
+      </tr>
+      <tr>
+        <td><code>organism-machine-bound</code></td>
+        <td class="loc">apps/borsouvertures/site/components/organisms/PlaySession.tsx</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>organism-presentational</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">5</td>
+      </tr>
+      <tr>
+        <td><code>organism-shell</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>organism-table-dispatch</code></td>
+        <td class="loc">apps/borsouvertures/site/components/organisms/SessionScreen.tsx</td>
+        <td class="num">4</td>
+      </tr>
+      <tr>
+        <td><code>persisted-store-module</code></td>
+        <td class="loc">apps/borsouvertures/site/state/appState.ts</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td><code>ref-callback-browser-api</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>route-suspense-resource</code></td>
+        <td class="loc">apps/borsouvertures/site/openings/openingsResource.ts</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td><code>satisfies-over-assertion</code></td>
+        <td class="loc">apps/borsouvertures/site/theme/boardThemes.utils.ts</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td><code>shared-props-shape</code></td>
+        <td class="loc">apps/borsouvertures/site/components/molecules/openingPanel.types.ts</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td><code>site-entrypoint</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>state-machine-module</code></td>
+        <td class="loc">apps/borsouvertures/site/openings/playMachine.utils.ts</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>unknown-payload-parser</code></td>
+        <td class="loc">apps/borsouvertures/site/state/persistedState.utils.ts</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>utils-branchless-list</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td><code>utils-pure-module</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">12</td>
+      </tr>
+      <tr>
+        <td><code>workspace-test-config</code></td>
+        <td class="loc">not declared</td>
+        <td class="num">1</td>
+      </tr></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<dialog class="code-modal" id="code-modal">
+  <div class="code-modal-head">
+    <h3 data-code-name></h3>
+    <span class="code-chip layer" data-code-layer></span>
+    <span class="code-chip" data-code-blueprint></span>
+    <span class="code-chip metric" data-code-metrics></span>
+    <button type="button" class="code-modal-close" data-code-close>Close</button>
+    <span class="loc" data-code-location></span>
+  </div>
+  <pre><code class="code-body" data-code-body></code></pre>
+</dialog>
+
+<script>
+  const tabs = [...document.querySelectorAll('nav.levels button')];
+  const panels = [...document.querySelectorAll('section.level')];
+  tabs.forEach((tab) => tab.addEventListener('click', () => {
+    tabs.forEach((each) => each.setAttribute('aria-selected', String(each === tab)));
+    const target = tab.dataset.target;
+    panels.forEach((panel) => { panel.hidden = panel.id !== target; });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }));
+
+  const search = document.getElementById('file-search');
+  const layerFilter = document.getElementById('layer-filter');
+  const rows = [...document.querySelectorAll('#file-table tbody tr')];
+  function applyFilters() {
+    const term = (search?.value ?? '').toLowerCase();
+    const layer = layerFilter?.value ?? '';
+    rows.forEach((row) => {
+      const matchesTerm = term === '' || row.textContent.toLowerCase().includes(term);
+      const matchesLayer = layer === '' || row.dataset.layer === layer;
+      row.hidden = !(matchesTerm && matchesLayer);
+    });
+  }
+  search?.addEventListener('input', applyFilters);
+  layerFilter?.addEventListener('change', applyFilters);
+
+  const codeModal = document.getElementById('code-modal');
+  codeModal?.querySelector('[data-code-close]')?.addEventListener('click', () => codeModal.close());
+  // A native dialog fills its whole box, so a click on the backdrop reports the
+  // dialog itself as the target; anything inside reports a child.
+  codeModal?.addEventListener('click', (event) => {
+    if (event.target === codeModal) codeModal.close();
+  });
+</script>
+<script>
+(() => {
+  const ZOOM_MIN = 0.3;
+  const ZOOM_MAX = 2.6;
+  const ZOOM_STEP = 0.0016;
+  const CORNER_RADIUS = 9;
+  const ROW_PITCH = 14;
+  const CHIP_ROW_HEIGHT = 22;
+  const ICON_WIDTH = 22;
+  const CHIP_PADDING = 16;
+  const CHIP_GAP = 6;
+  const CHIP_ROW_MAX_WIDTH = 320;
+  const CHIP_CHARACTER_WIDTH = 6.5;
+  const DRAG_SLOP = 5;
+
+  const svgElement = (name, attributes) => {
+    const element = document.createElementNS('http://www.w3.org/2000/svg', name);
+    for (const [key, value] of Object.entries(attributes)) element.setAttribute(key, String(value));
+    return element;
+  };
+
+  /**
+   * A polyline through the points ELK routed, with the corners rounded.
+   *
+   * The points already avoid every box, so the drawing must not wander from
+   * them: the corner radius is clamped to a third of the shorter adjacent
+   * segment, which keeps a rounded corner inside the lane its two segments
+   * were routed through.
+   */
+  const edgePath = (points) => {
+    if (points.length < 2) return '';
+    if (points.length === 2) {
+      return 'M' + points[0].x + ',' + points[0].y + ' L' + points[1].x + ',' + points[1].y;
+    }
+    const parts = ['M' + points[0].x + ',' + points[0].y];
+    for (let index = 1; index < points.length - 1; index += 1) {
+      const previous = points[index - 1];
+      const corner = points[index];
+      const next = points[index + 1];
+      const inLength = Math.hypot(corner.x - previous.x, corner.y - previous.y);
+      const outLength = Math.hypot(next.x - corner.x, next.y - corner.y);
+      const radius = Math.min(CORNER_RADIUS, inLength / 3, outLength / 3);
+      if (radius < 0.5) {
+        parts.push('L' + corner.x + ',' + corner.y);
+        continue;
+      }
+      const enterX = corner.x - ((corner.x - previous.x) / inLength) * radius;
+      const enterY = corner.y - ((corner.y - previous.y) / inLength) * radius;
+      const leaveX = corner.x + ((next.x - corner.x) / outLength) * radius;
+      const leaveY = corner.y + ((next.y - corner.y) / outLength) * radius;
+      parts.push('L' + enterX.toFixed(1) + ',' + enterY.toFixed(1));
+      parts.push('Q' + corner.x + ',' + corner.y + ' ' + leaveX.toFixed(1) + ',' + leaveY.toFixed(1));
+    }
+    const last = points[points.length - 1];
+    parts.push('L' + last.x + ',' + last.y);
+    return parts.join(' ');
+  };
+
+  const KEYWORDS = new Set([
+    'as', 'async', 'await', 'break', 'case', 'catch', 'class', 'const', 'continue', 'default',
+    'delete', 'do', 'else', 'enum', 'export', 'extends', 'false', 'finally', 'for', 'from',
+    'function', 'if', 'implements', 'import', 'in', 'instanceof', 'interface', 'let', 'new',
+    'null', 'of', 'readonly', 'return', 'satisfies', 'static', 'switch', 'this', 'throw', 'true',
+    'try', 'type', 'typeof', 'undefined', 'var', 'void', 'while', 'yield',
+  ]);
+
+  // This whole script is emitted from a template literal, so a backtick written
+  // here would close it two files upstream rather than land in the page.
+  const QUOTES = { template: String.fromCharCode(96) };
+
+  const escapeText = (text) =>
+    text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+
+  const span = (className, text) =>
+    className === '' ? escapeText(text) : '<span class="tok-' + className + '">' + escapeText(text) + '</span>';
+
+  /**
+   * Colour one snippet of TypeScript.
+   *
+   * A scanner rather than one pattern per token type: a URL inside a string
+   * contains a comment opener and an apostrophe inside a comment opens a
+   * string, so whichever of the two a regular expression matched first would
+   * swallow the rest of the file. Walking left to right, each construct ends
+   * where its own rules say it ends. The page cannot reach a highlighting
+   * library — its content policy allows no other origin — and the alternative
+   * is inlining one for a snippet of at most eighty lines.
+   */
+  const highlight = (code) => {
+    let out = '';
+    let index = 0;
+    while (index < code.length) {
+      const character = code[index];
+      const pair = code.slice(index, index + 2);
+      if (pair === '//') {
+        const newline = code.indexOf('\n', index);
+        const stop = newline === -1 ? code.length : newline;
+        out += span('comment', code.slice(index, stop));
+        index = stop;
+        continue;
+      }
+      if (pair === '/*') {
+        const closer = code.indexOf('*/', index + 2);
+        const stop = closer === -1 ? code.length : closer + 2;
+        out += span('comment', code.slice(index, stop));
+        index = stop;
+        continue;
+      }
+      if (character === "'" || character === '"' || character === QUOTES.template) {
+        let cursor = index + 1;
+        while (cursor < code.length) {
+          if (code[cursor] === '\\') { cursor += 2; continue; }
+          if (code[cursor] === character) { cursor += 1; break; }
+          cursor += 1;
+        }
+        out += span('string', code.slice(index, cursor));
+        index = cursor;
+        continue;
+      }
+      if (character >= '0' && character <= '9') {
+        let cursor = index;
+        while (cursor < code.length && /[\w.]/.test(code[cursor])) cursor += 1;
+        out += span('number', code.slice(index, cursor));
+        index = cursor;
+        continue;
+      }
+      if (/[A-Za-z_$]/.test(character)) {
+        let cursor = index;
+        while (cursor < code.length && /[\w$]/.test(code[cursor])) cursor += 1;
+        const word = code.slice(index, cursor);
+        let after = cursor;
+        while (after < code.length && code[after] === ' ') after += 1;
+        const kind = KEYWORDS.has(word)
+          ? 'keyword'
+          : /^[A-Z]/.test(word)
+            ? 'type'
+            : code[after] === '(' ? 'call' : '';
+        out += span(kind, word);
+        index = cursor;
+        continue;
+      }
+      out += escapeText(character);
+      index += 1;
+    }
+    return out;
+  };
+
+  /**
+   * Show one function's source.
+   *
+   * A block names a function, and the question a reader has next is what it
+   * does. The dialog is native, so Escape and the backdrop close it without
+   * any handling here.
+   */
+  const openCode = (entry) => {
+    const dialog = document.getElementById('code-modal');
+    if (!dialog || !entry) return;
+    dialog.querySelector('[data-code-name]').textContent = entry.name;
+    dialog.querySelector('[data-code-layer]').textContent = entry.layer;
+    const blueprintSlot = dialog.querySelector('[data-code-blueprint]');
+    blueprintSlot.textContent = entry.blueprint || 'no blueprint';
+    blueprintSlot.classList.toggle('absent', !entry.blueprint);
+    const metricSlot = dialog.querySelector('[data-code-metrics]');
+    if (metricSlot) {
+      const counts = [entry.lines + ' lines', 'cx ' + entry.complexity];
+      if (entry.disables > 0) {
+        counts.push(entry.disables + ' disable' + (entry.disables === 1 ? '' : 's'));
+      }
+      metricSlot.textContent = counts.join(' · ');
+    }
+    dialog.querySelector('[data-code-location]').textContent = entry.location;
+    dialog.querySelector('[data-code-body]').innerHTML = highlight(entry.code);
+    dialog.showModal();
+  };
+
+  function buildScene(host, data) {
+    const width = data.width;
+    const sources = data.sources || {};
+    const height = data.height;
+    const placed = new Map(data.nodes.map((node) => [node.id, node]));
+    const edges = data.edges;
+
+    const svg = svgElement('svg', {
+      viewBox: '0 0 ' + width + ' ' + height,
+      role: 'img',
+      'aria-label': data.title || 'architecture graph',
+      preserveAspectRatio: 'xMidYMid meet',
+    });
+
+    const defs = svgElement('defs', {});
+    for (const [id, className] of [
+      ['arrow-import', 'marker-import'],
+      ['arrow-type', 'marker-type'],
+      ['arrow-http', 'marker-http'],
+      ['arrow-lit', 'marker-lit'],
+    ]) {
+      const marker = svgElement('marker', {
+        id: id + '-' + data.level,
+        viewBox: '0 0 12 12',
+        refX: 11,
+        refY: 6,
+        markerWidth: 12,
+        markerHeight: 12,
+        orient: 'auto-start-reverse',
+        markerUnits: 'userSpaceOnUse',
+      });
+      const head = svgElement('path', { d: 'M1,1 L11,6 L1,11 Z', class: className });
+      marker.appendChild(head);
+      defs.appendChild(marker);
+    }
+    svg.appendChild(defs);
+
+    const edgeLayer = svgElement('g', { class: 'edges' });
+    const nodeLayer = svgElement('g', { class: 'nodes' });
+    svg.appendChild(edgeLayer);
+    svg.appendChild(nodeLayer);
+
+    const incidentByNode = new Map(data.nodes.map((node) => [node.id, []]));
+    for (const edge of edges) {
+      if (!placed.has(edge.from) || !placed.has(edge.to) || edge.points.length < 2) continue;
+      const kind = edge.kind === 'type' ? 'type' : edge.kind === 'http' ? 'http' : 'import';
+      const path = svgElement('path', {
+        d: edgePath(edge.points),
+        class: 'edge edge-' + kind,
+        'marker-end': 'url(#arrow-' + kind + '-' + data.level + ')',
+      });
+      if (edge.label) {
+        const title = svgElement('title', {});
+        title.textContent = edge.label;
+        path.appendChild(title);
+      }
+      edgeLayer.appendChild(path);
+      incidentByNode.get(edge.from).push(path);
+      incidentByNode.get(edge.to).push(path);
+    }
+
+    const nodeElements = new Map();
+    for (const node of data.nodes) {
+      const box = node;
+      const group = svgElement('g', {
+        class: 'node node-' + (node.tone || 'neutral'),
+        tabindex: '0',
+        role: 'button',
+        'aria-label': node.label + '. ' + (node.detail || ''),
+      });
+      group.appendChild(svgElement('rect', {
+        x: box.x, y: box.y, width: box.width, height: box.height, rx: 8, class: 'node-body',
+      }));
+      group.appendChild(svgElement('rect', {
+        x: box.x, y: box.y, width: 4, height: box.height, rx: 2, class: 'node-stripe',
+      }));
+      // The name sits on the first row and every fact about the block on its
+      // own row under it, at the pitch the generator sized the box with, then
+      // the pills. The generator decided the wrapping, so the two agree.
+      const lines = node.lines || [];
+      const chips = node.chips || [];
+      const bare = lines.length === 0 && chips.length === 0;
+      const labelY = box.y + (bare ? box.height / 2 + 4 : 21);
+      if (node.icon) {
+        const icon = svgElement('text', { x: box.x + 13, y: labelY, class: 'node-icon' });
+        icon.textContent = node.icon;
+        group.appendChild(icon);
+      }
+      const label = svgElement('text', {
+        x: box.x + (node.icon ? 13 + ICON_WIDTH : 14),
+        y: labelY,
+        class: 'node-label',
+      });
+      label.textContent = node.label;
+      group.appendChild(label);
+      lines.forEach((line, index) => {
+        const sub = svgElement('text', {
+          x: box.x + 14,
+          y: box.y + 21 + ROW_PITCH * (index + 1),
+          class: 'node-sub',
+        });
+        sub.textContent = line;
+        group.appendChild(sub);
+      });
+      let chipY = box.y + 21 + ROW_PITCH * lines.length + 6;
+      let chipX = box.x + 14;
+      let usedInRow = 0;
+      for (const chip of chips) {
+        const width = ICON_WIDTH + chip.text.length * CHIP_CHARACTER_WIDTH + CHIP_PADDING;
+        if (usedInRow > 0 && usedInRow + CHIP_GAP + width > CHIP_ROW_MAX_WIDTH) {
+          chipY += CHIP_ROW_HEIGHT;
+          chipX = box.x + 14;
+          usedInRow = 0;
+        }
+        group.appendChild(svgElement('rect', {
+          x: chipX, y: chipY, width, height: 17, rx: 5,
+          class: 'node-chip node-chip-' + (chip.tone || 'plain'),
+        }));
+        const text = svgElement('text', { x: chipX + 8, y: chipY + 12, class: 'node-chip-text' });
+        text.textContent = chip.icon + ' ' + chip.text;
+        group.appendChild(text);
+        chipX += width + CHIP_GAP;
+        usedInRow += (usedInRow > 0 ? CHIP_GAP : 0) + width;
+      }
+      const title = svgElement('title', {});
+      title.textContent = node.detail || node.label;
+      group.appendChild(title);
+      nodeLayer.appendChild(group);
+      nodeElements.set(node.id, group);
+    }
+
+    const clearFocus = () => {
+      svg.classList.remove('focused');
+      for (const element of nodeElements.values()) element.classList.remove('dim', 'lit');
+      for (const path of edgeLayer.children) path.classList.remove('dim', 'lit');
+    };
+
+    const focusNode = (id) => {
+      const neighbours = new Set([id]);
+      for (const edge of edges) {
+        if (edge.from === id) neighbours.add(edge.to);
+        if (edge.to === id) neighbours.add(edge.from);
+      }
+      svg.classList.add('focused');
+      for (const [nodeId, element] of nodeElements) {
+        element.classList.toggle('lit', neighbours.has(nodeId));
+        element.classList.toggle('dim', !neighbours.has(nodeId));
+      }
+      const incident = new Set(incidentByNode.get(id) ?? []);
+      for (const path of edgeLayer.children) {
+        path.classList.toggle('lit', incident.has(path));
+        path.classList.toggle('dim', !incident.has(path));
+      }
+    };
+
+    let pinned = null;
+    for (const [id, element] of nodeElements) {
+      element.addEventListener('mouseenter', () => { if (pinned === null) focusNode(id); });
+      element.addEventListener('mouseleave', () => { if (pinned === null) clearFocus(); });
+      element.addEventListener('focus', () => { if (pinned === null) focusNode(id); });
+      element.addEventListener('blur', () => { if (pinned === null) clearFocus(); });
+      const nodeData = placed.get(id);
+      const entry = nodeData && nodeData.sourceKey ? sources[nodeData.sourceKey] : null;
+      if (entry) element.classList.add('has-code');
+      const toggle = (event) => {
+        event.stopPropagation();
+        if (entry) {
+          focusNode(id);
+          openCode(entry);
+          return;
+        }
+        if (pinned === id) { pinned = null; clearFocus(); return; }
+        pinned = id;
+        focusNode(id);
+      };
+      element.addEventListener('click', toggle);
+      element.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggle(event); }
+      });
+    }
+    svg.addEventListener('click', () => { pinned = null; clearFocus(); });
+
+    const view = { x: 0, y: 0, width, height };
+    const applyView = () => {
+      svg.setAttribute('viewBox', view.x + ' ' + view.y + ' ' + view.width + ' ' + view.height);
+    };
+    const fit = () => {
+      view.x = 0;
+      view.y = 0;
+      view.width = width;
+      view.height = height;
+      applyView();
+    };
+
+    /**
+     * A client point in the graph's own coordinates.
+     *
+     * The canvas is letterboxed inside the stage whenever their aspect ratios
+     * differ, so mapping a finger or a cursor by the element's bounding box
+     * would drift by the size of the letterbox. The screen transform knows
+     * about that, and about the current viewBox, so zooming stays anchored on
+     * the point the user actually touched.
+     */
+    const toGraphPoint = (clientX, clientY) => {
+      const matrix = svg.getScreenCTM();
+      if (matrix === null) return null;
+      const point = svg.createSVGPoint();
+      point.x = clientX;
+      point.y = clientY;
+      return point.matrixTransform(matrix.inverse());
+    };
+
+    /** Zoom by the given factor while holding the given client point still. */
+    const zoomAround = (factor, clientX, clientY) => {
+      const anchor = toGraphPoint(clientX, clientY);
+      if (anchor === null) return;
+      const nextWidth = Math.min(width / ZOOM_MIN, Math.max(width / ZOOM_MAX, view.width * factor));
+      const applied = nextWidth / view.width;
+      view.x = anchor.x - (anchor.x - view.x) * applied;
+      view.y = anchor.y - (anchor.y - view.y) * applied;
+      view.width = nextWidth;
+      view.height *= applied;
+      applyView();
+    };
+
+    const zoomCentre = (factor) => {
+      const rect = svg.getBoundingClientRect();
+      zoomAround(factor, rect.left + rect.width / 2, rect.top + rect.height / 2);
+    };
+
+    svg.addEventListener(
+      'wheel',
+      (event) => {
+        event.preventDefault();
+        zoomAround(Math.exp(event.deltaY * ZOOM_STEP), event.clientX, event.clientY);
+      },
+      { passive: false },
+    );
+
+    /**
+     * One pointer pans, two pinch. Pointer events cover mouse, pen and touch,
+     * so the same handler serves a trackpad drag and a thumb and forefinger;
+     * touch-action none on the canvas is what stops the browser taking the
+     * gesture for page scrolling first.
+     */
+    const active = new Map();
+    const origins = new Map();
+    const captured = new Set();
+    let pinchDistance = 0;
+
+    const pointerPair = () => {
+      const points = [...active.values()];
+      return points.length < 2 ? null : points;
+    };
+    const distanceBetween = (pair) => Math.hypot(pair[0].x - pair[1].x, pair[0].y - pair[1].y);
+
+    svg.addEventListener('pointerdown', (event) => {
+      active.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      origins.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      const pair = pointerPair();
+      pinchDistance = pair === null ? 0 : distanceBetween(pair);
+      svg.classList.add('grabbing');
+    });
+
+    svg.addEventListener('pointermove', (event) => {
+      const previous = active.get(event.pointerId);
+      if (previous === undefined) return;
+      active.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      // Capture keeps a drag alive when the finger leaves the canvas, and it
+      // retargets the click that ends the gesture to the canvas. Taking it on
+      // the first press is what stopped a tap on a block from reaching the
+      // block; taking it once the pointer has actually travelled leaves a tap
+      // alone and still holds a real drag. It throws for a pointer id the
+      // element never really received, so a failure must not take the gesture
+      // down with it.
+      const origin = origins.get(event.pointerId);
+      if (!captured.has(event.pointerId) && origin !== undefined &&
+          Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > DRAG_SLOP) {
+        captured.add(event.pointerId);
+        try {
+          svg.setPointerCapture(event.pointerId);
+        } catch {
+          /* the gesture still works without capture */
+        }
+      }
+
+      const pair = pointerPair();
+      if (pair !== null) {
+        const distance = distanceBetween(pair);
+        if (pinchDistance > 0 && distance > 0) {
+          zoomAround(
+            pinchDistance / distance,
+            (pair[0].x + pair[1].x) / 2,
+            (pair[0].y + pair[1].y) / 2,
+          );
+        }
+        pinchDistance = distance;
+        return;
+      }
+
+      const rect = svg.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      view.x -= ((event.clientX - previous.x) / rect.width) * view.width;
+      view.y -= ((event.clientY - previous.y) / rect.height) * view.height;
+      applyView();
+    });
+
+    const releasePointer = (event) => {
+      active.delete(event.pointerId);
+      origins.delete(event.pointerId);
+      captured.delete(event.pointerId);
+      pinchDistance = 0;
+      if (active.size === 0) svg.classList.remove('grabbing');
+    };
+    svg.addEventListener('pointerup', releasePointer);
+    svg.addEventListener('pointercancel', releasePointer);
+
+    const stage = host.querySelector('.graph-stage');
+    stage.replaceChildren(svg);
+
+    /**
+     * Give the stage the height the fitted graph actually needs.
+     *
+     * A fixed height letterboxes every graph whose shape does not match it, and
+     * the component level is four times wider than it is tall: in a phone-width
+     * column it fitted to a strip a tenth of the box, with the rest empty. The
+     * clamp keeps a very wide graph from becoming a hairline and a very tall
+     * one from running off the screen.
+     */
+    const MINIMUM_STAGE_HEIGHT = 150;
+    const sizeStage = () => {
+      const available = stage.clientWidth;
+      if (available === 0 || width === 0) return;
+      const maximum = Math.round(window.innerHeight * 0.72);
+      const fitted = (available * height) / width;
+      stage.style.height = Math.round(Math.max(MINIMUM_STAGE_HEIGHT, Math.min(maximum, fitted))) + 'px';
+    };
+    sizeStage();
+    window.addEventListener('resize', sizeStage);
+
+    return { fit, zoomCentre };
+  }
+
+  /**
+   * A host either carries one graph or a set of them keyed by id. The journey
+   * level is the second kind: the reader picks a feature and an action, and the
+   * scene is rebuilt for that selection. Controls are wired once, against
+   * whichever scene is current, so switching never stacks a second listener.
+   */
+  function renderGraph(host) {
+    const payload = host.querySelector('script[type="application/json"]');
+    if (!payload) return;
+    const data = JSON.parse(payload.textContent);
+    let current = null;
+
+    const show = (graph) => {
+      current = buildScene(host, {
+        level: data.level,
+        title: data.title,
+        sources: data.sources,
+        width: graph.width,
+        height: graph.height,
+        nodes: graph.nodes,
+        edges: graph.edges,
+      });
+    };
+
+    for (const [selector, action] of [
+      ['[data-graph-reset]', () => current && current.fit()],
+      ['[data-graph-zoom-in]', () => current && current.zoomCentre(1 / 1.35)],
+      ['[data-graph-zoom-out]', () => current && current.zoomCentre(1.35)],
+    ]) {
+      const button = host.querySelector(selector);
+      if (button) button.addEventListener('click', action);
+    }
+
+    if (!data.graphs) {
+      show(data);
+      return;
+    }
+
+    const actionList = host.querySelector('[data-journey-actions]');
+    const selectAction = (actionId) => {
+      const graph = data.graphs[actionId];
+      if (!graph) return;
+      for (const button of host.querySelectorAll('[data-action-id]')) {
+        button.setAttribute('aria-pressed', String(button.dataset.actionId === actionId));
+      }
+      show(graph);
+    };
+
+    const selectFeature = (featureId) => {
+      for (const button of host.querySelectorAll('[data-feature-id]')) {
+        button.setAttribute('aria-pressed', String(button.dataset.featureId === featureId));
+      }
+      const feature = data.features.find((each) => each.id === featureId);
+      if (!feature || !actionList) return;
+      actionList.replaceChildren();
+      const entries = [
+        { id: feature.id + ':__all__', label: 'Everything in ' + feature.label, meta: feature.actions.length + ' actions' },
+        ...feature.actions.map((action) => ({
+          id: action.id,
+          label: action.label,
+          meta: action.method + ' ' + action.path,
+        })),
+      ];
+      for (const entry of entries) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'journey-action';
+        button.dataset.actionId = entry.id;
+        button.setAttribute('aria-pressed', 'false');
+        const name = document.createElement('span');
+        name.className = 'journey-action-name';
+        name.textContent = entry.label;
+        const meta = document.createElement('span');
+        meta.className = 'journey-action-meta';
+        meta.textContent = entry.meta;
+        button.append(name, meta);
+        button.addEventListener('click', () => selectAction(entry.id));
+        actionList.appendChild(button);
+      }
+      const first = entries[1] || entries[0];
+      if (first) selectAction(first.id);
+    };
+
+    for (const button of host.querySelectorAll('[data-feature-id]')) {
+      button.addEventListener('click', () => selectFeature(button.dataset.featureId));
+    }
+    const firstFeature = data.features[0];
+    if (firstFeature) selectFeature(firstFeature.id);
+  }
+
+  for (const host of document.querySelectorAll('.graph')) renderGraph(host);
+})();
+</script>

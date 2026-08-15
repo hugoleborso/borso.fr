@@ -1,0 +1,628 @@
+<title>Architecture maps</title>
+
+<style>
+  /*
+    Colour carries one meaning on this page: which layer a thing belongs to.
+    The chrome is therefore achromatic and cool, so a controller blue or a
+    repository amber is never competing with a decorative accent. Navy marks
+    the active level and links; amber is reserved for a route nothing reaches.
+    Monospace carries structure, because the subject is source files.
+  */
+  :root {
+    color-scheme: light dark;
+    --ground: #eef0f4;
+    --panel: #ffffff;
+    --panel-sunk: #f5f7fa;
+    --ink: #15181d;
+    --muted: #5b626e;
+    --line: #d8dce4;
+    --line-strong: #b9c1cd;
+    --accent: #1f3a5f;
+    --accent-soft: #dfe6f0;
+    --signal: #b45309;
+    --signal-soft: #fdf1e0;
+    --layer-route: #1e40af; --layer-route-bg: #dde7fb;
+    --layer-service: #166534; --layer-service-bg: #dcf3e4;
+    --layer-data: #92400e; --layer-data-bg: #fbeed8;
+    --layer-pure: #5b21b6; --layer-pure-bg: #e9e3fb;
+    --layer-edge: #9f1239; --layer-edge-bg: #fbdfe5;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --ground: #0f1216;
+      --panel: #161b22;
+      --panel-sunk: #1b212a;
+      --ink: #e6e9ee;
+      --muted: #98a1b0;
+      --line: #262d36;
+      --line-strong: #3a434f;
+      --accent: #8fb2dd;
+      --accent-soft: #1b2735;
+      --signal: #e0a355;
+      --signal-soft: #2c2317;
+      --layer-route: #9dc0f5; --layer-route-bg: #17263f;
+      --layer-service: #8fdcab; --layer-service-bg: #102a1b;
+      --layer-data: #edc07a; --layer-data-bg: #2f2413;
+      --layer-pure: #c3b1f5; --layer-pure-bg: #241d3a;
+      --layer-edge: #f3a1b3; --layer-edge-bg: #341620;
+    }
+  }
+  :root[data-theme='dark'] {
+    --ground: #0f1216;
+    --panel: #161b22;
+    --panel-sunk: #1b212a;
+    --ink: #e6e9ee;
+    --muted: #98a1b0;
+    --line: #262d36;
+    --line-strong: #3a434f;
+    --accent: #8fb2dd;
+    --accent-soft: #1b2735;
+    --signal: #e0a355;
+    --signal-soft: #2c2317;
+    --layer-route: #9dc0f5; --layer-route-bg: #17263f;
+    --layer-service: #8fdcab; --layer-service-bg: #102a1b;
+    --layer-data: #edc07a; --layer-data-bg: #2f2413;
+    --layer-pure: #c3b1f5; --layer-pure-bg: #241d3a;
+    --layer-edge: #f3a1b3; --layer-edge-bg: #341620;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 15px/1.6 var(--font-sans);
+    padding-bottom: 5rem;
+  }
+  .wrap { max-width: 76rem; margin: 0 auto; padding: 0 1.25rem; }
+
+  header.top { border-bottom: 1px solid var(--line); padding: 2.5rem 0 1.5rem; }
+  h1 {
+    font: 600 clamp(1.3rem, 3.5vw, 1.8rem)/1.2 var(--font-mono);
+    margin: 0 0 .5rem;
+    letter-spacing: -.02em;
+    text-wrap: balance;
+  }
+  .lede { color: var(--muted); max-width: 62ch; margin: 0 0 1.5rem; }
+  .stats { display: flex; flex-wrap: wrap; gap: 1rem 2.25rem; padding: 0; margin: 0; list-style: none; }
+  .stats li {
+    font: .7rem/1.4 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+  }
+  .stats b {
+    display: block;
+    font: 600 1.5rem/1.1 var(--font-mono);
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.02em;
+  }
+  .stats li.flagged b { color: var(--signal); }
+
+  nav.levels {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--ground);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2rem;
+  }
+  nav.levels .wrap { display: flex; gap: .15rem; overflow-x: auto; padding-top: .55rem; padding-bottom: .55rem; }
+  nav.levels button {
+    flex: 0 0 auto;
+    font: 500 .78rem/1 var(--font-mono);
+    letter-spacing: .01em;
+    color: var(--muted);
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: .5rem .75rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  nav.levels button:hover { color: var(--ink); background: var(--panel-sunk); }
+  nav.levels button[aria-selected='true'] {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--line-strong);
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  h2 { font: 600 1.15rem/1.3 var(--font-mono); margin: 0 0 .5rem; letter-spacing: -.01em; }
+  h3 { font: 600 .95rem/1.3 var(--font-mono); margin: 0 0 .4rem; }
+  .summary { color: var(--muted); max-width: 74ch; margin: 0 0 1.5rem; font-size: .89rem; }
+
+  .diagram-scroll, .table-scroll {
+    overflow-x: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .cards { display: grid; grid-template-columns: 1fr; gap: .7rem; }
+  @media (min-width: 620px) { .cards { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1000px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: .85rem .95rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    /* A grid item defaults to min-width:auto, so the nowrap kind tag in the
+       header sets a floor wider than the track's share and pushes the whole
+       page sideways. */
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .card header { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
+  .card h4 { margin: 0; font: 600 .88rem/1.3 var(--font-mono); }
+  .card p { margin: 0; font-size: .81rem; color: var(--muted); }
+  .tag {
+    font: .64rem/1.4 var(--font-mono);
+    color: var(--muted);
+    background: var(--panel-sunk);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: .1rem .45rem;
+    white-space: nowrap;
+  }
+  .bp { display: flex; gap: .35rem; flex-wrap: wrap; }
+  .bp span {
+    font: .64rem/1.4 var(--font-mono);
+    padding: .1rem .45rem;
+    border-radius: 4px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  table { border-collapse: collapse; width: 100%; font-size: .81rem; }
+  th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th {
+    font: 600 .66rem/1.4 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    position: sticky;
+    top: 0;
+    background: var(--panel);
+  }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr:hover { background: var(--panel-sunk); }
+  code, .loc { font-family: var(--font-mono); font-size: .76rem; }
+  .loc { color: var(--muted); }
+
+  .filters { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .9rem; }
+  .filters input, .filters select {
+    font: .83rem/1.4 var(--font-sans);
+    padding: .42rem .6rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--ink);
+  }
+  .filters input { flex: 1 1 18rem; }
+
+  .layer {
+    display: inline-block;
+    font: 500 .64rem/1.5 var(--font-mono);
+    padding: .08rem .4rem;
+    border-radius: 4px;
+    background: var(--panel-sunk);
+    color: var(--muted);
+    margin: 0 .2rem .2rem 0;
+    white-space: nowrap;
+  }
+  .layer-controller, .layer-route, .layer-entrypoint { background: var(--layer-route-bg); color: var(--layer-route); }
+  .layer-service, .layer-query, .layer-hook { background: var(--layer-service-bg); color: var(--layer-service); }
+  .layer-repository, .layer-database, .layer-schema, .layer-store { background: var(--layer-data-bg); color: var(--layer-data); }
+  .layer-core, .layer-utils, .layer-types { background: var(--layer-pure-bg); color: var(--layer-pure); }
+  .layer-adapter, .layer-client, .layer-middleware { background: var(--layer-edge-bg); color: var(--layer-edge); }
+
+  .slice {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: .95rem 1.1rem;
+    margin-bottom: .8rem;
+  }
+  .slice h3 { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; }
+  .mount {
+    background: var(--panel-sunk);
+    border: 1px solid var(--line);
+    padding: .08rem .4rem;
+    border-radius: 4px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .slice-files { margin: 0 0 .6rem; }
+
+  details.route { border-top: 1px solid var(--line); padding: .45rem 0 .2rem; }
+  details.route summary {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    list-style: none;
+  }
+  details.route summary::-webkit-details-marker { display: none; }
+  details.route[open] summary { margin-bottom: .3rem; }
+  .method {
+    font: 700 .66rem/1.5 var(--font-mono);
+    padding: .1rem .4rem;
+    border-radius: 4px;
+    background: var(--panel-sunk);
+    min-width: 3.6rem;
+    text-align: center;
+  }
+  .method-get { color: var(--layer-route); background: var(--layer-route-bg); }
+  .method-post { color: var(--layer-service); background: var(--layer-service-bg); }
+  .method-put { color: var(--layer-data); background: var(--layer-data-bg); }
+  .method-delete { color: var(--layer-edge); background: var(--layer-edge-bg); }
+  .path { font-weight: 600; }
+  .route-meta { font: .72rem/1.4 var(--font-mono); color: var(--muted); margin-left: auto; }
+  details.route:has(.unreached) { border-left: 2px solid var(--signal); padding-left: .6rem; }
+  details.route:has(.unreached) .route-meta { color: var(--signal); }
+  .route-body { padding: .3rem 0 .5rem; }
+
+  ol.chain { list-style: none; margin: 0 0 .5rem; padding: 0; display: flex; flex-direction: column; gap: .1rem; }
+  ol.chain li {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .18rem 0 .18rem .85rem;
+    border-left: 2px solid var(--line-strong);
+    flex-wrap: wrap;
+  }
+  ol.chain code { font-weight: 600; }
+  .reaches { margin: .25rem 0; font-size: .79rem; color: var(--muted); }
+  .reaches strong {
+    color: var(--ink);
+    font: 600 .66rem/1.5 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-right: .4rem;
+  }
+  .unreached { color: var(--signal); background: var(--signal-soft); border-radius: 5px; padding: .3rem .5rem; }
+  .unreached strong { color: var(--signal); }
+  .empty { color: var(--muted); font-size: .82rem; margin: .4rem 0 0; }
+
+  .bp-chip {
+    display: inline-block;
+    font: .64rem/1.5 var(--font-mono);
+    padding: .06rem .35rem;
+    border-radius: 4px;
+    background: var(--panel-sunk);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    margin: 0 .2rem .2rem 0;
+  }
+  .bp-chip.declares { background: var(--accent-soft); border-color: var(--line-strong); color: var(--accent); font-weight: 600; }
+  .note {
+    font-size: .82rem;
+    color: var(--muted);
+    border-left: 2px solid var(--line-strong);
+    padding: .35rem 0 .35rem .85rem;
+    margin: 1.25rem 0;
+    max-width: 70ch;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+
+  .graph {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 1.75rem;
+    overflow: hidden;
+  }
+  .graph-bar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    padding: .6rem .9rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-sunk);
+  }
+  .graph-hint { font: .7rem/1.4 var(--font-mono); color: var(--muted); }
+
+  .graph-legend { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; }
+  .graph-legend span { font: .66rem/1.4 var(--font-mono); color: var(--muted); display: inline-flex; align-items: center; gap: .3rem; }
+  .legend-line { width: 20px; height: 0; border-top: 2px solid var(--muted); display: inline-block; }
+  .legend-line.type { border-top-style: dashed; }
+  .legend-line.http { border-top-color: var(--accent); border-top-width: 3px; }
+  /*
+     The stage has a height and the canvas fits inside it, so a level opens
+     showing the whole graph. Reading it then means zooming: scroll or pinch,
+     or the two buttons. touch-action none is what lets a pinch reach the
+     canvas rather than being taken by the page first.
+  */
+  /* The height is set per graph from its own aspect ratio; this is the value
+     before the script runs and the floor a very wide graph lands on. */
+  .graph-stage { height: 300px; overflow: hidden; }
+  .graph svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+  }
+  .graph svg.grabbing { cursor: grabbing; }
+  .graph-controls { display: flex; gap: .3rem; margin-left: auto; }
+  .graph-controls button {
+    font: 500 .72rem/1 var(--font-mono);
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: .35rem .55rem;
+    cursor: pointer;
+    min-width: 2rem;
+  }
+  .graph-controls button:hover { color: var(--ink); border-color: var(--accent); }
+  .edge { fill: none; stroke: var(--line-strong); stroke-width: 1.6; opacity: .55; transition: stroke .12s, opacity .12s; }
+  .edge-type { stroke-dasharray: 5 4; }
+  .edge-http { stroke: var(--accent); stroke-width: 2.6; }
+  .marker-import, .marker-type { fill: var(--line-strong); }
+  .marker-http { fill: var(--accent); }
+  .marker-lit { fill: var(--accent); }
+  .edges .dim { opacity: .07; }
+  .edges .lit { stroke: var(--accent); stroke-width: 2.6; opacity: 1; }
+
+  .node { cursor: pointer; }
+  .node-body { fill: var(--panel); stroke: var(--line-strong); stroke-width: 1; transition: opacity .12s; }
+  .node-stripe { fill: var(--muted); }
+  .node-label { font: 600 12.5px var(--font-mono); fill: var(--ink); }
+  .node-sub { font: 10.5px var(--font-mono); fill: var(--muted); }
+  .node-icon { font: 13px var(--font-sans); }
+  .node-chip { fill: var(--chip); stroke: var(--line); stroke-width: 1; }
+  .node-chip-text { font: 10px var(--font-mono); fill: var(--muted); }
+  .node-chip-blueprint { fill: var(--accent-soft); stroke: var(--accent); }
+  .node-chip-complexity { fill: var(--layer-pure-bg); stroke: var(--layer-pure); }
+  .node-chip-size { fill: var(--layer-route-bg); stroke: var(--layer-route); }
+  .node-chip-warn { fill: var(--signal-soft); stroke: var(--signal); }
+  .node:hover .node-body, .node:focus-visible .node-body { stroke: var(--accent); stroke-width: 2; }
+  .node:focus-visible { outline: none; }
+  .nodes .dim { opacity: .22; }
+  .nodes .lit .node-body { stroke: var(--accent); stroke-width: 2; }
+
+  .node-actor .node-stripe { fill: var(--layer-pure); }
+  .node-system .node-stripe { fill: var(--accent); }
+  .node-external .node-stripe { fill: var(--signal); }
+  .node-browser .node-stripe { fill: var(--layer-route); }
+  .node-aws .node-stripe { fill: var(--layer-data); }
+  .node-build .node-stripe { fill: var(--muted); }
+  .node-api .node-stripe { fill: var(--layer-service); }
+  .node-site .node-stripe { fill: var(--layer-route); }
+  .node-domain .node-stripe { fill: var(--layer-pure); }
+  .node-infrastructure .node-stripe { fill: var(--layer-data); }
+  .node-external .node-body { stroke-dasharray: 4 3; }
+
+  /* The journey level colours a node by what it is in the flow, so the reader
+     can see the shape — screen, hook, wire, service, data — before reading a
+     single label. */
+  .node-step-ui .node-stripe { fill: var(--layer-route); }
+  .node-step-hook .node-stripe { fill: var(--layer-service); }
+  .node-step-endpoint .node-stripe { fill: var(--accent); }
+  .node-step-endpoint .node-body { stroke: var(--accent); stroke-width: 1.6; }
+  .node-step-controller .node-stripe { fill: var(--layer-route); }
+  .node-step-service .node-stripe { fill: var(--layer-service); }
+  .node-step-repository .node-stripe { fill: var(--layer-data); }
+  .node-step-database .node-stripe { fill: var(--layer-data); }
+  .node-step-core .node-stripe,
+  .node-step-utils .node-stripe { fill: var(--layer-pure); }
+  .node-step-table .node-stripe { fill: var(--layer-data); }
+  .node-step-table .node-body { fill: var(--layer-data-bg); }
+  .node-step-external .node-stripe { fill: var(--signal); }
+  .node-step-external .node-body { stroke-dasharray: 4 3; }
+
+  .journey-picker {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    padding: .8rem .9rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-sunk);
+  }
+  .journey-picker-label {
+    font: 600 .64rem/1.4 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+  .journey-features, .journey-actions { display: flex; gap: .35rem; flex-wrap: wrap; }
+  .journey-feature {
+    font: 500 .74rem/1 var(--font-mono);
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    padding: .35rem .7rem;
+    cursor: pointer;
+  }
+  .journey-feature[aria-pressed='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--panel);
+  }
+  .journey-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .15rem;
+    font: inherit;
+    text-align: left;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: .4rem .6rem;
+    cursor: pointer;
+    max-width: 100%;
+  }
+  .journey-action-name { font: 600 .78rem/1.3 var(--font-sans); color: var(--ink); }
+  .journey-action-meta {
+    font: .64rem/1.3 var(--font-mono);
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+  .journey-action[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .journey-action[aria-pressed='true'] .journey-action-name { color: var(--accent); }
+
+  .node.has-code { cursor: zoom-in; }
+
+  dialog.code-modal {
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--ink);
+    padding: 0;
+    width: min(78ch, 94vw);
+    max-height: 86vh;
+    overflow: hidden;
+  }
+  dialog.code-modal::backdrop { background: rgb(0 0 0 / 45%); }
+  .code-modal-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    flex-wrap: wrap;
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-sunk);
+  }
+  .code-modal-head h3 { margin: 0; font: 600 .95rem/1.3 var(--font-mono); }
+  .code-chip {
+    font: 500 .64rem/1.5 var(--font-mono);
+    padding: .1rem .45rem;
+    border-radius: 5px;
+    background: var(--chip);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .code-chip.layer { background: var(--accent-soft); color: var(--accent); }
+  .code-chip.absent { opacity: .65; font-style: italic; }
+  .code-modal-head .loc { flex: 1 1 100%; overflow-wrap: anywhere; }
+  .code-modal-close {
+    margin-left: auto;
+    font: 500 .74rem/1 var(--font-mono);
+    background: var(--panel);
+    color: var(--muted);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: .3rem .55rem;
+    cursor: pointer;
+  }
+  .code-modal pre {
+    margin: 0;
+    padding: 1rem;
+    overflow: auto;
+    max-height: 68vh;
+    font: .76rem/1.55 var(--font-mono);
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  /* The token colours reuse the layer palette, so the modal follows the page
+     into dark mode without a second set of variables. */
+  .tok-comment { color: var(--muted); font-style: italic; }
+  .tok-string { color: var(--layer-service); }
+  .tok-number { color: var(--layer-data); }
+  .tok-keyword { color: var(--layer-edge); }
+  .tok-type { color: var(--layer-route); }
+  .tok-call { color: var(--layer-pure); }
+
+  .orphan-routes { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+  .orphan-routes li {
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    flex-wrap: wrap;
+    background: var(--signal-soft);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: .25rem .5rem;
+    /* A route path is one unbroken token, and the longest here is wider than a
+       phone column, so it has to be allowed to break mid-string. */
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .orphan-routes code { color: var(--signal); font-weight: 600; overflow-wrap: anywhere; }
+
+</style>
+
+<style>
+  .app-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+  .app-card {
+    display: block;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    color: inherit;
+    text-decoration: none;
+    min-width: 0;
+  }
+  .app-card:hover { border-color: var(--accent); }
+  .app-card h2 { margin: 0 0 .35rem; font-size: 1rem; }
+  .app-card p { margin: 0 0 .6rem; color: var(--muted); font-size: .82rem; line-height: 1.5; }
+  .app-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
+  .app-facts li {
+    font: .68rem/1.6 var(--font-mono);
+    background: var(--panel-sunk);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: .1rem .4rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .app-icon { margin-right: .3rem; }
+</style>
+
+<header class="top"><div class="wrap">
+  <h1>Architecture maps</h1>
+  <p class="lede">One generated map per application, at five levels each, from the same generator and the same rules. Position comes from the path, edges come from real imports, and nothing on a map is authored by hand except the manifest each application carries.</p>
+</div></header>
+
+<main class="wrap">
+  <div class="app-grid">
+      <a class="app-card" href="./pragma-architecture.html">
+        <h2>Pragma</h2>
+        <p>Band enterprise resource planning: song catalogue, member instrument mastery, rehearsal and concert sessions, setlists, and a venue pipeline.</p>
+        <ul class="app-facts">
+          <li><span class="app-icon">🖥️</span>Single page application</li><li><span class="app-icon">📴</span>Service worker</li><li><span class="app-icon">🔌</span>HTTP API</li><li><span class="app-icon">🧩</span>Shared domain rules</li><li><span class="app-icon">🗄️</span>Application database</li><li><span class="app-icon">🪣</span>Chord chart bucket</li><li><span class="app-icon">🏗️</span>Infrastructure definition</li>
+        </ul>
+      </a>
+      <a class="app-card" href="./last-loop-lepin-architecture.html">
+        <h2>Last Loop Lépin</h2>
+        <p>Race-day live dashboard for a backyard ultra: runners, loops punched at the line, the ranking that falls out of them, and the photo wall.</p>
+        <ul class="app-facts">
+          <li><span class="app-icon">🖥️</span>Single page application</li><li><span class="app-icon">🔌</span>HTTP API</li><li><span class="app-icon">🗄️</span>Application database</li><li><span class="app-icon">🪣</span>Photo bucket</li><li><span class="app-icon">🏗️</span>Infrastructure definition</li>
+        </ul>
+      </a>
+      <a class="app-card" href="./borsouvertures-architecture.html">
+        <h2>Borsouvertures</h2>
+        <p>Chess openings trainer: learn an opening or play within one, over a bundled book, with an offline-capable service worker.</p>
+        <ul class="app-facts">
+          <li><span class="app-icon">🖥️</span>Single page application</li><li><span class="app-icon">🏗️</span>Infrastructure definition</li>
+        </ul>
+      </a>
+      <a class="app-card" href="./borso-fr-architecture.html">
+        <h2>borso.fr</h2>
+        <p>The apex landing site, plus two self-contained mini applications served from it: the twelve labours tracker and the Mondrian composition generator.</p>
+        <ul class="app-facts">
+          <li><span class="app-icon">🖥️</span>Static site</li><li><span class="app-icon">🏗️</span>Infrastructure definition</li>
+        </ul>
+      </a></div>
+</main>
