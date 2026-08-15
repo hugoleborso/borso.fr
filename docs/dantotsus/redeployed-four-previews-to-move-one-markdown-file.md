@@ -106,6 +106,22 @@ written by the thing that made it live, in the same repository, with no bucket
 and no extra credential. A deployment whose statuses never reached `success`
 is ignored, so a failed deploy cannot claim its inputs are serving.
 
+Measured on this pull request, across the two pushes that straddle the change.
+Push `b339ad7` changed `preview.yml` itself, so every digest differed and all
+four apps deployed in full; push `193ee6e` moved one markdown file, so all four
+skipped:
+
+| push | borso-fr | borsouvertures | pragma | last-loop-lepin |
+| --- | --- | --- | --- | --- |
+| `b339ad7` — deployed | 58 s | 57 s | 61 s | 75 s |
+| `193ee6e` — skipped | 14 s | 19 s | 13 s | 15 s |
+
+The deployed row is the cost of the old behaviour on *every* push, and what it
+bought is visible in its own log: `borso-fr-pr-51 (no changes)`, reached after
+a checkout, an install, an `@borso/infra` build and a synth. The `detect` job
+still runs and still names four apps; it is right to, and now it costs a minute
+of runner time instead of four full deploys.
+
 Both halves of the decision fail open, and that is the property worth keeping:
 an unreadable deployment list, an absent payload, a missing stack, a
 rolled-back stack, or a digest that cannot be computed all deploy exactly as
