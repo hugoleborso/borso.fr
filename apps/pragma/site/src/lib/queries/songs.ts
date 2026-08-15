@@ -15,7 +15,7 @@ import { useMutation, useMutationState, useQuery, useQueryClient } from '@tansta
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
 import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
-import { didLastSongWriteFail } from './song-write-failure.core';
+import { didLastSongWriteFail, selectSongThatLostItsLastWrite } from './song-write-failure.core';
 
 export const songKeys = {
   all: ['songs'] as const,
@@ -245,14 +245,27 @@ export function useUpdateSong() {
  * can say the values it renders are the ones `onError` put back.
  */
 export function useDidLastSongWriteFail(songId: string): boolean {
-  const entries = useMutationState({
+  return didLastSongWriteFail(useSongWriteEntries(), songId);
+}
+
+/**
+ * The song that lost its last write, for a page listing many of them. A delete
+ * is fired and the operator leaves immediately, so the catalog is where a
+ * failed one has to be reported: the row comes back on rollback, which is
+ * visible but says nothing about why.
+ */
+export function useSongThatLostItsLastWrite(): string | null {
+  return selectSongThatLostItsLastWrite(useSongWriteEntries());
+}
+
+function useSongWriteEntries() {
+  return useMutationState({
     filters: { mutationKey: songKeys.all },
     select: (mutation) => ({
       variables: mutation.state.variables,
       status: mutation.state.status,
     }),
   });
-  return didLastSongWriteFail(entries, songId);
 }
 
 // @FollowsBlueprint query-optimistic-mutation

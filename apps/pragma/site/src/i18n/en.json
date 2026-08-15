@@ -150,6 +150,7 @@
     "notesGimmicksPlaceholder": "Full stop before the last chorus, counted out loud.",
     "notesFreePlaceholder": "Anything the band should remember.",
     "createSearched": "Create “{{title}}”",
+    "lastWriteFailed": "The last change to “{{title}}” did not go through — the song is as it was.",
     "lastSaveFailed": "The last save did not go through — what you read below is the song as it was before the edit."
   },
   "mastery": {

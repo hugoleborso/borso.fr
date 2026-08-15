@@ -40,3 +40,24 @@ export function didLastSongWriteFail(entries: readonly SongWriteEntry[], songId:
   }
   return hasFailed;
 }
+
+/**
+ * Which song lost its last write, for a page that shows many of them rather
+ * than one — the catalog, after a delete the operator has already walked away
+ * from. Answers the most recently fired failure, since that is the one they
+ * just caused.
+ */
+// @FollowsBlueprint core-view-projection
+export function selectSongThatLostItsLastWrite(entries: readonly SongWriteEntry[]): string | null {
+  const lastStatusBySong = new Map<string, MutationStatus>();
+  for (const entry of entries) {
+    const parsed = songWriteVariablesSchema.safeParse(entry.variables);
+    if (!parsed.success) continue;
+    lastStatusBySong.set(parsed.data.id, entry.status);
+  }
+  let failed: string | null = null;
+  for (const [songId, status] of lastStatusBySong) {
+    if (status === 'error') failed = songId;
+  }
+  return failed;
+}

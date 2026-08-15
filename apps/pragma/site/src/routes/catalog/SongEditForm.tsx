@@ -49,7 +49,7 @@ interface SongEditFormProps {
   readonly songId: string | undefined;
   readonly defaultValues: SongDraftState;
   readonly onSubmit: (value: SongDraftState) => Promise<void>;
-  readonly onDelete: () => Promise<void>;
+  readonly onDelete: () => void;
   readonly newLinkUrl: string;
   readonly setNewLinkUrl: (value: string) => void;
   readonly error: string | null;

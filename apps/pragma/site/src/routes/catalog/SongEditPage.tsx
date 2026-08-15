@@ -11,11 +11,13 @@
  * A `?title=` parameter prefills the title, which is how the catalog hands
  * over what the operator typed in the search box before finding nothing.
  *
- * An update is fired without being awaited: the caches already hold the new
- * values, so the operator reads the edited song straight away instead of
- * watching a spinner, and a write that then fails is surfaced on the song page
- * they landed on. A create is awaited, because the route it navigates to needs
- * the id only the server can issue.
+ * An update and a delete are both fired without being awaited: the caches
+ * already hold the result, so the operator reads the edited song, or the
+ * catalog without the deleted one, straight away instead of watching a
+ * spinner. Neither failure goes unreported — `useMutationState` carries it to
+ * wherever they landed, the song page for an update and the catalog for a
+ * delete. A create is awaited, because the route it navigates to needs the id
+ * only the server can issue.
  */
 
 import type { JSX } from 'react';
@@ -81,15 +83,10 @@ export function SongEditPage(): JSX.Element {
     }
   };
 
-  const removeSong = async (): Promise<void> => {
+  const removeSong = (): void => {
     if (songId === undefined || isNew) return;
-    try {
-      // eslint-disable-next-line borso/no-discarded-await-before-navigation -- a delete is the one write where waiting is the point: the operator should not walk away believing a song is gone until the server says so, and this form's error line is the only place a failed delete can be reported, since /catalog shows the row returning but says nothing.
-      await deleteSong.mutateAsync({ id: songId });
-      navigateTo('/catalog', { replace: true });
-    } catch (error) {
-      setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
-    }
+    deleteSong.mutate({ id: songId });
+    navigateTo('/catalog', { replace: true });
   };
 
   if (isLoading) {

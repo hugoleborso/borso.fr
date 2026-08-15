@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { didLastSongWriteFail } from './song-write-failure.core';
+import { didLastSongWriteFail, selectSongThatLostItsLastWrite } from './song-write-failure.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('didLastSongWriteFail', () => {
@@ -49,5 +49,57 @@ describe('didLastSongWriteFail', () => {
         'song-1',
       ),
     ).toBe(false);
+  });
+});
+
+// @FollowsBlueprint test-pure-unit
+describe('selectSongThatLostItsLastWrite', () => {
+  it('answers nothing when nothing has been written', () => {
+    expect(selectSongThatLostItsLastWrite([])).toBe(null);
+  });
+
+  it('answers nothing when every last write went through', () => {
+    expect(
+      selectSongThatLostItsLastWrite([
+        { variables: { id: 'song-1' }, status: 'success' },
+        { variables: { id: 'song-2' }, status: 'success' },
+      ]),
+    ).toBe(null);
+  });
+
+  it('names the song whose last write failed', () => {
+    expect(
+      selectSongThatLostItsLastWrite([
+        { variables: { id: 'song-1' }, status: 'success' },
+        { variables: { id: 'song-2' }, status: 'error' },
+      ]),
+    ).toBe('song-2');
+  });
+
+  it('forgets a failure the operator has since written over', () => {
+    expect(
+      selectSongThatLostItsLastWrite([
+        { variables: { id: 'song-1' }, status: 'error' },
+        { variables: { id: 'song-1' }, status: 'success' },
+      ]),
+    ).toBe(null);
+  });
+
+  it('answers the most recently fired failure when two songs failed', () => {
+    expect(
+      selectSongThatLostItsLastWrite([
+        { variables: { id: 'song-1' }, status: 'error' },
+        { variables: { id: 'song-2' }, status: 'error' },
+      ]),
+    ).toBe('song-2');
+  });
+
+  it('ignores a write whose variables name no song', () => {
+    expect(
+      selectSongThatLostItsLastWrite([
+        { variables: null, status: 'error' },
+        { variables: { title: 'Feeling Good' }, status: 'error' },
+      ]),
+    ).toBe(null);
   });
 });
