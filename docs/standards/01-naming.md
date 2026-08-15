@@ -63,9 +63,17 @@ The verbs we use, and what each one promises:
 | `list…`                   | An array, possibly empty                 |
 | `build…` and `compose…`   | A new value assembled from parts         |
 | `project…` and `derive…`  | A view computed from source data         |
-| `select…`                 | One option chosen from several           |
+| `select…`                 | What a rule chooses: one option, or a subset |
 | `assert…`                 | Nothing, and throws when the check fails |
 | `is…`, `has…`, and `can…` | A boolean                                |
+
+`select…` and `list…` both hand back a collection sometimes, and the difference
+is who decides what is in it. `list…` enumerates what is there, so
+`listCatalogProblems` returns every problem there is. `select…` applies a rule,
+so `selectVisibleSongs` returns the songs that pass the filter and
+`selectCloneableDataTables` the tables the migration is allowed to copy. Fifty
+odd `select…` functions here return a single value and seven return a subset,
+and both readings are the same promise: the caller gets what the rule chose.
 
 The verbs `handle`, `process`, `manage`, and `do` are banned, because a reader
 cannot predict what any of them will do.
