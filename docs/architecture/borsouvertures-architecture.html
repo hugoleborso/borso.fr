@@ -409,6 +409,10 @@
   /* The journey level colours a node by what it is in the flow, so the reader
      can see the shape — screen, hook, wire, service, data — before reading a
      single label. */
+  .node-step-screen .node-stripe { fill: var(--accent); }
+  .node-step-screen .node-body { fill: var(--accent-soft); }
+  .node-step-gesture .node-stripe { fill: var(--signal); }
+  .node-step-gesture .node-body { fill: var(--signal-soft); }
   .node-step-ui .node-stripe { fill: var(--layer-route); }
   .node-step-hook .node-stripe { fill: var(--layer-service); }
   .node-step-endpoint .node-stripe { fill: var(--accent); }
@@ -542,6 +546,76 @@
   .tok-type { color: var(--layer-route); }
   .tok-call { color: var(--layer-pure); }
 
+  .cards-panel { margin-top: 1rem; }
+  .cards-panel > summary,
+  .coverage-missing > summary {
+    cursor: pointer;
+    font: 500 .78rem/1.6 var(--font-mono);
+    color: var(--muted);
+    padding: .4rem .6rem;
+    background: var(--panel-sunk);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+  }
+  .cards-panel > summary:hover,
+  .coverage-missing > summary:hover { border-color: var(--accent); color: var(--accent); }
+  .cards-panel[open] > summary { margin-bottom: .8rem; }
+
+  .coverage { margin-top: 1.2rem; }
+  .coverage h3 {
+    margin: 0 0 .3rem;
+    font: 600 .84rem/1.5 var(--font-mono);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: baseline;
+  }
+  .coverage h3 b { font-weight: 500; color: var(--muted); }
+  .coverage-percent {
+    margin-left: auto;
+    font: 600 .84rem/1.5 var(--font-mono);
+    color: var(--accent);
+  }
+  .coverage-rule { margin: 0 0 .7rem; color: var(--muted); font-size: .8rem; line-height: 1.6; }
+  .coverage-layers {
+    list-style: none;
+    margin: 0 0 .8rem;
+    padding: 0;
+    display: grid;
+    gap: .25rem .9rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  }
+  .coverage-layers li {
+    display: grid;
+    grid-template-columns: 7rem 1fr auto;
+    align-items: center;
+    gap: .5rem;
+    font: .68rem/1.6 var(--font-mono);
+    color: var(--muted);
+    min-width: 0;
+  }
+  .coverage-layer { overflow-wrap: anywhere; }
+  .coverage-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
+    overflow: hidden;
+    min-width: 0;
+  }
+  .coverage-bar i { display: block; height: 100%; background: var(--accent); }
+  .coverage-layers .partial .coverage-bar i { background: var(--signal); }
+  .coverage-layers .partial .coverage-count { color: var(--signal); font-weight: 600; }
+  .coverage-none { margin: 0; color: var(--muted); font-size: .78rem; }
+  .coverage-missing > ul {
+    list-style: none;
+    margin: .6rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: .15rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  }
+  .coverage-missing > ul li { min-width: 0; overflow-wrap: anywhere; }
+
   .orphan-routes { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
   .orphan-routes li {
     display: flex;
@@ -607,7 +681,9 @@
         <div class="graph-stage"></div>
         <script type="application/json">{"level":"context","title":"Level 1 — Context","width":592.5,"height":148,"nodes":[{"id":"player","label":"Player","icon":"♟️","lines":["outside the system"],"chips":[],"detail":"Trains an opening and plays lines inside it. Nothing here signs in, so every human user holds this one role.","tone":"actor","x":28,"y":50,"width":160,"height":48},{"id":"system","label":"Borsouvertures","icon":"🎯","lines":["inside — this repository builds it"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"}],"detail":"Chess openings trainer: learn an opening or play within one, over a bundled book, with an offline-capable service worker.","tone":"system","x":292,"y":28,"width":272.5,"height":92}],"edges":[{"from":"player","to":"system","kind":"uses","label":"uses","points":[{"x":188,"y":74},{"x":292,"y":74}]}]}</script>
       </div>
-      <div class="cards">
+      <details class="cards-panel">
+        <summary>2 blocks in detail</summary>
+        <div class="cards">
       <article class="card" data-group="people">
         <header>
           <h4>Player</h4>
@@ -624,6 +700,58 @@
         <p>Chess openings trainer: learn an opening or play within one, over a bundled book, with an offline-capable service worker.</p>
         
       </article></div>
+      </details>
+      
+      <section class="coverage">
+        <h3>Codebase coverage <b>103 of 103 files</b> <span class="coverage-percent">100%</span></h3>
+        <p class="coverage-rule">Every file sits inside the one system box, so this level accounts for all of them by construction. What it cannot show is which file reaches which external — that is level 3.5.</p>
+        <ul class="coverage-layers"><li>
+          <span class="coverage-layer">atom</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">21/21</span>
+        </li><li>
+          <span class="coverage-layer">config</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">2/2</span>
+        </li><li>
+          <span class="coverage-layer">core</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">declaration</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">i18n</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">molecule</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">22/22</span>
+        </li><li>
+          <span class="coverage-layer">organism</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">13/13</span>
+        </li><li>
+          <span class="coverage-layer">route</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">3/3</span>
+        </li><li>
+          <span class="coverage-layer">types</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">unknown</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">15/15</span>
+        </li><li>
+          <span class="coverage-layer">utils</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">15/15</span>
+        </li></ul>
+        <p class="coverage-none">Nothing is left out at this level.</p>
+      </section>
     </section>
     <section class="level" id="level-container" hidden>
       <h2>Level 2 — Containers</h2>
@@ -647,7 +775,9 @@
         <div class="graph-stage"></div>
         <script type="application/json">{"level":"container","title":"Level 2 — Containers","width":513,"height":266,"nodes":[{"id":"site","label":"Single page application","icon":"🖥️","lines":["React 19, Vite, Tailwind","CloudFront in front of an S3 origin, alias borsouvertures.borso.fr"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"}],"detail":"React 19, Vite, Tailwind. The whole trainer. The openings book ships as a static JSON asset rather than coming from a server, so the application has no back end of its own.","tone":"site","x":28,"y":132,"width":457,"height":106},{"id":"infrastructure","label":"Infrastructure definition","icon":"🏗️","lines":["AWS CDK, the shared StaticSite construct","Runs in CI, never at runtime"],"chips":[{"icon":"🗂️","text":"no source in this repository","tone":"plain"}],"detail":"AWS CDK, the shared StaticSite construct. One StaticSite from @borso/infra, in eu-west-3. Build-time only, never reached at runtime.","tone":"build","x":28,"y":28,"width":288,"height":84}],"edges":[]}</script>
       </div>
-      <div class="cards">
+      <details class="cards-panel">
+        <summary>2 blocks in detail</summary>
+        <div class="cards">
       <article class="card" data-group="browser">
         <header>
           <h4>Single page application</h4>
@@ -664,6 +794,58 @@
         <p>AWS CDK, the shared StaticSite construct. One StaticSite from @borso/infra, in eu-west-3. Build-time only, never reached at runtime.</p>
         
       </article></div>
+      </details>
+      
+      <section class="coverage">
+        <h3>Codebase coverage <b>103 of 103 files</b> <span class="coverage-percent">100%</span></h3>
+        <p class="coverage-rule">A file is drawn when its container is one the manifest declares. A file in a container the manifest has never heard of is invisible here.</p>
+        <ul class="coverage-layers"><li>
+          <span class="coverage-layer">atom</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">21/21</span>
+        </li><li>
+          <span class="coverage-layer">config</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">2/2</span>
+        </li><li>
+          <span class="coverage-layer">core</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">declaration</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">i18n</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">molecule</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">22/22</span>
+        </li><li>
+          <span class="coverage-layer">organism</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">13/13</span>
+        </li><li>
+          <span class="coverage-layer">route</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">3/3</span>
+        </li><li>
+          <span class="coverage-layer">types</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">unknown</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">15/15</span>
+        </li><li>
+          <span class="coverage-layer">utils</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">15/15</span>
+        </li></ul>
+        <p class="coverage-none">Nothing is left out at this level.</p>
+      </section>
     </section>
     <section class="level" id="level-component" hidden>
       <h2>Level 3 — Components</h2>
@@ -687,7 +869,9 @@
         <div class="graph-stage"></div>
         <script type="application/json">{"level":"component","title":"Level 3 — Components","width":649.5,"height":734,"nodes":[{"id":"site::root","label":"root","icon":"⚛️","lines":["","atom, config, core, declaration, i18n, molecule, organism, route, types, unknown, utils"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"},{"icon":"📘","text":"atom-lookup-variants","tone":"blueprint"},{"icon":"📘","text":"atom-null-render","tone":"blueprint"},{"icon":"📘","text":"atom-plain","tone":"blueprint"},{"icon":"📘","text":"cdk-app-entrypoint","tone":"blueprint"},{"icon":"📘","text":"component-lookup-table","tone":"blueprint"},{"icon":"📘","text":"core-appearance","tone":"blueprint"},{"icon":"📘","text":"core-label-key","tone":"blueprint"},{"icon":"📘","text":"core-view-intent","tone":"blueprint"},{"icon":"📘","text":"domain-types-module","tone":"blueprint"},{"icon":"📘","text":"hook-effect-free-mount","tone":"blueprint"},{"icon":"📘","text":"hook-external-store","tone":"blueprint"},{"icon":"📘","text":"i18n-key-walk","tone":"blueprint"},{"icon":"📘","text":"i18n-parity-gate","tone":"blueprint"},{"icon":"📘","text":"i18n-setup","tone":"blueprint"},{"icon":"📘","text":"i18n-typed-keys","tone":"blueprint"},{"icon":"📘","text":"injected-storage-slice","tone":"blueprint"},{"icon":"📘","text":"machine-impure-edge","tone":"blueprint"},{"icon":"📘","text":"machine-singleton","tone":"blueprint"},{"icon":"📘","text":"molecule-presentational","tone":"blueprint"},{"icon":"📘","text":"organism-machine-bound","tone":"blueprint"},{"icon":"📘","text":"organism-presentational","tone":"blueprint"},{"icon":"📘","text":"organism-shell","tone":"blueprint"},{"icon":"📘","text":"organism-table-dispatch","tone":"blueprint"},{"icon":"📘","text":"persisted-store-module","tone":"blueprint"},{"icon":"📘","text":"ref-callback-browser-api","tone":"blueprint"},{"icon":"📘","text":"route-suspense-resource","tone":"blueprint"},{"icon":"📘","text":"satisfies-over-assertion","tone":"blueprint"},{"icon":"📘","text":"shared-props-shape","tone":"blueprint"},{"icon":"📘","text":"site-entrypoint","tone":"blueprint"},{"icon":"📘","text":"state-machine-module","tone":"blueprint"},{"icon":"📘","text":"unknown-payload-parser","tone":"blueprint"},{"icon":"📘","text":"utils-branchless-list","tone":"blueprint"},{"icon":"📘","text":"utils-pure-module","tone":"blueprint"},{"icon":"📘","text":"workspace-test-config","tone":"blueprint"}],"detail":"103 files in Single page application. Layers: atom, config, core, declaration, i18n, molecule, organism, route, types, unknown, utils.","tone":"site","x":28,"y":28,"width":593.5,"height":678}],"edges":[]}</script>
       </div>
-      <div class="cards">
+      <details class="cards-panel">
+        <summary>1 block in detail</summary>
+        <div class="cards">
       <article class="card" data-group="site">
         <header>
           <h4>root</h4>
@@ -696,6 +880,58 @@
         <p>103 files in Single page application. Layers: atom, config, core, declaration, i18n, molecule, organism, route, types, unknown, utils.</p>
         <p class="bp"><span class="bp-declares">17 blueprints</span><span class="bp-follows">103 followers</span></p>
       </article></div>
+      </details>
+      
+      <section class="coverage">
+        <h3>Codebase coverage <b>103 of 103 files</b> <span class="coverage-percent">100%</span></h3>
+        <p class="coverage-rule">Every file belongs to exactly one context, named by its folder or by a @Feature tag, so this level accounts for all of them.</p>
+        <ul class="coverage-layers"><li>
+          <span class="coverage-layer">atom</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">21/21</span>
+        </li><li>
+          <span class="coverage-layer">config</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">2/2</span>
+        </li><li>
+          <span class="coverage-layer">core</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">declaration</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">i18n</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">molecule</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">22/22</span>
+        </li><li>
+          <span class="coverage-layer">organism</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">13/13</span>
+        </li><li>
+          <span class="coverage-layer">route</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">3/3</span>
+        </li><li>
+          <span class="coverage-layer">types</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">unknown</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">15/15</span>
+        </li><li>
+          <span class="coverage-layer">utils</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">15/15</span>
+        </li></ul>
+        <p class="coverage-none">Nothing is left out at this level.</p>
+      </section>
     </section>
     <section class="level" id="level-code" hidden>
       <h2>Level 4 — Code</h2>
@@ -1535,6 +1771,57 @@
       </tr></tbody>
         </table>
       </div>
+      
+      <section class="coverage">
+        <h3>Codebase coverage <b>103 of 103 files</b> <span class="coverage-percent">100%</span></h3>
+        <p class="coverage-rule">Every file is a row.</p>
+        <ul class="coverage-layers"><li>
+          <span class="coverage-layer">atom</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">21/21</span>
+        </li><li>
+          <span class="coverage-layer">config</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">2/2</span>
+        </li><li>
+          <span class="coverage-layer">core</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">declaration</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">i18n</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">molecule</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">22/22</span>
+        </li><li>
+          <span class="coverage-layer">organism</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">13/13</span>
+        </li><li>
+          <span class="coverage-layer">route</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">3/3</span>
+        </li><li>
+          <span class="coverage-layer">types</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">unknown</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">15/15</span>
+        </li><li>
+          <span class="coverage-layer">utils</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">15/15</span>
+        </li></ul>
+        <p class="coverage-none">Nothing is left out at this level.</p>
+      </section>
     </section>
 
   <section class="level" id="level-slice" hidden>
@@ -1563,6 +1850,60 @@
       </div>
     <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>
     
+    
+      <section class="coverage">
+        <h3>Codebase coverage <b>0 of 103 files</b> <span class="coverage-percent">0%</span></h3>
+        <p class="coverage-rule">A file is drawn when some user action reaches one of its exports. What is left is either the back end of a feature whose front end does not exist yet, or code no action reaches at all.</p>
+        <ul class="coverage-layers"><li class="partial">
+          <span class="coverage-layer">atom</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/21</span>
+        </li><li class="partial">
+          <span class="coverage-layer">config</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/2</span>
+        </li><li class="partial">
+          <span class="coverage-layer">core</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/5</span>
+        </li><li class="partial">
+          <span class="coverage-layer">declaration</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/1</span>
+        </li><li class="partial">
+          <span class="coverage-layer">i18n</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/5</span>
+        </li><li class="partial">
+          <span class="coverage-layer">molecule</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/22</span>
+        </li><li class="partial">
+          <span class="coverage-layer">organism</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/13</span>
+        </li><li class="partial">
+          <span class="coverage-layer">route</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/3</span>
+        </li><li class="partial">
+          <span class="coverage-layer">types</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/1</span>
+        </li><li class="partial">
+          <span class="coverage-layer">unknown</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/15</span>
+        </li><li class="partial">
+          <span class="coverage-layer">utils</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/15</span>
+        </li></ul>
+        <details class="coverage-missing">
+          <summary>103 files this level does not draw</summary>
+          <ul><li class="loc">bin/app.ts</li><li class="loc">scripts/build-openings.ts</li><li class="loc">site/components/atoms/BoardView.tsx</li><li class="loc">site/components/atoms/Button.tsx</li><li class="loc">site/components/atoms/EmptySlot.tsx</li><li class="loc">site/components/atoms/ErrorPanel.tsx</li><li class="loc">site/components/atoms/InlineBanner.tsx</li><li class="loc">site/components/atoms/LoadMoreRow.tsx</li><li class="loc">site/components/atoms/LoadingPanel.tsx</li><li class="loc">site/components/atoms/MiniBoard.tsx</li><li class="loc">site/components/atoms/Modal.tsx</li><li class="loc">site/components/atoms/MoveButtonList.tsx</li><li class="loc">site/components/atoms/Select.tsx</li><li class="loc">site/components/atoms/SelectorCard.tsx</li><li class="loc">site/components/atoms/SelectorPanel.tsx</li><li class="loc">site/components/atoms/SessionStartHint.tsx</li><li class="loc">site/components/atoms/StatusItem.tsx</li><li class="loc">site/components/atoms/ToggleSlider.tsx</li><li class="loc">site/components/atoms/boardDrop.utils.ts</li><li class="loc">site/components/atoms/boardPieces.tsx</li><li class="loc">site/components/atoms/buttonStyles.ts</li><li class="loc">site/components/atoms/loadMoreRow.types.ts</li><li class="loc">site/components/atoms/moveNotation.utils.ts</li><li class="loc">site/components/molecules/AutoOpponentToggle.tsx</li><li class="loc">site/components/molecules/BoardStyleSelect.tsx</li><li class="loc">site/components/molecules/LanguageSwitcher.tsx</li><li class="loc">site/components/molecules/LearnClearedBanner.tsx</li><li class="loc">site/components/molecules/LearnDrillPanel.tsx</li><li class="loc">site/components/molecules/LearnDrillProgress.tsx</li><li class="loc">site/components/molecules/LearnOutOfBookModal.tsx</li><li class="loc">site/components/molecules/LearnPickPrompt.tsx</li><li class="loc">site/components/molecules/LinesPanel.tsx</li><li class="loc">site/components/molecules/ModeToggle.tsx</li><li class="loc">site/components/molecules/OpeningsLoadFailurePanel.tsx</li><li class="loc">site/components/molecules/OpeningsLoadingPanel.tsx</li><li class="loc">site/components/molecules/OpeningsPanel.tsx</li><li class="loc">site/components/molecules/PlayBookPanel.tsx</li><li class="loc">site/components/molecules/PlayCompletedBanner.tsx</li><li class="loc">site/components/molecules/PlayOutOfBookModal.tsx</li><li class="loc">site/components/molecules/PlayStatusPanel.tsx</li><li class="loc">site/components/molecules/ShowMovesToggle.tsx</li><li class="loc">site/components/molecules/SideSelector.tsx</li><li class="loc">site/components/molecules/TreeVisualizationToggle.tsx</li><li class="loc">site/components/molecules/VariationsPanel.tsx</li><li class="loc">site/components/molecules/openingPanel.types.ts</li><li class="loc">site/components/organisms/CompactOpeningFlow.tsx</li><li class="loc">site/components/organisms/LearnDrill.tsx</li><li class="loc">site/components/organisms/LearnSessionControl.tsx</li><li class="loc">site/components/organisms/LearnTreeSession.tsx</li><li class="loc">site/components/organisms/OpeningFlowSelector.tsx</li><li class="loc">site/components/organisms/PlaySession.tsx</li><li class="loc">site/components/organisms/PlaySessionControl.tsx</li><li class="loc">site/components/organisms/SelectionAutoOpponentRow.tsx</li><li class="loc">site/components/organisms/SelectionScreen.tsx</li><li class="loc">site/components/organisms/SessionScreen.tsx</li><li class="loc">site/components/organisms/TopBar.tsx</li><li class="loc">site/components/organisms/WideOpeningFlow.tsx</li><li class="loc">site/components/organisms/session.types.ts</li><li class="loc">site/config/openingsCacheVersion.ts</li><li class="loc">site/i18n/i18n-parity.core.ts</li><li class="loc">site/i18n/i18n.ts</li><li class="loc">site/i18n/i18n.utils.ts</li><li class="loc">site/i18n/locale-storage.utils.ts</li><li class="loc">site/i18n/react-i18next.d.ts</li><li class="loc">site/lib/componentTable.types.ts</li><li class="loc">site/lib/usePaginatedList.ts</li><li class="loc">site/lib/useSessionStart.ts</li><li class="loc">site/lib/viewport.ts</li><li class="loc">site/lib/viewport.utils.ts</li><li class="loc">site/main.tsx</li><li class="loc">site/openings/bookArrows.utils.ts</li><li class="loc">site/openings/bookEngine.utils.ts</li><li class="loc">site/openings/bookTree.utils.ts</li><li class="loc">site/openings/learnSession.core.ts</li><li class="loc">site/openings/learnTreeMachine.utils.ts</li><li class="loc">site/openings/lineDisplay.utils.ts</li><li class="loc">site/openings/loadOpenings.ts</li><li class="loc">site/openings/machineEffects.ts</li><li class="loc">site/openings/machineInstances.ts</li><li class="loc">site/openings/openingFlow.core.ts</li><li class="loc">site/openings/openingIds.utils.ts</li><li class="loc">site/openings/openingsLoad.utils.ts</li><li class="loc">site/openings/openingsResource.ts</li><li class="loc">site/openings/parseOpenings.utils.ts</li><li class="loc">site/openings/playMachine.utils.ts</li><li class="loc">site/openings/playScope.core.ts</li><li class="loc">site/openings/playSession.core.ts</li><li class="loc">site/openings/previews.utils.ts</li><li class="loc">site/openings/selectors.utils.ts</li><li class="loc">site/openings/sessionStart.core.ts</li><li class="loc">site/openings/types.ts</li><li class="loc">site/openings/uciSquare.utils.ts</li><li class="loc">site/routes/OpeningTrainerRoute.tsx</li><li class="loc">site/routes/TrainerScreens.tsx</li><li class="loc">site/routes/trainerScreen.core.ts</li><li class="loc">site/state/appState.ts</li><li class="loc">site/state/persistedState.utils.ts</li><li class="loc">site/test-setup.ts</li><li class="loc">site/theme/boardAppearance.ts</li><li class="loc">site/theme/boardThemes.utils.ts</li><li class="loc">site/vite-env.d.ts</li><li class="loc">vite.config.ts</li><li class="loc">vitest.config.ts</li></ul>
+        </details>
+      </section>
   </section>
 
   <section class="level" id="level-patterns" hidden>

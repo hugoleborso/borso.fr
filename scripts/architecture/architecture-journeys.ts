@@ -25,7 +25,12 @@ import {
   type NodeChip,
   SIZE_ICON,
 } from './architecture-graph';
-import { type ArchitectureFile, type ExportedSymbol, symbolMetrics } from './architecture-model';
+import {
+  type ArchitectureFile,
+  type ExportedSymbol,
+  type ScreenRoute,
+  symbolMetrics,
+} from './architecture-model';
 
 export interface JourneyAction {
   readonly id: string;
@@ -50,8 +55,9 @@ export interface JourneyGraph {
 }
 
 const QUERIES_SUFFIX = '.queries.ts';
-const MAXIMUM_TRIGGERS_SHOWN = 5;
 const MAXIMUM_WALK_DEPTH = 6;
+/** A bound on the upward walk, so a cycle in the import graph cannot spin. */
+const MAXIMUM_SCREEN_WALK_STEPS = 500;
 
 /** `useAppendSetlistEntry` reads as `Append setlist entry`. */
 export function humaniseHook(hook: string): string {
@@ -74,6 +80,36 @@ function componentLabel(file: ArchitectureFile): string {
 interface WalkResult {
   readonly nodes: GraphNode[];
   readonly edges: GraphEdge[];
+}
+
+/**
+ * The screens whose page component reaches a file through imports.
+ *
+ * Walked upward rather than down: a component knows nothing about who renders
+ * it, so the only way from a button back to an address is to follow importers
+ * until one of them is a page the router names.
+ */
+function screensReaching(
+  filePath: string,
+  screens: readonly ScreenRoute[],
+  importersOf: ReadonlyMap<string, readonly string[]>,
+): ScreenRoute[] {
+  const reachable = new Set<string>([filePath]);
+  const queue = [filePath];
+  let steps = 0;
+  while (queue.length > 0 && steps < MAXIMUM_SCREEN_WALK_STEPS) {
+    steps += 1;
+    const current = queue.shift();
+    if (current === undefined) continue;
+    for (const importer of importersOf.get(current) ?? []) {
+      if (reachable.has(importer)) continue;
+      reachable.add(importer);
+      queue.push(importer);
+    }
+  }
+  return screens.filter(
+    (screen) => screen.componentFile !== null && reachable.has(screen.componentFile),
+  );
 }
 
 /** The pills a function block prints: its pattern, its size, its shape. */
@@ -244,11 +280,21 @@ export interface JourneyModel {
    * by however many actions reach it.
    */
   readonly sources: ReadonlyMap<string, SourceEntry>;
+  /** Every file some action's graph draws, which is this level's coverage. */
+  readonly drawnFiles: ReadonlySet<string>;
 }
 
 export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel {
   const fileByPath = new Map(files.map((file) => [file.path, file]));
   const sources = new Map<string, SourceEntry>();
+  const screens = files.flatMap((file) => file.screenRoutes);
+  const importersOf = new Map<string, string[]>();
+  for (const file of files) {
+    for (const edge of file.imports) {
+      if (edge.targetFile === null) continue;
+      importersOf.set(edge.targetFile, [...(importersOf.get(edge.targetFile) ?? []), file.path]);
+    }
+  }
 
   const routeOwner = new Map<string, { file: ArchitectureFile; symbol: string }[]>();
   const compositionRoot = files.find((file) => file.path.endsWith('/api/src/app.ts'));
@@ -296,6 +342,7 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
       const call = exported.apiCalls[0];
       if (call === undefined) continue;
       const actionId = `${featureId}:${exported.name}`;
+      const isMutationHook = exported.source.includes('useMutation');
       const hookNodeId = `hook:${exported.name}`;
       const endpointId = `endpoint:${call.method} ${call.path}`;
 
@@ -311,7 +358,75 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
       const nodes: GraphNode[] = [];
       const edges: GraphEdge[] = [];
 
-      for (const trigger of triggers.slice(0, MAXIMUM_TRIGGERS_SHOWN)) {
+      // A flow that starts at a component starts nowhere a person recognises.
+      // Each trigger is walked back up the import graph to the screens that can
+      // reach it, so the first block is an address the reader can type.
+      for (const trigger of triggers) {
+        for (const screen of screensReaching(trigger.path, screens, importersOf)) {
+          const screenId = `screen:${screen.path}`;
+          nodes.push({
+            id: screenId,
+            label: screen.path,
+            kind: 'step-screen',
+            detail: `${screen.component} renders at ${screen.path}`,
+            group: 'screen',
+            blueprints: [],
+            followsBlueprints: [],
+            fileCount: 0,
+            layer: 'screen',
+            icon: '\u{1F517}',
+            lines: ['screen'],
+          });
+          if (screen.componentFile !== null && screen.componentFile !== trigger.path) {
+            const pageId = `ui:${screen.componentFile}`;
+            edges.push({ from: screenId, to: pageId, label: 'renders', kind: 'import' });
+          } else {
+            edges.push({
+              from: screenId,
+              to: `ui:${trigger.path}`,
+              label: 'renders',
+              kind: 'import',
+            });
+          }
+        }
+      }
+      // The page is drawn as a trigger of its own when it is not one already,
+      // so the chain from the address to the component holding the gesture is
+      // continuous rather than jumping over whatever sits between.
+      const pageFiles = [
+        ...new Set(
+          triggers.flatMap((trigger) =>
+            screensReaching(trigger.path, screens, importersOf)
+              .map((screen) => screen.componentFile)
+              .filter((path): path is string => path !== null),
+          ),
+        ),
+      ];
+      const drawnFiles = [
+        ...new Map(
+          [...triggers, ...pageFiles.flatMap((path) => fileByPath.get(path) ?? [])].map((file) => [
+            file.path,
+            file,
+          ]),
+        ).values(),
+      ];
+      // A page that reaches the hook through another component gets the edge to
+      // that component rather than to the hook, so the middle of the chain is
+      // visible instead of skipped.
+      for (const page of drawnFiles) {
+        for (const edge of page.imports) {
+          if (edge.targetFile === null) continue;
+          if (!drawnFiles.some((each) => each.path === edge.targetFile)) continue;
+          edges.push({
+            from: `ui:${page.path}`,
+            to: `ui:${edge.targetFile}`,
+            label: 'renders',
+            kind: 'import',
+          });
+        }
+      }
+
+      for (const trigger of drawnFiles) {
         // The component that triggers the action is a file rather than one
         // function, so the block opens whichever export carries the file's own
         // name — the component itself — and falls back to the first export when
@@ -354,24 +469,43 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
                 chips: symbolChips(triggerBlueprint, componentExport),
               }),
         });
-        edges.push({ from: triggerKey, to: hookNodeId, label: '', kind: 'import' });
-      }
-      if (triggers.length > MAXIMUM_TRIGGERS_SHOWN) {
-        const remaining = triggers.length - MAXIMUM_TRIGGERS_SHOWN;
+        if (!triggers.some((each) => each.path === trigger.path)) continue;
+        // The gesture is the JSX attribute the hook's binding sits under. It is
+        // the one part of "what the user did" the tree actually records.
+        // Only a write gets a gesture block. A read hook's data reaches a
+        // handler too — a list feeding an `onSelect` — and drawing that as
+        // something the person did would be a claim the code does not make.
+        const gestureNames = isMutationHook
+          ? [
+              ...new Set(
+                trigger.gestures
+                  .filter((gesture) => gesture.hook === exported.name)
+                  .map((gesture) => gesture.event),
+              ),
+            ]
+              .sort()
+              .join(', ')
+          : '';
+        if (gestureNames === '') {
+          edges.push({ from: triggerKey, to: hookNodeId, label: '', kind: 'import' });
+          continue;
+        }
+        const gestureId = `gesture:${trigger.path}`;
         nodes.push({
-          id: `ui:more:${actionId}`,
-          label: `+${remaining} more`,
-          kind: 'step-ui',
-          detail: triggers
-            .slice(MAXIMUM_TRIGGERS_SHOWN)
-            .map((each) => each.path)
-            .join('\n'),
-          group: 'ui',
+          id: gestureId,
+          label: gestureNames,
+          kind: 'step-gesture',
+          detail: `Handled in ${trigger.path}`,
+          group: 'gesture',
           blueprints: [],
           followsBlueprints: [],
           fileCount: 0,
+          layer: 'gesture',
+          icon: '\u{1F446}',
+          lines: ['user gesture'],
         });
-        edges.push({ from: `ui:more:${actionId}`, to: hookNodeId, label: '', kind: 'import' });
+        edges.push({ from: triggerKey, to: gestureId, label: '', kind: 'import' });
+        edges.push({ from: gestureId, to: hookNodeId, label: 'calls', kind: 'import' });
       }
 
       const hookBlueprint = [...exported.blueprints, ...exported.followsBlueprints][0] ?? '';
@@ -458,5 +592,15 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
     });
   }
 
-  return { features, graphs, sources };
+  const drawnFiles = new Set(
+    [...graphs.values()].flatMap((graph) =>
+      graph.nodes.flatMap((node) => {
+        if (node.sourceKey !== undefined && node.sourceKey.startsWith('ui:')) {
+          return [node.sourceKey.slice('ui:'.length)];
+        }
+        return node.location === undefined ? [] : [node.location.split(':')[0] ?? ''];
+      }),
+    ),
+  );
+  return { features, graphs, sources, drawnFiles };
 }

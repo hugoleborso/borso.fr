@@ -114,6 +114,33 @@ export interface ArchitectureFile {
    * that way would otherwise read as unreachable.
    */
   readonly urlStrings: readonly string[];
+  /** Screens this module declares, when it is the router. */
+  readonly screenRoutes: readonly ScreenRoute[];
+  /**
+   * JSX event handlers whose body reaches an identifier imported from a query
+   * module, paired with the hook that identifier came from. This is the one
+   * record the tree keeps of what a person actually did.
+   */
+  readonly gestures: readonly HookGesture[];
+}
+
+/** One `<Route path="…" element={<Page />} />` in the front end's router. */
+export interface ScreenRoute {
+  readonly path: string;
+  readonly component: string;
+  /** Repo-relative path of the module the component comes from. */
+  readonly componentFile: string | null;
+}
+
+/** A JSX event handler whose body reaches a given identifier. */
+export interface GestureBinding {
+  readonly event: string;
+  readonly line: number;
+}
+
+export interface HookGesture extends GestureBinding {
+  /** The query hook whose binding this handler reaches. */
+  readonly hook: string;
 }
 
 export interface RouteMount {
@@ -740,7 +767,155 @@ export function buildArchitectureFile(
     mounts,
     apiCalls: readApiCalls(sourceFile, clientBinding ?? null),
     urlStrings: readApiPathStrings(text),
+    screenRoutes: readScreenRoutes(sourceFile, importLookup),
+    gestures: readHookGestures(sourceFile, imports),
   };
+}
+
+/**
+ * The screens the front-end router declares.
+ *
+ * `<Route path="/catalog/:songId" element={<SongDetailPage />} />` is the only
+ * place in the tree that ties a URL to a component, and a flow that starts at a
+ * function rather than at an address is a flow nobody can follow back to
+ * something they did.
+ */
+export function readScreenRoutes(
+  sourceFile: ts.SourceFile,
+  importLookup: ReadonlyMap<string, CallSymbol>,
+): ScreenRoute[] {
+  const found: ScreenRoute[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isJsxSelfClosingElement(node) && node.tagName.getText(sourceFile) === 'Route') {
+      let path: string | null = null;
+      let component: string | null = null;
+      for (const attribute of node.attributes.properties) {
+        if (!ts.isJsxAttribute(attribute)) continue;
+        const name = attribute.name.getText(sourceFile);
+        const value = attribute.initializer;
+        if (name === 'path' && value !== undefined && ts.isStringLiteral(value)) {
+          path = value.text;
+        }
+        if (name === 'element' && value !== undefined && ts.isJsxExpression(value)) {
+          const expression = value.expression;
+          if (expression !== undefined && ts.isJsxSelfClosingElement(expression)) {
+            component = expression.tagName.getText(sourceFile);
+          }
+        }
+      }
+      if (path !== null && component !== null) {
+        found.push({
+          path,
+          component,
+          componentFile: importLookup.get(component)?.file ?? null,
+        });
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return found;
+}
+
+/**
+ * The JSX event handlers whose body references one of the given identifiers.
+ *
+ * A page reaches a mutation hook through a binding, and what a person actually
+ * did is the attribute that binding sits under: `onClick`, `onSubmit`,
+ * `onDragEnd`. Nothing else in the tree records the gesture.
+ */
+export function readGestures(
+  sourceFile: ts.SourceFile,
+  identifiers: ReadonlySet<string>,
+): GestureBinding[] {
+  const found = new Map<string, GestureBinding>();
+  const visit = (node: ts.Node): void => {
+    if (ts.isJsxAttribute(node)) {
+      const name = node.name.getText(sourceFile);
+      const value = node.initializer;
+      if (/^on[A-Z]/.test(name) && value !== undefined && ts.isJsxExpression(value)) {
+        const referenced = collectReferencedIdentifiers(value);
+        if ([...identifiers].some((each) => referenced.has(each)) && !found.has(name)) {
+          found.set(name, {
+            event: name,
+            line: sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1,
+          });
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return [...found.values()].sort((left, right) => left.event.localeCompare(right.event));
+}
+
+/**
+ * Gestures, one per event handler, tagged with the query hook it reaches.
+ *
+ * A component imports `useCreateBar`, binds it to a local, and the local is
+ * referenced inside an `onSubmit`. Following the binding rather than the import
+ * is what keeps a page that imports four hooks from claiming all four sit under
+ * every handler.
+ */
+export function readHookGestures(
+  sourceFile: ts.SourceFile,
+  imports: readonly ImportEdge[],
+): HookGesture[] {
+  const hookNames = new Set(
+    imports
+      .filter((edge) => edge.targetFile?.endsWith('.queries.ts') === true && !edge.isTypeOnly)
+      .flatMap((edge) => edge.namedBindings)
+      .filter((binding) => binding.startsWith('use')),
+  );
+  if (hookNames.size === 0) return [];
+
+  // The hook is called once and its result held in a local, the local is
+  // wrapped in a callback, and the callback is held in another local before a
+  // handler ever names it. Following one hop finds nothing; the propagation
+  // repeats until no new name is bound, which is what reaches the handler on a
+  // page that routes its mutations through a dispatch object.
+  const localsByHook = new Map<string, Set<string>>(
+    [...hookNames].map((hook) => [hook, new Set([hook])]),
+  );
+  const declarations: { readonly names: string[]; readonly referenced: ReadonlySet<string> }[] = [];
+  const collectDeclarations = (node: ts.Node): void => {
+    if (ts.isVariableDeclaration(node) && node.initializer !== undefined) {
+      const bound: string[] = [];
+      if (ts.isIdentifier(node.name)) bound.push(node.name.text);
+      else if (ts.isObjectBindingPattern(node.name)) {
+        for (const element of node.name.elements) {
+          if (ts.isIdentifier(element.name)) bound.push(element.name.text);
+        }
+      }
+      if (bound.length > 0) {
+        declarations.push({
+          names: bound,
+          referenced: collectReferencedIdentifiers(node.initializer),
+        });
+      }
+    }
+    ts.forEachChild(node, collectDeclarations);
+  };
+  collectDeclarations(sourceFile);
+
+  for (const names of localsByHook.values()) {
+    let hasGrown = true;
+    while (hasGrown) {
+      hasGrown = false;
+      for (const declaration of declarations) {
+        if (![...names].some((each) => declaration.referenced.has(each))) continue;
+        for (const name of declaration.names) {
+          if (names.has(name)) continue;
+          names.add(name);
+          hasGrown = true;
+        }
+      }
+    }
+  }
+
+  return [...localsByHook.entries()].flatMap(([hook, names]) =>
+    readGestures(sourceFile, names).map((gesture) => ({ ...gesture, hook })),
+  );
 }
 
 export { isTestFile };

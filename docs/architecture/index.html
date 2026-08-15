@@ -409,6 +409,10 @@
   /* The journey level colours a node by what it is in the flow, so the reader
      can see the shape — screen, hook, wire, service, data — before reading a
      single label. */
+  .node-step-screen .node-stripe { fill: var(--accent); }
+  .node-step-screen .node-body { fill: var(--accent-soft); }
+  .node-step-gesture .node-stripe { fill: var(--signal); }
+  .node-step-gesture .node-body { fill: var(--signal-soft); }
   .node-step-ui .node-stripe { fill: var(--layer-route); }
   .node-step-hook .node-stripe { fill: var(--layer-service); }
   .node-step-endpoint .node-stripe { fill: var(--accent); }
@@ -541,6 +545,76 @@
   .tok-keyword { color: var(--layer-edge); }
   .tok-type { color: var(--layer-route); }
   .tok-call { color: var(--layer-pure); }
+
+  .cards-panel { margin-top: 1rem; }
+  .cards-panel > summary,
+  .coverage-missing > summary {
+    cursor: pointer;
+    font: 500 .78rem/1.6 var(--font-mono);
+    color: var(--muted);
+    padding: .4rem .6rem;
+    background: var(--panel-sunk);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+  }
+  .cards-panel > summary:hover,
+  .coverage-missing > summary:hover { border-color: var(--accent); color: var(--accent); }
+  .cards-panel[open] > summary { margin-bottom: .8rem; }
+
+  .coverage { margin-top: 1.2rem; }
+  .coverage h3 {
+    margin: 0 0 .3rem;
+    font: 600 .84rem/1.5 var(--font-mono);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: baseline;
+  }
+  .coverage h3 b { font-weight: 500; color: var(--muted); }
+  .coverage-percent {
+    margin-left: auto;
+    font: 600 .84rem/1.5 var(--font-mono);
+    color: var(--accent);
+  }
+  .coverage-rule { margin: 0 0 .7rem; color: var(--muted); font-size: .8rem; line-height: 1.6; }
+  .coverage-layers {
+    list-style: none;
+    margin: 0 0 .8rem;
+    padding: 0;
+    display: grid;
+    gap: .25rem .9rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  }
+  .coverage-layers li {
+    display: grid;
+    grid-template-columns: 7rem 1fr auto;
+    align-items: center;
+    gap: .5rem;
+    font: .68rem/1.6 var(--font-mono);
+    color: var(--muted);
+    min-width: 0;
+  }
+  .coverage-layer { overflow-wrap: anywhere; }
+  .coverage-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
+    overflow: hidden;
+    min-width: 0;
+  }
+  .coverage-bar i { display: block; height: 100%; background: var(--accent); }
+  .coverage-layers .partial .coverage-bar i { background: var(--signal); }
+  .coverage-layers .partial .coverage-count { color: var(--signal); font-weight: 600; }
+  .coverage-none { margin: 0; color: var(--muted); font-size: .78rem; }
+  .coverage-missing > ul {
+    list-style: none;
+    margin: .6rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: .15rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  }
+  .coverage-missing > ul li { min-width: 0; overflow-wrap: anywhere; }
 
   .orphan-routes { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
   .orphan-routes li {

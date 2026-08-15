@@ -14,7 +14,7 @@ import { GRAPH_RUNTIME_SCRIPT, GRAPH_STYLES } from './architecture-graph-view';
 import type { JourneyModel } from './architecture-journeys';
 import type { LevelLayout } from './architecture-layout';
 import type { ArchitectureFile } from './architecture-model';
-import type { BlueprintEntry, ContextSlice, GraphLevel } from './architecture-graph';
+import type { BlueprintEntry, ContextSlice, GraphLevel, LevelCoverage } from './architecture-graph';
 import type { ArchitectureManifest } from './architecture-manifest';
 
 export interface RenderInput {
@@ -23,6 +23,8 @@ export interface RenderInput {
   readonly slices: readonly ContextSlice[];
   readonly blueprints: readonly BlueprintEntry[];
   readonly files: readonly ArchitectureFile[];
+  /** How much of the codebase each level draws, one entry per level id. */
+  readonly coverage: readonly LevelCoverage[];
   readonly unmarkedCount: number;
   readonly layouts: ReadonlyMap<string, LevelLayout>;
   readonly journeys: JourneyModel;
@@ -243,6 +245,51 @@ function renderNodeCards(level: GraphLevel): string {
       </article>`,
     )
     .join('');
+}
+
+/**
+ * What a level draws, and what it leaves out.
+ *
+ * A diagram that shows most of a codebase and says nothing about the rest is
+ * read as showing all of it. The bar per layer says how much, and the list says
+ * exactly which files are missing — collapsed, because on a level that draws
+ * everything there is nothing to open, and on one that does not the list is
+ * long.
+ */
+function renderCoverage(coverage: LevelCoverage | undefined, applicationPrefix: string): string {
+  if (coverage === undefined) return '';
+  const total = coverage.byLayer.reduce((sum, layer) => sum + layer.total, 0);
+  const covered = coverage.byLayer.reduce((sum, layer) => sum + layer.covered, 0);
+  const percent = total === 0 ? 100 : Math.round((covered / total) * 100);
+  const rows = coverage.byLayer
+    .map((layer) => {
+      const layerPercent =
+        layer.total === 0 ? 100 : Math.round((layer.covered / layer.total) * 100);
+      return `<li${layer.covered < layer.total ? ' class="partial"' : ''}>
+          <span class="coverage-layer">${escapeHtml(layer.layer)}</span>
+          <span class="coverage-bar"><i style="width:${layerPercent}%"></i></span>
+          <span class="coverage-count">${layer.covered}/${layer.total}</span>
+        </li>`;
+    })
+    .join('');
+  return `
+      <section class="coverage">
+        <h3>Codebase coverage <b>${covered} of ${total} files</b> <span class="coverage-percent">${percent}%</span></h3>
+        <p class="coverage-rule">${escapeHtml(coverage.rule)}</p>
+        <ul class="coverage-layers">${rows}</ul>
+        ${
+          coverage.uncovered.length === 0
+            ? '<p class="coverage-none">Nothing is left out at this level.</p>'
+            : `<details class="coverage-missing">
+          <summary>${coverage.uncovered.length} file${coverage.uncovered.length === 1 ? '' : 's'} this level does not draw</summary>
+          <ul>${coverage.uncovered
+            .map(
+              (path) => `<li class="loc">${escapeHtml(path.replace(applicationPrefix, ''))}</li>`,
+            )
+            .join('')}</ul>
+        </details>`
+        }
+      </section>`;
 }
 
 function renderBlueprints(blueprints: readonly BlueprintEntry[]): string {
@@ -584,6 +631,7 @@ export function renderArchitecturePage(input: RenderInput): string {
     slices,
     blueprints,
     files,
+    coverage,
     unmarkedCount,
     layouts,
     journeys,
@@ -629,10 +677,21 @@ export function renderArchitecturePage(input: RenderInput): string {
           <thead><tr><th>File</th><th>Layer</th><th>Context</th><th class="num">Lines</th><th class="num">Exports</th><th class="num">Imports</th><th>Blueprint</th></tr></thead>
           <tbody>${fileRows}</tbody>
         </table>
-      </div>`
+      </div>
+      ${renderCoverage(
+        coverage.find((each) => each.levelId === level.id),
+        applicationPrefix,
+      )}`
           : `
       ${renderGraph(level, layouts.get(level.id) ?? { nodes: [], edges: [], width: 0, height: 0 })}
-      <div class="cards">${renderNodeCards(level)}</div>`
+      <details class="cards-panel">
+        <summary>${level.nodes.length} block${level.nodes.length === 1 ? '' : 's'} in detail</summary>
+        <div class="cards">${renderNodeCards(level)}</div>
+      </details>
+      ${renderCoverage(
+        coverage.find((each) => each.levelId === level.id),
+        applicationPrefix,
+      )}`
       }
     </section>`,
     )
@@ -682,6 +741,10 @@ ${PAGE_STYLES}
     ${renderJourneys(journeys, journeyLayouts)}
     <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>
     ${renderUnreachedByAction(journeys, slices)}
+    ${renderCoverage(
+      coverage.find((each) => each.levelId === 'slice'),
+      applicationPrefix,
+    )}
   </section>
 
   <section class="level" id="level-patterns" hidden>

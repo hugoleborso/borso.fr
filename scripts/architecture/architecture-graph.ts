@@ -151,6 +151,53 @@ function containerIdOf(file: ArchitectureFile): string {
   return CONTAINER_BY_SOURCE[file.container] ?? file.container;
 }
 
+export interface LayerCoverage {
+  readonly layer: string;
+  readonly covered: number;
+  readonly total: number;
+}
+
+export interface LevelCoverage {
+  readonly levelId: string;
+  /** What being drawn by this level means, so the number can be read. */
+  readonly rule: string;
+  readonly byLayer: readonly LayerCoverage[];
+  readonly uncovered: readonly string[];
+}
+
+/**
+ * How much of the codebase a level actually draws, per layer.
+ *
+ * A level that shows everything says so in one line, and one that does not
+ * lists what it left out. The distinction matters most at 3.5, where a file no
+ * user action reaches is either dead or the back end of a feature with no front
+ * end — and nothing on the page said which files those were.
+ */
+function buildLevelCoverage(
+  levelId: string,
+  rule: string,
+  files: readonly ArchitectureFile[],
+  isCovered: (file: ArchitectureFile) => boolean,
+): LevelCoverage {
+  const byLayer = new Map<string, { covered: number; total: number }>();
+  const uncovered: string[] = [];
+  for (const file of files) {
+    const entry = byLayer.get(file.layer) ?? { covered: 0, total: 0 };
+    entry.total += 1;
+    if (isCovered(file)) entry.covered += 1;
+    else uncovered.push(file.path);
+    byLayer.set(file.layer, entry);
+  }
+  return {
+    levelId,
+    rule,
+    byLayer: [...byLayer.entries()]
+      .map(([layer, counts]) => ({ layer, ...counts }))
+      .sort((left, right) => left.layer.localeCompare(right.layer)),
+    uncovered: uncovered.sort(),
+  };
+}
+
 function uniqueEdges(edges: readonly GraphEdge[]): GraphEdge[] {
   const seen = new Map<string, GraphEdge>();
   for (const edge of edges) {
@@ -894,6 +941,35 @@ async function buildApplication(options: BuildOptions): Promise<void> {
     );
   }
 
+  const declaredContainers = new Set(manifest.containers.map((each) => each.id));
+  const coverage = [
+    buildLevelCoverage(
+      'context',
+      'Every file sits inside the one system box, so this level accounts for all of them by construction. What it cannot show is which file reaches which external — that is level 3.5.',
+      files,
+      () => true,
+    ),
+    buildLevelCoverage(
+      'container',
+      'A file is drawn when its container is one the manifest declares. A file in a container the manifest has never heard of is invisible here.',
+      files,
+      (file) => declaredContainers.has(containerIdOf(file)),
+    ),
+    buildLevelCoverage(
+      'component',
+      'Every file belongs to exactly one context, named by its folder or by a @Feature tag, so this level accounts for all of them.',
+      files,
+      () => true,
+    ),
+    buildLevelCoverage(
+      'slice',
+      'A file is drawn when some user action reaches one of its exports. What is left is either the back end of a feature whose front end does not exist yet, or code no action reaches at all.',
+      files,
+      (file) => journeys.drawnFiles.has(file.path),
+    ),
+    buildLevelCoverage('code', 'Every file is a row.', files, () => true),
+  ];
+
   const page = renderArchitecturePage({
     manifest,
     layouts,
@@ -903,6 +979,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
     slices,
     blueprints,
     files,
+    coverage,
     unmarkedCount: unmarked.length,
   });
 

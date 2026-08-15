@@ -96,6 +96,15 @@ components that trigger it, the hook, the endpoint, and every function behind
 that endpoint down to the tables and external systems. Pick a feature, then an
 action, or take **Everything in <feature>** to see where its actions meet.
 
+A flow starts where a person starts: the URL. The router is the one place that
+ties an address to a component, so `<Route path="/bars" element={<BarsPage />} />`
+gives the first block, the page is walked down through the components that
+render it, and the block before the hook is the gesture — the JSX `on…`
+attribute the hook's binding sits under. `/bars → BarsPage → onSubmit →
+useCreateBar → POST /api/bars → createBar → insertBar → bar`. Only a write gets
+a gesture block: a read hook's data reaches a handler too, and drawing that as
+something the person did would be a claim the code does not make.
+
 An action is an exported hook in a `*.queries.ts` module that calls one
 endpoint. Those are the application's user-facing operations, already named by
 whoever wrote them, so `useAppendSetlistEntry` reads as *Append setlist entry*
@@ -153,6 +162,19 @@ Blocks of one kind sit together. ELK treats input order as a tiebreaker once
 crossings are minimised, so the generator hands it nodes sorted by kind, and the
 external systems land beside each other instead of interleaved with the browser
 APIs they share a rank with.
+
+## What each level leaves out
+
+Every level ends with a coverage panel: how many of the application's files it
+draws, a bar per layer, and the files it does not draw in a list collapsed by
+default. Levels 1, 3 and 4 account for every file by construction and say so in
+one line. Level 2 draws a file when its container is one the manifest declares.
+Level 3.5 draws a file when some user action reaches one of its exports, which
+is 53 of pragma's 243 — the rest is atoms and molecules no single flow names, the
+back end of a feature whose front end does not exist, and code nothing reaches.
+
+A diagram that shows most of a codebase and says nothing about the rest is read
+as showing all of it, which is the failure this panel exists to prevent.
 
 ## The two hand-written inputs
 

@@ -409,6 +409,10 @@
   /* The journey level colours a node by what it is in the flow, so the reader
      can see the shape — screen, hook, wire, service, data — before reading a
      single label. */
+  .node-step-screen .node-stripe { fill: var(--accent); }
+  .node-step-screen .node-body { fill: var(--accent-soft); }
+  .node-step-gesture .node-stripe { fill: var(--signal); }
+  .node-step-gesture .node-body { fill: var(--signal-soft); }
   .node-step-ui .node-stripe { fill: var(--layer-route); }
   .node-step-hook .node-stripe { fill: var(--layer-service); }
   .node-step-endpoint .node-stripe { fill: var(--accent); }
@@ -542,6 +546,76 @@
   .tok-type { color: var(--layer-route); }
   .tok-call { color: var(--layer-pure); }
 
+  .cards-panel { margin-top: 1rem; }
+  .cards-panel > summary,
+  .coverage-missing > summary {
+    cursor: pointer;
+    font: 500 .78rem/1.6 var(--font-mono);
+    color: var(--muted);
+    padding: .4rem .6rem;
+    background: var(--panel-sunk);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+  }
+  .cards-panel > summary:hover,
+  .coverage-missing > summary:hover { border-color: var(--accent); color: var(--accent); }
+  .cards-panel[open] > summary { margin-bottom: .8rem; }
+
+  .coverage { margin-top: 1.2rem; }
+  .coverage h3 {
+    margin: 0 0 .3rem;
+    font: 600 .84rem/1.5 var(--font-mono);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: baseline;
+  }
+  .coverage h3 b { font-weight: 500; color: var(--muted); }
+  .coverage-percent {
+    margin-left: auto;
+    font: 600 .84rem/1.5 var(--font-mono);
+    color: var(--accent);
+  }
+  .coverage-rule { margin: 0 0 .7rem; color: var(--muted); font-size: .8rem; line-height: 1.6; }
+  .coverage-layers {
+    list-style: none;
+    margin: 0 0 .8rem;
+    padding: 0;
+    display: grid;
+    gap: .25rem .9rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  }
+  .coverage-layers li {
+    display: grid;
+    grid-template-columns: 7rem 1fr auto;
+    align-items: center;
+    gap: .5rem;
+    font: .68rem/1.6 var(--font-mono);
+    color: var(--muted);
+    min-width: 0;
+  }
+  .coverage-layer { overflow-wrap: anywhere; }
+  .coverage-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
+    overflow: hidden;
+    min-width: 0;
+  }
+  .coverage-bar i { display: block; height: 100%; background: var(--accent); }
+  .coverage-layers .partial .coverage-bar i { background: var(--signal); }
+  .coverage-layers .partial .coverage-count { color: var(--signal); font-weight: 600; }
+  .coverage-none { margin: 0; color: var(--muted); font-size: .78rem; }
+  .coverage-missing > ul {
+    list-style: none;
+    margin: .6rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: .15rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  }
+  .coverage-missing > ul li { min-width: 0; overflow-wrap: anywhere; }
+
   .orphan-routes { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
   .orphan-routes li {
     display: flex;
@@ -607,7 +681,9 @@
         <div class="graph-stage"></div>
         <script type="application/json">{"level":"context","title":"Level 1 — Context","width":599.8,"height":178,"nodes":[{"id":"spectator","label":"Spectator","icon":"👀","lines":["outside the system"],"chips":[],"detail":"Follows the live ranking and the photo wall. Signs in to nothing.","tone":"actor","x":28,"y":102,"width":160,"height":48},{"id":"race-official","label":"Race official","icon":"⏱️","lines":["outside the system"],"chips":[],"detail":"Signs in with the admin PIN and punches each loop, edits runners, and uploads photos.","tone":"actor","x":28,"y":28,"width":160,"height":48},{"id":"system","label":"Last Loop Lépin","icon":"🎯","lines":["inside — this repository builds it"],"chips":[{"icon":"🗂️","text":"166 files","tone":"plain"},{"icon":"📏","text":"12425 lines total","tone":"size"},{"icon":"🧮","text":"cx 1062 total","tone":"complexity"},{"icon":"🚫","text":"1 disable","tone":"warn"}],"detail":"Race-day live dashboard for a backyard ultra: runners, loops punched at the line, the ranking that falls out of them, and the photo wall.","tone":"system","x":292.8,"y":43,"width":279,"height":92}],"edges":[{"from":"spectator","to":"system","kind":"uses","label":"uses","points":[{"x":188,"y":126},{"x":292.8,"y":104.3}]},{"from":"race-official","to":"system","kind":"uses","label":"uses","points":[{"x":188,"y":52},{"x":292.8,"y":73.7}]}]}</script>
       </div>
-      <div class="cards">
+      <details class="cards-panel">
+        <summary>3 blocks in detail</summary>
+        <div class="cards">
       <article class="card" data-group="people">
         <header>
           <h4>Spectator</h4>
@@ -632,6 +708,90 @@
         <p>Race-day live dashboard for a backyard ultra: runners, loops punched at the line, the ranking that falls out of them, and the photo wall.</p>
         
       </article></div>
+      </details>
+      
+      <section class="coverage">
+        <h3>Codebase coverage <b>166 of 166 files</b> <span class="coverage-percent">100%</span></h3>
+        <p class="coverage-rule">Every file sits inside the one system box, so this level accounts for all of them by construction. What it cannot show is which file reaches which external — that is level 3.5.</p>
+        <ul class="coverage-layers"><li>
+          <span class="coverage-layer">atom</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">18/18</span>
+        </li><li>
+          <span class="coverage-layer">config</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">4/4</span>
+        </li><li>
+          <span class="coverage-layer">controller</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">8/8</span>
+        </li><li>
+          <span class="coverage-layer">core</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li><li>
+          <span class="coverage-layer">database</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">2/2</span>
+        </li><li>
+          <span class="coverage-layer">entrypoint</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">environment</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">i18n</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">middleware</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">molecule</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li><li>
+          <span class="coverage-layer">organism</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">42/42</span>
+        </li><li>
+          <span class="coverage-layer">query</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">6/6</span>
+        </li><li>
+          <span class="coverage-layer">repository</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">4/4</span>
+        </li><li>
+          <span class="coverage-layer">route</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">schema</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">6/6</span>
+        </li><li>
+          <span class="coverage-layer">service</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">types</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">unknown</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">utils</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li></ul>
+        <p class="coverage-none">Nothing is left out at this level.</p>
+      </section>
     </section>
     <section class="level" id="level-container" hidden>
       <h2>Level 2 — Containers</h2>
@@ -655,7 +815,9 @@
         <div class="graph-stage"></div>
         <script type="application/json">{"level":"container","title":"Level 2 — Containers","width":963.5,"height":392,"nodes":[{"id":"site","label":"Single page application","icon":"🖥️","lines":["React, Vite, TanStack Query","CloudFront in front of an S3 origin, alias last-loop-lepin.borso.fr"],"chips":[{"icon":"🗂️","text":"112 files","tone":"plain"},{"icon":"📏","text":"8063 lines total","tone":"size"},{"icon":"🧮","text":"cx 566 total","tone":"complexity"},{"icon":"🚫","text":"1 disable","tone":"warn"}],"detail":"React, Vite, TanStack Query. The public dashboard and the admin screens behind the PIN. Reads and writes through the API.","tone":"site","x":28,"y":258,"width":463.5,"height":106},{"id":"api","label":"HTTP API","icon":"🔌","lines":["Hono on AWS Lambda, Drizzle","Lambda behind an API Gateway HTTP API, eu-west-3"],"chips":[{"icon":"🗂️","text":"52 files","tone":"plain"},{"icon":"📏","text":"4129 lines total","tone":"size"},{"icon":"🧮","text":"cx 473 total","tone":"complexity"}],"detail":"Hono on AWS Lambda, Drizzle. Every endpoint, with the admin ones gated by a session row rather than a secret. Its inferred router type is the contract the single page application compiles against.","tone":"api","x":595.5,"y":258,"width":340,"height":106},{"id":"database","label":"Application database","icon":"🗄️","lines":["Aurora DSQL, Postgres wire protocol, Drizzle","Aurora DSQL, eu-west-3, one cluster per application"],"chips":[{"icon":"🗂️","text":"no source in this repository","tone":"plain"}],"detail":"Aurora DSQL, Postgres wire protocol, Drizzle. One schema per stage inside a cluster shared across stages. Holds the runners, the punches, the editions, and the admin credentials and session rows.","tone":"api","x":323,"y":28,"width":359.5,"height":84},{"id":"photos-bucket","label":"Photo bucket","icon":"🪣","lines":["Amazon S3 behind its own CloudFront distribution","S3 in eu-west-3, fronted by photos-cdn.borso.fr in prod"],"chips":[{"icon":"🗂️","text":"no source in this repository","tone":"plain"}],"detail":"Amazon S3 behind its own CloudFront distribution. Holds the runner photos the official uploads. Served through PhotosCdn rather than from the API.","tone":"api","x":28,"y":154,"width":385.5,"height":84},{"id":"infrastructure","label":"Infrastructure definition","icon":"🏗️","lines":["AWS CDK, PreviewableApp plus PhotosCdn","Runs in CI, never at runtime"],"chips":[{"icon":"🗂️","text":"2 files","tone":"plain"},{"icon":"📏","text":"233 lines total","tone":"size"},{"icon":"🧮","text":"cx 23 total","tone":"complexity"}],"detail":"AWS CDK, PreviewableApp plus PhotosCdn. Composes the shared constructs into this application stack. Build-time only, never reached at runtime.","tone":"build","x":28,"y":28,"width":275,"height":106}],"edges":[{"from":"site","to":"api","kind":"type","label":"compiles against","points":[{"x":491.5,"y":311},{"x":595.5,"y":311}]}]}</script>
       </div>
-      <div class="cards">
+      <details class="cards-panel">
+        <summary>5 blocks in detail</summary>
+        <div class="cards">
       <article class="card" data-group="browser">
         <header>
           <h4>Single page application</h4>
@@ -696,6 +858,90 @@
         <p>AWS CDK, PreviewableApp plus PhotosCdn. Composes the shared constructs into this application stack. Build-time only, never reached at runtime.</p>
         <p class="bp"><span class="bp-follows">2 followers</span></p>
       </article></div>
+      </details>
+      
+      <section class="coverage">
+        <h3>Codebase coverage <b>166 of 166 files</b> <span class="coverage-percent">100%</span></h3>
+        <p class="coverage-rule">A file is drawn when its container is one the manifest declares. A file in a container the manifest has never heard of is invisible here.</p>
+        <ul class="coverage-layers"><li>
+          <span class="coverage-layer">atom</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">18/18</span>
+        </li><li>
+          <span class="coverage-layer">config</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">4/4</span>
+        </li><li>
+          <span class="coverage-layer">controller</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">8/8</span>
+        </li><li>
+          <span class="coverage-layer">core</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li><li>
+          <span class="coverage-layer">database</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">2/2</span>
+        </li><li>
+          <span class="coverage-layer">entrypoint</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">environment</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">i18n</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">middleware</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">molecule</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li><li>
+          <span class="coverage-layer">organism</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">42/42</span>
+        </li><li>
+          <span class="coverage-layer">query</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">6/6</span>
+        </li><li>
+          <span class="coverage-layer">repository</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">4/4</span>
+        </li><li>
+          <span class="coverage-layer">route</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">schema</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">6/6</span>
+        </li><li>
+          <span class="coverage-layer">service</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">types</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">unknown</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">utils</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li></ul>
+        <p class="coverage-none">Nothing is left out at this level.</p>
+      </section>
     </section>
     <section class="level" id="level-component" hidden>
       <h2>Level 3 — Components</h2>
@@ -719,7 +965,9 @@
         <div class="graph-stage"></div>
         <script type="application/json">{"level":"component","title":"Level 3 — Components","width":6021.8,"height":906,"nodes":[{"id":"api::__test","label":"__test","icon":"🚦","lines":["api/src/__test/","controller, core, schema, service"],"chips":[{"icon":"🗂️","text":"4 files","tone":"plain"},{"icon":"🔌","text":"1 routes","tone":"plain"},{"icon":"📏","text":"309 lines total","tone":"size"},{"icon":"🧮","text":"cx 6 total","tone":"complexity"},{"icon":"📘","text":"controller-public-router","tone":"blueprint"},{"icon":"📘","text":"core-lookup-table","tone":"blueprint"},{"icon":"📘","text":"service-orchestration","tone":"blueprint"}],"detail":"4 files in HTTP API. Layers: controller, core, schema, service. 1 HTTP routes.","tone":"api","x":3156.5,"y":434.5,"width":272.5,"height":172},{"id":"api::root","label":"api · root","icon":"🚀","lines":["api/src/","entrypoint"],"chips":[{"icon":"🗂️","text":"3 files","tone":"plain"},{"icon":"🔌","text":"1 routes","tone":"plain"},{"icon":"📏","text":"94 lines total","tone":"size"},{"icon":"🧮","text":"cx 3 total","tone":"complexity"},{"icon":"📘","text":"api-composition-root","tone":"blueprint"},{"icon":"📘","text":"api-dev-entrypoint","tone":"blueprint"},{"icon":"📘","text":"api-lambda-entrypoint","tone":"blueprint"}],"detail":"3 files in HTTP API. Layers: entrypoint. 1 HTTP routes.","tone":"api","x":2706,"y":465,"width":342.5,"height":150},{"id":"api::auth","label":"auth","icon":"🚦","lines":["api/src/auth/","controller, core, middleware, repository, schema, service"],"chips":[{"icon":"🗂️","text":"6 files","tone":"plain"},{"icon":"🔌","text":"2 routes","tone":"plain"},{"icon":"📏","text":"413 lines total","tone":"size"},{"icon":"🧮","text":"cx 47 total","tone":"complexity"},{"icon":"📘","text":"controller-public-router","tone":"blueprint"},{"icon":"📘","text":"core-decision","tone":"blueprint"},{"icon":"📘","text":"core-lookup-table","tone":"blueprint"},{"icon":"📘","text":"named-domain-error","tone":"blueprint"},{"icon":"📘","text":"repository-idempotent-upsert","tone":"blueprint"},{"icon":"📘","text":"repository-query","tone":"blueprint"},{"icon":"📘","text":"service-facade-reexport","tone":"blueprint"},{"icon":"📘","text":"service-orchestration","tone":"blueprint"}],"detail":"6 files in HTTP API. Layers: controller, core, middleware, repository, schema, service. 2 HTTP routes.","tone":"api","x":5158.8,"y":480.5,"width":398.5,"height":260},{"id":"api::database","label":"database","icon":"🗄️","lines":["api/src/database/","database"],"chips":[{"icon":"🗂️","text":"2 files","tone":"plain"},{"icon":"📏","text":"120 lines total","tone":"size"},{"icon":"🧮","text":"cx 18 total","tone":"complexity"},{"icon":"📘","text":"database-schema-barrel","tone":"blueprint"}],"detail":"2 files in HTTP API. Layers: database.","tone":"api","x":5669.3,"y":474,"width":324.5,"height":106},{"id":"api::edition","label":"edition","icon":"🚦","lines":["api/src/edition/","controller, core, repository, schema, service, types, utils"],"chips":[{"icon":"🗂️","text":"7 files","tone":"plain"},{"icon":"🔌","text":"8 routes","tone":"plain"},{"icon":"📏","text":"798 lines total","tone":"size"},{"icon":"🧮","text":"cx 114 total","tone":"complexity"},{"icon":"📘","text":"controller-guarded-router","tone":"blueprint"},{"icon":"📘","text":"controller-public-router","tone":"blueprint"},{"icon":"📘","text":"core-decision","tone":"blueprint"},{"icon":"📘","text":"core-projection","tone":"blueprint"},{"icon":"📘","text":"domain-types-module","tone":"blueprint"},{"icon":"📘","text":"named-domain-error","tone":"blueprint"},{"icon":"📘","text":"repository-idempotent-upsert","tone":"blueprint"},{"icon":"📘","text":"repository-query","tone":"blueprint"},{"icon":"📘","text":"repository-row-mapper","tone":"blueprint"},{"icon":"📘","text":"schema-dsql-constraints","tone":"blueprint"},{"icon":"📘","text":"schema-refine-pure-helper","tone":"blueprint"},{"icon":"📘","text":"schema-shared-slug","tone":"blueprint"},{"icon":"📘","text":"service-facade-reexport","tone":"blueprint"},{"icon":"📘","text":"service-orchestration","tone":"blueprint"}],"detail":"7 files in HTTP API. Layers: controller, core, repository, schema, service, types, utils. 8 HTTP routes.","tone":"api","x":4631.9,"y":298.5,"width":411.5,"height":392},{"id":"api::helpers","label":"helpers","icon":"🧠","lines":["api/src/helpers/","core, utils"],"chips":[{"icon":"🗂️","text":"4 files","tone":"plain"},{"icon":"📏","text":"447 lines total","tone":"size"},{"icon":"🧮","text":"cx 65 total","tone":"complexity"},{"icon":"📘","text":"core-parser-named-error","tone":"blueprint"},{"icon":"📘","text":"helper-module","tone":"blueprint"},{"icon":"📘","text":"named-domain-error","tone":"blueprint"}],"detail":"4 files in HTTP API. Layers: core, utils.","tone":"api","x":5158.8,"y":326.5,"width":331,"height":128},{"id":"api::media","label":"media","icon":"🚦","lines":["api/src/media/","controller, core, schema, service, unknown"],"chips":[{"icon":"🗂️","text":"5 files","tone":"plain"},{"icon":"🔌","text":"1 routes","tone":"plain"},{"icon":"📏","text":"163 lines total","tone":"size"},{"icon":"🧮","text":"cx 19 total","tone":"complexity"},{"icon":"📘","text":"controller-guarded-router","tone":"blueprint"},{"icon":"📘","text":"core-lookup-table","tone":"blueprint"},{"icon":"📘","text":"external-service-adapter","tone":"blueprint"},{"icon":"📘","text":"named-domain-error","tone":"blueprint"},{"icon":"📘","text":"service-facade-reexport","tone":"blueprint"}],"detail":"5 files in HTTP API. Layers: controller, core, schema, service, unknown. 1 HTTP routes.","tone":"api","x":3643.7,"y":662,"width":301,"height":216},{"id":"api::punch","label":"punch","icon":"🚦","lines":["api/src/punch/","controller, core, repository, schema, service, types"],"chips":[{"icon":"🗂️","text":"7 files","tone":"plain"},{"icon":"🔌","text":"6 routes","tone":"plain"},{"icon":"📏","text":"823 lines total","tone":"size"},{"icon":"🧮","text":"cx 74 total","tone":"complexity"},{"icon":"📘","text":"controller-guarded-router","tone":"blueprint"},{"icon":"📘","text":"controller-public-router","tone":"blueprint"},{"icon":"📘","text":"core-decision","tone":"blueprint"},{"icon":"📘","text":"named-domain-error","tone":"blueprint"},{"icon":"📘","text":"repository-query","tone":"blueprint"},{"icon":"📘","text":"repository-row-mapper","tone":"blueprint"},{"icon":"📘","text":"schema-dsql-constraints","tone":"blueprint"},{"icon":"📘","text":"service-facade-reexport","tone":"blueprint"},{"icon":"📘","text":"service-orchestration","tone":"blueprint"}],"detail":"7 files in HTTP API. Layers: controller, core, repository, schema, service, types. 6 HTTP routes.","tone":"api","x":4156,"y":392.5,"width":366,"height":282},{"id":"api::ranking","label":"ranking","icon":"🚦","lines":["api/src/ranking/","controller, core, service, types"],"chips":[{"icon":"🗂️","text":"6 files","tone":"plain"},{"icon":"🔌","text":"3 routes","tone":"plain"},{"icon":"📏","text":"573 lines total","tone":"size"},{"icon":"🧮","text":"cx 96 total","tone":"complexity"},{"icon":"📘","text":"controller-file-response","tone":"blueprint"},{"icon":"📘","text":"controller-public-router","tone":"blueprint"},{"icon":"📘","text":"core-projection","tone":"blueprint"},{"icon":"📘","text":"core-serializer","tone":"blueprint"},{"icon":"📘","text":"service-dto-mapping","tone":"blueprint"},{"icon":"📘","text":"service-facade-reexport","tone":"blueprint"},{"icon":"📘","text":"service-read-model","tone":"blueprint"}],"detail":"6 files in HTTP API. Layers: controller, core, service, types. 3 HTTP routes.","tone":"api","x":2289.7,"y":265,"width":305,"height":238},{"id":"api::runner","label":"runner","icon":"🚦","lines":["api/src/runner/","controller, core, environment, repository, schema, service, types, utils"],"chips":[{"icon":"🗂️","text":"8 files","tone":"plain"},{"icon":"🔌","text":"4 routes","tone":"plain"},{"icon":"📏","text":"389 lines total","tone":"size"},{"icon":"🧮","text":"cx 31 total","tone":"complexity"},{"icon":"📘","text":"controller-guarded-router","tone":"blueprint"},{"icon":"📘","text":"controller-public-router","tone":"blueprint"},{"icon":"📘","text":"core-decision","tone":"blueprint"},{"icon":"📘","text":"dto-mapper","tone":"blueprint"},{"icon":"📘","text":"environment-reader","tone":"blueprint"},{"icon":"📘","text":"named-domain-error","tone":"blueprint"},{"icon":"📘","text":"repository-idempotent-upsert","tone":"blueprint"},{"icon":"📘","text":"repository-query","tone":"blueprint"},{"icon":"📘","text":"schema-dsql-constraints","tone":"blueprint"},{"icon":"📘","text":"schema-shared-slug","tone":"blueprint"},{"icon":"📘","text":"service-dto-mapping","tone":"blueprint"},{"icon":"📘","text":"service-orchestration","tone":"blueprint"}],"detail":"8 files in HTTP API. Layers: controller, core, environment, repository, schema, service, types, utils. 4 HTTP routes.","tone":"api","x":3546.2,"y":299,"width":496,"height":326},{"id":"infrastructure::cdk","label":"cdk","icon":"🚀","lines":["cdk/","entrypoint"],"chips":[{"icon":"🗂️","text":"2 files","tone":"plain"},{"icon":"📏","text":"233 lines total","tone":"size"},{"icon":"🧮","text":"cx 23 total","tone":"complexity"},{"icon":"📘","text":"app-cdk-stack","tone":"blueprint"},{"icon":"📘","text":"cdk-app-entrypoint","tone":"blueprint"}],"detail":"2 files in Infrastructure definition. Layers: entrypoint.","tone":"infrastructure","x":28,"y":28,"width":266,"height":128},{"id":"site::root","label":"site · root","icon":"⚙️","lines":["","config, entrypoint, unknown"],"chips":[{"icon":"🗂️","text":"7 files","tone":"plain"},{"icon":"📏","text":"307 lines total","tone":"size"},{"icon":"🧮","text":"cx 8 total","tone":"complexity"},{"icon":"📘","text":"component-lookup-table","tone":"blueprint"},{"icon":"📘","text":"external-store-module","tone":"blueprint"},{"icon":"📘","text":"site-entrypoint","tone":"blueprint"},{"icon":"📘","text":"workspace-test-config","tone":"blueprint"}],"detail":"7 files in Single page application. Layers: config, entrypoint, unknown.","tone":"site","x":1370.3,"y":552,"width":344,"height":150},{"id":"site::atoms","label":"atoms","icon":"⚛️","lines":["site/src/components/atoms/","atom"],"chips":[{"icon":"🗂️","text":"18 files","tone":"plain"},{"icon":"📏","text":"556 lines total","tone":"size"},{"icon":"🧮","text":"cx 3 total","tone":"complexity"},{"icon":"📘","text":"atom-lookup-variants","tone":"blueprint"},{"icon":"📘","text":"atom-plain","tone":"blueprint"},{"icon":"📘","text":"branchless-render","tone":"blueprint"},{"icon":"📘","text":"core-view-intent","tone":"blueprint"}],"detail":"18 files in Single page application. Layers: atom.","tone":"site","x":1370.3,"y":339,"width":305,"height":150},{"id":"site::molecules","label":"molecules","icon":"🧬","lines":["site/src/components/molecules/","molecule"],"chips":[{"icon":"🗂️","text":"12 files","tone":"plain"},{"icon":"📏","text":"548 lines total","tone":"size"},{"icon":"🧮","text":"cx 17 total","tone":"complexity"},{"icon":"📘","text":"core-view-intent","tone":"blueprint"},{"icon":"📘","text":"core-view-projection","tone":"blueprint"},{"icon":"📘","text":"molecule-clock-subscriber","tone":"blueprint"},{"icon":"📘","text":"molecule-field","tone":"blueprint"},{"icon":"📘","text":"molecule-presentational","tone":"blueprint"},{"icon":"📘","text":"molecule-view-selector","tone":"blueprint"},{"icon":"📘","text":"utils-formatter","tone":"blueprint"},{"icon":"📘","text":"utils-pure-module","tone":"blueprint"}],"detail":"12 files in Single page application. Layers: molecule.","tone":"site","x":933.6,"y":504,"width":318,"height":238},{"id":"site::organisms","label":"organisms","icon":"🦴","lines":["site/src/components/organisms/","organism"],"chips":[{"icon":"🗂️","text":"42 files","tone":"plain"},{"icon":"📏","text":"4441 lines total","tone":"size"},{"icon":"🧮","text":"cx 320 total","tone":"complexity"},{"icon":"🚫","text":"1 disable","tone":"warn"},{"icon":"📘","text":"component-lookup-table","tone":"blueprint"},{"icon":"📘","text":"core-client-state-machine","tone":"blueprint"},{"icon":"📘","text":"core-error-to-key","tone":"blueprint"},{"icon":"📘","text":"core-form-schema","tone":"blueprint"},{"icon":"📘","text":"core-label-key","tone":"blueprint"},{"icon":"📘","text":"core-optimistic-overlay","tone":"blueprint"},{"icon":"📘","text":"core-parse-untrusted","tone":"blueprint"},{"icon":"📘","text":"core-view-intent","tone":"blueprint"},{"icon":"📘","text":"core-view-projection","tone":"blueprint"},{"icon":"📘","text":"data-module","tone":"blueprint"},{"icon":"📘","text":"hook-stateful-helper","tone":"blueprint"},{"icon":"📘","text":"lint-exception","tone":"blueprint"},{"icon":"📘","text":"molecule-clock-subscriber","tone":"blueprint"},{"icon":"📘","text":"named-domain-error","tone":"blueprint"},{"icon":"📘","text":"organism-form","tone":"blueprint"},{"icon":"📘","text":"organism-imperative-bridge","tone":"blueprint"},{"icon":"📘","text":"organism-mutation-panel","tone":"blueprint"},{"icon":"📘","text":"organism-presentational","tone":"blueprint"},{"icon":"📘","text":"organism-query-owning","tone":"blueprint"},{"icon":"📘","text":"organism-shell","tone":"blueprint"},{"icon":"📘","text":"organism-state-machine","tone":"blueprint"},{"icon":"📘","text":"utils-geometry","tone":"blueprint"},{"icon":"📘","text":"utils-pure-module","tone":"blueprint"}],"detail":"42 files in Single page application. Layers: organism.","tone":"site","x":28,"y":298,"width":344,"height":458},{"id":"site::i18n","label":"i18n","icon":"🌍","lines":["site/src/i18n/","i18n"],"chips":[{"icon":"🗂️","text":"5 files","tone":"plain"},{"icon":"📏","text":"254 lines total","tone":"size"},{"icon":"🧮","text":"cx 54 total","tone":"complexity"},{"icon":"📘","text":"i18n-key-walk","tone":"blueprint"},{"icon":"📘","text":"i18n-parity-gate","tone":"blueprint"},{"icon":"📘","text":"i18n-setup","tone":"blueprint"},{"icon":"📘","text":"i18n-typed-keys","tone":"blueprint"},{"icon":"📘","text":"injected-storage-slice","tone":"blueprint"}],"detail":"5 files in Single page application. Layers: i18n.","tone":"site","x":1824.1,"y":389,"width":279,"height":172},{"id":"site::lib","label":"lib","icon":"📐","lines":["site/src/lib/","types, unknown, utils"],"chips":[{"icon":"🗂️","text":"14 files","tone":"plain"},{"icon":"📏","text":"699 lines total","tone":"size"},{"icon":"🧮","text":"cx 44 total","tone":"complexity"},{"icon":"📘","text":"core-label-key","tone":"blueprint"},{"icon":"📘","text":"core-view-intent","tone":"blueprint"},{"icon":"📘","text":"domain-types-module","tone":"blueprint"},{"icon":"📘","text":"environment-reader","tone":"blueprint"},{"icon":"📘","text":"external-store-module","tone":"blueprint"},{"icon":"📘","text":"injected-browser-api","tone":"blueprint"},{"icon":"📘","text":"named-domain-error","tone":"blueprint"},{"icon":"📘","text":"typed-api-client","tone":"blueprint"},{"icon":"📘","text":"utils-branchless-list","tone":"blueprint"},{"icon":"📘","text":"utils-formatter","tone":"blueprint"},{"icon":"📘","text":"utils-geometry","tone":"blueprint"},{"icon":"📘","text":"utils-pure-module","tone":"blueprint"}],"detail":"14 files in Single page application. Layers: types, unknown, utils.","tone":"site","x":2250.7,"y":529,"width":344,"height":260},{"id":"site::queries","label":"queries","icon":"📡","lines":["site/src/lib/queries/","query"],"chips":[{"icon":"🗂️","text":"6 files","tone":"plain"},{"icon":"📏","text":"576 lines total","tone":"size"},{"icon":"🧮","text":"cx 89 total","tone":"complexity"},{"icon":"📘","text":"query-module","tone":"blueprint"},{"icon":"📘","text":"query-optimistic-mutation","tone":"blueprint"},{"icon":"📘","text":"query-pessimistic-mutation","tone":"blueprint"},{"icon":"📘","text":"query-polling","tone":"blueprint"},{"icon":"📘","text":"query-uncached-mutation","tone":"blueprint"},{"icon":"📘","text":"utils-pure-module","tone":"blueprint"}],"detail":"6 files in Single page application. Layers: query.","tone":"site","x":916.2,"y":247,"width":344,"height":194},{"id":"site::observability","label":"observability","icon":"📁","lines":["site/src/observability/","unknown"],"chips":[{"icon":"🗂️","text":"1 files","tone":"plain"},{"icon":"📏","text":"64 lines total","tone":"size"},{"icon":"🧮","text":"cx 3 total","tone":"complexity"},{"icon":"📘","text":"observability-adapter","tone":"blueprint"}],"detail":"1 files in Single page application. Layers: unknown.","tone":"site","x":1824.1,"y":598,"width":311.5,"height":106},{"id":"site::routes","label":"routes","icon":"🧭","lines":["site/src/routes/","route"],"chips":[{"icon":"🗂️","text":"7 files","tone":"plain"},{"icon":"📏","text":"618 lines total","tone":"size"},{"icon":"🧮","text":"cx 28 total","tone":"complexity"},{"icon":"📘","text":"component-lookup-table","tone":"blueprint"},{"icon":"📘","text":"route-detail-page","tone":"blueprint"},{"icon":"📘","text":"route-list-page","tone":"blueprint"},{"icon":"📘","text":"route-table","tone":"blueprint"},{"icon":"📘","text":"utils-pure-module","tone":"blueprint"}],"detail":"7 files in Single page application. Layers: route.","tone":"site","x":479,"y":484.5,"width":324.5,"height":150}],"edges":[{"from":"api::__test","to":"api::edition","kind":"import","label":"","points":[{"x":3429,"y":468.9},{"x":3546.2,"y":202},{"x":4042.2,"y":202},{"x":4156,"y":334.5},{"x":4522,"y":334.5},{"x":4631.9,"y":405.4}]},{"from":"api::__test","to":"api::edition","kind":"type","label":"","points":[{"x":3429,"y":503.3},{"x":3546.2,"y":215},{"x":4042.2,"y":215},{"x":4156,"y":347.5},{"x":4522,"y":347.5},{"x":4631.9,"y":441}]},{"from":"api::__test","to":"api::punch","kind":"import","label":"","points":[{"x":3429,"y":537.7},{"x":3546.2,"y":267},{"x":4042.2,"y":267},{"x":4156,"y":498.3}]},{"from":"api::__test","to":"api::runner","kind":"import","label":"","points":[{"x":3429,"y":572.1},{"x":3546.2,"y":364.2}]},{"from":"api::root","to":"api::__test","kind":"import","label":"","points":[{"x":3048.5,"y":507.9},{"x":3156.5,"y":520.5}]},{"from":"api::root","to":"api::auth","kind":"import","label":"","points":[{"x":3048.5,"y":572.1},{"x":3156.5,"y":676.5},{"x":3429,"y":676.5},{"x":3546.2,"y":643},{"x":4042.2,"y":643},{"x":4156,"y":705.5},{"x":4522,"y":705.5},{"x":4631.9,"y":734.5},{"x":5043.4,"y":734.5},{"x":5158.8,"y":610.5}]},{"from":"api::root","to":"api::edition","kind":"import","label":"","points":[{"x":3048.5,"y":486.4},{"x":3156.5,"y":389.5},{"x":3429,"y":389.5},{"x":3546.2,"y":228},{"x":4042.2,"y":228},{"x":4156,"y":360.5},{"x":4522,"y":360.5},{"x":4631.9,"y":476.7}]},{"from":"api::root","to":"api::media","kind":"import","label":"","points":[{"x":3048.5,"y":593.6},{"x":3156.5,"y":689.5},{"x":3429,"y":689.5},{"x":3546.2,"y":770},{"x":3643.7,"y":770}]},{"from":"api::root","to":"api::punch","kind":"import","label":"","points":[{"x":3048.5,"y":529.3},{"x":3156.5,"y":624.5},{"x":3429,"y":624.5},{"x":3546.2,"y":280},{"x":4042.2,"y":280},{"x":4156,"y":533.5}]},{"from":"api::root","to":"api::ranking","kind":"import","label":"","points":[{"x":2706,"y":515},{"x":2594.7,"y":413.8}]},{"from":"api::root","to":"api::runner","kind":"import","label":"","points":[{"x":3048.5,"y":550.7},{"x":3156.5,"y":650.5},{"x":3429,"y":650.5},{"x":3546.2,"y":494.6}]},{"from":"api::auth","to":"api::database","kind":"import","label":"","points":[{"x":5557.3,"y":610.5},{"x":5669.3,"y":537.6}]},{"from":"api::edition","to":"api::auth","kind":"import","label":"","points":[{"x":5043.4,"y":592.5},{"x":5158.8,"y":523.8}]},{"from":"api::edition","to":"api::punch","kind":"type","label":"","points":[{"x":4631.9,"y":548},{"x":4522,"y":473.1}]},{"from":"api::edition","to":"api::runner","kind":"type","label":"","points":[{"x":4631.9,"y":512.3},{"x":4522,"y":373.5},{"x":4156,"y":373.5},{"x":4042.2,"y":339.8}]},{"from":"api::edition","to":"api::database","kind":"import","label":"","points":[{"x":5043.4,"y":396.5},{"x":5158.8,"y":307.5},{"x":5557.3,"y":307.5},{"x":5669.3,"y":516.4}]},{"from":"api::edition","to":"api::helpers","kind":"import","label":"","points":[{"x":5043.4,"y":494.5},{"x":5158.8,"y":369.2}]},{"from":"api::media","to":"api::auth","kind":"import","label":"","points":[{"x":3944.7,"y":770},{"x":4042.2,"y":770},{"x":4156,"y":731.5},{"x":4522,"y":731.5},{"x":4631.9,"y":760.5},{"x":5043.4,"y":760.5},{"x":5158.8,"y":697.2}]},{"from":"api::punch","to":"api::auth","kind":"import","label":"","points":[{"x":4522,"y":634.2},{"x":4631.9,"y":721.5},{"x":5043.4,"y":721.5},{"x":5158.8,"y":567.2}]},{"from":"api::punch","to":"api::edition","kind":"import","label":"","points":[{"x":4522,"y":513.4},{"x":4631.9,"y":583.6}]},{"from":"api::punch","to":"api::edition","kind":"type","label":"","points":[{"x":4522,"y":553.6},{"x":4631.9,"y":619.2}]},{"from":"api::punch","to":"api::database","kind":"import","label":"","points":[{"x":4522,"y":432.8},{"x":4631.9,"y":279.5},{"x":5043.4,"y":279.5},{"x":5158.8,"y":294.5},{"x":5557.3,"y":294.5},{"x":5669.3,"y":495.2}]},{"from":"api::punch","to":"api::runner","kind":"import","label":"","points":[{"x":4156,"y":568.8},{"x":4042.2,"y":380.5}]},{"from":"api::punch","to":"api::helpers","kind":"import","label":"","points":[{"x":4522,"y":593.9},{"x":4631.9,"y":708.5},{"x":5043.4,"y":708.5},{"x":5158.8,"y":411.8}]},{"from":"api::ranking","to":"api::edition","kind":"type","label":"","points":[{"x":2594.7,"y":294.8},{"x":2706,"y":407},{"x":3048.5,"y":407},{"x":3156.5,"y":363.5},{"x":3429,"y":363.5},{"x":3546.2,"y":176},{"x":4042.2,"y":176},{"x":4156,"y":308.5},{"x":4522,"y":308.5},{"x":4631.9,"y":334.1}]},{"from":"api::ranking","to":"api::punch","kind":"import","label":"","points":[{"x":2594.7,"y":354.3},{"x":2706,"y":433},{"x":3048.5,"y":433},{"x":3156.5,"y":402.5},{"x":3429,"y":402.5},{"x":3546.2,"y":241},{"x":4042.2,"y":241},{"x":4156,"y":427.8}]},{"from":"api::ranking","to":"api::punch","kind":"type","label":"","points":[{"x":2594.7,"y":384},{"x":2706,"y":446},{"x":3048.5,"y":446},{"x":3156.5,"y":415.5},{"x":3429,"y":415.5},{"x":3546.2,"y":254},{"x":4042.2,"y":254},{"x":4156,"y":463}]},{"from":"api::ranking","to":"api::edition","kind":"import","label":"","points":[{"x":2594.7,"y":324.5},{"x":2706,"y":420},{"x":3048.5,"y":420},{"x":3156.5,"y":376.5},{"x":3429,"y":376.5},{"x":3546.2,"y":189},{"x":4042.2,"y":189},{"x":4156,"y":321.5},{"x":4522,"y":321.5},{"x":4631.9,"y":369.8}]},{"from":"api::ranking","to":"api::runner","kind":"type","label":"","points":[{"x":2594.7,"y":443.5},{"x":2706,"y":633},{"x":3048.5,"y":633},{"x":3156.5,"y":637.5},{"x":3429,"y":637.5},{"x":3546.2,"y":429.4}]},{"from":"api::ranking","to":"api::runner","kind":"import","label":"","points":[{"x":2594.7,"y":473.3},{"x":2706,"y":646},{"x":3048.5,"y":646},{"x":3156.5,"y":663.5},{"x":3429,"y":663.5},{"x":3546.2,"y":559.8}]},{"from":"api::runner","to":"api::auth","kind":"import","label":"","points":[{"x":4042.2,"y":543.5},{"x":4156,"y":718.5},{"x":4522,"y":718.5},{"x":4631.9,"y":747.5},{"x":5043.4,"y":747.5},{"x":5158.8,"y":653.8}]},{"from":"api::runner","to":"api::punch","kind":"type","label":"","points":[{"x":4042.2,"y":421.3},{"x":4156,"y":604}]},{"from":"api::runner","to":"api::database","kind":"import","label":"","points":[{"x":4042.2,"y":584.3},{"x":4156,"y":744.5},{"x":4522,"y":744.5},{"x":4631.9,"y":773.5},{"x":5043.4,"y":773.5},{"x":5158.8,"y":758.5},{"x":5557.3,"y":758.5},{"x":5669.3,"y":558.8}]},{"from":"api::runner","to":"api::edition","kind":"import","label":"","points":[{"x":4042.2,"y":502.8},{"x":4156,"y":692.5},{"x":4522,"y":692.5},{"x":4631.9,"y":654.9}]},{"from":"api::runner","to":"api::punch","kind":"import","label":"","points":[{"x":4042.2,"y":462},{"x":4156,"y":639.3}]},{"from":"site::root","to":"site::organisms","kind":"import","label":"","points":[{"x":1370.3,"y":652},{"x":1260.2,"y":786},{"x":916.2,"y":786},{"x":803.5,"y":652.5},{"x":479,"y":652.5},{"x":372,"y":664.4}]},{"from":"site::root","to":"site::lib","kind":"import","label":"","points":[{"x":1714.3,"y":627},{"x":1824.1,"y":579},{"x":2135.6,"y":579},{"x":2250.7,"y":685}]},{"from":"site::root","to":"site::routes","kind":"import","label":"","points":[{"x":1370.3,"y":602},{"x":1260.2,"y":760},{"x":916.2,"y":760},{"x":803.5,"y":559.5}]},{"from":"site::molecules","to":"site::root","kind":"import","label":"","points":[{"x":1251.6,"y":674},{"x":1260.2,"y":674},{"x":1370.3,"y":577}]},{"from":"site::molecules","to":"site::lib","kind":"import","label":"","points":[{"x":1251.6,"y":572},{"x":1260.2,"y":572},{"x":1370.3,"y":507},{"x":1714.3,"y":507},{"x":1824.1,"y":357},{"x":2135.6,"y":357},{"x":2250.7,"y":633}]},{"from":"site::molecules","to":"site::atoms","kind":"import","label":"","points":[{"x":1251.6,"y":538},{"x":1260.2,"y":538},{"x":1370.3,"y":459}]},{"from":"site::molecules","to":"site::lib","kind":"type","label":"","points":[{"x":1251.6,"y":606},{"x":1260.2,"y":606},{"x":1370.3,"y":520},{"x":1714.3,"y":520},{"x":1824.1,"y":370},{"x":2135.6,"y":370},{"x":2250.7,"y":659}]},{"from":"site::molecules","to":"site::i18n","kind":"import","label":"","points":[{"x":1251.6,"y":640},{"x":1260.2,"y":640},{"x":1370.3,"y":533},{"x":1714.3,"y":533},{"x":1824.1,"y":446.3}]},{"from":"site::molecules","to":"site::observability","kind":"import","label":"","points":[{"x":1251.6,"y":708},{"x":1260.2,"y":708},{"x":1370.3,"y":720},{"x":1714.3,"y":720},{"x":1824.1,"y":651}]},{"from":"site::organisms","to":"site::lib","kind":"import","label":"","points":[{"x":372,"y":328.5},{"x":479,"y":374.5},{"x":803.5,"y":374.5},{"x":916.2,"y":215},{"x":1260.2,"y":215},{"x":1370.3,"y":294},{"x":1714.3,"y":294},{"x":1824.1,"y":318},{"x":2135.6,"y":318},{"x":2250.7,"y":555}]},{"from":"site::organisms","to":"site::queries","kind":"import","label":"","points":[{"x":372,"y":389.6},{"x":479,"y":400.5},{"x":803.5,"y":400.5},{"x":916.2,"y":295.5}]},{"from":"site::organisms","to":"site::atoms","kind":"import","label":"","points":[{"x":372,"y":450.7},{"x":479,"y":426.5},{"x":803.5,"y":426.5},{"x":916.2,"y":459},{"x":1260.2,"y":459},{"x":1370.3,"y":369}]},{"from":"site::organisms","to":"site::lib","kind":"type","label":"","points":[{"x":372,"y":359.1},{"x":479,"y":387.5},{"x":803.5,"y":387.5},{"x":916.2,"y":228},{"x":1260.2,"y":228},{"x":1370.3,"y":307},{"x":1714.3,"y":307},{"x":1824.1,"y":331},{"x":2135.6,"y":331},{"x":2250.7,"y":581}]},{"from":"site::organisms","to":"site::molecules","kind":"import","label":"","points":[{"x":372,"y":511.7},{"x":479,"y":452.5},{"x":803.5,"y":452.5},{"x":916.2,"y":563.5},{"x":933.6,"y":563.5}]},{"from":"site::organisms","to":"site::routes","kind":"import","label":"","points":[{"x":372,"y":572.8},{"x":479,"y":522}]},{"from":"site::organisms","to":"site::observability","kind":"import","label":"","points":[{"x":372,"y":725.5},{"x":479,"y":678.5},{"x":803.5,"y":678.5},{"x":916.2,"y":812},{"x":1260.2,"y":812},{"x":1370.3,"y":733},{"x":1714.3,"y":733},{"x":1824.1,"y":677.5}]},{"from":"site::organisms","to":"site::root","kind":"import","label":"","points":[{"x":372,"y":694.9},{"x":479,"y":665.5},{"x":803.5,"y":665.5},{"x":916.2,"y":799},{"x":1260.2,"y":799},{"x":1370.3,"y":677}]},{"from":"site::organisms","to":"site::routes","kind":"type","label":"","points":[{"x":372,"y":603.3},{"x":479,"y":559.5}]},{"from":"site::organisms","to":"site::atoms","kind":"type","label":"","points":[{"x":372,"y":481.2},{"x":479,"y":439.5},{"x":803.5,"y":439.5},{"x":916.2,"y":472},{"x":1260.2,"y":472},{"x":1370.3,"y":399}]},{"from":"site::organisms","to":"site::queries","kind":"type","label":"","points":[{"x":372,"y":420.1},{"x":479,"y":413.5},{"x":803.5,"y":413.5},{"x":916.2,"y":344}]},{"from":"site::organisms","to":"site::molecules","kind":"type","label":"","points":[{"x":372,"y":542.3},{"x":479,"y":465.5},{"x":803.5,"y":465.5},{"x":916.2,"y":623},{"x":933.6,"y":623}]},{"from":"site::lib","to":"api::root","kind":"type","label":"","points":[{"x":2594.7,"y":659},{"x":2706,"y":565}]},{"from":"site::queries","to":"site::lib","kind":"import","label":"","points":[{"x":1260.2,"y":344},{"x":1370.3,"y":320},{"x":1714.3,"y":320},{"x":1824.1,"y":344},{"x":2135.6,"y":344},{"x":2250.7,"y":607}]},{"from":"site::root","to":"site::i18n","kind":"import","label":"","points":[{"x":1714.3,"y":589.5},{"x":1824.1,"y":503.7}]},{"from":"site::root","to":"site::observability","kind":"import","label":"","points":[{"x":1714.3,"y":664.5},{"x":1824.1,"y":624.5}]},{"from":"site::observability","to":"site::lib","kind":"import","label":"","points":[{"x":2135.6,"y":651},{"x":2250.7,"y":711}]},{"from":"site::routes","to":"site::root","kind":"import","label":"","points":[{"x":803.5,"y":578.3},{"x":916.2,"y":773},{"x":1260.2,"y":773},{"x":1370.3,"y":627}]},{"from":"site::routes","to":"site::atoms","kind":"import","label":"","points":[{"x":803.5,"y":522},{"x":916.2,"y":485},{"x":1260.2,"y":485},{"x":1370.3,"y":429}]},{"from":"site::routes","to":"site::organisms","kind":"import","label":"","points":[{"x":479,"y":597},{"x":372,"y":633.9}]},{"from":"site::routes","to":"site::lib","kind":"import","label":"","points":[{"x":803.5,"y":597},{"x":916.2,"y":825},{"x":1260.2,"y":825},{"x":1370.3,"y":746},{"x":1714.3,"y":746},{"x":1824.1,"y":722},{"x":2135.6,"y":722},{"x":2250.7,"y":737}]},{"from":"site::routes","to":"site::queries","kind":"import","label":"","points":[{"x":803.5,"y":503.3},{"x":916.2,"y":392.5}]},{"from":"site::routes","to":"site::lib","kind":"type","label":"","points":[{"x":803.5,"y":615.8},{"x":916.2,"y":838},{"x":1260.2,"y":838},{"x":1370.3,"y":759},{"x":1714.3,"y":759},{"x":1824.1,"y":735},{"x":2135.6,"y":735},{"x":2250.7,"y":763}]},{"from":"site::routes","to":"site::molecules","kind":"import","label":"","points":[{"x":803.5,"y":540.8},{"x":916.2,"y":682.5},{"x":933.6,"y":682.5}]}]}</script>
       </div>
-      <div class="cards">
+      <details class="cards-panel">
+        <summary>20 blocks in detail</summary>
+        <div class="cards">
       <article class="card" data-group="api">
         <header>
           <h4>__test</h4>
@@ -880,6 +1128,90 @@
         <p>7 files in Single page application. Layers: route.</p>
         <p class="bp"><span class="bp-declares">1 blueprint</span><span class="bp-follows">6 followers</span></p>
       </article></div>
+      </details>
+      
+      <section class="coverage">
+        <h3>Codebase coverage <b>166 of 166 files</b> <span class="coverage-percent">100%</span></h3>
+        <p class="coverage-rule">Every file belongs to exactly one context, named by its folder or by a @Feature tag, so this level accounts for all of them.</p>
+        <ul class="coverage-layers"><li>
+          <span class="coverage-layer">atom</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">18/18</span>
+        </li><li>
+          <span class="coverage-layer">config</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">4/4</span>
+        </li><li>
+          <span class="coverage-layer">controller</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">8/8</span>
+        </li><li>
+          <span class="coverage-layer">core</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li><li>
+          <span class="coverage-layer">database</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">2/2</span>
+        </li><li>
+          <span class="coverage-layer">entrypoint</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">environment</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">i18n</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">middleware</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">molecule</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li><li>
+          <span class="coverage-layer">organism</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">42/42</span>
+        </li><li>
+          <span class="coverage-layer">query</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">6/6</span>
+        </li><li>
+          <span class="coverage-layer">repository</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">4/4</span>
+        </li><li>
+          <span class="coverage-layer">route</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">schema</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">6/6</span>
+        </li><li>
+          <span class="coverage-layer">service</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">types</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">unknown</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">utils</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li></ul>
+        <p class="coverage-none">Nothing is left out at this level.</p>
+      </section>
     </section>
     <section class="level" id="level-code" hidden>
       <h2>Level 4 — Code</h2>
@@ -2223,6 +2555,89 @@
       </tr></tbody>
         </table>
       </div>
+      
+      <section class="coverage">
+        <h3>Codebase coverage <b>166 of 166 files</b> <span class="coverage-percent">100%</span></h3>
+        <p class="coverage-rule">Every file is a row.</p>
+        <ul class="coverage-layers"><li>
+          <span class="coverage-layer">atom</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">18/18</span>
+        </li><li>
+          <span class="coverage-layer">config</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">4/4</span>
+        </li><li>
+          <span class="coverage-layer">controller</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">8/8</span>
+        </li><li>
+          <span class="coverage-layer">core</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li><li>
+          <span class="coverage-layer">database</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">2/2</span>
+        </li><li>
+          <span class="coverage-layer">entrypoint</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">environment</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">i18n</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">middleware</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">1/1</span>
+        </li><li>
+          <span class="coverage-layer">molecule</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li><li>
+          <span class="coverage-layer">organism</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">42/42</span>
+        </li><li>
+          <span class="coverage-layer">query</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">6/6</span>
+        </li><li>
+          <span class="coverage-layer">repository</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">4/4</span>
+        </li><li>
+          <span class="coverage-layer">route</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">schema</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">6/6</span>
+        </li><li>
+          <span class="coverage-layer">service</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">types</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">5/5</span>
+        </li><li>
+          <span class="coverage-layer">unknown</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">7/7</span>
+        </li><li>
+          <span class="coverage-layer">utils</span>
+          <span class="coverage-bar"><i style="width:100%"></i></span>
+          <span class="coverage-count">12/12</span>
+        </li></ul>
+        <p class="coverage-none">Nothing is left out at this level.</p>
+      </section>
     </section>
 
   <section class="level" id="level-slice" hidden>
@@ -2251,6 +2666,92 @@
       </div>
     <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>
     <ul class="orphan-routes"><li><code>DELETE /api/admin/editions/:slug</code><span class="loc">edition</span></li><li><code>DELETE /api/admin/punches/:id</code><span class="loc">punch</span></li><li><code>GET /api/editions</code><span class="loc">edition</span></li><li><code>GET /api/editions/:editionSlug/runners</code><span class="loc">runner</span></li><li><code>GET /api/editions/:editionSlug/runners/:runnerSlug</code><span class="loc">runner</span></li><li><code>GET /api/editions/:editionSlug/runners/:runnerSlug/punches</code><span class="loc">runner</span></li><li><code>GET /api/editions/:slug</code><span class="loc">edition</span></li><li><code>GET /api/editions/:slug/state</code><span class="loc">edition</span></li><li><code>GET /api/editions/current</code><span class="loc">edition</span></li><li><code>GET /api/standings/:editionSlug</code><span class="loc">ranking</span></li><li><code>GET /api/standings/:editionSlug/csv</code><span class="loc">ranking</span></li><li><code>GET /api/standings/:editionSlug/laps.csv</code><span class="loc">ranking</span></li><li><code>POST /api/__test/seed</code><span class="loc">__test</span></li><li><code>POST /api/admin/auth/login</code><span class="loc">auth</span></li><li><code>POST /api/admin/auth/logout</code><span class="loc">auth</span></li><li><code>POST /api/admin/dnfs</code><span class="loc">punch</span></li><li><code>POST /api/admin/editions</code><span class="loc">edition</span></li><li><code>POST /api/admin/media/presign</code><span class="loc">media</span></li><li><code>POST /api/admin/punches</code><span class="loc">punch</span></li><li><code>POST /api/admin/punches/catchup</code><span class="loc">punch</span></li><li><code>POST /api/admin/runners</code><span class="loc">runner</span></li><li><code>POST /api/self-punches</code><span class="loc">punch</span></li><li><code>PUT /api/admin/editions/:slug</code><span class="loc">edition</span></li><li><code>PUT /api/admin/editions/:slug/status</code><span class="loc">edition</span></li><li><code>PUT /api/admin/punches/:id</code><span class="loc">punch</span></li></ul>
+    
+      <section class="coverage">
+        <h3>Codebase coverage <b>0 of 166 files</b> <span class="coverage-percent">0%</span></h3>
+        <p class="coverage-rule">A file is drawn when some user action reaches one of its exports. What is left is either the back end of a feature whose front end does not exist yet, or code no action reaches at all.</p>
+        <ul class="coverage-layers"><li class="partial">
+          <span class="coverage-layer">atom</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/18</span>
+        </li><li class="partial">
+          <span class="coverage-layer">config</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/4</span>
+        </li><li class="partial">
+          <span class="coverage-layer">controller</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/8</span>
+        </li><li class="partial">
+          <span class="coverage-layer">core</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/12</span>
+        </li><li class="partial">
+          <span class="coverage-layer">database</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/2</span>
+        </li><li class="partial">
+          <span class="coverage-layer">entrypoint</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/7</span>
+        </li><li class="partial">
+          <span class="coverage-layer">environment</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/1</span>
+        </li><li class="partial">
+          <span class="coverage-layer">i18n</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/5</span>
+        </li><li class="partial">
+          <span class="coverage-layer">middleware</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/1</span>
+        </li><li class="partial">
+          <span class="coverage-layer">molecule</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/12</span>
+        </li><li class="partial">
+          <span class="coverage-layer">organism</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/42</span>
+        </li><li class="partial">
+          <span class="coverage-layer">query</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/6</span>
+        </li><li class="partial">
+          <span class="coverage-layer">repository</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/4</span>
+        </li><li class="partial">
+          <span class="coverage-layer">route</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/7</span>
+        </li><li class="partial">
+          <span class="coverage-layer">schema</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/6</span>
+        </li><li class="partial">
+          <span class="coverage-layer">service</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/7</span>
+        </li><li class="partial">
+          <span class="coverage-layer">types</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/5</span>
+        </li><li class="partial">
+          <span class="coverage-layer">unknown</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/7</span>
+        </li><li class="partial">
+          <span class="coverage-layer">utils</span>
+          <span class="coverage-bar"><i style="width:0%"></i></span>
+          <span class="coverage-count">0/12</span>
+        </li></ul>
+        <details class="coverage-missing">
+          <summary>166 files this level does not draw</summary>
+          <ul><li class="loc">api/src/__test/test-seed.controller.ts</li><li class="loc">api/src/__test/test-seed.core.ts</li><li class="loc">api/src/__test/test-seed.schema.ts</li><li class="loc">api/src/__test/test-seed.service.ts</li><li class="loc">api/src/app.ts</li><li class="loc">api/src/auth/auth.controller.ts</li><li class="loc">api/src/auth/auth.core.ts</li><li class="loc">api/src/auth/auth.middleware.ts</li><li class="loc">api/src/auth/auth.repository.ts</li><li class="loc">api/src/auth/auth.schema.ts</li><li class="loc">api/src/auth/auth.service.ts</li><li class="loc">api/src/database/client.ts</li><li class="loc">api/src/database/schema.ts</li><li class="loc">api/src/edition/edition.controller.ts</li><li class="loc">api/src/edition/edition.core.ts</li><li class="loc">api/src/edition/edition.repository.ts</li><li class="loc">api/src/edition/edition.schema.ts</li><li class="loc">api/src/edition/edition.schema.utils.ts</li><li class="loc">api/src/edition/edition.service.ts</li><li class="loc">api/src/edition/edition.types.ts</li><li class="loc">api/src/helpers/geo/geo.core.ts</li><li class="loc">api/src/helpers/geo/haversine.utils.ts</li><li class="loc">api/src/helpers/gpx/gpx.core.ts</li><li class="loc">api/src/helpers/sun/sun.core.ts</li><li class="loc">api/src/main.dev.ts</li><li class="loc">api/src/main.ts</li><li class="loc">api/src/media/media.controller.ts</li><li class="loc">api/src/media/media.core.ts</li><li class="loc">api/src/media/media.s3.ts</li><li class="loc">api/src/media/media.schema.ts</li><li class="loc">api/src/media/media.service.ts</li><li class="loc">api/src/punch/punch.controller.ts</li><li class="loc">api/src/punch/punch.core.ts</li><li class="loc">api/src/punch/punch.repository.ts</li><li class="loc">api/src/punch/punch.schema.ts</li><li class="loc">api/src/punch/punch.service.ts</li><li class="loc">api/src/punch/punch.types.ts</li><li class="loc">api/src/punch/self-punch.controller.ts</li><li class="loc">api/src/ranking/fastest-lap.core.ts</li><li class="loc">api/src/ranking/laps-csv.core.ts</li><li class="loc">api/src/ranking/ranking.controller.ts</li><li class="loc">api/src/ranking/ranking.core.ts</li><li class="loc">api/src/ranking/ranking.service.ts</li><li class="loc">api/src/ranking/ranking.types.ts</li><li class="loc">api/src/runner/runner.controller.ts</li><li class="loc">api/src/runner/runner.core.ts</li><li class="loc">api/src/runner/runner.dto.utils.ts</li><li class="loc">api/src/runner/runner.environment.ts</li><li class="loc">api/src/runner/runner.repository.ts</li><li class="loc">api/src/runner/runner.schema.ts</li><li class="loc">api/src/runner/runner.service.ts</li><li class="loc">api/src/runner/runner.types.ts</li><li class="loc">cdk/bin/cdk.ts</li><li class="loc">cdk/lib/stack.ts</li><li class="loc">drizzle.config.ts</li><li class="loc">site/src/App.tsx</li><li class="loc">site/src/clock-store.ts</li><li class="loc">site/src/components/atoms/BigCount.tsx</li><li class="loc">site/src/components/atoms/Button.tsx</li><li class="loc">site/src/components/atoms/ButtonLink.tsx</li><li class="loc">site/src/components/atoms/Card.tsx</li><li class="loc">site/src/components/atoms/CardHeader.tsx</li><li class="loc">site/src/components/atoms/ErrorText.tsx</li><li class="loc">site/src/components/atoms/FastestLapBadge.tsx</li><li class="loc">site/src/components/atoms/FileInput.tsx</li><li class="loc">site/src/components/atoms/FlapDigit.tsx</li><li class="loc">site/src/components/atoms/InitialsAvatar.tsx</li><li class="loc">site/src/components/atoms/Input.tsx</li><li class="loc">site/src/components/atoms/Label.tsx</li><li class="loc">site/src/components/atoms/MonoNote.tsx</li><li class="loc">site/src/components/atoms/Pill.tsx</li><li class="loc">site/src/components/atoms/Select.tsx</li><li class="loc">site/src/components/atoms/Show.tsx</li><li class="loc">site/src/components/atoms/button-styles.ts</li><li class="loc">site/src/components/atoms/visibility.utils.ts</li><li class="loc">site/src/components/molecules/CorrectionBanner.tsx</li><li class="loc">site/src/components/molecules/Countdown.tsx</li><li class="loc">site/src/components/molecules/FormField.tsx</li><li class="loc">site/src/components/molecules/GpxFileField.tsx</li><li class="loc">site/src/components/molecules/InRaceCounter.tsx</li><li class="loc">site/src/components/molecules/LanguageSwitcher.tsx</li><li class="loc">site/src/components/molecules/LeaderboardChip.tsx</li><li class="loc">site/src/components/molecules/RunnerAvatar.tsx</li><li class="loc">site/src/components/molecules/correction-banner.utils.ts</li><li class="loc">site/src/components/molecules/countdown.utils.ts</li><li class="loc">site/src/components/molecules/leaderboard-chip.utils.ts</li><li class="loc">site/src/components/molecules/runner-avatar-view.utils.ts</li><li class="loc">site/src/components/organisms/AdminLoginForm.tsx</li><li class="loc">site/src/components/organisms/ArchivedEditionCard.tsx</li><li class="loc">site/src/components/organisms/CorrectionPanel.tsx</li><li class="loc">site/src/components/organisms/CourseMap.tsx</li><li class="loc">site/src/components/organisms/CreateEditionForm.tsx</li><li class="loc">site/src/components/organisms/DidNotFinishPanel.tsx</li><li class="loc">site/src/components/organisms/EditionEditForm.tsx</li><li class="loc">site/src/components/organisms/EditionFormFields.tsx</li><li class="loc">site/src/components/organisms/ElevationProfile.tsx</li><li class="loc">site/src/components/organisms/FinishRacePrompt.tsx</li><li class="loc">site/src/components/organisms/Leaderboard.tsx</li><li class="loc">site/src/components/organisms/NavigationBar.tsx</li><li class="loc">site/src/components/organisms/NextLoopCountdown.tsx</li><li class="loc">site/src/components/organisms/PunchPanel.tsx</li><li class="loc">site/src/components/organisms/RunnerAdminPanel.tsx</li><li class="loc">site/src/components/organisms/SelfPunchModal.tsx</li><li class="loc">site/src/components/organisms/SetupPanel.tsx</li><li class="loc">site/src/components/organisms/StartedEditionCard.tsx</li><li class="loc">site/src/components/organisms/UpcomingEditionCard.tsx</li><li class="loc">site/src/components/organisms/admin-errors.core.ts</li><li class="loc">site/src/components/organisms/admin-login.core.ts</li><li class="loc">site/src/components/organisms/admin-tabs.core.ts</li><li class="loc">site/src/components/organisms/correction-panel.core.ts</li><li class="loc">site/src/components/organisms/course-map-markers.core.ts</li><li class="loc">site/src/components/organisms/course-map.utils.ts</li><li class="loc">site/src/components/organisms/did-not-finish.core.ts</li><li class="loc">site/src/components/organisms/edition-form.core.ts</li><li class="loc">site/src/components/organisms/elevation-pastilles.core.ts</li><li class="loc">site/src/components/organisms/elevation-profile.utils.ts</li><li class="loc">site/src/components/organisms/gpx-file.utils.ts</li><li class="loc">site/src/components/organisms/leaderboard.utils.ts</li><li class="loc">site/src/components/organisms/navigation-styles.ts</li><li class="loc">site/src/components/organisms/punch-panel.core.ts</li><li class="loc">site/src/components/organisms/runner-form.core.ts</li><li class="loc">site/src/components/organisms/runner-loop-history.core.ts</li><li class="loc">site/src/components/organisms/runner-photo.errors.ts</li><li class="loc">site/src/components/organisms/self-punch.core.ts</li><li class="loc">site/src/components/organisms/setup-form.utils.ts</li><li class="loc">site/src/components/organisms/spectator.core.ts</li><li class="loc">site/src/components/organisms/upcoming-edition.core.ts</li><li class="loc">site/src/components/organisms/useGpxFile.ts</li><li class="loc">site/src/components/organisms/useRunnerPhotoUpload.ts</li><li class="loc">site/src/i18n/i18n-parity.core.ts</li><li class="loc">site/src/i18n/i18n.ts</li><li class="loc">site/src/i18n/i18n.utils.ts</li><li class="loc">site/src/i18n/locale-storage.utils.ts</li><li class="loc">site/src/i18n/react-i18next.d.ts</li><li class="loc">site/src/lib/api-base.utils.ts</li><li class="loc">site/src/lib/api-error.ts</li><li class="loc">site/src/lib/api.ts</li><li class="loc">site/src/lib/environment.ts</li><li class="loc">site/src/lib/formatters.utils.ts</li><li class="loc">site/src/lib/haversine.utils.ts</li><li class="loc">site/src/lib/initials.utils.ts</li><li class="loc">site/src/lib/label.utils.ts</li><li class="loc">site/src/lib/navigation.ts</li><li class="loc">site/src/lib/optional.utils.ts</li><li class="loc">site/src/lib/queries/auth.ts</li><li class="loc">site/src/lib/queries/editions.ts</li><li class="loc">site/src/lib/queries/optimistic.utils.ts</li><li class="loc">site/src/lib/queries/punches.ts</li><li class="loc">site/src/lib/queries/runners.ts</li><li class="loc">site/src/lib/queries/standings.ts</li><li class="loc">site/src/lib/race.types.ts</li><li class="loc">site/src/lib/request-position.utils.ts</li><li class="loc">site/src/lib/runner-avatar.utils.ts</li><li class="loc">site/src/lib/runner-status.utils.ts</li><li class="loc">site/src/main.tsx</li><li class="loc">site/src/observability/sentry.ts</li><li class="loc">site/src/routes/AdminPage.tsx</li><li class="loc">site/src/routes/ArchivesPage.tsx</li><li class="loc">site/src/routes/NotFoundPage.tsx</li><li class="loc">site/src/routes/RunnerProfilePage.tsx</li><li class="loc">site/src/routes/SpectatorPage.tsx</li><li class="loc">site/src/routes/route.core.ts</li><li class="loc">site/src/routes/runner-profile.core.ts</li><li class="loc">vite.config.ts</li><li class="loc">vitest.config.ts</li><li class="loc">vitest.mutation.config.ts</li></ul>
+        </details>
+      </section>
   </section>
 
   <section class="level" id="level-patterns" hidden>
