@@ -78,6 +78,44 @@ Write `isFinished`, `hasPendingUpload`, and `canSelfPunch`, and do not write
 A negated name such as `isNotReady` is banned, because the reader has to
 un-negate it every time it appears inside a `!`.
 
+## A name says what the value is, not how it was obtained
+
+`parsed`, `result`, `data`, `entries`, `payload`, `output`, `response` and
+`items` name the step that produced the value. They tell a reader where the
+value came from, which they can see anyway on the line above, and nothing about
+what it holds, which is the thing they came to find out.
+
+```ts
+// Don't
+const parsed = songWriteVariablesSchema.safeParse(variables);
+return parsed.success && parsed.data.id === songId;
+
+// Do
+const namedSong = songWriteVariablesSchema.safeParse(variables);
+return namedSong.success && namedSong.data.id === songId;
+```
+
+The cost compounds with distance. A parameter carries its name into every call
+site and every test:
+
+```ts
+// Don't — a reader three files away has no idea what an entry is
+export function didLastSongWriteFail(entries: readonly SongWriteEntry[], songId: string): boolean
+
+// Do
+export function didLastSongWriteFail(songWrites: readonly SongWrite[], songId: string): boolean
+```
+
+The test that catches this: read the name with the right-hand side covered. If
+`const parsed = …` could sit above a Zod parse, a JSON parse, a date parse or a
+chord parse and read the same in all four, it names none of them.
+
+Two exceptions, both narrow. A short-lived local inside a small pure function,
+where the whole story is visible at once, may use the plain word the domain uses
+— `merged`, `candidate`, `accumulator`. And a name imposed by a library or a
+destructuring — `data` out of TanStack Query, `response` out of `fetch` — stays
+as the library named it, because renaming it hides the contract.
+
 ## A file name says what the file contains
 
 | Suffix                   | Contents                                  |
@@ -160,3 +198,14 @@ return value, and any surprising edge case.
   of French terms that have appeared in this repository before.
 - `no-magic-numbers` from ESLint core, with `0`, `1`, and `-1` allowed.
 - Reviewer judgement for anything a dictionary cannot catch.
+
+**Not enforced: *a name says what the value is*.** Measured on 2026-08-15, the
+repository holds about 240 declarations of `parsed`, `result`, `entries`,
+`payload` and `data` across roughly 180 non-test files, 30 of them inside
+`.core.ts` and `.utils.ts` modules. A rule shipped today would be red on all of
+them, and a gate that has to be suppressed everywhere it fires is one nobody
+reads. Renaming them is a mechanical change worth funding on its own; until it
+is funded, this section is reviewer judgement, and new code is where it is
+cheap to hold the line. This paragraph exists because a standard that names a
+check which does not exist is the failure recorded in
+[`docs/dantotsus/an-approval-gate-that-only-existed-in-a-comment.md`](../dantotsus/an-approval-gate-that-only-existed-in-a-comment.md).

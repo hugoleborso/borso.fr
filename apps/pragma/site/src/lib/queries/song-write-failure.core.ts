@@ -15,16 +15,17 @@
 import type { MutationStatus } from '@tanstack/react-query';
 import { z } from 'zod';
 
-interface SongWriteEntry {
+interface SongWrite {
   readonly variables: unknown;
   readonly status: MutationStatus;
 }
 
 const songWriteVariablesSchema = z.object({ id: z.string() });
 
-function isWriteForSong(variables: unknown, songId: string): boolean {
-  const parsed = songWriteVariablesSchema.safeParse(variables);
-  return parsed.success && parsed.data.id === songId;
+/** The song a write names, or null when the write names none — a create. */
+function readSongId(variables: unknown): string | null {
+  const namedSong = songWriteVariablesSchema.safeParse(variables);
+  return namedSong.success ? namedSong.data.id : null;
 }
 
 /**
@@ -32,11 +33,11 @@ function isWriteForSong(variables: unknown, songId: string): boolean {
  * fired, so the last one naming this song is the write the operator just made.
  */
 // @FollowsBlueprint core-view-projection
-export function didLastSongWriteFail(entries: readonly SongWriteEntry[], songId: string): boolean {
+export function didLastSongWriteFail(songWrites: readonly SongWrite[], songId: string): boolean {
   let hasFailed = false;
-  for (const entry of entries) {
-    if (!isWriteForSong(entry.variables, songId)) continue;
-    hasFailed = entry.status === 'error';
+  for (const songWrite of songWrites) {
+    if (readSongId(songWrite.variables) !== songId) continue;
+    hasFailed = songWrite.status === 'error';
   }
   return hasFailed;
 }
@@ -48,16 +49,16 @@ export function didLastSongWriteFail(entries: readonly SongWriteEntry[], songId:
  * just caused.
  */
 // @FollowsBlueprint core-view-projection
-export function selectSongThatLostItsLastWrite(entries: readonly SongWriteEntry[]): string | null {
+export function selectSongThatLostItsLastWrite(songWrites: readonly SongWrite[]): string | null {
   const lastStatusBySong = new Map<string, MutationStatus>();
-  for (const entry of entries) {
-    const parsed = songWriteVariablesSchema.safeParse(entry.variables);
-    if (!parsed.success) continue;
-    lastStatusBySong.set(parsed.data.id, entry.status);
+  for (const songWrite of songWrites) {
+    const songId = readSongId(songWrite.variables);
+    if (songId === null) continue;
+    lastStatusBySong.set(songId, songWrite.status);
   }
-  let failed: string | null = null;
+  let songThatFailed: string | null = null;
   for (const [songId, status] of lastStatusBySong) {
-    if (status === 'error') failed = songId;
+    if (status === 'error') songThatFailed = songId;
   }
-  return failed;
+  return songThatFailed;
 }
