@@ -40,14 +40,14 @@ export function buildSetlistsRouter() {
     )
     .post('/', zValidator('json', setlistCreateSchema), async (context) => {
       const { sessionId } = context.req.valid('json');
-      const result = await createSetlistForSession(sessionId);
-      if (result.kind === 'already-exists') return context.json({ error: 'already-exists' }, 409);
-      return context.json({ setlist: result.setlist }, 201);
+      const updated = await createSetlistForSession(sessionId);
+      if (updated.kind === 'already-exists') return context.json({ error: 'already-exists' }, 409);
+      return context.json({ setlist: updated.setlist }, 201);
     })
     .get('/:id/entries', zValidator('param', setlistIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const entries = await getEntries(id);
-      return context.json({ entries });
+      const setlistEntries = await getEntries(id);
+      return context.json({ entries: setlistEntries });
     })
     .post(
       '/:id/entries',
@@ -67,10 +67,10 @@ export function buildSetlistsRouter() {
       async (context) => {
         const { id, entryId } = context.req.valid('param');
         const input = context.req.valid('json');
-        const result = await patchEntry(id, entryId, input);
-        if (result.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
-        if (result.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
-        return context.json({ entry: result.entry });
+        const updated = await patchEntry(id, entryId, input);
+        if (updated.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
+        if (updated.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ entry: updated.entry });
       },
     )
     .delete(
@@ -90,8 +90,8 @@ export function buildSetlistsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const { entryIds } = context.req.valid('json');
-        const result = await reorderEntries(id, entryIds);
-        if (result.kind === 'stale') return context.json({ error: 'reorder-stale' }, 409);
+        const updated = await reorderEntries(id, entryIds);
+        if (updated.kind === 'stale') return context.json({ error: 'reorder-stale' }, 409);
         return context.json({ id, entryIds });
       },
     );

@@ -40,10 +40,10 @@ export function buildMembersRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const result = await patchMember(id, input);
-        if (result.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
-        if (result.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
-        return context.json({ member: result.member });
+        const updated = await patchMember(id, input);
+        if (updated.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
+        if (updated.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ member: updated.member });
       },
     )
     .delete('/:id', zValidator('param', memberIdParamSchema), async (context) => {
@@ -64,9 +64,9 @@ export function buildMembersRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const { instrumentIds } = context.req.valid('json');
-        const result = await assignInstrumentsToMember(id, instrumentIds);
-        if (result.kind === 'member-not-found') return context.json({ error: 'not-found' }, 404);
-        if (result.kind === 'instrument-not-found') {
+        const updated = await assignInstrumentsToMember(id, instrumentIds);
+        if (updated.kind === 'member-not-found') return context.json({ error: 'not-found' }, 404);
+        if (updated.kind === 'instrument-not-found') {
           return context.json({ error: 'instrument-not-found' }, 400);
         }
         return context.json({ id, instrumentIds });

@@ -141,11 +141,11 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
   const remove = useDeleteMasteryDefault();
 
   const scores = useMemo<Record<string, number>>(() => {
-    const result: Record<string, number> = {};
+    const scores: Record<string, number> = {};
     for (const row of defaults.data?.defaults ?? []) {
-      result[cellKey(row.memberId, row.instrumentId)] = row.score;
+      scores[cellKey(row.memberId, row.instrumentId)] = row.score;
     }
-    return result;
+    return scores;
   }, [defaults.data]);
 
   const memberIds = useMemo(() => members.map((member) => member.id), [members]);
@@ -182,7 +182,7 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
     [remove, onError],
   );
 
-  const data = useMemo<MatrixRow[]>(() => members.map((member) => ({ member })), [members]);
+  const memberRows = useMemo<MatrixRow[]>(() => members.map((member) => ({ member })), [members]);
 
   const columns = useMemo<ColumnDef<MatrixRow>[]>(() => {
     const memberColumn: ColumnDef<MatrixRow> = {
@@ -247,13 +247,16 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
   }, [instruments, instrumentIds, scores, writeScore, clearScore, t]);
 
   const table = useReactTable({
-    data,
+    data: memberRows,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   return (
-    <section className="bg-bg-elev border border-line rounded-lg p-4" data-testid="mastery-matrix">
+    <section
+      className="bg-bg-elev border border-line rounded-lg p-4"
+      memberRows-testid="mastery-matrix"
+    >
       <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-1">
         {t('members.masteryMatrixTitle')}
       </h3>

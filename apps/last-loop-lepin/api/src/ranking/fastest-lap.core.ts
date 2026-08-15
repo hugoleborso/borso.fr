@@ -58,12 +58,12 @@ export function fastestLap(
   );
 
   const seenSlugs = new Set<string>();
-  const result: FastestLapEntry[] = [];
+  const laps: FastestLapEntry[] = [];
   for (const candidate of candidates) {
     if (candidate.durationMs !== minimumDurationMs) continue;
     if (seenSlugs.has(candidate.runnerSlug)) continue;
     seenSlugs.add(candidate.runnerSlug);
-    result.push({ runnerSlug: candidate.runnerSlug, durationMs: candidate.durationMs });
+    laps.push({ runnerSlug: candidate.runnerSlug, durationMs: candidate.durationMs });
   }
-  return result;
+  return laps;
 }

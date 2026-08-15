@@ -11,11 +11,11 @@ interface CfEvent {
 function evaluateHandler(event: CfEvent): unknown {
   // eslint-disable-next-line @typescript-eslint/no-implied-eval -- HOST_ROUTING_FUNCTION_CODE is the .code.js file read as a string at synth time and shipped verbatim to the edge runtime, so compiling that string is the only way to exercise the handler CloudFront actually runs
   const factory = new Function(`${HOST_ROUTING_FUNCTION_CODE}; return handler;`);
-  const result: unknown = factory();
-  if (typeof result !== 'function') {
+  const handler: unknown = factory();
+  if (typeof handler !== 'function') {
     throw new TypeError('CloudFront Function source did not yield a callable handler.');
   }
-  return result(event);
+  return handler(event);
 }
 
 // @FollowsBlueprint test-pure-unit

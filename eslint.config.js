@@ -227,6 +227,7 @@ export default tseslint.config(
       'borso/conditions-live-in-pure-functions': 'error',
       'borso/pure-functions-live-in-core-files': 'error',
       'borso/no-impure-calls-in-core-files': 'error',
+      'borso/no-step-named-value': 'error',
     },
   },
 

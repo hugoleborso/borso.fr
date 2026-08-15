@@ -40,7 +40,7 @@ describe('songSchema', () => {
   });
 
   it('defaults the optional collections', () => {
-    const parsed = songSchema.parse({
+    const song = songSchema.parse({
       id: API_SONG.id,
       title: 'X',
       artist: '',
@@ -50,7 +50,7 @@ describe('songSchema', () => {
       baseEnergy: null,
       chart: null,
     });
-    expect(parsed).toMatchObject({ links: [], isrcs: [], tags: [], mbid: null, album: null });
+    expect(song).toMatchObject({ links: [], isrcs: [], tags: [], mbid: null, album: null });
   });
 });
 

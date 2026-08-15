@@ -196,16 +196,10 @@ return value, and any surprising edge case.
   `handle`, `process`, `manage`, and `do` prefixes.
 - `borso/no-french-identifiers`, a custom ESLint rule, which flags a dictionary
   of French terms that have appeared in this repository before.
+- `borso/no-step-named-value`, a custom ESLint rule, which rejects a `const` or
+  `let` named `parsed`, `result`, `results`, `res`, `data`, `entries`,
+  `payload`, `output`, `obj`, `arr`, `val`, `tmp`, `temp`, `item` or `items`. A
+  `for (const entry of …)` head and a destructuring pattern are out of scope,
+  matching the two exceptions above.
 - `no-magic-numbers` from ESLint core, with `0`, `1`, and `-1` allowed.
 - Reviewer judgement for anything a dictionary cannot catch.
-
-**Not enforced: *a name says what the value is*.** Measured on 2026-08-15, the
-repository holds about 240 declarations of `parsed`, `result`, `entries`,
-`payload` and `data` across roughly 180 non-test files, 30 of them inside
-`.core.ts` and `.utils.ts` modules. A rule shipped today would be red on all of
-them, and a gate that has to be suppressed everywhere it fires is one nobody
-reads. Renaming them is a mechanical change worth funding on its own; until it
-is funded, this section is reviewer judgement, and new code is where it is
-cheap to hold the line. This paragraph exists because a standard that names a
-check which does not exist is the failure recorded in
-[`docs/dantotsus/an-approval-gate-that-only-existed-in-a-comment.md`](../dantotsus/an-approval-gate-that-only-existed-in-a-comment.md).

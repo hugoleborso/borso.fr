@@ -66,9 +66,9 @@ function isStage(value: string): value is Stage {
  */
 export function requirePrNumber(): number {
   const raw = requireEnv(PR_NUMBER_ENV);
-  const parsed = Number(raw);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
+  const asNumber = Number(raw);
+  if (!Number.isInteger(asNumber) || asNumber <= 0) {
     throw new Error(`${PR_NUMBER_ENV} must be a positive integer, got '${raw}'.`);
   }
-  return parsed;
+  return asNumber;
 }

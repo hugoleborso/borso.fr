@@ -38,8 +38,8 @@ export const runnerFormValuesSchema = z.object({
     .refine((raw) => Number.isInteger(Number.parseInt(raw, 10)), { message: 'bib-required' })
     .refine(
       (raw) => {
-        const parsed = Number.parseInt(raw, 10);
-        return parsed >= MINIMUM_BIB && parsed <= MAXIMUM_BIB;
+        const asNumber = Number.parseInt(raw, 10);
+        return asNumber >= MINIMUM_BIB && asNumber <= MAXIMUM_BIB;
       },
       { message: 'bib-out-of-range' },
     ),

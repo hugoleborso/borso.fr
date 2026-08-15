@@ -125,10 +125,10 @@ function durationFromLength(lengthMs: number | null | undefined): {
  * @BlueprintDescription Takes `unknown` and runs `safeParse`, returning an empty list rather than throwing, so a shape change upstream empties the search dropdown instead of failing the request. Every optional field falls back inside the mapper, and a recording with no title is dropped rather than emitted blank.
  */
 export function mapMusicBrainzRecordings(payload: unknown): ExternalSongHit[] {
-  const parsed = responseSchema.safeParse(payload);
-  if (!parsed.success) return [];
+  const recordings = responseSchema.safeParse(payload);
+  if (!recordings.success) return [];
   const hits: ExternalSongHit[] = [];
-  for (const recording of parsed.data.recordings) {
+  for (const recording of recordings.data.recordings) {
     const title = recording.title ?? '';
     if (title.length === 0) continue;
     const release = pickFirstRelease(recording.releases);

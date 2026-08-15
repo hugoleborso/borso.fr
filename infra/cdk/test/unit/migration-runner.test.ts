@@ -40,12 +40,12 @@ afterEach(() => {
  */
 describe('migration-runner handler', () => {
   it('Create: ensures schema, applies all migrations, returns physicalId', async () => {
-    const result = await handler({
+    const response = await handler({
       RequestType: 'Create',
       ResourceProperties: baseProps,
     });
-    expect(result.PhysicalResourceId).toBe('dsql-schema:test_app');
-    expect(result.Data?.SchemaName).toBe('test_app');
+    expect(response.PhysicalResourceId).toBe('dsql-schema:test_app');
+    expect(response.Data?.SchemaName).toBe('test_app');
 
     const queries = state.unsafeCalls.map((call) => call.query).join('\n');
     expect(queries).toMatch(/CREATE SCHEMA IF NOT EXISTS "test_app"/);
@@ -79,13 +79,13 @@ describe('migration-runner handler', () => {
   });
 
   it('Update: passes through PhysicalResourceId', async () => {
-    const result = await handler({
+    const response = await handler({
       RequestType: 'Update',
       PhysicalResourceId: 'existing-id',
       ResourceProperties: baseProps,
       OldResourceProperties: baseProps,
     });
-    expect(result.PhysicalResourceId).toBe('existing-id');
+    expect(response.PhysicalResourceId).toBe('existing-id');
   });
 
   it('Delete: drops the schema CASCADE and does not apply migrations', async () => {

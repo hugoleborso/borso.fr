@@ -137,8 +137,8 @@ export async function searchExternal(
     headers: { 'User-Agent': MUSICBRAINZ_USER_AGENT, Accept: 'application/json' },
   });
   if (!response.ok) return [];
-  const payload: unknown = await response.json();
-  const hits = mapMusicBrainzRecordings(payload);
+  const body: unknown = await response.json();
+  const hits = mapMusicBrainzRecordings(body);
   state.cache.set(cacheKey, { value: hits, expiresAt: now() + EXTERNAL_SEARCH_CACHE_TTL_MS });
   return hits;
 }

@@ -56,10 +56,10 @@ export function buildSongsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const result = await patchSong(id, input);
-        if (result.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
-        if (result.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
-        return context.json({ song: result.song });
+        const updatedSong = await patchSong(id, input);
+        if (updatedSong.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
+        if (updatedSong.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ song: updatedSong.song });
       },
     )
     .delete('/:id', zValidator('param', songIdParamSchema), async (context) => {

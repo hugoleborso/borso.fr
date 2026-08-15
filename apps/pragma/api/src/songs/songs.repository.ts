@@ -125,8 +125,8 @@ const PROJECTION = {
 
 function parseJsonArrayColumn<T>(raw: string | null, schema: z.ZodSchema<T[]>): T[] {
   if (raw === null) return [];
-  const parsed: unknown = JSON.parse(raw);
-  return schema.parse(parsed);
+  const storedValue: unknown = JSON.parse(raw);
+  return schema.parse(storedValue);
 }
 
 /**

@@ -73,11 +73,11 @@ describe('setlists controller (back-e2e)', () => {
         cookieHeader,
       });
     }
-    const entries = await readJson(
+    const listedEntries = await readJson(
       await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
       entryListEnvelope,
     );
-    expect(entries.entries.map((row) => row.position)).toEqual([0, 1, 2]);
+    expect(listedEntries.entries.map((row) => row.position)).toEqual([0, 1, 2]);
   });
 
   it('reorders entries via PUT /reorder', async () => {

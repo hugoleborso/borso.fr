@@ -17,9 +17,9 @@ const UNKNOWN_CAPACITY = 0;
 
 // @FollowsBlueprint core-parse-untrusted
 export function parseFriendsCounts(raw: unknown): Record<string, number> {
-  const parsed = friendsCountShape.safeParse(raw);
-  if (!parsed.success) return {};
-  return parsed.data;
+  const friendsCount = friendsCountShape.safeParse(raw);
+  if (!friendsCount.success) return {};
+  return friendsCount.data;
 }
 
 /**

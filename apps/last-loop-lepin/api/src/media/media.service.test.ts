@@ -37,12 +37,12 @@ describe('media.service', () => {
   });
 
   it('forwards a valid jpeg upload request', async () => {
-    const result = await presignRunnerPhotoUpload(
+    const presignedUpload = await presignRunnerPhotoUpload(
       { editionSlug: 'lepin-2026', runnerSlug: 'alice', contentType: 'image/jpeg' },
       new Date(),
     );
-    expect(result.uploadUrl).toMatch(/^https:\/\//);
-    expect(result.objectKey).toMatch(/\.jpg$/);
+    expect(presignedUpload.uploadUrl).toMatch(/^https:\/\//);
+    expect(presignedUpload.objectKey).toMatch(/\.jpg$/);
   });
 
   it('propagates MediaContentTypeError for unsupported content types', async () => {

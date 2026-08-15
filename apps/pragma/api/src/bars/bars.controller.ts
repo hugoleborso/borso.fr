@@ -35,10 +35,10 @@ export function buildBarsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const result = await patchBar(id, input);
-        if (result.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
-        if (result.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
-        return context.json({ bar: result.bar });
+        const updatedBar = await patchBar(id, input);
+        if (updatedBar.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
+        if (updatedBar.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ bar: updatedBar.bar });
       },
     )
     .delete('/:id', zValidator('param', barIdParamSchema), async (context) => {

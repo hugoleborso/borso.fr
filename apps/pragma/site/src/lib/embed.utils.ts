@@ -44,13 +44,13 @@ function tryParse(url: string): URL | null {
   }
 }
 
-function pathSegments(parsed: URL): readonly string[] {
-  return parsed.pathname.split('/').filter((segment) => segment.length > 0);
+function pathSegments(sourceUrl: URL): readonly string[] {
+  return sourceUrl.pathname.split('/').filter((segment) => segment.length > 0);
 }
 
-function youtubeEmbed(parsed: URL): EmbedResult | null {
-  if (parsed.host === 'youtu.be') {
-    const [videoId] = parsed.pathname.slice(1).split('/');
+function youtubeEmbed(sourceUrl: URL): EmbedResult | null {
+  if (sourceUrl.host === 'youtu.be') {
+    const [videoId] = sourceUrl.pathname.slice(1).split('/');
     if (videoId === '') return null;
     return {
       kind: 'oembed',
@@ -60,8 +60,8 @@ function youtubeEmbed(parsed: URL): EmbedResult | null {
       height: YOUTUBE_IFRAME_HEIGHT,
     };
   }
-  if (parsed.pathname === '/watch') {
-    const videoId = parsed.searchParams.get('v') ?? '';
+  if (sourceUrl.pathname === '/watch') {
+    const videoId = sourceUrl.searchParams.get('v') ?? '';
     if (videoId === '') return null;
     return {
       kind: 'oembed',
@@ -74,9 +74,9 @@ function youtubeEmbed(parsed: URL): EmbedResult | null {
   return null;
 }
 
-function spotifyEmbed(parsed: URL): EmbedResult | null {
+function spotifyEmbed(sourceUrl: URL): EmbedResult | null {
   // Spotify URL shape: /track/<id>, /album/<id>, /playlist/<id>.
-  const segments = pathSegments(parsed);
+  const segments = pathSegments(sourceUrl);
   if (segments.length < 2) return null;
   return {
     kind: 'oembed',
@@ -103,8 +103,8 @@ function deezerWidget(mediaType: string, mediaId: string): EmbedResult {
 // type sits at index 0 or index 1 and nowhere deeper.
 const DEEZER_MEDIA_TYPE_MAX_INDEX = 1;
 
-function deezerEmbed(parsed: URL): EmbedResult | null {
-  const segments = pathSegments(parsed);
+function deezerEmbed(sourceUrl: URL): EmbedResult | null {
+  const segments = pathSegments(sourceUrl);
   const mediaTypeIndex = segments.findIndex((segment) => DEEZER_MEDIA_TYPES.has(segment));
   if (mediaTypeIndex > DEEZER_MEDIA_TYPE_MAX_INDEX) return null;
   const mediaType = segments[mediaTypeIndex];
@@ -113,8 +113,8 @@ function deezerEmbed(parsed: URL): EmbedResult | null {
   return deezerWidget(mediaType, mediaId);
 }
 
-function vimeoEmbed(parsed: URL): EmbedResult | null {
-  const [firstSegment] = pathSegments(parsed);
+function vimeoEmbed(sourceUrl: URL): EmbedResult | null {
+  const [firstSegment] = pathSegments(sourceUrl);
   const videoId = firstSegment?.match(/^\d+$/)?.[0];
   if (videoId === undefined) return null;
   return {
@@ -126,10 +126,10 @@ function vimeoEmbed(parsed: URL): EmbedResult | null {
   };
 }
 
-function soundcloudEmbed(parsed: URL): EmbedResult {
+function soundcloudEmbed(sourceUrl: URL): EmbedResult {
   // SoundCloud's iframe uses its widget endpoint; the URL is opaque on
   // purpose (the API resolves it).
-  const iframeSrc = `https://w.soundcloud.com/player/?url=${encodeURIComponent(parsed.toString())}`;
+  const iframeSrc = `https://w.soundcloud.com/player/?url=${encodeURIComponent(sourceUrl.toString())}`;
   return {
     kind: 'oembed',
     provider: 'soundcloud',
@@ -139,9 +139,9 @@ function soundcloudEmbed(parsed: URL): EmbedResult {
   };
 }
 
-function soundsliceEmbed(parsed: URL): EmbedResult | null {
+function soundsliceEmbed(sourceUrl: URL): EmbedResult | null {
   // Soundslice slice URL: /slices/<slug>/
-  const segments = pathSegments(parsed);
+  const segments = pathSegments(sourceUrl);
   if (segments[0] !== 'slices' || segments[1] === undefined) return null;
   return {
     kind: 'oembed',
@@ -154,31 +154,31 @@ function soundsliceEmbed(parsed: URL): EmbedResult | null {
 
 // @FollowsBlueprint utils-pure-module
 export function resolveEmbed(url: string): EmbedResult {
-  const parsed = tryParse(url);
-  if (parsed === null) return { kind: 'plain', href: url };
+  const sourceUrl = tryParse(url);
+  if (sourceUrl === null) return { kind: 'plain', href: url };
 
-  if (YOUTUBE_DOMAINS.has(parsed.host)) {
-    const result = youtubeEmbed(parsed);
-    if (result !== null) return result;
+  if (YOUTUBE_DOMAINS.has(sourceUrl.host)) {
+    const embed = youtubeEmbed(sourceUrl);
+    if (embed !== null) return embed;
   }
-  if (parsed.host === SPOTIFY_HOST) {
-    const result = spotifyEmbed(parsed);
-    if (result !== null) return result;
+  if (sourceUrl.host === SPOTIFY_HOST) {
+    const embed = spotifyEmbed(sourceUrl);
+    if (embed !== null) return embed;
   }
-  if (parsed.host === DEEZER_HOST || parsed.host === `www.${DEEZER_HOST}`) {
-    const result = deezerEmbed(parsed);
-    if (result !== null) return result;
+  if (sourceUrl.host === DEEZER_HOST || sourceUrl.host === `www.${DEEZER_HOST}`) {
+    const embed = deezerEmbed(sourceUrl);
+    if (embed !== null) return embed;
   }
-  if (parsed.host === VIMEO_HOST || parsed.host === `player.${VIMEO_HOST}`) {
-    const result = vimeoEmbed(parsed);
-    if (result !== null) return result;
+  if (sourceUrl.host === VIMEO_HOST || sourceUrl.host === `player.${VIMEO_HOST}`) {
+    const embed = vimeoEmbed(sourceUrl);
+    if (embed !== null) return embed;
   }
-  if (parsed.host === SOUNDCLOUD_HOST || parsed.host === `www.${SOUNDCLOUD_HOST}`) {
-    return soundcloudEmbed(parsed);
+  if (sourceUrl.host === SOUNDCLOUD_HOST || sourceUrl.host === `www.${SOUNDCLOUD_HOST}`) {
+    return soundcloudEmbed(sourceUrl);
   }
-  if (parsed.host === SOUNDSLICE_HOST) {
-    const result = soundsliceEmbed(parsed);
-    if (result !== null) return result;
+  if (sourceUrl.host === SOUNDSLICE_HOST) {
+    const embed = soundsliceEmbed(sourceUrl);
+    if (embed !== null) return embed;
   }
 
   return { kind: 'plain', href: url };

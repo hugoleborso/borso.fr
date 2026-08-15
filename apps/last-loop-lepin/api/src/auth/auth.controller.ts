@@ -28,15 +28,15 @@ const authRouter = new Hono()
   .post('/login', zValidator('json', loginInputSchema), async (context) => {
     const ipAddress = readClientIp(context.req.header('x-forwarded-for'));
     try {
-      const result = await login({ pin: context.req.valid('json').pin, ipAddress }, new Date());
-      setCookie(context, AUTH_COOKIE_NAME, result.sessionId, {
+      const attempt = await login({ pin: context.req.valid('json').pin, ipAddress }, new Date());
+      setCookie(context, AUTH_COOKIE_NAME, attempt.sessionId, {
         httpOnly: true,
         secure: process.env.STAGE !== 'dev',
         sameSite: 'Lax',
         maxAge: ADMIN_COOKIE_TTL_SECONDS,
         path: '/',
       });
-      return context.json({ expiresAt: result.expiresAt.toISOString() });
+      return context.json({ expiresAt: attempt.expiresAt.toISOString() });
     } catch (error) {
       if (error instanceof AuthDeniedError) {
         return context.json(

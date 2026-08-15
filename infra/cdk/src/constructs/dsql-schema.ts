@@ -121,8 +121,8 @@ function readMigrations(dir: string): readonly MigrationFile[] {
   if (!fs.existsSync(absDir)) {
     throw new Error(`DsqlSchema: migrationsPath does not exist: ${absDir}`);
   }
-  const entries = fs.readdirSync(absDir);
-  const files = entries
+  const fileNames = fs.readdirSync(absDir);
+  const files = fileNames
     .filter((fileName) => MIGRATION_FILE_PATTERN.test(fileName))
     .sort((left, right) => left.localeCompare(right, 'en', { numeric: true }));
   return files.map((name) => ({

@@ -22,75 +22,75 @@ describe('session-cookie.utils', () => {
 
   it('round-trips a freshly built cookie', () => {
     const cookie = buildCookie(HMAC_KEY, NOW);
-    const result = verifyCookie(cookie, HMAC_KEY, NOW);
-    expect(result).toEqual({
+    const session = verifyCookie(cookie, HMAC_KEY, NOW);
+    expect(session).toEqual({
       ok: true,
       payload: { issuedAt: NOW, expiresAt: NOW + SESSION_TTL_MS },
     });
   });
 
   it('rejects a cookie missing the separator', () => {
-    const result = verifyCookie('not-signed', HMAC_KEY, NOW);
-    expect(result).toEqual({ ok: false, reason: 'malformed' });
+    const session = verifyCookie('not-signed', HMAC_KEY, NOW);
+    expect(session).toEqual({ ok: false, reason: 'malformed' });
   });
 
   it('rejects a cookie with an empty payload', () => {
-    const result = verifyCookie('.signature', HMAC_KEY, NOW);
-    expect(result).toEqual({ ok: false, reason: 'malformed' });
+    const session = verifyCookie('.signature', HMAC_KEY, NOW);
+    expect(session).toEqual({ ok: false, reason: 'malformed' });
   });
 
   it('rejects a cookie with an empty signature', () => {
-    const result = verifyCookie('payload.', HMAC_KEY, NOW);
-    expect(result).toEqual({ ok: false, reason: 'malformed' });
+    const session = verifyCookie('payload.', HMAC_KEY, NOW);
+    expect(session).toEqual({ ok: false, reason: 'malformed' });
   });
 
   it('rejects a cookie signed with a different key', () => {
     const cookie = buildCookie(HMAC_KEY, NOW);
     const otherKey = randomBytes(32);
-    const result = verifyCookie(cookie, otherKey, NOW);
-    expect(result).toEqual({ ok: false, reason: 'bad-signature' });
+    const session = verifyCookie(cookie, otherKey, NOW);
+    expect(session).toEqual({ ok: false, reason: 'bad-signature' });
   });
 
   it('rejects a signature whose byte length differs from the expected one', () => {
     const cookie = buildCookie(HMAC_KEY, NOW);
     const [payloadEncoded] = cookie.split('.');
-    const result = verifyCookie(`${payloadEncoded ?? ''}.AA`, HMAC_KEY, NOW);
-    expect(result).toEqual({ ok: false, reason: 'bad-signature' });
+    const session = verifyCookie(`${payloadEncoded ?? ''}.AA`, HMAC_KEY, NOW);
+    expect(session).toEqual({ ok: false, reason: 'bad-signature' });
   });
 
   it('rejects a cookie with a tampered payload', () => {
     const cookie = buildCookie(HMAC_KEY, NOW);
     const [, signature] = cookie.split('.');
     const tampered = `${Buffer.from('{"issuedAt":0,"expiresAt":99999999999999}', 'utf8').toString('base64url')}.${signature ?? ''}`;
-    const result = verifyCookie(tampered, HMAC_KEY, NOW);
-    expect(result).toEqual({ ok: false, reason: 'bad-signature' });
+    const session = verifyCookie(tampered, HMAC_KEY, NOW);
+    expect(session).toEqual({ ok: false, reason: 'bad-signature' });
   });
 
   it('rejects an expired cookie', () => {
     const cookie = buildCookie(HMAC_KEY, NOW);
-    const result = verifyCookie(cookie, HMAC_KEY, NOW + SESSION_TTL_MS);
-    expect(result).toEqual({ ok: false, reason: 'expired' });
+    const session = verifyCookie(cookie, HMAC_KEY, NOW + SESSION_TTL_MS);
+    expect(session).toEqual({ ok: false, reason: 'expired' });
   });
 
   it('rejects a cookie whose payload is not valid JSON', () => {
     const payloadEncoded = Buffer.from('not-json-at-all', 'utf8').toString('base64url');
     const cookie = `${payloadEncoded}.${signPayload(payloadEncoded)}`;
-    const result = verifyCookie(cookie, HMAC_KEY, NOW);
-    expect(result).toEqual({ ok: false, reason: 'malformed' });
+    const session = verifyCookie(cookie, HMAC_KEY, NOW);
+    expect(session).toEqual({ ok: false, reason: 'malformed' });
   });
 
   it('rejects a cookie whose JSON payload lacks the required fields', () => {
     const payloadEncoded = Buffer.from('{"foo":1}', 'utf8').toString('base64url');
     const cookie = `${payloadEncoded}.${signPayload(payloadEncoded)}`;
-    const result = verifyCookie(cookie, HMAC_KEY, NOW);
-    expect(result).toEqual({ ok: false, reason: 'malformed' });
+    const session = verifyCookie(cookie, HMAC_KEY, NOW);
+    expect(session).toEqual({ ok: false, reason: 'malformed' });
   });
 
   it('rejects a cookie whose JSON payload is the JSON scalar `null`', () => {
     const payloadEncoded = Buffer.from('null', 'utf8').toString('base64url');
     const cookie = `${payloadEncoded}.${signPayload(payloadEncoded)}`;
-    const result = verifyCookie(cookie, HMAC_KEY, NOW);
-    expect(result).toEqual({ ok: false, reason: 'malformed' });
+    const session = verifyCookie(cookie, HMAC_KEY, NOW);
+    expect(session).toEqual({ ok: false, reason: 'malformed' });
   });
 
   it('rejects a cookie whose JSON payload carries non-numeric fields', () => {
@@ -98,7 +98,7 @@ describe('session-cookie.utils', () => {
       'base64url',
     );
     const cookie = `${payloadEncoded}.${signPayload(payloadEncoded)}`;
-    const result = verifyCookie(cookie, HMAC_KEY, NOW);
-    expect(result).toEqual({ ok: false, reason: 'malformed' });
+    const session = verifyCookie(cookie, HMAC_KEY, NOW);
+    expect(session).toEqual({ ok: false, reason: 'malformed' });
   });
 });

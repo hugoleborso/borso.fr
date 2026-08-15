@@ -57,9 +57,9 @@ export function toggleInstrumentHeld(
  * at each of the two call sites.
  */
 export function toLineupPayload(lineup: LineupRecord | null): Record<string, string[]> {
-  const payload: Record<string, string[]> = {};
+  const body: Record<string, string[]> = {};
   for (const [memberId, instrumentIds] of Object.entries(lineup ?? {})) {
-    payload[memberId] = [...instrumentIds];
+    body[memberId] = [...instrumentIds];
   }
-  return payload;
+  return body;
 }

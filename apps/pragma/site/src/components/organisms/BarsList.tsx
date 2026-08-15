@@ -74,7 +74,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
 
-  const data = useMemo(() => [...bars], [bars]);
+  const barRows = useMemo(() => [...bars], [bars]);
 
   const columns = useMemo<ColumnDef<BarsListRow>[]>(
     () => [
@@ -153,7 +153,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
   );
 
   const table = useReactTable({
-    data,
+    data: barRows,
     columns,
     state: { sorting },
     onSortingChange: setSorting,

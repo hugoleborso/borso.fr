@@ -237,10 +237,10 @@ describe('sessions controller (back-e2e)', () => {
       cookieHeader,
     });
     const newSetlistId = (await readJson(newSetlistResponse, setlistEnvelope)).setlist.id;
-    const entries = await readJson(
+    const listedEntries = await readJson(
       await jsonRequest(app, `/api/setlists/${newSetlistId}/entries`, { cookieHeader }),
       entriesEnvelope,
     );
-    expect(entries.entries).toHaveLength(0);
+    expect(listedEntries.entries).toHaveLength(0);
   });
 });

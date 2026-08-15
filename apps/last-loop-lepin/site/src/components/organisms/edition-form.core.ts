@@ -49,11 +49,11 @@ export const editionFormValuesSchema = z.object({
   endsAt: z.string().min(1),
   intervalMinutes: z.string().refine(
     (raw) => {
-      const parsed = Number.parseInt(raw, 10);
+      const asNumber = Number.parseInt(raw, 10);
       return (
-        Number.isInteger(parsed) &&
-        parsed >= MINIMUM_INTERVAL_MINUTES &&
-        parsed <= MAXIMUM_INTERVAL_MINUTES
+        Number.isInteger(asNumber) &&
+        asNumber >= MINIMUM_INTERVAL_MINUTES &&
+        asNumber <= MAXIMUM_INTERVAL_MINUTES
       );
     },
     { message: 'interval-out-of-range' },
@@ -61,9 +61,9 @@ export const editionFormValuesSchema = z.object({
 });
 
 export function readIntervalMinutes(raw: string): number {
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isFinite(parsed)) return DEFAULT_INTERVAL_MINUTES;
-  return parsed;
+  const asNumber = Number.parseInt(raw, 10);
+  if (!Number.isFinite(asNumber)) return DEFAULT_INTERVAL_MINUTES;
+  return asNumber;
 }
 
 function buildBasePayload(values: EditionFormValues) {

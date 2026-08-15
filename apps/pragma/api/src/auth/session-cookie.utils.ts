@@ -47,11 +47,11 @@ function sign(payloadEncoded: string, hmacKey: Buffer): string {
 }
 
 export function buildCookie(hmacKey: Buffer, nowMillis: number): string {
-  const payload: SessionPayload = {
+  const session: SessionPayload = {
     issuedAt: nowMillis,
     expiresAt: nowMillis + SESSION_TTL_MS,
   };
-  const payloadEncoded = toBase64Url(Buffer.from(JSON.stringify(payload)));
+  const payloadEncoded = toBase64Url(Buffer.from(JSON.stringify(session)));
   const signature = sign(payloadEncoded, hmacKey);
   return `${payloadEncoded}${COOKIE_SEPARATOR}${signature}`;
 }
@@ -86,8 +86,8 @@ export function verifyCookie(
   ) {
     return { ok: false, reason: 'bad-signature' };
   }
-  const payload = parseJsonPayload(fromBase64Url(payloadEncoded).toString('utf8'));
-  if (payload === null) return { ok: false, reason: 'malformed' };
-  if (nowMillis >= payload.expiresAt) return { ok: false, reason: 'expired' };
-  return { ok: true, payload };
+  const session = parseJsonPayload(fromBase64Url(payloadEncoded).toString('utf8'));
+  if (session === null) return { ok: false, reason: 'malformed' };
+  if (nowMillis >= session.expiresAt) return { ok: false, reason: 'expired' };
+  return { ok: true, payload: session };
 }

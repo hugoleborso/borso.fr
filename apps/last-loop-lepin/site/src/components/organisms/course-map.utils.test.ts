@@ -101,10 +101,10 @@ describe('projectFraction', () => {
 
   it('returns the last point at fraction 1', () => {
     const track = indexTrack(SAMPLE_POINTS);
-    const result = projectFraction(track, 1);
+    const fraction = projectFraction(track, 1);
     const last = SAMPLE_POINTS[SAMPLE_POINTS.length - 1];
-    expect(result.lat).toBeCloseTo(last?.lat ?? 0, 5);
-    expect(result.lng).toBeCloseTo(last?.lng ?? 0, 5);
+    expect(fraction.lat).toBeCloseTo(last?.lat ?? 0, 5);
+    expect(fraction.lng).toBeCloseTo(last?.lng ?? 0, 5);
   });
 
   it('clamps fractions outside [0, 1]', () => {
@@ -131,8 +131,8 @@ describe('projectFraction', () => {
       { lat: 45, lng: 5 },
       { lat: 45.001, lng: 5.001 },
     ]);
-    const result = projectFraction(track, 0);
-    expect(result).toEqual({ lat: 45, lng: 5 });
+    const fraction = projectFraction(track, 0);
+    expect(fraction).toEqual({ lat: 45, lng: 5 });
   });
 
   it('handles a track of duplicated points (total === 0) by returning the first', () => {
@@ -269,33 +269,33 @@ describe('runnerDistanceFraction', () => {
   const ONE_HOUR_MS = 60 * 60_000;
 
   it('returns null when the edition is in setup', () => {
-    const result = runnerDistanceFraction(
+    const fraction = runnerDistanceFraction(
       { ...LIVE_TIMING, status: 'setup' },
       buildInRaceEntry(0),
       RACE_START_MS,
     );
-    expect(result).toBeNull();
+    expect(fraction).toBeNull();
   });
 
   it('returns null when the edition is finished', () => {
-    const result = runnerDistanceFraction(
+    const fraction = runnerDistanceFraction(
       { ...LIVE_TIMING, status: 'finished' },
       buildInRaceEntry(0),
       RACE_START_MS + ONE_HOUR_MS,
     );
-    expect(result).toBeNull();
+    expect(fraction).toBeNull();
   });
 
   it('returns null when the entry is DNF', () => {
-    const result = runnerDistanceFraction(LIVE_TIMING, buildOutEntry(), RACE_START_MS + 1_000);
-    expect(result).toBeNull();
+    const fraction = runnerDistanceFraction(LIVE_TIMING, buildOutEntry(), RACE_START_MS + 1_000);
+    expect(fraction).toBeNull();
   });
 
   it('returns elapsedInLoopMs / paceMs when the runner is still inside the current loop', () => {
     // 18 min into loop 1, paceMs = 30 min → fraction = 0.6.
     const nowMs = RACE_START_MS + 18 * 60_000;
-    const result = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(0, 30 * 60_000), nowMs);
-    expect(result).toEqual({ fraction: 0.6, restingAtCorral: false });
+    const fraction = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(0, 30 * 60_000), nowMs);
+    expect(fraction).toEqual({ fraction: 0.6, restingAtCorral: false });
   });
 
   it('measures the elapsed time from the current loop start, not from the race start', () => {
@@ -303,31 +303,31 @@ describe('runnerDistanceFraction', () => {
     // they are running loop 2 and are 30 min into it. paceMs = 60 min →
     // fraction = 0.5, not the 1.5 the race-start offset would give.
     const nowMs = RACE_START_MS + 90 * 60_000;
-    const result = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(1, ONE_HOUR_MS), nowMs);
-    expect(result).toEqual({ fraction: 0.5, restingAtCorral: false });
+    const fraction = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(1, ONE_HOUR_MS), nowMs);
+    expect(fraction).toEqual({ fraction: 0.5, restingAtCorral: false });
   });
 
   it('falls back to loopMs when lastLoopDurationMs is null', () => {
     // 15 min into loop 1, no recorded pace → fraction = 15/60 = 0.25.
     const nowMs = RACE_START_MS + 15 * 60_000;
-    const result = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(0, null), nowMs);
-    expect(result).toEqual({ fraction: 0.25, restingAtCorral: false });
+    const fraction = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(0, null), nowMs);
+    expect(fraction).toEqual({ fraction: 0.25, restingAtCorral: false });
   });
 
   it('reports restingAtCorral when the runner has already closed the current loop', () => {
     // 10 min into loop 1 (currentLoopIndex = 1); runner already validated
     // loop 1 → resting at corral until the next top-of-hour.
     const nowMs = RACE_START_MS + 10 * 60_000;
-    const result = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(1, 8 * 60_000), nowMs);
-    expect(result).toEqual({ fraction: 0, restingAtCorral: true });
+    const fraction = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(1, 8 * 60_000), nowMs);
+    expect(fraction).toEqual({ fraction: 0, restingAtCorral: true });
   });
 
   it('returns fraction 0 when paceMs is exactly zero (degenerate punch sequence)', () => {
     // A `lastLoopDurationMs` of 0 would only happen with a corrupted punch
     // sequence; the helper still defends against the divide-by-zero.
     const nowMs = RACE_START_MS + 5 * 60_000;
-    const result = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(0, 0), nowMs);
-    expect(result).toEqual({ fraction: 0, restingAtCorral: false });
+    const fraction = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(0, 0), nowMs);
+    expect(fraction).toEqual({ fraction: 0, restingAtCorral: false });
   });
 
   it('clamps elapsedSinceRace to zero when nowMs precedes startsAt (currentLoopIndex stays 1)', () => {
@@ -339,22 +339,22 @@ describe('runnerDistanceFraction', () => {
     // the original; preserving the projection is the refactor's whole
     // point.
     const nowMs = RACE_START_MS - 5_000;
-    const result = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(0, 60 * 60_000), nowMs);
-    expect(result?.restingAtCorral).toBe(false);
-    expect(result?.fraction).toBeCloseTo(-5_000 / (60 * 60_000), 9);
+    const fraction = runnerDistanceFraction(LIVE_TIMING, buildInRaceEntry(0, 60 * 60_000), nowMs);
+    expect(fraction?.restingAtCorral).toBe(false);
+    expect(fraction?.fraction).toBeCloseTo(-5_000 / (60 * 60_000), 9);
   });
 
   it('coerces intervalMinutes < 1 to 1 (defensive)', () => {
     // `Math.max(intervalMinutes, 1)` guards against a corrupted edition
     // with `intervalMinutes: 0` → division by zero in the loop arithmetic.
     const nowMs = RACE_START_MS + 30 * 1_000;
-    const result = runnerDistanceFraction(
+    const fraction = runnerDistanceFraction(
       { ...LIVE_TIMING, intervalMinutes: 0 },
       buildInRaceEntry(0, 60_000),
       nowMs,
     );
-    expect(result?.restingAtCorral).toBe(false);
-    expect(result?.fraction).toBeCloseTo(0.5, 5);
+    expect(fraction?.restingAtCorral).toBe(false);
+    expect(fraction?.fraction).toBeCloseTo(0.5, 5);
   });
 });
 

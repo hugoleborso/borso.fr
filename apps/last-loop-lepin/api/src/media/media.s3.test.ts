@@ -76,11 +76,11 @@ describe('media.s3', () => {
   it('sets expiresAt 5 minutes ahead of `now`', async () => {
     process.env.PHOTOS_BUCKET = 'lastloop-test-bucket';
     const now = new Date('2026-09-19T06:00:00+02:00');
-    const result = await createPresignedUpload(
+    const presignedUpload = await createPresignedUpload(
       { editionSlug: 'lepin-2026', runnerSlug: 'alice', contentType: 'image/jpeg' },
       now,
     );
     const fiveMinutesMs = 5 * 60 * 1000;
-    expect(result.expiresAt.getTime()).toBe(now.getTime() + fiveMinutesMs);
+    expect(presignedUpload.expiresAt.getTime()).toBe(now.getTime() + fiveMinutesMs);
   });
 });

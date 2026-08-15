@@ -109,24 +109,24 @@ describe('readIntervalMinutes', () => {
 
 describe('buildCreateEditionPayload', () => {
   it('carries the slug and the GPX and turns the schedule into timestamps', () => {
-    const payload = buildCreateEditionPayload(VALUES, '<gpx/>');
-    expect(payload.slug).toBe('lepin-2027');
-    expect(payload.gpxXml).toBe('<gpx/>');
-    expect(payload.intervalMinutes).toBe(60);
-    expect(payload.startsAt).toBe(new Date('2027-06-12T06:00').toISOString());
+    const body = buildCreateEditionPayload(VALUES, '<gpx/>');
+    expect(body.slug).toBe('lepin-2027');
+    expect(body.gpxXml).toBe('<gpx/>');
+    expect(body.intervalMinutes).toBe(60);
+    expect(body.startsAt).toBe(new Date('2027-06-12T06:00').toISOString());
   });
 });
 
 describe('buildReplaceEditionPayload', () => {
   it('omits the GPX when the operator picked no file', () => {
-    const payload = buildReplaceEditionPayload('lepin-2026', VALUES, null);
-    expect(payload.gpxXml).toBeUndefined();
-    expect(payload.slug).toBe('lepin-2026');
+    const body = buildReplaceEditionPayload('lepin-2026', VALUES, null);
+    expect(body.gpxXml).toBeUndefined();
+    expect(body.slug).toBe('lepin-2026');
   });
 
   it('includes the GPX when the operator picked one', () => {
-    const payload = buildReplaceEditionPayload('lepin-2026', VALUES, '<gpx/>');
-    expect(payload.gpxXml).toBe('<gpx/>');
+    const body = buildReplaceEditionPayload('lepin-2026', VALUES, '<gpx/>');
+    expect(body.gpxXml).toBe('<gpx/>');
   });
 });
 

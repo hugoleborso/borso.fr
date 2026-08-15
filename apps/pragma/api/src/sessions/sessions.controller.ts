@@ -49,10 +49,10 @@ export function buildSessionsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const result = await patchSession(id, input);
-        if (result.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
-        if (result.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
-        return context.json({ session: result.session });
+        const updatedSession = await patchSession(id, input);
+        if (updatedSession.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
+        if (updatedSession.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ session: updatedSession.session });
       },
     )
     .delete('/:id', zValidator('param', sessionIdParamSchema), async (context) => {

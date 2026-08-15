@@ -56,9 +56,9 @@ export function SongEditPage(): JSX.Element {
   const defaultValues = useMemo<SongDraftState>(() => {
     if (isNew) return { ...BLANK_SONG_DRAFT, title: prefilledTitle };
     if (songQuery.data?.song === undefined) return BLANK_SONG_DRAFT;
-    const parsed = singleSongSchema.safeParse({ song: songQuery.data.song });
-    if (!parsed.success) return BLANK_SONG_DRAFT;
-    return songFromApi(parsed.data.song);
+    const loadedSong = singleSongSchema.safeParse({ song: songQuery.data.song });
+    if (!loadedSong.success) return BLANK_SONG_DRAFT;
+    return songFromApi(loadedSong.data.song);
   }, [isNew, songQuery.data, prefilledTitle]);
 
   const formKey = isNew
@@ -68,14 +68,14 @@ export function SongEditPage(): JSX.Element {
   const isEditingMissingSong = !isNew && !songQuery.isLoading && songQuery.data === undefined;
 
   const saveSong = async (value: SongDraftState): Promise<void> => {
-    const payload = payloadFromDraft(value);
-    if (payload === null) return;
+    const body = payloadFromDraft(value);
+    if (body === null) return;
     try {
       if (isNew) {
-        const created = await createSong.mutateAsync(payload);
+        const created = await createSong.mutateAsync(body);
         navigateTo(`/catalog/${created.song.id}`, { replace: true });
       } else {
-        updateSong.mutate({ id: songId, ...payload });
+        updateSong.mutate({ id: songId, ...body });
         navigateTo(`/catalog/${songId}`);
       }
     } catch (error) {

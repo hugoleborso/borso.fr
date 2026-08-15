@@ -41,68 +41,88 @@ function buildPunch(loopIndex: number, finishedAtIso: string): LoopPunch {
 // @FollowsBlueprint test-pure-unit
 describe('validatePunchTiming', () => {
   it('rejects punches before the race starts', () => {
-    const result = validatePunchTiming(EDITION, 'alice', [], new Date('2026-09-19T05:30:00+02:00'));
-    expect(result).toEqual({ ok: false, reason: 'race-not-started' });
+    const verdict = validatePunchTiming(
+      EDITION,
+      'alice',
+      [],
+      new Date('2026-09-19T05:30:00+02:00'),
+    );
+    expect(verdict).toEqual({ ok: false, reason: 'race-not-started' });
   });
 
   it('rejects punches after the race ends', () => {
-    const result = validatePunchTiming(EDITION, 'alice', [], new Date('2026-09-19T22:30:00+02:00'));
-    expect(result).toEqual({ ok: false, reason: 'race-finished' });
+    const verdict = validatePunchTiming(
+      EDITION,
+      'alice',
+      [],
+      new Date('2026-09-19T22:30:00+02:00'),
+    );
+    expect(verdict).toEqual({ ok: false, reason: 'race-finished' });
   });
 
   it('accepts a fresh punch in loop 1', () => {
-    const result = validatePunchTiming(EDITION, 'alice', [], new Date('2026-09-19T06:55:00+02:00'));
-    expect(result).toEqual({ ok: true, loopIndex: 1 });
+    const verdict = validatePunchTiming(
+      EDITION,
+      'alice',
+      [],
+      new Date('2026-09-19T06:55:00+02:00'),
+    );
+    expect(verdict).toEqual({ ok: true, loopIndex: 1 });
   });
 
   it('accepts a punch in loop 2 (after the first top)', () => {
-    const result = validatePunchTiming(EDITION, 'alice', [], new Date('2026-09-19T07:30:00+02:00'));
-    expect(result).toEqual({ ok: true, loopIndex: 2 });
+    const verdict = validatePunchTiming(
+      EDITION,
+      'alice',
+      [],
+      new Date('2026-09-19T07:30:00+02:00'),
+    );
+    expect(verdict).toEqual({ ok: true, loopIndex: 2 });
   });
 
   it('rejects a second punch for the same loop', () => {
     const existing = [buildPunch(1, '2026-09-19T06:55:00+02:00')];
-    const result = validatePunchTiming(
+    const verdict = validatePunchTiming(
       EDITION,
       'alice',
       existing,
       new Date('2026-09-19T06:58:00+02:00'),
     );
-    expect(result).toEqual({ ok: false, reason: 'already-punched-this-loop' });
+    expect(verdict).toEqual({ ok: false, reason: 'already-punched-this-loop' });
   });
 
   it('does not consider the runner’s punch for an earlier loop as a conflict', () => {
     const existing: readonly LoopPunch[] = [buildPunch(1, '2026-09-19T06:55:00+02:00')];
-    const result = validatePunchTiming(
+    const verdict = validatePunchTiming(
       EDITION,
       'alice',
       existing,
       new Date('2026-09-19T07:55:00+02:00'),
     );
-    expect(result).toEqual({ ok: true, loopIndex: 2 });
+    expect(verdict).toEqual({ ok: true, loopIndex: 2 });
   });
 
   it('does not consider another runner’s punch as a conflict', () => {
     const existing: readonly LoopPunch[] = [
       { ...buildPunch(1, '2026-09-19T06:55:00+02:00'), runnerSlug: 'bob' },
     ];
-    const result = validatePunchTiming(
+    const verdict = validatePunchTiming(
       EDITION,
       'alice',
       existing,
       new Date('2026-09-19T06:58:00+02:00'),
     );
-    expect(result).toEqual({ ok: true, loopIndex: 1 });
+    expect(verdict).toEqual({ ok: true, loopIndex: 1 });
   });
 
   it('treats now === startsAt as the start of loop 1', () => {
-    const result = validatePunchTiming(EDITION, 'alice', [], EDITION.startsAt);
-    expect(result).toEqual({ ok: true, loopIndex: 1 });
+    const verdict = validatePunchTiming(EDITION, 'alice', [], EDITION.startsAt);
+    expect(verdict).toEqual({ ok: true, loopIndex: 1 });
   });
 
   it('treats now === endsAt as still in-race (cutoff is strict-after)', () => {
-    const result = validatePunchTiming(EDITION, 'alice', [], EDITION.endsAt);
-    expect(result.ok).toBe(true);
+    const verdict = validatePunchTiming(EDITION, 'alice', [], EDITION.endsAt);
+    expect(verdict.ok).toBe(true);
   });
 });
 
