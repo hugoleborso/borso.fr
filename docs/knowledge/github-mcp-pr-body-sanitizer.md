@@ -53,6 +53,18 @@ should protect it do not. Other angle brackets in the same body survived when
 they were part of prose rather than a `<word>` shape, which fits tag-stripping
 rather than escaping.
 
+Confirmed again the same day on PR #49, through `update_pull_request` rather
+than `create_pull_request`, so the deletion is not specific to one tool:
+
+| Sent | Stored |
+| --- | --- |
+| ``both name the file `<vendor>.adapter.ts`.`` | ``both name the file `.adapter.ts`.`` |
+
+That one is worse than an empty field: the sentence still parses, and it now
+says every reporting adapter is named `.adapter.ts` with nothing in front. A
+deleted placeholder does not always leave a visible hole — check the sentences
+it was inside, not only the token.
+
 This makes a placeholder in a PR body actively misleading — `Last verified: `
 reads as an empty field rather than as a form to fill in. Write the shape out
 instead: `Last verified: YYYY-MM-DD`, `npx vitest run path/to/file.test.ts`.
