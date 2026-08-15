@@ -4,7 +4,7 @@
     {
       "id": "api",
       "name": "HTTP API",
-      "fileCount": 63
+      "fileCount": 64
     },
     {
       "id": "database",
@@ -29,7 +29,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 175
+      "fileCount": 178
     },
     {
       "id": "uploads-bucket",
@@ -261,7 +261,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/auth.controller.ts",
-      "digest": "add72273b1bc",
+      "digest": "61b84e1f9538",
       "container": "api",
       "layer": "controller",
       "context": "auth",
@@ -382,7 +382,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/session-cookie.utils.ts",
-      "digest": "7c1800742013",
+      "digest": "25bc9ae3f4dd",
       "container": "api",
       "layer": "utils",
       "context": "auth",
@@ -401,7 +401,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/shared-password.middleware.ts",
-      "digest": "94742d0e937e",
+      "digest": "5cec4756c78a",
       "container": "api",
       "layer": "middleware",
       "context": "auth",
@@ -420,7 +420,7 @@
     },
     {
       "path": "apps/pragma/api/src/bars/bars.controller.ts",
-      "digest": "2fd8ceeb4e03",
+      "digest": "d041783dd2ce",
       "container": "api",
       "layer": "controller",
       "context": "bars",
@@ -556,7 +556,7 @@
     },
     {
       "path": "apps/pragma/api/src/instruments/instruments.controller.ts",
-      "digest": "dc46a037dc6a",
+      "digest": "0041ca071272",
       "container": "api",
       "layer": "controller",
       "context": "instruments",
@@ -825,7 +825,7 @@
     },
     {
       "path": "apps/pragma/api/src/members/members.controller.ts",
-      "digest": "da9017839ba7",
+      "digest": "6b08dbee6ddd",
       "container": "api",
       "layer": "controller",
       "context": "members",
@@ -845,7 +845,7 @@
     },
     {
       "path": "apps/pragma/api/src/members/members.repository.ts",
-      "digest": "9733c2945218",
+      "digest": "abb1c8a44be4",
       "container": "api",
       "layer": "repository",
       "context": "members",
@@ -940,7 +940,7 @@
     },
     {
       "path": "apps/pragma/api/src/sessions/sessions.controller.ts",
-      "digest": "8bad5c0a9408",
+      "digest": "5c247084dabe",
       "container": "api",
       "layer": "controller",
       "context": "sessions",
@@ -1061,7 +1061,7 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.controller.ts",
-      "digest": "2c1dbafcb841",
+      "digest": "f596ccccc53c",
       "container": "api",
       "layer": "controller",
       "context": "setlists",
@@ -1162,7 +1162,7 @@
     },
     {
       "path": "apps/pragma/api/src/songs/musicbrainz.adapter.ts",
-      "digest": "c3ebbd1b3698",
+      "digest": "c8778b20cb8a",
       "container": "api",
       "layer": "adapter",
       "context": "songs",
@@ -1171,7 +1171,8 @@
         "searchExternal"
       ],
       "imports": [
-        "apps/pragma/api/src/songs/musicbrainz.core.ts"
+        "apps/pragma/api/src/songs/musicbrainz.core.ts",
+        "apps/pragma/api/src/songs/search-ranking.core.ts"
       ],
       "blueprints": [
         "adapter-rate-limited-fetch"
@@ -1180,7 +1181,7 @@
     },
     {
       "path": "apps/pragma/api/src/songs/musicbrainz.core.ts",
-      "digest": "0a5e00fb9e6a",
+      "digest": "441258b15b1b",
       "container": "api",
       "layer": "core",
       "context": "songs",
@@ -1196,8 +1197,32 @@
       "followsBlueprints": []
     },
     {
+      "path": "apps/pragma/api/src/songs/search-ranking.core.ts",
+      "digest": "045d9072374c",
+      "container": "api",
+      "layer": "core",
+      "context": "songs",
+      "feature": null,
+      "exports": [
+        "coverSearchText",
+        "hasCoverMarker",
+        "overlapWithQuery",
+        "rankExternalHits",
+        "scoreExternalHit",
+        "unaskedTitleWords",
+        "wordsOf"
+      ],
+      "imports": [
+        "apps/pragma/api/src/songs/musicbrainz.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-decision"
+      ]
+    },
+    {
       "path": "apps/pragma/api/src/songs/songs.controller.ts",
-      "digest": "54520006b85f",
+      "digest": "2e112fd4a36d",
       "container": "api",
       "layer": "controller",
       "context": "songs",
@@ -1217,7 +1242,7 @@
     },
     {
       "path": "apps/pragma/api/src/songs/songs.repository.ts",
-      "digest": "69e210af2d90",
+      "digest": "459fa882fe34",
       "container": "api",
       "layer": "repository",
       "context": "songs",
@@ -1406,7 +1431,7 @@
     },
     {
       "path": "apps/pragma/api/src/uploads/uploads.controller.ts",
-      "digest": "27efd913823c",
+      "digest": "7933a8a704f5",
       "container": "api",
       "layer": "controller",
       "context": "uploads",
@@ -1595,7 +1620,7 @@
     },
     {
       "path": "apps/pragma/domain/tonality.core.ts",
-      "digest": "8a383d40e4dd",
+      "digest": "04a473c70a01",
       "container": "domain",
       "layer": "core",
       "context": "domain",
@@ -1852,6 +1877,18 @@
       "followsBlueprints": [
         "atom-variant"
       ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/chart-tone.ts",
+      "digest": "71bcc6ee47f2",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": null,
+      "exports": [],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
     },
     {
       "path": "apps/pragma/site/src/components/atoms/Chip.tsx",
@@ -2163,6 +2200,26 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/molecules/ChordProSectionHeading.tsx",
+      "digest": "16a1f455d573",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": null,
+      "exports": [
+        "ChordProSectionHeading"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Badge.tsx",
+        "apps/pragma/site/src/components/atoms/chart-tone.ts",
+        "apps/pragma/site/src/lib/chordpro.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
       "digest": "2b923cc13cd1",
       "container": "site",
@@ -2317,7 +2374,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/lineup-editor.core.ts",
-      "digest": "578ea03a40d5",
+      "digest": "63eb7a1a8c68",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2733,7 +2790,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/BarsList.tsx",
-      "digest": "fb85360f9f36",
+      "digest": "5d9ea3c203dd",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2795,7 +2852,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx",
-      "digest": "6c9fd4f6821b",
+      "digest": "28ad4705ba6a",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2804,7 +2861,9 @@
         "ChordChartViewer"
       ],
       "imports": [
+        "apps/pragma/site/src/components/atoms/chart-tone.ts",
         "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/ChordProSectionHeading.tsx",
         "apps/pragma/site/src/lib/chordpro.utils.ts"
       ],
       "blueprints": [],
@@ -2814,7 +2873,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/create-session-dialog.utils.ts",
-      "digest": "8055c63e8ad5",
+      "digest": "4b9ab459cba1",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2897,7 +2956,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/MasteryMatrix.tsx",
-      "digest": "8c5f3ae34699",
+      "digest": "a8e3f2477d7a",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3013,7 +3072,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
-      "digest": "f6ac33dddde1",
+      "digest": "9b071323abf3",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3078,7 +3137,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
-      "digest": "b910eebc6476",
+      "digest": "a35166337a72",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3477,13 +3536,16 @@
     },
     {
       "path": "apps/pragma/site/src/lib/chordpro.utils.ts",
-      "digest": "62d5c6befce1",
+      "digest": "49db15556f36",
       "container": "site",
       "layer": "utils",
       "context": "lib",
       "feature": "songs",
       "exports": [
+        "buildSectionHeading",
         "directiveLines",
+        "groupChordProSections",
+        "hasSectionHeading",
         "isTitleDirective",
         "parseChordPro",
         "parseChordProLine",
@@ -3531,7 +3593,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/embed.utils.ts",
-      "digest": "d65f4c36259b",
+      "digest": "d3a589b82a88",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3964,24 +4026,47 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/lib/queries/song-cache.core.ts",
+      "digest": "13b26c107269",
+      "container": "site",
+      "layer": "query",
+      "context": "queries",
+      "feature": null,
+      "exports": [
+        "buildOptimisticSong",
+        "mergeSongUpdate"
+      ],
+      "imports": [
+        "apps/pragma/domain/lineup.core.ts",
+        "apps/pragma/site/src/lib/api.client.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-projection",
+        "core-projection"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/lib/queries/song-write-failure.core.ts",
-      "digest": "8d1cb72424d5",
+      "digest": "89fa54ef390b",
       "container": "site",
       "layer": "query",
       "context": "queries",
       "feature": "songs",
       "exports": [
-        "didLastSongWriteFail"
+        "didLastSongWriteFail",
+        "selectSongThatLostItsLastWrite"
       ],
       "imports": [],
       "blueprints": [],
       "followsBlueprints": [
+        "core-view-projection",
         "core-view-projection"
       ]
     },
     {
       "path": "apps/pragma/site/src/lib/queries/songs.queries.ts",
-      "digest": "5d3654d9c0f0",
+      "digest": "169882950a70",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3993,13 +4078,14 @@
         "useDidLastSongWriteFail",
         "useSong",
         "useSongSearch",
+        "useSongThatLostItsLastWrite",
         "useSongsList",
         "useUpdateSong"
       ],
       "imports": [
-        "apps/pragma/domain/lineup.core.ts",
         "apps/pragma/site/src/lib/api.client.ts",
         "apps/pragma/site/src/lib/queries/optimistic.utils.ts",
+        "apps/pragma/site/src/lib/queries/song-cache.core.ts",
         "apps/pragma/site/src/lib/queries/song-write-failure.core.ts"
       ],
       "blueprints": [
@@ -4122,7 +4208,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/bars/bar-form.core.ts",
-      "digest": "62b6c4073437",
+      "digest": "cc315ef8dd1d",
       "container": "site",
       "layer": "route",
       "context": "bars",
@@ -4256,7 +4342,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/CatalogPage.tsx",
-      "digest": "f6a2d501d8ca",
+      "digest": "5b467d334846",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4471,7 +4557,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongDeleteAction.tsx",
-      "digest": "faf7972d3a9a",
+      "digest": "1e0765afa473",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4535,7 +4621,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongEditForm.tsx",
-      "digest": "3e182133361e",
+      "digest": "04ebd975b349",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4569,7 +4655,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongEditPage.tsx",
-      "digest": "481e19eff8d4",
+      "digest": "14747a9a15c1",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4757,7 +4843,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/login.core.ts",
-      "digest": "8b8daa1bd0e8",
+      "digest": "4d24e28bc236",
       "container": "site",
       "layer": "route",
       "context": "routes",
@@ -4776,7 +4862,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/Login.tsx",
-      "digest": "e7106fb8adc6",
+      "digest": "dbb2f1ed9638",
       "container": "site",
       "layer": "route",
       "context": "routes",
@@ -4923,7 +5009,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/sessions/friends-count.core.ts",
-      "digest": "0a4c844f4004",
+      "digest": "85254971e4f3",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -5648,6 +5734,7 @@
         "schema:externalSearchQuerySchema",
         "service:searchExternalSongs",
         "adapter:searchExternal",
+        "core:rankExternalHits",
         "core:mapMusicBrainzRecordings"
       ],
       "tables": [],
@@ -6290,7 +6377,7 @@
     {
       "id": "core-decision",
       "file": "apps/last-loop-lepin/api/src/punch/punch.core.ts",
-      "followerCount": 4
+      "followerCount": 5
     },
     {
       "id": "core-form-schema",
@@ -6315,7 +6402,7 @@
     {
       "id": "core-projection",
       "file": "apps/pragma/api/src/sessions/offline-manifest.core.ts",
-      "followerCount": 9
+      "followerCount": 11
     },
     {
       "id": "core-view-intent",
@@ -6325,7 +6412,7 @@
     {
       "id": "core-view-projection",
       "file": "apps/last-loop-lepin/site/src/components/organisms/punch-panel.core.ts",
-      "followerCount": 8
+      "followerCount": 9
     },
     {
       "id": "database-client",
@@ -6400,7 +6487,7 @@
     {
       "id": "molecule-presentational",
       "file": "apps/pragma/site/src/components/molecules/StatusChip.tsx",
-      "followerCount": 22
+      "followerCount": 23
     },
     {
       "id": "organism-form",

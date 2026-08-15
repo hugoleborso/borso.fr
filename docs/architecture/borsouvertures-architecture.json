@@ -1231,7 +1231,7 @@
     },
     {
       "path": "apps/borsouvertures/site/openings/bookEngine.utils.ts",
-      "digest": "a442b1474117",
+      "digest": "6eb11f8f8176",
       "container": "site",
       "layer": "utils",
       "context": "root",
@@ -1332,7 +1332,7 @@
     },
     {
       "path": "apps/borsouvertures/site/openings/loadOpenings.ts",
-      "digest": "c0e59d9801d8",
+      "digest": "de7be82157c1",
       "container": "site",
       "layer": "unknown",
       "context": "root",
@@ -1735,7 +1735,7 @@
     },
     {
       "path": "apps/borsouvertures/site/state/persistedState.utils.ts",
-      "digest": "b2e2971c7aab",
+      "digest": "cd0fe8ab8e1d",
       "container": "site",
       "layer": "utils",
       "context": "root",

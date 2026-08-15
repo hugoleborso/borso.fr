@@ -15,7 +15,7 @@
 
 import { normalizeLineup } from '@domain/lineup.core';
 import type { InferResponseType } from 'hono/client';
-import type { api } from '../api';
+import type { api } from '../api.client';
 
 type SongsListResponse = InferResponseType<typeof api.api.songs.$get>;
 type SongRow = SongsListResponse['songs'][number];
