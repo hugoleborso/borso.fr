@@ -859,7 +859,7 @@
     </section>
     <section class="level" id="level-component" hidden>
       <h2>Level 3 — Components</h2>
-      <p class="summary">Bounded contexts on the back and feature areas on the front, with the import edges between them. A back-end context is a folder under api/src; a front-end one is a @Feature tag, falling back to the folder.</p>
+      <p class="summary">Bounded contexts on the back and feature areas on the front, with the import edges between them. A back-end context is a folder under api/src; a front-end one is a @Feature tag, falling back to the folder. A column is depth in the import graph, not a layer: two contexts of the same shape sit in different columns when one is reached through more hops than the other, and nothing can be read from the horizontal position beyond what the arrows already say.</p>
       
       
       <div class="graph" data-level="component">
@@ -1975,7 +1975,7 @@
       <tr data-source-key="file:apps/pragma/site/src/routes/bars/bars-page.core.ts" tabindex="0">
         <td><code>core-view-intent</code></td>
         <td class="loc">apps/pragma/site/src/routes/bars/bars-page.core.ts</td>
-        <td class="loc"><a href="https://github.com/hugoleborso/borso.fr/commit/1b5402a" target="_blank" rel="noreferrer"><code>1b5402a</code></a> 2026-08-14 · 5 commits<br><span class="subject">fix(pragma): answer a dead link with a sentence and a way back</span></td>
+        <td class="loc"><a href="https://github.com/hugoleborso/borso.fr/commit/ef4312b" target="_blank" rel="noreferrer"><code>ef4312b</code></a> 2026-08-15 · 6 commits<br><span class="subject">feat(pragma): give the front end a feature axis, and one name per feature</span></td>
         <td class="num">7</td>
         <td><details class="followers"><summary>7 files</summary><ul><li class="loc" data-source-key="file:apps/borsouvertures/site/components/atoms/boardDrop.utils.ts" tabindex="0">site/components/atoms/boardDrop.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/learnSession.core.ts" tabindex="0">site/openings/learnSession.core.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/openingFlow.core.ts" tabindex="0">site/openings/openingFlow.core.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/playScope.core.ts" tabindex="0">site/openings/playScope.core.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/playSession.core.ts" tabindex="0">site/openings/playSession.core.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/sessionStart.core.ts" tabindex="0">site/openings/sessionStart.core.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/routes/trainerScreen.core.ts" tabindex="0">site/routes/trainerScreen.core.ts</li></ul></details></td>
       </tr>
@@ -2066,14 +2066,14 @@
       <tr data-source-key="file:apps/pragma/site/src/components/organisms/SongCard.tsx" tabindex="0">
         <td><code>organism-presentational</code></td>
         <td class="loc">apps/pragma/site/src/components/organisms/SongCard.tsx</td>
-        <td class="loc"><a href="https://github.com/hugoleborso/borso.fr/commit/068e5d5" target="_blank" rel="noreferrer"><code>068e5d5</code></a> 2026-08-14 · 5 commits<br><span class="subject">fix(pragma): make the app usable on a phone, one hand, no undo</span></td>
+        <td class="loc"><a href="https://github.com/hugoleborso/borso.fr/commit/ef4312b" target="_blank" rel="noreferrer"><code>ef4312b</code></a> 2026-08-15 · 6 commits<br><span class="subject">feat(pragma): give the front end a feature axis, and one name per feature</span></td>
         <td class="num">5</td>
         <td><details class="followers"><summary>5 files</summary><ul><li class="loc" data-source-key="file:apps/borsouvertures/site/components/organisms/LearnSessionControl.tsx" tabindex="0">site/components/organisms/LearnSessionControl.tsx</li><li class="loc" data-source-key="file:apps/borsouvertures/site/components/organisms/PlaySessionControl.tsx" tabindex="0">site/components/organisms/PlaySessionControl.tsx</li><li class="loc" data-source-key="file:apps/borsouvertures/site/components/organisms/SelectionAutoOpponentRow.tsx" tabindex="0">site/components/organisms/SelectionAutoOpponentRow.tsx</li><li class="loc" data-source-key="file:apps/borsouvertures/site/components/organisms/TopBar.tsx" tabindex="0">site/components/organisms/TopBar.tsx</li><li class="loc" data-source-key="file:apps/borsouvertures/site/components/organisms/WideOpeningFlow.tsx" tabindex="0">site/components/organisms/WideOpeningFlow.tsx</li></ul></details></td>
       </tr>
       <tr data-source-key="file:apps/pragma/site/src/components/organisms/AppShell.tsx" tabindex="0">
         <td><code>organism-shell</code></td>
         <td class="loc">apps/pragma/site/src/components/organisms/AppShell.tsx</td>
-        <td class="loc"><a href="https://github.com/hugoleborso/borso.fr/commit/e781fde" target="_blank" rel="noreferrer"><code>e781fde</code></a> 2026-08-15 · 9 commits<br><span class="subject">refactor(pragma): spell out the navigation abbreviation the standard rejects</span></td>
+        <td class="loc"><a href="https://github.com/hugoleborso/borso.fr/commit/ef4312b" target="_blank" rel="noreferrer"><code>ef4312b</code></a> 2026-08-15 · 10 commits<br><span class="subject">feat(pragma): give the front end a feature axis, and one name per feature</span></td>
         <td class="num">1</td>
         <td><details class="followers"><summary>1 file</summary><ul><li class="loc" data-source-key="file:apps/borsouvertures/site/routes/OpeningTrainerRoute.tsx" tabindex="0">site/routes/OpeningTrainerRoute.tsx</li></ul></details></td>
       </tr>
@@ -2150,7 +2150,7 @@
       <tr data-source-key="file:apps/pragma/site/src/lib/member-color.utils.ts" tabindex="0">
         <td><code>utils-pure-module</code></td>
         <td class="loc">apps/pragma/site/src/lib/member-color.utils.ts</td>
-        <td class="loc"><a href="https://github.com/hugoleborso/borso.fr/commit/f2fa6f6" target="_blank" rel="noreferrer"><code>f2fa6f6</code></a> 2026-08-10 · 3 commits<br><span class="subject">feat(meta): mark the canonical example of every pattern, and map the gaps</span></td>
+        <td class="loc"><a href="https://github.com/hugoleborso/borso.fr/commit/ef4312b" target="_blank" rel="noreferrer"><code>ef4312b</code></a> 2026-08-15 · 4 commits<br><span class="subject">feat(pragma): give the front end a feature axis, and one name per feature</span></td>
         <td class="num">12</td>
         <td><details class="followers"><summary>12 files</summary><ul><li class="loc" data-source-key="file:apps/borsouvertures/site/components/atoms/moveNotation.utils.ts" tabindex="0">site/components/atoms/moveNotation.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/i18n/i18n.utils.ts" tabindex="0">site/i18n/i18n.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/lib/viewport.utils.ts" tabindex="0">site/lib/viewport.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/bookEngine.utils.ts" tabindex="0">site/openings/bookEngine.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/bookTree.utils.ts" tabindex="0">site/openings/bookTree.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/lineDisplay.utils.ts" tabindex="0">site/openings/lineDisplay.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/openingIds.utils.ts" tabindex="0">site/openings/openingIds.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/openingsLoad.utils.ts" tabindex="0">site/openings/openingsLoad.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/previews.utils.ts" tabindex="0">site/openings/previews.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/selectors.utils.ts" tabindex="0">site/openings/selectors.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/openings/uciSquare.utils.ts" tabindex="0">site/openings/uciSquare.utils.ts</li><li class="loc" data-source-key="file:apps/borsouvertures/site/theme/boardThemes.utils.ts" tabindex="0">site/theme/boardThemes.utils.ts</li></ul></details></td>
       </tr>

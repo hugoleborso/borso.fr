@@ -15,16 +15,14 @@
  * calls and the imports are all read from the source.
  */
 
+import type { GraphEdge, GraphNode, NodeChip } from './architecture-graph';
 import {
   BLUEPRINT_ICON,
   COMPLEXITY_ICON,
   DISABLE_ICON,
-  type GraphEdge,
-  type GraphNode,
   LAYER_GROUP_ICON,
-  type NodeChip,
   SIZE_ICON,
-} from './architecture-graph';
+} from './architecture-icons';
 import {
   type ArchitectureFile,
   type ExportedSymbol,
@@ -59,11 +57,28 @@ const MAXIMUM_WALK_DEPTH = 6;
 /** A bound on the upward walk, so a cycle in the import graph cannot spin. */
 const MAXIMUM_SCREEN_WALK_STEPS = 500;
 
-/** `useAppendSetlistEntry` reads as `Append setlist entry`. */
+/**
+ * `useAppendSetlistEntry` reads as `Append setlist entry`.
+ *
+ * A read hook is named for what it returns rather than for what it does, so
+ * `useBarsList` came out as `Bars list` — a noun where every other action is a
+ * verb. The trailing word that names the shape of the result moves to the front
+ * as the verb it implies, which is what a person would say they did.
+ */
+const VERB_BY_TRAILING_NOUN: Readonly<Record<string, string>> = {
+  list: 'list',
+  detail: 'open',
+  search: 'search',
+};
+
 export function humaniseHook(hook: string): string {
   const withoutPrefix = hook.replace(/^use/, '');
-  const spaced = withoutPrefix.replaceAll(/([a-z\d])([A-Z])/g, '$1 $2');
-  const lowered = spaced.charAt(0) + spaced.slice(1).toLowerCase();
+  const words = withoutPrefix.replaceAll(/([a-z\d])([A-Z])/g, '$1 $2').split(' ');
+  const trailing = (words.at(-1) ?? '').toLowerCase();
+  const verb = VERB_BY_TRAILING_NOUN[trailing];
+  const ordered = verb === undefined ? words : [verb, ...words.slice(0, -1)];
+  const spaced = ordered.join(' ');
+  const lowered = spaced.charAt(0).toUpperCase() + spaced.slice(1).toLowerCase();
   return lowered.replace(/\bid\b/i, 'id');
 }
 

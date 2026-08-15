@@ -29,6 +29,15 @@ import {
   readApiPathStrings,
 } from './architecture-model';
 import {
+  BLUEPRINT_ICON,
+  COMPLEXITY_ICON,
+  DISABLE_ICON,
+  FILE_ICON,
+  LAYER_GROUP_ICON,
+  ROUTE_ICON,
+  SIZE_ICON,
+} from './architecture-icons';
+import {
   ARCHITECTURE_MANIFESTS,
   type ArchitectureManifest,
   manifestFor,
@@ -190,13 +199,6 @@ export interface NodeChip {
   /** Drives the pill's colour, and is a class name in the page. */
   readonly tone: 'plain' | 'blueprint' | 'complexity' | 'size' | 'warn';
 }
-
-export const BLUEPRINT_ICON = '📘';
-export const SIZE_ICON = '📏';
-export const COMPLEXITY_ICON = '🧮';
-export const DISABLE_ICON = '🚫';
-export const FILE_ICON = '🗂️';
-export const ROUTE_ICON = '🔌';
 
 /**
  * The pills a block prints for the code behind it.
@@ -536,35 +538,6 @@ function commonFolder(files: readonly ArchitectureFile[], applicationPrefix: str
   return `${first.slice(0, shared).join('/')}/`.replace(applicationPrefix, '');
 }
 
-/** One emoji per family of layers, so a block reads before it is read. */
-export const LAYER_GROUP_ICON: Readonly<Record<string, string>> = {
-  adapter: '🔗',
-  atom: '⚛️',
-  client: '🔗',
-  config: '⚙️',
-  controller: '🚦',
-  core: '🧠',
-  database: '🗄️',
-  declaration: '📄',
-  entrypoint: '🚀',
-  environment: '⚙️',
-  hook: '🪝',
-  i18n: '🌍',
-  middleware: '🚧',
-  molecule: '🧬',
-  organism: '🦴',
-  query: '📡',
-  repository: '🗄️',
-  route: '🧭',
-  schema: '📐',
-  service: '⚙️',
-  setup: '🚀',
-  store: '📦',
-  types: '📐',
-  utils: '🧰',
-  variants: '🎨',
-};
-
 function buildComponentLevel(
   files: readonly ArchitectureFile[],
   manifest: ArchitectureManifest,
@@ -643,7 +616,7 @@ function buildComponentLevel(
     id: 'component',
     title: 'Level 3 — Components',
     summary:
-      'Bounded contexts on the back and feature areas on the front, with the import edges between them. A back-end context is a folder under api/src; a front-end one is a @Feature tag, falling back to the folder.',
+      'Bounded contexts on the back and feature areas on the front, with the import edges between them. A back-end context is a folder under api/src; a front-end one is a @Feature tag, falling back to the folder. A column is depth in the import graph, not a layer: two contexts of the same shape sit in different columns when one is reached through more hops than the other, and nothing can be read from the horizontal position beyond what the arrows already say.',
     nodes,
     edges: uniqueEdges(edges),
   };
