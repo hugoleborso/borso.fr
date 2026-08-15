@@ -94,3 +94,14 @@ Two audiences read these documents, and both are badly served by vagueness. The
 first is an engineer who has never seen this repository, and the second is an
 agent that will apply the rule literally, including the parts you did not mean
 literally.
+
+## Enforced by
+
+- `generator:scripts/standards/hotspots.ts` crosses how often each file changes
+  with whether it follows a recorded pattern and whether its path says what it
+  is, and names the layer a blueprint would repay next. It is a report, not a
+  gate: a build cannot fail because a file was edited often, and a threshold on
+  churn would be met by splitting the file. The `--check` refuses only a stale
+  page.
+- `reviewer` reads that page before deciding which pattern to write down next,
+  because the ranking is an argument rather than an answer.

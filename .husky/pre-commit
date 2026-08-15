@@ -85,6 +85,10 @@ if [ -n "$staged_lintable" ]; then
   # existing backlog never blocks a commit and the next divergence does. A git
   # index read plus one pass over the tree, so it belongs on the commit.
   run_generator_check scripts/standards/convention-drift.ts
+  # Churn crossed with the repository's own weakness signals. A report rather
+  # than a gate; the --check only refuses a stale page, because a build cannot
+  # fail on how often a file was edited.
+  run_generator_check scripts/standards/hotspots.ts
   set -e
 fi
 

@@ -54,6 +54,16 @@ a file after sealing unseals it. Moving one does not. Rewording a standard
 invalidates the seals taken under the old wording. It is an attestation and not
 a signature, and `scripts/standards/seal.core.ts` says so at more length.
 
+`seal.ts verify` is deliberately **not** a CI gate yet, and this is the one
+place in this folder where a mechanism exists and nothing runs it. The pull
+request that introduced it changes more than four hundred files, nearly all of
+them a directory move, and requiring a seal on each would mean clearing four
+hundred files in one sitting. That is rubber-stamping, which is the failure the
+seal exists to prevent, so arming the gate on this change would have taught
+exactly the wrong habit on its first use. Wire it in the first pull request of
+ordinary size. Until then the skill is run by hand and
+`docs/standards/reviews/` holds what it found.
+
 Read [00. Principles](./00-principles.md) first, because it explains how to
 read the rest.
 

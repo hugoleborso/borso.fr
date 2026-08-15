@@ -60,6 +60,10 @@ Second round:
 | Standard 08 gains a `@third-party-dom` exception | Leaflet renders its own DOM, so no JSX element can carry a utility. The ban never accounted for it, and the code was right. |
 | Agents do not commit or stage | Six agents share one git index and every whole-tree `--check` generator. Recorded as a dantotsu. |
 | `borsolivres` ships with its back end only | Its React side was not reached. Committed anyway because the back end is green and the build surfaced three harness bugs. Flagged loudly rather than hidden. |
+| The seal is not a CI gate in this pull request | This change touches four hundred files, nearly all a directory move. Sealing them all is rubber-stamping, which is the thing the seal exists to stop. Arm it on the first ordinary-sized change. |
+| Convention drift gates on a ratchet, not a threshold | Thirty files sit outside a majority spelling. Clearing them is not worth an afternoon; reopening a settled question by accident is worth stopping. A falling count is always allowed. |
+| Case style is read per layer *and* per extension | Grouping by layer alone reported `App.tsx` against `main.ts` as a disagreement when both are correct. |
+| A one-word lowercase name is kebab-case | Reading `books` and `self-punch` as two styles reported nineteen of twenty-one controllers as divergent when they all agree. |
 
 ## Standing constraints
 

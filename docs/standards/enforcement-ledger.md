@@ -18,7 +18,10 @@ every application the standard covers.
 
 `docs/standards/00-principles.md`
 
-This standard names no enforcement.
+| Mechanism | Kind | Enforced | Where |
+| --- | --- | --- | --- |
+| `scripts/standards/hotspots.ts` | generator | yes | .husky/pre-commit, .github/workflows/ci.yml |
+| (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
 ## 01. Naming
 
@@ -36,7 +39,7 @@ This standard names no enforcement.
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
-| `scripts/standards/convention-drift.ts` | generator | NO | `scripts/standards/convention-drift.ts` is cited by this standard and does not exist |
+| `scripts/standards/convention-drift.ts` | generator | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
 ## 02. Purity and core files
@@ -196,9 +199,13 @@ This standard names no enforcement.
 
 ## What only a reviewer can check
 
-20 claim(s) below hand the check to a person, because no tool can make it.
+21 claim(s) below hand the check to a person, because no tool can make it.
 They are the checklist the standards review agent works from, so the agent
 reviews what lint cannot rather than repeating what lint already did.
+
+### 00. Principles
+
+- `reviewer` reads that page before deciding which pattern to write down next, because the ranking is an argument rather than an answer.
 
 ### 01. Naming
 
@@ -258,6 +265,6 @@ reviews what lint cannot rather than repeating what lint already did.
 
 ## Totals
 
-- 69 claim(s) enforced by a tool
-- 20 claim(s) left to a reviewer
-- 1 problem(s)
+- 71 claim(s) enforced by a tool
+- 21 claim(s) left to a reviewer
+- 0 problem(s)

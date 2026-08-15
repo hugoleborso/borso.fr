@@ -151,6 +151,7 @@ jobs:
       - run: pnpm exec tsx scripts/blueprints/blueprint-defects.ts --check
       - run: pnpm exec tsx .claude/skills/blueprint/blueprint-context.ts --check
       - run: pnpm exec tsx scripts/standards/convention-drift.ts --check
+      - run: pnpm exec tsx scripts/standards/hotspots.ts --check
       # Every `## Enforced by` bullet in docs/standards/ resolves against the
       # live ESLint configuration and the checked-in hooks. Fails on a rule
       # cited and enabled nowhere, a script no hook invokes, a gate whose
