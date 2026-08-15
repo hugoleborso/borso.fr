@@ -10,6 +10,7 @@
  * Deleting a member asks first. The button sits 12px from the name that opens
  * the edit form, the write takes their mastery scores with it, and nothing in
  * this app has an undo.
+ * @Feature members
  */
 
 import type { JSX } from 'react';

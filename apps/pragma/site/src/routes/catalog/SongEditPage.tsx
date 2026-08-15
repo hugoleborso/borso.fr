@@ -18,6 +18,7 @@
  * wherever they landed, the song page for an update and the catalog for a
  * delete. A create is awaited, because the route it navigates to needs the id
  * only the server can issue.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';

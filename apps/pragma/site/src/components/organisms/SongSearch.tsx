@@ -8,6 +8,7 @@
  * The 1000ms debounce runs in the change handler, through the shared
  * `debounce` primitive, so the network call fires once per typing
  * pause and no effect watches the input value.
+ * @Feature songs
  */
 
 import { type JSX, useMemo, useState } from 'react';

@@ -9,6 +9,7 @@
  * tap doing nothing and reads as broken.
  *
  * Hidden from `lg` up, where the sidebar is already visible.
+ * @Feature shell
  */
 
 import type { ParseKeys } from 'i18next';

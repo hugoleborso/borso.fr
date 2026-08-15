@@ -2,6 +2,7 @@
  * Setlists index — lists every concert session that already carries a
  * setlist. Tapping a row drills into the session detail, which mounts
  * the SetlistEditor for that setlist.
+ * @Feature setlists
  */
 
 import type { JSX } from 'react';

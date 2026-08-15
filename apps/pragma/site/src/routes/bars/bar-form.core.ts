@@ -3,6 +3,7 @@
  * fields to the payload the bars API accepts. The form keeps every
  * field as a string so the inputs stay controlled; this module is the
  * single place that turns those strings back into the domain types.
+ * @Feature bars
  */
 
 import { z } from 'zod';

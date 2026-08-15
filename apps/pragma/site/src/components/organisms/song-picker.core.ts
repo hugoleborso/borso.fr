@@ -6,6 +6,7 @@
  * contains the empty one, which is how the sheet opens on the whole catalog. The offer only makes sense once something is typed and
  * no song already carries that exact title, otherwise the sheet invites the
  * band to enter the same song twice.
+ * @Feature setlists
  */
 
 export interface PickableSong {

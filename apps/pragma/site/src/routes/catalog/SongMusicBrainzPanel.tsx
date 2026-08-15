@@ -4,6 +4,7 @@
  * the title/artist inputs when any field is populated. The user can
  * override any field by editing the underlying form state; this
  * panel only displays.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';

@@ -6,6 +6,7 @@
  * scroll-wheel ±1 in the matrix must feel instant; the cached row is
  * upserted/removed before the server replies, and `onSettled`
  * invalidates to reconcile.
+ * @Feature mastery
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

@@ -7,6 +7,7 @@
  * setlist editor's inline comment field commits instantly. `onSettled`
  * reconciles, and `onError` rolls back to whatever the cache held
  * before (null when this was a first-time comment).
+ * @Feature transitions
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

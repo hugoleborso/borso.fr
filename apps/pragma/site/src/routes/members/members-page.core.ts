@@ -2,6 +2,7 @@
  * Decisions the members admin page makes: how the two lists are
  * ordered, which values the edit form starts from, what toggling an
  * instrument produces, and what the selection becomes after a delete.
+ * @Feature members
  */
 
 export interface MemberRow {

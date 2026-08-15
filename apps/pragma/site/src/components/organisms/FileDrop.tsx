@@ -6,6 +6,7 @@
  *
  * The PUT goes through `fetch` rather than the Hono client because the
  * signed URL is S3's, not this application's API.
+ * @Feature uploads
  */
 
 import { type JSX, useState } from 'react';

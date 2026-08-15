@@ -3,6 +3,7 @@
  *
  * MusicBrainz reports a length in whole seconds, and the panel shows it the
  * way a track listing does, so the seconds are always two digits.
+ * @Feature songs
  */
 
 const SECONDS_PER_MINUTE = 60;

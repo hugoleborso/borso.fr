@@ -25,6 +25,7 @@
  * Those two hooks own the optimistic update: they patch the TanStack
  * Query cache in `onMutate`, roll it back in `onError`, and reconcile
  * in `onSettled`. This component only surfaces the error.
+ * @Feature mastery
  */
 
 import {

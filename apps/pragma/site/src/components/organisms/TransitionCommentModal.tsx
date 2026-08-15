@@ -10,6 +10,7 @@
  * It is a native modal `<dialog>` like every other sheet in the app, so
  * Escape and the backdrop both dismiss it. As a plain fixed `div` it answered
  * to neither, and Cancel was the only way out.
+ * @Feature transitions
  */
 
 import type { JSX } from 'react';

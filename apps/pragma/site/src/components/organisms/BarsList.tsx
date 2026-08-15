@@ -14,6 +14,7 @@
  *
  * The stale-banner above the list and the kanban view live in the
  * parent (`BarsPage`); this organism owns the list-view shape only.
+ * @Feature bars
  */
 
 import {

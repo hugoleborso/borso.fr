@@ -4,6 +4,7 @@
  * functions match on that pair and neither cares what else a row carries.
  *
  * Generic over the row so the caller keeps whatever shape the API returned.
+ * @Feature mastery
  */
 
 interface MasteryCell {

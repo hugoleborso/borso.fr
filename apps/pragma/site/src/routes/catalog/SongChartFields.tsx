@@ -1,6 +1,7 @@
 /**
  * Chord chart variant + tonality + base-energy fields. Extracted from
  * SongDetailPage so the parent stays under the file-length limit.
+ * @Feature songs
  */
 
 import { useTranslation } from 'react-i18next';

@@ -5,6 +5,7 @@
  * used to make sits here.
  *
  * @DependsOnExternal aws-s3
+ * @Feature uploads
  */
 
 /**

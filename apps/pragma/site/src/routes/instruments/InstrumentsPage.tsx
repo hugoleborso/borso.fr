@@ -10,6 +10,7 @@
  *
  * Deleting an instrument asks first: it leaves every lineup that holds it and
  * there is no undo.
+ * @Feature instruments
  */
 
 import { INSTRUMENT_FAMILIES, type InstrumentFamily } from '@domain/instrument.core';

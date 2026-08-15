@@ -15,6 +15,7 @@
  * @DependsOnExternal soundcloud
  * @DependsOnExternal deezer
  * @DependsOnExternal soundslice
+ * @Feature songs
  */
 
 const YOUTUBE_DOMAINS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be']);

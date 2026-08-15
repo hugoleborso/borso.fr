@@ -14,6 +14,7 @@
  * history with it and there is no undo — and a successful write bumps the
  * counter feeding the form's key, so the blank form remounts empty rather than
  * keeping what it just submitted and writing it twice.
+ * @Feature bars
  */
 
 import type { JSX } from 'react';

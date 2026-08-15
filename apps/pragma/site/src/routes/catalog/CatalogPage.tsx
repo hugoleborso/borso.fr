@@ -8,6 +8,7 @@
  * Data goes through TanStack Query — songs, members, instruments and
  * mastery defaults each have their own cache key, so navigating away
  * and back hits a warm cache and the page renders synchronously.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';

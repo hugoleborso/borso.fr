@@ -16,6 +16,7 @@
  * guard caching `{ authenticated: false }`, and without overwriting it
  * the post-login redirect lands on the guard, reads the stale `false`,
  * and bounces straight back to /login.
+ * @Feature auth
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

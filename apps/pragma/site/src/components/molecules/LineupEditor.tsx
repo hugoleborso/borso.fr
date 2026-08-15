@@ -27,6 +27,7 @@
  * the parent persists `lineupOverride: null`. Without a prior Reset,
  * Save calls `onSave(lineup, false)` and the parent persists the form
  * values verbatim.
+ * @Feature members
  */
 
 import { useForm } from '@tanstack/react-form';

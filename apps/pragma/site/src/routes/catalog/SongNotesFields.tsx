@@ -5,6 +5,7 @@
  * Three labelled boxes rather than one free-text area, because a named box
  * gets filled in and a blank one does not, and because the stage view reads
  * the structure and the gimmicks on their own.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';

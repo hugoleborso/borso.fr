@@ -4,6 +4,7 @@
  * (Spotify / YouTube / Deezer / Vimeo / SoundCloud / Soundslice) or a
  * plain `<a>` fallback. Closes blocker A13 — links render as oEmbed
  * iframes, not bare anchor tags.
+ * @Feature songs
  */
 
 import { useMemo } from 'react';

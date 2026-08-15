@@ -4,6 +4,7 @@
  *
  * A browser that has never signed in goes straight to the sign-in
  * screen, so no gated request is sent before the visitor has a session.
+ * @Feature auth
  */
 
 export type SessionGateState = 'checking' | 'sign-in-required' | 'granted';

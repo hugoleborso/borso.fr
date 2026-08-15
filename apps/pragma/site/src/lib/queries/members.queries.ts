@@ -6,6 +6,7 @@
  * Mutations are optimistic (round 17c) — the members list reflects
  * the change immediately, and `useAssignMemberInstruments` swaps the
  * member's instrument roster in place before the server confirms.
+ * @Feature members
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

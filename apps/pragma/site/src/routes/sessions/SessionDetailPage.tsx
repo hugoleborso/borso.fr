@@ -7,6 +7,7 @@
  *
  * Reads via useSession, useMembersList, useSessionsList,
  * useSetlistBySession. Writes via useUpdateSession + useCreateSetlist.
+ * @Feature sessions
  */
 
 import type { JSX } from 'react';

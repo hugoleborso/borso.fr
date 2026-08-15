@@ -2,6 +2,7 @@
  * Decisions the catalog page makes: which songs a filter and a search
  * box leave visible, how many songs each status filter would show, and
  * which lineup entries carry a real instrument.
+ * @Feature songs
  */
 
 import type { Lineup } from '@domain/lineup.core';

@@ -8,6 +8,7 @@
  * The friends-count grid is modelled as a nested `friends` field of
  * `Record<memberId, number>` — TanStack Form handles arbitrary-shape
  * objects natively.
+ * @Feature sessions
  */
 
 import { useForm } from '@tanstack/react-form';

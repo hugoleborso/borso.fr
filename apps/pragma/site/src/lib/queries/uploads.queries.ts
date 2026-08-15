@@ -5,6 +5,7 @@
  * A presigned GET URL expires, so `staleTime` and `gcTime` both sit
  * under the five minute validity window the API signs for, which makes
  * TanStack Query refetch a fresh URL before the held one goes stale.
+ * @Feature uploads
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';

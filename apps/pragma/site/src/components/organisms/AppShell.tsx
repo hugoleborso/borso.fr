@@ -30,6 +30,7 @@
  *
  * The browser's online status and the viewport width are both read
  * through `useSyncExternalStore` hooks, so this file holds no effect.
+ * @Feature shell
  */
 
 import type { ParseKeys } from 'i18next';

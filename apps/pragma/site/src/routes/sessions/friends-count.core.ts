@@ -5,6 +5,7 @@
  *
  * The column is a free-form JSON blob, so an unparsable value reads as
  * "nobody brought anyone" rather than throwing at render time.
+ * @Feature sessions
  */
 
 import { z } from 'zod';

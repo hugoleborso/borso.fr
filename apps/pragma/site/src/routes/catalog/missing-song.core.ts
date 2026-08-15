@@ -3,6 +3,7 @@
  * read came back empty. A deleted song and an unreachable API both leave the
  * route with nothing to draw, and telling the reader the song is gone when the
  * network is what failed sends them looking for a song that is still there.
+ * @Feature songs
  */
 
 import type { ParseKeys } from 'i18next';

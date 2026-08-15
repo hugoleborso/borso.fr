@@ -13,6 +13,7 @@
  *
  * The constants below come from the design tokens; they MUST stay in
  * sync with `styles/design-tokens.css` (`--ink` / `--surface`).
+ * @Feature members
  */
 
 const HEX_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;

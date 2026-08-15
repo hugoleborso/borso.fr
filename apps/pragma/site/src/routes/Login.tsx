@@ -6,6 +6,7 @@
  *
  * Design bundle source of truth: cream paper, centred card, blue
  * accent on the submit button, serif italic display title.
+ * @Feature auth
  */
 
 import { useForm } from '@tanstack/react-form';

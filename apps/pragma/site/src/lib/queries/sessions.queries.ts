@@ -1,6 +1,7 @@
 /**
  * Sessions feature queries / mutations. Practices + concerts share the
  * `/api/sessions` endpoint via single-table inheritance on `kind`.
+ * @Feature sessions
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

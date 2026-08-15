@@ -7,6 +7,7 @@
  *
  * The form is never submitted — see `SetlistEntryRow` — so there is no
  * `onSubmit` here either. It exists for field state and Zod validation.
+ * @Feature setlists
  */
 
 import { useForm } from '@tanstack/react-form';

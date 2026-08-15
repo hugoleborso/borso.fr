@@ -15,6 +15,7 @@
  * put every control — including the only way out, since a phone has no
  * Escape key — off screen for 93% of the scroll range. The bottom edge
  * is also where a thumb reaches while the other hand is on the neck.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';

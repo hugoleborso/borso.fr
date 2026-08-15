@@ -6,6 +6,7 @@
  * the card moves to the new column the instant the operator drops it,
  * the server confirms in the background, and a 500 rolls the card back
  * to its previous column.
+ * @Feature bars
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

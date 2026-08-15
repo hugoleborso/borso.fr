@@ -3,6 +3,7 @@
  * range, and how the transpose offset is written next to the buttons. The
  * chord source it renders is read by `selectChordProText` in
  * `chart-kind.utils.ts`, which every catalog surface shares.
+ * @Feature songs
  */
 
 /**

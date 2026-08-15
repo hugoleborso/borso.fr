@@ -6,6 +6,7 @@
  * derived row props (resolved lineup, prominent member chip in
  * single-member mode, override badge, the transition strip that
  * precedes each row) and emits intent through the supplied callbacks.
+ * @Feature setlists
  */
 
 import {

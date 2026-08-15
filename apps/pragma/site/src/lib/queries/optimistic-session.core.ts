@@ -5,6 +5,7 @@
  * other kind and read as `null`. Which half is the decision this file holds,
  * and it mirrors `buildSessionInsertShape` on the API side, which does the
  * same thing to the same body on its way into the database.
+ * @Feature sessions
  */
 
 import type { InferResponseType } from 'hono/client';

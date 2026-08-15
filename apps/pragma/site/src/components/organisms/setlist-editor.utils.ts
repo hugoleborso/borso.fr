@@ -2,6 +2,7 @@
  * Pure helpers for the SetlistEditor. Extracted so the parent stays
  * under the file-length cap and so the lineup / tonality / instrument
  * derivations stay easy to cover at 100%.
+ * @Feature setlists
  */
 
 import type { InstrumentFamily } from '@domain/instrument.core';

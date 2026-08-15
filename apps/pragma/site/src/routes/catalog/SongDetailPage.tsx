@@ -11,6 +11,7 @@
  *
  * The edit form lives in SongEditPage.tsx at /catalog/:songId/edit;
  * pressing the Edit button navigates there.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';

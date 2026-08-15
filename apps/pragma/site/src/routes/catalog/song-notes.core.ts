@@ -5,6 +5,7 @@
  * detail page and the stage view ask the same question: which of them actually
  * say something, in the order the band reads them — how the song is built,
  * what to watch out for, then everything else.
+ * @Feature songs
  */
 
 export interface SongNoteInput {

@@ -7,6 +7,7 @@
  * editor re-renders dozens of times. The pure half (`findOrphanMemberIds`)
  * lives in `setlist-editor.utils.ts`; the side-effecty wrapper lives
  * here so the utils file stays free of `console.warn`.
+ * @Feature members
  */
 
 import type { Lineup } from '@domain/lineup.core';

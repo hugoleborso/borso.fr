@@ -7,6 +7,7 @@
  * state, and the `onCreated` callback that fires once the mutation
  * resolves. The parent renders the dialog only while it should be
  * open, so the dialog opens itself the moment React attaches it.
+ * @Feature sessions
  */
 
 import { useForm } from '@tanstack/react-form';

@@ -7,6 +7,7 @@
  * A browser that has never signed in carries no session marker, so the
  * probe stays disabled and the visitor reaches /login without a gated
  * request answering 401.
+ * @Feature auth
  */
 
 import type { JSX } from 'react';

@@ -7,6 +7,7 @@
  * The list of links already on the song is the child, so what you add appears
  * directly under the field you added it in. It used to render a screenful
  * above, which on a phone made Add look like it had done nothing.
+ * @Feature songs
  */
 
 import type { JSX, ReactNode } from 'react';

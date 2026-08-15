@@ -10,6 +10,7 @@
  * `optimistic.utils.ts`) — otherwise a refetch from an early tick
  * (energy-slider drag, rapid reorder) lands after a later optimistic
  * write and snaps it back.
+ * @Feature setlists
  */
 
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';

@@ -28,6 +28,7 @@
  * `prominentMemberInstrument` chip describing what they play here, and the
  * strips are hidden because the gaps between the visible rows are no longer
  * the gaps of the set.
+ * @Feature setlists
  */
 
 import { evaluateTransition } from '@domain/transition.core';

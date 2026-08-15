@@ -5,6 +5,7 @@
  * concert a practice prepares, so both read the same rule. `now` is an
  * argument, which is what lets a test pin the boundary instead of waiting for
  * it.
+ * @Feature sessions
  */
 
 export interface DatedSession {

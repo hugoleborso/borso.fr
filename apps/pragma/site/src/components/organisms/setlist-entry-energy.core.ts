@@ -7,6 +7,7 @@
  * things. Both now read the value the control would write, and an unset row
  * says so by drawing the slider and the number in the muted palette instead of
  * the accent one.
+ * @Feature setlists
  */
 
 export const ENERGY_DEFAULT = 5;

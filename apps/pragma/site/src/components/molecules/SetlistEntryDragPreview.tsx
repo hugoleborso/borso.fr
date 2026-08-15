@@ -7,6 +7,7 @@
  * lifted. It shares nothing with `SetlistEntryRow` beyond the look of the
  * card, which is why it is a component of its own rather than a mode of that
  * one.
+ * @Feature setlists
  */
 
 import type { JSX } from 'react';

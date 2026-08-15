@@ -12,6 +12,7 @@
  * older rows carry — while the cache holds what a read returns, which is
  * always lists. `toEntryPatch` and `appendOptimisticEntry` normalise on the
  * way in, so an optimistic row and a fetched row are the same shape.
+ * @Feature setlists
  */
 
 import { type Lineup, normalizeLineup, type StoredLineup } from '@domain/lineup.core';

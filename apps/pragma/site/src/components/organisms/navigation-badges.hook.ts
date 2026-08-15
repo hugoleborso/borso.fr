@@ -6,6 +6,7 @@
  *
  * Failure is silent: a 404 / 500 / network error simply leaves that
  * entry's badge undefined, and `SidebarLink` skips rendering.
+ * @Feature shell
  */
 
 import { useMemo, useSyncExternalStore } from 'react';

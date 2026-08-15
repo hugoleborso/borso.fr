@@ -9,6 +9,7 @@
  * vocals counts twice. Members sitting the song out are skipped.
  * Returns null if the lineup is empty or no defaults are known for any
  * of the (member, instrument) pairs.
+ * @Feature mastery
  */
 
 import { type Lineup, memberInstrumentPairs } from '@domain/lineup.core';

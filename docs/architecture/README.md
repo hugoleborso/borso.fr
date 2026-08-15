@@ -197,11 +197,21 @@ manifest entry must be referenced by at least one tag; `--check` fails on either
 half alone.
 
 **`@Feature <id>`** groups front-end files that belong to one feature. Atomic
-design is a granularity axis and carries no feature axis, so the catalogue is
+design is a granularity axis and carries no feature axis, so the catalogue was
 spread across `routes/catalog/`, `lib/queries/songs.queries.ts` and several
-organisms with no structural tie between them. **No file carries this tag yet** —
-level 3 falls back to the folder, and whether to tag or to restructure
-`site/src/` by feature is still open.
+organisms with no structural tie between them. 111 files now carry the tag, and
+each id is the name of the API context that owns the data — `songs`,
+`setlists`, `sessions`, `members`, `instruments`, `mastery`, `bars`,
+`transitions`, `uploads`, `auth`, plus `shell` for the frame around them.
+
+Two things follow. Level 3 shows `site::songs` beside `api::songs` rather than
+`catalog` beside `songs`, so a reader can see the two halves of one feature.
+And the tag, not a rename, is what did it: the screen is still at `/catalog`
+and the folder is still `routes/catalog/`, because renaming a URL is a product
+decision and the map does not need one.
+
+An untagged file is cross-cutting by default, which is why `atoms/`, the
+generic molecules, `lib/`, `i18n/` and `sw/` still read as themselves.
 
 The manifest is
 [`scripts/architecture/pragma.manifest.ts`](../../scripts/architecture/pragma.manifest.ts):

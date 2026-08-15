@@ -13,6 +13,7 @@
  * reached as a deep link, this route used to carry no title and no link at
  * all, so the set on screen belonged to no readable session and the only way
  * out was the bottom bar.
+ * @Feature setlists
  */
 
 import type { JSX } from 'react';

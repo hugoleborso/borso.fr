@@ -7,6 +7,7 @@
  *
  * The whole strip is one button, so a note is one tap away on a phone
  * rather than a marker in a desktop-only gutter.
+ * @Feature transitions
  */
 
 import type { JSX } from 'react';

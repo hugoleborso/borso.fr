@@ -9,6 +9,7 @@
  * A pasted link is one unbreakable word, and the detail page clips what
  * overflows, so the note text breaks mid-word rather than running past the
  * card and off the screen.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';
