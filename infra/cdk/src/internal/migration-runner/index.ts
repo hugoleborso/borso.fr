@@ -30,6 +30,8 @@ import {
   type ColumnDefinition,
   isReplacedBeforeClone,
   buildCreateTableLikeSql,
+  type CatalogueColumnRow,
+  formatColumnType,
   selectCloneableDataTables,
   selectMissingColumns,
 } from './clone-from-schema.utils.js';
@@ -127,41 +129,16 @@ async function listColumns(
   return rows.map((row) => row.column_name);
 }
 
-/**
- * Columns with the type they would need to be recreated with.
- *
- * `data_type` alone loses the length of a `character varying` and the
- * precision of a `numeric`, so the two modifiers information_schema carries
- * separately are folded back in here.
- */
+/** Columns with the type they would need to be recreated with. */
 async function listColumnDefinitions(
   sql: postgres.Sql,
   schemaName: string,
   tableName: string,
 ): Promise<readonly ColumnDefinition[]> {
-  const rows = await sql.unsafe<
-    {
-      column_name: string;
-      data_type: string;
-      character_maximum_length: number | null;
-      numeric_precision: number | null;
-      numeric_scale: number | null;
-    }[]
-  >(
+  const rows = await sql.unsafe<CatalogueColumnRow[]>(
     `SELECT column_name, data_type, character_maximum_length, numeric_precision, numeric_scale FROM information_schema.columns WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_name = '${tableName.replace(/'/g, "''")}' ORDER BY ordinal_position`,
   );
-  return rows.map((row) => {
-    if (row.character_maximum_length !== null) {
-      return { name: row.column_name, type: `${row.data_type}(${row.character_maximum_length})` };
-    }
-    if (row.data_type === 'numeric' && row.numeric_precision !== null) {
-      return {
-        name: row.column_name,
-        type: `numeric(${row.numeric_precision},${row.numeric_scale ?? 0})`,
-      };
-    }
-    return { name: row.column_name, type: row.data_type };
-  });
+  return rows.map(formatColumnType);
 }
 
 /**

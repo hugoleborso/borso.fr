@@ -89,6 +89,34 @@ export interface ColumnDefinition {
   readonly type: string;
 }
 
+/** One `information_schema.columns` row, as far as recreating a column needs. */
+export interface CatalogueColumnRow {
+  readonly column_name: string;
+  readonly data_type: string;
+  readonly character_maximum_length: number | null;
+  readonly numeric_precision: number | null;
+  readonly numeric_scale: number | null;
+}
+
+/**
+ * A catalogue row as the type a column would have to be recreated with.
+ *
+ * `data_type` alone drops the length of a `character varying` and the precision
+ * of a `numeric`, both of which the catalogue reports in their own columns.
+ */
+export function formatColumnType(row: CatalogueColumnRow): ColumnDefinition {
+  if (row.character_maximum_length !== null) {
+    return { name: row.column_name, type: `${row.data_type}(${row.character_maximum_length})` };
+  }
+  if (row.data_type === 'numeric' && row.numeric_precision !== null) {
+    return {
+      name: row.column_name,
+      type: `numeric(${row.numeric_precision},${row.numeric_scale ?? 0})`,
+    };
+  }
+  return { name: row.column_name, type: row.data_type };
+}
+
 /**
  * A type name read back out of the catalogue, so it carries a length or a
  * precision but never an expression. Anything outside that shape is a column

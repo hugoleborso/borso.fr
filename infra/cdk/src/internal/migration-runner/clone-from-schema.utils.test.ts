@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildAddColumnSql,
   buildCloneInsertSql,
+  formatColumnType,
   buildCreateTableLikeSql,
   buildReplaceBeforeCloneSql,
   findUndecidedCredentialTables,
@@ -316,6 +317,44 @@ describe('buildAddColumnSql', () => {
     );
     expect(() => buildAddColumnSql('pr_49', 'so ng', { name: 'title', type: 'text' })).toThrow(
       'Invalid table name',
+    );
+  });
+});
+
+describe('formatColumnType', () => {
+  const row = {
+    column_name: 'family',
+    data_type: 'text',
+    character_maximum_length: null,
+    numeric_precision: null,
+    numeric_scale: null,
+  };
+
+  it('takes the data type as-is when the catalogue reports no modifier', () => {
+    expect(formatColumnType(row)).toStrictEqual({ name: 'family', type: 'text' });
+  });
+
+  it('folds back the length the catalogue reports separately', () => {
+    expect(
+      formatColumnType({ ...row, data_type: 'character varying', character_maximum_length: 200 }),
+    ).toStrictEqual({ name: 'family', type: 'character varying(200)' });
+  });
+
+  it('folds back a numeric precision and scale', () => {
+    expect(
+      formatColumnType({ ...row, data_type: 'numeric', numeric_precision: 10, numeric_scale: 2 }),
+    ).toStrictEqual({ name: 'family', type: 'numeric(10,2)' });
+  });
+
+  it('defaults a numeric with no scale to zero, which is what Postgres means by it', () => {
+    expect(formatColumnType({ ...row, data_type: 'numeric', numeric_precision: 10 })).toStrictEqual(
+      { name: 'family', type: 'numeric(10,0)' },
+    );
+  });
+
+  it('leaves a non-numeric type alone even when a precision is reported', () => {
+    expect(formatColumnType({ ...row, data_type: 'integer', numeric_precision: 32 })).toStrictEqual(
+      { name: 'family', type: 'integer' },
     );
   });
 });
