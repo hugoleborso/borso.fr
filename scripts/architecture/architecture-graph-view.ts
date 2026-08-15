@@ -436,11 +436,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     };
 
     for (const choice of host.querySelectorAll('[data-standard-index]')) {
-      // Written here rather than in the HTML so that every byte derived from
-      // git sits inside one fenced region the byte gate can skip.
-      const counted = data.documents[Number(choice.dataset.standardIndex)].versions.length;
-      choice.querySelector('[data-standard-count]').textContent =
-        counted + (counted === 1 ? ' version' : ' versions');
       choice.addEventListener('click', () => {
         documentIndex = Number(choice.dataset.standardIndex);
         const versions = data.documents[documentIndex].versions;

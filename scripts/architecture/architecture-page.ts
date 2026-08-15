@@ -112,31 +112,6 @@ function toneOf(kind: string): string {
   return 'neutral';
 }
 
-/**
- * The fence around the only bytes on the page that come from git rather than
- * from the working tree.
- *
- * A generated file cannot contain the commit that adds it, so a page carrying
- * its own documents' `git log` is one commit behind the moment it lands, and a
- * byte gate then fails the *next* commit — naming an application whose code
- * nobody touched. Fencing the region lets the gate keep its meaning, that the
- * map matches the code, without ever asking about a commit that did not exist
- * when the page was written.
- */
-const HISTORY_OPEN = '<!--history-->';
-const HISTORY_CLOSE = '<!--/history-->';
-
-/**
- * The page with its git-derived region removed, which is what `--check`
- * compares. Two pages that differ only inside the fence describe the same code.
- */
-export function withoutHistory(page: string): string {
-  return page
-    .split(HISTORY_OPEN)
-    .map((chunk, index) => (index === 0 ? chunk : chunk.slice(chunk.indexOf(HISTORY_CLOSE))))
-    .join(HISTORY_OPEN);
-}
-
 /** JSON embedded in a script tag, with the one sequence that could close it escaped. */
 function embedJson(value: unknown): string {
   return JSON.stringify(value).replaceAll('<', String.raw`\u003c`);
@@ -472,15 +447,11 @@ function renderBlueprints(
  * history is about 150 KB — so picking two commits is a redraw rather than a
  * request, which is the only kind of interaction this page can have.
  *
- * That history is the one input to this page that is not the working tree, and
- * a file cannot contain the commit that adds it, so these bytes are always one
- * commit behind and cannot be made otherwise. They are therefore fenced, and
- * `--check` compares the page with the fenced region removed from both sides.
- * Everything outside the fence is a function of the tree alone and stays gated
- * to the byte.
- *
- * The version count is rendered by the client from the same payload rather than
- * written here, so the fence has one region to cover instead of two.
+ * That history is the one input to this page that is not the working tree. It
+ * is why the page is generated rather than committed: a file cannot contain the
+ * commit that adds it, so a committed page would be one commit behind from the
+ * moment it landed. `pages.yml` regenerates before publishing, so what a reader
+ * opens is always current.
  */
 function renderStandards(standards: readonly StandardEntry[], repositorySlug: string): string {
   const payload = {
@@ -502,7 +473,7 @@ function renderStandards(standards: readonly StandardEntry[], repositorySlug: st
               (standard, index) =>
                 `<button type="button" class="standard-choice" data-standard-index="${index}" aria-pressed="${index === 0}">
                   <span class="standard-title">${escapeHtml(standard.title)}</span>
-                  <span class="standard-count" data-standard-count></span>
+                  <span class="standard-count">${standard.versions.length} version${standard.versions.length === 1 ? '' : 's'}</span>
                 </button>`,
             )
             .join('')}
@@ -517,7 +488,7 @@ function renderStandards(standards: readonly StandardEntry[], repositorySlug: st
         <div class="standard-timeline" data-standard-timeline></div>
         <div class="standard-diff" data-standard-diff></div>
       </div>
-      ${HISTORY_OPEN}<script type="application/json">${embedJson(payload)}</script>${HISTORY_CLOSE}
+      <script type="application/json">${embedJson(payload)}</script>
     </div>`;
 }
 

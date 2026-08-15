@@ -15,8 +15,14 @@ pnpm exec tsx scripts/architecture/architecture-graph.ts            # every app
 pnpm exec tsx scripts/architecture/architecture-graph.ts --app foo  # one app
 ```
 
-Pre-commit runs the same script with `--check` whenever a commit touches
-`apps/` or the generator, so no page can fall behind the code.
+The pages themselves are **not committed** — `.gitignore` covers
+`docs/architecture/*.html`. The model beside each one is, and pre-commit runs
+the same script with `--check` whenever a commit touches `apps/`, the generator
+or the blueprint layer table, so no model can fall behind the code. The pages
+are rebuilt from that code wherever they are read: `pages.yml` regenerates
+before publishing to GitHub Pages, and `architecture.yml` regenerates them into
+a workflow artifact on every pull request. Nothing publishes bytes from a
+commit, so a stale page has nowhere to exist.
 
 **To put a new application on the map, read [`install.md`](./install.md)** —
 what a codebase must provide, what is optional, and what holds each convention
@@ -63,8 +69,8 @@ tests them against every node rectangle, the hand-rolled renderer put **72 of
 the component level's 125 edges through an unrelated node**. It is now 0 of 125,
 and 0 at the context and container levels too.
 
-ELK is deterministic, so the committed page stays byte-identical between runs
-and `--check` needs no tolerance. `elkjs` is a devDependency of the generator
+ELK is deterministic, so the model stays byte-identical between runs and
+`--check` needs no tolerance. `elkjs` is a devDependency of the generator
 and never reaches the browser. See
 [ADR-0011](../adr/0011-elk-lays-out-the-architecture-graph-at-generation-time.md).
 
@@ -287,8 +293,8 @@ artifact. It needs one repository setting no workflow can make or read: Settings
 → Pages → Build and deployment → Source set to **GitHub Actions**. Until that is
 set the workflow fails on its deploy step and nothing else changes.
 
-The page is also uploaded as a workflow artifact, and the same file is committed
-here.
+On a pull request the page is uploaded as a workflow artifact, which is the
+only place that branch's pages exist.
 
 To reproduce a comparison locally:
 
@@ -318,14 +324,12 @@ pnpm exec tsx scripts/architecture/architecture-graph.ts --app pragma \
 - The typed client is recognised by the binding `api`, which every front end
   here uses. One that named it otherwise would draw no flow, and would say so
   in the title rather than silently.
-- **The Standards tab is up to one commit behind its own history, and no gate
-  says so.** Its version list comes from `git log`, and a file cannot contain
-  the sha of the commit that adds it, so the newest entry always appears one
-  run later. Those bytes are fenced between `<!--history-->` and
-  `<!--/history-->`, and `--check` compares the page with the fence removed from
-  both sides — everything else is a function of the tree alone and is still
-  compared to the byte. Before the fence the gate failed the commit *after* a
-  standards edit, naming an application whose code nobody touched. See
+- **The Standards tab reads `git log`, which is why the page is generated
+  rather than committed.** A file cannot contain the sha of the commit that
+  adds it, so a committed page would be one commit behind from the moment it
+  landed, and the byte gate over it failed the commit *after* every standards
+  edit — naming an application whose code nobody had touched. Publishing from a
+  fresh build removes the question. See
   [a generated file cannot contain its own commit](../dantotsus/a-generated-file-cannot-contain-its-own-commit.md).
 - A route handler defined outside the controller file is not followed.
 - The walk stops at depth six, which no chain in pragma currently reaches.

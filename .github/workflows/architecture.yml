@@ -46,12 +46,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # The head model is the committed one, and regenerating it here is also
-      # how a stale page gets caught on a push that skipped the hook.
+      # The pages are not committed, so this both produces them for the artifact
+      # below and, through --check, catches a committed model the code has
+      # moved past on a push that skipped the hook.
       - name: Build the head model
         run: pnpm exec tsx scripts/architecture/architecture-graph.ts
 
-      - name: Fail when the committed page is stale
+      - name: Fail when the committed model is stale
         run: pnpm exec tsx scripts/architecture/architecture-graph.ts --check
 
       # A worktree of the merge base, scanned by the head revision's generator.
@@ -91,9 +92,9 @@ jobs:
           done
           cat /tmp/architecture-diff.md >> "$GITHUB_STEP_SUMMARY"
 
-      # The page is the browsable half. A workflow artifact is a download rather
-      # than a link, which is the tradeoff for not publishing the repository to
-      # Pages; the same file is committed under docs/architecture/ either way.
+      # The page is the browsable half, and this artifact is the only place a
+      # pull request's own pages exist — `main` publishes to Pages, and nothing
+      # is committed.
       - name: Upload the browsable page
         uses: actions/upload-artifact@v4
         with:

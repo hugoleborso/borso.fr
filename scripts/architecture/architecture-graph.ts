@@ -19,11 +19,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { buildJourneys, type SourceEntry } from './architecture-journeys';
 import { type LevelLayout, layoutLevel } from './architecture-layout';
-import {
-  renderArchitectureIndex,
-  renderArchitecturePage,
-  withoutHistory,
-} from './architecture-page';
+import { renderArchitectureIndex, renderArchitecturePage } from './architecture-page';
 import {
   type ArchitectureFile,
   type NodeMetrics,
@@ -1843,21 +1839,18 @@ async function buildApplication(options: BuildOptions): Promise<void> {
 
   if (isCheck) {
     /**
-     * The model is compared to the byte, because every one of its bytes comes
-     * from the working tree. The page is compared with its git-derived history
-     * region removed from both sides: a page cannot contain the commit that
-     * adds it, so those bytes are one commit behind by construction, and asking
-     * about them fails the commit *after* the one that moved them. See
-     * `withoutHistory`.
+     * The model, and only the model. Every one of its bytes comes from the
+     * working tree, so it is compared to the byte and a mismatch always means
+     * the code moved without the map being regenerated.
+     *
+     * The page is not compared because it is not committed: it carries each
+     * standard's `git log`, a file cannot contain the commit that adds it, and
+     * a byte gate over it therefore failed the commit *after* every standards
+     * edit. `pages.yml` regenerates it before publishing.
      */
-    for (const [path, expected, comparable] of [
-      [modelPath, model, (text: string) => text],
-      [pagePath, page, withoutHistory],
-    ] as const) {
-      const committed = readSourceOrEmpty(relative(REPOSITORY_ROOT, path));
-      if (comparable(committed) === comparable(expected)) continue;
+    if (readSourceOrEmpty(relative(REPOSITORY_ROOT, modelPath)) !== model) {
       console.error(
-        `  ${relative(REPOSITORY_ROOT, path)} is out of date. Run \`pnpm exec tsx scripts/architecture/architecture-graph.ts\`.`,
+        `  ${relative(REPOSITORY_ROOT, modelPath)} is out of date. Run \`pnpm exec tsx scripts/architecture/architecture-graph.ts\`.`,
       );
       process.exit(1);
     }
@@ -1945,18 +1938,10 @@ async function main(): Promise<void> {
     });
   }
 
+  // The index is a page like any other, so it is generated and not committed.
+  if (isCheck) return;
   const indexPath = join(outputDirectory, 'index.html');
-  const index = renderArchitectureIndex(ARCHITECTURE_MANIFESTS);
-  if (isCheck) {
-    if (readSourceOrEmpty(relative(REPOSITORY_ROOT, indexPath)) !== index) {
-      console.error(
-        `  ${relative(REPOSITORY_ROOT, indexPath)} is out of date. Run \`pnpm exec tsx scripts/architecture/architecture-graph.ts\`.`,
-      );
-      process.exit(1);
-    }
-    return;
-  }
-  writeFileSync(indexPath, index);
+  writeFileSync(indexPath, renderArchitectureIndex(ARCHITECTURE_MANIFESTS));
   console.log(
     `Wrote ${relative(REPOSITORY_ROOT, outputDirectory)}/ for ${selected.length} app(s).`,
   );
