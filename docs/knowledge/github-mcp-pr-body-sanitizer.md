@@ -60,6 +60,51 @@ instead: `Last verified: YYYY-MM-DD`, `npx vitest run path/to/file.test.ts`.
 Cheap to check: read the body back after creating the PR and grep for the
 placeholders you sent.
 
+### `<details>` and `<summary>` are stripped; the markup inside them survives
+
+Observed 2026-08-15 on PR #49, through `mcp__github__update_pull_request`,
+following the round-trip procedure above. What was sent:
+
+```markdown
+<details>
+<summary><b>Four blind spots, each a different kind</b></summary>
+
+- **A flow is not a composition.** …
+</details>
+```
+
+What `pull_request_read method: get` returned for the stored body:
+
+```markdown
+
+<b>Four blind spots, each a different kind</b>
+
+- **A flow is not a composition.** …
+```
+
+Both `<details>` and `<summary>` are gone; the `<b>` inside the summary
+survived, as did every list item. Four such blocks in one body were hit
+identically. This is tag-stripping of the two collapsible tags rather than a
+general HTML strip, which is why `<b>` came through.
+
+**This contradicts the 2026-05-20 retraction above**, which recorded PR #26 as
+a control sample where `<details>` round-tripped intact. Both observations
+cannot describe the same behaviour; what changed between May and August is not
+known from here. Treat the newer one as current and re-run the procedure before
+relying on a collapsible section.
+
+**Consequence for `/open-pr`.** That skill's three-level progressive disclosure
+is built on `<details>`, so a body written to its template arrives flattened:
+every level-2 and level-3 section renders expanded, in order, with its summary
+line as a stray bold sentence. The body is not corrupted, only longer than
+intended — but a reviewer who was promised a skimmable summary gets the whole
+thing. Until this is re-verified, write the PR body with headings for the
+sections a reviewer may want to skip, and keep the first screen self-contained.
+
+_Caveat on the evidence: `pull_request_read method: get` truncates a long body
+at roughly four thousand characters, so this was read from the verbatim prefix
+rather than the whole document. The stripped tags sit inside that prefix._
+
 ### Markdown links come back wrapped in double backticks — sometimes
 
 Observed 2026-08-13 on PR #46, three times, through two different
@@ -111,9 +156,8 @@ than the specification.
 3. **Read the stored body back** after posting anything long and
    labelled, and repair it — the round-trip loop above, one call.
 
-_Untested here: whether `<details>` and `![alt](url)` are affected. The
-2026-05-20 retraction above stands for those until someone re-runs the
-procedure on them._
+_`<details>` has since been re-tested; see the section above. `![alt](url)`
+remains untested, and the 2026-05-20 retraction stands for it._
 
 ## Why this entry still exists
 

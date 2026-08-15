@@ -7,6 +7,16 @@ description: Open a GitHub pull request whose description is a progressive-discl
 
 A PR description is the **only artefact a reviewer reads end-to-end**. Everything else (spec, plan, ADRs, validation reports, code) is *linked from* the description and read on demand. The description's job is to let the reviewer go as deep as needed and no deeper — which is what `<details>` toggles are for.
 
+**Verify `<details>` still survives before relying on it.** Observed 2026-08-15
+on PR #49: a body sent through `mcp__github__update_pull_request` came back
+with every `<details>` and `<summary>` stripped and the markup inside them
+intact, so the three levels below arrived flattened into one long body. The
+round-trip check is one call — post, then read back with
+`pull_request_read method: get` and grep for the tags you sent. When they are
+gone, fall back to headings for the sections a reviewer may want to skip, and
+keep the first screen self-contained. See
+[`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../../../docs/knowledge/github-mcp-pr-body-sanitizer.md).
+
 Three-level progressive disclosure:
 
 - **Level 1 (always visible):** the summary + one-line "why" per decision + the validation verdicts. A reviewer who trusts the gates reads only this.
