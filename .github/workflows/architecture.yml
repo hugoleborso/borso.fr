@@ -134,7 +134,7 @@ jobs:
             // any agent session subscribed to the pull request, for no news.
             // The run link is excluded from the comparison, since it changes on
             // every run by definition.
-            const withoutRunLink = (text) => text.replace(/\[Browse the full map\].*$/s, '').trim();
+            const withoutRunLink = (text) => text.replace(/\[Browse the full maps\].*$/s, '').trim();
             if (withoutRunLink(existing.body ?? '') === withoutRunLink(body)) {
               core.info('Architecture report unchanged; leaving the existing comment alone.');
               return;
