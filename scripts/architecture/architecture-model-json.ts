@@ -21,6 +21,7 @@ export const routeSchema = z.object({
 
 export const fileSchema = z.object({
   path: z.string(),
+  digest: z.string(),
   container: z.string(),
   layer: z.string(),
   context: z.string(),

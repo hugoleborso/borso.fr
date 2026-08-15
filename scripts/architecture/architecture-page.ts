@@ -25,6 +25,25 @@ import type {
 } from './architecture-graph';
 import type { ArchitectureManifest } from './architecture-manifest';
 
+/**
+ * What a branch did, counted, before a reviewer reads a single block.
+ *
+ * The graphs answer *where* something moved; this answers *how much*, and it is
+ * the part that tells a reviewer whether the page is worth their next minute.
+ */
+export interface DiffReport {
+  /** The revision this branch is compared against, short. */
+  readonly baseline: string;
+  readonly counts: readonly { label: string; value: number }[];
+  /** Things the colours deliberately do not say, in the reader's words. */
+  readonly notes: readonly string[];
+  /** New path → the path it came from, for every file this branch renamed. */
+  readonly renamedFrom: Readonly<Record<string, string>>;
+  readonly removedFiles: readonly { path: string; layer: string; context: string }[];
+  /** Movement on the header totals, keyed by the label they carry. */
+  readonly deltas: Readonly<Record<string, number>>;
+}
+
 export interface RenderInput {
   readonly manifest: ArchitectureManifest;
   readonly levels: readonly GraphLevel[];
@@ -41,10 +60,29 @@ export interface RenderInput {
   readonly repositorySlug: string;
   /** Present only on the diff page: what this branch did to each block. */
   readonly statuses?: ReadonlyMap<string, StatusByNode>;
+  /** Present only on the diff page, alongside `statuses`. */
+  readonly report?: DiffReport;
   readonly unmarkedCount: number;
   readonly layouts: ReadonlyMap<string, LevelLayout>;
   readonly journeys: JourneyModel;
   readonly journeyLayouts: ReadonlyMap<string, LevelLayout>;
+}
+
+/**
+ * The one line that says whether this page is worth the next minute: how many
+ * files moved, in which direction, against which revision.
+ */
+function renderDiffCounts(report: DiffReport | undefined): string {
+  if (report === undefined) return '';
+  const counted = report.counts
+    .filter((each) => each.value > 0)
+    .map(
+      (each) =>
+        `<li class="count-${escapeHtml(each.label)}"><b>${each.value}</b>${escapeHtml(each.label)}</li>`,
+    )
+    .join('');
+  return `<ul class="diff-counts">${counted === '' ? '<li>no file added, renamed, edited or removed</li>' : counted}<li class="baseline">against <code>${escapeHtml(report.baseline)}</code></li></ul>
+  ${report.notes.map((note) => `<p class="diff-note">${escapeHtml(note)}</p>`).join('')}`;
 }
 
 function escapeHtml(text: string): string {
@@ -162,9 +200,22 @@ function renderUnreachedByAction(journeys: JourneyModel, slices: readonly Contex
     .join('')}</ul>`;
 }
 
+/**
+ * A journey step is coloured by what the branch did to the file it lives in.
+ *
+ * Silence on this level reads as "unchanged", which is the worst default for
+ * the walk that ties a URL to a table; a step whose module this branch wrote is
+ * exactly the step a reviewer should look at first.
+ */
+function journeyStatusOf(location: string | undefined, code: StatusByNode | undefined): string {
+  if (location === undefined || code === undefined) return '';
+  return code.get(location.slice(0, location.lastIndexOf(':'))) ?? '';
+}
+
 function renderJourneys(
   journeys: JourneyModel,
   journeyLayouts: ReadonlyMap<string, LevelLayout>,
+  code: StatusByNode | undefined,
 ): string {
   const graphs: Record<string, unknown> = {};
   for (const [id, layout] of journeyLayouts) {
@@ -183,6 +234,7 @@ function renderJourneys(
             chips: source.chips ?? [],
             detail: source.detail,
             tone: source.kind,
+            status: journeyStatusOf(source.location, code),
             sourceKey: source.sourceKey ?? '',
             x: placed.x,
             y: placed.y,
@@ -743,24 +795,43 @@ export function renderArchitecturePage(input: RenderInput): string {
     histories,
     repositorySlug,
     statuses,
+    report,
     unmarkedCount,
     layouts,
     journeys,
     journeyLayouts,
   } = input;
   const applicationPrefix = `apps/${manifest.application}/`;
+  const renamedFrom = report?.renamedFrom ?? {};
   const fileRows = files
-    .map(
-      (
-        file,
-      ) => `<tr class="row-${escapeHtml(statuses?.get('code')?.get(file.path) ?? '')}" data-container="${escapeHtml(file.container)}" data-layer="${escapeHtml(file.layer)}" data-context="${escapeHtml(file.feature ?? file.context)}" data-source-key="file:${escapeHtml(file.path)}" tabindex="0">
-        <td class="loc">${escapeHtml(file.path.replace(applicationPrefix, ''))}</td>
+    .map((file) => {
+      const cameFrom = renamedFrom[file.path];
+      return `<tr class="row-${escapeHtml(statuses?.get('code')?.get(file.path) ?? '')}" data-container="${escapeHtml(file.container)}" data-layer="${escapeHtml(file.layer)}" data-context="${escapeHtml(file.feature ?? file.context)}" data-source-key="file:${escapeHtml(file.path)}" tabindex="0">
+        <td class="loc">${escapeHtml(file.path.replace(applicationPrefix, ''))}${cameFrom === undefined ? '' : `<span class="renamed-from">← ${escapeHtml(cameFrom.replace(applicationPrefix, ''))}</span>`}</td>
         <td><span class="layer layer-${escapeHtml(file.layer)}">${escapeHtml(file.layer)}</span></td>
         <td>${escapeHtml(file.feature ?? file.context)}</td>
         <td class="num">${file.lineCount}</td>
         <td class="num">${file.exports.length}</td>
         <td class="num">${file.imports.filter((edge) => edge.targetFile !== null).length}</td>
         <td>${file.blueprints.map((id) => `<code class="bp-chip declares">${escapeHtml(id)}</code>`).join('')}${file.followsBlueprints.map((id) => `<code class="bp-chip">${escapeHtml(id)}</code>`).join('')}</td>
+      </tr>`;
+    })
+    .join('');
+
+  // A table that can only grow is not a diff. These rows have no source to
+  // open, because the file is not in this tree to read.
+  const removedRows = (report?.removedFiles ?? [])
+    .map(
+      (
+        file,
+      ) => `<tr class="row-removed" data-container="" data-layer="${escapeHtml(file.layer)}" data-context="${escapeHtml(file.context)}">
+        <td class="loc">${escapeHtml(file.path.replace(applicationPrefix, ''))}</td>
+        <td><span class="layer layer-${escapeHtml(file.layer)}">${escapeHtml(file.layer)}</span></td>
+        <td>${escapeHtml(file.context)}</td>
+        <td class="num">—</td>
+        <td class="num">—</td>
+        <td class="num">—</td>
+        <td>gone on this branch</td>
       </tr>`,
     )
     .join('');
@@ -786,7 +857,7 @@ export function renderArchitecturePage(input: RenderInput): string {
       <div class="table-scroll">
         <table id="file-table">
           <thead><tr><th>File</th><th>Layer</th><th>Context</th><th class="num">Lines</th><th class="num">Exports</th><th class="num">Imports</th><th>Blueprint</th></tr></thead>
-          <tbody>${fileRows}</tbody>
+          <tbody>${fileRows}${removedRows}</tbody>
         </table>
       </div>
       ${renderCoverage(
@@ -813,6 +884,11 @@ export function renderArchitecturePage(input: RenderInput): string {
     .join('');
 
   const isDiff = statuses !== undefined;
+  const delta = (label: string): string => {
+    const moved = report?.deltas[label];
+    if (moved === undefined || moved === 0) return '';
+    return `<i class="delta">${moved > 0 ? '+' : '−'}${Math.abs(moved)}</i>`;
+  };
   return `<title>${escapeHtml(manifest.name)} architecture${isDiff ? ' diff' : ''}</title>
 ${PAGE_STYLES}
 
@@ -820,16 +896,17 @@ ${PAGE_STYLES}
   <h1>${escapeHtml(manifest.name)} architecture${isDiff ? ' — what this branch moved' : ''}</h1>
   ${
     isDiff
-      ? `<p class="diff-legend"><i class="swatch added"></i>added<i class="swatch changed"></i>changed<i class="swatch removed"></i>gone on this branch<span>Everything else is the same map, unchanged.</span></p>`
+      ? `<p class="diff-legend"><i class="swatch added"></i>added<i class="swatch changed"></i>changed<i class="swatch moved"></i>moved, same code<i class="swatch removed"></i>gone on this branch<span>Everything else is the same map, unchanged.</span></p>
+  ${renderDiffCounts(report)}`
       : ''
   }
   <p class="lede">${escapeHtml(manifest.description)}</p>
   <ul class="stats">
-    <li><b>${files.length}</b>source files</li>
-    <li><b>${manifest.containers.length}</b>containers</li>
+    <li><b>${files.length}</b>source files${delta('source files')}</li>
+    <li><b>${manifest.containers.length}</b>containers${delta('containers')}</li>
     <li><b>${slices.length}</b>bounded contexts</li>
-    <li><b>${routeTotal}</b>HTTP routes</li>
-    <li><b>${blueprints.length}</b>blueprints</li>
+    <li><b>${routeTotal}</b>HTTP routes${delta('HTTP routes')}</li>
+    <li><b>${blueprints.length}</b>blueprints${delta('blueprints')}</li>
     <li class="flagged"><b>${unmarkedCount}</b>files with no pattern marker</li>
   </ul>
 </div></header>
@@ -860,7 +937,7 @@ ${PAGE_STYLES}
   <section class="level" id="level-slice" hidden>
     <h2>Level 3.5 — User actions</h2>
     <p class="summary">One thing a person does, drawn end to end: the components that trigger it, the endpoint it reaches, and every function behind that endpoint down to the tables and external systems. An action is an exported hook in a query module, so the names are the ones whoever wrote them chose, and the chain comes from the calls as written.</p>
-    ${renderJourneys(journeys, journeyLayouts)}
+    ${renderJourneys(journeys, journeyLayouts, statuses?.get('code'))}
     <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>
     ${renderUnreachedByAction(journeys, slices)}
     ${renderCoverage(
@@ -895,6 +972,7 @@ ${PAGE_STYLES}
     <span class="code-chip layer" data-code-layer></span>
     <span class="code-chip" data-code-blueprint></span>
     <span class="code-chip metric" data-code-metrics></span>
+    <button type="button" class="code-modal-view" data-code-view hidden></button>
     <button type="button" class="code-modal-close" data-code-close>Close</button>
     <span class="loc" data-code-location></span>
   </div>

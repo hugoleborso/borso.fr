@@ -149,7 +149,8 @@ are the same shape.
 
 [Browse the coloured map for this branch](https://github.com/hugoleborso/borso.fr/actions/workflows/architecture.yml?query=branch%3Aclaude%2Fmy-branch)
 — newest run, `architecture-maps` artifact, `pragma-diff.html`. Green is
-added, amber is changed, red struck through is gone. ·
+added, amber is edited, blue is moved with the same code, red struck through
+is gone. ·
 [The published map for `main`](https://hugoleborso.github.io/borso.fr/pragma-architecture.html)
 ```
 

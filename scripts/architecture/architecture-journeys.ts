@@ -281,6 +281,8 @@ export interface SourceEntry {
   readonly location: string;
   readonly blueprint: string;
   readonly code: string;
+  /** The same file as the base revision had it, on a diff page, when it changed. */
+  readonly baseCode?: string;
   readonly lines: number;
   readonly complexity: number;
   readonly disables: number;

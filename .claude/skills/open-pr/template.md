@@ -80,7 +80,8 @@ section rather than wonder.}}
 
 [Browse the coloured map for this branch]({{workflow-run-query-url}}) —
 newest run, `architecture-maps` artifact, `{{app}}-diff.html`. Green is
-added, amber is changed, red struck through is gone. ·
+added, amber is edited, blue is moved with the same code, red struck through
+is gone. ·
 [The published map for `main`](https://hugoleborso.github.io/borso.fr/{{app}}-architecture.html)
 
 ## Architecture choices

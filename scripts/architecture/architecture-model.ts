@@ -13,6 +13,7 @@
  * duplicated, so a rename cannot make the two disagree.
  */
 
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import ts from 'typescript';
@@ -89,6 +90,11 @@ export interface RouteEntry {
 
 export interface ArchitectureFile {
   readonly path: string;
+  /**
+   * The file's content, hashed. Position and layer are invariant under an edit,
+   * so without this a rewritten service reads as untouched in a branch diff.
+   */
+  readonly digest: string;
   readonly application: string;
   readonly container: string;
   readonly layer: string;
@@ -230,6 +236,8 @@ export interface ApiCall {
 }
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx'] as const;
+/** Enough of a sha1 to keep collisions out of a tree of a few hundred files. */
+const DIGEST_LENGTH = 12;
 const INDEX_BASENAMES = ['index.ts', 'index.tsx'] as const;
 
 const HONO_ROUTE_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'options', 'all']);
@@ -749,6 +757,7 @@ export function buildArchitectureFile(
 
   return {
     path: relativePath,
+    digest: createHash('sha1').update(text).digest('hex').slice(0, DIGEST_LENGTH),
     application: inferApplication(relativePath),
     container,
     layer: inferLayer(relativePath),

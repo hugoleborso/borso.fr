@@ -494,6 +494,11 @@
   .node-removed .node-body { stroke: var(--layer-edge); stroke-width: 2.4; fill: var(--layer-edge-bg); stroke-dasharray: 5 3; }
   .node-removed .node-stripe { fill: var(--layer-edge); }
   .node-removed .node-label { text-decoration: line-through; }
+  /* Moved is its own colour because "this file is elsewhere now" and "this file
+     was rewritten" are different amounts of reading, and painting a pure rename
+     as new code sends a reviewer looking for something that does not exist. */
+  .node-moved .node-body { stroke: var(--accent); stroke-width: 2.4; fill: var(--accent-soft); stroke-dasharray: 2 3; }
+  .node-moved .node-stripe { fill: var(--accent); }
 
   .diff-legend {
     display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem;
@@ -502,12 +507,30 @@
   .diff-legend .swatch { width: .8rem; height: .8rem; border-radius: 3px; display: inline-block; margin-right: .3rem; vertical-align: -1px; }
   .diff-legend .added { background: var(--layer-service-bg); border: 2px solid var(--layer-service); }
   .diff-legend .changed { background: var(--signal-soft); border: 2px solid var(--signal); }
+  .diff-legend .moved { background: var(--accent-soft); border: 2px dashed var(--accent); }
   .diff-legend .removed { background: var(--layer-edge-bg); border: 2px dashed var(--layer-edge); }
   .diff-legend span { color: var(--muted); opacity: .8; }
 
+  .diff-counts {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .9rem;
+    margin: .5rem 0 0; padding: 0; list-style: none;
+    font: .78rem/1.6 var(--font-mono); color: var(--muted);
+  }
+  .diff-counts b { font-size: 1rem; color: var(--ink); margin-right: .3rem; }
+  .diff-counts .count-added b { color: var(--layer-service); }
+  .diff-counts .count-edited b { color: var(--signal); }
+  .diff-counts .count-renamed b { color: var(--accent); }
+  .diff-counts .count-removed b { color: var(--layer-edge); }
+  .diff-counts .baseline { opacity: .8; }
+  .diff-note { margin: .35rem 0 0; font: .72rem/1.5 var(--font-mono); color: var(--muted); max-width: 78ch; }
+  .stats .delta { font-style: normal; font-size: .7rem; color: var(--accent); margin-left: .3rem; }
+  .renamed-from { display: block; font-size: .68rem; color: var(--muted); }
+
   tr.row-added td { background: var(--layer-service-bg); }
   tr.row-changed td { background: var(--signal-soft); }
+  tr.row-moved td { background: var(--accent-soft); }
   tr.row-removed td { background: var(--layer-edge-bg); text-decoration: line-through; }
+  tr.row-removed .layer { text-decoration: none; }
 
   .node.has-code { cursor: zoom-in; }
   tr.has-code, li.has-code { cursor: zoom-in; }
@@ -553,6 +576,20 @@
   .code-chip.layer { background: var(--accent-soft); color: var(--accent); }
   .code-chip.absent { opacity: .65; font-style: italic; }
   .code-modal-head .loc { flex: 1 1 100%; overflow-wrap: anywhere; }
+  .code-modal-view {
+    margin-left: auto;
+    font: 500 .74rem/1 var(--font-mono);
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: .3rem .55rem;
+    cursor: pointer;
+  }
+  .code-modal-view[hidden] { display: none; }
+  .code-modal-view + .code-modal-close { margin-left: .4rem; }
+  .code-body.as-diff { display: block; white-space: normal; }
+  .code-body.as-diff .diff-text { white-space: pre; }
   .code-modal-close {
     margin-left: auto;
     font: 500 .74rem/1 var(--font-mono);

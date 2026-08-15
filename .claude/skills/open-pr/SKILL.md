@@ -82,9 +82,12 @@ pnpm exec tsx scripts/architecture/architecture-diff.ts \
   /tmp/architecture-base/<app>-architecture.json \
   docs/architecture/<app>-architecture.json
 
-# The browsable page, for the link.
+# The browsable page, for the link. `--diff-ref` is not optional: without the
+# base revision, git cannot pair a rename, so twenty-five renamed modules read
+# as twenty-five new files beside twenty-five deletions, and the code dialog
+# has nothing to diff against.
 pnpm exec tsx scripts/architecture/architecture-graph.ts --app <app> \
-  --diff-base /tmp/architecture-base
+  --diff-base /tmp/architecture-base --diff-ref "$base"
 
 git worktree remove ../architecture-base --force
 ```

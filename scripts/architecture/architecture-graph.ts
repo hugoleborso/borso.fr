@@ -54,6 +54,10 @@ const SOURCE_PATTERN = /\.tsx?$/;
  * `--check` gate compares exact bytes.
  */
 const REPOSITORY_SLUG = 'hugoleborso/borso.fr';
+/** How much of a sha a reader needs to recognise the revision they compared against. */
+const SHORT_SHA_LENGTH = 12;
+/** The two levels that draw a file inside a named group, in the order they appear. */
+const GROUPING_LEVELS = ['container', 'component'] as const;
 /** Lines of a file the modal shows before it stops. */
 const MAXIMUM_MODAL_LINES = 400;
 /** A document's whole history is small; this only stops a runaway read. */
@@ -189,10 +193,20 @@ function listStandards(root: string): StandardEntry[] {
 
 /** A file's own source, for the modal, with a cap so a long one stays readable. */
 function readCappedSource(repositoryRelativePath: string, root: string): string {
-  const text = readSourceOrEmpty(repositoryRelativePath, root);
+  return capSource(readSourceOrEmpty(repositoryRelativePath, root));
+}
+
+function capSource(text: string): string {
   const lines = text.split('\n');
   if (lines.length <= MAXIMUM_MODAL_LINES) return text;
   return `${lines.slice(0, MAXIMUM_MODAL_LINES).join('\n')}\n\n// … ${lines.length - MAXIMUM_MODAL_LINES} more lines, see the file`;
+}
+
+/** A file as one revision had it, or the empty string when it was not there. */
+function readSourceAt(revision: string, repositoryRelativePath: string): string {
+  return capSource(
+    readGitOutput(REPOSITORY_ROOT, ['show', `${revision}:${repositoryRelativePath}`]),
+  );
 }
 
 /** File contents, or the empty string when the file is not there yet. */
@@ -301,7 +315,7 @@ function containerIdOf(file: ArchitectureFile): string {
   return CONTAINER_BY_SOURCE[file.container] ?? file.container;
 }
 
-export type NodeStatus = 'added' | 'changed' | 'removed';
+export type NodeStatus = 'added' | 'changed' | 'moved' | 'removed';
 
 /**
  * What a branch did to each block, keyed by node id and level.
@@ -968,6 +982,7 @@ export interface ArchitectureModelJson {
   readonly externals: readonly { id: string; name: string; reachedFrom: readonly string[] }[];
   readonly files: readonly {
     path: string;
+    digest: string;
     container: string;
     layer: string;
     context: string;
@@ -1026,6 +1041,7 @@ function buildModelJson(
       .sort((left, right) => left.path.localeCompare(right.path))
       .map((file) => ({
         path: file.path,
+        digest: file.digest,
         container: file.container,
         layer: file.layer,
         context: file.context,
@@ -1080,27 +1096,97 @@ function nodeIdentitiesOf(model: ArchitectureModel): {
   blueprint: Map<string, string>;
   component: Map<string, string>;
   code: Map<string, string>;
+  pathsByComponent: Map<string, readonly string[]>;
+  containerByPath: Map<string, string>;
+  componentByPath: Map<string, string>;
+  digestByPath: Map<string, string>;
 } {
   const context = new Map<string, string>();
   for (const external of model.externals) context.set(external.id, external.reachedFrom.join());
-  const container = new Map<string, string>();
-  for (const each of model.containers) container.set(each.id, String(each.fileCount));
   const blueprint = new Map<string, string>();
   for (const each of model.blueprints) blueprint.set(each.id, `${each.file}|${each.followerCount}`);
+  const container = new Map<string, string[]>();
+  const containerByPath = new Map<string, string>();
   const component = new Map<string, string[]>();
+  const componentByPath = new Map<string, string>();
+  const digestByPath = new Map<string, string>();
   const code = new Map<string, string>();
   for (const file of model.files) {
-    const id = `${CONTAINER_BY_SOURCE[file.container] ?? file.container}::${file.feature ?? file.context}`;
-    component.set(id, [...(component.get(id) ?? []), file.path]);
-    code.set(file.path, `${file.container}/${file.layer}`);
+    const containerId = CONTAINER_BY_SOURCE[file.container] ?? file.container;
+    const id = `${containerId}::${file.feature ?? file.context}`;
+    const stamp = `${file.path}:${file.digest}`;
+    container.set(containerId, [...(container.get(containerId) ?? []), stamp]);
+    component.set(id, [...(component.get(id) ?? []), stamp]);
+    containerByPath.set(file.path, containerId);
+    componentByPath.set(file.path, id);
+    digestByPath.set(file.path, file.digest);
+    // A file count is invariant under a rename, and a layer is invariant under
+    // any edit; both make a busy branch read as untouched. The digest is what
+    // makes "changed" a state these levels can actually reach.
+    code.set(file.path, `${file.container}/${file.layer}/${file.digest}`);
   }
+  const joined = (entries: Map<string, string[]>): Map<string, string> =>
+    new Map([...entries].map(([id, stamps]) => [id, stamps.sort().join()]));
   return {
     context,
-    container,
+    container: joined(container),
     blueprint,
-    component: new Map([...component].map(([id, paths]) => [id, paths.sort().join()])),
+    component: joined(component),
     code,
+    containerByPath,
+    pathsByComponent: new Map(
+      [...component].map(([id, stamps]) => [id, stamps.map((stamp) => stamp.split(':')[0] ?? '')]),
+    ),
+    componentByPath,
+    digestByPath,
   };
+}
+
+type ModelIdentities = ReturnType<typeof nodeIdentitiesOf>;
+
+/**
+ * Paths this branch renamed, as `new path` → `old path`.
+ *
+ * Git's own rename detection when a base revision is at hand, which catches a
+ * move that also edited the file; identical content otherwise, which catches
+ * only a pure move. Without this, a branch that renamed twenty-five modules
+ * reports twenty-five additions and twenty-five deletions, and a reviewer
+ * reading "twenty-five new files" goes looking for code that does not exist.
+ */
+function renamesBetween(
+  base: ModelIdentities,
+  head: ModelIdentities,
+  diffRef: string | null,
+): Map<string, string> {
+  const renames = new Map<string, string>();
+  const gone = [...base.code.keys()].filter((path) => !head.code.has(path));
+  const fresh = [...head.code.keys()].filter((path) => !base.code.has(path));
+  if (diffRef !== null) {
+    const reported = readGitOutput(REPOSITORY_ROOT, [
+      'diff',
+      '--name-status',
+      '-M',
+      '--diff-filter=R',
+      diffRef,
+    ]);
+    for (const line of reported.split('\n')) {
+      const [, from, to] = line.split('\t');
+      if (from === undefined || to === undefined) continue;
+      if (gone.includes(from) && fresh.includes(to)) renames.set(to, from);
+    }
+  }
+  const takenSources = new Set(renames.values());
+  for (const to of fresh) {
+    if (renames.has(to)) continue;
+    const digest = head.digestByPath.get(to);
+    const from = gone.find(
+      (path) => !takenSources.has(path) && base.digestByPath.get(path) === digest,
+    );
+    if (from === undefined) continue;
+    renames.set(to, from);
+    takenSources.add(from);
+  }
+  return renames;
 }
 
 /**
@@ -1125,6 +1211,74 @@ function statusesBetween(
   return statuses;
 }
 
+/**
+ * Code statuses with renames folded in.
+ *
+ * A renamed file is one event, not an addition beside a deletion: its new path
+ * carries `moved` when the content is identical and `changed` when the branch
+ * edited it on the way, and its old path drops out of the removed set.
+ */
+function codeStatuses(
+  base: ModelIdentities,
+  head: ModelIdentities,
+  renames: ReadonlyMap<string, string>,
+): Map<string, NodeStatus> {
+  const statuses = statusesBetween(base.code, head.code);
+  for (const [to, from] of renames) {
+    statuses.delete(from);
+    statuses.set(
+      to,
+      base.digestByPath.get(from) === head.digestByPath.get(to) ? 'moved' : 'changed',
+    );
+  }
+  return statuses;
+}
+
+/**
+ * Externals whose declaration merely appeared, rather than a call site moving.
+ *
+ * `reachedFrom` is built from `@DependsOnExternal` tags, so a branch that tags
+ * a tree for the first time turns every external amber and the colour stops
+ * discriminating. Nothing was reached differently; the map only learned to say
+ * so, and a diff that cannot tell those apart should say neither.
+ */
+function contextStatuses(base: ModelIdentities, head: ModelIdentities): Map<string, NodeStatus> {
+  const statuses = statusesBetween(base.context, head.context);
+  for (const [id, status] of statuses) {
+    if (status === 'changed' && base.context.get(id) === '') statuses.delete(id);
+  }
+  return statuses;
+}
+
+/**
+ * Component statuses, with a group whose files all moved elsewhere marked
+ * `moved` rather than `removed`.
+ *
+ * Re-bucketing a front end by feature empties the folder-shaped groups without
+ * deleting a line, and a tombstone over a folder that still exists costs a
+ * reviewer a real investigation to disprove.
+ */
+function componentStatuses(
+  base: ModelIdentities,
+  head: ModelIdentities,
+  renames: ReadonlyMap<string, string>,
+): { statuses: Map<string, NodeStatus>; regroupedInto: Map<string, readonly string[]> } {
+  const statuses = statusesBetween(base.component, head.component);
+  const headPathOf = new Map([...renames].map(([to, from]) => [from, to]));
+  const regroupedInto = new Map<string, readonly string[]>();
+  for (const [id, status] of statuses) {
+    if (status !== 'removed') continue;
+    const wasHolding = base.pathsByComponent.get(id) ?? [];
+    const landedIn = wasHolding.map((path) =>
+      head.componentByPath.get(headPathOf.get(path) ?? path),
+    );
+    if (landedIn.some((group) => group === undefined)) continue;
+    statuses.set(id, 'moved');
+    regroupedInto.set(id, [...new Set(landedIn.filter((group) => group !== undefined))].sort());
+  }
+  return { statuses, regroupedInto };
+}
+
 /** A block for something the target branch had and this one does not. */
 function ghostNode(id: string, label: string, kind: string, detail: string): GraphNode {
   return {
@@ -1141,8 +1295,83 @@ function ghostNode(id: string, label: string, kind: string, detail: string): Gra
   };
 }
 
+/**
+ * How many files entered and left each group, as a line the block can carry.
+ *
+ * A group that took twenty-five files in and let twenty-five out nets to zero,
+ * and a reviewer reading only the total concludes nothing happened there.
+ */
+function fileMovement(
+  base: ModelIdentities,
+  head: ModelIdentities,
+  code: ReadonlyMap<string, NodeStatus>,
+  renames: ReadonlyMap<string, string>,
+): Map<string, Map<string, string>> {
+  const entered = new Map<string, Map<string, number>>();
+  const left = new Map<string, Map<string, number>>();
+  const bump = (side: Map<string, Map<string, number>>, level: string, id: string): void => {
+    const group = side.get(level) ?? new Map<string, number>();
+    group.set(id, (group.get(id) ?? 0) + 1);
+    side.set(level, group);
+  };
+  const groupOf = (identities: ModelIdentities, level: string, path: string): string | undefined =>
+    level === 'container'
+      ? identities.containerByPath.get(path)
+      : identities.componentByPath.get(path);
+
+  for (const [path, status] of code) {
+    const wasPath = renames.get(path) ?? path;
+    for (const level of GROUPING_LEVELS) {
+      const was = status === 'added' ? undefined : groupOf(base, level, wasPath);
+      const now = status === 'removed' ? undefined : groupOf(head, level, path);
+      if (was === now) continue;
+      if (was !== undefined) bump(left, level, was);
+      if (now !== undefined) bump(entered, level, now);
+    }
+  }
+
+  const byLevel = new Map<string, Map<string, string>>();
+  for (const level of GROUPING_LEVELS) {
+    const lines = new Map<string, string>();
+    const inCount = entered.get(level) ?? new Map<string, number>();
+    const outCount = left.get(level) ?? new Map<string, number>();
+    for (const id of new Set([...inCount.keys(), ...outCount.keys()])) {
+      const parts = [
+        (inCount.get(id) ?? 0) === 0 ? '' : `+${inCount.get(id) ?? 0}`,
+        (outCount.get(id) ?? 0) === 0 ? '' : `\u2212${outCount.get(id) ?? 0}`,
+      ].filter((part) => part !== '');
+      lines.set(id, `${parts.join(' ')} files`);
+    }
+    byLevel.set(level, lines);
+  }
+  return byLevel;
+}
+
+/** A block for a group this branch emptied by re-bucketing rather than deleting. */
+function regroupedNode(
+  id: string,
+  label: string,
+  kind: string,
+  landedIn: readonly string[],
+): GraphNode {
+  const names = landedIn.map((each) => each.split('::')[1] ?? each);
+  return {
+    id,
+    label,
+    kind,
+    detail: `Regrouped into ${names.join(', ')}`,
+    group: null,
+    blueprints: [],
+    followsBlueprints: [],
+    fileCount: 0,
+    icon: '📦',
+    lines: ['no code removed', `now in ${names.join(', ')}`],
+  };
+}
+
 interface DiffPageOptions {
   readonly diffBase: string;
+  readonly diffRef: string | null;
   readonly manifest: ArchitectureManifest;
   readonly headModel: string;
   readonly levels: readonly GraphLevel[];
@@ -1177,29 +1406,44 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
   const baseParsed: unknown = JSON.parse(baseText);
   const headParsed: unknown = JSON.parse(options.headModel);
   const baseModel = architectureModelSchema.parse(baseParsed);
+  const headModel = architectureModelSchema.parse(headParsed);
   const base = nodeIdentitiesOf(baseModel);
-  const head = nodeIdentitiesOf(architectureModelSchema.parse(headParsed));
+  const head = nodeIdentitiesOf(headModel);
 
+  const renames = renamesBetween(base, head, options.diffRef);
+  const code = codeStatuses(base, head, renames);
+  const component = componentStatuses(base, head, renames);
   const statuses = new Map<string, StatusByNode>([
-    ['context', statusesBetween(base.context, head.context)],
+    ['context', contextStatuses(base, head)],
     ['container', statusesBetween(base.container, head.container)],
-    ['component', statusesBetween(base.component, head.component)],
-    ['code', statusesBetween(base.code, head.code)],
+    ['component', component.statuses],
+    ['code', code],
     // A pattern gained, lost, or with a different declaring file or follower
     // count is an architectural change like any other, so the Blueprints table
-    // carries the same three colours as the graphs.
+    // carries the same colours as the graphs.
     ['blueprint', statusesBetween(base.blueprint, head.blueprint)],
   ]);
 
   const externalName = new Map(baseModel.externals.map((each) => [each.id, each.name]));
   const containerName = new Map(baseModel.containers.map((each) => [each.id, each.name]));
   const diffLevels = options.levels.map((level) => {
-    const removed = [...(statuses.get(level.id) ?? new Map())]
-      .filter(([, status]) => status === 'removed')
-      .map(([id]) => id);
-    if (level.id === 'code' || removed.length === 0) return level;
-    const ghosts = removed.map((id) =>
-      level.id === 'context'
+    const missing = [...(statuses.get(level.id) ?? new Map())].filter(
+      ([id, status]) =>
+        (status === 'removed' || (status === 'moved' && component.regroupedInto.has(id))) &&
+        !level.nodes.some((node) => node.id === id),
+    );
+    if (level.id === 'code' || missing.length === 0) return level;
+    const ghosts = missing.map(([id, status]) => {
+      const landedIn = component.regroupedInto.get(id);
+      if (status === 'moved' && landedIn !== undefined) {
+        return regroupedNode(
+          id,
+          id.split('::')[1] ?? id,
+          `component-${id.split('::')[0] ?? 'unknown'}`,
+          landedIn,
+        );
+      }
+      return level.id === 'context'
         ? ghostNode(
             id,
             externalName.get(id) ?? id,
@@ -1213,13 +1457,26 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
               id.split('::')[1] ?? id,
               `component-${id.split('::')[0] ?? 'unknown'}`,
               'Removed on this branch',
-            ),
-    );
+            );
+    });
     return { ...level, nodes: [...level.nodes, ...ghosts] };
   });
 
+  const movement = fileMovement(base, head, code, renames);
+  const annotatedLevels = diffLevels.map((level) => {
+    if (level.id !== 'container' && level.id !== 'component') return level;
+    return {
+      ...level,
+      nodes: level.nodes.map((node) => {
+        const moved = movement.get(level.id)?.get(node.id);
+        if (moved === undefined) return node;
+        return { ...node, lines: [...(node.lines ?? []), moved] };
+      }),
+    };
+  });
+
   const diffLayouts = new Map<string, LevelLayout>();
-  for (const level of diffLevels) {
+  for (const level of annotatedLevels) {
     if (level.id === 'code') continue;
     diffLayouts.set(level.id, await layoutLevel(level));
   }
@@ -1228,22 +1485,116 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
     join(options.outputDirectory, `${options.manifest.application}-diff.html`),
     renderArchitecturePage({
       manifest: options.manifest,
-      sources: options.pageSources,
+      sources: withBaseSources(options.pageSources, code, renames, options.diffRef),
       standards: options.standards,
       histories: options.histories,
       repositorySlug: REPOSITORY_SLUG,
       layouts: diffLayouts,
       journeys: options.journeys,
       journeyLayouts: options.journeyLayouts,
-      levels: diffLevels,
+      levels: annotatedLevels,
       slices: options.slices,
       blueprints: options.blueprints,
       files: options.files,
       coverage: options.coverage,
       unmarkedCount: options.unmarkedCount,
       statuses,
+      report: buildDiffReport({
+        base,
+        baseModel,
+        headModel,
+        code,
+        renames,
+        diffRef: options.diffRef,
+      }),
     }),
   );
+}
+
+/**
+ * The dialog's sources, with the earlier text attached to every file this
+ * branch edited.
+ *
+ * Reading ninety lines of final source to find the six that moved is the work
+ * the page exists to remove, so on a diff page the dialog opens on the change
+ * and offers the whole file second.
+ */
+function withBaseSources(
+  sources: Readonly<Record<string, SourceEntry>>,
+  code: ReadonlyMap<string, NodeStatus>,
+  renames: ReadonlyMap<string, string>,
+  diffRef: string | null,
+): Readonly<Record<string, SourceEntry>> {
+  if (diffRef === null) return sources;
+  const withBase: Record<string, SourceEntry> = { ...sources };
+  for (const [path, status] of code) {
+    if (status !== 'changed') continue;
+    const entry = withBase[`file:${path}`];
+    if (entry === undefined) continue;
+    const baseCode = readSourceAt(diffRef, renames.get(path) ?? path);
+    if (baseCode === '') continue;
+    withBase[`file:${path}`] = { ...entry, baseCode };
+  }
+  return withBase;
+}
+
+interface DiffReportInput {
+  readonly base: ModelIdentities;
+  readonly baseModel: ArchitectureModel;
+  readonly headModel: ArchitectureModel;
+  readonly code: ReadonlyMap<string, NodeStatus>;
+  readonly renames: ReadonlyMap<string, string>;
+  readonly diffRef: string | null;
+}
+
+/**
+ * The counts a reviewer needs before reading a single block.
+ *
+ * Absolute totals answer "how big is this application", which is not the
+ * question a page titled *what this branch moved* is asked. Without these,
+ * "nothing was removed" and "removals are not rendered" look identical.
+ */
+function buildDiffReport(input: DiffReportInput): DiffReport {
+  const { base, baseModel, headModel, code, renames, diffRef } = input;
+  const countOf = (wanted: NodeStatus): number =>
+    [...code].filter(([path, status]) => status === wanted && !renames.has(path)).length;
+  const declaredOnly = [...base.context].filter(
+    ([id, before]) =>
+      before === '' &&
+      (headModel.externals.find((each) => each.id === id)?.reachedFrom.length ?? 0) > 0,
+  ).length;
+  const removedPaths = [...code]
+    .filter(([, status]) => status === 'removed')
+    .map(([path]) => path)
+    .sort();
+  const byPath = new Map(baseModel.files.map((file) => [file.path, file]));
+  return {
+    baseline: diffRef === null ? 'the target branch' : diffRef.slice(0, SHORT_SHA_LENGTH),
+    counts: [
+      { label: 'added', value: countOf('added') },
+      { label: 'renamed', value: renames.size },
+      { label: 'edited', value: countOf('changed') },
+      { label: 'removed', value: removedPaths.length },
+    ],
+    notes:
+      declaredOnly === 0
+        ? []
+        : [
+            `${declaredOnly} external${declaredOnly === 1 ? '' : 's'} carried no @DependsOnExternal declaration on the base. Declaring one is documentation, not a new dependency, so those blocks are left uncoloured.`,
+          ],
+    renamedFrom: Object.fromEntries(renames),
+    removedFiles: removedPaths.map((path) => ({
+      path,
+      layer: byPath.get(path)?.layer ?? 'unknown',
+      context: byPath.get(path)?.feature ?? byPath.get(path)?.context ?? 'unknown',
+    })),
+    deltas: {
+      'source files': headModel.files.length - baseModel.files.length,
+      'HTTP routes': headModel.routes.length - baseModel.routes.length,
+      blueprints: headModel.blueprints.length - baseModel.blueprints.length,
+      containers: headModel.containers.length - baseModel.containers.length,
+    },
+  };
 }
 
 interface BuildOptions {
@@ -1256,11 +1607,21 @@ interface BuildOptions {
   readonly isForeignTree: boolean;
   /** Directory holding the target branch's models, when a diff page is wanted. */
   readonly diffBase: string | null;
+  /** The revision the diff page compares against, when the caller knows it. */
+  readonly diffRef: string | null;
 }
 
 async function buildApplication(options: BuildOptions): Promise<void> {
-  const { manifest, applicationRoot, scanRoot, outputDirectory, isCheck, isForeignTree, diffBase } =
-    options;
+  const {
+    manifest,
+    applicationRoot,
+    scanRoot,
+    outputDirectory,
+    isCheck,
+    isForeignTree,
+    diffBase,
+    diffRef,
+  } = options;
 
   const files = listSourceFiles(applicationRoot)
     .map((absolutePath) => relative(scanRoot, absolutePath))
@@ -1407,6 +1768,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
   if (diffBase !== null) {
     await writeDiffPage({
       diffBase,
+      diffRef,
       manifest,
       headModel: model,
       levels,
@@ -1470,6 +1832,12 @@ async function main(): Promise<void> {
   const requested = readFlag('--app');
   /** Where the target branch's models sit, when a coloured diff page is wanted. */
   const diffBase = readFlag('--diff-base');
+  /**
+   * The base revision, when the caller has it. Git's own rename detection needs
+   * a revision to compare against, and a rename it misses reads as an addition
+   * beside a deletion — the one mistake that makes a diff page lie about size.
+   */
+  const diffRef = readFlag('--diff-ref');
   if (requested !== null && manifestFor(requested) === undefined) {
     console.error(
       `  --app ${requested} has no manifest. Known: ${ARCHITECTURE_MANIFESTS.map((each) => each.application).join(', ')}.`,
@@ -1495,6 +1863,7 @@ async function main(): Promise<void> {
       isCheck,
       isForeignTree: true,
       diffBase: null,
+      diffRef: null,
     });
     return;
   }
@@ -1508,6 +1877,7 @@ async function main(): Promise<void> {
       isCheck,
       isForeignTree: false,
       diffBase,
+      diffRef,
     });
   }
 

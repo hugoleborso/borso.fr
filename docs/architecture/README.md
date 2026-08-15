@@ -247,12 +247,39 @@ the target branch not having it yet.
 
 The same comparison is also written as a page, `<app>-diff.html`: **the map
 again, with each block coloured by what this branch did to it** — green for one
-the target branch did not have, amber for one whose contents moved, red and
-struck through for one it had and this branch does not. A block that is gone is
-drawn rather than omitted, because a diagram cannot show a deletion by leaving
-it out. The Blueprints table and the level 4 rows carry the same three colours.
-It is uploaded with the maps and never committed, because it describes a branch
-rather than the repository.
+the target branch did not have, amber for one this branch edited, blue for one
+that only moved, red and struck through for one it had and this branch does
+not. A block that is gone is drawn rather than omitted, because a diagram
+cannot show a deletion by leaving it out. The Blueprints table, the level 4
+rows and the level 3.5 steps carry the same four colours. It is uploaded with
+the maps and never committed, because it describes a branch rather than the
+repository.
+
+Four properties make those colours mean something, and each exists because its
+absence made the page lie:
+
+- **A file's signature is its content digest**, not its path and layer. Position
+  is invariant under an edit, so without the digest a rewritten service reads as
+  untouched and *changed* is a state the busiest level can never reach.
+- **A rename is one event.** `--diff-ref <sha>` hands the generator the base
+  revision so git's own rename detection runs; the new path carries the colour
+  and names where it came from, and the old path leaves the removed set. Without
+  it, a branch that renamed twenty-five modules reports twenty-five additions
+  beside twenty-five deletions and a reviewer goes looking for code that does
+  not exist.
+- **A group emptied by re-bucketing is not a deletion.** When every file a
+  context held is still in the tree under another group, the block says where
+  they went instead of wearing a tombstone. A gravestone over a folder that
+  still exists costs a reviewer a real investigation to disprove.
+- **An external that merely gained its first `@DependsOnExternal` tag is not
+  coloured**, and the header says how many did. Nothing is reached differently;
+  the map only learned to say so, and fourteen amber blocks out of fourteen
+  discriminate nothing.
+
+The header carries the counts — added, renamed, edited, removed — the revision
+compared against, and a delta on each total. Opening a changed file shows its
+diff first and the whole file behind one click, because reading ninety lines of
+final source to find the six that moved is the work the page exists to remove.
 
 [`pages.yml`](../../.github/workflows/pages.yml) publishes the maps to GitHub
 Pages on every push to `main`, so a link opens the map instead of downloading an
@@ -273,6 +300,11 @@ pnpm exec tsx scripts/architecture/architecture-diff.ts \
   /tmp/architecture-base/pragma-architecture.json \
   docs/architecture/pragma-architecture.json \
   --html /tmp/pragma-diff.html
+
+# The coloured map. --diff-ref is what buys rename pairing and the code diff.
+pnpm exec tsx scripts/architecture/architecture-graph.ts --app pragma \
+  --diff-base /tmp/architecture-base \
+  --diff-ref "$(git merge-base origin/main HEAD)"
 ```
 
 ## Known limits

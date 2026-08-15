@@ -142,6 +142,7 @@
   "files": [
     {
       "path": "apps/pragma/api/src/__test/test-seed.controller.ts",
+      "digest": "58441baaf57d",
       "container": "api",
       "layer": "controller",
       "context": "__test",
@@ -159,6 +160,7 @@
     },
     {
       "path": "apps/pragma/api/src/__test/test-seed.core.ts",
+      "digest": "e55d3996ee43",
       "container": "api",
       "layer": "core",
       "context": "__test",
@@ -179,6 +181,7 @@
     },
     {
       "path": "apps/pragma/api/src/__test/test-seed.repository.ts",
+      "digest": "93020b363497",
       "container": "api",
       "layer": "repository",
       "context": "__test",
@@ -204,6 +207,7 @@
     },
     {
       "path": "apps/pragma/api/src/__test/test-seed.service.ts",
+      "digest": "ea5553f01e6c",
       "container": "api",
       "layer": "service",
       "context": "__test",
@@ -229,6 +233,7 @@
     },
     {
       "path": "apps/pragma/api/src/app.ts",
+      "digest": "47763c0226f9",
       "container": "api",
       "layer": "entrypoint",
       "context": "root",
@@ -256,6 +261,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/auth.controller.ts",
+      "digest": "add72273b1bc",
       "container": "api",
       "layer": "controller",
       "context": "auth",
@@ -277,6 +283,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/auth.repository.ts",
+      "digest": "86317901d02b",
       "container": "api",
       "layer": "repository",
       "context": "auth",
@@ -297,6 +304,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/auth.schema.ts",
+      "digest": "9b65c46b330d",
       "container": "api",
       "layer": "schema",
       "context": "auth",
@@ -314,6 +322,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/auth.service.ts",
+      "digest": "46e879bc211a",
       "container": "api",
       "layer": "service",
       "context": "auth",
@@ -335,6 +344,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/ip-hash.utils.ts",
+      "digest": "0b1cb022d91e",
       "container": "api",
       "layer": "utils",
       "context": "auth",
@@ -352,6 +362,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/rate-limit.utils.ts",
+      "digest": "f6ff8b876822",
       "container": "api",
       "layer": "utils",
       "context": "auth",
@@ -371,6 +382,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/session-cookie.utils.ts",
+      "digest": "7c1800742013",
       "container": "api",
       "layer": "utils",
       "context": "auth",
@@ -389,6 +401,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/shared-password.middleware.ts",
+      "digest": "94742d0e937e",
       "container": "api",
       "layer": "middleware",
       "context": "auth",
@@ -407,6 +420,7 @@
     },
     {
       "path": "apps/pragma/api/src/bars/bars.controller.ts",
+      "digest": "2fd8ceeb4e03",
       "container": "api",
       "layer": "controller",
       "context": "bars",
@@ -426,6 +440,7 @@
     },
     {
       "path": "apps/pragma/api/src/bars/bars.repository.ts",
+      "digest": "4e2afd0f75a6",
       "container": "api",
       "layer": "repository",
       "context": "bars",
@@ -449,6 +464,7 @@
     },
     {
       "path": "apps/pragma/api/src/bars/bars.schema.ts",
+      "digest": "06031aa473c9",
       "container": "api",
       "layer": "schema",
       "context": "bars",
@@ -468,6 +484,7 @@
     },
     {
       "path": "apps/pragma/api/src/bars/bars.service.ts",
+      "digest": "ece26a28a014",
       "container": "api",
       "layer": "service",
       "context": "bars",
@@ -491,6 +508,7 @@
     },
     {
       "path": "apps/pragma/api/src/database/client.ts",
+      "digest": "85ba96afc90b",
       "container": "api",
       "layer": "database",
       "context": "database",
@@ -508,6 +526,7 @@
     },
     {
       "path": "apps/pragma/api/src/database/schema.ts",
+      "digest": "e78795c02ee9",
       "container": "api",
       "layer": "database",
       "context": "database",
@@ -521,6 +540,7 @@
     },
     {
       "path": "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+      "digest": "298d84adf6e3",
       "container": "api",
       "layer": "core",
       "context": "helpers",
@@ -536,6 +556,7 @@
     },
     {
       "path": "apps/pragma/api/src/instruments/instruments.controller.ts",
+      "digest": "dc46a037dc6a",
       "container": "api",
       "layer": "controller",
       "context": "instruments",
@@ -555,6 +576,7 @@
     },
     {
       "path": "apps/pragma/api/src/instruments/instruments.repository.ts",
+      "digest": "3458681e5317",
       "container": "api",
       "layer": "repository",
       "context": "instruments",
@@ -578,6 +600,7 @@
     },
     {
       "path": "apps/pragma/api/src/instruments/instruments.schema.ts",
+      "digest": "175d252a50b5",
       "container": "api",
       "layer": "schema",
       "context": "instruments",
@@ -597,6 +620,7 @@
     },
     {
       "path": "apps/pragma/api/src/instruments/instruments.service.ts",
+      "digest": "8d1009b2336a",
       "container": "api",
       "layer": "service",
       "context": "instruments",
@@ -619,6 +643,7 @@
     },
     {
       "path": "apps/pragma/api/src/main.dev.ts",
+      "digest": "c952a2685cd9",
       "container": "api",
       "layer": "entrypoint",
       "context": "root",
@@ -634,6 +659,7 @@
     },
     {
       "path": "apps/pragma/api/src/main.ts",
+      "digest": "d47f6a4f9ad0",
       "container": "api",
       "layer": "entrypoint",
       "context": "root",
@@ -651,6 +677,7 @@
     },
     {
       "path": "apps/pragma/api/src/mastery/mastery.controller.ts",
+      "digest": "e9e886db8478",
       "container": "api",
       "layer": "controller",
       "context": "mastery",
@@ -670,6 +697,7 @@
     },
     {
       "path": "apps/pragma/api/src/mastery/mastery.core.ts",
+      "digest": "dc27bd04d7cc",
       "container": "api",
       "layer": "core",
       "context": "mastery",
@@ -689,6 +717,7 @@
     },
     {
       "path": "apps/pragma/api/src/mastery/mastery.repository.ts",
+      "digest": "9e9fe5d411a7",
       "container": "api",
       "layer": "repository",
       "context": "mastery",
@@ -714,6 +743,7 @@
     },
     {
       "path": "apps/pragma/api/src/mastery/mastery.schema.ts",
+      "digest": "ac787959b55e",
       "container": "api",
       "layer": "schema",
       "context": "mastery",
@@ -735,6 +765,7 @@
     },
     {
       "path": "apps/pragma/api/src/mastery/mastery.service.ts",
+      "digest": "b0f2235a17f5",
       "container": "api",
       "layer": "service",
       "context": "mastery",
@@ -758,6 +789,7 @@
     },
     {
       "path": "apps/pragma/api/src/members/lineup-scrub.core.ts",
+      "digest": "65c707526851",
       "container": "api",
       "layer": "core",
       "context": "members",
@@ -775,6 +807,7 @@
     },
     {
       "path": "apps/pragma/api/src/members/member-palette.utils.ts",
+      "digest": "7e77588ca4e0",
       "container": "api",
       "layer": "utils",
       "context": "members",
@@ -792,6 +825,7 @@
     },
     {
       "path": "apps/pragma/api/src/members/members.controller.ts",
+      "digest": "da9017839ba7",
       "container": "api",
       "layer": "controller",
       "context": "members",
@@ -811,6 +845,7 @@
     },
     {
       "path": "apps/pragma/api/src/members/members.repository.ts",
+      "digest": "9733c2945218",
       "container": "api",
       "layer": "repository",
       "context": "members",
@@ -842,6 +877,7 @@
     },
     {
       "path": "apps/pragma/api/src/members/members.schema.ts",
+      "digest": "cdac837029fd",
       "container": "api",
       "layer": "schema",
       "context": "members",
@@ -863,6 +899,7 @@
     },
     {
       "path": "apps/pragma/api/src/members/members.service.ts",
+      "digest": "236bc84a95d3",
       "container": "api",
       "layer": "service",
       "context": "members",
@@ -887,6 +924,7 @@
     },
     {
       "path": "apps/pragma/api/src/sessions/offline-manifest.core.ts",
+      "digest": "5b697a1b13b9",
       "container": "api",
       "layer": "core",
       "context": "sessions",
@@ -902,6 +940,7 @@
     },
     {
       "path": "apps/pragma/api/src/sessions/sessions.controller.ts",
+      "digest": "8bad5c0a9408",
       "container": "api",
       "layer": "controller",
       "context": "sessions",
@@ -922,6 +961,7 @@
     },
     {
       "path": "apps/pragma/api/src/sessions/sessions.core.ts",
+      "digest": "1bdd42808dc5",
       "container": "api",
       "layer": "core",
       "context": "sessions",
@@ -940,6 +980,7 @@
     },
     {
       "path": "apps/pragma/api/src/sessions/sessions.repository.ts",
+      "digest": "7967694ee115",
       "container": "api",
       "layer": "repository",
       "context": "sessions",
@@ -966,6 +1007,7 @@
     },
     {
       "path": "apps/pragma/api/src/sessions/sessions.schema.ts",
+      "digest": "20ef3fc67eb1",
       "container": "api",
       "layer": "schema",
       "context": "sessions",
@@ -990,6 +1032,7 @@
     },
     {
       "path": "apps/pragma/api/src/sessions/sessions.service.ts",
+      "digest": "e0827ae4f984",
       "container": "api",
       "layer": "service",
       "context": "sessions",
@@ -1018,6 +1061,7 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.controller.ts",
+      "digest": "2c1dbafcb841",
       "container": "api",
       "layer": "controller",
       "context": "setlists",
@@ -1037,6 +1081,7 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.repository.ts",
+      "digest": "7250489d1032",
       "container": "api",
       "layer": "repository",
       "context": "setlists",
@@ -1064,6 +1109,7 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.schema.ts",
+      "digest": "bedc4acb3f3b",
       "container": "api",
       "layer": "schema",
       "context": "setlists",
@@ -1090,6 +1136,7 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.service.ts",
+      "digest": "0d745388bdf4",
       "container": "api",
       "layer": "service",
       "context": "setlists",
@@ -1115,6 +1162,7 @@
     },
     {
       "path": "apps/pragma/api/src/songs/musicbrainz.adapter.ts",
+      "digest": "c3ebbd1b3698",
       "container": "api",
       "layer": "adapter",
       "context": "songs",
@@ -1132,6 +1180,7 @@
     },
     {
       "path": "apps/pragma/api/src/songs/musicbrainz.core.ts",
+      "digest": "0a5e00fb9e6a",
       "container": "api",
       "layer": "core",
       "context": "songs",
@@ -1148,6 +1197,7 @@
     },
     {
       "path": "apps/pragma/api/src/songs/songs.controller.ts",
+      "digest": "54520006b85f",
       "container": "api",
       "layer": "controller",
       "context": "songs",
@@ -1167,6 +1217,7 @@
     },
     {
       "path": "apps/pragma/api/src/songs/songs.repository.ts",
+      "digest": "69e210af2d90",
       "container": "api",
       "layer": "repository",
       "context": "songs",
@@ -1194,6 +1245,7 @@
     },
     {
       "path": "apps/pragma/api/src/songs/songs.schema.ts",
+      "digest": "601b2312f0b7",
       "container": "api",
       "layer": "schema",
       "context": "songs",
@@ -1225,6 +1277,7 @@
     },
     {
       "path": "apps/pragma/api/src/songs/songs.service.ts",
+      "digest": "34be50c075d2",
       "container": "api",
       "layer": "service",
       "context": "songs",
@@ -1251,6 +1304,7 @@
     },
     {
       "path": "apps/pragma/api/src/transitions/transitions.controller.ts",
+      "digest": "a1b97cfb00fd",
       "container": "api",
       "layer": "controller",
       "context": "transitions",
@@ -1270,6 +1324,7 @@
     },
     {
       "path": "apps/pragma/api/src/transitions/transitions.repository.ts",
+      "digest": "4717f48e7727",
       "container": "api",
       "layer": "repository",
       "context": "transitions",
@@ -1293,6 +1348,7 @@
     },
     {
       "path": "apps/pragma/api/src/transitions/transitions.schema.ts",
+      "digest": "58d79bba945d",
       "container": "api",
       "layer": "schema",
       "context": "transitions",
@@ -1310,6 +1366,7 @@
     },
     {
       "path": "apps/pragma/api/src/transitions/transitions.service.ts",
+      "digest": "139a65d2896e",
       "container": "api",
       "layer": "service",
       "context": "transitions",
@@ -1331,6 +1388,7 @@
     },
     {
       "path": "apps/pragma/api/src/uploads/uploads.adapter.ts",
+      "digest": "8453e00f8f0e",
       "container": "api",
       "layer": "adapter",
       "context": "uploads",
@@ -1348,6 +1406,7 @@
     },
     {
       "path": "apps/pragma/api/src/uploads/uploads.controller.ts",
+      "digest": "27efd913823c",
       "container": "api",
       "layer": "controller",
       "context": "uploads",
@@ -1367,6 +1426,7 @@
     },
     {
       "path": "apps/pragma/api/src/uploads/uploads.core.ts",
+      "digest": "f67736677dc3",
       "container": "api",
       "layer": "core",
       "context": "uploads",
@@ -1386,6 +1446,7 @@
     },
     {
       "path": "apps/pragma/api/src/uploads/uploads.schema.ts",
+      "digest": "ea63602b4496",
       "container": "api",
       "layer": "schema",
       "context": "uploads",
@@ -1404,6 +1465,7 @@
     },
     {
       "path": "apps/pragma/api/src/uploads/uploads.service.ts",
+      "digest": "dc8f8908339f",
       "container": "api",
       "layer": "service",
       "context": "uploads",
@@ -1425,6 +1487,7 @@
     },
     {
       "path": "apps/pragma/api/src/uploads/uploads.types.ts",
+      "digest": "25dff36f606d",
       "container": "api",
       "layer": "types",
       "context": "uploads",
@@ -1441,6 +1504,7 @@
     },
     {
       "path": "apps/pragma/cdk/bin/cdk.ts",
+      "digest": "e201e3e74660",
       "container": "cdk",
       "layer": "entrypoint",
       "context": "cdk",
@@ -1454,6 +1518,7 @@
     },
     {
       "path": "apps/pragma/cdk/lib/stack.ts",
+      "digest": "61e25bab20e4",
       "container": "cdk",
       "layer": "entrypoint",
       "context": "cdk",
@@ -1469,6 +1534,7 @@
     },
     {
       "path": "apps/pragma/domain/bar-staleness.core.ts",
+      "digest": "d2bf96ae9a87",
       "container": "domain",
       "layer": "core",
       "context": "domain",
@@ -1486,6 +1552,7 @@
     },
     {
       "path": "apps/pragma/domain/instrument.core.ts",
+      "digest": "5d7929bdbd38",
       "container": "domain",
       "layer": "core",
       "context": "domain",
@@ -1505,6 +1572,7 @@
     },
     {
       "path": "apps/pragma/domain/lineup.core.ts",
+      "digest": "d7913c2ac944",
       "container": "domain",
       "layer": "core",
       "context": "domain",
@@ -1527,6 +1595,7 @@
     },
     {
       "path": "apps/pragma/domain/tonality.core.ts",
+      "digest": "8a383d40e4dd",
       "container": "domain",
       "layer": "core",
       "context": "domain",
@@ -1540,6 +1609,7 @@
     },
     {
       "path": "apps/pragma/domain/transition.core.ts",
+      "digest": "e6422d55a983",
       "container": "domain",
       "layer": "core",
       "context": "domain",
@@ -1558,6 +1628,7 @@
     },
     {
       "path": "apps/pragma/drizzle.config.ts",
+      "digest": "c5ab9c8a42e5",
       "container": "site",
       "layer": "config",
       "context": "root",
@@ -1569,6 +1640,7 @@
     },
     {
       "path": "apps/pragma/site/src/App.tsx",
+      "digest": "db5581a3ccf0",
       "container": "site",
       "layer": "entrypoint",
       "context": "root",
@@ -1597,6 +1669,7 @@
     },
     {
       "path": "apps/pragma/site/src/clock.store.ts",
+      "digest": "b0d9c2570e3b",
       "container": "site",
       "layer": "store",
       "context": "root",
@@ -1614,6 +1687,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/auto-grow-textarea.utils.ts",
+      "digest": "567d9f4a4aa2",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1629,6 +1703,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx",
+      "digest": "03e8271ecd46",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1648,6 +1723,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/Avatar.tsx",
+      "digest": "45c98fa8aeb9",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1664,6 +1740,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/avatar.variants.ts",
+      "digest": "bc025186a77d",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1679,6 +1756,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/Badge.tsx",
+      "digest": "0be354efcb71",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1695,6 +1773,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/badge.variants.ts",
+      "digest": "420c2ec9b5c5",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1710,6 +1789,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/Button.tsx",
+      "digest": "c61acfa22bed",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1726,6 +1806,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/button.variants.ts",
+      "digest": "fa79cdbb1009",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1741,6 +1822,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/Card.tsx",
+      "digest": "682b7ca2c7e5",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1757,6 +1839,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/card.variants.ts",
+      "digest": "ea77465bc588",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1772,6 +1855,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/Chip.tsx",
+      "digest": "f7e29f1274ac",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1788,6 +1872,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/chip.variants.ts",
+      "digest": "ef9015c99e3c",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1803,6 +1888,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+      "digest": "908986f542b8",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1818,6 +1904,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/Crumb.tsx",
+      "digest": "98f35254b0fe",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1835,6 +1922,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/DocumentFrame.tsx",
+      "digest": "3b6f837374b1",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1850,6 +1938,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/ExternalLink.tsx",
+      "digest": "65658ac7a2c9",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1865,6 +1954,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/HintText.tsx",
+      "digest": "e401c782bf28",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1882,6 +1972,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/Icon.tsx",
+      "digest": "125935d798bd",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1899,6 +1990,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/Input.tsx",
+      "digest": "a85518895f26",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1915,6 +2007,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/input.variants.ts",
+      "digest": "6988e4ea89b3",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1930,6 +2023,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/member-palette.utils.ts",
+      "digest": "0c91a51eac8d",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1949,6 +2043,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/OembedFrame.tsx",
+      "digest": "1057a7470ddf",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1966,6 +2061,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/PreviewImage.tsx",
+      "digest": "e7a8509dc360",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1981,6 +2077,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/PulsingDot.tsx",
+      "digest": "15b156c24968",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -1996,6 +2093,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/ScoreInput.tsx",
+      "digest": "b7598c92eb43",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -2012,6 +2110,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/BackLink.tsx",
+      "digest": "1ac080bff11d",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2029,6 +2128,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/BottomActionBar.tsx",
+      "digest": "4b74caa9c600",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2046,6 +2146,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/ChartKindIcon.tsx",
+      "digest": "da2897e3192a",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2063,6 +2164,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
+      "digest": "2b923cc13cd1",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2081,6 +2183,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/energy-sparkline.utils.ts",
+      "digest": "b9fca2e3f22e",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2096,6 +2199,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/EnergyBadge.tsx",
+      "digest": "e8b6507e993c",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2114,6 +2218,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/EnergySparkline.tsx",
+      "digest": "94bf4b76f93f",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2131,6 +2236,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/file-drop.utils.ts",
+      "digest": "a8ab1cde187f",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2152,6 +2258,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/FileDropZone.tsx",
+      "digest": "91dc778c6f0e",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2171,6 +2278,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/FilterPillGroup.tsx",
+      "digest": "89669561c33b",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2188,6 +2296,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/LanguageSwitcher.tsx",
+      "digest": "1a645f2ed3ee",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2208,6 +2317,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/lineup-editor.core.ts",
+      "digest": "578ea03a40d5",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2226,6 +2336,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/LineupEditor.tsx",
+      "digest": "fa53b57c4bf7",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2247,6 +2358,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/MasteryBadge.tsx",
+      "digest": "f433b51352b9",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2265,6 +2377,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/media-query-matching.hook.ts",
+      "digest": "d1906493385e",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2283,6 +2396,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/MemberChip.tsx",
+      "digest": "04f66df1fbb8",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2302,6 +2416,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/MemberFilterPills.tsx",
+      "digest": "b869e3d1432d",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2320,6 +2435,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/MemberLineup.tsx",
+      "digest": "422a25e7291e",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2337,6 +2453,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx",
+      "digest": "4e126ea41bb6",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2355,6 +2472,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/OfflineBanner.tsx",
+      "digest": "7c0e8bff34db",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2372,6 +2490,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/online-status.hook.ts",
+      "digest": "24b9ce70bab9",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2387,6 +2506,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/PageHeader.tsx",
+      "digest": "35970c99d20d",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2405,6 +2525,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/SearchBar.tsx",
+      "digest": "322b552aa242",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2424,6 +2545,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/setlist-entry-form.hook.ts",
+      "digest": "61ee383776aa",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2444,6 +2566,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/SetlistEntryDetailsFields.tsx",
+      "digest": "858a8cad48e9",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2464,6 +2587,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/SetlistEntryDragPreview.tsx",
+      "digest": "5b937622786f",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2481,6 +2605,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/SongEmbed.tsx",
+      "digest": "860efae54b29",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2500,6 +2625,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/SongNotes.tsx",
+      "digest": "0dac0db3d8b1",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2518,6 +2644,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/StatusChip.tsx",
+      "digest": "657b339de291",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2535,6 +2662,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/UploadedChartPreview.tsx",
+      "digest": "9583a5ae3ddf",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2554,6 +2682,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/AppShell.tsx",
+      "digest": "5a9d68548383",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2584,6 +2713,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/BarsKanban.tsx",
+      "digest": "cea1acb6f259",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2603,6 +2733,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/BarsList.tsx",
+      "digest": "fb85360f9f36",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2624,6 +2755,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/BottomTabBar.tsx",
+      "digest": "923fb44526c6",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2645,6 +2777,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/CatalogGrid.tsx",
+      "digest": "6c32f91a179e",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2662,6 +2795,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx",
+      "digest": "6c9fd4f6821b",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2680,6 +2814,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/create-session-dialog.utils.ts",
+      "digest": "8055c63e8ad5",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2698,6 +2833,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/CreateSessionDialog.tsx",
+      "digest": "2da9767c8684",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2722,6 +2858,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/FileDrop.tsx",
+      "digest": "7ade2b76697b",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2744,6 +2881,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/mastery-color.core.ts",
+      "digest": "dbdc36185c4e",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2759,6 +2897,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/MasteryMatrix.tsx",
+      "digest": "8c5f3ae34699",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2784,6 +2923,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/navigation-active.core.ts",
+      "digest": "b802478d2bd2",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2800,6 +2940,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/navigation-badges.hook.ts",
+      "digest": "e7c8b1995c05",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2819,6 +2960,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/orphan-member-warn.adapter.ts",
+      "digest": "ceadfa9d7729",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2835,6 +2977,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/RequireSession.tsx",
+      "digest": "26951cb10aad",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2854,6 +2997,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/session-gate.core.ts",
+      "digest": "199f4192118e",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2869,6 +3013,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
+      "digest": "f6ac33dddde1",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2895,6 +3040,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts",
+      "digest": "42c904b17f6f",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2913,6 +3059,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-filter.core.ts",
+      "digest": "ea041a4a8134",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2931,6 +3078,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
+      "digest": "b910eebc6476",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2966,6 +3114,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx",
+      "digest": "9696dbd58297",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2988,6 +3137,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx",
+      "digest": "4eb061e96a3a",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3015,6 +3165,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistSongPicker.tsx",
+      "digest": "7d393ff4458f",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3040,6 +3191,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistToolbar.tsx",
+      "digest": "19b272a20d71",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3058,6 +3210,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/song-picker.core.ts",
+      "digest": "a51e406da93b",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3075,6 +3228,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SongCard.tsx",
+      "digest": "1d4a884104c2",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3097,6 +3251,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SongDetailSidebar.tsx",
+      "digest": "a27daf080b6d",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3119,6 +3274,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SongSearch.tsx",
+      "digest": "42ef612283f4",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3141,6 +3297,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/transition-view.core.ts",
+      "digest": "7ebf310ae9ee",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3160,6 +3317,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/TransitionCommentModal.tsx",
+      "digest": "2b7c0c21ad0f",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3182,6 +3340,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/TransitionStrip.tsx",
+      "digest": "b8f7c4d6810e",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3202,6 +3361,7 @@
     },
     {
       "path": "apps/pragma/site/src/i18n/i18n-parity.core.ts",
+      "digest": "572f2e7ffc26",
       "container": "site",
       "layer": "i18n",
       "context": "i18n",
@@ -3221,6 +3381,7 @@
     },
     {
       "path": "apps/pragma/site/src/i18n/i18n.setup.ts",
+      "digest": "4d4595c3ca5c",
       "container": "site",
       "layer": "i18n",
       "context": "i18n",
@@ -3241,6 +3402,7 @@
     },
     {
       "path": "apps/pragma/site/src/i18n/i18n.utils.ts",
+      "digest": "73b973978950",
       "container": "site",
       "layer": "i18n",
       "context": "i18n",
@@ -3259,6 +3421,7 @@
     },
     {
       "path": "apps/pragma/site/src/i18n/locale-storage.utils.ts",
+      "digest": "786ba136da02",
       "container": "site",
       "layer": "i18n",
       "context": "i18n",
@@ -3278,6 +3441,7 @@
     },
     {
       "path": "apps/pragma/site/src/i18n/react-i18next.d.ts",
+      "digest": "d68ae6b895c7",
       "container": "site",
       "layer": "i18n",
       "context": "i18n",
@@ -3293,6 +3457,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/api.client.ts",
+      "digest": "3f239c76c920",
       "container": "site",
       "layer": "client",
       "context": "lib",
@@ -3312,6 +3477,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/chordpro.utils.ts",
+      "digest": "62d5c6befce1",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3333,6 +3499,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/counts.utils.ts",
+      "digest": "b0e4f0ac57cc",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3348,6 +3515,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/debounce.utils.ts",
+      "digest": "9b64b45c3795",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3363,6 +3531,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/embed.utils.ts",
+      "digest": "d65f4c36259b",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3378,6 +3547,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/form-submit.utils.ts",
+      "digest": "ef9e49861dec",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3394,6 +3564,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/formatters.utils.ts",
+      "digest": "7dfe85159296",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3410,6 +3581,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/mastery-aggregate.utils.ts",
+      "digest": "e90f53511941",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3427,6 +3599,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/mastery-matrix.utils.ts",
+      "digest": "de8092c1e85b",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3448,6 +3621,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/member-color.utils.ts",
+      "digest": "f86d8d265123",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3467,6 +3641,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/missing-record.utils.ts",
+      "digest": "c5bd51bd05a3",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3482,6 +3657,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/modal-dialog.adapter.ts",
+      "digest": "642a7f454591",
       "container": "site",
       "layer": "adapter",
       "context": "lib",
@@ -3498,6 +3674,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/navigation.hook.ts",
+      "digest": "ea922bbef80e",
       "container": "site",
       "layer": "hook",
       "context": "lib",
@@ -3511,6 +3688,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/object-upload.adapter.ts",
+      "digest": "7c142967b6ed",
       "container": "site",
       "layer": "adapter",
       "context": "lib",
@@ -3526,6 +3704,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/auth.queries.ts",
+      "digest": "7496723b3f5a",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3546,6 +3725,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/bars.queries.ts",
+      "digest": "74126ca020fd",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3570,6 +3750,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/instruments.queries.ts",
+      "digest": "4aea6aa0233a",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3595,6 +3776,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/mastery.queries.ts",
+      "digest": "48c7755873d7",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3618,6 +3800,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/mastery.utils.ts",
+      "digest": "fdff37f7422c",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3634,6 +3817,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/members.queries.ts",
+      "digest": "210ea5a49c57",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3663,6 +3847,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/optimistic-session.core.ts",
+      "digest": "a33f93091c5f",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3680,6 +3865,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/optimistic.utils.ts",
+      "digest": "65bf92971d9d",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3697,6 +3883,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/sessions.queries.ts",
+      "digest": "1f9d68cc6a7d",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3723,6 +3910,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/setlists.queries.ts",
+      "digest": "33eb1d81c7b3",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3755,6 +3943,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/setlists.utils.ts",
+      "digest": "5907a2067249",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3776,6 +3965,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/song-write-failure.core.ts",
+      "digest": "8d1cb72424d5",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3791,6 +3981,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/songs.queries.ts",
+      "digest": "5d3654d9c0f0",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3822,6 +4013,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/transitions.queries.ts",
+      "digest": "5a30fb06dbbc",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3843,6 +4035,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/uploads.queries.ts",
+      "digest": "0881d41ddb72",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -3863,6 +4056,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/query-client.setup.ts",
+      "digest": "bdbca4ef37a8",
       "container": "site",
       "layer": "setup",
       "context": "lib",
@@ -3876,6 +4070,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/session-marker.adapter.ts",
+      "digest": "32f8737620d0",
       "container": "site",
       "layer": "adapter",
       "context": "lib",
@@ -3891,6 +4086,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/upcoming-concerts.core.ts",
+      "digest": "2a09da0d9875",
       "container": "site",
       "layer": "core",
       "context": "lib",
@@ -3906,6 +4102,7 @@
     },
     {
       "path": "apps/pragma/site/src/main.tsx",
+      "digest": "ff4d34297f9f",
       "container": "site",
       "layer": "entrypoint",
       "context": "root",
@@ -3925,6 +4122,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/bars/bar-form.core.ts",
+      "digest": "62b6c4073437",
       "container": "site",
       "layer": "route",
       "context": "bars",
@@ -3949,6 +4147,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/bars/BarForm.tsx",
+      "digest": "bfd27279466a",
       "container": "site",
       "layer": "route",
       "context": "bars",
@@ -3971,6 +4170,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/bars/bars-page.core.ts",
+      "digest": "fde3d656ad41",
       "container": "site",
       "layer": "route",
       "context": "bars",
@@ -3999,6 +4199,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/bars/BarsPage.tsx",
+      "digest": "fa4257e0a039",
       "container": "site",
       "layer": "route",
       "context": "bars",
@@ -4029,6 +4230,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/catalog-page.core.ts",
+      "digest": "a7812ad4f9a4",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4054,6 +4256,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/CatalogPage.tsx",
+      "digest": "f6a2d501d8ca",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4085,6 +4288,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/chart-kind.utils.ts",
+      "digest": "18fbbf073bad",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4101,6 +4305,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/missing-song.core.ts",
+      "digest": "50cf64f1800e",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4116,6 +4321,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/scene-view.core.ts",
+      "digest": "728be4b49bce",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4139,6 +4345,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/song-draft.core.ts",
+      "digest": "aa7cdb9d6fcb",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4168,6 +4375,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/song-duration.utils.ts",
+      "digest": "52f6283f5158",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4183,6 +4391,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/song-lineup.core.ts",
+      "digest": "164a1a24b763",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4204,6 +4413,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/song-notes.core.ts",
+      "digest": "a5267bbe0345",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4220,6 +4430,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongChartFields.tsx",
+      "digest": "d6f3883ff4cf",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4240,6 +4451,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongChordPreview.tsx",
+      "digest": "fc6329ec22d7",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4259,6 +4471,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongDeleteAction.tsx",
+      "digest": "faf7972d3a9a",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4278,6 +4491,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongDetailPage.tsx",
+      "digest": "2bd4a70496b1",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4321,6 +4535,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongEditForm.tsx",
+      "digest": "3e182133361e",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4354,6 +4569,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongEditPage.tsx",
+      "digest": "481e19eff8d4",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4377,6 +4593,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongExternalLinks.tsx",
+      "digest": "32de28dfde7f",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4395,6 +4612,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongLinkAdder.tsx",
+      "digest": "a9c4505ca730",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4414,6 +4632,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongMusicBrainzPanel.tsx",
+      "digest": "2bbcfb8b6884",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4431,6 +4650,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongNotesFields.tsx",
+      "digest": "f4e937f6b4e2",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4448,6 +4668,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/SongScenePage.tsx",
+      "digest": "afcf3de13744",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4473,6 +4694,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/tonality-label.utils.ts",
+      "digest": "1c99ca5a66d3",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4488,6 +4710,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/instruments/instruments-page.core.ts",
+      "digest": "05600a9fe353",
       "container": "site",
       "layer": "route",
       "context": "instruments",
@@ -4506,6 +4729,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/instruments/InstrumentsPage.tsx",
+      "digest": "d60f6424e774",
       "container": "site",
       "layer": "route",
       "context": "instruments",
@@ -4533,6 +4757,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/login.core.ts",
+      "digest": "8b8daa1bd0e8",
       "container": "site",
       "layer": "route",
       "context": "routes",
@@ -4551,6 +4776,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/Login.tsx",
+      "digest": "e7106fb8adc6",
       "container": "site",
       "layer": "route",
       "context": "routes",
@@ -4575,6 +4801,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/members/MemberEditForm.tsx",
+      "digest": "d39b933d99e3",
       "container": "site",
       "layer": "route",
       "context": "members",
@@ -4596,6 +4823,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/members/members-page.core.ts",
+      "digest": "ba1d5ddad8d3",
       "container": "site",
       "layer": "route",
       "context": "members",
@@ -4621,6 +4849,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/members/MembersPage.tsx",
+      "digest": "64f25ec329e4",
       "container": "site",
       "layer": "route",
       "context": "members",
@@ -4648,6 +4877,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/sessions/ConcertEditForm.tsx",
+      "digest": "3d90a86c4813",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -4672,6 +4902,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/sessions/ConcertReadView.tsx",
+      "digest": "bc93236b3753",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -4692,6 +4923,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/sessions/friends-count.core.ts",
+      "digest": "0a4c844f4004",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -4709,6 +4941,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/sessions/missing-session.core.ts",
+      "digest": "e7496a8f0896",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -4724,6 +4957,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/sessions/PracticeReadView.tsx",
+      "digest": "a0aef4d87503",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -4744,6 +4978,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx",
+      "digest": "ef3c11b3dbef",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -4778,6 +5013,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/sessions/SessionsPage.tsx",
+      "digest": "b4e44297d244",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -4805,6 +5041,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx",
+      "digest": "498b0a933510",
       "container": "site",
       "layer": "route",
       "context": "setlists",
@@ -4828,6 +5065,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/setlists/SetlistsPage.tsx",
+      "digest": "d62cddbc2000",
       "container": "site",
       "layer": "route",
       "context": "setlists",
@@ -4850,6 +5088,7 @@
     },
     {
       "path": "apps/pragma/site/src/sw/manifest.utils.ts",
+      "digest": "7224ca105bde",
       "container": "site",
       "layer": "utils",
       "context": "sw",
@@ -4867,6 +5106,7 @@
     },
     {
       "path": "apps/pragma/site/src/sw/service-worker.setup.ts",
+      "digest": "d2c3275a3e34",
       "container": "site",
       "layer": "setup",
       "context": "sw",
@@ -4880,6 +5120,7 @@
     },
     {
       "path": "apps/pragma/site/src/sw/sw-cache.utils.ts",
+      "digest": "ecbfdff1f910",
       "container": "site",
       "layer": "utils",
       "context": "sw",
@@ -4895,6 +5136,7 @@
     },
     {
       "path": "apps/pragma/site/src/types.d.ts",
+      "digest": "3394e7b2b58f",
       "container": "site",
       "layer": "declaration",
       "context": "root",
@@ -4906,6 +5148,7 @@
     },
     {
       "path": "apps/pragma/vite.config.ts",
+      "digest": "204675fc511d",
       "container": "site",
       "layer": "config",
       "context": "root",
@@ -4917,6 +5160,7 @@
     },
     {
       "path": "apps/pragma/vitest.config.ts",
+      "digest": "31ae65bc7819",
       "container": "site",
       "layer": "config",
       "context": "root",
@@ -4930,6 +5174,7 @@
     },
     {
       "path": "apps/pragma/vitest.mutation.config.ts",
+      "digest": "77bf21841bf7",
       "container": "site",
       "layer": "config",
       "context": "root",

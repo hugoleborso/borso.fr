@@ -82,8 +82,11 @@ jobs:
               "docs/architecture/$app-architecture.json" >> /tmp/architecture-diff.md
             # The same comparison as a map rather than a list: the head model's
             # own graphs, with each block coloured by what this branch did to it.
+            # --diff-ref hands the generator the base revision, which is what
+            # lets git pair a rename instead of reporting an addition beside a
+            # deletion, and what lets the code dialog open on the change.
             pnpm exec tsx scripts/architecture/architecture-graph.ts \
-              --app "$app" --diff-base /tmp/architecture-base
+              --app "$app" --diff-base /tmp/architecture-base --diff-ref "$base_sha"
             printf '\n' >> /tmp/architecture-diff.md
           done
           cat /tmp/architecture-diff.md >> "$GITHUB_STEP_SUMMARY"
