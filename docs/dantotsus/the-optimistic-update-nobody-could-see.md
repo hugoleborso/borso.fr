@@ -5,7 +5,7 @@ detected-at: qa
 severity: medium
 related-pr: '#50'
 fix-pr: '#51'
-fix-commits: [531e6e4]
+fix-commits: [531e6e4, 4065faa]
 eradication-level: 2
 time-to-detect: 3 months
 tags: [react, tanstack-query, optimistic-update, frontend, pragma, custom-rule]
@@ -107,14 +107,27 @@ for: `useCreate…`, `useUpdate…`, `useDelete…`. An unresolvable receiver is
 alone rather than guessed at.
 
 Verified against the pre-fix file: the rule flags both `SongEditPage` sites in
-`531e6e4^`, and against the whole front end it now flags exactly one line.
+`531e6e4^`, and against the whole front end it now flags nothing.
 
-**Sibling defects swept:** that one line is the delete path in the same file,
-and it keeps its `await` behind a written exception. A delete is the one write
-where waiting is the point — the operator should not walk away believing a song
-is gone until the server says so, and the form's error line is the only place a
-failed delete can be reported, since `/catalog` shows the row returning but says
-nothing about why.
+**Sibling defects swept:** the delete path in the same file, which the rule
+found. It was first excused rather than fixed, behind a written exception
+arguing that a delete is the one write where waiting is the point, because a
+failed one has nowhere to be reported once the operator has left the form. The
+operator read the exception and asked whether TanStack had a hook for exactly
+that. It does, and this file was already using it: `useMutationState` carries a
+failed update to the song page, and the catalog can read the same mutation
+cache. So the delete now fires and navigates like every other write, and
+`selectSongThatLostItsLastWrite` names the song on the catalog — *"The last
+change to 'Last Call' did not go through — the song is as it was."* The
+rolled-back row is what makes the title readable again, which is what lets the
+banner name the song instead of saying something failed.
+
+Worth keeping as a lesson in its own right: **an eslint-disable whose reason is
+"there is nowhere to report this" is usually a missing surface, not a genuine
+exception.** The reason was checkable, a reviewer checked it, and it did not
+hold. Verified with the `DELETE` aborted in the browser — the catalog opens at
+once, the banner names the song, the row is listed again, and a later successful
+write clears it without a reload.
 
 ## See also
 
