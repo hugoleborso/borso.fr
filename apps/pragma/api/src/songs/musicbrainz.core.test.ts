@@ -29,6 +29,8 @@ describe('mapMusicBrainzRecordings', () => {
       disambiguation: 'radio edit',
       tags: ['electronic', 'disco', 'funk', 'house', 'dance'],
       isrcs: ['USQX91300108', 'GBUM71302999', 'USQX91300109'],
+      releaseCount: 2,
+      isrcCount: 4,
     });
     expect(hits[1]).toEqual({
       mbid: '11111111-2222-3333-4444-555555555555',
@@ -42,6 +44,8 @@ describe('mapMusicBrainzRecordings', () => {
       disambiguation: null,
       tags: [],
       isrcs: ['USQ4E1300686'],
+      releaseCount: 1,
+      isrcCount: 1,
     });
   });
 
@@ -137,6 +141,14 @@ describe('mapMusicBrainzRecordings', () => {
   it('caps isrcs at three entries, preserving order', () => {
     const hits = mapMusicBrainzRecordings(FIXTURE);
     expect(hits[0]?.isrcs).toEqual(['USQX91300108', 'GBUM71302999', 'USQX91300109']);
+  });
+
+  it('counts every release and every isrc, past the display trim', () => {
+    const hits = mapMusicBrainzRecordings(FIXTURE);
+    expect(hits[0]?.releaseCount).toBe(2);
+    expect(hits[0]?.isrcCount).toBe(4);
+    expect(hits[2]?.releaseCount).toBe(0);
+    expect(hits[2]?.isrcCount).toBe(0);
   });
 
   it('returns an empty isrc list when isrcs is absent', () => {

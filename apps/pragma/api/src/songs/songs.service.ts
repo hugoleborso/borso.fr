@@ -14,6 +14,7 @@ import {
   type ExternalSongHit,
   mapMusicBrainzRecordings,
 } from './musicbrainz.core';
+import { rankExternalHits } from './search-ranking.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteSongWithCascade,
@@ -82,7 +83,13 @@ const MUSICBRAINZ_BASE_URL = 'https://musicbrainz.org/ws/2/recording/';
 const MUSICBRAINZ_USER_AGENT = 'Pragma/1.0 (https://pragma.borso.fr)';
 const EXTERNAL_SEARCH_CACHE_TTL_MS = 60_000;
 const EXTERNAL_SEARCH_MIN_INTERVAL_MS = 1_000;
-const EXTERNAL_SEARCH_LIMIT = 10;
+// Wide enough that the original survives the noise a free-text query
+// pulls in; `rankExternalHits` is what narrows it back down.
+const EXTERNAL_SEARCH_LIMIT = 25;
+// MusicBrainz' default Lucene parser reads a search box entry as a strict
+// field query and misses the recording entirely; dismax is its forgiving
+// parser, built for exactly this input.
+const EXTERNAL_SEARCH_PARSER = 'dismax=true';
 
 export type ExternalFetcher = (url: string, init: RequestInit) => Promise<Response>;
 
@@ -132,13 +139,13 @@ export async function searchExternal(
   if (cached !== undefined) return cached.value;
   await waitForRateSlot(state, now);
   state.lastCallAt = now();
-  const url = `${MUSICBRAINZ_BASE_URL}?query=${encodeURIComponent(trimmed)}&fmt=json&limit=${EXTERNAL_SEARCH_LIMIT}&inc=tags+releases+isrcs`;
+  const url = `${MUSICBRAINZ_BASE_URL}?query=${encodeURIComponent(trimmed)}&fmt=json&limit=${EXTERNAL_SEARCH_LIMIT}&${EXTERNAL_SEARCH_PARSER}&inc=tags+releases+isrcs`;
   const response = await fetcher(url, {
     headers: { 'User-Agent': MUSICBRAINZ_USER_AGENT, Accept: 'application/json' },
   });
   if (!response.ok) return [];
   const body: unknown = await response.json();
-  const hits = mapMusicBrainzRecordings(body);
-  state.cache.set(cacheKey, { value: hits, expiresAt: now() + EXTERNAL_SEARCH_CACHE_TTL_MS });
-  return hits;
+  const hits = rankExternalHits(mapMusicBrainzRecordings(body), trimmed);
+  state.cache.set(cacheKey, { value: [...hits], expiresAt: now() + EXTERNAL_SEARCH_CACHE_TTL_MS });
+  return [...hits];
 }

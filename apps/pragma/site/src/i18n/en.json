@@ -240,7 +240,11 @@
     "transposeDown": "Transpose down",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
-    "noChordpro": "No ChordPro chart attached to this song."
+    "noChordpro": "No ChordPro chart attached to this song.",
+    "sectionVerse": "Verse",
+    "sectionChorus": "Chorus",
+    "sectionBridge": "Bridge",
+    "sectionTab": "Tab"
   },
   "bars": {
     "title": "Bars",
