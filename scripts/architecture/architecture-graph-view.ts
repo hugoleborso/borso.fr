@@ -857,17 +857,24 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       const feature = data.features.find((each) => each.id === featureId);
       if (!feature || !actionList) return;
       actionList.replaceChildren();
+      // A journey whose one action is the whole thing offers no overview, so it
+      // lists that action alone rather than the same graph under two names.
+      const overview = feature.overview
+        ? [
+            {
+              id: feature.id + ':__all__',
+              // With no action to contrast it against, the overview is the only
+              // entry, and "Everything in x" reads as a subset of something else.
+              label: feature.actions.length === 0 ? feature.label : 'Everything in ' + feature.label,
+              meta:
+                feature.actions.length === 0
+                  ? 'what it is made of'
+                  : feature.actions.length + (feature.actions.length === 1 ? ' action' : ' actions'),
+            },
+          ]
+        : [];
       const entries = [
-        {
-          id: feature.id + ':__all__',
-          label: 'Everything in ' + feature.label,
-          // A feature no action reaches is a composition rather than a flow,
-          // and "0 actions" reads as a gap where there is none.
-          meta:
-            feature.actions.length === 0
-              ? 'what it is made of'
-              : feature.actions.length + (feature.actions.length === 1 ? ' action' : ' actions'),
-        },
+        ...overview,
         ...feature.actions.map((action) => ({
           id: action.id,
           label: action.label,

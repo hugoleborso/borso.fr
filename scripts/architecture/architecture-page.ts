@@ -277,6 +277,7 @@ function renderJourneys(
     features: journeys.features.map((feature) => ({
       id: feature.id,
       label: feature.label,
+      overview: feature.overview,
       actions: feature.actions.map((action) => ({
         id: action.id,
         label: action.label,

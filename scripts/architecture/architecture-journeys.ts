@@ -45,6 +45,14 @@ export interface JourneyFeature {
   readonly id: string;
   readonly label: string;
   readonly actions: readonly JourneyAction[];
+  /**
+   * Whether an "everything in this" entry is worth offering beside the actions.
+   *
+   * False for a journey whose single action already is the whole thing —
+   * opening the application, or a request arriving — where the entry would
+   * select the same graph under a second name.
+   */
+  readonly overview: boolean;
 }
 
 export interface JourneyGraph {
@@ -411,6 +419,21 @@ export interface JourneyModel {
 const SHELL_FEATURE_ID = 'shell';
 /** The other one: a request arriving, before any route has been chosen. */
 const REQUEST_FEATURE_ID = 'request';
+
+/**
+ * The three entries that are not features say what they are, because their ids
+ * name the mechanism and a reader is owed the thing. The ids stay as they are:
+ * they key the graphs, and nothing outside this file reads them.
+ */
+const JOURNEY_LABELS: Record<string, string> = {
+  [SHELL_FEATURE_ID]: 'opening the app',
+  [REQUEST_FEATURE_ID]: 'serving a request',
+  shared: 'shared front end',
+};
+
+function journeyLabel(featureId: string): string {
+  return JOURNEY_LABELS[featureId] ?? featureId;
+}
 /**
  * The third: the front end a feature reaches for rather than owns. Its files
  * carry no `@Feature` tag, because a button belongs to no one screen, and that
@@ -1008,29 +1031,34 @@ export function buildJourneys(
     });
     features.push({
       id: featureId,
-      label: featureId,
+      label: journeyLabel(featureId),
       actions: actions.sort((left, right) => left.label.localeCompare(right.label)),
+      overview: true,
     });
   }
 
   for (const entry of frontEndEntries(files, htmlEntries)) {
     const shell = buildShellJourney(entry, files, screens, fileByPath, sources, graphs);
     const featureId = shellFeatureId(entry);
-    graphs.set(`${featureId}:__all__`, shell.graph);
-    // The single action is the whole journey, so both entries answer with the
-    // same graph rather than one of them selecting nothing.
+    // The single action is the whole journey, so there is no overview to offer
+    // and no second graph to register under one.
     for (const action of shell.actions) graphs.set(action.id, shell.graph);
-    features.unshift({ id: featureId, label: featureId, actions: shell.actions });
+    features.unshift({
+      id: featureId,
+      label: journeyLabel(featureId),
+      actions: shell.actions,
+      overview: false,
+    });
   }
 
   const request = buildRequestJourney(files, fileByPath, sources);
   if (request !== null) {
-    graphs.set(`${REQUEST_FEATURE_ID}:__all__`, request.graph);
     for (const action of request.actions) graphs.set(action.id, request.graph);
     features.push({
       id: REQUEST_FEATURE_ID,
-      label: REQUEST_FEATURE_ID,
+      label: journeyLabel(REQUEST_FEATURE_ID),
       actions: request.actions,
+      overview: false,
     });
   }
 
@@ -1062,7 +1090,12 @@ export function buildJourneys(
     }
     const sharedGraph = { nodes: dedupeNodes(sharedNodes), edges: dedupeEdges(sharedEdges) };
     graphs.set(`${SHARED_FEATURE_ID}:__all__`, sharedGraph);
-    features.push({ id: SHARED_FEATURE_ID, label: SHARED_FEATURE_ID, actions: [] });
+    features.push({
+      id: SHARED_FEATURE_ID,
+      label: journeyLabel(SHARED_FEATURE_ID),
+      actions: [],
+      overview: true,
+    });
   }
 
   const drawnFiles = new Set(

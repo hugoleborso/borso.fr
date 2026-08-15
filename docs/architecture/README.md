@@ -337,9 +337,10 @@ pnpm exec tsx scripts/architecture/architecture-graph.ts --app pragma \
   because every page renders a button, and unscoped it made `songs` 177 blocks
   of which 123 were `Button`, `Badge`, `Avatar` and their variants. A file joins
   a feature's view when it carries that feature's `@Feature` tag. The front end
-  no feature claims is drawn together under **shared**, which is the design
-  system and the third entry that is not a data flow, beside `shell` and
-  `request`.
+  no feature claims is drawn together under **shared front end**, the third
+  entry that is not a data flow, beside **opening the app** and **serving a
+  request**. Those three are labelled by what they are; their ids stay `shell`,
+  `request` and `shared`, which key the graphs and are read nowhere else.
 - A route handler defined outside the controller file is not followed.
 - The walk stops at depth six, which no chain in pragma currently reaches.
 - `sw.js` is scanned for URL strings only, since it ships as plain script.
