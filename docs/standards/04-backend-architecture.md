@@ -167,6 +167,9 @@ so it is a pure function of the error and it has tests.
 - `eslint:borso/conditions-live-in-pure-functions` covers business branches
   everywhere else. See
   [02. Purity and core files](./02-purity-and-core-files.md).
+- `eslint:no-restricted-imports` keeps `apps/<app>/domain/` free of React, Hono,
+  Drizzle, the AWS SDKs and either side's own modules. ADR-0010 justifies that
+  folder entirely on both sides reading it, and one framework import ends that.
 - `reviewer` checks that a repository returns rows, arrays and counts rather
   than a shape it derived, because a repository that projects is a service.
 - `reviewer` checks that a multi-table write is wrapped in one transaction owned

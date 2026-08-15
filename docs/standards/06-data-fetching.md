@@ -178,6 +178,9 @@ predates the suffix and has not been renamed.
   on a screen nobody is looking at.
 - `eslint:@typescript-eslint/no-unsafe-assignment` fails on a response value that
   has lost its type.
+- `eslint:no-restricted-imports` rejects a database package imported from a
+  site. The typed client is the only way across, and a bundler pulling `pg` into
+  a browser build fails at run time rather than at build time.
 - `reviewer` checks that a mutation whose full result the client already holds
   reconciles from the response rather than refetching, because an immediate read
   after a write can be served a pre-commit snapshot.

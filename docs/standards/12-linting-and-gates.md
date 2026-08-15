@@ -242,6 +242,11 @@ review.
 - `script:scripts/check-non-module-scripts.sh` fails an application's HTML
   carrying a `<script src>` without `type="module"`, which ships un-bundled and
   404s.
+- `generator:scripts/standards/rule-provenance.ts` records which rules were
+  written because a defect actually happened, by reading the eradication section
+  of every dantotsu, and which were written from principle. It gates nothing:
+  the ratio is an input to the decision about the next rule, and several of the
+  best rules here were written before anything went wrong.
 - `script:scripts/check-app-registration.sh` fails a directory under `apps/`
   that has no `.github/path-filters.yml` filter or no commitlint scope, and a
   filter naming an application that is not there. Both failures are silent

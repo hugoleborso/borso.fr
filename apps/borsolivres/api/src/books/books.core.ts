@@ -76,6 +76,11 @@ function isRatingMisplaced(draft: BookDraft): boolean {
 }
 
 function isTimelineReversed(timeline: BookTimeline): boolean {
+  // Stryker disable next-line ConditionalExpression,LogicalOperator: equivalent
+  // mutant. This narrows `string | null` to `string` so the comparison below
+  // type-checks; at run time a `<` between a date string and `null` coerces the
+  // string to NaN and is false whichever side the null is on, so removing
+  // either half leaves every result unchanged and no test can tell them apart.
   if (timeline.startedAt === null || timeline.finishedAt === null) return false;
   return timeline.finishedAt < timeline.startedAt;
 }

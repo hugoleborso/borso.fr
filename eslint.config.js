@@ -307,6 +307,72 @@ export default tseslint.config(
     rules: { 'borso/no-string-concatenated-class-names': 'error' },
   },
 
+  // A folder both sides of an application read cannot import from either side,
+  // and a pure file cannot import a vendor SDK.
+  //
+  // ADR-0010 justifies `apps/<app>/domain/` entirely on the claim that the API
+  // and the site both read it. One `import { useState } from 'react'` ends that,
+  // and until now nothing said so: the import rules here are all about direction
+  // inside a side, and `no-restricted-imports` appeared nowhere in this file.
+  //
+  // A `.core.ts` is held to the same bar from the other direction. The purity
+  // rules reject an impure *call*; they have nothing to say about importing a
+  // client whose construction is the impurity.
+  {
+    files: ['apps/*/domain/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'react', message: 'A domain rule both sides read cannot depend on React.' },
+            { name: 'react-dom', message: 'A domain rule both sides read cannot depend on React.' },
+            {
+              name: 'hono',
+              message: 'A domain rule both sides read cannot depend on the server framework.',
+            },
+            {
+              name: 'drizzle-orm',
+              message: 'A domain rule both sides read cannot depend on the database layer.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@api/*', '../api/*', '../../api/*', '@site/*', '../site/*', '../../site/*'],
+              message:
+                'A domain rule reaches into neither side. See ADR-0010: the folder exists because both sides read it.',
+            },
+            {
+              group: ['@aws-sdk/*', 'aws-cdk-lib', 'pg', 'postgres'],
+              message: 'A domain rule both sides read cannot depend on infrastructure.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // A site never imports a database package. The back end owns the database and
+  // the typed client is the only way across; a bundler pulling `pg` into a
+  // browser build fails at run time rather than at build time.
+  {
+    files: SITE_FILES,
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['pg', 'postgres', 'drizzle-orm/*', '@aws-sdk/client-dsql'],
+              message:
+                'The site reaches the database through the typed Hono client, never directly. See docs/standards/06-data-fetching.md.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // Naming and testing rules from standards 01 and 10, across all application
   // and infrastructure code.
   {

@@ -83,6 +83,7 @@ every application the standard covers.
 | `borso/no-outbound-call-outside-adapter` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api |
 | `borso/no-horizontal-folders-in-api` | ESLint rule | yes | borsolivres/api, last-loop-lepin/api, pragma/api |
 | `borso/conditions-live-in-pure-functions` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `no-restricted-imports` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
@@ -114,6 +115,7 @@ every application the standard covers.
 | `borso/no-server-state-in-use-state` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
 | `borso/no-discarded-await-before-navigation` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
 | `@typescript-eslint/no-unsafe-assignment` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsolivres/api, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `no-restricted-imports` | ESLint rule | yes | borso-fr/site, borsolivres/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
@@ -194,6 +196,7 @@ every application the standard covers.
 | `scripts/check-frontend-env-vars.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-migration-sql-dsql-compat.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-non-module-scripts.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
+| `scripts/standards/rule-provenance.ts` | generator | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-app-registration.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
@@ -265,6 +268,6 @@ reviews what lint cannot rather than repeating what lint already did.
 
 ## Totals
 
-- 71 claim(s) enforced by a tool
+- 74 claim(s) enforced by a tool
 - 21 claim(s) left to a reviewer
 - 0 problem(s)

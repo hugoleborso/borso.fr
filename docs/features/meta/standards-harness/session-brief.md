@@ -64,6 +64,8 @@ Second round:
 | Convention drift gates on a ratchet, not a threshold | Thirty files sit outside a majority spelling. Clearing them is not worth an afternoon; reopening a settled question by accident is worth stopping. A falling count is always allowed. |
 | Case style is read per layer *and* per extension | Grouping by layer alone reported `App.tsx` against `main.ts` as a disagreement when both are correct. |
 | A one-word lowercase name is kebab-case | Reading `books` and `self-punch` as two styles reported nineteen of twenty-one controllers as divergent when they all agree. |
+| The first push may use `SKIP_MUTATION_GATE=1` | The pre-push mutation wave takes about an hour and forty minutes on this branch, because the range is the whole branch and the change touches nearly every pure file. It ran once in full, scored 97.80, and named four survivors in one file. Re-running the whole wave to re-check one file is waste. The changed files are verified individually instead, and the flag is the hook's own documented escape, not `--no-verify`. Once the remote branch exists the range is one push and the gate is cheap again. |
+| `no-restricted-imports` per folder | `apps/<app>/domain/` is justified entirely by both sides reading it, and one `import { useState } from 'react'` ends that. Nothing said so; the rule appeared nowhere in `eslint.config.js`. |
 
 ## Standing constraints
 
