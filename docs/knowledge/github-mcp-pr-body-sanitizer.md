@@ -39,6 +39,27 @@ Concrete reference points as of 2026-05-20:
 
 ## Confirmed sanitizer behaviours
 
+### An angle-bracket placeholder is deleted, backticks or not
+
+Observed 2026-08-15 on PR #51, twice in one body, both inside code spans:
+
+| Sent | Stored |
+| --- | --- |
+| `` `npx vitest run <file>` `` | `` `npx vitest run ` `` |
+| `` `Last verified: <date>` `` | `` `Last verified: ` `` |
+
+The placeholder is read as an HTML tag and dropped, and the backticks that
+should protect it do not. Other angle brackets in the same body survived when
+they were part of prose rather than a `<word>` shape, which fits tag-stripping
+rather than escaping.
+
+This makes a placeholder in a PR body actively misleading — `Last verified: `
+reads as an empty field rather than as a form to fill in. Write the shape out
+instead: `Last verified: YYYY-MM-DD`, `npx vitest run path/to/file.test.ts`.
+
+Cheap to check: read the body back after creating the PR and grep for the
+placeholders you sent.
+
 ### Markdown links come back wrapped in double backticks — sometimes
 
 Observed 2026-08-13 on PR #46, three times, through two different
