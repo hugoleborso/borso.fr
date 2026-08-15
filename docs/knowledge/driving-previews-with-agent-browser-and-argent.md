@@ -75,6 +75,22 @@ works too, but it is **ignored while the daemon is already running** and says so
 in one line that is easy to miss above the navigation error — `agent-browser
 close` first, or export the variable and let every session inherit it.
 
+### Use the wrapper
+
+`scripts/browser.sh` carries everything below and passes every argument
+through, so it is a drop-in: `scripts/browser.sh snapshot` is `agent-browser
+snapshot`. `--restart` closes a daemon started without the settings, which is
+the one state no later call can fix.
+
+```bash
+scripts/browser.sh --restart open https://borsouvertures-pr-55.preview.borso.fr/
+scripts/browser.sh snapshot -i --json
+scripts/browser.sh errors
+```
+
+The rest of this section is what the wrapper does, kept because the reasoning is
+what stops somebody undoing it.
+
 ### The flags
 
 Pass them on every invocation, or export them once:

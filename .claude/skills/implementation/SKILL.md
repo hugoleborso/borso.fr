@@ -100,15 +100,15 @@ Manual sweeps are not a valid coverage path — repo rule.
 
 ### 4. Self-screenshot UI work before declaring it green
 
-If the slice you just shipped touches visible UI, **open it in the running dev server and screenshot it yourself before declaring the row done**. Read the screenshot — not the DOM dump, not the `agent-browser snapshot` JSON, the actual PNG. Visible defects (broken `<img>` fallbacks rendering alt text, missing icons, layout breakage at narrow viewports, overflow, contrast disasters) are invisible to type-checks and unit tests; they are obvious in a screenshot a human looks at for two seconds.
+If the slice you just shipped touches visible UI, **open it in the running dev server and screenshot it yourself before declaring the row done**. Read the screenshot — not the DOM dump, not the `scripts/browser.sh snapshot` JSON, the actual PNG. Visible defects (broken `<img>` fallbacks rendering alt text, missing icons, layout breakage at narrow viewports, overflow, contrast disasters) are invisible to type-checks and unit tests; they are obvious in a screenshot a human looks at for two seconds.
 
-The cost is two `agent-browser` commands per slice. The cost of *not* doing this is the implementer reporting the slice green, the visual-validator catching it next, and the user catching it after that.
+The cost is two `scripts/browser.sh` commands per slice. The cost of *not* doing this is the implementer reporting the slice green, the visual-validator catching it next, and the user catching it after that.
 
 Pair this with the broken-image scan from `/visual-validation`'s standard if you want a one-shot self-check:
 
 ```bash
-agent-browser screenshot /tmp/self-check.png
-agent-browser eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => img.src)"
+scripts/browser.sh screenshot /tmp/self-check.png
+scripts/browser.sh eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => img.src)"
 ```
 
 A non-empty `eval` result is a stop-the-line — the row is not done, the broken `<img>` has to be diagnosed and fixed *before* you tag the slice complete.
