@@ -5,12 +5,8 @@ the same generator and the same rules: `pragma-architecture.html`,
 `last-loop-lepin-architecture.html`, `borsouvertures-architecture.html` and
 `borso-fr-architecture.html`.
 
-**None of them is in this repository**, which is why they are named here and not
-linked. Build them first, or open the published copy at
-[GitHub Pages](https://hugoleborso.github.io/borso.fr/), or download the
-`architecture-maps` artifact from any pull request's workflow run.
-
-Build them with:
+**None of them is in this repository**, which is why they are named above and
+not linked. Build them with:
 
 ```bash
 pnpm exec tsx scripts/architecture/architecture-graph.ts            # every app
@@ -25,6 +21,11 @@ are rebuilt from that code wherever they are read: `pages.yml` regenerates
 before publishing to GitHub Pages, and `architecture.yml` regenerates them into
 a workflow artifact on every pull request. Nothing publishes bytes from a
 commit, so a stale page has nowhere to exist.
+
+So there are three places a built copy exists without running anything: the
+[published site](https://hugoleborso.github.io/borso.fr/), the
+`architecture-maps` artifact on any pull request's workflow run, and whatever
+the last local run left behind.
 
 **To put a new application on the map, read [`install.md`](./install.md)** —
 what a codebase must provide, what is optional, and what holds each convention
