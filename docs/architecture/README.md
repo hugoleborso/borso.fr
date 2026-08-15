@@ -241,6 +241,11 @@ are fatal for the tree being committed and only a warning when scanning another
 checkout, because a branch that adds an external system would otherwise fail on
 the target branch not having it yet.
 
+The same comparison is also written as a page, `<app>-diff.html`, with a count
+strip saying what moved against the target and one section per kind of change.
+It is uploaded with the maps and never committed, because it describes a branch
+rather than the repository.
+
 The page itself is uploaded as a workflow artifact, and the same file is
 committed here. Publishing to GitHub Pages would turn it into a plain link
 instead of a download, and needs Pages enabled on the repository, which is a
@@ -250,11 +255,12 @@ To reproduce a comparison locally:
 
 ```bash
 git worktree add --detach ../architecture-base "$(git merge-base origin/main HEAD)"
-pnpm exec tsx scripts/architecture/architecture-graph.ts \
+pnpm exec tsx scripts/architecture/architecture-graph.ts --app pragma \
   --app-root ../architecture-base/apps/pragma --out /tmp/architecture-base
 pnpm exec tsx scripts/architecture/architecture-diff.ts \
   /tmp/architecture-base/pragma-architecture.json \
-  docs/architecture/pragma-architecture.json
+  docs/architecture/pragma-architecture.json \
+  --html /tmp/pragma-diff.html
 ```
 
 ## Known limits

@@ -31,3 +31,6 @@ REFACTORING-BRIEF.md
 node_modules/.cache
 .stryker-tmp
 reports
+
+# Generated per pull request by the architecture workflow, never committed.
+docs/architecture/*-diff.html

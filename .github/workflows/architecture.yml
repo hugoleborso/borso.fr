@@ -79,7 +79,8 @@ jobs:
             printf '## %s\n\n' "$app" >> /tmp/architecture-diff.md
             pnpm exec tsx scripts/architecture/architecture-diff.ts \
               "/tmp/architecture-base/$app-architecture.json" \
-              "docs/architecture/$app-architecture.json" >> /tmp/architecture-diff.md
+              "docs/architecture/$app-architecture.json" \
+              --html "docs/architecture/$app-diff.html" >> /tmp/architecture-diff.md
             printf '\n' >> /tmp/architecture-diff.md
           done
           cat /tmp/architecture-diff.md >> "$GITHUB_STEP_SUMMARY"
@@ -95,6 +96,7 @@ jobs:
             docs/architecture/index.html
             docs/architecture/*-architecture.html
             docs/architecture/*-architecture.json
+            docs/architecture/*-diff.html
           retention-days: 30
 
       # One comment per pull request, rewritten in place, and only when the
