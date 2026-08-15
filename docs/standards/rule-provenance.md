@@ -20,10 +20,12 @@ first rung of the eradication ladder. The number is an input to the decision
 about the *next* rule, and nothing else. Do not delete a rule because this
 page puts it in the lower half.
 
-33 rule(s), read against 80 dantotsu(s).
+34 rule(s), read against 85 dantotsu(s).
 
 - 11 came from a defect that actually happened.
-- 22 were written from principle.
+- 23 were written from principle.
+
+1 rule(s) no standard cites, which the enforcement ledger also fails on: `borso/no-adapter-import-in-pure-module`.
 
 | Rule | Written because | Recorded in |
 | --- | --- | --- |
@@ -41,6 +43,7 @@ page puts it in the lower half.
 | `borso/conditions-live-in-pure-functions` | principle | — |
 | `borso/function-names-are-verb-phrases` | principle | — |
 | `borso/no-abbreviated-identifier` | principle | — |
+| `borso/no-adapter-import-in-pure-module` | principle | — |
 | `borso/no-array-methods-in-controllers` | principle | — |
 | `borso/no-components-outside-buckets` | principle | — |
 | `borso/no-database-client-outside-repository` | principle | — |

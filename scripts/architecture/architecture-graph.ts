@@ -76,6 +76,17 @@ const GROUPING_LEVELS = ['container', 'component'] as const;
 const MAXIMUM_MODAL_LINES = 400;
 /** A document's whole history is small; this only stops a runaway read. */
 const MAXIMUM_GIT_OUTPUT_BYTES = 8 * 1024 * 1024;
+/** The revision a tree's history was read at, short, or `unknown` outside git. */
+function readHeadRevision(root: string): string {
+  try {
+    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
+      cwd: root,
+      encoding: 'utf8',
+    }).trim();
+  } catch {
+    return 'unknown';
+  }
+}
 
 /** The standard documents in a directory, or none when it is not there. */
 function listStandardFileNames(directory: string): string[] {
@@ -1539,6 +1550,7 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
       sources: withBaseSources(options.pageSources, code, renames, options.diffRef),
       standards: options.standards,
       histories: options.histories,
+      historyRevision: readHeadRevision(REPOSITORY_ROOT),
       repositorySlug: REPOSITORY_SLUG,
       layouts: diffLayouts,
       journeys: options.journeys,
@@ -1800,6 +1812,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
     sources: pageSources,
     standards,
     histories,
+    historyRevision: readHeadRevision(scanRoot),
     repositorySlug: REPOSITORY_SLUG,
     layouts,
     journeys,

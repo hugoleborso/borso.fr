@@ -1,0 +1,99 @@
+#!/usr/bin/env tsx
+/**
+ * Fails when two workspaces name a version of the same dependency.
+ *
+ * Usage:
+ *   pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
+ *
+ * Nothing else in this repository reads a `package.json` version field, so a
+ * second workspace taking `zod@^4` while the first stays on `^3` passes lint,
+ * every gate and every test, and surfaces as a type error in whichever file
+ * happens to sit across the seam. The catalog in `pnpm-workspace.yaml` is the
+ * one place a version is written; this check is what stops a workspace writing
+ * a second one.
+ */
+
+import { globSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import {
+  listCatalogProblems,
+  type Catalogs,
+  type Declaration,
+  type WorkspaceManifest,
+} from './catalog.core';
+
+const REPOSITORY_ROOT = process.cwd();
+const WORKSPACE_FILE = 'pnpm-workspace.yaml';
+const MANIFEST_GLOBS = ['package.json', 'apps/*/package.json', 'infra/*/package.json'];
+const DEPENDENCY_FIELDS = ['dependencies', 'devDependencies'] as const;
+const DEFAULT_CATALOG = 'default';
+const CATALOG_HEADING = /^catalog:\s*$/;
+const CATALOGS_HEADING = /^catalogs:\s*$/;
+const NAMED_CATALOG_HEADING = /^ {2}([\w-]+):\s*$/;
+const ENTRY_PATTERN = /^ {2,4}'?([^':\s]+)'?:\s*'?([^'\s]+)'?\s*$/;
+
+function readManifest(relativePath: string): WorkspaceManifest {
+  const parsed: unknown = JSON.parse(readFileSync(join(REPOSITORY_ROOT, relativePath), 'utf8'));
+  const declarations: Declaration[] = [];
+  if (typeof parsed === 'object' && parsed !== null) {
+    for (const field of DEPENDENCY_FIELDS) {
+      const block: unknown = Reflect.get(parsed, field);
+      if (typeof block !== 'object' || block === null) continue;
+      for (const [name, range] of Object.entries(block)) {
+        if (typeof range === 'string') declarations.push({ name, range });
+      }
+    }
+  }
+  return { workspace: relativePath, declarations };
+}
+
+/**
+ * The catalogs, read line by line rather than with a YAML parser.
+ *
+ * The file this reads is written by hand in one shape, and a parser would be a
+ * dependency whose own version this very check would then have to police.
+ */
+function readCatalogs(): Catalogs {
+  const catalogs = new Map<string, Map<string, string>>();
+  let current: Map<string, string> | null = null;
+  let isInNamedSection = false;
+
+  for (const line of readFileSync(join(REPOSITORY_ROOT, WORKSPACE_FILE), 'utf8').split('\n')) {
+    if (CATALOG_HEADING.test(line)) {
+      current = new Map();
+      catalogs.set(DEFAULT_CATALOG, current);
+      isInNamedSection = false;
+      continue;
+    }
+    if (CATALOGS_HEADING.test(line)) {
+      current = null;
+      isInNamedSection = true;
+      continue;
+    }
+    const named = isInNamedSection ? NAMED_CATALOG_HEADING.exec(line) : null;
+    if (named !== null) {
+      current = new Map();
+      catalogs.set(named[1] ?? '', current);
+      continue;
+    }
+    const entry = current === null ? null : ENTRY_PATTERN.exec(line);
+    if (entry !== null) current?.set(entry[1] ?? '', entry[2] ?? '');
+  }
+  return catalogs;
+}
+
+const manifests = MANIFEST_GLOBS.flatMap((pattern) =>
+  globSync(pattern, { cwd: REPOSITORY_ROOT }).sort(),
+).map(readManifest);
+
+const problems = listCatalogProblems(manifests, readCatalogs());
+if (problems.length > 0) {
+  for (const problem of problems) console.error(`  ${problem.workspace}: ${problem.message}`);
+  console.error(
+    `\n${String(problems.length)} dependency problem(s). Move the version into \`${WORKSPACE_FILE}\` and write \`catalog:\` in the workspace.`,
+  );
+  process.exit(1);
+}
+console.log(
+  `[check-dependency-catalog] every dependency ${String(manifests.length)} workspace(s) share resolves through a catalog`,
+);

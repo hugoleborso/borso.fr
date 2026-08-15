@@ -145,6 +145,13 @@
   "blueprints": {
     "api/adapter": [
       {
+        "id": "adapter-external-service",
+        "name": "Adapter Over An External Service",
+        "usage": "Use for the one file in a bounded context that leaves the process, whether that is a vendor SDK or a plain fetch.",
+        "path": "apps/pragma/api/src/uploads/uploads.adapter.ts",
+        "followers": 1
+      },
+      {
         "id": "external-service-adapter",
         "name": "External Service Adapter",
         "usage": "Use for the one file in a slice that talks to a third party SDK, so no other file imports the vendor package.",
@@ -156,13 +163,6 @@
         "name": "Adapter Over A Rate-Limited Web Service",
         "usage": "Use for the one file in a bounded context that calls a third-party HTTP service with a published rate limit.",
         "path": "apps/pragma/api/src/songs/musicbrainz.adapter.ts",
-        "followers": 0
-      },
-      {
-        "id": "adapter-external-service",
-        "name": "Adapter Over An External Service",
-        "usage": "Use for the one file in a bounded context that leaves the process, whether that is a vendor SDK or a plain fetch.",
-        "path": "apps/pragma/api/src/uploads/uploads.adapter.ts",
         "followers": 0
       }
     ],
@@ -1075,7 +1075,7 @@
         "name": "Node Environment Adapter Test",
         "usage": "Use for a module that talks to a vendor SDK or reads `process.env`, so it runs under node rather than the default browser-like environment.",
         "path": "apps/last-loop-lepin/api/src/media/media.adapter.test.ts",
-        "followers": 3
+        "followers": 5
       }
     ],
     "test/api/controller": [
@@ -1250,7 +1250,7 @@
         "name": "Lint Rule Tester Suite",
         "usage": "Use for the suite that ships beside every custom lint rule.",
         "path": "eslint-rules/no-use-effect.test.js",
-        "followers": 32
+        "followers": 33
       }
     ],
     "tooling/lint-rule": [

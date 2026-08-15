@@ -13,13 +13,13 @@ of them, and is the first place to look when the same bug appears twice.
 A dantotsu opts in by naming the pattern in its front matter, as
 `blueprints: [some-id]`. Most defects implicate no pattern and name none.
 
-Read from 80 dantotsu(s).
+Read from 85 dantotsu(s).
 
 Ordered by exposure, which is followers times defects.
 
 | Blueprint | Followers | Defects | Recorded in |
 | --- | --- | --- | --- |
-| `test-lint-rule` — Lint Rule Tester Suite | 32 | 2 | [a-lint-rule-that-knew-only-one-of-three-spellings](../dantotsus/a-lint-rule-that-knew-only-one-of-three-spellings.md), [purity-rule-was-wrong-four-times](../dantotsus/purity-rule-was-wrong-four-times.md) |
+| `test-lint-rule` — Lint Rule Tester Suite | 33 | 2 | [a-lint-rule-that-knew-only-one-of-three-spellings](../dantotsus/a-lint-rule-that-knew-only-one-of-three-spellings.md), [purity-rule-was-wrong-four-times](../dantotsus/purity-rule-was-wrong-four-times.md) |
 | `query-optimistic-mutation` — Optimistic Mutation | 25 | 2 | [optimistic-reorder-reverted-by-stale-dsql-read](../dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md), [the-optimistic-update-nobody-could-see](../dantotsus/the-optimistic-update-nobody-could-see.md) |
 | `test-cdk-synth` — Construct Synthesis Test | 14 | 1 | [cdk-tests-leak-a-temp-assembly-per-synth](../dantotsus/cdk-tests-leak-a-temp-assembly-per-synth.md) |
 | `cloudfront-function-source` — CloudFront Function Source | 1 | 2 | [a-comment-that-shipped-to-the-cloudfront-edge](../dantotsus/a-comment-that-shipped-to-the-cloudfront-edge.md), [cloudfront-function-runtime-es5](../dantotsus/cloudfront-function-runtime-es5.md) |

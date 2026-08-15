@@ -199,6 +199,14 @@ every application the standard covers.
 | `scripts/check-app-registration.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
+## 13. Dependencies
+
+`docs/standards/13-dependencies.md`
+
+| Mechanism | Kind | Enforced | Where |
+| --- | --- | --- | --- |
+| `scripts/dependencies/check-dependency-catalog.ts` | script | NO | `scripts/dependencies/check-dependency-catalog.ts` exists but runs nowhere |
+
 ## What only a reviewer can check
 
 21 claim(s) below hand the check to a person, because no tool can make it.
@@ -269,4 +277,4 @@ reviews what lint cannot rather than repeating what lint already did.
 
 - 73 claim(s) enforced by a tool
 - 21 claim(s) left to a reviewer
-- 0 problem(s)
+- 2 problem(s)
