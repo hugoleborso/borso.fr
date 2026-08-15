@@ -62,8 +62,8 @@
     "openings": {
       "title": "Ouvertures",
       "all": "Toutes les ouvertures",
-      "family-count_one": "{{count}} famille",
-      "family-count_other": "{{count}} familles",
+      "opening-count_one": "{{count}} ouverture",
+      "opening-count_other": "{{count}} ouvertures",
       "variation-count_one": "{{count}} variante",
       "variation-count_other": "{{count}} variantes"
     },

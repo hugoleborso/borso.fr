@@ -7,7 +7,7 @@ worker that caches the openings dataset.
 ## Layout
 
 - `site/` — the Vite root, holding `index.html` and nothing else.
-- `site/src/` — source. React app (`main.tsx` → `routes/OpeningTrainerRoute.tsx`). Components are
+- `site/src/` — source. React app (`main.tsx` → `routes/OpeningTrainerPage.tsx`). Components are
   split into `components/atoms`, `components/molecules` and `components/organisms` by what each
   one imports; `i18n/` holds the English and French catalogues; `lib/` holds the viewport and
   pagination hooks; `openings/` holds the book engine and the session machines; `state/` holds

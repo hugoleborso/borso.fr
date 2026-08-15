@@ -30,7 +30,7 @@
     },
     {
       "path": "apps/borsouvertures/scripts/build-openings.ts",
-      "digest": "7a459b5195bf",
+      "digest": "ff689d3c4b6c",
       "container": "site",
       "layer": "unknown",
       "context": "root",
@@ -681,7 +681,7 @@
     },
     {
       "path": "apps/borsouvertures/site/src/components/molecules/OpeningsPanel.tsx",
-      "digest": "db16afcca608",
+      "digest": "d9ce1d618e25",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -1255,7 +1255,7 @@
     },
     {
       "path": "apps/borsouvertures/site/src/config/openingsCacheVersion.ts",
-      "digest": "6ee79f528bc9",
+      "digest": "26b122819dc6",
       "container": "site",
       "layer": "unknown",
       "context": "config",

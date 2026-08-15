@@ -41,25 +41,38 @@ const TSV_FILES = ['a', 'b', 'c', 'd', 'e'];
 const REQUIRED_TSV_COLUMN_COUNT = 3;
 const JSON_INDENT_SPACES = 2;
 const CACHE_VERSION_RADIX = 36;
+/**
+ * The families the trainer teaches, most specific first.
+ *
+ * Order is load-bearing: a row is assigned to the first entry its name starts
+ * with, so `Queen's Gambit` listed above `Queen's Gambit Declined` would take
+ * every declined row with it. `assertEveryFamilyMatched` fails the build when
+ * a name here wins nothing, which is how the shadowing and two typographic
+ * apostrophes below were found after six families had been silently absent.
+ *
+ * Names are the source dataset's own, exactly. `Giuoco Piano` is not here
+ * because lichess titles those rows `Italian Game: Giuoco Piano`, so it is a
+ * variation of the Italian Game rather than a family, and it already ships as
+ * one.
+ */
 const FAMILIES = [
+  "Queen's Gambit Declined",
+  "Queen's Gambit Accepted",
+  "Queen's Gambit",
+  "King's Indian Defense",
+  "King's Gambit",
+  "Petrov's Defense",
   'Scandinavian Defense',
   'Caro-Kann Defense',
   'Italian Game',
-  'Giuoco Piano',
   'Sicilian Defense',
   'Ruy Lopez',
   'French Defense',
-  "Queen's Gambit",
-  "Queen's Gambit Declined",
-  "Queen's Gambit Accepted",
-  'King’s Indian Defense',
   'Nimzo-Indian Defense',
   'English Opening',
-  'Petrov Defense',
   'Vienna Game',
   'Scotch Game',
   'Four Knights Game',
-  'King’s Gambit',
   'Pirc Defense',
   'Modern Defense',
   'Catalan Opening',
@@ -116,6 +129,25 @@ function assertUniqueLineIds(openings: Opening[]): void {
   }
 }
 
+/**
+ * Every family in `FAMILIES` has to produce an opening, because a family that
+ * matches nothing is silent: the run succeeds, the dataset is smaller, and
+ * nothing says which name was dropped.
+ *
+ * Two ways it happens, both of which have. A family whose name is a prefix of
+ * an earlier one never wins `find`, so listing both `Queen's Gambit` and
+ * `Queen's Gambit Declined` yields only the first. And a name spelled with a
+ * typographic apostrophe cannot match source rows that use the ASCII one.
+ */
+function assertEveryFamilyMatched(openings: ReadonlyMap<string, Opening>): void {
+  const missing = FAMILIES.filter((familyName) => !openings.has(toSlug(familyName)));
+  if (missing.length === 0) return;
+  throw new Error(
+    `${String(missing.length)} of ${String(FAMILIES.length)} families matched no row: ${missing.join(', ')}. ` +
+      'Either the name does not match the source rows, or an earlier family in the list is a prefix of it.',
+  );
+}
+
 async function buildOpenings(): Promise<void> {
   const openingsMap = new Map<string, Opening>();
 
@@ -152,6 +184,8 @@ async function buildOpenings(): Promise<void> {
       });
     }
   }
+
+  assertEveryFamilyMatched(openingsMap);
 
   const openings = Array.from(openingsMap.values()).map((opening) => ({
     ...opening,

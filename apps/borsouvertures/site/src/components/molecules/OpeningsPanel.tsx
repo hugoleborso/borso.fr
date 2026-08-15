@@ -63,7 +63,7 @@ export function OpeningsPanel({
     <SelectorPanel title={t('selection.openings.title')}>
       <AllOpeningsCard
         label={t('selection.openings.all')}
-        meta={t('selection.openings.family-count', { count: openings.length })}
+        meta={t('selection.openings.opening-count', { count: openings.length })}
         isActive={playScope.openingIds.length === 0}
         onSelect={selectAllOpenings}
       />
