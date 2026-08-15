@@ -30,6 +30,7 @@ const UNPROJECTED_TYPESCRIPT_FILES = [
   'apps/*/scripts/*.ts',
   'apps/*/cdk/bin/*.ts',
   'infra/*/vitest.config.ts',
+  'infra/*/vitest.mutation.config.ts',
   'infra/*/bin/*.ts',
 ];
 // A workspace's own build and deploy tooling, as opposed to the code it ships.

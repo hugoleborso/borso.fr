@@ -29,14 +29,14 @@ const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
  */
 export function makeIdempotent(statement: string): string {
   return statement
-    .replace(/\bCREATE\s+TABLE(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE TABLE IF NOT EXISTS$1')
+    .replace(/\bCREATE\s+TABLE(?=\s)(?!\s+IF\s+NOT\s+EXISTS)/i, 'CREATE TABLE IF NOT EXISTS')
     .replace(
-      /\bCREATE\s+UNIQUE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i,
-      'CREATE UNIQUE INDEX IF NOT EXISTS$1',
+      /\bCREATE\s+UNIQUE\s+INDEX(?=\s)(?!\s+IF\s+NOT\s+EXISTS)/i,
+      'CREATE UNIQUE INDEX IF NOT EXISTS',
     )
-    .replace(/\bCREATE\s+INDEX(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE INDEX IF NOT EXISTS$1')
-    .replace(/\bCREATE\s+SCHEMA(\s+(?!IF\s+NOT\s+EXISTS))/i, 'CREATE SCHEMA IF NOT EXISTS$1')
-    .replace(/\bADD\s+COLUMN(\s+(?!IF\s+NOT\s+EXISTS))/i, 'ADD COLUMN IF NOT EXISTS$1');
+    .replace(/\bCREATE\s+INDEX(?=\s)(?!\s+IF\s+NOT\s+EXISTS)/i, 'CREATE INDEX IF NOT EXISTS')
+    .replace(/\bCREATE\s+SCHEMA(?=\s)(?!\s+IF\s+NOT\s+EXISTS)/i, 'CREATE SCHEMA IF NOT EXISTS')
+    .replace(/\bADD\s+COLUMN(?=\s)(?!\s+IF\s+NOT\s+EXISTS)/i, 'ADD COLUMN IF NOT EXISTS');
 }
 
 /**
@@ -67,12 +67,9 @@ export function stripUsingClause(statement: string): string {
 export function asyncifyIndex(statement: string): string {
   if (!/\bCREATE\s+(?:UNIQUE\s+)?INDEX\b/i.test(statement)) return statement;
   const withoutAsync = statement
-    .replace(/\bINDEX\s+ASYNC\s+/i, 'INDEX ')
-    .replace(/\bIF\s+NOT\s+EXISTS\s+ASYNC\s+/i, 'IF NOT EXISTS ');
-  return withoutAsync.replace(
-    /\b(CREATE\s+(?:UNIQUE\s+)?INDEX)\s+(IF\s+NOT\s+EXISTS\s+)?/i,
-    '$1 ASYNC $2',
-  );
+    .replace(/\bINDEX\s+ASYNC\b/i, 'INDEX')
+    .replace(/\bIF\s+NOT\s+EXISTS\s+ASYNC\b/i, 'IF NOT EXISTS');
+  return withoutAsync.replace(/\b(CREATE\s+(?:UNIQUE\s+)?INDEX)\s+/i, '$1 ASYNC ');
 }
 
 // @FollowsBlueprint utils-pure-module

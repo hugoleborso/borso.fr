@@ -124,6 +124,23 @@ describe('buildCreateTableLikeSql', () => {
       expect(() => buildCreateTableLikeSql(source, target, table)).toThrow(/Invalid/);
     },
   );
+
+  /**
+   * Three identifiers reach the same guard, so the rejection has to say which
+   * one was wrong — a CDK prop misconfigured on the source is a different fix
+   * from one misconfigured on the target.
+   */
+  it('names the argument it rejected', () => {
+    expect(() => buildCreateTableLikeSql('pr-27', 'pr_27', 'editions')).toThrow(
+      /Invalid schema name: "pr-27"/,
+    );
+    expect(() => buildCreateTableLikeSql('prod', 'pr-27', 'editions')).toThrow(
+      /Invalid schema name: "pr-27"/,
+    );
+    expect(() => buildCreateTableLikeSql('prod', 'pr_27', 'has space')).toThrow(
+      /Invalid table name: "has space"/,
+    );
+  });
 });
 
 describe('buildCloneInsertSql', () => {
@@ -186,30 +203,30 @@ describe('buildCloneInsertSql', () => {
   it('rejects invalid column identifiers', () => {
     expect(() =>
       buildCloneInsertSql('prod', 'pr_27', 'runners', ['valid', 'DROP TABLE'], []),
-    ).toThrow(/Invalid/);
+    ).toThrow(/Invalid column name: "DROP TABLE"/);
   });
 
   it('rejects invalid identifiers in the nullify list', () => {
     expect(() => buildCloneInsertSql('prod', 'pr_27', 'runners', ['photo_key'], ['"; --'])).toThrow(
-      /Invalid/,
+      /Invalid column name/,
     );
   });
 
   it('rejects an invalid table name', () => {
     expect(() => buildCloneInsertSql('prod', 'pr_27', 'runners; DROP', ['slug'], [])).toThrow(
-      /Invalid/,
+      /Invalid table name/,
     );
   });
 
   it('rejects an invalid source schema name', () => {
     expect(() => buildCloneInsertSql('prod"; --', 'pr_27', 'runners', ['slug'], [])).toThrow(
-      /Invalid/,
+      /Invalid schema name/,
     );
   });
 
   it('rejects an invalid target schema name', () => {
     expect(() => buildCloneInsertSql('prod', 'pr_27"; --', 'runners', ['slug'], [])).toThrow(
-      /Invalid/,
+      /Invalid schema name/,
     );
   });
 });
@@ -350,6 +367,17 @@ describe('formatColumnType', () => {
     expect(formatColumnType({ ...row, data_type: 'numeric', numeric_precision: 10 })).toStrictEqual(
       { name: 'family', type: 'numeric(10,0)' },
     );
+  });
+
+  /**
+   * DSQL reports no precision for an unconstrained `numeric`, and `numeric(,0)`
+   * is not a type, so the column has to fall back to the bare type name.
+   */
+  it('keeps a numeric the catalogue reports no precision for as a bare numeric', () => {
+    expect(formatColumnType({ ...row, data_type: 'numeric' })).toStrictEqual({
+      name: 'family',
+      type: 'numeric',
+    });
   });
 
   it('leaves a non-numeric type alone even when a precision is reported', () => {

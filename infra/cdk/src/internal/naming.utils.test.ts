@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   assertDeployStage,
   bucketName,
+  dsqlClusterSsmPaths,
   dsqlSchemaName,
   lambdaFunctionName,
   frontendOrigin,
@@ -20,11 +21,22 @@ describe('validateAppSlug', () => {
   });
 
   it.each(['Borso', 'borso_fr', '-borso', '1borso', 'a..b', ''])('rejects %s', (slug) => {
-    expect(() => validateAppSlug(slug)).toThrow();
+    expect(() => validateAppSlug(slug)).toThrow(
+      /must be lowercase kebab-case, start with a letter/,
+    );
+  });
+
+  it('names the slug it rejected, since the caller passes several', () => {
+    expect(() => validateAppSlug('Borso')).toThrow(/"Borso"/);
   });
 
   it('rejects slugs over 32 chars', () => {
-    expect(() => validateAppSlug('a'.repeat(33))).toThrow();
+    expect(() => validateAppSlug('a'.repeat(33))).toThrow(/exceeds 32 characters/);
+  });
+
+  /** 32 is the longest accepted slug, not the first rejected one. */
+  it('accepts a slug of exactly 32 chars', () => {
+    expect(() => validateAppSlug('a'.repeat(32))).not.toThrow();
   });
 });
 
@@ -66,8 +78,12 @@ describe('stackName', () => {
   });
 
   it('requires prNumber for non-prod stages', () => {
-    expect(() => stackName({ app: 'test-app', stage: 'preview' })).toThrow();
-    expect(() => stackName({ app: 'test-app', stage: 'integ' })).toThrow();
+    expect(() => stackName({ app: 'test-app', stage: 'preview' })).toThrow(
+      /preview\/integ stage requires prNumber/,
+    );
+    expect(() => stackName({ app: 'test-app', stage: 'integ' })).toThrow(
+      /preview\/integ stage requires prNumber/,
+    );
   });
 });
 
@@ -115,8 +131,25 @@ describe('dsqlSchemaName', () => {
   });
 
   it('throws when preview/integ omits prNumber', () => {
-    expect(() => dsqlSchemaName({ app: 'test-app', stage: 'preview' })).toThrow();
-    expect(() => dsqlSchemaName({ app: 'test-app', stage: 'integ' })).toThrow();
+    expect(() => dsqlSchemaName({ app: 'test-app', stage: 'preview' })).toThrow(
+      /preview stage requires prNumber/,
+    );
+    expect(() => dsqlSchemaName({ app: 'test-app', stage: 'integ' })).toThrow(
+      /integ stage requires prNumber/,
+    );
+  });
+});
+
+describe('dsqlClusterSsmPaths', () => {
+  it('names one parameter per cluster attribute, under the app that owns it', () => {
+    expect(dsqlClusterSsmPaths('test-app')).toStrictEqual({
+      arn: '/borso/test-app/dsql-cluster-arn',
+      endpoint: '/borso/test-app/dsql-cluster-endpoint',
+    });
+  });
+
+  it('rejects an app slug that is not one', () => {
+    expect(() => dsqlClusterSsmPaths('Test_App')).toThrow(/Invalid app slug/);
   });
 });
 
@@ -134,7 +167,9 @@ describe('previewHostname / previewS3Prefix', () => {
   });
 
   it('throws for prod stage', () => {
-    expect(() => previewHostname({ app: 'test-app', stage: 'prod' })).toThrow();
+    expect(() => previewHostname({ app: 'test-app', stage: 'prod' })).toThrow(
+      /previewHostname\(\) is not for prod stage/,
+    );
   });
 
   it('s3 prefix mirrors hostname', () => {
@@ -147,7 +182,9 @@ describe('previewHostname / previewS3Prefix', () => {
   });
 
   it('previewS3Prefix throws for prod stage', () => {
-    expect(() => previewS3Prefix({ app: 'test-app', stage: 'prod' })).toThrow();
+    expect(() => previewS3Prefix({ app: 'test-app', stage: 'prod' })).toThrow(
+      /previewS3Prefix\(\) is not for prod stage/,
+    );
   });
 
   it('api hostname mirrors frontend hostname with -api suffix', () => {
@@ -160,16 +197,24 @@ describe('previewHostname / previewS3Prefix', () => {
   });
 
   it('previewApiHostname throws for prod stage', () => {
-    expect(() => previewApiHostname({ app: 'test-app', stage: 'prod' })).toThrow();
+    expect(() => previewApiHostname({ app: 'test-app', stage: 'prod' })).toThrow(
+      /previewApiHostname\(\) is not for prod stage/,
+    );
   });
 
   it('rejects non-integer or non-positive prNumber', () => {
-    expect(() => stackName({ app: 'test-app', stage: 'preview', prNumber: 0 })).toThrow();
-    expect(() => stackName({ app: 'test-app', stage: 'preview', prNumber: 1.5 })).toThrow();
+    expect(() => stackName({ app: 'test-app', stage: 'preview', prNumber: 0 })).toThrow(
+      /prNumber must be a positive integer, got 0/,
+    );
+    expect(() => stackName({ app: 'test-app', stage: 'preview', prNumber: 1.5 })).toThrow(
+      /prNumber must be a positive integer, got 1.5/,
+    );
   });
 
   it('rejects bad handler names in lambdaFunctionName', () => {
-    expect(() => lambdaFunctionName({ app: 'test-app', stage: 'prod' }, 'Bad_Handler')).toThrow();
+    expect(() => lambdaFunctionName({ app: 'test-app', stage: 'prod' }, 'Bad_Handler')).toThrow(
+      /Invalid app slug "Bad_Handler"/,
+    );
   });
 });
 
@@ -181,7 +226,9 @@ describe('frontendOrigin', () => {
   });
 
   it('throws for prod without a domain, since there is nothing to accept', () => {
-    expect(() => frontendOrigin({ app: 'test-app', stage: 'prod' }, undefined)).toThrow();
+    expect(() => frontendOrigin({ app: 'test-app', stage: 'prod' }, undefined)).toThrow(
+      /frontendOrigin\(\) requires domainName for the prod stage/,
+    );
   });
 
   it('uses the preview hostname for preview and integ', () => {

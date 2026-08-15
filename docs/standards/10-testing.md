@@ -115,8 +115,12 @@ e.g., a change that cannot alter behaviour, and say why on the line.
   `**/*.utils.ts` falls below the per-file thresholds each `vitest.config.ts`
   declares.
 - `gate:stryker` fails when a mutant survives. It is scoped with `--mutate` to
-  the changed pure files in the pre-push hook, and unscoped per application in
-  `full-suite.yml` on `main`.
+  the changed pure files in the pre-push hook, and unscoped in `full-suite.yml`
+  on `main`. Both cover every workspace that has pure modules, which since
+  2026-08-15 means the four applications, the repository's own `scripts/`, and
+  `infra/cdk`. The last two carried the coverage gate and no mutation
+  configuration at all, and scored 77.40 and 80.84 the first time one was
+  pointed at them.
 - `eslint:borso/test-file-has-sibling-source` fails when a `.core.ts` or
   `.utils.ts` file has no sibling test file.
 - `reviewer` checks that a test name states the behaviour and the condition,

@@ -73,7 +73,8 @@
         "src/internal/cf-host-routing-function.code.js",
         "src/internal/cf-static-site-index-rewrite.code.js",
         "test/**/*.test.ts",
-        "test/unit/fixtures/handler.ts"
+        "test/unit/fixtures/handler.ts",
+        "vitest.mutation.config.ts"
       ],
       "ignoreDependencies": ["esbuild"]
     },

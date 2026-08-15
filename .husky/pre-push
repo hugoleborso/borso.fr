@@ -195,6 +195,21 @@ if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
     start_gate mutation-tooling \
       pnpm exec stryker run --mutate "$(echo "$tooling_files" | paste -sd, -)"
   fi
+
+  # And infra/cdk, whose five pure modules rewrite every migration before it
+  # reaches DSQL. They sat at 100% coverage with no mutation configuration at
+  # all until 2026-08-15, and the first run scored 80.84 with 69 survivors.
+  infra_files=$(echo "$changed" |
+    sed -E 's/\.utils\.test\.ts$/.utils.ts/' |
+    sed -n 's|^infra/cdk/||p' |
+    grep -E '^src/.*\.utils\.ts$' |
+    while read -r gated; do [ -n "$gated" ] && [ -f "infra/cdk/$gated" ] && echo "$gated"; done |
+    sort -u || true)
+  if [ -n "$infra_files" ]; then
+    echo "[pre-push] infra-cdk: mutating $(echo "$infra_files" | grep -c .) changed gated file(s)"
+    start_gate mutation-infra-cdk \
+      pnpm --filter @borso/infra exec stryker run --mutate "$(echo "$infra_files" | paste -sd, -)"
+  fi
 fi
 
 # One wait for the whole wave — knip, the infra suites, every app's affected

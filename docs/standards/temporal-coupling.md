@@ -19,9 +19,9 @@ This is a report, not a gate. The input is the history, so it changes on
 every commit whether or not any source moved, and a freshness check on it
 would fail every commit for a reason nobody could act on.
 
-Read at `db41bae`, from the last 400 commit(s).
+Read at `b5cd7dd`, from the last 400 commit(s).
 
-9 pair(s) are left out because the module graph does not
+11 pair(s) are left out because the module graph does not
 describe one of the two files: deleted, renamed, or in a workspace the graph
 does not model. Nothing can be said about a connection that never existed.
 
