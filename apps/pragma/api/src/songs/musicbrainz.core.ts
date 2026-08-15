@@ -27,6 +27,11 @@ export interface ExternalSongHit {
   readonly disambiguation: string | null;
   readonly tags: readonly string[];
   readonly isrcs: readonly string[];
+  /** How many releases carry this recording; the notability signal the
+   * ranker reads, since MusicBrainz publishes no popularity figure. */
+  readonly releaseCount: number;
+  /** Full ISRC count, before `isrcs` is trimmed for display. */
+  readonly isrcCount: number;
 }
 
 const TAGS_MAX = 5;
@@ -148,6 +153,8 @@ export function mapMusicBrainzRecordings(payload: unknown): ExternalSongHit[] {
           : null,
       tags: topTagNames(recording.tags),
       isrcs: (recording.isrcs ?? []).slice(0, ISRCS_MAX),
+      releaseCount: recording.releases?.length ?? 0,
+      isrcCount: (recording.isrcs ?? []).length,
     });
   }
   return hits;

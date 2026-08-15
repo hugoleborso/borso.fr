@@ -1,7 +1,7 @@
 /**
  * ChordPro renderer. Pure-output wrapper around `parseChordPro` +
- * `transposeLines` — every layout decision is in Tailwind utility
- * classes on the rendered tokens.
+ * `transposeLines` + `groupChordProSections` — every layout decision is in
+ * Tailwind utility classes on the rendered tokens.
  *
  * The viewer is used in two surfaces:
  *  - inline preview on `/catalog/:songId` (compact, no controls);
@@ -10,6 +10,10 @@
  *
  * The transposition state lives in the parent (the stage view page
  * owns the slider; the inline preview pins semitones to 0).
+ *
+ * Lines are grouped into the verse / chorus / bridge blocks a reader scans
+ * for mid-song, so a marked block carries a heading instead of the empty
+ * paragraph a bare `{start_of_chorus}` used to render as.
  *
  * Two things the phone forced, both of which the desktop never showed:
  *
@@ -27,10 +31,17 @@
  */
 
 import { useMemo } from 'react';
-import { isTitleDirective, parseChordPro, transposeLines } from '../../lib/chordpro.utils';
+import {
+  type ChordProLine,
+  groupChordProSections,
+  hasSectionHeading,
+  isTitleDirective,
+  parseChordPro,
+  transposeLines,
+} from '../../lib/chordpro.utils';
+import type { ChordChartTone } from '../atoms/chart-tone';
+import { ChordProSectionHeading } from '../molecules/ChordProSectionHeading';
 import { composeClassName } from '../atoms/class-name.utils';
-
-export type ChordChartTone = 'light' | 'dark';
 
 interface ChordChartViewerProps {
   readonly source: string;
@@ -66,6 +77,65 @@ const SIZE_CLASS_BY_DENSITY = {
 
 const WRAPPED_LINE_CLASS = 'whitespace-pre-wrap break-words pl-6 -indent-6';
 
+function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.Element {
+  if (line.kind === 'blank') return <div key={key} className="h-4" />;
+  if (line.kind === 'directive' && isTitleDirective(line.name)) {
+    return (
+      <h3
+        key={key}
+        className={composeClassName(
+          'font-display italic text-2xl m-0 mb-2 not-prose',
+          TITLE_CLASS_BY_TONE[tone],
+        )}
+      >
+        {line.value}
+      </h3>
+    );
+  }
+  if (line.kind === 'directive') {
+    return (
+      <p
+        key={key}
+        className={composeClassName('italic text-xs m-0', DIRECTIVE_CLASS_BY_TONE[tone])}
+      >
+        {line.value}
+      </p>
+    );
+  }
+  if (line.kind === 'plain-line') {
+    return (
+      <p
+        key={key}
+        className={composeClassName('m-0', WRAPPED_LINE_CLASS, LYRIC_CLASS_BY_TONE[tone])}
+      >
+        {line.text}
+      </p>
+    );
+  }
+  return (
+    <div key={key} className={WRAPPED_LINE_CLASS}>
+      {line.tokens.map((token, tokenIndex) => {
+        const tokenKey = `${key}-token-${tokenIndex}`;
+        if (token.kind === 'chord') {
+          return (
+            <span
+              key={tokenKey}
+              className={composeClassName('font-semibold', CHORD_CLASS_BY_TONE[tone])}
+            >
+              [{token.chord}]
+            </span>
+          );
+        }
+        return (
+          <span key={tokenKey} className={LYRIC_CLASS_BY_TONE[tone]}>
+            {token.text}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 // @FollowsBlueprint organism-presentational
 export function ChordChartViewer({
   source,
@@ -75,6 +145,7 @@ export function ChordChartViewer({
 }: ChordChartViewerProps): JSX.Element {
   const lines = useMemo(() => parseChordPro(source), [source]);
   const transposed = useMemo(() => transposeLines(lines, semitones), [lines, semitones]);
+  const sections = useMemo(() => groupChordProSections(transposed), [transposed]);
   return (
     <div
       className={composeClassName(
@@ -83,63 +154,25 @@ export function ChordChartViewer({
         SIZE_CLASS_BY_DENSITY[compact ? 'compact' : 'roomy'],
       )}
     >
-      {transposed.map((line, index) => {
-        const key = `chord-line-${index}`;
-        if (line.kind === 'blank') return <div key={key} className="h-4" />;
-        if (line.kind === 'directive' && isTitleDirective(line.name)) {
-          return (
-            <h3
-              key={key}
-              className={composeClassName(
-                'font-display italic text-2xl m-0 mb-2 not-prose',
-                TITLE_CLASS_BY_TONE[tone],
-              )}
-            >
-              {line.value}
-            </h3>
-          );
-        }
-        if (line.kind === 'directive') {
-          return (
-            <p
-              key={key}
-              className={composeClassName('italic text-xs m-0', DIRECTIVE_CLASS_BY_TONE[tone])}
-            >
-              {line.value}
-            </p>
-          );
-        }
-        if (line.kind === 'plain-line') {
-          return (
-            <p
-              key={key}
-              className={composeClassName('m-0', WRAPPED_LINE_CLASS, LYRIC_CLASS_BY_TONE[tone])}
-            >
-              {line.text}
-            </p>
-          );
-        }
+      {sections.map((section, sectionIndex) => {
+        const sectionKey = `chord-section-${sectionIndex}`;
+        const hasHeading = hasSectionHeading(section);
         return (
-          <div key={key} className={WRAPPED_LINE_CLASS}>
-            {line.tokens.map((token, tokenIndex) => {
-              const tokenKey = `${key}-token-${tokenIndex}`;
-              if (token.kind === 'chord') {
-                return (
-                  <span
-                    key={tokenKey}
-                    className={composeClassName('font-semibold', CHORD_CLASS_BY_TONE[tone])}
-                  >
-                    [{token.chord}]
-                  </span>
-                );
-              }
-              return (
-                <span key={tokenKey} className={LYRIC_CLASS_BY_TONE[tone]}>
-                  {token.text}
-                </span>
-              );
-            })}
-          </div>
+          <section key={sectionKey} className="mb-5 last:mb-0">
+            {hasHeading && (
+              <div className="mb-1.5">
+                <ChordProSectionHeading
+                  kind={section.kind}
+                  label={section.label}
+                  ordinal={section.ordinal}
+                  tone={tone}
+                />
+              </div>
+            )}
+            {section.lines.map((line, lineIndex) =>
+              renderLine(line, `${sectionKey}-${lineIndex}`, tone),
+            )}
+          </section>
         );
       })}
     </div>

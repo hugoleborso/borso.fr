@@ -239,7 +239,11 @@
     "transposeDown": "Transposer plus bas",
     "zoomIn": "Agrandir",
     "zoomOut": "Réduire",
-    "noChordpro": "Aucun chord chart ChordPro attaché à ce morceau."
+    "noChordpro": "Aucun chord chart ChordPro attaché à ce morceau.",
+    "sectionVerse": "Couplet",
+    "sectionChorus": "Refrain",
+    "sectionBridge": "Pont",
+    "sectionTab": "Tablature"
   },
   "bars": {
     "title": "Bars",
