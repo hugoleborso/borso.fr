@@ -98,6 +98,10 @@ jobs:
       # workflow reports it; without the second the first commit naming the app
       # is rejected by a hook talking about an enum.
       - run: ./scripts/check-app-registration.sh
+      # One version per dependency, written in pnpm-workspace.yaml. Nothing
+      # else here reads a version field, so two workspaces drifting onto
+      # different majors passes every other gate.
+      - run: pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
       # Every `VITE_` variable a site reads is set by a workflow or written
       # down as deliberately unset, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.

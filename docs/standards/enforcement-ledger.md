@@ -50,6 +50,7 @@ every application the standard covers.
 | `borso/pure-functions-live-in-core-files` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
 | `borso/conditions-live-in-pure-functions` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
 | `borso/no-impure-calls-in-core-files` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `borso/no-adapter-import-in-pure-module` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api |
 | `unicorn/consistent-function-scoping` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
 | `vitest-coverage` | gate | yes | .github/workflows/ci.yml, .github/workflows/full-suite.yml |
 | `stryker` | gate | yes | .husky/pre-push, .github/workflows/full-suite.yml |
@@ -205,7 +206,7 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
-| `scripts/dependencies/check-dependency-catalog.ts` | script | NO | `scripts/dependencies/check-dependency-catalog.ts` exists but runs nowhere |
+| `scripts/dependencies/check-dependency-catalog.ts` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 
 ## What only a reviewer can check
 
@@ -275,6 +276,6 @@ reviews what lint cannot rather than repeating what lint already did.
 
 ## Totals
 
-- 73 claim(s) enforced by a tool
+- 75 claim(s) enforced by a tool
 - 21 claim(s) left to a reviewer
-- 2 problem(s)
+- 0 problem(s)

@@ -35,6 +35,12 @@ const WORKFLOWS_DIRECTORY = join(REPOSITORY_ROOT, '.github', 'workflows');
 const APPS_DIRECTORY = join(REPOSITORY_ROOT, 'apps');
 const OFF_SEVERITIES: ReadonlySet<unknown> = new Set(['off', 0]);
 const STANDARD_FILE_PATTERN = /^\d\d-[a-z0-9-]+\.md$/;
+/**
+ * A gate, wherever it sits under `scripts/` and in either language. Matching
+ * only `scripts/check-*.sh` let a gate written in TypeScript, or one moved into
+ * a subdirectory, run without any standard explaining it.
+ */
+const CHECK_SCRIPT_PATTERN = /^scripts\/(?:[a-z0-9-]+\/)*check-[a-z0-9-]+\.(?:sh|ts)$/;
 
 /**
  * A script that guards the conversation rather than the code, so no standard
@@ -242,7 +248,7 @@ function listOrphanMechanisms(
     if (!citedTargets.has(ruleName)) orphans.push({ kind: 'eslint', target: ruleName });
   }
   for (const file of repository.trackedFiles) {
-    if (!file.startsWith('scripts/check-') || !file.endsWith('.sh')) continue;
+    if (!CHECK_SCRIPT_PATTERN.test(file)) continue;
     if (citedTargets.has(file) || MECHANISMS_OUTSIDE_THE_STANDARDS.has(file)) continue;
     orphans.push({ kind: 'script', target: file });
   }

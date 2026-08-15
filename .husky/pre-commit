@@ -136,6 +136,13 @@ scripts/check-stylesheet-contents.sh
 echo "[pre-commit] checking each app is registered"
 scripts/check-app-registration.sh
 
+# One version per dependency, written in pnpm-workspace.yaml. Nothing else here
+# reads a version field, so two workspaces drifting onto different majors of the
+# same library passes every other gate and surfaces later as a type error in
+# whichever file sits across the seam.
+echo "[pre-commit] checking every shared dependency reads the catalog"
+pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
+
 # The enforcement ledger, whenever a standard or one of the mechanisms it can
 # cite changed. It resolves every `## Enforced by` bullet against the live
 # ESLint configuration and the checked-in hooks, so it fails on a rule cited

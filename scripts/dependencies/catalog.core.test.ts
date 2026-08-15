@@ -95,6 +95,28 @@ describe('listCatalogProblems', () => {
     ]);
   });
 
+  /**
+   * The local package and the published one share a name and nothing else, so
+   * the workspace holding the published range has nobody to disagree with.
+   */
+  it('does not let a workspace protocol range make another workspace shared', () => {
+    const manifests = [
+      buildManifest('apps/pragma', { leaflet: 'workspace:*' }),
+      buildManifest('infra/cdk', { leaflet: '^1.9.4' }),
+    ];
+    expect(findCatalogProblems(manifests, buildCatalogs({ default: {} }))).toEqual([]);
+  });
+
+  /** The catalog is for ranges, and a workspace protocol range is not one. */
+  it('does not ask a workspace protocol range to read the catalog', () => {
+    const manifests = [
+      buildManifest('apps/pragma', { vitest: 'catalog:' }),
+      buildManifest('infra/cdk', { vitest: 'catalog:' }),
+      buildManifest('infra/shared', { vitest: 'workspace:*' }),
+    ];
+    expect(findCatalogProblems(manifests, catalogs)).toEqual([]);
+  });
+
   /** A workspace dependency is the same package, not a shared external one. */
   it('does not count a workspace protocol range towards sharing', () => {
     const manifests = [

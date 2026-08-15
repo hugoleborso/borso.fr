@@ -82,6 +82,7 @@ read the rest.
 | 10     | [Testing](./10-testing.md)                              | Vitest, coverage, and mutation testing                 |
 | 11     | [Database](./11-database.md)                            | Drizzle, migrations, and transactions                  |
 | 12     | [Lint and gates](./12-linting-and-gates.md)             | ESLint, hooks, and CI                                  |
+| 13     | [Dependencies](./13-dependencies.md)                    | One version per dependency, in the pnpm catalog        |
 
 ## How a standard differs from a blueprint
 

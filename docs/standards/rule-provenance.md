@@ -25,8 +25,6 @@ page puts it in the lower half.
 - 11 came from a defect that actually happened.
 - 23 were written from principle.
 
-1 rule(s) no standard cites, which the enforcement ledger also fails on: `borso/no-adapter-import-in-pure-module`.
-
 | Rule | Written because | Recorded in |
 | --- | --- | --- |
 | `borso/no-direct-api-fetch-in-site` | a defect | [api-anchor-must-use-api-url-on-preview](../dantotsus/api-anchor-must-use-api-url-on-preview.md), [frontend-fetch-must-go-through-api-client](../dantotsus/frontend-fetch-must-go-through-api-client.md) |

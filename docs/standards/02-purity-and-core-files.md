@@ -195,6 +195,9 @@ surviving mutants under Stryker. Both checks run before a push. See
 - `eslint:borso/no-impure-calls-in-core-files` rejects `Date.now`, a zero
   argument `new Date()`, `Math.random`, `fetch`, `process.env`, `localStorage`,
   and the console methods inside a `.core.ts` or `.utils.ts` file.
+- `eslint:borso/no-adapter-import-in-pure-module` fails when a `.core.ts` or
+  `.utils.ts` imports an `.adapter.ts`. The rule above cannot catch it, because
+  it looks for `fetch` and the clock rather than for who was imported.
 - `eslint:unicorn/consistent-function-scoping` moves a function that closes over
   nothing out to module scope.
 - `gate:vitest-coverage` holds every pure file at full statement, branch,
