@@ -54,14 +54,29 @@ reality before any conclusions.
 
 Sources to walk in order, capturing each friction event as one row:
 
-- **`KAIZEN.md` (primary input).** If the task maintained a root-level
-  `KAIZEN.md` scratch file (gitignored; per CLAUDE.md's *Self-improvement
-  loop*), read it first — each bullet is a friction event already
-  captured in real time, problem-only. Map every bullet to an inventory
-  row. Many will resolve to `no-op: already eradicated by <existing
-  entry>` once cross-checked against the corpus — that cross-check is the
-  point. **`rm KAIZEN.md` once the kaizen PR is open** (it's local-only
-  scratch, not committed).
+- **`KAIZEN.md` (primary input).** `scripts/kaizen.sh show`. The file is
+  created at SessionStart and appended to by the main session *and by
+  every subagent that was told to*, one line per friction event,
+  problem-only. Map every line to an inventory row. Many will resolve to
+  `no-op: already eradicated by <existing entry>` once cross-checked
+  against the corpus — that cross-check is the point. **`rm KAIZEN.md`
+  once the kaizen PR is open** (it's local-only scratch, not committed).
+
+  An empty `KAIZEN.md` is a finding, not an absence: it means the task
+  ran without logging, so the inventory has to be rebuilt from the
+  transcript, the commits and any agent journals — expensive, and lossy
+  for whatever the subagents learned. Add an inventory row saying so.
+
+  **Read the writer, not only the line.** Every entry names who logged
+  it. One agent hitting a wall is a local problem; four agents hitting
+  the same wall is a systemic one, and the two deserve different
+  eradications — the first a fix where it happened, the second a change
+  to whatever they all read. Group the lines by writer once before
+  classifying, and put the count in the inventory row: *"three of the
+  five auditors logged this"* is the evidence that promotes a knowledge
+  entry into a gate. Entries written as `main` from a task that spawned
+  agents mean the agents were never told their label; note it, because
+  the sweep is then blind to whatever they hit.
 - **Conversation transcript.** Every interrupt-and-redirect from
   the user (*"wait, you missed X"*, *"NO, do Y"*, *"why did you
   assume Z"*, *"that doesn't work, try …"*, *"there was a lot more

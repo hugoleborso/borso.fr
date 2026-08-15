@@ -140,7 +140,23 @@ The orchestrator pipeline (`spec → adrs → plan → implement → validate �
 
 The mechanic: invoke the [`/after-task-dantotsus`](.claude/skills/after-task-dantotsus/SKILL.md) skill — it sweeps the just-merged PR (commits + review comments + CI failures + webhook events), classifies each candidate (real defect / vendor surprise / design pivot / operator confusion / no-op), and writes one Dantotsu per subject under `docs/knowledge/`. Tag the resulting PR with `kaizen` so the loop's output is visible in the PR list.
 
-**During** a non-trivial task, maintain a `KAIZEN.md` scratch file at the repo root: append each friction item as you hit it (defect, vendor surprise, repeated correction, operator confusion), one bullet, problem-only — *surface the problem, not the solution*; `/after-task-dantotsus` designs the eradication. The file is gitignored (local-only) and is the **primary input** to the sweep, alongside the PR diff + reviews + CI. The skill `rm`s it once the kaizen PR is open. If the sweep finds nothing worth capturing, the PR still opens with a "no setup changes from PR #N" note — the loop's existence is what matters.
+**During** a non-trivial task, log friction as you hit it:
+
+```bash
+scripts/kaizen.sh "blueprint generators fail from an app dir, and the error names a path that never existed"
+```
+
+One line per event — a defect, a vendor surprise, a correction you were given twice, a tool that failed in a way that named the wrong problem. **The problem only, never the fix:** `/after-task-dantotsus` designs the eradication, and a solution written in the moment is the one you already thought of.
+
+`KAIZEN.md` is created empty at SessionStart and is gitignored, so there is nothing to remember and nothing to clean up; the sweep removes it once the kaizen PR is open. It is the **primary input** to that sweep, alongside the PR diff, reviews and CI.
+
+**Subagents log here too, and this is the half that matters.** A workflow round runs a dozen agents that each hit friction and report it in a return value nobody keeps — PR #50 ran 22 and kept none of it, so its inventory had to be rebuilt from the transcript and 22 agent journals. When you write a subagent or workflow prompt, include the line:
+
+> log any friction as you hit it: `scripts/kaizen.sh --from <your-label> "<one sentence>"`
+
+giving each agent the label it should use. Nothing in the environment identifies a subagent, so an agent that is not told its name writes as `main` and the sweep cannot tell one agent struggling from four agents hitting the same wall — which is the difference between a local problem and a systemic one. Concurrent writers are safe; every entry is one atomic append.
+
+If the sweep finds nothing worth capturing, the PR still opens with a "no setup changes from PR #N" note — the loop's existence is what matters.
 
 What counts as a "lesson":
 - A pitfall that bit you and would bite again — add a new file under [`docs/knowledge/`](./docs/knowledge/) using the Dantotsu template (Symptom → causal chain → Fix), and link it from the index.
