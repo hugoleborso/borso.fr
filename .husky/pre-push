@@ -101,6 +101,14 @@ if echo "$changed" | grep -q '^infra/shared/'; then
   start_gate infra-shared pnpm --filter @borso/shared-infra test:coverage
 fi
 
+# The repository's own tooling, held to the bar it holds the applications to.
+# The mutation loop below iterates `apps/*` and the root is not one of them, so
+# a generator that decides whether a standard is enforced reached full coverage
+# and was never mutated. The suite is 13 s whole, so it needs no `--changed`.
+if echo "$changed" | grep -qE '^(scripts|eslint-rules)/'; then
+  start_gate tooling pnpm run test:coverage
+fi
+
 # Only the tests this push affects. `--changed <base>` walks Vitest's module
 # graph, so it selects the test files that changed AND the test files that
 # import a source file that changed, however deep the chain. Measured on
@@ -174,6 +182,19 @@ if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
     start_gate "mutation-$app" \
       pnpm --filter "@borso-app/$app" exec stryker run --mutate "$mutate_glob"
   done
+
+  # The same scoping for the root workspace, whose gated files are the pure
+  # modules under scripts/. Same two `--mutate` rules as above.
+  tooling_files=$(echo "$changed" |
+    sed -E 's/\.(core|utils)\.test\.ts$/.\1.ts/' |
+    grep -E '^scripts/.*\.(core|utils)\.ts$' |
+    while read -r gated; do [ -n "$gated" ] && [ -f "$gated" ] && echo "$gated"; done |
+    sort -u || true)
+  if [ -n "$tooling_files" ]; then
+    echo "[pre-push] tooling: mutating $(echo "$tooling_files" | grep -c .) changed gated file(s)"
+    start_gate mutation-tooling \
+      pnpm exec stryker run --mutate "$(echo "$tooling_files" | paste -sd, -)"
+  fi
 fi
 
 # One wait for the whole wave — knip, the infra suites, every app's affected

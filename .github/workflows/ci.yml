@@ -80,8 +80,11 @@ jobs:
       # copy. Guarded by scripts/check-coupled-lists.sh.
       - run: pnpm run format:check
       # The custom ESLint rules under eslint-rules/ each ship a RuleTester
-      # suite. A rule that misfires costs more than the rule saves.
-      - run: pnpm run test:eslint-rules
+      # suite, and the generators under scripts/ carry the same 100% per-file
+      # coverage threshold an application's pure modules do. `test:eslint-rules`
+      # ran the suite without `--coverage`, so the threshold in
+      # `vitest.config.ts` was declared and never applied to anything.
+      - run: pnpm run test:coverage
       # DSQL-compat scan on every migration SQL file. Mirrors the
       # pre-commit hook so a bypass via `git push --no-verify` still
       # gets caught before merge. Rung-2 eradication (paired with the
