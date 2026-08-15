@@ -1,20 +1,11 @@
 /**
- * Service layer for songs. The external-search method (MusicBrainz
- * proxy) keeps two in-execution-context guards: a 60s response cache
- * keyed by the lowercased query and a 1 req/sec floor between
- * outbound calls. Both reset on Lambda cold start, which is fine —
- * MusicBrainz' rate limit is per-IP and the cache only softens load
- * for a warm instance.
+ * Service layer for songs. The MusicBrainz search it re-exports lives in
+ * `musicbrainz.adapter.ts`, which is where ADR-0012 puts an outbound call.
  */
 
 import type { z } from 'zod';
-import {
-  type ExternalSearchCacheEntry,
-  expiredSearchCacheKeys,
-  type ExternalSongHit,
-  mapMusicBrainzRecordings,
-} from './musicbrainz.core';
-import { rankExternalHits } from './search-ranking.core';
+import type { ExternalSongHit } from './musicbrainz.core';
+import { searchExternal, type SearchExternalOptions } from './musicbrainz.adapter';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteSongWithCascade,
@@ -79,76 +70,14 @@ export async function removeSong(id: string): Promise<DeletionOutcome> {
   return await deleteSongWithCascade(id);
 }
 
-const MUSICBRAINZ_BASE_URL = 'https://musicbrainz.org/ws/2/recording/';
-const MUSICBRAINZ_USER_AGENT = 'Pragma/1.0 (https://pragma.borso.fr)';
-const EXTERNAL_SEARCH_CACHE_TTL_MS = 60_000;
-const EXTERNAL_SEARCH_MIN_INTERVAL_MS = 1_000;
-// Wide enough that the original survives the noise a free-text query
-// pulls in; `rankExternalHits` is what narrows it back down.
-const EXTERNAL_SEARCH_LIMIT = 25;
-// MusicBrainz' default Lucene parser reads a search box entry as a strict
-// field query and misses the recording entirely; dismax is its forgiving
-// parser, built for exactly this input.
-const EXTERNAL_SEARCH_PARSER = 'dismax=true';
-
-export type ExternalFetcher = (url: string, init: RequestInit) => Promise<Response>;
-
-interface ExternalSearchState {
-  readonly cache: Map<string, ExternalSearchCacheEntry>;
-  lastCallAt: number;
-}
-
-const externalSearchState: ExternalSearchState = {
-  cache: new Map(),
-  lastCallAt: 0,
-};
-
-function evictExpired(state: ExternalSearchState, now: number): void {
-  for (const cacheKey of expiredSearchCacheKeys(state.cache, now)) {
-    state.cache.delete(cacheKey);
-  }
-}
-
-async function waitForRateSlot(state: ExternalSearchState, now: () => number): Promise<void> {
-  const elapsed = now() - state.lastCallAt;
-  if (elapsed >= EXTERNAL_SEARCH_MIN_INTERVAL_MS) return;
-  const waitMs = EXTERNAL_SEARCH_MIN_INTERVAL_MS - elapsed;
-  await new Promise<void>((resolve) => {
-    setTimeout(resolve, waitMs);
-  });
-}
-
-export interface SearchExternalOptions {
-  readonly fetcher?: ExternalFetcher;
-  readonly now?: () => number;
-  readonly state?: ExternalSearchState;
-}
-
 /**
- * @DependsOnExternal musicbrainz
+ * The catalogue's external lookup. A one-line delegation on purpose: the
+ * controller calls the service, the service calls the adapter, and the network
+ * stays in the one file ADR-0012 allows it in.
  */
-export async function searchExternal(
+export async function searchExternalSongs(
   query: string,
   options: SearchExternalOptions = {},
 ): Promise<ExternalSongHit[]> {
-  const trimmed = query.trim();
-  if (trimmed.length === 0) return [];
-  const state = options.state ?? externalSearchState;
-  const now = options.now ?? Date.now;
-  const fetcher = options.fetcher ?? fetch;
-  const cacheKey = trimmed.toLowerCase();
-  evictExpired(state, now());
-  const cached = state.cache.get(cacheKey);
-  if (cached !== undefined) return cached.value;
-  await waitForRateSlot(state, now);
-  state.lastCallAt = now();
-  const url = `${MUSICBRAINZ_BASE_URL}?query=${encodeURIComponent(trimmed)}&fmt=json&limit=${EXTERNAL_SEARCH_LIMIT}&${EXTERNAL_SEARCH_PARSER}&inc=tags+releases+isrcs`;
-  const response = await fetcher(url, {
-    headers: { 'User-Agent': MUSICBRAINZ_USER_AGENT, Accept: 'application/json' },
-  });
-  if (!response.ok) return [];
-  const body: unknown = await response.json();
-  const hits = rankExternalHits(mapMusicBrainzRecordings(body), trimmed);
-  state.cache.set(cacheKey, { value: [...hits], expiresAt: now() + EXTERNAL_SEARCH_CACHE_TTL_MS });
-  return [...hits];
+  return await searchExternal(query, options);
 }

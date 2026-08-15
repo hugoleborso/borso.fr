@@ -40,7 +40,7 @@ follow it yet, is in [`install.md`](./install.md). Suffixes beyond the ones in
 | `.queries.ts`  | TanStack Query keys and hooks for one bounded context         |
 | `.hook.ts`     | A React hook that is not a component                          |
 | `.store.ts`    | Module-level state a component subscribes to                  |
-| `.adapter.ts`  | The boundary module talking to a browser or storage API       |
+| `.adapter.ts`  | The only place an outbound call may live (ADR-0012)           |
 | `.client.ts`   | The typed client for an API this repository owns              |
 | `.setup.ts`    | Boot-time wiring, run once for its side effect                |
 | `.variants.ts` | A `cva` variant table for one component                       |

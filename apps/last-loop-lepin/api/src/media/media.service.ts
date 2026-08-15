@@ -1,7 +1,7 @@
-import { createPresignedUpload, type PresignedUpload } from './media.s3';
+import { createPresignedUpload, type PresignedUpload } from './media.adapter';
 
 // @FollowsBlueprint service-facade-reexport
-export { MediaConfigError, MediaContentTypeError } from './media.s3';
+export { MediaConfigError, MediaContentTypeError } from './media.adapter';
 
 export interface PresignAdminInput {
   readonly editionSlug: string;

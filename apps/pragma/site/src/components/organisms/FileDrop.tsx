@@ -20,6 +20,7 @@ import {
   validateChartFile,
 } from '../molecules/file-drop.utils';
 import { FileDropZone } from '../molecules/FileDropZone';
+import { hasSentFileToPresignedUrl } from '../../lib/object-upload.adapter';
 
 export interface FileDropResult {
   readonly kind: FileDropChartKind;
@@ -59,12 +60,8 @@ export function FileDrop({
         contentLength: file.size,
         ...(songId === undefined ? {} : { songId }),
       });
-      const putResponse = await fetch(signed.uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      });
-      if (!putResponse.ok) {
+      const hasSent = await hasSentFileToPresignedUrl(signed.uploadUrl, file);
+      if (!hasSent) {
         setError(t('catalog.uploadFailed'));
         return;
       }

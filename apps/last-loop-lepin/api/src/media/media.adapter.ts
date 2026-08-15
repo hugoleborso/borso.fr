@@ -1,3 +1,11 @@
+/**
+ * The media context's way out of the process, and the only file in it that
+ * reaches S3. Per ADR-0012 an outbound call lives in an `.adapter.ts` and
+ * nowhere else.
+ *
+ * @DependsOnExternal aws-s3
+ */
+
 import { randomUUID } from 'node:crypto';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';

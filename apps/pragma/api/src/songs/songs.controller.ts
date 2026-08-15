@@ -17,7 +17,7 @@ import {
   getSongs,
   patchSong,
   removeSong,
-  searchExternal,
+  searchExternalSongs,
 } from './songs.service';
 
 /**
@@ -35,7 +35,7 @@ export function buildSongsRouter() {
     })
     .get('/search', zValidator('query', externalSearchQuerySchema), async (context) => {
       const { q } = context.req.valid('query');
-      const hits = await searchExternal(q);
+      const hits = await searchExternalSongs(q);
       return context.json({ hits });
     })
     .get('/:id', zValidator('param', songIdParamSchema), async (context) => {

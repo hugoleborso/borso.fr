@@ -232,6 +232,17 @@ export default tseslint.config(
     },
   },
 
+  // ADR-0012: an outbound call lives in a `<domain>.adapter.ts`. Both sides of
+  // an application, because a browser fetching a presigned URL and a Lambda
+  // calling a web service are the same kind of edge on the same map.
+  {
+    files: ['apps/*/api/src/**/*.ts', 'apps/*/site/src/**/*.{ts,tsx}'],
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/no-outbound-call-outside-adapter': 'error',
+    },
+  },
+
   // Back end rules from standards 04 and 11. Scoped to `api/src`, because a
   // controller, a repository and a raw SQL tag only mean something there.
   {
@@ -353,8 +364,7 @@ export default tseslint.config(
   {
     files: [
       'apps/*/api/src/database/client.ts',
-      'apps/*/api/src/**/*.s3.ts',
-      'apps/*/api/src/uploads/uploads.repository.ts',
+      'apps/*/api/src/**/*.adapter.ts',
       'apps/*/site/src/*-store.ts',
       'apps/*/site/src/**/*.store.ts',
       'apps/*/test/**/*.ts',

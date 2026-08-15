@@ -12,6 +12,7 @@ import { usePresignRunnerPhoto } from '../../lib/queries/runners';
 import { listPresent } from '../../lib/optional.utils';
 import { readPhotoContentType, selectPhotoRejection } from './runner-form.core';
 import { RunnerPhotoRejectedError, RunnerPhotoUploadFailedError } from './runner-photo.errors';
+import { sendFileToPresignedUrl } from '../../lib/object-upload.adapter';
 
 export interface RunnerPhotoUpload {
   readonly isPending: boolean;
@@ -33,12 +34,8 @@ export function useRunnerPhotoUpload(editionSlug: string): RunnerPhotoUpload {
       const contentType = readPhotoContentType(picked.type);
       if (contentType === null) throw new RunnerPhotoRejectedError('unsupported-type', picked.type);
       const target = await presign.mutateAsync({ editionSlug, runnerSlug, contentType });
-      const uploaded = await fetch(target.uploadUrl, {
-        method: 'PUT',
-        headers: { 'content-type': contentType },
-        body: picked,
-      });
-      if (!uploaded.ok) throw new RunnerPhotoUploadFailedError(uploaded.status);
+      const failureStatus = await sendFileToPresignedUrl(target.uploadUrl, picked, contentType);
+      if (failureStatus !== null) throw new RunnerPhotoUploadFailedError(failureStatus);
       objectKey = target.objectKey;
     }
     return objectKey;

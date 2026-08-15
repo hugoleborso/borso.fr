@@ -24,10 +24,19 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 112
+      "fileCount": 113
     }
   ],
-  "externals": [],
+  "externals": [
+    {
+      "id": "aws-s3",
+      "name": "Amazon S3",
+      "reachedFrom": [
+        "apps/last-loop-lepin/api/src/media/media.adapter.ts",
+        "apps/last-loop-lepin/site/src/lib/object-upload.adapter.ts"
+      ]
+    }
+  ],
   "files": [
     {
       "path": "apps/last-loop-lepin/api/src/__test/test-seed.controller.ts",
@@ -541,6 +550,28 @@
       "followsBlueprints": []
     },
     {
+      "path": "apps/last-loop-lepin/api/src/media/media.adapter.ts",
+      "container": "api",
+      "layer": "adapter",
+      "context": "media",
+      "feature": null,
+      "exports": [
+        "MediaConfigError",
+        "MediaContentTypeError",
+        "createPresignedUpload"
+      ],
+      "imports": [
+        "apps/last-loop-lepin/api/src/media/media.core.ts"
+      ],
+      "blueprints": [
+        "external-service-adapter"
+      ],
+      "followsBlueprints": [
+        "named-domain-error",
+        "named-domain-error"
+      ]
+    },
+    {
       "path": "apps/last-loop-lepin/api/src/media/media.controller.ts",
       "container": "api",
       "layer": "controller",
@@ -575,28 +606,6 @@
       ]
     },
     {
-      "path": "apps/last-loop-lepin/api/src/media/media.s3.ts",
-      "container": "api",
-      "layer": "unknown",
-      "context": "media",
-      "feature": null,
-      "exports": [
-        "MediaConfigError",
-        "MediaContentTypeError",
-        "createPresignedUpload"
-      ],
-      "imports": [
-        "apps/last-loop-lepin/api/src/media/media.core.ts"
-      ],
-      "blueprints": [
-        "external-service-adapter"
-      ],
-      "followsBlueprints": [
-        "named-domain-error",
-        "named-domain-error"
-      ]
-    },
-    {
       "path": "apps/last-loop-lepin/api/src/media/media.schema.ts",
       "container": "api",
       "layer": "schema",
@@ -621,7 +630,7 @@
         "presignRunnerPhotoUpload"
       ],
       "imports": [
-        "apps/last-loop-lepin/api/src/media/media.s3.ts"
+        "apps/last-loop-lepin/api/src/media/media.adapter.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -2629,6 +2638,7 @@
       "imports": [
         "apps/last-loop-lepin/site/src/components/organisms/runner-form.core.ts",
         "apps/last-loop-lepin/site/src/components/organisms/runner-photo.errors.ts",
+        "apps/last-loop-lepin/site/src/lib/object-upload.adapter.ts",
         "apps/last-loop-lepin/site/src/lib/optional.utils.ts",
         "apps/last-loop-lepin/site/src/lib/queries/runners.ts"
       ],
@@ -2888,6 +2898,21 @@
       "blueprints": [],
       "followsBlueprints": [
         "external-store-module"
+      ]
+    },
+    {
+      "path": "apps/last-loop-lepin/site/src/lib/object-upload.adapter.ts",
+      "container": "site",
+      "layer": "adapter",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "sendFileToPresignedUrl"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "adapter-direct-upload"
       ]
     },
     {
@@ -3680,12 +3705,14 @@
         "schema:presignInputSchema",
         "core:PHOTO_CONTENT_TYPES",
         "service:presignRunnerPhotoUpload",
-        "unknown:createPresignedUpload",
+        "adapter:createPresignedUpload",
         "core:ALLOWED_PHOTO_CONTENT_TYPES",
         "core:fileExtensionForContentType"
       ],
       "tables": [],
-      "externals": [],
+      "externals": [
+        "aws-s3"
+      ],
       "callerCount": 0,
       "unreached": true
     },
@@ -3844,6 +3871,11 @@
   ],
   "blueprints": [
     {
+      "id": "adapter-direct-upload",
+      "file": "apps/pragma/site/src/lib/object-upload.adapter.ts",
+      "followerCount": 1
+    },
+    {
       "id": "api-composition-root",
       "file": "apps/pragma/api/src/app.ts",
       "followerCount": 1
@@ -3995,7 +4027,7 @@
     },
     {
       "id": "external-service-adapter",
-      "file": "apps/last-loop-lepin/api/src/media/media.s3.ts",
+      "file": "apps/last-loop-lepin/api/src/media/media.adapter.ts",
       "followerCount": 0
     },
     {

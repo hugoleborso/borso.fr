@@ -4,7 +4,7 @@
     {
       "id": "api",
       "name": "HTTP API",
-      "fileCount": 62
+      "fileCount": 63
     },
     {
       "id": "database",
@@ -29,7 +29,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 174
+      "fileCount": 175
     },
     {
       "id": "uploads-bucket",
@@ -49,7 +49,8 @@
       "id": "aws-s3",
       "name": "Amazon S3",
       "reachedFrom": [
-        "apps/pragma/api/src/uploads/uploads.repository.ts"
+        "apps/pragma/api/src/uploads/uploads.adapter.ts",
+        "apps/pragma/site/src/lib/object-upload.adapter.ts"
       ]
     },
     {
@@ -99,7 +100,7 @@
       "id": "musicbrainz",
       "name": "MusicBrainz",
       "reachedFrom": [
-        "apps/pragma/api/src/songs/songs.service.ts"
+        "apps/pragma/api/src/songs/musicbrainz.adapter.ts"
       ]
     },
     {
@@ -1113,6 +1114,23 @@
       ]
     },
     {
+      "path": "apps/pragma/api/src/songs/musicbrainz.adapter.ts",
+      "container": "api",
+      "layer": "adapter",
+      "context": "songs",
+      "feature": null,
+      "exports": [
+        "searchExternal"
+      ],
+      "imports": [
+        "apps/pragma/api/src/songs/musicbrainz.core.ts"
+      ],
+      "blueprints": [
+        "adapter-rate-limited-fetch"
+      ],
+      "followsBlueprints": []
+    },
+    {
       "path": "apps/pragma/api/src/songs/musicbrainz.core.ts",
       "container": "api",
       "layer": "core",
@@ -1217,10 +1235,11 @@
         "getSongs",
         "patchSong",
         "removeSong",
-        "searchExternal"
+        "searchExternalSongs"
       ],
       "imports": [
         "apps/pragma/api/src/helpers/persistence/deletion.core.ts",
+        "apps/pragma/api/src/songs/musicbrainz.adapter.ts",
         "apps/pragma/api/src/songs/musicbrainz.core.ts",
         "apps/pragma/api/src/songs/songs.repository.ts",
         "apps/pragma/api/src/songs/songs.schema.ts"
@@ -1311,6 +1330,23 @@
       ]
     },
     {
+      "path": "apps/pragma/api/src/uploads/uploads.adapter.ts",
+      "container": "api",
+      "layer": "adapter",
+      "context": "uploads",
+      "feature": null,
+      "exports": [
+        "UploadsConfigError",
+        "presignGetObject",
+        "presignPutObject"
+      ],
+      "imports": [],
+      "blueprints": [
+        "adapter-external-service"
+      ],
+      "followsBlueprints": []
+    },
+    {
       "path": "apps/pragma/api/src/uploads/uploads.controller.ts",
       "container": "api",
       "layer": "controller",
@@ -1349,23 +1385,6 @@
       ]
     },
     {
-      "path": "apps/pragma/api/src/uploads/uploads.repository.ts",
-      "container": "api",
-      "layer": "repository",
-      "context": "uploads",
-      "feature": null,
-      "exports": [
-        "UploadsConfigError",
-        "presignGetObject",
-        "presignPutObject"
-      ],
-      "imports": [],
-      "blueprints": [
-        "repository-external-service"
-      ],
-      "followsBlueprints": []
-    },
-    {
       "path": "apps/pragma/api/src/uploads/uploads.schema.ts",
       "container": "api",
       "layer": "schema",
@@ -1394,8 +1413,8 @@
         "mintChartUpload"
       ],
       "imports": [
+        "apps/pragma/api/src/uploads/uploads.adapter.ts",
         "apps/pragma/api/src/uploads/uploads.core.ts",
-        "apps/pragma/api/src/uploads/uploads.repository.ts",
         "apps/pragma/api/src/uploads/uploads.types.ts",
         "apps/pragma/api/src/uploads/uploads.types.ts"
       ],
@@ -2715,6 +2734,7 @@
         "apps/pragma/site/src/components/molecules/FileDropZone.tsx",
         "apps/pragma/site/src/components/molecules/file-drop.utils.ts",
         "apps/pragma/site/src/lib/api.client.ts",
+        "apps/pragma/site/src/lib/object-upload.adapter.ts",
         "apps/pragma/site/src/lib/queries/uploads.queries.ts"
       ],
       "blueprints": [],
@@ -3487,6 +3507,21 @@
       ],
       "imports": [],
       "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/lib/object-upload.adapter.ts",
+      "container": "site",
+      "layer": "adapter",
+      "context": "lib",
+      "feature": null,
+      "exports": [
+        "hasSentFileToPresignedUrl"
+      ],
+      "imports": [],
+      "blueprints": [
+        "adapter-direct-upload"
+      ],
       "followsBlueprints": []
     },
     {
@@ -5366,7 +5401,8 @@
       "context": "songs",
       "steps": [
         "schema:externalSearchQuerySchema",
-        "service:searchExternal",
+        "service:searchExternalSongs",
+        "adapter:searchExternal",
         "core:mapMusicBrainzRecordings"
       ],
       "tables": [],
@@ -5673,7 +5709,7 @@
         "service:mintChartUpload",
         "core:buildChartObjectKey",
         "types:CHART_OBJECT_PREFIX",
-        "repository:presignPutObject",
+        "adapter:presignPutObject",
         "types:UPLOAD_URL_EXPIRES_SECONDS"
       ],
       "tables": [],
@@ -5689,7 +5725,7 @@
       "steps": [
         "schema:signGetInputSchema",
         "service:mintChartGetUrl",
-        "repository:presignGetObject",
+        "adapter:presignGetObject",
         "types:UPLOAD_URL_EXPIRES_SECONDS"
       ],
       "tables": [],
@@ -5927,6 +5963,21 @@
   ],
   "blueprints": [
     {
+      "id": "adapter-direct-upload",
+      "file": "apps/pragma/site/src/lib/object-upload.adapter.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "adapter-external-service",
+      "file": "apps/pragma/api/src/uploads/uploads.adapter.ts",
+      "followerCount": 0
+    },
+    {
+      "id": "adapter-rate-limited-fetch",
+      "file": "apps/pragma/api/src/songs/musicbrainz.adapter.ts",
+      "followerCount": 0
+    },
+    {
       "id": "api-composition-root",
       "file": "apps/pragma/api/src/app.ts",
       "followerCount": 0
@@ -6154,11 +6205,6 @@
     {
       "id": "ref-callback-browser-api",
       "file": "apps/pragma/site/src/lib/modal-dialog.adapter.ts",
-      "followerCount": 0
-    },
-    {
-      "id": "repository-external-service",
-      "file": "apps/pragma/api/src/uploads/uploads.repository.ts",
       "followerCount": 0
     },
     {

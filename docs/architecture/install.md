@@ -92,6 +92,7 @@ describe.
 | Part | Optional | Without it |
 | ---- | -------- | ---------- |
 | `@DependsOnExternal <id>` | Yes | Level 1 draws the actor and the system alone, and no third party appears anywhere |
+| An `.adapter.ts` per outbound call | Yes | The tag is the only evidence an external exists, so a `fetch` written without one makes level 1 quietly wrong (ADR-0012) |
 | `@Feature <id>` | Yes | Level 3 falls back to the folder, which mixes the granularity axis with the feature axis on the front end |
 | Blueprints | Yes | Blocks carry no pattern pill, and the Patterns tab is empty |
 | Standards documents | Yes | Nothing on the map changes; they are what makes the conventions above hold |
@@ -116,6 +117,7 @@ next agent from writing `helpers.ts` is the layer below it.
 | A pattern is copied rather than reinvented | The blueprint annotations, with `blueprint-indexing.ts --check` and `blueprint-heatmap.ts --check` in pre-commit |
 | The map matches the code | `architecture-graph.ts --check`, plus the pull-request comment saying what moved |
 | Externals are declared once | The two-way manifest cross-check above |
+| An outbound call is where the map can see it | `borso/no-outbound-call-outside-adapter`, which rejects a `fetch` or an AWS SDK client outside a `<domain>.adapter.ts` |
 | No rule is disabled quietly | `eslint-comments/require-description` plus `reportUnusedDisableDirectives`, and the disable count printed on the block itself |
 
 The ordering matters. A convention with a document and no gate lasts until the

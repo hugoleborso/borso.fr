@@ -18,6 +18,7 @@ import noFrenchIdentifiers from './no-french-identifiers.js';
 import noImpureCallsInCoreFiles from './no-impure-calls-in-core-files.js';
 import noInlineSubscribeInUseSyncExternalStore from './no-inline-subscribe-in-use-sync-external-store.js';
 import noLiteralJsxText from './no-literal-jsx-text.js';
+import noOutboundCallOutsideAdapter from './no-outbound-call-outside-adapter.js';
 import noQueryHooksOutsideOrganisms from './no-query-hooks-outside-organisms.js';
 import noRawSqlOutsideMigrations from './no-raw-sql-outside-migrations.js';
 import noServerStateInUseState from './no-server-state-in-use-state.js';
@@ -64,6 +65,7 @@ export const borsoPlugin = {
     'no-impure-calls-in-core-files': noImpureCallsInCoreFiles,
     'no-inline-subscribe-in-use-sync-external-store': noInlineSubscribeInUseSyncExternalStore,
     'no-literal-jsx-text': noLiteralJsxText,
+    'no-outbound-call-outside-adapter': noOutboundCallOutsideAdapter,
     'no-query-hooks-outside-organisms': noQueryHooksOutsideOrganisms,
     'no-raw-sql-outside-migrations': noRawSqlOutsideMigrations,
     'no-server-state-in-use-state': noServerStateInUseState,

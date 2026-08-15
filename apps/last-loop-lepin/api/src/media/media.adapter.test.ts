@@ -8,7 +8,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createPresignedUpload, MediaConfigError, MediaContentTypeError } from './media.s3';
+import { createPresignedUpload, MediaConfigError, MediaContentTypeError } from './media.adapter';
 
 const PRESERVED_ENV: Record<string, string | undefined> = {
   AWS_REGION: process.env.AWS_REGION,
@@ -17,7 +17,7 @@ const PRESERVED_ENV: Record<string, string | undefined> = {
   PHOTOS_BUCKET: process.env.PHOTOS_BUCKET,
 };
 
-describe('media.s3', () => {
+describe('media.adapter', () => {
   beforeAll(() => {
     process.env.AWS_REGION = 'eu-west-3';
     process.env.AWS_ACCESS_KEY_ID = 'AKIA-TEST';

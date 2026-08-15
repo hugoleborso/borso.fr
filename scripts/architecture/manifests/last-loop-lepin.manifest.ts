@@ -2,10 +2,9 @@
  * The hand-written half of last-loop-lepin's architecture model. Types and the
  * register of applications live in `../architecture-manifest.ts`.
  *
- * No file in this application carries a `@DependsOnExternal` tag yet, so the
- * externals list is empty: the database and the photo bucket appear as
- * containers, and level 1 draws no third party. Tagging is what puts an
- * external on the map; see `docs/architecture/install.md`.
+ * Only the S3 photo upload carries a `@DependsOnExternal` tag so far, so level 1
+ * draws that one edge and nothing else. Tagging is what puts an external on the
+ * map; see `docs/architecture/install.md`.
  */
 
 import type { ArchitectureManifest } from '../architecture-manifest';
@@ -87,5 +86,16 @@ export const lastLoopLepinManifest: ArchitectureManifest = {
       hosting: 'Runs in CI, never at runtime',
     },
   ],
-  externals: [],
+  externals: [
+    {
+      id: 'aws-s3',
+      icon: '\u{1FAA3}',
+      name: 'Amazon S3',
+      technology: 'AWS SDK, presigned PUT',
+      description:
+        'Object storage for the runner photos the official uploads, reached only through a presigned URL so no image passes through the API.',
+      boundary: 'aws',
+      realisedBy: 'photos-bucket',
+    },
+  ],
 };
