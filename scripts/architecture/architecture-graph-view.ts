@@ -871,7 +871,9 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
         ...feature.actions.map((action) => ({
           id: action.id,
           label: action.label,
-          meta: action.method + ' ' + action.path,
+          // The shell's action is an address rather than a call, so it carries
+          // no method and joining unconditionally left a leading space.
+          meta: [action.method, action.path].filter(Boolean).join(' '),
         })),
       ];
       for (const entry of entries) {
