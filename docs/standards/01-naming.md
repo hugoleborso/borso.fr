@@ -218,5 +218,10 @@ return value, and any surprising edge case.
 - `reviewer` checks that a comment documents something the code cannot say,
   and is not a restatement, a history note, or a description of what the code
   does not do.
+- `generator:scripts/standards/convention-drift.ts` reports every question the
+  tree has answered two ways — a layer whose files disagree about case style, a
+  module that exports a hook and does not say so the way its neighbours do, a
+  suffix invented once. It gates on a baseline that can only go down, so the
+  existing backlog is not a blocker and the next divergence is.
 - `reviewer` checks that a file name says what the file holds, because the
   suffix table is a convention no rule reads.

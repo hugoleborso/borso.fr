@@ -81,6 +81,10 @@ if [ -n "$staged_lintable" ]; then
   # any more, both read as fine until someone follows them.
   run_generator_check scripts/blueprints/blueprint-defects.ts
   run_generator_check .claude/skills/blueprint/blueprint-context.ts
+  # Two spellings for one idea. Gated on a baseline that only goes down, so the
+  # existing backlog never blocks a commit and the next divergence does. A git
+  # index read plus one pass over the tree, so it belongs on the commit.
+  run_generator_check scripts/standards/convention-drift.ts
   set -e
 fi
 

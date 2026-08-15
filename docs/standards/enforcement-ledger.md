@@ -36,6 +36,7 @@ This standard names no enforcement.
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
+| `scripts/standards/convention-drift.ts` | generator | NO | `scripts/standards/convention-drift.ts` is cited by this standard and does not exist |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
 ## 02. Purity and core files
@@ -259,4 +260,4 @@ reviews what lint cannot rather than repeating what lint already did.
 
 - 69 claim(s) enforced by a tool
 - 20 claim(s) left to a reviewer
-- 0 problem(s)
+- 1 problem(s)
