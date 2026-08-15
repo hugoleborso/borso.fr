@@ -2,9 +2,8 @@ import { existsSync } from 'node:fs';
 import { isGatedFile, isTestFile } from './impurity.js';
 
 /**
- * A `.core.ts`, `.utils.ts` or `.adapter.ts` file is under the coverage gate
- * and the mutation gate, and both gates are satisfied by a file that has no
- * tests at all,
+ * A `.core.ts`, `.utils.ts`, `.adapter.ts` or `.schema.ts` file is under the
+ * coverage gate, and it is satisfied by a file that has no tests at all,
  * because a file nothing imports contributes no uncovered line to a run that
  * never loads it. The missing sibling is therefore invisible until someone
  * notices the number is wrong.
@@ -19,18 +18,17 @@ import { isGatedFile, isTestFile } from './impurity.js';
  *
  * What this deliberately allows:
  *
- * - A `.core.test.ts`, `.utils.test.ts` or `.adapter.test.ts` file, which is
- *   the sibling itself.
+ * - The sibling itself, e.g. a `.core.test.ts` or an `.adapter.test.ts`.
  * - Either extension on either side, so `chart.utils.tsx` is satisfied by
  *   `chart.utils.test.ts` and by `chart.utils.test.tsx`.
- * - Any file without the three suffixes, since the gates only cover those.
+ * - Any file without the four suffixes, since the gates only cover those.
  *
  * See docs/standards/10-testing.md.
  */
 const MESSAGE =
-  'A `.core.ts`, `.utils.ts` or `.adapter.ts` file ships with a sibling `.test.ts`. The coverage ' +
-  'and mutation gates both pass a file that nothing tests, because a module no test loads reports ' +
-  'no uncovered line, so the missing suite is invisible until the number is read. ' +
+  'A `.core.ts`, `.utils.ts`, `.adapter.ts` or `.schema.ts` file ships with a sibling `.test.ts`. ' +
+  'The coverage and mutation gates both pass a file that nothing tests, because a module no test ' +
+  'loads reports no uncovered line, so the missing suite is invisible until the number is read. ' +
   'See docs/standards/10-testing.md.';
 
 const SOURCE_EXTENSION_PATTERN = /\.tsx?$/;

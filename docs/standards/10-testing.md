@@ -101,7 +101,7 @@ time.
 
 Everything else that touches the DOM, the network, React state, or any other
 side effect is out of scope for the gate, and it does not carry any of the
-three suffixes. A file that mixes pure helpers with impure code gets split
+four suffixes. A file that mixes pure helpers with impure code gets split
 rather than exempted.
 
 ### Which suffix earns a gate
@@ -179,7 +179,8 @@ e.g., a change that cannot alter behaviour, and say why on the line.
 - `vitest run --coverage`, with per-file thresholds in each `vitest.config.ts`.
 - `stryker run`, in the pre-push hook and in CI.
 - `borso/test-file-has-sibling-source`, a custom ESLint rule, which fails when
-  a `.core.ts`, `.utils.ts` or `.adapter.ts` file has no sibling test file. The
-  three suffixes are the ones the coverage and mutation gates cover, and both
-  gates pass a file nothing imports, so the missing suite is invisible in the
-  numbers until this rule names it.
+  a `.core.ts`, `.utils.ts`, `.adapter.ts` or `.schema.ts` file has no sibling
+  test file. The four suffixes are the `coverage.include` list of each
+  application's `vitest.config.ts`, and the two have to stay the same: a suffix
+  gated there and missing from the rule is a file whose missing test only the
+  coverage number notices.
