@@ -88,6 +88,33 @@ Read from 609 source file(s).
 | kebab | 40 | `apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts`, `apps/borso-fr/site/src/art/mondrian/painting.utils.ts`, `apps/borso-fr/site/src/art/mondrian/palettes.utils.ts` |
 | camel | 12 | `apps/borsouvertures/site/src/openings/bookArrows.utils.ts`, `apps/borsouvertures/site/src/openings/bookEngine.utils.ts`, `apps/borsouvertures/site/src/openings/bookTree.utils.ts` |
 
+## Does a file in borso-fr say which layer it is in?
+
+`layer-marker:borso-fr` — 15 file(s) outside the majority spelling.
+
+| Spelling | Files | For example |
+| --- | --- | --- |
+| the suffix names the layer | 53 | `apps/borso-fr/bin/app.ts`, `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts` |
+| nothing in the name says | 15 | `apps/borso-fr/site/src/12-travaux/App.tsx`, `apps/borso-fr/site/src/12-travaux/main.tsx`, `apps/borso-fr/site/src/art/mondrian/App.tsx` |
+
+## Does a file in borsouvertures say which layer it is in?
+
+`layer-marker:borsouvertures` — 12 file(s) outside the majority spelling.
+
+| Spelling | Files | For example |
+| --- | --- | --- |
+| the suffix names the layer | 89 | `apps/borsouvertures/bin/app.ts`, `apps/borsouvertures/site/src/components/atoms/BoardView.tsx`, `apps/borsouvertures/site/src/components/atoms/Button.tsx` |
+| nothing in the name says | 12 | `apps/borsouvertures/scripts/build-openings.ts`, `apps/borsouvertures/site/src/config/openingsCacheVersion.ts`, `apps/borsouvertures/site/src/lib/usePaginatedList.ts` |
+
+## Does a file in last-loop-lepin say which layer it is in?
+
+`layer-marker:last-loop-lepin` — 6 file(s) outside the majority spelling.
+
+| Spelling | Files | For example |
+| --- | --- | --- |
+| the suffix names the layer | 160 | `apps/last-loop-lepin/api/src/__test/test-seed.controller.ts`, `apps/last-loop-lepin/api/src/__test/test-seed.core.ts`, `apps/last-loop-lepin/api/src/__test/test-seed.schema.ts` |
+| nothing in the name says | 6 | `apps/last-loop-lepin/site/src/clock-store.ts`, `apps/last-loop-lepin/site/src/lib/api-error.ts`, `apps/last-loop-lepin/site/src/lib/api.ts` |
+
 ## How does a module that exports a hook say so in its name?
 
 `role-marker:hook` — 11 file(s) outside the majority spelling.

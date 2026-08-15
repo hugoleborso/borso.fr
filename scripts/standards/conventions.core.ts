@@ -88,6 +88,17 @@ export interface Divergence {
   readonly key: string;
   readonly question: string;
   readonly variants: readonly Variant[];
+  /**
+   * The variant the baseline counts, when the question has a direction.
+   *
+   * Left unset, the baseline counts everything outside the leading variant,
+   * which is right for a question where any one spelling winning is a fine
+   * outcome. It is wrong for a question where one answer is the defect: if
+   * unlayered files ever outnumbered layered ones, the majority rule would
+   * start counting the layered ones and the number would fall while the tree
+   * got worse.
+   */
+  readonly countedVariant?: string;
 }
 
 const EXAMPLES_PER_VARIANT = 3;
@@ -194,17 +205,58 @@ export function countSuffixes(facts: readonly FileFact[]): readonly Variant[] {
   return buildVariants(pathsBySuffix);
 }
 
+const LAYER_IN_THE_NAME = 'the suffix names the layer';
+const NO_LAYER_IN_THE_NAME = 'nothing in the name says';
+
+const APPLICATIONS_CONTAINER = 'apps';
+
+function readApplication(path: string): string | null {
+  const [container, application] = path.split('/');
+  return container === APPLICATIONS_CONTAINER ? (application ?? null) : null;
+}
+
+/**
+ * Per application, how many files leave their layer unsaid.
+ *
+ * Every position on the architecture map is read out of the path and the
+ * file-name suffix, so a file with no suffix the table knows sits at
+ * `unknown` and the map is that much less able to answer a question about it.
+ * The count is a budget that only goes down, which is a claim `CLAUDE.md` made
+ * for months with nothing behind it.
+ *
+ * Asked per application rather than per repository, because the four are at
+ * very different points and one number would hide a regression in the good one
+ * behind an improvement in the bad one.
+ */
+export function listLayerMarkerDivergences(facts: readonly FileFact[]): readonly Divergence[] {
+  const divergences: Divergence[] = [];
+  for (const [application, applicationFacts] of groupBy(facts, (fact) =>
+    readApplication(fact.path),
+  )) {
+    const pathsByShape = new Map<string, string[]>();
+    for (const fact of applicationFacts) {
+      const shape = fact.layer === UNGROUPABLE_LAYER ? NO_LAYER_IN_THE_NAME : LAYER_IN_THE_NAME;
+      const held = pathsByShape.get(shape) ?? [];
+      held.push(fact.path);
+      pathsByShape.set(shape, held);
+    }
+    if (!pathsByShape.has(NO_LAYER_IN_THE_NAME)) continue;
+    divergences.push({
+      key: `layer-marker:${application}`,
+      question: `Does a file in ${application} say which layer it is in?`,
+      variants: buildVariants(pathsByShape),
+      countedVariant: NO_LAYER_IN_THE_NAME,
+    });
+  }
+  return divergences;
+}
+
 export function listDivergences(facts: readonly FileFact[]): readonly Divergence[] {
-  // Stryker disable next-line MethodExpression: equivalent mutant. Both halves
-  // already arrive ordered, and every case-style key opens with `case-style:`,
-  // which sorts before the one `role-marker:hook` key the second half can
-  // produce, so no input reaches this sort out of order.
-  return [...listCaseStyleDivergences(facts), ...listHookNamingDivergences(facts)].sort(
-    // Stryker disable next-line ArrowFunction: equivalent mutant. Same reason
-    // as the line above: a comparator that ranks everything equal leaves an
-    // already ordered list in place.
-    (first, second) => first.key.localeCompare(second.key),
-  );
+  return [
+    ...listCaseStyleDivergences(facts),
+    ...listHookNamingDivergences(facts),
+    ...listLayerMarkerDivergences(facts),
+  ].sort((first, second) => first.key.localeCompare(second.key));
 }
 
 /**
@@ -212,6 +264,8 @@ export function listDivergences(facts: readonly FileFact[]): readonly Divergence
  * the majority spelling. Zero means the group agrees.
  */
 export function countMinorityFiles(divergence: Divergence): number {
+  const counted = divergence.variants.find((variant) => variant.name === divergence.countedVariant);
+  if (counted !== undefined) return counted.count;
   return divergence.variants.slice(1).reduce((total, variant) => total + variant.count, 0);
 }
 

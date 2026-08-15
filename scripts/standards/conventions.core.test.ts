@@ -6,6 +6,7 @@ import {
   listCaseStyleDivergences,
   listDivergences,
   listHookNamingDivergences,
+  listLayerMarkerDivergences,
   listRatchetFailures,
   listStaleBaselineKeys,
   readCaseStyle,
@@ -182,16 +183,78 @@ describe('countSuffixes', () => {
   });
 });
 
+describe('listLayerMarkerDivergences', () => {
+  it('counts the files whose name says no layer, per application', () => {
+    const facts = [
+      buildFact('apps/pragma/api/src/songs/songs.service.ts'),
+      buildFact('apps/pragma/api/src/songs/tonality.core.ts'),
+      buildFact('apps/pragma/site/src/clock-store.ts', { layer: 'unknown' }),
+      buildFact('apps/borso-fr/site/src/home-page.ts', { layer: 'unknown' }),
+    ];
+    const divergences = listLayerMarkerDivergences(facts);
+    expect(divergences.map((divergence) => divergence.key)).toEqual([
+      'layer-marker:pragma',
+      'layer-marker:borso-fr',
+    ]);
+    expect(divergences.map((divergence) => divergence.question)).toEqual([
+      'Does a file in pragma say which layer it is in?',
+      'Does a file in borso-fr say which layer it is in?',
+    ]);
+    expect(divergences.map(countMinorityFiles)).toEqual([1, 1]);
+  });
+
+  it('names the two answers so the report says which one is the defect', () => {
+    const facts = [
+      buildFact('apps/a/site/src/one.utils.ts'),
+      buildFact('apps/a/site/src/two.utils.ts'),
+      buildFact('apps/a/site/src/three.ts', { layer: 'unknown' }),
+    ];
+    const [divergence] = listLayerMarkerDivergences(facts);
+    expect(divergence?.variants.map((variant) => variant.name)).toEqual([
+      'the suffix names the layer',
+      'nothing in the name says',
+    ]);
+    expect(divergence?.countedVariant).toBe('nothing in the name says');
+  });
+
+  it('ignores a bare `apps` path, which names no application', () => {
+    expect(listLayerMarkerDivergences([buildFact('apps', { layer: 'unknown' })])).toEqual([]);
+  });
+
+  it('asks nothing of an application where every file names its layer', () => {
+    expect(
+      listLayerMarkerDivergences([buildFact('apps/pragma/api/src/songs/songs.service.ts')]),
+    ).toEqual([]);
+  });
+
+  it('ignores a path outside apps, which has no application to attribute it to', () => {
+    expect(
+      listLayerMarkerDivergences([buildFact('infra/cdk/src/index.ts', { layer: 'unknown' })]),
+    ).toEqual([]);
+  });
+
+  it('counts the unlayered files even when they are the majority', () => {
+    const facts = [
+      buildFact('apps/a/site/src/one.ts', { layer: 'unknown' }),
+      buildFact('apps/a/site/src/two.ts', { layer: 'unknown' }),
+      buildFact('apps/a/site/src/three.utils.ts'),
+    ];
+    expect(listLayerMarkerDivergences(facts).map(countMinorityFiles)).toEqual([2]);
+  });
+});
+
 describe('listDivergences', () => {
-  it('returns both kinds, ordered by key', () => {
+  it('returns every kind, ordered by key', () => {
     const facts = [
       buildFact('apps/a/x/one-thing.utils.ts'),
       buildFact('apps/a/x/bookArrows.utils.ts'),
       buildFact('apps/a/x/online-status.hook.ts', { exportsHook: true }),
       buildFact('apps/a/x/viewport.ts', { exportsHook: true }),
+      buildFact('apps/a/x/no-layer.ts', { layer: 'unknown' }),
     ];
     expect(listDivergences(facts).map((divergence) => divergence.key)).toEqual([
       'case-style:utils.ts',
+      'layer-marker:a',
       'role-marker:hook',
     ]);
   });
@@ -212,6 +275,32 @@ describe('countMinorityFiles', () => {
 
   it('counts nothing for a divergence with no variants', () => {
     expect(countMinorityFiles({ key: 'k', question: 'q', variants: [] })).toBe(0);
+  });
+
+  it('counts the named variant when the question has a direction', () => {
+    const divergence = {
+      key: 'k',
+      question: 'q',
+      variants: [
+        { name: 'named', count: 54, examples: [] },
+        { name: 'unnamed', count: 15, examples: [] },
+      ],
+      countedVariant: 'named',
+    };
+    expect(countMinorityFiles(divergence)).toBe(54);
+  });
+
+  it('falls back to the minority when the named variant is absent', () => {
+    const divergence = {
+      key: 'k',
+      question: 'q',
+      variants: [
+        { name: 'named', count: 54, examples: [] },
+        { name: 'unnamed', count: 15, examples: [] },
+      ],
+      countedVariant: 'gone',
+    };
+    expect(countMinorityFiles(divergence)).toBe(15);
   });
 });
 

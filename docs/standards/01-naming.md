@@ -271,7 +271,10 @@ meanings each. None of that is visible from any one file.
 - `generator:scripts/standards/convention-drift.ts` reports every question the
   tree has answered two ways — a layer whose files disagree about case style, a
   module that exports a hook and does not say so the way its neighbours do, a
-  suffix invented once. It gates on a baseline that can only go down, so the
-  existing backlog is not a blocker and the next divergence is.
+  suffix invented once, an application whose files leave their layer unsaid. It
+  gates on a baseline that can only go down, so the existing backlog is not a
+  blocker and the next divergence is. The layer question is the one with a
+  direction: the count is the files saying nothing, never the minority, so it
+  cannot fall by the tree getting worse.
 - `reviewer` checks that a file name says what the file holds, because the
   suffix table is a convention no rule reads.
