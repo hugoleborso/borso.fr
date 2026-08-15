@@ -1,14 +1,16 @@
 # Architecture diagrams
 
-[`index.html`](./index.html) lists one generated map per application, each at
-five levels, from the same generator and the same rules:
+`index.html` lists one generated map per application, each at five levels, from
+the same generator and the same rules: `pragma-architecture.html`,
+`last-loop-lepin-architecture.html`, `borsouvertures-architecture.html` and
+`borso-fr-architecture.html`.
 
-- [`pragma-architecture.html`](./pragma-architecture.html)
-- [`last-loop-lepin-architecture.html`](./last-loop-lepin-architecture.html)
-- [`borsouvertures-architecture.html`](./borsouvertures-architecture.html)
-- [`borso-fr-architecture.html`](./borso-fr-architecture.html)
+**None of them is in this repository**, which is why they are named here and not
+linked. Build them first, or open the published copy at
+[GitHub Pages](https://hugoleborso.github.io/borso.fr/), or download the
+`architecture-maps` artifact from any pull request's workflow run.
 
-Regenerate them with:
+Build them with:
 
 ```bash
 pnpm exec tsx scripts/architecture/architecture-graph.ts            # every app

@@ -114,6 +114,14 @@ markdown does not render as a link. `docs/features/` is out of scope entirely,
 because a report from May naming a file since renamed is telling the truth about
 May.
 
+The claim is settled against the git index rather than the disk, because a
+working tree is not the repository: it also holds whatever the generators last
+wrote. `docs/architecture/README.md` linked five pages that `.gitignore` covers,
+which resolved on any machine that had run the generator and failed in CI, where
+nothing had. The index gives the same answer in both, and it is the answer a
+fresh clone gets — which is the only one the reader of a link cares about. A
+generated artefact is therefore named in prose and never linked.
+
 ## Enforced by
 
 - `script:scripts/docs/check-doc-links.ts` fails a document that links a file

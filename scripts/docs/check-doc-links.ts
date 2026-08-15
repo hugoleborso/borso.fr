@@ -18,12 +18,14 @@
  * the truth about May.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { dirname, join, normalize } from 'node:path';
 import { listBrokenLinks, type BrokenLink } from './doc-links.core';
 
 const REPOSITORY_ROOT = process.cwd();
+/** `git ls-files` over this repository prints well under a megabyte. */
+const LIST_FILES_BUFFER_BYTES = 16 * 1024 * 1024;
 const HISTORICAL_PREFIX = 'docs/features/';
 
 /**
@@ -43,8 +45,45 @@ function listDocuments(): readonly string[] {
     .filter((path) => !path.endsWith(TEMPLATE_SUFFIX));
 }
 
+/**
+ * Every tracked path, plus every directory on the way to one.
+ *
+ * Read from the index rather than the disk, because a link is a claim about
+ * the repository and the working tree is not the repository: it also holds
+ * whatever the generators last wrote. `docs/architecture/README.md` linked five
+ * pages that `.gitignore` covers, which resolved on a machine that had run the
+ * generator and failed in CI, where nothing had. Asking git gives the same
+ * answer in both, and it is the answer a fresh clone gets.
+ */
+function buildTrackedPaths(): ReadonlySet<string> {
+  const tracked = new Set<string>();
+  for (const file of execFileSync('git', ['ls-files'], {
+    cwd: REPOSITORY_ROOT,
+    encoding: 'utf8',
+    maxBuffer: LIST_FILES_BUFFER_BYTES,
+  }).split('\n')) {
+    if (file.length === 0) continue;
+    tracked.add(file);
+    let directory = dirname(file);
+    while (directory !== '.') {
+      tracked.add(directory);
+      directory = dirname(directory);
+    }
+  }
+  return tracked;
+}
+
+const trackedPaths = buildTrackedPaths();
+
+const TRAILING_SEPARATOR = /\/+$/;
+
 function isPresent(documentPath: string, target: string): boolean {
-  return existsSync(join(REPOSITORY_ROOT, normalize(join(dirname(documentPath), target))));
+  // `normalize` keeps a trailing slash, and a directory is tracked under its
+  // bare name, so `../knowledge/` and `../knowledge` have to ask the same
+  // question.
+  return trackedPaths.has(
+    normalize(join(dirname(documentPath), target)).replace(TRAILING_SEPARATOR, ''),
+  );
 }
 
 const broken: BrokenLink[] = [];
