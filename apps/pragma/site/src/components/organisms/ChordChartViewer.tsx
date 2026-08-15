@@ -39,10 +39,9 @@ import {
   parseChordPro,
   transposeLines,
 } from '../../lib/chordpro.utils';
+import type { ChordChartTone } from '../atoms/chart-tone';
 import { ChordProSectionHeading } from '../molecules/ChordProSectionHeading';
 import { composeClassName } from '../atoms/class-name.utils';
-
-export type ChordChartTone = 'light' | 'dark';
 
 interface ChordChartViewerProps {
   readonly source: string;

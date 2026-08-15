@@ -10,7 +10,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { buildSectionHeading, type LabelledSectionKind } from '../../lib/chordpro.utils';
-import type { ChordChartTone } from '../organisms/ChordChartViewer';
+import type { ChordChartTone } from '../atoms/chart-tone';
 import { Badge } from '../atoms/Badge';
 
 const SECTION_LABEL_KEY = {
