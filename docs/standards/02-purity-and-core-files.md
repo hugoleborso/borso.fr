@@ -222,4 +222,9 @@ at zero over a changed-only selection. See [10. Testing](./10-testing.md).
   `**/*.{core,utils,adapter,schema}.ts`, run in CI per changed application.
 - `stryker run`, which fails the push when any mutant survives. Scoped to
   `apps/`: `infra/cdk`'s five `.utils.ts` files are coverage-gated and are not
-  mutated by any configuration.
+  mutated by any configuration. Measured 2026-08-15 by pointing Stryker at them
+  once: **90 mutants survive** at 100% coverage, which is the gap between "every
+  line ran" and "an assertion would have noticed", stated in a number. Turning
+  the gate on there is a decision about every future push touching `infra/`, and
+  about roughly forty equivalent regex-quantifier mutants that need a justified
+  disable comment each; it is not a configuration line.
