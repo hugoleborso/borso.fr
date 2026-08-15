@@ -73,8 +73,38 @@ That table also carries `key`, `mode` and `tempo`. Its key is algorithmically
 estimated and disagrees with ChoCo's human annotation on about a quarter of the
 overlap, so prefer the annotation and fall back to the estimate.
 
+## Sources that look right and are not usable
+
+**Hooktheory / TheoryTab** carries 40k pop analyses with verse and chorus
+labels, which is exactly the shape wanted. The public GitHub dump holds 490
+songs and matched nothing; the full 4.9 GB export sits behind a Google Drive
+link whose README restricts it to academic use, and both Hugging Face mirrors
+are gated.
+
+## Deriving chords from audio, and what it is worth
+
+Deezer's public search API returns a 30 second preview URL with no
+authentication, which covers 14 of 17 songs no corpus had. Chroma features,
+beat synchronous aggregation, template matching against major and minor
+triads, then a Viterbi pass whose transition cost discourages changing chord
+on every beat. `librosa` alone, no model weights.
+
+Calibrate the transition cost against songs whose grid you already hold, and do
+not trust the aggregate: a first pass scored "100% agreement" while emitting a
+single chord for the whole excerpt. Reading the sequences is what tells you
+anything.
+
+Measured against five known grids, roots come out largely right and qualities
+do not. Seventh templates over fire, so drop them. With triads only the result
+is roughly 70% of chords correct, and the variance matters more than the mean:
+Sweet Child O' Mine returns `C# B F# C#` exactly, while Valerie's horn
+arrangement returns two chords that are both wrong.
+
+That is a draft, not a transcription. Store it under a header that says so, and
+never let it overwrite a corpus transcription of the same song.
+
 ## Coverage actually reached
 
-33 of 50 songs. The 17 misses are songs released after the corpora were built
-(2023 onwards), the band's own compositions, and medleys. No source reached
-them, and a paid API would not have either.
+46 of 50 songs: 34 human transcriptions from the corpora, 12 audio drafts. The
+4 misses are two medleys, the band's own composition, and one song whose
+preview yielded too few chords to be worth writing.
