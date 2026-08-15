@@ -180,6 +180,8 @@ One line per event — a defect, a vendor surprise, a correction you were given 
 
 `KAIZEN.md` is created empty at SessionStart and is gitignored, so there is nothing to remember and nothing to clean up; the sweep removes it once the kaizen PR is open. It is the **primary input** to that sweep, alongside the PR diff, reviews and CI.
 
+**On a hosted session, archive it before you finish.** That arrangement assumes the sweep runs on the machine that logged the friction, and on claude.ai/code it does not: the container is reclaimed when the session ends and the sweep happens later in a fresh one, so a gitignored file cannot travel between them. Run `scripts/kaizen.sh archive <docs-slug>/<feature>` and commit the copy, or the sweep's primary input is the one thing it will not have. This session logged 33 entries from twelve different agents and would have lost all of them.
+
 **Subagents log here too, and this is the half that matters.** A workflow round runs a dozen agents that each hit friction and report it in a return value nobody keeps — PR #50 ran 22 and kept none of it, so its inventory had to be rebuilt from the transcript and 22 agent journals. When you write a subagent or workflow prompt, include the line:
 
 > log any friction as you hit it: `scripts/kaizen.sh --from <your-label> "<one sentence>"`
