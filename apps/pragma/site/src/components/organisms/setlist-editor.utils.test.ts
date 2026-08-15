@@ -109,19 +109,19 @@ describe('instrumentNamesFor', () => {
 
 describe('lineupOf', () => {
   it('returns the override when present', () => {
-    const result = lineupOf(
+    const lineup = lineupOf(
       { songId: 's1', lineupOverride: { m1: ['i1'] } },
       { s1: { id: 's1', title: 't', artist: 'a', defaultLineup: { m1: ['iX'] } } },
     );
-    expect(result).toEqual({ m1: ['i1'] });
+    expect(lineup).toEqual({ m1: ['i1'] });
   });
 
   it('falls back to the song default lineup when no override', () => {
-    const result = lineupOf(
+    const lineup = lineupOf(
       { songId: 's1', lineupOverride: null },
       { s1: { id: 's1', title: 't', artist: 'a', defaultLineup: { m1: ['iX'] } } },
     );
-    expect(result).toEqual({ m1: ['iX'] });
+    expect(lineup).toEqual({ m1: ['iX'] });
   });
 
   it('returns an empty record when the song is missing', () => {

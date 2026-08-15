@@ -10,12 +10,12 @@
  * temporary id on create, syncing server-defaulted fields on update).
  */
 
-import { normalizeLineup } from '@domain/lineup.core';
 import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
 import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
-import { didLastSongWriteFail } from './song-write-failure.core';
+import { buildOptimisticSong, mergeSongUpdate } from './song-cache.core';
+import { didLastSongWriteFail, selectSongThatLostItsLastWrite } from './song-write-failure.core';
 
 export const songKeys = {
   all: ['songs'] as const,
@@ -26,88 +26,10 @@ export const songKeys = {
 
 type SongsListResponse = InferResponseType<typeof api.api.songs.$get>;
 type SongByIdResponse = InferResponseType<(typeof api.api.songs)[':id']['$get']>;
-type SongRow = SongsListResponse['songs'][number];
 type SongCreateVariables = Parameters<typeof api.api.songs.$post>[0]['json'];
 type SongUpdateVariables = { id: string } & Parameters<
   (typeof api.api.songs)[':id']['$put']
 >[0]['json'];
-
-const NEW_SONG_DEFAULTS: Pick<
-  SongRow,
-  | 'artist'
-  | 'links'
-  | 'chart'
-  | 'tonalityStart'
-  | 'tonalityEnd'
-  | 'defaultLineup'
-  | 'baseEnergy'
-  | 'mbid'
-  | 'album'
-  | 'durationSeconds'
-  | 'isrcs'
-  | 'tags'
-  | 'structureNotes'
-  | 'gimmickNotes'
-  | 'notes'
-> = {
-  artist: '',
-  links: [],
-  chart: null,
-  tonalityStart: null,
-  tonalityEnd: null,
-  defaultLineup: {},
-  baseEnergy: null,
-  mbid: null,
-  album: null,
-  durationSeconds: null,
-  isrcs: [],
-  tags: [],
-  structureNotes: '',
-  gimmickNotes: '',
-  notes: '',
-};
-
-function normaliseLinks(links: SongCreateVariables['links']): SongRow['links'] {
-  if (links === undefined) return [];
-  return links.map((link) => ({
-    url: link.url,
-    provider: link.provider,
-    comment: link.comment ?? '',
-  }));
-}
-
-/**
- * A lineup travels to the API in any of the shapes the body accepts — a list
- * per member, or the single id and null the older rows carry — while a read
- * always answers with lists. The optimistic row has to look like a read, so
- * the write shape is normalised here rather than surfacing as two shapes in
- * the cache.
- */
-function normaliseLineup(lineup: SongCreateVariables['defaultLineup']): SongRow['defaultLineup'] {
-  if (lineup === undefined) return {};
-  return normalizeLineup(lineup);
-}
-
-function buildOptimisticSong(id: string, input: SongCreateVariables): SongRow {
-  const createdAt = new Date().toISOString();
-  const { links: inputLinks, defaultLineup: inputLineup, ...rest } = input;
-  return {
-    ...NEW_SONG_DEFAULTS,
-    ...rest,
-    links: normaliseLinks(inputLinks),
-    defaultLineup: normaliseLineup(inputLineup),
-    id,
-    createdAt,
-  };
-}
-
-function mergeSongUpdate(existing: SongRow, patch: Omit<SongUpdateVariables, 'id'>): SongRow {
-  const { links: patchLinks, defaultLineup: patchLineup, ...rest } = patch;
-  const merged: SongRow = { ...existing, ...rest };
-  if (patchLinks !== undefined) merged.links = normaliseLinks(patchLinks);
-  if (patchLineup !== undefined) merged.defaultLineup = normaliseLineup(patchLineup);
-  return merged;
-}
 
 /**
  * @Blueprint query-module
@@ -173,7 +95,12 @@ export function useCreateSong() {
       const temporaryId = crypto.randomUUID();
       queryClient.setQueryData<SongsListResponse>(listKey, (old) => {
         if (old === undefined) return old;
-        return { songs: [buildOptimisticSong(temporaryId, variables), ...old.songs] };
+        return {
+          songs: [
+            buildOptimisticSong(temporaryId, new Date().toISOString(), variables),
+            ...old.songs,
+          ],
+        };
       });
       return { previousList };
     },
@@ -245,14 +172,27 @@ export function useUpdateSong() {
  * can say the values it renders are the ones `onError` put back.
  */
 export function useDidLastSongWriteFail(songId: string): boolean {
-  const entries = useMutationState({
+  return didLastSongWriteFail(useSongWrites(), songId);
+}
+
+/**
+ * The song that lost its last write, for a page listing many of them. A delete
+ * is fired and the operator leaves immediately, so the catalog is where a
+ * failed one has to be reported: the row comes back on rollback, which is
+ * visible but says nothing about why.
+ */
+export function useSongThatLostItsLastWrite(): string | null {
+  return selectSongThatLostItsLastWrite(useSongWrites());
+}
+
+function useSongWrites() {
+  return useMutationState({
     filters: { mutationKey: songKeys.all },
     select: (mutation) => ({
       variables: mutation.state.variables,
       status: mutation.state.status,
     }),
   });
-  return didLastSongWriteFail(entries, songId);
 }
 
 // @FollowsBlueprint query-optimistic-mutation

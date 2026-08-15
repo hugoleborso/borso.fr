@@ -26,7 +26,7 @@ import { meanMasteryForSong } from '../../lib/mastery-aggregate.utils';
 import { useInstrumentsList } from '../../lib/queries/instruments';
 import { useMasteryDefaults } from '../../lib/queries/mastery';
 import { useMembersList } from '../../lib/queries/members';
-import { useSongsList } from '../../lib/queries/songs';
+import { useSongsList, useSongThatLostItsLastWrite } from '../../lib/queries/songs';
 import {
   buildNewSongPath,
   type CatalogStatusFilter,
@@ -64,6 +64,11 @@ export function CatalogPage(): JSX.Element {
     masteryQuery.isLoading;
 
   const songs = useMemo(() => songsQuery.data?.songs ?? [], [songsQuery.data]);
+  const failedWriteSongId = useSongThatLostItsLastWrite();
+  // A rolled-back delete puts the row back, so the title is readable again —
+  // which is what lets the banner name the song the operator just tried to
+  // remove rather than saying "something failed".
+  const songThatLostItsWrite = songs.find((song) => song.id === failedWriteSongId)?.title ?? null;
   const members = useMemo(() => membersQuery.data?.members ?? [], [membersQuery.data]);
   const instruments = useMemo(
     () => instrumentsQuery.data?.instruments ?? [],
@@ -175,6 +180,15 @@ export function CatalogPage(): JSX.Element {
       {errorMessage !== null && (
         <p className="text-danger text-sm mb-4" role="alert">
           {errorMessage}
+        </p>
+      )}
+      {songThatLostItsWrite !== null && (
+        <p
+          className="text-danger text-sm mb-4 border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
+          role="alert"
+        >
+          <Icon name="warn" size={14} />
+          {t('catalog.lastWriteFailed', { title: songThatLostItsWrite })}
         </p>
       )}
       {isLoading && <p className="text-ink-400 text-sm italic">{t('common.loading')}</p>}

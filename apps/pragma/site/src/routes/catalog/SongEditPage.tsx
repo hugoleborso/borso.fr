@@ -11,11 +11,13 @@
  * A `?title=` parameter prefills the title, which is how the catalog hands
  * over what the operator typed in the search box before finding nothing.
  *
- * An update is fired without being awaited: the caches already hold the new
- * values, so the operator reads the edited song straight away instead of
- * watching a spinner, and a write that then fails is surfaced on the song page
- * they landed on. A create is awaited, because the route it navigates to needs
- * the id only the server can issue.
+ * An update and a delete are both fired without being awaited: the caches
+ * already hold the result, so the operator reads the edited song, or the
+ * catalog without the deleted one, straight away instead of watching a
+ * spinner. Neither failure goes unreported — `useMutationState` carries it to
+ * wherever they landed, the song page for an update and the catalog for a
+ * delete. A create is awaited, because the route it navigates to needs the id
+ * only the server can issue.
  */
 
 import type { JSX } from 'react';
@@ -54,9 +56,9 @@ export function SongEditPage(): JSX.Element {
   const defaultValues = useMemo<SongDraftState>(() => {
     if (isNew) return { ...BLANK_SONG_DRAFT, title: prefilledTitle };
     if (songQuery.data?.song === undefined) return BLANK_SONG_DRAFT;
-    const parsed = singleSongSchema.safeParse({ song: songQuery.data.song });
-    if (!parsed.success) return BLANK_SONG_DRAFT;
-    return songFromApi(parsed.data.song);
+    const loadedSong = singleSongSchema.safeParse({ song: songQuery.data.song });
+    if (!loadedSong.success) return BLANK_SONG_DRAFT;
+    return songFromApi(loadedSong.data.song);
   }, [isNew, songQuery.data, prefilledTitle]);
 
   const formKey = isNew
@@ -66,14 +68,14 @@ export function SongEditPage(): JSX.Element {
   const isEditingMissingSong = !isNew && !songQuery.isLoading && songQuery.data === undefined;
 
   const saveSong = async (value: SongDraftState): Promise<void> => {
-    const payload = payloadFromDraft(value);
-    if (payload === null) return;
+    const body = payloadFromDraft(value);
+    if (body === null) return;
     try {
       if (isNew) {
-        const created = await createSong.mutateAsync(payload);
+        const created = await createSong.mutateAsync(body);
         navigateTo(`/catalog/${created.song.id}`, { replace: true });
       } else {
-        updateSong.mutate({ id: songId, ...payload });
+        updateSong.mutate({ id: songId, ...body });
         navigateTo(`/catalog/${songId}`);
       }
     } catch (error) {
@@ -81,14 +83,10 @@ export function SongEditPage(): JSX.Element {
     }
   };
 
-  const removeSong = async (): Promise<void> => {
+  const removeSong = (): void => {
     if (songId === undefined || isNew) return;
-    try {
-      await deleteSong.mutateAsync({ id: songId });
-      navigateTo('/catalog', { replace: true });
-    } catch (error) {
-      setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
-    }
+    deleteSong.mutate({ id: songId });
+    navigateTo('/catalog', { replace: true });
   };
 
   if (isLoading) {

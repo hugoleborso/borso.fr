@@ -16,7 +16,7 @@ import { Icon } from '../../components/atoms/Icon';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 
 interface SongDeleteActionProps {
-  readonly onDelete: () => Promise<void>;
+  readonly onDelete: () => void;
 }
 
 // @FollowsBlueprint organism-presentational
@@ -40,7 +40,7 @@ export function SongDeleteAction({ onDelete }: SongDeleteActionProps): JSX.Eleme
           confirmLabel={t('common.delete')}
           onConfirm={() => {
             setIsPending(false);
-            void onDelete();
+            onDelete();
           }}
           onCancel={() => setIsPending(false)}
         />

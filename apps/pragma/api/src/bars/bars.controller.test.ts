@@ -44,8 +44,8 @@ describe('bars controller (back-e2e)', () => {
         body: { name: `Bar-${status}`, status },
         cookieHeader,
       });
-      const parsed = await readJson(response, singleEnvelope);
-      expect(parsed.bar.status).toBe(status);
+      const bar = await readJson(response, singleEnvelope);
+      expect(bar.bar.status).toBe(status);
     }
     const list = await readJson(
       await jsonRequest(app, '/api/bars', { cookieHeader }),

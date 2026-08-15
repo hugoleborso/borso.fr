@@ -7,11 +7,11 @@ import {
 } from './locale-storage.utils';
 
 function createMemoryStorage(initial: Record<string, string> = {}): LanguageStorage {
-  const entries = new Map(Object.entries(initial));
+  const storedPairs = new Map(Object.entries(initial));
   return {
-    getItem: (key) => entries.get(key) ?? null,
+    getItem: (key) => storedPairs.get(key) ?? null,
     setItem: (key, value) => {
-      entries.set(key, value);
+      storedPairs.set(key, value);
     },
   };
 }

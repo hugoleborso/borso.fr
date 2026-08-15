@@ -20,8 +20,8 @@ function fakeFile(type: string, size: number): File {
 // @FollowsBlueprint test-pure-unit
 describe('validateChartFile', () => {
   it('accepts application/pdf as the pdf kind', () => {
-    const result = validateChartFile(fakeFile(ALLOWED_PDF_MIME, 1024));
-    expect(result).toEqual({ ok: true, kind: 'pdf', contentType: ALLOWED_PDF_MIME });
+    const verdict = validateChartFile(fakeFile(ALLOWED_PDF_MIME, 1024));
+    expect(verdict).toEqual({ ok: true, kind: 'pdf', contentType: ALLOWED_PDF_MIME });
   });
 
   it.each(ALLOWED_IMAGE_MIMES)('accepts %s as the image kind', (mime) => {
@@ -33,23 +33,23 @@ describe('validateChartFile', () => {
   });
 
   it('rejects an unsupported MIME', () => {
-    const result = validateChartFile(fakeFile('image/gif', 1024));
-    expect(result).toEqual({ ok: false, reason: 'unsupported-type' });
+    const verdict = validateChartFile(fakeFile('image/gif', 1024));
+    expect(verdict).toEqual({ ok: false, reason: 'unsupported-type' });
   });
 
   it('rejects an empty MIME', () => {
-    const result = validateChartFile(fakeFile('', 1024));
-    expect(result).toEqual({ ok: false, reason: 'unsupported-type' });
+    const verdict = validateChartFile(fakeFile('', 1024));
+    expect(verdict).toEqual({ ok: false, reason: 'unsupported-type' });
   });
 
   it('accepts a file sitting exactly on the ceiling', () => {
-    const result = validateChartFile(fakeFile(ALLOWED_PDF_MIME, FILE_DROP_MAX_BYTES));
-    expect(result).toEqual({ ok: true, kind: 'pdf', contentType: ALLOWED_PDF_MIME });
+    const verdict = validateChartFile(fakeFile(ALLOWED_PDF_MIME, FILE_DROP_MAX_BYTES));
+    expect(verdict).toEqual({ ok: true, kind: 'pdf', contentType: ALLOWED_PDF_MIME });
   });
 
   it('rejects files over the 10 MiB ceiling', () => {
-    const result = validateChartFile(fakeFile(ALLOWED_PDF_MIME, FILE_DROP_MAX_BYTES + 1));
-    expect(result).toEqual({ ok: false, reason: 'too-large' });
+    const verdict = validateChartFile(fakeFile(ALLOWED_PDF_MIME, FILE_DROP_MAX_BYTES + 1));
+    expect(verdict).toEqual({ ok: false, reason: 'too-large' });
   });
 });
 

@@ -97,7 +97,14 @@ Trivially-static features (no app logic) where the spec lists no behaviour to te
 5. **Walk category C** — tests pass. Identify workspaces, run their test scripts, capture results.
 6. **Walk category D** — test coverage of spec. Per use case, find a covering test. If none exists, the row is FAIL.
 7. **Write the report.** Markdown at `report_path`, format below.
-8. **Return only the report path.** Do not summarise findings.
+8. **Log your friction.** Anything that cost you time and is not a finding about the code — a gate that failed for an unrelated reason, a command that had to be run from a directory you had to discover, a convention two documents disagreed on — goes to the task's friction log, one line each, as you hit it:
+
+   ```bash
+   scripts/kaizen.sh --from technical-validator "<what went wrong, one sentence>"
+   ```
+
+   The problem only, never the fix. It is swept at merge by `/after-task-dantotsus`.
+9. **Return only the report path.** Do not summarise findings.
 
 ## Report format
 

@@ -42,9 +42,9 @@ export function formatDateTimeLocal(date: Date): string {
  */
 export function dateTimeLocalToIso(value: string): string | null {
   if (value.length < DATETIME_LOCAL_LENGTH) return null;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return parsed.toISOString();
+  const candidate = new Date(value);
+  if (Number.isNaN(candidate.getTime())) return null;
+  return candidate.toISOString();
 }
 
 /**

@@ -76,6 +76,8 @@ git.
 | `borso/no-abbreviated-identifier`                      | [01](./01-naming.md)                                       |
 | `borso/function-names-are-verb-phrases`                | [01](./01-naming.md)                                       |
 | `borso/no-french-identifiers`                          | [01](./01-naming.md)                                       |
+| `borso/no-step-named-value`                            | [01](./01-naming.md)                                       |
+| `borso/no-discarded-await-before-navigation`           | a dantotsu, [06](./06-data-fetching.md)                    |
 | `borso/no-circle-in-non-uniform-svg`                   | a dantotsu, kept from the Biome plugins                    |
 
 Six of the rules above came across from the Biome grit plugins, which are

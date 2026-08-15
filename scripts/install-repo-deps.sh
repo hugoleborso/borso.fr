@@ -203,6 +203,20 @@ find /tmp -maxdepth 1 -name 'cdk.out*' -type d -exec rm -rf {} + 2>/dev/null || 
 # docs/dantotsus/designated-branch-was-a-merged-pr-head.md.
 "$REPO_ROOT/scripts/check-branch-context.sh" || true
 
+# 9. KAIZEN.md — the friction log `/after-task-dantotsus` sweeps at merge.
+# Created empty here rather than on first use, because a file that already
+# exists gets appended to and a file somebody has to remember to create does
+# not: PR 50 maintained none, and its inventory had to be rebuilt from the
+# transcript, the commit history and 22 agent journals. Gitignored, so it never
+# reaches a commit.
+if [ ! -f "$REPO_ROOT/KAIZEN.md" ]; then
+  "$REPO_ROOT/scripts/kaizen.sh" init
+  log 'KAIZEN.md ready — log friction as you hit it: scripts/kaizen.sh "<what went wrong>"'
+else
+  kaizen_entries="$(grep -c '^- \[' "$REPO_ROOT/KAIZEN.md" || true)"
+  log "KAIZEN.md carries ${kaizen_entries:-0} entries logged earlier in this task"
+fi
+
 if [ ${#missing_optional[@]} -gt 0 ]; then
   printf '[install-repo-deps] WARN: optional tools missing: %s\n' "${missing_optional[*]}"
   printf '[install-repo-deps] WARN: re-run ./scripts/install-repo-deps.sh once the network settles.\n'

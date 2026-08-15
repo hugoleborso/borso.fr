@@ -83,11 +83,11 @@ export function lineupOf(
 
 /** The lineup without the members sitting the song out, which is what a chip row draws. */
 export function compactLineup(lineup: Lineup): Record<string, readonly string[]> {
-  const result: Record<string, readonly string[]> = {};
+  const played: Record<string, readonly string[]> = {};
   for (const [memberId, instrumentIds] of Object.entries(lineup)) {
-    if (instrumentIds.length > 0) result[memberId] = instrumentIds;
+    if (instrumentIds.length > 0) played[memberId] = instrumentIds;
   }
-  return result;
+  return played;
 }
 
 export interface ProminentMemberInstrumentResolution {

@@ -102,6 +102,11 @@ overlap, so prefer the annotation and fall back to the estimate.
 
 ## Sources that look right and are not usable
 
+Last verified: 2026-08-15 — the survey in commits `349c5a0` and `19d31bc`,
+which fetched each source named below and recorded what it answered. A source
+that is gated today may not be gated next year, so re-check before treating
+this section as a reason not to try.
+
 **Hooktheory / TheoryTab** carries 40k pop analyses with verse and chorus
 labels, which is exactly the shape wanted. The public GitHub dump holds 490
 songs and matched nothing; the full 4.9 GB export sits behind a Google Drive

@@ -28,9 +28,9 @@ export const requireSharedPasswordSession: MiddlewareHandler = async (context, n
   if (cookie === undefined) {
     return context.json({ error: 'session-required' }, 401);
   }
-  const result = verifyCookie(cookie, config.hmacKey, Date.now());
-  if (!result.ok) {
-    return context.json({ error: 'session-invalid', reason: result.reason }, 401);
+  const session = verifyCookie(cookie, config.hmacKey, Date.now());
+  if (!session.ok) {
+    return context.json({ error: 'session-invalid', reason: session.reason }, 401);
   }
   await next();
   return;

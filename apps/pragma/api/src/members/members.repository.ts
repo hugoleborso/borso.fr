@@ -132,11 +132,11 @@ async function scrubMemberFromSetlistOverrides(
   transaction: DatabaseExecutor,
   memberId: string,
 ): Promise<void> {
-  const entries = await transaction
+  const assignmentRows = await transaction
     .select({ id: setlistEntryTable.id, lineupOverride: setlistEntryTable.lineupOverride })
     .from(setlistEntryTable)
     .where(isNotNull(setlistEntryTable.lineupOverride));
-  for (const entryRow of entries) {
+  for (const entryRow of assignmentRows) {
     if (entryRow.lineupOverride === null) continue;
     const lineupRaw: unknown = JSON.parse(entryRow.lineupOverride);
     const lineup = lineupOverrideSchema.parse(lineupRaw);

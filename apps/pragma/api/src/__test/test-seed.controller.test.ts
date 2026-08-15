@@ -84,9 +84,9 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     const setlist = await findSetlistBySession(sessionId);
     expect(setlist).not.toBeNull();
     if (setlist === null) return;
-    const entries = await listEntries(setlist.id);
-    expect(entries.length).toBe(6);
-    expect(entries.every((entry) => entry.energy === null)).toBe(true);
+    const setlistEntries = await listEntries(setlist.id);
+    expect(setlistEntries.length).toBe(6);
+    expect(setlistEntries.every((entry) => entry.energy === null)).toBe(true);
   });
 
   it('bootstraps the admin password so the seeded preview is loginable', async () => {

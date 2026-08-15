@@ -49,7 +49,7 @@ interface SongEditFormProps {
   readonly songId: string | undefined;
   readonly defaultValues: SongDraftState;
   readonly onSubmit: (value: SongDraftState) => Promise<void>;
-  readonly onDelete: () => Promise<void>;
+  readonly onDelete: () => void;
   readonly newLinkUrl: string;
   readonly setNewLinkUrl: (value: string) => void;
   readonly error: string | null;
@@ -226,8 +226,8 @@ export function SongEditForm({
                 id="song-status"
                 value={field.state.value}
                 onChange={(event) => {
-                  const parsed = z.enum(songStatuses).safeParse(event.target.value);
-                  if (parsed.success) field.handleChange(parsed.data);
+                  const status = z.enum(songStatuses).safeParse(event.target.value);
+                  if (status.success) field.handleChange(status.data);
                 }}
                 onBlur={field.handleBlur}
                 className={inputVariants({ size: 'md' })}

@@ -19,9 +19,9 @@ export async function loadOpenings(): Promise<LoadOpeningsResult> {
   try {
     const response = await fetch(OPENINGS_URL, { cache: 'no-cache' });
     if (response.ok) {
-      const data: unknown = await response.json();
-      const parsed = parseOpenings(data);
-      if (parsed.length > 0) return { ok: true, openings: parsed };
+      const body: unknown = await response.json();
+      const openings = parseOpenings(body);
+      if (openings.length > 0) return { ok: true, openings };
     }
   } catch (networkError) {
     console.warn('Network openings.json fetch failed; trying bundled fallback', networkError);

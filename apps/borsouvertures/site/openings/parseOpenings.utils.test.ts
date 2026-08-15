@@ -43,9 +43,9 @@ function openingWithLineOverrides(overrides: Record<string, unknown>) {
 // @FollowsBlueprint test-pure-unit
 describe('parseOpenings', () => {
   it('parses a well-formed payload', () => {
-    const result = parseOpenings([validOpening]);
-    expect(result).toHaveLength(1);
-    expect(result[0]?.variations[0]?.lines[0]?.movesUci).toEqual(['e2e4']);
+    const openings = parseOpenings([validOpening]);
+    expect(openings).toHaveLength(1);
+    expect(openings[0]?.variations[0]?.lines[0]?.movesUci).toEqual(['e2e4']);
   });
 
   it('rejects a non-array root', () => {

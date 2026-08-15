@@ -47,27 +47,27 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
     zValidator('json', credentialsSchema),
     async (context) => {
       const { password } = context.req.valid('json');
-      const result = await attemptLogin({
+      const outcome = await attemptLogin({
         password,
         forwardedForHeader: context.req.header('x-forwarded-for'),
         bucketStore,
         now: clock(),
       });
-      if (result.kind === 'rate-limited') return context.json({ error: 'rate-limited' }, 429);
-      if (result.kind === 'not-bootstrapped') {
+      if (outcome.kind === 'rate-limited') return context.json({ error: 'rate-limited' }, 429);
+      if (outcome.kind === 'not-bootstrapped') {
         return context.json({ error: 'auth-not-bootstrapped' }, 503);
       }
-      if (result.kind === 'invalid-password') {
+      if (outcome.kind === 'invalid-password') {
         return context.json({ error: 'invalid-password' }, 401);
       }
-      setCookie(context, SESSION_COOKIE_NAME, result.cookieValue, {
+      setCookie(context, SESSION_COOKIE_NAME, outcome.cookieValue, {
         httpOnly: true,
         secure: process.env.STAGE !== 'dev',
         sameSite: 'Strict',
         maxAge: SESSION_COOKIE_MAX_AGE_S,
         path: '/',
       });
-      return context.json({ expiresAt: result.expiresAt });
+      return context.json({ expiresAt: outcome.expiresAt });
     },
   );
 
@@ -76,8 +76,8 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
     zValidator('json', credentialsSchema),
     async (context) => {
       const { password } = context.req.valid('json');
-      const result = await bootstrapAuth(password, clock());
-      if (result.kind === 'already-bootstrapped') {
+      const outcome = await bootstrapAuth(password, clock());
+      if (outcome.kind === 'already-bootstrapped') {
         return context.json({ error: 'already-bootstrapped' }, 409);
       }
       return context.json({ ok: true });
@@ -88,8 +88,8 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
     .use('*', requireSharedPasswordSession)
     .post('/rotate-password', zValidator('json', credentialsSchema), async (context) => {
       const { password } = context.req.valid('json');
-      const result = await rotatePassword(password, clock());
-      if (result.kind === 'not-bootstrapped') {
+      const outcome = await rotatePassword(password, clock());
+      if (outcome.kind === 'not-bootstrapped') {
         return context.json({ error: 'auth-not-bootstrapped' }, 503);
       }
       return context.json({ ok: true });

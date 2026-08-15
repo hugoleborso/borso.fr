@@ -227,6 +227,7 @@ export default tseslint.config(
       'borso/conditions-live-in-pure-functions': 'error',
       'borso/pure-functions-live-in-core-files': 'error',
       'borso/no-impure-calls-in-core-files': 'error',
+      'borso/no-step-named-value': 'error',
     },
   },
 
@@ -258,6 +259,7 @@ export default tseslint.config(
       'borso/no-vendor-sdk-outside-adapter': 'error',
       'borso/no-literal-jsx-text': 'error',
       'borso/no-dynamic-translation-keys': 'error',
+      'borso/no-discarded-await-before-navigation': 'error',
     },
   },
 

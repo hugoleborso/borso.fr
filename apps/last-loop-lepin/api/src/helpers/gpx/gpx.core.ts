@@ -58,8 +58,8 @@ interface RawPoint {
 
 /** Parse a string as a finite float. Returns `null` for NaN and infinities. */
 export function tryParseFloat(raw: string): number | null {
-  const parsed = Number.parseFloat(raw);
-  return Number.isFinite(parsed) ? parsed : null;
+  const asNumber = Number.parseFloat(raw);
+  return Number.isFinite(asNumber) ? asNumber : null;
 }
 
 /**

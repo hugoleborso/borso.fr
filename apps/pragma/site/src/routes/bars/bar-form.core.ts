@@ -122,6 +122,6 @@ export function selectBarFormTitleKind(initial: BarFormInitial): BarFormTitleKin
 }
 
 export function parseBarStatus(candidate: string): BarStatus | null {
-  const parsed = z.enum(BAR_STATUSES).safeParse(candidate);
-  return parsed.success ? parsed.data : null;
+  const status = z.enum(BAR_STATUSES).safeParse(candidate);
+  return status.success ? status.data : null;
 }

@@ -28,7 +28,7 @@ export function gatherCandidates(
   selection: Selection,
   playScope?: PlayScopeFilter,
 ): BookCandidate[] {
-  const results: BookCandidate[] = [];
+  const candidates: BookCandidate[] = [];
   for (const opening of openings) {
     if (
       playScope &&
@@ -67,11 +67,11 @@ export function gatherCandidates(
         if (selection.lineId !== ALL_KEY && selection.lineId && selection.lineId !== line.id) {
           continue;
         }
-        results.push({ opening, variation, line });
+        candidates.push({ opening, variation, line });
       }
     }
   }
-  return results;
+  return candidates;
 }
 
 // @FollowsBlueprint utils-pure-module

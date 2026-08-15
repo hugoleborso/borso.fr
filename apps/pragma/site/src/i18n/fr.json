@@ -150,6 +150,7 @@
     "notesGimmicksPlaceholder": "Break complet avant le dernier refrain, compté à voix haute.",
     "notesFreePlaceholder": "Tout ce que le groupe doit retenir.",
     "createSearched": "Créer « {{title}} »",
+    "lastWriteFailed": "La dernière modification de « {{title}} » n'est pas passée — le morceau est comme avant.",
     "lastSaveFailed": "Le dernier enregistrement n'est pas passé — ce que tu lis ci-dessous, c'est le morceau tel qu'il était avant la modification."
   },
   "mastery": {

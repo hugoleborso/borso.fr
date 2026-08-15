@@ -58,9 +58,9 @@ describe('toggleInstrumentHeld', () => {
 describe('toLineupPayload', () => {
   it('answers a mutable copy the request body can take', () => {
     const lineup = { ada: ['guitar'] };
-    const payload = toLineupPayload(lineup);
-    expect(payload).toEqual({ ada: ['guitar'] });
-    expect(payload.ada).not.toBe(lineup.ada);
+    const body = toLineupPayload(lineup);
+    expect(body).toEqual({ ada: ['guitar'] });
+    expect(body.ada).not.toBe(lineup.ada);
   });
 
   it('answers an empty record for no lineup at all', () => {

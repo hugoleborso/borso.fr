@@ -32,17 +32,17 @@ function buildEntry(
 describe('filterEntriesForMember', () => {
   it('returns every entry with an empty instrument map when no member is selected', () => {
     const songsById = { [ALPHA_SONG_ID]: buildSong(ALPHA_SONG_ID, { [HUGO]: [GUITAR] }) };
-    const entries = [buildEntry('e1', ALPHA_SONG_ID), buildEntry('e2', ALPHA_SONG_ID)];
-    expect(filterEntriesForMember(entries, songsById, null)).toEqual({
-      visibleEntries: entries,
+    const setlistEntries = [buildEntry('e1', ALPHA_SONG_ID), buildEntry('e2', ALPHA_SONG_ID)];
+    expect(filterEntriesForMember(setlistEntries, songsById, null)).toEqual({
+      visibleEntries: setlistEntries,
       instrumentIdsByEntryId: {},
     });
   });
 
   it('returns no entries when the selected member appears in zero lineups', () => {
     const songsById = { [ALPHA_SONG_ID]: buildSong(ALPHA_SONG_ID, { [HUGO]: [GUITAR] }) };
-    const entries = [buildEntry('e1', ALPHA_SONG_ID)];
-    expect(filterEntriesForMember(entries, songsById, PAULINE)).toEqual({
+    const setlistEntries = [buildEntry('e1', ALPHA_SONG_ID)];
+    expect(filterEntriesForMember(setlistEntries, songsById, PAULINE)).toEqual({
       visibleEntries: [],
       instrumentIdsByEntryId: {},
     });
@@ -54,13 +54,13 @@ describe('filterEntriesForMember', () => {
       [BRAVO_SONG_ID]: buildSong(BRAVO_SONG_ID, { [HUGO]: [BASS] }),
       [CHARLIE_SONG_ID]: buildSong(CHARLIE_SONG_ID, { [PAULINE]: [GUITAR], [ADRIEN]: [DRUMS] }),
     };
-    const entries = [
+    const setlistEntries = [
       buildEntry('e1', ALPHA_SONG_ID),
       buildEntry('e2', BRAVO_SONG_ID),
       buildEntry('e3', CHARLIE_SONG_ID),
     ];
-    expect(filterEntriesForMember(entries, songsById, HUGO)).toEqual({
-      visibleEntries: [entries[0], entries[1]],
+    expect(filterEntriesForMember(setlistEntries, songsById, HUGO)).toEqual({
+      visibleEntries: [setlistEntries[0], setlistEntries[1]],
       instrumentIdsByEntryId: { e1: [GUITAR], e2: [BASS] },
     });
   });
@@ -69,9 +69,9 @@ describe('filterEntriesForMember', () => {
     const songsById = {
       [ALPHA_SONG_ID]: buildSong(ALPHA_SONG_ID, { [HUGO]: [GUITAR] }),
     };
-    const entries = [buildEntry('e1', ALPHA_SONG_ID, { [HUGO]: [BASS] })];
-    expect(filterEntriesForMember(entries, songsById, HUGO)).toEqual({
-      visibleEntries: entries,
+    const setlistEntries = [buildEntry('e1', ALPHA_SONG_ID, { [HUGO]: [BASS] })];
+    expect(filterEntriesForMember(setlistEntries, songsById, HUGO)).toEqual({
+      visibleEntries: setlistEntries,
       instrumentIdsByEntryId: { e1: [BASS] },
     });
   });
@@ -80,8 +80,8 @@ describe('filterEntriesForMember', () => {
     const songsById = {
       [ALPHA_SONG_ID]: buildSong(ALPHA_SONG_ID, { [HUGO]: [DRUMS, GUITAR] }),
     };
-    const entries = [buildEntry('e1', ALPHA_SONG_ID)];
-    expect(filterEntriesForMember(entries, songsById, HUGO).instrumentIdsByEntryId).toEqual({
+    const setlistEntries = [buildEntry('e1', ALPHA_SONG_ID)];
+    expect(filterEntriesForMember(setlistEntries, songsById, HUGO).instrumentIdsByEntryId).toEqual({
       e1: [DRUMS, GUITAR],
     });
   });
@@ -90,8 +90,8 @@ describe('filterEntriesForMember', () => {
     const songsById = {
       [ALPHA_SONG_ID]: buildSong(ALPHA_SONG_ID, { [HUGO]: [GUITAR] }),
     };
-    const entries = [buildEntry('e1', ALPHA_SONG_ID, { [HUGO]: [] })];
-    expect(filterEntriesForMember(entries, songsById, HUGO)).toEqual({
+    const setlistEntries = [buildEntry('e1', ALPHA_SONG_ID, { [HUGO]: [] })];
+    expect(filterEntriesForMember(setlistEntries, songsById, HUGO)).toEqual({
       visibleEntries: [],
       instrumentIdsByEntryId: {},
     });
@@ -101,8 +101,8 @@ describe('filterEntriesForMember', () => {
     const songsById = {
       [ALPHA_SONG_ID]: buildSong(ALPHA_SONG_ID, { [HUGO]: [] }),
     };
-    const entries = [buildEntry('e1', ALPHA_SONG_ID)];
-    expect(filterEntriesForMember(entries, songsById, HUGO)).toEqual({
+    const setlistEntries = [buildEntry('e1', ALPHA_SONG_ID)];
+    expect(filterEntriesForMember(setlistEntries, songsById, HUGO)).toEqual({
       visibleEntries: [],
       instrumentIdsByEntryId: {},
     });
@@ -110,8 +110,8 @@ describe('filterEntriesForMember', () => {
 
   it('drops an entry pointing to an unknown song id', () => {
     const songsById: Record<string, SetlistEditorSong> = {};
-    const entries = [buildEntry('e1', 'orphan-song-id')];
-    expect(filterEntriesForMember(entries, songsById, HUGO)).toEqual({
+    const setlistEntries = [buildEntry('e1', 'orphan-song-id')];
+    expect(filterEntriesForMember(setlistEntries, songsById, HUGO)).toEqual({
       visibleEntries: [],
       instrumentIdsByEntryId: {},
     });

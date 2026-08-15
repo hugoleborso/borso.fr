@@ -76,7 +76,14 @@ If `agent-browser` is missing on the system, install it: `npm install -g agent-b
    - URL state — `agent-browser open <url>?seed=…&palette=…`, screenshot, `agent-browser back`, re-check.
    - `prefers-reduced-motion: reduce` — try `agent-browser set media reduce-motion` first; if unsupported, mark the row UNVERIFIABLE with a note (don't fake it).
 6. **Write the report.** Markdown at `report_path`, format below.
-7. **Return only the report path** as your final message. Do not summarise findings — the skill reads the report.
+7. **Log your friction.** Anything that cost you time and is not a finding about the app — a tool that failed in a way that named the wrong problem, a spec assertion you could not turn into a browser action, a harness limit you hit — goes to the task's friction log, one line each, as you hit it:
+
+   ```bash
+   scripts/kaizen.sh --from visual-validator "<what went wrong, one sentence>"
+   ```
+
+   The problem only, never the fix. It is swept at merge by `/after-task-dantotsus`, and a validator's friction is the kind most likely to be lost, because your report is about the app rather than about the run.
+8. **Return only the report path** as your final message. Do not summarise findings — the skill reads the report.
 
 ## Report format
 

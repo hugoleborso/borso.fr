@@ -16,16 +16,16 @@ export function buildUploadsRouter() {
     .use('*', requireSharedPasswordSession)
     .post('/sign', zValidator('json', signUploadInputSchema), async (context) => {
       const input = context.req.valid('json');
-      const result = await mintChartUpload({
+      const minted = await mintChartUpload({
         contentType: input.contentType,
         songId: input.songId,
         now: new Date(),
       });
-      return context.json(result);
+      return context.json(minted);
     })
     .post('/sign-get', zValidator('json', signGetInputSchema), async (context) => {
       const input = context.req.valid('json');
-      const result = await mintChartGetUrl({ objectKey: input.objectKey, now: new Date() });
-      return context.json(result);
+      const minted = await mintChartGetUrl({ objectKey: input.objectKey, now: new Date() });
+      return context.json(minted);
     });
 }

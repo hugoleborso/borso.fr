@@ -52,9 +52,9 @@ export interface PersistedState {
 export function parsePersistedState(raw: string): PersistedState | null {
   let record: Record<string, unknown>;
   try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!isPlainRecord(parsed)) return null;
-    record = parsed;
+    const storedValue: unknown = JSON.parse(raw);
+    if (!isPlainRecord(storedValue)) return null;
+    record = storedValue;
   } catch {
     return null;
   }
@@ -153,12 +153,12 @@ function parsePlayScope(value: unknown): PlayScope | null {
 
 function parseStringArray(value: unknown): string[] | null {
   if (!Array.isArray(value)) return null;
-  const result: string[] = [];
+  const strings: string[] = [];
   for (const entry of value) {
     if (typeof entry !== 'string') return null;
-    result.push(entry);
+    strings.push(entry);
   }
-  return result;
+  return strings;
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {

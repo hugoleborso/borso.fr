@@ -15,11 +15,11 @@ const testSeedRouter = new Hono().post(
   zValidator('query', seedFixtureSchema),
   async (context) => {
     const { fixture } = context.req.valid('query');
-    const result = await applySeedFixture(fixture, new Date());
+    const seeded = await applySeedFixture(fixture, new Date());
     return context.json({
-      fixture: result.fixture,
-      edition: result.editionSlug,
-      runners: result.runnerCount,
+      fixture: seeded.fixture,
+      edition: seeded.editionSlug,
+      runners: seeded.runnerCount,
     });
   },
 );

@@ -98,7 +98,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const [orderCopied, setOrderCopied] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const entries = useMemo(() => entriesQuery.data?.entries ?? NO_ROWS, [entriesQuery.data]);
+  const setlistEntries = useMemo(() => entriesQuery.data?.entries ?? NO_ROWS, [entriesQuery.data]);
   const songs = useMemo(() => songsQuery.data?.songs ?? NO_ROWS, [songsQuery.data]);
   const instruments = useMemo(
     () => instrumentsQuery.data?.instruments ?? NO_ROWS,
@@ -124,8 +124,9 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   );
 
   const energyValues = useMemo(
-    () => entries.map((entry) => entry.energy ?? songsById[entry.songId]?.baseEnergy ?? null),
-    [entries, songsById],
+    () =>
+      setlistEntries.map((entry) => entry.energy ?? songsById[entry.songId]?.baseEnergy ?? null),
+    [setlistEntries, songsById],
   );
 
   const meanMasteryBySongId = useMemo(() => {
@@ -148,9 +149,9 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
 
   const transitionViews = useMemo(() => {
     const views = [];
-    for (let index = 0; index < entries.length - 1; index += 1) {
-      const left = entries[index];
-      const right = entries[index + 1];
+    for (let index = 0; index < setlistEntries.length - 1; index += 1) {
+      const left = setlistEntries[index];
+      const right = setlistEntries[index + 1];
       if (left === undefined || right === undefined) continue;
       const verdict = evaluateTransition(
         lineupOf(left, songsById),
@@ -160,7 +161,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
       views.push(buildTransitionView(verdict, membersById, instrumentsById));
     }
     return views;
-  }, [entries, songsById, instrumentFamilies, membersById, instrumentsById]);
+  }, [setlistEntries, songsById, instrumentFamilies, membersById, instrumentsById]);
 
   const transitionNotesByPair = useMemo(
     () => indexTransitionComments(commentsQuery.data?.comments ?? NO_ROWS),
@@ -168,8 +169,8 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   );
 
   const filtered = useMemo(
-    () => filterEntriesForMember(entries, songsById, selectedMemberId),
-    [entries, songsById, selectedMemberId],
+    () => filterEntriesForMember(setlistEntries, songsById, selectedMemberId),
+    [setlistEntries, songsById, selectedMemberId],
   );
   const knownMemberIds = useMemo(() => new Set(members.map((member) => member.id)), [members]);
 
@@ -208,7 +209,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
 
   const copyOrderToClipboard = async (): Promise<void> => {
     try {
-      await navigator.clipboard.writeText(formatSetlistOrder(entries, songsById));
+      await navigator.clipboard.writeText(formatSetlistOrder(setlistEntries, songsById));
       setOrderCopied(true);
       window.setTimeout(() => setOrderCopied(false), COPIED_FEEDBACK_MS);
     } catch {
@@ -239,7 +240,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         <p className="text-ink-500 italic text-sm py-6 text-center">{t('lineup.emptyForMember')}</p>
       ) : (
         <SetlistEntriesList
-          entries={entries}
+          entries={setlistEntries}
           visibleEntries={visibleEntries}
           songsById={songsById}
           transitionViews={transitionViews}
@@ -259,7 +260,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
           onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
         />
       )}
-      {entries.length === 0 ? (
+      {setlistEntries.length === 0 ? (
         <p className="text-ink-500 italic text-sm py-6 text-center">{t('setlist.emptyList')}</p>
       ) : null}
       <BottomActionBar>
@@ -267,7 +268,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
           variant="ghost"
           size="sm"
           onClick={() => void copyOrderToClipboard()}
-          disabled={entries.length === 0}
+          disabled={setlistEntries.length === 0}
         >
           <Icon name={orderCopied ? 'check' : 'text'} size={14} />
           {orderCopied ? t('setlist.orderCopied') : t('setlist.copyOrder')}

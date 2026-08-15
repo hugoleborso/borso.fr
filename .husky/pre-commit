@@ -76,6 +76,12 @@ scripts/check-frontend-env-vars.sh
 echo "[pre-commit] checking each manifest names icons that ship"
 scripts/check-pwa-assets.sh
 
+# A knowledge entry saying a tool is broken steers every future agent away from
+# it and never expires on its own — two phone audits obeyed one that was wrong.
+# A grep over one directory, so it costs nothing and belongs on the commit.
+echo "[pre-commit] checking every \"does not work\" carries a date"
+scripts/check-negative-claims-are-dated.sh
+
 # A pure module whose only consumer is its own test scores 100% on the coverage
 # and mutation gates while running nowhere, and knip cannot see it because every
 # test file is a knip entry point. A git-index read plus a grep, so it costs

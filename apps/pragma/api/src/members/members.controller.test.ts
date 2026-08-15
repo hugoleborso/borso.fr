@@ -144,8 +144,8 @@ describe('members controller (back-e2e)', () => {
       cookieHeader,
     });
     expect(assignment.status).toBe(200);
-    const parsed = await readJson(assignment, assignmentResponseSchema);
-    expect(parsed.instrumentIds).toHaveLength(2);
+    const assigned = await readJson(assignment, assignmentResponseSchema);
+    expect(assigned.instrumentIds).toHaveLength(2);
 
     const list = await jsonRequest(app, `/api/members/${memberId}/instruments`, {
       cookieHeader,

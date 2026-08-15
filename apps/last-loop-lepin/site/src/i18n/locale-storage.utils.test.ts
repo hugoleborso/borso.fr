@@ -9,12 +9,12 @@ import {
 function buildStorage(initial: Record<string, string> = {}): LanguageStorage & {
   readonly entries: Map<string, string>;
 } {
-  const entries = new Map(Object.entries(initial));
+  const storedPairs = new Map(Object.entries(initial));
   return {
-    entries,
-    getItem: (key) => entries.get(key) ?? null,
+    entries: storedPairs,
+    getItem: (key) => storedPairs.get(key) ?? null,
     setItem: (key, value) => {
-      entries.set(key, value);
+      storedPairs.set(key, value);
     },
   };
 }

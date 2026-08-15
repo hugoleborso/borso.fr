@@ -1,5 +1,16 @@
 # Claude Code chat attachments are accessible from the session JSONL
 
+> **Just run [`scripts/session-attachments.sh`](../../scripts/session-attachments.sh).**
+> `list` shows what the human pasted into this session; `extract <dir>` writes
+> it out. This entry explains what the script does and covers the `uploads/`
+> case it does not.
+>
+> The script exists because this entry, written in 2026-05, did not stop the
+> same mistake in 2026-08: an agent told the operator their pasted logo was
+> unreachable and hand-drew a replacement.
+> [`docs/dantotsus/said-the-file-was-unreachable-without-looking.md`](../dantotsus/said-the-file-was-unreachable-without-looking.md)
+> records why prose was the wrong rung of the ladder for this one.
+
 ## Symptom
 
 User attaches a JPEG, PNG, or video file in chat. The agent — looking at the harness's tool surface — sees no `read_attachment` or equivalent and replies "I can only see a preview of your image; please commit the binary yourself." User pushes back: *"non TU commit ces fichiers toi-même"*.

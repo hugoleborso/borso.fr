@@ -40,10 +40,11 @@ export function buildInstrumentsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const result = await patchInstrument(id, input);
-        if (result.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
-        if (result.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
-        return context.json({ instrument: result.instrument });
+        const updatedInstrument = await patchInstrument(id, input);
+        if (updatedInstrument.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
+        if (updatedInstrument.kind === 'not-found')
+          return context.json({ error: 'not-found' }, 404);
+        return context.json({ instrument: updatedInstrument.instrument });
       },
     )
     .delete('/:id', zValidator('param', instrumentIdParamSchema), async (context) => {

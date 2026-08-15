@@ -12,11 +12,11 @@ describe('auth.service', () => {
 
   it('returns a session id and persists the session row on the correct PIN', async () => {
     const now = new Date('2026-09-19T06:00:00+02:00');
-    const result = await login({ pin: 'lastloop', ipAddress: '10.0.0.1' }, now);
-    expect(result.sessionId).toHaveLength(64);
-    expect(result.expiresAt.getTime()).toBeGreaterThan(now.getTime());
-    const persisted = await findValidSession(result.sessionId, now);
-    expect(persisted?.id).toBe(result.sessionId);
+    const attempt = await login({ pin: 'lastloop', ipAddress: '10.0.0.1' }, now);
+    expect(attempt.sessionId).toHaveLength(64);
+    expect(attempt.expiresAt.getTime()).toBeGreaterThan(now.getTime());
+    const persisted = await findValidSession(attempt.sessionId, now);
+    expect(persisted?.id).toBe(attempt.sessionId);
   });
 
   it('throws AuthDeniedError("invalid-pin") on wrong PIN', async () => {
@@ -44,11 +44,11 @@ describe('auth.service', () => {
 
   it('verifySession returns null for unknown ids and for expired sessions', async () => {
     const now = new Date('2026-09-19T06:00:00+02:00');
-    const result = await login({ pin: 'lastloop', ipAddress: '10.0.0.5' }, now);
-    const live = await verifySession(result.sessionId, now);
-    expect(live?.id).toBe(result.sessionId);
-    const tooLate = new Date(result.expiresAt.getTime() + 1);
-    const expired = await verifySession(result.sessionId, tooLate);
+    const attempt = await login({ pin: 'lastloop', ipAddress: '10.0.0.5' }, now);
+    const live = await verifySession(attempt.sessionId, now);
+    expect(live?.id).toBe(attempt.sessionId);
+    const tooLate = new Date(attempt.expiresAt.getTime() + 1);
+    const expired = await verifySession(attempt.sessionId, tooLate);
     expect(expired).toBeNull();
     const missing = await verifySession('no-such-id', now);
     expect(missing).toBeNull();
@@ -56,9 +56,9 @@ describe('auth.service', () => {
 
   it('logout deletes the session so subsequent verify returns null', async () => {
     const now = new Date('2026-09-19T06:00:00+02:00');
-    const result = await login({ pin: 'lastloop', ipAddress: '10.0.0.6' }, now);
-    await logout(result.sessionId);
-    const after = await verifySession(result.sessionId, now);
+    const attempt = await login({ pin: 'lastloop', ipAddress: '10.0.0.6' }, now);
+    await logout(attempt.sessionId);
+    const after = await verifySession(attempt.sessionId, now);
     expect(after).toBeNull();
   });
 });

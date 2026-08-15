@@ -48,6 +48,10 @@ The sandbox this repository's agent sessions run in is Linux x86_64 with no
 `/dev/kvm`, no Android SDK platform tools, and no macOS. So an agent session on
 the web can drive argent's Chromium target and nothing else.
 
+Last verified: 2026-08-15 — `uname -sm` answered `Linux x86_64`, `ls /dev/kvm`
+found nothing, and neither `adb` nor `emulator` is on `PATH`. The Chromium
+target itself was driven end to end the same day, gestures included.
+
 Checking for the constraint before starting:
 
 ```bash

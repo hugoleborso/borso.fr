@@ -43,16 +43,16 @@ function chordsOnLine(line: string): readonly ChordTonality[] {
     const bracketedChords: ChordTonality[] = [];
     for (const match of bracketedMatches) {
       const inner = match[0].slice(BRACKET_DELIMITER_LENGTH, -BRACKET_DELIMITER_LENGTH);
-      const parsed = parseChord(inner);
-      if (parsed !== null) bracketedChords.push(parsed);
+      const chord = parseChord(inner);
+      if (chord !== null) bracketedChords.push(chord);
     }
     return bracketedChords;
   }
   const chordOnlyLine: ChordTonality[] = [];
   for (const token of line.trim().split(/\s+/)) {
-    const parsed = parseChord(token);
-    if (parsed === null) return [];
-    chordOnlyLine.push(parsed);
+    const chord = parseChord(token);
+    if (chord === null) return [];
+    chordOnlyLine.push(chord);
   }
   return chordOnlyLine;
 }

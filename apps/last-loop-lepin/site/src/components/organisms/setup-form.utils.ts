@@ -67,9 +67,9 @@ const zodValidationErrorSchema = z.object({
  */
 // @FollowsBlueprint core-parse-untrusted
 export function summariseZodError(body: unknown): string | null {
-  const parsed = zodValidationErrorSchema.safeParse(body);
-  if (!parsed.success) return null;
-  return parsed.data.error.issues
+  const validationError = zodValidationErrorSchema.safeParse(body);
+  if (!validationError.success) return null;
+  return validationError.data.error.issues
     .map((issue) => `${(issue.path ?? []).join('.') || '?'}: ${issue.message ?? 'invalide'}`)
     .join(' · ');
 }

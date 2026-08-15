@@ -149,7 +149,7 @@ export function computeStandings(
     readonly currentRank: number;
   }
 
-  const result = progresses.reduce<RankAccumulator>(
+  const rankingPass = progresses.reduce<RankAccumulator>(
     (accumulator, progress) => {
       const isTied =
         accumulator.previous !== null && areTiedForRanking(accumulator.previous, progress);
@@ -180,7 +180,7 @@ export function computeStandings(
     { ranked: [], previous: null, currentRank: 0 },
   );
 
-  const ranked = result.ranked;
+  const ranked = rankingPass.ranked;
 
   const inRaceCount = progresses.filter((entry) => entry.status.kind === 'in-race').length;
   return {

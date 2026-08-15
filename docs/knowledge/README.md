@@ -39,6 +39,7 @@ Two failure modes to watch for:
 
 ### CDK / S3
 
+- [`preview-deploys-never-delete-what-you-removed.md`](./preview-deploys-never-delete-what-you-removed.md) — `prune: false` on the preview `BucketDeployment` keeps serving files a commit deleted; prod is unaffected because it takes the CDK default.
 - [`cdk-retain-buckets-orphan-on-failed-create.md`](./cdk-retain-buckets-orphan-on-failed-create.md) — `RemovalPolicy.RETAIN` on a literal-named bucket leaves an orphan if the first deploy of the stack fails post-bucket-create; manual `aws s3 rb` recovery.
 - [`cfn-rollback-blocks-redeploys.md`](./cfn-rollback-blocks-redeploys.md) — `UPDATE_ROLLBACK_IN_PROGRESS` rejects new deploys; a CI retry fails in ~40 s and looks like a code regression. Poll status, wait for terminal state, then trigger.
 - [`cfn-update-rollback-recovery.md`](./cfn-update-rollback-recovery.md) — recipe for unsticking a stack from `*_ROLLBACK_IN_PROGRESS`: wait → describe → continue-update-rollback with `--resources-to-skip` if needed. Includes the queued-`delete-stack`-races-CI-redeploy trap from PR #23.
@@ -67,6 +68,8 @@ Two failure modes to watch for:
 
 ### Claude Code tooling
 
+- [`two-agents-in-one-working-tree.md`](./two-agents-in-one-working-tree.md) — how a concurrent writer shows itself (`git diff` md5 moving over 60 s, findings that no longer reproduce), why staging explicit paths matters, and how to check a background run is really dead before launching a second one.
+- [`github-is-reachable-only-through-the-mcp-server.md`](./github-is-reachable-only-through-the-mcp-server.md) — `curl https://api.github.com` answers 403 and there is no `gh`; the MCP returns bodies HTML-escaped, which makes splicing a long PR description riskier than adding a comment.
 - [`askuserquestion-tool-requires-question-field.md`](./askuserquestion-tool-requires-question-field.md) — `AskUserQuestion` rejects calls that omit the `question` field per item; `header` alone is not enough.
 - [`claude-code-session-attachments-on-disk.md`](./claude-code-session-attachments-on-disk.md) — chat attachments live at `/root/.claude/uploads/<session>/...` (uploads) and inside `/root/.claude/projects/<workspace>/<session>.jsonl` (inlined base64 images); extractable without an explicit tool.
 - [`pr-body-from-cc-ui-skips-skill-sections.md`](./pr-body-from-cc-ui-skips-skill-sections.md) — PRs opened from the Claude Code UI auto-generate a body that omits `## Visual evidence` and `## Validation gaps`; retrofit via `mcp__github__update_pull_request` after open.
@@ -94,6 +97,7 @@ Two failure modes to watch for:
 
 ### Validation tooling
 
+- [`run-repo-tools-from-the-directory-they-expect.md`](./run-repo-tools-from-the-directory-they-expect.md) — blueprint generators from the repo root, vitest from the app workspace, and what each unhelpful error actually means.
 - [`agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md) — `agent-browser set device` does not propagate `matchMedia('(pointer: coarse)')`; touch-affordance assertions land UNVERIFIABLE without a workaround, or go through `scripts/argent.sh`, which sends real touch.
 - [`agent-browser-cdp-click-no-op-on-react-onclick.md`](./agent-browser-cdp-click-no-op-on-react-onclick.md) — CDP `click @ref` doesn't reliably fire React `onClick`; fall back to `element.click()` via `agent-browser eval`.
 - [`visual-validator-image-size-limit.md`](./visual-validator-image-size-limit.md) — past ~20 high-res screenshots, the validator's API session crashes on the per-image 2000 px ceiling; cap screenshots at 10 and prefer viewport over full-page.
