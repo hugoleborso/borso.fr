@@ -46,3 +46,9 @@ no stated reason, and since the destination is already scoped per PR
 Flipping it is a one-line change plus a construct snapshot update, and it is a
 delete verb on a bucket shared by all four apps' previews, so it is the
 operator's call rather than a drive-by.
+
+## Related
+
+- [`redeployed-four-previews-to-move-one-markdown-file.md`](../dantotsus/redeployed-four-previews-to-move-one-markdown-file.md)
+  — the other way a preview drifts from the branch that produced it, and the
+  digest the deploy now records to tell the two apart.
