@@ -160,8 +160,13 @@ if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
       # escaped delimiter rather than as alternation, so this substitution
       # matched nothing at all and a changed test never pulled in its sibling
       # source — the one thing the comment above says it does.
-      sed -E 's/\.(core|utils|adapter)\.test\.ts$/.\1.ts/' |
-      grep -E '\.(core|utils|adapter)\.ts$' |
+      sed -E 's/\.(core|utils|adapter)\.test\.tsx?$/.\1.ts/' |
+      grep -E '\.(core|utils|adapter)\.tsx?$' |
+      # A rename shows up here as its old path too, and Stryker exits 1 on
+      # "No tests were executed" when handed a file that is no longer there —
+      # an error naming nothing about the cause, on a push whose only crime was
+      # moving a file. The suffix work ahead is mostly renames.
+      while read -r gated; do [ -n "$gated" ] && [ -f "apps/$app/$gated" ] && echo "$gated"; done |
       sort -u || true)
     [ -z "$gated_files" ] && continue
     mutate_glob=$(echo "$gated_files" | paste -sd, -)

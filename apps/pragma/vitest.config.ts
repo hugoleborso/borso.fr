@@ -36,6 +36,7 @@ export default defineConfig({
         'api/src/**/*.core.ts',
         'api/src/**/*.utils.ts',
         'api/src/**/*.adapter.ts',
+        'api/src/**/*.schema.ts',
         'site/src/**/*.core.ts',
         'site/src/**/*.utils.ts',
         'site/src/**/*.adapter.ts',
@@ -53,6 +54,7 @@ export default defineConfig({
             'api/src/**/*.core.test.ts',
             'api/src/**/*.utils.test.ts',
             'api/src/**/*.adapter.test.ts',
+            'api/src/**/*.schema.test.ts',
             'cdk/test/**/*.test.ts',
             'site/src/**/*.utils.test.ts',
             'site/src/**/*.core.test.ts',
@@ -89,6 +91,7 @@ export default defineConfig({
             // is driven with a stub and belongs with the fast suite, not behind
             // a database this project boots.
             'api/src/**/*.adapter.test.ts',
+            'api/src/**/*.schema.test.ts',
           ],
           globalSetup: ['./test/setup-postgres.ts'],
           // Single shared Postgres across the back-e2e suites means a parallel

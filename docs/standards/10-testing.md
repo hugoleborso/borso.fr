@@ -80,8 +80,8 @@ SDK clients and the network calls to third-party services.
 ## Coverage gate
 
 `vitest run --coverage` fails when any file matching `**/*.core.ts`,
-`**/*.utils.ts` or `**/*.adapter.ts` falls below full statement, branch,
-function, and line coverage.
+`**/*.utils.ts`, `**/*.adapter.ts` or `**/*.schema.ts` falls below full
+statement, branch, function, and line coverage.
 
 The first two are pure. The third is not, and it is on the list anyway: an
 adapter is the one file in a bounded context that leaves the process
@@ -119,18 +119,26 @@ second is why it can be written at all.
 | `.controller.ts`| thin by rule, and every one already has a sibling test | no, it is an HTTP surface | no, covered end to end |
 | `.service.ts`   | yes, orchestration          | no, it needs the database     | no, covered end to end |
 | `.repository.ts`| yes, queries                | no, and a mocked query proves nothing | no, covered end to end |
-| `.schema.ts`    | yes, a missing constraint is behaviour | yes, zod parses in process | **not yet — see below** |
+| `.schema.ts`    | yes, a missing constraint is behaviour | yes, zod parses in process | yes |
 | `.queries.ts`   | yes, optimistic updates     | its pure half already moves to `.core.ts` / `.utils.ts` | no |
 | `.variants.ts`, `.types.ts`, `.d.ts`, `.config.ts` | declarative, the type checker is the test | n/a | no |
 
-`.schema.ts` meets both halves of the criterion and is the one suffix that
-qualifies and is not gated. Its zod validators are behaviour, and they parse in
-process with nothing to stand up. Today they are exercised only end to end:
-measured on 2026-08-15, adding `api/src/**/*.schema.ts` to pragma's coverage
-include reports every one of its ten schema files at 0% statements, because the
-fast suite never imports them. Closing that is sixteen new test files across
-the repository, which is a decision about where test effort goes rather than a
-gap to fill silently.
+`.schema.ts` was the case that tested the criterion: it qualifies, and it was
+not gated, which made the rule name its own exception. It is gated now — see
+[ADR-0013](../adr/0013-input-schemas-carry-the-coverage-gate.md) — and the
+sixteen sibling tests that closed it cost less than feared, because a Zod schema
+executes at import and reaches full statement coverage as soon as a test imports
+it. The work is writing assertions that name a rule rather than restate a shape.
+
+Two things a schema test has to reach on purpose:
+
+- **A refinement can be shadowed by an earlier one.** An array that breaks two
+  rules reports only the first, so the case for the second rule has to satisfy
+  every rule before it.
+- **A composite key or a unique index lives in a Drizzle callback that no import
+  evaluates**, so it reports as an uncovered function. `getTableConfig(table)`
+  reaches it, and the assertion is worth having: it pins the column order a
+  careless migration would change silently.
 
 ### An adapter's own obligation
 

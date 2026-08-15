@@ -5246,7 +5246,7 @@
     },
     {
       "path": "apps/pragma/vitest.config.ts",
-      "digest": "d9a402b5e980",
+      "digest": "fc749e04a86a",
       "container": "site",
       "layer": "config",
       "context": "root",

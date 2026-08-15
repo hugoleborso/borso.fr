@@ -1375,7 +1375,7 @@
     },
     {
       "path": "apps/borso-fr/vitest.config.ts",
-      "digest": "26f6f4636984",
+      "digest": "3d11000f4212",
       "container": "site",
       "layer": "config",
       "context": "root",

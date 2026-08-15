@@ -236,7 +236,10 @@ export default tseslint.config(
   // an application, because a browser fetching a presigned URL and a Lambda
   // calling a web service are the same kind of edge on the same map.
   {
-    files: ['apps/*/api/src/**/*.ts', 'apps/*/site/src/**/*.{ts,tsx}'],
+    // `SITE_FILES` rather than `site/src/**`: two of the four applications keep
+    // their sources directly under `site/`, so the narrower glob matched no file
+    // in either of them and both rules were silent on half the repository.
+    files: ['apps/*/api/src/**/*.ts', ...SITE_FILES],
     plugins: { borso: borsoPlugin },
     rules: {
       'borso/no-outbound-call-outside-adapter': 'error',

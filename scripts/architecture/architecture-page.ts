@@ -840,6 +840,10 @@ export function renderArchitecturePage(input: RenderInput): string {
     .join('');
 
   const layers = [...new Set(files.map((file) => file.layer))].sort();
+  // A file the suffix table does not recognise sits at `unknown`, which every
+  // level then draws in a group nobody named. The count is the migration's
+  // remaining budget, so it is a header number rather than a row to hunt for.
+  const unlayeredCount = files.filter((file) => file.layer === 'unknown').length;
   const routeTotal = slices.reduce((total, slice) => total + slice.routes.length, 0);
 
   const levelSections = levels
@@ -911,6 +915,11 @@ ${PAGE_STYLES}
     <li><b>${routeTotal}</b>HTTP routes${delta('HTTP routes')}</li>
     <li><b>${blueprints.length}</b>blueprints${delta('blueprints')}</li>
     <li class="flagged"><b>${unmarkedCount}</b>files with no pattern marker</li>
+    ${
+      unlayeredCount === 0
+        ? ''
+        : `<li class="flagged"><b>${unlayeredCount}</b>files with no layer suffix</li>`
+    }
   </ul>
 </div></header>
 

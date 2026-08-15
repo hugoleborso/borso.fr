@@ -9,7 +9,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 102
+      "fileCount": 103
     }
   ],
   "externals": [],
@@ -1546,7 +1546,7 @@
     },
     {
       "path": "apps/borsouvertures/site/openings/loadOpenings.ts",
-      "digest": "de7be82157c1",
+      "digest": "90205a3f0ff4",
       "container": "site",
       "layer": "unknown",
       "context": "root",
@@ -1556,6 +1556,7 @@
       ],
       "imports": [
         "apps/borsouvertures/site/openings/openings.json",
+        "apps/borsouvertures/site/openings/openingsSource.adapter.ts",
         "apps/borsouvertures/site/openings/parseOpenings.utils.ts",
         "apps/borsouvertures/site/openings/types.ts"
       ],
@@ -1672,6 +1673,22 @@
         "route-suspense-resource"
       ],
       "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/openings/openingsSource.adapter.ts",
+      "digest": "662e76e128cb",
+      "container": "site",
+      "layer": "adapter",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "fetchOpeningsDocument"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "adapter-external-service"
+      ]
     },
     {
       "path": "apps/borsouvertures/site/openings/parseOpenings.utils.ts",
@@ -2053,7 +2070,7 @@
     },
     {
       "path": "apps/borsouvertures/vitest.config.ts",
-      "digest": "c92970889eab",
+      "digest": "0087a17af656",
       "container": "site",
       "layer": "config",
       "context": "root",
@@ -2068,6 +2085,11 @@
   ],
   "routes": [],
   "blueprints": [
+    {
+      "id": "adapter-external-service",
+      "file": "apps/pragma/api/src/uploads/uploads.adapter.ts",
+      "followerCount": 1
+    },
     {
       "id": "atom-lookup-variants",
       "file": "apps/last-loop-lepin/site/src/components/atoms/Button.tsx",
