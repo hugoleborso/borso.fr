@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { ExternalSongHit } from './musicbrainz.core';
+import FIXTURE from './__fixtures__/musicbrainz-valerie-dismax.json';
+import { type ExternalSongHit, mapMusicBrainzRecordings } from './musicbrainz.core';
 import {
   coverSearchText,
   hasCoverMarker,
@@ -199,5 +200,40 @@ describe('rankExternalHits', () => {
 
   it('returns an empty list unchanged', () => {
     expect(rankExternalHits([], 'zzz')).toEqual([]);
+  });
+});
+
+/**
+ * The unit tests above pass on more than one scoring design, and the first
+ * design this block would have rejected was one of them: a flat bonus when the
+ * query contained the hit's title ranked tracks literally titled *Amy
+ * Winehouse* first. Only a real payload showed it.
+ *
+ * The fixture is what `dismax` returns for that query. The studio recording
+ * sits sixth, with one release, no ISRC and no tag, behind three covers and a
+ * mashup — so nothing in the notability signals promotes it. The word overlap
+ * and the unasked-title-word penalty do, which is the part a synthetic fixture
+ * would never have exercised.
+ */
+describe('rankExternalHits, against a captured MusicBrainz response', () => {
+  const QUERY = 'Valerie Amy Winehouse';
+
+  it('is handed a response whose first hits are covers, not the original', () => {
+    const hits = mapMusicBrainzRecordings(FIXTURE);
+    expect(hits[0]?.artist).not.toBe('Amy Winehouse');
+    expect(hits.findIndex((entry) => entry.artist === 'Amy Winehouse')).toBeGreaterThan(0);
+  });
+
+  it('promotes the Amy Winehouse recording to the first result', () => {
+    const ranked = rankExternalHits(mapMusicBrainzRecordings(FIXTURE), QUERY);
+    expect(ranked[0]?.title).toBe('Valerie');
+    expect(ranked[0]?.artist).toBe('Amy Winehouse');
+  });
+
+  it('keeps every tribute, mashup and cover out of the first three', () => {
+    const ranked = rankExternalHits(mapMusicBrainzRecordings(FIXTURE), QUERY);
+    for (const entry of ranked.slice(0, 3)) {
+      expect(entry.artist).toBe('Amy Winehouse');
+    }
   });
 });
