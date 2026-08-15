@@ -1,0 +1,766 @@
+{
+  "recordings": [
+    {
+      "id": "580b259a-33e2-42c4-87a2-58b150eb5ad7",
+      "title": "Valerie (Amy Winehouse)",
+      "artist-credit": [
+        {
+          "name": "Michmash"
+        }
+      ],
+      "first-release-date": "",
+      "length": 257000,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "f94c04ac-3534-406c-9c9d-081c908208ce",
+          "title": "Funk You, vol. 2"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "70024bb8-651b-4704-9905-2537d402e8b8",
+      "title": "Since I Left Valerie (Amy Winehouse vs. The Avalanches)",
+      "artist-credit": [
+        {
+          "name": "Danny Macabre"
+        }
+      ],
+      "first-release-date": "2024-03-21",
+      "length": 211382,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "ecacb958-2079-44c3-a008-f483605d3626",
+          "title": "The Martyr, the Hatter, and the Heart of the Matter"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "12931d97-32be-4ecc-9bb5-3fa26cd7e3be",
+      "title": "Valerie (Amy Winehouse tribute) (Khaleel Deal feat. Ursa Major & Mark Ronson)",
+      "artist-credit": [
+        {
+          "name": "S.I.R."
+        }
+      ],
+      "first-release-date": "2011-12-08",
+      "length": null,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "001817d0-70b3-43fb-bbf8-afa5052d6fab",
+          "title": "Strictly 2011: The MashUp Yearbook"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "8b0ae75b-49b2-45a3-8467-6c6321ac830a",
+      "title": "Valerie (The Zutons vs. Amy Winehouse)",
+      "artist-credit": [
+        {
+          "name": "Michmash"
+        }
+      ],
+      "first-release-date": "2023-01-01",
+      "length": 235811,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "ff96c1a2-2d0e-4856-b3d8-d631f1c62825",
+          "title": "Best of 2022"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "3dfc5648-6fcd-45ff-9dc1-2f9ff1a93026",
+      "title": "Valerie (Originally performed by Amy Winehouse)",
+      "artist-credit": [
+        {
+          "name": "RedHook"
+        }
+      ],
+      "first-release-date": "2024-03-07",
+      "length": 207150,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "e335f230-062f-40a4-9b3e-17be1cdd2afd",
+          "title": "RedHook Live Acoustic Sessions 2024"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "47422930-661a-41f3-9056-e2f8ddb11269",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "",
+      "length": null,
+      "disambiguation": "live, 2007-03-16: South by Southwest, La Zona Rosa, Austin, TX, USA",
+      "releases": [
+        {
+          "id": "102169c3-b648-4b2e-8879-2bd90a87a00a",
+          "title": "2007-03-16: South by Southwest, La Zona Rosa, Austin, TX, USA"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "e4ac8978-d7c2-4e43-aa8c-18ec56fecb71",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "",
+      "length": 218000,
+      "disambiguation": "live",
+      "releases": [
+        {
+          "id": "5b220bcb-20de-4a4c-9cbd-9da51c63fbb8",
+          "title": "2007-03-08: London, UK"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "ad0e4097-ecd6-4203-9fa0-8cb59314d362",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2011",
+      "length": 232000,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "6ea9743d-02ab-4c1f-bbab-9cd9949f2c71",
+          "title": "40X Love"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "580839ea-6e60-4ca3-8946-cc61abf90115",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "",
+      "length": 216662,
+      "disambiguation": "live, 2007-02-19: Astoria, London, UK",
+      "releases": [
+        {
+          "id": "9ceea682-805a-46ff-bf86-e09800124333",
+          "title": "2007-02-19: Astoria, London, UK"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "94a2135b-b788-4ade-9672-466a620fc73b",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2009-04-14",
+      "length": 230000,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "c1e399b3-d3f8-4024-97ef-cf51484eb597",
+          "title": "The Essential Album"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "3e832e23-d08a-495f-82e2-8a3632947673",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2006",
+      "length": 231920,
+      "disambiguation": "live, 2007-01-10: Jo Whiley Live Lounge, BBC Radio 1",
+      "releases": [
+        {
+          "id": "ef23abb2-4dd7-49f5-afdb-e4d17154bcaa",
+          "title": "Amy: The Original Soundtrack"
+        },
+        {
+          "id": "2c40ba95-92e7-416d-a99d-281277b8006d",
+          "title": "The Soul of Unplugged and Electrified"
+        },
+        {
+          "id": "c7d1ae3a-eb9c-482f-aaff-439694c0d443",
+          "title": "Greatest Hits"
+        },
+        {
+          "id": "d62eacb1-6980-4c67-b7b7-0fb6b42b2c50",
+          "title": "Back to Black"
+        },
+        {
+          "id": "712058ca-4239-4490-8cdc-9ecb1819bef2",
+          "title": "Back to Black (Complete Version)"
+        },
+        {
+          "id": "6ad6b3f9-0187-4ea0-9a20-e3681de42f57",
+          "title": "Bravo Black Hits, Vol. 18"
+        },
+        {
+          "id": "12dffe33-835f-4007-95d9-f8b547cb7cc3",
+          "title": "Miss Independent: From the Ladies of Pop"
+        },
+        {
+          "id": "4a2c6af3-7420-48be-aad9-0b7a1929906b",
+          "title": "Back to Black"
+        },
+        {
+          "id": "722957f0-d018-4da9-b453-c32340f34603",
+          "title": "The Dome, Volume 46"
+        },
+        {
+          "id": "f012c1f3-4d84-4802-a8fe-9c858d638a33",
+          "title": "Radio 1’s Live Lounge, Volume 2"
+        },
+        {
+          "id": "c3751386-7a5e-4f6e-908c-9f4e6f3cea91",
+          "title": "Die ultimative Chart Show: Die erfolgreichsten Hits 2008"
+        },
+        {
+          "id": "e4b1770b-ef7a-4b04-a3cb-a93ff5c0958c",
+          "title": "Back to Black"
+        },
+        {
+          "id": "3b14e1b4-c5c3-4f93-83a1-e478010be110",
+          "title": "Back to Black"
+        },
+        {
+          "id": "8b2e3d04-3dd9-4494-ba8f-451f26b97941",
+          "title": "Back to Black: B‐Sides"
+        },
+        {
+          "id": "917d379a-b7a2-3097-8594-cca84ab338b7",
+          "title": "Back to Black"
+        },
+        {
+          "id": "41546c12-2c12-3ac5-8a26-66a7bd8997eb",
+          "title": "Frank & Back to Black"
+        },
+        {
+          "id": "0b0ca6cc-f793-3dd8-9329-611a9fb08ae2",
+          "title": "Back to Black (Deluxe Edition)"
+        },
+        {
+          "id": "e75e5bc2-0145-4a26-8b87-7340362dfe4b",
+          "title": "Back to Black"
+        },
+        {
+          "id": "cd388813-97f4-41c6-9d28-c3a2d0208f64",
+          "title": "Essential Songs 2008"
+        },
+        {
+          "id": "715fb907-5504-4267-af9c-b56f1bb7354c",
+          "title": "Back to Black"
+        },
+        {
+          "id": "c53ddb36-c40d-4a89-a4f1-21c5bdb8b714",
+          "title": "The Other Side of Amy Winehouse: B-Sides, Remixes & Rarities"
+        },
+        {
+          "id": "191970eb-a39e-4d4b-9420-2e48b02a83d0",
+          "title": "Greatest Hits"
+        },
+        {
+          "id": "69f7757e-4254-42fe-9358-bdcceac7e922",
+          "title": "Greatest Hits"
+        },
+        {
+          "id": "af2d77af-5998-47bf-9607-fbf61fb1fc03",
+          "title": "Amy Winehouse at the BBC"
+        },
+        {
+          "id": "302ae914-42d3-46ec-8a0d-1df2d514041c",
+          "title": "Amy Winehouse at the BBC"
+        },
+        {
+          "id": "30d0d8f1-5f9a-4bcc-8407-a34900574f01",
+          "title": "Amy Winehouse at the BBC"
+        },
+        {
+          "id": "5441ecff-b159-4da4-9e0a-3b847f66d667",
+          "title": "Ö3 Greatest Hits Unplugged!"
+        },
+        {
+          "id": "98f6a6e9-20f4-4a93-9e20-bf66814ceba2",
+          "title": "Veronica album top 1000 allertijden"
+        },
+        {
+          "id": "516ed280-d23c-480b-9b4f-f1a94e0c9677",
+          "title": "3FM - 36 Serious Tracks"
+        },
+        {
+          "id": "08343cca-7931-4d6e-a3e1-0d79722e5d2e",
+          "title": "Amy: The Original Soundtrack"
+        },
+        {
+          "id": "bfda0702-1cef-4f6e-a549-c262a85d3950",
+          "title": "This Is Acoustic"
+        },
+        {
+          "id": "97a4c06f-4a57-47f1-8e0a-0f13c6cc70fd",
+          "title": "101 Acoustic"
+        },
+        {
+          "id": "79d99daf-8106-3336-9b2d-f7e9dc1e5706",
+          "title": "Back to Black"
+        },
+        {
+          "id": "71b9a8b6-925f-498e-9ec4-4d805c3a2240",
+          "title": "The Best of BBC Radio 1’s Live Lounge"
+        },
+        {
+          "id": "1c1c9053-54b3-4f86-b4b3-b0618692c3c4",
+          "title": "100x Women"
+        },
+        {
+          "id": "3892e9c3-388e-4422-a441-7ddeed05b816",
+          "title": "Acoustic Rewind"
+        },
+        {
+          "id": "a02ff495-160b-45d3-8384-ec0abe3499e4",
+          "title": "Back to Black"
+        },
+        {
+          "id": "6ec2ed68-db4d-49d1-95f4-c321f3053169",
+          "title": "Totally Chick Flicks"
+        },
+        {
+          "id": "7ce319a3-ad91-429f-b720-6fdfb9416557",
+          "title": "Amy Winehouse at the BBC"
+        },
+        {
+          "id": "b07684b9-d6ce-47fd-9677-f2fa8a3901b8",
+          "title": "At the BBC"
+        },
+        {
+          "id": "9762afeb-e17e-45e7-aac8-12f72c111c5d",
+          "title": "At the BBC"
+        }
+      ],
+      "isrcs": ["GBUM70702678", "GBCAD0706970"],
+      "tags": [
+        {
+          "name": "electronic",
+          "count": 1
+        },
+        {
+          "name": "pop",
+          "count": 3
+        },
+        {
+          "name": "jazz",
+          "count": 2
+        },
+        {
+          "name": "blues",
+          "count": 1
+        },
+        {
+          "name": "indie rock",
+          "count": 1
+        },
+        {
+          "name": "neo-soul",
+          "count": 1
+        },
+        {
+          "name": "soul",
+          "count": 3
+        },
+        {
+          "name": "neo soul",
+          "count": 2
+        },
+        {
+          "name": "contemporary jazz",
+          "count": 1
+        },
+        {
+          "name": "artist-session1_track1",
+          "count": 4
+        },
+        {
+          "name": "pop soul",
+          "count": 1
+        },
+        {
+          "name": "janet-jackson",
+          "count": 1
+        },
+        {
+          "name": "classic soul r b",
+          "count": 1
+        },
+        {
+          "name": "r&b",
+          "count": 3
+        },
+        {
+          "name": "contemporary r&b",
+          "count": 1
+        },
+        {
+          "name": "frank",
+          "count": 0
+        },
+        {
+          "name": "vocal jazz / soul / r&b",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "e6972cf5-dba2-4b1e-be54-96d2515e7dc1",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2008",
+      "length": 229693,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "6228f3d5-f56a-41b0-83ea-f92cda2796bc",
+          "title": "McMusic Hits 2008"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "555ebda3-4469-404b-82f3-b97304131811",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2008-01-22",
+      "length": 266000,
+      "disambiguation": "live, 2007-10-15: Absolutely Live, Tempodrom, Berlin",
+      "releases": [
+        {
+          "id": "1dcb0db2-7d8d-4940-8de4-ae0b8d0e3ea9",
+          "title": "2007-10-15: Absolutely Live, Tempodrom, Berlin (Radio FM 1 Broadcast)"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "aa37fca8-62ee-448f-b9d8-51232ce15204",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2012-11-16",
+      "length": 217000,
+      "disambiguation": "live, 2007-03-08: BBC One Sessions at Porchester Hall, London, UK",
+      "releases": [
+        {
+          "id": "af2d77af-5998-47bf-9607-fbf61fb1fc03",
+          "title": "Amy Winehouse at the BBC"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "2cad0b4a-5fde-4987-85f2-eef3cbc6b33a",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "",
+      "length": 227000,
+      "disambiguation": "live, 2007-06-22: Glastonbury Festival, Glastonbury, UK",
+      "releases": [
+        {
+          "id": "70e2fd92-caba-49d2-a537-286ea116e8d9",
+          "title": "Live Glastonbury Festival"
+        },
+        {
+          "id": "645a631d-fcff-48d8-9a9c-97b21a556114",
+          "title": "2007-06-22: Glastonbury Festival, Glastonbury, UK"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "760cba49-4814-4340-b074-dff6d90ad287",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2014-02-04",
+      "length": 241000,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "e8175993-5c89-42c3-87d0-6cfad8bc3ebf",
+          "title": "Heart & Soul"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "24b76de7-cd5b-4811-8aa0-ae2236f100d4",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2007-11-05",
+      "length": null,
+      "disambiguation": "live, 2007-03-08: Porchester Hall, London, England",
+      "releases": [
+        {
+          "id": "1b558779-a4b4-437c-a5bf-4bc1bd1b7496",
+          "title": "I Told You I Was Trouble: Amy Winehouse Live in London"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "713724b7-2ed0-406a-9b0c-b62b4bfd034c",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2007-06-26",
+      "length": null,
+      "disambiguation": "live",
+      "releases": [
+        {
+          "id": "f775b512-5015-4c27-988b-0a3051af3a01",
+          "title": "2007-06-26: Hove Festival, Arendal, Norway"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "9740b7d7-291e-4b43-aae4-66502362391f",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2007-06-15",
+      "length": 255013,
+      "disambiguation": "live, Radioeins Rbb, 2007-01-24: Kalkscheune, Berlin, Germany",
+      "releases": [
+        {
+          "id": "34e743a0-5908-4314-a46b-984de5c2e20e",
+          "title": "Back to Black"
+        }
+      ],
+      "isrcs": [],
+      "tags": [
+        {
+          "name": "pop",
+          "count": 1
+        },
+        {
+          "name": "soul",
+          "count": 2
+        },
+        {
+          "name": "r&b",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "ec0bd58f-f022-42c5-9093-57a23d73fbdb",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2008-01-01",
+      "length": 233000,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "a515a29b-c442-4242-9ca2-577ae615f493",
+          "title": "Remake"
+        },
+        {
+          "id": "47f367d0-a2a4-4649-b86f-49ea9593880b",
+          "title": "Re:Make - The Ultimate Covers Collection"
+        },
+        {
+          "id": "3dc75589-1e88-42c0-bbe4-35f16435f4e1",
+          "title": "RTL Presenteert Wereldsterren"
+        },
+        {
+          "id": "6bfad521-53bb-40ed-8e67-a6aa0408d38a",
+          "title": "New Collection"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "0f6566f2-ed9f-4afa-95c6-35a2fa0fa062",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2008",
+      "length": 236000,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "2c40ba95-92e7-416d-a99d-281277b8006d",
+          "title": "The Soul of Unplugged and Electrified"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "c0533663-5761-46b8-8b2d-b7c2560aa773",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2007-06-29",
+      "length": 215776,
+      "disambiguation": "live, 2007-06-29: Les Eurockéennes, Belfort, France",
+      "releases": [
+        {
+          "id": "153bce3c-bbf2-4bdc-b5a4-d21bcbfe18c6",
+          "title": "Live Eurockéennes De Belfort 2007"
+        },
+        {
+          "id": "09d8e12a-f801-4005-88fb-19be4d28c761",
+          "title": "Live Eurockéennes 2007"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "e468c8e7-fce2-4687-a3c1-a5bed5fc3c5b",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2007",
+      "length": 233000,
+      "disambiguation": "",
+      "releases": [
+        {
+          "id": "86001c1f-d335-4e27-87f8-408ccee50169",
+          "title": "Remixes & B Sides"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "5e6c74c5-b7df-43bb-ab3b-f47ac83a6b34",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "2007",
+      "length": 313000,
+      "disambiguation": "live, 2007-02-08: Paradiso, Amsterdam, Netherlands",
+      "releases": [
+        {
+          "id": "ec056772-f378-49cb-95ef-be9448b8a487",
+          "title": "2007-02-08: Paradiso, Amsterdam, Netherlands"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    },
+    {
+      "id": "cbf00113-c036-4c38-b941-a9169fcf8edf",
+      "title": "Valerie",
+      "artist-credit": [
+        {
+          "name": "Amy Winehouse"
+        }
+      ],
+      "first-release-date": "",
+      "length": null,
+      "disambiguation": "live, 2007-04-27: Coachella Festival, Gobi Tent, Indio, CA, USA",
+      "releases": [
+        {
+          "id": "7ad6b111-60fb-48b7-a402-75eb8c447074",
+          "title": "2007-04-27: Coachella Festival, Gobi Tent, Indio, CA, USA"
+        }
+      ],
+      "isrcs": [],
+      "tags": []
+    }
+  ]
+}
