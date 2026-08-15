@@ -110,6 +110,7 @@ Two failure modes to watch for:
 - [`orchestrator-dispatch-hygiene.md`](./orchestrator-dispatch-hygiene.md) — sub-agent dispatch knobs: pin `model: 'opus'` on implementation rounds; `isolation: "worktree"` for ≥4-commit rounds (and verify it took); escalate on lack-of-progress not a retry count; briefs say `biome check` not `biome lint`; verdict claims about routing/auth name the stage.
 - [`fresh-prod-bootstrap-503.md`](./fresh-prod-bootstrap-503.md) — a freshly-deployed pragma prod returns `503 auth-not-bootstrapped` on every API route until you `POST /api/admin/set-password` once; `read -rsp` keeps the secret off-screen; in prod the API is same-origin (no `-api` subdomain).
 - [`ultimate-guitar-scraping-cgu.md`](./ultimate-guitar-scraping-cgu.md) — UG's CGU §2.6 forbids scraping; sanctioned chord-chart import is manual paste / file upload / OCR-assist, and metadata enrichment goes through MusicBrainz.
+- [`free-chord-grid-sources.md`](./free-chord-grid-sources.md) — the three open corpora that between them cover two thirds of a working repertoire (ChoCo CC BY, Chordonomicon CC BY-NC, lmd_chords), why a "freer site" never helps for chords-with-lyrics, and the notation traps that silently corrupt a grid: `-` is a flat in music21 and a minor in iReal, a Spotify track id names a recording rather than a song, and iReal stores artists as `Lastname Firstname`.
 
 ### Browser / forms
 
