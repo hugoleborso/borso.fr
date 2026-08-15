@@ -17,6 +17,26 @@ A bare chord progression is different. Courts treat it as barely protectable,
 which is what makes a grid **without lyrics** the shape to aim for. That is
 also what "grille d'accords" means in French: the harmonic grid, not the words.
 
+## Check each site, do not generalise from Ultimate Guitar
+
+Ultimate Guitar forbids extraction in its terms and disallows its search paths
+in robots.txt, and it is tempting to assume every chord site is the same. It is
+not, and assuming it cost this repository a whole round of work.
+
+Checked directly, `boiteachansons.net`, `tabs4acoustic.com`, `cifraclub.com.br`,
+`chordu.com`, `e-chords.com`, `chordsworld.com` and `guitartabsexplorer.com` all
+disallow only admin, cache, API and print paths. Their song pages are not
+disallowed to anyone.
+
+Two sites go the other way and name the agent: `hooktheory.com` and
+`guitar-uke.com` both carry an explicit `Disallow: /` for **ClaudeBot**
+alongside GPTBot and CCBot, and Hooktheory adds an `ai-train=no` signal. A
+`User-agent: *` block that looks permissive can still be overridden by a
+named-agent block further down, so read the whole file, not the first stanza.
+
+So the rule is per-domain: fetch `/robots.txt`, look for your own agent by
+name, and take only the chord symbols.
+
 ## The sources that work
 
 | Source | Size | Licence | Covers |
@@ -103,8 +123,22 @@ arrangement returns two chords that are both wrong.
 That is a draft, not a transcription. Store it under a header that says so, and
 never let it overwrite a corpus transcription of the same song.
 
+## Where the sites beat the corpora
+
+For songs released after the corpora were built, the chord sites are the only
+source, and they are better than the audio route in two ways that matter: they
+print the section labels, and they state the capo.
+
+The capo is the trap. `S&M` prints as `Dm Gm Bb C` with capo I, and
+`Assassymphonie` as `Bm` shapes with capo II. Store those symbols without the
+capo note and the band plays the song a semitone flat. Record the capo in the
+chart header, or transpose to concert pitch and say that you did.
+
+Watch for a page whose stated key contradicts its own chart: Cifra Club's
+`Man Down` says A while printing Cm / Bb / Ab. Trust the chart.
+
 ## Coverage actually reached
 
-46 of 50 songs: 34 human transcriptions from the corpora, 12 audio drafts. The
-4 misses are two medleys, the band's own composition, and one song whose
-preview yielded too few chords to be worth writing.
+47 of 50 songs: 45 transcriptions, 2 audio drafts. The 3 misses are two medleys
+and the band's own composition, none of which exists outside the band's own
+arrangement.
