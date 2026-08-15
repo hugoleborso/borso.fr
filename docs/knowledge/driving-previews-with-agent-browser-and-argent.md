@@ -34,6 +34,14 @@ interaction.
 Without it every navigation fails with `ERR_CONNECTION_RESET`. The session's
 outbound proxy cannot complete a TLS 1.3 handshake with Chromium.
 
+**The failure reads as a network or a certificate problem and is neither**, which
+is what makes it expensive: `curl` reaches the same host through the same proxy,
+Chromium is launched with the right `--proxy-server` and does reach it, the
+proxy's own log shows no rejected `CONNECT`, and a `localhost` dev server loads
+perfectly. Every one of those observations points away from TLS. Re-confirmed
+2026-08-15 against `https://example.com` and a PR 55 preview, both of which went
+from `ERR_CONNECTION_RESET` to loading on this flag alone.
+
 ```
 --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader
 ```
@@ -44,7 +52,32 @@ Do not substitute `--disable-gpu`; that produces the error this avoids.
 
 ## agent-browser
 
-Pass the flags on every invocation, or export them once:
+### It has no browser of its own on a hosted session
+
+On claude.ai/code the first call fails before any flag matters:
+
+```
+✗ Chrome not found. Checked:
+  - agent-browser cache: /root/.agent-browser/browsers
+```
+
+Do not run `agent-browser install`. The container already ships Chromium for
+Playwright, and the environment brief says not to download a second copy. Point
+the tool at the one that is there:
+
+```bash
+export AGENT_BROWSER_EXECUTABLE_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome
+```
+
+The directory carries the Playwright build number, so read it from
+`ls /opt/pw-browsers` rather than pasting the number above. `--executable-path`
+works too, but it is **ignored while the daemon is already running** and says so
+in one line that is easy to miss above the navigation error — `agent-browser
+close` first, or export the variable and let every session inherit it.
+
+### The flags
+
+Pass them on every invocation, or export them once:
 
 ```bash
 export AGENT_BROWSER_ARGS="--ssl-version-max=tls1.2,--enable-unsafe-swiftshader,--use-gl=angle,--use-angle=swiftshader,--no-sandbox"
@@ -206,9 +239,8 @@ everything except Chromium.
 
 ## Preview URLs
 
-| App | URL |
-|-----|-----|
-| `borso-fr` | https://borso-fr-pr-40.preview.borso.fr |
-| `borsouvertures` | https://borsouvertures-pr-40.preview.borso.fr |
-| `pragma` | https://pragma-pr-40.preview.borso.fr |
-| `last-loop-lepin` | https://last-loop-lepin-pr-40.preview.borso.fr |
+`https://<app>-pr-<number>.preview.borso.fr`, one per application per open pull
+request: `borso-fr`, `borsouvertures`, `pragma`, `last-loop-lepin`. The pull
+request's own sticky comment carries the four live links and the commit each was
+built from, which is the copy to trust — a table of URLs written here would name
+whichever pull request happened to be open when somebody wrote it.
