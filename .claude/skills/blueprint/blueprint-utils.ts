@@ -100,7 +100,7 @@ const LAYER_BY_PATH_SEGMENT: readonly (readonly [string, string])[] = [
 
 const TEST_FILE_PATTERN = /\.test\.(ts|tsx|js)$/;
 const TEST_HELPER_PATTERN =
-  /(\.test-utils\.tsx?|^apps\/[^/]+\/test\/|\/test\/(unit\/)?(fixtures|helpers)\/)/;
+  /(\.test-utils\.tsx?|\/test-setup\.tsx?$|^apps\/[^/]+\/test\/|\/test\/(unit\/)?(fixtures|helpers)\/)/;
 
 /** Whether the file is a test rather than the code under test. */
 export function isTestFile(filePath: string): boolean {

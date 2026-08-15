@@ -9,7 +9,7 @@
     {
       "id": "site",
       "name": "Static site",
-      "fileCount": 70
+      "fileCount": 69
     }
   ],
   "externals": [],
@@ -1331,18 +1331,6 @@
         "apps/borso-fr/site/components/organisms/Galaxy.tsx",
         "apps/borso-fr/site/styles/tokens.css"
       ],
-      "blueprints": [],
-      "followsBlueprints": []
-    },
-    {
-      "path": "apps/borso-fr/site/test-setup.ts",
-      "digest": "c2b3f9c88406",
-      "container": "site",
-      "layer": "unknown",
-      "context": "root",
-      "feature": null,
-      "exports": [],
-      "imports": [],
       "blueprints": [],
       "followsBlueprints": []
     },

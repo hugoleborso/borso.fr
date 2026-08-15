@@ -939,7 +939,7 @@ ${PAGE_STYLES}
 
   <section class="level" id="level-slice" hidden>
     <h2>Level 3.5 — User actions</h2>
-    <p class="summary">One thing a person does, drawn end to end: the components that trigger it, the endpoint it reaches, and every function behind that endpoint down to the tables and external systems. An action is an exported hook in a query module, so the names are the ones whoever wrote them chose, and the chain comes from the calls as written.</p>
+    <p class="summary">One thing a person does, drawn end to end: the components that trigger it, the endpoint it reaches, and every function behind that endpoint down to the tables and external systems. An action is an exported hook in a query module, so the names are the ones whoever wrote them chose, and the chain comes from the calls as written. Picking a feature rather than an action draws what that feature is made of, down to the atoms its pages render. Two journeys are not data flows and are listed with the rest: <b>shell</b>, opening the application, and <b>request</b>, arriving at the API before a route is chosen.</p>
     ${renderJourneys(journeys, journeyLayouts, statuses?.get('code'))}
     <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>
     ${renderUnreachedByAction(journeys, slices)}

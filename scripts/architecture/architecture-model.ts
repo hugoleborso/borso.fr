@@ -260,9 +260,55 @@ function matchAll(pattern: RegExp, text: string): string[] {
 }
 
 /**
+ * The path aliases an application declares, read from its own tsconfig.
+ *
+ * Hard-coding `@api`, `@site` and `@domain` described two of this repository's
+ * four applications. A site that maps `@/*` to `./site/*` had every aliased
+ * import resolve to nothing, so its import graph showed 67 edges across 103
+ * files and its user-action level drew one of them. The compiler already knows
+ * the answer; asking it is what makes the scan work on an application nobody
+ * wrote this script for.
+ *
+ * Cached per application root, since every file in a scan asks the same
+ * question and reading a tsconfig per file is a measurable cost.
+ */
+const aliasesByApplicationRoot = new Map<string, readonly (readonly [string, string])[]>();
+
+function readAliasPrefixes(applicationRoot: string): readonly (readonly [string, string])[] {
+  const cached = aliasesByApplicationRoot.get(applicationRoot);
+  if (cached !== undefined) return cached;
+  const configPath = join(applicationRoot, 'tsconfig.json');
+  const parsed = ts.readConfigFile(configPath, (path) => {
+    try {
+      return readFileSync(path, 'utf8');
+    } catch {
+      return undefined;
+    }
+  });
+  const prefixes: [string, string][] = [];
+  const paths: unknown = parsed.config?.compilerOptions?.paths;
+  if (typeof paths === 'object' && paths !== null) {
+    for (const [pattern, targets] of Object.entries(paths)) {
+      const first = Array.isArray(targets) ? targets[0] : undefined;
+      if (typeof first !== 'string') continue;
+      // `"@site/*": ["./site/src/*"]` means the prefix `@site/` resolves under
+      // `<app>/site/src`. A mapping without the trailing star names one module
+      // rather than a directory and is left to the package branch.
+      if (!pattern.endsWith('/*') || !first.endsWith('/*')) continue;
+      prefixes.push([
+        pattern.slice(0, -1),
+        join(applicationRoot, first.slice(0, -2).replace(/^\.\//, '')),
+      ]);
+    }
+  }
+  const resolved = prefixes.sort((left, right) => right[0].length - left[0].length);
+  aliasesByApplicationRoot.set(applicationRoot, resolved);
+  return resolved;
+}
+
+/**
  * Resolve an import specifier to a repo-relative path, or to the package name
- * when it leaves the repository. Mirrors the `@api`, `@site` and `@domain`
- * aliases the workspace tsconfig declares.
+ * when it leaves the repository.
  */
 function resolveSpecifier(
   specifier: string,
@@ -270,11 +316,7 @@ function resolveSpecifier(
   repositoryRoot: string,
   applicationRoot: string,
 ): { targetFile: string | null; packageName: string | null } {
-  const aliasPrefixes: readonly (readonly [string, string])[] = [
-    ['@api/', join(applicationRoot, 'api/src')],
-    ['@site/', join(applicationRoot, 'site/src')],
-    ['@domain/', join(applicationRoot, 'domain')],
-  ];
+  const aliasPrefixes = readAliasPrefixes(applicationRoot);
 
   let absoluteBase: string | null = null;
   if (specifier.startsWith('.')) {

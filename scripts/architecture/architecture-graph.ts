@@ -16,7 +16,7 @@
 
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { buildJourneys, type SourceEntry } from './architecture-journeys';
 import { type LevelLayout, layoutLevel } from './architecture-layout';
 import { renderArchitectureIndex, renderArchitecturePage } from './architecture-page';
@@ -230,6 +230,43 @@ function readSourceOrEmpty(repositoryRelativePath: string, root: string = REPOSI
   } catch {
     return '';
   }
+}
+
+const HTML_MODULE_SCRIPT = /<script[^>]+type=["']module["'][^>]+src=["']([^"']+)["']/g;
+
+/**
+ * The modules an application's HTML pages load directly.
+ *
+ * A page built without a bundler entry convention names its script in the
+ * markup and nowhere else, so this is the only place the scan can learn that
+ * the file is where a person's visit begins rather than a module like any
+ * other.
+ */
+function readHtmlEntries(applicationRoot: string, scanRoot: string): string[] {
+  const found: string[] = [];
+  for (const page of listFilesNamed(applicationRoot, 'index.html')) {
+    for (const match of readSourceOrEmpty(relative(scanRoot, page), scanRoot).matchAll(
+      HTML_MODULE_SCRIPT,
+    )) {
+      const specifier = match[1];
+      if (specifier === undefined || !SOURCE_PATTERN.test(specifier)) continue;
+      found.push(relative(scanRoot, resolve(dirname(page), specifier)));
+    }
+  }
+  return [...new Set(found)].sort();
+}
+
+function listFilesNamed(directory: string, name: string): string[] {
+  const found: string[] = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      if (isToolingDirectory(entry.name)) continue;
+      found.push(...listFilesNamed(join(directory, entry.name), name));
+      continue;
+    }
+    if (entry.name === name) found.push(join(directory, entry.name));
+  }
+  return found;
 }
 
 function listSourceFiles(directory: string): string[] {
@@ -1684,7 +1721,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
     layouts.set(level.id, await layoutLevel(level));
   }
 
-  const journeys = buildJourneys(files);
+  const journeys = buildJourneys(files, readHtmlEntries(applicationRoot, scanRoot));
   const journeyLayouts = new Map<string, LevelLayout>();
   for (const [id, graph] of journeys.graphs) {
     journeyLayouts.set(
@@ -1721,7 +1758,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
     ),
     buildLevelCoverage(
       'slice',
-      "A file is drawn when a user action's walk reaches it: the screen, the components between it and the gesture, the hook, the controller the endpoint is declared in, and everything the handler calls down to the table. A presentational component that never touches data is absent by construction, and so is anything the application runs outside a user action — bootstrap, config, translations, the service worker. What is left in the list is the honest gap: the back end of a feature whose front end does not exist yet, and code no action reaches at all.",
+      "Three walks meet here. A flow is one action end to end — the screen, the components between it and the gesture, the hook, the controller the endpoint is declared in, and everything the handler calls down to the table. A feature's own view adds what those pages are made of, every component they render and every pure helper they lean on, because an atom sits in no data flow and a level built only from flows would report most of a front end as unreached. The last two are the journeys that are not data flows at all: opening the application, which runs the entry module and renders the frame every address sits inside, and sending any request, which lands on the API's composition root before a route is chosen. What is left in the list is the honest gap: process entry points, build configuration, ambient type declarations, and code no journey reaches.",
       files,
       (file) => journeys.drawnFiles.has(file.path),
     ),

@@ -9,7 +9,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 103
+      "fileCount": 102
     }
   ],
   "externals": [],
@@ -86,7 +86,10 @@
       ],
       "imports": [
         "apps/borsouvertures/site/components/atoms/boardDrop.utils.ts",
-        "apps/borsouvertures/site/components/atoms/boardPieces.tsx"
+        "apps/borsouvertures/site/components/atoms/boardPieces.tsx",
+        "apps/borsouvertures/site/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/theme/boardAppearance.ts",
+        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -238,7 +241,10 @@
       "exports": [
         "MiniBoard"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/theme/boardAppearance.ts",
+        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "atom-plain"
@@ -292,7 +298,9 @@
       "exports": [
         "describeMoveInStandardNotation"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/openings/uciSquare.utils.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "utils-pure-module"
@@ -324,7 +332,9 @@
       "exports": [
         "SelectorCard"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/lib/componentTable.types.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "atom-plain",
@@ -357,7 +367,9 @@
       "exports": [
         "SessionStartHint"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "atom-plain",
@@ -390,7 +402,9 @@
       "exports": [
         "ToggleSlider"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/lib/componentTable.types.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "atom-plain",
@@ -407,7 +421,9 @@
       "exports": [
         "AutoOpponentToggle"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -423,7 +439,11 @@
       "exports": [
         "BoardStyleSelect"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/Select.tsx",
+        "apps/borsouvertures/site/state/appState.ts",
+        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -439,7 +459,12 @@
       "exports": [
         "LanguageSwitcher"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx",
+        "apps/borsouvertures/site/i18n/i18n.ts",
+        "apps/borsouvertures/site/i18n/i18n.utils.ts",
+        "apps/borsouvertures/site/i18n/locale-storage.utils.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "component-lookup-table",
@@ -456,7 +481,11 @@
       "exports": [
         "LearnClearedBanner"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/InlineBanner.tsx",
+        "apps/borsouvertures/site/openings/machineInstances.ts",
+        "apps/borsouvertures/site/state/appState.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -472,7 +501,11 @@
       "exports": [
         "LearnDrillPanel"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/openings/machineInstances.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "component-lookup-table",
@@ -489,7 +522,9 @@
       "exports": [
         "LearnDrillProgress"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/StatusItem.tsx"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -505,7 +540,11 @@
       "exports": [
         "LearnOutOfBookModal"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/components/atoms/Modal.tsx",
+        "apps/borsouvertures/site/openings/machineInstances.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -521,7 +560,9 @@
       "exports": [
         "LearnPickPrompt"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/LoadingPanel.tsx"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -538,7 +579,21 @@
         "LinesPanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts"
+        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/components/atoms/LoadMoreRow.tsx",
+        "apps/borsouvertures/site/components/atoms/MiniBoard.tsx",
+        "apps/borsouvertures/site/components/atoms/SelectorCard.tsx",
+        "apps/borsouvertures/site/components/atoms/SelectorPanel.tsx",
+        "apps/borsouvertures/site/components/atoms/loadMoreRow.types.ts",
+        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
+        "apps/borsouvertures/site/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/lib/usePaginatedList.ts",
+        "apps/borsouvertures/site/openings/openingFlow.core.ts",
+        "apps/borsouvertures/site/openings/playScope.core.ts",
+        "apps/borsouvertures/site/openings/previews.utils.ts",
+        "apps/borsouvertures/site/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/state/appState.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -556,7 +611,12 @@
       "exports": [
         "ModeToggle"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx",
+        "apps/borsouvertures/site/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/state/appState.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "component-lookup-table",
@@ -571,7 +631,13 @@
       "context": "root",
       "feature": null,
       "exports": [],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/openings/openingFlow.core.ts",
+        "apps/borsouvertures/site/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/openings/types.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+      ],
       "blueprints": [
         "shared-props-shape"
       ],
@@ -587,7 +653,9 @@
       "exports": [
         "OpeningsLoadFailurePanel"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/ErrorPanel.tsx"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -603,7 +671,9 @@
       "exports": [
         "OpeningsLoadingPanel"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/LoadingPanel.tsx"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -620,7 +690,20 @@
         "OpeningsPanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts"
+        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/components/atoms/LoadMoreRow.tsx",
+        "apps/borsouvertures/site/components/atoms/MiniBoard.tsx",
+        "apps/borsouvertures/site/components/atoms/SelectorCard.tsx",
+        "apps/borsouvertures/site/components/atoms/SelectorPanel.tsx",
+        "apps/borsouvertures/site/components/atoms/loadMoreRow.types.ts",
+        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
+        "apps/borsouvertures/site/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/lib/usePaginatedList.ts",
+        "apps/borsouvertures/site/openings/playScope.core.ts",
+        "apps/borsouvertures/site/openings/previews.utils.ts",
+        "apps/borsouvertures/site/openings/types.ts",
+        "apps/borsouvertures/site/state/appState.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -638,7 +721,10 @@
       "exports": [
         "PlayBookPanel"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/openings/machineInstances.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -654,7 +740,11 @@
       "exports": [
         "PlayCompletedBanner"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/InlineBanner.tsx",
+        "apps/borsouvertures/site/openings/machineInstances.ts",
+        "apps/borsouvertures/site/openings/playSession.core.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -670,7 +760,11 @@
       "exports": [
         "PlayOutOfBookModal"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/components/atoms/Modal.tsx",
+        "apps/borsouvertures/site/openings/machineInstances.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -686,7 +780,10 @@
       "exports": [
         "PlayStatusPanel"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/StatusItem.tsx",
+        "apps/borsouvertures/site/lib/componentTable.types.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "component-lookup-table",
@@ -703,7 +800,9 @@
       "exports": [
         "ShowMovesToggle"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "molecule-presentational"
@@ -719,7 +818,11 @@
       "exports": [
         "SideSelector"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx",
+        "apps/borsouvertures/site/state/appState.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "component-lookup-table",
@@ -736,7 +839,11 @@
       "exports": [
         "TreeVisualizationToggle"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx",
+        "apps/borsouvertures/site/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/state/appState.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "component-lookup-table",
@@ -754,7 +861,20 @@
         "VariationsPanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts"
+        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/components/atoms/LoadMoreRow.tsx",
+        "apps/borsouvertures/site/components/atoms/MiniBoard.tsx",
+        "apps/borsouvertures/site/components/atoms/SelectorCard.tsx",
+        "apps/borsouvertures/site/components/atoms/SelectorPanel.tsx",
+        "apps/borsouvertures/site/components/atoms/loadMoreRow.types.ts",
+        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
+        "apps/borsouvertures/site/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/lib/usePaginatedList.ts",
+        "apps/borsouvertures/site/openings/openingFlow.core.ts",
+        "apps/borsouvertures/site/openings/playScope.core.ts",
+        "apps/borsouvertures/site/openings/previews.utils.ts",
+        "apps/borsouvertures/site/state/appState.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -772,7 +892,15 @@
       "exports": [
         "CompactOpeningFlow"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/components/molecules/LinesPanel.tsx",
+        "apps/borsouvertures/site/components/molecules/OpeningsPanel.tsx",
+        "apps/borsouvertures/site/components/molecules/VariationsPanel.tsx",
+        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
+        "apps/borsouvertures/site/lib/componentTable.types.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "component-lookup-table",
@@ -789,7 +917,25 @@
       "exports": [
         "LearnDrill"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/atoms/BoardView.tsx",
+        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/components/atoms/MoveButtonList.tsx",
+        "apps/borsouvertures/site/components/molecules/LearnClearedBanner.tsx",
+        "apps/borsouvertures/site/components/molecules/LearnDrillPanel.tsx",
+        "apps/borsouvertures/site/components/molecules/LearnDrillProgress.tsx",
+        "apps/borsouvertures/site/components/molecules/LearnOutOfBookModal.tsx",
+        "apps/borsouvertures/site/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/lib/useSessionStart.ts",
+        "apps/borsouvertures/site/lib/viewport.ts",
+        "apps/borsouvertures/site/openings/bookArrows.utils.ts",
+        "apps/borsouvertures/site/openings/learnSession.core.ts",
+        "apps/borsouvertures/site/openings/machineInstances.ts",
+        "apps/borsouvertures/site/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/openings/uciSquare.utils.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "component-lookup-table",
@@ -807,6 +953,7 @@
         "LearnSessionControl"
       ],
       "imports": [
+        "apps/borsouvertures/site/components/molecules/TreeVisualizationToggle.tsx",
         "apps/borsouvertures/site/components/organisms/session.types.ts"
       ],
       "blueprints": [],
@@ -825,8 +972,14 @@
         "LearnTreeSession"
       ],
       "imports": [
+        "apps/borsouvertures/site/components/molecules/LearnPickPrompt.tsx",
         "apps/borsouvertures/site/components/organisms/LearnDrill.tsx",
-        "apps/borsouvertures/site/components/organisms/session.types.ts"
+        "apps/borsouvertures/site/components/organisms/session.types.ts",
+        "apps/borsouvertures/site/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/openings/learnSession.core.ts",
+        "apps/borsouvertures/site/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -845,8 +998,14 @@
         "OpeningFlowSelector"
       ],
       "imports": [
+        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
         "apps/borsouvertures/site/components/organisms/CompactOpeningFlow.tsx",
-        "apps/borsouvertures/site/components/organisms/WideOpeningFlow.tsx"
+        "apps/borsouvertures/site/components/organisms/WideOpeningFlow.tsx",
+        "apps/borsouvertures/site/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/lib/viewport.ts",
+        "apps/borsouvertures/site/openings/openingFlow.core.ts",
+        "apps/borsouvertures/site/openings/types.ts",
+        "apps/borsouvertures/site/state/appState.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -865,7 +1024,20 @@
         "PlaySession"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/organisms/session.types.ts"
+        "apps/borsouvertures/site/components/atoms/BoardView.tsx",
+        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/components/molecules/PlayBookPanel.tsx",
+        "apps/borsouvertures/site/components/molecules/PlayCompletedBanner.tsx",
+        "apps/borsouvertures/site/components/molecules/PlayOutOfBookModal.tsx",
+        "apps/borsouvertures/site/components/molecules/PlayStatusPanel.tsx",
+        "apps/borsouvertures/site/components/organisms/session.types.ts",
+        "apps/borsouvertures/site/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/lib/useSessionStart.ts",
+        "apps/borsouvertures/site/lib/viewport.ts",
+        "apps/borsouvertures/site/openings/bookArrows.utils.ts",
+        "apps/borsouvertures/site/openings/machineInstances.ts",
+        "apps/borsouvertures/site/openings/playSession.core.ts",
+        "apps/borsouvertures/site/openings/uciSquare.utils.ts"
       ],
       "blueprints": [
         "organism-machine-bound"
@@ -885,7 +1057,10 @@
         "PlaySessionControl"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/organisms/session.types.ts"
+        "apps/borsouvertures/site/components/molecules/AutoOpponentToggle.tsx",
+        "apps/borsouvertures/site/components/organisms/session.types.ts",
+        "apps/borsouvertures/site/openings/machineInstances.ts",
+        "apps/borsouvertures/site/state/appState.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -902,7 +1077,10 @@
       "exports": [
         "SelectionAutoOpponentRow"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/molecules/AutoOpponentToggle.tsx",
+        "apps/borsouvertures/site/state/appState.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "organism-presentational"
@@ -919,8 +1097,17 @@
         "SelectionScreen"
       ],
       "imports": [
+        "apps/borsouvertures/site/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/components/atoms/SessionStartHint.tsx",
+        "apps/borsouvertures/site/components/molecules/SideSelector.tsx",
         "apps/borsouvertures/site/components/organisms/OpeningFlowSelector.tsx",
-        "apps/borsouvertures/site/components/organisms/SelectionAutoOpponentRow.tsx"
+        "apps/borsouvertures/site/components/organisms/SelectionAutoOpponentRow.tsx",
+        "apps/borsouvertures/site/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/openings/types.ts",
+        "apps/borsouvertures/site/state/appState.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -936,7 +1123,13 @@
       "context": "root",
       "feature": null,
       "exports": [],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/openings/types.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "shared-props-shape"
@@ -953,11 +1146,19 @@
         "SessionScreen"
       ],
       "imports": [
+        "apps/borsouvertures/site/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/components/molecules/ShowMovesToggle.tsx",
         "apps/borsouvertures/site/components/organisms/LearnSessionControl.tsx",
         "apps/borsouvertures/site/components/organisms/LearnTreeSession.tsx",
         "apps/borsouvertures/site/components/organisms/PlaySession.tsx",
         "apps/borsouvertures/site/components/organisms/PlaySessionControl.tsx",
-        "apps/borsouvertures/site/components/organisms/session.types.ts"
+        "apps/borsouvertures/site/components/organisms/session.types.ts",
+        "apps/borsouvertures/site/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/lib/viewport.ts",
+        "apps/borsouvertures/site/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/openings/types.ts",
+        "apps/borsouvertures/site/state/appState.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
       ],
       "blueprints": [
         "organism-table-dispatch"
@@ -976,7 +1177,12 @@
       "exports": [
         "TopBar"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/molecules/BoardStyleSelect.tsx",
+        "apps/borsouvertures/site/components/molecules/LanguageSwitcher.tsx",
+        "apps/borsouvertures/site/components/molecules/ModeToggle.tsx",
+        "apps/borsouvertures/site/state/appState.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "organism-presentational"
@@ -992,7 +1198,12 @@
       "exports": [
         "WideOpeningFlow"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/components/molecules/LinesPanel.tsx",
+        "apps/borsouvertures/site/components/molecules/OpeningsPanel.tsx",
+        "apps/borsouvertures/site/components/molecules/VariationsPanel.tsx",
+        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "organism-presentational"
@@ -1206,6 +1417,8 @@
       "feature": null,
       "exports": [],
       "imports": [
+        "apps/borsouvertures/site/i18n/i18n.ts",
+        "apps/borsouvertures/site/routes/OpeningTrainerRoute.tsx",
         "apps/borsouvertures/site/styles/tokens.css"
       ],
       "blueprints": [],
@@ -1305,7 +1518,8 @@
         "apps/borsouvertures/site/openings/bookTree.utils.ts",
         "apps/borsouvertures/site/openings/machineEffects.ts",
         "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/openings/uciSquare.utils.ts"
+        "apps/borsouvertures/site/openings/uciSquare.utils.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1397,7 +1611,8 @@
       ],
       "imports": [
         "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/openings/types.ts"
+        "apps/borsouvertures/site/openings/types.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1491,7 +1706,8 @@
         "apps/borsouvertures/site/openings/machineEffects.ts",
         "apps/borsouvertures/site/openings/selectors.utils.ts",
         "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/openings/uciSquare.utils.ts"
+        "apps/borsouvertures/site/openings/uciSquare.utils.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
       ],
       "blueprints": [
         "state-machine-module"
@@ -1522,7 +1738,8 @@
         "toggleVariationInPlayScope"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/selectors.utils.ts"
+        "apps/borsouvertures/site/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1609,7 +1826,8 @@
         "selectTreeVisualization"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/selectors.utils.ts"
+        "apps/borsouvertures/site/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1664,6 +1882,8 @@
         "OpeningTrainerRoute"
       ],
       "imports": [
+        "apps/borsouvertures/site/components/molecules/OpeningsLoadingPanel.tsx",
+        "apps/borsouvertures/site/components/organisms/TopBar.tsx",
         "apps/borsouvertures/site/routes/TrainerScreens.tsx"
       ],
       "blueprints": [],
@@ -1681,7 +1901,10 @@
       "exports": [
         "selectTrainerScreenKind"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/openings/openingsLoad.utils.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "core-view-intent"
@@ -1698,7 +1921,14 @@
         "TrainerScreens"
       ],
       "imports": [
-        "apps/borsouvertures/site/routes/trainerScreen.core.ts"
+        "apps/borsouvertures/site/components/molecules/OpeningsLoadFailurePanel.tsx",
+        "apps/borsouvertures/site/components/organisms/SelectionScreen.tsx",
+        "apps/borsouvertures/site/components/organisms/SessionScreen.tsx",
+        "apps/borsouvertures/site/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/openings/openingsResource.ts",
+        "apps/borsouvertures/site/openings/types.ts",
+        "apps/borsouvertures/site/routes/trainerScreen.core.ts",
+        "apps/borsouvertures/site/state/appState.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1726,7 +1956,10 @@
         "useAppState"
       ],
       "imports": [
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/openings/playScope.core.ts",
+        "apps/borsouvertures/site/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
       ],
       "blueprints": [
         "persisted-store-module"
@@ -1744,22 +1977,13 @@
         "parsePersistedState",
         "stringifyPersistedState"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+      ],
       "blueprints": [
         "unknown-payload-parser"
       ],
-      "followsBlueprints": []
-    },
-    {
-      "path": "apps/borsouvertures/site/test-setup.ts",
-      "digest": "c2b3f9c88406",
-      "container": "site",
-      "layer": "unknown",
-      "context": "root",
-      "feature": null,
-      "exports": [],
-      "imports": [],
-      "blueprints": [],
       "followsBlueprints": []
     },
     {
@@ -1772,7 +1996,9 @@
       "exports": [
         "getBoardAppearance"
       ],
-      "imports": [],
+      "imports": [
+        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+      ],
       "blueprints": [],
       "followsBlueprints": [
         "core-appearance"

@@ -858,7 +858,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       if (!feature || !actionList) return;
       actionList.replaceChildren();
       const entries = [
-        { id: feature.id + ':__all__', label: 'Everything in ' + feature.label, meta: feature.actions.length + ' actions' },
+        { id: feature.id + ':__all__', label: 'Everything in ' + feature.label, meta: feature.actions.length + (feature.actions.length === 1 ? ' action' : ' actions') },
         ...feature.actions.map((action) => ({
           id: action.id,
           label: action.label,

@@ -92,6 +92,11 @@ function componentLabel(file: ArchitectureFile): string {
   return base;
 }
 
+/** A screen, plus the router module that declared it. */
+interface OwnedScreenRoute extends ScreenRoute {
+  readonly owner: string;
+}
+
 interface WalkResult {
   readonly nodes: GraphNode[];
   readonly edges: GraphEdge[];
@@ -106,9 +111,9 @@ interface WalkResult {
  */
 function screensReaching(
   filePath: string,
-  screens: readonly ScreenRoute[],
+  screens: readonly OwnedScreenRoute[],
   importersOf: ReadonlyMap<string, readonly string[]>,
-): ScreenRoute[] {
+): OwnedScreenRoute[] {
   const reachable = new Set<string>([filePath]);
   const queue = [filePath];
   let steps = 0;
@@ -125,6 +130,72 @@ function screensReaching(
   return screens.filter(
     (screen) => screen.componentFile !== null && reachable.has(screen.componentFile),
   );
+}
+
+/**
+ * Every front-end module a set of screens renders, transitively.
+ *
+ * A flow answers "what happens when I click this". It does not answer "what is
+ * this screen made of", and the difference is most of the front end: an atom is
+ * in no data flow by construction, so a level that only walks flows accounts
+ * for a quarter of the tree and reports the rest as unreached — which reads as
+ * dead code rather than as a question the level never asked.
+ */
+function renderedBy(
+  seeds: readonly string[],
+  fileByPath: ReadonlyMap<string, ArchitectureFile>,
+  isStopped: (file: ArchitectureFile) => boolean,
+): ArchitectureFile[] {
+  const seen = new Set<string>();
+  const found: ArchitectureFile[] = [];
+  const queue = [...seeds];
+  while (queue.length > 0) {
+    const path = queue.shift();
+    if (path === undefined || seen.has(path)) continue;
+    seen.add(path);
+    const file = fileByPath.get(path);
+    if (file === undefined) continue;
+    if (!seeds.includes(path)) {
+      if (isStopped(file)) continue;
+      found.push(file);
+    }
+    for (const edge of file.imports) {
+      if (edge.targetFile !== null && !seen.has(edge.targetFile)) queue.push(edge.targetFile);
+    }
+  }
+  return found.sort((left, right) => left.path.localeCompare(right.path));
+}
+
+/** A block for a module a screen renders or leans on, rather than one a flow passes through. */
+function compositionNode(file: ArchitectureFile, sources: Map<string, SourceEntry>): GraphNode {
+  const key = `ui:${file.path}`;
+  const exported =
+    file.exports.find((each) => each.name === componentLabel(file)) ?? file.exports[0];
+  const blueprint = [...file.blueprints, ...file.followsBlueprints][0] ?? '';
+  if (exported !== undefined) {
+    sources.set(key, sourceEntry(file.path, file.layer, blueprint, exported));
+  }
+  return {
+    id: key,
+    label: componentLabel(file),
+    kind: `step-${file.layer}`,
+    detail: `${file.layer} · ${file.path}`,
+    group: file.layer,
+    blueprints: file.blueprints,
+    followsBlueprints: file.followsBlueprints,
+    fileCount: 0,
+    layer: file.layer,
+    location: file.path,
+    icon: LAYER_GROUP_ICON[file.layer] ?? '\u{1F9E9}',
+    lines: [file.layer],
+    ...(exported === undefined
+      ? {}
+      : {
+          sourceKey: key,
+          metrics: symbolMetrics(exported),
+          chips: symbolChips(blueprint, exported),
+        }),
+  };
 }
 
 /** The pills a function block prints: its pattern, its size, its shape. */
@@ -335,10 +406,257 @@ export interface JourneyModel {
   readonly drawnFiles: ReadonlySet<string>;
 }
 
-export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel {
+/** The journey that is not a data flow: opening the application at all. */
+const SHELL_FEATURE_ID = 'shell';
+/** The other one: a request arriving, before any route has been chosen. */
+const REQUEST_FEATURE_ID = 'request';
+
+/** True for a module the front end renders or leans on, rather than one the API owns. */
+function isFrontEndModule(file: ArchitectureFile): boolean {
+  return file.container === 'site' || file.container === 'domain';
+}
+
+/**
+ * Draw what the blocks already in a feature graph are made of.
+ *
+ * The flow through a feature names its pages, its hooks and its back end. The
+ * feature is also every component those pages render and every pure helper they
+ * lean on, and none of that appears in a flow — an atom is in no data flow by
+ * construction. Adding it here rather than to each action keeps a single action
+ * readable and lets the feature's own view answer "what is this made of".
+ */
+function addComposition(
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+  fileByPath: ReadonlyMap<string, ArchitectureFile>,
+  sources: Map<string, SourceEntry>,
+): void {
+  const drawn = new Set(
+    nodes.flatMap((node) =>
+      node.id.startsWith('ui:') ? [node.id.slice('ui:'.length)] : (node.location?.split(':') ?? []),
+    ),
+  );
+  const seeds = nodes
+    .filter((node) => node.id.startsWith('ui:'))
+    .map((node) => node.id.slice('ui:'.length));
+  if (seeds.length === 0) return;
+
+  const rendered = renderedBy(seeds, fileByPath, (file) => !isFrontEndModule(file));
+  const inGraph = new Set([...seeds, ...rendered.map((file) => file.path)]);
+  for (const file of rendered) {
+    if (drawn.has(file.path)) continue;
+    nodes.push(compositionNode(file, sources));
+  }
+  for (const path of inGraph) {
+    const file = fileByPath.get(path);
+    if (file === undefined) continue;
+    for (const edge of file.imports) {
+      if (edge.targetFile === null || !inGraph.has(edge.targetFile)) continue;
+      edges.push({
+        from: `ui:${path}`,
+        to: `ui:${edge.targetFile}`,
+        label: '',
+        kind: edge.isTypeOnly === true ? 'type' : 'import',
+      });
+    }
+  }
+}
+
+/**
+ * The frame every address renders inside, as its own journey.
+ *
+ * Opening the application is something a person does, and what answers is the
+ * shell: the session gate, the offline banner, the tab bar that is the only way
+ * to reach most addresses. None of it sits behind a query hook, so a level
+ * built purely from data flows never draws it, and the navigation the whole
+ * product hangs off reads as unreached code.
+ */
+function buildShellJourney(
+  entry: ArchitectureFile,
+  files: readonly ArchitectureFile[],
+  screens: readonly OwnedScreenRoute[],
+  fileByPath: ReadonlyMap<string, ArchitectureFile>,
+  sources: Map<string, SourceEntry>,
+  graphs: ReadonlyMap<string, JourneyGraph>,
+): { graph: JourneyGraph; actions: JourneyAction[] } {
+  // The router this entry renders, when it has one. A site without client-side
+  // routing has one address and no screen list, and its shell is simply
+  // everything the entry module puts on the page.
+  const reachable = new Set(renderedBy([entry.path], fileByPath, () => false).map((f) => f.path));
+  const router = files.find(
+    (file) => file.screenRoutes.length > 0 && (reachable.has(file.path) || file === entry),
+  );
+  const ownScreens =
+    router === undefined ? [] : screens.filter((screen) => screen.owner === router.path);
+
+  const alreadyDrawn = new Set(
+    [...graphs.values()].flatMap((graph) =>
+      graph.nodes.flatMap((node) =>
+        node.id.startsWith('ui:') ? [node.id.slice('ui:'.length)] : [],
+      ),
+    ),
+  );
+  // A screen no feature covers still has an address and still renders
+  // something; without it the level would leave a whole page unaccounted for
+  // because nobody wired a query to it yet.
+  const uncoveredScreens = ownScreens
+    .map((screen) => screen.componentFile)
+    .filter((path): path is string => path !== null && !alreadyDrawn.has(path));
+
+  const seeds = [
+    entry.path,
+    ...(router === undefined ? [] : [router.path]),
+    ...new Set(uncoveredScreens),
+  ];
+  const nodes: GraphNode[] = seeds.flatMap((path) => {
+    const file = fileByPath.get(path);
+    return file === undefined ? [] : [compositionNode(file, sources)];
+  });
+  const edges: GraphEdge[] = [];
+  for (const screen of ownScreens) {
+    if (screen.componentFile === null) continue;
+    const screenId = `screen:${screen.path}`;
+    nodes.push({
+      id: screenId,
+      label: screen.path,
+      kind: 'step-screen',
+      detail: `${screen.component} renders at ${screen.path}`,
+      group: 'screen',
+      blueprints: [],
+      followsBlueprints: [],
+      fileCount: 0,
+      layer: 'screen',
+      icon: '\u{1F517}',
+      lines: ['screen'],
+    });
+    edges.push({
+      from: `ui:${router?.path ?? entry.path}`,
+      to: screenId,
+      label: 'routes to',
+      kind: 'import',
+    });
+  }
+  addComposition(nodes, edges, fileByPath, sources);
+  const featureId = shellFeatureId(entry);
+  return {
+    graph: { nodes: dedupeNodes(nodes), edges: dedupeEdges(edges) },
+    actions: [
+      {
+        id: `${featureId}:open`,
+        label: 'Open the application',
+        hook: '',
+        feature: featureId,
+        method: '',
+        path: ownScreens[0]?.path ?? '/',
+        triggerCount: ownScreens.length,
+        reaches: [],
+      },
+    ],
+  };
+}
+
+/**
+ * One shell per front-end entry module.
+ *
+ * A repository can hold several small sites in one workspace, each with its own
+ * entry and its own page, and naming them all `shell` would draw them as one
+ * application that does not exist.
+ */
+function shellFeatureId(entry: ArchitectureFile): string {
+  const segments = entry.path.split('/');
+  const basename = segments.at(-1) ?? '';
+  const parent = segments.at(-2) ?? '';
+  // A conventional entry is named for nothing, so its folder names it. A page
+  // that is its own script names itself — two entries in one folder would
+  // otherwise claim the same journey and the second would silently replace the
+  // first.
+  const name = /^main\.tsx?$/.test(basename) ? parent : basename.replace(/\.tsx?$/, '');
+  return name === 'src' || name === 'site' ? SHELL_FEATURE_ID : `${SHELL_FEATURE_ID} · ${name}`;
+}
+
+/**
+ * The modules a browser starts at.
+ *
+ * Three shapes, in the order they are looked for: the modules an `index.html`
+ * names in a `<script type="module">`, which is the only authority a page
+ * without a bundler entry convention has; a `main.tsx` beside the sources; and
+ * failing both, whatever declares the routes. A site whose page is a plain
+ * script had its entry read as an ordinary module, so nothing rooted a journey
+ * there and the page's own code reported as unreached.
+ */
+function frontEndEntries(
+  files: readonly ArchitectureFile[],
+  htmlEntries: readonly string[],
+): ArchitectureFile[] {
+  const named = files.filter((file) => htmlEntries.includes(file.path));
+  const conventional = files.filter(
+    (file) => file.container === 'site' && /\/main\.tsx?$/.test(file.path),
+  );
+  const found = [...new Set([...named, ...conventional])];
+  if (found.length > 0) return found;
+  return files.filter((file) => file.screenRoutes.length > 0);
+}
+
+/**
+ * Where a request lands before it is a route: the API's own composition root.
+ *
+ * Every flow starts at an endpoint, which hides the fact that something mounted
+ * that endpoint, applied a gate to it and handed it a database client. That
+ * module and what it pulls in — the middleware, the schema barrel, the slice
+ * mounted only when a flag is set — sit above every journey and inside none, so
+ * a level built from flows alone reports the composition root of the back end
+ * as code nothing reaches.
+ */
+function buildRequestJourney(
+  files: readonly ArchitectureFile[],
+  fileByPath: ReadonlyMap<string, ArchitectureFile>,
+  sources: Map<string, SourceEntry>,
+): { graph: JourneyGraph; actions: JourneyAction[] } | null {
+  const root = files.find((file) => file.container === 'api' && /\/src\/app\.ts$/.test(file.path));
+  if (root === undefined) return null;
+  const mounted = renderedBy([root.path], fileByPath, (file) => file.container !== 'api');
+  const inGraph = new Set([root.path, ...mounted.map((file) => file.path)]);
+  const nodes = [root, ...mounted].map((file) => compositionNode(file, sources));
+  const edges: GraphEdge[] = [];
+  for (const path of inGraph) {
+    const file = fileByPath.get(path);
+    if (file === undefined) continue;
+    for (const edge of file.imports) {
+      if (edge.targetFile === null || !inGraph.has(edge.targetFile)) continue;
+      edges.push({
+        from: `ui:${path}`,
+        to: `ui:${edge.targetFile}`,
+        label: '',
+        kind: edge.isTypeOnly === true ? 'type' : 'import',
+      });
+    }
+  }
+  return {
+    graph: { nodes: dedupeNodes(nodes), edges: dedupeEdges(edges) },
+    actions: [
+      {
+        id: `${REQUEST_FEATURE_ID}:arrive`,
+        label: 'Send any request',
+        hook: '',
+        feature: REQUEST_FEATURE_ID,
+        method: '',
+        path: '/api',
+        triggerCount: 0,
+        reaches: [],
+      },
+    ],
+  };
+}
+
+export function buildJourneys(
+  files: readonly ArchitectureFile[],
+  htmlEntries: readonly string[] = [],
+): JourneyModel {
   const fileByPath = new Map(files.map((file) => [file.path, file]));
   const sources = new Map<string, SourceEntry>();
-  const screens = files.flatMap((file) => file.screenRoutes);
+  const screens = files.flatMap((file) =>
+    file.screenRoutes.map((route) => ({ ...route, owner: file.path })),
+  );
   const importersOf = new Map<string, string[]>();
   for (const file of files) {
     for (const edge of file.imports) {
@@ -645,6 +963,7 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
     }
 
     if (actions.length === 0) continue;
+    addComposition(featureNodes, featureEdges, fileByPath, sources);
     graphs.set(`${featureId}:__all__`, {
       nodes: dedupeNodes(featureNodes),
       edges: dedupeEdges(featureEdges),
@@ -653,6 +972,27 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
       id: featureId,
       label: featureId,
       actions: actions.sort((left, right) => left.label.localeCompare(right.label)),
+    });
+  }
+
+  for (const entry of frontEndEntries(files, htmlEntries)) {
+    const shell = buildShellJourney(entry, files, screens, fileByPath, sources, graphs);
+    const featureId = shellFeatureId(entry);
+    graphs.set(`${featureId}:__all__`, shell.graph);
+    // The single action is the whole journey, so both entries answer with the
+    // same graph rather than one of them selecting nothing.
+    for (const action of shell.actions) graphs.set(action.id, shell.graph);
+    features.unshift({ id: featureId, label: featureId, actions: shell.actions });
+  }
+
+  const request = buildRequestJourney(files, fileByPath, sources);
+  if (request !== null) {
+    graphs.set(`${REQUEST_FEATURE_ID}:__all__`, request.graph);
+    for (const action of request.actions) graphs.set(action.id, request.graph);
+    features.push({
+      id: REQUEST_FEATURE_ID,
+      label: REQUEST_FEATURE_ID,
+      actions: request.actions,
     });
   }
 
