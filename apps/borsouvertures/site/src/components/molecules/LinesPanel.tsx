@@ -6,7 +6,7 @@ import { MiniBoard } from '@/components/atoms/MiniBoard';
 import { SelectorCard, type SelectorCardProps } from '@/components/atoms/SelectorCard';
 import { SelectorPanel } from '@/components/atoms/SelectorPanel';
 import type { ComponentByFlag, ComponentByKind } from '@/lib/componentTable.types';
-import { usePaginatedList } from '@/lib/usePaginatedList';
+import { usePaginatedList } from '@/lib/paginated-list.hook';
 import type { LineEntry } from '@/openings/openingFlow.core';
 import {
   buildLineSelection,

@@ -570,7 +570,7 @@
     },
     {
       "path": "apps/borsouvertures/site/src/components/molecules/LinesPanel.tsx",
-      "digest": "77eaa87e9022",
+      "digest": "5d8f0faeca28",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -587,7 +587,7 @@
         "apps/borsouvertures/site/src/components/atoms/loadMoreRow.types.ts",
         "apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts",
         "apps/borsouvertures/site/src/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/src/lib/usePaginatedList.ts",
+        "apps/borsouvertures/site/src/lib/paginated-list.hook.ts",
         "apps/borsouvertures/site/src/openings/openingFlow.core.ts",
         "apps/borsouvertures/site/src/openings/playScope.core.ts",
         "apps/borsouvertures/site/src/openings/previews.utils.ts",
@@ -681,7 +681,7 @@
     },
     {
       "path": "apps/borsouvertures/site/src/components/molecules/OpeningsPanel.tsx",
-      "digest": "d9ce1d618e25",
+      "digest": "e7d9193ecbe5",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -698,7 +698,7 @@
         "apps/borsouvertures/site/src/components/atoms/loadMoreRow.types.ts",
         "apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts",
         "apps/borsouvertures/site/src/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/src/lib/usePaginatedList.ts",
+        "apps/borsouvertures/site/src/lib/paginated-list.hook.ts",
         "apps/borsouvertures/site/src/openings/playScope.core.ts",
         "apps/borsouvertures/site/src/openings/previews.utils.ts",
         "apps/borsouvertures/site/src/openings/types.ts",
@@ -852,7 +852,7 @@
     },
     {
       "path": "apps/borsouvertures/site/src/components/molecules/VariationsPanel.tsx",
-      "digest": "29864b63b2b2",
+      "digest": "53aa6775e6d8",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -869,7 +869,7 @@
         "apps/borsouvertures/site/src/components/atoms/loadMoreRow.types.ts",
         "apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts",
         "apps/borsouvertures/site/src/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/src/lib/usePaginatedList.ts",
+        "apps/borsouvertures/site/src/lib/paginated-list.hook.ts",
         "apps/borsouvertures/site/src/openings/openingFlow.core.ts",
         "apps/borsouvertures/site/src/openings/playScope.core.ts",
         "apps/borsouvertures/site/src/openings/previews.utils.ts",
@@ -909,7 +909,7 @@
     },
     {
       "path": "apps/borsouvertures/site/src/components/organisms/LearnDrill.tsx",
-      "digest": "c347b8dc4025",
+      "digest": "2be877eb9664",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -926,8 +926,8 @@
         "apps/borsouvertures/site/src/components/molecules/LearnDrillProgress.tsx",
         "apps/borsouvertures/site/src/components/molecules/LearnOutOfBookModal.tsx",
         "apps/borsouvertures/site/src/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/src/lib/useSessionStart.ts",
-        "apps/borsouvertures/site/src/lib/viewport.ts",
+        "apps/borsouvertures/site/src/lib/session-start.hook.ts",
+        "apps/borsouvertures/site/src/lib/viewport.hook.ts",
         "apps/borsouvertures/site/src/openings/bookArrows.utils.ts",
         "apps/borsouvertures/site/src/openings/learnSession.core.ts",
         "apps/borsouvertures/site/src/openings/machineInstances.ts",
@@ -989,7 +989,7 @@
     },
     {
       "path": "apps/borsouvertures/site/src/components/organisms/OpeningFlowSelector.tsx",
-      "digest": "ee651a1037d8",
+      "digest": "e0902a143dad",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -1002,7 +1002,7 @@
         "apps/borsouvertures/site/src/components/organisms/CompactOpeningFlow.tsx",
         "apps/borsouvertures/site/src/components/organisms/WideOpeningFlow.tsx",
         "apps/borsouvertures/site/src/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/src/lib/viewport.ts",
+        "apps/borsouvertures/site/src/lib/viewport.hook.ts",
         "apps/borsouvertures/site/src/openings/openingFlow.core.ts",
         "apps/borsouvertures/site/src/openings/types.ts",
         "apps/borsouvertures/site/src/state/appState.ts"
@@ -1015,7 +1015,7 @@
     },
     {
       "path": "apps/borsouvertures/site/src/components/organisms/PlaySession.tsx",
-      "digest": "9d7e135694e8",
+      "digest": "861e0b2d5c5e",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -1032,8 +1032,8 @@
         "apps/borsouvertures/site/src/components/molecules/PlayStatusPanel.tsx",
         "apps/borsouvertures/site/src/components/organisms/session.types.ts",
         "apps/borsouvertures/site/src/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/src/lib/useSessionStart.ts",
-        "apps/borsouvertures/site/src/lib/viewport.ts",
+        "apps/borsouvertures/site/src/lib/session-start.hook.ts",
+        "apps/borsouvertures/site/src/lib/viewport.hook.ts",
         "apps/borsouvertures/site/src/openings/bookArrows.utils.ts",
         "apps/borsouvertures/site/src/openings/machineInstances.ts",
         "apps/borsouvertures/site/src/openings/playSession.core.ts",
@@ -1137,7 +1137,7 @@
     },
     {
       "path": "apps/borsouvertures/site/src/components/organisms/SessionScreen.tsx",
-      "digest": "b4717a43e990",
+      "digest": "3f2fa020d2a9",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -1154,7 +1154,7 @@
         "apps/borsouvertures/site/src/components/organisms/PlaySessionControl.tsx",
         "apps/borsouvertures/site/src/components/organisms/session.types.ts",
         "apps/borsouvertures/site/src/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/src/lib/viewport.ts",
+        "apps/borsouvertures/site/src/lib/viewport.hook.ts",
         "apps/borsouvertures/site/src/openings/sessionStart.core.ts",
         "apps/borsouvertures/site/src/openings/types.ts",
         "apps/borsouvertures/site/src/state/appState.ts",
@@ -1383,10 +1383,10 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/src/lib/usePaginatedList.ts",
+      "path": "apps/borsouvertures/site/src/lib/paginated-list.hook.ts",
       "digest": "4a1ce08e11fc",
       "container": "site",
-      "layer": "unknown",
+      "layer": "hook",
       "context": "lib",
       "feature": null,
       "exports": [
@@ -1400,10 +1400,10 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/src/lib/useSessionStart.ts",
+      "path": "apps/borsouvertures/site/src/lib/session-start.hook.ts",
       "digest": "b4e52a0bdf08",
       "container": "site",
-      "layer": "unknown",
+      "layer": "hook",
       "context": "lib",
       "feature": null,
       "exports": [
@@ -1416,10 +1416,10 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/src/lib/viewport.ts",
+      "path": "apps/borsouvertures/site/src/lib/viewport.hook.ts",
       "digest": "5ac497d8c8e2",
       "container": "site",
-      "layer": "unknown",
+      "layer": "hook",
       "context": "lib",
       "feature": null,
       "exports": [
@@ -2137,7 +2137,7 @@
     },
     {
       "id": "hook-effect-free-mount",
-      "file": "apps/borsouvertures/site/src/lib/useSessionStart.ts",
+      "file": "apps/borsouvertures/site/src/lib/session-start.hook.ts",
       "followerCount": 1
     },
     {

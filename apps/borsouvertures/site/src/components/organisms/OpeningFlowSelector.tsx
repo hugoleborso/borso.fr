@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { OpeningPanelProps } from '@/components/molecules/openingPanel.types';
 import type { ComponentByFlag } from '@/lib/componentTable.types';
-import { useIsCompactViewport } from '@/lib/viewport';
+import { useIsCompactViewport } from '@/lib/viewport.hook';
 import { buildOpeningFlowLists } from '@/openings/openingFlow.core';
 import type { Opening } from '@/openings/types';
 import { useAppState } from '@/state/appState';

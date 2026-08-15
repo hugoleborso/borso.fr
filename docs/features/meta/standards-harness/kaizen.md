@@ -57,3 +57,4 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [16:06] `main` the verb table in 01-naming promised return values nothing checked, and four find… functions returning arrays survived a reviewer pass before a rule caught them
 - [16:11] `main` a generator's --check failure branch is never executed locally, so a ReferenceError in its own error message survived eslint, typecheck and the pre-commit hook and only fired in CI, where a stale file finally took that path
 - [17:13] `main` CLAUDE.md stated the unlayered-file count as a budget that only goes down and named four numbers, all four of which were already stale, with no gate behind the claim
+- [17:19] `main` the drift ratchet counted the minority spelling, so renaming a file TO the documented convention pushed role-marker:hook from 11 to 12 — the instrument punished the fix, and only using it revealed that

@@ -90,7 +90,7 @@ Read from 609 source file(s).
 
 ## Does a file in borso-fr say which layer it is in?
 
-`layer-marker:borso-fr` — 15 file(s) outside the majority spelling.
+`layer-marker:borso-fr` — 15 file(s) outside `the suffix names the layer`, which is the answer the standards give.
 
 | Spelling | Files | For example |
 | --- | --- | --- |
@@ -99,16 +99,16 @@ Read from 609 source file(s).
 
 ## Does a file in borsouvertures say which layer it is in?
 
-`layer-marker:borsouvertures` — 12 file(s) outside the majority spelling.
+`layer-marker:borsouvertures` — 9 file(s) outside `the suffix names the layer`, which is the answer the standards give.
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| the suffix names the layer | 89 | `apps/borsouvertures/bin/app.ts`, `apps/borsouvertures/site/src/components/atoms/BoardView.tsx`, `apps/borsouvertures/site/src/components/atoms/Button.tsx` |
-| nothing in the name says | 12 | `apps/borsouvertures/scripts/build-openings.ts`, `apps/borsouvertures/site/src/config/openingsCacheVersion.ts`, `apps/borsouvertures/site/src/lib/usePaginatedList.ts` |
+| the suffix names the layer | 92 | `apps/borsouvertures/bin/app.ts`, `apps/borsouvertures/site/src/components/atoms/BoardView.tsx`, `apps/borsouvertures/site/src/components/atoms/Button.tsx` |
+| nothing in the name says | 9 | `apps/borsouvertures/scripts/build-openings.ts`, `apps/borsouvertures/site/src/config/openingsCacheVersion.ts`, `apps/borsouvertures/site/src/openings/loadOpenings.ts` |
 
 ## Does a file in last-loop-lepin say which layer it is in?
 
-`layer-marker:last-loop-lepin` — 6 file(s) outside the majority spelling.
+`layer-marker:last-loop-lepin` — 6 file(s) outside `the suffix names the layer`, which is the answer the standards give.
 
 | Spelling | Files | For example |
 | --- | --- | --- |
@@ -117,13 +117,13 @@ Read from 609 source file(s).
 
 ## How does a module that exports a hook say so in its name?
 
-`role-marker:hook` — 11 file(s) outside the majority spelling.
+`role-marker:hook` — 21 file(s) outside `<name>.hook.ts`, which is the answer the standards give.
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| no marker in the name | 18 | `apps/borso-fr/site/src/art/mondrian/composition-url.ts`, `apps/borsouvertures/site/src/lib/viewport.ts`, `apps/borsouvertures/site/src/state/appState.ts` |
-| use<Name>.ts | 6 | `apps/borso-fr/site/src/art/mondrian/use-animation.ts`, `apps/borso-fr/site/src/art/mondrian/use-reduced-motion.ts`, `apps/borsouvertures/site/src/lib/usePaginatedList.ts` |
-| <name>.hook.ts | 5 | `apps/pragma/site/src/components/molecules/media-query-matching.hook.ts`, `apps/pragma/site/src/components/molecules/online-status.hook.ts`, `apps/pragma/site/src/components/molecules/setlist-entry-form.hook.ts` |
+| no marker in the name | 17 | `apps/borso-fr/site/src/art/mondrian/composition-url.ts`, `apps/borsouvertures/site/src/state/appState.ts`, `apps/last-loop-lepin/site/src/lib/queries/auth.ts` |
+| <name>.hook.ts | 8 | `apps/borsouvertures/site/src/lib/paginated-list.hook.ts`, `apps/borsouvertures/site/src/lib/session-start.hook.ts`, `apps/borsouvertures/site/src/lib/viewport.hook.ts` |
+| use<Name>.ts | 4 | `apps/borso-fr/site/src/art/mondrian/use-animation.ts`, `apps/borso-fr/site/src/art/mondrian/use-reduced-motion.ts`, `apps/last-loop-lepin/site/src/components/organisms/useGpxFile.ts` |
 
 ## Every suffix in use
 
@@ -142,8 +142,8 @@ than 3 files is either a convention nobody wrote down or an accident.
 | `.types.ts` | 11 |
 | `.queries.ts` | 10 |
 | `.adapter.ts` | 9 |
+| `.hook.ts` | 8 |
 | `.variants.ts` | 6 |
-| `.hook.ts` | 5 |
 | `.setup.ts` | 3 |
 | `.dev.ts` | 2 — rare |
 | `.middleware.ts` | 2 — rare |

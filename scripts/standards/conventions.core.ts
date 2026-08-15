@@ -89,16 +89,18 @@ export interface Divergence {
   readonly question: string;
   readonly variants: readonly Variant[];
   /**
-   * The variant the baseline counts, when the question has a direction.
+   * The answer the standards give, when the question has one.
    *
    * Left unset, the baseline counts everything outside the leading variant,
    * which is right for a question where any one spelling winning is a fine
-   * outcome. It is wrong for a question where one answer is the defect: if
-   * unlayered files ever outnumbered layered ones, the majority rule would
-   * start counting the layered ones and the number would fall while the tree
-   * got worse.
+   * outcome. It is wrong wherever a document already settled the question,
+   * because the majority is then the backlog rather than the convention, and
+   * the number moves the wrong way twice: a file renamed *to* the documented
+   * answer joins the minority and pushes the count up, and if the wrong
+   * spelling ever won outright the count would fall while the tree got worse.
+   * Both were observed here before this field existed.
    */
-  readonly countedVariant?: string;
+  readonly correctVariant?: string;
 }
 
 const EXAMPLES_PER_VARIANT = 3;
@@ -162,6 +164,9 @@ export function listCaseStyleDivergences(facts: readonly FileFact[]): readonly D
  * A file that exports a hook and does not say so in its name, beside one that
  * does. Two spellings for the same role is the drift; either alone is a choice.
  */
+/** The spelling `CLAUDE.md`'s suffix list gives this question. */
+const HOOK_SUFFIX_SHAPE = '<name>.hook.ts';
+
 export function listHookNamingDivergences(facts: readonly FileFact[]): readonly Divergence[] {
   const pathsByShape = new Map<string, string[]>();
   for (const fact of facts) {
@@ -170,7 +175,7 @@ export function listHookNamingDivergences(facts: readonly FileFact[]): readonly 
     const suffix = readNameSuffix(fact.basename);
     const shape =
       suffix === 'hook'
-        ? '<name>.hook.ts'
+        ? HOOK_SUFFIX_SHAPE
         : stem.startsWith('use')
           ? 'use<Name>.ts'
           : 'no marker in the name';
@@ -184,6 +189,7 @@ export function listHookNamingDivergences(facts: readonly FileFact[]): readonly 
       key: 'role-marker:hook',
       question: 'How does a module that exports a hook say so in its name?',
       variants: buildVariants(pathsByShape),
+      correctVariant: HOOK_SUFFIX_SHAPE,
     },
   ];
 }
@@ -245,7 +251,7 @@ export function listLayerMarkerDivergences(facts: readonly FileFact[]): readonly
       key: `layer-marker:${application}`,
       question: `Does a file in ${application} say which layer it is in?`,
       variants: buildVariants(pathsByShape),
-      countedVariant: NO_LAYER_IN_THE_NAME,
+      correctVariant: LAYER_IN_THE_NAME,
     });
   }
   return divergences;
@@ -260,20 +266,28 @@ export function listDivergences(facts: readonly FileFact[]): readonly Divergence
 }
 
 /**
- * The number a baseline records for a divergence: how many files sit outside
- * the majority spelling. Zero means the group agrees.
+ * The number a baseline records for a divergence: how many files still have to
+ * move. Zero means there is nothing left to fix.
+ *
+ * Against a documented answer that is every file not spelling it that way.
+ * Against no documented answer it is every file outside the leading spelling,
+ * because the majority is the only thing standing in for a decision nobody
+ * took.
  */
-export function countMinorityFiles(divergence: Divergence): number {
-  const counted = divergence.variants.find((variant) => variant.name === divergence.countedVariant);
-  if (counted !== undefined) return counted.count;
-  return divergence.variants.slice(1).reduce((total, variant) => total + variant.count, 0);
+export function countDivergentFiles(divergence: Divergence): number {
+  if (divergence.correctVariant === undefined) {
+    return divergence.variants.slice(1).reduce((total, variant) => total + variant.count, 0);
+  }
+  return divergence.variants
+    .filter((variant) => variant.name !== divergence.correctVariant)
+    .reduce((total, variant) => total + variant.count, 0);
 }
 
 export type BaselineCounts = Readonly<Record<string, number>>;
 
 export function buildBaseline(divergences: readonly Divergence[]): BaselineCounts {
   const counts: Record<string, number> = {};
-  for (const divergence of divergences) counts[divergence.key] = countMinorityFiles(divergence);
+  for (const divergence of divergences) counts[divergence.key] = countDivergentFiles(divergence);
   return counts;
 }
 

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/atoms/Button';
 import { ShowMovesToggle } from '@/components/molecules/ShowMovesToggle';
 import type { ComponentByKind } from '@/lib/componentTable.types';
-import { useIsCompactViewport } from '@/lib/viewport';
+import { useIsCompactViewport } from '@/lib/viewport.hook';
 import { buildSessionKey, selectTreeVisualization } from '@/openings/sessionStart.core';
 import type { Opening } from '@/openings/types';
 import { setView, useAppState } from '@/state/appState';

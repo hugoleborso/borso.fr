@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { usePaginatedList } from './usePaginatedList';
+import { usePaginatedList } from './paginated-list.hook';
 
 const PAGE_SIZE = 2;
 

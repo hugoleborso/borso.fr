@@ -23,7 +23,7 @@ import { basename, join } from 'node:path';
 import { inferLayer, isTestFile } from '../../.claude/skills/blueprint/blueprint-utils.js';
 import {
   buildBaseline,
-  countMinorityFiles,
+  countDivergentFiles,
   countSuffixes,
   listDivergences,
   listRatchetFailures,
@@ -107,7 +107,11 @@ function renderReport(facts: readonly FileFact[]): string {
   for (const divergence of divergences) {
     lines.push(`## ${divergence.question}`, '');
     lines.push(
-      `\`${divergence.key}\` — ${String(countMinorityFiles(divergence))} file(s) outside the majority spelling.`,
+      `\`${divergence.key}\` — ${String(countDivergentFiles(divergence))} file(s) outside ${
+        divergence.correctVariant === undefined
+          ? 'the majority spelling'
+          : `\`${divergence.correctVariant}\`, which is the answer the standards give`
+      }.`,
       '',
     );
     lines.push('| Spelling | Files | For example |', '| --- | --- | --- |');

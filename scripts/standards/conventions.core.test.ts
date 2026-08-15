@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildBaseline,
-  countMinorityFiles,
+  countDivergentFiles,
   countSuffixes,
   listCaseStyleDivergences,
   listDivergences,
@@ -200,7 +200,7 @@ describe('listLayerMarkerDivergences', () => {
       'Does a file in pragma say which layer it is in?',
       'Does a file in borso-fr say which layer it is in?',
     ]);
-    expect(divergences.map(countMinorityFiles)).toEqual([1, 1]);
+    expect(divergences.map(countDivergentFiles)).toEqual([1, 1]);
   });
 
   it('names the two answers so the report says which one is the defect', () => {
@@ -214,7 +214,7 @@ describe('listLayerMarkerDivergences', () => {
       'the suffix names the layer',
       'nothing in the name says',
     ]);
-    expect(divergence?.countedVariant).toBe('nothing in the name says');
+    expect(divergence?.correctVariant).toBe('the suffix names the layer');
   });
 
   it('ignores a bare `apps` path, which names no application', () => {
@@ -239,7 +239,7 @@ describe('listLayerMarkerDivergences', () => {
       buildFact('apps/a/site/src/two.ts', { layer: 'unknown' }),
       buildFact('apps/a/site/src/three.utils.ts'),
     ];
-    expect(listLayerMarkerDivergences(facts).map(countMinorityFiles)).toEqual([2]);
+    expect(listLayerMarkerDivergences(facts).map(countDivergentFiles)).toEqual([2]);
   });
 });
 
@@ -260,7 +260,7 @@ describe('listDivergences', () => {
   });
 });
 
-describe('countMinorityFiles', () => {
+describe('countDivergentFiles', () => {
   it('counts everything outside the majority spelling', () => {
     const divergence = {
       key: 'k',
@@ -270,14 +270,14 @@ describe('countMinorityFiles', () => {
         { name: 'camel', count: 12, examples: [] },
       ],
     };
-    expect(countMinorityFiles(divergence)).toBe(12);
+    expect(countDivergentFiles(divergence)).toBe(12);
   });
 
   it('counts nothing for a divergence with no variants', () => {
-    expect(countMinorityFiles({ key: 'k', question: 'q', variants: [] })).toBe(0);
+    expect(countDivergentFiles({ key: 'k', question: 'q', variants: [] })).toBe(0);
   });
 
-  it('counts the named variant when the question has a direction', () => {
+  it('counts everything but the documented answer, even when that answer leads', () => {
     const divergence = {
       key: 'k',
       question: 'q',
@@ -285,22 +285,35 @@ describe('countMinorityFiles', () => {
         { name: 'named', count: 54, examples: [] },
         { name: 'unnamed', count: 15, examples: [] },
       ],
-      countedVariant: 'named',
+      correctVariant: 'named',
     };
-    expect(countMinorityFiles(divergence)).toBe(54);
+    expect(countDivergentFiles(divergence)).toBe(15);
   });
 
-  it('falls back to the minority when the named variant is absent', () => {
+  it('counts everything but the documented answer when that answer trails', () => {
     const divergence = {
       key: 'k',
       question: 'q',
       variants: [
-        { name: 'named', count: 54, examples: [] },
-        { name: 'unnamed', count: 15, examples: [] },
+        { name: 'unnamed', count: 54, examples: [] },
+        { name: 'named', count: 15, examples: [] },
       ],
-      countedVariant: 'gone',
+      correctVariant: 'named',
     };
-    expect(countMinorityFiles(divergence)).toBe(15);
+    expect(countDivergentFiles(divergence)).toBe(54);
+  });
+
+  it('counts every file when nothing spells the documented answer yet', () => {
+    const divergence = {
+      key: 'k',
+      question: 'q',
+      variants: [
+        { name: 'one way', count: 54, examples: [] },
+        { name: 'another', count: 15, examples: [] },
+      ],
+      correctVariant: 'the documented one',
+    };
+    expect(countDivergentFiles(divergence)).toBe(69);
   });
 });
 

@@ -634,6 +634,15 @@
         "followers": 4
       }
     ],
+    "site/hook": [
+      {
+        "id": "hook-effect-free-mount",
+        "name": "Effect Free Mount Hook",
+        "usage": "Use when work has to run exactly once per mount, in place of a `useEffect` with an empty dependency array.",
+        "path": "apps/borsouvertures/site/src/lib/session-start.hook.ts",
+        "followers": 1
+      }
+    ],
     "site/i18n": [
       {
         "id": "i18n-parity-gate",
@@ -977,13 +986,6 @@
         "followers": 2
       },
       {
-        "id": "hook-effect-free-mount",
-        "name": "Effect Free Mount Hook",
-        "usage": "Use when work has to run exactly once per mount, in place of a `useEffect` with an empty dependency array.",
-        "path": "apps/borsouvertures/site/src/lib/useSessionStart.ts",
-        "followers": 1
-      },
-      {
         "id": "observability-adapter",
         "name": "Observability Adapter",
         "usage": "Use for the one module a front end calls to report an event, so no component imports the vendor SDK.",
@@ -1204,7 +1206,7 @@
         "id": "test-hook-probe",
         "name": "Hook Probe Component",
         "usage": "Use to drive a custom hook from a test without pulling in a hook testing library.",
-        "path": "apps/borsouvertures/site/src/lib/usePaginatedList.test.tsx",
+        "path": "apps/borsouvertures/site/src/lib/paginated-list.hook.test.tsx",
         "followers": 4
       },
       {

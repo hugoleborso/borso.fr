@@ -6,8 +6,8 @@ import { PlayCompletedBanner } from '@/components/molecules/PlayCompletedBanner'
 import { PlayOutOfBookModal } from '@/components/molecules/PlayOutOfBookModal';
 import { PlayStatusPanel } from '@/components/molecules/PlayStatusPanel';
 import type { ComponentByFlag } from '@/lib/componentTable.types';
-import { useSessionStart } from '@/lib/useSessionStart';
-import { useBoardWidth } from '@/lib/viewport';
+import { useSessionStart } from '@/lib/session-start.hook';
+import { useBoardWidth } from '@/lib/viewport.hook';
 import { selectVisibleBookMoves } from '@/openings/bookArrows.utils';
 import { playMachine } from '@/openings/machineInstances';
 import { isUndoAllowed, selectLineLabel } from '@/openings/playSession.core';
