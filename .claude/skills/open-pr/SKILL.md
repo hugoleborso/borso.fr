@@ -28,6 +28,7 @@ The skill assembles the PR body from two upstream loops, never re-deriving conte
 4. **`docs/features/<app>/<slug>/validation/technical-validation-*.md`** — most recent technical-validation report. Verdict at level 1; row-level findings at level 2.
 5. **`docs/dantotsus/*.md`** — entries created since the base ref. Listed under a *Dantotsus uncovered* block at level 2.
 6. **The diff** (`git diff origin/main...HEAD --stat` + `git log origin/main..HEAD`) — drives the *What changed* table at level 2.
+6a. **The architecture comparison** (`scripts/architecture/architecture-diff.ts`, plus `architecture-graph.ts --diff-base`) — drives the *Architecture map* section at level 1. Always generated, never skipped; see *Generating the architecture diff* below.
 
 **Orchestration loop** (only when `/tech-lead-orchestrator` drove the work — detected by the presence of `docs/features/<app>/<slug>/runs/<run-id>/`):
 7. **`docs/features/<app>/<slug>/runs/<run-id>/state.json`** — final stage, retry counters, validator verdicts. Drives the level-1 counter line.
@@ -49,11 +50,65 @@ Missing sources collapse: no empty `<details>` shells, no stubs. The absence of 
 3. **Confirm validation freshness.** If the latest visual-validation or technical-validation report is older than the most recent commit, surface a warning and ask whether to re-run (user can decline — the warning is then disclosed in the PR body).
 4. **Read every input source.** Parse the spec's Why + Q.O.D. The plan's table. Each ADR. Each validation report.
 4a. **Compute the orchestration trace (only if `runs/<run-id>/` exists).** Walk `journal.md.jsonl` chronologically to build the Mermaid edge list. Read each `agents/*.md` verdict YAML's front-matter to build the per-agent table. Count from `state.json`: implementation rounds = `retries.implement + 1`; validation rounds = `retries.validate + 1`; defects caught = number of `*_validation_completed` events with `status: FAIL` in the journal; kaizen items queued = lines under `## Items found during this session` in the gitignored `KAIZEN.md` (if absent, 0).
+4b. **Generate the architecture diff.** Always, for every application the branch touches. See *Generating the architecture diff*.
 5. **Render the body.** Feed everything through `template.md`. The skill never invents content — every level-1 line is sourced verbatim or near-verbatim from spec / plan / ADR / validation reports.
 6. **Show the draft body to the user.** Print it. The user can edit or approve. **The skill does not call `gh pr create` until the user says so explicitly.**
 7. **Generate the screenshot URL block.** Once the user approves, the skill SHA-pins the screenshot URLs (`git rev-parse HEAD`) and rewrites the body's screenshot section in place.
 8. **Call `gh pr create`** with `--title` and `--body-file <generated body>`. Title format: `feat(<scope>): <imperative present-tense — short>` per the repo's commitlint convention.
 9. **Stage no commit.** The PR body is not committed; it lives in the GitHub PR description. The skill's only file side-effect is the eventual screenshot SHA-pinning.
+
+## Generating the architecture diff
+
+**Always run this, on every PR, before rendering the body.** A reviewer who
+knows in one line that the branch added six bounded contexts and removed three
+reads the diff differently from one who has to infer it from four hundred
+changed lines. The section is cheap to produce and it is the first thing a
+reviewer should see.
+
+For each application the branch touches — the `apps/<app>/` directories with a
+non-empty diff, plus every application when `scripts/architecture/` or
+`.claude/skills/blueprint/blueprint-utils.ts` changed, because those move every
+map at once:
+
+```bash
+base="$(git merge-base origin/main HEAD)"
+git worktree add --detach ../architecture-base "$base"
+
+pnpm exec tsx scripts/architecture/architecture-graph.ts --app <app> \
+  --app-root ../architecture-base/apps/<app> --out /tmp/architecture-base
+
+# The numbers, for the body.
+pnpm exec tsx scripts/architecture/architecture-diff.ts \
+  /tmp/architecture-base/<app>-architecture.json \
+  docs/architecture/<app>-architecture.json
+
+# The browsable page, for the link.
+pnpm exec tsx scripts/architecture/architecture-graph.ts --app <app> \
+  --diff-base /tmp/architecture-base
+
+git worktree remove ../architecture-base --force
+```
+
+What goes in the body:
+
+- **One level-1 line per application**, from the markdown report's counts:
+  routes added or removed, routes reaching a table or an external they did not
+  reach before, routes that lost their last caller, files that changed layer,
+  blueprints gained or lost. Write the ones that are non-zero; say
+  "no architectural change" when the report says so, because that is the
+  sentence that lets a reviewer skip the section.
+- **A link to the coloured map**, which is the artifact the `architecture`
+  workflow uploads for this pull request:
+  `https://github.com/hugoleborso/borso.fr/actions/workflows/architecture.yml?query=branch%3A<branch>`
+  — the newest run there carries `architecture-maps`, and `<app>-diff.html`
+  inside it is the same graphs with each block coloured by what the branch did:
+  green added, amber changed, red and struck through removed.
+- **A link to the published map** for the current state of `main`:
+  `https://hugoleborso.github.io/borso.fr/<app>-architecture.html`.
+
+Never paste the whole markdown report into the body. It is capped at fifteen
+lines per section and still runs long on a branch that renames anything; the
+counts belong at level 1 and the detail belongs in the linked page.
 
 ## PreToolUse hook
 
@@ -86,6 +141,10 @@ Do **not** invoke when:
 - **Over-summarising.** Level 1 is not a tagline; it has to actually let a reviewer decide whether to merge without opening any toggle. If the level 1 summary requires "see details" to make sense, it's wrong.
 - **Stingy with `<details>`.** The opposite failure mode of *Over-summarising*. Default to collapsing aggressively — anything that isn't strictly load-bearing for the merge decision goes in a toggle. File-by-file rationale, trade-offs, alternatives considered, references-left-intact, test plan: every one of these is a `<details>` by default. Level 1 stays tight; the reviewer expands only what they need. The two failure modes set the band: Level 1 must stand alone, *and* everything else must collapse.
 - **Pseudo-toggles.** A `<details>` with one line inside is noise. Either inline or skip.
+- **Shipping without the architecture diff.** It is one command and it is the
+  section that most changes how fast a review goes. A PR body with no
+  *Architecture map* section reads as "nobody checked", which on this repository
+  is indistinguishable from "the map moved and nobody noticed".
 - **Parroting git output.** Don't paste `git diff --stat`, `git log --oneline`, or `git grep` commands into the PR body — GitHub already renders the diff, the file tree, and the commit list natively on the PR page. The body's job is to talk about *what changed and why*, not *which lines moved*. Same goes for the test plan: don't write `git grep adr-writer returns nothing` — write the behavioural assertion ("no live references to the deleted skill remain in the active config").
 - **Lying screenshots.** SHA-pin every screenshot URL to the head commit before opening the PR; raw GitHub URLs to `main` rot when the branch is deleted.
 - **Inventing content.** Level-1 lines are sourced from spec / plan / ADR; the skill never paraphrases beyond what those documents say. If the spec is sloppy, fix the spec — don't paper over it in the PR body.

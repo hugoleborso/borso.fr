@@ -15,6 +15,10 @@ The canonical shape of a `/open-pr` body. Three rules:
 
 ## Body layout (top to bottom)
 
+The order is: Summary, Validation, Orchestration trace (when there is
+one), **Architecture map**, Architecture choices, What the user sees,
+Visual evidence, Test plan, Validation gaps, Dantotsus, Known gaps.
+
 ### Section 1: Summary (level 1)
 
 1–3 sentences. The *why* + the *what* in one breath. No "see below" /
@@ -124,6 +128,44 @@ chosen path, one line. Level 2 = the ADR's *Decision* + *Consequences*.
 Level 3 = *Alternatives considered* + *Evaluation rubric*.
 
 ```markdown
+## Architecture map (level 1, always present)
+
+One line per application the branch touches, giving the counts that
+`architecture-diff.ts` printed, then two links: the coloured map for
+this branch, and the published map for `main`.
+
+This section is never omitted. When a branch changes nothing structural
+it says so in one sentence, and that sentence is the point: it tells a
+reviewer the map is not worth opening. A missing section says nothing,
+and on this repository "nothing" and "the map moved and nobody looked"
+are the same shape.
+
+```markdown
+## Architecture map
+
+- **pragma** — 6 contexts added, 14 changed, 3 removed; 2 routes now
+  reach a table they did not; 4 files changed layer; 2 blueprints added.
+- **last-loop-lepin** — no architectural change.
+
+[Browse the coloured map for this branch](https://github.com/hugoleborso/borso.fr/actions/workflows/architecture.yml?query=branch%3Aclaude%2Fmy-branch)
+— newest run, `architecture-maps` artifact, `pragma-diff.html`. Green is
+added, amber is changed, red struck through is gone. ·
+[The published map for `main`](https://hugoleborso.github.io/borso.fr/pragma-architecture.html)
+```
+
+Rules:
+
+- **Counts, not the report.** The markdown report caps each section at
+  fifteen lines and still runs long on a branch that renames anything.
+  A reviewer wants the shape of the change, not the enumeration; the
+  enumeration is one click away in the coloured page.
+- **Name the colours.** A reviewer who has not seen the page before does
+  not know green means added. One clause fixes that.
+- **Every application, when the generator changed.** A change under
+  `scripts/architecture/` or `blueprint-utils.ts` moves every map at
+  once, so the section covers all of them rather than the one the branch
+  seems to be about.
+
 ## Architecture choices
 
 - **Persistence: Aurora DSQL (per-app cluster, drizzle-kit migrate).**
