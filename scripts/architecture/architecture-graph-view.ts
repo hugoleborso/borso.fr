@@ -858,7 +858,16 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       if (!feature || !actionList) return;
       actionList.replaceChildren();
       const entries = [
-        { id: feature.id + ':__all__', label: 'Everything in ' + feature.label, meta: feature.actions.length + (feature.actions.length === 1 ? ' action' : ' actions') },
+        {
+          id: feature.id + ':__all__',
+          label: 'Everything in ' + feature.label,
+          // A feature no action reaches is a composition rather than a flow,
+          // and "0 actions" reads as a gap where there is none.
+          meta:
+            feature.actions.length === 0
+              ? 'what it is made of'
+              : feature.actions.length + (feature.actions.length === 1 ? ' action' : ' actions'),
+        },
         ...feature.actions.map((action) => ({
           id: action.id,
           label: action.label,

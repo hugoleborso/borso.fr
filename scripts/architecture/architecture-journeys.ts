@@ -411,6 +411,12 @@ export interface JourneyModel {
 const SHELL_FEATURE_ID = 'shell';
 /** The other one: a request arriving, before any route has been chosen. */
 const REQUEST_FEATURE_ID = 'request';
+/**
+ * The third: the front end a feature reaches for rather than owns. Its files
+ * carry no `@Feature` tag, because a button belongs to no one screen, and that
+ * is exactly what makes them a set rather than a stray.
+ */
+const SHARED_FEATURE_ID = 'shared';
 
 /** True for a module the front end renders or leans on, rather than one the API owns. */
 function isFrontEndModule(file: ArchitectureFile): boolean {
@@ -425,6 +431,14 @@ function isFrontEndModule(file: ArchitectureFile): boolean {
  * lean on, and none of that appears in a flow — an atom is in no data flow by
  * construction. Adding it here rather than to each action keeps a single action
  * readable and lets the feature's own view answer "what is this made of".
+ *
+ * **Scoped to the feature's own files.** The walk from a feature's screens
+ * reaches the whole shared component library, because every page renders a
+ * button. Drawn unscoped, `songs` was 177 blocks of which 54 were its own and
+ * 123 were `Button`, `Badge`, `Avatar` and their variant files — a picture of
+ * the application answering a question about one feature. A file joins its
+ * feature's view when it carries that feature's `@Feature` tag; the untagged
+ * front end is the design system and has its own entry.
  */
 /**
  * A node's `location` is `<path>:<line>`, and only the path names a file. The
@@ -442,6 +456,7 @@ function addComposition(
   edges: GraphEdge[],
   fileByPath: ReadonlyMap<string, ArchitectureFile>,
   sources: Map<string, SourceEntry>,
+  featureId: string,
 ): void {
   const drawn = new Set(
     nodes.flatMap((node) =>
@@ -453,7 +468,11 @@ function addComposition(
     .map((node) => node.id.slice('ui:'.length));
   if (seeds.length === 0) return;
 
-  const rendered = renderedBy(seeds, fileByPath, (file) => !isFrontEndModule(file));
+  const rendered = renderedBy(
+    seeds,
+    fileByPath,
+    (file) => !isFrontEndModule(file) || file.feature !== featureId,
+  );
   const inGraph = new Set([...seeds, ...rendered.map((file) => file.path)]);
   for (const file of rendered) {
     if (drawn.has(file.path)) continue;
@@ -548,7 +567,7 @@ function buildShellJourney(
       kind: 'import',
     });
   }
-  addComposition(nodes, edges, fileByPath, sources);
+  addComposition(nodes, edges, fileByPath, sources, shellFeatureId(entry));
   const featureId = shellFeatureId(entry);
   return {
     graph: { nodes: dedupeNodes(nodes), edges: dedupeEdges(edges) },
@@ -982,7 +1001,7 @@ export function buildJourneys(
     }
 
     if (actions.length === 0) continue;
-    addComposition(featureNodes, featureEdges, fileByPath, sources);
+    addComposition(featureNodes, featureEdges, fileByPath, sources, featureId);
     graphs.set(`${featureId}:__all__`, {
       nodes: dedupeNodes(featureNodes),
       edges: dedupeEdges(featureEdges),
@@ -1013,6 +1032,37 @@ export function buildJourneys(
       label: REQUEST_FEATURE_ID,
       actions: request.actions,
     });
+  }
+
+  /**
+   * Every front-end file no feature claims, drawn together.
+   *
+   * Composition is scoped to a feature's own files, so without this the shared
+   * component library would appear nowhere: `Button`, `Badge`, `Avatar` and
+   * their variants are rendered by every feature and tagged by none. Drawing
+   * them inside each feature was the alternative, and it is what made `songs`
+   * 177 blocks with 123 of them belonging to the application rather than to
+   * songs.
+   */
+  const shared = files.filter((file) => isFrontEndModule(file) && file.feature === null);
+  if (shared.length > 0) {
+    const sharedPaths = new Set(shared.map((file) => file.path));
+    const sharedNodes = shared.map((file) => compositionNode(file, sources));
+    const sharedEdges: GraphEdge[] = [];
+    for (const file of shared) {
+      for (const edge of file.imports) {
+        if (edge.targetFile === null || !sharedPaths.has(edge.targetFile)) continue;
+        sharedEdges.push({
+          from: `ui:${file.path}`,
+          to: `ui:${edge.targetFile}`,
+          label: '',
+          kind: edge.isTypeOnly === true ? 'type' : 'import',
+        });
+      }
+    }
+    const sharedGraph = { nodes: dedupeNodes(sharedNodes), edges: dedupeEdges(sharedEdges) };
+    graphs.set(`${SHARED_FEATURE_ID}:__all__`, sharedGraph);
+    features.push({ id: SHARED_FEATURE_ID, label: SHARED_FEATURE_ID, actions: [] });
   }
 
   const drawnFiles = new Set(

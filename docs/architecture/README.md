@@ -332,6 +332,14 @@ pnpm exec tsx scripts/architecture/architecture-graph.ts --app pragma \
   edit — naming an application whose code nobody had touched. Publishing from a
   fresh build removes the question. See
   [a generated file cannot contain its own commit](../dantotsus/a-generated-file-cannot-contain-its-own-commit.md).
+- **A feature's view draws that feature's own files, not everything its screens
+  render.** The walk from a page reaches the whole shared component library,
+  because every page renders a button, and unscoped it made `songs` 177 blocks
+  of which 123 were `Button`, `Badge`, `Avatar` and their variants. A file joins
+  a feature's view when it carries that feature's `@Feature` tag. The front end
+  no feature claims is drawn together under **shared**, which is the design
+  system and the third entry that is not a data flow, beside `shell` and
+  `request`.
 - A route handler defined outside the controller file is not followed.
 - The walk stops at depth six, which no chain in pragma currently reaches.
 - `sw.js` is scanned for URL strings only, since it ships as plain script.
