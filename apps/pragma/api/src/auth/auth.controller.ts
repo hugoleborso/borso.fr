@@ -25,7 +25,8 @@ import { type BucketStore, createBucketStore } from './rate-limit.utils';
 import { SESSION_COOKIE_NAME, SESSION_TTL_MS } from './session-cookie.utils';
 import { requireSharedPasswordSession } from './shared-password.middleware';
 
-const SESSION_COOKIE_MAX_AGE_S = SESSION_TTL_MS / 1000;
+const MILLISECONDS_PER_SECOND = 1_000;
+const SESSION_COOKIE_MAX_AGE_S = SESSION_TTL_MS / MILLISECONDS_PER_SECOND;
 
 export interface BuildAuthRouterOptions {
   readonly bucketStore?: BucketStore;

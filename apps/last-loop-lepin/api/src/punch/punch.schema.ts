@@ -70,6 +70,9 @@ export const correctPunchInputSchema = z.object({
   finishedAt: z.string().datetime({ offset: true }),
 });
 
+const MAX_LATITUDE_DEGREES = 90;
+const MAX_LONGITUDE_DEGREES = 180;
+
 export const catchupPunchInputSchema = z.object({
   editionSlug: editionSlugSchema,
   runnerSlug: runnerSlugSchema,
@@ -79,8 +82,8 @@ export const catchupPunchInputSchema = z.object({
 export const selfPunchInputSchema = z.object({
   editionSlug: editionSlugSchema,
   runnerSlug: runnerSlugSchema,
-  clientLat: z.number().min(-90).max(90).nullable(),
-  clientLng: z.number().min(-180).max(180).nullable(),
+  clientLat: z.number().min(-MAX_LATITUDE_DEGREES).max(MAX_LATITUDE_DEGREES).nullable(),
+  clientLng: z.number().min(-MAX_LONGITUDE_DEGREES).max(MAX_LONGITUDE_DEGREES).nullable(),
   clientAccuracyM: z.number().nonnegative().nullable(),
 });
 

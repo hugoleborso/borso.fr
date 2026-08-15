@@ -121,11 +121,19 @@ are synchronising with.
 
 ## Enforced by
 
-- `borso/no-use-effect`, a custom ESLint rule, set to error across
-  `apps/*/site/`, with the disable comment requiring a description.
-- `react-hooks/rules-of-hooks` and `react-hooks/exhaustive-deps`, both set to
-  error, which cover the effects that survive. `exhaustive-deps` needs the
-  explicit severity: the plugin's recommended set ships it at `warn`, and no
-  gate here passes `--max-warnings`, so it failed nothing until 2026-08-15.
-- `borso/no-inline-subscribe-in-use-sync-external-store`, a custom ESLint rule,
-  which rejects an inline `subscribe` or `getSnapshot` argument.
+- `eslint:borso/no-use-effect` rejects every effect across `apps/*/site/`, and
+  the disable comment that excuses one has to carry a reason.
+- `eslint:react-hooks/rules-of-hooks` rejects a hook called conditionally or
+  outside a component.
+- `eslint:react-hooks/exhaustive-deps` rejects a dependency array that does not
+  list everything the effect reads. It ships at `warn` from the plugin's
+  recommended preset, so both the pre-commit hook and `ci.yml` pass
+  `--max-warnings 0` and a warning fails the run exactly as an error does.
+  Without that flag eslint exits 0 on a warning, which is how a rule stays on
+  and gates nothing.
+- `eslint:borso/no-inline-subscribe-in-use-sync-external-store` rejects an
+  inline `subscribe` or `getSnapshot` argument, which resubscribes on every
+  render.
+- `reviewer` checks that the reason on a surviving effect names the external
+  system it synchronises with, because a rule can see the disable comment and
+  not whether the sentence after it is true.

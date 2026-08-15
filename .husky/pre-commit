@@ -23,10 +23,16 @@ changed=$(git diff --cached --name-only --diff-filter=ACMR)
 #
 # Rung-1 eradication, together with the ci.yml backup, of
 # docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
+#
+# --max-warnings 0 is what makes the warning-severity rules a gate. Several
+# rules the standards rely on ship at `warn` from their plugin's recommended
+# preset — react-hooks/exhaustive-deps, react-hooks/incompatible-library — and
+# eslint exits 0 on a warning, so without this flag those rules printed and
+# nothing stopped. A warning nobody has to clear is a rule that is off.
 staged_lintable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs)$' || true)
 if [ -n "$staged_lintable" ]; then
   echo "[pre-commit] running eslint on staged files"
-  echo "$staged_lintable" | xargs pnpm exec eslint --no-warn-ignored --cache --cache-strategy content --cache-location .eslintcache
+  echo "$staged_lintable" | xargs pnpm exec eslint --no-warn-ignored --max-warnings 0 --cache --cache-strategy content --cache-location .eslintcache
 fi
 
 staged_formattable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html)$' || true)
@@ -69,6 +75,12 @@ if [ -n "$staged_lintable" ]; then
   set +e
   run_generator_check .claude/skills/blueprint/blueprint-indexing.ts
   run_generator_check .claude/skills/blueprint/blueprint-heatmap.ts
+  # The defect page and the seeding lookup are generated from the same
+  # annotations, so they go stale on the same edit: a dantotsu naming a
+  # blueprint that does not exist, and a hook seeding a pattern nobody carries
+  # any more, both read as fine until someone follows them.
+  run_generator_check scripts/blueprints/blueprint-defects.ts
+  run_generator_check .claude/skills/blueprint/blueprint-context.ts
   set -e
 fi
 
@@ -102,6 +114,37 @@ fi
 # so it costs nothing and belongs on the commit.
 echo "[pre-commit] checking each app ships one stylesheet"
 scripts/check-single-stylesheet.sh
+
+# And that the one stylesheet holds tokens only. Counting the files never opens
+# one, so a global `.classname { … }` rule inside it — the cascade coming back,
+# invisible in the JSX it styles — had no gate at all.
+echo "[pre-commit] checking each stylesheet holds tokens only"
+scripts/check-stylesheet-contents.sh
+
+# Every directory under apps/ has a path-filters key and a commitlint scope.
+# Both failures are silent in the way that matters: no filter means the app
+# never gets a preview deploy and no workflow says so, and no scope means the
+# first commit naming the app is rejected by a hook talking about an enum.
+echo "[pre-commit] checking each app is registered"
+scripts/check-app-registration.sh
+
+# The enforcement ledger, whenever a standard or one of the mechanisms it can
+# cite changed. It resolves every `## Enforced by` bullet against the live
+# ESLint configuration and the checked-in hooks, so it fails on a rule cited
+# and enabled nowhere, a script no hook invokes, a gate whose command is absent
+# from a site it claims, and a mechanism that runs while no standard says why.
+#
+# This is the one check here that is not instant: it builds an ESLint instance
+# and resolves a configuration per probe path, measured at 6.9 s. It stays on
+# the commit because the trigger is narrow — the standards, the rules, the
+# config and the two gate sites — and a commit touching those is rare, while a
+# standard claiming an enforcement nobody runs is exactly what this branch
+# found four of.
+if git diff --cached --name-only |
+  grep -qE '^(docs/standards/|eslint-rules/|eslint\.config\.js|\.husky/|\.github/workflows/)'; then
+  echo "[pre-commit] checking the enforcement ledger"
+  pnpm exec tsx scripts/standards/enforcement-ledger.ts --check
+fi
 
 # A `VITE_*` variable a site reads and no workflow sets is a feature that never
 # runs, in every stage, silently: Vite substitutes `undefined` at build time and

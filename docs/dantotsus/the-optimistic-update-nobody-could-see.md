@@ -9,6 +9,7 @@ fix-commits: [531e6e4, 4065faa]
 eradication-level: 2
 time-to-detect: 3 months
 tags: [react, tanstack-query, optimistic-update, frontend, pragma, custom-rule]
+blueprints: [query-optimistic-mutation]
 ---
 
 # The optimistic update nobody could see

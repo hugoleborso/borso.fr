@@ -189,21 +189,34 @@ return value, and any surprising edge case.
 
 ## Enforced by
 
-- `borso/no-abbreviated-identifier`, a custom ESLint rule, which rejects a
-  dictionary of known abbreviations and any identifier under three characters
-  outside a loop header.
-- `borso/function-names-are-verb-phrases`, a custom ESLint rule, which rejects
-  `handle`, `process`, `manage`, and `do` prefixes.
-- `borso/no-french-identifiers`, a custom ESLint rule, which flags a dictionary
-  of French terms that have appeared in this repository before.
-- `borso/no-step-named-value`, a custom ESLint rule, which rejects a `const` or
-  `let` named `parsed`, `result`, `results`, `res`, `data`, `entries`,
-  `payload`, `output`, `obj`, `arr`, `val`, `tmp`, `temp`, `item` or `items`. A
-  `for (const entry of …)` head and a destructuring pattern are out of scope,
-  matching the two exceptions above.
-- Reviewer judgement for anything a dictionary cannot catch, which includes
-  the magic-number rule above. `no-magic-numbers` is **not** enabled:
-  `{ ignore: [0, 1, -1] }` reports 1928 sites across the repository (measured
-  2026-08-15), so turning it on is a decision about 1928 edits rather than a
-  configuration line, and this section listed it as enforced for months while
-  it was off.
+- `eslint:borso/no-abbreviated-identifier` rejects a dictionary of known
+  abbreviations and any identifier under three characters outside a loop header.
+- `eslint:borso/function-names-are-verb-phrases` rejects the `handle`,
+  `process`, `manage`, and `do` prefixes.
+- `eslint:borso/no-french-identifiers` flags a dictionary of French terms that
+  have appeared in this repository before.
+- `eslint:borso/no-step-named-value` rejects a `const` or `let` named `parsed`,
+  `result`, `results`, `res`, `data`, `entries`, `payload`, `output`, `obj`,
+  `arr`, `val`, `tmp`, `temp`, `item` or `items`. A `for (const entry of …)`
+  head and a destructuring pattern are out of scope, matching the two
+  exceptions above.
+- `eslint:unicorn/consistent-boolean-name` requires a boolean to read as a
+  claim.
+- `eslint:unicorn/catch-error-name` requires `catch (error)`.
+- `eslint:no-magic-numbers` requires a literal to be named, across `apps/` and
+  `infra/`, with `enforceConst` so the name is a `const`. Exempt: `0`, `1` and
+  `-1` as identity values; the HTTP status codes `200`, `201`, `204`, `301`,
+  `302`, `400`, `401`, `403`, `404`, `409`, `422`, `429`, `500`, `502` and
+  `503`, which are names in a published registry already; an array index, a
+  parameter or class field default, and an object property, whose key or
+  parameter name is the name the rule asks for. Off in a test file, where a
+  fixture literal belongs next to the assertion that gives it meaning.
+- `reviewer` checks that a verb keeps the promise the table above makes, so a
+  `find…` returns `null` when the thing is absent and a `get…` throws.
+- `reviewer` checks that a boolean name is not negated, because `isNotReady`
+  reads as a double negative inside a `!`.
+- `reviewer` checks that a comment documents something the code cannot say,
+  and is not a restatement, a history note, or a description of what the code
+  does not do.
+- `reviewer` checks that a file name says what the file holds, because the
+  suffix table is a convention no rule reads.

@@ -30,13 +30,8 @@ eslint-rules/                 the custom rules, one file each
   index.js                    the plugin object
   <rule-name>.js
   <rule-name>.test.js         a RuleTester suite per rule
+apps/<app>/eslint.config.js   extends the root, adds app specific overrides
 ```
-
-There is no per-application ESLint configuration. The flat config at the root
-reaches every workspace, each application's `lint` script runs `eslint` from
-the root against its own folder, and an application-specific exception is a
-`files:` block in the root file — e.g. the one that lets `borsouvertures` say
-`piece`. One file is the point: a rule cannot be quietly relaxed in a corner.
 
 Every custom rule ships with a `RuleTester` suite, because a lint rule that
 misfires costs more than the rule saves.
@@ -45,7 +40,7 @@ misfires costs more than the rule saves.
 
 The configuration starts from `@eslint/js` recommended,
 `typescript-eslint` strict and stylistic with type checking, the React hooks
-plugin, the React refresh plugin, `eslint-plugin-import-x` for resolution and
+plugin, the React refresh plugin, `eslint-plugin-import` for resolution and
 cycle detection, `eslint-plugin-unicorn` for the naming and correctness rules,
 `eslint-plugin-vitest` on test files, and `eslint-plugin-jsx-a11y` on the front
 ends.
@@ -74,15 +69,6 @@ git.
 | `borso/no-direct-api-fetch-in-site`                    | [06](./06-data-fetching.md)                                |
 | `borso/no-api-anchor-in-site`                          | [06](./06-data-fetching.md)                                |
 | `borso/no-vendor-sdk-outside-adapter`                  | [06](./06-data-fetching.md)                                |
-| `borso/no-adapter-import-in-pure-module`               | [02](./02-purity-and-core-files.md)                        |
-| `borso/no-outbound-call-outside-adapter`               | [06](./06-data-fetching.md), ADR-0012                      |
-| `borso/test-file-has-sibling-source`                   | [10](./10-testing.md)                                      |
-| `borso/no-cross-slice-repository-imports`              | [04](./04-backend-architecture.md)                         |
-| `borso/no-raw-sql-outside-migrations`                  | [11](./11-database.md)                                     |
-| `borso/no-server-state-in-use-state`                   | [06](./06-data-fetching.md)                                |
-| `borso/no-flat-components-folder`                      | [05](./05-frontend-architecture.md)                        |
-| `borso/no-dynamic-translation-keys`                    | [09](./09-i18n.md)                                         |
-| `borso/no-string-concatenated-class-names`             | [08](./08-styling.md)                                      |
 | `borso/no-use-effect`                                  | [07](./07-state-and-effects.md)                            |
 | `borso/no-inline-subscribe-in-use-sync-external-store` | [07](./07-state-and-effects.md)                            |
 | `borso/no-component-css-imports`                       | [08](./08-styling.md)                                      |
@@ -175,7 +161,14 @@ The blueprint for the replacement shape is annotated at
 ## The gates, in the order they run
 
 The pre-commit hook runs `eslint --cache` and `prettier --check` on the staged
-files. It is the cheap hook: nothing in it reads the whole repository's tests.
+files, and it runs the coverage suite for `infra/cdk` or `infra/shared` when
+either one changed.
+
+Both eslint invocations, here and in CI, pass `--max-warnings 0`. Several rules
+the standards lean on ship at `warn` from their plugin's recommended preset,
+`react-hooks/exhaustive-deps` and `react-hooks/incompatible-library` among
+them, and eslint exits 0 on a warning. Without the flag those rules print into
+a log nobody reads and stop nothing, which makes them advice again.
 
 It also runs the cheap whole-repository checks, each a git-index read plus a
 grep, and each guarding a class no linter sees because the evidence lives in
@@ -187,29 +180,32 @@ two files at once:
 | `check-migration-sql-dsql-compat.sh` | a migration uses SQL Aurora DSQL rejects |
 | `check-frontend-env-vars.sh` | a site reads a `VITE_*` variable no workflow sets, so the code behind it never runs |
 | `check-pure-modules-have-callers.sh` | a `*.core.ts` or `*.utils.ts` is reached only from its own test, where coverage and mutation both score it at full marks while it runs nowhere |
-| `check-pwa-assets.sh` | a web manifest names an icon that does not ship |
-| `check-negative-claims-are-dated.sh` | a document says something "does not work" without a date, so a claim about a vendor ages with nothing to date it against |
-| `check-non-module-scripts.sh` | an application's HTML carries a `<script src>` without `type="module"`, which Vite does not bundle |
+| `check-non-module-scripts.sh` | an application's HTML carries a `<script src>` without `type="module"`, which ships un-bundled and 404s |
+| `check-app-registration.sh` | a new application is missing its path filter or its commitlint scope, so it never deploys and nothing says so |
+| `check-pwa-assets.sh` | a web app manifest names an icon that does not ship |
+| `check-negative-claims-are-dated.sh` | a knowledge entry says a tool does not work and carries no date |
 
-The last two carry an allowlist keyed by variable or by path, and every entry
-in one states its reason. That is deliberate: both checks describe situations
-that can be legitimate, and writing the reason down is what separates a
-decision from an oversight.
+`check-frontend-env-vars.sh` and `check-pure-modules-have-callers.sh` each
+carry an allowlist keyed by variable or by path, and every entry in one states
+its reason. That is deliberate: both checks describe situations that can be
+legitimate, and writing the reason down is what separates a decision from an
+oversight.
+
+The hook also greps the workflows for a `pnpm --filter <pkg> deploy` that
+should have been `pnpm --filter <pkg> run deploy`, because seven script names
+are pnpm built-ins and pnpm silently prefers its own.
 
 The pre-push hook runs `knip` for dead code, `actionlint` for the workflows,
-the coverage suite for `infra/cdk` or `infra/shared` when either one changed,
-the tests each changed application's diff reaches, and the mutation tests for
-the gated files that changed.
+the tests each pushed commit affects, and the mutation tests for the pure files
+those commits changed.
 
-The two greps on the workflows — non-module script tags and pnpm reserved
-script names — are in pre-commit, with the other whole-repository checks. This
-paragraph placed all four in the wrong hook until 2026-08-15, which matters
-because "why did that fail" starts with knowing which hook to read.
-
-CI runs the same checks on every workspace the change touched, plus
-`tsc --noEmit`, `pnpm -r build`, and the full test suites with coverage. It does
-**not** synthesize the CDK stacks, and it does not run the mutation gate; the
-unscoped mutation run is `full-suite.yml` on `main`.
+CI mirrors every one of the whole-repository checks above, so skipping a hook
+delays the failure rather than removing it, and adds `tsc --noEmit`, the test
+suites for each changed application, the coverage gate, and `cdk synth` for
+every application. The synth is what covers `cdk/bin/*.ts`: the per-app stack
+tests call `build<App>Stack()` directly, so a break in the entry point that
+reads `STAGE` and names the stacks passes every other gate and surfaces in the
+automatic production deploy after the merge.
 
 ## Suppressing a rule
 
@@ -222,7 +218,34 @@ review.
 
 ## Enforced by
 
-- The pre-commit, commit-msg, and pre-push hooks in `.husky/`.
-- `.github/workflows/ci.yml`.
-- `eslint-comments/require-description`, which rejects a disable comment with
-  no reason.
+- `gate:eslint` runs over the staged files on commit and over the repository in
+  CI, both with `--max-warnings 0`.
+- `gate:prettier` runs over the staged files on commit and over the repository
+  in CI.
+- `gate:typecheck` runs `tsc --noEmit` in every workspace.
+- `gate:eslint-rule-suites` runs the `RuleTester` suite every custom rule ships
+  with, because a rule that misfires costs more than the rule saves.
+- `gate:knip` fails on an unused file, export or dependency.
+- `gate:actionlint` fails on a malformed workflow, which is where a
+  `paths-filter` base misuse and a shell quoting bug both hid.
+- `gate:commitlint` fails a message that is not a conventional commit or names
+  a scope outside the enumeration.
+- `eslint:@eslint-community/eslint-comments/require-description` rejects a
+  disable comment with no reason after the two dashes. The short spelling
+  `eslint-comments/require-description` is not the rule's identifier, and this
+  document cited it for months.
+- `script:scripts/check-frontend-env-vars.sh` fails a site reading a `VITE_*`
+  variable no workflow sets, which Vite substitutes as `undefined` at build
+  time while nothing else complains.
+- `script:scripts/check-migration-sql-dsql-compat.sh` fails a migration using
+  SQL that Aurora DSQL rejects, which no local Postgres run would catch.
+- `script:scripts/check-non-module-scripts.sh` fails an application's HTML
+  carrying a `<script src>` without `type="module"`, which ships un-bundled and
+  404s.
+- `script:scripts/check-app-registration.sh` fails a directory under `apps/`
+  that has no `.github/path-filters.yml` filter or no commitlint scope, and a
+  filter naming an application that is not there. Both failures are silent
+  otherwise: the application simply never gets a preview deploy, and no
+  workflow reports it.
+- `reviewer` checks that the reason on a disable comment is a claim about that
+  line which a reader can check, and not "pre-existing" or "will fix later".

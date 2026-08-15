@@ -15,8 +15,8 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client", "vite-plugin-pwa/client"],
     "paths": {
-      "@/*": ["./site/*"]
+      "@/*": ["./site/src/*"]
     }
   },
-  "include": ["site/**/*.ts", "site/**/*.tsx", "vite.config.ts", "vitest.config.ts"]
+  "include": ["site/src/**/*.ts", "site/src/**/*.tsx", "vite.config.ts", "vitest.config.ts"]
 }

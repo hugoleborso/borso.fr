@@ -10,6 +10,8 @@ import { presignGetObject, presignPutObject } from './uploads.adapter';
 import type { AllowedUploadContentType, PresignedGetUrl, PresignedPutUrl } from './uploads.types';
 import { UPLOAD_URL_EXPIRES_SECONDS } from './uploads.types';
 
+const MILLISECONDS_PER_SECOND = 1_000;
+
 export interface MintChartUploadParams {
   readonly contentType: AllowedUploadContentType;
   readonly songId?: string;
@@ -37,7 +39,9 @@ export async function mintChartUpload(params: MintChartUploadParams): Promise<Pr
   return {
     uploadUrl,
     objectKey,
-    expiresAt: new Date(params.now.getTime() + UPLOAD_URL_EXPIRES_SECONDS * 1000).toISOString(),
+    expiresAt: new Date(
+      params.now.getTime() + UPLOAD_URL_EXPIRES_SECONDS * MILLISECONDS_PER_SECOND,
+    ).toISOString(),
   };
 }
 
@@ -53,6 +57,8 @@ export async function mintChartGetUrl(params: MintChartGetUrlParams): Promise<Pr
   });
   return {
     getUrl,
-    expiresAt: new Date(params.now.getTime() + UPLOAD_URL_EXPIRES_SECONDS * 1000).toISOString(),
+    expiresAt: new Date(
+      params.now.getTime() + UPLOAD_URL_EXPIRES_SECONDS * MILLISECONDS_PER_SECOND,
+    ).toISOString(),
   };
 }

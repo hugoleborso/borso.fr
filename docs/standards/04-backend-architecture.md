@@ -149,13 +149,25 @@ so it is a pure function of the error and it has tests.
 
 ## Enforced by
 
-- `borso/no-controller-imports-outside-service`, a custom ESLint rule.
-- `borso/no-cross-slice-repository-imports`, a custom ESLint rule.
-- `borso/no-database-client-outside-repository`, a custom ESLint rule, which
-  allows the client import only in `*.repository.ts` and `database/client.ts`.
-- `borso/no-array-methods-in-controllers`, a custom ESLint rule, which rejects
-  `map`, `filter`, `reduce`, `find`, `some`, and `every` in a `*.controller.ts`
-  file.
-- `borso/conditions-live-in-pure-functions`, which covers business branches
+- `eslint:borso/no-controller-imports-outside-service` keeps a controller to its
+  own service, its own schema, and the framework.
+- `eslint:borso/no-cross-slice-repository-imports` stops a service reaching into
+  another slice's repository.
+- `eslint:borso/no-database-client-outside-repository` allows the client import
+  only in `*.repository.ts` and `database/client.ts`.
+- `eslint:borso/no-array-methods-in-controllers` rejects `map`, `filter`,
+  `reduce`, `find`, `some`, and `every` in a `*.controller.ts` file.
+- `eslint:borso/no-outbound-call-outside-adapter` keeps a call that leaves the
+  process inside an `*.adapter.ts` file.
+- `eslint:borso/no-horizontal-folders-in-api` rejects `domain/`, `controllers/`,
+  `services/`, `repositories/` and `routes/` inside `api/src/`, where every rule
+  has an owning bounded context. It does not touch `apps/<app>/domain/`, which
+  sits beside `api/` rather than inside it and holds only what both sides read.
+  See [ADR-0010](../adr/0010-pragma-domain-folder-for-cross-boundary-rules.md).
+- `eslint:borso/conditions-live-in-pure-functions` covers business branches
   everywhere else. See
   [02. Purity and core files](./02-purity-and-core-files.md).
+- `reviewer` checks that a repository returns rows, arrays and counts rather
+  than a shape it derived, because a repository that projects is a service.
+- `reviewer` checks that a multi-table write is wrapped in one transaction owned
+  by the service.

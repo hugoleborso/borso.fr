@@ -50,7 +50,7 @@ export function inferApplication(filePath: string): string {
   return infraMatch === null ? 'unknown' : `infra-${infraMatch[1]}`;
 }
 
-const LAYER_BY_FILE_SUFFIX: readonly (readonly [string, string])[] = [
+export const LAYER_BY_FILE_SUFFIX: readonly (readonly [string, string])[] = [
   ['.controller.ts', 'controller'],
   ['.service.ts', 'service'],
   ['.repository.ts', 'repository'],
@@ -76,7 +76,7 @@ const LAYER_BY_FILE_SUFFIX: readonly (readonly [string, string])[] = [
  * entry is matched against the end of the path, so `main.ts` only counts as an
  * entry point where it sits directly under a container's source root.
  */
-const ENTRY_POINT_PATH_SUFFIXES: readonly string[] = [
+export const ENTRY_POINT_PATH_SUFFIXES: readonly string[] = [
   '/api/src/app.ts',
   '/api/src/main.ts',
   '/api/src/main.dev.ts',
@@ -86,7 +86,7 @@ const ENTRY_POINT_PATH_SUFFIXES: readonly string[] = [
   '/cdk/lib/stack.ts',
 ];
 
-const LAYER_BY_PATH_SEGMENT: readonly (readonly [string, string])[] = [
+export const LAYER_BY_PATH_SEGMENT: readonly (readonly [string, string])[] = [
   ['eslint-rules/', 'lint-rule'],
   ['/components/atoms/', 'atom'],
   ['/components/molecules/', 'molecule'],

@@ -6,8 +6,8 @@
  */
 
 import { z } from 'zod';
-import type { SongChartKind } from './SongChartFields';
-import type { SongExternalLinkValue } from './SongExternalLinks';
+import type { SongChartKind } from '../../components/organisms/SongChartFields';
+import type { SongExternalLinkValue } from '../../components/organisms/SongExternalLinks';
 
 export const songStatuses = ['idea', 'wip', 'rehearsed', 'concert_ready'] as const;
 export const linkProviders = ['spotify', 'deezer', 'youtube', 'other'] as const;

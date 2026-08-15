@@ -43,6 +43,15 @@ const WORKSPACE_TOOLING_FILES = [
 const SITE_FILES = ['apps/*/site/**/*.{ts,tsx}'];
 const TEST_FILES = ['**/*.test.{ts,tsx,js}', '**/*.test-utils.ts', '**/test/**/*.ts'];
 
+// The identity values docs/standards/01-naming.md exempts, plus the HTTP status
+// codes. A status code is already a name in a published registry that every
+// reader of an HTTP handler knows, so `HTTP_NOT_FOUND = 404` renames 404 to
+// something no clearer than 404 itself, at every call site.
+const IDENTITY_VALUES = [0, 1, -1];
+const HTTP_STATUS_CODES = [
+  200, 201, 204, 301, 302, 400, 401, 403, 404, 409, 422, 429, 500, 502, 503,
+];
+
 export default tseslint.config(
   {
     ignores: [
@@ -60,7 +69,7 @@ export default tseslint.config(
       'docs/**',
       'apps/*/api/src/database/migrations/**',
       'apps/*/site/public/**',
-      'apps/*/site/openings/openings.json',
+      'apps/*/site/src/openings/openings.json',
     ],
   },
 
@@ -262,6 +271,7 @@ export default tseslint.config(
     plugins: { borso: borsoPlugin },
     rules: {
       'borso/no-array-methods-in-controllers': 'error',
+      'borso/no-horizontal-folders-in-api': 'error',
       'borso/no-cross-slice-repository-imports': 'error',
       'borso/no-database-client-outside-repository': 'error',
       'borso/no-raw-sql-outside-migrations': 'error',
@@ -278,6 +288,7 @@ export default tseslint.config(
       'borso/atomic-design-composition': 'error',
       'borso/atomic-design-import-direction': 'error',
       'borso/no-flat-components-folder': 'error',
+      'borso/no-components-outside-buckets': 'error',
       'borso/no-query-hooks-outside-organisms': 'error',
       'borso/no-component-css-imports': 'error',
       'borso/no-vendor-sdk-outside-adapter': 'error',
@@ -306,6 +317,30 @@ export default tseslint.config(
       'borso/function-names-are-verb-phrases': 'error',
       'borso/no-french-identifiers': 'error',
       'borso/test-file-has-sibling-source': 'error',
+
+      // docs/standards/01-naming.md: a literal in a function body gets a name,
+      // because the `const` declaration is what documents the choice.
+      //
+      // The exemptions, and why each one is not a naming decision in disguise:
+      // `ignore` holds the identity values and the HTTP status codes above.
+      // `ignoreArrayIndexes` covers `tuple[2]`, where the index is the name of
+      // the slot rather than a quantity. `ignoreDefaultValues` covers
+      // `function f(retries = 3)`, where the parameter name already names the
+      // value. `ignoreClassFieldInitialValues` is the same case for a field.
+      // `enforceConst` rejects `let MAXIMUM = 12`, so a named literal cannot be
+      // reassigned. `detectObjects` stays off, because an object literal's key
+      // is already the name the rule is asking for.
+      'no-magic-numbers': [
+        'error',
+        {
+          ignore: [...IDENTITY_VALUES, ...HTTP_STATUS_CODES],
+          ignoreArrayIndexes: true,
+          ignoreDefaultValues: true,
+          ignoreClassFieldInitialValues: true,
+          enforceConst: true,
+          detectObjects: false,
+        },
+      ],
     },
   },
 
@@ -457,6 +492,11 @@ export default tseslint.config(
       // them as `() => Promise.resolve(…)` satisfies the rule and reads worse.
       '@typescript-eslint/require-await': 'off',
       'max-lines': 'off',
+      // A fixture literal is not a magic number. A test names its value in the
+      // `it` title and in the expectation next to it, so hoisting `42` to a
+      // `const` moves the number away from the assertion that gives it meaning.
+      // There are around fifteen hundred of them across the repository.
+      'no-magic-numbers': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',

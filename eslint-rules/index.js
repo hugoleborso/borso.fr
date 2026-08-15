@@ -8,6 +8,7 @@ import noApiAnchorInSite from './no-api-anchor-in-site.js';
 import noArrayMethodsInControllers from './no-array-methods-in-controllers.js';
 import noCircleInNonUniformSvg from './no-circle-in-non-uniform-svg.js';
 import noComponentCssImports from './no-component-css-imports.js';
+import noComponentsOutsideBuckets from './no-components-outside-buckets.js';
 import noControllerImportsOutsideService from './no-controller-imports-outside-service.js';
 import noCrossSliceRepositoryImports from './no-cross-slice-repository-imports.js';
 import noDatabaseClientOutsideRepository from './no-database-client-outside-repository.js';
@@ -16,6 +17,7 @@ import noDiscardedAwaitBeforeNavigation from './no-discarded-await-before-naviga
 import noDynamicTranslationKeys from './no-dynamic-translation-keys.js';
 import noFlatComponentsFolder from './no-flat-components-folder.js';
 import noFrenchIdentifiers from './no-french-identifiers.js';
+import noHorizontalFoldersInApi from './no-horizontal-folders-in-api.js';
 import noImpureCallsInCoreFiles from './no-impure-calls-in-core-files.js';
 import noInlineSubscribeInUseSyncExternalStore from './no-inline-subscribe-in-use-sync-external-store.js';
 import noLiteralJsxText from './no-literal-jsx-text.js';
@@ -56,6 +58,7 @@ export const borsoPlugin = {
     'no-array-methods-in-controllers': noArrayMethodsInControllers,
     'no-circle-in-non-uniform-svg': noCircleInNonUniformSvg,
     'no-component-css-imports': noComponentCssImports,
+    'no-components-outside-buckets': noComponentsOutsideBuckets,
     'no-controller-imports-outside-service': noControllerImportsOutsideService,
     'no-cross-slice-repository-imports': noCrossSliceRepositoryImports,
     'no-database-client-outside-repository': noDatabaseClientOutsideRepository,
@@ -64,6 +67,7 @@ export const borsoPlugin = {
     'no-dynamic-translation-keys': noDynamicTranslationKeys,
     'no-flat-components-folder': noFlatComponentsFolder,
     'no-french-identifiers': noFrenchIdentifiers,
+    'no-horizontal-folders-in-api': noHorizontalFoldersInApi,
     'no-impure-calls-in-core-files': noImpureCallsInCoreFiles,
     'no-inline-subscribe-in-use-sync-external-store': noInlineSubscribeInUseSyncExternalStore,
     'no-literal-jsx-text': noLiteralJsxText,

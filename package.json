@@ -23,6 +23,7 @@
     "@stryker-mutator/core": "9.6.1",
     "@stryker-mutator/vitest-runner": "9.6.1",
     "@swmansion/argent": "0.19.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "@vitest/eslint-plugin": "1.6.26",
     "agent-browser": "0.33.2",
     "elkjs": "0.12.0",

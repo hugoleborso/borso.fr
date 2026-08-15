@@ -29,16 +29,23 @@ export const barTable = pgTable('bar', {
   contactPhone: text('contact_phone'),
 });
 
+const NAME_MAX = 256;
+const NOTES_MAX = 8_192;
+const CITY_MAX = 128;
+const CAPACITY_MAX = 100_000;
+const CONTACT_NAME_MAX = 128;
+const CONTACT_PHONE_MAX = 32;
+
 export const barCreateSchema = z.object({
-  name: z.string().trim().min(1).max(256),
+  name: z.string().trim().min(1).max(NAME_MAX),
   status: z.enum(BAR_STATUSES),
-  notes: z.string().max(8_192).default(''),
+  notes: z.string().max(NOTES_MAX).default(''),
   lastInteractionAt: z.string().datetime().nullable().default(null),
-  city: z.string().max(128).nullable().default(null),
-  capacity: z.number().int().min(0).max(100_000).nullable().default(null),
-  contactName: z.string().max(128).nullable().default(null),
+  city: z.string().max(CITY_MAX).nullable().default(null),
+  capacity: z.number().int().min(0).max(CAPACITY_MAX).nullable().default(null),
+  contactName: z.string().max(CONTACT_NAME_MAX).nullable().default(null),
   contactEmail: z.string().email().nullable().default(null),
-  contactPhone: z.string().max(32).nullable().default(null),
+  contactPhone: z.string().max(CONTACT_PHONE_MAX).nullable().default(null),
 });
 
 export const barUpdateSchema = barCreateSchema.partial();

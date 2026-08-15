@@ -27,14 +27,23 @@ const HEX_PATTERN = /^#[0-9a-f]{6}$/i;
 const HEX_RADIX = 16;
 const HEX_PAIR_LENGTH = 2;
 const HASH_PREFIX_LENGTH = 1;
+const RED_PAIR_START = 0;
+const GREEN_PAIR_START = 2;
+const BLUE_PAIR_START = 4;
 const FALLBACK_KEY: MemberPaletteKey = 'coral';
 
-const PALETTE_RGB: Record<MemberPaletteKey, readonly [number, number, number]> = {
-  coral: [0xc4, 0x58, 0x3a],
-  teal: [0x3d, 0x8a, 0x8a],
-  mustard: [0xc4, 0x91, 0x2b],
-  plum: [0x8a, 0x48, 0x70],
-  sage: [0x6e, 0x8a, 0x48],
+interface RgbChannels {
+  readonly red: number;
+  readonly green: number;
+  readonly blue: number;
+}
+
+const PALETTE_RGB: Record<MemberPaletteKey, RgbChannels> = {
+  coral: { red: 0xc4, green: 0x58, blue: 0x3a },
+  teal: { red: 0x3d, green: 0x8a, blue: 0x8a },
+  mustard: { red: 0xc4, green: 0x91, blue: 0x2b },
+  plum: { red: 0x8a, green: 0x48, blue: 0x70 },
+  sage: { red: 0x6e, green: 0x8a, blue: 0x48 },
 };
 
 /** The three channel bytes of a `#rrggbb` string, or `null` when it is not one. */
@@ -43,9 +52,18 @@ export function parseHexTriplet(hex: string): readonly [number, number, number] 
   const trimmed = hex.trim();
   if (!HEX_PATTERN.test(trimmed)) return null;
   const body = trimmed.slice(HASH_PREFIX_LENGTH);
-  const red = Number.parseInt(body.slice(0, HEX_PAIR_LENGTH), HEX_RADIX);
-  const green = Number.parseInt(body.slice(HEX_PAIR_LENGTH, HEX_PAIR_LENGTH * 2), HEX_RADIX);
-  const blue = Number.parseInt(body.slice(HEX_PAIR_LENGTH * 2), HEX_RADIX);
+  const red = Number.parseInt(
+    body.slice(RED_PAIR_START, RED_PAIR_START + HEX_PAIR_LENGTH),
+    HEX_RADIX,
+  );
+  const green = Number.parseInt(
+    body.slice(GREEN_PAIR_START, GREEN_PAIR_START + HEX_PAIR_LENGTH),
+    HEX_RADIX,
+  );
+  const blue = Number.parseInt(
+    body.slice(BLUE_PAIR_START, BLUE_PAIR_START + HEX_PAIR_LENGTH),
+    HEX_RADIX,
+  );
   return [red, green, blue] as const;
 }
 
@@ -59,11 +77,15 @@ const PALETTE_KEYS: readonly MemberPaletteKey[] = ['coral', 'teal', 'mustard', '
 export function paletteKeyFromHex(hex: string): MemberPaletteKey {
   const rgb = parseHexTriplet(hex);
   if (!rgb) return FALLBACK_KEY;
+  const [red, green, blue] = rgb;
   let bestKey: MemberPaletteKey = FALLBACK_KEY;
   let bestDistance = Number.POSITIVE_INFINITY;
   for (const candidate of PALETTE_KEYS) {
-    const [paletteR, paletteG, paletteB] = PALETTE_RGB[candidate];
-    const distance = (paletteR - rgb[0]) ** 2 + (paletteG - rgb[1]) ** 2 + (paletteB - rgb[2]) ** 2;
+    const paletteRgb = PALETTE_RGB[candidate];
+    const redGap = paletteRgb.red - red;
+    const greenGap = paletteRgb.green - green;
+    const blueGap = paletteRgb.blue - blue;
+    const distance = redGap * redGap + greenGap * greenGap + blueGap * blueGap;
     if (distance < bestDistance) {
       bestDistance = distance;
       bestKey = candidate;

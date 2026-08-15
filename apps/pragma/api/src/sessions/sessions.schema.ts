@@ -28,7 +28,12 @@ export const sessionTable = pgTable('session', {
 // Also used by the repository to validate the JSON blob deserialised
 // from the `friends_count_per_member` text column (Aurora DSQL stores
 // it as TEXT — see docs/knowledge/dsql-postgres-compat-gaps.md §1).
-export const friendsCountSchema = z.record(z.string().uuid(), z.number().int().min(0).max(1_000));
+const FRIENDS_PER_MEMBER_MAX = 1_000;
+
+export const friendsCountSchema = z.record(
+  z.string().uuid(),
+  z.number().int().min(0).max(FRIENDS_PER_MEMBER_MAX),
+);
 
 const VENUE_MAX = 256;
 const CAPACITY_MAX = 100_000;

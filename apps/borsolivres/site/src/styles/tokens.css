@@ -1,0 +1,116 @@
+/*
+ * borsolivres — design tokens bridged to Tailwind v4 through `@theme`.
+ *
+ * Every variable declared inside `@theme` becomes a utility automatically:
+ * `--color-paper-raised` gives `bg-paper-raised` and `text-paper-raised`,
+ * `--font-display` gives `font-display`.
+ *
+ * This is the only stylesheet the application ships. Component styles are
+ * Tailwind utilities on the JSX, so this file holds tokens and element rules
+ * and no class selector at all. See docs/standards/08-styling.md.
+ */
+
+@import 'tailwindcss';
+
+@theme {
+  /* Paper surfaces — a warm library white */
+  --color-paper: #f6f2ea;
+  --color-paper-raised: #fdfbf6;
+  --color-paper-sunk: #ece6da;
+
+  /* Ink tones */
+  --color-ink-900: #1c1814;
+  --color-ink-700: #40382e;
+  --color-ink-500: #6d6255;
+  --color-ink-400: #8f8779;
+  --color-ink-300: #b6aea1;
+
+  /* Rules */
+  --color-rule: rgba(28, 24, 20, 0.1);
+  --color-rule-strong: rgba(28, 24, 20, 0.22);
+
+  /* Accent — the spine colour */
+  --color-accent: #3f6b52;
+  --color-accent-ink: #2b4c39;
+  --color-accent-soft: rgba(63, 107, 82, 0.12);
+
+  /* Reading statuses, each with a legible foreground on its own background */
+  --color-want-background: #e9e3d5;
+  --color-want-ink: #5c5140;
+  --color-reading-background: #dbe7ef;
+  --color-reading-ink: #2c5470;
+  --color-finished-background: #d9e7d5;
+  --color-finished-ink: #35553a;
+  --color-abandoned-background: #eddcd8;
+  --color-abandoned-ink: #7a3b30;
+
+  /* Signals */
+  --color-danger: #a83a2a;
+  --color-star: #b8841a;
+
+  /* Typography stacks */
+  --font-display: 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --font-sans: system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+}
+
+/*
+ * Dark mode. Tailwind v4 unwraps every `@theme` block into the top of
+ * `:root`, so a second `@theme` nested under a media query collapses into the
+ * first and would override it unconditionally. The overrides therefore sit on
+ * `:root` directly, outside any `@theme` block: Tailwind reads `@theme` only
+ * to discover utility names, and the runtime values come from the cascade.
+ *
+ * It follows the operating system and offers no in-app switch, because a
+ * switch is React state synchronising with a system that already publishes
+ * the answer in CSS.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: #17140f;
+    --color-paper-raised: #201c16;
+    --color-paper-sunk: #100e0a;
+    --color-ink-900: #f2ede3;
+    --color-ink-700: #dad3c5;
+    --color-ink-500: #a49d8f;
+    --color-ink-400: #7b7468;
+    --color-ink-300: #4e473a;
+    --color-rule: rgba(242, 237, 227, 0.1);
+    --color-rule-strong: rgba(242, 237, 227, 0.22);
+    --color-accent: #7fb494;
+    --color-accent-ink: #9cccae;
+    --color-accent-soft: rgba(127, 180, 148, 0.16);
+    --color-want-background: #2b2519;
+    --color-want-ink: #d8cdb5;
+    --color-reading-background: #1b2b36;
+    --color-reading-ink: #b4d4e8;
+    --color-finished-background: #1e2e21;
+    --color-finished-ink: #b8d9bd;
+    --color-abandoned-background: #33201c;
+    --color-abandoned-ink: #e5b5ab;
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-ink-900);
+    background: var(--color-paper);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

@@ -13,7 +13,7 @@ import { SongDetailPage } from './routes/catalog/SongDetailPage';
 import { SongEditPage } from './routes/catalog/SongEditPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
 import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
-import { Login } from './routes/Login';
+import { LoginPage } from './routes/LoginPage';
 import { MembersPage } from './routes/members/MembersPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
 import { SessionsPage } from './routes/sessions/SessionsPage';
@@ -24,7 +24,7 @@ export function App(): JSX.Element {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireSession />}>
           {/*
             The stage view is a fullscreen takeover (black background,

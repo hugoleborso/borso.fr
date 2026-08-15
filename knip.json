@@ -11,14 +11,21 @@
         "agent-browser",
         "esbuild"
       ],
-      "entry": [".claude/skills/blueprint/blueprint-*.ts", "scripts/architecture/*.ts"],
+      "entry": [
+        ".claude/skills/blueprint/blueprint-*.ts",
+        "scripts/architecture/*.ts",
+        "scripts/blueprints/blueprint-defects.ts",
+        "scripts/standards/enforcement-ledger.ts",
+        "scripts/standards/seal.ts",
+        "scripts/**/*.test.ts"
+      ],
       "project": [".claude/skills/blueprint/**/*.ts", "scripts/**/*.ts"]
     },
     "apps/borso-fr": {
       "entry": [
         "bin/app.ts",
-        "site/art/mondrian/main.tsx",
-        "site/12-travaux/main.tsx",
+        "site/src/art/mondrian/main.tsx",
+        "site/src/12-travaux/main.tsx",
         "site/**/*.utils.test.ts"
       ],
       "project": ["bin/**/*.ts", "site/**/*.ts", "site/**/*.tsx"],

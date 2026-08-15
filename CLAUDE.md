@@ -124,6 +124,24 @@ Two tags carry what a path cannot: `@DependsOnExternal <id>` names an external s
 
 Blueprints are an overlay on this map, never the substrate: a blueprint says *which example this copies*, a position says *where it sits*, and blueprint coverage is partial by design.
 
+## Sizing a task before starting it
+
+Run [`/route`](./.claude/skills/route/SKILL.md) at the start of anything that is not obviously one file. It sizes the work on five axes — blast radius, open decisions, precedent, reversibility, proof — and picks one of four tiers: do it directly, chain the skills, specify it first, or fan it out across agents. Both failures cost about the same, and this repo has hit both: `/specification` on a one-line fix wastes the hour the *North star* protects, and eleven files across three apps with no spec produces a change nobody can review.
+
+**Two traps when a task fans out to parallel agents, both already hit here.** Agents share one git index, so an agent that runs `git add` stages another's half-finished work and the next commit ships it — tell every agent not to commit and collect the work yourself. And every whole-repository generator (`blueprint-indexing`, `blueprint-heatmap`, `architecture-graph`, `enforcement-ledger`) has a `--check` gate that reads the entire tree, so an agent regenerating one bakes in every other agent's uncommitted work — regenerate once, yourself, after they finish. When agents must genuinely not see each other, give them `isolation: "worktree"`.
+
+## The standards cannot claim enforcement they do not have
+
+Every `## Enforced by` bullet in `docs/standards/` opens with a typed marker (`eslint:`, `script:`, `generator:`, `gate:`, `types:`, `test:`, `reviewer`), and [`scripts/standards/enforcement-ledger.ts`](./scripts/standards/enforcement-ledger.ts) resolves each one against the checkout. It asks ESLint which rules are actually on — through `calculateConfigForFile`, per layer, per application — rather than reading `eslint.config.js`, because that is the only way to see through the shared presets. It fails on a rule that does not exist, one that runs nowhere, one that reaches three applications out of four, and on a mechanism that runs and no standard explains.
+
+This exists because the prose was wrong for months in four places at once and nothing read it. **When you add a rule, cite it in the standard it comes from; when you add a `reviewer` bullet, you are adding to the review agent's scope.** [`docs/standards/enforcement-ledger.md`](./docs/standards/enforcement-ledger.md) is generated; do not edit it.
+
+**The residue is reviewed, not ignored.** The `reviewer` bullets are collected in the ledger and are the entire scope of [`/standards-review`](./.claude/skills/standards-review/SKILL.md). Since CI runs no model, the review is *recorded*: the agent hashes each file's content into `docs/standards/seals.jsonl`, and CI re-hashes the branch's changed files and fails on any it cannot find. Editing a file after sealing unseals it; moving it does not; rewording a standard invalidates seals taken under the old wording. It is an attestation, not a signature — never describe it as tamper-proof.
+
+**A blueprint's follower count is not a quality signal on its own.** A dantotsu may name the pattern whose shape let its defect through, as `blueprints: [some-id]` in its front matter, and [`blueprint-defects.md`](./docs/standards/blueprint-defects.md) ranks patterns by followers times defects. A pattern with forty followers and one defect propagated that mistake forty times. Tag sparingly: the field means the pattern *permitted* the mistake, and a loose tag makes the page noise.
+
+**A new file under `apps/` or `infra/` arrives with its blueprint already in context.** `.claude/hooks/pretool-blueprint-context.sh` resolves the target path's layer and injects the canonical example plus the governing standard, on the Write itself. It reads a precomputed lookup rather than importing the TypeScript, because starting `tsx` costs a second and this runs on every write; the layer tables in that JSON are emitted from the same constants `inferLayer` uses, so the two cannot drift. Regenerate with `pnpm exec tsx .claude/skills/blueprint/blueprint-context.ts`.
+
 ## Dantotsus, knowledge, and ADRs
 
 Three complementary folders, one purpose: keep the team's mental model ahead of the codebase's failure modes and the *why* of past trade-offs.

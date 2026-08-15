@@ -67,6 +67,7 @@ import {
 import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
 
 const ENERGY_STEP = 1;
+const POSITION_DIGITS = 2;
 const ICON_BUTTON_CLASS =
   'w-11 h-11 sm:w-9 sm:h-9 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
 
@@ -150,7 +151,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
       <div className="flex flex-col gap-2 bg-bg-elev border border-line rounded-md px-2 sm:px-3 py-2.5 transition-colors hover:border-line-strong">
         <div className="flex items-start gap-2 sm:gap-3">
           <span className="font-mono text-xs text-ink-400 pt-3 w-6 text-right shrink-0">
-            {String(props.position).padStart(2, '0')}
+            {String(props.position).padStart(POSITION_DIGITS, '0')}
           </span>
           <button
             type="button"

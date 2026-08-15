@@ -57,7 +57,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/__test/test-seed.core.ts",
-      "digest": "ddc82e4aaf3b",
+      "digest": "bfce8cc0a76f",
       "container": "api",
       "layer": "core",
       "context": "__test",
@@ -134,7 +134,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/auth/auth.controller.ts",
-      "digest": "c0ec664db6c6",
+      "digest": "c86dffba04af",
       "container": "api",
       "layer": "controller",
       "context": "auth",
@@ -217,7 +217,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/auth/auth.schema.ts",
-      "digest": "7b4976ceeb7d",
+      "digest": "5f0197cfe27d",
       "container": "api",
       "layer": "schema",
       "context": "auth",
@@ -234,7 +234,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/auth/auth.service.ts",
-      "digest": "e6e70a22bb08",
+      "digest": "dad111012ca8",
       "container": "api",
       "layer": "service",
       "context": "auth",
@@ -362,7 +362,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/edition/edition.schema.ts",
-      "digest": "91fe237a5be1",
+      "digest": "ce617e220f51",
       "container": "api",
       "layer": "schema",
       "context": "edition",
@@ -478,7 +478,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/helpers/geo/haversine.utils.ts",
-      "digest": "d2ca70fe866a",
+      "digest": "9310ff52fa9e",
       "container": "api",
       "layer": "utils",
       "context": "helpers",
@@ -517,7 +517,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/helpers/sun/sun.core.ts",
-      "digest": "b83dc7e64a75",
+      "digest": "d8f4cdaf6528",
       "container": "api",
       "layer": "core",
       "context": "helpers",
@@ -577,7 +577,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/media/media.adapter.ts",
-      "digest": "85b7df25664c",
+      "digest": "6ff54caa4a33",
       "container": "api",
       "layer": "adapter",
       "context": "media",
@@ -688,7 +688,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/punch/punch.core.ts",
-      "digest": "baa20ab84759",
+      "digest": "109c8f1d01bc",
       "container": "api",
       "layer": "core",
       "context": "punch",
@@ -743,7 +743,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/punch/punch.schema.ts",
-      "digest": "c134bba81750",
+      "digest": "2814035a19f9",
       "container": "api",
       "layer": "schema",
       "context": "punch",
@@ -768,7 +768,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/punch/punch.service.ts",
-      "digest": "69545bfe1b5a",
+      "digest": "fc70abf23312",
       "container": "api",
       "layer": "service",
       "context": "punch",
@@ -1072,7 +1072,7 @@
     },
     {
       "path": "apps/last-loop-lepin/api/src/runner/runner.schema.ts",
-      "digest": "8c377038a8e8",
+      "digest": "4c4daabf65a3",
       "container": "api",
       "layer": "schema",
       "context": "runner",
@@ -1587,7 +1587,7 @@
     },
     {
       "path": "apps/last-loop-lepin/site/src/components/molecules/countdown.utils.ts",
-      "digest": "80901a3fa1c2",
+      "digest": "427ef31696d4",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -1994,7 +1994,7 @@
     },
     {
       "path": "apps/last-loop-lepin/site/src/components/organisms/CourseMap.tsx",
-      "digest": "956bce8ad3eb",
+      "digest": "0554e997de1c",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2208,7 +2208,7 @@
     },
     {
       "path": "apps/last-loop-lepin/site/src/components/organisms/elevation-profile.utils.ts",
-      "digest": "aad1c66d00ff",
+      "digest": "771a63572e44",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2224,7 +2224,7 @@
     },
     {
       "path": "apps/last-loop-lepin/site/src/components/organisms/ElevationProfile.tsx",
-      "digest": "e8a457d16b02",
+      "digest": "0c2c56bde830",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2449,7 +2449,7 @@
     },
     {
       "path": "apps/last-loop-lepin/site/src/components/organisms/runner-form.core.ts",
-      "digest": "bd1aaa225418",
+      "digest": "6b48463f3114",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2976,7 +2976,7 @@
     },
     {
       "path": "apps/last-loop-lepin/site/src/lib/haversine.utils.ts",
-      "digest": "04c39ccb7ae2",
+      "digest": "6fbabe3ca0b8",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -4084,7 +4084,7 @@
     },
     {
       "id": "component-lookup-table",
-      "file": "apps/borsouvertures/site/lib/componentTable.types.ts",
+      "file": "apps/borsouvertures/site/src/lib/componentTable.types.ts",
       "followerCount": 4
     },
     {
@@ -4124,7 +4124,7 @@
     },
     {
       "id": "core-label-key",
-      "file": "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+      "file": "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts",
       "followerCount": 2
     },
     {
@@ -4169,7 +4169,7 @@
     },
     {
       "id": "data-module",
-      "file": "apps/borso-fr/site/labours/labours-2026.ts",
+      "file": "apps/borso-fr/site/src/labours/labours-2026.ts",
       "followerCount": 1
     },
     {
@@ -4214,12 +4214,12 @@
     },
     {
       "id": "i18n-key-walk",
-      "file": "apps/borsouvertures/site/i18n/i18n.utils.ts",
+      "file": "apps/borsouvertures/site/src/i18n/i18n.utils.ts",
       "followerCount": 1
     },
     {
       "id": "i18n-parity-gate",
-      "file": "apps/borsouvertures/site/i18n/i18n-parity.core.ts",
+      "file": "apps/borsouvertures/site/src/i18n/i18n-parity.core.ts",
       "followerCount": 1
     },
     {
@@ -4229,7 +4229,7 @@
     },
     {
       "id": "i18n-typed-keys",
-      "file": "apps/borsouvertures/site/i18n/react-i18next.d.ts",
+      "file": "apps/borsouvertures/site/src/i18n/react-i18next.d.ts",
       "followerCount": 1
     },
     {
@@ -4239,12 +4239,12 @@
     },
     {
       "id": "injected-storage-slice",
-      "file": "apps/borsouvertures/site/i18n/locale-storage.utils.ts",
+      "file": "apps/borsouvertures/site/src/i18n/locale-storage.utils.ts",
       "followerCount": 1
     },
     {
       "id": "lint-exception",
-      "file": "apps/borso-fr/site/components/organisms/Galaxy.tsx",
+      "file": "apps/borso-fr/site/src/components/organisms/Galaxy.tsx",
       "followerCount": 1
     },
     {

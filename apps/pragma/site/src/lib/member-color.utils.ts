@@ -20,6 +20,10 @@ const HEX_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const HEX_RADIX = 16;
 const HASH_PREFIX_LENGTH = 1;
 const SHORT_HEX_LENGTH = 3;
+const HEX_PAIR_LENGTH = 2;
+const RED_PAIR_START = 0;
+const GREEN_PAIR_START = 2;
+const BLUE_PAIR_START = 4;
 const BYTE_MAX = 255;
 const SRGB_THRESHOLD = 0.03928;
 const SRGB_SCALE = 12.92;
@@ -57,9 +61,18 @@ export function parseHex(hex: string): Rgb | null {
           .map((character) => character + character)
           .join('')
       : raw;
-  const red = Number.parseInt(normalised.slice(0, 2), HEX_RADIX);
-  const green = Number.parseInt(normalised.slice(2, 4), HEX_RADIX);
-  const blue = Number.parseInt(normalised.slice(4, 6), HEX_RADIX);
+  const red = Number.parseInt(
+    normalised.slice(RED_PAIR_START, RED_PAIR_START + HEX_PAIR_LENGTH),
+    HEX_RADIX,
+  );
+  const green = Number.parseInt(
+    normalised.slice(GREEN_PAIR_START, GREEN_PAIR_START + HEX_PAIR_LENGTH),
+    HEX_RADIX,
+  );
+  const blue = Number.parseInt(
+    normalised.slice(BLUE_PAIR_START, BLUE_PAIR_START + HEX_PAIR_LENGTH),
+    HEX_RADIX,
+  );
   return { r: red, g: green, b: blue };
 }
 

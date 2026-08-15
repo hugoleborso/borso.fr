@@ -9,6 +9,7 @@ fix-commits: [1fad0d7]
 eradication-level: 1
 time-to-detect: hours
 tags: [cdk, cloudfront, cloudformation, drift, vitest, snapshot, ci]
+blueprints: [cloudfront-function-source]
 ---
 
 # A comment that shipped to the CloudFront edge

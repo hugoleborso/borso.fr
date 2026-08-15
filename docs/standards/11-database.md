@@ -48,8 +48,16 @@ The snapshot files are generated artefacts, so the formatter and the linter
 both ignore them.
 
 Migrations run from the CDK migration runner Lambda at deploy time, and the
-audit test in `database/migrations.audit.test.ts` fails when the checked-in
-migrations and the schema disagree.
+audit test in `database/migrations.audit.test.ts` reads the `.sql` files that
+Lambda applies and fails on any column carrying `DEFAULT now()` outside a named
+allow list. The allow list holds the row-lifecycle timestamps the database is
+meant to own; a business date reaching it would take its value from the
+migration runner's clock at deploy time instead. The test asserts on the
+artifact rather than on the Drizzle objects, so it also catches SQL edited by
+hand.
+
+The two full-stack applications each carry their own copy, because the allow
+list is a statement about that application's tables.
 
 ## Transactions
 
@@ -92,10 +100,13 @@ The background is in
 
 ## Enforced by
 
-- `borso/no-database-client-outside-repository`, a custom ESLint rule.
-- `borso/no-raw-sql-outside-migrations`, a custom ESLint rule, which rejects
-  Drizzle's `sql` template tag outside a migration or a repository.
-- `database/migrations.audit.test.ts`, which compares the checked-in migrations
-  with the schema.
-- The `back-e2e` Vitest project, which runs every repository method against a
-  real Postgres.
+- `eslint:borso/no-database-client-outside-repository` fails when any file
+  other than a `*.repository.ts` imports the database client.
+- `eslint:borso/no-raw-sql-outside-migrations` rejects Drizzle's `sql` template
+  tag outside a migration or a repository.
+- `test:migrations.audit.test.ts`, one per full-stack application, rejects a
+  `DEFAULT now()` on any column outside that application's allow list.
+- `gate:vitest-back-e2e` runs every repository method against a real Postgres.
+- `reviewer` checks that a workflow writing more than one table wraps the
+  writes in one transaction owned by the service, and that a cascade DSQL will
+  not enforce is written out explicitly.
