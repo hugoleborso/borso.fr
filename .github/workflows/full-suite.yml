@@ -35,9 +35,9 @@ jobs:
     outputs:
       apps: ${{ steps.compute.outputs.apps }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -73,9 +73,9 @@ jobs:
       DATABASE_URL: postgres://app:app@localhost:5432/app
       APP: ${{ matrix.app }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -98,7 +98,7 @@ jobs:
       # it and the hash of the source it came from. Restoring it means a run
       # re-tests the mutants whose source or tests moved and reuses the verdict
       # for the rest. A cache miss simply costs a full run.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: apps/${{ matrix.app }}/reports/mutation/incremental.json
           key: stryker-${{ matrix.app }}-${{ github.sha }}
