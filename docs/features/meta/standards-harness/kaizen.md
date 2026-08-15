@@ -61,3 +61,4 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [17:34] `main` spent twenty minutes diagnosing agent-browser ERR_CONNECTION_RESET from first principles when docs/knowledge/driving-previews-with-agent-browser-and-argent.md names the exact cause and flag, and CLAUDE.md links that doc from the section about checking a screen
 - [17:34] `main` agent-browser on a hosted session has no browser in its own cache and the fix is an env var the preview-driving doc did not mention, so the documented recipe fails at step zero
 - [17:37] `main` the visual-validation skill and its agent both told the validator to run agent-browser install, which is the wrong move in this image and the first thing an isolated agent would try after Chrome not found
+- [17:57] `main` no gate read the documents' own links, and the /code-standards routing table had thirteen dead ones, each a single ../ short of the repository root and invisible in a rendered preview

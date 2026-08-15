@@ -13,9 +13,8 @@ tags: [cloudfront, edge-runtime, throttling, vendor-quirk]
 
 ## Symptom
 
-After fixing the host-routing function with the ES5 rewrite (see
-[`cloudfront-function-runtime-es5.md`](./cloudfront-function-runtime-es5.md))
-and successfully redeploying, every request still returned
+After fixing the host-routing function with the ES5 rewrite the edge runtime
+demands and successfully redeploying, every request still returned
 `HTTP/2 503` — but with a different cache header:
 `x-cache: FunctionThrottledError from cloudfront`. CloudWatch
 metrics in `us-east-1` showed `FunctionThrottles` rising from 0 →

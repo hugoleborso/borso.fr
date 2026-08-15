@@ -134,6 +134,7 @@ jobs:
       # A workspace holding gated files with no mutation config is unmeasured
       # rather than clean, and its coverage number hides the difference.
       - run: ./scripts/check-mutation-covers-gated-files.sh
+      - run: pnpm exec tsx scripts/docs/check-doc-links.ts
       # A pure module reached only from its own test passes coverage and
       # mutation at full marks while running nowhere, and knip cannot see it.
       - run: ./scripts/check-pure-modules-have-callers.sh

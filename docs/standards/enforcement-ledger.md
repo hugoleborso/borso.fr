@@ -20,6 +20,7 @@ every application the standard covers.
 
 | Mechanism | Kind | Enforced | Where |
 | --- | --- | --- | --- |
+| `scripts/docs/check-doc-links.ts` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
@@ -283,6 +284,6 @@ reviews what lint cannot rather than repeating what lint already did.
 
 ## Totals
 
-- 78 claim(s) enforced by a tool
+- 79 claim(s) enforced by a tool
 - 23 claim(s) left to a reviewer
 - 0 problem(s)

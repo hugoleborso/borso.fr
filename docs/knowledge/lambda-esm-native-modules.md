@@ -36,9 +36,9 @@ Two layers stack:
 
 The repo's [`LambdaApi`](../../infra/cdk/src/constructs/lambda-api.ts)
 and [`DsqlSchema`](../../infra/cdk/src/constructs/dsql-schema.ts)
-constructs now inject a shared banner via
-[`esm-cjs-interop-banner.ts`](../../infra/cdk/src/internal/esm-cjs-interop-banner.ts)
-that restores all three globals. That fixes the `require('buffer')`
+constructs now inject a shared banner, written inline in
+[`lambda-api.ts`](../../infra/cdk/src/constructs/lambda-api.ts) beside the
+comment explaining it, that restores all three globals. That fixes the `require('buffer')`
 class of failure (smithy + AWS SDK transitive deps) and the
 `__dirname` class of failure (native modules at module-load time).
 

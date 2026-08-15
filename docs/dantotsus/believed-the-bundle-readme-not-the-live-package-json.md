@@ -78,7 +78,7 @@ Two work items.
 ```
 
 ```diff
-+ | I trust the imported brief about the workspace's toolchain | The spec inherits a stale picture of `apps/<slug>/` from a hand-off README or design-bundle README; a Q.O.D. row about *build pipeline / framework / test runner / deploy mechanism* gets ratified on a wrong premise, and an ADR built on top is invalidated in code review. The brief documents *intent*; `apps/<slug>/package.json` documents *reality*. Cat the live `package.json` before locking any toolchain-shaped Q.O.D. row. See [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](../../../docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md). |
++ | I trust the imported brief about the workspace's toolchain | The spec inherits a stale picture of `apps/<slug>/` from a hand-off README or design-bundle README; a Q.O.D. row about *build pipeline / framework / test runner / deploy mechanism* gets ratified on a wrong premise, and an ADR built on top is invalidated in code review. The brief documents *intent*; `apps/<slug>/package.json` documents *reality*. Cat the live `package.json` before locking any toolchain-shaped Q.O.D. row. See [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](./believed-the-bundle-readme-not-the-live-package-json.md). |
 ```
 
 `.claude/skills/technical-conception/standard.md` — operating-mode step 2 gains the parallel rule (the plan also inventories from the live workspace, not from the spec), and a common-mistakes row.
@@ -89,7 +89,7 @@ Two work items.
 ```
 
 ```diff
-+ | Inventory mirrors the spec instead of the live workspace | If the spec carried a stale picture of the workspace's toolchain (typical when the brief comes from a hand-off README or external design bundle), the plan inherits the picture and the ADR ratifies it. The fix is mechanical: `ls apps/<slug>/` and `cat apps/<slug>/package.json` *before* listing surfaces. Divergences become Q.O.D. clarifications back to the spec, not silent "we'll handle it in code". See [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](../../../docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md). |
++ | Inventory mirrors the spec instead of the live workspace | If the spec carried a stale picture of the workspace's toolchain (typical when the brief comes from a hand-off README or external design bundle), the plan inherits the picture and the ADR ratifies it. The fix is mechanical: `ls apps/<slug>/` and `cat apps/<slug>/package.json` *before* listing surfaces. Divergences become Q.O.D. clarifications back to the spec, not silent "we'll handle it in code". See [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](./believed-the-bundle-readme-not-the-live-package-json.md). |
 ```
 
 The two skills now have the *same* defence at the same level of the funnel: cat `package.json` first, believe the brief second. The compression vector ("I'll just take the brief's word for it") is closed at both ends — if `/specification` slips, `/technical-conception` catches; if both slip, the divergence at minimum surfaces in the plan's inventory and forces an escalation.

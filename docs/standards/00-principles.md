@@ -95,8 +95,32 @@ first is an engineer who has never seen this repository, and the second is an
 agent that will apply the rule literally, including the parts you did not mean
 literally.
 
+### A link is a claim about the tree
+
+Every relative link in a document names a file, and that is a claim the tree can
+settle, so it is checked like any other. A dead link costs more than a missing
+one: the reader follows it, finds nothing, and concludes the document describes
+a state the repository has left, when the only stale thing was the path.
+
+The routing table in the `/code-standards` skill — whose entire job is sending a
+reader to the right standard — carried thirteen dead links, every one a single
+`../` short of the repository root. A rendered preview cannot show that, and
+nothing else was reading them.
+
+Three kinds of link are not a claim about the tree, and the checker knows all
+three: a placeholder the reader fills in, a target GitHub resolves against the
+repository rather than the file, and anything inside a fenced block, which
+markdown does not render as a link. `docs/features/` is out of scope entirely,
+because a report from May naming a file since renamed is telling the truth about
+May.
+
 ## Enforced by
 
+- `script:scripts/docs/check-doc-links.ts` fails a document that links a file
+  which is not there, across every markdown file outside `docs/features/`. It
+  skips a placeholder, a GitHub-relative target and anything inside a fenced
+  block, and it is the reason the `/code-standards` routing table's thirteen
+  dead links are gone.
 - `reviewer` reads `docs/standards/hotspots.md` before deciding which pattern to
   write down next. It crosses how often each file changes with whether it
   follows a recorded pattern and whether its path says what it is. Nothing gates

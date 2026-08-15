@@ -122,4 +122,3 @@ for the next infra-touch PR).
 ## See also
 
 - [`docs/dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md`](../dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md) — sibling: stack delete *succeeds* but a `RETAIN`-policy bucket survives, an orphan to clean up. Same family of CFN-vs-reality drift.
-- [`docs/knowledge/retrigger-ci-with-empty-commit.md`](./retrigger-ci-with-empty-commit.md) — companion knowledge entry on the empty-commit retrigger technique used during PR #23.

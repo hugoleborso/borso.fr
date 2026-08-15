@@ -223,7 +223,7 @@ An untagged file is cross-cutting by default, which is why `atoms/`, the
 generic molecules, `lib/`, `i18n/` and `sw/` still read as themselves.
 
 The manifest is
-[`scripts/architecture/pragma.manifest.ts`](../../scripts/architecture/pragma.manifest.ts):
+[`scripts/architecture/pragma.manifest.ts`](../../scripts/architecture/manifests/pragma.manifest.ts):
 actors, containers and external systems, which no single source file owns.
 
 ## Blueprints in the diagram

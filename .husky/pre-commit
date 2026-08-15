@@ -189,6 +189,13 @@ scripts/check-pwa-assets.sh
 echo "[pre-commit] checking every \"does not work\" carries a date"
 scripts/check-negative-claims-are-dated.sh
 
+# A document that links a file which is not there sends the reader looking for a
+# stale document rather than a stale link. The routing table in
+# `/code-standards` carried thirteen of them, one `../` short of the repository
+# root, which a rendered preview cannot show.
+echo "[pre-commit] checking every document link names a file that exists"
+pnpm exec tsx scripts/docs/check-doc-links.ts
+
 # A pure module whose only consumer is its own test scores 100% on the coverage
 # and mutation gates while running nowhere, and knip cannot see it because every
 # test file is a knip entry point. A git-index read plus a grep, so it costs
