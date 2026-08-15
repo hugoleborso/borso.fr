@@ -159,3 +159,36 @@ takes half an hour.**
 2. `borsolivres` has no front end and no CDK stack. Keep, finish, or drop.
 3. `docs/adding-a-fullstack-app.md` is stale enough to mislead. Rewrite against
    `pragma`, or delete it with a pointer.
+4. **pragma's catalog shows an average that ignores per-song overrides.** The
+   back end's `meanForSong` averages the effective score and the front end's
+   `meanDefaultMasteryForSong` averages the defaults, so the two disagree on any
+   song carrying an override. The name now says which is which, and the
+   catalog-list endpoint would have to ship the effective number for the screen
+   to show it. Which number belongs on that screen is yours.
+5. **last-loop-lepin shows two different numbers under the word "loop
+   duration".** The leaderboard and the fastest-lap badge measure from the
+   loop's own hourly top, which `punch.core.ts` argues for because the
+   punch-to-punch gap counts corral rest. The runner profile shows exactly that
+   punch-to-punch gap. Both are defensible and only one should carry the word.
+6. **`type-coverage`.** Measured and left out, with the numbers, in the section
+   above. One dev dependency and half an hour if you want it.
+
+## Vocabulary findings recorded but not acted on
+
+Writing the three vocabularies turned up more than the four defects fixed in
+this branch. These are in the vocabularies themselves and none of them is
+urgent:
+
+- `pragma` uses **session** for a dated practice or concert and for a signed-in
+  browser, and **transition** for a domain rule, a bounded context, and a bar
+  changing status.
+- `pragma` declares `MEMBER_PALETTE` twice with different shapes, which is why
+  the front end maps a stored hex back to the nearest canonical hue by squared
+  RGB distance.
+- `last-loop-lepin` says **valid** and **active** for the same predicate, and
+  **did not finish** on the back against **out** on the front, with no marked
+  boundary.
+- `borsouvertures` uses **candidate** for both an opening-variation-line triple
+  and a UCI move, declares `PlayScope` and `PlayScopeFilter` as one value under
+  two types that disagree on which fields are required, and calls the board
+  appearance a style in the persisted state and a theme in its module.
