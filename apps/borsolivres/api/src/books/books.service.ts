@@ -5,10 +5,12 @@
  *
  * `detachBooksFromShelf` is the books half of the shelf cascade. Aurora DSQL
  * enforces no foreign key, so `shelves.service.ts` calls this before it
- * deletes a shelf rather than relying on the engine.
+ * deletes a shelf rather than relying on the engine, and hands over the
+ * transaction it opened so both halves land or neither does.
  */
 
 import type { z } from 'zod';
+import type { DatabaseExecutor } from '../database/client';
 import {
   type BookRejectionReason,
   decideBookWrite,
@@ -102,9 +104,17 @@ export async function listShelfBooks(shelfId: string): Promise<BookRow[]> {
   return books.toSorted((left, right) => left.title.localeCompare(right.title));
 }
 
-/** Clears the shelf reference every book on the given shelf carries. */
-export async function detachBooksFromShelf(shelfId: string): Promise<number> {
-  return await clearShelfOnBooks(shelfId);
+/**
+ * Clears the shelf reference every book on the given shelf carries, and answers
+ * how many books lost it. The executor arrives from the caller because the
+ * detach is one half of a two-table workflow the shelves service owns, so it
+ * has to write through that workflow's transaction rather than open its own.
+ */
+export async function detachBooksFromShelf(
+  executor: DatabaseExecutor,
+  shelfId: string,
+): Promise<number> {
+  return await clearShelfOnBooks(executor, shelfId);
 }
 
 /**

@@ -6,7 +6,9 @@
  * and the cascade is written out: the books context detaches its rows first,
  * through its own service, and only then does the shelf row go. Reaching into
  * `books.repository.ts` from here would take ownership of a table this slice
- * does not own. See docs/adr/0006-cascade-on-delete-via-json-blob-scrub.md.
+ * does not own. Both writes run on one transaction this service opens, so a
+ * failure between them cannot leave books detached from a shelf that is still
+ * there. See docs/adr/0006-cascade-on-delete-via-json-blob-scrub.md.
  */
 
 import { detachBooksFromShelf } from '../books/books.service';
@@ -15,6 +17,7 @@ import {
   findShelfById,
   insertShelf,
   listShelves,
+  runInOneTransaction,
   type ShelfRow,
   updateShelfName,
 } from './shelves.repository';
@@ -47,7 +50,9 @@ const NO_BOOKS_DETACHED = 0;
 export async function removeShelf(id: string): Promise<ShelfRemoval> {
   const shelf = await findShelfById(id);
   if (shelf === null) return { kind: 'not-found', detachedBookCount: NO_BOOKS_DETACHED };
-  const detachedBookCount = await detachBooksFromShelf(id);
-  await deleteShelf(id);
-  return { kind: 'ok', detachedBookCount };
+  return await runInOneTransaction(async (executor) => {
+    const detachedBookCount = await detachBooksFromShelf(executor, id);
+    await deleteShelf(executor, id);
+    return { kind: 'ok', detachedBookCount };
+  });
 }

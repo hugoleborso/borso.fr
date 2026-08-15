@@ -5,7 +5,7 @@
 
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { BOOK_STATUSES, type BookDraft, type BookStatus } from './books.core';
 import { bookTable } from './books.schema';
 
@@ -110,9 +110,11 @@ export async function deleteBook(id: string): Promise<number> {
   return deleted.length;
 }
 
-export async function clearShelfOnBooks(shelfId: string): Promise<number> {
-  const database = getDatabase();
-  const detached = await database
+export async function clearShelfOnBooks(
+  executor: DatabaseExecutor,
+  shelfId: string,
+): Promise<number> {
+  const detached = await executor
     .update(bookTable)
     .set({ shelfId: null })
     .where(eq(bookTable.shelfId, shelfId))
