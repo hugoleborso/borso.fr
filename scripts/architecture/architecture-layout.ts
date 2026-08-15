@@ -41,15 +41,15 @@ export interface LevelLayout {
 }
 
 /** The box a node with a name and nothing under it needs. */
-const NODE_BASE_HEIGHT = 34;
+const NODE_BASE_HEIGHT = 38;
 /** Added per line printed under the name, matching the renderer's row pitch. */
 export const NODE_LINE_HEIGHT = 14;
 const NODE_MIN_WIDTH = 138;
-// Measured in the page with `getComputedTextLength`: 7.513 px per character for
-// the name and 6.315 for the lines under it. The estimate carries headroom
-// because the box is sized here and the text is measured by whichever monospace
-// face the reader's machine resolves.
-const LABEL_CHARACTER_WIDTH = 7.7;
+// Measured in the page with `getComputedTextLength`: 9.016 px per character for
+// the name at its 15px weight, and 6.315 for the lines under it. The estimate
+// carries headroom because the box is sized here and the text is measured by
+// whichever monospace face the reader's machine resolves.
+const LABEL_CHARACTER_WIDTH = 9.3;
 const LINE_CHARACTER_WIDTH = 6.5;
 const LABEL_PADDING = 28;
 

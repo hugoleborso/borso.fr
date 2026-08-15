@@ -448,10 +448,25 @@ function buildContainerLevel(
       lines: [
         container.technology,
         ...(container.hosting === undefined ? [] : [container.hosting]),
+        // A container with no scanned file used to print "no source in this
+        // repository", which is false for anything whose source is simply not
+        // TypeScript under `apps/<slug>/`. The note says which it is.
+        ...(owned.length === 0 && container.sourceNote !== undefined
+          ? wrapNote(container.sourceNote)
+          : []),
       ],
       chips:
         owned.length === 0
-          ? [{ icon: FILE_ICON, text: 'no source in this repository', tone: 'plain' as const }]
+          ? [
+              {
+                icon: FILE_ICON,
+                text:
+                  container.sourceNote === undefined
+                    ? 'no file the scan reads'
+                    : 'source outside the scan',
+                tone: 'plain' as const,
+              },
+            ]
           : [
               { icon: FILE_ICON, text: `${metrics.files} files`, tone: 'plain' as const },
               ...metricChips(metrics, true),
@@ -525,6 +540,24 @@ function buildContainerLevel(
   };
 }
 
+/** A note broken into block-width rows, since a block prints one row at a time. */
+const NOTE_ROW_CHARACTERS = 58;
+
+function wrapNote(note: string): string[] {
+  const rows: string[] = [];
+  let current = '';
+  for (const word of note.split(' ')) {
+    if (current !== '' && `${current} ${word}`.length > NOTE_ROW_CHARACTERS) {
+      rows.push(current);
+      current = word;
+      continue;
+    }
+    current = current === '' ? word : `${current} ${word}`;
+  }
+  if (current !== '') rows.push(current);
+  return rows;
+}
+
 /** The folder a group of files shares, which is what names the block. */
 function commonFolder(files: readonly ArchitectureFile[], applicationPrefix: string): string {
   const folders = files.map((file) => file.path.split('/').slice(0, -1));
@@ -571,6 +604,9 @@ function buildComponentLevel(
     const blueprintIds = [
       ...new Set(owned.flatMap((file) => [...file.blueprints, ...file.followsBlueprints])),
     ].sort();
+    const markedCount = owned.filter(
+      (file) => file.blueprints.length > 0 || file.followsBlueprints.length > 0,
+    ).length;
     return {
       id,
       label: (nameCount.get(name) ?? 0) > 1 ? `${containerId} · ${name}` : name,
@@ -591,11 +627,16 @@ function buildComponentLevel(
           ? [{ icon: ROUTE_ICON, text: `${routeCount} routes`, tone: 'plain' as const }]
           : []),
         ...metricChips(metrics, true),
-        ...blueprintIds.map((each) => ({
+        // One pill per blueprint made a context with nine patterns the widest
+        // block on the level, and a reader could not compare two contexts
+        // without counting. The count plus the share of files carrying a marker
+        // is the comparable form; the ids are on the block's card and in
+        // Patterns.
+        {
           icon: BLUEPRINT_ICON,
-          text: each,
-          tone: 'blueprint' as const,
-        })),
+          text: `${blueprintIds.length} pattern${blueprintIds.length === 1 ? '' : 's'} · ${markedCount}/${owned.length} marked`,
+          tone: 'blueprint',
+        },
       ],
     };
   });

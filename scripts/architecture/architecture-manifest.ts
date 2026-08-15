@@ -38,6 +38,15 @@ export interface ManifestContainer {
   readonly icon: string;
   /** Where this runs, when that is not obvious from the runtime alone. */
   readonly hosting?: string;
+  /**
+   * Why the scan finds no file for this container, when it finds none.
+   *
+   * The block used to print "no source in this repository", which is false for
+   * anything whose source is simply not TypeScript under `apps/<slug>/`: the
+   * service worker ships as a plain script and the bucket is a CDK resource.
+   * A container with no scanned source has to say which of those it is.
+   */
+  readonly sourceNote?: string;
 }
 
 export interface ManifestExternal {

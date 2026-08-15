@@ -11,7 +11,13 @@ import { CHIP_ROW_HEIGHT, NODE_LINE_HEIGHT } from './architecture-layout';
 export const GRAPH_RUNTIME_SCRIPT = String.raw`
 (() => {
   const ZOOM_MIN = 0.3;
-  const ZOOM_MAX = 2.6;
+  // How far in a reader can go, expressed as the narrowest slice of the graph
+  // the canvas will show rather than as a multiple of the fitted view. A
+  // multiple is the wrong unit: the component level is three thousand units
+  // wide and fits at about a third of actual size, so 2.6x of that was barely
+  // life size and the labels stayed unreadable. A floor in graph units gives
+  // the same magnification on every level whatever its width.
+  const MINIMUM_VIEW_WIDTH = 340;
   const ZOOM_STEP = 0.0016;
   const CORNER_RADIUS = 9;
   const ROW_PITCH = ${NODE_LINE_HEIGHT};
@@ -289,7 +295,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       const lines = node.lines || [];
       const chips = node.chips || [];
       const bare = lines.length === 0 && chips.length === 0;
-      const labelY = box.y + (bare ? box.height / 2 + 4 : 21);
+      const labelY = box.y + (bare ? box.height / 2 + 5 : 24);
       if (node.icon) {
         const icon = svgElement('text', { x: box.x + 13, y: labelY, class: 'node-icon' });
         icon.textContent = node.icon;
@@ -305,13 +311,13 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       lines.forEach((line, index) => {
         const sub = svgElement('text', {
           x: box.x + 14,
-          y: box.y + 21 + ROW_PITCH * (index + 1),
+          y: box.y + 24 + ROW_PITCH * (index + 1),
           class: 'node-sub',
         });
         sub.textContent = line;
         group.appendChild(sub);
       });
-      let chipY = box.y + 21 + ROW_PITCH * lines.length + 6;
+      let chipY = box.y + 24 + ROW_PITCH * lines.length + 6;
       let chipX = box.x + 14;
       let usedInRow = 0;
       for (const chip of chips) {
@@ -423,7 +429,10 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     const zoomAround = (factor, clientX, clientY) => {
       const anchor = toGraphPoint(clientX, clientY);
       if (anchor === null) return;
-      const nextWidth = Math.min(width / ZOOM_MIN, Math.max(width / ZOOM_MAX, view.width * factor));
+      const nextWidth = Math.min(
+        width / ZOOM_MIN,
+        Math.max(Math.min(MINIMUM_VIEW_WIDTH, width), view.width * factor),
+      );
       const applied = nextWidth / view.width;
       view.x = anchor.x - (anchor.x - view.x) * applied;
       view.y = anchor.y - (anchor.y - view.y) * applied;
@@ -712,9 +721,9 @@ export const GRAPH_STYLES = String.raw`
   .node { cursor: pointer; }
   .node-body { fill: var(--panel); stroke: var(--line-strong); stroke-width: 1; transition: opacity .12s; }
   .node-stripe { fill: var(--muted); }
-  .node-label { font: 600 12.5px var(--font-mono); fill: var(--ink); }
+  .node-label { font: 700 15px var(--font-mono); fill: var(--ink); }
   .node-sub { font: 10.5px var(--font-mono); fill: var(--muted); }
-  .node-icon { font: 13px var(--font-sans); }
+  .node-icon { font: 15px var(--font-sans); }
   .node-chip { fill: var(--chip); stroke: var(--line); stroke-width: 1; }
   .node-chip-text { font: 10px var(--font-mono); fill: var(--muted); }
   .node-chip-blueprint { fill: var(--accent-soft); stroke: var(--accent); }

@@ -380,9 +380,9 @@
   .node { cursor: pointer; }
   .node-body { fill: var(--panel); stroke: var(--line-strong); stroke-width: 1; transition: opacity .12s; }
   .node-stripe { fill: var(--muted); }
-  .node-label { font: 600 12.5px var(--font-mono); fill: var(--ink); }
+  .node-label { font: 700 15px var(--font-mono); fill: var(--ink); }
   .node-sub { font: 10.5px var(--font-mono); fill: var(--muted); }
-  .node-icon { font: 13px var(--font-sans); }
+  .node-icon { font: 15px var(--font-sans); }
   .node-chip { fill: var(--chip); stroke: var(--line); stroke-width: 1; }
   .node-chip-text { font: 10px var(--font-mono); fill: var(--muted); }
   .node-chip-blueprint { fill: var(--accent-soft); stroke: var(--accent); }
@@ -689,7 +689,7 @@
           </span>
         </div>
         <div class="graph-stage"></div>
-        <script type="application/json">{"level":"context","title":"Level 1 — Context","width":592.5,"height":148,"nodes":[{"id":"player","label":"Player","icon":"♟️","lines":["outside the system"],"chips":[],"detail":"Trains an opening and plays lines inside it. Nothing here signs in, so every human user holds this one role.","tone":"actor","x":28,"y":50,"width":160,"height":48},{"id":"system","label":"Borsouvertures","icon":"🎯","lines":["inside — this repository builds it"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"}],"detail":"Chess openings trainer: learn an opening or play within one, over a bundled book, with an offline-capable service worker.","tone":"system","x":292,"y":28,"width":272.5,"height":92}],"edges":[{"from":"player","to":"system","kind":"uses","label":"uses","points":[{"x":188,"y":74},{"x":292,"y":74}]}]}</script>
+        <script type="application/json">{"level":"context","title":"Level 1 — Context","width":592.5,"height":152,"nodes":[{"id":"player","label":"Player","icon":"♟️","lines":["outside the system"],"chips":[],"detail":"Trains an opening and plays lines inside it. Nothing here signs in, so every human user holds this one role.","tone":"actor","x":28,"y":50,"width":160,"height":52},{"id":"system","label":"Borsouvertures","icon":"🎯","lines":["inside — this repository builds it"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"}],"detail":"Chess openings trainer: learn an opening or play within one, over a bundled book, with an offline-capable service worker.","tone":"system","x":292,"y":28,"width":272.5,"height":96}],"edges":[{"from":"player","to":"system","kind":"uses","label":"uses","points":[{"x":188,"y":76},{"x":292,"y":76}]}]}</script>
       </div>
       <details class="cards-panel">
         <summary>2 blocks in detail</summary>
@@ -783,7 +783,7 @@
           </span>
         </div>
         <div class="graph-stage"></div>
-        <script type="application/json">{"level":"container","title":"Level 2 — Containers","width":513,"height":266,"nodes":[{"id":"site","label":"Single page application","icon":"🖥️","lines":["React 19, Vite, Tailwind","CloudFront in front of an S3 origin, alias borsouvertures.borso.fr"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"}],"detail":"React 19, Vite, Tailwind. The whole trainer. The openings book ships as a static JSON asset rather than coming from a server, so the application has no back end of its own.","tone":"site","x":28,"y":132,"width":457,"height":106},{"id":"infrastructure","label":"Infrastructure definition","icon":"🏗️","lines":["AWS CDK, the shared StaticSite construct","Runs in CI, never at runtime"],"chips":[{"icon":"🗂️","text":"no source in this repository","tone":"plain"}],"detail":"AWS CDK, the shared StaticSite construct. One StaticSite from @borso/infra, in eu-west-3. Build-time only, never reached at runtime.","tone":"build","x":28,"y":28,"width":288,"height":84}],"edges":[]}</script>
+        <script type="application/json">{"level":"container","title":"Level 2 — Containers","width":513,"height":274,"nodes":[{"id":"site","label":"Single page application","icon":"🖥️","lines":["React 19, Vite, Tailwind","CloudFront in front of an S3 origin, alias borsouvertures.borso.fr"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"}],"detail":"React 19, Vite, Tailwind. The whole trainer. The openings book ships as a static JSON asset rather than coming from a server, so the application has no back end of its own.","tone":"site","x":28,"y":136,"width":457,"height":110},{"id":"infrastructure","label":"Infrastructure definition","icon":"🏗️","lines":["AWS CDK, the shared StaticSite construct","Runs in CI, never at runtime"],"chips":[{"icon":"🗂️","text":"no file the scan reads","tone":"plain"}],"detail":"AWS CDK, the shared StaticSite construct. One StaticSite from @borso/infra, in eu-west-3. Build-time only, never reached at runtime.","tone":"build","x":28,"y":28,"width":288,"height":88}],"edges":[]}</script>
       </div>
       <details class="cards-panel">
         <summary>2 blocks in detail</summary>
@@ -877,7 +877,7 @@
           </span>
         </div>
         <div class="graph-stage"></div>
-        <script type="application/json">{"level":"component","title":"Level 3 — Components","width":649.5,"height":734,"nodes":[{"id":"site::root","label":"root","icon":"⚛️","lines":["","atom, config, core, declaration, i18n, molecule, organism, route, types, unknown, utils"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"},{"icon":"📘","text":"atom-lookup-variants","tone":"blueprint"},{"icon":"📘","text":"atom-null-render","tone":"blueprint"},{"icon":"📘","text":"atom-plain","tone":"blueprint"},{"icon":"📘","text":"cdk-app-entrypoint","tone":"blueprint"},{"icon":"📘","text":"component-lookup-table","tone":"blueprint"},{"icon":"📘","text":"core-appearance","tone":"blueprint"},{"icon":"📘","text":"core-label-key","tone":"blueprint"},{"icon":"📘","text":"core-view-intent","tone":"blueprint"},{"icon":"📘","text":"domain-types-module","tone":"blueprint"},{"icon":"📘","text":"hook-effect-free-mount","tone":"blueprint"},{"icon":"📘","text":"hook-external-store","tone":"blueprint"},{"icon":"📘","text":"i18n-key-walk","tone":"blueprint"},{"icon":"📘","text":"i18n-parity-gate","tone":"blueprint"},{"icon":"📘","text":"i18n-setup","tone":"blueprint"},{"icon":"📘","text":"i18n-typed-keys","tone":"blueprint"},{"icon":"📘","text":"injected-storage-slice","tone":"blueprint"},{"icon":"📘","text":"machine-impure-edge","tone":"blueprint"},{"icon":"📘","text":"machine-singleton","tone":"blueprint"},{"icon":"📘","text":"molecule-presentational","tone":"blueprint"},{"icon":"📘","text":"organism-machine-bound","tone":"blueprint"},{"icon":"📘","text":"organism-presentational","tone":"blueprint"},{"icon":"📘","text":"organism-shell","tone":"blueprint"},{"icon":"📘","text":"organism-table-dispatch","tone":"blueprint"},{"icon":"📘","text":"persisted-store-module","tone":"blueprint"},{"icon":"📘","text":"ref-callback-browser-api","tone":"blueprint"},{"icon":"📘","text":"route-suspense-resource","tone":"blueprint"},{"icon":"📘","text":"satisfies-over-assertion","tone":"blueprint"},{"icon":"📘","text":"shared-props-shape","tone":"blueprint"},{"icon":"📘","text":"site-entrypoint","tone":"blueprint"},{"icon":"📘","text":"state-machine-module","tone":"blueprint"},{"icon":"📘","text":"unknown-payload-parser","tone":"blueprint"},{"icon":"📘","text":"utils-branchless-list","tone":"blueprint"},{"icon":"📘","text":"utils-pure-module","tone":"blueprint"},{"icon":"📘","text":"workspace-test-config","tone":"blueprint"}],"detail":"103 files in Single page application. Layers: atom, config, core, declaration, i18n, molecule, organism, route, types, unknown, utils.","tone":"site","x":28,"y":28,"width":593.5,"height":678}],"edges":[]}</script>
+        <script type="application/json">{"level":"component","title":"Level 3 — Components","width":649.5,"height":188,"nodes":[{"id":"site::root","label":"root","icon":"⚛️","lines":["","atom, config, core, declaration, i18n, molecule, organism, route, types, unknown, utils"],"chips":[{"icon":"🗂️","text":"103 files","tone":"plain"},{"icon":"📏","text":"4895 lines total","tone":"size"},{"icon":"🧮","text":"cx 472 total","tone":"complexity"},{"icon":"📘","text":"34 patterns · 96/103 marked","tone":"blueprint"}],"detail":"103 files in Single page application. Layers: atom, config, core, declaration, i18n, molecule, organism, route, types, unknown, utils.","tone":"site","x":28,"y":28,"width":593.5,"height":132}],"edges":[]}</script>
       </div>
       <details class="cards-panel">
         <summary>1 block in detail</summary>
@@ -2289,7 +2289,13 @@
 <script>
 (() => {
   const ZOOM_MIN = 0.3;
-  const ZOOM_MAX = 2.6;
+  // How far in a reader can go, expressed as the narrowest slice of the graph
+  // the canvas will show rather than as a multiple of the fitted view. A
+  // multiple is the wrong unit: the component level is three thousand units
+  // wide and fits at about a third of actual size, so 2.6x of that was barely
+  // life size and the labels stayed unreadable. A floor in graph units gives
+  // the same magnification on every level whatever its width.
+  const MINIMUM_VIEW_WIDTH = 340;
   const ZOOM_STEP = 0.0016;
   const CORNER_RADIUS = 9;
   const ROW_PITCH = 14;
@@ -2567,7 +2573,7 @@
       const lines = node.lines || [];
       const chips = node.chips || [];
       const bare = lines.length === 0 && chips.length === 0;
-      const labelY = box.y + (bare ? box.height / 2 + 4 : 21);
+      const labelY = box.y + (bare ? box.height / 2 + 5 : 24);
       if (node.icon) {
         const icon = svgElement('text', { x: box.x + 13, y: labelY, class: 'node-icon' });
         icon.textContent = node.icon;
@@ -2583,13 +2589,13 @@
       lines.forEach((line, index) => {
         const sub = svgElement('text', {
           x: box.x + 14,
-          y: box.y + 21 + ROW_PITCH * (index + 1),
+          y: box.y + 24 + ROW_PITCH * (index + 1),
           class: 'node-sub',
         });
         sub.textContent = line;
         group.appendChild(sub);
       });
-      let chipY = box.y + 21 + ROW_PITCH * lines.length + 6;
+      let chipY = box.y + 24 + ROW_PITCH * lines.length + 6;
       let chipX = box.x + 14;
       let usedInRow = 0;
       for (const chip of chips) {
@@ -2701,7 +2707,10 @@
     const zoomAround = (factor, clientX, clientY) => {
       const anchor = toGraphPoint(clientX, clientY);
       if (anchor === null) return;
-      const nextWidth = Math.min(width / ZOOM_MIN, Math.max(width / ZOOM_MAX, view.width * factor));
+      const nextWidth = Math.min(
+        width / ZOOM_MIN,
+        Math.max(Math.min(MINIMUM_VIEW_WIDTH, width), view.width * factor),
+      );
       const applied = nextWidth / view.width;
       view.x = anchor.x - (anchor.x - view.x) * applied;
       view.y = anchor.y - (anchor.y - view.y) * applied;
