@@ -55,14 +55,14 @@ if [ -n "$staged_lintable" ]; then
   pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts --check
 fi
 
-# The architecture page, whenever pragma changed. The generator derives the
-# graph from paths, imports and the Hono call chain, so a rename or a new route
-# moves the page without anyone editing it, and a stale page is a diagram that
-# lies. It also refuses a `@DependsOnExternal` naming an external system the
-# manifest does not declare, and a declared external no file reaches, because
-# either half alone is how a context diagram drifts from the code.
-if git diff --cached --name-only | grep -q '^apps/pragma/'; then
-  echo "[pre-commit] checking the pragma architecture page"
+# The architecture pages, whenever any application changed. The generator
+# derives each graph from paths, imports and the Hono call chain, so a rename or
+# a new route moves the page without anyone editing it, and a stale page is a
+# diagram that lies. It also refuses a `@DependsOnExternal` naming an external
+# system the manifest does not declare, and a declared external no file reaches,
+# because either half alone is how a context diagram drifts from the code.
+if git diff --cached --name-only | grep -qE '^(apps/|scripts/architecture/)'; then
+  echo "[pre-commit] checking the architecture pages"
   pnpm exec tsx scripts/architecture/architecture-graph.ts --check
 fi
 

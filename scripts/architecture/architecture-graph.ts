@@ -939,6 +939,12 @@ async function buildApplication(options: BuildOptions): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  // `--list` prints the applications a caller can loop over, so a workflow does
+  // not carry a second copy of the register that would drift from this one.
+  if (process.argv.includes('--list')) {
+    for (const manifest of ARCHITECTURE_MANIFESTS) console.log(manifest.application);
+    return;
+  }
   const isCheck = process.argv.includes('--check');
   /**
    * `--app-root` points the scan at another checkout of one application, which

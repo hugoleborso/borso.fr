@@ -1,4 +1,4 @@
-# What a pull request does to pragma's architecture, said in one comment.
+# What a pull request does to each application's architecture, in one comment.
 #
 # `architecture-graph.ts --check` already fails a commit whose generated page is
 # stale, so the page in the branch is always current. What that gate cannot do
@@ -16,7 +16,7 @@ name: architecture
 on:
   pull_request:
     paths:
-      - 'apps/pragma/**'
+      - 'apps/**'
       - 'scripts/architecture/**'
       - '.claude/skills/blueprint/blueprint-utils.ts'
       - '.github/workflows/architecture.yml'
@@ -57,22 +57,31 @@ jobs:
       # A worktree of the merge base, scanned by the head revision's generator.
       # The merge base rather than the branch tip, so the comparison describes
       # this pull request and not whatever else landed on the target meanwhile.
-      - name: Build the target-branch model
+      - name: Build the target-branch models and diff them
         run: |
           set -euo pipefail
           base_sha="$(git merge-base "origin/${{ github.base_ref }}" HEAD)"
           echo "Comparing against $base_sha on ${{ github.base_ref }}"
           git worktree add --detach ../architecture-base "$base_sha"
-          pnpm exec tsx scripts/architecture/architecture-graph.ts \
-            --app-root ../architecture-base/apps/pragma \
-            --out /tmp/architecture-base
-
-      - name: Diff the two models
-        run: |
-          set -euo pipefail
-          pnpm exec tsx scripts/architecture/architecture-diff.ts \
-            /tmp/architecture-base/pragma-architecture.json \
-            docs/architecture/pragma-architecture.json > /tmp/architecture-diff.md
+          : > /tmp/architecture-diff.md
+          for app in $(pnpm exec tsx scripts/architecture/architecture-graph.ts --list); do
+            # An application the target branch does not have yet cannot be
+            # compared, and its whole map is new by definition.
+            if [ ! -d "../architecture-base/apps/$app" ]; then
+              printf '## %s\n\nNew application on this branch; nothing to compare.\n\n' "$app" \
+                >> /tmp/architecture-diff.md
+              continue
+            fi
+            pnpm exec tsx scripts/architecture/architecture-graph.ts \
+              --app "$app" \
+              --app-root "../architecture-base/apps/$app" \
+              --out /tmp/architecture-base
+            printf '## %s\n\n' "$app" >> /tmp/architecture-diff.md
+            pnpm exec tsx scripts/architecture/architecture-diff.ts \
+              "/tmp/architecture-base/$app-architecture.json" \
+              "docs/architecture/$app-architecture.json" >> /tmp/architecture-diff.md
+            printf '\n' >> /tmp/architecture-diff.md
+          done
           cat /tmp/architecture-diff.md >> "$GITHUB_STEP_SUMMARY"
 
       # The page is the browsable half. A workflow artifact is a download rather
@@ -81,10 +90,11 @@ jobs:
       - name: Upload the browsable page
         uses: actions/upload-artifact@v4
         with:
-          name: pragma-architecture
+          name: architecture-maps
           path: |
-            docs/architecture/pragma-architecture.html
-            docs/architecture/pragma-architecture.json
+            docs/architecture/index.html
+            docs/architecture/*-architecture.html
+            docs/architecture/*-architecture.json
           retention-days: 30
 
       # One comment per pull request, rewritten in place, and only when the
@@ -95,13 +105,13 @@ jobs:
         with:
           script: |
             const fs = require('node:fs');
-            const marker = '<!-- pragma-architecture-diff -->';
+            const marker = '<!-- architecture-diff -->';
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const body = [
               marker,
               fs.readFileSync('/tmp/architecture-diff.md', 'utf8').trim(),
               '',
-              `[Browse the full map](${runUrl}#artifacts) — download the \`pragma-architecture\` artifact and open \`pragma-architecture.html\`.`,
+              `[Browse the full maps](${runUrl}#artifacts) — download the \`architecture-maps\` artifact and open \`index.html\`.`,
             ].join('\n');
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;

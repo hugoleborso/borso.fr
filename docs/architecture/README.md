@@ -1,14 +1,26 @@
 # Architecture diagrams
 
-[`pragma-architecture.html`](./pragma-architecture.html) is a generated,
-browsable map of `apps/pragma` at five levels. Regenerate it with:
+[`index.html`](./index.html) lists one generated map per application, each at
+five levels, from the same generator and the same rules:
+
+- [`pragma-architecture.html`](./pragma-architecture.html)
+- [`last-loop-lepin-architecture.html`](./last-loop-lepin-architecture.html)
+- [`borsouvertures-architecture.html`](./borsouvertures-architecture.html)
+- [`borso-fr-architecture.html`](./borso-fr-architecture.html)
+
+Regenerate them with:
 
 ```bash
-pnpm exec tsx scripts/architecture/architecture-graph.ts
+pnpm exec tsx scripts/architecture/architecture-graph.ts            # every app
+pnpm exec tsx scripts/architecture/architecture-graph.ts --app foo  # one app
 ```
 
 Pre-commit runs the same script with `--check` whenever a commit touches
-`apps/pragma/`, so the page cannot fall behind the code.
+`apps/` or the generator, so no page can fall behind the code.
+
+**To put a new application on the map, read [`install.md`](./install.md)** —
+what a codebase must provide, what is optional, and what holds each convention
+in place once it is met.
 
 ## The rule this rests on
 
@@ -19,7 +31,9 @@ lives in
 shared with the blueprint scripts so the two cannot disagree. Today every one
 of pragma's 223 source files resolves to a known layer, with none left over.
 
-Suffixes beyond the ones in [`01. Naming`](../standards/01-naming.md):
+The full resolution order, and how to adopt it in an application that does not
+follow it yet, is in [`install.md`](./install.md). Suffixes beyond the ones in
+[`01. Naming`](../standards/01-naming.md):
 
 | Suffix         | Contents                                                     |
 | -------------- | ------------------------------------------------------------ |
@@ -202,7 +216,8 @@ pnpm exec tsx scripts/architecture/architecture-diff.ts \
 
 ## Known limits
 
-- Only `apps/pragma` is modelled. The generator hard-codes one manifest.
+- An application with no query modules has an empty level 3.5, because a user
+  action is an exported hook in one of them. Today only pragma has any.
 - A route handler defined outside the controller file is not followed.
 - The walk stops at depth six, which no chain in pragma currently reaches.
 - `sw.js` is scanned for URL strings only, since it ships as plain script.
