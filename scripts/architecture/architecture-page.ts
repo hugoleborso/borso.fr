@@ -481,6 +481,7 @@ const PAGE_STYLES = String.raw`
     --muted: #5b626e;
     --line: #d8dce4;
     --line-strong: #b9c1cd;
+    --chip: #eef1f6;
     --accent: #1f3a5f;
     --accent-soft: #dfe6f0;
     --signal: #b45309;
@@ -502,6 +503,7 @@ const PAGE_STYLES = String.raw`
       --muted: #98a1b0;
       --line: #262d36;
       --line-strong: #3a434f;
+      --chip: #212832;
       --accent: #8fb2dd;
       --accent-soft: #1b2735;
       --signal: #e0a355;
@@ -521,6 +523,7 @@ const PAGE_STYLES = String.raw`
     --muted: #98a1b0;
     --line: #262d36;
     --line-strong: #3a434f;
+    --chip: #212832;
     --accent: #8fb2dd;
     --accent-soft: #1b2735;
     --signal: #e0a355;
