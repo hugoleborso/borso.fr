@@ -2553,7 +2553,7 @@
         "apps/pragma/site/src/components/molecules/media-query-matching.hook.ts",
         "apps/pragma/site/src/components/molecules/online-status.hook.ts",
         "apps/pragma/site/src/components/organisms/BottomTabBar.tsx",
-        "apps/pragma/site/src/components/organisms/nav-active.core.ts",
+        "apps/pragma/site/src/components/organisms/navigation-active.core.ts",
         "apps/pragma/site/src/components/organisms/navigation-badges.hook.ts",
         "apps/pragma/site/src/lib/counts.utils.ts",
         "apps/pragma/site/src/lib/modal-dialog.adapter.ts"
@@ -2616,7 +2616,7 @@
         "apps/pragma/site/src/components/atoms/Badge.tsx",
         "apps/pragma/site/src/components/atoms/Icon.tsx",
         "apps/pragma/site/src/components/atoms/class-name.utils.ts",
-        "apps/pragma/site/src/components/organisms/nav-active.core.ts",
+        "apps/pragma/site/src/components/organisms/navigation-active.core.ts",
         "apps/pragma/site/src/lib/counts.utils.ts"
       ],
       "blueprints": [],
@@ -2763,14 +2763,14 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/pragma/site/src/components/organisms/nav-active.core.ts",
+      "path": "apps/pragma/site/src/components/organisms/navigation-active.core.ts",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
       "feature": null,
       "exports": [
         "isMoreTabActive",
-        "isNavDestinationActive"
+        "isNavigationDestinationActive"
       ],
       "imports": [],
       "blueprints": [],

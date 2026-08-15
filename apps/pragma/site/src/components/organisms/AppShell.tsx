@@ -45,10 +45,13 @@ import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { MEMBER_PALETTE, memberInitial } from '../atoms/member-palette.utils';
 import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
 import { OfflineBanner } from '../molecules/OfflineBanner';
-import { BREAKPOINT_BELOW_LG, useIsMediaQueryMatching } from '../molecules/media-query-matching.hook';
+import {
+  BREAKPOINT_BELOW_LG,
+  useIsMediaQueryMatching,
+} from '../molecules/media-query-matching.hook';
 import { useIsOnline } from '../molecules/online-status.hook';
 import { BottomTabBar } from './BottomTabBar';
-import { isNavDestinationActive } from './nav-active.core';
+import { isNavigationDestinationActive } from './navigation-active.core';
 import { useNavigationBadges } from './navigation-badges.hook';
 
 interface NavItem {
@@ -124,7 +127,7 @@ export function AppShell(): JSX.Element {
               item={item}
               label={t(item.labelKey)}
               badge={badges[item.to]}
-              isActive={isNavDestinationActive(location.pathname, item.to)}
+              isActive={isNavigationDestinationActive(location.pathname, item.to)}
               onClick={closeMobileNav}
             />
           ))}
@@ -140,7 +143,7 @@ export function AppShell(): JSX.Element {
               item={item}
               label={t(item.labelKey)}
               badge={badges[item.to]}
-              isActive={isNavDestinationActive(location.pathname, item.to)}
+              isActive={isNavigationDestinationActive(location.pathname, item.to)}
               onClick={closeMobileNav}
             />
           ))}

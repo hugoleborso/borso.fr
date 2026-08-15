@@ -1,20 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { isMoreTabActive, isNavDestinationActive } from './nav-active.core';
+import { isMoreTabActive, isNavigationDestinationActive } from './navigation-active.core';
 
 const ADMIN_DESTINATIONS = ['/members', '/instruments'];
 
 // @FollowsBlueprint test-pure-unit
-describe('isNavDestinationActive', () => {
+describe('isNavigationDestinationActive', () => {
   it('lights the destination up on its own path', () => {
-    expect(isNavDestinationActive('/catalog', '/catalog')).toBe(true);
+    expect(isNavigationDestinationActive('/catalog', '/catalog')).toBe(true);
   });
 
   it('lights it up on a page below it', () => {
-    expect(isNavDestinationActive('/catalog/3/edit', '/catalog')).toBe(true);
+    expect(isNavigationDestinationActive('/catalog/3/edit', '/catalog')).toBe(true);
   });
 
   it('leaves another destination dark', () => {
-    expect(isNavDestinationActive('/sessions', '/catalog')).toBe(false);
+    expect(isNavigationDestinationActive('/sessions', '/catalog')).toBe(false);
   });
 });
 

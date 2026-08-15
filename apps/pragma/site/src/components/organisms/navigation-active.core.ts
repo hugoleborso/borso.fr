@@ -7,7 +7,7 @@
  */
 
 // @FollowsBlueprint core-decision
-export function isNavDestinationActive(activePath: string, destination: string): boolean {
+export function isNavigationDestinationActive(activePath: string, destination: string): boolean {
   return activePath.startsWith(destination);
 }
 
@@ -24,6 +24,6 @@ export function isMoreTabActive(
 ): boolean {
   return (
     isMoreOpen ||
-    moreDestinations.some((destination) => isNavDestinationActive(activePath, destination))
+    moreDestinations.some((destination) => isNavigationDestinationActive(activePath, destination))
   );
 }
