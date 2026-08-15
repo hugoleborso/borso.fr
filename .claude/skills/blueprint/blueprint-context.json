@@ -1258,7 +1258,7 @@
         "name": "Lint Rule Tester Suite",
         "usage": "Use for the suite that ships beside every custom lint rule.",
         "path": "eslint-rules/no-use-effect.test.js",
-        "followers": 33
+        "followers": 34
       }
     ],
     "tooling/lint-rule": [
@@ -1267,7 +1267,7 @@
         "name": "Custom Lint Rule",
         "usage": "Use for a rule in the `borso` plugin that enforces one document in `docs/standards/`.",
         "path": "eslint-rules/no-use-effect.js",
-        "followers": 32
+        "followers": 33
       },
       {
         "id": "lint-rule-predicate",

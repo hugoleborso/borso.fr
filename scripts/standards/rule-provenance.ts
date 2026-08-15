@@ -96,7 +96,7 @@ function readCorpus(): Corpus {
  * report a rule with real provenance as written from principle, which is the
  * error that matters here.
  */
-function findMentions(corpus: ReadonlyMap<string, string>, rule: string): readonly string[] {
+function listMentions(corpus: ReadonlyMap<string, string>, rule: string): readonly string[] {
   const bareName = rule.replace('borso/', '');
   const found: string[] = [];
   for (const [key, contents] of corpus) {
@@ -110,8 +110,8 @@ async function buildRecords(): Promise<readonly RuleRecord[]> {
   const enabled = await readEnabledRules();
   return readRegisteredRules().map((rule) => ({
     rule,
-    dantotsuSlugs: findMentions(corpus.dantotsus, rule),
-    citingStandards: findMentions(corpus.standards, rule),
+    dantotsuSlugs: listMentions(corpus.dantotsus, rule),
+    citingStandards: listMentions(corpus.standards, rule),
     enabled: enabled.has(rule),
   }));
 }

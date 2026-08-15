@@ -31,6 +31,7 @@ every application the standard covers.
 | --- | --- | --- | --- |
 | `borso/no-abbreviated-identifier` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
 | `borso/function-names-are-verb-phrases` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
+| `borso/verb-promises-match-return-type` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
 | `borso/no-french-identifiers` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
 | `borso/no-step-named-value` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
 | `unicorn/consistent-boolean-name` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
@@ -226,7 +227,7 @@ reviews what lint cannot rather than repeating what lint already did.
 ### 01. Naming
 
 - `reviewer` checks that a definition in a `VOCABULARY.md` is still true, which is prose against code and therefore nothing a rule can do.
-- `reviewer` checks that a verb keeps the promise the table above makes, so a `find…` returns `null` when the thing is absent and a `get…` throws.
+- `reviewer` checks the half of the verb table the rule above cannot reach: that a `find…` actually returns `null` rather than throwing, that a `get…` throws, and that a `build…`, `project…` or `select…` returns what its verb says. Those are claims about behaviour, not about the shape of the annotation.
 - `reviewer` checks that a boolean name is not negated, because `isNotReady` reads as a double negative inside a `!`.
 - `reviewer` checks that a comment documents something the code cannot say, and is not a restatement, a history note, or a description of what the code does not do.
 - `reviewer` checks that a file name says what the file holds, because the suffix table is a convention no rule reads.
@@ -282,6 +283,6 @@ reviews what lint cannot rather than repeating what lint already did.
 
 ## Totals
 
-- 77 claim(s) enforced by a tool
+- 78 claim(s) enforced by a tool
 - 23 claim(s) left to a reviewer
 - 0 problem(s)

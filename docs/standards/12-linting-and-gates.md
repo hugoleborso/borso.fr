@@ -84,6 +84,7 @@ git.
 | `borso/no-raw-sql-outside-migrations`                  | [11](./11-database.md)                                     |
 | `borso/no-abbreviated-identifier`                      | [01](./01-naming.md)                                       |
 | `borso/function-names-are-verb-phrases`                | [01](./01-naming.md)                                       |
+| `borso/verb-promises-match-return-type`                | [01](./01-naming.md)                                       |
 | `borso/no-french-identifiers`                          | [01](./01-naming.md)                                       |
 | `borso/no-step-named-value`                            | [01](./01-naming.md)                                       |
 | `borso/no-discarded-await-before-navigation`           | a dantotsu, [06](./06-data-fetching.md)                    |

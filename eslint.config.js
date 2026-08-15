@@ -382,6 +382,7 @@ export default tseslint.config(
     rules: {
       'borso/no-abbreviated-identifier': 'error',
       'borso/function-names-are-verb-phrases': 'error',
+      'borso/verb-promises-match-return-type': 'error',
       'borso/no-french-identifiers': 'error',
       'borso/test-file-has-sibling-source': 'error',
 
@@ -588,6 +589,18 @@ export default tseslint.config(
       // file is read as a string at synth time and shipped to the edge. There
       // is no import to make the reference visible.
       'no-unused-vars': ['error', { varsIgnorePattern: '^handler$' }],
+    },
+  },
+
+  // The verb table is a promise to a reader, and the harness's own generators
+  // have readers too. This rule needs no type information, so unlike the rest
+  // of the naming block it can reach `scripts/` and the skills, which is where
+  // the reviewer found four `find…` functions handing back arrays.
+  {
+    files: ['scripts/**/*.ts', '.claude/skills/**/*.ts', 'eslint-rules/**/*.js'],
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/verb-promises-match-return-type': 'error',
     },
   },
 

@@ -57,7 +57,7 @@ function countWorkspacesByDependency(
   return counts;
 }
 
-function findUncatalogued(
+function listUncatalogued(
   manifests: readonly WorkspaceManifest[],
   sharedNames: ReadonlySet<string>,
 ): readonly CatalogProblem[] {
@@ -76,7 +76,7 @@ function findUncatalogued(
   return problems;
 }
 
-function findDanglingReferences(
+function listDanglingReferences(
   manifests: readonly WorkspaceManifest[],
   catalogs: Catalogs,
 ): readonly CatalogProblem[] {
@@ -95,7 +95,7 @@ function findDanglingReferences(
   return problems;
 }
 
-function findUnusedEntries(
+function listUnusedEntries(
   manifests: readonly WorkspaceManifest[],
   catalogs: Catalogs,
 ): readonly CatalogProblem[] {
@@ -130,8 +130,8 @@ export function listCatalogProblems(
   const counts = countWorkspacesByDependency(manifests);
   const sharedNames = new Set([...counts].filter(([, count]) => count > 1).map(([name]) => name));
   return [
-    ...findUncatalogued(manifests, sharedNames),
-    ...findDanglingReferences(manifests, catalogs),
-    ...findUnusedEntries(manifests, catalogs),
+    ...listUncatalogued(manifests, sharedNames),
+    ...listDanglingReferences(manifests, catalogs),
+    ...listUnusedEntries(manifests, catalogs),
   ];
 }

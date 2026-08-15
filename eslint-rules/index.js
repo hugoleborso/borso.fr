@@ -32,6 +32,7 @@ import noUseEffect from './no-use-effect.js';
 import noVendorSdkOutsideAdapter from './no-vendor-sdk-outside-adapter.js';
 import pureFunctionsLiveInCoreFiles from './pure-functions-live-in-core-files.js';
 import testFileHasSiblingSource from './test-file-has-sibling-source.js';
+import verbPromisesMatchReturnType from './verb-promises-match-return-type.js';
 
 /**
  * The `borso` ESLint plugin holds every rule that encodes a decision from
@@ -82,5 +83,6 @@ export const borsoPlugin = {
     'no-vendor-sdk-outside-adapter': noVendorSdkOutsideAdapter,
     'pure-functions-live-in-core-files': pureFunctionsLiveInCoreFiles,
     'test-file-has-sibling-source': testFileHasSiblingSource,
+    'verb-promises-match-return-type': verbPromisesMatchReturnType,
   },
 };

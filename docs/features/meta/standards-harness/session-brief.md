@@ -66,6 +66,8 @@ Second round:
 | A one-word lowercase name is kebab-case | Reading `books` and `self-punch` as two styles reported nineteen of twenty-one controllers as divergent when they all agree. |
 | The first push may use `SKIP_MUTATION_GATE=1` | The pre-push mutation wave takes about an hour and forty minutes on this branch, because the range is the whole branch and the change touches nearly every pure file. It ran once in full, scored 97.80, and named four survivors in one file. Re-running the whole wave to re-check one file is waste. The changed files are verified individually instead, and the flag is the hook's own documented escape, not `--no-verify`. Once the remote branch exists the range is one push and the gate is cheap again. |
 | `no-restricted-imports` per folder | `apps/<app>/domain/` is justified entirely by both sides reading it, and one `import { useState } from 'react'` ends that. Nothing said so; the rule appeared nowhere in `eslint.config.js`. |
+| A `find…` that returns an array is renamed, not excused | The standards reviewer found four of them and named both honest resolutions: rename every one, or weaken the table so `find…` over a collection is legal. Weakening it makes the promise unfalsifiable, and `Array.prototype.find` sets the reader's expectation anyway. Renaming also made the row checkable, which is what `borso/verb-promises-match-return-type` now does. |
+| The verb rule reads the annotation, not the type | A type-aware rule cannot reach `scripts/`, which has no tsc project, and that is exactly where the reviewer's finding was. Reading the annotation costs the functions that carry none, and buys the harness's own generators. |
 
 ## Standing constraints
 
@@ -91,8 +93,9 @@ has a dantotsu named *a green mutation gate is not a green coverage gate*. Most
 survivors are in the render functions, where a mutant changes prose and no test
 asserts on that prose.
 
-The hardening pass finished. The unscoped root run is **100.00 with zero
-survivors over 916 mutants in 64 seconds**, and the gate that was missing is now
+The hardening pass finished. Re-measured on the merged branch, the unscoped root
+run is **100.00 with zero survivors over 1090 mutants and 5 timeouts**, and the
+gate that was missing is now
 wired: `pnpm run test:coverage` at the root in CI, a `tooling` gate in pre-push
 whenever `scripts/` or `eslint-rules/` changes, and an unscoped `tooling` job in
 `full-suite.yml`. Before that, the root's declared 100% per-file coverage

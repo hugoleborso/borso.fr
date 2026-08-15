@@ -37,7 +37,7 @@ declare -A ALLOWED_TEST_ONLY=(
   [apps/last-loop-lepin/api/src/runner/runner.core.ts]="deliberately dormant: validateRunnerDraft waits on the relay-format decision, see PR #46"
   [apps/pragma/site/src/sw/manifest.utils.ts]="live counterpart: site/public/sw.js reimplements this in plain JS; consolidating needs a SW bundling decision"
   [apps/pragma/site/src/sw/sw-cache.utils.ts]="live counterpart: site/public/sw.js reimplements this in plain JS; consolidating needs a SW bundling decision"
-  [apps/pragma/api/src/mastery/mastery.core.ts]="live counterpart: site/src/lib/mastery-aggregate.utils.ts carries meanForSong on the front end"
+  [apps/pragma/api/src/mastery/mastery.core.ts]="live counterpart: site/src/lib/mastery-aggregate.core.ts carries meanDefaultMasteryForSong on the front end"
   [apps/last-loop-lepin/site/src/lib/request-position.utils.ts]="never wired: the self-punch flow reads geolocation without it"
 )
 

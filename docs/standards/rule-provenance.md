@@ -20,10 +20,10 @@ first rung of the eradication ladder. The number is an input to the decision
 about the *next* rule, and nothing else. Do not delete a rule because this
 page puts it in the lower half.
 
-34 rule(s), read against 85 dantotsu(s).
+35 rule(s), read against 85 dantotsu(s).
 
 - 11 came from a defect that actually happened.
-- 23 were written from principle.
+- 24 were written from principle.
 
 | Rule | Written because | Recorded in |
 | --- | --- | --- |
@@ -61,3 +61,4 @@ page puts it in the lower half.
 | `borso/no-use-effect` | principle | — |
 | `borso/pure-functions-live-in-core-files` | principle | — |
 | `borso/test-file-has-sibling-source` | principle | — |
+| `borso/verb-promises-match-return-type` | principle | — |
