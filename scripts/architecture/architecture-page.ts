@@ -11,10 +11,17 @@
  */
 
 import { GRAPH_RUNTIME_SCRIPT, GRAPH_STYLES } from './architecture-graph-view';
-import type { JourneyModel } from './architecture-journeys';
+import type { JourneyModel, SourceEntry } from './architecture-journeys';
 import type { LevelLayout } from './architecture-layout';
 import type { ArchitectureFile } from './architecture-model';
-import type { BlueprintEntry, ContextSlice, GraphLevel, LevelCoverage } from './architecture-graph';
+import type {
+  BlueprintEntry,
+  ContextSlice,
+  FileHistory,
+  GraphLevel,
+  LevelCoverage,
+  StandardEntry,
+} from './architecture-graph';
 import type { ArchitectureManifest } from './architecture-manifest';
 
 export interface RenderInput {
@@ -25,6 +32,12 @@ export interface RenderInput {
   readonly files: readonly ArchitectureFile[];
   /** How much of the codebase each level draws, one entry per level id. */
   readonly coverage: readonly LevelCoverage[];
+  /** Everything the code dialog can open, keyed once for the whole page. */
+  readonly sources: Readonly<Record<string, SourceEntry>>;
+  readonly standards: readonly StandardEntry[];
+  /** Last commit per blueprint or standard file, keyed by repo-relative path. */
+  readonly histories: Readonly<Record<string, FileHistory>>;
+  readonly repositorySlug: string;
   readonly unmarkedCount: number;
   readonly layouts: ReadonlyMap<string, LevelLayout>;
   readonly journeys: JourneyModel;
@@ -292,14 +305,61 @@ function renderCoverage(coverage: LevelCoverage | undefined, applicationPrefix: 
       </section>`;
 }
 
-function renderBlueprints(blueprints: readonly BlueprintEntry[]): string {
+function renderHistoryCell(
+  path: string,
+  histories: Readonly<Record<string, FileHistory>>,
+  repositorySlug: string,
+): string {
+  const history = histories[path];
+  if (history === undefined) return '<td class="loc">—</td>';
+  return `<td class="loc"><a href="https://github.com/${escapeHtml(repositorySlug)}/commit/${escapeHtml(history.sha)}" target="_blank" rel="noreferrer"><code>${escapeHtml(history.sha)}</code></a> ${escapeHtml(history.date)} · ${history.commits} commit${history.commits === 1 ? '' : 's'}<br><span class="subject">${escapeHtml(history.subject)}</span></td>`;
+}
+
+function renderBlueprints(
+  blueprints: readonly BlueprintEntry[],
+  histories: Readonly<Record<string, FileHistory>>,
+  repositorySlug: string,
+  applicationPrefix: string,
+): string {
   return blueprints
     .map(
       (blueprint) => `
-      <tr>
+      <tr${blueprint.file === '' ? '' : ` data-source-key="file:${escapeHtml(blueprint.file)}" tabindex="0"`}>
         <td><code>${escapeHtml(blueprint.id)}</code></td>
-        <td class="loc">${escapeHtml(blueprint.file === '' ? 'not declared' : blueprint.file)}</td>
+        <td class="loc">${
+          blueprint.file === ''
+            ? '<span class="undeclared" title="A file here carries @FollowsBlueprint with this id, and no file anywhere in the repository declares it with @Blueprint. The id is a typo, or the declaring file was deleted and its followers were left behind.">nothing declares it</span>'
+            : escapeHtml(blueprint.file.replace(applicationPrefix, ''))
+        }</td>
+        ${renderHistoryCell(blueprint.file, histories, repositorySlug)}
         <td class="num">${blueprint.followers.length}</td>
+        <td>${
+          blueprint.followers.length === 0
+            ? '<span class="undeclared">none</span>'
+            : `<details class="followers"><summary>${blueprint.followers.length} file${blueprint.followers.length === 1 ? '' : 's'}</summary><ul>${blueprint.followers
+                .map(
+                  (follower) =>
+                    `<li class="loc" data-source-key="file:${escapeHtml(follower)}" tabindex="0">${escapeHtml(follower.replace(applicationPrefix, ''))}</li>`,
+                )
+                .join('')}</ul></details>`
+        }</td>
+      </tr>`,
+    )
+    .join('');
+}
+
+function renderStandards(
+  standards: readonly StandardEntry[],
+  histories: Readonly<Record<string, FileHistory>>,
+  repositorySlug: string,
+): string {
+  return standards
+    .map(
+      (standard) => `
+      <tr>
+        <td><a href="https://github.com/${escapeHtml(repositorySlug)}/blob/main/${escapeHtml(standard.path)}" target="_blank" rel="noreferrer">${escapeHtml(standard.title)}</a></td>
+        <td>${escapeHtml(standard.rule)}</td>
+        ${renderHistoryCell(standard.path, histories, repositorySlug)}
       </tr>`,
     )
     .join('');
@@ -632,6 +692,10 @@ export function renderArchitecturePage(input: RenderInput): string {
     blueprints,
     files,
     coverage,
+    sources,
+    standards,
+    histories,
+    repositorySlug,
     unmarkedCount,
     layouts,
     journeys,
@@ -642,7 +706,7 @@ export function renderArchitecturePage(input: RenderInput): string {
     .map(
       (
         file,
-      ) => `<tr data-container="${escapeHtml(file.container)}" data-layer="${escapeHtml(file.layer)}" data-context="${escapeHtml(file.feature ?? file.context)}">
+      ) => `<tr data-container="${escapeHtml(file.container)}" data-layer="${escapeHtml(file.layer)}" data-context="${escapeHtml(file.feature ?? file.context)}" data-source-key="file:${escapeHtml(file.path)}" tabindex="0">
         <td class="loc">${escapeHtml(file.path.replace(applicationPrefix, ''))}</td>
         <td><span class="layer layer-${escapeHtml(file.layer)}">${escapeHtml(file.layer)}</span></td>
         <td>${escapeHtml(file.feature ?? file.context)}</td>
@@ -748,16 +812,26 @@ ${PAGE_STYLES}
   </section>
 
   <section class="level" id="level-patterns" hidden>
-    <h2>Patterns</h2>
+    <h2>Patterns and standards</h2>
     <p class="summary">The blueprint overlay. A blueprint is a canonical example marked in place; followers carry its id. Coverage is partial by design, so this view sits beside the position graph rather than inside it: position says where a node is, a pattern says which example it copies.</p>
     <div class="table-scroll">
+      <table class="clickable">
+        <thead><tr><th>Blueprint</th><th>Declared in</th><th>Last change</th><th class="num">Followers</th><th>Following files</th></tr></thead>
+        <tbody>${renderBlueprints(blueprints, histories, repositorySlug, applicationPrefix)}</tbody>
+      </table>
+    </div>
+    <h3 class="standards-heading">Standards</h3>
+    <p class="summary">A blueprint says which example to copy; a standard says what the rule is and which gate holds it. These are the repository's, not this application's, so a change here moves every application at once.</p>
+    <div class="table-scroll">
       <table>
-        <thead><tr><th>Blueprint</th><th>Declared in</th><th class="num">Followers</th></tr></thead>
-        <tbody>${renderBlueprints(blueprints)}</tbody>
+        <thead><tr><th>Standard</th><th>Rule</th><th>Last change</th></tr></thead>
+        <tbody>${renderStandards(standards, histories, repositorySlug)}</tbody>
       </table>
     </div>
   </section>
 </main>
+
+<script type="application/json" id="page-sources">${embedJson(sources)}</script>
 
 <dialog class="code-modal" id="code-modal">
   <div class="code-modal-head">

@@ -3845,7 +3845,7 @@
   "blueprints": [
     {
       "id": "api-composition-root",
-      "file": "",
+      "file": "apps/pragma/api/src/app.ts",
       "followerCount": 1
     },
     {
@@ -3860,7 +3860,7 @@
     },
     {
       "id": "app-cdk-stack",
-      "file": "",
+      "file": "apps/pragma/cdk/lib/stack.ts",
       "followerCount": 1
     },
     {
@@ -3870,7 +3870,7 @@
     },
     {
       "id": "atom-plain",
-      "file": "",
+      "file": "apps/pragma/site/src/components/atoms/Crumb.tsx",
       "followerCount": 11
     },
     {
@@ -3880,12 +3880,12 @@
     },
     {
       "id": "cdk-app-entrypoint",
-      "file": "",
+      "file": "apps/pragma/cdk/bin/cdk.ts",
       "followerCount": 1
     },
     {
       "id": "component-lookup-table",
-      "file": "",
+      "file": "apps/borsouvertures/site/lib/componentTable.types.ts",
       "followerCount": 4
     },
     {
@@ -3925,7 +3925,7 @@
     },
     {
       "id": "core-label-key",
-      "file": "",
+      "file": "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
       "followerCount": 2
     },
     {
@@ -3940,7 +3940,7 @@
     },
     {
       "id": "core-parse-untrusted",
-      "file": "",
+      "file": "apps/pragma/api/src/songs/musicbrainz.core.ts",
       "followerCount": 1
     },
     {
@@ -3950,7 +3950,7 @@
     },
     {
       "id": "core-projection",
-      "file": "",
+      "file": "apps/pragma/api/src/sessions/offline-manifest.core.ts",
       "followerCount": 3
     },
     {
@@ -3960,7 +3960,7 @@
     },
     {
       "id": "core-view-intent",
-      "file": "",
+      "file": "apps/pragma/site/src/routes/bars/bars-page.core.ts",
       "followerCount": 7
     },
     {
@@ -3970,7 +3970,7 @@
     },
     {
       "id": "data-module",
-      "file": "",
+      "file": "apps/borso-fr/site/labours/labours-2026.ts",
       "followerCount": 1
     },
     {
@@ -4015,12 +4015,12 @@
     },
     {
       "id": "i18n-key-walk",
-      "file": "",
+      "file": "apps/borsouvertures/site/i18n/i18n.utils.ts",
       "followerCount": 1
     },
     {
       "id": "i18n-parity-gate",
-      "file": "",
+      "file": "apps/borsouvertures/site/i18n/i18n-parity.core.ts",
       "followerCount": 1
     },
     {
@@ -4030,7 +4030,7 @@
     },
     {
       "id": "i18n-typed-keys",
-      "file": "",
+      "file": "apps/borsouvertures/site/i18n/react-i18next.d.ts",
       "followerCount": 1
     },
     {
@@ -4040,12 +4040,12 @@
     },
     {
       "id": "injected-storage-slice",
-      "file": "",
+      "file": "apps/borsouvertures/site/i18n/locale-storage.utils.ts",
       "followerCount": 1
     },
     {
       "id": "lint-exception",
-      "file": "",
+      "file": "apps/borso-fr/site/components/organisms/Galaxy.tsx",
       "followerCount": 1
     },
     {
@@ -4060,7 +4060,7 @@
     },
     {
       "id": "molecule-presentational",
-      "file": "",
+      "file": "apps/pragma/site/src/components/molecules/StatusChip.tsx",
       "followerCount": 3
     },
     {
@@ -4095,17 +4095,17 @@
     },
     {
       "id": "organism-presentational",
-      "file": "",
+      "file": "apps/pragma/site/src/components/organisms/SongCard.tsx",
       "followerCount": 5
     },
     {
       "id": "organism-query-owning",
-      "file": "",
+      "file": "apps/pragma/site/src/components/organisms/RequireSession.tsx",
       "followerCount": 2
     },
     {
       "id": "organism-shell",
-      "file": "",
+      "file": "apps/pragma/site/src/components/organisms/AppShell.tsx",
       "followerCount": 1
     },
     {
@@ -4115,17 +4115,17 @@
     },
     {
       "id": "query-module",
-      "file": "",
+      "file": "apps/pragma/site/src/lib/queries/songs.queries.ts",
       "followerCount": 4
     },
     {
       "id": "query-optimistic-mutation",
-      "file": "",
+      "file": "apps/pragma/site/src/lib/queries/songs.queries.ts",
       "followerCount": 3
     },
     {
       "id": "query-pessimistic-mutation",
-      "file": "",
+      "file": "apps/pragma/site/src/lib/queries/setlists.queries.ts",
       "followerCount": 4
     },
     {
@@ -4155,12 +4155,12 @@
     },
     {
       "id": "route-detail-page",
-      "file": "",
+      "file": "apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx",
       "followerCount": 1
     },
     {
       "id": "route-list-page",
-      "file": "",
+      "file": "apps/pragma/site/src/routes/catalog/CatalogPage.tsx",
       "followerCount": 3
     },
     {
@@ -4205,12 +4205,12 @@
     },
     {
       "id": "site-entrypoint",
-      "file": "",
+      "file": "apps/pragma/site/src/main.tsx",
       "followerCount": 1
     },
     {
       "id": "typed-api-client",
-      "file": "",
+      "file": "apps/pragma/site/src/lib/api.client.ts",
       "followerCount": 1
     },
     {
@@ -4230,12 +4230,12 @@
     },
     {
       "id": "utils-pure-module",
-      "file": "",
+      "file": "apps/pragma/site/src/lib/member-color.utils.ts",
       "followerCount": 9
     },
     {
       "id": "workspace-test-config",
-      "file": "",
+      "file": "apps/pragma/vitest.config.ts",
       "followerCount": 1
     }
   ]

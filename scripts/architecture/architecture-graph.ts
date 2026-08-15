@@ -14,9 +14,10 @@
  * a slice does what its name claims without opening a file.
  */
 
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
-import { buildJourneys } from './architecture-journeys';
+import { buildJourneys, type SourceEntry } from './architecture-journeys';
 import { type LevelLayout, layoutLevel } from './architecture-layout';
 import { renderArchitectureIndex, renderArchitecturePage } from './architecture-page';
 import {
@@ -37,6 +38,103 @@ const REPOSITORY_ROOT = resolve(import.meta.dirname, '../..');
 const OUTPUT_DIRECTORY = join(REPOSITORY_ROOT, 'docs/architecture');
 const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'cdk.out', '.git', '__fixtures__']);
 const SOURCE_PATTERN = /\.tsx?$/;
+/**
+ * The repository a commit link points at. Read from a constant rather than from
+ * `git remote`, because a fork's remote would change every emitted page and the
+ * `--check` gate compares exact bytes.
+ */
+const REPOSITORY_SLUG = 'hugoleborso/borso.fr';
+/** Lines of a file the modal shows before it stops. */
+const MAXIMUM_MODAL_LINES = 400;
+
+/** The standard documents in a directory, or none when it is not there. */
+function listStandardFileNames(directory: string): string[] {
+  try {
+    return readdirSync(directory)
+      .filter((name) => name.endsWith('.md') && name !== 'README.md')
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+/** The files under a directory, or none when the directory is not there. */
+function listSourceFilesOrEmpty(directory: string): string[] {
+  try {
+    return listSourceFiles(directory);
+  } catch {
+    return [];
+  }
+}
+
+export interface FileHistory {
+  readonly commits: number;
+  readonly sha: string;
+  readonly date: string;
+  readonly subject: string;
+}
+
+/**
+ * When a file last changed, and how often, so a pattern can be read as current
+ * or as something nobody has touched since it was written.
+ */
+function readFileHistory(repositoryRelativePath: string, root: string): FileHistory | null {
+  try {
+    const last = execFileSync(
+      'git',
+      ['log', '--format=%h|%ad|%s', '--date=short', '-1', '--', repositoryRelativePath],
+      { cwd: root, encoding: 'utf8' },
+    ).trim();
+    if (last === '') return null;
+    const [sha = '', date = '', ...subject] = last.split('|');
+    const commits = execFileSync(
+      'git',
+      ['rev-list', '--count', 'HEAD', '--', repositoryRelativePath],
+      { cwd: root, encoding: 'utf8' },
+    ).trim();
+    return { commits: Number(commits), sha, date, subject: subject.join('|') };
+  } catch {
+    return null;
+  }
+}
+
+export interface StandardEntry {
+  readonly path: string;
+  readonly title: string;
+  readonly rule: string;
+}
+
+/**
+ * The written rules, listed beside the patterns.
+ *
+ * A blueprint says which example to copy and a standard says what the rule is;
+ * the page carried the first and not the second, which left the map showing the
+ * shape of the code with no way to reach the reason it has that shape.
+ */
+function listStandards(root: string): StandardEntry[] {
+  const directory = 'docs/standards';
+  const names = listStandardFileNames(join(root, directory));
+  return names.map((name) => {
+    const path = `${directory}/${name}`;
+    const text = readSourceOrEmpty(path, root);
+    const lines = text.split('\n');
+    const title = (lines[0] ?? name).replace(/^#\s*/, '');
+    const ruleIndex = lines.findIndex((line) => line.trim() === '## Rule');
+    const rule =
+      ruleIndex === -1
+        ? ''
+        : (lines.slice(ruleIndex + 1).find((line) => line.trim() !== '') ?? '').trim();
+    return { path, title, rule };
+  });
+}
+
+/** A file's own source, for the modal, with a cap so a long one stays readable. */
+function readCappedSource(repositoryRelativePath: string, root: string): string {
+  const text = readSourceOrEmpty(repositoryRelativePath, root);
+  const lines = text.split('\n');
+  if (lines.length <= MAXIMUM_MODAL_LINES) return text;
+  return `${lines.slice(0, MAXIMUM_MODAL_LINES).join('\n')}\n\n// … ${lines.length - MAXIMUM_MODAL_LINES} more lines, see the file`;
+}
 
 /** File contents, or the empty string when the file is not there yet. */
 function readSourceOrEmpty(repositoryRelativePath: string, root: string = REPOSITORY_ROOT): string {
@@ -742,8 +840,33 @@ export interface BlueprintEntry {
   readonly followers: readonly string[];
 }
 
-function buildBlueprintOverlay(files: readonly ArchitectureFile[]): BlueprintEntry[] {
+/**
+ * Blueprints are declared repository-wide and followed per application, so the
+ * declaration has to be looked for outside this application's own files. Half
+ * the pattern list read `not declared` when it was only ever "declared in
+ * another application", which is a different statement entirely.
+ */
+function readRepositoryDeclarations(root: string): Map<string, string> {
   const declaredIn = new Map<string, string>();
+  const pattern = /@Blueprint\s+([\w-]+)/g;
+  for (const directory of ['apps', 'infra', 'eslint-rules', 'scripts']) {
+    const absolute = listSourceFilesOrEmpty(join(root, directory));
+    for (const path of absolute.sort()) {
+      const relativePath = relative(root, path);
+      for (const match of readSourceOrEmpty(relativePath, root).matchAll(pattern)) {
+        const id = match[1];
+        if (id !== undefined && !declaredIn.has(id)) declaredIn.set(id, relativePath);
+      }
+    }
+  }
+  return declaredIn;
+}
+
+function buildBlueprintOverlay(
+  files: readonly ArchitectureFile[],
+  declaredElsewhere: ReadonlyMap<string, string>,
+): BlueprintEntry[] {
+  const declaredIn = new Map<string, string>(declaredElsewhere);
   for (const file of files) {
     for (const blueprintId of file.blueprints) declaredIn.set(blueprintId, file.path);
   }
@@ -753,7 +876,11 @@ function buildBlueprintOverlay(files: readonly ArchitectureFile[]): BlueprintEnt
       followers.set(blueprintId, [...(followers.get(blueprintId) ?? []), file.path]);
     }
   }
-  return [...new Set([...declaredIn.keys(), ...followers.keys()])].sort().map((id) => ({
+  // Only the ids this application actually uses. The repository declares many
+  // more, and listing a pattern no file here follows would pad the view with
+  // other applications' business.
+  const used = new Set([...files.flatMap((file) => file.blueprints), ...followers.keys()]);
+  return [...used].sort().map((id) => ({
     id,
     file: declaredIn.get(id) ?? '',
     followers: followers.get(id) ?? [],
@@ -914,7 +1041,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
     ]),
   );
   const slices = buildSlices(files, urlOnlyScripts);
-  const blueprints = buildBlueprintOverlay(files);
+  const blueprints = buildBlueprintOverlay(files, readRepositoryDeclarations(scanRoot));
 
   const unmarked = files.filter(
     (file) => file.blueprints.length === 0 && file.followsBlueprints.length === 0,
@@ -970,8 +1097,40 @@ async function buildApplication(options: BuildOptions): Promise<void> {
     buildLevelCoverage('code', 'Every file is a row.', files, () => true),
   ];
 
+  // One source map for the whole page: the journey graphs key their functions,
+  // and level 4 and the pattern list key whole files, so a click anywhere opens
+  // the same dialog rather than each view carrying its own copy.
+  const pageSources: Record<string, SourceEntry> = Object.fromEntries(journeys.sources);
+  for (const file of files) {
+    pageSources[`file:${file.path}`] = {
+      name: file.path.split('/').pop() ?? file.path,
+      layer: file.layer,
+      location: file.path,
+      blueprint: [...file.blueprints, ...file.followsBlueprints][0] ?? '',
+      code: readCappedSource(file.path, scanRoot),
+      lines: file.lineCount,
+      complexity: file.complexity,
+      disables: file.lintExceptions,
+    };
+  }
+
+  const standards = listStandards(scanRoot);
+  const histories: Record<string, FileHistory> = {};
+  for (const path of [
+    ...blueprints.map((blueprint) => blueprint.file),
+    ...standards.map((standard) => standard.path),
+  ]) {
+    if (path === '' || histories[path] !== undefined) continue;
+    const history = readFileHistory(path, scanRoot);
+    if (history !== null) histories[path] = history;
+  }
+
   const page = renderArchitecturePage({
     manifest,
+    sources: pageSources,
+    standards,
+    histories,
+    repositorySlug: REPOSITORY_SLUG,
     layouts,
     journeys,
     journeyLayouts,

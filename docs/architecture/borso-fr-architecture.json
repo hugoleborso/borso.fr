@@ -1334,7 +1334,7 @@
   "blueprints": [
     {
       "id": "atom-plain",
-      "file": "",
+      "file": "apps/pragma/site/src/components/atoms/Crumb.tsx",
       "followerCount": 16
     },
     {
@@ -1344,7 +1344,7 @@
     },
     {
       "id": "cdk-app-entrypoint",
-      "file": "",
+      "file": "apps/pragma/cdk/bin/cdk.ts",
       "followerCount": 1
     },
     {
@@ -1359,17 +1359,17 @@
     },
     {
       "id": "core-lookup-table",
-      "file": "",
+      "file": "apps/last-loop-lepin/api/src/auth/auth.core.ts",
       "followerCount": 1
     },
     {
       "id": "core-view-intent",
-      "file": "",
+      "file": "apps/pragma/site/src/routes/bars/bars-page.core.ts",
       "followerCount": 3
     },
     {
       "id": "core-view-projection",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/components/organisms/punch-panel.core.ts",
       "followerCount": 1
     },
     {
@@ -1379,37 +1379,37 @@
     },
     {
       "id": "domain-types-module",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/lib/race.types.ts",
       "followerCount": 1
     },
     {
       "id": "hook-external-store",
-      "file": "",
+      "file": "apps/pragma/site/src/components/molecules/online-status.hook.ts",
       "followerCount": 2
     },
     {
       "id": "i18n-key-walk",
-      "file": "",
+      "file": "apps/borsouvertures/site/i18n/i18n.utils.ts",
       "followerCount": 1
     },
     {
       "id": "i18n-parity-gate",
-      "file": "",
+      "file": "apps/borsouvertures/site/i18n/i18n-parity.core.ts",
       "followerCount": 1
     },
     {
       "id": "i18n-setup",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/i18n/i18n.ts",
       "followerCount": 1
     },
     {
       "id": "i18n-typed-keys",
-      "file": "",
+      "file": "apps/borsouvertures/site/i18n/react-i18next.d.ts",
       "followerCount": 1
     },
     {
       "id": "injected-browser-api",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/lib/request-position.utils.ts",
       "followerCount": 1
     },
     {
@@ -1419,32 +1419,32 @@
     },
     {
       "id": "molecule-presentational",
-      "file": "",
+      "file": "apps/pragma/site/src/components/molecules/StatusChip.tsx",
       "followerCount": 6
     },
     {
       "id": "organism-presentational",
-      "file": "",
+      "file": "apps/pragma/site/src/components/organisms/SongCard.tsx",
       "followerCount": 8
     },
     {
       "id": "organism-table-dispatch",
-      "file": "",
+      "file": "apps/borsouvertures/site/components/organisms/SessionScreen.tsx",
       "followerCount": 2
     },
     {
       "id": "site-entrypoint",
-      "file": "",
+      "file": "apps/pragma/site/src/main.tsx",
       "followerCount": 2
     },
     {
       "id": "unknown-payload-parser",
-      "file": "",
+      "file": "apps/borsouvertures/site/state/persistedState.utils.ts",
       "followerCount": 1
     },
     {
       "id": "utils-pure-module",
-      "file": "",
+      "file": "apps/pragma/site/src/lib/member-color.utils.ts",
       "followerCount": 1
     },
     {
@@ -1459,7 +1459,7 @@
     },
     {
       "id": "workspace-test-config",
-      "file": "",
+      "file": "apps/pragma/vitest.config.ts",
       "followerCount": 1
     }
   ]

@@ -484,6 +484,16 @@
   .journey-action[aria-pressed='true'] .journey-action-name { color: var(--accent); }
 
   .node.has-code { cursor: zoom-in; }
+  tr.has-code, li.has-code { cursor: zoom-in; }
+  tr.has-code:hover td { background: var(--accent-soft); }
+  li.has-code:hover { color: var(--accent); }
+  table.clickable tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .undeclared { color: var(--muted); font-style: italic; }
+  .subject { color: var(--muted); }
+  .followers > summary { cursor: pointer; font: .7rem/1.6 var(--font-mono); color: var(--muted); }
+  .followers > ul { list-style: none; margin: .35rem 0 0; padding: 0; display: grid; gap: .1rem; }
+  .followers > ul li { min-width: 0; overflow-wrap: anywhere; }
+  .standards-heading { margin: 1.6rem 0 .3rem; font: 600 .95rem/1.4 var(--font-mono); }
 
   dialog.code-modal {
     border: 1px solid var(--line-strong);

@@ -182,6 +182,31 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     dialog.showModal();
   };
 
+  /**
+   * Anything outside a graph that names a source: a level 4 row, a blueprint,
+   * a follower. The dialog is the same one the blocks open, so a reader who
+   * learned to click a block does not have to learn a second thing.
+   */
+  const wirePageSources = () => {
+    const holder = document.getElementById('page-sources');
+    if (!holder) return;
+    const sources = JSON.parse(holder.textContent || '{}');
+    for (const element of document.querySelectorAll('[data-source-key]')) {
+      const entry = sources[element.dataset.sourceKey];
+      if (!entry) continue;
+      element.classList.add('has-code');
+      element.addEventListener('click', (event) => {
+        event.stopPropagation();
+        openCode(entry);
+      });
+      element.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        openCode(entry);
+      });
+    }
+  };
+
   function buildScene(host, data) {
     const width = data.width;
     const sources = data.sources || {};
@@ -617,6 +642,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
   }
 
   for (const host of document.querySelectorAll('.graph')) renderGraph(host);
+  wirePageSources();
 })();
 `;
 
@@ -790,6 +816,16 @@ export const GRAPH_STYLES = String.raw`
   .journey-action[aria-pressed='true'] .journey-action-name { color: var(--accent); }
 
   .node.has-code { cursor: zoom-in; }
+  tr.has-code, li.has-code { cursor: zoom-in; }
+  tr.has-code:hover td { background: var(--accent-soft); }
+  li.has-code:hover { color: var(--accent); }
+  table.clickable tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .undeclared { color: var(--muted); font-style: italic; }
+  .subject { color: var(--muted); }
+  .followers > summary { cursor: pointer; font: .7rem/1.6 var(--font-mono); color: var(--muted); }
+  .followers > ul { list-style: none; margin: .35rem 0 0; padding: 0; display: grid; gap: .1rem; }
+  .followers > ul li { min-width: 0; overflow-wrap: anywhere; }
+  .standards-heading { margin: 1.6rem 0 .3rem; font: 600 .95rem/1.4 var(--font-mono); }
 
   dialog.code-modal {
     border: 1px solid var(--line-strong);

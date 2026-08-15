@@ -29,7 +29,7 @@ source file in pragma ends in a suffix naming its layer, and the layer table
 lives in
 [`.claude/skills/blueprint/blueprint-utils.ts`](../../.claude/skills/blueprint/blueprint-utils.ts),
 shared with the blueprint scripts so the two cannot disagree. Today every one
-of pragma's 223 source files resolves to a known layer, with none left over.
+of pragma's 243 source files resolves to a known layer, with none left over.
 
 The full resolution order, and how to adopt it in an application that does not
 follow it yet, is in [`install.md`](./install.md). Suffixes beyond the ones in
@@ -108,7 +108,7 @@ something the person did would be a claim the code does not make.
 An action is an exported hook in a `*.queries.ts` module that calls one
 endpoint. Those are the application's user-facing operations, already named by
 whoever wrote them, so `useAppendSetlistEntry` reads as *Append setlist entry*
-without anyone maintaining a list. There are 37 of them across 9 features.
+without anyone maintaining a list. There are 38 of them across 9 features.
 
 The chain is real: the triggers come from imports of that hook, the endpoint
 from the call on the typed client, and each back-end step from the identifiers
@@ -125,8 +125,19 @@ Each block carries its layer, the blueprint it follows where the code is marked,
 and how big and how tangled the thing behind it is. Clicking a block opens the
 function's own source, highlighted, with its `path:line`, so the question a
 block raises — *what does this actually do* — is answered without leaving the
-page. Sources are keyed once and shared across the 46 graphs, because the same
+page. Sources are keyed once and shared across the 47 graphs, because the same
 service appears in several flows.
+
+Level 4 and the pattern list open the same dialog: a row is a file, clicking it
+shows that file's source highlighted. The pattern list also carries, per
+blueprint, the commit that last touched the declaring file, how many commits it
+has, the followers behind a toggle, and a link to the diff. Standards sit under
+the patterns, because a blueprint says which example to copy and a standard says
+what the rule is.
+
+A blueprint is looked for across the whole repository, not just this
+application: they are declared once and followed everywhere, so half the list
+read `not declared` when it meant `declared in another application`.
 
 Endpoints behind no action are listed under the graph. Some are deliberate, and
 the rest are the back end of a feature whose front end does not exist yet; the

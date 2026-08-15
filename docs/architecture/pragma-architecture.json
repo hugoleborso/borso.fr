@@ -5933,12 +5933,12 @@
     },
     {
       "id": "api-dev-entrypoint",
-      "file": "",
+      "file": "apps/last-loop-lepin/api/src/main.dev.ts",
       "followerCount": 1
     },
     {
       "id": "api-lambda-entrypoint",
-      "file": "",
+      "file": "apps/last-loop-lepin/api/src/main.ts",
       "followerCount": 1
     },
     {
@@ -5953,7 +5953,7 @@
     },
     {
       "id": "atom-lookup-variants",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/components/atoms/Button.tsx",
       "followerCount": 1
     },
     {
@@ -5973,7 +5973,7 @@
     },
     {
       "id": "component-lookup-table",
-      "file": "",
+      "file": "apps/borsouvertures/site/lib/componentTable.types.ts",
       "followerCount": 1
     },
     {
@@ -5988,27 +5988,27 @@
     },
     {
       "id": "core-appearance",
-      "file": "",
+      "file": "apps/borso-fr/site/labours/labours-appearance.core.ts",
       "followerCount": 3
     },
     {
       "id": "core-decision",
-      "file": "",
+      "file": "apps/last-loop-lepin/api/src/punch/punch.core.ts",
       "followerCount": 4
     },
     {
       "id": "core-form-schema",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/components/organisms/edition-form.core.ts",
       "followerCount": 3
     },
     {
       "id": "core-label-key",
-      "file": "",
+      "file": "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
       "followerCount": 1
     },
     {
       "id": "core-lookup-table",
-      "file": "",
+      "file": "apps/last-loop-lepin/api/src/auth/auth.core.ts",
       "followerCount": 2
     },
     {
@@ -6028,7 +6028,7 @@
     },
     {
       "id": "core-view-projection",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/components/organisms/punch-panel.core.ts",
       "followerCount": 8
     },
     {
@@ -6038,22 +6038,22 @@
     },
     {
       "id": "database-schema-barrel",
-      "file": "",
+      "file": "apps/last-loop-lepin/api/src/database/schema.ts",
       "followerCount": 1
     },
     {
       "id": "dto-mapper",
-      "file": "",
+      "file": "apps/last-loop-lepin/api/src/runner/runner.dto.utils.ts",
       "followerCount": 1
     },
     {
       "id": "external-store-module",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/clock-store.ts",
       "followerCount": 1
     },
     {
       "id": "helper-module",
-      "file": "",
+      "file": "apps/last-loop-lepin/api/src/helpers/sun/sun.core.ts",
       "followerCount": 1
     },
     {
@@ -6063,27 +6063,27 @@
     },
     {
       "id": "i18n-key-walk",
-      "file": "",
+      "file": "apps/borsouvertures/site/i18n/i18n.utils.ts",
       "followerCount": 1
     },
     {
       "id": "i18n-parity-gate",
-      "file": "",
+      "file": "apps/borsouvertures/site/i18n/i18n-parity.core.ts",
       "followerCount": 1
     },
     {
       "id": "i18n-setup",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/i18n/i18n.ts",
       "followerCount": 1
     },
     {
       "id": "i18n-typed-keys",
-      "file": "",
+      "file": "apps/borsouvertures/site/i18n/react-i18next.d.ts",
       "followerCount": 1
     },
     {
       "id": "injected-storage-slice",
-      "file": "",
+      "file": "apps/borsouvertures/site/i18n/locale-storage.utils.ts",
       "followerCount": 1
     },
     {
@@ -6108,7 +6108,7 @@
     },
     {
       "id": "organism-form",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/components/organisms/CreateEditionForm.tsx",
       "followerCount": 2
     },
     {
@@ -6148,7 +6148,7 @@
     },
     {
       "id": "query-uncached-mutation",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/lib/queries/punches.ts",
       "followerCount": 1
     },
     {
@@ -6163,7 +6163,7 @@
     },
     {
       "id": "repository-idempotent-upsert",
-      "file": "",
+      "file": "apps/last-loop-lepin/api/src/edition/edition.repository.ts",
       "followerCount": 2
     },
     {
@@ -6178,7 +6178,7 @@
     },
     {
       "id": "repository-query",
-      "file": "",
+      "file": "apps/last-loop-lepin/api/src/punch/punch.repository.ts",
       "followerCount": 3
     },
     {
@@ -6223,7 +6223,7 @@
     },
     {
       "id": "service-read-model",
-      "file": "",
+      "file": "apps/last-loop-lepin/api/src/ranking/ranking.service.ts",
       "followerCount": 1
     },
     {
@@ -6238,7 +6238,7 @@
     },
     {
       "id": "utils-formatter",
-      "file": "",
+      "file": "apps/last-loop-lepin/site/src/lib/formatters.utils.ts",
       "followerCount": 3
     },
     {
