@@ -141,6 +141,17 @@ export function selectFormForBar(
   return bar === undefined ? current : buildBarFormInitial(bar);
 }
 
+/**
+ * Whether the list row is the bar the form currently holds.
+ *
+ * Under `md` the form sits below the whole list, so a tap on a row changed
+ * nothing a phone could see: the form it filled was off the bottom of the
+ * screen and the row itself looked exactly as it did before.
+ */
+export function isBarBeingEdited(barId: string, form: BarFormInitial): boolean {
+  return form.id === barId;
+}
+
 /** Deleting the bar the form is editing resets the form; any other deletion does not. */
 export function selectFormAfterDeletion(
   current: BarFormInitial,
@@ -148,4 +159,29 @@ export function selectFormAfterDeletion(
   blank: BarFormInitial,
 ): BarFormInitial {
   return current.id === deletedBarId ? blank : current;
+}
+
+/**
+ * The React key of the bar form.
+ *
+ * Selecting another bar remounts the form, which is how the fields pick up the
+ * new values. Creating one used to leave the key at its blank value, so the
+ * form kept everything just submitted and a second tap on Save wrote a
+ * duplicate record. The counter the page bumps on every successful write is
+ * what makes the blank form a different form from the one that produced it.
+ */
+export function buildBarFormKey(initial: BarFormInitial, writeCount: number): string {
+  return `${initial.id ?? 'new'}-${writeCount}`;
+}
+
+/**
+ * Which of the two panels the page actually shows.
+ *
+ * The kanban board moves cards with HTML5 drag and drop, and touch input never
+ * fires those events, so on a phone the board renders a reordering affordance
+ * no finger can use — and five empty 480px columns to scroll past. The list,
+ * whose form carries a status field, is the path that works by touch.
+ */
+export function selectVisibleBarsView(chosen: BarsView, isNarrow: boolean): BarsView {
+  return isNarrow ? 'list' : chosen;
 }

@@ -1,5 +1,15 @@
 # Preview validation of `last-loop-lepin` for PR 40
 
+> **Correction, 2026-08-14.** This record says argent's `gesture-tap` could not be
+> used, because every call returned `CDP request Input.dispatchMouseEvent timed out`.
+> That was true of these runs and is not true of the tool: `gesture-tap` was
+> re-verified working, and the timeouts were almost certainly agent-browser holding
+> the same browser, which wedges argent's input dispatch exactly as it wedges
+> `Page.navigate`. Two later phone audits read the claim and sent no touch events at
+> all. Give argent its own browser with `scripts/argent.sh`; see
+> [`docs/knowledge/driving-previews-with-agent-browser-and-argent.md`](../../../knowledge/driving-previews-with-agent-browser-and-argent.md).
+> The findings below stand; only the claim about the tool is withdrawn.
+
 ## Verdict
 
 FAIL with 4 defects. One is functional and sits in the self punch flow, the

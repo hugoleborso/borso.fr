@@ -9,12 +9,13 @@
  * here so the utils file stays free of `console.warn`.
  */
 
+import type { Lineup } from '@domain/lineup.core';
 import { findOrphanMemberIds, selectUnwarnedMemberIds } from './setlist-editor.utils';
 
 const warnedOrphanMemberIds = new Set<string>();
 
 export function warnIfOrphanMemberIds(
-  resolvedLineup: Readonly<Record<string, string | null>>,
+  resolvedLineup: Lineup,
   knownMemberIds: ReadonlySet<string>,
   songId: string,
 ): void {

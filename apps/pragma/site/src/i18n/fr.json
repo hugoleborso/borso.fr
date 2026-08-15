@@ -10,12 +10,13 @@
     "members": "Membres",
     "instruments": "Instruments",
     "administrationSection": "Administration",
-    "openMenu": "Ouvrir le menu",
-    "closeMenu": "Fermer le menu",
     "language": {
       "fr": "FR",
       "en": "EN"
-    }
+    },
+    "bottomBar": "Sections principales",
+    "more": "Plus",
+    "closeMenu": "Fermer le menu"
   },
   "shell": {
     "meName": "Hugo",
@@ -44,9 +45,9 @@
     "offlineTitle": "Mode hors-ligne",
     "offlineHint": "catalogue, accords et setlist du prochain concert disponibles. Toute modification est désactivée.",
     "search": "Chercher",
-    "filters": "Filtres",
     "all": "Toutes",
-    "actions": "Actions"
+    "actions": "Actions",
+    "loadFailed": "Impossible de charger cette page. Vérifie la connexion, puis réessaie."
   },
   "scaffold": {
     "title": "Pragma — squelette prêt",
@@ -54,13 +55,17 @@
   },
   "instruments": {
     "title": "Instruments",
-    "subtitle": "Les instruments harmoniques entrent dans l'analyse de transition.",
+    "subtitle": "La famille d’un instrument alimente l’analyse des transitions.",
     "name": "Nom",
-    "isHarmonic": "Harmonique (compte pour l'analyse de transition)",
-    "harmonic": "harmonique",
-    "percussive": "percussif",
     "newTitle": "Nouvel instrument",
-    "editTitle": "Modifier l'instrument"
+    "editTitle": "Modifier l'instrument",
+    "family": "Famille",
+    "familyHint": "Un instrument harmonique porte les accords : celui qui en garde un peut tenir une transition.",
+    "deleteConfirm": "Supprimer cet instrument ? Il quitte tous les line-ups qui l'utilisent.",
+    "familyHarmonic": "harmonique",
+    "familyPercussive": "percussif",
+    "familyVocal": "chant",
+    "familyOther": "autre"
   },
   "members": {
     "title": "Membres",
@@ -71,8 +76,10 @@
     "newTitle": "Nouveau membre",
     "editTitle": "Modifier le membre",
     "noInstrumentsYet": "Aucun instrument assigné",
+    "deleteConfirm": "Supprimer ce membre ? Ses niveaux de maîtrise partent avec lui.",
     "masteryMatrixTitle": "Matrice de maîtrise",
-    "masteryMatrixSubtitle": "Clic pour éditer ; molette pour ±1 ; clic-droit pour vider. Moyennes en ligne = musicalité du membre ; en colonne = effectif sur l'instrument.",
+    "masteryMatrixSubtitle": "Touche une case pour saisir une note, vide-la pour l'effacer. À la souris : molette pour ±1, clic-droit pour vider. Moyennes en ligne = musicalité du membre ; en colonne = effectif sur l'instrument.",
+    "masteryMatrixScrollHint": "Fais glisser la grille sur le côté pour atteindre chaque instrument.",
     "rowAverage": "Moy.",
     "columnAverage": "Moy."
   },
@@ -102,6 +109,7 @@
     "previewTitle": "Grille d'accords",
     "openScene": "Mode scène",
     "emptyList": "Aucun morceau pour l'instant.",
+    "emptySearch": "Aucun morceau ne correspond à cette recherche.",
     "energyBadge": "E",
     "masteryBadge": "M",
     "noMastery": "—",
@@ -116,6 +124,8 @@
     "mastery": "Maîtrise",
     "playedRecently": "Joué récemment",
     "backToCatalog": "Catalogue",
+    "songNotFound": "Ce morceau n'est plus au catalogue.",
+    "deleteConfirm": "Supprimer ce morceau ? Sa grille, ses notes et ses liens partent avec.",
     "uploadPrompt": "Dépose un fichier ou clique pour choisir",
     "uploadHint": "PDF, PNG, JPEG, WebP ou HEIC — jusqu'à {{maxMb}} Mo",
     "uploadInProgress": "Envoi en cours…",
@@ -131,7 +141,16 @@
     "duration": "Durée",
     "mbid": "Identifiant MusicBrainz",
     "isrcs": "ISRC",
-    "tags": "Tags"
+    "tags": "Tags",
+    "notesTitle": "Notes",
+    "notesStructure": "Structure",
+    "notesGimmicks": "Gimmicks",
+    "notesFree": "Notes libres",
+    "notesStructurePlaceholder": "intro ×4 · couplet · refrain · pont · refrain ×2",
+    "notesGimmicksPlaceholder": "Break complet avant le dernier refrain, compté à voix haute.",
+    "notesFreePlaceholder": "Tout ce que le groupe doit retenir.",
+    "createSearched": "Créer « {{title}} »",
+    "lastSaveFailed": "Le dernier enregistrement n'est pas passé — ce que tu lis ci-dessous, c'est le morceau tel qu'il était avant la modification."
   },
   "mastery": {
     "title": "Matrice de maîtrise",
@@ -144,6 +163,7 @@
     "newSession": "Nouvelle session",
     "kindConcert": "Concert",
     "kindPractice": "Répétition",
+    "sessionNotFound": "Cette session n'est plus au planning.",
     "date": "Date",
     "venue": "Lieu",
     "capacity": "Jauge",
@@ -184,14 +204,34 @@
     "capo": "Capo",
     "notes": "Notes",
     "energy": "Énergie",
-    "transitionWarning": "Transition à risque",
+    "energyDown": "Un point d'énergie en moins",
+    "energyUp": "Un point d'énergie en plus",
     "openTransitionComment": "Voir / commenter la transition",
     "transitionCommentTitle": "Commentaire de transition",
     "missingSessionId": "Identifiant de session manquant.",
     "noSetlistYet": "Aucune setlist créée pour cette session.",
     "createForSession": "Créer une setlist",
     "copyOrder": "Copier l'ordre",
-    "orderCopied": "Copié !"
+    "orderCopied": "Copié !",
+    "emptyList": "Aucun morceau dans ce set pour l’instant.",
+    "addSongDone": "Terminé ({{count}})",
+    "addSongSearchPlaceholder": "Chercher un morceau, ou taper un nouveau titre",
+    "addSongNoMatch": "Aucun morceau ne correspond.",
+    "addSongCreate": "Créer « {{title}} » et l’ajouter",
+    "transitionCovered": "Transition tenue",
+    "transitionRisky": "Transition risquée",
+    "transitionNobody": "personne ne garde d’instrument entre ces deux morceaux",
+    "transitionAddNote": "Ajouter une note sur cette transition",
+    "crumb": "Setlist",
+    "removeConfirm": "Retirer « {{title}} » de ce set ?",
+    "failure": {
+      "load": "Impossible de charger ce set. Vérifie la connexion et réessaie.",
+      "add": "Le morceau n’a pas été ajouté. Vérifie la connexion et réessaie.",
+      "remove": "Le morceau n’a pas été retiré. Vérifie la connexion et réessaie.",
+      "reorder": "Le nouvel ordre n’a pas été enregistré. Vérifie la connexion et réessaie.",
+      "update": "La modification n’a pas été enregistrée. Vérifie la connexion et réessaie.",
+      "copyOrder": "L’ordre de passage n’a pas pu être copié dans le presse-papier."
+    }
   },
   "scene": {
     "title": "Mode Scène",
@@ -222,14 +262,15 @@
     "notes": "Notes",
     "newBar": "Nouveau bar",
     "staleBanner": "{{count}} bars n'ont pas été relancés depuis +60 jours — un petit coup de fil ?",
-    "staleBadge": "À relancer"
+    "staleBadge": "À relancer",
+    "staleColumn": "Relance",
+    "deleteConfirm": "Supprimer ce bar ? Ses contacts et son historique partent avec."
   },
   "fileDrop": {
     "remove": "Retirer"
   },
   "lineup": {
     "edit": "Lineup",
-    "editDefault": "Modifier le lineup par défaut",
     "modal": {
       "title": {
         "song": "Lineup par défaut",
@@ -243,6 +284,8 @@
     "cancel": "Annuler",
     "allMembers": "Tous les membres",
     "emptyForMember": "Rien à jouer ce soir.",
-    "filterByMember": "Filtrer par membre"
+    "filterByMember": "Filtrer par membre",
+    "multiInstrumentHint": "Touchez chaque instrument tenu par la personne sur ce morceau. Deux à la fois, c’est possible.",
+    "instruments": "Instruments"
   }
 }

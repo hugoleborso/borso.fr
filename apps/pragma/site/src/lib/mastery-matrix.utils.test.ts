@@ -6,6 +6,7 @@ import {
   MASTERY_SCORE_MAX,
   MASTERY_SCORE_MIN,
   rowAverage,
+  selectScoreEditIntent,
 } from './mastery-matrix.utils';
 
 // @FollowsBlueprint test-pure-unit
@@ -68,5 +69,19 @@ describe('clampScore', () => {
   it('keeps both bounds themselves', () => {
     expect(clampScore(MASTERY_SCORE_MIN)).toBe(MASTERY_SCORE_MIN);
     expect(clampScore(MASTERY_SCORE_MAX)).toBe(MASTERY_SCORE_MAX);
+  });
+});
+
+describe('selectScoreEditIntent', () => {
+  it('reads an emptied cell as dropping the override', () => {
+    expect(selectScoreEditIntent('')).toBe('clear');
+  });
+
+  it('reads a cell holding only spaces as dropping the override', () => {
+    expect(selectScoreEditIntent('  ')).toBe('clear');
+  });
+
+  it('reads a typed digit as a score to write, zero included', () => {
+    expect(selectScoreEditIntent('0')).toBe('write');
   });
 });

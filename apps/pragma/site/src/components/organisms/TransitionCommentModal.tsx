@@ -6,13 +6,20 @@
  * The textarea shows the stored comment until the operator types, and
  * the typed value from then on, so the loaded comment is derived during
  * render rather than copied into state by an effect.
+ *
+ * It is a native modal `<dialog>` like every other sheet in the app, so
+ * Escape and the backdrop both dismiss it. As a plain fixed `div` it answered
+ * to neither, and Cancel was the only way out.
  */
 
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
+import { composeClassName } from '../atoms/class-name.utils';
+import { inputVariants } from '../atoms/input.variants';
 import { ApiError } from '../../lib/api';
+import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog';
 import { useSaveTransitionComment, useTransitionComment } from '../../lib/queries/transitions';
 
 const COMMENT_MAX_LENGTH = 4_096;
@@ -20,6 +27,8 @@ const COMMENT_MAX_LENGTH = 4_096;
 export interface TransitionCommentModalProps {
   readonly songAId: string;
   readonly songBId: string;
+  readonly songATitle: string;
+  readonly songBTitle: string;
   readonly onClose: () => void;
 }
 
@@ -27,6 +36,8 @@ export interface TransitionCommentModalProps {
 export function TransitionCommentModal({
   songAId,
   songBId,
+  songATitle,
+  songBTitle,
   onClose,
 }: TransitionCommentModalProps): JSX.Element {
   const { t } = useTranslation();
@@ -52,15 +63,18 @@ export function TransitionCommentModal({
   const displayError = localError ?? queryError;
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-ink-900/40 backdrop-blur-sm flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={openDismissibleDialogOnAttach}
+      onClose={onClose}
+      className="m-auto w-[calc(100vw-2rem)] sm:w-[30rem] max-w-[30rem] rounded-lg border border-line-strong bg-bg-elev p-0 backdrop:bg-ink-900/40"
     >
-      <div className="bg-bg-elev border border-line-strong rounded-lg p-6 w-full max-w-[480px] shadow-[0_18px_50px_rgba(26,22,18,0.18)]">
-        <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-4">
+      <div className="p-6">
+        <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-1">
           {t('setlist.transitionCommentTitle')}
         </h3>
+        <p className="text-xs text-ink-500 m-0 mb-4">
+          {songATitle} <span className="text-ink-300">▸</span> {songBTitle}
+        </p>
         {displayError === null ? null : (
           <p className="text-danger text-sm mb-3" role="alert">
             {displayError}
@@ -74,7 +88,7 @@ export function TransitionCommentModal({
             onChange={(event) => setEditedDraft(event.target.value)}
             rows={6}
             maxLength={COMMENT_MAX_LENGTH}
-            className="w-full bg-bg border border-line rounded-md px-3 py-2 text-xs font-mono text-ink-700 outline-none focus:border-ink-700 resize-y"
+            className={composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y')}
           />
         )}
         <div className="flex gap-2 mt-4 justify-end">
@@ -86,6 +100,6 @@ export function TransitionCommentModal({
           </Button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

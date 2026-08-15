@@ -3,7 +3,8 @@ import {
   formValuesToLineup,
   type LineupEditorMember,
   lineupToFormValues,
-  NOT_PLAYING_OPTION_VALUE,
+  toggleInstrumentHeld,
+  toLineupPayload,
 } from './lineup-editor.core';
 
 const MEMBERS: readonly LineupEditorMember[] = [
@@ -14,30 +15,55 @@ const MEMBERS: readonly LineupEditorMember[] = [
 // @FollowsBlueprint test-pure-unit
 describe('lineupToFormValues', () => {
   it('fills a value for every member', () => {
-    expect(lineupToFormValues({ ada: 'guitar' }, MEMBERS)).toEqual({
-      ada: 'guitar',
-      bob: NOT_PLAYING_OPTION_VALUE,
-    });
+    expect(lineupToFormValues({ ada: ['guitar'] }, MEMBERS)).toEqual({ ada: ['guitar'], bob: [] });
   });
 
-  it('reads an explicit null as not playing', () => {
-    expect(lineupToFormValues({ ada: null, bob: null }, MEMBERS)).toEqual({
-      ada: NOT_PLAYING_OPTION_VALUE,
-      bob: NOT_PLAYING_OPTION_VALUE,
-    });
+  it('keeps every instrument a member holds at once', () => {
+    expect(lineupToFormValues({ ada: ['drums', 'vocals'] }, MEMBERS).ada).toEqual([
+      'drums',
+      'vocals',
+    ]);
+  });
+
+  it('copies the lists rather than sharing them with the lineup', () => {
+    const lineup = { ada: ['guitar'] };
+    expect(lineupToFormValues(lineup, MEMBERS).ada).not.toBe(lineup.ada);
+  });
+
+  it('reads an empty list as not playing', () => {
+    expect(lineupToFormValues({ ada: [], bob: [] }, MEMBERS)).toEqual({ ada: [], bob: [] });
   });
 });
 
 describe('formValuesToLineup', () => {
-  it('keeps only the members who play something', () => {
-    expect(formValuesToLineup({ ada: 'guitar', bob: NOT_PLAYING_OPTION_VALUE })).toEqual({
-      ada: 'guitar',
-    });
+  it('keeps every member, so one sitting out is written as sitting out', () => {
+    expect(formValuesToLineup({ ada: ['guitar'], bob: [] })).toEqual({ ada: ['guitar'], bob: [] });
   });
 
-  it('collapses an all-empty selection to null', () => {
-    expect(
-      formValuesToLineup({ ada: NOT_PLAYING_OPTION_VALUE, bob: NOT_PLAYING_OPTION_VALUE }),
-    ).toBeNull();
+  it('collapses a selection where nobody plays to null', () => {
+    expect(formValuesToLineup({ ada: [], bob: [] })).toBeNull();
+  });
+});
+
+describe('toggleInstrumentHeld', () => {
+  it('adds an instrument the member does not hold', () => {
+    expect(toggleInstrumentHeld(['drums'], 'vocals')).toEqual(['drums', 'vocals']);
+  });
+
+  it('drops an instrument the member holds', () => {
+    expect(toggleInstrumentHeld(['drums', 'vocals'], 'drums')).toEqual(['vocals']);
+  });
+});
+
+describe('toLineupPayload', () => {
+  it('answers a mutable copy the request body can take', () => {
+    const lineup = { ada: ['guitar'] };
+    const payload = toLineupPayload(lineup);
+    expect(payload).toEqual({ ada: ['guitar'] });
+    expect(payload.ada).not.toBe(lineup.ada);
+  });
+
+  it('answers an empty record for no lineup at all', () => {
+    expect(toLineupPayload(null)).toEqual({});
   });
 });

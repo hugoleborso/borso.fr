@@ -23,7 +23,10 @@ import {
   toggleInstrumentAssignment,
 } from './members-page.core';
 
-const FIELD_LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
+const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const CHECKBOX_ROW_CLASS =
+  'flex items-center gap-2.5 min-h-11 text-sm text-ink-700 cursor-pointer select-none';
+const CHECKBOX_CLASS = 'w-5 h-5 accent-accent';
 const FIRST_NAME_MIN_LENGTH = 1;
 const FIRST_NAME_MAX_LENGTH = 64;
 
@@ -70,18 +73,16 @@ function InstrumentPanel({
   const EmptyNotice = EMPTY_NOTICE_BY_LIST_STATE[selectInstrumentListState(instruments)];
   return (
     <fieldset className="border border-line rounded-md p-3 mt-2">
-      <legend className="text-[11px] tracking-wider uppercase text-ink-400 px-2">
+      <legend className="text-xs tracking-wider uppercase text-ink-400 px-2">
         {t('members.instrumentsAssigned')}
       </legend>
       <EmptyNotice />
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col">
         {instruments.map((instrument) => (
-          <label
-            key={instrument.id}
-            className="flex items-center gap-2 text-sm text-ink-700 cursor-pointer"
-          >
+          <label key={instrument.id} className={CHECKBOX_ROW_CLASS}>
             <input
               type="checkbox"
+              className={CHECKBOX_CLASS}
               checked={assignedInstrumentIds.includes(instrument.id)}
               onChange={() =>
                 onInstrumentsChanged(
@@ -191,7 +192,7 @@ export function MemberEditForm({
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
-              className="w-full h-10 rounded-md bg-bg-elev border border-line cursor-pointer"
+              className="w-full min-h-11 rounded-md bg-bg-elev border border-line cursor-pointer"
             />
           )}
         </form.Field>

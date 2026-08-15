@@ -35,7 +35,7 @@ The validator uses [`agent-browser`](https://github.com/vercel-labs/agent-browse
 
 - **Reference-based snapshots.** `agent-browser snapshot -i --json` returns the accessibility tree with `@e1`, `@e2` refs. The agent acts on refs, not CSS selectors. This eliminates a category of selector-fragility that plagues Playwright in agent hands.
 - **Stateful daemon.** A persistent process holds the browser session; commands are individual shell calls. The agent's loop is "snapshot → reason → act → re-snapshot", which matches LLM affordances.
-- **Built-in emulation.** `set viewport`, `set device`, `set media [dark|light]` cover the spec's edge-case checklist without scripting.
+- **Built-in emulation.** `set viewport`, `set device`, `set media [dark|light]` cover the spec's edge-case checklist without scripting. They do not cover touch: `set device` sets the viewport and the user agent, leaves `matchMedia('(pointer: coarse)')` false, and a click is still a click. An assertion about tap behaviour, thumb reach or a gesture is answered with `scripts/argent.sh`, which sends real touch, or it is UNVERIFIABLE.
 
 Playwright would have worked for this skill, but agent-browser is *shaped* for LLMs. The validation reports are richer because the agent isn't fighting an imperative JS API.
 

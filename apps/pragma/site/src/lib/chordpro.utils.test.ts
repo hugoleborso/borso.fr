@@ -212,4 +212,19 @@ describe('transposeLines', () => {
     expect(shifted[1]).toEqual({ kind: 'blank' });
     expect(shifted[2]).toEqual({ kind: 'plain-line', text: 'Plain text' });
   });
+
+  it('shifts the key directive spelled in full', () => {
+    const shifted = transposeLines(parseChordPro('{key: Am}'), 3);
+    expect(shifted[0]).toEqual({ kind: 'directive', name: 'key', value: 'Cm' });
+  });
+
+  it('shifts the key directive spelled abbreviated', () => {
+    const shifted = transposeLines(parseChordPro('{k: Am}'), 3);
+    expect(shifted[0]).toEqual({ kind: 'directive', name: 'k', value: 'Cm' });
+  });
+
+  it('leaves a directive that is not a key at its written value', () => {
+    const shifted = transposeLines(parseChordPro('{comment: A word}'), 3);
+    expect(shifted[0]).toEqual({ kind: 'directive', name: 'comment', value: 'A word' });
+  });
 });

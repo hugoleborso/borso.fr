@@ -10,10 +10,12 @@
  * temporary id on create, syncing server-defaulted fields on update).
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { normalizeLineup } from '@domain/lineup.core';
+import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
 import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
+import { didLastSongWriteFail } from './song-write-failure.core';
 
 export const songKeys = {
   all: ['songs'] as const,
@@ -44,6 +46,9 @@ const NEW_SONG_DEFAULTS: Pick<
   | 'durationSeconds'
   | 'isrcs'
   | 'tags'
+  | 'structureNotes'
+  | 'gimmickNotes'
+  | 'notes'
 > = {
   artist: '',
   links: [],
@@ -57,6 +62,9 @@ const NEW_SONG_DEFAULTS: Pick<
   durationSeconds: null,
   isrcs: [],
   tags: [],
+  structureNotes: '',
+  gimmickNotes: '',
+  notes: '',
 };
 
 function normaliseLinks(links: SongCreateVariables['links']): SongRow['links'] {
@@ -68,22 +76,36 @@ function normaliseLinks(links: SongCreateVariables['links']): SongRow['links'] {
   }));
 }
 
+/**
+ * A lineup travels to the API in any of the shapes the body accepts — a list
+ * per member, or the single id and null the older rows carry — while a read
+ * always answers with lists. The optimistic row has to look like a read, so
+ * the write shape is normalised here rather than surfacing as two shapes in
+ * the cache.
+ */
+function normaliseLineup(lineup: SongCreateVariables['defaultLineup']): SongRow['defaultLineup'] {
+  if (lineup === undefined) return {};
+  return normalizeLineup(lineup);
+}
+
 function buildOptimisticSong(id: string, input: SongCreateVariables): SongRow {
   const createdAt = new Date().toISOString();
-  const { links: inputLinks, ...rest } = input;
+  const { links: inputLinks, defaultLineup: inputLineup, ...rest } = input;
   return {
     ...NEW_SONG_DEFAULTS,
     ...rest,
     links: normaliseLinks(inputLinks),
+    defaultLineup: normaliseLineup(inputLineup),
     id,
     createdAt,
   };
 }
 
 function mergeSongUpdate(existing: SongRow, patch: Omit<SongUpdateVariables, 'id'>): SongRow {
-  const { links: patchLinks, ...rest } = patch;
+  const { links: patchLinks, defaultLineup: patchLineup, ...rest } = patch;
   const merged: SongRow = { ...existing, ...rest };
   if (patchLinks !== undefined) merged.links = normaliseLinks(patchLinks);
+  if (patchLineup !== undefined) merged.defaultLineup = normaliseLineup(patchLineup);
   return merged;
 }
 
@@ -216,6 +238,21 @@ export function useUpdateSong() {
       void queryClient.invalidateQueries({ queryKey: songKeys.list() });
     },
   });
+}
+
+/**
+ * Whether the last write aimed at this song failed, so a page showing the song
+ * can say the values it renders are the ones `onError` put back.
+ */
+export function useDidLastSongWriteFail(songId: string): boolean {
+  const entries = useMutationState({
+    filters: { mutationKey: songKeys.all },
+    select: (mutation) => ({
+      variables: mutation.state.variables,
+      status: mutation.state.status,
+    }),
+  });
+  return didLastSongWriteFail(entries, songId);
 }
 
 // @FollowsBlueprint query-optimistic-mutation

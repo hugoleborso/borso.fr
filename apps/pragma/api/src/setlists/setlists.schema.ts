@@ -8,6 +8,7 @@
 
 import { integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
 
 // @FollowsBlueprint schema-table-and-input
 export const setlistTable = pgTable('setlist', {
@@ -35,8 +36,13 @@ const CAPO_MAX = 11;
 
 // Also used by the repository to validate the JSON blob deserialised
 // from the `lineup_override` text column (Aurora DSQL stores it as
-// TEXT — see docs/knowledge/dsql-postgres-compat-gaps.md §1).
-export const lineupOverrideSchema = z.record(z.string().uuid(), z.string().uuid().nullable());
+// TEXT — see docs/knowledge/dsql-postgres-compat-gaps.md §1). A value
+// is a list of instrument ids; the single id and the null are the
+// shapes written before one member could hold two instruments, and
+// `normalizeLineup` lifts both into lists on read.
+export const lineupOverrideSchema = z
+  .record(z.string().uuid(), z.union([z.array(z.string().uuid()), z.string().uuid(), z.null()]))
+  .transform((stored: Record<string, StoredLineupValue>) => normalizeLineup(stored));
 
 export const setlistEntryCreateSchema = z.object({
   songId: z.string().uuid(),

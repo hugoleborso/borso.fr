@@ -7,8 +7,12 @@
  * write applies its change to the list cache optimistically and rolls
  * that change back if the request fails. The selected-instrument-for-edit
  * state stays in `useState` because it's UI state, not server state.
+ *
+ * Deleting an instrument asks first: it leaves every lineup that holds it and
+ * there is no undo.
  */
 
+import { INSTRUMENT_FAMILIES, type InstrumentFamily } from '@domain/instrument.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useState } from 'react';
@@ -16,7 +20,9 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '../../components/atoms/Badge';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
+import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Input } from '../../components/atoms/Input';
+import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api';
 import {
@@ -25,14 +31,28 @@ import {
   useInstrumentsList,
   useUpdateInstrument,
 } from '../../lib/queries/instruments';
-import { selectInstrumentDeletionEffect } from './instruments-page.core';
+import {
+  INSTRUMENT_FAMILY_LABEL_KEY,
+  selectInstrumentDeletionEffect,
+} from './instruments-page.core';
 
 interface SelectedInstrument {
   id: string;
   name: string;
-  isHarmonic: boolean;
+  family: InstrumentFamily;
 }
 
+/**
+ * The name button stretches over the whole row through an `::after` overlay, so
+ * the family badge and the space beside it open the instrument like the name
+ * does instead of being a dead strip a finger lands on. The delete button sits
+ * above the overlay on its own layer.
+ */
+const ROW_OPENING_BUTTON_CLASS =
+  'flex-1 min-h-11 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0 ' +
+  'after:absolute after:inset-0';
+
+const DEFAULT_NEW_INSTRUMENT_FAMILY: InstrumentFamily = 'harmonic';
 const INSTRUMENT_NAME_MIN_LENGTH = 1;
 const INSTRUMENT_NAME_MAX_LENGTH = 64;
 
@@ -44,20 +64,20 @@ export function InstrumentsPage(): JSX.Element {
   const update = useUpdateInstrument();
   const remove = useDeleteInstrument();
   const [selected, setSelected] = useState<SelectedInstrument | null>(null);
+  const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null);
 
   const form = useForm({
-    defaultValues: { name: selected?.name ?? '', isHarmonic: selected?.isHarmonic ?? false },
+    defaultValues: {
+      name: selected?.name ?? '',
+      family: selected?.family ?? DEFAULT_NEW_INSTRUMENT_FAMILY,
+    },
     onSubmit: async ({ value }) => {
       const trimmed = value.name.trim();
       if (trimmed.length === 0) return;
       if (selected === null) {
-        await create.mutateAsync({ name: trimmed, isHarmonic: value.isHarmonic });
+        await create.mutateAsync({ name: trimmed, family: value.family });
       } else {
-        await update.mutateAsync({
-          id: selected.id,
-          name: trimmed,
-          isHarmonic: value.isHarmonic,
-        });
+        await update.mutateAsync({ id: selected.id, name: trimmed, family: value.family });
       }
       setSelected(null);
       form.reset();
@@ -67,7 +87,7 @@ export function InstrumentsPage(): JSX.Element {
   const selectInstrument = (row: SelectedInstrument): void => {
     setSelected(row);
     form.setFieldValue('name', row.name);
-    form.setFieldValue('isHarmonic', row.isHarmonic);
+    form.setFieldValue('family', row.family);
   };
 
   const clearSelection = (): void => {
@@ -108,22 +128,20 @@ export function InstrumentsPage(): JSX.Element {
             .map((row) => (
               <li
                 key={row.id}
-                className="flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors"
+                className="relative flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors"
               >
                 <button
                   type="button"
-                  className="flex-1 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
+                  className={ROW_OPENING_BUTTON_CLASS}
                   onClick={() => selectInstrument(row)}
                 >
                   {row.name}
                 </button>
-                <Badge tone="mono">
-                  {row.isHarmonic ? t('instruments.harmonic') : t('instruments.percussive')}
-                </Badge>
+                <Badge tone="mono">{t(INSTRUMENT_FAMILY_LABEL_KEY[row.family])}</Badge>
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
-                  onClick={() => removeInstrument(row.id)}
+                  className="relative z-10 inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
+                  onClick={() => setPendingDeletionId(row.id)}
                   aria-label={t('common.delete')}
                 >
                   ×
@@ -144,7 +162,7 @@ export function InstrumentsPage(): JSX.Element {
             className="flex flex-col gap-2.5"
           >
             <label
-              className="text-[11px] tracking-wider uppercase text-ink-400 font-medium"
+              className="text-xs tracking-wider uppercase text-ink-400 font-medium"
               htmlFor="instrument-name"
             >
               {t('instruments.name')}
@@ -163,19 +181,32 @@ export function InstrumentsPage(): JSX.Element {
                 />
               )}
             </form.Field>
-            <form.Field name="isHarmonic">
+            <span className="text-xs tracking-wider uppercase text-ink-400 font-medium">
+              {t('instruments.family')}
+            </span>
+            <form.Field name="family">
               {(field) => (
-                <label className="flex items-center gap-2 text-sm text-ink-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={field.state.value}
-                    onChange={(event) => field.handleChange(event.target.checked)}
-                    onBlur={field.handleBlur}
-                  />
-                  {t('instruments.isHarmonic')}
-                </label>
+                <div className="flex flex-wrap gap-1.5" role="group">
+                  {INSTRUMENT_FAMILIES.map((family) => (
+                    <button
+                      key={family}
+                      type="button"
+                      aria-pressed={field.state.value === family}
+                      onClick={() => field.handleChange(family)}
+                      className={composeClassName(
+                        'inline-flex items-center min-h-11 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors',
+                        field.state.value === family
+                          ? 'bg-accent-soft border-accent text-accent font-medium'
+                          : 'bg-bg border-line text-ink-500 hover:border-line-strong',
+                      )}
+                    >
+                      {t(INSTRUMENT_FAMILY_LABEL_KEY[family])}
+                    </button>
+                  ))}
+                </div>
               )}
             </form.Field>
+            <p className="text-xs text-ink-500 m-0">{t('instruments.familyHint')}</p>
             <div className="flex gap-2 mt-2">
               <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
                 {([canSubmit, isSubmitting]) => (
@@ -193,6 +224,17 @@ export function InstrumentsPage(): JSX.Element {
           </form>
         </Card>
       </div>
+      {pendingDeletionId === null ? null : (
+        <ConfirmDialog
+          question={t('instruments.deleteConfirm')}
+          confirmLabel={t('common.delete')}
+          onConfirm={() => {
+            removeInstrument(pendingDeletionId);
+            setPendingDeletionId(null);
+          }}
+          onCancel={() => setPendingDeletionId(null)}
+        />
+      )}
     </section>
   );
 }

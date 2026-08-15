@@ -8,6 +8,10 @@
  * label). Click on a row's name selects the bar for editing; the
  * `×` action removes it.
  *
+ * The selected row is outlined and carries `aria-current`, because under `md`
+ * the form it fills sits below the entire list: without the outline a tap on a
+ * row changed nothing anybody could see on a phone.
+ *
  * The stale-banner above the list and the kanban view live in the
  * parent (`BarsPage`); this organism owns the list-view shape only.
  */
@@ -20,7 +24,7 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatCapacity } from '../../lib/formatters.utils';
@@ -30,6 +34,18 @@ import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 
 const MOBILE_HIDDEN_COLUMN_IDS = new Set(['city', 'capacity']);
+
+/**
+ * The name button stretches over the whole row through an `::after` overlay, so
+ * the status badge and the staleness cell open the bar like the name does
+ * instead of being a dead strip a finger lands on. The delete button is lifted
+ * above the overlay by its own stacking context.
+ */
+const ROW_OPENING_BUTTON_CLASS =
+  'flex flex-col items-start justify-center w-full min-h-11 text-left text-[13.5px] text-ink-900 ' +
+  'cursor-pointer bg-transparent border-0 p-0 after:absolute after:inset-0';
+
+const ROW_OVERLAY_ESCAPING_CLASS = 'relative z-10';
 
 const SORT_ARROW_ROTATION_BY_DIRECTION = {
   asc: '-rotate-90',
@@ -43,6 +59,7 @@ export interface BarsListRow {
   readonly city: string | null;
   readonly capacity: number | null;
   readonly isStale: boolean;
+  readonly isBeingEdited: boolean;
 }
 
 interface BarsListProps {
@@ -68,10 +85,13 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         cell: ({ row }) => (
           <button
             type="button"
-            className="text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0 p-0"
+            className={ROW_OPENING_BUTTON_CLASS}
             onClick={() => onSelect(row.original.id)}
           >
             {row.original.name}
+            <span className="md:hidden text-xs font-mono text-ink-400">
+              {row.original.city ?? ''} · {formatCapacity(row.original.capacity)}
+            </span>
           </button>
         ),
         enableSorting: true,
@@ -86,7 +106,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
       {
         id: 'stale',
         accessorFn: (row) => (row.isStale ? 1 : 0),
-        header: () => '',
+        header: () => t('bars.staleColumn'),
         cell: ({ row }) =>
           row.original.isStale ? <Badge tone="warn">{t('bars.staleBadge')}</Badge> : null,
         enableSorting: true,
@@ -116,7 +136,10 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         cell: ({ row }) => (
           <button
             type="button"
-            className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
+            className={composeClassName(
+              'inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1',
+              ROW_OVERLAY_ESCAPING_CLASS,
+            )}
             onClick={() => onRemove(row.original.id)}
             aria-label={t('common.delete')}
           >
@@ -140,25 +163,23 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
 
   return (
     <ul className="flex flex-col gap-1.5" aria-label={t('bars.title')}>
-      <li className="flex items-center gap-3 px-3 py-1 text-[10.5px] tracking-wider uppercase text-ink-500 font-medium">
+      <li className="flex items-center gap-3 px-3 text-xs tracking-wider uppercase text-ink-500 font-medium">
         {table.getHeaderGroups()[0]?.headers.map((header, index) => {
           const sortDirection = header.column.getIsSorted();
           const canSort = header.column.getCanSort();
           const className = composeClassName(
             index === 0 && 'flex-1',
-            MOBILE_HIDDEN_COLUMN_IDS.has(header.column.id) && 'hidden md:inline',
+            MOBILE_HIDDEN_COLUMN_IDS.has(header.column.id)
+              ? 'hidden md:inline-flex'
+              : 'inline-flex',
             canSort && 'cursor-pointer select-none',
           );
           return (
-            <button
+            <SortableHeader
               key={header.id}
-              type="button"
-              onClick={header.column.getToggleSortingHandler()}
-              disabled={!canSort}
-              className={composeClassName(
-                className,
-                'bg-transparent border-0 text-[10.5px] tracking-wider uppercase text-ink-500 font-medium p-0 text-left',
-              )}
+              canSort={canSort}
+              onToggleSorting={header.column.getToggleSortingHandler()}
+              className={className}
             >
               {flexRender(header.column.columnDef.header, header.getContext())}
               {sortDirection ? (
@@ -171,16 +192,18 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
                   )}
                 />
               ) : null}
-            </button>
+            </SortableHeader>
           );
         })}
       </li>
       {table.getRowModel().rows.map((row) => (
         <li
           key={row.id}
+          aria-current={row.original.isBeingEdited}
           className={composeClassName(
-            'flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors',
+            'relative flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors',
             row.original.isStale && 'border-warn/40',
+            row.original.isBeingEdited && 'ring-2 ring-accent',
           )}
         >
           {row.getVisibleCells().map((cell) => {
@@ -190,7 +213,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
               <span
                 key={cell.id}
                 className={composeClassName(
-                  isName && 'flex-1',
+                  isName && 'flex-1 min-w-0',
                   isHiddenOnMobile && 'hidden md:inline',
                 )}
               >
@@ -201,5 +224,45 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         </li>
       ))}
     </ul>
+  );
+}
+
+interface SortableHeaderProps {
+  readonly canSort: boolean;
+  readonly onToggleSorting: ((event: unknown) => void) | undefined;
+  readonly className: string | undefined;
+  readonly children: ReactNode;
+}
+
+/**
+ * No `display` utility here: the caller decides between `inline-flex` and
+ * `hidden md:inline-flex`, and a `display` in this string would win over the
+ * caller's `hidden` on stylesheet order rather than on source order.
+ */
+const HEADER_CELL_CLASS =
+  'items-center min-h-11 bg-transparent border-0 text-xs tracking-wider uppercase text-ink-500 font-medium p-0 text-left';
+
+/**
+ * A column header, rendered as a button only when the column can actually be
+ * sorted. The actions column carries neither a label nor a sort, and as a
+ * disabled button it put an invisible, unnamed control in the tab order.
+ */
+function SortableHeader({
+  canSort,
+  onToggleSorting,
+  className,
+  children,
+}: SortableHeaderProps): JSX.Element {
+  if (!canSort) {
+    return <span className={composeClassName(className, HEADER_CELL_CLASS)}>{children}</span>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={onToggleSorting}
+      className={composeClassName(className, HEADER_CELL_CLASS)}
+    >
+      {children}
+    </button>
   );
 }

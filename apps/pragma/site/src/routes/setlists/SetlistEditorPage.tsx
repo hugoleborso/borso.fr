@@ -8,12 +8,21 @@
  *
  * Falls back to a small CTA when no setlist exists yet; one click
  * creates the setlist for the session and the editor mounts.
+ *
+ * The header naming the session and linking back to it is not decoration:
+ * reached as a deep link, this route used to carry no title and no link at
+ * all, so the set on screen belonged to no readable session and the only way
+ * out was the bottom bar.
  */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
+import { BackLink } from '../../components/molecules/BackLink';
+import { PageHeader } from '../../components/molecules/PageHeader';
+import { formatSessionDate } from '../../lib/formatters.utils';
+import { useSession } from '../../lib/queries/sessions';
 import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 
@@ -28,9 +37,23 @@ export function SetlistEditorPage(): JSX.Element {
 }
 
 function ResolveSetlist({ sessionId }: { sessionId: string }): JSX.Element {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const setlistQuery = useSetlistBySession(sessionId);
   const createSetlist = useCreateSetlist();
+  const sessionQuery = useSession(sessionId);
+  const session = sessionQuery.data?.session ?? null;
+  const sessionHeader = (
+    <>
+      <BackLink to={`/sessions/${sessionId}`} label={t('common.back')} />
+      <PageHeader
+        crumb={t('setlist.crumb')}
+        title={
+          session === null ? t('setlist.title') : formatSessionDate(session.date, i18n.language)
+        }
+        subtitle={session?.venue ?? undefined}
+      />
+    </>
+  );
 
   if (setlistQuery.isLoading) {
     return <p className="px-4 sm:px-9 py-7 italic text-ink-400 text-sm">{t('common.loading')}</p>;
@@ -48,7 +71,8 @@ function ResolveSetlist({ sessionId }: { sessionId: string }): JSX.Element {
 
   if (setlist === null) {
     return (
-      <section className="px-4 sm:px-9 py-7 max-w-[1280px]">
+      <section className="px-4 sm:px-9 py-7 max-w-[1280px] flex flex-col">
+        {sessionHeader}
         <div className="bg-bg-elev border border-line rounded-md p-6 flex flex-col gap-3 items-start">
           <p className="text-ink-700">{t('setlist.noSetlistYet')}</p>
           <Button
@@ -58,19 +82,14 @@ function ResolveSetlist({ sessionId }: { sessionId: string }): JSX.Element {
           >
             {createSetlist.isPending ? t('common.loading') : t('setlist.createForSession')}
           </Button>
-          <Link
-            to={`/sessions/${sessionId}`}
-            className="text-ink-500 text-sm underline-offset-2 hover:underline"
-          >
-            {t('common.back')}
-          </Link>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
+    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col">
+      {sessionHeader}
       <SetlistEditor setlistId={setlist.id} />
     </section>
   );

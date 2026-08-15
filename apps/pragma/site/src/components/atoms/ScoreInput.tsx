@@ -1,25 +1,31 @@
 /**
  * ScoreInput atom — one mastery cell. Three affordances share one value:
  * typing it, wheeling it by a step, and clearing it from the context menu. The
- * atom owns the affordances and reports the intent; clamping and persistence
- * belong to the caller, which already has the pure helper for both.
+ * atom owns the affordances and reports the intent; clamping, reading an empty
+ * box as "no score" and persistence belong to the caller, which already has
+ * the pure helpers for all three.
+ *
+ * A cell with no score shows an empty box rather than a zero: the two mean
+ * different things to the band — nobody has rated this member on this
+ * instrument, against they cannot play it at all — and the row is absent from
+ * the API in the first case.
  */
 
 import type { JSX, MouseEvent, WheelEvent } from 'react';
 
 const SCORE_INPUT_CLASS =
-  'w-12 text-center bg-bg-elev border border-line rounded-sm text-xs py-1 outline-none focus:border-ink-700 font-mono';
+  'w-12 min-h-11 text-center bg-bg-elev border border-line rounded-sm text-base py-1 outline-none focus:border-ink-700 font-mono';
 
 // @FollowsBlueprint component-lookup-table
 const STEP_BY_SCROLLED_UP: Readonly<Record<`${boolean}`, number>> = { true: 1, false: -1 };
 
 interface ScoreInputProps {
-  readonly value: number;
+  readonly value: number | null;
   readonly minimum: number;
   readonly maximum: number;
   readonly label: string;
   readonly onStep: (step: number) => void;
-  readonly onType: (typedValue: number) => void;
+  readonly onEdit: (rawValue: string) => void;
   readonly onClear: () => void;
 }
 
@@ -30,7 +36,7 @@ export function ScoreInput({
   maximum,
   label,
   onStep,
-  onType,
+  onEdit,
   onClear,
 }: ScoreInputProps): JSX.Element {
   function stepOnWheel(event: WheelEvent<HTMLInputElement>): void {
@@ -48,13 +54,13 @@ export function ScoreInput({
       type="number"
       min={minimum}
       max={maximum}
-      value={value}
+      value={value ?? ''}
       aria-label={label}
       className={SCORE_INPUT_CLASS}
       onWheel={stepOnWheel}
       onContextMenu={clearOnContextMenu}
       onChange={(event) => {
-        onType(Number(event.target.value));
+        onEdit(event.target.value);
       }}
     />
   );

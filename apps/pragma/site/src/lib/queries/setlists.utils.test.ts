@@ -6,6 +6,7 @@ import {
   type MinimalSetlistEntry,
   removeEntryById,
   reorderEntriesByIds,
+  toEntryPatch,
 } from './setlists.utils';
 
 function makeEntry(overrides: Partial<MinimalSetlistEntry>): MinimalSetlistEntry {
@@ -118,7 +119,7 @@ describe('appendOptimisticEntry', () => {
       keyOverride: 'Am',
       capo: 2,
       notes: 'rough',
-      lineupOverride: { 'member-1': 'instrument-1' },
+      lineupOverride: { 'member-1': ['instrument-1'] },
     });
     expect(next.entries[0]).toMatchObject({
       id: 'tmp',
@@ -128,7 +129,31 @@ describe('appendOptimisticEntry', () => {
       keyOverride: 'Am',
       capo: 2,
       notes: 'rough',
-      lineupOverride: { 'member-1': 'instrument-1' },
+      lineupOverride: { 'member-1': ['instrument-1'] },
     });
+  });
+
+  it('lifts a lineup written in the older single-instrument shape into lists', () => {
+    const next = appendOptimisticEntry(
+      { entries: [] },
+      { id: 'tmp', songId: 'song-2', lineupOverride: { 'member-1': 'instrument-1' } },
+    );
+    expect(next.entries[0]?.lineupOverride).toEqual({ 'member-1': ['instrument-1'] });
+  });
+});
+
+describe('toEntryPatch', () => {
+  it('passes a patch without a lineup through untouched', () => {
+    expect(toEntryPatch({ energy: 4, notes: 'x' })).toEqual({ energy: 4, notes: 'x' });
+  });
+
+  it('normalises the lineup a mutation carries', () => {
+    expect(toEntryPatch({ lineupOverride: { 'member-1': 'instrument-1' } })).toEqual({
+      lineupOverride: { 'member-1': ['instrument-1'] },
+    });
+  });
+
+  it('keeps a cleared override as cleared', () => {
+    expect(toEntryPatch({ lineupOverride: null })).toEqual({ lineupOverride: null });
   });
 });

@@ -70,7 +70,7 @@ describe('instruments mutations — optimistic updates', () => {
     const tree = mountWithClient(queryClient, <ProbeCreate sink={slot.sink} />);
     const send = slot.read();
 
-    send({ name: 'Bass', isHarmonic: true }).catch(() => undefined);
+    send({ name: 'Bass', family: 'harmonic' }).catch(() => undefined);
     await flushMicrotasks();
     expect(
       queryClient.getQueryData<OptimisticListShape>(instrumentKeys.list())?.instruments,

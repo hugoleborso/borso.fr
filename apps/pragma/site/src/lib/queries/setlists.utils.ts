@@ -6,7 +6,15 @@
  * the snapshot in `onError`. The shape is generic in the entry type so
  * the helpers don't pin themselves to the BE projection — the queries
  * file passes the inferred shape through `setQueryData<EntriesCache>`.
+ *
+ * A lineup written by a mutation arrives in whichever shape the request body
+ * allows — a list of instruments per member, or the single id and null the
+ * older rows carry — while the cache holds what a read returns, which is
+ * always lists. `toEntryPatch` and `appendOptimisticEntry` normalise on the
+ * way in, so an optimistic row and a fetched row are the same shape.
  */
+
+import { type Lineup, normalizeLineup, type StoredLineup } from '@domain/lineup.core';
 
 export interface MinimalSetlistEntry {
   readonly id: string;
@@ -16,7 +24,7 @@ export interface MinimalSetlistEntry {
   readonly keyOverride: string | null;
   readonly capo: number | null;
   readonly notes: string;
-  readonly lineupOverride: Record<string, string | null> | null;
+  readonly lineupOverride: Lineup | null;
 }
 
 export interface EntriesCache<TEntry extends MinimalSetlistEntry = MinimalSetlistEntry> {
@@ -64,7 +72,7 @@ export interface OptimisticAppendInput {
   readonly keyOverride?: string | null;
   readonly capo?: number | null;
   readonly notes?: string;
-  readonly lineupOverride?: Record<string, string | null> | null;
+  readonly lineupOverride?: StoredLineup | null;
 }
 
 // @FollowsBlueprint utils-pure-module
@@ -80,7 +88,26 @@ export function appendOptimisticEntry(
     keyOverride: input.keyOverride ?? null,
     capo: input.capo ?? null,
     notes: input.notes ?? '',
-    lineupOverride: input.lineupOverride ?? null,
+    lineupOverride: input.lineupOverride == null ? null : normalizeLineup(input.lineupOverride),
   };
   return { entries: [...cache.entries, placeholder] };
+}
+
+export interface EntryPatchInput {
+  readonly songId?: string;
+  readonly energy?: number | null;
+  readonly keyOverride?: string | null;
+  readonly capo?: number | null;
+  readonly notes?: string;
+  readonly lineupOverride?: StoredLineup | null;
+}
+
+/** A mutation's variables as the cache holds them, lineup included. */
+export function toEntryPatch(input: EntryPatchInput): Partial<MinimalSetlistEntry> {
+  const { lineupOverride, ...rest } = input;
+  if (lineupOverride === undefined) return rest;
+  return {
+    ...rest,
+    lineupOverride: lineupOverride === null ? null : normalizeLineup(lineupOverride),
+  };
 }

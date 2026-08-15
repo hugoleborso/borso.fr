@@ -11,15 +11,16 @@
  *
  * Aggregations:
  *  - `meanForSong`: arithmetic mean of `effective(member, instrument)`
- *    over the song's lineup, skipping members with no instrument set
- *    or no default+override at all.
+ *    over the song's lineup, one score per instrument held — a member
+ *    on drums and vocals is rated on both — skipping the members
+ *    sitting the song out and the pairs nothing is known about.
  *  - `isRedundantOverride`: true iff override.score === default.score,
  *    so the admin UI can flag rows that should be garbage-collected.
  *
  * Pure functions over plain objects. No I/O.
  */
 
-import { instrumentedMembers } from '@domain/lineup.core';
+import { type Lineup, memberInstrumentPairs } from '@domain/lineup.core';
 
 export type MemberId = string;
 export type InstrumentId = string;
@@ -48,8 +49,6 @@ export function effective(
   return fallback ?? null;
 }
 
-export type Lineup = Readonly<Record<string, InstrumentId | null>>;
-
 export function meanForSong(
   defaults: DefaultMap,
   overrides: OverrideMap,
@@ -57,7 +56,7 @@ export function meanForSong(
   lineup: Lineup,
 ): number | null {
   const scores: number[] = [];
-  for (const [memberId, instrumentId] of instrumentedMembers(lineup)) {
+  for (const [memberId, instrumentId] of memberInstrumentPairs(lineup)) {
     const score = effective(defaults, overrides, { memberId, instrumentId, songId });
     if (score === null) continue;
     scores.push(score);

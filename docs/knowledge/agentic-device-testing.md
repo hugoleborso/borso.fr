@@ -66,13 +66,29 @@ the Chromium viewport pass.
 ## Running argent
 
 ```bash
-pnpm exec argent --help
+scripts/argent.sh start http://localhost:5174/
+scripts/argent.sh describe
+scripts/argent.sh tap 0.5 0.95
+scripts/argent.sh stop
 ```
 
-Argent installs its own skills for the agent, which is the documented way in.
-Ask it what it can do rather than guessing flags, the same habit
+[`scripts/argent.sh`](../../scripts/argent.sh) is the way in. Starting argent by
+hand needs a Chromium of its own, the proxy stripped from that browser, and a
+tool-server on a port that is not 3001; each of those has cost a session, and
+the script does all three. `scripts/argent.sh run <anything>` passes through to
+`argent run` with the device already named, so the full tool surface stays
+reachable — ask it what it can do with `pnpm exec argent --help` rather than
+guessing flags, the same habit
 [`agent-browser-cli-quirks.md`](./agent-browser-cli-quirks.md) records for the
 other tool.
+
+**Touch gestures work on the sandbox's Chromium target.** `gesture-tap`,
+`keyboard` and `describe` were re-verified end to end against a local `pragma`:
+tap, type, tap logged in, opened a drawer, closed it, changed tab and left a
+full-screen view, with no timeout. This repository carried a note saying
+`gesture-tap` was broken here, and two phone audits believed it and sent no
+touch events at all. See
+[`driving-previews-with-agent-browser-and-argent.md`](./driving-previews-with-agent-browser-and-argent.md).
 
 ## Device profiles we check
 

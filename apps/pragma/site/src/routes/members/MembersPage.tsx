@@ -6,6 +6,10 @@
  * Color values are entered as hex (`#rrggbb`); the contrast helper in
  * `member-color.utils.ts` picks the readable foreground for each chip
  * at render time.
+ *
+ * Deleting a member asks first. The button sits 12px from the name that opens
+ * the edit form, the write takes their mastery scores with it, and nothing in
+ * this app has an undo.
  */
 
 import type { JSX } from 'react';
@@ -13,6 +17,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/atoms/Avatar';
 import { memberInitial } from '../../components/atoms/member-palette.utils';
+import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { MasteryMatrix } from '../../components/organisms/MasteryMatrix';
 import { ApiError } from '../../lib/api';
@@ -56,6 +61,7 @@ export function MembersPage(): JSX.Element {
   const deleteMember = useDeleteMember();
   const assignInstruments = useAssignMemberInstruments();
   const [selected, setSelected] = useState<MemberSelection | null>(null);
+  const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const selectedInstruments = useMemberInstruments(selected?.id ?? '', selected !== null);
 
@@ -135,7 +141,7 @@ export function MembersPage(): JSX.Element {
               />
               <button
                 type="button"
-                className="flex-1 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
+                className="flex-1 min-h-11 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0"
                 onClick={() =>
                   setSelected({
                     id: member.id,
@@ -149,7 +155,7 @@ export function MembersPage(): JSX.Element {
               <button
                 type="button"
                 className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
-                onClick={() => removeMember(member.id)}
+                onClick={() => setPendingDeletionId(member.id)}
                 aria-label={t('common.delete')}
               >
                 ×
@@ -173,6 +179,17 @@ export function MembersPage(): JSX.Element {
         instruments={sortedInstruments}
         onError={setLocalError}
       />
+      {pendingDeletionId === null ? null : (
+        <ConfirmDialog
+          question={t('members.deleteConfirm')}
+          confirmLabel={t('common.delete')}
+          onConfirm={() => {
+            removeMember(pendingDeletionId);
+            setPendingDeletionId(null);
+          }}
+          onCancel={() => setPendingDeletionId(null)}
+        />
+      )}
     </section>
   );
 }

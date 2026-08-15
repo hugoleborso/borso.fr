@@ -49,14 +49,12 @@ export function Login(): JSX.Element {
   });
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-bg px-4 py-8">
+    <main className="min-h-dvh flex items-center justify-center bg-bg px-4 py-8">
       <Card className="w-full max-w-[420px] p-6 sm:p-8">
         <h1 className="font-display italic text-[36px] sm:text-[44px] leading-none tracking-[-0.015em] text-ink-900 m-0 mb-1">
           {t('appName')}
         </h1>
-        <p className="text-[11px] tracking-[0.18em] uppercase text-ink-500 mb-6">
-          {t('appWordmark')}
-        </p>
+        <p className="text-xs tracking-[0.18em] uppercase text-ink-500 mb-6">{t('appWordmark')}</p>
         <form
           onSubmit={(event) => {
             event.preventDefault();
@@ -67,7 +65,7 @@ export function Login(): JSX.Element {
         >
           <label
             htmlFor="login-password"
-            className="text-[11px] tracking-wider uppercase text-ink-400 font-medium"
+            className="text-xs tracking-wider uppercase text-ink-400 font-medium"
           >
             {t('auth.passwordLabel')}
           </label>

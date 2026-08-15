@@ -12,10 +12,12 @@ export const inputVariants = cva(
   {
     variants: {
       // Every size clears the 44px touch floor through `min-h-11`, so a
-      // coarse pointer can hit the field on a phone.
+      // coarse pointer can hit the field on a phone, and renders at 16px
+      // because iOS Safari zooms the whole page in when a focused control
+      // is any smaller. The sizes differ in padding only.
       size: {
-        sm: 'min-h-11 px-2.5 py-1.5 text-xs',
-        md: 'min-h-11 px-3 py-2 text-[13px]',
+        sm: 'min-h-11 px-2.5 py-1.5 text-base',
+        md: 'min-h-11 px-3 py-2 text-base',
       },
     },
     defaultVariants: { size: 'md' },

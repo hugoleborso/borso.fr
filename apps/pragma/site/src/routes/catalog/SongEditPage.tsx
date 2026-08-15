@@ -7,15 +7,26 @@
  * This file owns the data-fetch + navigation; the form itself lives
  * in `SongEditForm.tsx` so the per-file line budget stays under cap
  * as the form grew to cover the MusicBrainz enrichment fields.
+ *
+ * A `?title=` parameter prefills the title, which is how the catalog hands
+ * over what the operator typed in the search box before finding nothing.
+ *
+ * An update is fired without being awaited: the caches already hold the new
+ * values, so the operator reads the edited song straight away instead of
+ * watching a spinner, and a write that then fails is surfaced on the song page
+ * they landed on. A create is awaited, because the route it navigates to needs
+ * the id only the server can issue.
  */
 
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { ApiError } from '../../lib/api';
 import { useNavigateTo } from '../../lib/navigation';
 import { useCreateSong, useDeleteSong, useSong, useUpdateSong } from '../../lib/queries/songs';
+import { selectMissingSongMessageKey } from './missing-song.core';
 import { SongEditForm } from './SongEditForm';
 import {
   BLANK_SONG_DRAFT,
@@ -30,6 +41,8 @@ export function SongEditPage(): JSX.Element {
   const { t } = useTranslation();
   const { songId } = useParams<{ songId: string }>();
   const navigateTo = useNavigateTo();
+  const [searchParams] = useSearchParams();
+  const prefilledTitle = searchParams.get('title') ?? '';
   const isNew = songId === undefined || songId === 'new';
   const songQuery = useSong(songId ?? '', !isNew);
   const createSong = useCreateSong();
@@ -39,16 +52,18 @@ export function SongEditPage(): JSX.Element {
   const [newLinkUrl, setNewLinkUrl] = useState('');
 
   const defaultValues = useMemo<SongDraftState>(() => {
-    if (isNew) return BLANK_SONG_DRAFT;
+    if (isNew) return { ...BLANK_SONG_DRAFT, title: prefilledTitle };
     if (songQuery.data?.song === undefined) return BLANK_SONG_DRAFT;
     const parsed = singleSongSchema.safeParse({ song: songQuery.data.song });
     if (!parsed.success) return BLANK_SONG_DRAFT;
     return songFromApi(parsed.data.song);
-  }, [isNew, songQuery.data]);
+  }, [isNew, songQuery.data, prefilledTitle]);
 
-  const formKey = isNew ? 'new' : `${songId}:${songQuery.data?.song.id ?? 'loading'}`;
+  const formKey = isNew
+    ? `new:${prefilledTitle}`
+    : `${songId}:${songQuery.data?.song.id ?? 'loading'}`;
   const isLoading = !isNew && songQuery.isLoading;
-  const queryError = songQuery.error instanceof ApiError ? songQuery.error.message : null;
+  const isEditingMissingSong = !isNew && !songQuery.isLoading && songQuery.data === undefined;
 
   const saveSong = async (value: SongDraftState): Promise<void> => {
     const payload = payloadFromDraft(value);
@@ -58,7 +73,7 @@ export function SongEditPage(): JSX.Element {
         const created = await createSong.mutateAsync(payload);
         navigateTo(`/catalog/${created.song.id}`, { replace: true });
       } else {
-        await updateSong.mutateAsync({ id: songId, ...payload });
+        updateSong.mutate({ id: songId, ...payload });
         navigateTo(`/catalog/${songId}`);
       }
     } catch (error) {
@@ -79,6 +94,15 @@ export function SongEditPage(): JSX.Element {
   if (isLoading) {
     return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
   }
+  if (isEditingMissingSong) {
+    return (
+      <NotFoundNotice
+        message={t(selectMissingSongMessageKey(songQuery.error))}
+        backTo="/catalog"
+        backLabel={t('catalog.backToCatalog')}
+      />
+    );
+  }
 
   return (
     <SongEditForm
@@ -90,7 +114,7 @@ export function SongEditPage(): JSX.Element {
       onDelete={removeSong}
       newLinkUrl={newLinkUrl}
       setNewLinkUrl={setNewLinkUrl}
-      error={localError ?? queryError}
+      error={localError}
     />
   );
 }

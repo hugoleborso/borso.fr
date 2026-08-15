@@ -1,12 +1,24 @@
 /**
  * LineupEditor — modal that edits a lineup record
- * (`Record<memberId, instrumentId | null>`). Two surfaces share this
- * molecule: the song detail page (editing the song's `defaultLineup`)
- * and a setlist entry row (editing the entry's `lineupOverride`).
+ * (`Record<memberId, instrumentIds>`). Two surfaces share this molecule:
+ * the song detail page (editing the song's `defaultLineup`) and a setlist
+ * entry row (editing the entry's `lineupOverride`).
  *
- * On Save, the molecule normalises an all-null selection set to
- * `null` so the BE never persists `{}` — the override-vs-default
- * badge is binary on non-null.
+ * Each member gets a row of instrument toggles rather than a dropdown,
+ * because one person can hold several instruments at once — a drummer who
+ * also sings — and because a toggle is a thumb-sized target where a native
+ * select on a phone is a scroll wheel.
+ *
+ * Only the member list scrolls: the sheet is a flex column whose middle band
+ * is the scroll container, so the title stays at the top and Save and Cancel
+ * at the bottom whatever the band's size. They were sticky instead, which
+ * keeps them on screen but paints them over whatever the sheet has not
+ * scrolled past — the last member's bottom instrument chip was three quarters
+ * behind the action row and swallowed every tap aimed at it.
+ *
+ * On Save, the molecule normalises a selection where nobody plays to
+ * `null` so the BE never persists an override that says nothing — the
+ * override-vs-default badge is binary on non-null.
  *
  * On Reset to default (button only present when `defaultLineup` is
  * supplied — i.e. the setlist-entry surface), the form values revert
@@ -20,14 +32,15 @@
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { openDialogOnAttach } from '../../lib/modal-dialog';
+import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog';
 import { Button } from '../atoms/Button';
+import { composeClassName } from '../atoms/class-name.utils';
 import {
   formValuesToLineup,
   type LineupEditorMember,
   type LineupRecord,
   lineupToFormValues,
-  NOT_PLAYING_OPTION_VALUE,
+  toggleInstrumentHeld,
 } from './lineup-editor.core';
 import { MemberChip } from './MemberChip';
 
@@ -40,6 +53,17 @@ export interface LineupEditorInstrument {
 
 export type LineupEditorSurface = 'song' | 'setlist-entry';
 
+/**
+ * The scrollbar is drawn rather than left to the platform's overlay one, which
+ * only appears once a scroll is already under way. A band long enough to
+ * overflow the sheet showed its last instrument chip sliced by the action row
+ * with nothing on screen saying the list continued.
+ */
+const MEMBER_SCROLLER_CLASS =
+  'flex-1 overflow-y-auto flex flex-col gap-3 p-4 pb-8 ' +
+  '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-bg-sunk ' +
+  '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-line-strong';
+
 export interface LineupEditorProps {
   readonly open: boolean;
   readonly surface: LineupEditorSurface;
@@ -50,9 +74,6 @@ export interface LineupEditorProps {
   readonly onSave: (lineup: LineupRecord | null, wasReset: boolean) => void;
   readonly onClose: () => void;
 }
-
-const FIELD_CLASS =
-  'w-full bg-bg-elev border border-line rounded-md px-2 py-1 text-[13px] font-mono text-ink-900 outline-none focus:border-ink-700';
 
 /**
  * @Blueprint molecule-dialog-form
@@ -98,11 +119,11 @@ function LineupEditorContent({
 
   return (
     <dialog
-      ref={openDialogOnAttach}
+      ref={openDismissibleDialogOnAttach}
       onClose={onClose}
-      className="m-auto w-[calc(100vw-2rem)] sm:w-[28rem] max-w-[28rem] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
+      className="m-auto w-[calc(100vw-1.5rem)] sm:w-[30rem] max-w-[30rem] max-h-[calc(100dvh-1.5rem)] flex flex-col overflow-hidden rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-line">
+      <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-line bg-bg-elev">
         <h2 className="font-display italic text-xl text-ink-900 m-0">{modalTitle}</h2>
         <Button
           type="button"
@@ -110,53 +131,71 @@ function LineupEditorContent({
           size="sm"
           onClick={onClose}
           aria-label={t('common.cancel')}
+          className="min-w-11"
         >
           ×
         </Button>
       </div>
       <form
-        className="flex flex-col gap-2 p-4"
+        className="flex min-h-0 flex-1 flex-col"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
       >
-        <ul className="flex flex-col gap-2 m-0 p-0 list-none">
-          {members.map((member) => (
-            <li
-              key={member.id}
-              className="grid grid-cols-[auto_1fr_minmax(0,11rem)] items-center gap-2"
-            >
-              <MemberChip memberName={member.name} memberColor={member.color} size="sm" />
-              <label
-                className="text-[13px] text-ink-900"
-                htmlFor={`lineup-editor-instrument-${member.id}`}
-              >
-                {member.name}
-              </label>
-              <form.Field name={member.id}>
-                {(field) => (
-                  <select
-                    id={`lineup-editor-instrument-${member.id}`}
-                    value={field.state.value}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    onBlur={field.handleBlur}
-                    className={FIELD_CLASS}
-                  >
-                    <option value={NOT_PLAYING_OPTION_VALUE}>{t('lineup.notPlaying')}</option>
-                    {instruments.map((instrument) => (
-                      <option key={instrument.id} value={instrument.id}>
-                        {instrument.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </form.Field>
-            </li>
-          ))}
-        </ul>
-        <div className="flex flex-wrap gap-2 mt-2 justify-between">
+        <div className={MEMBER_SCROLLER_CLASS}>
+          <p className="text-xs text-ink-500 m-0">{t('lineup.multiInstrumentHint')}</p>
+          <ul className="flex flex-col gap-3 m-0 p-0 list-none">
+            {members.map((member) => (
+              <li key={member.id} className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2">
+                  <MemberChip memberName={member.name} memberColor={member.color} size="sm" />
+                  <span className="text-[13px] text-ink-900 font-medium">{member.name}</span>
+                </div>
+                <form.Field name={member.id}>
+                  {(field) => (
+                    <div
+                      className="flex flex-wrap gap-1.5"
+                      role="group"
+                      aria-label={`${member.name} — ${t('lineup.instruments')}`}
+                    >
+                      {instruments.map((instrument) => {
+                        const isHeld = field.state.value.includes(instrument.id);
+                        return (
+                          <button
+                            key={instrument.id}
+                            type="button"
+                            aria-pressed={isHeld}
+                            onClick={() =>
+                              field.handleChange(
+                                toggleInstrumentHeld(field.state.value, instrument.id),
+                              )
+                            }
+                            className={composeClassName(
+                              'inline-flex items-center min-h-11 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors',
+                              isHeld
+                                ? 'bg-accent-soft border-accent text-accent font-medium'
+                                : 'bg-bg border-line text-ink-500 hover:border-line-strong',
+                            )}
+                          >
+                            {instrument.name}
+                          </button>
+                        );
+                      })}
+                      {field.state.value.length === 0 ? (
+                        <span className="self-center text-xs italic text-ink-400 pl-1">
+                          {t('lineup.notPlaying')}
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+                </form.Field>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="shrink-0 px-4 py-3 flex flex-wrap gap-2 justify-between border-t border-line bg-bg-elev">
           {defaultLineup === undefined ? (
             <span />
           ) : (

@@ -34,7 +34,7 @@ export function SongMusicBrainzPanel({
     tags.length > 0 ||
     isrcs.length > 0;
   if (!hasContent) return null;
-  const labelClass = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
+  const labelClass = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
   return (
     <section className="border border-line rounded-md p-3 bg-bg-sunk flex flex-col gap-2">
       <h3 className={labelClass}>{t('catalog.musicBrainzMetadata')}</h3>
@@ -70,7 +70,7 @@ export function SongMusicBrainzPanel({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="text-[10px] px-1.5 py-0.5 rounded bg-bg-elev border border-line text-ink-500 uppercase tracking-wider"
+                  className="text-xs px-1.5 py-0.5 rounded bg-bg-elev border border-line text-ink-500 uppercase tracking-wider"
                 >
                   {tag}
                 </span>

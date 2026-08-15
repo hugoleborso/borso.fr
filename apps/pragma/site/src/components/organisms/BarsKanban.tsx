@@ -3,7 +3,9 @@
  * between columns to change a bar's status.
  *
  * HTML5 drag suffices here — the design bundle's handle pattern applies to
- * the mobile setlist reorder, not to this desktop board.
+ * the mobile setlist reorder, not to this desktop board. Touch input fires no
+ * drag event at all, which is why `BarsPage` shows this board only from `lg`
+ * up and renders the list below it.
  */
 
 import type { JSX } from 'react';
@@ -40,7 +42,7 @@ interface BarsKanbanProps<TStatus extends string> {
 export function BarsKanban<TStatus extends string>(props: BarsKanbanProps<TStatus>): JSX.Element {
   const { t } = useTranslation();
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 overflow-x-auto">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-3.5 overflow-x-auto">
       {props.statuses.map((status) => (
         <section
           key={status}
@@ -52,7 +54,7 @@ export function BarsKanban<TStatus extends string>(props: BarsKanbanProps<TStatu
             props.onMoveToStatus(status, event.dataTransfer.getData(DRAGGED_BAR_MIME));
           }}
         >
-          <h3 className="font-medium text-[11px] tracking-wider uppercase text-ink-500 mx-1 mt-1 mb-1.5 flex items-center gap-2">
+          <h3 className="font-medium text-xs tracking-wider uppercase text-ink-500 mx-1 mt-1 mb-1.5 flex items-center gap-2">
             {props.statusLabel(status)}
             <span className="font-mono text-ink-400">{props.cardsByStatus[status].length}</span>
           </h3>
@@ -72,11 +74,11 @@ export function BarsKanban<TStatus extends string>(props: BarsKanbanProps<TStatu
                 {card.name}
                 {card.isStale ? <Badge tone="warn">{t('bars.staleBadge')}</Badge> : null}
               </div>
-              <div className="text-[10.5px] font-mono text-ink-400 tracking-wide">
+              <div className="text-xs font-mono text-ink-400 tracking-wide">
                 {card.city ?? ''} · {formatCapacity(card.capacity)}
               </div>
               {card.contactName === null ? null : (
-                <div className="text-[11.5px] text-ink-500 mt-1.5">{card.contactName}</div>
+                <div className="text-xs text-ink-500 mt-1.5">{card.contactName}</div>
               )}
             </button>
           ))}

@@ -43,6 +43,15 @@ Priority order when in tension: (1) make the conversation worth the user's time;
 - `.claude/skills/<slug>/` — skills. **Markdown-only.** A skill is a set of instructions an LLM follows: `SKILL.md`, `standard.md`, `template.md`, `worked-example.md` as needed. **No `package.json`, no test runner, no TS utilities.** Primitives the skill needs (verdict parsing, state transitions, retry budgeting, journal aggregation) are described in prose; the LLM runtime executes them. Skills are not pnpm workspaces.
 - `docs/features/<app>/<slug>/` — the conversation that produced a feature: `spec/spec.md`, `plan/plan.md`, `validation/`. `<app>` here is a **docs slug**, not necessarily a pnpm workspace. Valid docs slugs: every `apps/<slug>` plus `meta` (for repo-internal work like skills, hooks, conventions). `meta` does **not** need an entry in `.github/path-filters.yml` — it isn't deployable.
 
+## Checking a screen in a browser
+
+Two tools, and the question decides which:
+
+- **Layout, content, styles, contrast, anything you measure** → `agent-browser`, the Playwright-backed CLI. This is what [`/visual-validation`](./.claude/skills/visual-validation/SKILL.md) drives.
+- **Touch behaviour — is this reachable with a thumb, does the tap land, what does the keyboard cover, does the swipe work** → [`scripts/argent.sh`](./scripts/argent.sh). `start`, then `describe`, `tap <x> <y>`, `run <anything>`, `stop`. It boots a Chromium of argent's own and a tool-server off port 3001, because both are traps that read as application bugs.
+
+**A synthetic click is not a tap, and `agent-browser set device` does not give you a coarse pointer.** A phone pass driven only by clicks reports no touch findings because it sent no touch events — that has already happened here, twice, across six audit rounds. If the task says phone, `scripts/argent.sh` is in the loop. Full recipe and traps: [`docs/knowledge/driving-previews-with-agent-browser-and-argent.md`](./docs/knowledge/driving-previews-with-agent-browser-and-argent.md).
+
 ## Conventions
 
 - **pnpm always** — no `npm` / `yarn`. Lockfile is committed.

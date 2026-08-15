@@ -20,7 +20,7 @@ export const Crumb = forwardRef<HTMLDivElement, CrumbProps>(({ className, ...res
   <div
     ref={ref}
     className={composeClassName(
-      'font-sans font-medium text-[10.5px] tracking-[0.16em] uppercase text-ink-400',
+      'font-sans font-medium text-xs tracking-[0.16em] uppercase text-ink-400',
       className,
     )}
     {...rest}

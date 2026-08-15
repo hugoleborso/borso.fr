@@ -3,6 +3,11 @@
  * showing a label + mono count. Matches the prototype's
  * Statuses row on the Catalog screen. Selection is exclusive
  * (radio-like): exactly one option is active at a time.
+ *
+ * The row wraps rather than scrolling sideways: at 375 px the five
+ * statuses and their counts need 457 px, and a sideways scroll with no
+ * fade, no arrow and no scrollbar left the last status entirely off
+ * screen and unreachable, which reads as a filter the app does not have.
  */
 
 import { composeClassName } from '../atoms/class-name.utils';
@@ -29,7 +34,10 @@ export function FilterPillGroup<TValue extends string>({
 }: FilterPillGroupProps<TValue>): JSX.Element {
   return (
     <div
-      className={composeClassName('inline-flex gap-1 p-[3px] bg-bg-sunk rounded-lg', className)}
+      className={composeClassName(
+        'flex flex-wrap max-w-full gap-1 p-[3px] bg-bg-sunk rounded-lg',
+        className,
+      )}
       role="tablist"
     >
       {options.map((option) => {
@@ -42,14 +50,14 @@ export function FilterPillGroup<TValue extends string>({
             aria-selected={isActive}
             onClick={() => onChange(option.value)}
             className={composeClassName(
-              'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer',
+              'inline-flex shrink-0 items-center gap-1.5 min-h-11 px-3 rounded-md text-xs font-medium whitespace-nowrap transition-colors cursor-pointer',
               isActive
                 ? 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]'
                 : 'bg-transparent text-ink-500 hover:text-ink-700',
             )}
           >
             <span>{option.label}</span>
-            <span className="font-mono text-ink-400 text-[10.5px]">{option.count}</span>
+            <span className="font-mono text-ink-400 text-xs">{option.count}</span>
           </button>
         );
       })}

@@ -10,12 +10,13 @@
     "members": "Members",
     "instruments": "Instruments",
     "administrationSection": "Administration",
-    "openMenu": "Open menu",
-    "closeMenu": "Close menu",
     "language": {
       "fr": "FR",
       "en": "EN"
-    }
+    },
+    "bottomBar": "Main sections",
+    "more": "More",
+    "closeMenu": "Close menu"
   },
   "shell": {
     "meName": "Hugo",
@@ -44,9 +45,9 @@
     "offlineTitle": "Offline mode",
     "offlineHint": "catalog, charts and the next-concert setlist remain available. All edits are disabled.",
     "search": "Search",
-    "filters": "Filters",
     "all": "All",
-    "actions": "Actions"
+    "actions": "Actions",
+    "loadFailed": "This page could not be loaded. Check the connection, then try again."
   },
   "scaffold": {
     "title": "Pragma — scaffold ready",
@@ -54,13 +55,17 @@
   },
   "instruments": {
     "title": "Instruments",
-    "subtitle": "Harmonic instruments feed the transition analysis.",
+    "subtitle": "The family of an instrument feeds the transition analysis.",
     "name": "Name",
-    "isHarmonic": "Harmonic (counts for transition analysis)",
-    "harmonic": "harmonic",
-    "percussive": "percussive",
     "newTitle": "New instrument",
-    "editTitle": "Edit instrument"
+    "editTitle": "Edit instrument",
+    "family": "Family",
+    "familyHint": "A harmonic instrument carries the chords, so whoever keeps one can hold a transition.",
+    "deleteConfirm": "Delete this instrument? It leaves every lineup that uses it.",
+    "familyHarmonic": "harmonic",
+    "familyPercussive": "percussive",
+    "familyVocal": "vocal",
+    "familyOther": "other"
   },
   "members": {
     "title": "Members",
@@ -71,8 +76,10 @@
     "newTitle": "New member",
     "editTitle": "Edit member",
     "noInstrumentsYet": "No instruments assigned",
+    "deleteConfirm": "Delete this member? Their mastery scores go with them.",
     "masteryMatrixTitle": "Mastery matrix",
-    "masteryMatrixSubtitle": "Click to edit; scroll to adjust ±1; right-click to clear. Row averages = per-member musicianship; column averages = per-instrument bench strength.",
+    "masteryMatrixSubtitle": "Tap a cell to type a score, empty it to clear. With a mouse: scroll a cell for ±1, right-click to clear. Row averages = per-member musicianship; column averages = per-instrument bench strength.",
+    "masteryMatrixScrollHint": "Swipe the grid sideways to reach every instrument.",
     "rowAverage": "Avg",
     "columnAverage": "Avg"
   },
@@ -102,6 +109,7 @@
     "previewTitle": "Chord chart",
     "openScene": "Scene mode",
     "emptyList": "No songs yet.",
+    "emptySearch": "No song matches this search.",
     "energyBadge": "E",
     "masteryBadge": "M",
     "noMastery": "—",
@@ -116,6 +124,8 @@
     "mastery": "Mastery",
     "playedRecently": "Played recently",
     "backToCatalog": "Catalog",
+    "songNotFound": "This song is no longer in the catalog.",
+    "deleteConfirm": "Delete this song? Its chart, notes and links go with it.",
     "uploadPrompt": "Drop a file or click to pick",
     "uploadHint": "PDF, PNG, JPEG, WebP or HEIC up to {{maxMb}} MB",
     "uploadInProgress": "Uploading…",
@@ -131,7 +141,16 @@
     "duration": "Duration",
     "mbid": "MusicBrainz ID",
     "isrcs": "ISRCs",
-    "tags": "Tags"
+    "tags": "Tags",
+    "notesTitle": "Notes",
+    "notesStructure": "Structure",
+    "notesGimmicks": "Gimmicks",
+    "notesFree": "Notes",
+    "notesStructurePlaceholder": "intro ×4 · verse · chorus · bridge · chorus ×2",
+    "notesGimmicksPlaceholder": "Full stop before the last chorus, counted out loud.",
+    "notesFreePlaceholder": "Anything the band should remember.",
+    "createSearched": "Create “{{title}}”",
+    "lastSaveFailed": "The last save did not go through — what you read below is the song as it was before the edit."
   },
   "mastery": {
     "title": "Mastery matrix",
@@ -144,6 +163,7 @@
     "newSession": "New session",
     "kindConcert": "Concert",
     "kindPractice": "Practice",
+    "sessionNotFound": "This session is no longer in the schedule.",
     "date": "Date",
     "venue": "Venue",
     "capacity": "Capacity",
@@ -184,14 +204,34 @@
     "capo": "Capo",
     "notes": "Notes",
     "energy": "Energy",
-    "transitionWarning": "Risky transition",
+    "energyDown": "One energy point down",
+    "energyUp": "One energy point up",
     "openTransitionComment": "View / comment the transition",
     "transitionCommentTitle": "Transition comment",
     "missingSessionId": "Missing session id.",
     "noSetlistYet": "No setlist created for this session yet.",
     "createForSession": "Create a setlist",
     "copyOrder": "Copy order",
-    "orderCopied": "Copied!"
+    "orderCopied": "Copied!",
+    "emptyList": "No song in this set yet.",
+    "addSongDone": "Done ({{count}})",
+    "addSongSearchPlaceholder": "Search a song, or type a new title",
+    "addSongNoMatch": "No song matches.",
+    "addSongCreate": "Create “{{title}}” and add it",
+    "transitionCovered": "Transition held",
+    "transitionRisky": "Risky transition",
+    "transitionNobody": "nobody keeps an instrument across these two songs",
+    "transitionAddNote": "Add a note on this transition",
+    "crumb": "Setlist",
+    "removeConfirm": "Remove “{{title}}” from this set?",
+    "failure": {
+      "load": "Could not load this set. Check the connection and try again.",
+      "add": "The song was not added. Check the connection and try again.",
+      "remove": "The song was not removed. Check the connection and try again.",
+      "reorder": "The new order was not saved. Check the connection and try again.",
+      "update": "The change was not saved. Check the connection and try again.",
+      "copyOrder": "The running order could not be copied to the clipboard."
+    }
   },
   "scene": {
     "title": "Scene Mode",
@@ -222,14 +262,15 @@
     "notes": "Notes",
     "newBar": "New bar",
     "staleBanner": "{{count}} bars haven't been touched in 60+ days — give them a poke.",
-    "staleBadge": "Stale"
+    "staleBadge": "Stale",
+    "staleColumn": "Follow-up",
+    "deleteConfirm": "Delete this bar? Its contact details and history go with it."
   },
   "fileDrop": {
     "remove": "Remove"
   },
   "lineup": {
     "edit": "Lineup",
-    "editDefault": "Edit default lineup",
     "modal": {
       "title": {
         "song": "Default lineup",
@@ -243,6 +284,8 @@
     "cancel": "Cancel",
     "allMembers": "All members",
     "emptyForMember": "Nothing to play tonight.",
-    "filterByMember": "Filter by member"
+    "filterByMember": "Filter by member",
+    "multiInstrumentHint": "Tap every instrument a member holds on this song. Two at once is fine.",
+    "instruments": "Instruments"
   }
 }

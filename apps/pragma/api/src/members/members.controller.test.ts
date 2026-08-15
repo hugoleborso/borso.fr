@@ -22,7 +22,7 @@ const memberListEnvelope = z.object({ members: z.array(memberSchema) });
 const instrumentSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  isHarmonic: z.boolean(),
+  family: z.enum(['harmonic', 'percussive', 'vocal', 'other']),
 });
 const singleInstrumentEnvelope = z.object({ instrument: instrumentSchema });
 const instrumentListEnvelope = z.object({ instruments: z.array(instrumentSchema) });
@@ -35,11 +35,11 @@ async function createInstrument(
   app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
   cookieHeader: string,
   name: string,
-  isHarmonic: boolean,
+  family: 'harmonic' | 'percussive' | 'vocal' | 'other',
 ): Promise<string> {
   const response = await jsonRequest(app, '/api/instruments', {
     method: 'POST',
-    body: { name, isHarmonic },
+    body: { name, family },
     cookieHeader,
   });
   const created = await readJson(response, singleInstrumentEnvelope);
@@ -134,9 +134,9 @@ describe('members controller (back-e2e)', () => {
       cookieHeader,
     });
     const memberId = (await readJson(memberCreate, singleMemberEnvelope)).member.id;
-    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', true);
-    const bassId = await createInstrument(app, cookieHeader, 'Bass', true);
-    await createInstrument(app, cookieHeader, 'Drums', false);
+    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', 'harmonic');
+    const bassId = await createInstrument(app, cookieHeader, 'Bass', 'harmonic');
+    await createInstrument(app, cookieHeader, 'Drums', 'percussive');
 
     const assignment = await jsonRequest(app, `/api/members/${memberId}/instruments`, {
       method: 'PUT',
@@ -218,15 +218,15 @@ describe('members controller (back-e2e)', () => {
       )
     ).member.id;
 
-    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', true);
-    const bassId = await createInstrument(app, cookieHeader, 'Bass', true);
+    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', 'harmonic');
+    const bassId = await createInstrument(app, cookieHeader, 'Bass', 'harmonic');
 
     const songResponse = await jsonRequest(app, '/api/songs', {
       method: 'POST',
       body: {
         title: 'Cascade Test',
         status: 'idea',
-        defaultLineup: { [targetMemberId]: bassId, [keepMemberId]: guitarId },
+        defaultLineup: { [targetMemberId]: [bassId], [keepMemberId]: [guitarId] },
       },
       cookieHeader,
     });
@@ -256,7 +256,7 @@ describe('members controller (back-e2e)', () => {
       method: 'POST',
       body: {
         songId,
-        lineupOverride: { [targetMemberId]: guitarId, [keepMemberId]: bassId },
+        lineupOverride: { [targetMemberId]: [guitarId], [keepMemberId]: [bassId] },
       },
       cookieHeader,
     });
@@ -275,11 +275,11 @@ describe('members controller (back-e2e)', () => {
       z.object({
         song: z.object({
           id: z.string().uuid(),
-          defaultLineup: z.record(z.string(), z.string().nullable()),
+          defaultLineup: z.record(z.string(), z.array(z.string())),
         }),
       }),
     );
-    expect(songAfter.song.defaultLineup).toEqual({ [keepMemberId]: guitarId });
+    expect(songAfter.song.defaultLineup).toEqual({ [keepMemberId]: [guitarId] });
 
     const entriesAfter = await readJson(
       await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
@@ -287,12 +287,12 @@ describe('members controller (back-e2e)', () => {
         entries: z.array(
           z.object({
             id: z.string().uuid(),
-            lineupOverride: z.record(z.string(), z.string().nullable()).nullable(),
+            lineupOverride: z.record(z.string(), z.array(z.string())).nullable(),
           }),
         ),
       }),
     );
     const updatedEntry = entriesAfter.entries.find((row) => row.id === entryId);
-    expect(updatedEntry?.lineupOverride).toEqual({ [keepMemberId]: bassId });
+    expect(updatedEntry?.lineupOverride).toEqual({ [keepMemberId]: [bassId] });
   });
 });

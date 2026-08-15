@@ -26,7 +26,7 @@ export interface SongCardProps {
   chartKind: ChartKind;
   baseEnergy: number | null;
   meanMastery: number | null;
-  defaultLineup: Record<string, string>;
+  defaultLineup: Record<string, readonly string[]>;
   members: readonly LineupMember[];
   instruments: readonly LineupInstrument[];
 }
@@ -64,12 +64,12 @@ export function SongCard({
       <h3 className="font-display italic text-[22px] leading-tight tracking-[-0.01em] text-ink-900 m-0 mb-1">
         {title}
       </h3>
-      <div className="flex items-center gap-2 text-[11.5px] text-ink-500">
+      <div className="flex items-center gap-2 text-xs text-ink-500">
         <span className="truncate">{artist}</span>
         {tonalityLabel !== null && (
           <>
             <span className="text-ink-300">·</span>
-            <span className="font-mono text-[11px]">{tonalityLabel}</span>
+            <span className="font-mono text-xs">{tonalityLabel}</span>
           </>
         )}
       </div>

@@ -17,9 +17,11 @@ export const badgeVariants = cva(
         accent: 'bg-accent text-bg-elev',
         warn: 'bg-warn-soft text-warn',
       },
+      // 12px is the floor: below it a count read at arm's length on a phone
+      // stops being a count and becomes a smudge.
       size: {
-        sm: 'px-1.5 py-0.5 text-[10px]',
-        md: 'px-2 py-0.5 text-[11px]',
+        sm: 'px-1.5 py-0.5 text-xs',
+        md: 'px-2 py-0.5 text-xs',
       },
     },
     defaultVariants: { tone: 'default', size: 'sm' },

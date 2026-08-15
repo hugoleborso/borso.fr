@@ -24,7 +24,7 @@ export interface ChartKindIconProps {
 export function ChartKindIcon({ kind, size = 14 }: ChartKindIconProps): JSX.Element {
   const { t } = useTranslation();
   if (kind === null || kind === undefined) {
-    return <span className="text-[10px] text-ink-300 italic">{t('catalog.noChartHint')}</span>;
+    return <span className="text-xs text-ink-300 italic">{t('catalog.noChartHint')}</span>;
   }
   return <Icon name={KIND_ICON[kind]} size={size} className="text-ink-400" />;
 }

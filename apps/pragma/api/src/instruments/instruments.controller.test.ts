@@ -15,7 +15,7 @@ import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 const instrumentSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  isHarmonic: z.boolean(),
+  family: z.enum(['harmonic', 'percussive', 'vocal', 'other']),
 });
 const singleInstrumentEnvelope = z.object({ instrument: instrumentSchema });
 const instrumentListEnvelope = z.object({ instruments: z.array(instrumentSchema) });
@@ -36,7 +36,7 @@ describe('instruments controller (back-e2e)', () => {
     const listResponse = await jsonRequest(app, '/api/instruments');
     const createResponse = await jsonRequest(app, '/api/instruments', {
       method: 'POST',
-      body: { name: 'Guitar', isHarmonic: true },
+      body: { name: 'Guitar', family: 'harmonic' },
     });
     const updateResponse = await jsonRequest(
       app,
@@ -59,17 +59,17 @@ describe('instruments controller (back-e2e)', () => {
 
     const create = await jsonRequest(app, '/api/instruments', {
       method: 'POST',
-      body: { name: 'Guitar', isHarmonic: true },
+      body: { name: 'Guitar', family: 'harmonic' },
       cookieHeader,
     });
     expect(create.status).toBe(201);
     const created = await readJson(create, singleInstrumentEnvelope);
     expect(created.instrument.name).toBe('Guitar');
-    expect(created.instrument.isHarmonic).toBe(true);
+    expect(created.instrument.family).toBe('harmonic');
 
     await jsonRequest(app, '/api/instruments', {
       method: 'POST',
-      body: { name: 'Drums', isHarmonic: false },
+      body: { name: 'Drums', family: 'percussive' },
       cookieHeader,
     });
 
@@ -79,7 +79,7 @@ describe('instruments controller (back-e2e)', () => {
 
     const updateResponse = await jsonRequest(app, `/api/instruments/${created.instrument.id}`, {
       method: 'PUT',
-      body: { name: 'Bass', isHarmonic: true },
+      body: { name: 'Bass', family: 'harmonic' },
       cookieHeader,
     });
     expect(updateResponse.status).toBe(200);
@@ -101,7 +101,7 @@ describe('instruments controller (back-e2e)', () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const create = await jsonRequest(app, '/api/instruments', {
       method: 'POST',
-      body: { name: 'Voice', isHarmonic: false },
+      body: { name: 'Voice', family: 'vocal' },
       cookieHeader,
     });
     const created = await readJson(create, singleInstrumentEnvelope);

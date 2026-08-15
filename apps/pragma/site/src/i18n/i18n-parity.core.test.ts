@@ -23,10 +23,14 @@ const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = [
   'catalog.linkPlaceholder', // a URL placeholder, not prose
   'catalog.masteryBadge', // "M" — the initial of Mastery and of Maîtrise alike
   'catalog.noMastery', // an em dash, not a word
+  'catalog.notesGimmicks', // "gimmick" is the word French musicians use here
+  'catalog.notesStructure', // same word, same spelling
+  'catalog.notesTitle', // same word, same spelling
   'catalog.tags', // "tags" is the word French musicians use here
   'common.actions', // same word, same spelling
   'instruments.title', // same word, same spelling
   'lineup.edit', // fr.json says "lineup" throughout, e.g. "Lineup par défaut"
+  'lineup.instruments', // same word, same spelling
   'nav.administrationSection', // same word, same spelling
   'nav.bars', // "un bar" is the same word in French
   'nav.instruments', // same word, same spelling
@@ -40,6 +44,7 @@ const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = [
   'sessions.setlist', // "setlist" is the word French musicians use
   'sessions.title', // same word, same spelling
   'setlist.capo', // guitar jargon, used as-is in French
+  'setlist.crumb', // the band says "setlist" in both languages
   'setlist.notes', // same word, same spelling
   'setlist.title', // "setlist" is the word French musicians use
   'shell.meName', // a first name

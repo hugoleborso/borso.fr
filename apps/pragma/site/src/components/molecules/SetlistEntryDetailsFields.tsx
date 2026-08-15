@@ -8,6 +8,9 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
+import { composeClassName } from '../atoms/class-name.utils';
+import { inputVariants } from '../atoms/input.variants';
 import {
   CAPO_MAX,
   CAPO_MIN,
@@ -16,10 +19,9 @@ import {
   type SetlistEntryForm,
 } from './setlist-entry-form';
 
-const FIELD_CLASS =
-  'w-full bg-bg-elev border border-line rounded-md px-2 py-1 text-[13px] font-mono text-ink-900 outline-none focus:border-ink-700';
-const LABEL_CLASS =
-  'flex flex-col gap-1 text-[10.5px] tracking-wider uppercase text-ink-400 font-medium';
+const FIELD_CLASS = composeClassName(inputVariants({ size: 'sm' }), 'font-mono');
+const LABEL_CLASS = 'flex flex-col gap-1 text-xs tracking-wider uppercase text-ink-400 font-medium';
+const NOTES_ROWS = 2;
 
 interface SetlistEntryDetailsFieldsProps {
   readonly form: SetlistEntryForm;
@@ -33,7 +35,7 @@ export function SetlistEntryDetailsFields({
 }: SetlistEntryDetailsFieldsProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
       <form.Field name="keyOverride">
         {(field) => (
           <label className={LABEL_CLASS}>
@@ -75,10 +77,11 @@ export function SetlistEntryDetailsFields({
       </form.Field>
       <form.Field name="notes">
         {(field) => (
-          <label className={LABEL_CLASS}>
+          <label className={composeClassName(LABEL_CLASS, 'sm:col-span-3')}>
             {t('setlist.notes')}
-            <input
-              type="text"
+            <AutoGrowTextarea
+              size="sm"
+              rows={NOTES_ROWS}
               value={field.state.value}
               onChange={(event) => {
                 const next = event.target.value;
@@ -87,7 +90,7 @@ export function SetlistEntryDetailsFields({
               }}
               onBlur={field.handleBlur}
               maxLength={NOTES_MAX}
-              className={FIELD_CLASS}
+              className="font-mono"
             />
           </label>
         )}

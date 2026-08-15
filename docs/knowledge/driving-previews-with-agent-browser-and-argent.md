@@ -1,8 +1,16 @@
 # Driving the previews with agent-browser and argent
 
-Both tools are installed and both work in this sandbox. Neither works with its
-default invocation, and they cannot share a browser. This is the recipe that
-does work, verified end to end against the PR 40 previews.
+Both tools are installed and both work in this sandbox, argent's touch gestures
+included. Neither works with its default invocation, and they cannot share a
+browser. This is the recipe that does work, verified end to end against the PR
+40 previews, and re-verified against a local `pragma` when the claim that
+`gesture-tap` was broken turned out to be wrong.
+
+**If the task says to check touch behaviour, drive it with argent.** Synthetic
+clicks through `agent-browser` are not taps: they will not tell you whether a
+target is reachable with a thumb, whether a gesture is swallowed by an overlay,
+or what the on-screen keyboard covers. Two phone audits skipped argent on the
+strength of a stale note in this file and reported no touch findings at all.
 
 ## What each tool is for
 
@@ -52,6 +60,19 @@ active page.
 
 ## argent
 
+**Use [`scripts/argent.sh`](../../scripts/argent.sh) rather than the steps below.**
+It encodes every one of them:
+
+```bash
+scripts/argent.sh start http://localhost:5174/   # browser + server + open, ~5s
+scripts/argent.sh describe                       # frames as normalised [0,1] boxes
+scripts/argent.sh tap 0.5 0.95                   # a real tap at a frame's centre
+scripts/argent.sh run keyboard --text "hello"    # --udid is filled in for you
+scripts/argent.sh stop
+```
+
+The rest of this section is what the script does and why, for the day it breaks.
+
 Argent does not launch a browser for you. It probes CDP ports, so a Chromium has
 to be running first, and the tool-server has to be told which port to probe.
 
@@ -59,21 +80,37 @@ Start the browser as a long-lived background process. A Chromium started inside
 a normal shell call is reaped when the call returns.
 
 ```bash
-/opt/pw-browsers/chromium-1194/chrome-linux/chrome \
+env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy \
+  /opt/pw-browsers/chromium-1194/chrome-linux/chrome \
   --remote-debugging-port=9222 --remote-allow-origins=* \
-  --headless=new --no-sandbox --disable-dev-shm-usage \
-  --ssl-version-max=tls1.2 \
+  --headless=new --no-sandbox --disable-dev-shm-usage --no-proxy-server \
   --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader \
+  --window-size=375,812 \
   --user-data-dir=<a fresh directory> about:blank
 ```
+
+The proxy has to be stripped from the browser too, not only from the probe
+below. A Chromium that inherits `HTTPS_PROXY` sends `http://localhost:5174` out
+through the proxy and renders `ERR_CONNECTION_REFUSED`, which `describe` then
+reports as a page whose only content is Chromium's own error screen — easy to
+misread as the app being down. Keep `--ssl-version-max=tls1.2` if the browser
+must reach the internet; with `--no-proxy-server` and a localhost target it is
+not needed.
 
 Then restart the tool-server with the port and with the loopback proxy bypass,
 also as a long-lived background process, because `argent server start` blocks:
 
 ```bash
 ARGENT_CHROMIUM_PORTS=9222 NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 \
-  pnpm exec argent server start
+  pnpm exec argent server start --port 4310
 ```
+
+**Pass `--port`.** The tool-server binds `127.0.0.1:3001` by default, which is
+the port `pragma`'s dev API listens on. Start argent while that API is down and
+it takes the port; the site's `/api` proxy then reaches argent instead, every
+call answers 401 with `Tool-server requires Authorization: Bearer …`, and the
+app tells you *"Wrong password."* — a login bug that is really a port collision.
+Any app whose dev API uses 3001 has the same trap.
 
 `ARGENT_CHROMIUM_PORTS` is read by the server, not by the CLI, so setting it on
 an `argent run …` call does nothing once a server is already up. `NO_PROXY`
@@ -108,20 +145,26 @@ its tabs. It then fails in a way that wastes time — `Page.navigate`,
 
 Give each tool its own browser.
 
-## `gesture-tap` does not work on this Chromium
+## `gesture-tap` works — the note that said otherwise cost two audits
 
-Two validation runs hit it independently. Every `argent run gesture-tap` returns
+This section used to read *"`gesture-tap` does not work on this Chromium"*, on
+the strength of two runs that both saw `CDP request Input.dispatchMouseEvent
+timed out`. Two later phone audits read that line, drove everything through
+`agent-browser` clicks instead, and reported no touch findings at all, because
+no touch event was ever sent. The claim is wrong, or was fixed under us.
 
-```
-CDP request Input.dispatchMouseEvent timed out
-```
+Re-tested end to end against `pragma` on a fresh browser started as below:
+`gesture-tap` answered `{"tapped": true}`, and tap → `keyboard` → tap logged in,
+opened the More drawer, closed it again, switched tab, and left scene mode. Not
+one timeout.
 
-One run reproduced it with no emulation session attached at all, so it is not
-the shared-browser hazard above. Scrolling and `describe` keep working; only the
-input dispatch wedges.
+The likely cause of the original failures is the hazard above: both reproductions
+ran while `agent-browser` held its own session, and Playwright owning the target
+wedges input dispatch the same way it wedges `Page.navigate`. Give argent its
+own browser and its input works.
 
-Drive touch through CDP directly instead. `Input.dispatchTouchEvent` worked
-first time and every time:
+`Input.dispatchTouchEvent` over raw CDP also works, and is still the fallback if
+`gesture-tap` ever wedges again:
 
 ```js
 await send('Input.dispatchTouchEvent', {

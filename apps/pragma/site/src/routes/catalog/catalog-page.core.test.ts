@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   type CatalogSong,
+  buildNewSongPath,
   compactLineup,
+  selectCatalogEmptyMessageKey,
   countSongsWithStatus,
   isMatchingSearch,
   isMatchingStatusFilter,
@@ -91,11 +93,35 @@ describe('selectVisibleSongs', () => {
 });
 
 describe('compactLineup', () => {
-  it('drops members with no instrument', () => {
-    expect(compactLineup({ ada: 'guitar', bob: null, cleo: '' })).toEqual({ ada: 'guitar' });
+  it('drops the members holding nothing', () => {
+    expect(compactLineup({ ada: ['guitar'], bob: [] })).toEqual({ ada: ['guitar'] });
+  });
+
+  it('keeps both instruments of a member holding two', () => {
+    expect(compactLineup({ ada: ['drums', 'vocals'] })).toEqual({ ada: ['drums', 'vocals'] });
   });
 
   it('returns an empty record for an empty lineup', () => {
     expect(compactLineup({})).toEqual({});
+  });
+});
+
+describe('buildNewSongPath', () => {
+  it('goes to the blank form when nothing was searched', () => {
+    expect(buildNewSongPath('   ')).toBe('/catalog/new');
+  });
+
+  it('carries what was typed so the title is not typed twice', () => {
+    expect(buildNewSongPath(' Slow Burn ')).toBe('/catalog/new?title=Slow%20Burn');
+  });
+});
+
+describe('selectCatalogEmptyMessageKey', () => {
+  it('says the catalog is empty when nothing was searched', () => {
+    expect(selectCatalogEmptyMessageKey('  ')).toBe('catalog.emptyList');
+  });
+
+  it('says the search matched nothing when something was', () => {
+    expect(selectCatalogEmptyMessageKey('Bohemian')).toBe('catalog.emptySearch');
   });
 });

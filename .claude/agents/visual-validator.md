@@ -34,7 +34,7 @@ agent-browser press Space                      # Send a key
 agent-browser screenshot <absolute-path>       # Save a PNG to disk
 agent-browser screenshot <absolute-path> --full  # Full-page PNG
 agent-browser set viewport <width> <height>    # Resize
-agent-browser set device "iPhone 14"           # Device emulation (mobile, coarse pointer)
+agent-browser set device "iPhone 14"           # Viewport + user agent. NOT a coarse pointer, NOT touch.
 agent-browser set media dark                   # Emulate prefers-color-scheme: dark
 agent-browser wait --load networkidle          # Wait for network to settle
 agent-browser wait --text "Untitled"           # Wait for text to appear
@@ -72,7 +72,7 @@ If `agent-browser` is missing on the system, install it: `npm install -g agent-b
 5. **Walk the edge-case categories the spec likely mentions:**
    - Narrow-viewport thresholds (e.g. ≤ 960 px, ≤ 520 px, ≤ 380 px) — `agent-browser set viewport <w> <h>` and re-check the layout claims.
    - `prefers-color-scheme: dark` — `agent-browser set media dark` and re-check first-visit palette claim.
-   - Touch / coarse-pointer affordances — `agent-browser set device "iPhone 14"` and re-check tap behaviour, caption swap.
+   - Touch / coarse-pointer affordances — **not** `agent-browser set device`. That sets the viewport and the user agent; `matchMedia('(pointer: coarse)')` stays false (see `docs/knowledge/agent-browser-coarse-pointer-emulation.md`), and a click is not a tap, so a hover-only affordance still appears to work and a swallowed tap still appears to land. Drive real touch with `scripts/argent.sh` — `start <url>`, `describe`, `tap <x> <y>` — and say in the report which tool produced each row. If the assertion needs touch and you could not run argent, the row is UNVERIFIABLE; do not pass it on a click.
    - URL state — `agent-browser open <url>?seed=…&palette=…`, screenshot, `agent-browser back`, re-check.
    - `prefers-reduced-motion: reduce` — try `agent-browser set media reduce-motion` first; if unsupported, mark the row UNVERIFIABLE with a note (don't fake it).
 6. **Write the report.** Markdown at `report_path`, format below.

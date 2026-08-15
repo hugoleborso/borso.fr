@@ -50,6 +50,9 @@ export interface SongRow {
   durationSeconds: number | null;
   isrcs: string[];
   tags: string[];
+  structureNotes: string;
+  gimmickNotes: string;
+  notes: string;
   createdAt: Date;
 }
 
@@ -68,6 +71,9 @@ export interface SongInsertShape {
   durationSeconds: number | null;
   isrcs: string[];
   tags: string[];
+  structureNotes: string;
+  gimmickNotes: string;
+  notes: string;
 }
 
 export type SongPersistedShape = Partial<SongInsertShape>;
@@ -88,6 +94,9 @@ interface SongRawRow {
   durationSeconds: number | null;
   isrcs: string | null;
   tags: string | null;
+  structureNotes: string | null;
+  gimmickNotes: string | null;
+  notes: string | null;
   createdAt: Date;
 }
 
@@ -108,6 +117,9 @@ const PROJECTION = {
   durationSeconds: songTable.durationSeconds,
   isrcs: songTable.isrcs,
   tags: songTable.tags,
+  structureNotes: songTable.structureNotes,
+  gimmickNotes: songTable.gimmickNotes,
+  notes: songTable.notes,
   createdAt: songTable.createdAt,
 } as const;
 
@@ -143,6 +155,9 @@ function rowToSong(row: SongRawRow): SongRow {
     durationSeconds: row.durationSeconds,
     isrcs: parseJsonArrayColumn(row.isrcs, songIsrcsRowSchema),
     tags: parseJsonArrayColumn(row.tags, songTagsRowSchema),
+    structureNotes: row.structureNotes ?? '',
+    gimmickNotes: row.gimmickNotes ?? '',
+    notes: row.notes ?? '',
     createdAt: row.createdAt,
   };
 }
@@ -166,6 +181,9 @@ function encodeInsert(values: SongInsertShape): SongInsertEncoded {
     durationSeconds: values.durationSeconds,
     isrcs: JSON.stringify(values.isrcs),
     tags: JSON.stringify(values.tags),
+    structureNotes: values.structureNotes,
+    gimmickNotes: values.gimmickNotes,
+    notes: values.notes,
   };
 }
 
@@ -189,6 +207,9 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   if ('durationSeconds' in updates) encoded.durationSeconds = updates.durationSeconds;
   if ('isrcs' in updates) encoded.isrcs = JSON.stringify(updates.isrcs ?? []);
   if ('tags' in updates) encoded.tags = JSON.stringify(updates.tags ?? []);
+  if ('structureNotes' in updates) encoded.structureNotes = updates.structureNotes;
+  if ('gimmickNotes' in updates) encoded.gimmickNotes = updates.gimmickNotes;
+  if ('notes' in updates) encoded.notes = updates.notes;
   return encoded;
 }
 

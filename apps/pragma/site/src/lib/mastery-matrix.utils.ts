@@ -64,3 +64,16 @@ export const MASTERY_SCORE_MAX = 10;
 export function clampScore(value: number): number {
   return Math.min(Math.max(Math.round(value), MASTERY_SCORE_MIN), MASTERY_SCORE_MAX);
 }
+
+export type ScoreEditIntent = 'clear' | 'write';
+
+/**
+ * What emptying a cell means. A phone fires no `contextmenu` on an input and
+ * no `wheel` on a touch scroll, so the right-click that used to be the only
+ * way to drop an override was unreachable with a finger; deleting the digits
+ * is the gesture that is left, and it used to write a literal zero because
+ * `Number('')` is `0`.
+ */
+export function selectScoreEditIntent(rawValue: string): ScoreEditIntent {
+  return rawValue.trim() === '' ? 'clear' : 'write';
+}

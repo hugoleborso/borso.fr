@@ -85,6 +85,11 @@ jobs:
       # down as deliberately unset, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.
       - run: ./scripts/check-frontend-env-vars.sh
+      # Every icon a web app manifest names resolves to a file that ships,
+      # mirroring the pre-commit hook so a push made with hooks skipped still
+      # gets caught. A broken icon path installs a grey square and fails
+      # nothing else here.
+      - run: ./scripts/check-pwa-assets.sh
       # A pure module reached only from its own test passes coverage and
       # mutation at full marks while running nowhere, and knip cannot see it.
       - run: ./scripts/check-pure-modules-have-callers.sh

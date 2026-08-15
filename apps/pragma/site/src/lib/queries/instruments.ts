@@ -5,6 +5,7 @@
  * delete feels instant; `onSettled` invalidates to reconcile.
  */
 
+import type { InstrumentFamily } from '@domain/instrument.core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
@@ -36,7 +37,7 @@ export function useCreateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: instrumentKeys.all,
-    mutationFn: async (variables: { name: string; isHarmonic: boolean }) => {
+    mutationFn: async (variables: { name: string; family: InstrumentFamily }) => {
       const response = await api.api.instruments.$post({ json: variables });
       if (!isResponseSuccessful(response))
         throw new ApiError(response.status, `create ${response.status}`, null);
@@ -72,7 +73,7 @@ export function useUpdateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: instrumentKeys.all,
-    mutationFn: async (variables: { id: string; name?: string; isHarmonic?: boolean }) => {
+    mutationFn: async (variables: { id: string; name?: string; family?: InstrumentFamily }) => {
       const { id, ...rest } = variables;
       const response = await api.api.instruments[':id'].$put({
         param: { id },

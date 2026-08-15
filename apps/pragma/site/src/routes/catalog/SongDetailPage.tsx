@@ -21,9 +21,13 @@ import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
+import { BackLink } from '../../components/molecules/BackLink';
 import { ChartKindIcon } from '../../components/molecules/ChartKindIcon';
+import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { LineupEditor, type LineupRecord } from '../../components/molecules/LineupEditor';
+import { toLineupPayload } from '../../components/molecules/lineup-editor.core';
 import { SongEmbed } from '../../components/molecules/SongEmbed';
+import { SongNotes } from '../../components/molecules/SongNotes';
 import { StatusChip } from '../../components/molecules/StatusChip';
 import { UploadedChartPreview } from '../../components/molecules/UploadedChartPreview';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
@@ -33,10 +37,12 @@ import { resolveEmbed } from '../../lib/embed.utils';
 import { useInstrumentsList } from '../../lib/queries/instruments';
 import { useMasteryDefaults } from '../../lib/queries/mastery';
 import { useMembersList } from '../../lib/queries/members';
-import { useSong, useUpdateSong } from '../../lib/queries/songs';
+import { useDidLastSongWriteFail, useSong, useUpdateSong } from '../../lib/queries/songs';
 import { useSignedChartUrl } from '../../lib/queries/uploads';
 import { extractChartKind, selectChordProText } from './chart-kind.utils';
+import { selectMissingSongMessageKey } from './missing-song.core';
 import { buildMasteryKey, buildSongLineupRows } from './song-lineup.core';
+import { selectSongNoteSections } from './song-notes.core';
 import { buildTonalityLabel } from './tonality-label.utils';
 
 const NO_ROWS: readonly never[] = [];
@@ -51,6 +57,7 @@ export function SongDetailPage(): JSX.Element {
   const instrumentsQuery = useInstrumentsList();
   const masteryQuery = useMasteryDefaults();
   const updateSong = useUpdateSong();
+  const hasFailedWrite = useDidLastSongWriteFail(songId ?? '');
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
 
   const song = songQuery.data?.song ?? null;
@@ -72,12 +79,8 @@ export function SongDetailPage(): JSX.Element {
     membersQuery.isLoading ||
     instrumentsQuery.isLoading ||
     masteryQuery.isLoading;
-  const error =
-    songQuery.error instanceof ApiError
-      ? songQuery.error.message
-      : (membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error) instanceof ApiError
-        ? 'load-failed'
-        : null;
+  const hasSideLoadFailed =
+    (membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error) !== null;
 
   const masteryLookup = useMemo(() => {
     const lookup = new Map<string, number>();
@@ -103,7 +106,7 @@ export function SongDetailPage(): JSX.Element {
 
   const saveSongLineup = (lineup: LineupRecord | null): void => {
     if (song === null) return;
-    updateSong.mutate({ id: song.id, defaultLineup: lineup ?? {} });
+    updateSong.mutate({ id: song.id, defaultLineup: toLineupPayload(lineup) });
   };
 
   if (isLoading) {
@@ -111,30 +114,26 @@ export function SongDetailPage(): JSX.Element {
   }
   if (song === null) {
     return (
-      <p className="px-4 sm:px-9 py-7 text-danger text-sm" role="alert">
-        {error ?? 'not-found'}
-      </p>
+      <NotFoundNotice
+        message={t(selectMissingSongMessageKey(songQuery.error))}
+        backTo="/catalog"
+        backLabel={t('catalog.backToCatalog')}
+      />
     );
   }
 
   const chartKind = extractChartKind(song.chart ?? null);
   const chordProText = selectChordProText(song.chart ?? null);
   const tonality = buildTonalityLabel(song.tonalityStart, song.tonalityEnd);
-  const labelClass = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
+  const labelClass = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
-      <Link
-        to="/catalog"
-        className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900 transition-colors no-underline"
-      >
-        <Icon name="chevL" size={14} />
-        {t('catalog.backToCatalog')}
-      </Link>
+      <BackLink to="/catalog" label={t('catalog.backToCatalog')} />
 
       <header className="flex items-end justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <div className="text-[11px] tracking-wider uppercase text-ink-500 mb-1">
+          <div className="text-xs tracking-wider uppercase text-ink-500 mb-1">
             {song.artist.length > 0 ? song.artist : t('catalog.crumb')}
           </div>
           <h1 className="font-display italic text-[40px] sm:text-[56px] leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 mb-2">
@@ -172,11 +171,21 @@ export function SongDetailPage(): JSX.Element {
         </div>
       </header>
 
-      {error === null ? null : (
+      {hasSideLoadFailed ? (
         <p className="text-danger text-sm" role="alert">
-          {error}
+          {t('common.loadFailed')}
         </p>
-      )}
+      ) : null}
+
+      {hasFailedWrite ? (
+        <p
+          className="text-danger text-sm border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
+          role="alert"
+        >
+          <Icon name="warn" size={14} />
+          {t('catalog.lastSaveFailed')}
+        </p>
+      ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
         <div className="flex flex-col gap-4 min-w-0">
@@ -188,7 +197,7 @@ export function SongDetailPage(): JSX.Element {
                 <span className="flex-1" />
                 <Link
                   to={`/catalog/${song.id}/scene`}
-                  className="inline-flex items-center gap-1 text-xs text-ink-500 hover:text-ink-900 no-underline"
+                  className="inline-flex items-center gap-1 min-h-11 px-2 -mr-1 rounded-md text-xs text-ink-500 hover:text-ink-900 no-underline"
                 >
                   <Icon name="play" size={12} />
                   {t('catalog.openScene')}
@@ -225,6 +234,8 @@ export function SongDetailPage(): JSX.Element {
             </Card>
           )}
 
+          <SongNotesCard song={song} />
+
           {song.links.length > 0 ? (
             <Card>
               <div className={composeClassName(labelClass, 'mb-2.5')}>
@@ -239,13 +250,9 @@ export function SongDetailPage(): JSX.Element {
                       className="bg-bg border border-line rounded-md p-2 flex items-start gap-2"
                     >
                       <div className="flex-1 min-w-0">
-                        <SongEmbed
-                          embed={embed}
-                          title={`${link.provider}-${link.url}`}
-                          iframeClassName="rounded-md max-w-full"
-                        />
+                        <SongEmbed embed={embed} title={`${link.provider}-${link.url}`} />
                         {link.comment.length > 0 ? (
-                          <div className="text-[11px] text-ink-500 mt-1">{link.comment}</div>
+                          <div className="text-xs text-ink-500 mt-1">{link.comment}</div>
                         ) : null}
                       </div>
                     </li>
@@ -272,5 +279,27 @@ export function SongDetailPage(): JSX.Element {
         onClose={() => setLineupEditorOpen(false)}
       />
     </section>
+  );
+}
+
+interface SongNotesCardProps {
+  readonly song: {
+    readonly structureNotes: string;
+    readonly gimmickNotes: string;
+    readonly notes: string;
+  };
+}
+
+function SongNotesCard({ song }: SongNotesCardProps): JSX.Element | null {
+  const { t } = useTranslation();
+  const sections = selectSongNoteSections(song);
+  if (sections.length === 0) return null;
+  return (
+    <Card>
+      <div className="text-xs tracking-wider uppercase text-ink-400 font-medium mb-2.5">
+        {t('catalog.notesTitle')}
+      </div>
+      <SongNotes song={song} />
+    </Card>
   );
 }

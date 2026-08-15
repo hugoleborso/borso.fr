@@ -19,6 +19,7 @@ import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Input } from '../../components/atoms/Input';
+import { inputVariants } from '../../components/atoms/input.variants';
 import { memberInitial } from '../../components/atoms/member-palette.utils';
 import { readableForeground } from '../../lib/member-color.utils';
 
@@ -45,7 +46,7 @@ interface ConcertEditFormProps {
 const FRIENDS_PER_MEMBER_MAX = 1_000;
 const VENUE_MAX = 256;
 const GEAR_MAX = 2_048;
-const LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
 const concertFormSchema = z.object({
   venue: z.string().max(VENUE_MAX),
@@ -117,7 +118,7 @@ export function ConcertEditForm({
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
-              className="w-full bg-bg-elev border border-line rounded-md px-3 py-2 text-xs font-mono text-ink-700 outline-none focus:border-ink-700 resize-y"
+              className={composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y')}
               rows={4}
               maxLength={GEAR_MAX}
             />
@@ -140,25 +141,28 @@ export function ConcertEditForm({
                         style={{ color: readableForeground(member.color) }}
                       />
                       <span className="flex-1 text-[13px] text-ink-700">{member.firstName}</span>
-                      <input
-                        type="number"
-                        min={0}
-                        max={FRIENDS_PER_MEMBER_MAX}
-                        value={friendsField.state.value[member.id] ?? 0}
-                        onChange={(event) => {
-                          const clamped = Math.max(
-                            0,
-                            Math.min(FRIENDS_PER_MEMBER_MAX, Number(event.target.value)),
-                          );
-                          friendsField.handleChange({
-                            ...friendsField.state.value,
-                            [member.id]: clamped,
-                          });
-                        }}
-                        onBlur={friendsField.handleBlur}
-                        className="w-20 text-right bg-bg-elev border border-line rounded-md px-2 py-1 text-xs font-mono outline-none focus:border-ink-700"
-                        aria-label={`${t('sessions.friendsCount')} — ${member.firstName}`}
-                      />
+                      <div className="w-20 shrink-0">
+                        <Input
+                          type="number"
+                          size="sm"
+                          min={0}
+                          max={FRIENDS_PER_MEMBER_MAX}
+                          value={friendsField.state.value[member.id] ?? 0}
+                          onChange={(event) => {
+                            const clamped = Math.max(
+                              0,
+                              Math.min(FRIENDS_PER_MEMBER_MAX, Number(event.target.value)),
+                            );
+                            friendsField.handleChange({
+                              ...friendsField.state.value,
+                              [member.id]: clamped,
+                            });
+                          }}
+                          onBlur={friendsField.handleBlur}
+                          className="text-right font-mono"
+                          aria-label={`${t('sessions.friendsCount')} — ${member.firstName}`}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>

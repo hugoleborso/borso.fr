@@ -49,7 +49,7 @@ async function seedTriple(
   });
   const instrumentResponse = await jsonRequest(app, '/api/instruments', {
     method: 'POST',
-    body: { name: 'Voice', isHarmonic: false },
+    body: { name: 'Voice', family: 'vocal' },
     cookieHeader,
   });
   const songResponse = await jsonRequest(app, '/api/songs', {

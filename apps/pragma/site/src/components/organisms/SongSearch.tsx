@@ -131,7 +131,7 @@ function SongSearchHitRow({ hit, onPick }: SongSearchHitRowProps): JSX.Element {
             {visibleTags.map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] px-1.5 py-0.5 rounded bg-bg border border-line text-ink-500 uppercase tracking-wider"
+                className="text-xs px-1.5 py-0.5 rounded bg-bg border border-line text-ink-500 uppercase tracking-wider"
               >
                 {tag}
               </span>
@@ -140,7 +140,7 @@ function SongSearchHitRow({ hit, onPick }: SongSearchHitRowProps): JSX.Element {
         ) : null}
       </div>
       {hit.disambiguation === null ? null : (
-        <div className="text-[11px] text-ink-400 italic">{hit.disambiguation}</div>
+        <div className="text-xs text-ink-400 italic">{hit.disambiguation}</div>
       )}
     </button>
   );

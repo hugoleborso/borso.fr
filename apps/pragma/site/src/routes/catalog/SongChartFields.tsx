@@ -4,6 +4,7 @@
  */
 
 import { useTranslation } from 'react-i18next';
+import { AutoGrowTextarea } from '../../components/atoms/AutoGrowTextarea';
 import { Input } from '../../components/atoms/Input';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { FileDrop } from '../../components/organisms/FileDrop';
@@ -28,8 +29,16 @@ interface SongChartFieldsProps {
   readonly onBaseEnergyChange: (value: string) => void;
 }
 
-const LABEL_CLASS = 'text-[11px] tracking-wider uppercase text-ink-400 font-medium';
-const RADIO_LABEL_CLASS = 'flex items-center gap-2 text-sm text-ink-700 cursor-pointer';
+const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+/**
+ * No negative margin pulling the padding back out: the tap box is what the
+ * layout reserves, and `px-2 -mx-2` grew it eight pixels past the slot, so two
+ * neighbours in this row overlapped by four pixels and the later one won the
+ * hit test on the earlier one's right edge.
+ */
+const RADIO_LABEL_CLASS =
+  'inline-flex items-center gap-2 min-h-11 px-2 rounded-md text-sm text-ink-700 cursor-pointer';
+const RADIO_INPUT_CLASS = 'w-5 h-5 accent-accent';
 
 // @FollowsBlueprint organism-presentational
 export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
@@ -77,6 +86,7 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
             <input
               type="radio"
               name="chart-kind"
+              className={RADIO_INPUT_CLASS}
               checked={props.chartKind === 'none'}
               onChange={() => props.onChartKindChange('none')}
             />
@@ -86,6 +96,7 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
             <input
               type="radio"
               name="chart-kind"
+              className={RADIO_INPUT_CLASS}
               checked={props.chartKind === 'chordpro'}
               onChange={() => props.onChartKindChange('chordpro')}
             />
@@ -95,6 +106,7 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
             <input
               type="radio"
               name="chart-kind"
+              className={RADIO_INPUT_CLASS}
               checked={props.chartKind === 'pdf'}
               onChange={() => props.onChartKindChange('pdf')}
             />
@@ -104,6 +116,7 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
             <input
               type="radio"
               name="chart-kind"
+              className={RADIO_INPUT_CLASS}
               checked={props.chartKind === 'image'}
               onChange={() => props.onChartKindChange('image')}
             />
@@ -132,10 +145,10 @@ function SongChartEditor(props: SongChartFieldsProps): JSX.Element | null {
 
   if (props.chartKind === 'chordpro') {
     return (
-      <textarea
+      <AutoGrowTextarea
         value={props.chordproText}
         onChange={(event) => props.onChordproChange(event.target.value)}
-        className="w-full bg-bg border border-line rounded-md px-3 py-2 mt-3 text-[13px] font-mono text-ink-700 outline-none focus:border-ink-700 resize-y"
+        className="mt-3 font-mono"
         rows={CHORDPRO_ROWS}
         maxLength={CHORDPRO_MAX_LENGTH}
       />

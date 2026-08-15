@@ -28,7 +28,9 @@ import { useMasteryDefaults } from '../../lib/queries/mastery';
 import { useMembersList } from '../../lib/queries/members';
 import { useSongsList } from '../../lib/queries/songs';
 import {
+  buildNewSongPath,
   type CatalogStatusFilter,
+  selectCatalogEmptyMessageKey,
   compactLineup,
   countSongsWithStatus,
   selectVisibleSongs,
@@ -143,26 +145,22 @@ export function CatalogPage(): JSX.Element {
     ready: readyCount,
   });
 
+  const newSongControl = (
+    <Link to={buildNewSongPath(search)} className="no-underline self-center justify-self-center">
+      <Button variant="accent" type="button">
+        <Icon name="plus" size={14} />
+        {t('catalog.newSong')}
+      </Button>
+    </Link>
+  );
+
   return (
     <div className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
       <PageHeader
         crumb={t('catalog.crumb')}
         title={t('catalog.title')}
         subtitle={subtitle}
-        actions={
-          <>
-            <Button variant="default">
-              <Icon name="filter" size={14} />
-              {t('common.filters')}
-            </Button>
-            <Link to="/catalog/new">
-              <Button variant="accent" type="button">
-                <Icon name="plus" size={14} />
-                {t('catalog.newSong')}
-              </Button>
-            </Link>
-          </>
-        }
+        actions={newSongControl}
       />
 
       <div className="flex gap-3.5 items-center mb-5 flex-wrap">
@@ -181,9 +179,21 @@ export function CatalogPage(): JSX.Element {
       )}
       {isLoading && <p className="text-ink-400 text-sm italic">{t('common.loading')}</p>}
       {!isLoading && cards.length === 0 && (
-        <p className="text-ink-400 text-sm italic">{t('catalog.emptyList')}</p>
+        <div className="flex flex-col items-start gap-3 py-8">
+          <p className="text-ink-400 text-sm italic m-0">
+            {t(selectCatalogEmptyMessageKey(search))}
+          </p>
+          <Link to={buildNewSongPath(search)}>
+            <Button variant="accent" type="button">
+              <Icon name="plus" size={14} />
+              {search.trim().length === 0
+                ? t('catalog.newSong')
+                : t('catalog.createSearched', { title: search.trim() })}
+            </Button>
+          </Link>
+        </div>
       )}
-      {!isLoading && cards.length > 0 && <CatalogGrid songs={cards} />}
+      {!isLoading && cards.length > 0 && <CatalogGrid songs={cards} trailing={newSongControl} />}
     </div>
   );
 }

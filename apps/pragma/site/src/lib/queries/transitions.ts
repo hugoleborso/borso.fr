@@ -27,6 +27,22 @@ type TransitionPairOk = Extract<
 >;
 type TransitionPairCache = TransitionPairOk | null;
 
+/**
+ * Every stored comment in one read. The setlist editor shows the note on each
+ * gap inline, and a setlist of twenty songs would otherwise open nineteen
+ * requests for rows that mostly do not exist.
+ */
+export function useTransitionCommentsList() {
+  return useQuery({
+    queryKey: transitionKeys.list(),
+    queryFn: async () => {
+      const response = await api.api['transition-comments'].$get();
+      if (!response.ok) throw new ApiError(response.status, `transitions ${response.status}`, null);
+      return response.json();
+    },
+  });
+}
+
 export function useTransitionComment(songAId: string, songBId: string, isEnabled = true) {
   return useQuery({
     queryKey: transitionKeys.byPair(songAId, songBId),

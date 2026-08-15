@@ -5,14 +5,15 @@
  * selected member.
  *
  * `selectedMemberId === null` is the "all members" pass-through: every
- * entry is visible and no per-entry instrument chip is produced.
+ * entry is visible and no per-entry instrument chip is produced. A member
+ * holding two instruments on one song answers with both.
  *
  * The resolution rule itself is `resolveLineup` in `domain/`, shared with the
  * back end, so the override winning per key over the song default is decided
  * in one place rather than written out again here.
  */
 
-import { resolveLineup } from '@domain/lineup.core';
+import { instrumentsHeldBy, resolveLineup } from '@domain/lineup.core';
 import type { SetlistEditorEntry, SetlistEditorSong } from './setlist-editor.utils';
 
 export interface FilterableEntry extends SetlistEditorEntry {
@@ -21,7 +22,7 @@ export interface FilterableEntry extends SetlistEditorEntry {
 
 export interface FilterEntriesResult<TEntry extends FilterableEntry> {
   readonly visibleEntries: readonly TEntry[];
-  readonly instrumentByEntryId: Readonly<Record<string, string>>;
+  readonly instrumentIdsByEntryId: Readonly<Record<string, readonly string[]>>;
 }
 
 // @FollowsBlueprint core-view-projection
@@ -31,25 +32,25 @@ export function filterEntriesForMember<TEntry extends FilterableEntry>(
   selectedMemberId: string | null,
 ): FilterEntriesResult<TEntry> {
   if (selectedMemberId === null) {
-    return { visibleEntries: entries, instrumentByEntryId: {} };
+    return { visibleEntries: entries, instrumentIdsByEntryId: {} };
   }
   const visibleEntries: TEntry[] = [];
-  const instrumentByEntryId: Record<string, string> = {};
+  const instrumentIdsByEntryId: Record<string, readonly string[]> = {};
   for (const entry of entries) {
-    const instrumentId = resolveInstrumentForMember(entry, songsById, selectedMemberId);
-    if (instrumentId === null) continue;
+    const instrumentIds = resolveInstrumentsForMember(entry, songsById, selectedMemberId);
+    if (instrumentIds.length === 0) continue;
     visibleEntries.push(entry);
-    instrumentByEntryId[entry.id] = instrumentId;
+    instrumentIdsByEntryId[entry.id] = instrumentIds;
   }
-  return { visibleEntries, instrumentByEntryId };
+  return { visibleEntries, instrumentIdsByEntryId };
 }
 
-function resolveInstrumentForMember(
+function resolveInstrumentsForMember(
   entry: SetlistEditorEntry,
   songsById: Readonly<Record<string, SetlistEditorSong>>,
   memberId: string,
-): string | null {
+): readonly string[] {
   const song = songsById[entry.songId];
-  if (song === undefined) return null;
-  return resolveLineup(song.defaultLineup, entry.lineupOverride)[memberId] ?? null;
+  if (song === undefined) return [];
+  return instrumentsHeldBy(resolveLineup(song.defaultLineup, entry.lineupOverride), memberId);
 }
