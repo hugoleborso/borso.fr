@@ -483,6 +483,62 @@ function captureSource(node: ts.Node, sourceFile: ts.SourceFile): string {
   ].join('\n');
 }
 
+function dedupeApiCalls(calls: readonly ApiCall[]): ApiCall[] {
+  return [...new Map(calls.map((call) => [`${call.method} ${call.path}`, call])).values()];
+}
+
+/**
+ * Endpoints reachable from each module-local function, followed to a fixed
+ * point.
+ *
+ * A hook that calls `api.…$post()` inline is read from its own body, but a hook
+ * whose request sits in a module-local helper — the shape TanStack Query
+ * encourages, since `queryFn` wants a named function — reads as calling no
+ * endpoint at all. The whole feature then vanishes from the user-action level
+ * while its code is plainly there, which is worse than drawing nothing: the
+ * coverage number says the walk looked and found nothing to draw.
+ */
+function readLocalApiCalls(
+  sourceFile: ts.SourceFile,
+  clientIdentifier: string | null,
+): Map<string, ApiCall[]> {
+  if (clientIdentifier === null) return new Map();
+  const own = new Map<string, ApiCall[]>();
+  const references = new Map<string, Set<string>>();
+  for (const statement of sourceFile.statements) {
+    const named =
+      ts.isFunctionDeclaration(statement) && statement.name !== undefined
+        ? [[statement.name.text, statement] as const]
+        : ts.isVariableStatement(statement)
+          ? statement.declarationList.declarations.flatMap((declaration) =>
+              ts.isIdentifier(declaration.name) && declaration.initializer !== undefined
+                ? [[declaration.name.text, declaration.initializer] as const]
+                : [],
+            )
+          : [];
+    for (const [name, node] of named) {
+      own.set(name, readApiCallsIn(node, sourceFile, clientIdentifier));
+      references.set(name, collectReferencedIdentifiers(node));
+    }
+  }
+
+  const resolved = new Map(own);
+  for (let pass = 0; pass < own.size; pass += 1) {
+    let hasGrown = false;
+    for (const [name, referenced] of references) {
+      const inherited = [...referenced].flatMap((each) =>
+        each === name ? [] : (resolved.get(each) ?? []),
+      );
+      const merged = dedupeApiCalls([...(resolved.get(name) ?? []), ...inherited]);
+      if (merged.length === (resolved.get(name) ?? []).length) continue;
+      resolved.set(name, merged);
+      hasGrown = true;
+    }
+    if (!hasGrown) break;
+  }
+  return resolved;
+}
+
 function readExportedSymbols(
   sourceFile: ts.SourceFile,
   importLookup: Map<string, CallSymbol>,
@@ -490,6 +546,7 @@ function readExportedSymbols(
   clientIdentifier: string | null,
 ): ExportedSymbol[] {
   const symbols: ExportedSymbol[] = [];
+  const localCalls = readLocalApiCalls(sourceFile, clientIdentifier);
 
   const record = (name: string, node: ts.Node, isFunction: boolean): void => {
     const referenced = collectReferencedIdentifiers(node);
@@ -516,7 +573,10 @@ function readExportedSymbols(
       callSymbols,
       dependsOnExternal: ownExternals.length > 0 ? ownExternals : [...fileExternals],
       tables: [...tables],
-      apiCalls: readApiCallsIn(node, sourceFile, clientIdentifier),
+      apiCalls: dedupeApiCalls([
+        ...readApiCallsIn(node, sourceFile, clientIdentifier),
+        ...[...referenced].flatMap((identifier) => localCalls.get(identifier) ?? []),
+      ]),
       blueprints: matchAll(BLUEPRINT_TAG, leadingText),
       followsBlueprints: matchAll(FOLLOWS_BLUEPRINT_TAG, leadingText),
       source: captureSource(node, sourceFile),

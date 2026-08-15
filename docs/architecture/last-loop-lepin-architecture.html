@@ -2821,7 +2821,7 @@
     
       <section class="coverage">
         <h3>Codebase coverage <b>0 of 167 files</b> <span class="coverage-percent">0%</span></h3>
-        <p class="coverage-rule">A file is drawn when some user action reaches one of its exports. What is left is either the back end of a feature whose front end does not exist yet, or code no action reaches at all.</p>
+        <p class="coverage-rule">A file is drawn when a user action's walk reaches it: the screen, the components between it and the gesture, the hook, the controller the endpoint is declared in, and everything the handler calls down to the table. A presentational component that never touches data is absent by construction, and so is anything the application runs outside a user action — bootstrap, config, translations, the service worker. What is left in the list is the honest gap: the back end of a feature whose front end does not exist yet, and code no action reaches at all.</p>
         <ul class="coverage-layers"><li class="partial">
           <span class="coverage-layer">adapter</span>
           <span class="coverage-bar"><i style="width:0%"></i></span>

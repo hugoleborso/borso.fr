@@ -148,6 +148,19 @@ function symbolChips(blueprint: string, symbol: ExportedSymbol): NodeChip[] {
   ];
 }
 
+/** The schema module declaring a Drizzle table, and the declaration itself. */
+function tableDeclaration(
+  table: string,
+  fileByPath: ReadonlyMap<string, ArchitectureFile>,
+): { file: ArchitectureFile; symbol: ExportedSymbol } | undefined {
+  for (const file of fileByPath.values()) {
+    if (file.layer !== 'schema') continue;
+    const symbol = file.exports.find((each) => each.name === table);
+    if (symbol !== undefined) return { file, symbol };
+  }
+  return undefined;
+}
+
 function sourceEntry(
   path: string,
   layer: string,
@@ -214,16 +227,37 @@ function walkSymbol(
   });
 
   for (const table of exported.tables) {
+    // The block is the Drizzle declaration, so it opens that file and counts as
+    // drawn. Without this the schema modules every flow ends in read as covered
+    // by nothing.
+    const declaration = tableDeclaration(table, fileByPath);
+    const tableKey = `table:${table}`;
+    if (declaration !== undefined) {
+      sources.set(
+        tableKey,
+        sourceEntry(declaration.file.path, declaration.file.layer, '', declaration.symbol),
+      );
+    }
     result.nodes.push({
-      id: `table:${table}`,
+      id: tableKey,
       label: table.replace(/Table$/, ''),
       kind: 'step-table',
-      detail: `Database table ${table}`,
+      detail:
+        declaration === undefined
+          ? `Database table ${table}`
+          : `${table} · ${declaration.file.path}`,
       group: 'data',
       blueprints: [],
       followsBlueprints: [],
       fileCount: 0,
       layer: 'table',
+      ...(declaration === undefined
+        ? {}
+        : {
+            location: `${declaration.file.path}:${declaration.symbol.line}`,
+            sourceKey: tableKey,
+            metrics: symbolMetrics(declaration.symbol),
+          }),
       icon: '\u{1F5C4}',
       lines: ['database table'],
     });
@@ -314,6 +348,13 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
   }
 
   const routeOwner = new Map<string, { file: ArchitectureFile; symbol: string }[]>();
+  /**
+   * The controller module each route is declared in.
+   *
+   * The endpoint block *is* that handler, so without this the file the walk
+   * reads the route from is drawn on every flow and counted on none.
+   */
+  const routeController = new Map<string, string>();
   const compositionRoot = files.find((file) => file.path.endsWith('/api/src/app.ts'));
   const mountByRouter = new Map<string, string>();
   for (const mount of compositionRoot?.mounts ?? []) {
@@ -327,6 +368,7 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
       const base = mountByRouter.get(`${file.path}#${route.routerVariable}`) ?? '';
       const full = `${base}${route.path === '/' ? '' : route.path}`.replace(/\/+/g, '/');
       const identifier = `${route.method} ${full}`;
+      routeController.set(identifier, `${file.path}:${route.line}`);
       // The handler also references its zod schemas, and a validator is not a
       // step in what the user did, so the flow starts at the first layer that
       // does something: the service, or whatever the controller calls directly.
@@ -544,16 +586,21 @@ export function buildJourneys(files: readonly ArchitectureFile[]): JourneyModel 
         lines: [module.layer],
         chips: symbolChips(hookBlueprint, exported),
       });
+      const declaredIn = routeController.get(`${call.method} ${call.path}`);
       nodes.push({
         id: endpointId,
         label: `${call.method} ${call.path}`,
         kind: 'step-endpoint',
-        detail: 'HTTP request, session cookie attached',
+        detail:
+          declaredIn === undefined
+            ? 'HTTP request, session cookie attached'
+            : `Declared in ${declaredIn}`,
         group: 'endpoint',
         blueprints: [],
         followsBlueprints: [],
         fileCount: 0,
         layer: 'http',
+        ...(declaredIn === undefined ? {} : { location: declaredIn }),
         icon: '\u{1F50C}',
         lines: ['HTTP endpoint'],
       });
