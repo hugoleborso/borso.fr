@@ -2,6 +2,7 @@
  * MasteryBadge — mono "M 7.2" / "M —" indicator showing the mean
  * mastery the lineup has on this song. Renders an em-dash when the
  * mean is unavailable.
+ * @Feature mastery
  */
 
 import { useTranslation } from 'react-i18next';

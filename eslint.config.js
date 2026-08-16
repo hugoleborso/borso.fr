@@ -24,6 +24,7 @@ const TYPESCRIPT_FILES = ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'];
 const UNPROJECTED_TYPESCRIPT_FILES = [
   'vitest.config.ts',
   '.claude/skills/**/*.ts',
+  'scripts/**/*.ts',
   'apps/*/vitest.mutation.config.ts',
   'apps/*/bin/*.ts',
   'apps/*/scripts/*.ts',
@@ -231,6 +232,29 @@ export default tseslint.config(
     },
   },
 
+  // ADR-0012: an outbound call lives in a `<domain>.adapter.ts`. Both sides of
+  // an application, because a browser fetching a presigned URL and a Lambda
+  // calling a web service are the same kind of edge on the same map.
+  {
+    // `SITE_FILES` rather than `site/src/**`: two of the four applications keep
+    // their sources directly under `site/`, so the narrower glob matched no file
+    // in either of them and both rules were silent on half the repository.
+    // `domain/` is the third place: it holds the rules both sides read
+    // (ADR-0010), its files are gated for coverage and mutation like any other
+    // pure module, and it sits under neither `api/src` nor `site`.
+    files: ['apps/*/api/src/**/*.ts', 'apps/*/domain/**/*.ts', ...SITE_FILES],
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/no-outbound-call-outside-adapter': 'error',
+      // The other direction of the same dependency. An adapter leaning on a
+      // pure module is the pattern; a pure module leaning on an adapter is a
+      // file that reaches the network while carrying the suffix that promises
+      // it does not, and both pure gates would still pass because the test
+      // stubs the adapter.
+      'borso/no-adapter-import-in-pure-module': 'error',
+    },
+  },
+
   // Back end rules from standards 04 and 11. Scoped to `api/src`, because a
   // controller, a repository and a raw SQL tag only mean something there.
   {
@@ -352,9 +376,9 @@ export default tseslint.config(
   {
     files: [
       'apps/*/api/src/database/client.ts',
-      'apps/*/api/src/**/*.s3.ts',
-      'apps/*/api/src/uploads/uploads.repository.ts',
+      'apps/*/api/src/**/*.adapter.ts',
       'apps/*/site/src/*-store.ts',
+      'apps/*/site/src/**/*.store.ts',
       'apps/*/test/**/*.ts',
     ],
     rules: { 'unicorn/no-top-level-assignment-in-function': 'off' },
@@ -386,6 +410,11 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       ...jsxA11y.flatConfigs.recommended.rules,
+      // The plugin ships this one at `warn`, and no gate here passes
+      // `--max-warnings`, so a stale dependency array failed nothing. Standard
+      // 07 leans on it: an effect that survives review is allowed through a
+      // disable comment, and this is what makes the comment necessary.
+      'react-hooks/exhaustive-deps': 'error',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'borso/no-direct-api-fetch-in-site': 'error',
       'borso/no-api-anchor-in-site': 'error',
@@ -462,7 +491,8 @@ export default tseslint.config(
   {
     files: [
       'eslint-rules/**/*.js',
-      'scripts/**/*.{js,mjs}',
+      'scripts/**/*.{js,mjs,ts}',
+      '.claude/skills/**/*.ts',
       '*.config.{js,ts}',
       'apps/*/scripts/**/*.{ts,mjs}',
       'apps/*/api/src/main.dev.ts',

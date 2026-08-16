@@ -11,6 +11,7 @@
  * The resolution rule itself is `resolveLineup` in `domain/`, shared with the
  * back end, so the override winning per key over the song default is decided
  * in one place rather than written out again here.
+ * @Feature setlists
  */
 
 import { instrumentsHeldBy, resolveLineup } from '@domain/lineup.core';

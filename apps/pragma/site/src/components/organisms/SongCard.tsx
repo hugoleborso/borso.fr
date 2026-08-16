@@ -6,6 +6,7 @@
  *  - serif italic title (font-display),
  *  - artist + tonality meta row,
  *  - MemberLineup footer (bare avatars).
+ * @Feature songs
  */
 
 import { Link } from 'react-router-dom';

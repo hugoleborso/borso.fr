@@ -8,6 +8,7 @@
  * Data goes through TanStack Query — songs, members, instruments and
  * mastery defaults each have their own cache key, so navigating away
  * and back hits a warm cache and the page renders synchronously.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';
@@ -21,12 +22,12 @@ import { PageHeader } from '../../components/molecules/PageHeader';
 import { SearchBar } from '../../components/molecules/SearchBar';
 import { CatalogGrid } from '../../components/organisms/CatalogGrid';
 import type { SongCardProps } from '../../components/organisms/SongCard';
-import { ApiError } from '../../lib/api';
+import { ApiError } from '../../lib/api.client';
 import { meanMasteryForSong } from '../../lib/mastery-aggregate.utils';
-import { useInstrumentsList } from '../../lib/queries/instruments';
-import { useMasteryDefaults } from '../../lib/queries/mastery';
-import { useMembersList } from '../../lib/queries/members';
-import { useSongsList, useSongThatLostItsLastWrite } from '../../lib/queries/songs';
+import { useInstrumentsList } from '../../lib/queries/instruments.queries';
+import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
+import { useMembersList } from '../../lib/queries/members.queries';
+import { useSongsList, useSongThatLostItsLastWrite } from '../../lib/queries/songs.queries';
 import {
   buildNewSongPath,
   type CatalogStatusFilter,

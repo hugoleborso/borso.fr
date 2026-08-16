@@ -2,6 +2,7 @@
  * Read-only practice detail. The signature affordance is the
  * prepared-concert link; selecting a different concert from the
  * dropdown still mutates the session.
+ * @Feature sessions
  */
 
 import { useTranslation } from 'react-i18next';

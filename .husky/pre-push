@@ -128,7 +128,10 @@ for app in $changed_app_slugs; do
   fi
 done
 
-# Mutation testing, scoped to the pure files this push actually touches.
+# Mutation testing, scoped to the gated files this push actually touches: the
+# pure ones, plus the adapters, which the coverage and mutation configs cover
+# for the same reason. A gate that is armed everywhere except at the moment a
+# file changes is the shape this repository keeps rediscovering.
 #
 # Coverage says a line ran; a surviving mutant says no assertion noticed a
 # change to it, which is the signal docs/standards/10-testing.md asks for. A
@@ -151,14 +154,23 @@ if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
   for app in $changed_app_slugs; do
     # `|| true` because a grep that matches nothing exits 1, and a failing
     # command substitution inside an assignment aborts the hook under `set -e`.
-    pure_files=$(echo "$changed" |
+    gated_files=$(echo "$changed" |
       sed -n "s|^apps/$app/||p" |
-      sed -e 's|\.\(core\|utils\)\.test\.ts$|.\1.ts|' |
-      grep -E '\.(core|utils)\.ts$' |
+      # `-E` and a delimiter that is not `|`: inside `s|…|…|` a `\|` reads as an
+      # escaped delimiter rather than as alternation, so this substitution
+      # matched nothing at all and a changed test never pulled in its sibling
+      # source — the one thing the comment above says it does.
+      sed -E 's/\.(core|utils|adapter)\.test\.tsx?$/.\1.ts/' |
+      grep -E '\.(core|utils|adapter)\.tsx?$' |
+      # A rename shows up here as its old path too, and Stryker exits 1 on
+      # "No tests were executed" when handed a file that is no longer there —
+      # an error naming nothing about the cause, on a push whose only crime was
+      # moving a file. The suffix work ahead is mostly renames.
+      while read -r gated; do [ -n "$gated" ] && [ -f "apps/$app/$gated" ] && echo "$gated"; done |
       sort -u || true)
-    [ -z "$pure_files" ] && continue
-    mutate_glob=$(echo "$pure_files" | paste -sd, -)
-    echo "[pre-push] $app: mutating $(echo "$pure_files" | grep -c .) changed pure file(s)"
+    [ -z "$gated_files" ] && continue
+    mutate_glob=$(echo "$gated_files" | paste -sd, -)
+    echo "[pre-push] $app: mutating $(echo "$gated_files" | grep -c .) changed gated file(s)"
     start_gate "mutation-$app" \
       pnpm --filter "@borso-app/$app" exec stryker run --mutate "$mutate_glob"
   done

@@ -68,6 +68,22 @@ YAML at `runs/<run-id>/agents/<agent>-<NN>.md`. Mark retries as
 
 </details>
 
+## Architecture map
+
+{{Always present. One line per application the branch touches, from the
+counts `architecture-diff.ts` printed. Say "no architectural change"
+when the report says so — that sentence is what lets a reviewer skip the
+section rather than wonder.}}
+
+- **{{app}}** — {{e.g. "6 contexts added, 14 changed, 3 removed; 2 routes
+  now reach a table they did not; 4 files changed layer"}}.
+
+[Browse the coloured map for this branch]({{workflow-run-query-url}}) —
+newest run, `architecture-maps` artifact, `{{app}}-diff.html`. Green is
+added, amber is edited, blue is moved with the same code, red struck through
+is gone. ·
+[The published map for `main`](https://hugoleborso.github.io/borso.fr/{{app}}-architecture.html)
+
 ## Architecture choices
 
 {{One bullet per ADR referenced by the diff or the plan. Level 1 line =
@@ -175,6 +191,7 @@ https://claude.ai/code/session_{{session_id}}
 | Summary | `spec.md` § *Pourquoi* + headline result | near-verbatim |
 | Validation verdicts | latest report files under `validation/` | yes |
 | Orchestration trace | `runs/<run-id>/state.json` + `journal.md.jsonl` + `agents/*.md` | computed |
+| Architecture map | `architecture-diff.ts` counts + the workflow artifact link | computed |
 | Architecture choices | `docs/adr/NNNN-*.md` (each referenced ADR) | yes |
 | What the user sees / does | `spec.md` § *Result* (visible / behaviour) | yes |
 | Visual evidence | `validation/visual-validation-<ts>/*.png` | n/a (binary) |

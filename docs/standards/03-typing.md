@@ -105,7 +105,12 @@ export function rankRunners(runners: readonly Runner[], now: Date): Ranking {
 - `@typescript-eslint/no-explicit-any`, set to error.
 - `borso/no-type-assertion-except-unknown`, a custom ESLint rule, which allows
   `as const` and a single `as unknown` and rejects everything else.
-- `@typescript-eslint/explicit-module-boundary-types`, set to error.
+- Not `@typescript-eslint/explicit-module-boundary-types`, which this section
+  claimed for months and which is off: it is in neither `strictTypeChecked` nor
+  `stylisticTypeChecked`, and `eslint.config.js` never names it. It reports 212
+  sites (measured 2026-08-15). Until it is turned on, the return-type rule above
+  is reviewer judgement, and `no-unsafe-return` is the only part of it a machine
+  checks.
 - The type-aware `no-unsafe-argument`, `no-unsafe-assignment`,
   `no-unsafe-call`, `no-unsafe-member-access`, and `no-unsafe-return` rules
   from `typescript-eslint`, all set to error.

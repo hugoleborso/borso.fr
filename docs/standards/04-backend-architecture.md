@@ -14,11 +14,18 @@ api/src/
     auth.repository.ts     Drizzle queries only
     auth.schema.ts         Drizzle tables and Zod input schemas
     auth.core.ts           pure rules, optional
+    auth.adapter.ts        the only file that leaves the process, optional
     auth.types.ts          types shared inside the slice, optional
     auth.*.test.ts         one sibling test per file
   helpers/
     geo/  gpx/  sun/       cross-cutting, and still layered
 ```
+
+An outbound call — a `fetch`, a vendor SDK client — lives in
+`<domain>.adapter.ts`, never in the service or the repository. A repository is
+database access and a service is orchestration; neither also means "and
+sometimes the network". `borso/no-outbound-call-outside-adapter` enforces it,
+and [ADR-0012](../adr/0012-outbound-calls-live-in-adapter-files.md) records why.
 
 ## Reason
 

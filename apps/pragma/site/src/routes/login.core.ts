@@ -2,6 +2,7 @@
  * What the sign-in screen does with the two answers it can get: where it sends
  * the visitor once the password is accepted, and which message it shows when
  * it is not.
+ * @Feature auth
  */
 
 import type { ParseKeys } from 'i18next';

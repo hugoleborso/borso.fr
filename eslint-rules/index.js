@@ -3,6 +3,7 @@ import atomicDesignImportDirection from './atomic-design-import-direction.js';
 import conditionsLiveInPureFunctions from './conditions-live-in-pure-functions.js';
 import functionNamesAreVerbPhrases from './function-names-are-verb-phrases.js';
 import noAbbreviatedIdentifier from './no-abbreviated-identifier.js';
+import noAdapterImportInPureModule from './no-adapter-import-in-pure-module.js';
 import noApiAnchorInSite from './no-api-anchor-in-site.js';
 import noArrayMethodsInControllers from './no-array-methods-in-controllers.js';
 import noCircleInNonUniformSvg from './no-circle-in-non-uniform-svg.js';
@@ -18,6 +19,7 @@ import noFrenchIdentifiers from './no-french-identifiers.js';
 import noImpureCallsInCoreFiles from './no-impure-calls-in-core-files.js';
 import noInlineSubscribeInUseSyncExternalStore from './no-inline-subscribe-in-use-sync-external-store.js';
 import noLiteralJsxText from './no-literal-jsx-text.js';
+import noOutboundCallOutsideAdapter from './no-outbound-call-outside-adapter.js';
 import noQueryHooksOutsideOrganisms from './no-query-hooks-outside-organisms.js';
 import noRawSqlOutsideMigrations from './no-raw-sql-outside-migrations.js';
 import noServerStateInUseState from './no-server-state-in-use-state.js';
@@ -49,6 +51,7 @@ export const borsoPlugin = {
     'conditions-live-in-pure-functions': conditionsLiveInPureFunctions,
     'function-names-are-verb-phrases': functionNamesAreVerbPhrases,
     'no-abbreviated-identifier': noAbbreviatedIdentifier,
+    'no-adapter-import-in-pure-module': noAdapterImportInPureModule,
     'no-api-anchor-in-site': noApiAnchorInSite,
     'no-array-methods-in-controllers': noArrayMethodsInControllers,
     'no-circle-in-non-uniform-svg': noCircleInNonUniformSvg,
@@ -64,6 +67,7 @@ export const borsoPlugin = {
     'no-impure-calls-in-core-files': noImpureCallsInCoreFiles,
     'no-inline-subscribe-in-use-sync-external-store': noInlineSubscribeInUseSyncExternalStore,
     'no-literal-jsx-text': noLiteralJsxText,
+    'no-outbound-call-outside-adapter': noOutboundCallOutsideAdapter,
     'no-query-hooks-outside-organisms': noQueryHooksOutsideOrganisms,
     'no-raw-sql-outside-migrations': noRawSqlOutsideMigrations,
     'no-server-state-in-use-state': noServerStateInUseState,

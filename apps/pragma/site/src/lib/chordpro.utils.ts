@@ -10,6 +10,7 @@
  * Spec note: this is a minimal parser, sufficient for the v1 viewer
  * (chord-above-lyric layout, transposable). Tab + Lilypond blocks are
  * left as raw text — the viewer renders them in a `<pre>` block.
+ * @Feature songs
  */
 
 export interface ChordToken {

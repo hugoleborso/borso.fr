@@ -6,6 +6,7 @@
  * holds anything collapses to `null`, because the API treats a non-null
  * lineup as "this entry overrides the song default" and an empty object would
  * claim an override that says nothing.
+ * @Feature members
  */
 
 export type LineupRecord = Readonly<Record<string, readonly string[]>>;

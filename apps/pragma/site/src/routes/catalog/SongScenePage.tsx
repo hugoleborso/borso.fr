@@ -15,6 +15,7 @@
  * put every control — including the only way out, since a phone has no
  * Escape key — off screen for 93% of the scroll range. The bottom edge
  * is also where a thumb reaches while the other hand is on the neck.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';
@@ -24,9 +25,9 @@ import { useParams } from 'react-router-dom';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SongNotes } from '../../components/molecules/SongNotes';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
-import { openDialogOnAttach } from '../../lib/modal-dialog';
-import { useNavigateTo } from '../../lib/navigation';
-import { useSong } from '../../lib/queries/songs';
+import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
+import { useNavigateTo } from '../../lib/navigation.hook';
+import { useSong } from '../../lib/queries/songs.queries';
 import { selectChordProText } from './chart-kind.utils';
 import { selectMissingSongMessageKey } from './missing-song.core';
 import {

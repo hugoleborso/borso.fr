@@ -7,6 +7,7 @@
  *
  * Reads via useSession, useMembersList, useSessionsList,
  * useSetlistBySession. Writes via useUpdateSession + useCreateSetlist.
+ * @Feature sessions
  */
 
 import type { JSX } from 'react';
@@ -15,14 +16,14 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
-import { getCurrentTime, readServerTime, subscribeClock } from '../../clock-store';
-import { ApiError } from '../../lib/api';
+import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
+import { ApiError } from '../../lib/api.client';
 import { isPositiveCount } from '../../lib/counts.utils';
 import { selectUpcomingConcerts } from '../../lib/upcoming-concerts.core';
 import { formatSessionDate } from '../../lib/formatters.utils';
-import { useMembersList } from '../../lib/queries/members';
-import { useSession, useSessionsList, useUpdateSession } from '../../lib/queries/sessions';
-import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists';
+import { useMembersList } from '../../lib/queries/members.queries';
+import { useSession, useSessionsList, useUpdateSession } from '../../lib/queries/sessions.queries';
+import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists.queries';
 import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';

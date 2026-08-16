@@ -1,0 +1,63 @@
+# Publishes the architecture maps to GitHub Pages, so a link opens the map
+# instead of a download of a workflow artifact.
+#
+# This needs one repository setting the workflow cannot make or read: Settings →
+# Pages → Build and deployment → Source must be "GitHub Actions". Until that is
+# set, this workflow fails on the deploy step with a 404 and nothing else
+# breaks; the maps still upload as an artifact on every pull request.
+#
+# The maps are not committed, so this triggers on what they are derived from
+# rather than on the pages themselves. `docs/standards/**` is in the list
+# because the Standards tab carries each document's history.
+
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'scripts/architecture/**'
+      - 'docs/standards/**'
+      - '.claude/skills/blueprint/blueprint-utils.ts'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # The only copy there is. Nothing publishes a file from the commit, so a
+      # stale page cannot exist to be published.
+      - name: Build the maps
+        run: pnpm exec tsx scripts/architecture/architecture-graph.ts
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/architecture
+      - id: deploy
+        uses: actions/deploy-pages@v4

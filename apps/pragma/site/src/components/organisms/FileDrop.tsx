@@ -6,12 +6,13 @@
  *
  * The PUT goes through `fetch` rather than the Hono client because the
  * signed URL is S3's, not this application's API.
+ * @Feature uploads
  */
 
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api';
-import { useSignChartUpload } from '../../lib/queries/uploads';
+import { ApiError } from '../../lib/api.client';
+import { useSignChartUpload } from '../../lib/queries/uploads.queries';
 import { composeClassName } from '../atoms/class-name.utils';
 import {
   FILE_DROP_MAX_MEBIBYTES,
@@ -20,6 +21,7 @@ import {
   validateChartFile,
 } from '../molecules/file-drop.utils';
 import { FileDropZone } from '../molecules/FileDropZone';
+import { hasSentFileToPresignedUrl } from '../../lib/object-upload.adapter';
 
 export interface FileDropResult {
   readonly kind: FileDropChartKind;
@@ -59,12 +61,8 @@ export function FileDrop({
         contentLength: file.size,
         ...(songId === undefined ? {} : { songId }),
       });
-      const putResponse = await fetch(signed.uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      });
-      if (!putResponse.ok) {
+      const hasSent = await hasSentFileToPresignedUrl(signed.uploadUrl, file);
+      if (!hasSent) {
         setError(t('catalog.uploadFailed'));
         return;
       }

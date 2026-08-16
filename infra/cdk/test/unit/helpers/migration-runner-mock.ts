@@ -108,7 +108,19 @@ export function makeSql(): SqlMock {
         const queriedSchema = listColumnsMatch[1] ?? '';
         const queriedTable = listColumnsMatch[2] ?? '';
         const columns = state.columnsPerTable.get(`${queriedSchema}.${queriedTable}`) ?? [];
-        return Promise.resolve(columns.map((column_name) => ({ column_name })));
+        // The runner reads the type alongside the name when it reconciles a
+        // target table against the source, so the fixture has to carry one.
+        // Every column in these fixtures is text, which is what the real
+        // schemas are almost entirely made of.
+        return Promise.resolve(
+          columns.map((column_name) => ({
+            column_name,
+            data_type: 'text',
+            character_maximum_length: null,
+            numeric_precision: null,
+            numeric_scale: null,
+          })),
+        );
       }
       if (/SELECT name FROM/i.test(query)) {
         return Promise.resolve([...state.appliedMigrations].map((name) => ({ name })));

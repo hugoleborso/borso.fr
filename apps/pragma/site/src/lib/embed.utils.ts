@@ -8,6 +8,14 @@
  * v1 ships hand-coded URL patterns rather than a live oEmbed call —
  * the known providers are stable, and an opaque oEmbed call would
  * block render. Pure utility, 100% coverage gated.
+ *
+ * @DependsOnExternal youtube
+ * @DependsOnExternal spotify
+ * @DependsOnExternal vimeo
+ * @DependsOnExternal soundcloud
+ * @DependsOnExternal deezer
+ * @DependsOnExternal soundslice
+ * @Feature songs
  */
 
 const YOUTUBE_DOMAINS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be']);

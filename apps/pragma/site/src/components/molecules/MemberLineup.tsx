@@ -4,6 +4,7 @@
  * holds) to a set of chips, using the resolved member's name and colour, and
  * naming every instrument in the chip's tooltip. Caller injects the members
  * and instruments to keep this molecule free of data-fetching concerns.
+ * @Feature members
  */
 
 import { MemberChip } from './MemberChip';

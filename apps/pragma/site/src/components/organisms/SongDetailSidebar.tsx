@@ -5,6 +5,7 @@
  * The lineup card reads one row per member, holding every instrument they
  * carry on this song; the mastery card scores each instrument separately, so
  * it reads the same rows flattened.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';

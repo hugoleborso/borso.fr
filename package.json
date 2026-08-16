@@ -25,6 +25,7 @@
     "@swmansion/argent": "0.19.0",
     "@vitest/eslint-plugin": "1.6.26",
     "agent-browser": "0.33.2",
+    "elkjs": "0.12.0",
     "esbuild": "^0.24.0",
     "eslint": "10.8.1",
     "eslint-config-prettier": "10.1.8",
@@ -41,7 +42,8 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "typescript-eslint": "8.66.0",
-    "vitest": "4.1.10"
+    "vitest": "4.1.10",
+    "zod": "^4.4.3"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

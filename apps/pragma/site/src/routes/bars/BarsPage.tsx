@@ -14,6 +14,7 @@
  * history with it and there is no undo — and a successful write bumps the
  * counter feeding the form's key, so the blank form remounts empty rather than
  * keeping what it just submitted and writing it twice.
+ * @Feature bars
  */
 
 import type { JSX } from 'react';
@@ -26,12 +27,17 @@ import { PageHeader } from '../../components/molecules/PageHeader';
 import {
   BREAKPOINT_BELOW_LG,
   useIsMediaQueryMatching,
-} from '../../components/molecules/useIsMediaQueryMatching';
+} from '../../components/molecules/media-query-matching.hook';
 import { BarsKanban } from '../../components/organisms/BarsKanban';
 import { BarsList, type BarsListRow } from '../../components/organisms/BarsList';
-import { ApiError } from '../../lib/api';
+import { ApiError } from '../../lib/api.client';
 import { isPositiveCount } from '../../lib/counts.utils';
-import { useBarsList, useCreateBar, useDeleteBar, useUpdateBar } from '../../lib/queries/bars';
+import {
+  useBarsList,
+  useCreateBar,
+  useDeleteBar,
+  useUpdateBar,
+} from '../../lib/queries/bars.queries';
 import { countStale, isStale } from '@domain/bar-staleness.core';
 import { BarForm } from './BarForm';
 import {

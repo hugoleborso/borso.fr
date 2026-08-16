@@ -12,6 +12,7 @@
  */
 
 const PURE_FILE_PATTERN = /\.(core|utils)\.tsx?$/;
+const TESTED_FILE_PATTERN = /\.(core|utils|adapter|schema)\.tsx?$/;
 const TEST_FILE_PATTERN = /\.(test|spec|test-utils)\.[jt]sx?$/;
 const TEST_HARNESS_FOLDER_PATTERN = /(^|\/)test\//;
 const CONTROLLER_FILE_PATTERN = /\.controller\.ts$/;
@@ -98,6 +99,24 @@ export const MUTATING_METHOD_NAMES = new Set([
 // @FollowsBlueprint lint-rule-predicate
 export function isPureFile(filename) {
   return PURE_FILE_PATTERN.test(filename);
+}
+
+/**
+ * A file the coverage gate covers, which is the pure files plus `.adapter.ts`
+ * and `.schema.ts`. Neither of those two is pure — an adapter talks to the
+ * network and a schema is a value the module builds at import — so both stay
+ * out of `isPureFile`, and the purity rules keep meaning what they meant. The
+ * two questions are separate: the gates ask "is this file tested to the line",
+ * and the purity rules ask "may this file touch the world".
+ *
+ * The list is the `coverage.include` of each full-stack application's
+ * `vitest.config.ts`, and the two have to agree: a suffix gated there and
+ * missing here is a file whose missing test only the coverage number notices.
+ *
+ * See docs/standards/10-testing.md.
+ */
+export function isGatedFile(filename) {
+  return TESTED_FILE_PATTERN.test(filename);
 }
 
 export function isTestFile(filename) {

@@ -1,0 +1,146 @@
+# What a pull request does to each application's architecture, in one comment.
+#
+# `architecture-graph.ts --check` already fails a commit whose generated page is
+# stale, so the page in the branch is always current. What that gate cannot do
+# is say what changed, because a generated HTML file diffs badly and the JSON
+# model diffs as a wall of lines. This workflow answers that: it builds the
+# model for the merge base and for the head, and reports the difference as
+# routes, externals and layers rather than as text.
+#
+# The target branch does not need to carry the generator. The script runs at the
+# head revision against a worktree of the base, through `--app-root`, so a
+# branch opened before this workflow existed still gets a comparison.
+
+name: architecture
+
+on:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'scripts/architecture/**'
+      - '.claude/skills/blueprint/blueprint-utils.ts'
+      - '.github/workflows/architecture.yml'
+
+concurrency:
+  group: architecture-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  architecture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # The pages are not committed, so this both produces them for the artifact
+      # below and, through --check, catches a committed model the code has
+      # moved past on a push that skipped the hook.
+      - name: Build the head model
+        run: pnpm exec tsx scripts/architecture/architecture-graph.ts
+
+      - name: Fail when the committed model is stale
+        run: pnpm exec tsx scripts/architecture/architecture-graph.ts --check
+
+      # A worktree of the merge base, scanned by the head revision's generator.
+      # The merge base rather than the branch tip, so the comparison describes
+      # this pull request and not whatever else landed on the target meanwhile.
+      - name: Build the target-branch models and diff them
+        run: |
+          set -euo pipefail
+          base_sha="$(git merge-base "origin/${{ github.base_ref }}" HEAD)"
+          echo "Comparing against $base_sha on ${{ github.base_ref }}"
+          git worktree add --detach ../architecture-base "$base_sha"
+          : > /tmp/architecture-diff.md
+          for app in $(pnpm exec tsx scripts/architecture/architecture-graph.ts --list); do
+            # An application the target branch does not have yet cannot be
+            # compared, and its whole map is new by definition.
+            if [ ! -d "../architecture-base/apps/$app" ]; then
+              printf '## %s\n\nNew application on this branch; nothing to compare.\n\n' "$app" \
+                >> /tmp/architecture-diff.md
+              continue
+            fi
+            pnpm exec tsx scripts/architecture/architecture-graph.ts \
+              --app "$app" \
+              --app-root "../architecture-base/apps/$app" \
+              --out /tmp/architecture-base
+            printf '## %s\n\n' "$app" >> /tmp/architecture-diff.md
+            pnpm exec tsx scripts/architecture/architecture-diff.ts \
+              "/tmp/architecture-base/$app-architecture.json" \
+              "docs/architecture/$app-architecture.json" >> /tmp/architecture-diff.md
+            # The same comparison as a map rather than a list: the head model's
+            # own graphs, with each block coloured by what this branch did to it.
+            # --diff-ref hands the generator the base revision, which is what
+            # lets git pair a rename instead of reporting an addition beside a
+            # deletion, and what lets the code dialog open on the change.
+            pnpm exec tsx scripts/architecture/architecture-graph.ts \
+              --app "$app" --diff-base /tmp/architecture-base --diff-ref "$base_sha"
+            printf '\n' >> /tmp/architecture-diff.md
+          done
+          cat /tmp/architecture-diff.md >> "$GITHUB_STEP_SUMMARY"
+
+      # The page is the browsable half, and this artifact is the only place a
+      # pull request's own pages exist — `main` publishes to Pages, and nothing
+      # is committed.
+      - name: Upload the browsable page
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-maps
+          path: |
+            docs/architecture/index.html
+            docs/architecture/*-architecture.html
+            docs/architecture/*-architecture.json
+            docs/architecture/*-diff.html
+          retention-days: 30
+
+      # One comment per pull request, rewritten in place, and only when the
+      # report changed. A new comment per push would bury the conversation, and
+      # an identical rewrite still notifies everyone watching.
+      - name: Comment the architecture diff
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const marker = '<!-- architecture-diff -->';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              marker,
+              fs.readFileSync('/tmp/architecture-diff.md', 'utf8').trim(),
+              '',
+              `[Browse the full maps](${runUrl}#artifacts) — download the \`architecture-maps\` artifact and open \`index.html\`.`,
+            ].join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body?.includes(marker));
+            if (!existing) {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              return;
+            }
+            // Only rewrite when the report actually moved. A push that changes
+            // no architecture produces the same body, and updating anyway emits
+            // an issue_comment event that notifies every watcher and re-enters
+            // any agent session subscribed to the pull request, for no news.
+            // The run link is excluded from the comparison, since it changes on
+            // every run by definition.
+            const withoutRunLink = (text) => text.replace(/\[Browse the full maps\].*$/s, '').trim();
+            if (withoutRunLink(existing.body ?? '') === withoutRunLink(body)) {
+              core.info('Architecture report unchanged; leaving the existing comment alone.');
+              return;
+            }
+            await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });

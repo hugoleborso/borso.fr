@@ -33,6 +33,7 @@
  * badge sits above the title. In single-member filter mode, the parent
  * passes a `prominentMemberInstrument` chip that hoists what the filtered
  * member plays here above the title.
+ * @Feature setlists
  */
 
 import { useSortable } from '@dnd-kit/sortable';
@@ -56,7 +57,7 @@ import {
   ENERGY_MIN,
   type SetlistEntryFormValues,
   useSetlistEntryForm,
-} from '../molecules/setlist-entry-form';
+} from '../molecules/setlist-entry-form.hook';
 import { selectMasteryColor } from './mastery-color.core';
 import {
   ENERGY_DEFAULT,

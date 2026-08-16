@@ -7,15 +7,16 @@
  * state, and the `onCreated` callback that fires once the mutation
  * resolves. The parent renders the dialog only while it should be
  * open, so the dialog opens itself the moment React attaches it.
+ * @Feature sessions
  */
 
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
-import { ApiError } from '../../lib/api';
-import { openDialogOnAttach } from '../../lib/modal-dialog';
-import { useCreateSession } from '../../lib/queries/sessions';
+import { ApiError } from '../../lib/api.client';
+import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
+import { useCreateSession } from '../../lib/queries/sessions.queries';
 import { Button } from '../atoms/Button';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';

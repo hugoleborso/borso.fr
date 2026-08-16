@@ -16,13 +16,14 @@
  * sheet's footer it was 447 px below the last line of content, which on
  * a phone is behind the keyboard the title was just typed with, and
  * pressing return did nothing at all.
+ * @Feature setlists
  */
 
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api';
-import { openDialogOnAttach } from '../../lib/modal-dialog';
-import { useCreateSong } from '../../lib/queries/songs';
+import { ApiError } from '../../lib/api.client';
+import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
+import { useCreateSong } from '../../lib/queries/songs.queries';
 import { Button } from '../atoms/Button';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';

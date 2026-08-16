@@ -9,6 +9,7 @@
  *
  * Also indexes the stored transition comments by ordered pair, so a setlist of
  * twenty songs looks its notes up once rather than asking per gap.
+ * @Feature transitions
  */
 
 import type { TransitionCarrier, TransitionVerdict } from '@domain/transition.core';

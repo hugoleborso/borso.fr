@@ -1,6 +1,7 @@
 /**
  * Colour a mastery score is drawn in on a setlist row. An unscored
  * member is neutral; the thresholds match the mastery matrix.
+ * @Feature mastery
  */
 
 const GOOD_SCORE_FLOOR = 7;

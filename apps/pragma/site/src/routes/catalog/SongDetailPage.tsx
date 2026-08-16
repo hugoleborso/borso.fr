@@ -11,6 +11,7 @@
  *
  * The edit form lives in SongEditPage.tsx at /catalog/:songId/edit;
  * pressing the Edit button navigates there.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';
@@ -32,13 +33,13 @@ import { StatusChip } from '../../components/molecules/StatusChip';
 import { UploadedChartPreview } from '../../components/molecules/UploadedChartPreview';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { SongDetailSidebar } from '../../components/organisms/SongDetailSidebar';
-import { ApiError } from '../../lib/api';
+import { ApiError } from '../../lib/api.client';
 import { resolveEmbed } from '../../lib/embed.utils';
-import { useInstrumentsList } from '../../lib/queries/instruments';
-import { useMasteryDefaults } from '../../lib/queries/mastery';
-import { useMembersList } from '../../lib/queries/members';
-import { useDidLastSongWriteFail, useSong, useUpdateSong } from '../../lib/queries/songs';
-import { useSignedChartUrl } from '../../lib/queries/uploads';
+import { useInstrumentsList } from '../../lib/queries/instruments.queries';
+import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
+import { useMembersList } from '../../lib/queries/members.queries';
+import { useDidLastSongWriteFail, useSong, useUpdateSong } from '../../lib/queries/songs.queries';
+import { useSignedChartUrl } from '../../lib/queries/uploads.queries';
 import { extractChartKind, selectChordProText } from './chart-kind.utils';
 import { selectMissingSongMessageKey } from './missing-song.core';
 import { buildMasteryKey, buildSongLineupRows } from './song-lineup.core';

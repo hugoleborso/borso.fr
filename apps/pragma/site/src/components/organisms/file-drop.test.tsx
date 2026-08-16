@@ -16,7 +16,7 @@ import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FileDrop } from './FileDrop';
-import '../../i18n/i18n';
+import '../../i18n/i18n.setup';
 
 function withQueryClient(children: ReactNode): ReactNode {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

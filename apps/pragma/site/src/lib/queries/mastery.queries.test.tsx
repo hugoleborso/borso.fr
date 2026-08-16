@@ -6,7 +6,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { masteryKeys, useDeleteMasteryDefault, useSaveMasteryDefault } from './mastery';
+import { masteryKeys, useDeleteMasteryDefault, useSaveMasteryDefault } from './mastery.queries';
 import {
   createIsolatedQueryClient,
   createMutateSlot,
@@ -15,7 +15,7 @@ import {
   jsonResponse,
   mountWithClient,
   stubFetch,
-} from './test-helpers';
+} from './queries.test-utils';
 
 interface OptimisticDefaultsShape {
   defaults: { memberId: string; instrumentId: string; score: number }[];

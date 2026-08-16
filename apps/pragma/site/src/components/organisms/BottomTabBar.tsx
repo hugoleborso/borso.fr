@@ -9,6 +9,7 @@
  * tap doing nothing and reads as broken.
  *
  * Hidden from `lg` up, where the sidebar is already visible.
+ * @Feature shell
  */
 
 import type { ParseKeys } from 'i18next';
@@ -19,7 +20,7 @@ import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon, type IconName } from '../atoms/Icon';
 import { isPositiveCount } from '../../lib/counts.utils';
-import { isMoreTabActive, isNavDestinationActive } from './nav-active.core';
+import { isMoreTabActive, isNavigationDestinationActive } from './navigation-active.core';
 
 export interface BottomTab {
   readonly to: string;
@@ -49,7 +50,7 @@ export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
       aria-label={t('nav.bottomBar')}
     >
       {props.tabs.map((tab) => {
-        const isActive = isNavDestinationActive(props.activePath, tab.to);
+        const isActive = isNavigationDestinationActive(props.activePath, tab.to);
         const badge = props.badges[tab.to];
         const isBadgeShown = isPositiveCount(badge);
         return (

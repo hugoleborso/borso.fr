@@ -4,6 +4,7 @@
  * linked concert. Create is gated by `CreateSessionDialog` (asks for
  * the date + the kind-specific fields); each row exposes a trash
  * affordance backed by `useDeleteSession` with optimistic removal.
+ * @Feature sessions
  */
 
 import { type JSX, useState } from 'react';
@@ -16,10 +17,10 @@ import { BottomActionBar } from '../../components/molecules/BottomActionBar';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
-import { ApiError } from '../../lib/api';
+import { ApiError } from '../../lib/api.client';
 import { formatSessionDate } from '../../lib/formatters.utils';
-import { useNavigateTo } from '../../lib/navigation';
-import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions';
+import { useNavigateTo } from '../../lib/navigation.hook';
+import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions.queries';
 
 // @FollowsBlueprint route-list-page
 export function SessionsPage(): JSX.Element {

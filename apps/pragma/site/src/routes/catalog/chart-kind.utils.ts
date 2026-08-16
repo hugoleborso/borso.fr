@@ -7,6 +7,7 @@
  *
  * Pure, total — `null`/`undefined`/`{}` chart inputs collapse to
  * `null` so the rendering layer can switch on a single tag.
+ * @Feature songs
  */
 
 export type ChartKindTag = 'chordpro' | 'pdf' | 'image' | null;

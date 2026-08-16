@@ -3,11 +3,11 @@
  *
  * media.service is a thin wrapper around `createPresignedUpload`; this
  * test exercises the wrapper boundary so the file isn't left untested.
- * Heavy S3 / content-type assertions live in media.s3.test.ts.
+ * Heavy S3 / content-type assertions live in media.adapter.test.ts.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { MediaContentTypeError } from './media.s3';
+import { MediaContentTypeError } from './media.adapter';
 import { presignRunnerPhotoUpload } from './media.service';
 
 const PRESERVED_ENV: Record<string, string | undefined> = {

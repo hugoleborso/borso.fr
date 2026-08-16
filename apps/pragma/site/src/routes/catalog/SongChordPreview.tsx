@@ -7,6 +7,7 @@
  * The preview is a check on what was typed, not the surface the chart is read
  * from on stage — so it keeps the same height budget as the editor it mirrors
  * rather than pushing Save and Delete a chart's length down the page.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';

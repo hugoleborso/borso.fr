@@ -28,6 +28,7 @@
  * `prominentMemberInstrument` chip describing what they play here, and the
  * strips are hidden because the gaps between the visible rows are no longer
  * the gaps of the set.
+ * @Feature setlists
  */
 
 import { evaluateTransition } from '@domain/transition.core';
@@ -35,22 +36,25 @@ import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { meanMasteryForSong } from '../../lib/mastery-aggregate.utils';
-import { useInstrumentsList } from '../../lib/queries/instruments';
-import { useMasteryDefaults } from '../../lib/queries/mastery';
-import { useMembersList } from '../../lib/queries/members';
+import { useInstrumentsList } from '../../lib/queries/instruments.queries';
+import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
+import { useMembersList } from '../../lib/queries/members.queries';
 import {
   useAppendSetlistEntry,
   useDeleteSetlistEntry,
   useReorderSetlist,
   useSetlistEntries,
   useUpdateSetlistEntry,
-} from '../../lib/queries/setlists';
-import { useSongsList } from '../../lib/queries/songs';
-import { useTransitionCommentsList } from '../../lib/queries/transitions';
+} from '../../lib/queries/setlists.queries';
+import { useSongsList } from '../../lib/queries/songs.queries';
+import { useTransitionCommentsList } from '../../lib/queries/transitions.queries';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { BottomActionBar } from '../molecules/BottomActionBar';
-import { BREAKPOINT_BELOW_LG, useIsMediaQueryMatching } from '../molecules/useIsMediaQueryMatching';
+import {
+  BREAKPOINT_BELOW_LG,
+  useIsMediaQueryMatching,
+} from '../molecules/media-query-matching.hook';
 import { SetlistEntriesList } from './SetlistEntriesList';
 import { SetlistSongPicker } from './SetlistSongPicker';
 import { SetlistToolbar } from './SetlistToolbar';

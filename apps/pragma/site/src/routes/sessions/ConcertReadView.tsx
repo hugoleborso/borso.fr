@@ -3,6 +3,7 @@
  * concert layout: friends-per-member bars on the left + gear card,
  * venue + capacity summary on the right. The "Edit" affordance lives
  * on the parent SessionDetailPage header.
+ * @Feature sessions
  */
 
 import { useTranslation } from 'react-i18next';

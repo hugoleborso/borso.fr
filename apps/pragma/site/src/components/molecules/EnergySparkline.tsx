@@ -14,6 +14,7 @@
  * straight from the data and `top` in pixels (the vertical axis is 1:1,
  * height is fixed), so they stay perfectly round at any width with no
  * measuring.
+ * @Feature setlists
  */
 
 import { buildSparklinePath } from './energy-sparkline.utils';

@@ -10,6 +10,7 @@
  *
  * TanStack Query types a mutation's variables as `unknown`, and a create carries
  * no id at all, so which song a write names is parsed rather than asserted.
+ * @Feature songs
  */
 
 import type { MutationStatus } from '@tanstack/react-query';

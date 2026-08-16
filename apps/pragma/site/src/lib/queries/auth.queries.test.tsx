@@ -8,7 +8,7 @@
  */
 
 import { afterEach, describe, expect, it } from 'vitest';
-import { authKeys, useLogin } from './auth';
+import { authKeys, useLogin } from './auth.queries';
 import {
   createIsolatedQueryClient,
   createMutateSlot,
@@ -16,7 +16,7 @@ import {
   jsonResponse,
   mountWithClient,
   stubFetch,
-} from './test-helpers';
+} from './queries.test-utils';
 
 function ProbeLogin({
   sink,

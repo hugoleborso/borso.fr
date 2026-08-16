@@ -6,6 +6,7 @@
  * the mobile setlist reorder, not to this desktop board. Touch input fires no
  * drag event at all, which is why `BarsPage` shows this board only from `lg`
  * up and renders the list below it.
+ * @Feature bars
  */
 
 import type { JSX } from 'react';

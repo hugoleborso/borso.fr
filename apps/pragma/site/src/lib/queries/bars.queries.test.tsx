@@ -6,7 +6,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { barKeys, useCreateBar, useDeleteBar, useUpdateBar } from './bars';
+import { barKeys, useCreateBar, useDeleteBar, useUpdateBar } from './bars.queries';
 import {
   createIsolatedQueryClient,
   createMutateSlot,
@@ -15,7 +15,7 @@ import {
   jsonResponse,
   mountWithClient,
   stubFetch,
-} from './test-helpers';
+} from './queries.test-utils';
 
 interface OptimisticListShape {
   bars: { id: string; name: string; status: string }[];

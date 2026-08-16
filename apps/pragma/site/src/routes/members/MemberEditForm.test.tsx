@@ -9,7 +9,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import '../../i18n/i18n';
+import '../../i18n/i18n.setup';
 import { MemberEditForm } from './MemberEditForm';
 import { type MemberFormValues, DEFAULT_MEMBER_COLOR } from './members-page.core';
 

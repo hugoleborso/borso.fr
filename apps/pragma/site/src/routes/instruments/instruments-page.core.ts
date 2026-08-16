@@ -6,6 +6,7 @@
  *
  * Also holds the label key of each instrument family, which both the list and
  * the form read.
+ * @Feature instruments
  */
 
 import type { InstrumentFamily } from '@domain/instrument.core';

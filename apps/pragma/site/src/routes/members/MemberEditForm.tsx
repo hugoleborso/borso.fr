@@ -5,6 +5,7 @@
  * The parent gives the form a key derived from the selected member, so
  * picking another member remounts the form and the fields start from
  * the new values. Nothing copies the selection into field state.
+ * @Feature members
  */
 
 import { useForm } from '@tanstack/react-form';

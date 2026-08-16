@@ -9,6 +9,7 @@
  *    nulls fall back to 5, the neutral midpoint),
  *  - the curve is the Catmull-Rom-ish quadratic-Bezier chain the
  *    prototype's `EnergySparkline` uses.
+ * @Feature setlists
  */
 
 const VERTICAL_PADDING = 6;

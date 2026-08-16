@@ -7,6 +7,7 @@
  *
  * Field vocabulary, validation, and the values-to-payload translation
  * live in `bar-form.core.ts`.
+ * @Feature bars
  */
 
 import { useForm } from '@tanstack/react-form';

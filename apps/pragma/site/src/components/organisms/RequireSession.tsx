@@ -7,12 +7,13 @@
  * A browser that has never signed in carries no session marker, so the
  * probe stays disabled and the visitor reaches /login without a gated
  * request answering 401.
+ * @Feature auth
  */
 
 import type { JSX } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useSessionProbe } from '../../lib/queries/auth';
-import { hasSessionMarker } from '../../lib/session-marker';
+import { useSessionProbe } from '../../lib/queries/auth.queries';
+import { hasSessionMarker } from '../../lib/session-marker.adapter';
 import { selectSessionGateState, type SessionGateState } from './session-gate.core';
 
 function CheckingSession(): JSX.Element {

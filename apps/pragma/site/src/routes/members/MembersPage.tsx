@@ -10,6 +10,7 @@
  * Deleting a member asks first. The button sits 12px from the name that opens
  * the edit form, the write takes their mastery scores with it, and nothing in
  * this app has an undo.
+ * @Feature members
  */
 
 import type { JSX } from 'react';
@@ -20,9 +21,9 @@ import { memberInitial } from '../../components/atoms/member-palette.utils';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { MasteryMatrix } from '../../components/organisms/MasteryMatrix';
-import { ApiError } from '../../lib/api';
+import { ApiError } from '../../lib/api.client';
 import { readableForeground } from '../../lib/member-color.utils';
-import { useInstrumentsList } from '../../lib/queries/instruments';
+import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import {
   useAssignMemberInstruments,
   useCreateMember,
@@ -30,7 +31,7 @@ import {
   useMemberInstruments,
   useMembersList,
   useUpdateMember,
-} from '../../lib/queries/members';
+} from '../../lib/queries/members.queries';
 import { MemberEditForm } from './MemberEditForm';
 import {
   applyMemberWriteIntent,

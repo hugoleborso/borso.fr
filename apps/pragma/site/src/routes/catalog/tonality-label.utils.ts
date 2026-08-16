@@ -4,6 +4,7 @@
  * A song that modulates carries a start key and a different end key, and the
  * label names both. A song that stays in one key names it once, whether the
  * end key is absent or equal to the start key.
+ * @Feature songs
  */
 
 const MODULATION_SEPARATOR = ' → ';

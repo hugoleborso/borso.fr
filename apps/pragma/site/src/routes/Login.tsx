@@ -6,6 +6,7 @@
  *
  * Design bundle source of truth: cream paper, centred card, blue
  * accent on the submit button, serif italic display title.
+ * @Feature auth
  */
 
 import { useForm } from '@tanstack/react-form';
@@ -18,9 +19,9 @@ import { Button } from '../components/atoms/Button';
 import { Card } from '../components/atoms/Card';
 import { Icon } from '../components/atoms/Icon';
 import { Input } from '../components/atoms/Input';
-import { ApiError } from '../lib/api';
-import { useNavigateTo } from '../lib/navigation';
-import { useLogin } from '../lib/queries/auth';
+import { ApiError } from '../lib/api.client';
+import { useNavigateTo } from '../lib/navigation.hook';
+import { useLogin } from '../lib/queries/auth.queries';
 import { selectLoginErrorMessageKey, selectPostLoginPath } from './login.core';
 
 const passwordSchema = z.object({ password: z.string().min(8).max(256) });

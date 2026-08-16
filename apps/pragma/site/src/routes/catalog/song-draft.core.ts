@@ -2,6 +2,7 @@
  * Song-draft shape + helpers shared between SongDetailPage and the
  * child form components. Extracted so the parent stays under the
  * file-length limit.
+ * @Feature songs
  */
 
 import { z } from 'zod';

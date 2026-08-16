@@ -3,6 +3,8 @@
  * Mirrors the shape of `apps/last-loop-lepin/api/src/database/client.ts` —
  * one singleton per Lambda container, lazy DSQL token refresh via the
  * `password` callback.
+ *
+ * @DependsOnExternal aws-dsql
  */
 
 import { DsqlSigner } from '@aws-sdk/dsql-signer';

@@ -1,4 +1,5 @@
 import bundledOpeningsJson from './openings.json';
+import { fetchOpeningsDocument } from './openingsSource.adapter';
 import { parseOpenings } from './parseOpenings.utils';
 import type { Opening } from './types';
 
@@ -16,15 +17,10 @@ type LoadOpeningsResult = { ok: true; openings: Opening[] } | { ok: false; error
  * network and the bundled fallback fail (data corruption / shape drift).
  */
 export async function loadOpenings(): Promise<LoadOpeningsResult> {
-  try {
-    const response = await fetch(OPENINGS_URL, { cache: 'no-cache' });
-    if (response.ok) {
-      const body: unknown = await response.json();
-      const openings = parseOpenings(body);
-      if (openings.length > 0) return { ok: true, openings };
-    }
-  } catch (networkError) {
-    console.warn('Network openings.json fetch failed; trying bundled fallback', networkError);
+  const body = await fetchOpeningsDocument(OPENINGS_URL);
+  if (body !== null) {
+    const openings = parseOpenings(body);
+    if (openings.length > 0) return { ok: true, openings };
   }
   try {
     const fallback = parseOpenings(bundledOpeningsJson);

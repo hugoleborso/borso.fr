@@ -10,6 +10,7 @@
  *
  * Deleting an instrument asks first: it leaves every lineup that holds it and
  * there is no undo.
+ * @Feature instruments
  */
 
 import { INSTRUMENT_FAMILIES, type InstrumentFamily } from '@domain/instrument.core';
@@ -24,13 +25,13 @@ import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Input } from '../../components/atoms/Input';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
-import { ApiError } from '../../lib/api';
+import { ApiError } from '../../lib/api.client';
 import {
   useCreateInstrument,
   useDeleteInstrument,
   useInstrumentsList,
   useUpdateInstrument,
-} from '../../lib/queries/instruments';
+} from '../../lib/queries/instruments.queries';
 import {
   INSTRUMENT_FAMILY_LABEL_KEY,
   selectInstrumentDeletionEffect,

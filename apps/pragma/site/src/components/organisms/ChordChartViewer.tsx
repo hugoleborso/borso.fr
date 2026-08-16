@@ -28,6 +28,7 @@
  * sideways shows one line at a time and stops being a chart. A wrapped
  * continuation is indented so it reads as a continuation and not as a new line
  * of the song.
+ * @Feature songs
  */
 
 import { useMemo } from 'react';

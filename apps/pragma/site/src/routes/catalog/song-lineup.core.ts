@@ -8,6 +8,7 @@
  * lineup card reads, while the mastery card scores each instrument on its own.
  * Resolving once here keeps both cards free of `.find()` chains and makes the
  * "a member who left the band is dropped" rule something a test can state.
+ * @Feature songs
  */
 
 import type { Lineup } from '@domain/lineup.core';

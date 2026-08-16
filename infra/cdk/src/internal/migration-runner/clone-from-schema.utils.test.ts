@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildAddColumnSql,
   buildCloneInsertSql,
+  formatColumnType,
   buildCreateTableLikeSql,
   buildReplaceBeforeCloneSql,
   findUndecidedCredentialTables,
   isCloneableDataTable,
   isReplacedBeforeClone,
   selectCloneableDataTables,
+  selectMissingColumns,
 } from './clone-from-schema.utils.js';
 
 // @FollowsBlueprint test-pure-unit
@@ -246,5 +249,112 @@ describe('isCloneableDataTable', () => {
   it('returns true for tables outside the blocklist', () => {
     expect(isCloneableDataTable('editions', ['admin_sessions'])).toBe(true);
     expect(isCloneableDataTable('runners', [])).toBe(true);
+  });
+});
+
+describe('selectMissingColumns', () => {
+  it('returns the source columns the target does not have', () => {
+    expect(
+      selectMissingColumns(
+        [
+          { name: 'id', type: 'text' },
+          { name: 'is_harmonic', type: 'boolean' },
+          { name: 'family', type: 'text' },
+        ],
+        ['id', 'is_harmonic'],
+      ),
+    ).toStrictEqual([{ name: 'family', type: 'text' }]);
+  });
+
+  it('returns nothing when the target already matches', () => {
+    expect(
+      selectMissingColumns([{ name: 'id', type: 'text' }], ['id', 'extra_column_only_here']),
+    ).toStrictEqual([]);
+  });
+
+  it('returns every column for a table the target has not created yet', () => {
+    const columns = [
+      { name: 'id', type: 'text' },
+      { name: 'name', type: 'text' },
+    ];
+    expect(selectMissingColumns(columns, [])).toStrictEqual(columns);
+  });
+});
+
+describe('buildAddColumnSql', () => {
+  it('builds a bare ADD COLUMN, which is the only shape Aurora DSQL accepts', () => {
+    expect(buildAddColumnSql('pr_49', 'instrument', { name: 'family', type: 'text' })).toBe(
+      'ALTER TABLE "pr_49"."instrument" ADD COLUMN IF NOT EXISTS "family" text',
+    );
+  });
+
+  it('keeps a length or a precision the catalogue reported', () => {
+    expect(
+      buildAddColumnSql('pr_49', 'song', { name: 'title', type: 'character varying(200)' }),
+    ).toBe('ALTER TABLE "pr_49"."song" ADD COLUMN IF NOT EXISTS "title" character varying(200)');
+    expect(buildAddColumnSql('pr_49', 'song', { name: 'weight', type: 'numeric(10, 2)' })).toBe(
+      'ALTER TABLE "pr_49"."song" ADD COLUMN IF NOT EXISTS "weight" numeric(10, 2)',
+    );
+    expect(
+      buildAddColumnSql('pr_49', 'song', { name: 'created_at', type: 'timestamp with time zone' }),
+    ).toBe(
+      'ALTER TABLE "pr_49"."song" ADD COLUMN IF NOT EXISTS "created_at" timestamp with time zone',
+    );
+  });
+
+  it('refuses a type that is not a plain type name', () => {
+    expect(() =>
+      buildAddColumnSql('pr_49', 'song', { name: 'title', type: 'text; DROP SCHEMA "pragma"' }),
+    ).toThrow('refusing to build with type');
+  });
+
+  it('refuses an identifier that is not a plain identifier', () => {
+    expect(() => buildAddColumnSql('pr_49', 'song', { name: 'a"b', type: 'text' })).toThrow(
+      'Invalid column name',
+    );
+    expect(() => buildAddColumnSql('pr-49', 'song', { name: 'title', type: 'text' })).toThrow(
+      'Invalid schema name',
+    );
+    expect(() => buildAddColumnSql('pr_49', 'so ng', { name: 'title', type: 'text' })).toThrow(
+      'Invalid table name',
+    );
+  });
+});
+
+describe('formatColumnType', () => {
+  const row = {
+    column_name: 'family',
+    data_type: 'text',
+    character_maximum_length: null,
+    numeric_precision: null,
+    numeric_scale: null,
+  };
+
+  it('takes the data type as-is when the catalogue reports no modifier', () => {
+    expect(formatColumnType(row)).toStrictEqual({ name: 'family', type: 'text' });
+  });
+
+  it('folds back the length the catalogue reports separately', () => {
+    expect(
+      formatColumnType({ ...row, data_type: 'character varying', character_maximum_length: 200 }),
+    ).toStrictEqual({ name: 'family', type: 'character varying(200)' });
+  });
+
+  it('folds back a numeric precision and scale', () => {
+    expect(
+      formatColumnType({ ...row, data_type: 'numeric', numeric_precision: 10, numeric_scale: 2 }),
+    ).toStrictEqual({ name: 'family', type: 'numeric(10,2)' });
+  });
+
+  it('defaults a numeric with no scale to zero, which is what Postgres means by it', () => {
+    expect(formatColumnType({ ...row, data_type: 'numeric', numeric_precision: 10 })).toStrictEqual(
+      { name: 'family', type: 'numeric(10,0)' },
+    );
+  });
+
+  it('leaves a non-numeric type alone even when a precision is reported', () => {
+    expect(formatColumnType({ ...row, data_type: 'integer', numeric_precision: 32 })).toStrictEqual(
+      { name: 'family', type: 'integer' },
+    );
   });
 });

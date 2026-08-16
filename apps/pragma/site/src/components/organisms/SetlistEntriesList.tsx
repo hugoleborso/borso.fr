@@ -6,6 +6,7 @@
  * derived row props (resolved lineup, prominent member chip in
  * single-member mode, override badge, the transition strip that
  * precedes each row) and emits intent through the supplied callbacks.
+ * @Feature setlists
  */
 
 import {
@@ -29,7 +30,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import type { LineupEditorInstrument } from '../molecules/LineupEditor';
 import type { LineupMember } from '../molecules/MemberLineup';
-import { warnIfOrphanMemberIds } from './orphan-member-warn';
+import { warnIfOrphanMemberIds } from './orphan-member-warn.adapter';
 import { SetlistEntryDragPreview } from '../molecules/SetlistEntryDragPreview';
 import { SetlistEntryRow } from './SetlistEntryRow';
 import {

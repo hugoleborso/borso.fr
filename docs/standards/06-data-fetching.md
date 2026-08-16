@@ -150,6 +150,19 @@ thing under two spellings and the dashboard cannot group them. The adapter
 fixes those in one place and takes the event name as a closed union, so a name
 that does not exist is a type error rather than an event nobody finds.
 
+That module is named `<vendor>.adapter.ts`, so the folder and
+[ADR-0012](../adr/0012-outbound-calls-live-in-adapter-files.md) agree rather
+than compete. They are answering different questions: the folder is a *scope*,
+and it is the narrower rule, because a reporting SDK is the one outbound
+dependency whose call sites are the whole application rather than one bounded
+context; the suffix is a *layer*, and the architecture map reads it off the path
+to know that the edge to the vendor leaves from here. A reporting module that
+kept a plain name would sit in the right folder and still land on the map with
+no layer at all.
+
+`apps/last-loop-lepin/site/src/observability/sentry.ts` is the one module that
+predates the suffix and has not been renamed.
+
 ## Enforced by
 
 - `borso/no-vendor-sdk-outside-adapter`, a custom ESLint rule, which rejects an

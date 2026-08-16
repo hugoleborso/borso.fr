@@ -2,6 +2,7 @@
  * Pure helpers backing `CreateSessionDialog`. Kept side-effect-free so
  * the date defaulting + the `<input type="datetime-local">` ↔ ISO bridge
  * can be tested without mounting the form.
+ * @Feature sessions
  */
 
 const TOMORROW_HOUR = 20;

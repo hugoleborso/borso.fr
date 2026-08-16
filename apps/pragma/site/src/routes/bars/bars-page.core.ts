@@ -2,6 +2,7 @@
  * Decisions the bars page makes: which kanban column a bar belongs to,
  * which write a submitted form means, and which form the page should
  * show after a row is selected or deleted.
+ * @Feature bars
  */
 
 import {

@@ -84,6 +84,7 @@ _(no entries yet)_
 - 0005 — Dynamic Workflows as the orchestration substrate (supersedes 0001's runtime, not its intent).
 - 0007 — ESLint with type-aware rules replaces Biome; the cost is a 23× slower cold lint, the benefit is every rule the standards name.
 - 0008 — purity enforced by file location through three custom rules, with "condition" narrowed to mean a decision.
+- 0011 — ELK lays out the architecture graph at generation time; edges through unrelated nodes go from 72/125 to 0/125 and the page still ships no layout engine.
 
 ## How `/open-pr` uses ADRs
 

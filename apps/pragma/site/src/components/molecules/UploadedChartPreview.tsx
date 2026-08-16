@@ -3,6 +3,7 @@
  * short-lived signed GET URL, in an `<iframe>` (PDF) or an `<img>`
  * (image). The URL is signed by the route that renders this preview,
  * so the molecule stays renderable without a query client.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';

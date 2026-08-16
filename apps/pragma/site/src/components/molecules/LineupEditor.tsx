@@ -27,12 +27,13 @@
  * the parent persists `lineupOverride: null`. Without a prior Reset,
  * Save calls `onSave(lineup, false)` and the parent persists the form
  * values verbatim.
+ * @Feature members
  */
 
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog';
+import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { Button } from '../atoms/Button';
 import { composeClassName } from '../atoms/class-name.utils';
 import {

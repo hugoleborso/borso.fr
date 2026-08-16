@@ -105,6 +105,47 @@ describe('migration-runner handler — cloneFromSchema (Neon-branch pattern)', (
     expect(queries).toMatch(/INSERT INTO "pr_27"\."_migrations" \("name", "applied_at"\)/);
   });
 
+  it('adds a column production gained to a preview schema that already exists', async () => {
+    // The failure this covers: `pragma-pr-49` was first deployed before
+    // production gained `instrument.family`. The structural step is
+    // `CREATE TABLE IF NOT EXISTS`, which is a no-op on a table that is
+    // already there, so the preview kept the old shape while the data step
+    // named the new column — and Aurora DSQL answered `column "family" of
+    // relation "instrument" does not exist`.
+    state.existingSchemas.add('prod');
+    state.existingSchemas.add('pr_49');
+    state.tablesPerSchema.set('prod', ['_migrations', 'instrument']);
+    state.tablesPerSchema.set('pr_49', ['_migrations', 'instrument']);
+    state.columnsPerTable.set('prod._migrations', ['name', 'applied_at']);
+    state.columnsPerTable.set('pr_49._migrations', ['name', 'applied_at']);
+    state.columnsPerTable.set('prod.instrument', ['id', 'is_harmonic', 'family']);
+    state.columnsPerTable.set('pr_49.instrument', ['id', 'is_harmonic']);
+
+    await handler({
+      RequestType: 'Update',
+      ResourceProperties: {
+        ...baseProps,
+        schemaName: 'pr_49',
+        migrations: [],
+        cloneFromSchema: { sourceSchemaName: 'prod' },
+      },
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+
+    const alterIndex = queries.findIndex((query) =>
+      query.includes('ALTER TABLE "pr_49"."instrument" ADD COLUMN IF NOT EXISTS "family" text'),
+    );
+    const insertIndex = queries.findIndex((query) =>
+      query.includes('INSERT INTO "pr_49"."instrument"'),
+    );
+    expect(alterIndex).toBeGreaterThan(-1);
+    // The reconciliation has to land before the INSERT that names the column.
+    expect(insertIndex).toBeGreaterThan(alterIndex);
+    // Only the missing column is added; the two the target already has are
+    // left alone, because DSQL would reject a second ADD of the same name.
+    expect(queries.filter((query) => query.includes('ADD COLUMN'))).toHaveLength(1);
+  });
+
   it('skips the clone step when the source schema does not exist (first-ever deploy of an app)', async () => {
     // existingSchemas stays empty — prod has never been deployed yet.
     await handler({

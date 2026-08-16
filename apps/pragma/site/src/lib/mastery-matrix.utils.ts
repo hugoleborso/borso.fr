@@ -3,6 +3,7 @@
  * case 1bis: row averages = per-member overall musicianship, column
  * averages = per-instrument bench strength. Both compute live as the
  * matrix is edited.
+ * @Feature mastery
  */
 
 // @FollowsBlueprint utils-pure-module

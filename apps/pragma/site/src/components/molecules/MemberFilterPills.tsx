@@ -8,6 +8,7 @@
  * "All members" pill need 455 px against a 343 px viewport, and a
  * sideways scroll with no fade and no scrollbar left the last member
  * off screen, so filtering by that person looked impossible.
+ * @Feature members
  */
 
 import type { JSX } from 'react';

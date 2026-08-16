@@ -6,7 +6,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { buildChartObjectKey } from './uploads.core';
-import { presignGetObject, presignPutObject } from './uploads.repository';
+import { presignGetObject, presignPutObject } from './uploads.adapter';
 import type { AllowedUploadContentType, PresignedGetUrl, PresignedPutUrl } from './uploads.types';
 import { UPLOAD_URL_EXPIRES_SECONDS } from './uploads.types';
 

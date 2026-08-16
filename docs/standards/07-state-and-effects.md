@@ -124,6 +124,8 @@ are synchronising with.
 - `borso/no-use-effect`, a custom ESLint rule, set to error across
   `apps/*/site/`, with the disable comment requiring a description.
 - `react-hooks/rules-of-hooks` and `react-hooks/exhaustive-deps`, both set to
-  error, which cover the effects that survive.
+  error, which cover the effects that survive. `exhaustive-deps` needs the
+  explicit severity: the plugin's recommended set ships it at `warn`, and no
+  gate here passes `--max-warnings`, so it failed nothing until 2026-08-15.
 - `borso/no-inline-subscribe-in-use-sync-external-store`, a custom ESLint rule,
   which rejects an inline `subscribe` or `getSnapshot` argument.

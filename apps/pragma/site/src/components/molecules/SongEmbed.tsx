@@ -5,6 +5,7 @@
  *
  * Both the song detail page and the song edit form's link list show the same
  * thing, so the markup lives here rather than twice.
+ * @Feature songs
  */
 
 import type { JSX } from 'react';

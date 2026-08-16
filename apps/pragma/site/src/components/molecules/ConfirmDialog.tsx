@@ -12,7 +12,7 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog';
+import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { Button } from '../atoms/Button';
 
 export interface ConfirmDialogProps {

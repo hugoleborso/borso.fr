@@ -2,6 +2,7 @@
  * EnergyBadge — the "E 4" / "E 6" mono badge from the prototype.
  * Tiny, mono, sits beside song titles and on setlist rows to
  * surface the song's base energy at a glance.
+ * @Feature setlists
  */
 
 import { useTranslation } from 'react-i18next';

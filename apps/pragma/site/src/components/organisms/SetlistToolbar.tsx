@@ -21,6 +21,7 @@
  * mid-drag was several hundred pixels above the viewport: a reorder failed
  * and nothing on screen changed. The two set-level actions moved the other
  * way, into the bottom bar, out of the strip a thumb cannot reach.
+ * @Feature setlists
  */
 
 import type { JSX } from 'react';

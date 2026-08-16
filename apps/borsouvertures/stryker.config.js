@@ -1,5 +1,5 @@
 import { defineStrykerConfig } from '../../stryker.shared.js';
 
 export default defineStrykerConfig({
-  mutate: ['site/**/*.core.ts', 'site/**/*.utils.ts'],
+  mutate: ['site/**/*.core.ts', 'site/**/*.utils.ts', 'site/**/*.adapter.ts'],
 });
