@@ -5,7 +5,7 @@ detected-at: review
 severity: medium
 related-pr: https://github.com/hugoleborso/borso.fr/pull/49
 fix-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-commits: [01e8a28]
+fix-commits: [01e8a28, e065cd1]
 eradication-level: 2
 time-to-detect: days
 tags: [ci, gates, pre-commit, github-actions, vitest, eslint, drift]
@@ -65,7 +65,7 @@ either half. Only the pair is wrong, and the pair is never on screen at once.
 ## Countermeasure
 
 `scripts/check-coupled-lists.sh`, run in pre-commit and in CI, reads both copies
-of the two rules that still exist as pairs and fails when they disagree.
+of the three rules that still exist as pairs and fails when they disagree.
 
 It compares meaning rather than text, because the dialects differ:
 
@@ -95,8 +95,9 @@ reintroducing each:
 | --- | --- |
 | `blueprint-utils.ts` removed from the hook's trigger | fails, naming the path and the file |
 | a suffix added to `TESTED_FILE_PATTERN` and not to the configs | fails once per application, naming the config |
+| a knowledge entry removed from its index | fails, naming the file nobody could now find |
 
-Shipped in `01e8a28`, wired into `.husky/pre-commit` and `.github/workflows/ci.yml`.
+Shipped in `01e8a28` and `e065cd1`, wired into `.husky/pre-commit` and `.github/workflows/ci.yml`.
 
 The other two pairs were eradicated structurally in PR #49 rather than checked,
 which is the better rung and the reason they are not in the script:
