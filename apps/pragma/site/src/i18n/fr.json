@@ -194,8 +194,8 @@
   },
   "setlist": {
     "title": "Setlists",
-    "indexSubtitle": "Setlists en cours, triées par date de concert.",
-    "indexEmpty": "Aucune setlist créée — ouvre un concert depuis /sessions pour en composer une.",
+    "indexSubtitle": "Tous les concerts, du plus récent au plus ancien. Compose la setlist de ceux qui n’en ont pas.",
+    "indexNoConcert": "Aucun concert enregistré — ajoute-en un depuis",
     "addSong": "Ajouter un morceau",
     "removeEntry": "Retirer",
     "moveUp": "Monter",
@@ -231,6 +231,7 @@
       "remove": "Le morceau n’a pas été retiré. Vérifie la connexion et réessaie.",
       "reorder": "Le nouvel ordre n’a pas été enregistré. Vérifie la connexion et réessaie.",
       "update": "La modification n’a pas été enregistrée. Vérifie la connexion et réessaie.",
+      "create": "La setlist n’a pas été créée. Vérifie la connexion et réessaie.",
       "copyOrder": "L’ordre de passage n’a pas pu être copié dans le presse-papier."
     }
   },

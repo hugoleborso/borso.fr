@@ -194,8 +194,8 @@
   },
   "setlist": {
     "title": "Setlists",
-    "indexSubtitle": "Setlists in flight, sorted by concert date.",
-    "indexEmpty": "No setlist created yet — open a concert from /sessions and build one.",
+    "indexSubtitle": "Every concert, newest first. Build a setlist for the ones that have none.",
+    "indexNoConcert": "No concert on the books yet — add one from",
     "addSong": "Add song",
     "removeEntry": "Remove",
     "moveUp": "Move up",
@@ -231,6 +231,7 @@
       "remove": "The song was not removed. Check the connection and try again.",
       "reorder": "The new order was not saved. Check the connection and try again.",
       "update": "The change was not saved. Check the connection and try again.",
+      "create": "The setlist was not created. Check the connection and try again.",
       "copyOrder": "The running order could not be copied to the clipboard."
     }
   },
