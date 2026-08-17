@@ -5,7 +5,7 @@ detected-at: review
 severity: medium
 related-pr: https://github.com/hugoleborso/borso.fr/pull/49
 fix-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-commits: [01e8a28, e065cd1]
+fix-commits: [01e8a28, e065cd1, b5c02e5]
 eradication-level: 2
 time-to-detect: days
 tags: [ci, gates, pre-commit, github-actions, vitest, eslint, drift]
