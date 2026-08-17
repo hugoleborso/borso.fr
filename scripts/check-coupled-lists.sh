@@ -80,6 +80,23 @@ for config in apps/*/vitest.config.ts; do
   done
 done
 
+# 3. The knowledge corpus and its index.
+#
+# `docs/knowledge/README.md` carries a one-line entry per file, and an entry
+# that never gets written makes the file unfindable by anyone who did not
+# already know it existed — which is the entire audience. Three had drifted out
+# before this check existed.
+#
+# `docs/dantotsus/README.md` is deliberately not a per-entry index; it says so,
+# and points at `ls` and a listing script instead. So it is not checked here.
+for entry in docs/knowledge/*.md; do
+  name=$(basename "$entry")
+  [ "$name" = 'README.md' ] && continue
+  if ! grep -qF -- "./$name)" docs/knowledge/README.md; then
+    fail "docs/knowledge/$name is not linked from docs/knowledge/README.md, so nobody who does not already know it exists will find it."
+  fi
+done
+
 if [ "$failed" -ne 0 ]; then
   echo "[check-coupled-lists] two lists that have to agree do not." >&2
   exit 1
