@@ -112,6 +112,44 @@ function toneOf(kind: string): string {
   return 'neutral';
 }
 
+const STYLE_BLOCK = /<style>([\s\S]*?)<\/style>/g;
+const CUSTOM_PROPERTY_USE = /var\(\s*(--[\w-]+)\s*([,)])/g;
+const CUSTOM_PROPERTY_DEFINITION = /(--[\w-]+)\s*:/g;
+
+/**
+ * The page, or a throw naming a custom property it reads and never defines.
+ *
+ * An undefined custom property is not an empty string and not the property's
+ * inherited value: the declaration is invalid at computed-value time, so the
+ * property falls back to its *initial* value. `fill: var(--chip)` with no
+ * `--chip` paints black, on a page whose whole palette exists to keep colour
+ * meaningful. Nothing about that reads as a missing definition when you look at
+ * it, which is why it survived a light theme, a dark theme and a review.
+ *
+ * A `var(--x, fallback)` use may name a property nobody defines, because that
+ * is what the fallback is for. Only the page's own stylesheets are read: the
+ * application source the code viewer embeds carries custom properties defined
+ * in the application's stylesheet, which this page neither ships nor needs.
+ */
+function withDefinedCustomProperties(page: string): string {
+  const styles = [...page.matchAll(STYLE_BLOCK)].map(([, css]) => css ?? '').join('\n');
+  const defined = new Set([...styles.matchAll(CUSTOM_PROPERTY_DEFINITION)].map(([, name]) => name));
+  const missing = [
+    ...new Set(
+      [...styles.matchAll(CUSTOM_PROPERTY_USE)]
+        .filter((match) => match[2] === ')')
+        .map((match) => match[1] ?? '')
+        .filter((name) => !defined.has(name)),
+    ),
+  ].sort();
+  if (missing.length > 0) {
+    throw new Error(
+      `The page reads ${missing.join(', ')} with no fallback and never defines ${missing.length === 1 ? 'it' : 'them'}. An undefined custom property is invalid at computed-value time, so the declaration falls back to the property's initial value — black, for a fill.`,
+    );
+  }
+  return page;
+}
+
 /** JSON embedded in a script tag, with the one sequence that could close it escaped. */
 function embedJson(value: unknown): string {
   return JSON.stringify(value).replaceAll('<', String.raw`\u003c`);
@@ -926,7 +964,7 @@ export function renderArchitecturePage(input: RenderInput): string {
     if (moved === undefined || moved === 0) return '';
     return `<i class="delta">${moved > 0 ? '+' : '−'}${Math.abs(moved)}</i>`;
   };
-  return `<title>${escapeHtml(manifest.name)} architecture${isDiff ? ' diff' : ''}</title>
+  return withDefinedCustomProperties(`<title>${escapeHtml(manifest.name)} architecture${isDiff ? ' diff' : ''}</title>
 ${PAGE_STYLES}
 
 <header class="top"><div class="wrap">
@@ -1055,7 +1093,7 @@ ${PAGE_STYLES}
   });
 </script>
 <script>${GRAPH_RUNTIME_SCRIPT}</script>
-`;
+`);
 }
 
 /**
