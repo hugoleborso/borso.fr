@@ -69,7 +69,11 @@ jobs:
       - run: pnpm exec eslint . --cache --cache-strategy content --cache-location .eslintcache
       # Formatter drift is part of the gate. A commit made with hooks
       # skipped, or from an editor that is not on prettier, fails here.
-      - run: pnpm exec prettier --check . --cache
+      # `pnpm run` rather than `pnpm exec`: the agent harness's command rewriter
+      # substitutes its own build of the formatter when a command names it
+      # through `pnpm exec`, so that shape must not exist here for anyone to
+      # copy. Guarded by scripts/check-coupled-lists.sh.
+      - run: pnpm run format:check
       # The custom ESLint rules under eslint-rules/ each ship a RuleTester
       # suite. A rule that misfires costs more than the rule saves.
       - run: pnpm run test:eslint-rules

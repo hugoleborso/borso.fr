@@ -97,8 +97,6 @@ Two failure modes to watch for:
 - [`biome-formatter-trips-line-count-ceiling.md`](./biome-formatter-trips-line-count-ceiling.md) — a `biome check --write` pass can split JSX/ternaries enough to push an untouched file past `noExcessiveLinesPerFile` ; option set + escape hatch.
 - [`ts-narrowing-lost-in-function-declarations.md`](./ts-narrowing-lost-in-function-declarations.md) — TS preserves narrowing in arrow expressions but not in `function` declarations inside the same scope; convert helpers in `useEffect` to arrow form.
 - [`lambda-esm-native-modules.md`](./lambda-esm-native-modules.md) — ESM-bundled Lambdas crash at cold start on `__dirname is not defined`; the shared banner restores `require`, `__filename`, `__dirname`, and prefer pure-WASM (`hash-wasm`) over native modules (`argon2`, `bcrypt`).
-- [`pnpm-exec-prettier-resolves-a-different-config.md`](./pnpm-exec-prettier-resolves-a-different-config.md) — `pnpm exec prettier` formats at 80 columns where `node_modules/.bin/prettier` reads the repo's 100, and a `--write` then rewrites files nobody touched.
-- [`commitlint-caps-the-body-lines-too.md`](./commitlint-caps-the-body-lines-too.md) — `body-max-line-length` is 100 as well as the header's, and it bites on exactly the markdown table that makes a good refactor message.
 - [`stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md`](./stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md) — Stryker runs from a sandbox copy, so a Vitest `globalSetup` at `../../scripts/` resolves to a file that is genuinely absent; plus the pnpm `--` forwarding trap and the `.stryker-tmp` leftovers.
 ### Validation tooling
 

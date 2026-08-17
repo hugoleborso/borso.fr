@@ -32,7 +32,7 @@ fi
 staged_formattable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html)$' || true)
 if [ -n "$staged_formattable" ]; then
   echo "[pre-commit] running prettier on staged files"
-  echo "$staged_formattable" | xargs pnpm exec prettier --check --cache --ignore-unknown
+  echo "$staged_formattable" | xargs node_modules/.bin/prettier --check --cache --ignore-unknown
 fi
 
 # DSQL compatibility of staged migration SQL. The find inside is a no-op when

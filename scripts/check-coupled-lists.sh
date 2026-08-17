@@ -97,6 +97,23 @@ for entry in docs/knowledge/*.md; do
   fi
 done
 
+# 4. The formatter the repository tells you to run.
+#
+# The agent harness rewrites a literal `pnpm exec prettier` and substitutes its
+# own build — 3.8.1 against the 3.9.6 this repository pins, measured 2026-08-17.
+# The substitute formats at prettier's default 80 columns instead of the 100 in
+# `.prettierrc.json`, so a `--write` reformats every file it is handed and every
+# file it is not. Eight unrelated files were rewritten that way, one of them
+# losing an escaped character inside a package.json.
+#
+# The repository cannot change the harness. It can stop publishing the shape
+# that breaks: `pnpm run format` and `node_modules/.bin/prettier` are both
+# unambiguous, and neither is rewritten.
+# `--exclude` on this file: it necessarily contains the string it forbids.
+if grep -rn --exclude="$(basename "$0")" 'pnpm exec prettier' .husky .github scripts 2>/dev/null; then
+  fail "the lines above invoke prettier through a command shape the agent harness rewrites to a different version. Use 'pnpm run format:check' or 'node_modules/.bin/prettier'."
+fi
+
 if [ "$failed" -ne 0 ]; then
   echo "[check-coupled-lists] two lists that have to agree do not." >&2
   exit 1

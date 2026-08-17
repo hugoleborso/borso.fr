@@ -11,9 +11,17 @@ Observed 2026-08-15 while writing schema tests for `pragma` and
 | `unique('x').on(...)` | `getTableConfig(table).uniqueConstraints` |
 | `primaryKey({ columns })` | `getTableConfig(table).primaryKeys` |
 
-An assertion against the wrong one returns `undefined` and passes nothing —
-`expect(config.uniqueConstraints[0]?.columns).toEqual([...])` is green when the
-index is a `uniqueIndex`, because `[0]` is undefined and `?.` swallows it.
+An assertion against the wrong container **fails**, and says so clearly:
+
+```
+AssertionError: expected undefined to deeply equal [ 'member_id', 'instrument_id' ]
+```
+
+Measured 2026-08-17, because the first version of this entry claimed the
+opposite — that the assertion passed silently on `undefined`. It does not.
+`expect(undefined).toEqual([…])` is a failure, and the optional chain does not
+swallow it. The cost here is a minute of looking in the wrong place, not a green
+test proving nothing.
 
 Worth asserting at all: a composite primary key and a unique index live inside a
 callback that no import evaluates, so they report as an uncovered function and,
