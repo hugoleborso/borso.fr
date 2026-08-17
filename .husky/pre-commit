@@ -113,6 +113,19 @@ scripts/check-pure-modules-have-callers.sh
 echo "[pre-commit] checking app HTML for non-module <script src> tags"
 scripts/check-non-module-scripts.sh
 
+# Two lists that have to say the same thing. Both halves read correctly alone
+# and only the pair is wrong, which is why review never caught either of the two
+# that shipped in PR #49. Rung-2 eradication of
+# docs/dantotsus/two-copies-that-had-to-agree-and-nothing-made-them.md.
+echo "[pre-commit] checking the lists that have to agree"
+scripts/check-coupled-lists.sh
+
+# A workspace with gated files and no mutation config reports nothing, not zero,
+# and a coverage number then reads as reassurance it has not earned. Rung-2
+# eradication of docs/dantotsus/the-gate-that-was-never-pointed-at-the-code.md.
+echo "[pre-commit] checking every gated workspace is mutated"
+scripts/check-mutation-covers-gated-files.sh
+
 # `deploy`, `destroy`, `install`, `update`, `sync`, `fetch` and `publish` are
 # pnpm built-ins. Without `run`, pnpm shadows the package's scripts entry and
 # silently does the wrong thing. Another instant grep of a standing invariant.
