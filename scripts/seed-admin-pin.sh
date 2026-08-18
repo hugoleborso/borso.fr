@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Seed (or rotate) the admin PIN hash in last-loop-lepin's `prod.admin_credentials`
-# table. Every preview schema clones from `prod` on next deploy, so this is the
-# single source of truth — seed once here and every PR's preview inherits.
+# Seed (or rotate) the admin PIN hash in one last-loop-lepin schema's
+# `admin_credentials` table. Defaults to `prod`; set SCHEMA to reach another.
 #
 # Usage:
-#   ./scripts/seed-admin-pin.sh
+#   ./scripts/seed-admin-pin.sh                 # prod
+#   SCHEMA=pr_57 ./scripts/seed-admin-pin.sh    # one preview stage
 #
 # Prompts for the PIN (silent), generates the scrypt hash in the exact format
 # the API expects (`scrypt$<saltHex>$<keyHex>`, 16-byte salt + 64-byte key, cf.
@@ -15,8 +15,11 @@
 # Portable across bash + zsh: the silent prompt uses `stty -echo` (not
 # `read -rsp` which zsh interprets as a coprocess prompt).
 #
-# After this runs, redeploy any in-flight preview to propagate (or wait for
-# the next CFN update event on its DsqlSchema custom resource).
+# Seeding one schema reaches no other. A preview clones `prod` when its schema
+# is created, but `admin_credentials` sits in that clone's tableBlocklist (see
+# apps/last-loop-lepin/cdk/lib/stack.ts) so that a public preview URL cannot
+# carry production's PIN hash. Each stage's admin area therefore stays
+# unreachable until its own schema is seeded by this script.
 set -euo pipefail
 
 PROFILE="${PROFILE:-borso-admin}"

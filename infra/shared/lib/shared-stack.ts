@@ -45,7 +45,7 @@ interface SharedStackProps extends StackProps {
  *   - GitHub OIDC provider (one per account)
  *   - Previews S3 bucket + CloudFront distribution + host-routing Function
  *   - Three deploy roles (prod / preview / shared-infra) — see deploy-roles.ts
- *   - Cost budgets ($5/$20/$50), notifying `props.budgetEmail`
+ *   - Cost budgets ($2/$5/$20/$50), notifying `props.budgetEmail`
  *   - The SSM parameters listed in `SHARED_SSM_PARAMETERS`, which constructs
  *     read at synth time
  *
@@ -161,7 +161,7 @@ export class SharedStack extends Stack {
     // AWS Budgets only accepts USD as the currency unit. The amounts below
     // are dollar thresholds — close enough to euro at the tiny absolute scale
     // we operate at, and AWS rejects any other Unit value at deploy time.
-    for (const amount of [5, 20, 50]) {
+    for (const amount of [2, 5, 20, 50]) {
       new CfnBudget(this, `Budget${amount}`, {
         budget: {
           budgetName: `borso-monthly-${amount}usd`,

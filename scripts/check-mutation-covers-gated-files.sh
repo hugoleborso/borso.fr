@@ -44,6 +44,10 @@ for workspace in apps/*/ infra/*/; do
   workspace=${workspace%/}
   [ -f "$workspace/package.json" ] || continue
 
+  # `-print -quit` rather than a pipe into `head -1`: under the `pipefail` above,
+  # `head` closing after the first line leaves `find` still walking the tree, and
+  # the SIGPIPE it takes (exit 141) fails the whole script. It is a race on how
+  # fast the tree walks, so it passes locally on a warm cache and fails on CI.
   gated=$(find "$workspace" -type f \
     \( -name '*.core.ts' -o -name '*.utils.ts' -o -name '*.adapter.ts' \
     -o -name '*.core.tsx' -o -name '*.utils.tsx' -o -name '*.adapter.tsx' \) \
