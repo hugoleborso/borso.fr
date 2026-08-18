@@ -1,5 +1,5 @@
 import bundledOpeningsJson from './openings.json';
-import { fetchOpeningsDocument } from './openingsSource.adapter';
+import { fetchOpeningsDocument } from './openings-source.adapter';
 import { parseOpenings } from './parseOpenings.utils';
 import type { Opening } from './types';
 

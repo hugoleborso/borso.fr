@@ -1590,7 +1590,7 @@
     },
     {
       "path": "apps/borsouvertures/site/src/openings/loadOpenings.ts",
-      "digest": "90205a3f0ff4",
+      "digest": "8ee609633665",
       "container": "site",
       "layer": "unknown",
       "context": "openings",
@@ -1599,8 +1599,8 @@
         "loadOpenings"
       ],
       "imports": [
+        "apps/borsouvertures/site/src/openings/openings-source.adapter.ts",
         "apps/borsouvertures/site/src/openings/openings.json",
-        "apps/borsouvertures/site/src/openings/openingsSource.adapter.ts",
         "apps/borsouvertures/site/src/openings/parseOpenings.utils.ts",
         "apps/borsouvertures/site/src/openings/types.ts"
       ],
@@ -1682,6 +1682,22 @@
       ]
     },
     {
+      "path": "apps/borsouvertures/site/src/openings/openings-source.adapter.ts",
+      "digest": "662e76e128cb",
+      "container": "site",
+      "layer": "adapter",
+      "context": "openings",
+      "feature": null,
+      "exports": [
+        "fetchOpeningsDocument"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "adapter-external-service"
+      ]
+    },
+    {
       "path": "apps/borsouvertures/site/src/openings/openingsLoad.utils.ts",
       "digest": "f83a0ef24cb6",
       "container": "site",
@@ -1717,22 +1733,6 @@
         "route-suspense-resource"
       ],
       "followsBlueprints": []
-    },
-    {
-      "path": "apps/borsouvertures/site/src/openings/openingsSource.adapter.ts",
-      "digest": "662e76e128cb",
-      "container": "site",
-      "layer": "adapter",
-      "context": "openings",
-      "feature": null,
-      "exports": [
-        "fetchOpeningsDocument"
-      ],
-      "imports": [],
-      "blueprints": [],
-      "followsBlueprints": [
-        "adapter-external-service"
-      ]
     },
     {
       "path": "apps/borsouvertures/site/src/openings/parseOpenings.utils.ts",

@@ -5,7 +5,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchOpeningsDocument } from './openingsSource.adapter';
+import { fetchOpeningsDocument } from './openings-source.adapter';
 
 type PlatformFetch = (url: string, init: RequestInit) => Promise<Response>;
 
