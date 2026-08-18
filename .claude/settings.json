@@ -28,6 +28,15 @@
             "command": ".claude/hooks/pretool-no-broad-kill.sh"
           }
         ]
+      },
+      {
+        "matcher": "mcp__github__create_pull_request|mcp__github__update_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pretool-github-pr-body.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
