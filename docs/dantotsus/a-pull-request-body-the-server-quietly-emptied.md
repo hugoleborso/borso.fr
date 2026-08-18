@@ -114,6 +114,19 @@ standard's `<details>` requirement and this path is now explicit in both
 places, so a body is written to the contract of the tool that will
 carry it.
 
+The hook's first customer was the sweep that added it, and it refused
+that body for *describing* the markup rather than using it — the third
+instance of the same mention-versus-use confusion found in one sitting,
+after both guard hooks in
+[`two-guard-hooks-that-never-guarded`](./two-guard-hooks-that-never-guarded.md).
+It now reads the body with its code spans and fenced blocks removed, via
+`.claude/hooks/strip-markdown-code.py`, because prose about a tag quotes
+the tag. Seven cases cover both directions. The pattern is worth naming
+for the next hook anyone writes here: **a text-matching gate needs to
+know which parts of its input are quoted**, and in this repository the
+quoting is a heredoc for a shell command and a backtick for a
+document.
+
 ## See also
 
 - [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../knowledge/github-mcp-pr-body-sanitizer.md) — the probe table and the full list of forms.

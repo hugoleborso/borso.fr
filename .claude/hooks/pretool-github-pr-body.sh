@@ -32,6 +32,12 @@ INPUT="$(cat)"
 BODY="$(jq -r '.tool_input.body // ""' <<<"$INPUT")"
 if [[ -z "$BODY" ]]; then exit 0; fi
 
+# Match markup that renders, not markup that is being written about. A body
+# explaining this very sanitizer quotes every form it names, and the first
+# body to reach this hook — the sweep that added it — was refused for saying
+# the words. Code spans and fenced blocks are dropped before the checks.
+BODY_AS_RENDERED="$(printf '%s' "$BODY" | python3 "$(dirname "$0")/strip-markdown-code.py")"
+
 block() {
   echo "[pr-body] $1" >&2
   echo "[pr-body] The GitHub MCP server strips this before storing the body, without failing." >&2
@@ -42,19 +48,19 @@ block() {
   exit 2
 }
 
-if grep -qE '!\[[^]]*\]\(' <<<"$BODY"; then
+if grep -qE '!\[[^]]*\]\(' <<<"$BODY_AS_RENDERED"; then
   block "the body carries a markdown image; its URL comes back wrapped in backticks and renders as code."
 fi
 
-if grep -qiE '<img[[:space:]]' <<<"$BODY"; then
+if grep -qiE '<img[[:space:]]' <<<"$BODY_AS_RENDERED"; then
   block "the body carries an <img> tag; its src attribute is removed and an empty tag is stored."
 fi
 
-if grep -qiE '<details>|<summary>' <<<"$BODY"; then
+if grep -qiE '<details>|<summary>' <<<"$BODY_AS_RENDERED"; then
   block "the body carries a <details> toggle; the tag is removed and its contents are flattened into the page."
 fi
 
-if grep -qE '\]\([^)]+\.(png|jpe?g|gif|webp|svg)([?#][^)]*)?\)' <<<"$BODY"; then
+if grep -qE '\]\([^)]+\.(png|jpe?g|gif|webp|svg)([?#][^)]*)?\)' <<<"$BODY_AS_RENDERED"; then
   block "the body links a file whose extension is an image; the URL comes back wrapped in backticks."
 fi
 
