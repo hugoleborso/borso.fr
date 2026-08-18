@@ -229,12 +229,19 @@ export function SessionDetailPage(): JSX.Element {
       <h3 className="font-display italic text-2xl text-ink-900 m-0 mt-4">
         {t('sessions.setlist')}
       </h3>
-      {setlist === null ? (
-        <div>
-          <Button variant="accent" onClick={buildSetlist}>
+      {setlistQuery.isLoading ? (
+        <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
+      ) : setlist === null ? (
+        <div className="flex flex-col gap-2 items-start">
+          <Button variant="accent" onClick={buildSetlist} disabled={createSetlist.isPending}>
             <Icon name="plus" size={14} />
             {t('sessions.buildSetlist')}
           </Button>
+          {createSetlist.isError ? (
+            <p className="text-danger text-sm" role="alert">
+              {t('setlist.failure.create')}
+            </p>
+          ) : null}
         </div>
       ) : (
         <SetlistEditor setlistId={setlist.id} />

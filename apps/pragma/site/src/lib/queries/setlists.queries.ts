@@ -13,7 +13,13 @@
  * @Feature setlists
  */
 
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useIsMutating,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { isLastPendingMutation } from './optimistic.utils';
 import {
@@ -40,11 +46,13 @@ export const setlistKeys = {
   all: ['setlists'] as const,
   bySessionId: (sessionId: string) => [...setlistKeys.all, 'bySession', sessionId] as const,
   entriesOf: (setlistId: string) => [...setlistKeys.all, 'entries', setlistId] as const,
+  creation: () => [...setlistKeys.all, 'creation'] as const,
 };
 
 const ENTRY_MUTATION_KEY = [...setlistKeys.all, 'entry-mutation'] as const;
 
 const NO_SETLIST_STATUS = 404;
+const SETLIST_EXISTS_STATUS = 409;
 
 async function fetchSetlistBySession(sessionId: string) {
   const response = await api.api.setlists['by-session'][':sessionId'].$get({
@@ -53,6 +61,21 @@ async function fetchSetlistBySession(sessionId: string) {
   if (response.status === NO_SETLIST_STATUS) return null;
   if (!response.ok) throw new ApiError(response.status, `setlist ${response.status}`, null);
   return response.json();
+}
+
+/**
+ * The setlist of a session the API refused to create a second one for.
+ *
+ * The read can still answer 404: Aurora DSQL makes a write visible on the
+ * connection that made it before the others, so a `GET` served by another
+ * Lambda can miss a row the `POST` has already committed. That is a failed
+ * create from the caller's side, not an empty session.
+ */
+async function readSetlistOfConflictingSession(sessionId: string) {
+  const existing = await fetchSetlistBySession(sessionId);
+  if (existing === null)
+    throw new ApiError(SETLIST_EXISTS_STATUS, `create ${SETLIST_EXISTS_STATUS}`, null);
+  return existing;
 }
 
 export function useSetlistBySession(sessionId: string, isEnabled = true) {
@@ -98,25 +121,43 @@ export function useSetlistEntries(setlistId: string, isEnabled = true) {
  * fetch (404) until the real id arrives. The latency is bounded by the
  * single round-trip; optimistic doesn't improve perceived UX here.
  *
+ * A session already carrying a setlist answers 409, and that is a
+ * success for the caller: the thing it asked to exist exists. The row is
+ * read back and returned, which is what turns a second tap on a create
+ * button into the editor instead of into a dead end.
+ *
  * @Blueprint query-pessimistic-mutation
  * @BlueprintName Pessimistic Mutation
  * @BlueprintUsage Use for a write whose result the client cannot predict, such as an insert the caller reads an identifier back from.
- * @BlueprintDescription Holds no `onMutate` and no rollback, and invalidates the affected key in `onSuccess` so the next read comes from the server that issued the row. The header states why the optimistic path is refused here, which is the part a reader needs, because the absence of a snapshot otherwise looks like an omission rather than a decision.
+ * @BlueprintDescription Holds no `onMutate` and no rollback, and writes the row the response carries into the affected key in `onSuccess`, so the caller sees the record it just created without a second read the write's own answer already contains. The header states why the optimistic path is refused here, which is the part a reader needs, because the absence of a snapshot otherwise looks like an omission rather than a decision.
  */
 export function useCreateSetlist() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: setlistKeys.creation(),
     mutationFn: async (variables: { sessionId: string }) => {
       const response = await api.api.setlists.$post({ json: variables });
-      if (!response.ok) throw new ApiError(response.status, `create ${response.status}`, null);
-      return response.json();
+      if (response.status === SETLIST_EXISTS_STATUS)
+        return await readSetlistOfConflictingSession(variables.sessionId);
+      if (!isResponseSuccessful(response))
+        throw new ApiError(response.status, `create ${response.status}`, null);
+      return await response.json();
     },
-    onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({
-        queryKey: setlistKeys.bySessionId(variables.sessionId),
-      });
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(setlistKeys.bySessionId(variables.sessionId), data);
     },
   });
+}
+
+/**
+ * Whether a setlist is being created right now, by any surface.
+ *
+ * A page reached while the write is in flight reads the session as carrying
+ * no setlist, because none has been committed yet, and the screen that says
+ * so is the one offering to create it — which is what the operator just did.
+ */
+export function useIsCreatingSetlist(): boolean {
+  return useIsMutating({ mutationKey: setlistKeys.creation() }) > 0;
 }
 
 // @FollowsBlueprint query-optimistic-mutation

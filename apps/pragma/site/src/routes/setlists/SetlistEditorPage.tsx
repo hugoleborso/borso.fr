@@ -24,7 +24,11 @@ import { BackLink } from '../../components/molecules/BackLink';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useSession } from '../../lib/queries/sessions.queries';
-import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlists.queries';
+import {
+  useCreateSetlist,
+  useIsCreatingSetlist,
+  useSetlistBySession,
+} from '../../lib/queries/setlists.queries';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 
 // @FollowsBlueprint route-detail-page
@@ -41,6 +45,7 @@ function ResolveSetlist({ sessionId }: { sessionId: string }): JSX.Element {
   const { t, i18n } = useTranslation();
   const setlistQuery = useSetlistBySession(sessionId);
   const createSetlist = useCreateSetlist();
+  const isCreating = useIsCreatingSetlist();
   const sessionQuery = useSession(sessionId);
   const session = sessionQuery.data?.session ?? null;
   const sessionHeader = (
@@ -56,7 +61,7 @@ function ResolveSetlist({ sessionId }: { sessionId: string }): JSX.Element {
     </>
   );
 
-  if (setlistQuery.isLoading) {
+  if (setlistQuery.isLoading || isCreating) {
     return <p className="px-4 sm:px-9 py-7 italic text-ink-400 text-sm">{t('common.loading')}</p>;
   }
 
@@ -83,6 +88,11 @@ function ResolveSetlist({ sessionId }: { sessionId: string }): JSX.Element {
           >
             {createSetlist.isPending ? t('common.loading') : t('setlist.createForSession')}
           </Button>
+          {createSetlist.isError ? (
+            <p className="text-danger text-sm" role="alert">
+              {t('setlist.failure.create')}
+            </p>
+          ) : null}
         </div>
       </section>
     );
