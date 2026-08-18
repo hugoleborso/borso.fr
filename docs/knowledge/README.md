@@ -47,6 +47,7 @@ Two failure modes to watch for:
 ### GitHub Actions
 
 - [`workflow-dispatch-default-branch.md`](./workflow-dispatch-default-branch.md) — `workflow_dispatch` and `issue_comment` workflows only show in the UI once on the default branch.
+- [`a-conflicted-pull-request-gets-no-checks.md`](./a-conflicted-pull-request-gets-no-checks.md) — a `pull_request` workflow runs against `refs/pull/<n>/merge`, so a conflicting pull request gets **zero** runs rather than red ones. An empty checks list means `mergeable_state: dirty` far more often than it means a dropped event; merge the base branch in and push.
 - [`github-scheduled-workflows-fire-late.md`](./github-scheduled-workflows-fire-late.md) — measured: this repo's nightly cron fires 1h01m–2h45m after its declared time, every day observed. Never key a wait on the cron expression; read the last few `created_at` values instead. Includes the monitor-that-cannot-report-its-own-failure trap.
 - [`github-oidc-sub-claim-per-trigger.md`](./github-oidc-sub-claim-per-trigger.md) — the OIDC `sub` claim describes the *event*, not the workflow, so adding a `schedule:` trigger changes the credential presented; claim-per-trigger table, why `environment:` wins, and how to trust several.
 
