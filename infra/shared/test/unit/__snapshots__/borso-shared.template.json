@@ -726,6 +726,36 @@
         ]
       }
     },
+    "Budget2": {
+      "Type": "AWS::Budgets::Budget",
+      "Properties": {
+        "Budget": {
+          "BudgetLimit": {
+            "Amount": 2,
+            "Unit": "USD"
+          },
+          "BudgetName": "borso-monthly-2usd",
+          "BudgetType": "COST",
+          "TimeUnit": "MONTHLY"
+        },
+        "NotificationsWithSubscribers": [
+          {
+            "Notification": {
+              "ComparisonOperator": "GREATER_THAN",
+              "NotificationType": "ACTUAL",
+              "Threshold": 80,
+              "ThresholdType": "PERCENTAGE"
+            },
+            "Subscribers": [
+              {
+                "Address": "hugo@example.com",
+                "SubscriptionType": "EMAIL"
+              }
+            ]
+          }
+        ]
+      }
+    },
     "Budget5": {
       "Type": "AWS::Budgets::Budget",
       "Properties": {

@@ -220,10 +220,10 @@ describe('SharedStack', () => {
   });
 
   describe('budgets', () => {
-    it('creates 5/20/50 USD budgets notifying the address the entrypoint passed in', () => {
+    it('creates 2/5/20/50 USD budgets notifying the address the entrypoint passed in', () => {
       const tpl = synth();
-      tpl.resourceCountIs('AWS::Budgets::Budget', 3);
-      for (const amount of [5, 20, 50]) {
+      tpl.resourceCountIs('AWS::Budgets::Budget', 4);
+      for (const amount of [2, 5, 20, 50]) {
         tpl.hasResourceProperties('AWS::Budgets::Budget', {
           Budget: Match.objectLike({
             BudgetName: `borso-monthly-${amount}usd`,
