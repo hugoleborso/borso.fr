@@ -17,6 +17,16 @@
 # commits, and feature branches with at least one un-merged
 # commit are NOT flagged.
 #
+# The freshly-branched case needs its own test, which is the tip
+# comparison below: a branch created from main and not yet
+# committed to has zero commits ahead of main, exactly like a
+# merged pull-request head, and the count alone cannot separate
+# them. What separates them is where the tip sits — a fresh branch
+# IS origin/main, while a merged head is an ancestor of it, behind
+# the merge commit. Without that test this fired on the first
+# commit of every task, and a warning that always fires is one the
+# reader learns to skip past.
+#
 # Non-fatal: prints to stdout and exits 0 in every branch. The
 # install-repo-deps.sh caller chains with `|| true` anyway.
 
@@ -51,6 +61,13 @@ fi
 # not yet in main. Zero commits == every commit on this branch is
 # already in main == the branch is fully merged.
 unmerged_count=$(git rev-list --count origin/main..HEAD 2>/dev/null || echo 0)
+
+# A branch sitting exactly on origin/main is a fresh start, not a
+# shipped one: there is no work to be orphaned yet.
+if [[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/main)" ]]; then
+  exit 0
+fi
+
 if [[ "$unmerged_count" -eq 0 ]]; then
   printf '\n⚠️  [branch-context] "%s" is fully merged into origin/main.\n' "$current_branch"
   printf '   Every commit on this branch already shipped, which usually\n'
