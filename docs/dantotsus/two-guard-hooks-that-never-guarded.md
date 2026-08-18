@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: local
 severity: high
 related-pr: '#60'
-fix-pr: '#61'
+fix-pr: '#62'
 fix-commits: [195b354]
 eradication-level: 2
 time-to-detect: 3 months
@@ -76,7 +76,7 @@ so a gate written with exit 1 is a log line wearing a gate's clothes"*.
 
 **Type:** DevX check (level 2 — the gates now actually gate)
 
-**Reference:** [PR #61](https://github.com/hugoleborso/borso.fr/pull/61) · commit [`195b354`](https://github.com/hugoleborso/borso.fr/commit/195b354)
+**Reference:** [PR #62](https://github.com/hugoleborso/borso.fr/pull/62) · commit [`195b354`](https://github.com/hugoleborso/borso.fr/commit/195b354)
 
 **The actual fix:**
 

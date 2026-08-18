@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#24'
-fix-pr: '#61'
+fix-pr: '#62'
 fix-commits: [866e0cb]
 eradication-level: 2
 time-to-detect: 3 months
@@ -77,7 +77,7 @@ and the two are told apart by where the tip sits, not by the count"*.
 
 **Type:** DevX check (level 2 — the false positive is now impossible)
 
-**Reference:** [PR #61](https://github.com/hugoleborso/borso.fr/pull/61) · commit [`866e0cb`](https://github.com/hugoleborso/borso.fr/commit/866e0cb)
+**Reference:** [PR #62](https://github.com/hugoleborso/borso.fr/pull/62) · commit [`866e0cb`](https://github.com/hugoleborso/borso.fr/commit/866e0cb)
 
 **The actual fix:**
 

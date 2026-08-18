@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#60'
-fix-pr: '#61'
+fix-pr: '#62'
 fix-commits: [0f55859]
 eradication-level: 2
 time-to-detect: 3 days
@@ -82,7 +82,7 @@ have"*.
 
 **Type:** DevX check (level 2 — the body is refused before it is sent)
 
-**Reference:** [PR #61](https://github.com/hugoleborso/borso.fr/pull/61) · commit [`0f55859`](https://github.com/hugoleborso/borso.fr/commit/0f55859)
+**Reference:** [PR #62](https://github.com/hugoleborso/borso.fr/pull/62) · commit [`0f55859`](https://github.com/hugoleborso/borso.fr/commit/0f55859)
 
 **The actual fix:**
 

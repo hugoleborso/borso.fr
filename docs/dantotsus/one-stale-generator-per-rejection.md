@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#60'
-fix-pr: '#61'
+fix-pr: '#62'
 fix-commits: [59867d4]
 eradication-level: 2
 time-to-detect: minutes
@@ -71,7 +71,7 @@ it charges one commit cycle per fact it already knows"*.
 
 **Type:** DevX check (level 2 — the gate now reports every stale artefact at once)
 
-**Reference:** [PR #61](https://github.com/hugoleborso/borso.fr/pull/61) · commit [`59867d4`](https://github.com/hugoleborso/borso.fr/commit/59867d4)
+**Reference:** [PR #62](https://github.com/hugoleborso/borso.fr/pull/62) · commit [`59867d4`](https://github.com/hugoleborso/borso.fr/commit/59867d4)
 
 **The actual fix:**
 

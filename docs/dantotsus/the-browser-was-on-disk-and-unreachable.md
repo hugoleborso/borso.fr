@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#60'
-fix-pr: '#61'
+fix-pr: '#62'
 fix-commits: [f6463f6]
 eradication-level: 1
 time-to-detect: minutes
@@ -84,7 +84,7 @@ and a container that ships its own puts it in a fifth"*.
 
 **Type:** code diff (level 1 — the tool cannot fail to find the browser, so the misconception has nothing to express)
 
-**Reference:** [PR #61](https://github.com/hugoleborso/borso.fr/pull/61) · commit [`f6463f6`](https://github.com/hugoleborso/borso.fr/commit/f6463f6)
+**Reference:** [PR #62](https://github.com/hugoleborso/borso.fr/pull/62) · commit [`f6463f6`](https://github.com/hugoleborso/borso.fr/commit/f6463f6)
 
 **The actual fix:**
 
