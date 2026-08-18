@@ -5128,7 +5128,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/setlists/setlist-index.core.ts",
-      "digest": "17e7f3e6a02a",
+      "digest": "819173173c4b",
       "container": "site",
       "layer": "route",
       "context": "setlists",

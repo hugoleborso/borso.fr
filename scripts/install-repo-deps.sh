@@ -183,6 +183,35 @@ if ! command -v agent-browser >/dev/null 2>&1; then
     log "npm not available; skipping agent-browser install"
   fi
 fi
+# agent-browser looks for a browser in its own cache, in the system Chrome
+# locations, and in Puppeteer's and Playwright's caches — none of which is
+# where this environment keeps one. The managed container ships a Chromium at
+# $PLAYWRIGHT_BROWSERS_PATH and asks that nothing download a second copy, so
+# the CLI reports "Chrome not found. Run `agent-browser install`" and the
+# obvious next step is the one the environment forbids. Pointing its user-level
+# config at the browser that is already on disk makes the first `agent-browser
+# open` of a session work with no flag at all, which matters because
+# `--executable-path` is ignored once a daemon is running: the flag looks like
+# it does not work, and the fix is `agent-browser close --all` first.
+#
+# Only written when absent, so an operator's own config is never overwritten,
+# and a no-op on a machine that has no Playwright browsers directory.
+browsers_root="${PLAYWRIGHT_BROWSERS_PATH:-/opt/pw-browsers}"
+agent_browser_config="$HOME/.agent-browser/config.json"
+if command -v agent-browser >/dev/null 2>&1 && [ ! -f "$agent_browser_config" ]; then
+  chromium_binary=""
+  if [ -x "$browsers_root/chromium" ]; then
+    chromium_binary="$browsers_root/chromium"
+  else
+    chromium_binary=$(find "$browsers_root" -maxdepth 3 -type f -name chrome -path '*chrome-linux*' 2>/dev/null | sort | tail -n1)
+  fi
+  if [ -n "$chromium_binary" ]; then
+    mkdir -p "$(dirname "$agent_browser_config")"
+    printf '{"executablePath":"%s"}\n' "$chromium_binary" > "$agent_browser_config"
+    log "agent-browser: pointed at $chromium_binary"
+  fi
+fi
+
 if command -v agent-browser >/dev/null 2>&1; then
   log "agent-browser: $(agent-browser --version 2>/dev/null || echo 'installed')"
 else
