@@ -83,7 +83,11 @@ fi
 
 # Validation block check — only enforced when the feature has at least
 # one validation report under docs/features/.
-HAS_VALIDATION_DIR=$(find docs/features -type d -name validation 2>/dev/null | head -n1)
+# `-print -quit` rather than a pipe into the head of the output: under
+# `set -o pipefail` that pipe returns 141 whenever `find` still has output to
+# write when the reader closes it, and in a hook a non-zero that is not 2 is a
+# silent skip rather than a refusal.
+HAS_VALIDATION_DIR=$(find docs/features -type d -name validation -print -quit 2>/dev/null)
 if [[ -n "$HAS_VALIDATION_DIR" ]] && ! grep -qE '^## Validation\b' <<<"$BODY"; then
   block "no '## Validation' section in the body, but docs/features has validation reports. Surface the verdicts up-front."
 fi
