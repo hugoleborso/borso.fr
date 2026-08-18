@@ -35,11 +35,15 @@ for workspace in apps/*/ infra/*/; do
   workspace=${workspace%/}
   [ -f "$workspace/package.json" ] || continue
 
+  # `-print -quit` rather than a pipe into `head -1`: under the `pipefail` above,
+  # `head` closing after the first line leaves `find` still walking the tree, and
+  # the SIGPIPE it takes (exit 141) fails the whole script. It is a race on how
+  # fast the tree walks, so it passes locally on a warm cache and fails on CI.
   gated=$(find "$workspace" -type f \
     \( -name '*.core.ts' -o -name '*.utils.ts' -o -name '*.adapter.ts' \
     -o -name '*.core.tsx' -o -name '*.utils.tsx' -o -name '*.adapter.tsx' \) \
     -not -path '*/node_modules/*' -not -path '*/.stryker-tmp/*' \
-    -not -name '*.test.*' | head -1)
+    -not -name '*.test.*' -print -quit)
   [ -n "$gated" ] || continue
 
   if grep -qx -- "$workspace" <<<"$ALLOWED_WITHOUT_MUTATION"; then
@@ -56,7 +60,7 @@ for workspace in apps/*/ infra/*/; do
 
   for suffix in ${GATED_SUFFIXES//|/ }; do
     present=$(find "$workspace" -type f -name "*.$suffix.ts" -not -path '*/node_modules/*' \
-      -not -path '*/.stryker-tmp/*' -not -name '*.test.*' | head -1)
+      -not -path '*/.stryker-tmp/*' -not -name '*.test.*' -print -quit)
     [ -n "$present" ] || continue
     if ! grep -q "\*\.$suffix\.ts" "$config"; then
       echo "[check-mutation-covers-gated-files] $workspace holds *.$suffix.ts and $config does not mutate that suffix." >&2
