@@ -49,10 +49,27 @@ fi
 # The check also refuses a stale index, which is what stops an annotation from
 # being added without the generated file catching up. One pass over the tree,
 # well under a second, so it belongs on the commit.
+#
+# The three generated artefacts are checked together, and every stale one is
+# named in a single rejection. Run under `set -e` as three consecutive
+# commands, the first failure ended the hook, so a commit that moved all three
+# was rejected three times and the operator learned about one generator per
+# attempt. The cost of continuing is one more pass over a tree that is already
+# in the file cache.
+generator_failures=""
+run_generator_check() {
+  if ! pnpm exec tsx "$1" --check; then
+    generator_failures="${generator_failures}  pnpm exec tsx $1
+"
+  fi
+}
+
 if [ -n "$staged_lintable" ]; then
   echo "[pre-commit] checking blueprint annotations"
-  pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --check
-  pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts --check
+  set +e
+  run_generator_check .claude/skills/blueprint/blueprint-indexing.ts
+  run_generator_check .claude/skills/blueprint/blueprint-heatmap.ts
+  set -e
 fi
 
 # The architecture pages, whenever any application changed. The generator
@@ -68,7 +85,15 @@ fi
 if git diff --cached --name-only |
   grep -qE '^(apps/|scripts/architecture/|\.claude/skills/blueprint/blueprint-utils\.ts$)'; then
   echo "[pre-commit] checking the architecture pages"
-  pnpm exec tsx scripts/architecture/architecture-graph.ts --check
+  set +e
+  run_generator_check scripts/architecture/architecture-graph.ts
+  set -e
+fi
+
+if [ -n "$generator_failures" ]; then
+  echo "[pre-commit] ERROR: generated files are stale. Run all of these, then commit again:" >&2
+  printf '%s' "$generator_failures" >&2
+  exit 1
 fi
 
 # One stylesheet per application. A second CSS file is how an application
