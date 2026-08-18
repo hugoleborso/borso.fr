@@ -60,14 +60,16 @@ describe('listCaseStyleDivergences', () => {
     expect(listCaseStyleDivergences(facts)).toEqual([]);
   });
 
+  /** The minority style is met first, so a report in reading order fails here. */
   it('reports a layer that uses two case styles, majority first', () => {
     const facts = [
+      buildFact('apps/b/x/bookArrows.utils.ts'),
       buildFact('apps/a/x/one-thing.utils.ts'),
       buildFact('apps/a/x/another-thing.utils.ts'),
-      buildFact('apps/b/x/bookArrows.utils.ts'),
     ];
     const [divergence] = listCaseStyleDivergences(facts);
     expect(divergence?.key).toBe('case-style:utils.ts');
+    expect(divergence?.question).toBe('How is the name of a utils.ts file written?');
     expect(divergence?.variants.map((variant) => [variant.name, variant.count])).toEqual([
       ['kebab', 2],
       ['camel', 1],
@@ -102,8 +104,9 @@ describe('listCaseStyleDivergences', () => {
     expect(listCaseStyleDivergences(facts)).toEqual([]);
   });
 
-  it('caps the examples it shows', () => {
-    const facts = ['one', 'two', 'three', 'four'].map((name) =>
+  /** Three examples, and the first three by path rather than the first three met. */
+  it('shows the three lowest paths as examples', () => {
+    const facts = ['zulu', 'mike', 'alpha', 'bravo'].map((name) =>
       buildFact(`apps/a/x/${name}.utils.ts`),
     );
     facts.push(buildFact('apps/b/x/bookArrows.utils.ts'));
@@ -130,8 +133,8 @@ describe('listCaseStyleDivergences', () => {
 
   it('orders two variants of equal size by name, so the report is stable', () => {
     const facts = [
-      buildFact('apps/a/x/bookArrows.utils.ts'),
       buildFact('apps/a/x/one-thing.utils.ts'),
+      buildFact('apps/a/x/bookArrows.utils.ts'),
     ];
     const [divergence] = listCaseStyleDivergences(facts);
     expect(divergence?.variants.map((variant) => variant.name)).toEqual(['camel', 'kebab']);
@@ -147,6 +150,7 @@ describe('listHookNamingDivergences', () => {
     expect(listHookNamingDivergences(facts)).toEqual([]);
   });
 
+  /** The module that exports no hook belongs to none of the three spellings. */
   it('reports the three spellings a hook module can carry', () => {
     const facts = [
       buildFact('apps/a/x/online-status.hook.ts', { exportsHook: true }),
@@ -156,10 +160,11 @@ describe('listHookNamingDivergences', () => {
     ];
     const [divergence] = listHookNamingDivergences(facts);
     expect(divergence?.key).toBe('role-marker:hook');
-    expect(divergence?.variants.map((variant) => variant.name).sort()).toEqual([
-      '<name>.hook.ts',
-      'no marker in the name',
-      'use<Name>.ts',
+    expect(divergence?.question).toBe('How does a module that exports a hook say so in its name?');
+    expect(divergence?.variants).toEqual([
+      { name: '<name>.hook.ts', count: 1, examples: ['apps/a/x/online-status.hook.ts'] },
+      { name: 'no marker in the name', count: 1, examples: ['apps/a/x/viewport.ts'] },
+      { name: 'use<Name>.ts', count: 1, examples: ['apps/a/x/usePaginatedList.ts'] },
     ]);
   });
 

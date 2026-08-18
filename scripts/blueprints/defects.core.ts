@@ -36,6 +36,10 @@ const TITLE_PATTERN = /^#\s+(.+)$/m;
 /** The `blueprints: [a, b]` front-matter field, or an empty list. */
 export function readBlueprintIds(markdown: string): readonly string[] {
   const frontMatter = FRONT_MATTER_PATTERN.exec(markdown)?.[1];
+  // Stryker disable next-line ConditionalExpression: equivalent mutant. The
+  // guard is what lets the next line take a `string`; without it `exec` reads
+  // `undefined` as the literal text `"undefined"`, which the blueprints
+  // pattern never matches, so the guard below returns the same empty list.
   if (frontMatter === undefined) return [];
   const namedIds = BLUEPRINTS_FIELD_PATTERN.exec(frontMatter)?.[1];
   if (namedIds === undefined) return [];
@@ -104,11 +108,13 @@ export interface BlueprintAnnotation {
   readonly usage: string;
 }
 
-const BLUEPRINT_MARKER = '@Blueprint ';
 const BLUEPRINT_NAME_PATTERN = /@BlueprintName\s+(.+)/;
 const BLUEPRINT_USAGE_PATTERN = /@BlueprintUsage\s+(.+)/;
 // The identifier is on the marker's own line. `\s+` would step over the
-// newline and read the JSDoc's closing `*/` as an identifier.
+// newline and read the JSDoc's closing `*/` as an identifier. The two patterns
+// accept the same separators, so every declaration the scan finds is one the
+// identifier pattern can read.
+const BLUEPRINT_MARKER_PATTERN = /@Blueprint[ \t]/g;
 const BLUEPRINT_ID_PATTERN = /@Blueprint[ \t]+([A-Za-z0-9][\w-]*)/;
 
 /**
@@ -123,12 +129,7 @@ const BLUEPRINT_ID_PATTERN = /@Blueprint[ \t]+([A-Za-z0-9][\w-]*)/;
  */
 export function readBlueprintAnnotations(contents: string): readonly BlueprintAnnotation[] {
   const annotations: BlueprintAnnotation[] = [];
-  const starts: number[] = [];
-  let searchFrom = contents.indexOf(BLUEPRINT_MARKER);
-  while (searchFrom !== -1) {
-    starts.push(searchFrom);
-    searchFrom = contents.indexOf(BLUEPRINT_MARKER, searchFrom + BLUEPRINT_MARKER.length);
-  }
+  const starts = [...contents.matchAll(BLUEPRINT_MARKER_PATTERN)].map((match) => match.index);
 
   for (const [position, start] of starts.entries()) {
     const end = starts[position + 1] ?? contents.length;
@@ -137,7 +138,13 @@ export function readBlueprintAnnotations(contents: string): readonly BlueprintAn
     if (id === undefined) continue;
     annotations.push({
       id,
+      // Stryker disable next-line OptionalChaining: equivalent mutant. The
+      // capture group is not optional, so a match always carries it; the `?.`
+      // is there because `noUncheckedIndexedAccess` types an index read as
+      // possibly undefined, and nothing at runtime can take that branch.
       name: BLUEPRINT_NAME_PATTERN.exec(span)?.[1]?.trim() ?? id,
+      // Stryker disable next-line OptionalChaining: equivalent mutant. Same
+      // reason as the line above.
       usage: BLUEPRINT_USAGE_PATTERN.exec(span)?.[1]?.trim() ?? '',
     });
   }

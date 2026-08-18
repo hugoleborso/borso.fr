@@ -11,6 +11,17 @@ describe('readEnforcedByBullets', () => {
     expect(readEnforcedByBullets('# 00. Principles\n\nSome prose.\n')).toEqual([]);
   });
 
+  /** A standard can carry bullets elsewhere, and none of them is a citation. */
+  it('returns nothing from a standard that has bullets and no enforcement section', () => {
+    expect(readEnforcedByBullets('# 01. Naming\n\n- `eslint:borso/x` a rule.\n')).toEqual([]);
+  });
+
+  it('reads the bullets when the heading opens the second line of the file', () => {
+    expect(readEnforcedByBullets('\n## Enforced by\n\n- `reviewer` kept.\n')).toEqual([
+      '`reviewer` kept.',
+    ]);
+  });
+
   it('reads the bullets that follow the heading', () => {
     const markdown = '## Enforced by\n\n- `eslint:borso/a` first.\n- `reviewer` second.\n';
     expect(readEnforcedByBullets(markdown)).toEqual([
@@ -22,6 +33,18 @@ describe('readEnforcedByBullets', () => {
   it('stops at the next heading', () => {
     const markdown = '## Enforced by\n\n- `reviewer` kept.\n\n## Something else\n\n- dropped.\n';
     expect(readEnforcedByBullets(markdown)).toEqual(['`reviewer` kept.']);
+  });
+
+  /** The next heading opening one character in is still the next heading. */
+  it('stops at a heading that follows the enforcement heading immediately', () => {
+    const markdown = '## Enforced by \n## Something else\n\n- dropped.\n';
+    expect(readEnforcedByBullets(markdown)).toEqual([]);
+  });
+
+  it('reads the last bullet whole when the file does not end in a newline', () => {
+    expect(readEnforcedByBullets('## Enforced by\n\n- `reviewer` kept.')).toEqual([
+      '`reviewer` kept.',
+    ]);
   });
 
   it('folds a bullet that wraps across lines into one claim', () => {
@@ -99,6 +122,10 @@ describe('readCitationFromBullet', () => {
 describe('readStandardTitle', () => {
   it('reads the first heading', () => {
     expect(readStandardTitle('# 01. Naming\n\nprose', '01-naming.md')).toBe('01. Naming');
+  });
+
+  it('trims a heading padded at the end of its line', () => {
+    expect(readStandardTitle('# 01. Naming   \n\nprose', '01-naming.md')).toBe('01. Naming');
   });
 
   it('falls back to the file name when the document has no title', () => {

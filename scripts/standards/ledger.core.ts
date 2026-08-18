@@ -96,6 +96,9 @@ export interface LedgerProblem {
 export function selectLedgerProblems(input: LedgerInput): readonly LedgerProblem[] {
   const problems: LedgerProblem[] = [];
   for (const standard of input.standards) {
+    // Stryker disable next-line ArrayDeclaration: equivalent mutant. The
+    // fallback stands in for a standard the map has no entry for, and the loop
+    // body only reads `verdict`, which no injected filler carries.
     for (const resolved of input.resolutionsByStandard.get(standard.standard) ?? []) {
       if (resolved.verdict === 'broken' || resolved.verdict === 'unscoped') {
         problems.push({ standard: standard.standard, message: resolved.detail });
@@ -183,6 +186,10 @@ export function renderLedger(input: LedgerInput): string {
     '',
   );
   for (const standard of input.standards) {
+    // Stryker disable next-line ArrayDeclaration: equivalent mutant. The
+    // fallback stands in for a standard the map has no entry for, and the
+    // filter that follows keeps only entries whose `verdict` is `reviewer`,
+    // which no injected filler carries.
     const reviewerClaims = (input.resolutionsByStandard.get(standard.standard) ?? []).filter(
       (resolved) => resolved.verdict === 'reviewer',
     );
@@ -200,5 +207,5 @@ export function renderLedger(input: LedgerInput): string {
     `- ${String(selectLedgerProblems(input).length)} problem(s)`,
     '',
   );
-  return `${lines.join('\n')}`;
+  return lines.join('\n');
 }
