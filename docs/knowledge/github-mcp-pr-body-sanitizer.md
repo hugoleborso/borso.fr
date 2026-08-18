@@ -169,7 +169,42 @@ than the specification.
    labelled, and repair it — the round-trip loop above, one call.
 
 _`<details>` has since been re-tested; see the section above. `![alt](url)`
-remains untested, and the 2026-05-20 retraction stands for it._
+was untested until 2026-08-18, when the probe below answered it._
+
+## What the sanitizer does to each form (probed 2026-08-18, PR #60)
+
+One `update_pull_request` call per form, each followed by a
+`pull_request_read` of the stored body. The body was being written to carry
+before-and-after screenshots of a phone screen, and every attempt to show them
+came back defused:
+
+| Written | Stored | Renders as |
+| --- | --- | --- |
+| `<img src="…" width="300">` | `<img width="300">` | nothing — an empty tag |
+| `![alt](…/shot.png)` | `![alt](` + backtick-wrapped URL | code, not an image |
+| `[text](…/shot.png)` | same backtick wrap | code, not a link |
+| `[text](…/tree/<sha>/dir)` | unchanged | a working link |
+| `[text](…/blob/<sha>/CLAUDE.md)` | unchanged | a working link |
+| `[text](…/commit/<40-hex-sha>)` | unchanged | a working link |
+| `<https://host/path>` | removed entirely | nothing |
+| `<details>` / `<summary>` | removed, contents kept | a flattened section |
+
+The rule is the **extension**, not the URL, the host or the pinned SHA: a
+40-hex commit SHA passes untouched inside a `.md` link and is wrapped inside a
+`.png` one. Short SHAs, branch names and `main` all behave the same, so
+shortening or re-pinning the URL does not help.
+
+**What to do instead.** Commit the screenshots and link the pull request's
+Files changed tab, which renders committed images inline; use `###` headings
+where the standard asks for `<details>`; then read the body back. Since
+2026-08-18 a PreToolUse hook refuses a body carrying any of the defused forms
+before the call is made — `.claude/hooks/pretool-github-pr-body.sh`, wired for
+`mcp__github__create_pull_request` and `mcp__github__update_pull_request`.
+
+A body posted through the claude.ai web UI or by `gh` is not affected; the
+open-pr standard's `<details>` requirement is written for that path. The
+rendered evidence for this repository is
+[`docs/dantotsus/a-pull-request-body-the-server-quietly-emptied.md`](../dantotsus/a-pull-request-body-the-server-quietly-emptied.md).
 
 ## Why this entry still exists
 

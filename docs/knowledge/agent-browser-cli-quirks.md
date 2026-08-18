@@ -1,6 +1,6 @@
 # `agent-browser` CLI quirks worth remembering
 
-Two CLI footguns we hit during PR #8 that cost more time than they
+CLI footguns hit during PR #8 and PR #60 that cost more time than they
 should have.
 
 ## 1. `--executable-path` is ignored when the daemon is already running
@@ -68,6 +68,40 @@ agent-browser --executable-path /opt/pw-browsers/chromium-1194/chrome-linux/chro
 ```
 
 (See quirk #1 above — the flag is only read on daemon start.)
+
+Since 2026-08-18 this is handled for you: SessionStart writes
+`~/.agent-browser/config.json` with `executablePath` pointing at the Chromium
+the container already ships, so the first `open` of a session needs no flag and
+never starts a daemon with the wrong browser. The two failure shapes it
+removes, both observed on PR #60: the CLI reporting *"Chrome not found … Run
+`agent-browser install`"* while a Chromium sat at `$PLAYWRIGHT_BROWSERS_PATH`,
+and `--executable-path` then appearing inert because quirk #1 had already
+started a daemon. See
+[`docs/dantotsus/the-browser-was-on-disk-and-unreachable.md`](../dantotsus/the-browser-was-on-disk-and-unreachable.md).
+
+## 4. `click` on a ref below the fold of a nested scroller does nothing, and says it did
+
+Observed 2026-08-18. `agent-browser click <ref>` printed `✓ Done` and no
+request left the page. The element was real, enabled and 830 px down a 812 px
+viewport — inside a `<main>` that owns the scrolling, with `document.body`
+itself unscrollable:
+
+```bash
+agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('Build setlist')); const r = b.getBoundingClientRect(); return { top: r.top, innerHeight: window.innerHeight, hit: document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) }; })()"
+# { top: 830.8, innerHeight: 812, hit: null }
+```
+
+`window.scrollTo` is a no-op on such a page — `document.documentElement.scrollHeight`
+equals the viewport height — so the fix is to scroll the container that owns
+the overflow, then re-check the hit point before believing the click:
+
+```bash
+agent-browser eval "(() => { const m = document.querySelector('main'); m.scrollTop = m.scrollHeight; return m.scrollTop; })()"
+```
+
+Read this before concluding that a button is dead. During PR #60 this exact
+sequence read as *"the create button does nothing"*, which was wrong, and the
+real defect was elsewhere.
 
 ## Related
 
