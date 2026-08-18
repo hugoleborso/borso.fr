@@ -200,6 +200,7 @@ every application the standard covers.
 | `commitlint` | gate | yes | .husky/commit-msg |
 | `@eslint-community/eslint-comments/require-description` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
 | `scripts/check-coupled-lists.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
+| `scripts/check-no-racy-pipelines.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-frontend-env-vars.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-migration-sql-dsql-compat.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-non-module-scripts.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
@@ -286,6 +287,6 @@ reviews what lint cannot rather than repeating what lint already did.
 
 ## Totals
 
-- 81 claim(s) enforced by a tool
+- 82 claim(s) enforced by a tool
 - 23 claim(s) left to a reviewer
 - 0 problem(s)

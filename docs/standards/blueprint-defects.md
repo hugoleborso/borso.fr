@@ -13,7 +13,7 @@ of them, and is the first place to look when the same bug appears twice.
 A dantotsu opts in by naming the pattern in its front matter, as
 `blueprints: [some-id]`. Most defects implicate no pattern and name none.
 
-Read from 89 dantotsu(s).
+Read from 90 dantotsu(s).
 
 Ordered by exposure, which is followers times defects.
 

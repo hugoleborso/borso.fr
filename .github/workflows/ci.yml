@@ -142,6 +142,10 @@ jobs:
       # production. Mirrors the pre-commit hook, which was the only place it
       # ran, so `--no-verify` disabled it for good.
       - run: ./scripts/check-non-module-scripts.sh
+      # A directory walk piped into `head` or `grep -q` is a race, and `pipefail`
+      # turns the losing side into a failing script — which is how this one was
+      # found, green locally and red here on the same commit.
+      - run: ./scripts/check-no-racy-pipelines.sh
       # `deploy`, `destroy`, `install`, `update`, `sync`, `fetch` and `publish`
       # are pnpm built-ins: without `run`, pnpm shadows the package's scripts
       # entry and silently does the wrong thing. Mirrors the pre-commit hook,

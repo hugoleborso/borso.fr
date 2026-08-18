@@ -213,6 +213,12 @@ scripts/check-pure-modules-have-callers.sh
 echo "[pre-commit] checking app HTML for non-module <script src> tags"
 scripts/check-non-module-scripts.sh
 
+# A directory walk piped into `head` or `grep -q` is a race, and `pipefail`
+# turns the losing side into a failing script. It passed five local runs of the
+# tree it walks and failed on the first CI run of the same commit.
+echo "[pre-commit] checking no script races a walk against an early-stopping pipe"
+scripts/check-no-racy-pipelines.sh
+
 # Two lists that have to say the same thing. Both halves read correctly alone
 # and only the pair is wrong, which is why review never caught either of the two
 # that shipped in PR #49. Rung-2 eradication of

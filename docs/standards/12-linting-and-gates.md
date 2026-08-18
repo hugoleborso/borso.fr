@@ -253,6 +253,11 @@ review.
   in its workflow, and the gated file suffixes in `eslint-rules/impurity.js` and
   in every `vitest.config.ts`. Neither half is wrong on its own, which is why a
   reviewer reads past both.
+- `script:scripts/check-no-racy-pipelines.sh` fails a `set -o pipefail` script
+  that pipes a directory walk into `head` or `grep -q`. The consumer closes the
+  pipe first and the producer's write error fails the script, and whether that
+  happens is timing — the instance it was written for passed five consecutive
+  local runs and failed on the first CI run of the same commit.
 - `script:scripts/check-frontend-env-vars.sh` fails a site reading a `VITE_*`
   variable no workflow sets, which Vite substitutes as `undefined` at build
   time while nothing else complains.
