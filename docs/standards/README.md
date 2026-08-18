@@ -48,9 +48,10 @@ The reviewer never repeats what lint already did, and widening what it checks
 means writing a `reviewer` bullet in a standard rather than editing the skill.
 
 Because CI runs no model, the review is recorded rather than repeated: the
-agent hashes the content it cleared into [`seals.jsonl`](./seals.jsonl), and CI
-hashes the branch's changed files and fails on any hash it cannot find. Editing
-a file after sealing unseals it. Moving one does not. Rewording a standard
+agent hashes the content it cleared into [`seals.jsonl`](./seals.jsonl), and
+`scripts/standards/seal.ts verify` hashes the branch's changed files and fails
+on any hash it cannot find — no model on that side, only sha-256. Editing a
+file after sealing unseals it. Moving one does not. Rewording a standard
 invalidates the seals taken under the old wording. It is an attestation and not
 a signature, and `scripts/standards/seal.core.ts` says so at more length.
 
