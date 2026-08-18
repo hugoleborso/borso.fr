@@ -64,3 +64,6 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [17:57] `main` no gate read the documents' own links, and the /code-standards routing table had thirteen dead ones, each a single ../ short of the repository root and invisible in a rendered preview
 - [18:01] `main` the doc-link gate resolved links with existsSync against the working tree, which holds generated output, so it passed locally and failed in CI on five gitignored architecture pages — a gate whose answer depends on what the generators last wrote
 - [18:02] `main` verifying the gate by appending a probe link and undoing it with git checkout -- reverted an unstaged real fix in the same file; the git diff --stat that would have shown it printed nothing and I read past it
+- [13:37] `main` a find piped into head under set -o pipefail is a race: green five times locally, red on the first CI run of the same commit, and the error names the filesystem rather than the pipe
+- [13:37] `main` the reconciliation a merge commit carries is invisible to a rebase, so replaying a branch linearly silently reverts prose and hardening that the merges had already settled
+- [13:37] `main` git cherry reported 30 of 66 commits as new when they were already in main under different sha, because the upstream branch had been rebased after the merges; subject matching found them, patch-id did not
