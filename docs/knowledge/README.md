@@ -60,7 +60,7 @@ Two failure modes to watch for:
 - [`agent-browser-cli-quirks.md`](./agent-browser-cli-quirks.md) — `--executable-path` ignored once daemon runs; `screenshot` takes positional path, not `--output`; Chromium provisioning can fail behind proxies. _2026-08-18_: SessionStart now points the CLI at the container's own Chromium, and a `click` on a ref below the fold of a nested scroller reports success while doing nothing — scroll the element that owns the overflow, then hit-test, before calling a button dead.
 - [`zsh-read-p-coprocess-quirk.md`](./zsh-read-p-coprocess-quirk.md) — `read -rsp "prompt: " var` is bash-only ; zsh reads `-p` as a coprocess flag and errors. Use `printf` + `stty -echo` + `read -r` for portable interactive prompts.
 - [`aws-dsql-cli-token-flag-name.md`](./aws-dsql-cli-token-flag-name.md) — `aws dsql generate-db-connect-admin-auth-token` wants `--hostname <endpoint>` ; the older `--identifier <cluster-id>` form is rejected.
-
+- [`destructive-git-with-uncommitted-verification-work.md`](./destructive-git-with-uncommitted-verification-work.md) — proving an eradication works means breaking the code, and `git checkout --` then reverts the eradication with the probe. Commit first; three losses in one session.
 ### pnpm / package management
 
 - [`pnpm-peer-warning-is-not-enforcement.md`](./pnpm-peer-warning-is-not-enforcement.md) — pnpm only *warns* on peer-dep mismatch; installs succeed and the bad combination crashes at runtime.
@@ -75,18 +75,21 @@ Two failure modes to watch for:
 - [`pr-body-from-cc-ui-skips-skill-sections.md`](./pr-body-from-cc-ui-skips-skill-sections.md) — PRs opened from the Claude Code UI auto-generate a body that omits `## Visual evidence` and `## Validation gaps`; retrofit via `mcp__github__update_pull_request` after open.
 - [`github-mcp-pr-body-sanitizer.md`](./github-mcp-pr-body-sanitizer.md) — _rewritten 2026-05-21, first confirmed behaviour added 2026-08-14_: the three originally-asserted patterns were not reproducible (PR #26 has working `<details>` and `![]()`), so the entry ships a round-trip verification procedure and names PR #26 as the control sample. One behaviour has now survived it: markdown links come back wrapped in double backticks, inside the parentheses, so the anchor is dead — observed four times across PRs #46 and #48 while other links in the same bodies survived. The trigger is URL length: six samples separate cleanly at about 150 characters. Mitigation: link through `/blob/main/` rather than a long agent branch name, which takes 38 characters off every link. _2026-08-18_: a second, sharper behaviour — every URL ending in an image extension is backtick-wrapped, `<img>` loses its `src`, `<details>` is stripped and an autolink is removed, so no screenshot can be embedded in a body written through this server. A PreToolUse hook now refuses such a body before the call.
 - [`cdk-out-tmp-fills-the-sandbox-disk.md`](./cdk-out-tmp-fills-the-sandbox-disk.md) — `vitest run` on `infra/cdk/` accretes `/tmp/cdk.out*` staging dirs (~24 MB each, 100s+ on a long-running sandbox), eventually exhausting `/tmp` and breaking the suite with `ENOSPC`. SessionStart now sweeps them; recovery + cause documented.
-
+- [`subagents-that-were-never-told-their-label.md`](./subagents-that-were-never-told-their-label.md) — every `KAIZEN.md` line saying `main` after a task that spawned agents means the sweep cannot tell one agent's wall from four agents' wall.
+- [`a-generated-label-should-name-the-thing.md`](./a-generated-label-should-name-the-thing.md) — a generated UI label that reuses an internal id names the mechanism; keep the id, add a label.
+- [`driving-previews-with-agent-browser-and-argent.md`](./driving-previews-with-agent-browser-and-argent.md) — which of the two tools answers which question, and the traps in each.
+- [`dynamic-workflow-feature-pipeline.md`](./dynamic-workflow-feature-pipeline.md) — the operator runbook for the `plan → ship` Dynamic Workflow.
 ### Local dev / Postgres
 
 - [`local-postgres-without-docker.md`](./local-postgres-without-docker.md) — `scripts/local-postgres.sh` boots a sandbox-private Postgres for any borso app when Docker is unavailable (claude.ai/code sandbox); per-app stable port, Drizzle-friendly, `pnpm run test` wires `DATABASE_URL` automatically.
-
+- [`dsql-clone-from-prod.md`](./dsql-clone-from-prod.md) — cloning a production schema into a preview, and what the clone does not carry.
 ### Aurora DSQL
 
 - [`dsql-postgres-compat-gaps.md`](./dsql-postgres-compat-gaps.md) — catalogue of DSQL's divergences from Postgres (no jsonb, no FKs, no multi-DDL tx, no partial indexes, no advisory locks, no `USING <method>` on CREATE INDEX, retries need `IF NOT EXISTS`, only `admin` user, IAM is per-cluster).
 - [`dsql-serverless-pricing-vs-aurora.md`](./dsql-serverless-pricing-vs-aurora.md) — DSQL bills per DPU + per GB-month, not per cluster; idle clusters cost ~nothing. The "one-cluster-per-app" choice is about latency + quotas + ordering, not cost.
 - [`cloudwatch-retention-bounds-an-absence-claim.md`](./cloudwatch-retention-bounds-an-absence-claim.md) — `filter-log-events` accepts a window far older than the group's retention and says nothing, so "this never happened" is only ever a claim about the retained days. Read `retentionInDays` and the oldest event before quoting a period.
 - [`dsql-strong-consistency-is-per-connection.md`](./dsql-strong-consistency-is-per-connection.md) — read-after-write is consistent within a connection, not across them; a `PUT` then an immediate `GET` on a different Lambda/connection can read the pre-commit snapshot. A warm-connection `curl` loop won't reproduce it; reconcile from the mutation response, not a blind refetch.
-
+- [`drizzle-unique-index-is-not-a-unique-constraint.md`](./drizzle-unique-index-is-not-a-unique-constraint.md) — `uniqueIndex` lands in `getTableConfig().indexes`, not `.uniqueConstraints`; asserting against the wrong one passes on `undefined`.
 ### Build / lint tooling
 
 - [`biome-stack-overflow-on-dist-binaries.md`](./biome-stack-overflow-on-dist-binaries.md) — Biome 2.x stack-overflows on woff/png binaries in `dist/`; turn on `vcs.useIgnoreFile`.
@@ -95,7 +98,7 @@ Two failure modes to watch for:
 - [`biome-formatter-trips-line-count-ceiling.md`](./biome-formatter-trips-line-count-ceiling.md) — a `biome check --write` pass can split JSX/ternaries enough to push an untouched file past `noExcessiveLinesPerFile` ; option set + escape hatch.
 - [`ts-narrowing-lost-in-function-declarations.md`](./ts-narrowing-lost-in-function-declarations.md) — TS preserves narrowing in arrow expressions but not in `function` declarations inside the same scope; convert helpers in `useEffect` to arrow form.
 - [`lambda-esm-native-modules.md`](./lambda-esm-native-modules.md) — ESM-bundled Lambdas crash at cold start on `__dirname is not defined`; the shared banner restores `require`, `__filename`, `__dirname`, and prefer pure-WASM (`hash-wasm`) over native modules (`argon2`, `bcrypt`).
-
+- [`stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md`](./stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md) — Stryker runs from a sandbox copy, so a Vitest `globalSetup` at `../../scripts/` resolves to a file that is genuinely absent; plus the pnpm `--` forwarding trap and the `.stryker-tmp` leftovers.
 ### Validation tooling
 
 - [`run-repo-tools-from-the-directory-they-expect.md`](./run-repo-tools-from-the-directory-they-expect.md) — blueprint generators from the repo root, vitest from the app workspace, and what each unhelpful error actually means.
