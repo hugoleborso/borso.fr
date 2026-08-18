@@ -14,7 +14,7 @@ at twenty files.
 `convention-baseline.json` holds the current count per question and the
 gate fails only on an increase. Fixing one and running `--accept` lowers it.
 
-Read from 609 source file(s).
+Read from 610 source file(s).
 
 ## How is the name of a atom.ts file written?
 
@@ -132,8 +132,8 @@ than 3 files is either a convention nobody wrote down or an accident.
 
 | Suffix | Files |
 | --- | --- |
+| `.core.ts` | 85 |
 | `.utils.ts` | 85 |
-| `.core.ts` | 84 |
 | `.controller.ts` | 19 |
 | `.service.ts` | 18 |
 | `.schema.ts` | 16 |

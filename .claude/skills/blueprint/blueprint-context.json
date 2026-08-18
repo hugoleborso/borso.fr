@@ -1027,7 +1027,7 @@
         "name": "Pure Utility Module",
         "usage": "Use for deterministic helpers with no side effect, which the coverage gate holds at one hundred percent per file.",
         "path": "apps/pragma/site/src/lib/member-color.utils.ts",
-        "followers": 51
+        "followers": 52
       },
       {
         "id": "utils-formatter",

@@ -206,6 +206,11 @@ e.g., a change that cannot alter behaviour, and say why on the line.
   `infra/cdk`. The last two carried the coverage gate and no mutation
   configuration at all, and scored 77.40 and 80.84 the first time one was
   pointed at them.
+- `script:scripts/check-mutation-covers-gated-files.sh` fails a workspace that
+  holds gated files and ships no mutation configuration. A missing gate produces
+  no output to be wrong, so the absence itself is what fails here — `infra/cdk`
+  read as 100% covered for as long as nothing pointed Stryker at it, and the
+  first run reported 90 survivors.
 - `eslint:borso/test-file-has-sibling-source` fails when a `.core.ts` or
   `.utils.ts` file has no sibling test file.
 - `reviewer` checks that a test name states the behaviour and the condition,

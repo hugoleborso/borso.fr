@@ -248,6 +248,11 @@ review.
   disable comment with no reason after the two dashes. The short spelling
   `eslint-comments/require-description` is not the rule's identifier, and this
   document cited it for months.
+- `script:scripts/check-coupled-lists.sh` fails when two copies of one list
+  disagree — the architecture generator's trigger paths in the commit hook and
+  in its workflow, and the gated file suffixes in `eslint-rules/impurity.js` and
+  in every `vitest.config.ts`. Neither half is wrong on its own, which is why a
+  reviewer reads past both.
 - `script:scripts/check-frontend-env-vars.sh` fails a site reading a `VITE_*`
   variable no workflow sets, which Vite substitutes as `undefined` at build
   time while nothing else complains.

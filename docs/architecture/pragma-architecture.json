@@ -29,7 +29,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 178
+      "fileCount": 179
     },
     {
       "id": "uploads-bucket",
@@ -4271,7 +4271,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/setlists.queries.ts",
-      "digest": "33eb1d81c7b3",
+      "digest": "354335d629de",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -4281,6 +4281,7 @@
         "useAppendSetlistEntry",
         "useCreateSetlist",
         "useDeleteSetlistEntry",
+        "useIsCreatingSetlist",
         "useReorderSetlist",
         "useSetlistBySession",
         "useSetlistEntries",
@@ -5065,7 +5066,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx",
-      "digest": "4195532bc77a",
+      "digest": "6b3784149a60",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -5127,8 +5128,25 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/routes/setlists/setlist-index.core.ts",
+      "digest": "17e7f3e6a02a",
+      "container": "site",
+      "layer": "route",
+      "context": "setlists",
+      "feature": "setlists",
+      "exports": [
+        "buildSetlistIndexRows",
+        "selectConcertsNewestFirst"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx",
-      "digest": "498b0a933510",
+      "digest": "3b9a0b6f0938",
       "container": "site",
       "layer": "route",
       "context": "setlists",
@@ -5152,7 +5170,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/setlists/SetlistsPage.tsx",
-      "digest": "d62cddbc2000",
+      "digest": "fe492a9529ea",
       "container": "site",
       "layer": "route",
       "context": "setlists",
@@ -5161,12 +5179,16 @@
         "SetlistsPage"
       ],
       "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
         "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
         "apps/pragma/site/src/components/molecules/PageHeader.tsx",
         "apps/pragma/site/src/lib/api.client.ts",
         "apps/pragma/site/src/lib/formatters.utils.ts",
+        "apps/pragma/site/src/lib/navigation.hook.ts",
         "apps/pragma/site/src/lib/queries/sessions.queries.ts",
-        "apps/pragma/site/src/lib/queries/setlists.queries.ts"
+        "apps/pragma/site/src/lib/queries/setlists.queries.ts",
+        "apps/pragma/site/src/routes/setlists/setlist-index.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -6623,7 +6645,7 @@
     {
       "id": "utils-pure-module",
       "file": "apps/pragma/site/src/lib/member-color.utils.ts",
-      "followerCount": 24
+      "followerCount": 25
     },
     {
       "id": "workspace-test-config",
