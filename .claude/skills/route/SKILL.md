@@ -17,7 +17,7 @@ Answer all five. Answer them by **looking**, not by guessing: run the greps, ope
 
 | Axis | Question | How to answer it |
 | --- | --- | --- |
-| Blast radius | How many files, layers and applications? | `rg` for the symbol, list the folder, read `docs/architecture/<app>-architecture.html` |
+| Blast radius | How many files, layers and applications? | `rg` for the symbol, list the folder, read the map for the application (`pnpm exec tsx scripts/architecture/architecture-graph.ts` writes it; the pages are generated, not committed) |
 | Decisions | Is anything genuinely open about what to build? | If you can name two defensible answers and the user has not picked, it is open |
 | Precedent | Does a blueprint already cover every layer this touches? | `.claude/skills/blueprint/blueprint-index.md` |
 | Reversibility | Does it touch a schema, a shared construct, a secret, prod infrastructure? | A migration, `infra/shared/`, or anything in `docs/adr/`'s trigger list |

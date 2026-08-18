@@ -92,7 +92,9 @@ transaction without a cast.
 When the cascade crosses a **slice boundary** rather than reaching another
 table, the owning repository exports the transaction instead, because
 `borso/no-cross-slice-repository-imports` stops the service calling the other
-slice's repository directly:
+slice's repository directly. No application has that case today, so the shape
+below is the one a standards review arrived at on an application that did, and
+it is written here rather than shown from the tree:
 
 ```ts
 // shelves.repository.ts

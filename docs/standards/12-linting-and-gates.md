@@ -30,8 +30,13 @@ eslint-rules/                 the custom rules, one file each
   index.js                    the plugin object
   <rule-name>.js
   <rule-name>.test.js         a RuleTester suite per rule
-apps/<app>/eslint.config.js   extends the root, adds app specific overrides
 ```
+
+There is no per-application ESLint configuration. The flat config at the root
+reaches every workspace, each application's `lint` script runs `eslint` from
+the root against its own folder, and an application-specific exception is a
+`files:` block in the root file — e.g. the one that lets `borsouvertures` say
+`piece`. One file is the point: a rule cannot be quietly relaxed in a corner.
 
 Every custom rule ships with a `RuleTester` suite, because a lint rule that
 misfires costs more than the rule saves.
@@ -40,7 +45,7 @@ misfires costs more than the rule saves.
 
 The configuration starts from `@eslint/js` recommended,
 `typescript-eslint` strict and stylistic with type checking, the React hooks
-plugin, the React refresh plugin, `eslint-plugin-import` for resolution and
+plugin, the React refresh plugin, `eslint-plugin-import-x` for resolution and
 cycle detection, `eslint-plugin-unicorn` for the naming and correctness rules,
 `eslint-plugin-vitest` on test files, and `eslint-plugin-jsx-a11y` on the front
 ends.
@@ -59,29 +64,29 @@ git.
 | `borso/conditions-live-in-pure-functions`              | [02](./02-purity-and-core-files.md)                        |
 | `borso/pure-functions-live-in-core-files`              | [02](./02-purity-and-core-files.md)                        |
 | `borso/no-impure-calls-in-core-files`                  | [02](./02-purity-and-core-files.md)                        |
-| `borso/no-adapter-import-in-pure-module`               | [02](./02-purity-and-core-files.md)                        |
 | `borso/no-type-assertion-except-unknown`               | [03](./03-typing.md)                                       |
 | `borso/no-controller-imports-outside-service`          | [04](./04-backend-architecture.md)                         |
 | `borso/no-array-methods-in-controllers`                | [04](./04-backend-architecture.md)                         |
-| `borso/no-cross-slice-repository-imports`              | [04](./04-backend-architecture.md)                         |
 | `borso/no-database-client-outside-repository`          | [04](./04-backend-architecture.md), [11](./11-database.md) |
 | `borso/atomic-design-composition`                      | [05](./05-frontend-architecture.md)                        |
 | `borso/atomic-design-import-direction`                 | [05](./05-frontend-architecture.md)                        |
 | `borso/no-query-hooks-outside-organisms`               | [05](./05-frontend-architecture.md)                        |
-| `borso/no-flat-components-folder`                      | [05](./05-frontend-architecture.md)                        |
 | `borso/no-direct-api-fetch-in-site`                    | [06](./06-data-fetching.md)                                |
 | `borso/no-api-anchor-in-site`                          | [06](./06-data-fetching.md)                                |
 | `borso/no-vendor-sdk-outside-adapter`                  | [06](./06-data-fetching.md)                                |
+| `borso/no-adapter-import-in-pure-module`               | [02](./02-purity-and-core-files.md)                        |
 | `borso/no-outbound-call-outside-adapter`               | [06](./06-data-fetching.md), ADR-0012                      |
+| `borso/test-file-has-sibling-source`                   | [10](./10-testing.md)                                      |
+| `borso/no-cross-slice-repository-imports`              | [04](./04-backend-architecture.md)                         |
+| `borso/no-raw-sql-outside-migrations`                  | [11](./11-database.md)                                     |
 | `borso/no-server-state-in-use-state`                   | [06](./06-data-fetching.md)                                |
+| `borso/no-flat-components-folder`                      | [05](./05-frontend-architecture.md)                        |
+| `borso/no-dynamic-translation-keys`                    | [09](./09-i18n.md)                                         |
+| `borso/no-string-concatenated-class-names`             | [08](./08-styling.md)                                      |
 | `borso/no-use-effect`                                  | [07](./07-state-and-effects.md)                            |
 | `borso/no-inline-subscribe-in-use-sync-external-store` | [07](./07-state-and-effects.md)                            |
 | `borso/no-component-css-imports`                       | [08](./08-styling.md)                                      |
-| `borso/no-string-concatenated-class-names`             | [08](./08-styling.md)                                      |
 | `borso/no-literal-jsx-text`                            | [09](./09-i18n.md)                                         |
-| `borso/no-dynamic-translation-keys`                    | [09](./09-i18n.md)                                         |
-| `borso/test-file-has-sibling-source`                   | [10](./10-testing.md)                                      |
-| `borso/no-raw-sql-outside-migrations`                  | [11](./11-database.md)                                     |
 | `borso/no-abbreviated-identifier`                      | [01](./01-naming.md)                                       |
 | `borso/function-names-are-verb-phrases`                | [01](./01-naming.md)                                       |
 | `borso/verb-promises-match-return-type`                | [01](./01-naming.md)                                       |
@@ -171,8 +176,7 @@ The blueprint for the replacement shape is annotated at
 ## The gates, in the order they run
 
 The pre-commit hook runs `eslint --cache` and `prettier --check` on the staged
-files, and it runs the coverage suite for `infra/cdk` or `infra/shared` when
-either one changed.
+files. It is the cheap hook: nothing in it reads the whole repository's tests.
 
 Both eslint invocations, here and in CI, pass `--max-warnings 0`. Several rules
 the standards lean on ship at `warn` from their plugin's recommended preset,

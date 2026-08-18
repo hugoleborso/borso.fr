@@ -7,10 +7,10 @@
  *   pnpm exec tsx scripts/standards/temporal-coupling.ts [--commits <n>]
  *
  * There is no `--check`, for the reason written at length in
- * `docs/dantotsus/a-freshness-gate-on-an-artefact-made-of-git-history.md`: the
- * input is the history, so the page changes on every commit whether or not any
- * source moved, and a freshness gate on it could never be green. The page
- * records the revision it was read at instead.
+ * `docs/dantotsus/a-generated-file-cannot-contain-its-own-commit.md`: the input
+ * is the history, so the page changes on every commit whether or not any source
+ * moved, and a freshness gate on it could never be green. The page records the
+ * revision it was read at instead.
  */
 
 import { execFileSync } from 'node:child_process';

@@ -54,8 +54,8 @@ every application the standard covers.
 | --- | --- | --- | --- |
 | `borso/pure-functions-live-in-core-files` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
 | `borso/conditions-live-in-pure-functions` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
-| `borso/no-impure-calls-in-core-files` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
 | `borso/no-adapter-import-in-pure-module` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api |
+| `borso/no-impure-calls-in-core-files` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra |
 | `unicorn/consistent-function-scoping` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
 | `vitest-coverage` | gate | yes | .github/workflows/ci.yml, .github/workflows/full-suite.yml |
 | `stryker` | gate | yes | .husky/pre-push, .github/workflows/full-suite.yml |
