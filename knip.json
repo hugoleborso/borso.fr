@@ -4,21 +4,21 @@
   "workspaces": {
     ".": {
       "ignoreBinaries": ["typecheck", "build"],
-      "ignoreDependencies": [
-        "@stryker-mutator/core",
-        "@stryker-mutator/vitest-runner",
-        "@swmansion/argent",
-        "agent-browser",
-        "esbuild"
+      "ignoreDependencies": ["@swmansion/argent", "agent-browser", "esbuild"],
+      "entry": [
+        ".claude/skills/blueprint/blueprint-*.ts",
+        "scripts/architecture/*.ts",
+        "scripts/blueprints/*.ts",
+        "scripts/standards/*.ts",
+        "scripts/**/*.test.ts"
       ],
-      "entry": [".claude/skills/blueprint/blueprint-*.ts", "scripts/architecture/*.ts"],
       "project": [".claude/skills/blueprint/**/*.ts", "scripts/**/*.ts"]
     },
     "apps/borso-fr": {
       "entry": [
         "bin/app.ts",
-        "site/art/mondrian/main.tsx",
-        "site/12-travaux/main.tsx",
+        "site/src/art/mondrian/main.tsx",
+        "site/src/12-travaux/main.tsx",
         "site/**/*.utils.test.ts"
       ],
       "project": ["bin/**/*.ts", "site/**/*.ts", "site/**/*.tsx"],
@@ -73,7 +73,8 @@
         "src/internal/cf-host-routing-function.code.js",
         "src/internal/cf-static-site-index-rewrite.code.js",
         "test/**/*.test.ts",
-        "test/unit/fixtures/handler.ts"
+        "test/unit/fixtures/handler.ts",
+        "vitest.mutation.config.ts"
       ],
       "ignoreDependencies": ["esbuild"]
     },

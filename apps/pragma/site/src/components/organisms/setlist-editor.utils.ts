@@ -112,7 +112,7 @@ interface NameableInstrument {
  * cascade-scrub (R1 in the lineup-editor plan). Pure so the caller
  * owns when and how to surface the warning.
  */
-export function findOrphanMemberIds(lineup: Lineup, knownMemberIds: ReadonlySet<string>): string[] {
+export function listOrphanMemberIds(lineup: Lineup, knownMemberIds: ReadonlySet<string>): string[] {
   const orphans: string[] = [];
   for (const memberId of Object.keys(lineup)) {
     if (!knownMemberIds.has(memberId)) orphans.push(memberId);

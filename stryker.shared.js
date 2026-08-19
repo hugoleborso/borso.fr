@@ -1,3 +1,6 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 /**
  * Shared Stryker settings.
  *
@@ -10,6 +13,28 @@
 
 /** A mutant that hangs is a mutated loop condition, and it is killed by the clock. */
 const MUTANT_TIMEOUT_MILLISECONDS = 8000;
+
+/**
+ * Where Stryker copies the workspace to mutate it, outside the workspace.
+ *
+ * The default is `.stryker-tmp` beside the code, and a sandbox appearing and
+ * vanishing inside a workspace is visible to anything else reading that
+ * directory. It has bitten this repository twice: the architecture generator
+ * counted the sandbox's files as real ones, and `infra/cdk`'s CDK snapshot
+ * tests fail with an ENOENT inside `AssetStaging.calculateHash` when a
+ * concurrent mutation run creates one mid-walk, which the pre-push wave does
+ * every time a change touches both a pure module and anything else in the
+ * workspace.
+ *
+ * Keyed by the workspace path so the parallel gates cannot collide.
+ */
+function sandboxOutsideTheWorkspace() {
+  const slug = process
+    .cwd()
+    .replaceAll(/[^a-z0-9]+/gi, '-')
+    .replace(/^-|-$/g, '');
+  return join(tmpdir(), `borso-stryker-${slug}`);
+}
 
 export function defineStrykerConfig({ mutate, vitest }) {
   return {
@@ -24,7 +49,7 @@ export function defineStrykerConfig({ mutate, vitest }) {
     coverageAnalysis: 'perTest',
     timeoutMS: MUTANT_TIMEOUT_MILLISECONDS,
     concurrency: 4,
-    tempDirName: '.stryker-tmp',
+    tempDirName: sandboxOutsideTheWorkspace(),
     cleanTempDir: true,
     disableTypeChecks: '{src,site,api,test}/**/*.{js,ts,jsx,tsx}',
     // A mutation in code that runs once at module load, e.g. a constant table,

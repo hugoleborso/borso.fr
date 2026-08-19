@@ -8,7 +8,7 @@ import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
-import { findUndecidedCredentialTables } from '../internal/migration-runner/clone-from-schema.utils.js';
+import { listUndecidedCredentialTables } from '../internal/migration-runner/clone-from-schema.utils.js';
 import {
   assertDeployStage,
   dsqlSchemaName,
@@ -115,6 +115,9 @@ interface MigrationFile {
 }
 
 const MIGRATION_FILE_PATTERN = /^(\d+)_[A-Za-z0-9_-]+\.sql$/;
+const MIGRATION_RUNNER_TIMEOUT_MINUTES = 5;
+const MIGRATION_RUNNER_MEMORY_MIB = 512;
+const HEXADECIMAL_RADIX = 16;
 
 function readMigrations(dir: string): readonly MigrationFile[] {
   const absDir = path.resolve(dir);
@@ -145,7 +148,7 @@ function assertCredentialTablesDecided(
   migrations: readonly MigrationFile[],
 ): void {
   if (config === undefined) return;
-  const undecided = findUndecidedCredentialTables(
+  const undecided = listUndecidedCredentialTables(
     config,
     migrations.map((migration) => migration.sql),
   );
@@ -198,8 +201,8 @@ export class DsqlSchema extends Construct {
       entry: resolveRunnerEntry(),
       runtime: Runtime.NODEJS_22_X,
       architecture: Architecture.ARM_64,
-      timeout: Duration.minutes(5),
-      memorySize: 512,
+      timeout: Duration.minutes(MIGRATION_RUNNER_TIMEOUT_MINUTES),
+      memorySize: MIGRATION_RUNNER_MEMORY_MIB,
       logGroup: runnerLogGroup,
       bundling: {
         target: 'node22',
@@ -295,5 +298,5 @@ function digestMigrations(migrations: readonly MigrationFile[]): string {
   for (const character of serialized) {
     accumulator = (accumulator * HASH_MULTIPLIER + character.charCodeAt(0)) | 0;
   }
-  return accumulator.toString(16);
+  return accumulator.toString(HEXADECIMAL_RADIX);
 }

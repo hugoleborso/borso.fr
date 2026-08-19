@@ -230,11 +230,13 @@ function hasCreateTableStatement(migrationSql: string, table: string): boolean {
  * `admin_credentials`. Demanding a decision about a table the schema has never
  * heard of would be noise, and noise is what gets a guard deleted.
  */
-export function findUndecidedCredentialTables(
+export function listUndecidedCredentialTables(
   config: CloneDecisionLists,
   migrationSql: readonly string[],
 ): string[] {
+  // Stryker disable next-line ArrayDeclaration: equivalent mutant. The default is only ever asked whether it includes a name from CREDENTIAL_TABLES, and Stryker's filler string is not one of those two names, so no input tells the two arrays apart.
   const blocklist = config.tableBlocklist ?? [];
+  // Stryker disable next-line ArrayDeclaration: equivalent mutant. Same as above — the default is only read through `includes` of a CREDENTIAL_TABLES name.
   const tablesToReplace = config.tablesToReplace ?? [];
   return CREDENTIAL_TABLES.filter(
     (table) =>

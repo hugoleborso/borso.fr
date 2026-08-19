@@ -25,18 +25,20 @@ Agent({
 
 The brief carries the spec path, dev URL, report path, and evidence directory — and *nothing else*. It does not summarise the implementation, list known gotchas, or hint at what to look for.
 
-## Tooling: agent-browser
+## Tooling: `scripts/browser.sh`
 
 The validator drives the browser via [`agent-browser`](https://github.com/vercel-labs/agent-browser) — the LLM-oriented CLI that exposes a reference-based snapshot/click/screenshot interface tuned for agents. Not Playwright: agent-browser is the right shape for an LLM-driven validator (text refs over selectors, JSON snapshots over imperative API calls).
 
-If `agent-browser` is not installed on the system, the validator surfaces that as a single FAIL row titled "Tooling unavailable" and exits without falling back. Install:
+**Call it through [`scripts/browser.sh`](../../../scripts/browser.sh), never directly.** Two settings are not optional in this sandbox and neither is discoverable from a failure message: the browser agent-browser looks for is not there, and without `--ssl-version-max=tls1.2` every https navigation dies with `ERR_CONNECTION_RESET`. The wrapper sets both and passes every argument through, so `scripts/browser.sh snapshot` is `agent-browser snapshot`.
 
 ```bash
-npm install -g agent-browser
-agent-browser install   # provisions the daemon + its browser
+scripts/browser.sh --restart open http://localhost:5173/
+scripts/browser.sh snapshot -i --json
+scripts/browser.sh screenshot ./evidence/01-catalog.png
+scripts/browser.sh errors
 ```
 
-The skill (this file, running in the main session) does not install agent-browser automatically — that's an explicit operator decision since it touches the global npm prefix and provisions a Chromium binary. Surface the install command to the user if it's missing.
+**Never run `agent-browser install`.** The suggestion appears in agent-browser's own "Chrome not found" message and is wrong here: the image already ships Chromium for Playwright, the environment brief says not to fetch a second copy, and the wrapper points at the one that exists. If the wrapper itself fails, that is a genuine "Tooling unavailable" FAIL row, and the validator exits without falling back to Playwright.
 
 ## When to invoke
 

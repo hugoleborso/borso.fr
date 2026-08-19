@@ -11,6 +11,7 @@ const CONSUMER_REPO = 'hugoleborso/borso.fr';
  * therefore the branch name that ends up in the OIDC sub claim for those events.
  */
 const DEFAULT_BRANCH = 'main';
+const PREVIEW_ROLE_MAX_SESSION_HOURS = 2;
 
 /**
  * IAM actions a CDK-driven deploy needs on the per-stack roles it creates,
@@ -120,7 +121,7 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
       repo: CONSUMER_REPO,
       subjects: [{ kind: 'pull_request' }, { kind: 'branch', branch: DEFAULT_BRANCH }],
     }),
-    maxSessionDuration: Duration.hours(2),
+    maxSessionDuration: Duration.hours(PREVIEW_ROLE_MAX_SESSION_HOURS),
     description:
       'Used by preview.yml to deploy/destroy <app>-pr-<n> stacks, and by cleanup-orphans.yml on its schedule.',
   });

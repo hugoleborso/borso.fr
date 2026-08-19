@@ -18,7 +18,7 @@
       "path": "apps/borsouvertures/bin/app.ts",
       "digest": "4cf5ecf5bac6",
       "container": "site",
-      "layer": "unknown",
+      "layer": "entrypoint",
       "context": "root",
       "feature": null,
       "exports": [],
@@ -30,7 +30,7 @@
     },
     {
       "path": "apps/borsouvertures/scripts/build-openings.ts",
-      "digest": "19c83591018e",
+      "digest": "36e786f2bbeb",
       "container": "site",
       "layer": "unknown",
       "context": "root",
@@ -41,11 +41,11 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/boardDrop.utils.ts",
+      "path": "apps/borsouvertures/site/src/components/atoms/boardDrop.utils.ts",
       "digest": "325945e0b829",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "buildDroppedUci",
@@ -58,11 +58,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/boardPieces.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/boardPieces.tsx",
       "digest": "5677b8734817",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "buildNamedPieces"
@@ -75,21 +75,21 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/BoardView.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/BoardView.tsx",
       "digest": "2f89489ba557",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "BoardView"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/boardDrop.utils.ts",
-        "apps/borsouvertures/site/components/atoms/boardPieces.tsx",
-        "apps/borsouvertures/site/state/persistedState.utils.ts",
-        "apps/borsouvertures/site/theme/boardAppearance.ts",
-        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/boardDrop.utils.ts",
+        "apps/borsouvertures/site/src/components/atoms/boardPieces.tsx",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/src/theme/boardAppearance.ts",
+        "apps/borsouvertures/site/src/theme/boardThemes.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -98,17 +98,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/Button.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/Button.tsx",
       "digest": "d3efd28dd654",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "Button"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/buttonStyles.ts"
+        "apps/borsouvertures/site/src/components/atoms/buttonStyles.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -116,11 +116,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/buttonStyles.ts",
+      "path": "apps/borsouvertures/site/src/components/atoms/buttonStyles.ts",
       "digest": "151598bc1e0a",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "ACTIVE_BUTTON_CLASS",
@@ -131,11 +131,11 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/EmptySlot.tsx",
       "digest": "bfbe5b485c15",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "EmptySlot"
@@ -147,17 +147,17 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/ErrorPanel.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/ErrorPanel.tsx",
       "digest": "237cdfcb7a0a",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "ErrorPanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/buttonStyles.ts"
+        "apps/borsouvertures/site/src/components/atoms/buttonStyles.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -165,17 +165,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/InlineBanner.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/InlineBanner.tsx",
       "digest": "21719b45da68",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "InlineBanner"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/buttonStyles.ts"
+        "apps/borsouvertures/site/src/components/atoms/buttonStyles.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -183,11 +183,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/LoadingPanel.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/LoadingPanel.tsx",
       "digest": "47a87231edd0",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "LoadingPanel"
@@ -199,18 +199,18 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/LoadMoreRow.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/LoadMoreRow.tsx",
       "digest": "d58f15cd5548",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "LoadMoreRow"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/buttonStyles.ts",
-        "apps/borsouvertures/site/components/atoms/loadMoreRow.types.ts"
+        "apps/borsouvertures/site/src/components/atoms/buttonStyles.ts",
+        "apps/borsouvertures/site/src/components/atoms/loadMoreRow.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -218,11 +218,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/loadMoreRow.types.ts",
+      "path": "apps/borsouvertures/site/src/components/atoms/loadMoreRow.types.ts",
       "digest": "d44643063f68",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [],
       "imports": [],
@@ -232,18 +232,18 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/MiniBoard.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/MiniBoard.tsx",
       "digest": "f5bf2a51e946",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "MiniBoard"
       ],
       "imports": [
-        "apps/borsouvertures/site/theme/boardAppearance.ts",
-        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+        "apps/borsouvertures/site/src/theme/boardAppearance.ts",
+        "apps/borsouvertures/site/src/theme/boardThemes.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -251,17 +251,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/Modal.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/Modal.tsx",
       "digest": "180d6276368f",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "Modal"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/buttonStyles.ts"
+        "apps/borsouvertures/site/src/components/atoms/buttonStyles.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -270,18 +270,18 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/MoveButtonList.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/MoveButtonList.tsx",
       "digest": "21df43afce42",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "MoveButtonList"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/buttonStyles.ts",
-        "apps/borsouvertures/site/components/atoms/moveNotation.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/buttonStyles.ts",
+        "apps/borsouvertures/site/src/components/atoms/moveNotation.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -289,17 +289,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/moveNotation.utils.ts",
+      "path": "apps/borsouvertures/site/src/components/atoms/moveNotation.utils.ts",
       "digest": "68c4ef65c1b0",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "describeMoveInStandardNotation"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/uciSquare.utils.ts"
+        "apps/borsouvertures/site/src/openings/uciSquare.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -307,11 +307,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/Select.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/Select.tsx",
       "digest": "d782c1d52100",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "Select"
@@ -323,17 +323,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/SelectorCard.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/SelectorCard.tsx",
       "digest": "62a0ff5346b9",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "SelectorCard"
       ],
       "imports": [
-        "apps/borsouvertures/site/lib/componentTable.types.ts"
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -342,11 +342,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/SelectorPanel.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/SelectorPanel.tsx",
       "digest": "593c50598478",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "SelectorPanel"
@@ -358,17 +358,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/SessionStartHint.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/SessionStartHint.tsx",
       "digest": "4f6c525b3a0b",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "SessionStartHint"
       ],
       "imports": [
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -377,11 +377,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/StatusItem.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/StatusItem.tsx",
       "digest": "a14b46b0bf46",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "StatusItem"
@@ -393,17 +393,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx",
+      "path": "apps/borsouvertures/site/src/components/atoms/ToggleSlider.tsx",
       "digest": "91045a318e52",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "ToggleSlider"
       ],
       "imports": [
-        "apps/borsouvertures/site/lib/componentTable.types.ts"
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -412,17 +412,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/AutoOpponentToggle.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/AutoOpponentToggle.tsx",
       "digest": "028c06b29492",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "AutoOpponentToggle"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx"
+        "apps/borsouvertures/site/src/components/atoms/ToggleSlider.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -430,19 +430,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/BoardStyleSelect.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/BoardStyleSelect.tsx",
       "digest": "5487420811d4",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "BoardStyleSelect"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/Select.tsx",
-        "apps/borsouvertures/site/state/appState.ts",
-        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/Select.tsx",
+        "apps/borsouvertures/site/src/state/appState.ts",
+        "apps/borsouvertures/site/src/theme/boardThemes.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -450,20 +450,20 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/LanguageSwitcher.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/LanguageSwitcher.tsx",
       "digest": "3e9e1e6ddd88",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "LanguageSwitcher"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx",
-        "apps/borsouvertures/site/i18n/i18n.ts",
-        "apps/borsouvertures/site/i18n/i18n.utils.ts",
-        "apps/borsouvertures/site/i18n/locale-storage.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/ToggleSlider.tsx",
+        "apps/borsouvertures/site/src/i18n/i18n.ts",
+        "apps/borsouvertures/site/src/i18n/i18n.utils.ts",
+        "apps/borsouvertures/site/src/i18n/locale-storage.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -472,19 +472,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/LearnClearedBanner.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/LearnClearedBanner.tsx",
       "digest": "e78ad98d1fd6",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "LearnClearedBanner"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/InlineBanner.tsx",
-        "apps/borsouvertures/site/openings/machineInstances.ts",
-        "apps/borsouvertures/site/state/appState.ts"
+        "apps/borsouvertures/site/src/components/atoms/InlineBanner.tsx",
+        "apps/borsouvertures/site/src/openings/machineInstances.ts",
+        "apps/borsouvertures/site/src/state/appState.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -492,19 +492,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/LearnDrillPanel.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/LearnDrillPanel.tsx",
       "digest": "3262ab8ac668",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "LearnDrillPanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/Button.tsx",
-        "apps/borsouvertures/site/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/openings/machineInstances.ts"
+        "apps/borsouvertures/site/src/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/src/openings/machineInstances.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -513,17 +513,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/LearnDrillProgress.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/LearnDrillProgress.tsx",
       "digest": "85f82ce01b2d",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "LearnDrillProgress"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/StatusItem.tsx"
+        "apps/borsouvertures/site/src/components/atoms/StatusItem.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -531,19 +531,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/LearnOutOfBookModal.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/LearnOutOfBookModal.tsx",
       "digest": "41e1ad43340c",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "LearnOutOfBookModal"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/Button.tsx",
-        "apps/borsouvertures/site/components/atoms/Modal.tsx",
-        "apps/borsouvertures/site/openings/machineInstances.ts"
+        "apps/borsouvertures/site/src/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/src/components/atoms/Modal.tsx",
+        "apps/borsouvertures/site/src/openings/machineInstances.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -551,17 +551,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/LearnPickPrompt.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/LearnPickPrompt.tsx",
       "digest": "a6434568a1ff",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "LearnPickPrompt"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/LoadingPanel.tsx"
+        "apps/borsouvertures/site/src/components/atoms/LoadingPanel.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -569,31 +569,31 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/LinesPanel.tsx",
-      "digest": "77eaa87e9022",
+      "path": "apps/borsouvertures/site/src/components/molecules/LinesPanel.tsx",
+      "digest": "5d8f0faeca28",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "LinesPanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
-        "apps/borsouvertures/site/components/atoms/LoadMoreRow.tsx",
-        "apps/borsouvertures/site/components/atoms/MiniBoard.tsx",
-        "apps/borsouvertures/site/components/atoms/SelectorCard.tsx",
-        "apps/borsouvertures/site/components/atoms/SelectorPanel.tsx",
-        "apps/borsouvertures/site/components/atoms/loadMoreRow.types.ts",
-        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
-        "apps/borsouvertures/site/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/lib/usePaginatedList.ts",
-        "apps/borsouvertures/site/openings/openingFlow.core.ts",
-        "apps/borsouvertures/site/openings/playScope.core.ts",
-        "apps/borsouvertures/site/openings/previews.utils.ts",
-        "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/state/appState.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/src/components/atoms/LoadMoreRow.tsx",
+        "apps/borsouvertures/site/src/components/atoms/MiniBoard.tsx",
+        "apps/borsouvertures/site/src/components/atoms/SelectorCard.tsx",
+        "apps/borsouvertures/site/src/components/atoms/SelectorPanel.tsx",
+        "apps/borsouvertures/site/src/components/atoms/loadMoreRow.types.ts",
+        "apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/src/lib/paginated-list.hook.ts",
+        "apps/borsouvertures/site/src/openings/openingFlow.core.ts",
+        "apps/borsouvertures/site/src/openings/playScope.core.ts",
+        "apps/borsouvertures/site/src/openings/previews.utils.ts",
+        "apps/borsouvertures/site/src/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/src/state/appState.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -602,20 +602,20 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/ModeToggle.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/ModeToggle.tsx",
       "digest": "3e58c70e6d74",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "ModeToggle"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx",
-        "apps/borsouvertures/site/openings/sessionStart.core.ts",
-        "apps/borsouvertures/site/state/appState.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/ToggleSlider.tsx",
+        "apps/borsouvertures/site/src/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/src/state/appState.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -624,19 +624,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
+      "path": "apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts",
       "digest": "5a2f9c792551",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borsouvertures/site/openings/openingFlow.core.ts",
-        "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts",
-        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+        "apps/borsouvertures/site/src/openings/openingFlow.core.ts",
+        "apps/borsouvertures/site/src/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/src/openings/types.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/src/theme/boardThemes.utils.ts"
       ],
       "blueprints": [
         "shared-props-shape"
@@ -644,17 +644,17 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/OpeningsLoadFailurePanel.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/OpeningsLoadFailurePanel.tsx",
       "digest": "80eaaf85a9d4",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "OpeningsLoadFailurePanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/ErrorPanel.tsx"
+        "apps/borsouvertures/site/src/components/atoms/ErrorPanel.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -662,17 +662,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/OpeningsLoadingPanel.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/OpeningsLoadingPanel.tsx",
       "digest": "f5553e21baf8",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "OpeningsLoadingPanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/LoadingPanel.tsx"
+        "apps/borsouvertures/site/src/components/atoms/LoadingPanel.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -680,30 +680,30 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/OpeningsPanel.tsx",
-      "digest": "db16afcca608",
+      "path": "apps/borsouvertures/site/src/components/molecules/OpeningsPanel.tsx",
+      "digest": "e7d9193ecbe5",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "OpeningsPanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
-        "apps/borsouvertures/site/components/atoms/LoadMoreRow.tsx",
-        "apps/borsouvertures/site/components/atoms/MiniBoard.tsx",
-        "apps/borsouvertures/site/components/atoms/SelectorCard.tsx",
-        "apps/borsouvertures/site/components/atoms/SelectorPanel.tsx",
-        "apps/borsouvertures/site/components/atoms/loadMoreRow.types.ts",
-        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
-        "apps/borsouvertures/site/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/lib/usePaginatedList.ts",
-        "apps/borsouvertures/site/openings/playScope.core.ts",
-        "apps/borsouvertures/site/openings/previews.utils.ts",
-        "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/state/appState.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/src/components/atoms/LoadMoreRow.tsx",
+        "apps/borsouvertures/site/src/components/atoms/MiniBoard.tsx",
+        "apps/borsouvertures/site/src/components/atoms/SelectorCard.tsx",
+        "apps/borsouvertures/site/src/components/atoms/SelectorPanel.tsx",
+        "apps/borsouvertures/site/src/components/atoms/loadMoreRow.types.ts",
+        "apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/src/lib/paginated-list.hook.ts",
+        "apps/borsouvertures/site/src/openings/playScope.core.ts",
+        "apps/borsouvertures/site/src/openings/previews.utils.ts",
+        "apps/borsouvertures/site/src/openings/types.ts",
+        "apps/borsouvertures/site/src/state/appState.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -712,18 +712,18 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/PlayBookPanel.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/PlayBookPanel.tsx",
       "digest": "0ec439a11bdb",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "PlayBookPanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/Button.tsx",
-        "apps/borsouvertures/site/openings/machineInstances.ts"
+        "apps/borsouvertures/site/src/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/src/openings/machineInstances.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -731,19 +731,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/PlayCompletedBanner.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/PlayCompletedBanner.tsx",
       "digest": "a0b76a870d24",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "PlayCompletedBanner"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/InlineBanner.tsx",
-        "apps/borsouvertures/site/openings/machineInstances.ts",
-        "apps/borsouvertures/site/openings/playSession.core.ts"
+        "apps/borsouvertures/site/src/components/atoms/InlineBanner.tsx",
+        "apps/borsouvertures/site/src/openings/machineInstances.ts",
+        "apps/borsouvertures/site/src/openings/playSession.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -751,19 +751,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/PlayOutOfBookModal.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/PlayOutOfBookModal.tsx",
       "digest": "eceb70fb5d4c",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "PlayOutOfBookModal"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/Button.tsx",
-        "apps/borsouvertures/site/components/atoms/Modal.tsx",
-        "apps/borsouvertures/site/openings/machineInstances.ts"
+        "apps/borsouvertures/site/src/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/src/components/atoms/Modal.tsx",
+        "apps/borsouvertures/site/src/openings/machineInstances.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -771,18 +771,18 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/PlayStatusPanel.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/PlayStatusPanel.tsx",
       "digest": "add71f589099",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "PlayStatusPanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/StatusItem.tsx",
-        "apps/borsouvertures/site/lib/componentTable.types.ts"
+        "apps/borsouvertures/site/src/components/atoms/StatusItem.tsx",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -791,17 +791,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/ShowMovesToggle.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/ShowMovesToggle.tsx",
       "digest": "f818bb72a570",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "ShowMovesToggle"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx"
+        "apps/borsouvertures/site/src/components/atoms/ToggleSlider.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -809,19 +809,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/SideSelector.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/SideSelector.tsx",
       "digest": "cf393f1b4d5b",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "SideSelector"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx",
-        "apps/borsouvertures/site/state/appState.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/ToggleSlider.tsx",
+        "apps/borsouvertures/site/src/state/appState.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -830,19 +830,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/TreeVisualizationToggle.tsx",
+      "path": "apps/borsouvertures/site/src/components/molecules/TreeVisualizationToggle.tsx",
       "digest": "fdfaa5f62807",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "TreeVisualizationToggle"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/ToggleSlider.tsx",
-        "apps/borsouvertures/site/openings/sessionStart.core.ts",
-        "apps/borsouvertures/site/state/appState.ts"
+        "apps/borsouvertures/site/src/components/atoms/ToggleSlider.tsx",
+        "apps/borsouvertures/site/src/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/src/state/appState.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -851,30 +851,30 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/molecules/VariationsPanel.tsx",
-      "digest": "29864b63b2b2",
+      "path": "apps/borsouvertures/site/src/components/molecules/VariationsPanel.tsx",
+      "digest": "53aa6775e6d8",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "VariationsPanel"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
-        "apps/borsouvertures/site/components/atoms/LoadMoreRow.tsx",
-        "apps/borsouvertures/site/components/atoms/MiniBoard.tsx",
-        "apps/borsouvertures/site/components/atoms/SelectorCard.tsx",
-        "apps/borsouvertures/site/components/atoms/SelectorPanel.tsx",
-        "apps/borsouvertures/site/components/atoms/loadMoreRow.types.ts",
-        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
-        "apps/borsouvertures/site/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/lib/usePaginatedList.ts",
-        "apps/borsouvertures/site/openings/openingFlow.core.ts",
-        "apps/borsouvertures/site/openings/playScope.core.ts",
-        "apps/borsouvertures/site/openings/previews.utils.ts",
-        "apps/borsouvertures/site/state/appState.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/src/components/atoms/LoadMoreRow.tsx",
+        "apps/borsouvertures/site/src/components/atoms/MiniBoard.tsx",
+        "apps/borsouvertures/site/src/components/atoms/SelectorCard.tsx",
+        "apps/borsouvertures/site/src/components/atoms/SelectorPanel.tsx",
+        "apps/borsouvertures/site/src/components/atoms/loadMoreRow.types.ts",
+        "apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/src/lib/paginated-list.hook.ts",
+        "apps/borsouvertures/site/src/openings/openingFlow.core.ts",
+        "apps/borsouvertures/site/src/openings/playScope.core.ts",
+        "apps/borsouvertures/site/src/openings/previews.utils.ts",
+        "apps/borsouvertures/site/src/state/appState.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -883,23 +883,23 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/CompactOpeningFlow.tsx",
+      "path": "apps/borsouvertures/site/src/components/organisms/CompactOpeningFlow.tsx",
       "digest": "649f3641aa1c",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "CompactOpeningFlow"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/Button.tsx",
-        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
-        "apps/borsouvertures/site/components/molecules/LinesPanel.tsx",
-        "apps/borsouvertures/site/components/molecules/OpeningsPanel.tsx",
-        "apps/borsouvertures/site/components/molecules/VariationsPanel.tsx",
-        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
-        "apps/borsouvertures/site/lib/componentTable.types.ts"
+        "apps/borsouvertures/site/src/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/src/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/src/components/molecules/LinesPanel.tsx",
+        "apps/borsouvertures/site/src/components/molecules/OpeningsPanel.tsx",
+        "apps/borsouvertures/site/src/components/molecules/VariationsPanel.tsx",
+        "apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -908,33 +908,33 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/LearnDrill.tsx",
-      "digest": "c347b8dc4025",
+      "path": "apps/borsouvertures/site/src/components/organisms/LearnDrill.tsx",
+      "digest": "2be877eb9664",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "LearnDrill"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/BoardView.tsx",
-        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
-        "apps/borsouvertures/site/components/atoms/MoveButtonList.tsx",
-        "apps/borsouvertures/site/components/molecules/LearnClearedBanner.tsx",
-        "apps/borsouvertures/site/components/molecules/LearnDrillPanel.tsx",
-        "apps/borsouvertures/site/components/molecules/LearnDrillProgress.tsx",
-        "apps/borsouvertures/site/components/molecules/LearnOutOfBookModal.tsx",
-        "apps/borsouvertures/site/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/lib/useSessionStart.ts",
-        "apps/borsouvertures/site/lib/viewport.ts",
-        "apps/borsouvertures/site/openings/bookArrows.utils.ts",
-        "apps/borsouvertures/site/openings/learnSession.core.ts",
-        "apps/borsouvertures/site/openings/machineInstances.ts",
-        "apps/borsouvertures/site/openings/sessionStart.core.ts",
-        "apps/borsouvertures/site/openings/uciSquare.utils.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts",
-        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/BoardView.tsx",
+        "apps/borsouvertures/site/src/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/src/components/atoms/MoveButtonList.tsx",
+        "apps/borsouvertures/site/src/components/molecules/LearnClearedBanner.tsx",
+        "apps/borsouvertures/site/src/components/molecules/LearnDrillPanel.tsx",
+        "apps/borsouvertures/site/src/components/molecules/LearnDrillProgress.tsx",
+        "apps/borsouvertures/site/src/components/molecules/LearnOutOfBookModal.tsx",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/src/lib/session-start.hook.ts",
+        "apps/borsouvertures/site/src/lib/viewport.hook.ts",
+        "apps/borsouvertures/site/src/openings/bookArrows.utils.ts",
+        "apps/borsouvertures/site/src/openings/learnSession.core.ts",
+        "apps/borsouvertures/site/src/openings/machineInstances.ts",
+        "apps/borsouvertures/site/src/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/src/openings/uciSquare.utils.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/src/theme/boardThemes.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -943,18 +943,18 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/LearnSessionControl.tsx",
+      "path": "apps/borsouvertures/site/src/components/organisms/LearnSessionControl.tsx",
       "digest": "d89a6232172e",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "LearnSessionControl"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/molecules/TreeVisualizationToggle.tsx",
-        "apps/borsouvertures/site/components/organisms/session.types.ts"
+        "apps/borsouvertures/site/src/components/molecules/TreeVisualizationToggle.tsx",
+        "apps/borsouvertures/site/src/components/organisms/session.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -962,24 +962,24 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/LearnTreeSession.tsx",
+      "path": "apps/borsouvertures/site/src/components/organisms/LearnTreeSession.tsx",
       "digest": "1bd440f351b2",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "LearnTreeSession"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/molecules/LearnPickPrompt.tsx",
-        "apps/borsouvertures/site/components/organisms/LearnDrill.tsx",
-        "apps/borsouvertures/site/components/organisms/session.types.ts",
-        "apps/borsouvertures/site/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/openings/learnSession.core.ts",
-        "apps/borsouvertures/site/openings/sessionStart.core.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts",
-        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+        "apps/borsouvertures/site/src/components/molecules/LearnPickPrompt.tsx",
+        "apps/borsouvertures/site/src/components/organisms/LearnDrill.tsx",
+        "apps/borsouvertures/site/src/components/organisms/session.types.ts",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/src/openings/learnSession.core.ts",
+        "apps/borsouvertures/site/src/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/src/theme/boardThemes.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -988,24 +988,24 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/OpeningFlowSelector.tsx",
-      "digest": "ee651a1037d8",
+      "path": "apps/borsouvertures/site/src/components/organisms/OpeningFlowSelector.tsx",
+      "digest": "e0902a143dad",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "OpeningFlowSelector"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
-        "apps/borsouvertures/site/components/organisms/CompactOpeningFlow.tsx",
-        "apps/borsouvertures/site/components/organisms/WideOpeningFlow.tsx",
-        "apps/borsouvertures/site/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/lib/viewport.ts",
-        "apps/borsouvertures/site/openings/openingFlow.core.ts",
-        "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/state/appState.ts"
+        "apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts",
+        "apps/borsouvertures/site/src/components/organisms/CompactOpeningFlow.tsx",
+        "apps/borsouvertures/site/src/components/organisms/WideOpeningFlow.tsx",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/src/lib/viewport.hook.ts",
+        "apps/borsouvertures/site/src/openings/openingFlow.core.ts",
+        "apps/borsouvertures/site/src/openings/types.ts",
+        "apps/borsouvertures/site/src/state/appState.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1014,30 +1014,30 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/PlaySession.tsx",
-      "digest": "9d7e135694e8",
+      "path": "apps/borsouvertures/site/src/components/organisms/PlaySession.tsx",
+      "digest": "861e0b2d5c5e",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "PlaySession"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/BoardView.tsx",
-        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
-        "apps/borsouvertures/site/components/molecules/PlayBookPanel.tsx",
-        "apps/borsouvertures/site/components/molecules/PlayCompletedBanner.tsx",
-        "apps/borsouvertures/site/components/molecules/PlayOutOfBookModal.tsx",
-        "apps/borsouvertures/site/components/molecules/PlayStatusPanel.tsx",
-        "apps/borsouvertures/site/components/organisms/session.types.ts",
-        "apps/borsouvertures/site/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/lib/useSessionStart.ts",
-        "apps/borsouvertures/site/lib/viewport.ts",
-        "apps/borsouvertures/site/openings/bookArrows.utils.ts",
-        "apps/borsouvertures/site/openings/machineInstances.ts",
-        "apps/borsouvertures/site/openings/playSession.core.ts",
-        "apps/borsouvertures/site/openings/uciSquare.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/BoardView.tsx",
+        "apps/borsouvertures/site/src/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/src/components/molecules/PlayBookPanel.tsx",
+        "apps/borsouvertures/site/src/components/molecules/PlayCompletedBanner.tsx",
+        "apps/borsouvertures/site/src/components/molecules/PlayOutOfBookModal.tsx",
+        "apps/borsouvertures/site/src/components/molecules/PlayStatusPanel.tsx",
+        "apps/borsouvertures/site/src/components/organisms/session.types.ts",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/src/lib/session-start.hook.ts",
+        "apps/borsouvertures/site/src/lib/viewport.hook.ts",
+        "apps/borsouvertures/site/src/openings/bookArrows.utils.ts",
+        "apps/borsouvertures/site/src/openings/machineInstances.ts",
+        "apps/borsouvertures/site/src/openings/playSession.core.ts",
+        "apps/borsouvertures/site/src/openings/uciSquare.utils.ts"
       ],
       "blueprints": [
         "organism-machine-bound"
@@ -1047,20 +1047,20 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/PlaySessionControl.tsx",
+      "path": "apps/borsouvertures/site/src/components/organisms/PlaySessionControl.tsx",
       "digest": "e684dc4dc826",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "PlaySessionControl"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/molecules/AutoOpponentToggle.tsx",
-        "apps/borsouvertures/site/components/organisms/session.types.ts",
-        "apps/borsouvertures/site/openings/machineInstances.ts",
-        "apps/borsouvertures/site/state/appState.ts"
+        "apps/borsouvertures/site/src/components/molecules/AutoOpponentToggle.tsx",
+        "apps/borsouvertures/site/src/components/organisms/session.types.ts",
+        "apps/borsouvertures/site/src/openings/machineInstances.ts",
+        "apps/borsouvertures/site/src/state/appState.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1068,18 +1068,18 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/SelectionAutoOpponentRow.tsx",
+      "path": "apps/borsouvertures/site/src/components/organisms/SelectionAutoOpponentRow.tsx",
       "digest": "173977bab729",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "SelectionAutoOpponentRow"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/molecules/AutoOpponentToggle.tsx",
-        "apps/borsouvertures/site/state/appState.ts"
+        "apps/borsouvertures/site/src/components/molecules/AutoOpponentToggle.tsx",
+        "apps/borsouvertures/site/src/state/appState.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1087,27 +1087,27 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/SelectionScreen.tsx",
+      "path": "apps/borsouvertures/site/src/components/organisms/SelectionScreen.tsx",
       "digest": "8606849a760a",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "SelectionScreen"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/Button.tsx",
-        "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
-        "apps/borsouvertures/site/components/atoms/SessionStartHint.tsx",
-        "apps/borsouvertures/site/components/molecules/SideSelector.tsx",
-        "apps/borsouvertures/site/components/organisms/OpeningFlowSelector.tsx",
-        "apps/borsouvertures/site/components/organisms/SelectionAutoOpponentRow.tsx",
-        "apps/borsouvertures/site/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/openings/sessionStart.core.ts",
-        "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/state/appState.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/src/components/atoms/EmptySlot.tsx",
+        "apps/borsouvertures/site/src/components/atoms/SessionStartHint.tsx",
+        "apps/borsouvertures/site/src/components/molecules/SideSelector.tsx",
+        "apps/borsouvertures/site/src/components/organisms/OpeningFlowSelector.tsx",
+        "apps/borsouvertures/site/src/components/organisms/SelectionAutoOpponentRow.tsx",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/src/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/src/openings/types.ts",
+        "apps/borsouvertures/site/src/state/appState.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1116,19 +1116,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/session.types.ts",
+      "path": "apps/borsouvertures/site/src/components/organisms/session.types.ts",
       "digest": "255593ec3683",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/openings/sessionStart.core.ts",
-        "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts",
-        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+        "apps/borsouvertures/site/src/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/src/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/src/openings/types.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/src/theme/boardThemes.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1136,29 +1136,29 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/SessionScreen.tsx",
-      "digest": "b4717a43e990",
+      "path": "apps/borsouvertures/site/src/components/organisms/SessionScreen.tsx",
+      "digest": "3f2fa020d2a9",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "SessionScreen"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/atoms/Button.tsx",
-        "apps/borsouvertures/site/components/molecules/ShowMovesToggle.tsx",
-        "apps/borsouvertures/site/components/organisms/LearnSessionControl.tsx",
-        "apps/borsouvertures/site/components/organisms/LearnTreeSession.tsx",
-        "apps/borsouvertures/site/components/organisms/PlaySession.tsx",
-        "apps/borsouvertures/site/components/organisms/PlaySessionControl.tsx",
-        "apps/borsouvertures/site/components/organisms/session.types.ts",
-        "apps/borsouvertures/site/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/lib/viewport.ts",
-        "apps/borsouvertures/site/openings/sessionStart.core.ts",
-        "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/state/appState.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/components/atoms/Button.tsx",
+        "apps/borsouvertures/site/src/components/molecules/ShowMovesToggle.tsx",
+        "apps/borsouvertures/site/src/components/organisms/LearnSessionControl.tsx",
+        "apps/borsouvertures/site/src/components/organisms/LearnTreeSession.tsx",
+        "apps/borsouvertures/site/src/components/organisms/PlaySession.tsx",
+        "apps/borsouvertures/site/src/components/organisms/PlaySessionControl.tsx",
+        "apps/borsouvertures/site/src/components/organisms/session.types.ts",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/src/lib/viewport.hook.ts",
+        "apps/borsouvertures/site/src/openings/sessionStart.core.ts",
+        "apps/borsouvertures/site/src/openings/types.ts",
+        "apps/borsouvertures/site/src/state/appState.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [
         "organism-table-dispatch"
@@ -1168,20 +1168,20 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/TopBar.tsx",
+      "path": "apps/borsouvertures/site/src/components/organisms/TopBar.tsx",
       "digest": "a3ac88b9598a",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "TopBar"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/molecules/BoardStyleSelect.tsx",
-        "apps/borsouvertures/site/components/molecules/LanguageSwitcher.tsx",
-        "apps/borsouvertures/site/components/molecules/ModeToggle.tsx",
-        "apps/borsouvertures/site/state/appState.ts"
+        "apps/borsouvertures/site/src/components/molecules/BoardStyleSelect.tsx",
+        "apps/borsouvertures/site/src/components/molecules/LanguageSwitcher.tsx",
+        "apps/borsouvertures/site/src/components/molecules/ModeToggle.tsx",
+        "apps/borsouvertures/site/src/state/appState.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1189,20 +1189,64 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/components/organisms/WideOpeningFlow.tsx",
+      "path": "apps/borsouvertures/site/src/components/organisms/trainerScreen.core.ts",
+      "digest": "65a02bf05ae0",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "selectTrainerScreenKind"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/src/openings/openingsLoad.utils.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-view-intent"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/src/components/organisms/TrainerScreens.tsx",
+      "digest": "6511cd497b75",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": null,
+      "exports": [
+        "TrainerScreens"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/src/components/molecules/OpeningsLoadFailurePanel.tsx",
+        "apps/borsouvertures/site/src/components/organisms/SelectionScreen.tsx",
+        "apps/borsouvertures/site/src/components/organisms/SessionScreen.tsx",
+        "apps/borsouvertures/site/src/components/organisms/trainerScreen.core.ts",
+        "apps/borsouvertures/site/src/lib/componentTable.types.ts",
+        "apps/borsouvertures/site/src/openings/openingsResource.ts",
+        "apps/borsouvertures/site/src/openings/types.ts",
+        "apps/borsouvertures/site/src/state/appState.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "component-lookup-table"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/src/components/organisms/WideOpeningFlow.tsx",
       "digest": "95ce5341bcc6",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "WideOpeningFlow"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/molecules/LinesPanel.tsx",
-        "apps/borsouvertures/site/components/molecules/OpeningsPanel.tsx",
-        "apps/borsouvertures/site/components/molecules/VariationsPanel.tsx",
-        "apps/borsouvertures/site/components/molecules/openingPanel.types.ts"
+        "apps/borsouvertures/site/src/components/molecules/LinesPanel.tsx",
+        "apps/borsouvertures/site/src/components/molecules/OpeningsPanel.tsx",
+        "apps/borsouvertures/site/src/components/molecules/VariationsPanel.tsx",
+        "apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1210,11 +1254,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/config/openingsCacheVersion.ts",
-      "digest": "6ee79f528bc9",
+      "path": "apps/borsouvertures/site/src/config/openingsCacheVersion.ts",
+      "digest": "26b122819dc6",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "config",
       "feature": null,
       "exports": [
         "OPENINGS_CACHE_VERSION"
@@ -1224,11 +1268,11 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/i18n/i18n-parity.core.ts",
+      "path": "apps/borsouvertures/site/src/i18n/i18n-parity.core.ts",
       "digest": "46b701922bc5",
       "container": "site",
       "layer": "i18n",
-      "context": "root",
+      "context": "i18n",
       "feature": null,
       "exports": [
         "areCataloguesInParity",
@@ -1236,7 +1280,7 @@
         "listIdenticalValueKeys"
       ],
       "imports": [
-        "apps/borsouvertures/site/i18n/i18n.utils.ts"
+        "apps/borsouvertures/site/src/i18n/i18n.utils.ts"
       ],
       "blueprints": [
         "i18n-parity-gate"
@@ -1244,20 +1288,20 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/i18n/i18n.ts",
+      "path": "apps/borsouvertures/site/src/i18n/i18n.ts",
       "digest": "ec5455d003f2",
       "container": "site",
       "layer": "i18n",
-      "context": "root",
+      "context": "i18n",
       "feature": null,
       "exports": [
         "readBrowserStorage"
       ],
       "imports": [
-        "apps/borsouvertures/site/i18n/en.json",
-        "apps/borsouvertures/site/i18n/fr.json",
-        "apps/borsouvertures/site/i18n/i18n.utils.ts",
-        "apps/borsouvertures/site/i18n/locale-storage.utils.ts"
+        "apps/borsouvertures/site/src/i18n/en.json",
+        "apps/borsouvertures/site/src/i18n/fr.json",
+        "apps/borsouvertures/site/src/i18n/i18n.utils.ts",
+        "apps/borsouvertures/site/src/i18n/locale-storage.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1265,11 +1309,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/i18n/i18n.utils.ts",
+      "path": "apps/borsouvertures/site/src/i18n/i18n.utils.ts",
       "digest": "e585efc545ef",
       "container": "site",
       "layer": "i18n",
-      "context": "root",
+      "context": "i18n",
       "feature": null,
       "exports": [
         "FALLBACK_LANGUAGE",
@@ -1289,11 +1333,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/i18n/locale-storage.utils.ts",
+      "path": "apps/borsouvertures/site/src/i18n/locale-storage.utils.ts",
       "digest": "a5a5a5c6084a",
       "container": "site",
       "layer": "i18n",
-      "context": "root",
+      "context": "i18n",
       "feature": null,
       "exports": [
         "LANGUAGE_STORAGE_KEY",
@@ -1301,7 +1345,7 @@
         "writeSavedLanguage"
       ],
       "imports": [
-        "apps/borsouvertures/site/i18n/i18n.utils.ts"
+        "apps/borsouvertures/site/src/i18n/i18n.utils.ts"
       ],
       "blueprints": [
         "injected-storage-slice"
@@ -1309,15 +1353,15 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/i18n/react-i18next.d.ts",
+      "path": "apps/borsouvertures/site/src/i18n/react-i18next.d.ts",
       "digest": "f9afa8fd3337",
       "container": "site",
       "layer": "i18n",
-      "context": "root",
+      "context": "i18n",
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borsouvertures/site/i18n/en.json"
+        "apps/borsouvertures/site/src/i18n/en.json"
       ],
       "blueprints": [
         "i18n-typed-keys"
@@ -1325,11 +1369,11 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/lib/componentTable.types.ts",
+      "path": "apps/borsouvertures/site/src/lib/componentTable.types.ts",
       "digest": "04ae0710d340",
       "container": "site",
       "layer": "types",
-      "context": "root",
+      "context": "lib",
       "feature": null,
       "exports": [],
       "imports": [],
@@ -1339,11 +1383,11 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/lib/usePaginatedList.ts",
+      "path": "apps/borsouvertures/site/src/lib/paginated-list.hook.ts",
       "digest": "4a1ce08e11fc",
       "container": "site",
-      "layer": "unknown",
-      "context": "root",
+      "layer": "hook",
+      "context": "lib",
       "feature": null,
       "exports": [
         "DEFAULT_PAGE_SIZE",
@@ -1356,11 +1400,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/lib/useSessionStart.ts",
+      "path": "apps/borsouvertures/site/src/lib/session-start.hook.ts",
       "digest": "b4e52a0bdf08",
       "container": "site",
-      "layer": "unknown",
-      "context": "root",
+      "layer": "hook",
+      "context": "lib",
       "feature": null,
       "exports": [
         "useSessionStart"
@@ -1372,11 +1416,11 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/lib/viewport.ts",
+      "path": "apps/borsouvertures/site/src/lib/viewport.hook.ts",
       "digest": "5ac497d8c8e2",
       "container": "site",
-      "layer": "unknown",
-      "context": "root",
+      "layer": "hook",
+      "context": "lib",
       "feature": null,
       "exports": [
         "useBoardWidth",
@@ -1384,7 +1428,7 @@
         "useViewportWidth"
       ],
       "imports": [
-        "apps/borsouvertures/site/lib/viewport.utils.ts"
+        "apps/borsouvertures/site/src/lib/viewport.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1392,11 +1436,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/lib/viewport.utils.ts",
+      "path": "apps/borsouvertures/site/src/lib/viewport.utils.ts",
       "digest": "23b01d0bee6f",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "lib",
       "feature": null,
       "exports": [
         "isCompactViewport",
@@ -1409,17 +1453,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/main.tsx",
-      "digest": "7fccde88273b",
+      "path": "apps/borsouvertures/site/src/main.tsx",
+      "digest": "949cf6f3120b",
       "container": "site",
-      "layer": "unknown",
+      "layer": "entrypoint",
       "context": "root",
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borsouvertures/site/i18n/i18n.ts",
-        "apps/borsouvertures/site/routes/OpeningTrainerRoute.tsx",
-        "apps/borsouvertures/site/styles/tokens.css"
+        "apps/borsouvertures/site/src/i18n/i18n.ts",
+        "apps/borsouvertures/site/src/routes/OpeningTrainerPage.tsx",
+        "apps/borsouvertures/site/src/styles/tokens.css"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1427,11 +1471,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/bookArrows.utils.ts",
+      "path": "apps/borsouvertures/site/src/openings/bookArrows.utils.ts",
       "digest": "fd156beeba8b",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "selectVisibleBookMoves"
@@ -1443,19 +1487,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/bookEngine.utils.ts",
+      "path": "apps/borsouvertures/site/src/openings/bookEngine.utils.ts",
       "digest": "6eb11f8f8176",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "computeBookState",
         "gatherCandidates"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/openings/types.ts"
+        "apps/borsouvertures/site/src/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/src/openings/types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1463,11 +1507,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/bookTree.utils.ts",
+      "path": "apps/borsouvertures/site/src/openings/bookTree.utils.ts",
       "digest": "efb7bf3ca76b",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "isVariationCleared",
@@ -1476,7 +1520,7 @@
         "nextMovesAt"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/types.ts"
+        "apps/borsouvertures/site/src/openings/types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1484,11 +1528,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/learnSession.core.ts",
+      "path": "apps/borsouvertures/site/src/openings/learnSession.core.ts",
       "digest": "b5366d6c1087",
       "container": "site",
       "layer": "core",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "NO_DRILL_TARGET",
@@ -1496,8 +1540,8 @@
         "isLearnDrillReady"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/openings/types.ts"
+        "apps/borsouvertures/site/src/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/src/openings/types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1505,21 +1549,21 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/learnTreeMachine.utils.ts",
-      "digest": "17c4eb4ff070",
+      "path": "apps/borsouvertures/site/src/openings/learnTreeMachine.utils.ts",
+      "digest": "e778052c741c",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "createLearnTreeMachine"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/bookTree.utils.ts",
-        "apps/borsouvertures/site/openings/machineEffects.ts",
-        "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/openings/uciSquare.utils.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/openings/bookTree.utils.ts",
+        "apps/borsouvertures/site/src/openings/machineEffects.ts",
+        "apps/borsouvertures/site/src/openings/types.ts",
+        "apps/borsouvertures/site/src/openings/uciSquare.utils.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1527,17 +1571,17 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/lineDisplay.utils.ts",
+      "path": "apps/borsouvertures/site/src/openings/lineDisplay.utils.ts",
       "digest": "c4e47b085a5f",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "shortLineName"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/types.ts"
+        "apps/borsouvertures/site/src/openings/types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1545,30 +1589,30 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/loadOpenings.ts",
-      "digest": "90205a3f0ff4",
+      "path": "apps/borsouvertures/site/src/openings/loadOpenings.ts",
+      "digest": "8ee609633665",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "loadOpenings"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/openings.json",
-        "apps/borsouvertures/site/openings/openingsSource.adapter.ts",
-        "apps/borsouvertures/site/openings/parseOpenings.utils.ts",
-        "apps/borsouvertures/site/openings/types.ts"
+        "apps/borsouvertures/site/src/openings/openings-source.adapter.ts",
+        "apps/borsouvertures/site/src/openings/openings.json",
+        "apps/borsouvertures/site/src/openings/parseOpenings.utils.ts",
+        "apps/borsouvertures/site/src/openings/types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/openings/machineEffects.ts",
+      "path": "apps/borsouvertures/site/src/openings/machineEffects.ts",
       "digest": "c04ae0efb3e7",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "pickRandomCandidate",
@@ -1581,19 +1625,19 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/openings/machineInstances.ts",
+      "path": "apps/borsouvertures/site/src/openings/machineInstances.ts",
       "digest": "0af74b50ee6c",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "learnTreeMachine",
         "playMachine"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/learnTreeMachine.utils.ts",
-        "apps/borsouvertures/site/openings/playMachine.utils.ts"
+        "apps/borsouvertures/site/src/openings/learnTreeMachine.utils.ts",
+        "apps/borsouvertures/site/src/openings/playMachine.utils.ts"
       ],
       "blueprints": [
         "machine-singleton"
@@ -1601,19 +1645,19 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/openings/openingFlow.core.ts",
+      "path": "apps/borsouvertures/site/src/openings/openingFlow.core.ts",
       "digest": "bceeef4f7aac",
       "container": "site",
       "layer": "core",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "buildOpeningFlowLists"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/src/openings/types.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1621,11 +1665,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/openingIds.utils.ts",
+      "path": "apps/borsouvertures/site/src/openings/openingIds.utils.ts",
       "digest": "dfa7f4a520fd",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "buildLineId",
@@ -1638,48 +1682,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/openingsLoad.utils.ts",
-      "digest": "f83a0ef24cb6",
-      "container": "site",
-      "layer": "utils",
-      "context": "root",
-      "feature": null,
-      "exports": [
-        "selectOpeningsLoad"
-      ],
-      "imports": [
-        "apps/borsouvertures/site/openings/types.ts"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "utils-pure-module"
-      ]
-    },
-    {
-      "path": "apps/borsouvertures/site/openings/openingsResource.ts",
-      "digest": "3580369a042e",
-      "container": "site",
-      "layer": "unknown",
-      "context": "root",
-      "feature": null,
-      "exports": [
-        "readOpeningsRequest"
-      ],
-      "imports": [
-        "apps/borsouvertures/site/openings/loadOpenings.ts",
-        "apps/borsouvertures/site/openings/openingsLoad.utils.ts"
-      ],
-      "blueprints": [
-        "route-suspense-resource"
-      ],
-      "followsBlueprints": []
-    },
-    {
-      "path": "apps/borsouvertures/site/openings/openingsSource.adapter.ts",
+      "path": "apps/borsouvertures/site/src/openings/openings-source.adapter.ts",
       "digest": "662e76e128cb",
       "container": "site",
       "layer": "adapter",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "fetchOpeningsDocument"
@@ -1691,17 +1698,54 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/parseOpenings.utils.ts",
+      "path": "apps/borsouvertures/site/src/openings/openingsLoad.utils.ts",
+      "digest": "f83a0ef24cb6",
+      "container": "site",
+      "layer": "utils",
+      "context": "openings",
+      "feature": null,
+      "exports": [
+        "selectOpeningsLoad"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/src/openings/types.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/borsouvertures/site/src/openings/openingsResource.ts",
+      "digest": "3580369a042e",
+      "container": "site",
+      "layer": "unknown",
+      "context": "openings",
+      "feature": null,
+      "exports": [
+        "readOpeningsRequest"
+      ],
+      "imports": [
+        "apps/borsouvertures/site/src/openings/loadOpenings.ts",
+        "apps/borsouvertures/site/src/openings/openingsLoad.utils.ts"
+      ],
+      "blueprints": [
+        "route-suspense-resource"
+      ],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borsouvertures/site/src/openings/parseOpenings.utils.ts",
       "digest": "dbce46df3d06",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "parseOpenings"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/types.ts"
+        "apps/borsouvertures/site/src/openings/types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1709,22 +1753,22 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/playMachine.utils.ts",
-      "digest": "9b8365ac6974",
+      "path": "apps/borsouvertures/site/src/openings/playMachine.utils.ts",
+      "digest": "5d8bf6679793",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "createPlayMachine"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/bookEngine.utils.ts",
-        "apps/borsouvertures/site/openings/machineEffects.ts",
-        "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/openings/uciSquare.utils.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/openings/bookEngine.utils.ts",
+        "apps/borsouvertures/site/src/openings/machineEffects.ts",
+        "apps/borsouvertures/site/src/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/src/openings/types.ts",
+        "apps/borsouvertures/site/src/openings/uciSquare.utils.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [
         "state-machine-module"
@@ -1732,11 +1776,11 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/openings/playScope.core.ts",
+      "path": "apps/borsouvertures/site/src/openings/playScope.core.ts",
       "digest": "d7e79b87b67a",
       "container": "site",
       "layer": "core",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "EMPTY_PLAY_SCOPE",
@@ -1755,8 +1799,8 @@
         "toggleVariationInPlayScope"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1764,11 +1808,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/playSession.core.ts",
+      "path": "apps/borsouvertures/site/src/openings/playSession.core.ts",
       "digest": "4978c22e2b93",
       "container": "site",
       "layer": "core",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "isUndoAllowed",
@@ -1776,8 +1820,8 @@
         "selectLineLabel"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/lineDisplay.utils.ts",
-        "apps/borsouvertures/site/openings/types.ts"
+        "apps/borsouvertures/site/src/openings/lineDisplay.utils.ts",
+        "apps/borsouvertures/site/src/openings/types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1785,11 +1829,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/previews.utils.ts",
+      "path": "apps/borsouvertures/site/src/openings/previews.utils.ts",
       "digest": "96d38240da77",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "buildLinePreview",
@@ -1797,7 +1841,7 @@
         "buildVariationPreview"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/types.ts"
+        "apps/borsouvertures/site/src/openings/types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1805,11 +1849,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/selectors.utils.ts",
+      "path": "apps/borsouvertures/site/src/openings/selectors.utils.ts",
       "digest": "c44bf8bfb723",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "ALL_KEY",
@@ -1820,7 +1864,7 @@
         "listVariations"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/types.ts"
+        "apps/borsouvertures/site/src/openings/types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1828,11 +1872,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/sessionStart.core.ts",
+      "path": "apps/borsouvertures/site/src/openings/sessionStart.core.ts",
       "digest": "19162234b07c",
       "container": "site",
       "layer": "core",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "buildSessionKey",
@@ -1843,8 +1887,8 @@
         "selectTreeVisualization"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
+        "apps/borsouvertures/site/src/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1852,11 +1896,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/types.ts",
+      "path": "apps/borsouvertures/site/src/openings/types.ts",
       "digest": "33075dc97e74",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [],
       "imports": [],
@@ -1866,11 +1910,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/openings/uciSquare.utils.ts",
+      "path": "apps/borsouvertures/site/src/openings/uciSquare.utils.ts",
       "digest": "06dc6e29a2e2",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "openings",
       "feature": null,
       "exports": [
         "isPromotionPiece",
@@ -1889,19 +1933,19 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/routes/OpeningTrainerRoute.tsx",
-      "digest": "1e4855b0a44f",
+      "path": "apps/borsouvertures/site/src/routes/OpeningTrainerPage.tsx",
+      "digest": "3683257f89f2",
       "container": "site",
       "layer": "route",
-      "context": "root",
+      "context": "routes",
       "feature": null,
       "exports": [
-        "OpeningTrainerRoute"
+        "OpeningTrainerPage"
       ],
       "imports": [
-        "apps/borsouvertures/site/components/molecules/OpeningsLoadingPanel.tsx",
-        "apps/borsouvertures/site/components/organisms/TopBar.tsx",
-        "apps/borsouvertures/site/routes/TrainerScreens.tsx"
+        "apps/borsouvertures/site/src/components/molecules/OpeningsLoadingPanel.tsx",
+        "apps/borsouvertures/site/src/components/organisms/TopBar.tsx",
+        "apps/borsouvertures/site/src/components/organisms/TrainerScreens.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1909,55 +1953,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/routes/trainerScreen.core.ts",
-      "digest": "65a02bf05ae0",
-      "container": "site",
-      "layer": "route",
-      "context": "root",
-      "feature": null,
-      "exports": [
-        "selectTrainerScreenKind"
-      ],
-      "imports": [
-        "apps/borsouvertures/site/openings/openingsLoad.utils.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "core-view-intent"
-      ]
-    },
-    {
-      "path": "apps/borsouvertures/site/routes/TrainerScreens.tsx",
-      "digest": "6511cd497b75",
-      "container": "site",
-      "layer": "route",
-      "context": "root",
-      "feature": null,
-      "exports": [
-        "TrainerScreens"
-      ],
-      "imports": [
-        "apps/borsouvertures/site/components/molecules/OpeningsLoadFailurePanel.tsx",
-        "apps/borsouvertures/site/components/organisms/SelectionScreen.tsx",
-        "apps/borsouvertures/site/components/organisms/SessionScreen.tsx",
-        "apps/borsouvertures/site/lib/componentTable.types.ts",
-        "apps/borsouvertures/site/openings/openingsResource.ts",
-        "apps/borsouvertures/site/openings/types.ts",
-        "apps/borsouvertures/site/routes/trainerScreen.core.ts",
-        "apps/borsouvertures/site/state/appState.ts"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "component-lookup-table"
-      ]
-    },
-    {
-      "path": "apps/borsouvertures/site/state/appState.ts",
+      "path": "apps/borsouvertures/site/src/state/appState.ts",
       "digest": "9a1a905a6a86",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "state",
       "feature": null,
       "exports": [
         "resetPlayScopeAndSelection",
@@ -1973,10 +1973,10 @@
         "useAppState"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/playScope.core.ts",
-        "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/state/persistedState.utils.ts",
-        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+        "apps/borsouvertures/site/src/openings/playScope.core.ts",
+        "apps/borsouvertures/site/src/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/src/state/persistedState.utils.ts",
+        "apps/borsouvertures/site/src/theme/boardThemes.utils.ts"
       ],
       "blueprints": [
         "persisted-store-module"
@@ -1984,19 +1984,19 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/state/persistedState.utils.ts",
+      "path": "apps/borsouvertures/site/src/state/persistedState.utils.ts",
       "digest": "cd0fe8ab8e1d",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "state",
       "feature": null,
       "exports": [
         "parsePersistedState",
         "stringifyPersistedState"
       ],
       "imports": [
-        "apps/borsouvertures/site/openings/selectors.utils.ts",
-        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+        "apps/borsouvertures/site/src/openings/selectors.utils.ts",
+        "apps/borsouvertures/site/src/theme/boardThemes.utils.ts"
       ],
       "blueprints": [
         "unknown-payload-parser"
@@ -2004,17 +2004,17 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borsouvertures/site/theme/boardAppearance.ts",
+      "path": "apps/borsouvertures/site/src/theme/boardAppearance.ts",
       "digest": "6953513278f7",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "theme",
       "feature": null,
       "exports": [
         "getBoardAppearance"
       ],
       "imports": [
-        "apps/borsouvertures/site/theme/boardThemes.utils.ts"
+        "apps/borsouvertures/site/src/theme/boardThemes.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -2022,11 +2022,11 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/theme/boardThemes.utils.ts",
+      "path": "apps/borsouvertures/site/src/theme/boardThemes.utils.ts",
       "digest": "70942c7db208",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "theme",
       "feature": null,
       "exports": [
         "boardThemes",
@@ -2043,7 +2043,7 @@
       ]
     },
     {
-      "path": "apps/borsouvertures/site/vite-env.d.ts",
+      "path": "apps/borsouvertures/site/src/vite-env.d.ts",
       "digest": "6ddc1d15fb66",
       "container": "site",
       "layer": "declaration",
@@ -2056,21 +2056,21 @@
     },
     {
       "path": "apps/borsouvertures/vite.config.ts",
-      "digest": "1ec3428861d6",
+      "digest": "3bcd6d91ccfa",
       "container": "site",
       "layer": "config",
       "context": "root",
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borsouvertures/site/config/openingsCacheVersion.ts"
+        "apps/borsouvertures/site/src/config/openingsCacheVersion.ts"
       ],
       "blueprints": [],
       "followsBlueprints": []
     },
     {
       "path": "apps/borsouvertures/vitest.config.ts",
-      "digest": "45d68018d7ca",
+      "digest": "41163df0f75a",
       "container": "site",
       "layer": "config",
       "context": "root",
@@ -2097,7 +2097,7 @@
     },
     {
       "id": "atom-null-render",
-      "file": "apps/borsouvertures/site/components/atoms/EmptySlot.tsx",
+      "file": "apps/borsouvertures/site/src/components/atoms/EmptySlot.tsx",
       "followerCount": 0
     },
     {
@@ -2112,17 +2112,17 @@
     },
     {
       "id": "component-lookup-table",
-      "file": "apps/borsouvertures/site/lib/componentTable.types.ts",
+      "file": "apps/borsouvertures/site/src/lib/componentTable.types.ts",
       "followerCount": 21
     },
     {
       "id": "core-appearance",
-      "file": "apps/borso-fr/site/labours/labours-appearance.core.ts",
+      "file": "apps/borso-fr/site/src/labours/labours-appearance.core.ts",
       "followerCount": 1
     },
     {
       "id": "core-label-key",
-      "file": "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+      "file": "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts",
       "followerCount": 2
     },
     {
@@ -2137,7 +2137,7 @@
     },
     {
       "id": "hook-effect-free-mount",
-      "file": "apps/borsouvertures/site/lib/useSessionStart.ts",
+      "file": "apps/borsouvertures/site/src/lib/session-start.hook.ts",
       "followerCount": 1
     },
     {
@@ -2147,12 +2147,12 @@
     },
     {
       "id": "i18n-key-walk",
-      "file": "apps/borsouvertures/site/i18n/i18n.utils.ts",
+      "file": "apps/borsouvertures/site/src/i18n/i18n.utils.ts",
       "followerCount": 0
     },
     {
       "id": "i18n-parity-gate",
-      "file": "apps/borsouvertures/site/i18n/i18n-parity.core.ts",
+      "file": "apps/borsouvertures/site/src/i18n/i18n-parity.core.ts",
       "followerCount": 0
     },
     {
@@ -2162,22 +2162,22 @@
     },
     {
       "id": "i18n-typed-keys",
-      "file": "apps/borsouvertures/site/i18n/react-i18next.d.ts",
+      "file": "apps/borsouvertures/site/src/i18n/react-i18next.d.ts",
       "followerCount": 0
     },
     {
       "id": "injected-storage-slice",
-      "file": "apps/borsouvertures/site/i18n/locale-storage.utils.ts",
+      "file": "apps/borsouvertures/site/src/i18n/locale-storage.utils.ts",
       "followerCount": 0
     },
     {
       "id": "machine-impure-edge",
-      "file": "apps/borsouvertures/site/openings/machineEffects.ts",
+      "file": "apps/borsouvertures/site/src/openings/machineEffects.ts",
       "followerCount": 0
     },
     {
       "id": "machine-singleton",
-      "file": "apps/borsouvertures/site/openings/machineInstances.ts",
+      "file": "apps/borsouvertures/site/src/openings/machineInstances.ts",
       "followerCount": 0
     },
     {
@@ -2187,7 +2187,7 @@
     },
     {
       "id": "organism-machine-bound",
-      "file": "apps/borsouvertures/site/components/organisms/PlaySession.tsx",
+      "file": "apps/borsouvertures/site/src/components/organisms/PlaySession.tsx",
       "followerCount": 1
     },
     {
@@ -2202,12 +2202,12 @@
     },
     {
       "id": "organism-table-dispatch",
-      "file": "apps/borsouvertures/site/components/organisms/SessionScreen.tsx",
+      "file": "apps/borsouvertures/site/src/components/organisms/SessionScreen.tsx",
       "followerCount": 4
     },
     {
       "id": "persisted-store-module",
-      "file": "apps/borsouvertures/site/state/appState.ts",
+      "file": "apps/borsouvertures/site/src/state/appState.ts",
       "followerCount": 0
     },
     {
@@ -2217,17 +2217,17 @@
     },
     {
       "id": "route-suspense-resource",
-      "file": "apps/borsouvertures/site/openings/openingsResource.ts",
+      "file": "apps/borsouvertures/site/src/openings/openingsResource.ts",
       "followerCount": 0
     },
     {
       "id": "satisfies-over-assertion",
-      "file": "apps/borsouvertures/site/theme/boardThemes.utils.ts",
+      "file": "apps/borsouvertures/site/src/theme/boardThemes.utils.ts",
       "followerCount": 0
     },
     {
       "id": "shared-props-shape",
-      "file": "apps/borsouvertures/site/components/molecules/openingPanel.types.ts",
+      "file": "apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts",
       "followerCount": 2
     },
     {
@@ -2237,12 +2237,12 @@
     },
     {
       "id": "state-machine-module",
-      "file": "apps/borsouvertures/site/openings/playMachine.utils.ts",
+      "file": "apps/borsouvertures/site/src/openings/playMachine.utils.ts",
       "followerCount": 1
     },
     {
       "id": "unknown-payload-parser",
-      "file": "apps/borsouvertures/site/state/persistedState.utils.ts",
+      "file": "apps/borsouvertures/site/src/state/persistedState.utils.ts",
       "followerCount": 1
     },
     {

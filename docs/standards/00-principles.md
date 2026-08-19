@@ -94,3 +94,54 @@ Two audiences read these documents, and both are badly served by vagueness. The
 first is an engineer who has never seen this repository, and the second is an
 agent that will apply the rule literally, including the parts you did not mean
 literally.
+
+### A link is a claim about the tree
+
+Every relative link in a document names a file, and that is a claim the tree can
+settle, so it is checked like any other. A dead link costs more than a missing
+one: the reader follows it, finds nothing, and concludes the document describes
+a state the repository has left, when the only stale thing was the path.
+
+The routing table in the `/code-standards` skill — whose entire job is sending a
+reader to the right standard — carried thirteen dead links, every one a single
+`../` short of the repository root. A rendered preview cannot show that, and
+nothing else was reading them.
+
+Three kinds of link are not a claim about the tree, and the checker knows all
+three: a placeholder the reader fills in, a target GitHub resolves against the
+repository rather than the file, and anything inside a fenced block, which
+markdown does not render as a link. `docs/features/` is out of scope entirely,
+because a report from May naming a file since renamed is telling the truth about
+May.
+
+The claim is settled against the git index rather than the disk, because a
+working tree is not the repository: it also holds whatever the generators last
+wrote. `docs/architecture/README.md` linked five pages that `.gitignore` covers,
+which resolved on any machine that had run the generator and failed in CI, where
+nothing had. The index gives the same answer in both, and it is the answer a
+fresh clone gets — which is the only one the reader of a link cares about. A
+generated artefact is therefore named in prose and never linked.
+
+## Enforced by
+
+- `script:scripts/docs/check-doc-links.ts` fails a document that links a file
+  which is not there, across every markdown file outside `docs/features/`. It
+  skips a placeholder, a GitHub-relative target and anything inside a fenced
+  block, and it is the reason the `/code-standards` routing table's thirteen
+  dead links are gone.
+- `reviewer` reads `docs/standards/hotspots.md` before deciding which pattern to
+  write down next. It crosses how often each file changes with whether it
+  follows a recorded pattern and whether its path says what it is. Nothing gates
+  it and nothing checks it is fresh: the input is the git history, so the page
+  moves on every commit whether or not any source did, and a staleness gate
+  would fail every commit for a reason nobody could act on. The page records the
+  commit it was read at; regenerate with
+  `pnpm exec tsx scripts/standards/hotspots.ts` when the age matters.
+- `reviewer` reads `docs/standards/temporal-coupling.md` before deciding whether
+  a seam is real. It crosses the git history with the module graph and names the
+  pairs that always change together and have no import path between them in
+  either direction, which is a dependency nothing in the code admits to. Pairs
+  the graph does not describe are left out and counted rather than reported,
+  because a connection that never existed cannot be missing. Nothing gates it
+  and nothing checks it is fresh, for the same reason as the page above;
+  regenerate with `pnpm exec tsx scripts/standards/temporal-coupling.ts`.

@@ -23,7 +23,7 @@ import { SearchBar } from '../../components/molecules/SearchBar';
 import { CatalogGrid } from '../../components/organisms/CatalogGrid';
 import type { SongCardProps } from '../../components/organisms/SongCard';
 import { ApiError } from '../../lib/api.client';
-import { meanMasteryForSong } from '../../lib/mastery-aggregate.utils';
+import { meanDefaultMasteryForSong } from '../../lib/mastery-aggregate.core';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
@@ -136,7 +136,7 @@ export function CatalogPage(): JSX.Element {
         tonalityEnd: song.tonalityEnd,
         chartKind: extractChartKind(song.chart ?? null),
         baseEnergy: song.baseEnergy,
-        meanMastery: meanMasteryForSong(song.defaultLineup, masteryDefaults),
+        meanMastery: meanDefaultMasteryForSong(song.defaultLineup, masteryDefaults),
         defaultLineup: compactLineup(song.defaultLineup),
         members: lineupMembers,
         instruments,

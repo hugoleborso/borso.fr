@@ -17,8 +17,19 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 
+const SESSION_TTL_DAYS = 30;
+const HOURS_PER_DAY = 24;
+const MINUTES_PER_HOUR = 60;
+const SECONDS_PER_MINUTE = 60;
+const MILLISECONDS_PER_SECOND = 1_000;
+
 export const SESSION_COOKIE_NAME = 'pragma_session';
-export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+export const SESSION_TTL_MS =
+  SESSION_TTL_DAYS *
+  HOURS_PER_DAY *
+  MINUTES_PER_HOUR *
+  SECONDS_PER_MINUTE *
+  MILLISECONDS_PER_SECOND;
 
 const COOKIE_SEPARATOR = '.';
 

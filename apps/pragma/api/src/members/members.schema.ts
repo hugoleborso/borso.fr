@@ -28,11 +28,14 @@ export const memberInstrumentTable = pgTable(
   (table) => [primaryKey({ columns: [table.memberId, table.instrumentId] })],
 );
 
-export const firstNameSchema = z.string().trim().min(1).max(64);
+const FIRST_NAME_MAX = 64;
+const AVATAR_S3_KEY_MAX = 512;
+
+export const firstNameSchema = z.string().trim().min(1).max(FIRST_NAME_MAX);
 export const colorSchema = z
   .string()
   .regex(HEX_COLOR_PATTERN, 'expected hex color like #abc or #aabbcc');
-export const avatarS3KeySchema = z.string().min(1).max(512).nullable();
+export const avatarS3KeySchema = z.string().min(1).max(AVATAR_S3_KEY_MAX).nullable();
 
 export const createMemberSchema = z.object({
   firstName: firstNameSchema,

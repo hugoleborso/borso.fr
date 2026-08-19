@@ -45,13 +45,16 @@ buildAppRouter>` — the type carries the full route tree.
 The two Biome Grit plugins ship as defence-in-depth even though the
 direct causes are gone:
 
-- [`no-inline-subscribe-in-use-sync-external-store.grit`](../../biome-plugins/no-inline-subscribe-in-use-sync-external-store.grit)
+- [`no-inline-subscribe-in-use-sync-external-store`](../../eslint-rules/no-inline-subscribe-in-use-sync-external-store.js)
   — guards the three remaining direct `useSyncExternalStore` call
   sites (clock-store consumers) and anything that bypasses TanStack
   Query in the future.
-- [`no-direct-api-fetch-in-site.grit`](../../biome-plugins/no-direct-api-fetch-in-site.grit)
+- [`no-direct-api-fetch-in-site`](../../eslint-rules/no-direct-api-fetch-in-site.js)
   — guards against any reintroduction of `fetch('/api/...')`
   literals outside the apiClient.
+
+Both shipped first as Biome Grit plugins and moved with the rest when this
+repository settled on ESLint.
 
 ## What's still wrong (follow-up)
 

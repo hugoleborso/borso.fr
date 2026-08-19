@@ -50,7 +50,7 @@ export function inferApplication(filePath: string): string {
   return infraMatch === null ? 'unknown' : `infra-${infraMatch[1]}`;
 }
 
-const LAYER_BY_FILE_SUFFIX: readonly (readonly [string, string])[] = [
+export const LAYER_BY_FILE_SUFFIX: readonly (readonly [string, string])[] = [
   ['.controller.ts', 'controller'],
   ['.service.ts', 'service'],
   ['.repository.ts', 'repository'],
@@ -76,7 +76,7 @@ const LAYER_BY_FILE_SUFFIX: readonly (readonly [string, string])[] = [
  * entry is matched against the end of the path, so `main.ts` only counts as an
  * entry point where it sits directly under a container's source root.
  */
-const ENTRY_POINT_PATH_SUFFIXES: readonly string[] = [
+export const ENTRY_POINT_PATH_SUFFIXES: readonly string[] = [
   '/api/src/app.ts',
   '/api/src/main.ts',
   '/api/src/main.dev.ts',
@@ -84,10 +84,13 @@ const ENTRY_POINT_PATH_SUFFIXES: readonly string[] = [
   '/site/src/App.tsx',
   '/cdk/bin/cdk.ts',
   '/cdk/lib/stack.ts',
+  '/bin/app.ts',
+  '/bin/shared.ts',
 ];
 
-const LAYER_BY_PATH_SEGMENT: readonly (readonly [string, string])[] = [
+export const LAYER_BY_PATH_SEGMENT: readonly (readonly [string, string])[] = [
   ['eslint-rules/', 'lint-rule'],
+  ['infra/shared/lib/', 'stack'],
   ['/components/atoms/', 'atom'],
   ['/components/molecules/', 'molecule'],
   ['/components/organisms/', 'organism'],
@@ -137,11 +140,23 @@ export interface FollowsBlueprintEntry {
   readonly lineNumber: number;
 }
 
-const FOLLOWS_BLUEPRINT_PATTERN = /\/\/\s*@FollowsBlueprint\s+(.+)/;
+/**
+ * A marker line, in either comment style, followed by identifiers only.
+ *
+ * Two things this gets right that the first version did not. It accepts the
+ * JSDoc form as well as the line-comment form, because `@Blueprint` is written
+ * inside a JSDoc block and a reader naturally writes its counterpart the same
+ * way, where it was silently invisible. And the identifiers are matched as
+ * identifiers rather than as "the rest of the line", which is what made this
+ * file count a sentence in its own documentation as a follower of a blueprint
+ * called `id\` comments out of a file, returning one entry`.
+ */
+const FOLLOWS_BLUEPRINT_PATTERN =
+  /(?:\/\/|^\s*\*)\s*@FollowsBlueprint\s+([A-Za-z0-9][\w-]*(?:\s+[A-Za-z0-9][\w-]*)*)\s*$/;
 
 /**
- * Parse `// @FollowsBlueprint id` comments out of a file, returning one entry
- * per identifier with the line it sits on.
+ * Parse `@FollowsBlueprint id` markers out of a file, returning one entry per
+ * identifier with the line it sits on.
  */
 export function extractFollowsBlueprint(fileContent: string): FollowsBlueprintEntry[] {
   const entries: FollowsBlueprintEntry[] = [];
@@ -151,10 +166,10 @@ export function extractFollowsBlueprint(fileContent: string): FollowsBlueprintEn
     if (match === null) {
       continue;
     }
-    for (const blueprintId of match[1].trim().split(/\s+/)) {
-      if (blueprintId !== '') {
-        entries.push({ blueprintId, lineNumber: index + 1 });
-      }
+    const namedIds = match[1];
+    if (namedIds === undefined) continue;
+    for (const blueprintId of namedIds.trim().split(/\s+/)) {
+      entries.push({ blueprintId, lineNumber: index + 1 });
     }
   }
   return entries;

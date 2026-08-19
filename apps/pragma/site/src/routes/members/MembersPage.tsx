@@ -32,7 +32,7 @@ import {
   useMembersList,
   useUpdateMember,
 } from '../../lib/queries/members.queries';
-import { MemberEditForm } from './MemberEditForm';
+import { MemberEditForm } from '../../components/organisms/MemberEditForm';
 import {
   applyMemberWriteIntent,
   buildMemberFormKey,

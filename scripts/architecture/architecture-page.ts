@@ -57,6 +57,14 @@ export interface RenderInput {
   readonly standards: readonly StandardEntry[];
   /** Last commit per blueprint or standard file, keyed by repo-relative path. */
   readonly histories: Readonly<Record<string, FileHistory>>;
+  /**
+   * The revision every date and commit count on this page was read at.
+   *
+   * The page is regenerated when the structure or the renderer moves, not on
+   * every commit, so the history it shows can be a few commits behind. Saying
+   * which revision it was read at is what keeps that honest.
+   */
+  readonly historyRevision: string;
   readonly repositorySlug: string;
   /** Present only on the diff page: what this branch did to each block. */
   readonly statuses?: ReadonlyMap<string, StatusByNode>;
@@ -864,6 +872,7 @@ export function renderArchitecturePage(input: RenderInput): string {
     sources,
     standards,
     histories,
+    historyRevision,
     repositorySlug,
     statuses,
     report,
@@ -983,6 +992,7 @@ ${PAGE_STYLES}
     <li><b>${routeTotal}</b>HTTP routes${delta('HTTP routes')}</li>
     <li><b>${blueprints.length}</b>blueprints${delta('blueprints')}</li>
     <li class="flagged"><b>${unmarkedCount}</b>files with no pattern marker</li>
+    <li class="read-at">dates read at <code>${escapeHtml(historyRevision)}</code></li>
     ${
       unlayeredCount === 0
         ? ''

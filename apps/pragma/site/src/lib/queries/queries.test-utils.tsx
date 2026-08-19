@@ -59,6 +59,7 @@ export interface FetchStub {
 }
 
 const STUB_BASE_URL = 'http://localhost.test';
+const MICROTASK_FLUSH_TURNS = 10;
 
 export function stubFetch(handler: (request: Request) => Promise<Response>): FetchStub {
   const original = globalThis.fetch;
@@ -110,7 +111,7 @@ export function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => voi
  */
 export async function flushMicrotasks(): Promise<void> {
   await act(async () => {
-    for (let turn = 0; turn < 10; turn += 1) {
+    for (let turn = 0; turn < MICROTASK_FLUSH_TURNS; turn += 1) {
       await Promise.resolve();
     }
   });

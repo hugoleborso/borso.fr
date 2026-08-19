@@ -34,8 +34,29 @@ export interface SeedPlan {
   readonly didNotFinishes: readonly SeedDidNotFinishPlan[];
 }
 
-const HOUR_MS = 60 * 60 * 1000;
-const MINUTE_MS = 60 * 1000;
+/**
+ * One row of a fixture's story, written in hours from the race start rather
+ * than as a timestamp, so the table stays readable and stays independent of
+ * the `now` the seeder is called with.
+ */
+interface SeedPunchSchedule {
+  readonly runnerSlug: string;
+  readonly loopIndex: number;
+  readonly hoursAfterStart: number;
+}
+
+interface SeedDidNotFinishSchedule {
+  readonly runnerSlug: string;
+  readonly outAtLoop: number;
+  readonly reason: 'late' | 'manual';
+  readonly hoursAfterStart: number;
+}
+
+const MILLISECONDS_PER_SECOND = 1_000;
+const SECONDS_PER_MINUTE = 60;
+const MINUTES_PER_HOUR = 60;
+const MINUTE_MS = SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+const HOUR_MS = MINUTES_PER_HOUR * MINUTE_MS;
 const RACE_DURATION_HOURS = 16;
 const SURVIVOR_RACE_STARTED_HOURS_AGO = -3;
 const TOP_RACE_STARTED_HOURS_AGO = -1;
@@ -43,6 +64,37 @@ const TOP_OVERSHOOT_MINUTES = 2;
 const FINISHED_RACE_ENDED_MINUTES_AGO = 5;
 const SURVIVOR_LOOP_COUNT = 5;
 const CHASER_LOOP_COUNT = 3;
+const SURVIVOR_LOOP_LEAD_HOURS = 0.05;
+const CHASER_LOOP_LEAD_HOURS = 0.1;
+
+const SURVIVOR_PUNCH_SCHEDULE: readonly SeedPunchSchedule[] = [
+  { runnerSlug: 'alice', loopIndex: 1, hoursAfterStart: 0.92 },
+  { runnerSlug: 'alice', loopIndex: 2, hoursAfterStart: 1.93 },
+  { runnerSlug: 'alice', loopIndex: 3, hoursAfterStart: 2.95 },
+  { runnerSlug: 'bob', loopIndex: 1, hoursAfterStart: 0.95 },
+  { runnerSlug: 'bob', loopIndex: 2, hoursAfterStart: 1.97 },
+  { runnerSlug: 'carla', loopIndex: 1, hoursAfterStart: 0.98 },
+  { runnerSlug: 'dan', loopIndex: 1, hoursAfterStart: 0.99 },
+];
+
+const SURVIVOR_DID_NOT_FINISH_SCHEDULE: readonly SeedDidNotFinishSchedule[] = [
+  { runnerSlug: 'dan', outAtLoop: 1, reason: 'late', hoursAfterStart: 2 },
+];
+
+const TOP_PUNCH_SCHEDULE: readonly SeedPunchSchedule[] = [
+  { runnerSlug: 'alice', loopIndex: 1, hoursAfterStart: 0.93 },
+  { runnerSlug: 'bob', loopIndex: 1, hoursAfterStart: 0.97 },
+];
+
+const FINISHED_TRAILING_PUNCH_SCHEDULE: readonly SeedPunchSchedule[] = [
+  { runnerSlug: 'carla', loopIndex: 1, hoursAfterStart: 0.95 },
+];
+
+const FINISHED_DID_NOT_FINISH_SCHEDULE: readonly SeedDidNotFinishSchedule[] = [
+  { runnerSlug: 'bob', outAtLoop: 3, reason: 'late', hoursAfterStart: 4 },
+  { runnerSlug: 'carla', outAtLoop: 1, reason: 'late', hoursAfterStart: 2 },
+  { runnerSlug: 'dan', outAtLoop: 0, reason: 'manual', hoursAfterStart: 0.5 },
+];
 
 function alignedToTopOfHour(now: Date, offsetHours: number): Date {
   const cursor = new Date(now.getTime() + offsetHours * HOUR_MS);
@@ -54,28 +106,36 @@ function offsetFromStart(startsAt: Date, hours: number): Date {
   return new Date(startsAt.getTime() + hours * HOUR_MS);
 }
 
+function listScheduledPunches(
+  startsAt: Date,
+  schedule: readonly SeedPunchSchedule[],
+): readonly SeedPunchPlan[] {
+  return schedule.map(({ runnerSlug, loopIndex, hoursAfterStart }) => ({
+    runnerSlug,
+    loopIndex,
+    finishedAt: offsetFromStart(startsAt, hoursAfterStart),
+  }));
+}
+
+function listScheduledDidNotFinishes(
+  startsAt: Date,
+  schedule: readonly SeedDidNotFinishSchedule[],
+): readonly SeedDidNotFinishPlan[] {
+  return schedule.map(({ runnerSlug, outAtLoop, reason, hoursAfterStart }) => ({
+    runnerSlug,
+    outAtLoop,
+    reason,
+    decidedAt: offsetFromStart(startsAt, hoursAfterStart),
+  }));
+}
+
 function planRaceDownToOneSurvivor(now: Date): SeedPlan {
   const startsAt = alignedToTopOfHour(now, SURVIVOR_RACE_STARTED_HOURS_AGO);
   const endsAt = offsetFromStart(startsAt, RACE_DURATION_HOURS);
   return {
     raceWindow: { startsAt, endsAt, status: 'live' },
-    punches: [
-      { runnerSlug: 'alice', loopIndex: 1, finishedAt: offsetFromStart(startsAt, 0.92) },
-      { runnerSlug: 'alice', loopIndex: 2, finishedAt: offsetFromStart(startsAt, 1.93) },
-      { runnerSlug: 'alice', loopIndex: 3, finishedAt: offsetFromStart(startsAt, 2.95) },
-      { runnerSlug: 'bob', loopIndex: 1, finishedAt: offsetFromStart(startsAt, 0.95) },
-      { runnerSlug: 'bob', loopIndex: 2, finishedAt: offsetFromStart(startsAt, 1.97) },
-      { runnerSlug: 'carla', loopIndex: 1, finishedAt: offsetFromStart(startsAt, 0.98) },
-      { runnerSlug: 'dan', loopIndex: 1, finishedAt: offsetFromStart(startsAt, 0.99) },
-    ],
-    didNotFinishes: [
-      {
-        runnerSlug: 'dan',
-        outAtLoop: 1,
-        reason: 'late',
-        decidedAt: offsetFromStart(startsAt, 2),
-      },
-    ],
+    punches: listScheduledPunches(startsAt, SURVIVOR_PUNCH_SCHEDULE),
+    didNotFinishes: listScheduledDidNotFinishes(startsAt, SURVIVOR_DID_NOT_FINISH_SCHEDULE),
   };
 }
 
@@ -85,10 +145,7 @@ function planTopWithDidNotFinishCandidates(now: Date): SeedPlan {
   const endsAt = offsetFromStart(startsAt, RACE_DURATION_HOURS);
   return {
     raceWindow: { startsAt, endsAt, status: 'live' },
-    punches: [
-      { runnerSlug: 'alice', loopIndex: 1, finishedAt: offsetFromStart(startsAt, 0.93) },
-      { runnerSlug: 'bob', loopIndex: 1, finishedAt: offsetFromStart(startsAt, 0.97) },
-    ],
+    punches: listScheduledPunches(startsAt, TOP_PUNCH_SCHEDULE),
     didNotFinishes: [],
   };
 }
@@ -115,25 +172,11 @@ function planRaceFinished(now: Date): SeedPlan {
   return {
     raceWindow: { startsAt, endsAt, status: 'finished' },
     punches: [
-      ...listLoopPunches(startsAt, 'alice', SURVIVOR_LOOP_COUNT, 0.05),
-      ...listLoopPunches(startsAt, 'bob', CHASER_LOOP_COUNT, 0.1),
-      { runnerSlug: 'carla', loopIndex: 1, finishedAt: offsetFromStart(startsAt, 0.95) },
+      ...listLoopPunches(startsAt, 'alice', SURVIVOR_LOOP_COUNT, SURVIVOR_LOOP_LEAD_HOURS),
+      ...listLoopPunches(startsAt, 'bob', CHASER_LOOP_COUNT, CHASER_LOOP_LEAD_HOURS),
+      ...listScheduledPunches(startsAt, FINISHED_TRAILING_PUNCH_SCHEDULE),
     ],
-    didNotFinishes: [
-      { runnerSlug: 'bob', outAtLoop: 3, reason: 'late', decidedAt: offsetFromStart(startsAt, 4) },
-      {
-        runnerSlug: 'carla',
-        outAtLoop: 1,
-        reason: 'late',
-        decidedAt: offsetFromStart(startsAt, 2),
-      },
-      {
-        runnerSlug: 'dan',
-        outAtLoop: 0,
-        reason: 'manual',
-        decidedAt: offsetFromStart(startsAt, 0.5),
-      },
-    ],
+    didNotFinishes: listScheduledDidNotFinishes(startsAt, FINISHED_DID_NOT_FINISH_SCHEDULE),
   };
 }
 

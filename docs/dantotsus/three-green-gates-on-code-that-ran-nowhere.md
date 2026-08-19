@@ -105,7 +105,7 @@ is the useful part, because they are not one thing:
 | `i18n-parity.core.ts` × 4 | test-only **by design** — they exist so a test can assert catalogue parity. Correct as they are. |
 | `runner/runner.core.ts` | deliberately dormant, documented in PR #46, waiting on the relay-format decision. |
 | `sw/manifest.utils.ts`, `sw/sw-cache.utils.ts` | **a live counterpart elsewhere**: `site/public/sw.js` is a hand-written 146-line service worker reimplementing this logic in plain JavaScript. The tested copy is the dead one and the running copy is ungated. |
-| `mastery/mastery.core.ts` | same shape: `site/src/lib/mastery-aggregate.utils.ts` carries `meanForSong` on the front end. |
+| `mastery/mastery.core.ts` | same shape: `site/src/lib/mastery-aggregate.core.ts` carries `meanDefaultMasteryForSong` on the front end. |
 | `lib/request-position.utils.ts` | never wired — the self-punch flow reads geolocation without it. |
 
 Each sits in `ALLOWED_TEST_ONLY` with that reason, which is what turns "nobody

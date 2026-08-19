@@ -11,7 +11,10 @@ import {
   readClientIp,
 } from './auth.service';
 
-const ADMIN_COOKIE_TTL_SECONDS = 12 * 60 * 60;
+const SECONDS_PER_MINUTE = 60;
+const MINUTES_PER_HOUR = 60;
+const ADMIN_COOKIE_TTL_HOURS = 12;
+const ADMIN_COOKIE_TTL_SECONDS = ADMIN_COOKIE_TTL_HOURS * MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
 
 /**
  * `sameSite: 'Lax'` is the deliberate default — `Strict` blocked the

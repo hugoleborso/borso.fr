@@ -23,10 +23,16 @@ changed=$(git diff --cached --name-only --diff-filter=ACMR)
 #
 # Rung-1 eradication, together with the ci.yml backup, of
 # docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
+#
+# --max-warnings 0 is what makes the warning-severity rules a gate. Several
+# rules the standards rely on ship at `warn` from their plugin's recommended
+# preset — react-hooks/exhaustive-deps, react-hooks/incompatible-library — and
+# eslint exits 0 on a warning, so without this flag those rules printed and
+# nothing stopped. A warning nobody has to clear is a rule that is off.
 staged_lintable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs)$' || true)
 if [ -n "$staged_lintable" ]; then
   echo "[pre-commit] running eslint on staged files"
-  echo "$staged_lintable" | xargs pnpm exec eslint --no-warn-ignored --cache --cache-strategy content --cache-location .eslintcache
+  echo "$staged_lintable" | xargs pnpm exec eslint --no-warn-ignored --max-warnings 0 --cache --cache-strategy content --cache-location .eslintcache
 fi
 
 staged_formattable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html)$' || true)
@@ -69,6 +75,20 @@ if [ -n "$staged_lintable" ]; then
   set +e
   run_generator_check .claude/skills/blueprint/blueprint-indexing.ts
   run_generator_check .claude/skills/blueprint/blueprint-heatmap.ts
+  # The defect page and the seeding lookup are generated from the same
+  # annotations, so they go stale on the same edit: a dantotsu naming a
+  # blueprint that does not exist, and a hook seeding a pattern nobody carries
+  # any more, both read as fine until someone follows them.
+  run_generator_check scripts/blueprints/blueprint-defects.ts
+  run_generator_check .claude/skills/blueprint/blueprint-context.ts
+  # Two spellings for one idea. Gated on a baseline that only goes down, so the
+  # existing backlog never blocks a commit and the next divergence does. A git
+  # index read plus one pass over the tree, so it belongs on the commit.
+  run_generator_check scripts/standards/convention-drift.ts
+  # Which rules were written because something went wrong. A report; the check
+  # refuses only a stale page, because a ratio between defect-born and
+  # principle-born rules is not a thing to gate on.
+  run_generator_check scripts/standards/rule-provenance.ts
   set -e
 fi
 
@@ -103,6 +123,54 @@ fi
 echo "[pre-commit] checking each app ships one stylesheet"
 scripts/check-single-stylesheet.sh
 
+# And that the one stylesheet holds tokens only. Counting the files never opens
+# one, so a global `.classname { … }` rule inside it — the cascade coming back,
+# invisible in the JSX it styles — had no gate at all.
+echo "[pre-commit] checking each stylesheet holds tokens only"
+scripts/check-stylesheet-contents.sh
+
+# Every directory under apps/ has a path-filters key and a commitlint scope.
+# Both failures are silent in the way that matters: no filter means the app
+# never gets a preview deploy and no workflow says so, and no scope means the
+# first commit naming the app is rejected by a hook talking about an enum.
+echo "[pre-commit] checking each app is registered"
+scripts/check-app-registration.sh
+
+# Each term in an application's vocabulary names the folder that owns it, and
+# that folder gets renamed by changes with no reason to open the vocabulary.
+echo "[pre-commit] checking each vocabulary term names a folder that exists"
+scripts/check-vocabulary-paths.sh
+
+# A NUL byte turns a source file into a binary as far as git is concerned, so
+# it stops merging textually and every diff over it reads `Binary files differ`.
+echo "[pre-commit] checking no file carries a NUL byte"
+scripts/check-no-null-bytes.sh
+
+# One version per dependency, written in pnpm-workspace.yaml. Nothing else here
+# reads a version field, so two workspaces drifting onto different majors of the
+# same library passes every other gate and surfaces later as a type error in
+# whichever file sits across the seam.
+echo "[pre-commit] checking every shared dependency reads the catalog"
+pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
+
+# The enforcement ledger, whenever a standard or one of the mechanisms it can
+# cite changed. It resolves every `## Enforced by` bullet against the live
+# ESLint configuration and the checked-in hooks, so it fails on a rule cited
+# and enabled nowhere, a script no hook invokes, a gate whose command is absent
+# from a site it claims, and a mechanism that runs while no standard says why.
+#
+# This is the one check here that is not instant: it builds an ESLint instance
+# and resolves a configuration per probe path, measured at 6.9 s. It stays on
+# the commit because the trigger is narrow — the standards, the rules, the
+# config and the two gate sites — and a commit touching those is rare, while a
+# standard claiming an enforcement nobody runs is exactly what this branch
+# found four of.
+if git diff --cached --name-only |
+  grep -qE '^(docs/standards/|eslint-rules/|eslint\.config\.js|\.husky/|\.github/workflows/)'; then
+  echo "[pre-commit] checking the enforcement ledger"
+  pnpm exec tsx scripts/standards/enforcement-ledger.ts --check
+fi
+
 # A `VITE_*` variable a site reads and no workflow sets is a feature that never
 # runs, in every stage, silently: Vite substitutes `undefined` at build time and
 # nothing fails. A git-index read plus a grep over the workflows, so it costs
@@ -123,6 +191,13 @@ scripts/check-pwa-assets.sh
 echo "[pre-commit] checking every \"does not work\" carries a date"
 scripts/check-negative-claims-are-dated.sh
 
+# A document that links a file which is not there sends the reader looking for a
+# stale document rather than a stale link. The routing table in
+# `/code-standards` carried thirteen of them, one `../` short of the repository
+# root, which a rendered preview cannot show.
+echo "[pre-commit] checking every document link names a file that exists"
+pnpm exec tsx scripts/docs/check-doc-links.ts
+
 # A pure module whose only consumer is its own test scores 100% on the coverage
 # and mutation gates while running nowhere, and knip cannot see it because every
 # test file is a knip entry point. A git-index read plus a grep, so it costs
@@ -137,6 +212,12 @@ scripts/check-pure-modules-have-callers.sh
 # docs/dantotsus/vite-non-module-script-tags-arent-bundled.md.
 echo "[pre-commit] checking app HTML for non-module <script src> tags"
 scripts/check-non-module-scripts.sh
+
+# A directory walk piped into `head` or `grep -q` is a race, and `pipefail`
+# turns the losing side into a failing script. It passed five local runs of the
+# tree it walks and failed on the first CI run of the same commit.
+echo "[pre-commit] checking no script races a walk against an early-stopping pipe"
+scripts/check-no-racy-pipelines.sh
 
 # Two lists that have to say the same thing. Both halves read correctly alone
 # and only the pair is wrong, which is why review never caught either of the two

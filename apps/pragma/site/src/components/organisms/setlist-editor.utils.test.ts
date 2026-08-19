@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   compactLineup,
-  findOrphanMemberIds,
+  listOrphanMemberIds,
   formatSetlistOrder,
   instrumentFamilyMap,
   instrumentNamesFor,
@@ -143,19 +143,19 @@ describe('compactLineup', () => {
   });
 });
 
-describe('findOrphanMemberIds', () => {
+describe('listOrphanMemberIds', () => {
   it('returns an empty list when every member is known', () => {
-    expect(findOrphanMemberIds({ m1: ['i1'], m2: ['i2'] }, new Set(['m1', 'm2']))).toEqual([]);
+    expect(listOrphanMemberIds({ m1: ['i1'], m2: ['i2'] }, new Set(['m1', 'm2']))).toEqual([]);
   });
 
   it('returns the lineup keys absent from the known set', () => {
-    expect(findOrphanMemberIds({ m1: ['i1'], mGhost: ['i2'] }, new Set(['m1']))).toEqual([
+    expect(listOrphanMemberIds({ m1: ['i1'], mGhost: ['i2'] }, new Set(['m1']))).toEqual([
       'mGhost',
     ]);
   });
 
   it('returns an empty list when the lineup is empty', () => {
-    expect(findOrphanMemberIds({}, new Set(['m1']))).toEqual([]);
+    expect(listOrphanMemberIds({}, new Set(['m1']))).toEqual([]);
   });
 });
 

@@ -13,13 +13,31 @@
 
 import type { LatLng } from '../geo/geo.core';
 
-const DEGREES_TO_RADIANS = Math.PI / 180;
-const RADIANS_TO_DEGREES = 180 / Math.PI;
-const HOURS_PER_LONGITUDE_DEGREE = 1 / 15;
+const DEGREES_IN_HALF_TURN = 180;
+const DEGREES_PER_HOUR_OF_LONGITUDE = 15;
+const DEGREES_TO_RADIANS = Math.PI / DEGREES_IN_HALF_TURN;
+const RADIANS_TO_DEGREES = DEGREES_IN_HALF_TURN / Math.PI;
+const HOURS_PER_LONGITUDE_DEGREE = 1 / DEGREES_PER_HOUR_OF_LONGITUDE;
 const STANDARD_ZENITH_DEGREES = 90.833;
 const MILLISECONDS_PER_HOUR = 3_600_000;
 const FULL_CIRCLE_DEGREES = 360;
 const HOURS_IN_DAY = 24;
+
+// The published coefficients of the algorithm named in the file header, each
+// under the name the algorithm gives it, so a reader can check a line against
+// the reference without matching digits.
+const APPROXIMATE_SUNRISE_HOUR = 6;
+const APPROXIMATE_SUNSET_HOUR = 18;
+const MEAN_ANOMALY_DEGREES_PER_DAY = 0.9856;
+const MEAN_ANOMALY_EPOCH_OFFSET_DEGREES = 3.289;
+const EQUATION_OF_CENTRE_FIRST_TERM_DEGREES = 1.916;
+const EQUATION_OF_CENTRE_SECOND_TERM_DEGREES = 0.02;
+const EQUATION_OF_CENTRE_SECOND_HARMONIC = 2;
+const SUN_PERIGEE_LONGITUDE_DEGREES = 282.634;
+const COSINE_OF_EARTH_OBLIQUITY = 0.91764;
+const SINE_OF_EARTH_OBLIQUITY = 0.39782;
+const SIDEREAL_DRIFT_HOURS_PER_DAY = 0.06571;
+const SIDEREAL_EPOCH_OFFSET_HOURS = 6.622;
 
 export const POLAR_NIGHT_MESSAGE = 'Polar night: sun does not rise at this latitude on this date.';
 export const POLAR_DAY_MESSAGE = 'Polar day: sun does not set at this latitude on this date.';
@@ -80,17 +98,19 @@ function computeUtcHour(
   isRising: boolean,
 ): number {
   const approximateTime = isRising
-    ? dayOfYear + (6 - longitudeHours) / HOURS_IN_DAY
-    : dayOfYear + (18 - longitudeHours) / HOURS_IN_DAY;
+    ? dayOfYear + (APPROXIMATE_SUNRISE_HOUR - longitudeHours) / HOURS_IN_DAY
+    : dayOfYear + (APPROXIMATE_SUNSET_HOUR - longitudeHours) / HOURS_IN_DAY;
 
-  const meanAnomalyDegrees = 0.9856 * approximateTime - 3.289;
+  const meanAnomalyDegrees =
+    MEAN_ANOMALY_DEGREES_PER_DAY * approximateTime - MEAN_ANOMALY_EPOCH_OFFSET_DEGREES;
   const meanAnomalyRadians = meanAnomalyDegrees * DEGREES_TO_RADIANS;
 
   const trueLongitudeDegrees = normalizeDegrees(
     meanAnomalyDegrees +
-      1.916 * Math.sin(meanAnomalyRadians) +
-      0.02 * Math.sin(2 * meanAnomalyRadians) +
-      282.634,
+      EQUATION_OF_CENTRE_FIRST_TERM_DEGREES * Math.sin(meanAnomalyRadians) +
+      EQUATION_OF_CENTRE_SECOND_TERM_DEGREES *
+        Math.sin(EQUATION_OF_CENTRE_SECOND_HARMONIC * meanAnomalyRadians) +
+      SUN_PERIGEE_LONGITUDE_DEGREES,
   );
   const trueLongitudeRadians = trueLongitudeDegrees * DEGREES_TO_RADIANS;
 
@@ -99,12 +119,14 @@ function computeUtcHour(
   // taking `atan` of a tangent and adding back the quadrant difference,
   // which blows up numerically as the longitude approaches 90°.
   const rightAscensionDegrees = normalizeDegrees(
-    Math.atan2(0.91764 * Math.sin(trueLongitudeRadians), Math.cos(trueLongitudeRadians)) *
-      RADIANS_TO_DEGREES,
+    Math.atan2(
+      COSINE_OF_EARTH_OBLIQUITY * Math.sin(trueLongitudeRadians),
+      Math.cos(trueLongitudeRadians),
+    ) * RADIANS_TO_DEGREES,
   );
   const rightAscensionHours = rightAscensionDegrees * HOURS_PER_LONGITUDE_DEGREE;
 
-  const sineOfDeclination = 0.39782 * Math.sin(trueLongitudeRadians);
+  const sineOfDeclination = SINE_OF_EARTH_OBLIQUITY * Math.sin(trueLongitudeRadians);
   const cosineOfDeclination = Math.cos(Math.asin(sineOfDeclination));
 
   const latitudeRadians = latitude * DEGREES_TO_RADIANS;
@@ -123,7 +145,11 @@ function computeUtcHour(
     : Math.acos(cosineOfHourAngle) * RADIANS_TO_DEGREES;
   const hourAngleHours = hourAngleDegrees * HOURS_PER_LONGITUDE_DEGREE;
 
-  const localMeanTime = hourAngleHours + rightAscensionHours - 0.06571 * approximateTime - 6.622;
+  const localMeanTime =
+    hourAngleHours +
+    rightAscensionHours -
+    SIDEREAL_DRIFT_HOURS_PER_DAY * approximateTime -
+    SIDEREAL_EPOCH_OFFSET_HOURS;
   return normalizeHours(localMeanTime - longitudeHours);
 }
 

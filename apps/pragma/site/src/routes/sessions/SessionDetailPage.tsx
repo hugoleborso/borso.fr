@@ -27,11 +27,14 @@ import { useCreateSetlist, useSetlistBySession } from '../../lib/queries/setlist
 import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
-import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
-import { ConcertReadView } from './ConcertReadView';
+import {
+  ConcertEditForm,
+  type ConcertEditFormPayload,
+} from '../../components/organisms/ConcertEditForm';
+import { ConcertReadView } from '../../components/organisms/ConcertReadView';
 import { parseFriendsCounts } from './friends-count.core';
 import { selectMissingSessionMessageKey } from './missing-session.core';
-import { PracticeReadView } from './PracticeReadView';
+import { PracticeReadView } from '../../components/molecules/PracticeReadView';
 
 const NO_ROWS: readonly never[] = [];
 
