@@ -205,8 +205,6 @@
     "capo": "Capo",
     "notes": "Notes",
     "energy": "Energy",
-    "energyDown": "One energy point down",
-    "energyUp": "One energy point up",
     "openTransitionComment": "View / comment the transition",
     "transitionCommentTitle": "Transition comment",
     "missingSessionId": "Missing session id.",

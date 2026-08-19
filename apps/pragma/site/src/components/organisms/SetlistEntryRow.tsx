@@ -2,14 +2,17 @@
  * One row of the setlist editor: the position, a drag handle, the song and
  * who plays what on it, the energy slider, and the row actions.
  *
- * The layout stacks under `sm` and spreads out above it, so a phone gets one
- * readable column and thumb-sized controls rather than a five-cell grid
- * squeezed into 375 px. The energy control and the key / capo / notes panel sit
- * below the title row rather than inside it, so they span the card instead of
- * the 189 px the position, the drag handle and the action stack leave. The
- * title wraps into that column rather than being cut off at one line: the
- * action stack is 132 px tall beside it, so a second line costs no height, and
- * on stage a half-read title is worth nothing.
+ * The card is a header and a footer: the position, the drag handle and the
+ * title on top, then one strip carrying the energy readout and the three row
+ * actions, with the energy bar spanning the card under it. The actions are a
+ * row in both layouts. Stacked into a column they were 157 px of buttons
+ * beside a 61 px title, so two thirds of a phone's song card was the empty
+ * space that column reserved; on a 375 px screen a card is now about 160 px
+ * instead of 230 px, and nothing in it is blank.
+ *
+ * The title wraps rather than being cut off at one line — on stage a half-read
+ * title is worth nothing — and it spans the card because nothing sits to its
+ * right any more.
  *
  * Each row owns a small `useForm` instance — the parent
  * (`SetlistEditor`) doesn't centralise per-row state. The form is never
@@ -42,6 +45,7 @@ import type { JSX, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { composeClassName } from '../atoms/class-name.utils';
+import { EnergyBar } from '../atoms/EnergyBar';
 import { Icon } from '../atoms/Icon';
 import {
   LineupEditor,
@@ -66,19 +70,8 @@ import {
 } from './setlist-entry-energy.core';
 import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
 
-const ENERGY_STEP = 1;
 const ICON_BUTTON_CLASS =
   'w-11 h-11 sm:w-9 sm:h-9 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
-
-/**
- * Nine intervals over the width a phone leaves this row is about twelve pixels
- * per energy point, which is a drag nobody lands on the first try. The pair of
- * steppers is the exact way to move one point; the slider stays for the long
- * jumps.
- */
-const ENERGY_STEP_BUTTON_CLASS =
-  'w-11 h-11 sm:w-9 sm:h-9 shrink-0 inline-flex items-center justify-center rounded-md border border-line ' +
-  'text-ink-700 bg-bg-elev cursor-pointer hover:border-line-strong disabled:opacity-40 disabled:cursor-not-allowed';
 
 export interface ProminentMemberInstrument {
   readonly memberName: string;
@@ -214,7 +207,49 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               />
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-center gap-2 shrink-0 sm:self-start">
+        </div>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:flex-nowrap sm:gap-3">
+          <form.Field name="energy">
+            {(field) => {
+              const appearance = selectEnergyAppearance(
+                isEnergyStored({
+                  isEdited: field.state.meta.isDirty,
+                  entryEnergy: props.energy,
+                  songEnergy: props.baseEnergy,
+                }),
+              );
+              const changeEnergy = (next: number): void => {
+                field.handleChange(next);
+                publishEnergy(next);
+              };
+              return (
+                <>
+                  <span className="order-1 text-xs font-mono uppercase tracking-wider text-ink-400 shrink-0">
+                    {t('setlist.energy')}
+                  </span>
+                  <span
+                    className={composeClassName(
+                      'order-2 sm:order-4 font-mono text-sm min-w-[18px] shrink-0 text-center',
+                      appearance.readoutClassName,
+                    )}
+                  >
+                    {field.state.value}
+                  </span>
+                  <EnergyBar
+                    value={field.state.value}
+                    minimum={ENERGY_MIN}
+                    maximum={ENERGY_MAX}
+                    label={t('setlist.energy')}
+                    filledClassName={appearance.filledClassName}
+                    emptyClassName={appearance.emptyClassName}
+                    className="order-4 sm:order-3 w-full sm:w-auto sm:flex-1 sm:max-w-[320px]"
+                    onChange={changeEnergy}
+                  />
+                </>
+              );
+            }}
+          </form.Field>
+          <div className="order-3 sm:order-5 ml-auto flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setLineupEditorOpen(true)}
@@ -233,7 +268,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             >
               <Icon name="more" size={15} />
             </button>
-            <span className="w-6 h-px sm:w-px sm:h-6 bg-line shrink-0" />
+            <span className="w-px h-6 bg-line shrink-0" />
             <button
               type="button"
               onClick={() => setIsRemovalPending(true)}
@@ -244,72 +279,6 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             </button>
           </div>
         </div>
-        <form.Field name="energy">
-          {(field) => {
-            const appearance = selectEnergyAppearance(
-              isEnergyStored({
-                isEdited: field.state.meta.isDirty,
-                entryEnergy: props.energy,
-                songEnergy: props.baseEnergy,
-              }),
-            );
-            return (
-              <div className="flex items-center gap-2 max-w-full sm:max-w-[340px]">
-                <span className="text-xs font-mono uppercase tracking-wider text-ink-400 shrink-0">
-                  {t('setlist.energy')}
-                </span>
-                <input
-                  type="range"
-                  min={ENERGY_MIN}
-                  max={ENERGY_MAX}
-                  value={field.state.value}
-                  onChange={(event) => {
-                    const next = Number(event.target.value);
-                    field.handleChange(next);
-                    publishEnergy(next);
-                  }}
-                  onBlur={field.handleBlur}
-                  aria-label={t('setlist.energy')}
-                  className={composeClassName('flex-1 min-w-0 h-11', appearance.sliderClassName)}
-                />
-                <button
-                  type="button"
-                  className={ENERGY_STEP_BUTTON_CLASS}
-                  disabled={field.state.value <= ENERGY_MIN}
-                  aria-label={t('setlist.energyDown')}
-                  onClick={() => {
-                    const next = field.state.value - ENERGY_STEP;
-                    field.handleChange(next);
-                    publishEnergy(next);
-                  }}
-                >
-                  −
-                </button>
-                <span
-                  className={composeClassName(
-                    'font-mono text-xs min-w-[18px] shrink-0 text-center',
-                    appearance.readoutClassName,
-                  )}
-                >
-                  {field.state.value}
-                </span>
-                <button
-                  type="button"
-                  className={ENERGY_STEP_BUTTON_CLASS}
-                  disabled={field.state.value >= ENERGY_MAX}
-                  aria-label={t('setlist.energyUp')}
-                  onClick={() => {
-                    const next = field.state.value + ENERGY_STEP;
-                    field.handleChange(next);
-                    publishEnergy(next);
-                  }}
-                >
-                  +
-                </button>
-              </div>
-            );
-          }}
-        </form.Field>
         {moreOpen ? (
           <SetlistEntryDetailsFields
             form={form}

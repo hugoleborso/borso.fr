@@ -9,7 +9,10 @@
  * watched while dragging rows around, and scrolling it off screen is what made
  * it useless on a phone. Its caption goes with the pills, for the same reason —
  * a single sparkline over the set needs no label to be read as the energy
- * curve. The curve shrinks under `sm` rather than disappearing.
+ * curve. The curve shrinks under `sm` rather than disappearing, but only to
+ * 56 px: at 36 px a set that swings from 2 to 9 drew as a nearly flat line
+ * with the point markers touching each other, which is the one thing the curve
+ * exists to show.
  *
  * The two rows are returned as a fragment rather than wrapped: a sticky
  * element only travels inside its own parent, so a wrapper around both would
@@ -29,7 +32,7 @@ import { useTranslation } from 'react-i18next';
 import { EnergySparkline } from '../molecules/EnergySparkline';
 import { type FilterPillMember, MemberFilterPills } from '../molecules/MemberFilterPills';
 
-const ENERGY_HEIGHT_COMPACT_PX = 36;
+const ENERGY_HEIGHT_COMPACT_PX = 56;
 const ENERGY_HEIGHT_PX = 72;
 
 export interface SetlistToolbarProps {

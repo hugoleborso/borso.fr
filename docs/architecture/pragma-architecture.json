@@ -29,7 +29,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 179
+      "fileCount": 181
     },
     {
       "id": "uploads-bucket",
@@ -1974,6 +1974,45 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/atoms/energy-bar.utils.ts",
+      "digest": "73581faa3e64",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": "setlists",
+      "exports": [
+        "buildEnergyLevels",
+        "levelFromKey",
+        "levelFromPointerRatio"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module",
+        "utils-pure-module",
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/EnergyBar.tsx",
+      "digest": "4f321aad697f",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": "setlists",
+      "exports": [
+        "EnergyBar"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/energy-bar.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/atoms/ExternalLink.tsx",
       "digest": "65658ac7a2c9",
       "container": "site",
@@ -3099,7 +3138,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts",
-      "digest": "42c904b17f6f",
+      "digest": "48654fce77dc",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3196,7 +3235,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx",
-      "digest": "4eb061e96a3a",
+      "digest": "7297dc36d60e",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3205,6 +3244,7 @@
         "SetlistEntryRow"
       ],
       "imports": [
+        "apps/pragma/site/src/components/atoms/EnergyBar.tsx",
         "apps/pragma/site/src/components/atoms/Icon.tsx",
         "apps/pragma/site/src/components/atoms/class-name.utils.ts",
         "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
@@ -3250,7 +3290,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistToolbar.tsx",
-      "digest": "19b272a20d71",
+      "digest": "b56a13cd71cd",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -6364,7 +6404,7 @@
     {
       "id": "atom-plain",
       "file": "apps/pragma/site/src/components/atoms/Crumb.tsx",
-      "followerCount": 6
+      "followerCount": 7
     },
     {
       "id": "atom-variant",
@@ -6644,7 +6684,7 @@
     {
       "id": "utils-pure-module",
       "file": "apps/pragma/site/src/lib/member-color.utils.ts",
-      "followerCount": 25
+      "followerCount": 28
     },
     {
       "id": "workspace-test-config",
