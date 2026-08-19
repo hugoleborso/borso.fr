@@ -215,7 +215,7 @@
         "name": "Core Projection",
         "usage": "Use for a read model that turns rows and `now` into the exact payload the caller sends.",
         "path": "apps/pragma/api/src/sessions/offline-manifest.core.ts",
-        "followers": 16
+        "followers": 17
       },
       {
         "id": "core-decision",

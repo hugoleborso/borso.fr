@@ -51,17 +51,7 @@ export interface EntryInsertShape {
   notes: string;
 }
 
-interface SetlistEntryRawRow {
-  id: string;
-  setlistId: string;
-  songId: string;
-  position: number;
-  lineupOverride: string | null;
-  energy: number | null;
-  keyOverride: string | null;
-  capo: number | null;
-  notes: string;
-}
+type SetlistEntryRawRow = typeof setlistEntryTable.$inferSelect;
 
 // @FollowsBlueprint repository-projection
 const SETLIST_PROJECTION = {

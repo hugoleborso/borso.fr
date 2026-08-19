@@ -29,7 +29,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 188
+      "fileCount": 189
     },
     {
       "id": "uploads-bucket",
@@ -980,7 +980,7 @@
     },
     {
       "path": "apps/pragma/api/src/sessions/sessions.repository.ts",
-      "digest": "c294cca7be1e",
+      "digest": "34f44c72541c",
       "container": "api",
       "layer": "repository",
       "context": "sessions",
@@ -1101,7 +1101,7 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.repository.ts",
-      "digest": "c312d9b7803b",
+      "digest": "d01751e53791",
       "container": "api",
       "layer": "repository",
       "context": "setlists",
@@ -5288,8 +5288,24 @@
       "followsBlueprints": []
     },
     {
+      "path": "apps/pragma/site/src/routes/sessions/session-facts.core.ts",
+      "digest": "5977ee51dc33",
+      "container": "site",
+      "layer": "route",
+      "context": "sessions",
+      "feature": "sessions",
+      "exports": [
+        "selectSessionFacts"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-projection"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx",
-      "digest": "ebf2eab806cc",
+      "digest": "c6d16ea228ea",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -5303,19 +5319,20 @@
         "apps/pragma/site/src/components/atoms/Icon.tsx",
         "apps/pragma/site/src/components/molecules/BackLink.tsx",
         "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx",
+        "apps/pragma/site/src/components/molecules/PageHeader.tsx",
         "apps/pragma/site/src/components/molecules/PracticeReadView.tsx",
         "apps/pragma/site/src/components/organisms/ConcertEditForm.tsx",
         "apps/pragma/site/src/components/organisms/ConcertReadView.tsx",
         "apps/pragma/site/src/components/organisms/SessionSetlists.tsx",
         "apps/pragma/site/src/lib/api.client.ts",
-        "apps/pragma/site/src/lib/counts.utils.ts",
         "apps/pragma/site/src/lib/formatters.utils.ts",
         "apps/pragma/site/src/lib/queries/members.queries.ts",
         "apps/pragma/site/src/lib/queries/sessions.queries.ts",
         "apps/pragma/site/src/lib/queries/setlists.queries.ts",
         "apps/pragma/site/src/lib/upcoming-concerts.core.ts",
         "apps/pragma/site/src/routes/sessions/friends-count.core.ts",
-        "apps/pragma/site/src/routes/sessions/missing-session.core.ts"
+        "apps/pragma/site/src/routes/sessions/missing-session.core.ts",
+        "apps/pragma/site/src/routes/sessions/session-facts.core.ts"
       ],
       "blueprints": [
         "route-detail-page"
@@ -6796,7 +6813,7 @@
     {
       "id": "core-projection",
       "file": "apps/pragma/api/src/sessions/offline-manifest.core.ts",
-      "followerCount": 13
+      "followerCount": 14
     },
     {
       "id": "core-view-intent",

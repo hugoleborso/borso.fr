@@ -28,16 +28,7 @@ export interface SessionRow {
   friendsCountPerMember: unknown;
 }
 
-interface SessionRawRow {
-  id: string;
-  kind: string;
-  date: Date;
-  preparedConcertId: string | null;
-  venue: string | null;
-  capacity: number | null;
-  gear: string | null;
-  friendsCountPerMember: string | null;
-}
+type SessionRawRow = typeof sessionTable.$inferSelect;
 
 // @FollowsBlueprint repository-projection
 const PROJECTION = {

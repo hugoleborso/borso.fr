@@ -16,7 +16,6 @@ import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { ApiError } from '../../lib/api.client';
-import { isPositiveCount } from '../../lib/counts.utils';
 import { selectUpcomingConcerts } from '../../lib/upcoming-concerts.core';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useMembersList } from '../../lib/queries/members.queries';
@@ -24,6 +23,7 @@ import { useSession, useSessionsList, useUpdateSession } from '../../lib/queries
 import { useSetlistsBySession } from '../../lib/queries/setlists.queries';
 import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
+import { PageHeader } from '../../components/molecules/PageHeader';
 import {
   ConcertEditForm,
   type ConcertEditFormPayload,
@@ -32,6 +32,7 @@ import { ConcertReadView } from '../../components/organisms/ConcertReadView';
 import { SessionSetlists } from '../../components/organisms/SessionSetlists';
 import { parseFriendsCounts } from './friends-count.core';
 import { selectMissingSessionMessageKey } from './missing-session.core';
+import { selectSessionFacts } from './session-facts.core';
 import { PracticeReadView } from '../../components/molecules/PracticeReadView';
 
 const NO_ROWS: readonly never[] = [];
@@ -132,51 +133,33 @@ export function SessionDetailPage(): JSX.Element {
   }
 
   const isConcert = session.kind === 'concert';
-  const hasGuests = isPositiveCount(friendsTotal);
   const formattedDate = formatSessionDate(session.date, i18n.language);
+  const sessionFacts = selectSessionFacts({
+    isConcert,
+    capacity: session.capacity,
+    guestCount: friendsTotal,
+    capacityLabel: t('sessions.capacity'),
+    guestsLabel: t('sessions.friendsCount').toLowerCase(),
+  });
   const titleText = isConcert ? (session.venue ?? formattedDate) : t('sessions.kindPractice');
 
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
       <BackLink to="/sessions" label={t('common.back')} />
 
-      <header className="flex items-end justify-between gap-4 flex-wrap">
-        <div className="min-w-0">
-          <div className="text-xs tracking-wider uppercase text-ink-500 mb-1">
-            {t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
-          </div>
-          <h1 className="font-display italic text-[40px] sm:text-[56px] leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 mb-2">
-            {titleText}
-          </h1>
-          <div className="flex items-center gap-2.5 text-[13px] text-ink-500 flex-wrap">
-            <span>{formattedDate}</span>
-            {isConcert && session.capacity !== null ? (
-              <>
-                <span className="text-ink-300">·</span>
-                <span>
-                  {t('sessions.capacity')} {session.capacity}
-                </span>
-              </>
-            ) : null}
-            {isConcert && hasGuests ? (
-              <>
-                <span className="text-ink-300">·</span>
-                <span>
-                  {friendsTotal} {t('sessions.friendsCount').toLowerCase()}
-                </span>
-              </>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {isConcert && !editingConcert ? (
+      <PageHeader
+        crumb={t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
+        title={titleText}
+        subtitle={[formattedDate, ...sessionFacts].join(' · ')}
+        actions={
+          isConcert && !editingConcert ? (
             <Button variant="default" onClick={() => setEditingConcert(true)}>
               <Icon name="edit" size={14} />
               {t('common.edit')}
             </Button>
-          ) : null}
-        </div>
-      </header>
+          ) : null
+        }
+      />
 
       {localError === null ? null : (
         <p className="text-danger text-sm" role="alert">
