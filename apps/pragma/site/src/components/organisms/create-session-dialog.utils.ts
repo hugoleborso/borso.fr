@@ -7,7 +7,13 @@
 
 const TOMORROW_HOUR = 20;
 const TOMORROW_MINUTE = 0;
-const ONE_DAY_MS = 24 * 60 * 60 * 1_000;
+const HOURS_PER_DAY = 24;
+const MINUTES_PER_HOUR = 60;
+const SECONDS_PER_MINUTE = 60;
+const MILLISECONDS_PER_SECOND = 1_000;
+const ONE_DAY_MS = HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+const YEAR_DIGITS = 4;
+const TWO_DIGIT_FIELD = 2;
 const DATETIME_LOCAL_LENGTH = 16;
 
 /**
@@ -27,11 +33,11 @@ export function defaultDateTimeLocal(now: Date): string {
  */
 // @FollowsBlueprint utils-pure-module
 export function formatDateTimeLocal(date: Date): string {
-  const year = String(date.getFullYear()).padStart(4, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const year = String(date.getFullYear()).padStart(YEAR_DIGITS, '0');
+  const month = String(date.getMonth() + 1).padStart(TWO_DIGIT_FIELD, '0');
+  const day = String(date.getDate()).padStart(TWO_DIGIT_FIELD, '0');
+  const hours = String(date.getHours()).padStart(TWO_DIGIT_FIELD, '0');
+  const minutes = String(date.getMinutes()).padStart(TWO_DIGIT_FIELD, '0');
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 

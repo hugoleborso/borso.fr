@@ -44,7 +44,7 @@ function readModel(path: string): ArchitectureModel {
   return result.data;
 }
 
-function listChanges<T>(
+function buildChangeSets<T>(
   base: readonly T[],
   head: readonly T[],
   keyOf: (entry: T) => string,
@@ -222,10 +222,10 @@ function main(): void {
   const head = readModel(headPath);
   const applicationPrefix = `apps/${head.application}/`;
 
-  const routes = listChanges<RouteEntry>(base.routes, head.routes, (route) => route.id);
-  const files = listChanges<FileEntry>(base.files, head.files, (file) => file.path);
-  const externals = listChanges(base.externals, head.externals, (external) => external.id);
-  const blueprints = listChanges(base.blueprints, head.blueprints, (entry) => entry.id);
+  const routes = buildChangeSets<RouteEntry>(base.routes, head.routes, (route) => route.id);
+  const files = buildChangeSets<FileEntry>(base.files, head.files, (file) => file.path);
+  const externals = buildChangeSets(base.externals, head.externals, (external) => external.id);
+  const blueprints = buildChangeSets(base.blueprints, head.blueprints, (entry) => entry.id);
 
   const reachChanges = routes.common
     .filter(

@@ -29,6 +29,7 @@ const VIEWBOX_WIDTH = 360;
 const DEFAULT_HEIGHT = 64;
 const POINT_DIAMETER_PX = 6;
 const LINE_WIDTH = 2;
+const PERCENT_SCALE = 100;
 
 // @FollowsBlueprint molecule-presentational
 export function EnergySparkline({
@@ -71,7 +72,7 @@ export function EnergySparkline({
           key={`point-${pointIndex}`}
           className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
-            left: `${(x / VIEWBOX_WIDTH) * 100}%`,
+            left: `${(x / VIEWBOX_WIDTH) * PERCENT_SCALE}%`,
             top: y,
             width: POINT_DIAMETER_PX,
             height: POINT_DIAMETER_PX,

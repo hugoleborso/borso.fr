@@ -9,6 +9,7 @@ fix-commits: [882ab2b]
 eradication-level: 2
 time-to-detect: months
 tags: [vite, observability, ci, github-actions, gates, process]
+blueprints: [observability-adapter]
 ---
 
 # A feature nobody switched on, in any stage, for months

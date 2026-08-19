@@ -64,13 +64,16 @@ export const lineupOverrideSchema = z
   .record(z.string().uuid(), z.union([z.array(z.string().uuid()), z.string().uuid(), z.null()]))
   .transform((stored: Record<string, StoredLineupValue>) => normalizeLineup(stored));
 
+const KEY_OVERRIDE_MAX = 16;
+const NOTES_MAX = 2_048;
+
 export const setlistEntryCreateSchema = z.object({
   songId: z.string().uuid(),
   energy: z.number().int().min(ENERGY_MIN).max(ENERGY_MAX).nullable().default(null),
   lineupOverride: lineupOverrideSchema.nullable().default(null),
-  keyOverride: z.string().max(16).nullable().default(null),
+  keyOverride: z.string().max(KEY_OVERRIDE_MAX).nullable().default(null),
   capo: z.number().int().min(CAPO_MIN).max(CAPO_MAX).nullable().default(null),
-  notes: z.string().max(2_048).default(''),
+  notes: z.string().max(NOTES_MAX).default(''),
 });
 
 export const setlistEntryUpdateSchema = setlistEntryCreateSchema.partial();

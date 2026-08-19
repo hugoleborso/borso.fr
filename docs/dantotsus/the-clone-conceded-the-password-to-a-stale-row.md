@@ -156,7 +156,7 @@ rate-limit state, not data.
   — the decision to clone at all, and the consent it rests on.
 - [`docs/knowledge/dsql-clone-from-prod.md`](../knowledge/dsql-clone-from-prod.md)
   — the clone contract in full.
-- [`fresh-prod-bootstrap-503.md`](./fresh-prod-bootstrap-503.md) — the 503
+- [`fresh-prod-bootstrap-503.md`](../knowledge/fresh-prod-bootstrap-503.md) — the 503
   the replace window briefly reproduces, and why it is the safe failure.
 - [`a-gate-that-reported-success-while-measuring-nothing.md`](./a-gate-that-reported-success-while-measuring-nothing.md)
   — the same shape one layer up: a step that did everything asked of it

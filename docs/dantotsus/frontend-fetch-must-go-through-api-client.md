@@ -110,10 +110,12 @@ on the read side. See the companion knowledge entry
 [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](../knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
 
 *Layer 2 — anyone reintroducing a bare `fetch('/api/...')` in site/
-code gets a lint error.* The Biome Grit plugin
-[`no-direct-api-fetch-in-site.grit`](../../biome-plugins/no-direct-api-fetch-in-site.grit)
-fires on any string-literal `/api/...` URL passed as the first
-argument to `fetch`. Registered in `apps/last-loop-lepin/biome.jsonc`.
+code gets a lint error.* Shipped as the Biome Grit plugin
+`no-direct-api-fetch-in-site.grit`, registered in
+`apps/last-loop-lepin/biome.jsonc`; the rule survived the move off Biome and is
+now [`eslint-rules/no-direct-api-fetch-in-site.js`](../../eslint-rules/no-direct-api-fetch-in-site.js),
+which fires on any string-literal `/api/...` URL passed as the first argument to
+`fetch`.
 Dynamic URLs (variables, absolute URLs returned by the API) are
 intentionally not caught — those are the legitimate non-apiClient
 cases.

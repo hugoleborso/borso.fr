@@ -30,7 +30,7 @@ Use only when the user knowingly defers the perspective for a follow-up; never a
 
 - The user / business / customer value, in one paragraph.
 - **Output metric** (lagging, the end-state we care about): one measurable objective — revenue / quality / lead time / productivity / adoption / learning. A wish-list of four objectives means none of them. Output metrics are *not* asserted by `/visual-validation`.
-- **Input metric(s)** (leading, controllable, observable): the behaviour(s) that — when consistently executed — produce the output metric. Each is a named flow or numeric threshold that a future Claude session can drive via `/visual-validation` or measure via analytics. See [`input-vs-output-metrics`](../../../../.claude/skills/specification/standard.md#input-vs-output-metrics-amazon-flywheel) for the framing.
+- **Input metric(s)** (leading, controllable, observable): the behaviour(s) that — when consistently executed — produce the output metric. Each is a named flow or numeric threshold that a future Claude session can drive via `/visual-validation` or measure via analytics. See [`input-vs-output-metrics`](./standard.md#input-vs-output-metrics-amazon-flywheel) for the framing.
 - Any field observation (Gemba) that validates the **problem** exists, not just that the solution is wanted.
 
 ## Result

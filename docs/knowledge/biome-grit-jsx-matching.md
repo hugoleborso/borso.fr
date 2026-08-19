@@ -99,7 +99,7 @@ AST nodes and a pattern for one won't match the other.
 
 - [`docs/dantotsus/api-anchor-must-use-api-url-on-preview.md`](../dantotsus/api-anchor-must-use-api-url-on-preview.md)
   — the dantotsu that surfaced this distinction.
-- [`biome-plugins/no-api-anchor-in-site.grit`](../../biome-plugins/no-api-anchor-in-site.grit)
-  — working JSX plugin built on these notes.
-- [`biome-plugins/no-direct-api-fetch-in-site.grit`](../../biome-plugins/no-direct-api-fetch-in-site.grit)
-  — sibling plugin on the JS-string surface, for contrast.
+- [`eslint-rules/no-api-anchor-in-site.js`](../../eslint-rules/no-api-anchor-in-site.js)
+  — the JSX rule these notes were written for, since ported off Biome.
+- [`eslint-rules/no-direct-api-fetch-in-site.js`](../../eslint-rules/no-direct-api-fetch-in-site.js)
+  — sibling rule on the JS-string surface, for contrast.

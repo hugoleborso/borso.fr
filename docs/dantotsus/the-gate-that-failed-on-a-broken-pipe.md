@@ -92,6 +92,22 @@ refused. The repository's six other `| head` pipelines read from `sed`, `grep`,
 `ls`, `dig`, `sort` and `actionlint -version` over inputs of a few lines, which
 fit the pipe buffer and cannot signal; they are left alone.
 
+**What stops the next one:** `scripts/check-no-racy-pipelines.sh` fails any
+tracked shell script that sets `pipefail` and pipes a walking producer — `find`,
+`git ls-files` — into a consumer that stops reading early — `head`, `grep -q`.
+Removing the pipe from these two sites is level 1 for these two sites and
+nothing at all for the next script somebody writes, and the shape is easy to
+write because it reads correctly: `| head -1` is the obvious way to ask "is
+there at least one". The check joins backslash continuations before matching,
+because the `find` that produced this failure spread over five lines and put
+`| head -1` on the last, so a line-by-line search sees neither half of it. It is
+wired into pre-commit and CI's `build` job and cited in
+[`12. Linting and gates`](../standards/12-linting-and-gates.md).
+
+It cannot see a walk assembled through a variable (`producer="find …"; $producer
+| head -1`). No script here does that, and a pattern that tried to catch it
+would misfire on the many pipelines that are fine.
+
 ## See also
 
 - [`the-gate-that-was-never-pointed-at-the-code`](./the-gate-that-was-never-pointed-at-the-code.md) — the dantotsu this check is the eradication of.

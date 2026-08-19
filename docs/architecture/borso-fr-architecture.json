@@ -18,7 +18,7 @@
       "path": "apps/borso-fr/bin/app.ts",
       "digest": "8ba9c0ef38d2",
       "container": "site",
-      "layer": "unknown",
+      "layer": "entrypoint",
       "context": "root",
       "feature": null,
       "exports": [],
@@ -29,38 +29,38 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/12-travaux/App.tsx",
+      "path": "apps/borso-fr/site/src/12-travaux/App.tsx",
       "digest": "bbf442bad659",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "12-travaux",
       "feature": null,
       "exports": [
         "App"
       ],
       "imports": [
-        "apps/borso-fr/site/components/organisms/FeaturedMonth.tsx",
-        "apps/borso-fr/site/components/organisms/LaboursHero.tsx",
-        "apps/borso-fr/site/components/organisms/LaboursMasthead.tsx",
-        "apps/borso-fr/site/components/organisms/MonthFilmstrip.tsx",
-        "apps/borso-fr/site/labours/labours.core.ts",
-        "apps/borso-fr/site/labours/labours.ts"
+        "apps/borso-fr/site/src/components/organisms/FeaturedMonth.tsx",
+        "apps/borso-fr/site/src/components/organisms/LaboursHero.tsx",
+        "apps/borso-fr/site/src/components/organisms/LaboursMasthead.tsx",
+        "apps/borso-fr/site/src/components/organisms/MonthFilmstrip.tsx",
+        "apps/borso-fr/site/src/labours/labours.core.ts",
+        "apps/borso-fr/site/src/labours/labours.ts"
       ],
       "blueprints": [],
       "followsBlueprints": []
     },
     {
-      "path": "apps/borso-fr/site/12-travaux/main.tsx",
+      "path": "apps/borso-fr/site/src/12-travaux/main.tsx",
       "digest": "9d5373f6d2ad",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "12-travaux",
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borso-fr/site/12-travaux/App.tsx",
-        "apps/borso-fr/site/i18n/i18n.ts",
-        "apps/borso-fr/site/styles/tokens.css"
+        "apps/borso-fr/site/src/12-travaux/App.tsx",
+        "apps/borso-fr/site/src/i18n/i18n.ts",
+        "apps/borso-fr/site/src/styles/tokens.css"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -68,11 +68,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/animation.core.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/animation.core.ts",
       "digest": "6dbcc602b023",
       "container": "site",
       "layer": "core",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "ANIMATION_MODE_LIST",
@@ -90,39 +90,39 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/App.tsx",
+      "path": "apps/borso-fr/site/src/art/mondrian/App.tsx",
       "digest": "591186627fac",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "App"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/animation.core.ts",
-        "apps/borso-fr/site/art/mondrian/cascade-timer.ts",
-        "apps/borso-fr/site/art/mondrian/composition-url.ts",
-        "apps/borso-fr/site/art/mondrian/download.ts",
-        "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
-        "apps/borso-fr/site/art/mondrian/painting.utils.ts",
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/art/mondrian/paper-theme.ts",
-        "apps/borso-fr/site/art/mondrian/titles.utils.ts",
-        "apps/borso-fr/site/art/mondrian/use-reduced-motion.ts",
-        "apps/borso-fr/site/components/atoms/Announcer.tsx",
-        "apps/borso-fr/site/components/organisms/CompositionStage.tsx",
-        "apps/borso-fr/site/components/organisms/StudioRail.tsx"
+        "apps/borso-fr/site/src/art/mondrian/animation.core.ts",
+        "apps/borso-fr/site/src/art/mondrian/cascade-timer.ts",
+        "apps/borso-fr/site/src/art/mondrian/composition-url.ts",
+        "apps/borso-fr/site/src/art/mondrian/download.ts",
+        "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts",
+        "apps/borso-fr/site/src/art/mondrian/painting.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/paper-theme.ts",
+        "apps/borso-fr/site/src/art/mondrian/titles.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/use-reduced-motion.ts",
+        "apps/borso-fr/site/src/components/atoms/Announcer.tsx",
+        "apps/borso-fr/site/src/components/organisms/CompositionStage.tsx",
+        "apps/borso-fr/site/src/components/organisms/StudioRail.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": []
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/cascade-timer.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/cascade-timer.ts",
       "digest": "1ad1d1071a4a",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "applyCascade",
@@ -130,7 +130,7 @@
         "stopCascade"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/composition-url.ts"
+        "apps/borso-fr/site/src/art/mondrian/composition-url.ts"
       ],
       "blueprints": [
         "browser-edge-module"
@@ -138,11 +138,11 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/composition-url.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/composition-url.ts",
       "digest": "2579cabb20ff",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "INITIAL_STATE",
@@ -154,8 +154,8 @@
         "useCompositionState"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/art/mondrian/url-state.utils.ts"
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/url-state.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -164,19 +164,19 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/download.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/download.ts",
       "digest": "230a6060a4ed",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "downloadCompositionPng"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/painting.utils.ts",
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/art/mondrian/url-state.utils.ts"
+        "apps/borso-fr/site/src/art/mondrian/painting.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/url-state.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -184,11 +184,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/keyboard.utils.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts",
       "digest": "fc9e982d9040",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "isComposeKeyEvent"
@@ -200,20 +200,20 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/main.tsx",
+      "path": "apps/borso-fr/site/src/art/mondrian/main.tsx",
       "digest": "fb1472df4ec5",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/App.tsx",
-        "apps/borso-fr/site/art/mondrian/composition-url.ts",
-        "apps/borso-fr/site/art/mondrian/keyboard.utils.ts",
-        "apps/borso-fr/site/art/mondrian/paper-theme.ts",
-        "apps/borso-fr/site/i18n/i18n.ts",
-        "apps/borso-fr/site/styles/tokens.css"
+        "apps/borso-fr/site/src/art/mondrian/App.tsx",
+        "apps/borso-fr/site/src/art/mondrian/composition-url.ts",
+        "apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/paper-theme.ts",
+        "apps/borso-fr/site/src/i18n/i18n.ts",
+        "apps/borso-fr/site/src/styles/tokens.css"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -221,11 +221,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts",
       "digest": "235664a2092b",
       "container": "site",
       "layer": "core",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "CUSTOM_COLOR_SLOTS",
@@ -239,9 +239,9 @@
         "selectSwatchRowKind"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/animation.core.ts",
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/i18n/i18n.utils.ts"
+        "apps/borso-fr/site/src/art/mondrian/animation.core.ts",
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/i18n/i18n.utils.ts"
       ],
       "blueprints": [
         "core-label-key"
@@ -251,11 +251,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/painting.utils.ts",
-      "digest": "fd02fd447129",
+      "path": "apps/borso-fr/site/src/art/mondrian/painting.utils.ts",
+      "digest": "1fe37cef4ca0",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "chooseJitteredSplitFraction",
@@ -274,8 +274,8 @@
         "splitRect"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/i18n/i18n.utils.ts"
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/i18n/i18n.utils.ts"
       ],
       "blueprints": [
         "utils-seeded-generator"
@@ -283,11 +283,11 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
       "digest": "d359686c7f13",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "CUSTOM_DEFAULTS",
@@ -298,7 +298,7 @@
         "selectPalette"
       ],
       "imports": [
-        "apps/borso-fr/site/i18n/i18n.utils.ts"
+        "apps/borso-fr/site/src/i18n/i18n.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -306,17 +306,17 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/paper-theme.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/paper-theme.ts",
       "digest": "41e75a9acb60",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "applyPaperTheme"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts"
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -324,11 +324,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/titles.utils.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/titles.utils.ts",
       "digest": "7cdf43f16adf",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "TITLE_ADJECTIVES",
@@ -339,9 +339,9 @@
         "pickFromNonEmptyList"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/painting.utils.ts",
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/i18n/i18n.utils.ts"
+        "apps/borso-fr/site/src/art/mondrian/painting.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/i18n/i18n.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -349,11 +349,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/url-state.utils.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/url-state.utils.ts",
       "digest": "09149d193d26",
       "container": "site",
       "layer": "utils",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "buildSearch",
@@ -363,7 +363,7 @@
         "seedToHex"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts"
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -372,17 +372,17 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/use-animation.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/use-animation.ts",
       "digest": "e206161a2a69",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "useAnimation"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/animation.core.ts"
+        "apps/borso-fr/site/src/art/mondrian/animation.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -390,11 +390,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/use-reduced-motion.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/use-reduced-motion.ts",
       "digest": "8f18e4c7b2f1",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "art",
       "feature": null,
       "exports": [
         "useIsReducedMotion"
@@ -406,11 +406,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/Announcer.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/Announcer.tsx",
       "digest": "26487609c526",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "Announcer"
@@ -422,11 +422,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/BrandWordmark.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/BrandWordmark.tsx",
       "digest": "2ca46f4f4c3a",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "BrandWordmark"
@@ -438,11 +438,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/CarouselImage.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/CarouselImage.tsx",
       "digest": "378e190909c1",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "CarouselImage"
@@ -454,11 +454,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/CarouselVideo.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/CarouselVideo.tsx",
       "digest": "e3d0473e4aa5",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "CarouselVideo"
@@ -470,18 +470,18 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/ChallengeBarStrip.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/ChallengeBarStrip.tsx",
       "digest": "c717992b5de6",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "ChallengeBarStrip"
       ],
       "imports": [
-        "apps/borso-fr/site/labours/labours-appearance.core.ts",
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -489,11 +489,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/Chip.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/Chip.tsx",
       "digest": "0a4e7a319da5",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "Chip"
@@ -505,17 +505,17 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/ChipLink.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/ChipLink.tsx",
       "digest": "bf8dd26daabf",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "ChipLink"
       ],
       "imports": [
-        "apps/borso-fr/site/components/atoms/Chip.tsx"
+        "apps/borso-fr/site/src/components/atoms/Chip.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -523,11 +523,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/ControlField.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/ControlField.tsx",
       "digest": "c3f8d9f2e550",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "ControlField"
@@ -539,17 +539,17 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/EditableSwatch.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/EditableSwatch.tsx",
       "digest": "4ae30658d63b",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "EditableSwatch"
       ],
       "imports": [
-        "apps/borso-fr/site/components/atoms/ReadOnlySwatch.tsx"
+        "apps/borso-fr/site/src/components/atoms/ReadOnlySwatch.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -557,11 +557,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/MiniStat.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/MiniStat.tsx",
       "digest": "8915fe549f17",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "MiniStat"
@@ -573,17 +573,17 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/MondrianRect.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/MondrianRect.tsx",
       "digest": "13d04b32901d",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "MondrianRect"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/painting.utils.ts"
+        "apps/borso-fr/site/src/art/mondrian/painting.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -591,11 +591,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/ProgressBar.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/ProgressBar.tsx",
       "digest": "8ccf071a9999",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "ProgressBar"
@@ -607,11 +607,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/ReadOnlySwatch.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/ReadOnlySwatch.tsx",
       "digest": "a278e639aa15",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "ReadOnlySwatch",
@@ -624,11 +624,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/SegmentedControl.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/SegmentedControl.tsx",
       "digest": "abaaf532e2e6",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "SegmentedControl"
@@ -640,11 +640,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/Tag.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/Tag.tsx",
       "digest": "58924f03a781",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "Tag"
@@ -656,17 +656,17 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/atoms/YearButton.tsx",
+      "path": "apps/borso-fr/site/src/components/atoms/YearButton.tsx",
       "digest": "bd4f86be8b24",
       "container": "site",
       "layer": "atom",
-      "context": "root",
+      "context": "atoms",
       "feature": null,
       "exports": [
         "YearButton"
       ],
       "imports": [
-        "apps/borso-fr/site/labours/labours-appearance.core.ts"
+        "apps/borso-fr/site/src/labours/labours-appearance.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -674,19 +674,19 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/molecules/ChallengeStatusTag.tsx",
+      "path": "apps/borso-fr/site/src/components/molecules/ChallengeStatusTag.tsx",
       "digest": "8699d4333bda",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "ChallengeStatusTag"
       ],
       "imports": [
-        "apps/borso-fr/site/components/atoms/Tag.tsx",
-        "apps/borso-fr/site/labours/labours-appearance.core.ts",
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/components/atoms/Tag.tsx",
+        "apps/borso-fr/site/src/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -694,19 +694,19 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/molecules/EditablePaletteSwatches.tsx",
+      "path": "apps/borso-fr/site/src/components/molecules/EditablePaletteSwatches.tsx",
       "digest": "0293a497c9b2",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "EditablePaletteSwatches"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/components/atoms/EditableSwatch.tsx"
+        "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts",
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/components/atoms/EditableSwatch.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -714,21 +714,21 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/molecules/FilmstripCard.tsx",
+      "path": "apps/borso-fr/site/src/components/molecules/FilmstripCard.tsx",
       "digest": "42f8d9234679",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "FilmstripCard"
       ],
       "imports": [
-        "apps/borso-fr/site/components/atoms/ChallengeBarStrip.tsx",
-        "apps/borso-fr/site/labours/labours-appearance.core.ts",
-        "apps/borso-fr/site/labours/labours.core.ts",
-        "apps/borso-fr/site/labours/labours.types.ts",
-        "apps/borso-fr/site/theme/twelve-labours.theme.ts"
+        "apps/borso-fr/site/src/components/atoms/ChallengeBarStrip.tsx",
+        "apps/borso-fr/site/src/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/src/labours/labours.core.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts",
+        "apps/borso-fr/site/src/theme/twelve-labours.theme.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -736,21 +736,21 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/molecules/ProofChip.tsx",
+      "path": "apps/borso-fr/site/src/components/molecules/ProofChip.tsx",
       "digest": "a6262ecc9838",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "ProofChip"
       ],
       "imports": [
-        "apps/borso-fr/site/components/atoms/Chip.tsx",
-        "apps/borso-fr/site/components/atoms/ChipLink.tsx",
-        "apps/borso-fr/site/labours/labours-appearance.core.ts",
-        "apps/borso-fr/site/labours/labours.core.ts",
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/components/atoms/Chip.tsx",
+        "apps/borso-fr/site/src/components/atoms/ChipLink.tsx",
+        "apps/borso-fr/site/src/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/src/labours/labours.core.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -758,21 +758,21 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/molecules/ProofMedia.tsx",
+      "path": "apps/borso-fr/site/src/components/molecules/ProofMedia.tsx",
       "digest": "52afe336bae5",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "ProofMedia"
       ],
       "imports": [
-        "apps/borso-fr/site/components/atoms/CarouselImage.tsx",
-        "apps/borso-fr/site/components/atoms/CarouselVideo.tsx",
-        "apps/borso-fr/site/labours/labours-appearance.core.ts",
-        "apps/borso-fr/site/labours/labours.core.ts",
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/components/atoms/CarouselImage.tsx",
+        "apps/borso-fr/site/src/components/atoms/CarouselVideo.tsx",
+        "apps/borso-fr/site/src/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/src/labours/labours.core.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -780,19 +780,19 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/molecules/ReadOnlyPaletteSwatches.tsx",
+      "path": "apps/borso-fr/site/src/components/molecules/ReadOnlyPaletteSwatches.tsx",
       "digest": "347798bb7461",
       "container": "site",
       "layer": "molecule",
-      "context": "root",
+      "context": "molecules",
       "feature": null,
       "exports": [
         "ReadOnlyPaletteSwatches"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/components/atoms/ReadOnlySwatch.tsx",
-        "apps/borso-fr/site/components/molecules/EditablePaletteSwatches.tsx"
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/components/atoms/ReadOnlySwatch.tsx",
+        "apps/borso-fr/site/src/components/molecules/EditablePaletteSwatches.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -800,21 +800,21 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/ChallengeRow.tsx",
+      "path": "apps/borso-fr/site/src/components/organisms/ChallengeRow.tsx",
       "digest": "dcbdc05c5aa4",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "ChallengeRow"
       ],
       "imports": [
-        "apps/borso-fr/site/components/molecules/ChallengeStatusTag.tsx",
-        "apps/borso-fr/site/components/organisms/ProofSection.tsx",
-        "apps/borso-fr/site/labours/labours-appearance.core.ts",
-        "apps/borso-fr/site/labours/labours.core.ts",
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/components/molecules/ChallengeStatusTag.tsx",
+        "apps/borso-fr/site/src/components/organisms/ProofSection.tsx",
+        "apps/borso-fr/site/src/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/src/labours/labours.core.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -822,22 +822,22 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/CompositionStage.tsx",
+      "path": "apps/borso-fr/site/src/components/organisms/CompositionStage.tsx",
       "digest": "da490eeae012",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "CompositionStage"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/animation.core.ts",
-        "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
-        "apps/borso-fr/site/art/mondrian/painting.utils.ts",
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/art/mondrian/url-state.utils.ts",
-        "apps/borso-fr/site/components/organisms/MondrianFrame.tsx"
+        "apps/borso-fr/site/src/art/mondrian/animation.core.ts",
+        "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts",
+        "apps/borso-fr/site/src/art/mondrian/painting.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/url-state.utils.ts",
+        "apps/borso-fr/site/src/components/organisms/MondrianFrame.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -845,21 +845,21 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/FeaturedMonth.tsx",
+      "path": "apps/borso-fr/site/src/components/organisms/FeaturedMonth.tsx",
       "digest": "36fbea7782db",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "FeaturedMonth"
       ],
       "imports": [
-        "apps/borso-fr/site/components/atoms/ProgressBar.tsx",
-        "apps/borso-fr/site/components/organisms/ChallengeRow.tsx",
-        "apps/borso-fr/site/labours/labours-appearance.core.ts",
-        "apps/borso-fr/site/labours/labours.core.ts",
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/components/atoms/ProgressBar.tsx",
+        "apps/borso-fr/site/src/components/organisms/ChallengeRow.tsx",
+        "apps/borso-fr/site/src/labours/labours-appearance.core.ts",
+        "apps/borso-fr/site/src/labours/labours.core.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -867,11 +867,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/galaxy-clock.core.ts",
+      "path": "apps/borso-fr/site/src/components/organisms/galaxy-clock.core.ts",
       "digest": "339e1f843422",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "easeTowards",
@@ -884,11 +884,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/galaxy-shaders.ts",
+      "path": "apps/borso-fr/site/src/components/organisms/galaxy-shaders.ts",
       "digest": "3d35d611302d",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "FRAGMENT_SHADER",
@@ -901,18 +901,18 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/Galaxy.tsx",
+      "path": "apps/borso-fr/site/src/components/organisms/Galaxy.tsx",
       "digest": "513402e9c343",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "Galaxy"
       ],
       "imports": [
-        "apps/borso-fr/site/components/organisms/galaxy-clock.core.ts",
-        "apps/borso-fr/site/components/organisms/galaxy-shaders.ts"
+        "apps/borso-fr/site/src/components/organisms/galaxy-clock.core.ts",
+        "apps/borso-fr/site/src/components/organisms/galaxy-shaders.ts"
       ],
       "blueprints": [
         "lint-exception"
@@ -922,20 +922,20 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/LaboursHero.tsx",
+      "path": "apps/borso-fr/site/src/components/organisms/LaboursHero.tsx",
       "digest": "f7b9c7855792",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "LaboursHero"
       ],
       "imports": [
-        "apps/borso-fr/site/components/atoms/MiniStat.tsx",
-        "apps/borso-fr/site/components/atoms/ProgressBar.tsx",
-        "apps/borso-fr/site/labours/labours.core.ts",
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/components/atoms/MiniStat.tsx",
+        "apps/borso-fr/site/src/components/atoms/ProgressBar.tsx",
+        "apps/borso-fr/site/src/labours/labours.core.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -943,18 +943,18 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/LaboursMasthead.tsx",
+      "path": "apps/borso-fr/site/src/components/organisms/LaboursMasthead.tsx",
       "digest": "b1f51eec7e77",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "LaboursMasthead"
       ],
       "imports": [
-        "apps/borso-fr/site/components/atoms/BrandWordmark.tsx",
-        "apps/borso-fr/site/components/atoms/YearButton.tsx"
+        "apps/borso-fr/site/src/components/atoms/BrandWordmark.tsx",
+        "apps/borso-fr/site/src/components/atoms/YearButton.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -962,21 +962,21 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/MondrianFrame.tsx",
+      "path": "apps/borso-fr/site/src/components/organisms/MondrianFrame.tsx",
       "digest": "4041c683c37b",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "MondrianFrame"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/animation.core.ts",
-        "apps/borso-fr/site/art/mondrian/painting.utils.ts",
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/art/mondrian/use-animation.ts",
-        "apps/borso-fr/site/components/atoms/MondrianRect.tsx"
+        "apps/borso-fr/site/src/art/mondrian/animation.core.ts",
+        "apps/borso-fr/site/src/art/mondrian/painting.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/art/mondrian/use-animation.ts",
+        "apps/borso-fr/site/src/components/atoms/MondrianRect.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -984,18 +984,18 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/MonthFilmstrip.tsx",
+      "path": "apps/borso-fr/site/src/components/organisms/MonthFilmstrip.tsx",
       "digest": "49e91afd2134",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "MonthFilmstrip"
       ],
       "imports": [
-        "apps/borso-fr/site/components/molecules/FilmstripCard.tsx",
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/components/molecules/FilmstripCard.tsx",
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1003,20 +1003,20 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/PaletteSwatchRow.tsx",
+      "path": "apps/borso-fr/site/src/components/organisms/PaletteSwatchRow.tsx",
       "digest": "e9ed7498dc8d",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "PaletteSwatchRow"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/components/molecules/EditablePaletteSwatches.tsx",
-        "apps/borso-fr/site/components/molecules/ReadOnlyPaletteSwatches.tsx"
+        "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts",
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/components/molecules/EditablePaletteSwatches.tsx",
+        "apps/borso-fr/site/src/components/molecules/ReadOnlyPaletteSwatches.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1024,20 +1024,20 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/ProofSection.tsx",
+      "path": "apps/borso-fr/site/src/components/organisms/ProofSection.tsx",
       "digest": "c9143507baa4",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "ProofSection"
       ],
       "imports": [
-        "apps/borso-fr/site/components/molecules/ProofChip.tsx",
-        "apps/borso-fr/site/components/molecules/ProofMedia.tsx",
-        "apps/borso-fr/site/labours/labours.core.ts",
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/components/molecules/ProofChip.tsx",
+        "apps/borso-fr/site/src/components/molecules/ProofMedia.tsx",
+        "apps/borso-fr/site/src/labours/labours.core.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1045,22 +1045,22 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/components/organisms/StudioRail.tsx",
+      "path": "apps/borso-fr/site/src/components/organisms/StudioRail.tsx",
       "digest": "4f5a789ebe5b",
       "container": "site",
       "layer": "organism",
-      "context": "root",
+      "context": "organisms",
       "feature": null,
       "exports": [
         "StudioRail"
       ],
       "imports": [
-        "apps/borso-fr/site/art/mondrian/animation.core.ts",
-        "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
-        "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/components/atoms/ControlField.tsx",
-        "apps/borso-fr/site/components/atoms/SegmentedControl.tsx",
-        "apps/borso-fr/site/components/organisms/PaletteSwatchRow.tsx"
+        "apps/borso-fr/site/src/art/mondrian/animation.core.ts",
+        "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts",
+        "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
+        "apps/borso-fr/site/src/components/atoms/ControlField.tsx",
+        "apps/borso-fr/site/src/components/atoms/SegmentedControl.tsx",
+        "apps/borso-fr/site/src/components/organisms/PaletteSwatchRow.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1068,7 +1068,7 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/home-menu.core.ts",
+      "path": "apps/borso-fr/site/src/home-menu.core.ts",
       "digest": "295b26ee8e37",
       "container": "site",
       "layer": "core",
@@ -1087,7 +1087,7 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/home-page.ts",
+      "path": "apps/borso-fr/site/src/home-page.ts",
       "digest": "6ba40c5158fc",
       "container": "site",
       "layer": "unknown",
@@ -1095,18 +1095,18 @@
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borso-fr/site/home-menu.core.ts",
-        "apps/borso-fr/site/i18n/fr.json"
+        "apps/borso-fr/site/src/home-menu.core.ts",
+        "apps/borso-fr/site/src/i18n/fr.json"
       ],
       "blueprints": [],
       "followsBlueprints": []
     },
     {
-      "path": "apps/borso-fr/site/i18n/i18n-parity.core.ts",
+      "path": "apps/borso-fr/site/src/i18n/i18n-parity.core.ts",
       "digest": "6610b7115903",
       "container": "site",
       "layer": "i18n",
-      "context": "root",
+      "context": "i18n",
       "feature": null,
       "exports": [
         "diffCatalogues",
@@ -1114,7 +1114,7 @@
         "listIdenticalValueKeys"
       ],
       "imports": [
-        "apps/borso-fr/site/i18n/i18n.utils.ts"
+        "apps/borso-fr/site/src/i18n/i18n.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1122,16 +1122,16 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/i18n/i18n.ts",
+      "path": "apps/borso-fr/site/src/i18n/i18n.ts",
       "digest": "fca81f10c3d2",
       "container": "site",
       "layer": "i18n",
-      "context": "root",
+      "context": "i18n",
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borso-fr/site/i18n/fr.json",
-        "apps/borso-fr/site/i18n/i18n.utils.ts"
+        "apps/borso-fr/site/src/i18n/fr.json",
+        "apps/borso-fr/site/src/i18n/i18n.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1139,11 +1139,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/i18n/i18n.utils.ts",
+      "path": "apps/borso-fr/site/src/i18n/i18n.utils.ts",
       "digest": "1ee1c10c9542",
       "container": "site",
       "layer": "i18n",
-      "context": "root",
+      "context": "i18n",
       "feature": null,
       "exports": [
         "DEFAULT_LANGUAGE",
@@ -1151,7 +1151,7 @@
         "listTranslationKeys"
       ],
       "imports": [
-        "apps/borso-fr/site/i18n/en.json"
+        "apps/borso-fr/site/src/i18n/en.json"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1159,15 +1159,15 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/i18n/react-i18next.d.ts",
+      "path": "apps/borso-fr/site/src/i18n/react-i18next.d.ts",
       "digest": "bb967c0c006b",
       "container": "site",
       "layer": "i18n",
-      "context": "root",
+      "context": "i18n",
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borso-fr/site/i18n/en.json"
+        "apps/borso-fr/site/src/i18n/en.json"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1175,17 +1175,17 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/labours/labours-2025.ts",
+      "path": "apps/borso-fr/site/src/labours/labours-2025.ts",
       "digest": "b481dadeb82c",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "labours",
       "feature": null,
       "exports": [
         "EDITION_2025"
       ],
       "imports": [
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1193,17 +1193,17 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/labours/labours-2026.ts",
+      "path": "apps/borso-fr/site/src/labours/labours-2026.ts",
       "digest": "afa883748aee",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "labours",
       "feature": null,
       "exports": [
         "EDITION_2026"
       ],
       "imports": [
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [
         "data-module"
@@ -1211,11 +1211,11 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/borso-fr/site/labours/labours-appearance.core.ts",
+      "path": "apps/borso-fr/site/src/labours/labours-appearance.core.ts",
       "digest": "b3f7010c1ea9",
       "container": "site",
       "layer": "core",
-      "context": "root",
+      "context": "labours",
       "feature": null,
       "exports": [
         "TRANSPARENT",
@@ -1232,9 +1232,9 @@
         "selectYearButtonColors"
       ],
       "imports": [
-        "apps/borso-fr/site/i18n/i18n.utils.ts",
-        "apps/borso-fr/site/labours/labours.types.ts",
-        "apps/borso-fr/site/theme/twelve-labours.theme.ts"
+        "apps/borso-fr/site/src/i18n/i18n.utils.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts",
+        "apps/borso-fr/site/src/theme/twelve-labours.theme.ts"
       ],
       "blueprints": [
         "core-appearance"
@@ -1244,11 +1244,11 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/labours/labours.core.ts",
+      "path": "apps/borso-fr/site/src/labours/labours.core.ts",
       "digest": "e583497f09aa",
       "container": "site",
       "layer": "core",
-      "context": "root",
+      "context": "labours",
       "feature": null,
       "exports": [
         "buildFilmstripSummary",
@@ -1275,8 +1275,8 @@
         "selectProofLabel"
       ],
       "imports": [
-        "apps/borso-fr/site/i18n/i18n.utils.ts",
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/i18n/i18n.utils.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1284,19 +1284,19 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/labours/labours.ts",
+      "path": "apps/borso-fr/site/src/labours/labours.ts",
       "digest": "0f641d793ab2",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "labours",
       "feature": null,
       "exports": [
         "LABOURS"
       ],
       "imports": [
-        "apps/borso-fr/site/labours/labours-2025.ts",
-        "apps/borso-fr/site/labours/labours-2026.ts",
-        "apps/borso-fr/site/labours/labours.types.ts"
+        "apps/borso-fr/site/src/labours/labours-2025.ts",
+        "apps/borso-fr/site/src/labours/labours-2026.ts",
+        "apps/borso-fr/site/src/labours/labours.types.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1304,15 +1304,15 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/labours/labours.types.ts",
+      "path": "apps/borso-fr/site/src/labours/labours.types.ts",
       "digest": "5c6ca5c4697b",
       "container": "site",
       "layer": "types",
-      "context": "root",
+      "context": "labours",
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borso-fr/site/i18n/i18n.utils.ts"
+        "apps/borso-fr/site/src/i18n/i18n.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1320,26 +1320,26 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/main.tsx",
+      "path": "apps/borso-fr/site/src/main.tsx",
       "digest": "658e12bb3977",
       "container": "site",
-      "layer": "unknown",
+      "layer": "entrypoint",
       "context": "root",
       "feature": null,
       "exports": [],
       "imports": [
-        "apps/borso-fr/site/components/organisms/Galaxy.tsx",
-        "apps/borso-fr/site/styles/tokens.css"
+        "apps/borso-fr/site/src/components/organisms/Galaxy.tsx",
+        "apps/borso-fr/site/src/styles/tokens.css"
       ],
       "blueprints": [],
       "followsBlueprints": []
     },
     {
-      "path": "apps/borso-fr/site/theme/twelve-labours.theme.ts",
+      "path": "apps/borso-fr/site/src/theme/twelve-labours.theme.ts",
       "digest": "aff7384d637a",
       "container": "site",
       "layer": "unknown",
-      "context": "root",
+      "context": "theme",
       "feature": null,
       "exports": [
         "ABANDONED_BAR_ON_DARK",
@@ -1375,7 +1375,7 @@
     },
     {
       "path": "apps/borso-fr/vitest.config.ts",
-      "digest": "9324abb4d2c8",
+      "digest": "c8ac142535f9",
       "container": "site",
       "layer": "config",
       "context": "root",
@@ -1397,7 +1397,7 @@
     },
     {
       "id": "browser-edge-module",
-      "file": "apps/borso-fr/site/art/mondrian/cascade-timer.ts",
+      "file": "apps/borso-fr/site/src/art/mondrian/cascade-timer.ts",
       "followerCount": 3
     },
     {
@@ -1407,12 +1407,12 @@
     },
     {
       "id": "core-appearance",
-      "file": "apps/borso-fr/site/labours/labours-appearance.core.ts",
+      "file": "apps/borso-fr/site/src/labours/labours-appearance.core.ts",
       "followerCount": 0
     },
     {
       "id": "core-label-key",
-      "file": "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+      "file": "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts",
       "followerCount": 1
     },
     {
@@ -1432,7 +1432,7 @@
     },
     {
       "id": "data-module",
-      "file": "apps/borso-fr/site/labours/labours-2026.ts",
+      "file": "apps/borso-fr/site/src/labours/labours-2026.ts",
       "followerCount": 2
     },
     {
@@ -1447,12 +1447,12 @@
     },
     {
       "id": "i18n-key-walk",
-      "file": "apps/borsouvertures/site/i18n/i18n.utils.ts",
+      "file": "apps/borsouvertures/site/src/i18n/i18n.utils.ts",
       "followerCount": 1
     },
     {
       "id": "i18n-parity-gate",
-      "file": "apps/borsouvertures/site/i18n/i18n-parity.core.ts",
+      "file": "apps/borsouvertures/site/src/i18n/i18n-parity.core.ts",
       "followerCount": 1
     },
     {
@@ -1462,7 +1462,7 @@
     },
     {
       "id": "i18n-typed-keys",
-      "file": "apps/borsouvertures/site/i18n/react-i18next.d.ts",
+      "file": "apps/borsouvertures/site/src/i18n/react-i18next.d.ts",
       "followerCount": 1
     },
     {
@@ -1472,7 +1472,7 @@
     },
     {
       "id": "lint-exception",
-      "file": "apps/borso-fr/site/components/organisms/Galaxy.tsx",
+      "file": "apps/borso-fr/site/src/components/organisms/Galaxy.tsx",
       "followerCount": 1
     },
     {
@@ -1487,7 +1487,7 @@
     },
     {
       "id": "organism-table-dispatch",
-      "file": "apps/borsouvertures/site/components/organisms/SessionScreen.tsx",
+      "file": "apps/borsouvertures/site/src/components/organisms/SessionScreen.tsx",
       "followerCount": 2
     },
     {
@@ -1497,7 +1497,7 @@
     },
     {
       "id": "unknown-payload-parser",
-      "file": "apps/borsouvertures/site/state/persistedState.utils.ts",
+      "file": "apps/borsouvertures/site/src/state/persistedState.utils.ts",
       "followerCount": 1
     },
     {
@@ -1507,12 +1507,12 @@
     },
     {
       "id": "utils-seeded-generator",
-      "file": "apps/borso-fr/site/art/mondrian/painting.utils.ts",
+      "file": "apps/borso-fr/site/src/art/mondrian/painting.utils.ts",
       "followerCount": 2
     },
     {
       "id": "vendored-third-party",
-      "file": "apps/borso-fr/site/components/organisms/galaxy-shaders.ts",
+      "file": "apps/borso-fr/site/src/components/organisms/galaxy-shaders.ts",
       "followerCount": 1
     },
     {

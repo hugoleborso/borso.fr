@@ -63,9 +63,17 @@ The verbs we use, and what each one promises:
 | `list…`                   | An array, possibly empty                 |
 | `build…` and `compose…`   | A new value assembled from parts         |
 | `project…` and `derive…`  | A view computed from source data         |
-| `select…`                 | One option chosen from several           |
+| `select…`                 | What a rule chooses: one option, or a subset |
 | `assert…`                 | Nothing, and throws when the check fails |
 | `is…`, `has…`, and `can…` | A boolean                                |
+
+`select…` and `list…` both hand back a collection sometimes, and the difference
+is who decides what is in it. `list…` enumerates what is there, so
+`listCatalogProblems` returns every problem there is. `select…` applies a rule,
+so `selectVisibleSongs` returns the songs that pass the filter and
+`selectCloneableDataTables` the tables the migration is allowed to copy. Fifty
+odd `select…` functions here return a single value and seven return a subset,
+and both readings are the same promise: the caller gets what the rule chose.
 
 The verbs `handle`, `process`, `manage`, and `do` are banned, because a reader
 cannot predict what any of them will do.
@@ -187,23 +195,86 @@ explaining, the code is unclear, so rewrite the code.
 JSDoc is welcome on an exported function, where it documents the arguments, the
 return value, and any surprising edge case.
 
+## The application's own words
+
+Every rule above is about the *shape* of a name. None of them can tell you that
+the band calls it a bar and not a venue, or that the race calls it a loop and
+not a lap. That question has no rule, and it is the one that decides whether two
+people writing in the same folder agree.
+
+So each application with a domain of its own carries an `apps/<app>/VOCABULARY.md`:
+one section per noun the application talks about, saying what it is, which
+bounded context owns it, the invariants that hold, and the word it is most often
+confused with. Read it before naming a new type, column, function or file, and
+add to it when a new noun appears.
+
+It closes the same gap the English-only rule leaves open. The rule says not to
+write `porteurTonal`, and it cannot say what to write instead; the vocabulary
+can, because the word already exists somewhere in the tree.
+
+The last section of each file, *Words we do not use*, is the part that pays off
+fastest. It names the term a reader would reach for and the term this
+application actually uses, which is exactly the substitution a new contributor
+gets wrong.
+
+Writing one is also a diagnostic. Drafting the first two turned up one rule
+implemented twice under two names with two different answers, one schema
+restating a shared validator with weaker bounds, and three nouns carrying two
+meanings each. None of that is visible from any one file.
+
 ## Enforced by
 
-- `borso/no-abbreviated-identifier`, a custom ESLint rule, which rejects a
-  dictionary of known abbreviations and any identifier under three characters
-  outside a loop header.
-- `borso/function-names-are-verb-phrases`, a custom ESLint rule, which rejects
-  `handle`, `process`, `manage`, and `do` prefixes.
-- `borso/no-french-identifiers`, a custom ESLint rule, which flags a dictionary
-  of French terms that have appeared in this repository before.
-- `borso/no-step-named-value`, a custom ESLint rule, which rejects a `const` or
-  `let` named `parsed`, `result`, `results`, `res`, `data`, `entries`,
-  `payload`, `output`, `obj`, `arr`, `val`, `tmp`, `temp`, `item` or `items`. A
-  `for (const entry of …)` head and a destructuring pattern are out of scope,
-  matching the two exceptions above.
-- Reviewer judgement for anything a dictionary cannot catch, which includes
-  the magic-number rule above. `no-magic-numbers` is **not** enabled:
-  `{ ignore: [0, 1, -1] }` reports 1928 sites across the repository (measured
-  2026-08-15), so turning it on is a decision about 1928 edits rather than a
-  configuration line, and this section listed it as enforced for months while
-  it was off.
+- `eslint:borso/no-abbreviated-identifier` rejects a dictionary of known
+  abbreviations and any identifier under three characters outside a loop header.
+- `eslint:borso/function-names-are-verb-phrases` rejects the `handle`,
+  `process`, `manage`, and `do` prefixes.
+- `eslint:borso/verb-promises-match-return-type` reads the declared return type
+  and holds three of the verbs above to it: a `list…` returns an array, a
+  `find…` does not, and an `is…`, `has…` or `can…` returns a boolean or a type
+  predicate. It reads the annotation only, so it needs no type information and
+  reaches `scripts/`, the skills and `eslint-rules/` as well as `apps/` and
+  `infra/`. A function with no annotation is out of scope, and so are the five
+  verbs promising a shape no annotation can tell apart.
+- `eslint:borso/no-french-identifiers` flags a dictionary of French terms that
+  have appeared in this repository before.
+- `eslint:borso/no-step-named-value` rejects a `const` or `let` named `parsed`,
+  `result`, `results`, `res`, `data`, `entries`, `payload`, `output`, `obj`,
+  `arr`, `val`, `tmp`, `temp`, `item` or `items`. A `for (const entry of …)`
+  head and a destructuring pattern are out of scope, matching the two
+  exceptions above.
+- `eslint:unicorn/consistent-boolean-name` requires a boolean to read as a
+  claim.
+- `eslint:unicorn/catch-error-name` requires `catch (error)`.
+- `eslint:no-magic-numbers` requires a literal to be named, across `apps/` and
+  `infra/`, with `enforceConst` so the name is a `const`. Exempt: `0`, `1` and
+  `-1` as identity values; the HTTP status codes `200`, `201`, `204`, `301`,
+  `302`, `400`, `401`, `403`, `404`, `409`, `422`, `429`, `500`, `502` and
+  `503`, which are names in a published registry already; an array index, a
+  parameter or class field default, and an object property, whose key or
+  parameter name is the name the rule asks for. Off in a test file, where a
+  fixture literal belongs next to the assertion that gives it meaning.
+- `script:scripts/check-vocabulary-paths.sh` fails a `VOCABULARY.md` whose term
+  points at a folder that is not there. That line is the only mechanically
+  checkable fact in the document, and the one that rots first, because a slice
+  gets renamed by a change with no reason to open the vocabulary.
+- `reviewer` checks that a definition in a `VOCABULARY.md` is still true, which
+  is prose against code and therefore nothing a rule can do.
+- `reviewer` checks the half of the verb table the rule above cannot reach: that
+  a `find…` actually returns `null` rather than throwing, that a `get…` throws,
+  and that a `build…`, `project…` or `select…` returns what its verb says. Those
+  are claims about behaviour, not about the shape of the annotation.
+- `reviewer` checks that a boolean name is not negated, because `isNotReady`
+  reads as a double negative inside a `!`.
+- `reviewer` checks that a comment documents something the code cannot say,
+  and is not a restatement, a history note, or a description of what the code
+  does not do.
+- `generator:scripts/standards/convention-drift.ts` reports every question the
+  tree has answered two ways — a layer whose files disagree about case style, a
+  module that exports a hook and does not say so the way its neighbours do, a
+  suffix invented once, an application whose files leave their layer unsaid. It
+  gates on a baseline that can only go down, so the existing backlog is not a
+  blocker and the next divergence is. The layer question is the one with a
+  direction: the count is the files saying nothing, never the minority, so it
+  cannot fall by the tree getting worse.
+- `reviewer` checks that a file name says what the file holds, because the
+  suffix table is a convention no rule reads.

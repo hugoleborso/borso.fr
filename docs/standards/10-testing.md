@@ -177,20 +177,18 @@ exactly the kind that is cheap to cover.
 
 ## Mutation gate
 
-`pnpm run test:mutation` runs Stryker over `.core.ts`, `.utils.ts` and
-`.adapter.ts` — the coverage list minus `.schema.ts`, which is not mutated
-anywhere — and it fails when any mutant survives, except a **static** mutant, one in code that runs once at
-module load. `stryker.shared.js` sets `ignoreStatic: true`, so a static mutant
-is reported and does not fail the gate on its own. The two named below are
-worth killing anyway; the gate will not make you.
+`pnpm run test:mutation` runs Stryker over the same file set, and it fails when
+any mutant survives.
 
-**Where it runs, exactly.** The pre-push hook runs it, scoped with `--mutate`
-to the changed gated files, and skippable with `SKIP_MUTATION_GATE=1`. Pull
-request CI does **not** run it — `ci.yml` has no Stryker step. The unscoped run
-is [`full-suite.yml`](../../.github/workflows/full-suite.yml), which triggers on
-push to `main`, i.e. after the merge. So a surviving mutant is caught before a
-push or after a merge, and never in between; that is the cost of not paying for
-a full mutation run on every pull request.
+Two places run it, and `ci.yml` is not one of them. The pre-push hook runs it
+on every push, scoped with `--mutate` to the pure files that push changed,
+which is seconds rather than the fifteen to twenty-five minutes an unscoped run
+over one application costs. [`full-suite.yml`](../../.github/workflows/full-suite.yml)
+then runs it unscoped on `main`, one job per application, with Stryker's
+`--incremental` file restored from the Actions cache.
+
+Scoping the push gate is only honest because the unscoped run exists somewhere,
+and `main` is where it exists.
 
 When a mutant survives, the fix is a new assertion, and it is not an exclusion.
 Add a Stryker disable comment only for a mutant that is genuinely equivalent,
@@ -198,11 +196,23 @@ e.g., a change that cannot alter behaviour, and say why on the line.
 
 ## Enforced by
 
-- `vitest run --coverage`, with per-file thresholds in each `vitest.config.ts`.
-- `stryker run`, in the pre-push hook and in CI.
-- `borso/test-file-has-sibling-source`, a custom ESLint rule, which fails when
-  a `.core.ts`, `.utils.ts`, `.adapter.ts` or `.schema.ts` file has no sibling
-  test file. The four suffixes are the `coverage.include` list of each
-  application's `vitest.config.ts`, and the two have to stay the same: a suffix
-  gated there and missing from the rule is a file whose missing test only the
-  coverage number notices.
+- `gate:vitest-coverage` fails when a file matching `**/*.core.ts` or
+  `**/*.utils.ts` falls below the per-file thresholds each `vitest.config.ts`
+  declares.
+- `gate:stryker` fails when a mutant survives. It is scoped with `--mutate` to
+  the changed pure files in the pre-push hook, and unscoped in `full-suite.yml`
+  on `main`. Both cover every workspace that has pure modules, which since
+  2026-08-15 means the four applications, the repository's own `scripts/`, and
+  `infra/cdk`. The last two carried the coverage gate and no mutation
+  configuration at all, and scored 77.40 and 80.84 the first time one was
+  pointed at them.
+- `script:scripts/check-mutation-covers-gated-files.sh` fails a workspace that
+  holds gated files and ships no mutation configuration. A missing gate produces
+  no output to be wrong, so the absence itself is what fails here — `infra/cdk`
+  read as 100% covered for as long as nothing pointed Stryker at it, and the
+  first run reported 90 survivors.
+- `eslint:borso/test-file-has-sibling-source` fails when a `.core.ts` or
+  `.utils.ts` file has no sibling test file.
+- `reviewer` checks that a test name states the behaviour and the condition,
+  and that a service test asserts on what the database holds rather than on
+  which method was called.

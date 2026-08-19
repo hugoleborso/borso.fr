@@ -20,6 +20,25 @@ styles live in a separate file that nobody remembers to clean up.
 
 CSS modules are banned. Styled components are banned. An `import './Foo.css'`
 line beside a component is banned. A global `.classname { … }` rule is banned.
+
+The one exception is a library that renders its own DOM, where there is no JSX
+element to carry a utility. Leaflet is the case: it builds its tiles, its zoom
+bar and its attribution itself. Write those rules inside a marked region that
+names the library and the reason, the same shape an `eslint-disable-next-line`
+takes, so a reviewer reads the claim next to the code:
+
+```css
+/* @third-party-dom leaflet: renders its tiles into DOM it owns, so no JSX
+   element exists to carry a utility class. */
+.course-map .leaflet-tile {
+  filter: brightness(0.92);
+}
+/* @end-third-party-dom */
+```
+
+The region exempts class selectors and nothing else. An element rule inside it
+still has to be layered, because that rule is about the cascade rather than
+about who owns the DOM.
 A second CSS file in an application is banned.
 
 ## Design tokens
@@ -83,16 +102,20 @@ and `lg:` for wider screens. See
 
 ## Enforced by
 
-- `borso/no-component-css-imports`, a custom ESLint rule, which rejects an
-  import of a `.css` file from anywhere other than the application entry point.
-- `borso/no-string-concatenated-class-names`, a custom ESLint rule, which
-  rejects a template literal in a `className` attribute and points at `clsx`.
-- [`scripts/check-single-stylesheet.sh`](../../scripts/check-single-stylesheet.sh),
-  run by the pre-commit hook and again in CI, which fails when an application
-  ships more than one `.css` file under its site directory. It reads the git
-  index rather than walking the filesystem, because `coverage/` and
-  `.stryker-tmp/` are gitignored and both contain CSS.
-
-Add the thing that enforces a rule in the same change that states it, or write
-that the rule is reviewed by hand. See
-[an approval gate that only existed in a comment](../dantotsus/an-approval-gate-that-only-existed-in-a-comment.md).
+- `eslint:borso/no-component-css-imports` rejects an import of a `.css` file
+  from anywhere other than the application entry point.
+- `eslint:borso/no-string-concatenated-class-names` rejects a template literal
+  in a `className` attribute and points at `clsx`.
+- `eslint:borso/no-circle-in-non-uniform-svg` rejects a `<circle>` inside an SVG
+  that scales unevenly, where it renders as an ellipse.
+- `script:scripts/check-single-stylesheet.sh` fails an application that ships
+  more than one `.css` file under its site directory. It reads the git index
+  rather than walking the filesystem, because `coverage/` and `.stryker-tmp/`
+  are gitignored and both contain CSS.
+- `script:scripts/check-stylesheet-contents.sh` reads that one file and rejects
+  a class selector, an id selector other than `#root`, and an element rule
+  written outside `@layer`. The last one matters because unlayered CSS outranks
+  every utility Tailwind emits, so a top-level `body { … }` silently beats the
+  classes on the element it targets.
+- `reviewer` checks that a set of more than two visual variants goes through
+  `cva` rather than a conditional expression.

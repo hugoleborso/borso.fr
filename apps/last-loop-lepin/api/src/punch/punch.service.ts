@@ -23,6 +23,8 @@ import {
 } from './punch.repository';
 import type { LoopPunch, ManualDidNotFinish } from './punch.types';
 
+const MILLISECONDS_PER_MINUTE = 60_000;
+
 // @FollowsBlueprint named-domain-error
 export class PunchNotFoundError extends Error {
   override readonly name = 'PunchNotFoundError';
@@ -231,7 +233,7 @@ export interface CatchupPunchInput {
  */
 export async function catchupPunch(input: CatchupPunchInput, now: Date): Promise<LoopPunch> {
   const edition = await getEdition(input.editionSlug);
-  const intervalMs = edition.intervalMinutes * 60_000;
+  const intervalMs = edition.intervalMinutes * MILLISECONDS_PER_MINUTE;
   const startMs = edition.startsAt.getTime();
   const currentLoopFloor = loopIndexAt(edition, now);
   if (input.loopIndex > currentLoopFloor) {

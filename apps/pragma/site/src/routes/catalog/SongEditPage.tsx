@@ -35,7 +35,7 @@ import {
   useUpdateSong,
 } from '../../lib/queries/songs.queries';
 import { selectMissingSongMessageKey } from './missing-song.core';
-import { SongEditForm } from './SongEditForm';
+import { SongEditForm } from '../../components/organisms/SongEditForm';
 import {
   BLANK_SONG_DRAFT,
   payloadFromDraft,

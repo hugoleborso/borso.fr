@@ -39,7 +39,7 @@ import {
   useUpdateBar,
 } from '../../lib/queries/bars.queries';
 import { countStale, isStale } from '@domain/bar-staleness.core';
-import { BarForm } from './BarForm';
+import { BarForm } from '../../components/organisms/BarForm';
 import {
   BAR_STATUS_KEY,
   BAR_STATUSES,

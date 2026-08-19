@@ -39,6 +39,13 @@ export const gpxMetadataSchema: z.ZodType<GpxMetadata> = z.object({
 
 const editionStatusValues: ReadonlySet<string> = new Set(['setup', 'live', 'finished']);
 
+const DEFAULT_INTERVAL_MINUTES = 60;
+const MIN_INTERVAL_MINUTES = 1;
+const MAX_INTERVAL_MINUTES = 240;
+const SLUG_MIN_LENGTH = 3;
+const SLUG_MAX_LENGTH = 64;
+const DISPLAY_NAME_MAX_LENGTH = 120;
+
 export function isEditionStatus(value: unknown): value is EditionStatus {
   return typeof value === 'string' && editionStatusValues.has(value);
 }
@@ -51,7 +58,7 @@ export const editionsTable = pgTable('editions', {
   endsAt: timestamp('ends_at', { withTimezone: true, mode: 'date' }).notNull(),
   sunriseAt: timestamp('sunrise_at', { withTimezone: true, mode: 'date' }).notNull(),
   sunsetAt: timestamp('sunset_at', { withTimezone: true, mode: 'date' }).notNull(),
-  intervalMinutes: integer('interval_min').notNull().default(60),
+  intervalMinutes: integer('interval_min').notNull().default(DEFAULT_INTERVAL_MINUTES),
   // Aurora DSQL doesn't support `jsonb`. The GPX metadata is stored as
   // JSON-encoded text and parsed via `gpxMetadataSchema` at the repository
   // boundary, which doubles as runtime validation.
@@ -68,19 +75,19 @@ export const editionsTable = pgTable('editions', {
  */
 export const editionSlugSchema = z
   .string()
-  .min(3)
-  .max(64)
+  .min(SLUG_MIN_LENGTH)
+  .max(SLUG_MAX_LENGTH)
   .regex(/^[a-z0-9-]+$/, 'lowercase letters, digits and dashes only');
 
 export const createEditionInputSchema = z.object({
   slug: editionSlugSchema,
-  displayName: z.string().min(1).max(120),
+  displayName: z.string().min(1).max(DISPLAY_NAME_MAX_LENGTH),
   startsAt: z.string().datetime({ offset: true }),
   endsAt: z.string().datetime({ offset: true }),
   // 1–240 min covers the realistic range: 1 min is the smallest useful
   // testing value (sub-minute loops would race the wall-clock validation
   // window in punch.core); 240 min caps absurd inputs. Defaults to 60.
-  intervalMinutes: z.number().int().min(1).max(240).optional(),
+  intervalMinutes: z.number().int().min(MIN_INTERVAL_MINUTES).max(MAX_INTERVAL_MINUTES).optional(),
   gpxXml: z.string().min(1),
 });
 

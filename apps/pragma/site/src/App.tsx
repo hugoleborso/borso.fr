@@ -13,11 +13,11 @@ import { SongDetailPage } from './routes/catalog/SongDetailPage';
 import { SongEditPage } from './routes/catalog/SongEditPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
 import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
-import { Login } from './routes/Login';
+import { LoginPage } from './routes/LoginPage';
 import { MembersPage } from './routes/members/MembersPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
 import { SessionsPage } from './routes/sessions/SessionsPage';
-import { SessionSetlistRedirect } from './routes/setlists/SessionSetlistRedirect';
+import { SessionSetlistRedirectPage } from './routes/setlists/SessionSetlistRedirectPage';
 import { SetlistEditorPage } from './routes/setlists/SetlistEditorPage';
 import { SetlistsPage } from './routes/setlists/SetlistsPage';
 
@@ -25,7 +25,7 @@ export function App(): JSX.Element {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireSession />}>
           {/*
             The stage view is a fullscreen takeover (black background,
@@ -41,7 +41,7 @@ export function App(): JSX.Element {
             <Route path="/catalog/:songId" element={<SongDetailPage />} />
             <Route path="/sessions" element={<SessionsPage />} />
             <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
-            <Route path="/sessions/:sessionId/setlist" element={<SessionSetlistRedirect />} />
+            <Route path="/sessions/:sessionId/setlist" element={<SessionSetlistRedirectPage />} />
             <Route path="/setlists" element={<SetlistsPage />} />
             <Route path="/setlists/:setlistId" element={<SetlistEditorPage />} />
             <Route path="/bars" element={<BarsPage />} />

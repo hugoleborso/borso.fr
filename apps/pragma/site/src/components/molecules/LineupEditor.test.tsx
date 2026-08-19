@@ -61,7 +61,7 @@ function findButtonByText(container: HTMLElement, label: string): HTMLButtonElem
   return buttons.find((button) => button.textContent.trim() === label) ?? null;
 }
 
-function findInstrumentToggles(container: HTMLElement, memberName: string): HTMLButtonElement[] {
+function listInstrumentToggles(container: HTMLElement, memberName: string): HTMLButtonElement[] {
   const group = container.querySelector(`[aria-label="${memberName} — Instruments"]`);
   if (!(group instanceof HTMLElement)) {
     throw new TypeError(`no instrument group found for ${memberName}`);
@@ -74,7 +74,7 @@ function findInstrumentToggle(
   memberName: string,
   instrumentName: string,
 ): HTMLButtonElement {
-  const toggle = findInstrumentToggles(container, memberName).find(
+  const toggle = listInstrumentToggles(container, memberName).find(
     (button) => button.textContent.trim() === instrumentName,
   );
   if (toggle === undefined) {
@@ -84,7 +84,7 @@ function findInstrumentToggle(
 }
 
 function heldInstrumentNames(container: HTMLElement, memberName: string): string[] {
-  return findInstrumentToggles(container, memberName)
+  return listInstrumentToggles(container, memberName)
     .filter((button) => button.getAttribute('aria-pressed') === 'true')
     .map((button) => button.textContent.trim());
 }
@@ -186,7 +186,7 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    const toggleNames = findInstrumentToggles(container, HUGO.name).map((button) =>
+    const toggleNames = listInstrumentToggles(container, HUGO.name).map((button) =>
       button.textContent.trim(),
     );
     expect(toggleNames).toEqual([GUITAR.name, BASS.name, DRUMS.name]);

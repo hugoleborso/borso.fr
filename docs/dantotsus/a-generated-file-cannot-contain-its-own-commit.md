@@ -120,3 +120,10 @@ The second question to ask, and the one that resolves it faster: **who reads the
 committed copy?** A generated artefact that every consumer rebuilds before using
 is not an artefact, it is a cache — and a cache under a byte gate is a chore
 with no beneficiary.
+
+Two other generators here read the history, and both took the second road before
+this one did: `scripts/standards/hotspots.ts` and
+`scripts/standards/temporal-coupling.ts` ship no `--check` at all, and each page
+prints the revision its dates were read at. That is the answer whenever the
+artefact is worth committing — state the revision, drop the gate — and this one
+is the case where the artefact was not worth committing either.

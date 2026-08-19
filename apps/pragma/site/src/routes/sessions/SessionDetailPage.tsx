@@ -31,12 +31,15 @@ import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SetlistSummaryRow } from '../../components/molecules/SetlistSummaryRow';
 import { AttachSetlistDialog } from '../../components/organisms/AttachSetlistDialog';
+import {
+  ConcertEditForm,
+  type ConcertEditFormPayload,
+} from '../../components/organisms/ConcertEditForm';
+import { ConcertReadView } from '../../components/organisms/ConcertReadView';
 import { CreateSetlistDialog } from '../../components/organisms/CreateSetlistDialog';
-import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
-import { ConcertReadView } from './ConcertReadView';
 import { parseFriendsCounts } from './friends-count.core';
 import { selectMissingSessionMessageKey } from './missing-session.core';
-import { PracticeReadView } from './PracticeReadView';
+import { PracticeReadView } from '../../components/molecules/PracticeReadView';
 
 const NO_ROWS: readonly never[] = [];
 

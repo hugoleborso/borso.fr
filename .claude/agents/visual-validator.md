@@ -19,34 +19,38 @@ The skill that dispatches you provides a self-contained brief with these fields:
 
 You receive nothing else. No implementation summary. No "this should work because…".
 
-## Tooling: agent-browser
+## Tooling: `scripts/browser.sh`
 
-You drive the browser via the `agent-browser` CLI. It is a Rust daemon controlled by shell commands; you invoke it through Bash. The CLI is reference-based — you take a snapshot, identify elements by their `@eN` refs, then act on them.
+You drive the browser through `scripts/browser.sh`, run from the repository root. It is `agent-browser` — a Rust daemon controlled by shell commands — with the two settings this sandbox needs already applied, and every argument passed straight through. The CLI is reference-based: take a snapshot, identify elements by their `@eN` refs, then act on them.
+
+**Never call `agent-browser` directly, and never run `agent-browser install`.** The browser it looks for is not where it looks, and without `--ssl-version-max=tls1.2` every https navigation fails with `ERR_CONNECTION_RESET`. Neither is discoverable from the error you would get, and the install command agent-browser itself suggests fetches a second Chromium this image already has.
 
 The commands you will use most:
 
 ```bash
-agent-browser open <url>                       # Navigate
-agent-browser snapshot -i --json               # Get the accessibility tree + element refs as JSON
-agent-browser click @eN                        # Click an element by its ref
-agent-browser fill @eN "text"                  # Type into a field by ref
-agent-browser press Space                      # Send a key
-agent-browser screenshot <absolute-path>       # Save a PNG to disk
-agent-browser screenshot <absolute-path> --full  # Full-page PNG
-agent-browser set viewport <width> <height>    # Resize
-agent-browser set device "iPhone 14"           # Viewport + user agent. NOT a coarse pointer, NOT touch.
-agent-browser set media dark                   # Emulate prefers-color-scheme: dark
-agent-browser wait --load networkidle          # Wait for network to settle
-agent-browser wait --text "Untitled"           # Wait for text to appear
-agent-browser get url                          # Get current URL
-agent-browser get text "<css-selector>"        # Read text content
-agent-browser back                             # Browser back button
-agent-browser reload                           # Reload page
+scripts/browser.sh open <url>                       # Navigate
+scripts/browser.sh --restart open <url>             # Same, from a fresh daemon
+scripts/browser.sh snapshot -i --json               # Accessibility tree + element refs as JSON
+scripts/browser.sh click @eN                        # Click an element by its ref
+scripts/browser.sh fill @eN "text"                  # Type into a field by ref
+scripts/browser.sh press Space                      # Send a key
+scripts/browser.sh screenshot <absolute-path>       # Save a PNG to disk
+scripts/browser.sh screenshot <absolute-path> --full  # Full-page PNG
+scripts/browser.sh set viewport <width> <height>    # Resize
+scripts/browser.sh set device "iPhone 14"           # Viewport + user agent. NOT a coarse pointer, NOT touch.
+scripts/browser.sh set media dark                   # Emulate prefers-color-scheme: dark
+scripts/browser.sh wait --load networkidle          # Wait for network to settle
+scripts/browser.sh wait --text "Untitled"           # Wait for text to appear
+scripts/browser.sh get url                          # Get current URL
+scripts/browser.sh get text "<css-selector>"        # Read text content
+scripts/browser.sh errors                           # Console errors since the last navigation
+scripts/browser.sh back                             # Browser back button
+scripts/browser.sh reload                           # Reload page
 ```
 
-If a command you need isn't documented here, run `agent-browser --help` or `agent-browser <command> --help` and adapt. The CLI is the source of truth, not this brief.
+If a command you need isn't documented here, run `scripts/browser.sh --help` or `scripts/browser.sh <command> --help` and adapt. The CLI is the source of truth, not this brief.
 
-If `agent-browser` is missing on the system, install it: `npm install -g agent-browser && agent-browser install`. Surface install failures as a single FAIL row at the top of the report titled "Tooling unavailable" and stop — do not fall back to a different tool silently.
+If `scripts/browser.sh` itself fails, surface it as a single FAIL row at the top of the report titled "Tooling unavailable" and stop — do not fall back to a different tool silently, and do not try to install anything.
 
 ## Procedure
 

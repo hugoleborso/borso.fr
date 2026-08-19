@@ -30,14 +30,14 @@ cd "$(dirname "$0")/.."
 #     untested copy. That is a consolidation decision, not a deletion, and it
 #     is open with the operator rather than settled here.
 declare -A ALLOWED_TEST_ONLY=(
-  [apps/borso-fr/site/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
-  [apps/borsouvertures/site/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
+  [apps/borso-fr/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
+  [apps/borsouvertures/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
   [apps/last-loop-lepin/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
   [apps/pragma/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
   [apps/last-loop-lepin/api/src/runner/runner.core.ts]="deliberately dormant: validateRunnerDraft waits on the relay-format decision, see PR #46"
   [apps/pragma/site/src/sw/manifest.utils.ts]="live counterpart: site/public/sw.js reimplements this in plain JS; consolidating needs a SW bundling decision"
   [apps/pragma/site/src/sw/sw-cache.utils.ts]="live counterpart: site/public/sw.js reimplements this in plain JS; consolidating needs a SW bundling decision"
-  [apps/pragma/api/src/mastery/mastery.core.ts]="live counterpart: site/src/lib/mastery-aggregate.utils.ts carries meanForSong on the front end"
+  [apps/pragma/api/src/mastery/mastery.core.ts]="live counterpart: site/src/lib/mastery-aggregate.core.ts carries meanDefaultMasteryForSong on the front end"
   [apps/last-loop-lepin/site/src/lib/request-position.utils.ts]="never wired: the self-punch flow reads geolocation without it"
 )
 

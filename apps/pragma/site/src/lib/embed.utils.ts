@@ -34,6 +34,9 @@ const VIMEO_IFRAME_HEIGHT = 360;
 const GENERIC_IFRAME_WIDTH = 480;
 const GENERIC_IFRAME_HEIGHT = 320;
 
+// A Spotify embed path is `/<kind>/<id>`, so both segments have to be there.
+const SPOTIFY_KIND_AND_ID_SEGMENTS = 2;
+
 export type EmbedResult =
   | {
       kind: 'oembed';
@@ -85,7 +88,7 @@ function youtubeEmbed(sourceUrl: URL): EmbedResult | null {
 function spotifyEmbed(sourceUrl: URL): EmbedResult | null {
   // Spotify URL shape: /track/<id>, /album/<id>, /playlist/<id>.
   const segments = pathSegments(sourceUrl);
-  if (segments.length < 2) return null;
+  if (segments.length < SPOTIFY_KIND_AND_ID_SEGMENTS) return null;
   return {
     kind: 'oembed',
     provider: 'spotify',

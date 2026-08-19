@@ -25,6 +25,8 @@ export const transitionPairParamSchema = z.object({
   b: z.string().uuid(),
 });
 
+const COMMENT_MAX = 4_096;
+
 export const transitionCommentBodySchema = z.object({
-  comment: z.string().trim().min(1).max(4_096),
+  comment: z.string().trim().min(1).max(COMMENT_MAX),
 });

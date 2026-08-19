@@ -23,7 +23,9 @@ export const instrumentTable = pgTable('instrument', {
   family: text('family'),
 });
 
-const instrumentNameSchema = z.string().trim().min(1).max(64);
+const INSTRUMENT_NAME_MAX = 64;
+
+const instrumentNameSchema = z.string().trim().min(1).max(INSTRUMENT_NAME_MAX);
 
 export const instrumentFamilySchema = z.enum(INSTRUMENT_FAMILIES);
 

@@ -9,6 +9,7 @@ fix-commits: [a3cd942, 92d6ae2, d5714ae]
 eradication-level: 4
 time-to-detect: minutes (first hit on the live preview URL)
 tags: [cloudfront, javascript, edge-runtime]
+blueprints: [cloudfront-function-source]
 ---
 
 # CloudFront Functions runtime 2.0 lies about its ES syntax surface

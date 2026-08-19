@@ -5,6 +5,7 @@
 #   scripts/kaizen.sh "blueprint generators fail from an app dir, error names a path that never existed"
 #   scripts/kaizen.sh --from audit-stage-r2 "tapping +1 twice moves the counter and not the chart"
 #   scripts/kaizen.sh show
+#   scripts/kaizen.sh archive <docs-slug>/<feature>
 #
 # `--from` names the writer, because the sweep reads differently depending on
 # who hit the friction: the same line from four different agents is a systemic
@@ -33,6 +34,14 @@
 #
 # The file is gitignored, so it never lands in a commit; the sweep removes it
 # once the kaizen pull request is open.
+#
+# `archive` exists because that arrangement assumes the sweep runs on the same
+# machine that logged the friction. On a hosted session it does not: the
+# container is reclaimed when the session ends, the sweep happens later in a
+# fresh one, and a gitignored file cannot travel between them. So the log's
+# primary input reaches the sweep only if somebody copies it into the branch
+# first. `archive` is that copy, into the feature folder where the sweep will
+# look for it.
 
 set -euo pipefail
 
@@ -73,6 +82,15 @@ case "${1:-}" in
   show)
     [ -f "$KAIZEN_FILE" ] || { printf 'no KAIZEN.md yet\n'; exit 0; }
     cat "$KAIZEN_FILE"
+    ;;
+  archive)
+    [ -n "${2:-}" ] || { printf 'usage: scripts/kaizen.sh archive <docs-slug>/<feature>\n' >&2; exit 1; }
+    [ -f "$KAIZEN_FILE" ] || { printf 'no KAIZEN.md to archive\n' >&2; exit 1; }
+    destination="$REPO_ROOT/docs/features/$2/kaizen.md"
+    mkdir -p "$(dirname "$destination")"
+    cp "$KAIZEN_FILE" "$destination"
+    printf '\033[36m[kaizen]\033[0m archived %s entry/entries to docs/features/%s/kaizen.md — commit it, or the sweep will never see it\n' \
+      "$(grep -c '^- \[' "$KAIZEN_FILE" || true)" "$2"
     ;;
   init)
     ensure_file

@@ -66,7 +66,12 @@ jobs:
           restore-keys: |
             lint-cache-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.js', '.prettierrc.json') }}-
             lint-cache-
-      - run: pnpm exec eslint . --cache --cache-strategy content --cache-location .eslintcache
+      # --max-warnings 0 is what makes the warning-severity rules a gate.
+      # react-hooks/exhaustive-deps, react-hooks/incompatible-library and
+      # react-refresh/only-export-components all ship at `warn`, and eslint
+      # exits 0 on a warning, so before this flag they printed into the log and
+      # stopped nothing. Mirrors the .husky/pre-commit invocation.
+      - run: pnpm exec eslint . --max-warnings 0 --cache --cache-strategy content --cache-location .eslintcache
       # Formatter drift is part of the gate. A commit made with hooks
       # skipped, or from an editor that is not on prettier, fails here.
       # `pnpm run` rather than `pnpm exec`: the agent harness's command rewriter
@@ -75,8 +80,11 @@ jobs:
       # copy. Guarded by scripts/check-coupled-lists.sh.
       - run: pnpm run format:check
       # The custom ESLint rules under eslint-rules/ each ship a RuleTester
-      # suite. A rule that misfires costs more than the rule saves.
-      - run: pnpm run test:eslint-rules
+      # suite, and the generators under scripts/ carry the same 100% per-file
+      # coverage threshold an application's pure modules do. `test:eslint-rules`
+      # ran the suite without `--coverage`, so the threshold in
+      # `vitest.config.ts` was declared and never applied to anything.
+      - run: pnpm run test:coverage
       # DSQL-compat scan on every migration SQL file. Mirrors the
       # pre-commit hook so a bypass via `git push --no-verify` still
       # gets caught before merge. Rung-2 eradication (paired with the
@@ -85,6 +93,27 @@ jobs:
       # One stylesheet per application, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.
       - run: ./scripts/check-single-stylesheet.sh
+      # And that the one stylesheet holds tokens only: counting the files never
+      # opens one, so a global `.classname` rule inside it had no gate at all.
+      - run: ./scripts/check-stylesheet-contents.sh
+      # Every directory under apps/ has a path-filters key and a commitlint
+      # scope. Without the first the app never gets a preview deploy and no
+      # workflow reports it; without the second the first commit naming the app
+      # is rejected by a hook talking about an enum.
+      - run: ./scripts/check-app-registration.sh
+      # One version per dependency, written in pnpm-workspace.yaml. Nothing
+      # else here reads a version field, so two workspaces drifting onto
+      # different majors passes every other gate.
+      # A NUL byte inside a string literal is legal, invisible in every editor
+      # and diff, and accepted by ESLint, Prettier and tsc. It surfaces much
+      # later as an argument execFileSync refuses or a separator that stops
+      # matching.
+      # Each term in an application's vocabulary names the folder that owns it,
+      # and that folder gets renamed by changes with no reason to open the
+      # vocabulary.
+      - run: ./scripts/check-vocabulary-paths.sh
+      - run: ./scripts/check-no-null-bytes.sh
+      - run: pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
       # Every `VITE_` variable a site reads is set by a workflow or written
       # down as deliberately unset, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.
@@ -105,18 +134,81 @@ jobs:
       # A workspace holding gated files with no mutation config is unmeasured
       # rather than clean, and its coverage number hides the difference.
       - run: ./scripts/check-mutation-covers-gated-files.sh
+      - run: pnpm exec tsx scripts/docs/check-doc-links.ts
       # A pure module reached only from its own test passes coverage and
       # mutation at full marks while running nowhere, and knip cannot see it.
       - run: ./scripts/check-pure-modules-have-callers.sh
+      # A non-module <script src> tag ships un-bundled and 404s in preview and
+      # production. Mirrors the pre-commit hook, which was the only place it
+      # ran, so `--no-verify` disabled it for good.
+      - run: ./scripts/check-non-module-scripts.sh
+      # A directory walk piped into `head` or `grep -q` is a race, and `pipefail`
+      # turns the losing side into a failing script — which is how this one was
+      # found, green locally and red here on the same commit.
+      - run: ./scripts/check-no-racy-pipelines.sh
+      # `deploy`, `destroy`, `install`, `update`, `sync`, `fetch` and `publish`
+      # are pnpm built-ins: without `run`, pnpm shadows the package's scripts
+      # entry and silently does the wrong thing. Mirrors the pre-commit hook,
+      # which was the only place this ran, so `--no-verify` disabled it for
+      # good. Rung-2 eradication of docs/dantotsus/pnpm-reserved-script-names.md.
+      - name: Workflows do not shadow a pnpm built-in script name
+        run: |
+          pattern='pnpm[[:space:]]+--filter[[:space:]]+("[^"]+"|[^[:space:]]+)[[:space:]]+(deploy|destroy|install|update|sync|fetch|publish)([[:space:]]|$)'
+          if grep -nrE "$pattern" .github/workflows/ >&2; then
+            echo "ERROR: above lines invoke a pnpm built-in instead of a package script." >&2
+            echo "Use 'pnpm --filter <pkg> run <name>' to force script lookup." >&2
+            exit 1
+          fi
       # Blueprint annotations, mirroring the pre-commit hook so a push made
       # with hooks skipped still gets caught. Fails on a blueprint missing one
       # of its four tags, a duplicated identifier, a follower naming a
       # blueprint that does not exist, and a generated file left stale.
       - run: pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --check
       - run: pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts --check
+      # The defect page and the seeding lookup come off the same annotations,
+      # so they go stale on the same edit. A dantotsu naming a blueprint that
+      # does not exist, and a hook seeding a pattern nobody carries any more,
+      # both read as fine until someone follows them.
+      - run: pnpm exec tsx scripts/blueprints/blueprint-defects.ts --check
+      - run: pnpm exec tsx .claude/skills/blueprint/blueprint-context.ts --check
+      - run: pnpm exec tsx scripts/standards/convention-drift.ts --check
+      - run: pnpm exec tsx scripts/standards/rule-provenance.ts --check
+      # Every `## Enforced by` bullet in docs/standards/ resolves against the
+      # live ESLint configuration and the checked-in hooks. Fails on a rule
+      # cited and enabled nowhere, a script no hook invokes, a gate whose
+      # command is absent from a site it claims, and a mechanism that runs
+      # while no standard says why. Unconditional here; the pre-commit hook
+      # runs it only when a standard or one of those mechanisms is staged,
+      # because it takes about seven seconds.
+      - run: pnpm exec tsx scripts/standards/enforcement-ledger.ts --check
+      # The architecture pages, mirroring the pre-commit hook, which was the
+      # only place they were checked. The generator derives each graph from
+      # paths, imports and the Hono call chain, so a stale page is a diagram
+      # that lies, and a diagram that lies survives a bypassed hook forever.
+      - run: pnpm exec tsx scripts/architecture/architecture-graph.ts --check
       - run: pnpm --filter @borso/infra test:coverage
       - run: pnpm --filter @borso/shared-infra test:coverage
       - run: pnpm -r build
+      # The CDK synth the standards claim CI runs, which until now it did not:
+      # `pnpm -r build` is `vite build`, and the per-app stack tests call
+      # `build<App>Stack()` directly, so nothing exercised `cdk/bin/*.ts` — the
+      # file that reads STAGE, names the stacks and wires the cluster stack to
+      # the app stack. A break there passes every gate and fails the automatic
+      # prod deploy after the merge instead. `run synth` rather than `synth`
+      # per the pnpm reserved-name rule above, even though `synth` is not one
+      # of the seven. Measured at about 12 s per app on this repository.
+      #
+      # The account is a placeholder because synth only stamps it into the
+      # template: no stack here does a `fromLookup`, so the run needs no
+      # credentials and reaches no AWS endpoint.
+      #
+      # Scoped to the applications rather than `-r`: `@borso/shared-infra`'s
+      # synth wants BORSO_BUDGET_EMAIL, and that stack is already synthesized
+      # by its own template snapshot test above, which asserts on the result
+      # instead of only proving it built.
+      - run: pnpm --filter "@borso-app/*" run synth
+        env:
+          CDK_DEFAULT_ACCOUNT: '000000000000'
       - run: pnpm exec knip
 
   # Which apps this change actually touches. An `infra/cdk` change means all of
