@@ -1,5 +1,11 @@
 /**
- * Pure cache transforms for the setlist entries query.
+ * Pure cache transforms for the two setlist queries, and the one filter
+ * that picks which setlists a session can still be offered.
+ *
+ * The entry half is optimistic and the setlist half is not. An entry
+ * mutation snapshots the cache before the request and rolls back on
+ * failure; a setlist mutation writes what its own response returned, so
+ * it needs no snapshot and has nothing to roll back.
  *
  * Each mutation in `setlist-entries.queries.ts` snapshots the current `{ entries }`
  * cache, applies one of these helpers in `onMutate`, and rolls back to

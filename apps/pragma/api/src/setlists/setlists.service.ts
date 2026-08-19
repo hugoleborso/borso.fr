@@ -8,9 +8,8 @@
 import type { z } from 'zod';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { getSessionById } from '../sessions/sessions.service';
-import { buildSetlistSummaries, type SetlistSummary } from './setlists.core';
+import { buildSetlistSummaries, type SetlistSummary, tallySongsPerSetlist } from './setlists.core';
 import {
-  countEntriesBySetlist,
   deleteEntry,
   deleteSessionLink,
   deleteSetlistWithEntries,
@@ -21,6 +20,7 @@ import {
   listAllSessionLinks,
   listEntries,
   listEntryIds,
+  listEntryOwners,
   listSetlists,
   listSetlistsOfSession,
   type SetlistEntryRow,
@@ -43,19 +43,21 @@ export type LinkOutcome = { kind: 'ok' } | { kind: 'not-found' };
 // @FollowsBlueprint service-read-model
 export async function getAllSetlists(): Promise<SetlistSummary[]> {
   const setlists = await listSetlists();
-  const [songCounts, links] = await Promise.all([
-    countEntriesBySetlist(setlists.map((setlist) => setlist.id)),
+  const setlistIds = setlists.map((setlist) => setlist.id);
+  const [entryOwners, links] = await Promise.all([
+    listEntryOwners(setlistIds),
     listAllSessionLinks(),
   ]);
-  return buildSetlistSummaries(setlists, songCounts, links);
+  return buildSetlistSummaries(setlists, tallySongsPerSetlist(setlistIds, entryOwners), links);
 }
 
 export async function getSetlistsOfSession(sessionId: string): Promise<SetlistSummary[]> {
   const setlists = await listSetlistsOfSession(sessionId);
-  const songCounts = await countEntriesBySetlist(setlists.map((setlist) => setlist.id));
+  const setlistIds = setlists.map((setlist) => setlist.id);
+  const entryOwners = await listEntryOwners(setlistIds);
   return buildSetlistSummaries(
     setlists,
-    songCounts,
+    tallySongsPerSetlist(setlistIds, entryOwners),
     setlists.map((setlist) => ({ setlistId: setlist.id, sessionId })),
   );
 }

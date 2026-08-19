@@ -1101,13 +1101,12 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.repository.ts",
-      "digest": "d01751e53791",
+      "digest": "23449bd1dfd6",
       "container": "api",
       "layer": "repository",
       "context": "setlists",
       "feature": null,
       "exports": [
-        "countEntriesBySetlist",
         "deleteEntry",
         "deleteSessionLink",
         "deleteSetlistWithEntries",
@@ -1118,6 +1117,7 @@
         "listAllSessionLinks",
         "listEntries",
         "listEntryIds",
+        "listEntryOwners",
         "listSetlists",
         "listSetlistsOfSession",
         "setEntryPosition",
@@ -1170,7 +1170,7 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.service.ts",
-      "digest": "6d35627c2308",
+      "digest": "48534f737bac",
       "container": "api",
       "layer": "service",
       "context": "setlists",
@@ -4491,7 +4491,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/setlists.utils.ts",
-      "digest": "4c1f2749e8b2",
+      "digest": "4f797ea79a6a",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -5969,12 +5969,12 @@
         "repository:listSetlists",
         "database:getDatabase",
         "schema:setlistTable",
-        "repository:countEntriesBySetlist",
+        "repository:listEntryOwners",
         "schema:setlistEntryTable",
-        "core:tallySongsPerSetlist",
         "repository:listAllSessionLinks",
         "schema:sessionSetlistTable",
-        "core:buildSetlistSummaries"
+        "core:buildSetlistSummaries",
+        "core:tallySongsPerSetlist"
       ],
       "tables": [
         "sessionSetlistTable",
@@ -6035,10 +6035,10 @@
         "database:getDatabase",
         "schema:sessionSetlistTable",
         "schema:setlistTable",
-        "repository:countEntriesBySetlist",
+        "repository:listEntryOwners",
         "schema:setlistEntryTable",
-        "core:tallySongsPerSetlist",
-        "core:buildSetlistSummaries"
+        "core:buildSetlistSummaries",
+        "core:tallySongsPerSetlist"
       ],
       "tables": [
         "sessionSetlistTable",

@@ -11,11 +11,7 @@ import { and, asc, eq, inArray, max } from 'drizzle-orm';
 import type { z } from 'zod';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
-import {
-  selectNextLinkPosition,
-  type SetlistSongCount,
-  tallySongsPerSetlist,
-} from './setlists.core';
+import { selectNextLinkPosition } from './setlists.core';
 import {
   lineupOverrideSchema,
   sessionSetlistTable,
@@ -248,16 +244,15 @@ export async function deleteSessionLink(
   return selectDeletionOutcome(deleted.length);
 }
 
-export async function countEntriesBySetlist(
+export async function listEntryOwners(
   setlistIds: readonly string[],
-): Promise<SetlistSongCount[]> {
+): Promise<{ setlistId: string }[]> {
   if (setlistIds.length === 0) return [];
   const database = getDatabase();
-  const rows = await database
+  return await database
     .select({ setlistId: setlistEntryTable.setlistId })
     .from(setlistEntryTable)
     .where(inArray(setlistEntryTable.setlistId, [...setlistIds]));
-  return tallySongsPerSetlist(setlistIds, rows);
 }
 
 export async function listEntries(setlistId: string): Promise<SetlistEntryRow[]> {
