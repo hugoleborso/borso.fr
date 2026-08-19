@@ -19,7 +19,7 @@ This is a report, not a gate. The input is the history, so it changes on
 every commit whether or not any source moved, and a freshness check on it
 would fail every commit for a reason nobody could act on.
 
-Read at `a74568b`, from the last 400 commit(s).
+Read at `be783f1`, from the last 400 commit(s).
 
 8 pair(s) are left out because the module graph does not
 describe one of the two files: deleted, renamed, or in a workspace the graph
@@ -33,7 +33,7 @@ together.
 
 | File | Changes with | Degree | Shared | Their commits |
 | --- | --- | --- | --- | --- |
-| `apps/last-loop-lepin/vitest.config.ts` | `apps/pragma/vitest.config.ts` | 31% | 4 | 9 / 8 |
+| `apps/last-loop-lepin/vitest.config.ts` | `apps/pragma/vitest.config.ts` | 33% | 4 | 8 / 8 |
 
 ## Coupled, and connected
 
