@@ -9,7 +9,7 @@
     {
       "id": "site",
       "name": "Static site",
-      "fileCount": 69
+      "fileCount": 72
     }
   ],
   "externals": [],
@@ -51,7 +51,7 @@
     },
     {
       "path": "apps/borso-fr/site/12-travaux/main.tsx",
-      "digest": "9d5373f6d2ad",
+      "digest": "4935d9c5212e",
       "container": "site",
       "layer": "unknown",
       "context": "root",
@@ -60,7 +60,8 @@
       "imports": [
         "apps/borso-fr/site/12-travaux/App.tsx",
         "apps/borso-fr/site/i18n/i18n.ts",
-        "apps/borso-fr/site/styles/tokens.css"
+        "apps/borso-fr/site/styles/tokens.css",
+        "apps/borso-fr/site/warp/warp-drive.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -91,7 +92,7 @@
     },
     {
       "path": "apps/borso-fr/site/art/mondrian/App.tsx",
-      "digest": "591186627fac",
+      "digest": "ac00eda18ee5",
       "container": "site",
       "layer": "unknown",
       "context": "root",
@@ -109,7 +110,7 @@
         "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
         "apps/borso-fr/site/art/mondrian/paper-theme.ts",
         "apps/borso-fr/site/art/mondrian/titles.utils.ts",
-        "apps/borso-fr/site/art/mondrian/use-reduced-motion.ts",
+        "apps/borso-fr/site/art/mondrian/use-reduced-motion.hook.ts",
         "apps/borso-fr/site/components/atoms/Announcer.tsx",
         "apps/borso-fr/site/components/organisms/CompositionStage.tsx",
         "apps/borso-fr/site/components/organisms/StudioRail.tsx"
@@ -201,7 +202,7 @@
     },
     {
       "path": "apps/borso-fr/site/art/mondrian/main.tsx",
-      "digest": "fb1472df4ec5",
+      "digest": "58cc7044fa89",
       "container": "site",
       "layer": "unknown",
       "context": "root",
@@ -213,7 +214,8 @@
         "apps/borso-fr/site/art/mondrian/keyboard.utils.ts",
         "apps/borso-fr/site/art/mondrian/paper-theme.ts",
         "apps/borso-fr/site/i18n/i18n.ts",
-        "apps/borso-fr/site/styles/tokens.css"
+        "apps/borso-fr/site/styles/tokens.css",
+        "apps/borso-fr/site/warp/warp-drive.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -372,10 +374,10 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/use-animation.ts",
+      "path": "apps/borso-fr/site/art/mondrian/use-animation.hook.ts",
       "digest": "e206161a2a69",
       "container": "site",
-      "layer": "unknown",
+      "layer": "hook",
       "context": "root",
       "feature": null,
       "exports": [
@@ -390,10 +392,10 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/art/mondrian/use-reduced-motion.ts",
+      "path": "apps/borso-fr/site/art/mondrian/use-reduced-motion.hook.ts",
       "digest": "8f18e4c7b2f1",
       "container": "site",
-      "layer": "unknown",
+      "layer": "hook",
       "context": "root",
       "feature": null,
       "exports": [
@@ -963,7 +965,7 @@
     },
     {
       "path": "apps/borso-fr/site/components/organisms/MondrianFrame.tsx",
-      "digest": "4041c683c37b",
+      "digest": "7336c9bc8fd5",
       "container": "site",
       "layer": "organism",
       "context": "root",
@@ -975,7 +977,7 @@
         "apps/borso-fr/site/art/mondrian/animation.core.ts",
         "apps/borso-fr/site/art/mondrian/painting.utils.ts",
         "apps/borso-fr/site/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/art/mondrian/use-animation.ts",
+        "apps/borso-fr/site/art/mondrian/use-animation.hook.ts",
         "apps/borso-fr/site/components/atoms/MondrianRect.tsx"
       ],
       "blueprints": [],
@@ -1088,7 +1090,7 @@
     },
     {
       "path": "apps/borso-fr/site/home-page.ts",
-      "digest": "6ba40c5158fc",
+      "digest": "f521b6f162d8",
       "container": "site",
       "layer": "unknown",
       "context": "root",
@@ -1096,7 +1098,8 @@
       "exports": [],
       "imports": [
         "apps/borso-fr/site/home-menu.core.ts",
-        "apps/borso-fr/site/i18n/fr.json"
+        "apps/borso-fr/site/i18n/fr.json",
+        "apps/borso-fr/site/warp/warp-drive.ts"
       ],
       "blueprints": [],
       "followsBlueprints": []
@@ -1362,6 +1365,59 @@
       "followsBlueprints": []
     },
     {
+      "path": "apps/borso-fr/site/warp/warp-drive.ts",
+      "digest": "da149fab2f9a",
+      "container": "site",
+      "layer": "unknown",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "installWarpDrive"
+      ],
+      "imports": [
+        "apps/borso-fr/site/warp/warp-navigation.core.ts",
+        "apps/borso-fr/site/warp/warp-streaks.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "browser-edge-module"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/warp/warp-navigation.core.ts",
+      "digest": "2746b0344506",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "isModifiedClick",
+        "selectNavigationMode"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/warp/warp-streaks.core.ts",
+      "digest": "e6702ea30fdb",
+      "container": "site",
+      "layer": "core",
+      "context": "root",
+      "feature": null,
+      "exports": [
+        "WARP_DURATION_MILLISECONDS",
+        "WARP_STREAK_COUNT",
+        "buildWarpStreaks",
+        "selectJumpStyleProperties",
+        "selectStreakColor",
+        "selectStreakStyleProperties"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
       "path": "apps/borso-fr/vite.config.ts",
       "digest": "4633157bce0d",
       "container": "site",
@@ -1398,7 +1454,7 @@
     {
       "id": "browser-edge-module",
       "file": "apps/borso-fr/site/art/mondrian/cascade-timer.ts",
-      "followerCount": 3
+      "followerCount": 4
     },
     {
       "id": "cdk-app-entrypoint",
