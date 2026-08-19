@@ -38,8 +38,8 @@ const TOP_GLOW_MULTIPLIER = 1.9;
 
 /**
  * Squared, so the galaxy answers the click straight away and still spends most
- * of its speed at the end. Cubed was the first try and it left the first half
- * of the jump looking like nothing had happened.
+ * of its speed at the end. A cube leaves the first half of the jump looking
+ * like nothing has happened.
  *
  * Clamped rather than guarded: squaring turns a reading from before the jump
  * into a positive one, and the frames between the last one and the navigation

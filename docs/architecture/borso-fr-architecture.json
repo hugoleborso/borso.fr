@@ -1385,7 +1385,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/warp/warp-jump.core.ts",
-      "digest": "d7a6a4a03a88",
+      "digest": "301d52e9189c",
       "container": "site",
       "layer": "core",
       "context": "warp",

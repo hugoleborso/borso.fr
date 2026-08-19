@@ -111,10 +111,34 @@ Lives in: `site/src/components/organisms/`
 
 - Ported from the react-bits component under its MIT header; the GLSL in
   `galaxy-shaders.ts` is verbatim and only the harness was retyped.
-- Mounted into `#bg-canvas-wrap` with one frozen parameter set, taking
-  the reader's reduced-motion preference as `isAnimationPaused`.
+- Mounted into `#bg-canvas-wrap` with one parameter set fixed at mount,
+  taking the reader's reduced-motion preference as `isAnimationPaused`.
+  Two uniforms move after that: the frame loop scales the star speed and
+  the glow by the Jump's intensity.
 - `selectStarClock` returns the previous reading while paused, so the
-  stars hold position instead of jumping when animation resumes.
+  stars hold position instead of jumping when animation resumes, and it
+  accumulates distance per frame rather than deriving it from the clock,
+  which is what lets the star speed change mid-flight without tearing.
+
+## Jump
+
+The lightspeed acceleration the Galaxy makes while the browser leaves the
+landing page for another page of the site. Never "warp animation" or
+"transition": the Galaxy is already travelling, and a jump is that travel
+taken up, not a second effect laid over it.
+
+Lives in: `site/src/warp/`
+
+- `warp-navigation.core.ts` decides whether a click earns a jump. Only a
+  plain left click on a same-origin link that replaces this document does.
+- `warp-jump.core.ts` holds the curve and the two multipliers, and the
+  arithmetic tying the peak to the shader's cycle rate.
+- `warp-jump.store.ts` holds the start time outside React, because the
+  Galaxy's frame loop lives inside the effect that owns its WebGL context.
+- `warp-drive.ts` is the browser edge: the click listener, the navigation
+  timer, and the reset for a page restored from the back-forward cache.
+- Only the landing page installs it. The other pages have no Galaxy, so
+  there is nothing there to accelerate.
 
 ## Month
 
