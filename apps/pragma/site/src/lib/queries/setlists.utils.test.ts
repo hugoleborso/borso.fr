@@ -179,8 +179,9 @@ describe('setlist list cache transforms', () => {
     expect(appendSetlistToCache(cache, second).setlists).toEqual([first, second]);
   });
 
-  it('appends nothing when the setlist is already listed', () => {
-    expect(appendSetlistToCache(cache, first)).toBe(cache);
+  it('appends nothing when the setlist is already listed, wherever it sits', () => {
+    const twoDeep: SetlistsCache = { setlists: [second, first] };
+    expect(appendSetlistToCache(twoDeep, first)).toBe(twoDeep);
   });
 
   it('removes a deleted setlist', () => {

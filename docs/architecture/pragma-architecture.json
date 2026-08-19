@@ -5293,7 +5293,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/setlists/setlist-index.core.ts",
-      "digest": "85cbfa8b7ebc",
+      "digest": "8ea6a85bffbc",
       "container": "site",
       "layer": "route",
       "context": "setlists",

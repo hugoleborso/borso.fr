@@ -32,20 +32,24 @@ export interface SetlistIndexRow<TSession extends IndexSession> {
   readonly sessions: TSession[];
 }
 
-function latestSessionDate(sessions: readonly IndexSession[]): string {
-  return sessions.reduce((latest, session) => (session.date > latest ? session.date : latest), '');
-}
-
+/**
+ * A row's sessions are held most recent first, so the one at the front
+ * is its latest, and a row no session carries has none at all — which
+ * is what sorts it above the rest rather than any date it could stand
+ * in for.
+ */
 function compareRows(
   left: SetlistIndexRow<IndexSession>,
   right: SetlistIndexRow<IndexSession>,
 ): number {
-  const isLeftAttached = left.sessions.length > 0;
-  const isRightAttached = right.sessions.length > 0;
-  if (isLeftAttached !== isRightAttached) return isLeftAttached ? 1 : -1;
-  const byLatestSession = latestSessionDate(right.sessions).localeCompare(
-    latestSessionDate(left.sessions),
-  );
+  const leftLatest = left.sessions[0];
+  const rightLatest = right.sessions[0];
+  if (leftLatest === undefined && rightLatest === undefined) {
+    return left.name.localeCompare(right.name);
+  }
+  if (leftLatest === undefined) return -1;
+  if (rightLatest === undefined) return 1;
+  const byLatestSession = rightLatest.date.localeCompare(leftLatest.date);
   if (byLatestSession !== 0) return byLatestSession;
   return left.name.localeCompare(right.name);
 }

@@ -7,6 +7,12 @@ const EARLIER_CONCERT: IndexSession = {
   date: '2026-08-01T20:00:00.000Z',
   venue: 'Le Petit Bain',
 };
+const MIDDLE_CONCERT: IndexSession = {
+  id: 'concert-2',
+  kind: 'concert',
+  date: '2026-09-01T20:00:00.000Z',
+  venue: 'La Boule Noire',
+};
 const LATER_PRACTICE: IndexSession = {
   id: 'practice-1',
   kind: 'practice',
@@ -70,15 +76,27 @@ describe('buildSetlistIndexRows', () => {
     expect(rows.map((row) => row.id)).toEqual(['loose', 'attached']);
   });
 
-  it('ranks a setlist by its latest session, not by the first one it was attached to', () => {
+  it('orders the setlists no session carries by their name', () => {
     const rows = buildSetlistIndexRows(
       [
-        setlist({ id: 'both', name: 'Set 1', sessionIds: ['concert-1', 'practice-1'] }),
-        setlist({ id: 'older', name: 'Set 2', sessionIds: ['concert-1'] }),
+        setlist({ id: 'third', name: 'Rappel' }),
+        setlist({ id: 'first', name: 'Filage' }),
+        setlist({ id: 'second', name: 'Première partie' }),
       ],
-      [EARLIER_CONCERT, LATER_PRACTICE],
+      [EARLIER_CONCERT],
     );
-    expect(rows.map((row) => row.id)).toEqual(['both', 'older']);
+    expect(rows.map((row) => row.id)).toEqual(['first', 'second', 'third']);
+  });
+
+  it('ranks a setlist by its latest session, not by the oldest one carrying it', () => {
+    const rows = buildSetlistIndexRows(
+      [
+        setlist({ id: 'middle', name: 'Set 1', sessionIds: ['concert-2'] }),
+        setlist({ id: 'spanning', name: 'Set 2', sessionIds: ['concert-1', 'practice-1'] }),
+      ],
+      [EARLIER_CONCERT, MIDDLE_CONCERT, LATER_PRACTICE],
+    );
+    expect(rows.map((row) => row.id)).toEqual(['spanning', 'middle']);
   });
 
   it('breaks a tie on the name, so the order never depends on the rows order', () => {
