@@ -12,6 +12,7 @@
 
 import { Color, Mesh, type OGLRenderingContext, Program, Renderer, Triangle } from 'ogl';
 import { useEffect, useRef } from 'react';
+import { readJumpIntensity } from '../../warp/warp-jump.store';
 import { easeTowards, selectStarClock } from './galaxy-clock.core';
 import { FRAGMENT_SHADER, VERTEX_SHADER } from './galaxy-shaders';
 
@@ -213,12 +214,23 @@ export function Galaxy({
 
     const update = (timestamp: number) => {
       frame.handle = requestAnimationFrame(update);
-      const clock = selectStarClock(isAnimationPaused, timestamp, starSpeed, {
-        elapsedSeconds: uniforms.uTime.value,
-        travelledDistance: uniforms.uStarSpeed.value,
-      });
+      // The lightspeed jump between two pages of the site is this galaxy flying
+      // rather than anything drawn over it, so the frame loop reads how hard it
+      // should be travelling from a module outside React. State would not do:
+      // it would re-run the effect that owns this WebGL context.
+      const jumpIntensity = readJumpIntensity(timestamp);
+      const clock = selectStarClock(
+        isAnimationPaused,
+        timestamp,
+        starSpeed * jumpIntensity.starSpeedMultiplier,
+        {
+          elapsedSeconds: uniforms.uTime.value,
+          travelledDistance: uniforms.uStarSpeed.value,
+        },
+      );
       uniforms.uTime.value = clock.elapsedSeconds;
       uniforms.uStarSpeed.value = clock.travelledDistance;
+      uniforms.uGlowIntensity.value = glowIntensity * jumpIntensity.glowMultiplier;
 
       smoothPointer.current.x = easeTowards(smoothPointer.current.x, targetPointer.current.x);
       smoothPointer.current.y = easeTowards(smoothPointer.current.y, targetPointer.current.y);

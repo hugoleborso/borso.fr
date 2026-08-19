@@ -12,7 +12,6 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../../i18n/i18n';
 import '../../styles/tokens.css';
-import { installWarpDrive } from '../../warp/warp-drive';
 import { App } from './App';
 import {
   composeNewSeed,
@@ -30,8 +29,6 @@ const COMPOSE_ON_SPACE: Readonly<Record<`${boolean}`, (event: KeyboardEvent) => 
   },
   false: () => undefined,
 };
-
-installWarpDrive();
 
 // @FollowsBlueprint site-entrypoint
 const rootElement = document.getElementById('root');

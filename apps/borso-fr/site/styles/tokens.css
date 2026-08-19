@@ -76,11 +76,6 @@
   --animate-welcome-in: fadeUp 1.2s ease-out 0.2s both;
   --animate-title-in: fadeUp 1.2s ease-out 0.5s both;
 
-  /* Lightspeed jump — the field `site/warp/warp-drive.ts` draws over a page on its way out. */
-  --color-warp-core: #f5f5f0;
-  --color-warp-glow: #9bb6ff;
-  --color-warp-ember: #e85a25;
-
   /*
    * The four extra breakpoints are the widths the two designs already switched
    * at, kept to the pixel so the migration to Tailwind moved no layout.
@@ -127,73 +122,4 @@
   to {
     opacity: 1;
   }
-}
-
-@keyframes warp-veil {
-  from {
-    opacity: 0;
-  }
-  45% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/*
- * The trail is anchored at the centre of the screen by its left edge, so
- * rotating it aims it and translating it flies it outwards. `scaleX` stretches
- * it from that same edge, which is what turns a dot into a streak.
- */
-@keyframes warp-streak {
-  from {
-    opacity: 0;
-    transform: rotate(var(--warp-angle)) translateX(var(--warp-start)) scaleX(0.04);
-  }
-  25% {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-    transform: rotate(var(--warp-angle)) translateX(var(--warp-end)) scaleX(1);
-  }
-}
-
-@keyframes warp-flash {
-  from,
-  55% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.15);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(4.2);
-  }
-}
-
-/*
- * The three parts of the lightspeed jump. Each one takes its length from an
- * `animation-duration` that `site/warp/warp-drive.ts` writes onto the element,
- * which is what lets a streak run at its own speed and what keeps the length of
- * the jump in the module that also decides when to leave the page. A `var()`
- * inside an `@theme` entry would not do: it resolves against `:root`, where a
- * per-element value has not been written yet.
- */
-@utility animate-warp-veil {
-  animation-name: warp-veil;
-  animation-timing-function: ease-out;
-  animation-fill-mode: both;
-}
-
-@utility animate-warp-streak {
-  animation-name: warp-streak;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.9, 0.35);
-  animation-fill-mode: both;
-}
-
-@utility animate-warp-flash {
-  animation-name: warp-flash;
-  animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.65);
-  animation-fill-mode: both;
 }
