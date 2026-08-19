@@ -123,10 +123,12 @@ export async function updateSession(
 
 export async function deleteSessionWithCascade(id: string): Promise<DeletionOutcome> {
   const database = getDatabase();
-  await database.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
-  const deleted = await database
-    .delete(sessionTable)
-    .where(eq(sessionTable.id, id))
-    .returning({ id: sessionTable.id });
-  return selectDeletionOutcome(deleted.length);
+  return await database.transaction(async (transaction) => {
+    await transaction.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
+    const deleted = await transaction
+      .delete(sessionTable)
+      .where(eq(sessionTable.id, id))
+      .returning({ id: sessionTable.id });
+    return selectDeletionOutcome(deleted.length);
+  });
 }

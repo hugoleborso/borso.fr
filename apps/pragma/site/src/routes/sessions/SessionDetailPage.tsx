@@ -3,10 +3,8 @@
  * prototype's `ConcertDetail` (sessions.jsx lines 108-202) and
  * `PracticeDetail` (lines 222-277). The concert read view + practice
  * read view live in sibling files so this page stays a thin
- * orchestrator: data fetch, edit-mode toggle, setlist mount.
- *
- * Reads via useSession, useMembersList, useSessionsList,
- * useSetlistBySession. Writes via useUpdateSession + useCreateSetlist.
+ * orchestrator: data fetch, edit-mode toggle, and the region listing
+ * the setlists the session carries.
  * @Feature sessions
  */
 
@@ -23,20 +21,15 @@ import { selectUpcomingConcerts } from '../../lib/upcoming-concerts.core';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useMembersList } from '../../lib/queries/members.queries';
 import { useSession, useSessionsList, useUpdateSession } from '../../lib/queries/sessions.queries';
-import {
-  useSetlistsBySession,
-  useUnlinkSetlistFromSession,
-} from '../../lib/queries/setlists.queries';
+import { useSetlistsBySession } from '../../lib/queries/setlists.queries';
 import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
-import { SetlistSummaryRow } from '../../components/molecules/SetlistSummaryRow';
-import { AttachSetlistDialog } from '../../components/organisms/AttachSetlistDialog';
 import {
   ConcertEditForm,
   type ConcertEditFormPayload,
 } from '../../components/organisms/ConcertEditForm';
 import { ConcertReadView } from '../../components/organisms/ConcertReadView';
-import { CreateSetlistDialog } from '../../components/organisms/CreateSetlistDialog';
+import { SessionSetlists } from '../../components/organisms/SessionSetlists';
 import { parseFriendsCounts } from './friends-count.core';
 import { selectMissingSessionMessageKey } from './missing-session.core';
 import { PracticeReadView } from '../../components/molecules/PracticeReadView';
@@ -57,13 +50,10 @@ export function SessionDetailPage(): JSX.Element {
   const sessionsQuery = useSessionsList();
   const setlistsQuery = useSetlistsBySession(sessionId ?? '', sessionId !== undefined);
   const updateSession = useUpdateSession();
-  const unlinkSetlist = useUnlinkSetlistFromSession();
 
   const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
   const [editingConcert, setEditingConcert] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const [isCreatingSetlist, setIsCreatingSetlist] = useState(false);
-  const [isAttachingSetlist, setIsAttachingSetlist] = useState(false);
 
   const session = sessionQuery.data?.session ?? null;
   const members = membersQuery.data?.members ?? NO_ROWS;
@@ -226,68 +216,11 @@ export function SessionDetailPage(): JSX.Element {
       <h3 className="font-display italic text-2xl text-ink-900 m-0 mt-4">
         {t('sessions.setlists')}
       </h3>
-      {setlistsQuery.isLoading ? (
-        <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
-      ) : (
-        <>
-          {setlists.length === 0 ? (
-            <p className="text-ink-400 italic text-sm">{t('sessions.noSetlists')}</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {setlists.map((setlist) => (
-                <li key={setlist.id}>
-                  <SetlistSummaryRow
-                    id={setlist.id}
-                    name={setlist.name}
-                    songCount={setlist.songCount}
-                    sessionsLabel={null}
-                    action={
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        aria-label={t('setlist.detach.aria')}
-                        disabled={unlinkSetlist.isPending}
-                        onClick={() =>
-                          unlinkSetlist.mutate({ setlistId: setlist.id, sessionId: session.id })
-                        }
-                      >
-                        {t('setlist.detach.button')}
-                      </Button>
-                    }
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-          <div className="flex flex-wrap gap-2 items-start">
-            <Button variant="accent" onClick={() => setIsCreatingSetlist(true)}>
-              <Icon name="plus" size={14} />
-              {t('setlist.new')}
-            </Button>
-            <Button variant="default" onClick={() => setIsAttachingSetlist(true)}>
-              <Icon name="setlist" size={14} />
-              {t('setlist.attach.button')}
-            </Button>
-          </div>
-          {unlinkSetlist.isError ? (
-            <p className="text-danger text-sm" role="alert">
-              {t('setlist.failure.detach')}
-            </p>
-          ) : null}
-        </>
-      )}
-
-      {isCreatingSetlist ? (
-        <CreateSetlistDialog
-          sessionId={session.id}
-          suggestedName={t('setlist.create.defaultName', { index: setlists.length + 1 })}
-          onClose={() => setIsCreatingSetlist(false)}
-          onCreated={() => setIsCreatingSetlist(false)}
-        />
-      ) : null}
-      {isAttachingSetlist ? (
-        <AttachSetlistDialog sessionId={session.id} onClose={() => setIsAttachingSetlist(false)} />
-      ) : null}
+      <SessionSetlists
+        sessionId={session.id}
+        setlists={setlists}
+        isLoading={setlistsQuery.isLoading}
+      />
     </section>
   );
 }

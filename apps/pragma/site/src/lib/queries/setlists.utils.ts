@@ -1,7 +1,7 @@
 /**
  * Pure cache transforms for the setlist entries query.
  *
- * Each mutation in `setlists.ts` snapshots the current `{ entries }`
+ * Each mutation in `setlist-entries.queries.ts` snapshots the current `{ entries }`
  * cache, applies one of these helpers in `onMutate`, and rolls back to
  * the snapshot in `onError`. The shape is generic in the entry type so
  * the helpers don't pin themselves to the BE projection — the queries

@@ -14,7 +14,6 @@ import {
   deleteEntry,
   deleteSessionLink,
   deleteSetlistWithEntries,
-  findNextLinkPosition,
   findSetlistById,
   insertEntry,
   insertSessionLink,
@@ -61,15 +60,17 @@ export async function getSetlistsOfSession(sessionId: string): Promise<SetlistSu
   );
 }
 
-export async function getSetlist(setlistId: string): Promise<SetlistRow | null> {
+export async function findSetlist(setlistId: string): Promise<SetlistRow | null> {
   return await findSetlistById(setlistId);
 }
 
 /**
  * Creates the setlist and, when the caller named a session, attaches it
  * in the same call. The attach is what makes the button on a session's
- * own page one tap rather than two, and a missing session is refused
- * before the setlist is written so no half-linked row survives.
+ * own page one tap rather than two. A session that does not exist is
+ * refused before anything is written, and the two rows are written in
+ * one transaction, so a link without its setlist cannot outlive a
+ * failure the way it would under a database enforcing no foreign key.
  */
 export async function createSetlist(
   input: SetlistCreateInput,
@@ -78,10 +79,7 @@ export async function createSetlist(
     const session = await getSessionById(input.sessionId);
     if (session === null) return { kind: 'session-not-found' };
   }
-  const setlist = await insertSetlist(input.name);
-  if (input.sessionId !== null) {
-    await attachToSession(setlist.id, input.sessionId);
-  }
+  const setlist = await insertSetlist(input.name, input.sessionId);
   return { kind: 'ok', setlist };
 }
 
@@ -102,7 +100,7 @@ export async function linkSetlistToSession(
     getSessionById(sessionId),
   ]);
   if (setlist === null || session === null) return { kind: 'not-found' };
-  await attachToSession(setlistId, sessionId);
+  await insertSessionLink(sessionId, setlistId);
   return { kind: 'ok' };
 }
 
@@ -111,11 +109,6 @@ export async function unlinkSetlistFromSession(
   sessionId: string,
 ): Promise<DeletionOutcome> {
   return await deleteSessionLink(sessionId, setlistId);
-}
-
-async function attachToSession(setlistId: string, sessionId: string): Promise<void> {
-  const position = await findNextLinkPosition(sessionId);
-  await insertSessionLink(sessionId, setlistId, position);
 }
 
 export async function getEntries(setlistId: string): Promise<SetlistEntryRow[]> {

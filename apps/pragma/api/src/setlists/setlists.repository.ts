@@ -9,7 +9,7 @@
 
 import { and, asc, eq, inArray, max } from 'drizzle-orm';
 import type { z } from 'zod';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   selectNextLinkPosition,
@@ -26,10 +26,7 @@ import {
 
 export type LineupOverride = z.infer<typeof lineupOverrideSchema>;
 
-export interface SetlistRow {
-  id: string;
-  name: string;
-}
+export type SetlistRow = typeof setlistTable.$inferSelect;
 
 export interface SetlistEntryRow {
   id: string;
@@ -155,11 +152,50 @@ export async function listSetlistsOfSession(sessionId: string): Promise<SetlistR
     .orderBy(asc(sessionSetlistTable.position));
 }
 
-export async function insertSetlist(name: string): Promise<SetlistRow> {
+/**
+ * Writes the setlist and, when a session is named, the link that puts it
+ * at the end of that session's setlists — in one transaction, because
+ * Aurora DSQL enforces no foreign key, so a link written without its
+ * setlist, or a setlist that was meant to be attached and is not, would
+ * survive forever.
+ */
+export async function insertSetlist(name: string, sessionId: string | null): Promise<SetlistRow> {
   const database = getDatabase();
-  const [row] = await database.insert(setlistTable).values({ name }).returning(SETLIST_PROJECTION);
-  if (row === undefined) throw new Error('insert returned no row');
-  return row;
+  return await database.transaction(async (transaction) => {
+    const [row] = await transaction
+      .insert(setlistTable)
+      .values({ name })
+      .returning(SETLIST_PROJECTION);
+    if (row === undefined) throw new Error('insert returned no row');
+    if (sessionId !== null) await attachAtEnd(transaction, sessionId, row.id);
+    return row;
+  });
+}
+
+export async function insertSessionLink(sessionId: string, setlistId: string): Promise<void> {
+  const database = getDatabase();
+  await database.transaction(async (transaction) => {
+    await attachAtEnd(transaction, sessionId, setlistId);
+  });
+}
+
+async function attachAtEnd(
+  executor: DatabaseExecutor,
+  sessionId: string,
+  setlistId: string,
+): Promise<void> {
+  const [row] = await executor
+    .select({ highest: max(sessionSetlistTable.position) })
+    .from(sessionSetlistTable)
+    .where(eq(sessionSetlistTable.sessionId, sessionId));
+  await executor
+    .insert(sessionSetlistTable)
+    .values({
+      sessionId,
+      setlistId,
+      position: selectNextLinkPosition(row?.highest ?? null),
+    })
+    .onConflictDoNothing();
 }
 
 export async function updateSetlistName(
@@ -177,13 +213,17 @@ export async function updateSetlistName(
 
 export async function deleteSetlistWithEntries(setlistId: string): Promise<DeletionOutcome> {
   const database = getDatabase();
-  await database.delete(setlistEntryTable).where(eq(setlistEntryTable.setlistId, setlistId));
-  await database.delete(sessionSetlistTable).where(eq(sessionSetlistTable.setlistId, setlistId));
-  const deleted = await database
-    .delete(setlistTable)
-    .where(eq(setlistTable.id, setlistId))
-    .returning({ id: setlistTable.id });
-  return selectDeletionOutcome(deleted.length);
+  return await database.transaction(async (transaction) => {
+    await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.setlistId, setlistId));
+    await transaction
+      .delete(sessionSetlistTable)
+      .where(eq(sessionSetlistTable.setlistId, setlistId));
+    const deleted = await transaction
+      .delete(setlistTable)
+      .where(eq(setlistTable.id, setlistId))
+      .returning({ id: setlistTable.id });
+    return selectDeletionOutcome(deleted.length);
+  });
 }
 
 export interface SetlistSessionLink {
@@ -199,32 +239,6 @@ export async function listAllSessionLinks(): Promise<SetlistSessionLink[]> {
       sessionId: sessionSetlistTable.sessionId,
     })
     .from(sessionSetlistTable);
-}
-
-/**
- * The position a setlist joining this session lands on: one past the
- * highest already taken, so the order the band wrote is preserved and
- * two concurrent links never silently swap.
- */
-export async function findNextLinkPosition(sessionId: string): Promise<number> {
-  const database = getDatabase();
-  const [row] = await database
-    .select({ highest: max(sessionSetlistTable.position) })
-    .from(sessionSetlistTable)
-    .where(eq(sessionSetlistTable.sessionId, sessionId));
-  return selectNextLinkPosition(row?.highest ?? null);
-}
-
-export async function insertSessionLink(
-  sessionId: string,
-  setlistId: string,
-  position: number,
-): Promise<void> {
-  const database = getDatabase();
-  await database
-    .insert(sessionSetlistTable)
-    .values({ sessionId, setlistId, position })
-    .onConflictDoNothing();
 }
 
 export async function deleteSessionLink(

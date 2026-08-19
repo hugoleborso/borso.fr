@@ -14,7 +14,7 @@ at twenty files.
 `convention-baseline.json` holds the current count per question and the
 gate fails only on an increase. Fixing one and running `--accept` lowers it.
 
-Read from 617 source file(s).
+Read from 620 source file(s).
 
 ## How is the name of a atom.ts file written?
 
@@ -40,7 +40,7 @@ Read from 617 source file(s).
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| kebab | 34 | `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts`, `apps/borso-fr/site/src/home-menu.core.ts` |
+| kebab | 35 | `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts`, `apps/borso-fr/site/src/home-menu.core.ts` |
 | camel | 5 | `apps/borsouvertures/site/src/openings/learnSession.core.ts`, `apps/borsouvertures/site/src/openings/openingFlow.core.ts`, `apps/borsouvertures/site/src/openings/playScope.core.ts` |
 
 ## How is the name of a entrypoint.tsx file written?

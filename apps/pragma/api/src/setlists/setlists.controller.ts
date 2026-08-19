@@ -22,7 +22,7 @@ import {
   createSetlist,
   getAllSetlists,
   getEntries,
-  getSetlist,
+  findSetlist,
   getSetlistsOfSession,
   linkSetlistToSession,
   patchEntry,
@@ -59,7 +59,7 @@ export function buildSetlistsRouter() {
     })
     .get('/:id', zValidator('param', setlistIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const setlist = await getSetlist(id);
+      const setlist = await findSetlist(id);
       if (setlist === null) return context.json({ error: 'not-found' }, 404);
       return context.json({ setlist });
     })

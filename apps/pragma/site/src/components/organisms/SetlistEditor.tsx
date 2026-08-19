@@ -1,5 +1,5 @@
 /**
- * Setlist editor. Embedded inside the concert session detail page.
+ * Setlist editor. Mounted by the setlist's own page.
  * Renders the ordered entries; each row carries an inline display
  * (title, artist, tonality, mastery, lineup, energy slider).
  *

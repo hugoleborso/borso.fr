@@ -744,7 +744,7 @@
         "name": "Presentational Organism",
         "usage": "Use for a screen region that composes molecules and atoms but owns no state and fetches nothing.",
         "path": "apps/pragma/site/src/components/organisms/SongCard.tsx",
-        "followers": 33
+        "followers": 34
       },
       {
         "id": "core-view-projection",

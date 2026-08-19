@@ -29,7 +29,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 185
+      "fileCount": 188
     },
     {
       "id": "uploads-bucket",
@@ -980,7 +980,7 @@
     },
     {
       "path": "apps/pragma/api/src/sessions/sessions.repository.ts",
-      "digest": "a93628c4321a",
+      "digest": "c294cca7be1e",
       "container": "api",
       "layer": "repository",
       "context": "sessions",
@@ -1061,7 +1061,7 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.controller.ts",
-      "digest": "6b458a192733",
+      "digest": "c6b0d6d55bb8",
       "container": "api",
       "layer": "controller",
       "context": "setlists",
@@ -1101,7 +1101,7 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.repository.ts",
-      "digest": "2ee0102170ac",
+      "digest": "c312d9b7803b",
       "container": "api",
       "layer": "repository",
       "context": "setlists",
@@ -1111,7 +1111,6 @@
         "deleteEntry",
         "deleteSessionLink",
         "deleteSetlistWithEntries",
-        "findNextLinkPosition",
         "findSetlistById",
         "insertEntry",
         "insertSessionLink",
@@ -1171,7 +1170,7 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.service.ts",
-      "digest": "26ed233dd997",
+      "digest": "6d35627c2308",
       "container": "api",
       "layer": "service",
       "context": "setlists",
@@ -1179,9 +1178,9 @@
       "exports": [
         "appendEntry",
         "createSetlist",
+        "findSetlist",
         "getAllSetlists",
         "getEntries",
-        "getSetlist",
         "getSetlistsOfSession",
         "linkSetlistToSession",
         "patchEntry",
@@ -3361,6 +3360,27 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/organisms/SessionSetlists.tsx",
+      "digest": "a78f17d2c5ec",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "setlists",
+      "exports": [
+        "SessionSetlists"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/molecules/SetlistSummaryRow.tsx",
+        "apps/pragma/site/src/components/organisms/AttachSetlistDialog.tsx",
+        "apps/pragma/site/src/components/organisms/CreateSetlistDialog.tsx",
+        "apps/pragma/site/src/lib/queries/setlists.queries.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
       "path": "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
       "digest": "e991363fd338",
       "container": "site",
@@ -3426,8 +3446,28 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/organisms/SetlistCatalogList.tsx",
+      "digest": "081dbac43796",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "setlists",
+      "exports": [
+        "SetlistCatalogList"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/molecules/SetlistSummaryRow.tsx",
+        "apps/pragma/site/src/lib/formatters.utils.ts",
+        "apps/pragma/site/src/lib/setlist-index.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
-      "digest": "78ddd5853d35",
+      "digest": "63481e006789",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3511,6 +3551,26 @@
       "followsBlueprints": [
         "organism-form"
       ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SetlistHeaderActions.tsx",
+      "digest": "e2d1b452e3e5",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "setlists",
+      "exports": [
+        "SetlistHeaderActions"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
+        "apps/pragma/site/src/lib/queries/setlists.queries.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistSongPicker.tsx",
@@ -4431,7 +4491,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/setlists.utils.ts",
-      "digest": "993130f0e97a",
+      "digest": "4c1f2749e8b2",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -4600,6 +4660,22 @@
       "imports": [],
       "blueprints": [],
       "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/lib/setlist-index.core.ts",
+      "digest": "8ea6a85bffbc",
+      "container": "site",
+      "layer": "core",
+      "context": "lib",
+      "feature": "setlists",
+      "exports": [
+        "buildSetlistIndexRows"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module"
+      ]
     },
     {
       "path": "apps/pragma/site/src/lib/setlist-name.utils.ts",
@@ -5213,7 +5289,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx",
-      "digest": "cb96f3fc1749",
+      "digest": "ebf2eab806cc",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -5228,11 +5304,9 @@
         "apps/pragma/site/src/components/molecules/BackLink.tsx",
         "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx",
         "apps/pragma/site/src/components/molecules/PracticeReadView.tsx",
-        "apps/pragma/site/src/components/molecules/SetlistSummaryRow.tsx",
-        "apps/pragma/site/src/components/organisms/AttachSetlistDialog.tsx",
         "apps/pragma/site/src/components/organisms/ConcertEditForm.tsx",
         "apps/pragma/site/src/components/organisms/ConcertReadView.tsx",
-        "apps/pragma/site/src/components/organisms/CreateSetlistDialog.tsx",
+        "apps/pragma/site/src/components/organisms/SessionSetlists.tsx",
         "apps/pragma/site/src/lib/api.client.ts",
         "apps/pragma/site/src/lib/counts.utils.ts",
         "apps/pragma/site/src/lib/formatters.utils.ts",
@@ -5293,24 +5367,8 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/pragma/site/src/routes/setlists/setlist-index.core.ts",
-      "digest": "8ea6a85bffbc",
-      "container": "site",
-      "layer": "route",
-      "context": "setlists",
-      "feature": "setlists",
-      "exports": [
-        "buildSetlistIndexRows"
-      ],
-      "imports": [],
-      "blueprints": [],
-      "followsBlueprints": [
-        "utils-pure-module"
-      ]
-    },
-    {
       "path": "apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx",
-      "digest": "9d73a29d6932",
+      "digest": "e7e357a50046",
       "container": "site",
       "layer": "route",
       "context": "setlists",
@@ -5319,20 +5377,17 @@
         "SetlistEditorPage"
       ],
       "imports": [
-        "apps/pragma/site/src/components/atoms/Button.tsx",
-        "apps/pragma/site/src/components/atoms/Icon.tsx",
-        "apps/pragma/site/src/components/atoms/Input.tsx",
         "apps/pragma/site/src/components/molecules/BackLink.tsx",
-        "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
         "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx",
         "apps/pragma/site/src/components/molecules/PageHeader.tsx",
         "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
+        "apps/pragma/site/src/components/organisms/SetlistHeaderActions.tsx",
         "apps/pragma/site/src/lib/formatters.utils.ts",
         "apps/pragma/site/src/lib/navigation.hook.ts",
         "apps/pragma/site/src/lib/queries/sessions.queries.ts",
         "apps/pragma/site/src/lib/queries/setlists.queries.ts",
-        "apps/pragma/site/src/lib/setlist-name.utils.ts",
-        "apps/pragma/site/src/routes/setlists/setlist-index.core.ts"
+        "apps/pragma/site/src/lib/setlist-index.core.ts",
+        "apps/pragma/site/src/lib/setlist-name.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -5341,7 +5396,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/setlists/SetlistsPage.tsx",
-      "digest": "328beaa66b21",
+      "digest": "a1e2fcf2895a",
       "container": "site",
       "layer": "route",
       "context": "setlists",
@@ -5354,14 +5409,13 @@
         "apps/pragma/site/src/components/atoms/Icon.tsx",
         "apps/pragma/site/src/components/molecules/BottomActionBar.tsx",
         "apps/pragma/site/src/components/molecules/PageHeader.tsx",
-        "apps/pragma/site/src/components/molecules/SetlistSummaryRow.tsx",
         "apps/pragma/site/src/components/organisms/CreateSetlistDialog.tsx",
+        "apps/pragma/site/src/components/organisms/SetlistCatalogList.tsx",
         "apps/pragma/site/src/lib/api.client.ts",
-        "apps/pragma/site/src/lib/formatters.utils.ts",
         "apps/pragma/site/src/lib/navigation.hook.ts",
         "apps/pragma/site/src/lib/queries/sessions.queries.ts",
         "apps/pragma/site/src/lib/queries/setlists.queries.ts",
-        "apps/pragma/site/src/routes/setlists/setlist-index.core.ts"
+        "apps/pragma/site/src/lib/setlist-index.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -5921,7 +5975,7 @@
       "context": "setlists",
       "steps": [
         "schema:setlistIdParamSchema",
-        "service:getSetlist",
+        "service:findSetlist",
         "repository:findSetlistById",
         "database:getDatabase",
         "schema:setlistTable"
@@ -6319,7 +6373,8 @@
         "schema:setlistTable",
         "service:getSessionById",
         "repository:findSessionById",
-        "schema:sessionTable"
+        "schema:sessionTable",
+        "repository:insertSessionLink"
       ],
       "tables": [
         "sessionTable",
@@ -6836,7 +6891,7 @@
     {
       "id": "organism-presentational",
       "file": "apps/pragma/site/src/components/organisms/SongCard.tsx",
-      "followerCount": 15
+      "followerCount": 16
     },
     {
       "id": "organism-query-owning",

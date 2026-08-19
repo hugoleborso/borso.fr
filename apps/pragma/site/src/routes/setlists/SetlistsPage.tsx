@@ -14,20 +14,19 @@ import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { BottomActionBar } from '../../components/molecules/BottomActionBar';
 import { PageHeader } from '../../components/molecules/PageHeader';
-import { SetlistSummaryRow } from '../../components/molecules/SetlistSummaryRow';
 import { CreateSetlistDialog } from '../../components/organisms/CreateSetlistDialog';
+import { SetlistCatalogList } from '../../components/organisms/SetlistCatalogList';
 import { ApiError } from '../../lib/api.client';
-import { formatSessionDate } from '../../lib/formatters.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { useSessionsList } from '../../lib/queries/sessions.queries';
 import { useSetlistsList } from '../../lib/queries/setlists.queries';
-import { buildSetlistIndexRows, type IndexSession } from './setlist-index.core';
+import { buildSetlistIndexRows, type IndexSession } from '../../lib/setlist-index.core';
 
 const NO_ROWS: readonly never[] = [];
 
 // @FollowsBlueprint route-list-page
 export function SetlistsPage(): JSX.Element {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigateTo = useNavigateTo();
   const setlistsQuery = useSetlistsList();
   const sessionsQuery = useSessionsList();
@@ -50,13 +49,6 @@ export function SetlistsPage(): JSX.Element {
         ? sessionsQuery.error.message
         : null;
 
-  const describeSessions = (sessions: readonly IndexSession[]): string | null => {
-    if (sessions.length === 0) return t('setlist.noSession');
-    return sessions
-      .map((session) => session.venue ?? formatSessionDate(session.date, i18n.language))
-      .join(' · ');
-  };
-
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
       <PageHeader
@@ -77,23 +69,11 @@ export function SetlistsPage(): JSX.Element {
           {error}
         </p>
       )}
-      {isLoading ? <p className="text-ink-400 italic text-sm">{t('common.loading')}</p> : null}
-      {!isLoading && rows.length === 0 ? (
-        <p className="text-ink-400 italic text-sm">{t('setlist.indexEmpty')}</p>
-      ) : null}
-
-      <ul className="flex flex-col gap-2">
-        {rows.map((row) => (
-          <li key={row.id}>
-            <SetlistSummaryRow
-              id={row.id}
-              name={row.name}
-              songCount={row.songCount}
-              sessionsLabel={describeSessions(row.sessions)}
-            />
-          </li>
-        ))}
-      </ul>
+      {isLoading ? (
+        <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
+      ) : (
+        <SetlistCatalogList rows={rows} />
+      )}
 
       {isCreating ? (
         <CreateSetlistDialog
