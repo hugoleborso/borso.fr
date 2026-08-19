@@ -12,6 +12,15 @@
 # wrong. This check makes the absence itself the thing that fails.
 #
 # See docs/dantotsus/the-gate-that-was-never-pointed-at-the-code.md.
+#
+# The existence tests below use `-print -quit` rather than a pipe into the head
+# of the output. Under `set -o pipefail` that pipe fails the whole script
+# whenever `find` still has output to write when the reader closes it: `find`
+# takes SIGPIPE, prints "Broken pipe", and the pipeline's status becomes 141.
+# Whether that happens depends on how much of the tree is left to walk, so the
+# check passed on the pull request that added it and failed on the next one.
+# `-quit` also stops the walk at the first match rather than testing every
+# node_modules entry to the end.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

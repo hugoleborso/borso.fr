@@ -61,6 +61,8 @@ Pulled from the spec, in this order:
 4. **Use cases / edge cases — error cases** — invalid URL params, third-party failures, keyboard accidents.
 5. **Q.O.D. user-visible decisions** — anything in the decisions table that the user can see (palette options, default mode, URL behaviour, mobile affordances, accessibility decisions). Skip Q.O.D. rows that are purely engineering — those go to `/technical-validation`.
 
+6. **Reachability of every write the surface implies.** For each screen that lists a kind of record, the validator checks that the screen itself offers a path to create one, and follows it. A list is the page a person opens to work on that record; when creation lives only somewhere else, the feature is unreachable to everyone who does not already know where. This row is checked even when the spec does not name it, because a spec written from the author's mental model rarely names the door they already know about — PR #60 shipped a setlists index that listed only the concerts that already had a setlist, and a band whose every concert had one could not create another anywhere in the application. FAIL names the surface and the record it cannot create.
+
 The Production strategy section is **not** validated here — analytics + alerting are observability concerns, not visible-behaviour concerns.
 
 ## What does not get validated
