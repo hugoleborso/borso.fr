@@ -17,6 +17,7 @@ import { Login } from './routes/Login';
 import { MembersPage } from './routes/members/MembersPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
 import { SessionsPage } from './routes/sessions/SessionsPage';
+import { SessionSetlistRedirect } from './routes/setlists/SessionSetlistRedirect';
 import { SetlistEditorPage } from './routes/setlists/SetlistEditorPage';
 import { SetlistsPage } from './routes/setlists/SetlistsPage';
 
@@ -40,8 +41,9 @@ export function App(): JSX.Element {
             <Route path="/catalog/:songId" element={<SongDetailPage />} />
             <Route path="/sessions" element={<SessionsPage />} />
             <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
-            <Route path="/sessions/:sessionId/setlist" element={<SetlistEditorPage />} />
+            <Route path="/sessions/:sessionId/setlist" element={<SessionSetlistRedirect />} />
             <Route path="/setlists" element={<SetlistsPage />} />
+            <Route path="/setlists/:setlistId" element={<SetlistEditorPage />} />
             <Route path="/bars" element={<BarsPage />} />
             <Route path="/members" element={<MembersPage />} />
             <Route path="/instruments" element={<InstrumentsPage />} />

@@ -4,6 +4,7 @@
  * the transform lifts all three into lists on read.
  */
 
+import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import {
   lineupOverrideSchema,
@@ -13,7 +14,11 @@ import {
   setlistEntryIdParamSchema,
   setlistEntryUpdateSchema,
   setlistIdParamSchema,
+  setlistLinkSchema,
+  setlistRenameSchema,
   setlistReorderSchema,
+  setlistSessionParamSchema,
+  sessionSetlistTable,
 } from './setlists.schema';
 
 const ENERGY_FLOOR = 1;
@@ -97,14 +102,51 @@ describe('setlistReorderSchema', () => {
   });
 });
 
+describe('setlistCreateSchema', () => {
+  it('takes a setlist belonging to no session yet, with no name', () => {
+    expect(setlistCreateSchema.parse({})).toEqual({ name: '', sessionId: null });
+  });
+
+  it('attaches the setlist to the session the caller named', () => {
+    const sessionId = crypto.randomUUID();
+    expect(setlistCreateSchema.parse({ name: '  Rappel  ', sessionId })).toEqual({
+      name: 'Rappel',
+      sessionId,
+    });
+  });
+
+  it('refuses a session that is not a uuid', () => {
+    expect(setlistCreateSchema.safeParse({ sessionId: 'session-1' }).success).toBe(false);
+  });
+});
+
+describe('setlistRenameSchema', () => {
+  it('trims the new name', () => {
+    expect(setlistRenameSchema.parse({ name: ' Filage ' })).toEqual({ name: 'Filage' });
+  });
+
+  it('refuses a missing name, which would erase the current one by accident', () => {
+    expect(setlistRenameSchema.safeParse({}).success).toBe(false);
+  });
+});
+
 describe('the identifier schemas', () => {
   it('each accept a uuid and refuse anything else', () => {
     const id = crypto.randomUUID();
-    expect(setlistCreateSchema.safeParse({ sessionId: id }).success).toBe(true);
     expect(setlistIdParamSchema.safeParse({ id }).success).toBe(true);
     expect(setlistEntryIdParamSchema.safeParse({ id, entryId: id }).success).toBe(true);
     expect(setlistBySessionParamSchema.safeParse({ sessionId: id }).success).toBe(true);
+    expect(setlistSessionParamSchema.safeParse({ id, sessionId: id }).success).toBe(true);
+    expect(setlistLinkSchema.safeParse({ sessionId: id }).success).toBe(true);
     expect(setlistIdParamSchema.safeParse({ id: 'setlist-1' }).success).toBe(false);
     expect(setlistEntryIdParamSchema.safeParse({ id }).success).toBe(false);
+    expect(setlistLinkSchema.safeParse({ sessionId: 'session-1' }).success).toBe(false);
+  });
+});
+
+describe('the session-setlist link table', () => {
+  it('identifies a link by the session and the setlist, so one pair is stored once', () => {
+    const [primary] = getTableConfig(sessionSetlistTable).primaryKeys;
+    expect(primary?.columns.map((column) => column.name)).toEqual(['session_id', 'setlist_id']);
   });
 });

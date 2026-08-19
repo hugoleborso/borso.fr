@@ -7,12 +7,18 @@
  * JSON.stringify on the way in.
  */
 
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, inArray, max } from 'drizzle-orm';
 import type { z } from 'zod';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
+  selectNextLinkPosition,
+  type SetlistSongCount,
+  tallySongsPerSetlist,
+} from './setlists.core';
+import {
   lineupOverrideSchema,
+  sessionSetlistTable,
   type SetlistEntryPersistedUpdate,
   setlistEntryTable,
   setlistTable,
@@ -22,7 +28,7 @@ export type LineupOverride = z.infer<typeof lineupOverrideSchema>;
 
 export interface SetlistRow {
   id: string;
-  sessionId: string;
+  name: string;
 }
 
 export interface SetlistEntryRow {
@@ -59,6 +65,12 @@ interface SetlistEntryRawRow {
   capo: number | null;
   notes: string;
 }
+
+// @FollowsBlueprint repository-projection
+const SETLIST_PROJECTION = {
+  id: setlistTable.id,
+  name: setlistTable.name,
+} as const;
 
 // @FollowsBlueprint repository-projection
 const ENTRY_PROJECTION = {
@@ -118,24 +130,130 @@ function encodeEntryUpdate(updates: SetlistEntryPersistedUpdate): EntryUpdateEnc
   };
 }
 
-export async function findSetlistBySession(sessionId: string): Promise<SetlistRow | null> {
+export async function listSetlists(): Promise<SetlistRow[]> {
+  const database = getDatabase();
+  return await database.select(SETLIST_PROJECTION).from(setlistTable).orderBy(asc(setlistTable.id));
+}
+
+export async function findSetlistById(setlistId: string): Promise<SetlistRow | null> {
   const database = getDatabase();
   const rows = await database
-    .select({ id: setlistTable.id, sessionId: setlistTable.sessionId })
+    .select(SETLIST_PROJECTION)
     .from(setlistTable)
-    .where(eq(setlistTable.sessionId, sessionId))
+    .where(eq(setlistTable.id, setlistId))
     .limit(1);
   return rows[0] ?? null;
 }
 
-export async function insertSetlist(sessionId: string): Promise<SetlistRow> {
+export async function listSetlistsOfSession(sessionId: string): Promise<SetlistRow[]> {
   const database = getDatabase();
-  const [row] = await database
-    .insert(setlistTable)
-    .values({ sessionId })
-    .returning({ id: setlistTable.id, sessionId: setlistTable.sessionId });
+  return await database
+    .select(SETLIST_PROJECTION)
+    .from(sessionSetlistTable)
+    .innerJoin(setlistTable, eq(setlistTable.id, sessionSetlistTable.setlistId))
+    .where(eq(sessionSetlistTable.sessionId, sessionId))
+    .orderBy(asc(sessionSetlistTable.position));
+}
+
+export async function insertSetlist(name: string): Promise<SetlistRow> {
+  const database = getDatabase();
+  const [row] = await database.insert(setlistTable).values({ name }).returning(SETLIST_PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
   return row;
+}
+
+export async function updateSetlistName(
+  setlistId: string,
+  name: string,
+): Promise<SetlistRow | null> {
+  const database = getDatabase();
+  const [row] = await database
+    .update(setlistTable)
+    .set({ name })
+    .where(eq(setlistTable.id, setlistId))
+    .returning(SETLIST_PROJECTION);
+  return row ?? null;
+}
+
+export async function deleteSetlistWithEntries(setlistId: string): Promise<DeletionOutcome> {
+  const database = getDatabase();
+  await database.delete(setlistEntryTable).where(eq(setlistEntryTable.setlistId, setlistId));
+  await database.delete(sessionSetlistTable).where(eq(sessionSetlistTable.setlistId, setlistId));
+  const deleted = await database
+    .delete(setlistTable)
+    .where(eq(setlistTable.id, setlistId))
+    .returning({ id: setlistTable.id });
+  return selectDeletionOutcome(deleted.length);
+}
+
+export interface SetlistSessionLink {
+  setlistId: string;
+  sessionId: string;
+}
+
+export async function listAllSessionLinks(): Promise<SetlistSessionLink[]> {
+  const database = getDatabase();
+  return await database
+    .select({
+      setlistId: sessionSetlistTable.setlistId,
+      sessionId: sessionSetlistTable.sessionId,
+    })
+    .from(sessionSetlistTable);
+}
+
+/**
+ * The position a setlist joining this session lands on: one past the
+ * highest already taken, so the order the band wrote is preserved and
+ * two concurrent links never silently swap.
+ */
+export async function findNextLinkPosition(sessionId: string): Promise<number> {
+  const database = getDatabase();
+  const [row] = await database
+    .select({ highest: max(sessionSetlistTable.position) })
+    .from(sessionSetlistTable)
+    .where(eq(sessionSetlistTable.sessionId, sessionId));
+  return selectNextLinkPosition(row?.highest ?? null);
+}
+
+export async function insertSessionLink(
+  sessionId: string,
+  setlistId: string,
+  position: number,
+): Promise<void> {
+  const database = getDatabase();
+  await database
+    .insert(sessionSetlistTable)
+    .values({ sessionId, setlistId, position })
+    .onConflictDoNothing();
+}
+
+export async function deleteSessionLink(
+  sessionId: string,
+  setlistId: string,
+): Promise<DeletionOutcome> {
+  const database = getDatabase();
+  const deleted = await database
+    .delete(sessionSetlistTable)
+    .where(
+      and(
+        eq(sessionSetlistTable.sessionId, sessionId),
+        eq(sessionSetlistTable.setlistId, setlistId),
+      ),
+    )
+    .returning({ setlistId: sessionSetlistTable.setlistId });
+  return selectDeletionOutcome(deleted.length);
+}
+
+export async function countEntriesBySetlist(
+  setlistIds: readonly string[],
+): Promise<SetlistSongCount[]> {
+  if (setlistIds.length === 0) return [];
+  const database = getDatabase();
+  const rows = await database
+    .select({ setlistId: setlistEntryTable.setlistId })
+    .from(setlistEntryTable)
+    .where(inArray(setlistEntryTable.setlistId, [...setlistIds]));
+  return tallySongsPerSetlist(setlistIds, rows);
 }
 
 export async function listEntries(setlistId: string): Promise<SetlistEntryRow[]> {

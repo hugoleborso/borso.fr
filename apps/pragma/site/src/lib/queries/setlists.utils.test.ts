@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
   appendOptimisticEntry,
+  appendSetlistToCache,
   applyEntryPatch,
+  applySessionLinkInCache,
   type EntriesCache,
   type MinimalSetlistEntry,
+  type MinimalSetlistSummary,
   removeEntryById,
+  removeSetlistFromCache,
+  renameSetlistInCache,
   reorderEntriesByIds,
+  selectSetlistsNotOnSession,
+  type SetlistsCache,
   toEntryPatch,
 } from './setlists.utils';
 
@@ -155,5 +162,71 @@ describe('toEntryPatch', () => {
 
   it('keeps a cleared override as cleared', () => {
     expect(toEntryPatch({ lineupOverride: null })).toEqual({ lineupOverride: null });
+  });
+});
+
+describe('setlist list cache transforms', () => {
+  const first: MinimalSetlistSummary = {
+    id: 'a',
+    name: 'Set 1',
+    songCount: 2,
+    sessionIds: ['concert-1'],
+  };
+  const second: MinimalSetlistSummary = { id: 'b', name: 'Set 2', songCount: 0, sessionIds: [] };
+  const cache: SetlistsCache = { setlists: [first] };
+
+  it('appends a created setlist', () => {
+    expect(appendSetlistToCache(cache, second).setlists).toEqual([first, second]);
+  });
+
+  it('appends nothing when the setlist is already listed', () => {
+    expect(appendSetlistToCache(cache, first)).toBe(cache);
+  });
+
+  it('removes a deleted setlist', () => {
+    expect(removeSetlistFromCache(cache, 'a').setlists).toEqual([]);
+  });
+
+  it('leaves the list alone when the deleted setlist is not in it', () => {
+    expect(removeSetlistFromCache(cache, 'z').setlists).toEqual([first]);
+  });
+
+  it('renames one setlist and only that one', () => {
+    const renamed = renameSetlistInCache({ setlists: [first, second] }, 'a', 'Rappel');
+    expect(renamed.setlists.map((setlist) => setlist.name)).toEqual(['Rappel', 'Set 2']);
+  });
+
+  it('records a session that now carries the setlist', () => {
+    const linked = applySessionLinkInCache(cache, 'a', 'practice-1', true);
+    expect(linked.setlists[0]?.sessionIds).toEqual(['concert-1', 'practice-1']);
+  });
+
+  it('records the same session once, however many times it is linked', () => {
+    const linked = applySessionLinkInCache(cache, 'a', 'concert-1', true);
+    expect(linked.setlists[0]?.sessionIds).toEqual(['concert-1']);
+  });
+
+  it('records a session that no longer carries the setlist', () => {
+    const unlinked = applySessionLinkInCache(cache, 'a', 'concert-1', false);
+    expect(unlinked.setlists[0]?.sessionIds).toEqual([]);
+  });
+
+  it('leaves the other setlists untouched when a link changes', () => {
+    const linked = applySessionLinkInCache({ setlists: [first, second] }, 'b', 'concert-1', true);
+    expect(linked.setlists[0]).toBe(first);
+  });
+});
+
+describe('selectSetlistsNotOnSession', () => {
+  const attached: MinimalSetlistSummary = {
+    id: 'a',
+    name: '',
+    songCount: 0,
+    sessionIds: ['concert-1'],
+  };
+  const loose: MinimalSetlistSummary = { id: 'b', name: '', songCount: 0, sessionIds: [] };
+
+  it('offers only the setlists the session does not carry', () => {
+    expect(selectSetlistsNotOnSession([attached, loose], 'concert-1')).toEqual([loose]);
   });
 });

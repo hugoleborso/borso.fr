@@ -112,3 +112,83 @@ export function toEntryPatch(input: EntryPatchInput): Partial<MinimalSetlistEntr
     lineupOverride: lineupOverride === null ? null : normalizeLineup(lineupOverride),
   };
 }
+
+export interface MinimalSetlistSummary {
+  readonly id: string;
+  readonly name: string;
+  readonly songCount: number;
+  readonly sessionIds: readonly string[];
+}
+
+export interface SetlistsCache<TSetlist extends MinimalSetlistSummary = MinimalSetlistSummary> {
+  readonly setlists: readonly TSetlist[];
+}
+
+/**
+ * The lists a write reconciles from its own response rather than from a
+ * refetch: Aurora DSQL makes a row visible on the connection that wrote
+ * it before the others, so a `GET` fired straight after a `POST` can be
+ * served by another Lambda and answer without it. See
+ * docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md.
+ */
+export function appendSetlistToCache<TSetlist extends MinimalSetlistSummary>(
+  cache: SetlistsCache<TSetlist>,
+  setlist: TSetlist,
+): SetlistsCache<TSetlist> {
+  if (cache.setlists.some((existing) => existing.id === setlist.id)) return cache;
+  return { setlists: [...cache.setlists, setlist] };
+}
+
+export function removeSetlistFromCache<TSetlist extends MinimalSetlistSummary>(
+  cache: SetlistsCache<TSetlist>,
+  setlistId: string,
+): SetlistsCache<TSetlist> {
+  return { setlists: cache.setlists.filter((setlist) => setlist.id !== setlistId) };
+}
+
+export function renameSetlistInCache<TSetlist extends MinimalSetlistSummary>(
+  cache: SetlistsCache<TSetlist>,
+  setlistId: string,
+  name: string,
+): SetlistsCache<TSetlist> {
+  return {
+    setlists: cache.setlists.map((setlist) =>
+      setlist.id === setlistId ? { ...setlist, name } : setlist,
+    ),
+  };
+}
+
+/**
+ * Records that a session now carries a setlist, or no longer does, in
+ * the summary the index reads. The index shows every setlist with the
+ * sessions playing it, so a link made from a session's page has to
+ * reach that list too.
+ */
+export function applySessionLinkInCache<TSetlist extends MinimalSetlistSummary>(
+  cache: SetlistsCache<TSetlist>,
+  setlistId: string,
+  sessionId: string,
+  isLinked: boolean,
+): SetlistsCache<TSetlist> {
+  return {
+    setlists: cache.setlists.map((setlist) => {
+      if (setlist.id !== setlistId) return setlist;
+      const withoutSession = setlist.sessionIds.filter((id) => id !== sessionId);
+      return {
+        ...setlist,
+        sessionIds: isLinked ? [...withoutSession, sessionId] : withoutSession,
+      };
+    }),
+  };
+}
+
+/**
+ * The setlists a session does not carry yet, which are the ones its
+ * "attach an existing setlist" picker can offer.
+ */
+export function selectSetlistsNotOnSession<TSetlist extends MinimalSetlistSummary>(
+  setlists: readonly TSetlist[],
+  sessionId: string,
+): TSetlist[] {
+  return setlists.filter((setlist) => !setlist.sessionIds.includes(sessionId));
+}

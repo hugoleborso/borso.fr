@@ -1,52 +1,98 @@
 import { describe, expect, it } from 'vitest';
-import {
-  buildSetlistIndexRows,
-  type SetlistPayload,
-  selectConcertsNewestFirst,
-} from './setlist-index.core';
+import { buildSetlistIndexRows, type IndexSession, type IndexSetlist } from './setlist-index.core';
 
-const PRACTICE = { id: 'practice-1', kind: 'practice', date: '2026-09-01T20:00:00.000Z' };
-const EARLIER_CONCERT = { id: 'concert-1', kind: 'concert', date: '2026-08-01T20:00:00.000Z' };
-const LATER_CONCERT = { id: 'concert-2', kind: 'concert', date: '2026-10-01T20:00:00.000Z' };
+const EARLIER_CONCERT: IndexSession = {
+  id: 'concert-1',
+  kind: 'concert',
+  date: '2026-08-01T20:00:00.000Z',
+  venue: 'Le Petit Bain',
+};
+const LATER_PRACTICE: IndexSession = {
+  id: 'practice-1',
+  kind: 'practice',
+  date: '2026-10-01T20:00:00.000Z',
+  venue: null,
+};
 
-describe('selectConcertsNewestFirst', () => {
-  it('keeps the concerts only', () => {
-    expect(selectConcertsNewestFirst([PRACTICE, EARLIER_CONCERT])).toEqual([EARLIER_CONCERT]);
-  });
-
-  it('puts the latest concert first', () => {
-    expect(selectConcertsNewestFirst([EARLIER_CONCERT, LATER_CONCERT])).toEqual([
-      LATER_CONCERT,
-      EARLIER_CONCERT,
-    ]);
-  });
-
-  it('leaves the given list untouched', () => {
-    const sessions = [EARLIER_CONCERT, LATER_CONCERT];
-    selectConcertsNewestFirst(sessions);
-    expect(sessions).toEqual([EARLIER_CONCERT, LATER_CONCERT]);
-  });
-});
+function setlist(overrides: Partial<IndexSetlist> & { id: string }): IndexSetlist {
+  return { name: '', songCount: 0, sessionIds: [], ...overrides };
+}
 
 describe('buildSetlistIndexRows', () => {
-  const existingSetlist: SetlistPayload = { setlist: { id: 'setlist-1' } };
-
-  it('pairs each concert with the setlist read at its own position', () => {
-    expect(
-      buildSetlistIndexRows([LATER_CONCERT, EARLIER_CONCERT], [null, existingSetlist]),
-    ).toEqual([
-      { session: LATER_CONCERT, setlistId: null },
-      { session: EARLIER_CONCERT, setlistId: 'setlist-1' },
+  it('resolves every session carrying the setlist', () => {
+    const rows = buildSetlistIndexRows(
+      [setlist({ id: 'a', name: 'Set 1', songCount: 4, sessionIds: ['concert-1', 'practice-1'] })],
+      [EARLIER_CONCERT, LATER_PRACTICE],
+    );
+    expect(rows).toEqual([
+      { id: 'a', name: 'Set 1', songCount: 4, sessions: [LATER_PRACTICE, EARLIER_CONCERT] },
     ]);
   });
 
-  it('reads a concert whose setlist has not been answered yet as carrying none', () => {
-    expect(buildSetlistIndexRows([LATER_CONCERT], [])).toEqual([
-      { session: LATER_CONCERT, setlistId: null },
-    ]);
+  it('drops a session identifier no loaded session answers', () => {
+    const rows = buildSetlistIndexRows(
+      [setlist({ id: 'a', sessionIds: ['deleted-session'] })],
+      [EARLIER_CONCERT],
+    );
+    expect(rows[0]?.sessions).toEqual([]);
   });
 
-  it('holds no row when there is no concert', () => {
-    expect(buildSetlistIndexRows([], [existingSetlist])).toEqual([]);
+  it('puts the setlists no session carries first', () => {
+    const rows = buildSetlistIndexRows(
+      [
+        setlist({ id: 'attached', name: 'Set 1', sessionIds: ['concert-1'] }),
+        setlist({ id: 'loose', name: 'Set 2' }),
+      ],
+      [EARLIER_CONCERT],
+    );
+    expect(rows.map((row) => row.id)).toEqual(['loose', 'attached']);
+  });
+
+  it('orders the attached ones by their latest session, most recent first', () => {
+    const rows = buildSetlistIndexRows(
+      [
+        setlist({ id: 'older', name: 'Set 1', sessionIds: ['concert-1'] }),
+        setlist({ id: 'newer', name: 'Set 2', sessionIds: ['practice-1'] }),
+      ],
+      [EARLIER_CONCERT, LATER_PRACTICE],
+    );
+    expect(rows.map((row) => row.id)).toEqual(['newer', 'older']);
+  });
+
+  it('puts them first whichever order the rows came back in', () => {
+    const rows = buildSetlistIndexRows(
+      [
+        setlist({ id: 'loose', name: 'Set 2' }),
+        setlist({ id: 'attached', name: 'Set 1', sessionIds: ['concert-1'] }),
+      ],
+      [EARLIER_CONCERT],
+    );
+    expect(rows.map((row) => row.id)).toEqual(['loose', 'attached']);
+  });
+
+  it('ranks a setlist by its latest session, not by the first one it was attached to', () => {
+    const rows = buildSetlistIndexRows(
+      [
+        setlist({ id: 'both', name: 'Set 1', sessionIds: ['concert-1', 'practice-1'] }),
+        setlist({ id: 'older', name: 'Set 2', sessionIds: ['concert-1'] }),
+      ],
+      [EARLIER_CONCERT, LATER_PRACTICE],
+    );
+    expect(rows.map((row) => row.id)).toEqual(['both', 'older']);
+  });
+
+  it('breaks a tie on the name, so the order never depends on the rows order', () => {
+    const rows = buildSetlistIndexRows(
+      [
+        setlist({ id: 'second', name: 'Rappel', sessionIds: ['concert-1'] }),
+        setlist({ id: 'first', name: 'Filage', sessionIds: ['concert-1'] }),
+      ],
+      [EARLIER_CONCERT],
+    );
+    expect(rows.map((row) => row.id)).toEqual(['first', 'second']);
+  });
+
+  it('holds no row when the band has written no setlist', () => {
+    expect(buildSetlistIndexRows([], [EARLIER_CONCERT])).toEqual([]);
   });
 });

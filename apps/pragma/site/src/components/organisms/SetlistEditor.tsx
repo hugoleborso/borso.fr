@@ -45,7 +45,7 @@ import {
   useReorderSetlist,
   useSetlistEntries,
   useUpdateSetlistEntry,
-} from '../../lib/queries/setlists.queries';
+} from '../../lib/queries/setlist-entries.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { useTransitionCommentsList } from '../../lib/queries/transitions.queries';
 import { Button } from '../atoms/Button';

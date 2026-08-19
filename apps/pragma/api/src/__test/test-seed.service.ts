@@ -20,7 +20,7 @@ import { bootstrapAuth } from '../auth/auth.service';
 import { createInstrument } from '../instruments/instruments.service';
 import { assignInstrumentsToMember, createMember } from '../members/members.service';
 import { createSession } from '../sessions/sessions.service';
-import { appendEntry, createSetlistForSession } from '../setlists/setlists.service';
+import { appendEntry, createSetlist } from '../setlists/setlists.service';
 import { createSong } from '../songs/songs.service';
 import { saveTransitionComment } from '../transitions/transitions.service';
 import {
@@ -37,6 +37,7 @@ const CONCERT_CAPACITY = 120;
 const CONCERT_VENUE = 'Le Petit Bain';
 const CONCERT_GEAR = 'Backline fournie, deux retours';
 const SEED_ADMIN_PASSWORD = 'pragma-preview';
+const SEED_SETLIST_NAME = 'Set principal';
 
 type SongCreateInput = Parameters<typeof createSong>[0];
 
@@ -247,9 +248,9 @@ async function seedConcertSetlist(songIds: readonly string[], now: Date): Promis
     gear: CONCERT_GEAR,
     friendsCountPerMember: {},
   });
-  const created = await createSetlistForSession(concert.id);
-  if (created.kind === 'already-exists')
-    throw new Error('seeded concert already carries a setlist');
+  const created = await createSetlist({ name: SEED_SETLIST_NAME, sessionId: concert.id });
+  if (created.kind === 'session-not-found')
+    throw new Error('seeded concert vanished before its setlist was written');
   for (const songId of songIds) {
     await appendEntry(created.setlist.id, {
       songId,

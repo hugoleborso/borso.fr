@@ -42,8 +42,10 @@ const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = [
   'sessions.kindConcert', // same word, same spelling
   'sessions.noPreparedConcert', // an em dash, not a word
   'sessions.setlist', // "setlist" is the word French musicians use
+  'sessions.setlists', // same word, and French pluralises it the same way
   'sessions.title', // same word, same spelling
   'setlist.capo', // guitar jargon, used as-is in French
+  'setlist.create.defaultName', // "Set 1" is what the band writes on the paper, in both languages
   'setlist.crumb', // the band says "setlist" in both languages
   'setlist.notes', // same word, same spelling
   'setlist.title', // "setlist" is the word French musicians use

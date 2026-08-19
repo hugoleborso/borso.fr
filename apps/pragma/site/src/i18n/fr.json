@@ -176,7 +176,6 @@
     "friendsCountPerMember": "Amis par membre",
     "myFriendsCount": "Mes amis",
     "setlist": "Setlist",
-    "buildSetlist": "Composer la setlist",
     "editConcertDetails": "Modifier les infos concert",
     "saveConcertDetails": "Enregistrer",
     "selectMember": "Membre",
@@ -187,15 +186,16 @@
       "submit": "Créer"
     },
     "delete": {
-      "confirm": "Supprimer cette session ? Sa setlist (si elle existe) part avec.",
+      "confirm": "Supprimer cette session ? Les setlists qu’elle porte sont détachées, pas supprimées.",
       "button": "Supprimer",
       "aria": "Supprimer la session"
-    }
+    },
+    "setlists": "Setlists",
+    "noSetlists": "Aucune setlist sur cette session."
   },
   "setlist": {
     "title": "Setlists",
-    "indexSubtitle": "Tous les concerts, du plus récent au plus ancien. Compose la setlist de ceux qui n’en ont pas.",
-    "indexNoConcert": "Aucun concert enregistré — ajoute-en un depuis",
+    "indexSubtitle": "Toutes les setlists du groupe. Une même setlist peut être jouée dans plusieurs sessions.",
     "addSong": "Ajouter un morceau",
     "removeEntry": "Retirer",
     "moveUp": "Monter",
@@ -209,9 +209,6 @@
     "energyUp": "Un point d'énergie en plus",
     "openTransitionComment": "Voir / commenter la transition",
     "transitionCommentTitle": "Commentaire de transition",
-    "missingSessionId": "Identifiant de session manquant.",
-    "noSetlistYet": "Aucune setlist créée pour cette session.",
-    "createForSession": "Créer une setlist",
     "copyOrder": "Copier l'ordre",
     "orderCopied": "Copié !",
     "emptyList": "Aucun morceau dans ce set pour l’instant.",
@@ -232,7 +229,45 @@
       "reorder": "Le nouvel ordre n’a pas été enregistré. Vérifie la connexion et réessaie.",
       "update": "La modification n’a pas été enregistrée. Vérifie la connexion et réessaie.",
       "create": "La setlist n’a pas été créée. Vérifie la connexion et réessaie.",
-      "copyOrder": "L’ordre de passage n’a pas pu être copié dans le presse-papier."
+      "copyOrder": "L’ordre de passage n’a pas pu être copié dans le presse-papier.",
+      "rename": "Le nouveau nom n’a pas été enregistré. Vérifie la connexion et réessaie.",
+      "delete": "La setlist n’a pas été supprimée. Vérifie la connexion et réessaie.",
+      "attach": "La setlist n’a pas été liée à cette session. Vérifie la connexion et réessaie.",
+      "detach": "La setlist n’a pas été détachée. Vérifie la connexion et réessaie."
+    },
+    "indexEmpty": "Aucune setlist pour l’instant — crée la première.",
+    "untitled": "Setlist sans titre",
+    "songCount_one": "{{count}} morceau",
+    "songCount_other": "{{count}} morceaux",
+    "new": "Nouvelle setlist",
+    "missingId": "Identifiant de setlist manquant.",
+    "notFound": "Cette setlist n’existe plus.",
+    "playedIn": "Jouée dans",
+    "noSession": "Rattachée à aucune session",
+    "create": {
+      "title": "Nouvelle setlist",
+      "nameLabel": "Nom",
+      "namePlaceholder": "Première partie, rappel, filage…",
+      "submit": "Créer",
+      "defaultName": "Set {{index}}"
+    },
+    "attach": {
+      "button": "Lier une setlist existante",
+      "title": "Lier une setlist",
+      "empty": "Toutes les setlists sont déjà liées à cette session."
+    },
+    "detach": {
+      "button": "Détacher",
+      "aria": "Détacher cette setlist de la session"
+    },
+    "rename": {
+      "label": "Renommer",
+      "save": "Enregistrer"
+    },
+    "delete": {
+      "button": "Supprimer",
+      "aria": "Supprimer la setlist",
+      "confirm": "Supprimer « {{name}} » ? Ses morceaux partent avec, dans toutes les sessions qui la jouent."
     }
   },
   "scene": {

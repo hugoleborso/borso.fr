@@ -1,67 +1,60 @@
 /**
- * Setlists index — every concert the band has on the books, whether or not
- * it already carries a setlist. A concert that carries one drills into the
- * session detail, which mounts the editor; a concert that carries none is
- * built from here in one tap.
- *
- * Listing only the concerts that already had a setlist made this page a
- * mirror with no door: the sole way to start a set was to know it is born on
- * a concert's own page, and a band whose every concert already had one could
- * not create a setlist anywhere in the application.
+ * Setlists index — every setlist the band has written, whether or not a
+ * session carries it yet, with the sessions playing each one. New
+ * setlists are born here as well as from a session's own page, because
+ * a set is often written before anyone knows which rehearsal will run
+ * through it.
  * @Feature setlists
  */
 
 import type { JSX } from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
-import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
+import { BottomActionBar } from '../../components/molecules/BottomActionBar';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { SetlistSummaryRow } from '../../components/molecules/SetlistSummaryRow';
+import { CreateSetlistDialog } from '../../components/organisms/CreateSetlistDialog';
 import { ApiError } from '../../lib/api.client';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { useSessionsList } from '../../lib/queries/sessions.queries';
-import { useCreateSetlist, useSetlistsBySessionIds } from '../../lib/queries/setlists.queries';
-import { buildSetlistIndexRows, selectConcertsNewestFirst } from './setlist-index.core';
+import { useSetlistsList } from '../../lib/queries/setlists.queries';
+import { buildSetlistIndexRows, type IndexSession } from './setlist-index.core';
 
 const NO_ROWS: readonly never[] = [];
-const CARD_CLASS = 'flex items-center gap-3 bg-bg-elev border border-line rounded-md px-4 py-3';
 
 // @FollowsBlueprint route-list-page
 export function SetlistsPage(): JSX.Element {
   const { t, i18n } = useTranslation();
   const navigateTo = useNavigateTo();
+  const setlistsQuery = useSetlistsList();
   const sessionsQuery = useSessionsList();
-  const createSetlist = useCreateSetlist();
-
-  const concerts = useMemo(
-    () => selectConcertsNewestFirst(sessionsQuery.data?.sessions ?? NO_ROWS),
-    [sessionsQuery.data],
-  );
-
-  const concertIds = useMemo(() => concerts.map((session) => session.id), [concerts]);
-  const setlistQueries = useSetlistsBySessionIds(concertIds);
+  const [isCreating, setIsCreating] = useState(false);
 
   const rows = useMemo(
     () =>
-      buildSetlistIndexRows(
-        concerts,
-        setlistQueries.map((query) => query.data),
+      buildSetlistIndexRows<IndexSession>(
+        setlistsQuery.data?.setlists ?? NO_ROWS,
+        sessionsQuery.data?.sessions ?? NO_ROWS,
       ),
-    [concerts, setlistQueries],
+    [setlistsQuery.data, sessionsQuery.data],
   );
 
-  const isLoading = sessionsQuery.isLoading || setlistQueries.some((query) => query.isLoading);
+  const isLoading = setlistsQuery.isLoading || sessionsQuery.isLoading;
   const error =
-    sessionsQuery.error instanceof ApiError
-      ? sessionsQuery.error.message
-      : (setlistQueries.find((query) => query.error instanceof ApiError)?.error?.message ?? null);
+    setlistsQuery.error instanceof ApiError
+      ? setlistsQuery.error.message
+      : sessionsQuery.error instanceof ApiError
+        ? sessionsQuery.error.message
+        : null;
 
-  const buildSetlist = (sessionId: string): void => {
-    createSetlist.mutate({ sessionId });
-    navigateTo(`/sessions/${sessionId}/setlist`);
+  const describeSessions = (sessions: readonly IndexSession[]): string | null => {
+    if (sessions.length === 0) return t('setlist.noSession');
+    return sessions
+      .map((session) => session.venue ?? formatSessionDate(session.date, i18n.language))
+      .join(' · ');
   };
 
   return (
@@ -72,6 +65,13 @@ export function SetlistsPage(): JSX.Element {
         subtitle={t('setlist.indexSubtitle')}
       />
 
+      <BottomActionBar>
+        <Button variant="accent" onClick={() => setIsCreating(true)}>
+          <Icon name="plus" size={14} />
+          {t('setlist.new')}
+        </Button>
+      </BottomActionBar>
+
       {error === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">
           {error}
@@ -79,64 +79,30 @@ export function SetlistsPage(): JSX.Element {
       )}
       {isLoading ? <p className="text-ink-400 italic text-sm">{t('common.loading')}</p> : null}
       {!isLoading && rows.length === 0 ? (
-        <p className="text-ink-400 italic text-sm">
-          {t('setlist.indexNoConcert')}{' '}
-          <Link to="/sessions" className="text-accent underline">
-            {t('sessions.title')}
-          </Link>
-        </p>
+        <p className="text-ink-400 italic text-sm">{t('setlist.indexEmpty')}</p>
       ) : null}
 
       <ul className="flex flex-col gap-2">
-        {rows.map(({ session, setlistId }) => {
-          const concertLine = (
-            <>
-              <Icon
-                name="setlist"
-                size={18}
-                className={setlistId === null ? 'text-ink-300' : 'text-ink-500'}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="font-display italic text-xl text-ink-900 leading-tight truncate">
-                  {session.venue ?? t('sessions.kindConcert')}
-                </div>
-                <div className="text-[12px] text-ink-500 mt-0.5">
-                  {formatSessionDate(session.date, i18n.language)}
-                </div>
-              </div>
-            </>
-          );
-          return (
-            <li key={session.id}>
-              {setlistId === null ? (
-                <div className={CARD_CLASS}>
-                  {concertLine}
-                  <Button
-                    variant="accent"
-                    size="sm"
-                    onClick={() => buildSetlist(session.id)}
-                    disabled={createSetlist.isPending}
-                  >
-                    <Icon name="plus" size={14} />
-                    {t('setlist.createForSession')}
-                  </Button>
-                </div>
-              ) : (
-                <Link
-                  to={`/sessions/${session.id}`}
-                  className={composeClassName(
-                    CARD_CLASS,
-                    'hover:border-line-strong transition-colors',
-                  )}
-                >
-                  {concertLine}
-                  <Icon name="chevR" size={14} className="text-ink-400" />
-                </Link>
-              )}
-            </li>
-          );
-        })}
+        {rows.map((row) => (
+          <li key={row.id}>
+            <SetlistSummaryRow
+              id={row.id}
+              name={row.name}
+              songCount={row.songCount}
+              sessionsLabel={describeSessions(row.sessions)}
+            />
+          </li>
+        ))}
       </ul>
+
+      {isCreating ? (
+        <CreateSetlistDialog
+          sessionId={null}
+          suggestedName={t('setlist.create.defaultName', { index: rows.length + 1 })}
+          onClose={() => setIsCreating(false)}
+          onCreated={(setlistId) => navigateTo(`/setlists/${setlistId}`)}
+        />
+      ) : null}
     </section>
   );
 }

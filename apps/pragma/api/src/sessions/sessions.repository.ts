@@ -1,6 +1,8 @@
 /**
- * Repository for the sessions bounded context. Owns the cascade on
- * delete (setlist + setlist_entry rows for the session's setlist).
+ * Repository for the sessions bounded context. Deleting a session
+ * detaches the setlists it carried; the setlists themselves survive,
+ * because one of them may be carried by another session too and every
+ * one of them is reachable from the setlists index on its own.
  *
  * `friends_count_per_member` is stored as TEXT (Aurora DSQL doesn't
  * support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1).
@@ -8,10 +10,10 @@
  * JSON.stringify on the way in.
  */
 
-import { desc, eq, inArray } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
-import { setlistEntryTable, setlistTable } from '../setlists/setlists.schema';
+import { sessionSetlistTable } from '../setlists/setlists.schema';
 import { encodeSessionInsert, type SessionInsertShape } from './sessions.core';
 import { friendsCountSchema, type SessionPersistedUpdate, sessionTable } from './sessions.schema';
 
@@ -121,17 +123,7 @@ export async function updateSession(
 
 export async function deleteSessionWithCascade(id: string): Promise<DeletionOutcome> {
   const database = getDatabase();
-  const setlists = await database
-    .select({ id: setlistTable.id })
-    .from(setlistTable)
-    .where(eq(setlistTable.sessionId, id));
-  if (setlists.length > 0) {
-    const setlistIds = setlists.map((row) => row.id);
-    await database
-      .delete(setlistEntryTable)
-      .where(inArray(setlistEntryTable.setlistId, setlistIds));
-    await database.delete(setlistTable).where(eq(setlistTable.sessionId, id));
-  }
+  await database.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
   const deleted = await database
     .delete(sessionTable)
     .where(eq(sessionTable.id, id))
