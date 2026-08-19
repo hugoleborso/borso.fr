@@ -100,15 +100,15 @@ Manual sweeps are not a valid coverage path — repo rule.
 
 ### 4. Self-screenshot UI work before declaring it green
 
-If the slice you just shipped touches visible UI, **open it in the running dev server and screenshot it yourself before declaring the row done**. Read the screenshot — not the DOM dump, not the `agent-browser snapshot` JSON, the actual PNG. Visible defects (broken `<img>` fallbacks rendering alt text, missing icons, layout breakage at narrow viewports, overflow, contrast disasters) are invisible to type-checks and unit tests; they are obvious in a screenshot a human looks at for two seconds.
+If the slice you just shipped touches visible UI, **open it in the running dev server and screenshot it yourself before declaring the row done**. Read the screenshot — not the DOM dump, not the `scripts/browser.sh snapshot` JSON, the actual PNG. Visible defects (broken `<img>` fallbacks rendering alt text, missing icons, layout breakage at narrow viewports, overflow, contrast disasters) are invisible to type-checks and unit tests; they are obvious in a screenshot a human looks at for two seconds.
 
-The cost is two `agent-browser` commands per slice. The cost of *not* doing this is the implementer reporting the slice green, the visual-validator catching it next, and the user catching it after that.
+The cost is two `scripts/browser.sh` commands per slice. The cost of *not* doing this is the implementer reporting the slice green, the visual-validator catching it next, and the user catching it after that.
 
 Pair this with the broken-image scan from `/visual-validation`'s standard if you want a one-shot self-check:
 
 ```bash
-agent-browser screenshot /tmp/self-check.png
-agent-browser eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => img.src)"
+scripts/browser.sh screenshot /tmp/self-check.png
+scripts/browser.sh eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => img.src)"
 ```
 
 A non-empty `eval` result is a stop-the-line — the row is not done, the broken `<img>` has to be diagnosed and fixed *before* you tag the slice complete.
@@ -125,7 +125,7 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
    c. If the change is a pure helper, the file ends in `.utils.ts`; write the matching `.utils.test.ts` alongside it.
    d. Mark the declaration `// @FollowsBlueprint <id>`.
    e. Update local commits as you go — do not save the diff for one giant commit.
-3a. **Re-walk the plan's §3 Code-quality self-check section bullet by bullet.** Each bullet names a repo-rule risk the plan author flagged for *this* feature ("rename `y` → `candidateYear` in App.tsx's year-switch", "extract `pickDefaultMonth` to `data.utils.ts` so clock-dependent flows are testable", "no `useEffect` to derive `selected`", …). The plan-author wrote them because they predicted this implementation would slip on them. Verify each against the diff. An unchecked bullet is a blocker — fix the diff before running pre-flight gates; `/technical-validation` will FAIL on it otherwise. See [`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md) for the precedent.
+3a. **Re-walk the plan's §3 Code-quality self-check section bullet by bullet.** Each bullet names a repo-rule risk the plan author flagged for *this* feature ("rename `y` → `candidateYear` in App.tsx's year-switch", "extract `pickDefaultMonth` to `data.utils.ts` so clock-dependent flows are testable", "no `useEffect` to derive `selected`", …). The plan-author wrote them because they predicted this implementation would slip on them. Verify each against the diff. An unchecked bullet is a blocker — fix the diff before running pre-flight gates; `/technical-validation` will FAIL on it otherwise. See [`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md) for the precedent.
 4. **Run the plan's pre-flight gates** in order. Fix issues, do not bypass.
 5. **Run `/visual-validation`** for UI work. Read the report; the verdict must be PASS before push.
 6. **Run `/technical-validation`** always. Read the report; the verdict must be PASS before push.

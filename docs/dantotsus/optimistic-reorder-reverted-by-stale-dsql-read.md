@@ -9,6 +9,7 @@ fix-commits: [12bf7d9]
 eradication-level: 2
 time-to-detect: hours
 tags: [react, tanstack-query, dsql, optimistic-updates, pragma]
+blueprints: [query-optimistic-mutation]
 ---
 
 # The reorder that travelled to the server and came back wrong

@@ -34,6 +34,9 @@ export const adminSessionsTable = pgTable('admin_sessions', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 });
 
+const PIN_MIN_LENGTH = 4;
+const PIN_MAX_LENGTH = 32;
+
 export const loginInputSchema = z.object({
-  pin: z.string().min(4).max(32),
+  pin: z.string().min(PIN_MIN_LENGTH).max(PIN_MAX_LENGTH),
 });

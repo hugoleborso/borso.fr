@@ -89,6 +89,7 @@ git.
 | `borso/no-literal-jsx-text`                            | [09](./09-i18n.md)                                         |
 | `borso/no-abbreviated-identifier`                      | [01](./01-naming.md)                                       |
 | `borso/function-names-are-verb-phrases`                | [01](./01-naming.md)                                       |
+| `borso/verb-promises-match-return-type`                | [01](./01-naming.md)                                       |
 | `borso/no-french-identifiers`                          | [01](./01-naming.md)                                       |
 | `borso/no-step-named-value`                            | [01](./01-naming.md)                                       |
 | `borso/no-discarded-await-before-navigation`           | a dantotsu, [06](./06-data-fetching.md)                    |
@@ -177,6 +178,12 @@ The blueprint for the replacement shape is annotated at
 The pre-commit hook runs `eslint --cache` and `prettier --check` on the staged
 files. It is the cheap hook: nothing in it reads the whole repository's tests.
 
+Both eslint invocations, here and in CI, pass `--max-warnings 0`. Several rules
+the standards lean on ship at `warn` from their plugin's recommended preset,
+`react-hooks/exhaustive-deps` and `react-hooks/incompatible-library` among
+them, and eslint exits 0 on a warning. Without the flag those rules print into
+a log nobody reads and stop nothing, which makes them advice again.
+
 It also runs the cheap whole-repository checks, each a git-index read plus a
 grep, and each guarding a class no linter sees because the evidence lives in
 two files at once:
@@ -187,29 +194,32 @@ two files at once:
 | `check-migration-sql-dsql-compat.sh` | a migration uses SQL Aurora DSQL rejects |
 | `check-frontend-env-vars.sh` | a site reads a `VITE_*` variable no workflow sets, so the code behind it never runs |
 | `check-pure-modules-have-callers.sh` | a `*.core.ts` or `*.utils.ts` is reached only from its own test, where coverage and mutation both score it at full marks while it runs nowhere |
-| `check-pwa-assets.sh` | a web manifest names an icon that does not ship |
-| `check-negative-claims-are-dated.sh` | a document says something "does not work" without a date, so a claim about a vendor ages with nothing to date it against |
-| `check-non-module-scripts.sh` | an application's HTML carries a `<script src>` without `type="module"`, which Vite does not bundle |
+| `check-non-module-scripts.sh` | an application's HTML carries a `<script src>` without `type="module"`, which ships un-bundled and 404s |
+| `check-app-registration.sh` | a new application is missing its path filter or its commitlint scope, so it never deploys and nothing says so |
+| `check-pwa-assets.sh` | a web app manifest names an icon that does not ship |
+| `check-negative-claims-are-dated.sh` | a knowledge entry says a tool does not work and carries no date |
 
-The last two carry an allowlist keyed by variable or by path, and every entry
-in one states its reason. That is deliberate: both checks describe situations
-that can be legitimate, and writing the reason down is what separates a
-decision from an oversight.
+`check-frontend-env-vars.sh` and `check-pure-modules-have-callers.sh` each
+carry an allowlist keyed by variable or by path, and every entry in one states
+its reason. That is deliberate: both checks describe situations that can be
+legitimate, and writing the reason down is what separates a decision from an
+oversight.
+
+The hook also greps the workflows for a `pnpm --filter <pkg> deploy` that
+should have been `pnpm --filter <pkg> run deploy`, because seven script names
+are pnpm built-ins and pnpm silently prefers its own.
 
 The pre-push hook runs `knip` for dead code, `actionlint` for the workflows,
-the coverage suite for `infra/cdk` or `infra/shared` when either one changed,
-the tests each changed application's diff reaches, and the mutation tests for
-the gated files that changed.
+the tests each pushed commit affects, and the mutation tests for the pure files
+those commits changed.
 
-The two greps on the workflows — non-module script tags and pnpm reserved
-script names — are in pre-commit, with the other whole-repository checks. This
-paragraph placed all four in the wrong hook until 2026-08-15, which matters
-because "why did that fail" starts with knowing which hook to read.
-
-CI runs the same checks on every workspace the change touched, plus
-`tsc --noEmit`, `pnpm -r build`, and the full test suites with coverage. It does
-**not** synthesize the CDK stacks, and it does not run the mutation gate; the
-unscoped mutation run is `full-suite.yml` on `main`.
+CI mirrors every one of the whole-repository checks above, so skipping a hook
+delays the failure rather than removing it, and adds `tsc --noEmit`, the test
+suites for each changed application, the coverage gate, and `cdk synth` for
+every application. The synth is what covers `cdk/bin/*.ts`: the per-app stack
+tests call `build<App>Stack()` directly, so a break in the entry point that
+reads `STAGE` and names the stacks passes every other gate and surfaces in the
+automatic production deploy after the merge.
 
 ## Suppressing a rule
 
@@ -222,7 +232,54 @@ review.
 
 ## Enforced by
 
-- The pre-commit, commit-msg, and pre-push hooks in `.husky/`.
-- `.github/workflows/ci.yml`.
-- `eslint-comments/require-description`, which rejects a disable comment with
-  no reason.
+- `gate:eslint` runs over the staged files on commit and over the repository in
+  CI, both with `--max-warnings 0`.
+- `gate:prettier` runs over the staged files on commit and over the repository
+  in CI.
+- `gate:typecheck` runs `tsc --noEmit` in every workspace.
+- `gate:eslint-rule-suites` runs the `RuleTester` suite every custom rule ships
+  with, because a rule that misfires costs more than the rule saves.
+- `gate:knip` fails on an unused file, export or dependency.
+- `gate:actionlint` fails on a malformed workflow, which is where a
+  `paths-filter` base misuse and a shell quoting bug both hid.
+- `gate:commitlint` fails a message that is not a conventional commit or names
+  a scope outside the enumeration.
+- `eslint:@eslint-community/eslint-comments/require-description` rejects a
+  disable comment with no reason after the two dashes. The short spelling
+  `eslint-comments/require-description` is not the rule's identifier, and this
+  document cited it for months.
+- `script:scripts/check-coupled-lists.sh` fails when two copies of one list
+  disagree — the architecture generator's trigger paths in the commit hook and
+  in its workflow, and the gated file suffixes in `eslint-rules/impurity.js` and
+  in every `vitest.config.ts`. Neither half is wrong on its own, which is why a
+  reviewer reads past both.
+- `script:scripts/check-no-racy-pipelines.sh` fails a `set -o pipefail` script
+  that pipes a directory walk into `head` or `grep -q`. The consumer closes the
+  pipe first and the producer's write error fails the script, and whether that
+  happens is timing — the instance it was written for passed five consecutive
+  local runs and failed on the first CI run of the same commit.
+- `script:scripts/check-frontend-env-vars.sh` fails a site reading a `VITE_*`
+  variable no workflow sets, which Vite substitutes as `undefined` at build
+  time while nothing else complains.
+- `script:scripts/check-migration-sql-dsql-compat.sh` fails a migration using
+  SQL that Aurora DSQL rejects, which no local Postgres run would catch.
+- `script:scripts/check-non-module-scripts.sh` fails an application's HTML
+  carrying a `<script src>` without `type="module"`, which ships un-bundled and
+  404s.
+- `script:scripts/check-no-null-bytes.sh` fails a tracked text file carrying a
+  NUL byte. A NUL is legal inside a string, renders as nothing in an editor,
+  shows as unchanged whitespace in a diff, and passes ESLint, Prettier and
+  `tsc`; it surfaces much later as an `execFileSync` refusing an argument or a
+  separator that silently stopped matching.
+- `generator:scripts/standards/rule-provenance.ts` records which rules were
+  written because a defect actually happened, by reading the eradication section
+  of every dantotsu, and which were written from principle. It gates nothing:
+  the ratio is an input to the decision about the next rule, and several of the
+  best rules here were written before anything went wrong.
+- `script:scripts/check-app-registration.sh` fails a directory under `apps/`
+  that has no `.github/path-filters.yml` filter or no commitlint scope, and a
+  filter naming an application that is not there. Both failures are silent
+  otherwise: the application simply never gets a preview deploy, and no
+  workflow reports it.
+- `reviewer` checks that the reason on a disable comment is a claim about that
+  line which a reader can check, and not "pre-existing" or "will fix later".

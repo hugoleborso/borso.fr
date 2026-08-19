@@ -30,13 +30,17 @@ Inside `apps/<slug>/`:
 - **`.env.development`** — `localhost` URLs the frontend reads at dev time. Committed. (`.env.production` lives in CI, not the repo.)
 - **`site/`, `src/`, `api/`, `db/`, etc.** — whatever the app needs.
 
-## Three repo-root updates
+## Repo-root updates
 
-When you add a new app, three files at repo root must learn its slug:
+When you add a new app, these files outside it must learn its slug. The first
+two are gated by `scripts/check-app-registration.sh`, so forgetting either
+fails the commit rather than the deploy:
 
 1. **`.github/path-filters.yml`** — add `<slug>: 'apps/<slug>/**'`. Drives which apps the preview/deploy workflows see as changed.
 2. **`commitlint.config.js`** — add `<slug>` to the `scope-enum` array. Lets `git commit -m "feat(<slug>): …"` pass.
-3. **`pnpm-workspace.yaml`** — *no change needed.* Already globs `apps/*`.
+3. **`pnpm-workspace.yaml`** — *no change needed for the workspace glob.* A dependency a second workspace already declares does have to move into the catalog there, and `scripts/dependencies/check-dependency-catalog.ts` fails the commit otherwise. See [`docs/standards/13-dependencies.md`](./standards/13-dependencies.md).
+4. **`knip.json`** — add a `workspaces` entry naming the app's entry points, or `pnpm exec knip` reports its whole tree as unused.
+5. **`apps/<slug>/VOCABULARY.md`** — the application's nouns, if it has a domain of its own. `scripts/check-vocabulary-paths.sh` gates the folder each term names. See [`docs/standards/01-naming.md`](./standards/01-naming.md).
 
 The workflows themselves auto-discover the app list from the workspace via `pnpm ls --filter "./apps/*" --json`, so you don't update the `apps=[…]` literal. (See `flows.md` for what the workflows actually do.)
 

@@ -77,10 +77,15 @@ export default defineConfig({
           name: 'back-e2e',
           environment: 'node',
           include: ['api/src/**/*.test.ts', 'test/**/*.test.ts'],
-          // An adapter takes its way out of the process as an argument, so it
-          // is driven with a stub and belongs with the fast suite, not behind
-          // a database this project boots.
-          exclude: ['api/src/**/*.adapter.test.ts', 'api/src/**/*.schema.test.ts'],
+          exclude: [
+            'api/src/**/*.core.test.ts',
+            'api/src/**/*.utils.test.ts',
+            // An adapter takes its way out of the process as an argument, so it
+            // is driven with a stub and belongs with the fast suite, not behind
+            // a database this project boots.
+            'api/src/**/*.adapter.test.ts',
+            'api/src/**/*.schema.test.ts',
+          ],
           globalSetup: ['./test/setup-postgres.ts'],
           // Single shared Postgres across the back-e2e suites means a parallel
           // truncateAllTables() in one test would wipe another's data — race

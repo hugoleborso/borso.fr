@@ -118,9 +118,11 @@ subscribe arrow to be unstable. See the companion knowledge entry
 
 *Layer 2 — anyone who reaches for `useSyncExternalStore` directly in
 the future gets a lint error if they pass an inline arrow.* The
-Biome Grit plugin [`no-inline-subscribe-in-use-sync-external-store.grit`](../../biome-plugins/no-inline-subscribe-in-use-sync-external-store.grit)
-fires on any literal arrow or function expression in that position.
-Registered in `apps/last-loop-lepin/biome.jsonc`. The current three
+rule fires on any literal arrow or function expression in that position.
+Shipped as the Biome Grit plugin
+`no-inline-subscribe-in-use-sync-external-store.grit`, registered in
+`apps/last-loop-lepin/biome.jsonc`, and now
+[`eslint-rules/no-inline-subscribe-in-use-sync-external-store.js`](../../eslint-rules/no-inline-subscribe-in-use-sync-external-store.js). The current three
 direct call sites (`Countdown.tsx`, `CorrectionBanner.tsx`,
 `App.tsx`) all pass module-scope identifiers and survive the rule.
 

@@ -27,6 +27,20 @@ import { HOSTED_ZONE_NAME } from './certs-stack.js';
 import { createDeployRoles } from './deploy-roles.js';
 
 const PREVIEWS_DOMAIN = `*.preview.${HOSTED_ZONE_NAME}`;
+const PREVIEW_OBJECT_EXPIRATION_DAYS = 60;
+const ERROR_RESPONSE_TTL_MINUTES = 5;
+// Four escalating monthly cost alarms. AWS Budgets only accepts USD, so
+// these are dollar thresholds.
+const MONTHLY_BUDGET_FIRST_ALERT_USD = 2;
+const MONTHLY_BUDGET_SECOND_ALERT_USD = 5;
+const MONTHLY_BUDGET_THIRD_ALERT_USD = 20;
+const MONTHLY_BUDGET_FINAL_ALERT_USD = 50;
+const MONTHLY_BUDGET_AMOUNTS_USD = [
+  MONTHLY_BUDGET_FIRST_ALERT_USD,
+  MONTHLY_BUDGET_SECOND_ALERT_USD,
+  MONTHLY_BUDGET_THIRD_ALERT_USD,
+  MONTHLY_BUDGET_FINAL_ALERT_USD,
+];
 
 interface SharedStackProps extends StackProps {
   readonly borsoFrCert: ICertificate;
@@ -79,7 +93,13 @@ export class SharedStack extends Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
       removalPolicy: RemovalPolicy.RETAIN,
-      lifecycleRules: [{ id: 'expire-previews', prefix: '', expiration: Duration.days(60) }],
+      lifecycleRules: [
+        {
+          id: 'expire-previews',
+          prefix: '',
+          expiration: Duration.days(PREVIEW_OBJECT_EXPIRATION_DAYS),
+        },
+      ],
     });
 
     const routingFunction = new CfFunction(this, 'HostRouter', {
@@ -107,7 +127,11 @@ export class SharedStack extends Stack {
         // across every preview subdomain. Hugo uploads the file once
         // post-deploy; if it isn't there, CloudFront falls back to its
         // default error page after a short loop.
-        { httpStatus: 404, responsePagePath: '/404.jpeg', ttl: Duration.minutes(5) },
+        {
+          httpStatus: 404,
+          responsePagePath: '/404.jpeg',
+          ttl: Duration.minutes(ERROR_RESPONSE_TTL_MINUTES),
+        },
       ],
     });
 
@@ -161,7 +185,7 @@ export class SharedStack extends Stack {
     // AWS Budgets only accepts USD as the currency unit. The amounts below
     // are dollar thresholds — close enough to euro at the tiny absolute scale
     // we operate at, and AWS rejects any other Unit value at deploy time.
-    for (const amount of [2, 5, 20, 50]) {
+    for (const amount of MONTHLY_BUDGET_AMOUNTS_USD) {
       new CfnBudget(this, `Budget${amount}`, {
         budget: {
           budgetName: `borso-monthly-${amount}usd`,

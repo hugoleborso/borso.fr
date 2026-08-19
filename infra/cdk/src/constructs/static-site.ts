@@ -36,6 +36,8 @@ import {
 import { SHARED_SSM_PARAMETERS } from '../internal/shared-ssm.js';
 import { applyStandardTags } from '../internal/tags.js';
 
+const ERROR_RESPONSE_TTL_MINUTES = 5;
+
 export interface StaticSiteProps {
   /** App slug, kebab-case (e.g. "borso-fr"). */
   readonly app: string;
@@ -176,7 +178,7 @@ export class StaticSite extends Construct {
               httpStatus: 404,
               responsePagePath: '/index.html',
               responseHttpStatus: 200,
-              ttl: Duration.minutes(5),
+              ttl: Duration.minutes(ERROR_RESPONSE_TTL_MINUTES),
             },
           ]
         : [
@@ -184,7 +186,11 @@ export class StaticSite extends Construct {
             // HTML). CloudFront returns the file as-is; S3 supplies the
             // image/jpeg Content-Type. The browser renders it as a
             // full-page image.
-            { httpStatus: 404, responsePagePath: '/404.jpeg', ttl: Duration.minutes(5) },
+            {
+              httpStatus: 404,
+              responsePagePath: '/404.jpeg',
+              ttl: Duration.minutes(ERROR_RESPONSE_TTL_MINUTES),
+            },
           ],
     });
 

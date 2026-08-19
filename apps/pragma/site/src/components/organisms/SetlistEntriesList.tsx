@@ -44,6 +44,7 @@ import {
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
 
+const SONG_ID_FALLBACK_LENGTH = 8;
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
 const DRAG_TOUCH_DELAY_MS = 200;
 const DRAG_TOUCH_TOLERANCE_PX = 8;
@@ -150,7 +151,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 key={entry.id}
                 position={props.inFilteredMode ? visibleIndex + 1 : fullIndex + 1}
                 entryId={entry.id}
-                title={song?.title ?? entry.songId.slice(0, 8)}
+                title={song?.title ?? entry.songId.slice(0, SONG_ID_FALLBACK_LENGTH)}
                 artist={song?.artist ?? ''}
                 tonalityLabel={tonalityLabelFor(song)}
                 meanMastery={props.meanMasteryBySongId[entry.songId] ?? null}
@@ -194,7 +195,7 @@ function renderDragPreview(
   return (
     <SetlistEntryDragPreview
       position={activeIndex + 1}
-      title={activeSong?.title ?? activeEntry.songId.slice(0, 8)}
+      title={activeSong?.title ?? activeEntry.songId.slice(0, SONG_ID_FALLBACK_LENGTH)}
       artist={activeSong?.artist ?? ''}
     />
   );

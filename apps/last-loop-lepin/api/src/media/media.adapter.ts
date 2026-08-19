@@ -11,7 +11,10 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ALLOWED_PHOTO_CONTENT_TYPES, fileExtensionForContentType } from './media.core';
 
-const PRESIGN_EXPIRES_SECONDS = 5 * 60;
+const SECONDS_PER_MINUTE = 60;
+const MILLISECONDS_PER_SECOND = 1_000;
+const PRESIGN_EXPIRES_MINUTES = 5;
+const PRESIGN_EXPIRES_SECONDS = PRESIGN_EXPIRES_MINUTES * SECONDS_PER_MINUTE;
 
 let cachedClient: S3Client | null = null;
 
@@ -86,6 +89,6 @@ export async function createPresignedUpload(
   return {
     uploadUrl,
     objectKey,
-    expiresAt: new Date(now.getTime() + PRESIGN_EXPIRES_SECONDS * 1000),
+    expiresAt: new Date(now.getTime() + PRESIGN_EXPIRES_SECONDS * MILLISECONDS_PER_SECOND),
   };
 }

@@ -4,7 +4,9 @@ The apex landing site at `https://borso.fr`. Plain HTML / CSS / JS for now; swit
 
 ## Layout
 
-- `site/` — source. Hand-written HTML, CSS, JS (modules). The Mondrian generator under `site/art/mondrian/` is a self-contained mini-app.
+- `site/` — the Vite root. It holds the page entry points and nothing else, because a page's path under the root is the URL it ships at: `index.html`, `12-travaux/index.html`, `art/mondrian/index.html`, `family/*.html`.
+- `site/src/` — the TypeScript and React source, laid out like the other applications: `components/{atoms,molecules,organisms}/`, `i18n/`, `labours/`, `styles/`, `theme/`, plus a folder per extra page holding its `main.tsx`. The Mondrian generator under `site/src/art/mondrian/` is a self-contained mini-app.
+- `site/public/` — static assets served at the site root.
 - `bin/app.ts` — CDK entry point. Reads `STAGE` + `PR_NUMBER` env, builds a `StaticSite` from `@borso/infra`.
 - `dist/` — build output. Gitignored. The `build` script (`pnpm build`) produces it via `cp -R site dist`. Trivial today; swappable for Vite/Astro later.
 

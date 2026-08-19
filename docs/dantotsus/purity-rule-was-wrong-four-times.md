@@ -9,6 +9,7 @@ fix-commits: []
 eradication-level: 2
 time-to-detect: days
 tags: [eslint, custom-rules, purity, standards, false-positives]
+blueprints: [test-lint-rule]
 ---
 
 # A rule written before its subject was understood, four times

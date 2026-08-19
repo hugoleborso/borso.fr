@@ -3,7 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import { OPENINGS_CACHE_VERSION } from './site/config/openingsCacheVersion';
+import { OPENINGS_CACHE_VERSION } from './site/src/config/openingsCacheVersion';
 
 const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
@@ -14,7 +14,7 @@ export default defineConfig({
   publicDir: fromHere('./site/public'),
   resolve: {
     alias: {
-      '@': fromHere('./site'),
+      '@': fromHere('./site/src'),
     },
   },
   build: {

@@ -13,8 +13,13 @@
  * double; `createBucketStore()` is the production factory.
  */
 
+const SECONDS_PER_MINUTE = 60;
+const MILLISECONDS_PER_SECOND = 1_000;
+const RATE_LIMIT_WINDOW_MINUTES = 15;
+
 export const RATE_LIMIT_MAX_ATTEMPTS = 5;
-export const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+export const RATE_LIMIT_WINDOW_MS =
+  RATE_LIMIT_WINDOW_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
 
 export interface RateBucket {
   attempts: number;

@@ -10,6 +10,8 @@ import { loopIndexAt } from '../edition/edition.core';
 import type { RaceEdition } from '../edition/edition.types';
 import type { LoopPunch } from './punch.types';
 
+const MILLISECONDS_PER_MINUTE = 60_000;
+
 export type PunchValidation =
   | { readonly ok: true; readonly loopIndex: number }
   | { readonly ok: false; readonly reason: PunchRejectReason };
@@ -72,7 +74,7 @@ export function validatePunchTiming(
  * `ranking/fastest-lap.core.ts`) — the formula is defined exactly once.
  */
 export function loopDurationMs(edition: RaceEdition, punch: LoopPunch): number | null {
-  const intervalMs = edition.intervalMinutes * 60_000;
+  const intervalMs = edition.intervalMinutes * MILLISECONDS_PER_MINUTE;
   const loopStartMs = edition.startsAt.getTime() + (punch.loopIndex - 1) * intervalMs;
   const elapsed = punch.finishedAt.getTime() - loopStartMs;
   return elapsed >= 0 ? elapsed : null;

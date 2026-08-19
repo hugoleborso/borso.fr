@@ -247,6 +247,7 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
     return [memberColumn, ...instrumentColumns, averageColumn];
   }, [instruments, instrumentIds, scores, writeScore, clearScore, t]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- @tanstack/react-table's useReactTable returns functions the React Compiler cannot memoize, so it skips compiling this component; the table object is read only by this component's own JSX below and never handed to a memoized child, so the skip changes nothing observable
   const table = useReactTable({
     data: memberRows,
     columns,

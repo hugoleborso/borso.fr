@@ -58,16 +58,20 @@ export const songTable = pgTable('song', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 });
 
+const LINK_COMMENT_MAX = 2_048;
+const CHORDPRO_TEXT_MAX = 64_000;
+const S3_KEY_MAX = 512;
+
 export const songExternalLinkSchema = z.object({
   url: z.string().url(),
   provider: z.enum(LINK_PROVIDERS),
-  comment: z.string().max(2_048).default(''),
+  comment: z.string().max(LINK_COMMENT_MAX).default(''),
 });
 
 export const chordChartSchema = z.union([
-  z.object({ kind: z.literal('chordpro'), text: z.string().min(1).max(64_000) }),
-  z.object({ kind: z.literal('pdf'), s3Key: z.string().min(1).max(512) }),
-  z.object({ kind: z.literal('image'), s3Key: z.string().min(1).max(512) }),
+  z.object({ kind: z.literal('chordpro'), text: z.string().min(1).max(CHORDPRO_TEXT_MAX) }),
+  z.object({ kind: z.literal('pdf'), s3Key: z.string().min(1).max(S3_KEY_MAX) }),
+  z.object({ kind: z.literal('image'), s3Key: z.string().min(1).max(S3_KEY_MAX) }),
 ]);
 
 /**
@@ -87,17 +91,22 @@ const SONG_ISRC_MAX = 32;
 const SONG_ISRCS_MAX = 8;
 const SONG_TAG_MAX = 64;
 const SONG_TAGS_MAX = 16;
-const SONG_DURATION_MAX_SECONDS = 24 * 60 * 60;
+const HOURS_PER_DAY = 24;
+const MINUTES_PER_HOUR = 60;
+const SECONDS_PER_MINUTE = 60;
+const SONG_DURATION_MAX_SECONDS = HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
+const SONG_LINKS_MAX = 16;
+const SONG_TONALITY_MAX = 16;
 const SONG_NOTE_MAX = 4_096;
 
 const songBaseSchema = z.object({
-  title: z.string().trim().min(1).max(256),
-  artist: z.string().trim().max(256).default(''),
+  title: z.string().trim().min(1).max(SONG_STRING_FIELD_MAX),
+  artist: z.string().trim().max(SONG_STRING_FIELD_MAX).default(''),
   status: z.enum(SONG_STATUSES),
-  links: z.array(songExternalLinkSchema).max(16).default([]),
+  links: z.array(songExternalLinkSchema).max(SONG_LINKS_MAX).default([]),
   chart: chordChartSchema.nullable().default(null),
-  tonalityStart: z.string().max(16).nullable().default(null),
-  tonalityEnd: z.string().max(16).nullable().default(null),
+  tonalityStart: z.string().max(SONG_TONALITY_MAX).nullable().default(null),
+  tonalityEnd: z.string().max(SONG_TONALITY_MAX).nullable().default(null),
   defaultLineup: defaultLineupSchema.default({}),
   baseEnergy: z.number().int().min(ENERGY_MIN).max(ENERGY_MAX).nullable().default(null),
   mbid: z.string().max(SONG_STRING_FIELD_MAX).nullable().default(null),
@@ -113,7 +122,9 @@ const songBaseSchema = z.object({
 export const songCreateInputSchema = songBaseSchema;
 export const songUpdateInputSchema = songBaseSchema.partial();
 export const songIdParamSchema = z.object({ id: z.string().uuid() });
-export const externalSearchQuerySchema = z.object({ q: z.string().min(1).max(256) });
+export const externalSearchQuerySchema = z.object({
+  q: z.string().min(1).max(SONG_STRING_FIELD_MAX),
+});
 
 // Row-side Zod schema for the `links` text column — wraps the array
 // shape that the controller validates per-element. The repository uses

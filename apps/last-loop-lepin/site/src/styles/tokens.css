@@ -103,6 +103,10 @@
  * rule sits outside every cascade layer, and unlayered CSS beats the layered
  * utilities Tailwind emits, so `bg-bg-elev` on the element would lose to it.
  */
+/* @third-party-dom leaflet: renders its tiles, controls and attribution into
+   DOM it owns, so no JSX element exists to carry a utility class. The rules
+   stay unlayered because Leaflet's own `.leaflet-container` rule is unlayered
+   and would otherwise win. */
 .course-map {
   background: var(--color-bg-elev);
 }
@@ -144,3 +148,4 @@
 .course-map .leaflet-marker-icon {
   transition: transform 0.6s ease-out;
 }
+/* @end-third-party-dom */

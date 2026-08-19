@@ -30,6 +30,7 @@ const UNPROJECTED_TYPESCRIPT_FILES = [
   'apps/*/scripts/*.ts',
   'apps/*/cdk/bin/*.ts',
   'infra/*/vitest.config.ts',
+  'infra/*/vitest.mutation.config.ts',
   'infra/*/bin/*.ts',
 ];
 // A workspace's own build and deploy tooling, as opposed to the code it ships.
@@ -42,6 +43,15 @@ const WORKSPACE_TOOLING_FILES = [
 
 const SITE_FILES = ['apps/*/site/**/*.{ts,tsx}'];
 const TEST_FILES = ['**/*.test.{ts,tsx,js}', '**/*.test-utils.ts', '**/test/**/*.ts'];
+
+// The identity values docs/standards/01-naming.md exempts, plus the HTTP status
+// codes. A status code is already a name in a published registry that every
+// reader of an HTTP handler knows, so `HTTP_NOT_FOUND = 404` renames 404 to
+// something no clearer than 404 itself, at every call site.
+const IDENTITY_VALUES = [0, 1, -1];
+const HTTP_STATUS_CODES = [
+  200, 201, 204, 301, 302, 400, 401, 403, 404, 409, 422, 429, 500, 502, 503,
+];
 
 export default tseslint.config(
   {
@@ -60,7 +70,7 @@ export default tseslint.config(
       'docs/**',
       'apps/*/api/src/database/migrations/**',
       'apps/*/site/public/**',
-      'apps/*/site/openings/openings.json',
+      'apps/*/site/src/openings/openings.json',
     ],
   },
 
@@ -262,6 +272,7 @@ export default tseslint.config(
     plugins: { borso: borsoPlugin },
     rules: {
       'borso/no-array-methods-in-controllers': 'error',
+      'borso/no-horizontal-folders-in-api': 'error',
       'borso/no-cross-slice-repository-imports': 'error',
       'borso/no-database-client-outside-repository': 'error',
       'borso/no-raw-sql-outside-migrations': 'error',
@@ -278,6 +289,7 @@ export default tseslint.config(
       'borso/atomic-design-composition': 'error',
       'borso/atomic-design-import-direction': 'error',
       'borso/no-flat-components-folder': 'error',
+      'borso/no-components-outside-buckets': 'error',
       'borso/no-query-hooks-outside-organisms': 'error',
       'borso/no-component-css-imports': 'error',
       'borso/no-vendor-sdk-outside-adapter': 'error',
@@ -296,6 +308,72 @@ export default tseslint.config(
     rules: { 'borso/no-string-concatenated-class-names': 'error' },
   },
 
+  // A folder both sides of an application read cannot import from either side,
+  // and a pure file cannot import a vendor SDK.
+  //
+  // ADR-0010 justifies `apps/<app>/domain/` entirely on the claim that the API
+  // and the site both read it. One `import { useState } from 'react'` ends that,
+  // and until now nothing said so: the import rules here are all about direction
+  // inside a side, and `no-restricted-imports` appeared nowhere in this file.
+  //
+  // A `.core.ts` is held to the same bar from the other direction. The purity
+  // rules reject an impure *call*; they have nothing to say about importing a
+  // client whose construction is the impurity.
+  {
+    files: ['apps/*/domain/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'react', message: 'A domain rule both sides read cannot depend on React.' },
+            { name: 'react-dom', message: 'A domain rule both sides read cannot depend on React.' },
+            {
+              name: 'hono',
+              message: 'A domain rule both sides read cannot depend on the server framework.',
+            },
+            {
+              name: 'drizzle-orm',
+              message: 'A domain rule both sides read cannot depend on the database layer.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@api/*', '../api/*', '../../api/*', '@site/*', '../site/*', '../../site/*'],
+              message:
+                'A domain rule reaches into neither side. See ADR-0010: the folder exists because both sides read it.',
+            },
+            {
+              group: ['@aws-sdk/*', 'aws-cdk-lib', 'pg', 'postgres'],
+              message: 'A domain rule both sides read cannot depend on infrastructure.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // A site never imports a database package. The back end owns the database and
+  // the typed client is the only way across; a bundler pulling `pg` into a
+  // browser build fails at run time rather than at build time.
+  {
+    files: SITE_FILES,
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['pg', 'postgres', 'drizzle-orm/*', '@aws-sdk/client-dsql'],
+              message:
+                'The site reaches the database through the typed Hono client, never directly. See docs/standards/06-data-fetching.md.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // Naming and testing rules from standards 01 and 10, across all application
   // and infrastructure code.
   {
@@ -304,8 +382,33 @@ export default tseslint.config(
     rules: {
       'borso/no-abbreviated-identifier': 'error',
       'borso/function-names-are-verb-phrases': 'error',
+      'borso/verb-promises-match-return-type': 'error',
       'borso/no-french-identifiers': 'error',
       'borso/test-file-has-sibling-source': 'error',
+
+      // docs/standards/01-naming.md: a literal in a function body gets a name,
+      // because the `const` declaration is what documents the choice.
+      //
+      // The exemptions, and why each one is not a naming decision in disguise:
+      // `ignore` holds the identity values and the HTTP status codes above.
+      // `ignoreArrayIndexes` covers `tuple[2]`, where the index is the name of
+      // the slot rather than a quantity. `ignoreDefaultValues` covers
+      // `function f(retries = 3)`, where the parameter name already names the
+      // value. `ignoreClassFieldInitialValues` is the same case for a field.
+      // `enforceConst` rejects `let MAXIMUM = 12`, so a named literal cannot be
+      // reassigned. `detectObjects` stays off, because an object literal's key
+      // is already the name the rule is asking for.
+      'no-magic-numbers': [
+        'error',
+        {
+          ignore: [...IDENTITY_VALUES, ...HTTP_STATUS_CODES],
+          ignoreArrayIndexes: true,
+          ignoreDefaultValues: true,
+          ignoreClassFieldInitialValues: true,
+          enforceConst: true,
+          detectObjects: false,
+        },
+      ],
     },
   },
 
@@ -457,6 +560,11 @@ export default tseslint.config(
       // them as `() => Promise.resolve(…)` satisfies the rule and reads worse.
       '@typescript-eslint/require-await': 'off',
       'max-lines': 'off',
+      // A fixture literal is not a magic number. A test names its value in the
+      // `it` title and in the expectation next to it, so hoisting `42` to a
+      // `const` moves the number away from the assertion that gives it meaning.
+      // There are around fifteen hundred of them across the repository.
+      'no-magic-numbers': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
@@ -481,6 +589,18 @@ export default tseslint.config(
       // file is read as a string at synth time and shipped to the edge. There
       // is no import to make the reference visible.
       'no-unused-vars': ['error', { varsIgnorePattern: '^handler$' }],
+    },
+  },
+
+  // The verb table is a promise to a reader, and the harness's own generators
+  // have readers too. This rule needs no type information, so unlike the rest
+  // of the naming block it can reach `scripts/` and the skills, which is where
+  // the reviewer found four `find…` functions handing back arrays.
+  {
+    files: ['scripts/**/*.ts', '.claude/skills/**/*.ts', 'eslint-rules/**/*.js'],
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/verb-promises-match-return-type': 'error',
     },
   },
 

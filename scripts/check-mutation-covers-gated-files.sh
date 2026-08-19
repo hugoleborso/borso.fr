@@ -28,13 +28,13 @@ cd "$(dirname "$0")/.."
 # A workspace may sit here while its mutants are being killed, and the entry
 # says which and why. An entry with no reason is not an entry.
 #
-# infra/cdk — 90 mutants survive at 100% coverage, measured 2026-08-15 over
-#   src/**/*.utils.ts. Most are regex-quantifier mutants that are equivalent for
-#   every input the function can receive, so closing them means a justified
-#   Stryker disable comment each rather than a better assertion. Wiring the gate
-#   before that work is done would land a red gate, and a red gate that nobody
-#   can make green gets skipped.
-ALLOWED_WITHOUT_MUTATION='infra/cdk'
+# Empty since 2026-08-18: `infra/cdk` was the one entry, and its survivors are
+# killed. The first run over `src/**/*.utils.ts` scored 80.84 with 69
+# survivors and turned up three real defects in the migration rewrites,
+# including a lookahead that doubled an `IF NOT EXISTS` the statement already
+# carried. It is wired and green now, so the exemption has nothing left to
+# excuse.
+ALLOWED_WITHOUT_MUTATION=''
 
 GATED_SUFFIXES='core|utils|adapter'
 
