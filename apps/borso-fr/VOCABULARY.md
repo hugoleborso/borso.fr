@@ -82,8 +82,9 @@ Lives in: `site/src/art/mondrian/`
 
 What any page of the site does between the click on an internal link and the
 browser leaving. Every page has one: a Jump where there is a Galaxy, a Fade
-where there is not. `warp-drive.ts` installs it on all three built pages, and
-the caller passes the length the click is held for.
+where there is not. `warp-drive.ts` installs it on all three built pages. A
+page with something longer to play passes its own length for the click to be
+held; the two that fade take the default.
 
 Lives in: `site/src/warp/`
 
