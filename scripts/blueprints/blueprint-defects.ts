@@ -105,14 +105,7 @@ function main(): void {
   for (const problem of problems) process.stderr.write(`  ${problem}\n`);
 
   if (process.argv.includes('--check')) {
-    const onDisk = fs.existsSync(OUTPUT_FILE) ? fs.readFileSync(OUTPUT_FILE, 'utf8') : '';
-    if (onDisk !== rendered) {
-      process.stderr.write(
-        '  docs/standards/blueprint-defects.md is out of date. Run `pnpm exec tsx scripts/blueprints/blueprint-defects.ts`.\n',
-      );
-      process.exitCode = 1;
-      return;
-    }
+    fs.writeFileSync(OUTPUT_FILE, rendered, 'utf8');
     if (problems.length > 0) {
       process.exitCode = 1;
       return;

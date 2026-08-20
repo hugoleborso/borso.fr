@@ -46,22 +46,42 @@ function listDocuments(): readonly string[] {
 }
 
 /**
- * Every tracked path, plus every directory on the way to one.
+ * Every path a reader can reach, plus every directory on the way to one.
  *
- * Read from the index rather than the disk, because a link is a claim about
- * the repository and the working tree is not the repository: it also holds
- * whatever the generators last wrote. `docs/architecture/README.md` linked five
- * pages that `.gitignore` covers, which resolved on a machine that had run the
- * generator and failed in CI, where nothing had. Asking git gives the same
- * answer in both, and it is the answer a fresh clone gets.
+ * Two kinds of path qualify. Tracked ones, from the index rather than the
+ * disk, because a link is a claim about the repository and a working tree also
+ * holds whatever anyone left lying in it. And ignored ones that are on disk,
+ * which is what a generated file looks like: none of them is committed, and
+ * every reader — the SessionStart hook, CI's first step, `pages.yml` — runs
+ * the generators before anything opens a link.
+ *
+ * The second kind used to be refused, and the reason was sound at the time:
+ * `docs/architecture/README.md` linked five ignored pages that resolved on a
+ * machine which had run the generator and failed in CI, where nothing had. CI
+ * now runs them immediately after `pnpm install`, so the two answers agree
+ * again. An ignored path that is *absent* is still a dead link, which is the
+ * case that would catch a generator that stopped producing one.
  */
-function buildTrackedPaths(): ReadonlySet<string> {
-  const tracked = new Set<string>();
-  for (const file of execFileSync('git', ['ls-files'], {
+function listIgnoredFilesOnDisk(): readonly string[] {
+  return execFileSync('git', ['ls-files', '--others', '--ignored', '--exclude-standard'], {
     cwd: REPOSITORY_ROOT,
     encoding: 'utf8',
     maxBuffer: LIST_FILES_BUFFER_BYTES,
-  }).split('\n')) {
+  })
+    .split('\n')
+    .filter((path) => path.length > 0);
+}
+
+function buildTrackedPaths(): ReadonlySet<string> {
+  const tracked = new Set<string>();
+  const files = execFileSync('git', ['ls-files'], {
+    cwd: REPOSITORY_ROOT,
+    encoding: 'utf8',
+    maxBuffer: LIST_FILES_BUFFER_BYTES,
+  })
+    .split('\n')
+    .concat(listIgnoredFilesOnDisk());
+  for (const file of files) {
     if (file.length === 0) continue;
     tracked.add(file);
     let directory = dirname(file);

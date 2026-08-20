@@ -246,6 +246,43 @@ else
   log "KAIZEN.md carries ${kaizen_entries:-0} entries logged earlier in this task"
 fi
 
+# 10. The generated files, none of which is committed. Agents read
+# blueprint-index.md before writing a file, the pre-write hook reads
+# blueprint-context.json on every Write, and the standards reviewer reads
+# enforcement-ledger.md; all three read the working tree, so a fresh checkout
+# has to produce them before anything asks. Cheap enough to do unconditionally
+# and far cheaper than the failure, which is an agent silently reading nothing.
+#
+# Backgrounded as one batch: the heatmap walks every source file, and nothing
+# in the first turn of a session needs these within the first few seconds.
+#
+# Two of them are produced here and now, and the rest in the background. The
+# pre-write hook is best-effort by contract and exits 0 when its lookup is
+# missing, so a race would not break a write — it would silently write a file
+# with no blueprint in front of it, which is worse than a failure because
+# nothing says it happened. 2.3 s at session start buys that away. The
+# architecture maps take fourteen and nothing in the first turn reads them.
+log 'generating the lookups an agent reads before its first write'
+(
+  cd "$REPO_ROOT" || exit 0
+  pnpm exec tsx .claude/skills/blueprint/blueprint-context.ts >/dev/null 2>&1 || true
+  pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts >/dev/null 2>&1 || true
+)
+
+log 'generating the reports and the maps in the background'
+(
+  cd "$REPO_ROOT" || exit 0
+  for generator in \
+    .claude/skills/blueprint/blueprint-heatmap.ts \
+    scripts/blueprints/blueprint-defects.ts \
+    scripts/standards/convention-drift.ts \
+    scripts/standards/rule-provenance.ts \
+    scripts/standards/enforcement-ledger.ts \
+    scripts/architecture/architecture-graph.ts; do
+    pnpm exec tsx "$generator" >/dev/null 2>&1 || true
+  done
+) &
+
 if [ ${#missing_optional[@]} -gt 0 ]; then
   printf '[install-repo-deps] WARN: optional tools missing: %s\n' "${missing_optional[*]}"
   printf '[install-repo-deps] WARN: re-run ./scripts/install-repo-deps.sh once the network settles.\n'

@@ -1852,23 +1852,16 @@ async function buildApplication(options: BuildOptions): Promise<void> {
 
   if (isCheck) {
     /**
-     * The model, and only the model. Every one of its bytes comes from the
-     * working tree, so it is compared to the byte and a mismatch always means
-     * the code moved without the map being regenerated.
-     *
-     * The page is not compared because it is not committed: it carries each
-     * standard's `git log`, a file cannot contain the commit that adds it, and
-     * a byte gate over it therefore failed the commit *after* every standards
-     * edit. `pages.yml` regenerates it before publishing.
+     * Neither the page nor the model is committed, so there is nothing to
+     * compare them against and `--check` writes them like any other run. What
+     * it still refuses is a `@DependsOnExternal` naming a system the manifest
+     * does not declare, and a declared external no file reaches — which is
+     * checked while the model is built, above.
      */
-    if (readSourceOrEmpty(relative(REPOSITORY_ROOT, modelPath)) !== model) {
-      console.error(
-        `  ${relative(REPOSITORY_ROOT, modelPath)} is out of date. Run \`pnpm exec tsx scripts/architecture/architecture-graph.ts\`.`,
-      );
-      process.exit(1);
-    }
+    writeFileSync(pagePath, page);
+    writeFileSync(modelPath, model);
     console.log(
-      `${manifest.application}: ${files.length} files across ${levels.length} levels and ${slices.length} slices. Up to date.`,
+      `${manifest.application}: ${files.length} files across ${levels.length} levels and ${slices.length} slices.`,
     );
     return;
   }

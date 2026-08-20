@@ -70,25 +70,37 @@ run_generator_check() {
   fi
 }
 
+run_generator() {
+  if ! pnpm exec tsx "$1"; then
+    generator_failures="${generator_failures}  pnpm exec tsx $1
+"
+  fi
+}
+
+# What runs here is what a commit can be WRONG about, not what a commit makes
+# stale. None of these files is committed any more, so no run can find one out
+# of date; each of the ones left refuses something a person did: an annotation
+# that names no blueprint, a dantotsu that names none, a question the tree had
+# already answered being answered a second way.
+#
+# `blueprint-heatmap.ts` and `rule-provenance.ts` used to run here and no
+# longer do. Neither ever refused anything but its own staleness, and the
+# heatmap reads every source file in the repository to do it. They are
+# regenerated at SessionStart and published by `pages.yml`.
 if [ -n "$staged_lintable" ]; then
   echo "[pre-commit] checking blueprint annotations"
   set +e
   run_generator_check .claude/skills/blueprint/blueprint-indexing.ts
-  run_generator_check .claude/skills/blueprint/blueprint-heatmap.ts
-  # The defect page and the seeding lookup are generated from the same
-  # annotations, so they go stale on the same edit: a dantotsu naming a
-  # blueprint that does not exist, and a hook seeding a pattern nobody carries
-  # any more, both read as fine until someone follows them.
+  # A dantotsu naming a blueprint that does not exist reads as fine until
+  # someone follows the link.
   run_generator_check scripts/blueprints/blueprint-defects.ts
-  run_generator_check .claude/skills/blueprint/blueprint-context.ts
+  # The lookup the pre-write hook reads. Not a gate — it is regenerated so a
+  # blueprint added this session seeds the next write in it.
+  run_generator .claude/skills/blueprint/blueprint-context.ts
   # Two spellings for one idea. Gated on a baseline that only goes down, so the
   # existing backlog never blocks a commit and the next divergence does. A git
   # index read plus one pass over the tree, so it belongs on the commit.
   run_generator_check scripts/standards/convention-drift.ts
-  # Which rules were written because something went wrong. A report; the check
-  # refuses only a stale page, because a ratio between defect-born and
-  # principle-born rules is not a thing to gate on.
-  run_generator_check scripts/standards/rule-provenance.ts
   set -e
 fi
 

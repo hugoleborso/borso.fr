@@ -4,7 +4,7 @@
  * because something went wrong, and which were written because something might.
  *
  * Usage:
- *   pnpm exec tsx scripts/standards/rule-provenance.ts [--check]
+ *   pnpm exec tsx scripts/standards/rule-provenance.ts
  *
  * `--check` only refuses a stale page. There is no threshold and there never
  * should be. A rule written from principle is not a defect, and a gate that
@@ -12,7 +12,7 @@
  * things that did not happen.
  */
 
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ESLint } from 'eslint';
 import { readEradicationSection, renderProvenanceReport, type RuleRecord } from './provenance.core';
@@ -120,19 +120,6 @@ async function main(): Promise<void> {
   const records = await buildRecords();
   const dantotsuCount = readCorpus().dantotsus.size;
   const rendered = renderProvenanceReport(records, dantotsuCount);
-
-  if (process.argv.includes('--check')) {
-    const onDisk = existsSync(REPORT_PATH) ? readFileSync(REPORT_PATH, 'utf8') : '';
-    if (onDisk !== rendered) {
-      console.error(
-        '  docs/standards/rule-provenance.md is out of date. Run `pnpm exec tsx scripts/standards/rule-provenance.ts`.',
-      );
-      process.exitCode = 1;
-      return;
-    }
-    console.log('rule-provenance.md is up to date.');
-    return;
-  }
 
   writeFileSync(REPORT_PATH, rendered);
   const fromDefect = records.filter((record) => record.dantotsuSlugs.length > 0).length;
