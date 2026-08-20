@@ -29,7 +29,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 189
+      "fileCount": 192
     },
     {
       "id": "uploads-bucket",
@@ -2018,6 +2018,47 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/atoms/energy-bar.utils.ts",
+      "digest": "decb6ec23655",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": "setlists",
+      "exports": [
+        "buildEnergyLevels",
+        "isDragIntent",
+        "levelFromKey",
+        "levelFromPointerRatio"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module",
+        "utils-pure-module",
+        "utils-pure-module",
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/EnergyBar.tsx",
+      "digest": "6c4094f1cdcb",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": "setlists",
+      "exports": [
+        "EnergyBar"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/energy-bar.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/atoms/ExternalLink.tsx",
       "digest": "65658ac7a2c9",
       "container": "site",
@@ -2496,6 +2537,22 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/molecules/member-lineup.core.ts",
+      "digest": "cda0bb3eb714",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": "members",
+      "exports": [
+        "buildLineupChips"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-projection"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/molecules/MemberChip.tsx",
       "digest": "04f66df1fbb8",
       "container": "site",
@@ -2536,7 +2593,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/MemberLineup.tsx",
-      "digest": "422a25e7291e",
+      "digest": "ed6b3dbae56e",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2545,7 +2602,9 @@
         "MemberLineup"
       ],
       "imports": [
-        "apps/pragma/site/src/components/molecules/MemberChip.tsx"
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/MemberChip.tsx",
+        "apps/pragma/site/src/components/molecules/member-lineup.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -2688,7 +2747,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/SetlistEntryDetailsFields.tsx",
-      "digest": "858a8cad48e9",
+      "digest": "15ff3365a966",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2700,7 +2759,8 @@
         "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx",
         "apps/pragma/site/src/components/atoms/class-name.utils.ts",
         "apps/pragma/site/src/components/atoms/input.variants.ts",
-        "apps/pragma/site/src/components/molecules/setlist-entry-form.hook.ts"
+        "apps/pragma/site/src/components/molecules/setlist-entry-form.hook.ts",
+        "apps/pragma/site/src/lib/queries/setlist-entries.queries.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -3382,7 +3442,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
-      "digest": "e991363fd338",
+      "digest": "5d2bd390ddc7",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3395,6 +3455,7 @@
         "lineupOf",
         "listOrphanMemberIds",
         "prominentMemberInstrumentFor",
+        "restrictToVerticalAxis",
         "selectUnwarnedMemberIds",
         "tonalityLabelFor"
       ],
@@ -3409,7 +3470,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts",
-      "digest": "42c904b17f6f",
+      "digest": "d7a9966313d1",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3467,7 +3528,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
-      "digest": "63481e006789",
+      "digest": "396c0907637d",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3503,7 +3564,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx",
-      "digest": "d1be3620f664",
+      "digest": "62a7c71cbeda",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3519,14 +3580,15 @@
         "apps/pragma/site/src/components/organisms/TransitionStrip.tsx",
         "apps/pragma/site/src/components/organisms/orphan-member-warn.adapter.ts",
         "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
-        "apps/pragma/site/src/components/organisms/transition-view.core.ts"
+        "apps/pragma/site/src/components/organisms/transition-view.core.ts",
+        "apps/pragma/site/src/lib/queries/setlist-entries.queries.ts"
       ],
       "blueprints": [],
       "followsBlueprints": []
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx",
-      "digest": "b1f3555f16f5",
+      "digest": "98a7776968b7",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3535,6 +3597,7 @@
         "SetlistEntryRow"
       ],
       "imports": [
+        "apps/pragma/site/src/components/atoms/EnergyBar.tsx",
         "apps/pragma/site/src/components/atoms/Icon.tsx",
         "apps/pragma/site/src/components/atoms/class-name.utils.ts",
         "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
@@ -3545,7 +3608,8 @@
         "apps/pragma/site/src/components/molecules/lineup-editor.core.ts",
         "apps/pragma/site/src/components/molecules/setlist-entry-form.hook.ts",
         "apps/pragma/site/src/components/organisms/mastery-color.core.ts",
-        "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts"
+        "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts",
+        "apps/pragma/site/src/lib/queries/setlist-entries.queries.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -3600,7 +3664,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistToolbar.tsx",
-      "digest": "19b272a20d71",
+      "digest": "2ae2565d8950",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -4436,7 +4500,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/setlist-entries.queries.ts",
-      "digest": "8be97301dea2",
+      "digest": "6848323d75df",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -6753,7 +6817,7 @@
     {
       "id": "atom-plain",
       "file": "apps/pragma/site/src/components/atoms/Crumb.tsx",
-      "followerCount": 6
+      "followerCount": 7
     },
     {
       "id": "atom-variant",
@@ -6813,7 +6877,7 @@
     {
       "id": "core-projection",
       "file": "apps/pragma/api/src/sessions/offline-manifest.core.ts",
-      "followerCount": 14
+      "followerCount": 15
     },
     {
       "id": "core-view-intent",
@@ -7033,7 +7097,7 @@
     {
       "id": "utils-pure-module",
       "file": "apps/pragma/site/src/lib/member-color.utils.ts",
-      "followerCount": 26
+      "followerCount": 30
     },
     {
       "id": "workspace-test-config",

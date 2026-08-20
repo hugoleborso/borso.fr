@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { composeClassName } from '../atoms/class-name.utils';
 import { inputVariants } from '../atoms/input.variants';
+import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import {
   CAPO_MAX,
   CAPO_MIN,
@@ -26,7 +27,7 @@ const NOTES_ROWS = 2;
 
 interface SetlistEntryDetailsFieldsProps {
   readonly form: SetlistEntryForm;
-  readonly onPatch: (patch: Record<string, unknown>) => void;
+  readonly onPatch: (patch: SetlistEntryPatch) => void;
 }
 
 // @FollowsBlueprint molecule-presentational

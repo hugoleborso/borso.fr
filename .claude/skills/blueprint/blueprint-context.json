@@ -215,7 +215,7 @@
         "name": "Core Projection",
         "usage": "Use for a read model that turns rows and `now` into the exact payload the caller sends.",
         "path": "apps/pragma/api/src/sessions/offline-manifest.core.ts",
-        "followers": 17
+        "followers": 18
       },
       {
         "id": "core-decision",
@@ -553,7 +553,7 @@
         "name": "Plain Atom",
         "usage": "Use for a user interface primitive that has one look and therefore needs no variant table.",
         "path": "apps/pragma/site/src/components/atoms/Crumb.tsx",
-        "followers": 47
+        "followers": 48
       },
       {
         "id": "atom-lookup-variants",
@@ -1027,7 +1027,7 @@
         "name": "Pure Utility Module",
         "usage": "Use for deterministic helpers with no side effect, which the coverage gate holds at one hundred percent per file.",
         "path": "apps/pragma/site/src/lib/member-color.utils.ts",
-        "followers": 53
+        "followers": 57
       },
       {
         "id": "utils-formatter",
@@ -1130,7 +1130,7 @@
         "name": "Pure Unit Test",
         "usage": "Use for every `*.core.ts` and `*.utils.ts` file, which the per-file coverage gate holds at 100 percent.",
         "path": "apps/pragma/domain/transition.core.test.ts",
-        "followers": 193
+        "followers": 199
       }
     ],
     "test/infra/unknown": [
@@ -1162,7 +1162,7 @@
         "name": "jsdom Gap Stub",
         "usage": "Use when a component calls a browser API the test environment does not implement, and only then.",
         "path": "apps/borsouvertures/site/src/components/atoms/Modal.test.tsx",
-        "followers": 2
+        "followers": 3
       }
     ],
     "test/site/core": [
@@ -1189,7 +1189,7 @@
         "name": "Component Render Test",
         "usage": "Use for asserting what a user sees and what their click does, rather than what the component called.",
         "path": "apps/pragma/site/src/components/molecules/MemberFilterPills.test.tsx",
-        "followers": 13
+        "followers": 14
       }
     ],
     "test/site/query": [

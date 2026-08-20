@@ -14,7 +14,7 @@ at twenty files.
 `convention-baseline.json` holds the current count per question and the
 gate fails only on an increase. Fixing one and running `--accept` lowers it.
 
-Read from 625 source file(s).
+Read from 628 source file(s).
 
 ## How is the name of a atom.ts file written?
 
@@ -22,7 +22,7 @@ Read from 625 source file(s).
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| kebab | 12 | `apps/last-loop-lepin/site/src/components/atoms/button-styles.ts`, `apps/last-loop-lepin/site/src/components/atoms/visibility.utils.ts`, `apps/pragma/site/src/components/atoms/auto-grow-textarea.utils.ts` |
+| kebab | 13 | `apps/last-loop-lepin/site/src/components/atoms/button-styles.ts`, `apps/last-loop-lepin/site/src/components/atoms/visibility.utils.ts`, `apps/pragma/site/src/components/atoms/auto-grow-textarea.utils.ts` |
 | camel | 4 | `apps/borsouvertures/site/src/components/atoms/boardDrop.utils.ts`, `apps/borsouvertures/site/src/components/atoms/buttonStyles.ts`, `apps/borsouvertures/site/src/components/atoms/loadMoreRow.types.ts` |
 
 ## How is the name of a atom.tsx file written?
@@ -31,7 +31,7 @@ Read from 625 source file(s).
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| pascal | 64 | `apps/borso-fr/site/src/components/atoms/Announcer.tsx`, `apps/borso-fr/site/src/components/atoms/BrandWordmark.tsx`, `apps/borso-fr/site/src/components/atoms/CarouselImage.tsx` |
+| pascal | 65 | `apps/borso-fr/site/src/components/atoms/Announcer.tsx`, `apps/borso-fr/site/src/components/atoms/BrandWordmark.tsx`, `apps/borso-fr/site/src/components/atoms/CarouselImage.tsx` |
 | camel | 1 | `apps/borsouvertures/site/src/components/atoms/boardPieces.tsx` |
 
 ## How is the name of a core.ts file written?
@@ -58,7 +58,7 @@ Read from 625 source file(s).
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| kebab | 11 | `apps/last-loop-lepin/site/src/components/molecules/correction-banner.utils.ts`, `apps/last-loop-lepin/site/src/components/molecules/countdown.utils.ts`, `apps/last-loop-lepin/site/src/components/molecules/leaderboard-chip.utils.ts` |
+| kebab | 12 | `apps/last-loop-lepin/site/src/components/molecules/correction-banner.utils.ts`, `apps/last-loop-lepin/site/src/components/molecules/countdown.utils.ts`, `apps/last-loop-lepin/site/src/components/molecules/leaderboard-chip.utils.ts` |
 | camel | 1 | `apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts` |
 
 ## How is the name of a organism.ts file written?
@@ -132,8 +132,8 @@ than 3 files is either a convention nobody wrote down or an accident.
 
 | Suffix | Files |
 | --- | --- |
-| `.core.ts` | 89 |
-| `.utils.ts` | 86 |
+| `.core.ts` | 90 |
+| `.utils.ts` | 87 |
 | `.controller.ts` | 19 |
 | `.service.ts` | 18 |
 | `.schema.ts` | 16 |
