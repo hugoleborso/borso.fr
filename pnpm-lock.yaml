@@ -58,11 +58,11 @@ catalogs:
       specifier: ^4.1.10
       version: 4.1.10
     aws-cdk:
-      specifier: ^2.180.0
-      version: 2.1120.0
+      specifier: ^2.1136.0
+      version: 2.1138.0
     aws-cdk-lib:
-      specifier: ^2.180.0
-      version: 2.252.0
+      specifier: ^2.264.0
+      version: 2.266.0
     clsx:
       specifier: 2.1.1
       version: 2.1.1
@@ -70,8 +70,8 @@ catalogs:
       specifier: 9.2.1
       version: 9.2.1
     constructs:
-      specifier: ^10.4.2
-      version: 10.6.0
+      specifier: ^10.8.1
+      version: 10.8.1
     drizzle-kit:
       specifier: ^0.30.0
       version: 0.30.6
@@ -289,13 +289,13 @@ importers:
         version: 4.1.10(vitest@4.1.10)
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1120.0
+        version: 2.1138.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.252.0(constructs@10.6.0)
+        version: 2.266.0(constructs@10.8.1)
       constructs:
         specifier: 'catalog:'
-        version: 10.6.0
+        version: 10.8.1
       jsdom:
         specifier: 'catalog:'
         version: 30.0.1
@@ -377,13 +377,13 @@ importers:
         version: 4.1.10(vitest@4.1.10)
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1120.0
+        version: 2.1138.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.252.0(constructs@10.6.0)
+        version: 2.266.0(constructs@10.8.1)
       constructs:
         specifier: 'catalog:'
-        version: 10.6.0
+        version: 10.8.1
       jsdom:
         specifier: 'catalog:'
         version: 30.0.1
@@ -504,16 +504,16 @@ importers:
         version: 4.1.10(vitest@4.1.10)
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1120.0
+        version: 2.1138.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.252.0(constructs@10.6.0)
+        version: 2.266.0(constructs@10.8.1)
       concurrently:
         specifier: 'catalog:'
         version: 9.2.1
       constructs:
         specifier: 'catalog:'
-        version: 10.6.0
+        version: 10.8.1
       drizzle-kit:
         specifier: 'catalog:'
         version: 0.30.6
@@ -652,16 +652,16 @@ importers:
         version: 4.1.10(vitest@4.1.10)
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1120.0
+        version: 2.1138.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.252.0(constructs@10.6.0)
+        version: 2.266.0(constructs@10.8.1)
       concurrently:
         specifier: 'catalog:'
         version: 9.2.1
       constructs:
         specifier: 'catalog:'
-        version: 10.6.0
+        version: 10.8.1
       drizzle-kit:
         specifier: 'catalog:'
         version: 0.30.6
@@ -704,10 +704,10 @@ importers:
         version: 4.1.10(vitest@4.1.10)
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.252.0(constructs@10.6.0)
+        version: 2.266.0(constructs@10.8.1)
       constructs:
         specifier: 'catalog:'
-        version: 10.6.0
+        version: 10.8.1
       esbuild:
         specifier: 'catalog:'
         version: 0.24.2
@@ -732,13 +732,13 @@ importers:
         version: 4.1.10(vitest@4.1.10)
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1120.0
+        version: 2.1138.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.252.0(constructs@10.6.0)
+        version: 2.266.0(constructs@10.8.1)
       constructs:
         specifier: 'catalog:'
-        version: 10.6.0
+        version: 10.8.1
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
@@ -765,14 +765,14 @@ packages:
     resolution: {integrity: sha512-93Z1N+BQNXysodoicpOIyNh2drHfz/CTf9nnT0FEx72GJcIiwgydD7tGAr78j41LsYn3hlRn+LdGPuBLn1Bl8Q==}
     engines: {node: ^22.13.0 || >=24.0.0}
 
-  '@aws-cdk/asset-awscli-v1@2.2.273':
-    resolution: {integrity: sha512-X57HYUtHt9BQrlrzUNcMyRsDUCoakYNnY6qh5lNwRCHPtQoTfXmuISkfLk0AjLkcbS5lw1LLTQFiQhTDXfiTvg==}
+  '@aws-cdk/asset-awscli-v1@2.2.292':
+    resolution: {integrity: sha512-d4aMFsAFj19FtxVyw8IzlUKv5Zu4sIvgnEjI2IU6IWBJgVbJ4aFnadANqYa+6MwB1CQbGOg0jh8WE77M+Nb/9A==}
 
-  '@aws-cdk/asset-node-proxy-agent-v6@2.1.1':
-    resolution: {integrity: sha512-We4bmHaowOPHr+IQR4/FyTGjRfjgBj4ICMjtqmJeBDWad3Q/6St12NT07leNtyuukv2qMhtSZJQorD8KpKTwRA==}
+  '@aws-cdk/asset-node-proxy-agent-v6@2.1.2':
+    resolution: {integrity: sha512-pDiuqH+qY3zM9lhhLjbKJ1tnKOHzQ2V4Wr/3qsxyKeKAkuPMI/BVGvZG1PbrikUw949cGVTfVEt4ETKKYnrj0Q==}
 
-  '@aws-cdk/cloud-assembly-schema@53.20.0':
-    resolution: {integrity: sha512-4kLAUO+I8b4nlk1Z2P4n3Ye8UtqCiXk0kJMLUThBnyHLbdz06rwAb+qlb9WZOie7NtPluemVS243ifcBh/NVsQ==}
+  '@aws-cdk/cloud-assembly-schema@54.20.0':
+    resolution: {integrity: sha512-ts2dVBi0VUXOLKcqyLYsHUWYpwGPFd+xm4q+6Y4jjP8orwodjRi2mJrmpy9b0gHnbv8e/hFnmEbqrD0bBJOnPA==}
     engines: {node: '>= 18.0.0'}
     bundledDependencies:
       - jsonschema
@@ -4032,12 +4032,13 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
-  aws-cdk-lib@2.252.0:
-    resolution: {integrity: sha512-bRLyTtJxhVgsx2JrL2B/KYYWf+Rg0s68UgQp+VRZK0h5fXeaPqDVEJGPMr7FiOgrmYwEadjfbxsTsZKNAloAvg==}
+  aws-cdk-lib@2.266.0:
+    resolution: {integrity: sha512-sBQU42pEc9ud3yeVU2En2euQRUhCg63eaJIPEVpBtE5aPhJjN3d9MkzQ9eYGLVXP3fnohUE54BiVOdUrkEDUbg==}
     engines: {node: '>= 20.0.0'}
     peerDependencies:
       constructs: ^10.5.0
     bundledDependencies:
+      - '@aws/cloudformation-validate'
       - '@balena/dockerignore'
       - '@aws-cdk/cloud-assembly-api'
       - case
@@ -4047,12 +4048,11 @@ packages:
       - minimatch
       - punycode
       - semver
-      - table
       - yaml
       - mime-types
 
-  aws-cdk@2.1120.0:
-    resolution: {integrity: sha512-vDVa0IX0FhizARdY/GLSParFglKbdHCIhM8IDmynrAv9w8uLLljzWMeLUOhC1XpMErDZ/npYEihAOjfKxTaMIw==}
+  aws-cdk@2.1138.0:
+    resolution: {integrity: sha512-gZ5F8rmh+qc7ZNWsbaXYoV+p7jSYynRRg70s7FAn3VmzRaSkTE31ijpQHYroxCbDEtKSzgN63ORR/WuZmvXAwA==}
     engines: {node: '>= 18.0.0'}
     hasBin: true
 
@@ -4341,8 +4341,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  constructs@10.6.0:
-    resolution: {integrity: sha512-TxHOnBO5zMo/G76ykzGF/wMpEHu257TbWiIxP9K0Yv/+t70UzgBQiTqjkAsWOPC6jW91DzJI0+ehQV6xDRNBuQ==}
+  constructs@10.8.1:
+    resolution: {integrity: sha512-98yGXYyhePqPYh3cYu8nzBERmAhC0DONe3UD03okK0nehZ7hYP4wgZuf02a04+uOWxnTJ5Rpp5m0GRNpwyLGGA==}
 
   content-disposition@1.1.0:
     resolution: {integrity: sha512-5jRCH9Z/+DRP7rkvY83B+yGIGX96OYdJmzngqnw2SBSxqCFPd0w2km3s5iawpGX8krnwSGmF0FW5Nhr0Hfai3g==}
@@ -7232,11 +7232,11 @@ snapshots:
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.5.2
 
-  '@aws-cdk/asset-awscli-v1@2.2.273': {}
+  '@aws-cdk/asset-awscli-v1@2.2.292': {}
 
-  '@aws-cdk/asset-node-proxy-agent-v6@2.1.1': {}
+  '@aws-cdk/asset-node-proxy-agent-v6@2.1.2': {}
 
-  '@aws-cdk/cloud-assembly-schema@53.20.0': {}
+  '@aws-cdk/cloud-assembly-schema@54.20.0': {}
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -10548,14 +10548,14 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  aws-cdk-lib@2.252.0(constructs@10.6.0):
+  aws-cdk-lib@2.266.0(constructs@10.8.1):
     dependencies:
-      '@aws-cdk/asset-awscli-v1': 2.2.273
-      '@aws-cdk/asset-node-proxy-agent-v6': 2.1.1
-      '@aws-cdk/cloud-assembly-schema': 53.20.0
-      constructs: 10.6.0
+      '@aws-cdk/asset-awscli-v1': 2.2.292
+      '@aws-cdk/asset-node-proxy-agent-v6': 2.1.2
+      '@aws-cdk/cloud-assembly-schema': 54.20.0
+      constructs: 10.8.1
 
-  aws-cdk@2.1120.0: {}
+  aws-cdk@2.1138.0: {}
 
   axe-core@4.13.0: {}
 
@@ -10839,7 +10839,7 @@ snapshots:
       tree-kill: 1.2.2
       yargs: 17.7.2
 
-  constructs@10.6.0: {}
+  constructs@10.8.1: {}
 
   content-disposition@1.1.0: {}
 
