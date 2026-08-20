@@ -22,9 +22,10 @@ before publishing to GitHub Pages, and `architecture.yml` regenerates them into
 a workflow artifact on every pull request. Nothing publishes bytes from a
 commit, so a stale page has nowhere to exist.
 
-So there are three places a built copy exists without running anything: the
-[published site](https://hugoleborso.github.io/borso.fr/), the
-`architecture-maps` artifact on any pull request's workflow run, and whatever
+So there are four places a built copy exists without running anything: the
+[published site](https://hugoleborso.github.io/borso.fr/) for `main`, the
+pull request's own copy at `architecture-pr-<n>.preview.borso.fr`, the
+`architecture-maps` artifact on that pull request's workflow run, and whatever
 the last local run left behind.
 
 **To put a new application on the map, read [`install.md`](./install.md)** —
@@ -297,8 +298,24 @@ artifact. It needs one repository setting no workflow can make or read: Settings
 → Pages → Build and deployment → Source set to **GitHub Actions**. Until that is
 set the workflow fails on its deploy step and nothing else changes.
 
-On a pull request the page is uploaded as a workflow artifact, which is the
-only place that branch's pages exist.
+On a pull request the maps go to the previews CDN, at
+`https://architecture-pr-<n>.preview.borso.fr`, and the comment links them. That
+host needed nothing built: the routing function in front of the previews bucket
+reads any `<name>-pr-<n>` host and serves `/<name>/pr-<n>/`, the certificate is
+the wildcard the previews already use, and the bucket expires its objects after
+sixty days, so nothing tears the maps down either. The workflow assumes
+`PreviewDeployRole`, whose trust policy already names `pull_request`.
+
+The same pages still upload as a workflow artifact. That is what a reader who
+wants the whole folder offline downloads, and it is the fallback whenever AWS is
+unreachable: both publish steps may fail without failing the report, and the
+comment then links the artifact and says the published copy is missing.
+
+Each page is a document rather than a fragment — doctype, `charset`, `viewport`
+— which is what makes it readable on a phone and what stops it depending on the
+host to declare its encoding. GitHub Pages sends `charset=utf-8`; `aws s3 sync`
+sets a bare `text/html`, and the same bytes rendered as mojibake there until the
+generator declared it.
 
 To reproduce a comparison locally:
 
