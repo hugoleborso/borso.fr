@@ -27,6 +27,10 @@
           {
             "type": "command",
             "command": ".claude/hooks/pretool-no-broad-kill.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/pretool-no-swallowed-push.sh"
           }
         ]
       },
