@@ -52,8 +52,14 @@ export function defineStrykerConfig({ mutate, vitest }) {
     tempDirName: sandboxOutsideTheWorkspace(),
     cleanTempDir: true,
     disableTypeChecks: '{src,site,api,test}/**/*.{js,ts,jsx,tsx}',
-    // A mutation in code that runs once at module load, e.g. a constant table,
-    // is reported separately and does not fail the gate on its own.
+    // Only ignores a static mutant that NO test covers. One that runs at module
+    // load while a test happens to be executing gets that test as its covering
+    // set, and is then run and counted like any other — so a constant table
+    // read by a module some other suite imported first is scored against tests
+    // that never look at it. Five such mutants sat at 28.57% on one file for
+    // four days while the assertions that would have killed them passed.
+    // Keep a lookup table inside the function that reads it, not beside it.
+    // See docs/dantotsus/the-mutants-were-judged-by-the-wrong-jury.md.
     ignoreStatic: true,
     mutate,
     ...(vitest === undefined ? {} : { vitest }),
