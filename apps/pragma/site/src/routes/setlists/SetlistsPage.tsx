@@ -1,11 +1,4 @@
-/**
- * Setlists index — every setlist the band has written, whether or not a
- * session carries it yet, with the sessions playing each one. New
- * setlists are born here as well as from a session's own page, because
- * a set is often written before anyone knows which rehearsal will run
- * through it.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';

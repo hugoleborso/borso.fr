@@ -1,15 +1,4 @@
-/**
- * What the setlists index shows: every setlist the band has written,
- * with the sessions carrying it resolved from the sessions already
- * loaded by the page.
- *
- * A setlist attached to nothing sorts first, because it is either just
- * created or waiting to be attached, and both are the states the
- * operator came to the page to act on. The rest follow by their latest
- * session, most recent first, with the name breaking ties so the order
- * never depends on the order rows came back in.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 export interface IndexSession {
   readonly id: string;
@@ -32,12 +21,6 @@ export interface SetlistIndexRow<TSession extends IndexSession> {
   readonly sessions: TSession[];
 }
 
-/**
- * A row's sessions are held most recent first, so the one at the front
- * is its latest, and a row no session carries has none at all — which
- * is what sorts it above the rest rather than any date it could stand
- * in for.
- */
 function compareRows(
   left: SetlistIndexRow<IndexSession>,
   right: SetlistIndexRow<IndexSession>,

@@ -38,10 +38,8 @@ describe('selectInitialLanguage', () => {
     expect(selectInitialLanguage(null, ['de-DE', 'en-US'])).toBe('en');
   });
 
-  it('reads a browser language with no region as its own family', () => {
+  it('reads a browser language with no region as its own family, English included, French alone doubling as the default and so unable to tell the family lookup from the fallback', () => {
     expect(selectInitialLanguage(null, ['fr'])).toBe('fr');
-    // English too: 'fr' also happens to be the default, so it alone cannot
-    // tell the family lookup apart from the fallback.
     expect(selectInitialLanguage(null, ['en'])).toBe('en');
   });
 

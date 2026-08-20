@@ -18,10 +18,6 @@ interface UpcomingEditionCardProps {
   readonly locale: string;
 }
 
-/**
- * The spectator screen outside race day: the next edition with a countdown to
- * the gun, and the list of editions already run.
- */
 // @FollowsBlueprint organism-presentational
 export function UpcomingEditionCard({ upcoming, archives, locale }: UpcomingEditionCardProps) {
   const { t } = useTranslation();

@@ -1,14 +1,4 @@
 /**
- * The songs context's way out of the process, and the only file in it that
- * makes a network call. Per ADR-0012 an outbound call lives in an
- * `.adapter.ts` and nowhere else.
- *
- * Two guards live here rather than in the service, because both belong to
- * MusicBrainz' contract rather than to anything the band does: a 60s response
- * cache keyed by the lowercased query, and a 1 req/sec floor between outbound
- * calls. Both reset on Lambda cold start, which is fine — the rate limit is
- * per-IP and the cache only softens load for a warm instance.
- *
  * @DependsOnExternal musicbrainz
  */
 
@@ -24,12 +14,7 @@ const MUSICBRAINZ_BASE_URL = 'https://musicbrainz.org/ws/2/recording/';
 const MUSICBRAINZ_USER_AGENT = 'Pragma/1.0 (https://pragma.borso.fr)';
 const EXTERNAL_SEARCH_CACHE_TTL_MS = 60_000;
 const EXTERNAL_SEARCH_MIN_INTERVAL_MS = 1_000;
-// Wide enough that the original survives the noise a free-text query
-// pulls in; `rankExternalHits` is what narrows it back down.
 const EXTERNAL_SEARCH_LIMIT = 25;
-// MusicBrainz' default Lucene parser reads a search box entry as a strict
-// field query and misses the recording entirely; dismax is its forgiving
-// parser, built for exactly this input.
 const EXTERNAL_SEARCH_PARSER = 'dismax=true';
 
 export type ExternalFetcher = (url: string, init: RequestInit) => Promise<Response>;

@@ -1,14 +1,4 @@
-/**
- * Inline "add an external link" fieldset rendered inside the song
- * edit form. The URL input is locally controlled by the parent
- * (`newLinkUrl` state); the `+ Add` button calls back to the parent's
- * `onAdd` handler which appends to the form's `links` field.
- *
- * The list of links already on the song is the child, so what you add appears
- * directly under the field you added it in. It used to render a screenful
- * above, which on a phone made Add look like it had done nothing.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';

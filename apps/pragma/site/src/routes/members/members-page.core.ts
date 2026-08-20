@@ -1,9 +1,4 @@
-/**
- * Decisions the members admin page makes: how the two lists are
- * ordered, which values the edit form starts from, what toggling an
- * instrument produces, and what the selection becomes after a delete.
- * @Feature members
- */
+/** @Feature members */
 
 export interface MemberRow {
   readonly id: string;
@@ -50,10 +45,6 @@ export function buildMemberFormValues(selection: MemberSelection | null): Member
   };
 }
 
-/**
- * The form key remounts the form whenever the operator picks another
- * member, which is how the fields reset without an effect.
- */
 export function buildMemberFormKey(selection: MemberSelection | null): string {
   return selection?.id ?? 'new-member';
 }
@@ -75,7 +66,6 @@ export function toggleInstrumentAssignment(
     : [...assignedInstrumentIds, instrumentId];
 }
 
-/** Deleting the selected member clears the selection; deleting another keeps it. */
 export function selectSelectionAfterDeletion(
   selection: MemberSelection | null,
   deletedMemberId: string,

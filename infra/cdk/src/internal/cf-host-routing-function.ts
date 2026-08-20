@@ -1,13 +1,3 @@
-/**
- * Re-exports the CloudFront Function (viewer-request) source code as a
- * string for `cloudfront.Function`'s `code: FunctionCode.fromInline(...)`.
- *
- * The actual JS lives in the sibling `cf-host-routing-function.js` so it
- * can be syntax-highlighted, lint-checked, and unit-tested as real JS
- * instead of an unparsed template literal.
- *
- */
-
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';

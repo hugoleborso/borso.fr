@@ -8,7 +8,6 @@ import type { RankedRunner } from './ranking.types';
 const EDITION: RaceEdition = {
   slug: 'lepin-2026',
   displayName: '2026',
-  // 4-hour race, 60-min interval → totalHourlyTops === 4.
   startsAt: new Date('2026-09-19T06:00:00+02:00'),
   endsAt: new Date('2026-09-19T10:00:00+02:00'),
   sunriseAt: new Date('2026-09-19T07:15:00+02:00'),
@@ -125,8 +124,6 @@ describe('renderLapsCsv', () => {
   });
 
   it('renders a single-runner full-race row with formatted loop durations', () => {
-    // Loops start on the hour. Alice clears each loop 5 min before the
-    // next top → every cell should be 55:00.
     const punches: readonly LoopPunch[] = [
       punch('alice', 1, '2026-09-19T06:55:00+02:00'),
       punch('alice', 2, '2026-09-19T07:55:00+02:00'),
@@ -142,8 +139,6 @@ describe('renderLapsCsv', () => {
   it('leaves cells empty when a runner has no punch for that loop', () => {
     const punches = [
       punch('alice', 1, '2026-09-19T06:55:00+02:00'),
-      // No punch for loops 2 / 3, then one for 4 (gap → DNF upstream,
-      // but the CSV still reports the raw loop times).
       punch('alice', 4, '2026-09-19T09:55:00+02:00'),
     ];
     const csv = renderLapsCsv(EDITION, [rankedOf(ALICE, 1)], punches);
@@ -176,8 +171,6 @@ describe('renderLapsCsv', () => {
   });
 
   it('drops a clock-skew degenerate punch (finishedAt before loop top) to an empty cell', () => {
-    // Loop 2 starts at 07:00; a punch stamped 06:30 lands before that
-    // top-of-hour and `loopDurationMs` returns `null`.
     const punches = [punch('alice', 2, '2026-09-19T06:30:00+02:00')];
     const csv = renderLapsCsv(EDITION, [rankedOf(ALICE, 1)], punches);
     expect(csv).toBe('bib,runner_slug,display_name,B1,B2,B3,B4\n1,alice,"Alice",,,,\n');

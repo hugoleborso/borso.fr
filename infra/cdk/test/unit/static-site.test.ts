@@ -15,11 +15,6 @@ describe('StaticSite (prod)', () => {
   });
 
   it('creates the alias R53 records with the exact FQDN (no zone double-suffix)', () => {
-    // Regression for the relative-recordName-doubles-zone trap: CDK's ARecord
-    // silently appends the zone when recordName has no trailing dot, so
-    // passing `'borso.fr'` against zone `borso.fr` produced `borso.fr.borso.fr.`
-    // in R53 — a phantom record that resolved nothing. Constructs MUST
-    // synthesise records whose Name equals "<domain>." exactly.
     tpl.hasResourceProperties('AWS::Route53::RecordSet', {
       Type: 'A',
       Name: 'borso.fr.',
@@ -28,10 +23,6 @@ describe('StaticSite (prod)', () => {
       Type: 'AAAA',
       Name: 'borso.fr.',
     });
-    // Belt-and-braces: assert the bug shape is structurally absent from the
-    // synthesised template. If anyone re-introduces a relative recordName,
-    // the synth output will contain `borso.fr.borso.fr.` and this assertion
-    // will fail before the deploy ever touches R53.
     expect(JSON.stringify(tpl.toJSON())).not.toContain('borso.fr.borso.fr');
   });
 
@@ -45,9 +36,6 @@ describe('StaticSite (prod)', () => {
   });
 
   it('sets DeletionPolicy=Delete on the bucket so failed first deploys roll back cleanly', () => {
-    // Static-site buckets hold only rebuildable build output; eradicates
-    // the orphan-bucket trap documented in cdk-failed-deploy-leaves-
-    // retained-buckets-orphaned.md.
     tpl.hasResource('AWS::S3::Bucket', {
       DeletionPolicy: 'Delete',
       UpdateReplacePolicy: 'Delete',
@@ -84,9 +72,6 @@ describe('StaticSite (prod)', () => {
         ]),
       }),
     });
-    // Belt-and-braces: assert the SPA fallback shape is NOT present, so a
-    // future edit that flips the default doesn't silently turn every multi-
-    // page static site (borso-fr, borsouvertures) into a soft-404 trap.
     expect(JSON.stringify(tpl.toJSON())).not.toContain('"ResponseCode":"200"');
   });
 
@@ -112,8 +97,6 @@ describe('StaticSite (prod)', () => {
 });
 
 describe('StaticSite (prod, with same-origin /api/* routing)', () => {
-  // AWS-managed CachingDisabled policy ID — stable documented constant.
-  // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html
   const CACHING_DISABLED_ID = '4135ea2d-6df8-44a3-9df3-4b5a84be39ad';
   const tpl = synth((stack) => {
     new StaticSite(stack, 'Site', {
@@ -159,9 +142,6 @@ describe('StaticSite (prod, with same-origin /api/* routing)', () => {
 });
 
 describe('StaticSite (prod, subdomain)', () => {
-  // The relative-recordName bug ALSO bit any subdomain caller: passing
-  // `'borsouvertures.borso.fr'` against zone `borso.fr` produced
-  // `borsouvertures.borso.fr.borso.fr.` — same shape, same phantom record.
   const tpl = synth((stack) => {
     new StaticSite(stack, 'Site', {
       app: 'borsouvertures',
@@ -185,7 +165,6 @@ describe('StaticSite (prod, subdomain)', () => {
 });
 
 describe('StaticSite (prod, trailing-dot domainName is idempotent)', () => {
-  // A caller passing the already-absolute form must not double the dot.
   const tpl = synth((stack) => {
     new StaticSite(stack, 'Site', {
       app: 'borso-fr',
@@ -224,8 +203,6 @@ describe('StaticSite (preview)', () => {
   });
 
   it('issues a CloudFront invalidation scoped to this PR prefix on every redeploy', () => {
-    // BucketDeployment surfaces invalidation by setting DistributionId +
-    // DistributionPaths on the Custom::CDKBucketDeployment resource.
     const json = JSON.stringify(tpl.toJSON());
     expect(json).toContain('"DistributionPaths":["/test-app/pr-42/*"]');
     expect(json).toContain('/borso/shared/previews-distribution-id');

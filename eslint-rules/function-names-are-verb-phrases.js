@@ -1,32 +1,5 @@
 import { readFunctionName } from './impurity.js';
 
-/**
- * A function name answers "what do I get back". `handleSetlist` answers
- * nothing, so the reader opens the body, and the four banned verbs are the
- * ones that guarantee that trip: `handle`, `process`, `manage`, and `do`.
- *
- * The replacement is in the verb table in the standard, where each verb
- * promises a return value, e.g. `find…` returns the thing or `null`, `list…`
- * returns an array, and `project…` returns a view computed from source data.
- *
- * The match needs an upper case letter after the verb, which is what tells
- * `doWork` from `download` and `handleClick` from `handler`. A name that is
- * exactly one of the four verbs, e.g. a Hono middleware named `handle`, is not
- * matched, because the standard's complaint is a verb followed by a noun that
- * says nothing.
- *
- * What this deliberately allows:
- *
- * - A React component, which is `PascalCase` and returns a tree rather than a
- *   value, e.g. `DoNotDisturbIcon`.
- * - A hook, which is `use<Uppercase>`.
- * - A destructured binding, e.g. `const { handleSubmit } = useForm()`, since
- *   the name comes from the library.
- * - A property that holds something other than a function, since only function
- *   nodes are visited.
- *
- * See docs/standards/01-naming.md.
- */
 const MESSAGE =
   '`{{name}}` starts with `{{verb}}`, which promises the reader nothing. Name the function ' +
   'after what it returns, e.g. `find…` for the thing or `null`, `list…` for an array, ' +

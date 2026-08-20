@@ -1,17 +1,3 @@
-/**
- * Drizzle schema for the instruments bounded context. An instrument has
- * a name and a family — harmonic, percussive, vocal or other — and the
- * transition rule reads the family to decide who can carry the gap
- * between two songs.
- *
- * `family` is nullable at the database level because Aurora DSQL refuses
- * NOT NULL and DEFAULT on a column added after table creation (see
- * docs/knowledge/dsql-postgres-compat-gaps.md §10). The write side
- * always provides one and the read side narrows a null through the
- * legacy `is_harmonic` boolean, which DSQL also refuses to drop, so the
- * repository keeps it in sync rather than leaving it to rot.
- */
-
 import { boolean, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { INSTRUMENT_FAMILIES } from '@domain/instrument.core';

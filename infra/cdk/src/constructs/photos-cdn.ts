@@ -24,44 +24,17 @@ import { SHARED_SSM_PARAMETERS } from '../internal/shared-ssm.js';
 import { applyStandardTags } from '../internal/tags.js';
 
 const PHOTOS_CACHE_MAX_AGE_SECONDS = 86_400;
+const FULLY_QUALIFIED_DOMAIN_SUFFIX = '.';
 
-/**
- * Inputs for {@link PhotosCdn}. The construct does NOT create the S3 bucket
- * (the bucket lifecycle — `RETAIN` on prod vs. `DESTROY` on previews — lives
- * with the app stack, which owns the user-generated-content trade-off).
- * It only attaches the CloudFront distribution, the OAC, and the Route 53
- * alias records.
- */
 export interface PhotosCdnProps {
-  /** App slug, kebab-case. Used for tagging only. */
   readonly app: string;
-  /** Deployment stage. */
   readonly stage: Stage;
-  /** PR number for preview/integ stages. */
   readonly prNumber?: number;
-  /**
-   * Existing S3 bucket holding the runner photos. The construct grants
-   * the CloudFront OAC service principal `s3:GetObject` on this bucket
-   * via a resource policy, scoped to the distribution ARN.
-   */
   readonly bucket: IBucket;
-  /**
-   * Fully-qualified hostname for the CDN. Examples:
-   *   - prod: `photos-cdn.borso.fr` (covered by the `*.borso.fr` wildcard cert).
-   *   - preview: `<app>-pr-<n>-photos.preview.borso.fr` (one level deep —
-   *     fits under `*.preview.borso.fr`).
-   */
   readonly hostname: string;
 }
 
 /**
- * CloudFront-fronted access to a private S3 bucket of runner photos.
- *
- * Single distribution per app+stage, deterministic URL
- * `https://<hostname>/<photoKey>`, 24h cache (spec Q.O.D. row 7). The
- * bucket stays private — only the OAC service principal can read it; the
- * distribution does the public-facing read.
- *
  * @Blueprint reusable-cdk-construct
  * @BlueprintName Reusable CDK Construct
  * @BlueprintUsage Use for any piece of infrastructure more than one application stack composes.
@@ -84,9 +57,6 @@ export class PhotosCdn extends Construct {
     const certArn = StringParameter.valueForStringParameter(this, certSsmPath);
     const certificate = Certificate.fromCertificateArn(this, 'Cert', certArn);
 
-    // Cache policy with TTLs pinned to the 24h spec target. The S3 origin
-    // doesn't set Cache-Control on uploads today, so CloudFront's
-    // defaultTtl is what reaches the viewer.
     const cachePolicy = new CachePolicy(this, 'CachePolicy', {
       cachePolicyName: `${props.app}-${props.stage}-photos${
         props.prNumber === undefined ? '' : `-pr-${props.prNumber}`
@@ -122,17 +92,17 @@ export class PhotosCdn extends Construct {
       hostedZoneId: zoneId,
       zoneName,
     });
-    // Force absolute FQDN so CDK's ARecord doesn't double-suffix the zone
-    // name (see static-site.ts for the same dantotsu).
-    const recordName = props.hostname.endsWith('.') ? props.hostname : `${props.hostname}.`;
+    const fullyQualifiedHostname = props.hostname.endsWith(FULLY_QUALIFIED_DOMAIN_SUFFIX)
+      ? props.hostname
+      : `${props.hostname}${FULLY_QUALIFIED_DOMAIN_SUFFIX}`;
     new ARecord(this, 'AliasA', {
       zone,
-      recordName,
+      recordName: fullyQualifiedHostname,
       target: RecordTarget.fromAlias(new CloudFrontTarget(this.distribution)),
     });
     new AaaaRecord(this, 'AliasAAAA', {
       zone,
-      recordName,
+      recordName: fullyQualifiedHostname,
       target: RecordTarget.fromAlias(new CloudFrontTarget(this.distribution)),
     });
 

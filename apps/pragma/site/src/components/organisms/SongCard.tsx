@@ -1,13 +1,4 @@
-/**
- * SongCard — the editorial card the prototype renders in the catalog
- * grid. Composes:
- *  - StatusChip (top-left),
- *  - ChartKindIcon (top-right),
- *  - serif italic title (font-display),
- *  - artist + tonality meta row,
- *  - MemberLineup footer (bare avatars).
- * @Feature songs
- */
+/** @Feature songs */
 
 import { Link } from 'react-router-dom';
 import { buildTonalityLabel } from '../../routes/catalog/tonality-label.utils';

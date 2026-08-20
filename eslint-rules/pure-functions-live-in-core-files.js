@@ -21,89 +21,6 @@ import {
   readMemberCallName,
 } from './impurity.js';
 
-/**
- * The other half of `conditions-live-in-pure-functions`. That rule says a
- * branch belongs in a pure function, and the present rule says a pure function
- * belongs in a `.core.ts` or `.utils.ts` file, where the coverage gate and the
- * mutation gate can find it.
- *
- * A function is reported when it carries at least one decision and shows no
- * sign of impurity. The signs are a deliberate list rather than an analysis,
- * since an analysis that is almost right produces false positives.
- *
- * ## What the list missed, and why it grew
- *
- * The first version read the function's own body for a handful of markers, so
- * it called roughly a third of what it reported pure when it was not. A
- * repository encoder that writes `arg.venue = …`, a Lambda entry point that
- * memoises its client in a module level `let`, a CDK helper that calls
- * `fs.readdirSync`, and an `async` function with no `await` were all reported
- * as pure helpers. Moving any of them into a `.core.ts` file would have moved
- * the impurity with them, which is the opposite of what the standard asks.
- *
- * The markers now are:
- *
- * 1. `await`, `yield`, JSX, `new Date()` with no argument, an impure global,
- *    `Date.now`, `Math.random`, and a call to a React hook, as before.
- * 2. **`async` itself**, whether or not the body awaits. An `async` function
- *    returns a promise, so its caller has to await it, and a promise returning
- *    function in a `.core.ts` file is a contract the coverage gate cannot
- *    check cheaply.
- * 3. **Module level mutable state**, meaning a read or a write of a `let` or a
- *    `var` declared at module scope. A function that memoises into one is a
- *    singleton factory, e.g. `getDatabase` and `getClient`.
- * 4. **A binding imported from an impure module**, see `IMPURE_MODULE_SOURCES`.
- *    `fs`, `crypto` and `child_process` are impure wherever they are called
- *    from.
- * 5. **Mutation of an argument**, meaning `arg.x = …`, `delete arg.x`,
- *    `arg[i] += …`, and a mutating method call such as `arg.push(…)`. The
- *    function writes outside its return value, so it is not pure.
- * 6. **A call to another impure function declared in the same file.** Impurity
- *    propagates along the call graph until it stops changing, so
- *    `readDsqlConfig`, which calls `readEnv`, which reads `process.env`, is
- *    impure. Imported functions stay unknown, and unknown counts as pure,
- *    because guessing at another file's body is the analysis this rule set out
- *    to avoid.
- *
- * ## Two shapes that are pure and still not helpers
- *
- * A function that **returns nothing** decides nothing. It exists for an effect
- * this list may not name, e.g. `applyStandardTags` calls `Tags.of(scope).add`
- * and `buildPragmaAppStack` constructs a stack. Either the return annotation
- * says `void`, `Promise<void>`, `never` or `asserts x is T`, or no `return`
- * carries a value.
- *
- * A **type guard**, meaning a function annotated `value is T`, asks what kind
- * of thing a value is rather than what it means. `conditions-live-in-pure-
- * functions` exempts the same question written inline, e.g. `typeof value ===
- * 'string'` and `Array.isArray(value)`, so naming it does not turn it into a
- * decision.
- *
- * ## A branch is not enough, it has to be a decision
- *
- * The rule used to count any `if`, ternary, `switch`, `&&` or `||`, which
- * reported every row encoder in every repository, because encoding a row is a
- * run of presence tests, e.g. `if ('title' in updates) encoded.title = …`.
- * Those functions are pure, and moving them into a `.core.ts` file would buy a
- * test that asserts `JSON.stringify` was called.
- *
- * So the branch has to be a decision, using the same definition as
- * `conditions-live-in-pure-functions`, in `decisions.js`. A presence or type
- * test, a choice between two plain values, a `switch` used as a lookup table,
- * and a bare `&&` or `||` combining values are all exempt.
- *
- * The one place the two rules differ is the guard clause. The sibling exempts
- * every guard, and leaves this rule to catch a decision written as a chain of
- * guards, e.g. `if (laps > required) { return 'finisher'; } return 'running';`.
- * So only a *refusing* guard is exempt here, meaning one that throws or
- * returns nothing.
- *
- * React components and hooks are exempt, because a component returns a tree
- * and a hook reads render state, so neither is a pure helper even when its
- * body happens to look like one.
- *
- * See docs/standards/02-purity-and-core-files.md.
- */
 const MESSAGE =
   'The function `{{name}}` branches and touches nothing outside its arguments, so it is a pure ' +
   'function and belongs in a `.core.ts` or `.utils.ts` file with a sibling test. Pure files ' +
@@ -147,10 +64,6 @@ function walk(node, visit) {
   }
 }
 
-/**
- * A branch that chooses between behaviours or computes a domain outcome, as
- * opposed to one that handles the shape of a value.
- */
 function isDecision(node, sourceCode) {
   switch (node.type) {
     case 'IfStatement': {
@@ -167,8 +80,6 @@ function isDecision(node, sourceCode) {
     case 'SwitchStatement': {
       return !isLookupTableSwitch(node);
     }
-    // `??` is absence, and `x || 'anonymous'` is a default. Anything else
-    // combines two computed tests, which is a branch the coverage gate counts.
     case 'LogicalExpression': {
       if (node.operator === '??') {
         return false;
@@ -185,7 +96,6 @@ function isCallToHook(callExpression) {
   return callExpression.callee.type === 'Identifier' && isReactHookName(callExpression.callee.name);
 }
 
-/** The identifier a member chain starts from, e.g. `row` in `row.a.b`. */
 function readRootIdentifierName(node) {
   let current = node;
   while (current.type === 'MemberExpression' || current.type === 'ChainExpression') {
@@ -236,7 +146,6 @@ function readParameterNames(functionNode) {
   return names;
 }
 
-/** `arg.x = …`, `delete arg.x`, `arg.x++`, and `arg.push(…)`. */
 function isArgumentMutation(node, parameterNames) {
   if (node.type === 'AssignmentExpression' || node.type === 'UpdateExpression') {
     const target = node.type === 'AssignmentExpression' ? node.left : node.argument;
@@ -262,7 +171,6 @@ function isArgumentMutation(node, parameterNames) {
   );
 }
 
-/** A `void`, `never`, `undefined`, `Promise<void>` or `asserts x is T` return. */
 function hasNothingReturnAnnotation(functionNode) {
   const annotation = functionNode.returnType?.typeAnnotation;
   if (annotation === undefined) {
@@ -285,7 +193,6 @@ function hasNothingReturnAnnotation(functionNode) {
   );
 }
 
-/** Walks the body without descending into a nested function of its own. */
 function hasValueReturn(functionNode) {
   if (functionNode.body.type !== 'BlockStatement') {
     return true;
@@ -311,7 +218,6 @@ function isTypeGuard(functionNode) {
   return functionNode.returnType?.typeAnnotation.type === 'TSTypePredicate';
 }
 
-/** A nested function's purity is judged by the function that contains it. */
 function hasEnclosingFunction(node) {
   let current = node.parent;
   while (current !== undefined && current !== null) {
@@ -327,15 +233,6 @@ function isWithin(range, outerNode) {
   return range[0] >= outerNode.range[0] && range[1] <= outerNode.range[1];
 }
 
-/**
- * Whether `name` reads the impure global rather than something the file
- * declared itself.
- *
- * A parameter named `window`, a local named `process` and an imported `fetch`
- * helper are declarations, so the read is not a read of the global. A name
- * the file never declares resolves either nowhere or to the global scope,
- * which is where `languageOptions.globals` puts the browser and Node names.
- */
 function isImpureGlobalRead(scope, name) {
   for (let current = scope; current !== null; current = current.upper) {
     if (current.set.has(name)) {
@@ -345,26 +242,12 @@ function isImpureGlobalRead(scope, name) {
   return true;
 }
 
-/**
- * The scope a module's own declarations live in.
- *
- * `getScope(Program)` answers the global scope, whose only child is the module
- * scope, and every `import` and every top level `let` is declared in the
- * child. Reading the parent instead would find no variables at all.
- */
 function readModuleScope(sourceCode, program) {
   const scope = sourceCode.getScope(program);
   const [child] = scope.childScopes;
   return child?.type === 'module' ? child : scope;
 }
 
-/**
- * Module scope bindings a pure function may not touch, as reference ranges.
- *
- * A `let` or a `var` at module scope is mutable state, and a binding imported
- * from `node:fs` reaches the file system. Scope analysis rather than a name
- * match, so a parameter that shadows one of them does not count.
- */
 function collectImpureBindingRanges(moduleScope) {
   const ranges = [];
   for (const variable of moduleScope.variables) {
@@ -386,11 +269,6 @@ function collectImpureBindingRanges(moduleScope) {
   return ranges;
 }
 
-/**
- * Every module scope function, by name, with the ranges from which it is
- * referenced. The reference ranges are what turns "who calls whom" into a
- * question about node positions, which needs no scope walking of its own.
- */
 function collectModuleFunctions(moduleScope) {
   const functions = new Map();
   for (const variable of moduleScope.variables) {
@@ -415,11 +293,6 @@ function collectModuleFunctions(moduleScope) {
   return functions;
 }
 
-/**
- * Marks a function impure when it calls an impure one from the same file,
- * repeatedly, because the callee may itself only become impure on a later
- * pass. The graph is one file wide, so the loop settles in a few passes.
- */
 function spreadImpurityAlongCallGraph(moduleFunctions, findings) {
   let hasChanged = true;
   while (hasChanged) {

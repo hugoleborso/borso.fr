@@ -51,9 +51,7 @@ describe('requestPosition', () => {
     });
   });
 
-  it('asks for the high-accuracy fix the geofence needs, with no cached position', () => {
-    // A cached or low-accuracy fix would be compared against the 100 m
-    // geofence, so the options are part of the contract, not a preference.
+  it('asks for the high-accuracy fix with no cached position, the options being part of the contract because whatever comes back is compared against the 100 m geofence', () => {
     let receivedOptions: PositionOptions | undefined;
     const geolocation: Geolocation = {
       getCurrentPosition: (_success, _error, options) => {

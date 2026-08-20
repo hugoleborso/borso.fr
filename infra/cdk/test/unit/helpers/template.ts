@@ -1,22 +1,8 @@
-/**
- * Test-only helpers for working with synthesized CFN templates.
- *
- * `aws-cdk-lib/assertions` types template properties as `any`/`unknown`,
- * which would force type assertions in every test. These helpers narrow
- * via type guards instead, keeping the tests assertion-free per the
- * repo-wide no-type-assertion rule.
- */
-
 import { App, Stack } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 
-/** Standard CDK env used across construct unit tests. */
 export const TEST_ENV = { account: '123456789012', region: 'eu-west-3' } as const;
 
-/**
- * Synthesize a one-stack CDK app and return its CFN template. Constructs
- * scoped under `setup` land in a stack named `TestStack` with `TEST_ENV`.
- */
 export function synthTemplate(setup: (stack: Stack) => void): Template {
   const app = new App();
   const stack = new Stack(app, 'TestStack', { env: TEST_ENV });
@@ -45,11 +31,6 @@ function isCfnOutput(value: unknown): value is CfnOutput {
   return isObject(value) && 'Value' in value;
 }
 
-/**
- * Returns every resource of `type` in the template, as a plain array.
- * Wraps `findResources` to drop the keying-by-logical-id and to give
- * test code a stable shape.
- */
 export function resourcesOfType(
   template: { findResources(type: string): Record<string, unknown> },
   type: string,
@@ -57,7 +38,6 @@ export function resourcesOfType(
   return Object.values(template.findResources(type)).filter(isCfnResource);
 }
 
-/** Output values from a synthesized template, narrowed to known shape. */
 export function outputValues(template: { toJSON(): unknown }): readonly unknown[] {
   const json = template.toJSON();
   if (!isObject(json) || !isObject(json.Outputs)) return [];

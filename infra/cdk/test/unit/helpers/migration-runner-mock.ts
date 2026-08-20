@@ -1,22 +1,3 @@
-/**
- * Shared mock state + SQL-mock factory for the migration-runner test
- * suites. Lives outside `src/` so vitest doesn't try to enforce 100 %
- * coverage on the harness itself, and outside the `*.test.ts` glob so
- * it doesn't auto-run.
- *
- * Two test files consume it:
- *   - `migration-runner.test.ts` — the legacy path (ensureSchema +
- *     applyMigrations).
- *   - `migration-runner-clone.test.ts` — the cloneFromSchema branch.
- *
- * The state is a module-level singleton — each test calls
- * `resetMigrationRunnerMockState()` in its `beforeEach` to wipe between
- * tests. The mock matches `information_schema` queries to fixture data
- * the test sets in `state.existingSchemas`, `state.tablesPerSchema`,
- * `state.columnsPerTable`; everything else falls through to the
- * pre-existing INSERT/SELECT bookkeeping used by the legacy tests.
- */
-
 interface UnsafeCall {
   readonly query: string;
   readonly params?: readonly unknown[];
@@ -27,13 +8,9 @@ export const state: {
   taggedCalls: string[];
   ended: number;
   appliedMigrations: Set<string>;
-  /** Test hook: if set, the next `.unsafe()` call rejects with this error. */
   rejectNextUnsafe: Error | null;
-  /** Schemas the mock pretends exist when the runner queries `information_schema.schemata`. */
   existingSchemas: Set<string>;
-  /** `schemaName → tables` the mock returns when the runner lists tables. */
   tablesPerSchema: Map<string, readonly string[]>;
-  /** `"schema.table" → columns` the mock returns when the runner lists columns. */
   columnsPerTable: Map<string, readonly string[]>;
 } = {
   unsafeCalls: [],
@@ -57,12 +34,6 @@ export function resetMigrationRunnerMockState(): void {
   state.columnsPerTable = new Map();
 }
 
-/**
- * Minimal subset of the postgres.js `Sql<{}>` shape that the migration
- * runner actually touches at runtime. Declared here so the mock type can
- * be inferred via Object.assign — no `as Sql<...>` casts at the test
- * boundary, no need to satisfy the full library interface.
- */
 export type SqlMock = ((
   strings: TemplateStringsArray,
   ...values: readonly unknown[]
@@ -108,10 +79,6 @@ export function makeSql(): SqlMock {
         const queriedSchema = listColumnsMatch[1] ?? '';
         const queriedTable = listColumnsMatch[2] ?? '';
         const columns = state.columnsPerTable.get(`${queriedSchema}.${queriedTable}`) ?? [];
-        // The runner reads the type alongside the name when it reconciles a
-        // target table against the source, so the fixture has to carry one.
-        // Every column in these fixtures is text, which is what the real
-        // schemas are almost entirely made of.
         return Promise.resolve(
           columns.map((column_name) => ({
             column_name,

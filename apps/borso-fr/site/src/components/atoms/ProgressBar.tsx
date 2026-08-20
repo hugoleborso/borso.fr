@@ -14,7 +14,6 @@ interface ProgressBarAppearance {
   marker: string;
 }
 
-/** The edition bar carries a marker at the fill's edge; the month bar does not. */
 const APPEARANCE_BY_TONE: Readonly<Record<ProgressBarTone, ProgressBarAppearance>> = {
   edition: {
     track: 'relative h-2.5 overflow-hidden bg-labours-stripe',

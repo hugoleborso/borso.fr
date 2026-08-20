@@ -1,13 +1,3 @@
-/**
- * Decides whether every workspace agrees on the version of every dependency it
- * shares with another workspace.
- *
- * The decision is about `pnpm-workspace.yaml`'s catalogs rather than about the
- * ranges themselves. Comparing ranges finds a disagreement after it happens;
- * requiring a shared name to resolve through the catalog means the second
- * workspace has no range of its own to disagree with.
- */
-
 const CATALOG_PREFIX = 'catalog:';
 const DEFAULT_CATALOG = 'default';
 const WORKSPACE_PREFIX = 'workspace:';
@@ -22,7 +12,6 @@ export interface WorkspaceManifest {
   readonly declarations: readonly Declaration[];
 }
 
-/** Every catalog by name, with `default` holding the unnamed `catalog:` block. */
 export type Catalogs = ReadonlyMap<string, ReadonlyMap<string, string>>;
 
 export interface CatalogProblem {
@@ -30,10 +19,6 @@ export interface CatalogProblem {
   readonly message: string;
 }
 
-/**
- * The catalog a range points at, or `null` when the range is a version of its
- * own. `catalog:` is the default catalog and `catalog:react19` is a named one.
- */
 export function readCatalogReference(range: string): string | null {
   if (!range.startsWith(CATALOG_PREFIX)) return null;
   const named = range.slice(CATALOG_PREFIX.length).trim();
@@ -119,10 +104,6 @@ function listUnusedEntries(
   return problems;
 }
 
-/**
- * Every reason the catalogs and the manifests disagree, in the order a reader
- * should act on them: name a version twice, point at nothing, hold nothing.
- */
 export function listCatalogProblems(
   manifests: readonly WorkspaceManifest[],
   catalogs: Catalogs,

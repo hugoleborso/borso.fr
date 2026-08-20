@@ -1,9 +1,3 @@
-/**
- * Mastery endpoints. Hono routing + Zod parsing only; orchestration in
- * the service. The `effective = override ?? default` projection and
- * row/column averages live in `mastery.core.ts`.
- */
-
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';

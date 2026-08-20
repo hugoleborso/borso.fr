@@ -1,10 +1,3 @@
-/**
- * Vitest globalSetup for the back-e2e gate. Assumes `DATABASE_URL` is
- * already exported by the caller (`pnpm run test` does this via the
- * `scripts/local-postgres.sh start pragma` invocation). The schema is
- * applied once; per-suite isolation is via `truncateAllTables`.
- */
-
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -72,8 +65,4 @@ export async function setup(): Promise<void> {
   }
   await applyMigrations(externalUrl);
   process.env.STAGE = 'dev';
-}
-
-export async function teardown(): Promise<void> {
-  // The sandbox Postgres is owned by the script that started it; nothing to tear down here.
 }

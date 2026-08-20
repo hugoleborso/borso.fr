@@ -1,12 +1,4 @@
-/**
- * The three note fields of the song form: how the song is built, the gimmicks
- * to watch for, and anything else.
- *
- * Three labelled boxes rather than one free-text area, because a named box
- * gets filled in and a blank one does not, and because the stage view reads
- * the structure and the gimmicks on their own.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';

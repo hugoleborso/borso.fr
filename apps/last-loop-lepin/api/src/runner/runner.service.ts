@@ -86,10 +86,6 @@ export async function listPunchesForRunner(
     .toSorted((left, right) => left.loopIndex - right.loopIndex);
 }
 
-/**
- * Write a runner row unless the edition already carries that slug. Exposed
- * for the test seeding endpoint, which replays one roster on every fixture.
- */
 export async function seedRunner(runner: Runner): Promise<void> {
   await upsertRunner(runner);
 }

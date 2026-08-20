@@ -3,9 +3,8 @@ import type { OpeningPanelProps } from '@/components/molecules/openingPanel.type
 import { OpeningsPanel } from '@/components/molecules/OpeningsPanel';
 import { VariationsPanel } from '@/components/molecules/VariationsPanel';
 
-/** Nothing to advance to on a wide viewport: all three columns are on screen. */
 function stayOnTheSameStep(): void {
-  // Intentionally empty.
+  return undefined;
 }
 
 // @FollowsBlueprint organism-presentational

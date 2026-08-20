@@ -1,8 +1,3 @@
-/**
- * A mastery score is the one number a band member argues about, so its bounds
- * are the rule worth pinning; the rest is uuid discipline on the composite keys.
- */
-
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import {

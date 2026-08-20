@@ -73,8 +73,6 @@ describe('githubActionsPrincipal', () => {
     expect(serialized).toContain('repo:a/b:ref:refs/heads/main');
   });
 
-  // An empty list synthesizes a role nothing can assume, and the failure only
-  // shows up at deploy time as an opaque STS error on whichever workflow tries.
   it('refuses to build a principal that trusts nothing', () => {
     expect(() =>
       githubActionsPrincipal('arn:aws:iam::123456789012:oidc-provider/x', {

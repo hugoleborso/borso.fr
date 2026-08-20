@@ -1,10 +1,3 @@
-/**
- * Test-seed controller. The skill-of-the-controller is to insert known
- * fixtures so the visual-validation flow can hit deterministic states
- * without driving the whole admin UI. The security guard (only mount
- * when ALLOW_TEST_SEED='1') is asserted in `../app.test.ts`.
- */
-
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';

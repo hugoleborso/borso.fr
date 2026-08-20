@@ -75,14 +75,6 @@ const INITIAL_SNAPSHOT: PlayMachineSnapshot = {
   autoOpponent: true,
 };
 
-/**
- * Everything one game owns: the configuration it was started with, the chess
- * engine, the played-move history, and the three modal flags. A fresh object
- * per {@link PlayMachine.start}, so the object's identity doubles as the
- * game's identity — a pending opponent timeout captures the run it belongs to
- * and bails once the machine has moved on, which is the mitigation for B5 in
- * the spec (a stale setTimeout firing after a reset).
- */
 interface PlayRun {
   config: PlayMachineConfig;
   chess: Chess;
@@ -154,16 +146,6 @@ function isOpponentToMove(run: PlayRun): boolean {
 }
 
 /**
- * Play-mode state machine. Owns one chess.js engine plus the played-move
- * history, both held in the {@link PlayRun} the current game created.
- * Components subscribe via `useSyncExternalStore`; tests drive it directly
- * with injected timers + RNG.
- *
- * The machine consults `computeBookState` on every move to decide whether the
- * user is still in book; the book engine is the source of truth for "what
- * moves are legal in this scope." The machine is responsible for chess state
- * and timing — it does not invent book logic.
- *
  * @Blueprint state-machine-module
  * @BlueprintName Hand Written State Machine Module
  * @BlueprintUsage Use for session state that outlives a render, has timers of its own, and would otherwise be a tangle of `useState` and effects.
@@ -190,8 +172,6 @@ export function createPlayMachine(options: PlayMachineOptions = {}): PlayMachine
     if (!readBookState(scheduledRun).inBook) return;
     scheduleTimeout(() => {
       const activeRun = run;
-      // The machine has moved on: a start or a reset replaced the run this
-      // reply was scheduled for.
       if (activeRun !== scheduledRun) return;
       const choice = pickRandom(readBookState(activeRun).possibleNextMovesUci);
       if (!choice) return;

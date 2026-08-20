@@ -1,9 +1,3 @@
-/**
- * 100%-coverage gate for the MusicBrainz response mapper. The live API
- * is never hit — the test feeds the committed fixture (and a handful
- * of malformed shapes) into the pure mapper.
- */
-
 import { describe, expect, it } from 'vitest';
 import FIXTURE from './__fixtures__/musicbrainz-sample.json';
 import {

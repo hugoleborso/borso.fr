@@ -1,8 +1,3 @@
-/**
- * A comment lives on an ordered pair, and the pair is two uuids; the comment
- * itself is trimmed, so whitespace is not a comment.
- */
-
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import {

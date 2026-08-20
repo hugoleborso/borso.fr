@@ -30,12 +30,6 @@ const opening: Opening = {
   variations: [variation],
 };
 
-/**
- * A dataset entry whose own id collides with the {@link ALL_KEY} sentinel. The
- * sentinel means "every entry at this level", so it must never resolve to this
- * decoy — which is what makes the sentinel check in each finder load-bearing
- * rather than a shortcut around a lookup that would miss anyway.
- */
 const decoyLineNamedAll: Line = {
   id: ALL_KEY,
   name: 'Decoy',

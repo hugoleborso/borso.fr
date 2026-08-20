@@ -1,12 +1,3 @@
-/**
- * Repository for the setlists bounded context.
- *
- * `lineup_override` is stored as TEXT (Aurora DSQL doesn't support
- * jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1).
- * `rowToEntry` is the single parse-and-Zod-validate boundary; writes
- * JSON.stringify on the way in.
- */
-
 import { and, asc, eq, inArray, max } from 'drizzle-orm';
 import type { z } from 'zod';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
@@ -138,13 +129,6 @@ export async function listSetlistsOfSession(sessionId: string): Promise<SetlistR
     .orderBy(asc(sessionSetlistTable.position));
 }
 
-/**
- * Writes the setlist and, when a session is named, the link that puts it
- * at the end of that session's setlists — in one transaction, because
- * Aurora DSQL enforces no foreign key, so a link written without its
- * setlist, or a setlist that was meant to be attached and is not, would
- * survive forever.
- */
 export async function insertSetlist(name: string, sessionId: string | null): Promise<SetlistRow> {
   const database = getDatabase();
   return await database.transaction(async (transaction) => {

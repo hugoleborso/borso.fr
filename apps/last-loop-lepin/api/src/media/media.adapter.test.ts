@@ -84,9 +84,6 @@ describe('media.adapter', () => {
     expect(presignedUpload.expiresAt.getTime()).toBe(now.getTime() + fiveMinutesMs);
   });
   it('falls back to the deployment region when the environment names none', async () => {
-    // The client is cached for the life of the module, so the region is read
-    // exactly once — on a module that has already signed something, the
-    // fallback is unreachable however the environment is set.
     vi.resetModules();
     process.env.PHOTOS_BUCKET = 'lastloop-test-bucket';
     delete process.env.AWS_REGION;
@@ -151,8 +148,6 @@ describe('media.adapter', () => {
       new Date(),
     );
     expect(presignedUpload.uploadUrl).toContain('us-east-1');
-    // This is the one test that re-imports the module, so it is the only place
-    // a value computed once at module load can be observed under a mutation.
     expect(presignedUpload.uploadUrl).toContain('X-Amz-Expires=300');
     process.env.AWS_REGION = 'eu-west-3';
   });

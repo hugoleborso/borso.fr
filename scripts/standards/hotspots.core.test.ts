@@ -29,7 +29,6 @@ function buildWeakFiles(count: number): readonly FileHistory[] {
 
 const HEAD_REVISION = 'abc1234';
 
-/** The rows of one markdown table, picked out by the cell each row opens with. */
 function readRows(rendered: string, opensWith: string): readonly string[] {
   return rendered.split('\n').filter((line) => line.startsWith(opensWith));
 }
@@ -60,12 +59,10 @@ describe('readWeaknesses', () => {
 });
 
 describe('rankHotspots', () => {
-  /** The pattern is doing its job; churn alone is not risk. */
   it('leaves out a file that changes constantly and follows a pattern', () => {
     expect(rankHotspots([buildHistory({ commits: 99 })])).toEqual([]);
   });
 
-  /** Nobody is there to get it wrong. */
   it('leaves out a weak file nobody touches', () => {
     expect(rankHotspots([buildHistory({ commits: 0, followsAPattern: false })])).toEqual([]);
   });
@@ -116,11 +113,6 @@ describe('rankLayerGaps', () => {
     expect(gaps).toEqual([{ layer: 'config', unpatternedFiles: 2, churn: 8 }]);
   });
 
-  /**
-   * A pattern pays where work is happening, not where files are merely many.
-   * The busy layer is named last in the alphabet on purpose, so a page ordered
-   * by name rather than by churn fails here.
-   */
   it('orders by the churn on unpatterned files, not by how many there are', () => {
     const gaps = rankLayerGaps([
       buildHistory({ layer: 'alpha', commits: 1, followsAPattern: false }),
@@ -246,7 +238,6 @@ describe('renderHotspotReport', () => {
     ]);
   });
 
-  /** Twenty five is shown in full, so the sentence would be about no files. */
   it('says nothing about files left out when exactly twenty five score', () => {
     const rendered = renderHotspotReport(buildWeakFiles(25), 400, HEAD_REVISION);
     expect(readRows(rendered, '| `file-')).toHaveLength(25);

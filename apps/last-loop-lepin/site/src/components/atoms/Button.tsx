@@ -19,7 +19,6 @@ interface ButtonProps {
   readonly justify?: ButtonJustify;
   readonly disabled?: boolean;
   readonly title?: string;
-  /** Hook the browser driven tests use to find the control. */
   readonly testId?: string;
   readonly style?: CSSProperties;
 }

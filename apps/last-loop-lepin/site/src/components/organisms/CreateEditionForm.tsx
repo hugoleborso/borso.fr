@@ -29,11 +29,6 @@ interface CreateEditionFormProps {
 }
 
 /**
- * Standalone create form, always available so the organiser can register next
- * year's race while the current one is still running. It owns its own field
- * state, so editing the live edition next to it cannot leak values across.
- */
-/**
  * @Blueprint organism-form
  * @BlueprintName Organism Form
  * @BlueprintUsage Use for a screen region that collects fields and writes them through a mutation.

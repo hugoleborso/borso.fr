@@ -1,13 +1,3 @@
-/**
- * The two shape changes a session goes through on the way in, both driven by
- * the `kind` discriminant: the validated request body becomes the insert
- * shape, and the insert shape becomes the persisted row.
- *
- * A concert carries a venue, a capacity, gear and a friend count per member;
- * a practice carries the concert it prepares. Neither may borrow the other's
- * columns, and the two functions below are where that is decided.
- */
-
 import type { z } from 'zod';
 import type { sessionCreateSchema, sessionTable } from './sessions.schema';
 

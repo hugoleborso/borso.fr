@@ -1,17 +1,3 @@
-/**
- * Textarea that grows to the height of what it holds, so the page is the only
- * thing that scrolls. A fixed row count shows a few lines of a longer note
- * through a nested scroll region, and the drag that would reach the rest moves
- * the box instead of the page — iOS Safari draws no resize grabber, so on a
- * phone there is no way to make the box taller.
- *
- * `rows` still sets the floor: `scrollHeight` never reports less than the box
- * the row count reserves, so an empty field keeps the height it was given.
- *
- * `measureAutoGrowBox` sets the ceiling, and hands the box back its own scroll
- * once the content passes it.
- */
-
 import type { JSX, TextareaHTMLAttributes } from 'react';
 import { measureAutoGrowBox } from './auto-grow-textarea.utils';
 import { composeClassName } from './class-name.utils';

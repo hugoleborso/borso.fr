@@ -1,10 +1,3 @@
-/**
- * The banner shown publicly after a punch correction lands stays up for one
- * minute. The rule is a function of the correction instant and the current
- * time, so the component can re-render on every clock tick and let the
- * predicate flip on its own.
- */
-
 const CORRECTION_BANNER_LIFETIME_MS = 60_000;
 
 // @FollowsBlueprint utils-pure-module

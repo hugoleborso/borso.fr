@@ -1,16 +1,4 @@
-/**
- * Sparkline path geometry — pure, deterministic, fully covered. The
- * SVG renderer in the sibling `EnergySparkline.tsx` just consumes
- * `path` + `points`.
- *
- *  - `width` is the total SVG width in user units,
- *  - `height` is the total SVG height in user units,
- *  - `values` is a sequence of 1..10 energy levels (nullable —
- *    nulls fall back to 5, the neutral midpoint),
- *  - the curve is the Catmull-Rom-ish quadratic-Bezier chain the
- *    prototype's `EnergySparkline` uses.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 const VERTICAL_PADDING = 6;
 const VERTICALLY_PADDED_EDGES = 2;

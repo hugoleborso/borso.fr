@@ -1,9 +1,4 @@
-/**
- * Decisions the catalog page makes: which songs a filter and a search
- * box leave visible, how many songs each status filter would show, and
- * which lineup entries carry a real instrument.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { Lineup } from '@domain/lineup.core';
 
@@ -51,7 +46,6 @@ export function selectVisibleSongs<Song extends CatalogSong>(
   );
 }
 
-/** A member holding no instrument sits the song out, which the card omits. */
 export function compactLineup(lineup: Lineup): Record<string, readonly string[]> {
   const compacted: Record<string, readonly string[]> = {};
   for (const [memberId, instrumentIds] of Object.entries(lineup)) {
@@ -62,22 +56,12 @@ export function compactLineup(lineup: Lineup): Record<string, readonly string[]>
 
 const NEW_SONG_PATH = '/catalog/new';
 
-/**
- * Where the create button goes. What the operator typed in the search box is
- * the title they were looking for and did not find, so it travels to the form
- * rather than being typed twice.
- */
 export function buildNewSongPath(search: string): string {
   const title = search.trim();
   if (title.length === 0) return NEW_SONG_PATH;
   return `${NEW_SONG_PATH}?title=${encodeURIComponent(title)}`;
 }
 
-/**
- * What the empty grid says. "No songs yet" is true of an empty catalog and
- * false of a search that matched nothing, and the second is the case the
- * operator is far more often looking at.
- */
 export function selectCatalogEmptyMessageKey(
   search: string,
 ): 'catalog.emptyList' | 'catalog.emptySearch' {

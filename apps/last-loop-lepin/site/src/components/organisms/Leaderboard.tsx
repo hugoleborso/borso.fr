@@ -31,13 +31,7 @@ const WRAPPER_BY_INTERACTIVITY: Readonly<
 
 interface LeaderboardProps {
   readonly ranked: readonly RankedRunnerDto[];
-  /** Slugs holding the edition's fastest lap record; each one gets a badge. */
   readonly fastestLapSlugs?: ReadonlySet<string>;
-  /**
-   * Tap on a chip, handled by the parent. Omitted on screens where chips are
-   * not interactive, e.g. the broadcast display, so no inert button catches
-   * keyboard focus there.
-   */
   readonly onChipSelect?: (entry: RankedRunnerDto) => void;
   readonly locale: string;
 }
@@ -45,10 +39,6 @@ interface LeaderboardProps {
 const EMPTY_FASTEST_LAP_SLUGS: ReadonlySet<string> = new Set();
 const NO_SELECTION = () => undefined;
 
-/**
- * The standings, laid out as chips flowing down CSS columns, which gives a
- * masonry look without the experimental grid track value.
- */
 // @FollowsBlueprint organism-presentational
 export function Leaderboard({
   ranked,

@@ -1,15 +1,3 @@
-/**
- * Drizzle schema barrel. Each domain owns its table definitions in
- * `<domain>.schema.ts` (vertical-slice rule per CLAUDE.md). This file
- * re-exports them in one namespace so the drizzle client + drizzle-kit
- * can pick up every table without listing them ad-hoc.
- *
- * Foreign keys are declared in TypeScript for documentation but Aurora
- * DSQL does not enforce them at write time (see last-loop-lepin's
- * runner.schema.ts header). App-level invariants live in the service
- * layer.
- */
-
 // @FollowsBlueprint database-schema-barrel
 export { appConfigTable, authAttemptTable } from '../auth/auth.schema';
 export { barTable } from '../bars/bars.schema';

@@ -1,18 +1,5 @@
 /**
  * @vitest-environment node
- *
- * CDK synth audit for the pragma stack. The non-trivial assertions:
- *
- * 1. No `AWS::SecretsManager::Secret` resources — per ADR-0004 the
- *    shared password hash + HMAC signing key live in the application
- *    DB row `pragma.app_config`, not in Secrets Manager.
- * 2. The uploads bucket carries the expected name shape per stage,
- *    blocks all public access, and exposes the GET/PUT CORS pair the
- *    front-end relies on.
- * 3. The API Lambda receives `UPLOADS_BUCKET` as an env var on every
- *    stage and `ALLOW_TEST_SEED='1'` only on non-prod stages (the flag
- *    is injected by `PreviewableApp`, shared across every app).
- * 4. The prod stack carries the `pragma.borso.fr` CloudFront alias.
  */
 
 import path from 'node:path';
@@ -30,12 +17,6 @@ const FAKE_API_ENTRY = path.join(WORKSPACE_ROOT, 'api', 'src', 'main.ts');
 const FAKE_MIGRATIONS_DIR = path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations');
 const PREVIEW_PR_NUMBER = 1;
 
-/**
- * Synthesising this app takes seconds, and there are only two distinct results,
- * so the twelve call sites below share two of them. Without the cache the suite
- * builds the same two templates six times each, which is what put it over its
- * per-test budget whenever the pre-push hook ran its gates in parallel.
- */
 const templateByStage = new Map<string, Template>();
 
 // @FollowsBlueprint test-cdk-synth
@@ -92,28 +73,15 @@ function readSchemaCloneConfig(template: Template): unknown {
 }
 
 describe('pragma preview schema cloning', () => {
-  // This stack copies production rows — real members, songs, setlists — into
-  // every preview, and a preview URL is public. These two assertions are the
-  // guard rails on that decision: prod must never clone (a self-clone would be
-  // destructive), and the exclusions must not silently shrink.
-  it('never clones on prod', () => {
+  it('never clones on prod, where source and target would be the same schema', () => {
     expect(readSchemaCloneConfig(synthAppStack('prod'))).toBeUndefined();
   });
 
-  it('clones prod into a preview, minus rate-limit state, with avatar keys nulled', () => {
+  it('clones prod into a preview, replacing app_config so the production password gates the preview, dropping rate-limit state and nulling avatar keys', () => {
     expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
       sourceSchemaName: 'prod',
-      // `app_config` is deliberately absent from this list: the preview is
-      // protected by production's own password, which is the only credential
-      // that is neither hard-coded in a public repository nor in need of
-      // distribution. Adding it here would lock every preview out.
       tableBlocklist: ['auth_attempt'],
-      // Prod's uploads bucket is a different bucket; a cloned key would 404.
       columnsToNullify: { member: ['avatar_s3_key'] },
-      // Without this the clone's ON CONFLICT DO NOTHING concedes to whatever
-      // row id=1 the schema already had — which on a schema bootstrapped by
-      // the old fixture meant real production data behind the fixture's
-      // published password.
       tablesToReplace: ['app_config'],
     });
   });

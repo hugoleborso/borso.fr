@@ -1,10 +1,3 @@
-/**
- * Back-e2e for the sessions endpoints. Covers auth gating, CRUD on
- * concerts and practices, the kind discriminator (a payload that mixes
- * concert-only with practice-only keys is rejected at the controller
- * boundary), and the detaching of the setlists on session delete.
- */
-
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
@@ -224,8 +217,6 @@ describe('sessions controller (back-e2e)', () => {
     );
     expect(afterDelete.setlists).toEqual([]);
 
-    // The setlist itself outlives the session: another one may be
-    // playing it, and it is reachable from the index either way.
     const stillListed = await readJson(
       await jsonRequest(app, '/api/setlists', { cookieHeader }),
       setlistListEnvelope,

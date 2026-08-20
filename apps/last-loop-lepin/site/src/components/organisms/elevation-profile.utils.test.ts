@@ -6,10 +6,7 @@ const PROFILE_HEIGHT = 100;
 
 // @FollowsBlueprint test-pure-unit
 describe('buildProfileGeometry', () => {
-  it('returns a degenerate geometry for an empty elevations series', () => {
-    // Defensive: the caller renders the placeholder before invoking the
-    // helper, but if a future call site forgets the guard, the SVG should
-    // still be well-formed (no NaN coords).
+  it('returns a well-formed baseline geometry with no NaN coordinates for an empty series', () => {
     const geometry = buildProfileGeometry([], [], PROFILE_WIDTH, PROFILE_HEIGHT);
     expect(geometry.areaPolygonPoints).toBe(
       `0,${PROFILE_HEIGHT} ${PROFILE_WIDTH},${PROFILE_HEIGHT}`,
@@ -21,7 +18,7 @@ describe('buildProfileGeometry', () => {
     expect(geometry.height).toBe(PROFILE_HEIGHT);
   });
 
-  it('flat profile: every Y collapses to height/2 (no divide-by-zero)', () => {
+  it('flat profile: every Y, in yAt and in the polyline alike, collapses to height/2 (no divide-by-zero)', () => {
     const geometry = buildProfileGeometry(
       [100, 100, 100],
       [0, 50, 100],
@@ -31,7 +28,6 @@ describe('buildProfileGeometry', () => {
     expect(geometry.yAt(0)).toBe(PROFILE_HEIGHT / 2);
     expect(geometry.yAt(0.5)).toBe(PROFILE_HEIGHT / 2);
     expect(geometry.yAt(1)).toBe(PROFILE_HEIGHT / 2);
-    // Every Y in the polyline is height/2.
     const yCoords = geometry.linePolylinePoints
       .split(' ')
       .map((pair) => Number.parseFloat(pair.split(',')[1] ?? '0'));
@@ -40,36 +36,31 @@ describe('buildProfileGeometry', () => {
     }
   });
 
-  it('monotonic climb: yAt(0) is the floor, yAt(1) is the top-margin ceiling', () => {
+  it('monotonic climb: the lowest elevation lands on the canvas floor and the highest 5 % below the top', () => {
     const geometry = buildProfileGeometry(
       [100, 200, 300],
       [0, 50, 100],
       PROFILE_WIDTH,
       PROFILE_HEIGHT,
     );
-    // The lowest elevation lands at y = height (canvas floor); the
-    // highest lands at y = height × Y_TOP_MARGIN_FRACTION (5 % from top).
     expect(geometry.yAt(0)).toBeCloseTo(PROFILE_HEIGHT, 5);
     expect(geometry.yAt(1)).toBeCloseTo(PROFILE_HEIGHT * 0.05, 5);
   });
 
-  it('V-shape: yAt(0.5) hits the bottom of the V (lowest elevation)', () => {
+  it('V-shape: yAt(0.5) hits the lowest elevation at the canvas floor, SVG Y being inverted', () => {
     const geometry = buildProfileGeometry(
       [300, 100, 300],
       [0, 50, 100],
       PROFILE_WIDTH,
       PROFILE_HEIGHT,
     );
-    // The dip at fraction 0.5 reaches the minimum elevation → y = height
-    // (canvas floor, since canvas Y is inverted).
     expect(geometry.yAt(0.5)).toBeCloseTo(PROFILE_HEIGHT, 5);
   });
 
-  it('large N (50 points): the area polygon has N + 2 vertices (bottom-left, samples, bottom-right)', () => {
+  it('large N: a 50-sample sine profile, whose min differs from its max, yields N + 2 polygon vertices (bottom-left, samples, bottom-right)', () => {
     const elevations: number[] = [];
     const cumulative: number[] = [];
     for (let index = 0; index < 50; index += 1) {
-      // Sine-ish profile so min ≠ max.
       elevations.push(400 + Math.sin(index / 5) * 100);
       cumulative.push(index * 100);
     }
@@ -78,14 +69,13 @@ describe('buildProfileGeometry', () => {
     expect(vertexCount).toBe(elevations.length + 2);
   });
 
-  it('yAt(0) returns the y of the first elevation sample', () => {
+  it('yAt(0) returns the y of the first elevation sample, the canvas floor when it is the minimum', () => {
     const geometry = buildProfileGeometry(
       [100, 200, 300],
       [0, 50, 100],
       PROFILE_WIDTH,
       PROFILE_HEIGHT,
     );
-    // First sample y for elevation 100 (the minimum) is the canvas floor.
     expect(geometry.yAt(0)).toBeCloseTo(PROFILE_HEIGHT, 5);
   });
 
@@ -99,24 +89,20 @@ describe('buildProfileGeometry', () => {
     expect(geometry.yAt(1)).toBeCloseTo(PROFILE_HEIGHT * 0.05, 5);
   });
 
-  it('yAt(midpoint) lerps between the two surrounding samples', () => {
-    // 3 evenly-spaced samples [100, 200, 300]; fraction 0.25 lands halfway
-    // between sample 0 and 1 → interpolated elevation = 150.
+  it('yAt(0.25) lerps to elevation 150, halfway between the two surrounding samples of [100, 200, 300]', () => {
     const geometry = buildProfileGeometry(
       [100, 200, 300],
       [0, 50, 100],
       PROFILE_WIDTH,
       PROFILE_HEIGHT,
     );
-    // Elevation 150 in a [100, 300] span → normalised 0.25.
     const usableHeight = PROFILE_HEIGHT * (1 - 0.05);
-    const expectedY = PROFILE_HEIGHT - 0.25 * usableHeight;
+    const normalisedFor150 = 0.25;
+    const expectedY = PROFILE_HEIGHT - normalisedFor150 * usableHeight;
     expect(geometry.yAt(0.25)).toBeCloseTo(expectedY, 5);
   });
 
-  it('yAt(0.75) lerps from the sample before it, not from the start of the track', () => {
-    // 3 evenly-spaced samples [100, 200, 300]; fraction 0.75 lands halfway
-    // between sample 1 (50 m, 200 m of elevation) and sample 2 → 250.
+  it('yAt(0.75) lerps to elevation 250 from the sample before it, not from the start of the track', () => {
     const geometry = buildProfileGeometry(
       [100, 200, 300],
       [0, 50, 100],
@@ -124,7 +110,8 @@ describe('buildProfileGeometry', () => {
       PROFILE_HEIGHT,
     );
     const usableHeight = PROFILE_HEIGHT * (1 - 0.05);
-    const expectedY = PROFILE_HEIGHT - 0.75 * usableHeight;
+    const normalisedFor250 = 0.75;
+    const expectedY = PROFILE_HEIGHT - normalisedFor250 * usableHeight;
     expect(geometry.yAt(0.75)).toBeCloseTo(expectedY, 5);
   });
 
@@ -149,9 +136,7 @@ describe('buildProfileGeometry', () => {
     expect(xCoords).toEqual([0, 0]);
   });
 
-  it('takes the first sample reaching the target when several share a distance', () => {
-    // Samples 1 and 2 both sit at 50 m: the one that first reaches the
-    // target is the answer, so 0.5 reads elevation 200, not 400.
+  it('takes the first sample reaching the target when several share a distance, so 0.5 reads 200 and not 400', () => {
     const geometry = buildProfileGeometry(
       [100, 200, 400, 300],
       [0, 50, 50, 100],
@@ -163,9 +148,7 @@ describe('buildProfileGeometry', () => {
     expect(geometry.yAt(0.5)).toBeCloseTo(PROFILE_HEIGHT - normalisedFor200 * usableHeight, 5);
   });
 
-  it('reads the very last sample at fraction 1 when the track ends on a repeated distance', () => {
-    // The last two samples both sit at 100 m; fraction 1 is the end of the
-    // track, which is elevation 300, not the 400 of the sample before it.
+  it('reads the very last sample at fraction 1 when the track ends on a repeated distance, so 1 reads 300 and not the 400 before it', () => {
     const geometry = buildProfileGeometry(
       [100, 200, 400, 300],
       [0, 50, 100, 100],
@@ -188,58 +171,36 @@ describe('buildProfileGeometry', () => {
     expect(geometry.yAt(2)).toBeCloseTo(geometry.yAt(1), 9);
   });
 
-  it('single-point series: yAt always returns the only sample y', () => {
+  it('single-point series: the elevation span is zero, so yAt always returns the mid-line', () => {
     const geometry = buildProfileGeometry([500], [0], PROFILE_WIDTH, PROFILE_HEIGHT);
-    // With elevationSpan === 0 (single sample equals itself), Y collapses
-    // to mid-line.
     expect(geometry.yAt(0)).toBe(PROFILE_HEIGHT / 2);
     expect(geometry.yAt(0.5)).toBe(PROFILE_HEIGHT / 2);
     expect(geometry.yAt(1)).toBe(PROFILE_HEIGHT / 2);
   });
 
-  it('zero-length track (cumulative all zero): yAt returns the first sample y', () => {
-    // Degenerate input — every sample sits at distance 0. The helper
-    // shouldn't divide by zero; it returns the first sample's y.
+  it('zero-length track, every cumulative at 0: yAt returns the first sample y instead of dividing by zero', () => {
     const geometry = buildProfileGeometry([100, 200], [0, 0], PROFILE_WIDTH, PROFILE_HEIGHT);
-    // elevationSpan = 100 ≠ 0, so we take the "first sample y" branch.
     expect(geometry.yAt(0.5)).toBeCloseTo(PROFILE_HEIGHT, 5);
   });
 
-  it('handles cumulativeDistances shorter than pointElevations (degenerate input)', () => {
-    // Defensive against length mismatch (the Zod refine forbids this at
-    // the API boundary, but the helper is also called directly from the
-    // unit test and the React shell). The zip truncates at the shorter
-    // input; the rest of the elevations are dropped.
+  it('truncates at the shorter input when cumulativeDistances is shorter than pointElevations, dropping the trailing elevations', () => {
     const geometry = buildProfileGeometry([100, 200, 300], [0, 50], PROFILE_WIDTH, PROFILE_HEIGHT);
-    // Two samples retained → polyline has 2 vertices.
     expect(geometry.linePolylinePoints.split(' ')).toHaveLength(2);
   });
 
-  it('non-monotonic cumulative: yAt falls back to the last sample when no segment matches', () => {
-    // A pathological input where cumulative decreases after the first
-    // sample. `totalDistance = max(cumulative) = 100` (from the first
-    // sample), but no later sample has cumulative >= targetDistance for
-    // a fraction near 1 → `foundSegment` stays false, the helper returns
-    // the y of the last sample.
+  it('non-monotonic cumulative: yAt falls back to the last sample when no later sample reaches the target distance', () => {
     const geometry = buildProfileGeometry(
       [100, 300, 500],
       [100, 50, 25],
       PROFILE_WIDTH,
       PROFILE_HEIGHT,
     );
-    // Fraction 0.9 → targetDistance = 90; later cumulatives are 50 and
-    // 25, both < 90 → fallback path. yForElevation(500) is the canvas
-    // ceiling minus margin.
     const fallback = geometry.yAt(0.9);
     expect(Number.isFinite(fallback)).toBe(true);
-    // Also exercises the `< targetDistance` truthy branch (twice).
     expect(fallback).toBeCloseTo(PROFILE_HEIGHT * 0.05, 5);
   });
 
-  it('non-monotonic cumulative: fraction 0 still reads the first sample', () => {
-    // Without the fraction-0 short-circuit, the walk would extrapolate
-    // backwards across the decreasing first segment and land on the last
-    // elevation instead of the first.
+  it('non-monotonic cumulative: the fraction-0 short-circuit reads the first sample rather than extrapolating backwards to the last', () => {
     const geometry = buildProfileGeometry(
       [100, 300, 500],
       [100, 50, 25],

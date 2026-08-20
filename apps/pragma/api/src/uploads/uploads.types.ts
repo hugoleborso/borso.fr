@@ -1,9 +1,3 @@
-/**
- * Shared DTOs for the uploads bounded context. The controller, service
- * and repository all import from here so the swap to a real presigner
- * doesn't ripple through type names.
- */
-
 export interface PresignedPutUrl {
   readonly uploadUrl: string;
   readonly objectKey: string;

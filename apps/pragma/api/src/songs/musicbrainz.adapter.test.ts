@@ -1,10 +1,5 @@
 /**
  * @vitest-environment node
- *
- * The network never happens here: `searchExternal` takes its fetcher, its
- * clock and its cache as options precisely so the two guards that belong to
- * MusicBrainz' contract — a 60s response cache and a 1 req/sec floor — can be
- * driven without a socket or a timer.
  */
 
 // @FollowsBlueprint test-node-adapter
@@ -87,12 +82,8 @@ describe('searchExternal', () => {
     vi.useFakeTimers();
     try {
       const fetcher = vi.fn(respondWith(FIXTURE));
-      // One millisecond into the floor, so 999 remain.
       const state = freshState(RATE_FLOOR_MS - 1);
       const pending = searchExternal('Get Lucky', { fetcher, now: () => RATE_FLOOR_MS, state });
-      // Let every pending microtask run: without the wait the request would
-      // already be out, and a synchronous assertion could not tell the two
-      // apart, since the fetch is awaited either way.
       await vi.advanceTimersByTimeAsync(0);
       expect(fetcher).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(RATE_FLOOR_MS - 2);
@@ -107,9 +98,6 @@ describe('searchExternal', () => {
 
   it('schedules no wait at all once the floor has elapsed', async () => {
     vi.useFakeTimers();
-    // The floor is exactly spent, which is the boundary: a wait of zero and no
-    // wait at all are indistinguishable by timing, so what separates them is
-    // whether a timer was ever scheduled.
     const scheduleWait = vi.spyOn(globalThis, 'setTimeout');
     try {
       const fetcher = vi.fn(respondWith(FIXTURE));
@@ -126,8 +114,6 @@ describe('searchExternal', () => {
   });
 
   it('treats a refusal as no results rather than an error the caller must handle', async () => {
-    // The body is a payload that would map to hits, so the status is the only
-    // thing that can produce an empty answer here.
     const hits = await searchExternal('Get Lucky', {
       fetcher: respondWith(FIXTURE, 503),
       now: () => 0,

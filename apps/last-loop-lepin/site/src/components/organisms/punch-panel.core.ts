@@ -1,16 +1,3 @@
-/**
- * The punching screen's rules.
- *
- * Backyard rule: every loop starts on the top of the hour, not when the
- * previous loop closed, so which loop the organiser is punching comes from
- * the elapsed race time and never from anybody's punches.
- *
- * A punch the organiser just tapped shows as done straight away, from an
- * overlay that carries the loop it belongs to. The overlay needs no clearing
- * when the race ticks into the next loop: an entry recorded against loop
- * three simply stops matching once the current loop is four.
- */
-
 import type { RankedRunnerDto } from '../../lib/race.types';
 
 const MINUTES_TO_MS = 60_000;
@@ -19,7 +6,6 @@ const LATE_PROGRESS_THRESHOLD = 0.85;
 
 export interface PunchLoopClock {
   readonly currentLoopIndex: number;
-  /** How far into the current loop the race is, from zero to one. */
   readonly progressInLoop: number;
   readonly minutesToNextTop: number;
 }
@@ -85,12 +71,6 @@ export interface PunchTile {
 }
 
 /**
- * One tile per runner still in the race, in standings order. A tile reads as
- * punched once the server credits the current loop or the organiser's own tap
- * is still in flight, and as late when the top of the hour is close and the
- * runner has not come through.
- */
-/**
  * @Blueprint core-view-projection
  * @BlueprintName Core View Projection
  * @BlueprintUsage Use for turning fetched data plus the current time into the exact list a component maps over.
@@ -117,10 +97,6 @@ export function listPunchTiles(
   return tiles;
 }
 
-/**
- * How a tile reads. A punched runner is never also late, because `listPunchTiles`
- * only marks a tile late while it is unpunched, so the three states are exclusive.
- */
 export type PunchTileTone = 'pending' | 'punched' | 'late';
 
 export function selectPunchTileTone(isPunched: boolean, isLate: boolean): PunchTileTone {

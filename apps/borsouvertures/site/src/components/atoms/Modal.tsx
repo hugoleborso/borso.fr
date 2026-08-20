@@ -8,20 +8,9 @@ interface ModalProps {
   onClose: () => void;
 }
 
-/**
- * Tailwind's preflight zeroes the margin of every element, and a modal
- * `<dialog>` is centred by the user agent's `margin: auto`, so `m-auto` here
- * is what keeps the dialog in the middle of the viewport.
- */
 const DIALOG_CLASS =
   'm-auto p-0 max-w-none max-h-none bg-transparent text-inherit backdrop:bg-black/65';
 
-/**
- * A native `<dialog>` only renders as a modal, with its focus trap and its
- * backdrop, after an imperative `showModal()`. The ref callback is where that
- * call belongs: React runs it when the element attaches and runs the returned
- * cleanup when it detaches, which is the whole lifecycle the dialog needs.
- */
 // @FollowsBlueprint ref-callback-browser-api
 function openAsModalDialog(dialog: HTMLDialogElement | null): () => void {
   dialog?.showModal();

@@ -1,13 +1,3 @@
-/**
- * A click on a link is only worth a warp when the browser was going to replace
- * the whole document with another page of this site. Everything else — a new
- * tab, a download, a jump to an anchor on the page already open — either keeps
- * the reader here or leaves this document alive behind a new one, and holding
- * it back for the length of an animation would be a delay with nothing to
- * look at.
- */
-
-/** `warp` means the module drives the navigation; `browser` means it stays out of the way. */
 export type NavigationMode = 'warp' | 'browser';
 
 export interface LinkActivation {
@@ -19,10 +9,8 @@ export interface LinkActivation {
   readonly isReducedMotionPreferred: boolean;
 }
 
-/** The two `target` values that replace the current document rather than opening another. */
 const SAME_DOCUMENT_TARGETS: ReadonlySet<string> = new Set(['', '_self']);
 
-/** Everything a hash carries is scroll position, so two hrefs that differ only there are one page. */
 function readAddressWithoutFragment(href: string): string {
   const address = new URL(href);
   return `${address.origin}${address.pathname}${address.search}`;
@@ -48,7 +36,6 @@ export function selectNavigationMode(activation: LinkActivation): NavigationMode
   return 'warp';
 }
 
-/** A click the browser would not have turned into a plain navigation of its own. */
 export interface ClickModifiers {
   readonly button: number;
   readonly altKey: boolean;

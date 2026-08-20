@@ -1,9 +1,3 @@
-/**
- * The caller holds a named result rather than a Response, so the two things
- * worth pinning are that the bytes go out as a PUT carrying the file's own
- * content type, and that a refusal reads as `false` rather than as a throw.
- */
-
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { hasSentFileToPresignedUrl } from './object-upload.adapter';
 

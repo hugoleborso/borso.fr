@@ -146,11 +146,7 @@ describe('nextStep — self-punch FSM', () => {
     expect(initialSelfPunchState).toEqual<SelfPunchState>({ kind: 'confirm' });
   });
 
-  it('throws on an unknown event type (assertNever guard rail)', () => {
-    // The runtime guard fires only when something delivers an unknown event
-    // shape — by construction TypeScript prevents that at compile time.
-    // Reach the branch by routing the `unknown` value through `Function.call`,
-    // which sidesteps the parameter type without a type assertion.
+  it('throws on an unknown event type, the assertNever guard rail a caller can only reach through Function.call since TypeScript forbids the shape at compile time and this repository bans the type assertion that would fake it', () => {
     const malformed: unknown = { type: 'not-a-real-event' };
     expect(() => {
       Function.prototype.call.call(nextStep, null, initialSelfPunchState, malformed);

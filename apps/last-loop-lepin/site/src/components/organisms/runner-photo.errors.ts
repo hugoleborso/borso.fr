@@ -1,9 +1,3 @@
-/**
- * Failures the runner photo upload can produce. They live apart from the
- * hook that throws them so the message mapping in `admin-errors.core.ts` can
- * recognise them without importing React.
- */
-
 import type { PhotoRejection } from './runner-form.core';
 
 // @FollowsBlueprint named-domain-error

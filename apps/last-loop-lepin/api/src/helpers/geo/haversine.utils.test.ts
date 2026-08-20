@@ -35,9 +35,9 @@ describe('haversineDistanceMeters', () => {
     );
   });
 
-  it('keeps points ≤100 m apart inside the 100 m geofence (frontier vector)', () => {
-    // ~0.0008 degrees of latitude at this latitude ≈ 89 m.
-    const nearby = { lat: PARIS.lat + 0.0008, lng: PARIS.lng };
+  it('reads eighty-nine metres between two points 0.0008 degrees of latitude apart', () => {
+    const EIGHTY_NINE_METRES_OF_LATITUDE_DEGREES = 0.0008;
+    const nearby = { lat: PARIS.lat + EIGHTY_NINE_METRES_OF_LATITUDE_DEGREES, lng: PARIS.lng };
     const distance = haversineDistanceMeters(PARIS, nearby);
     expect(distance).toBeLessThan(100);
     expect(distance).toBeGreaterThan(50);

@@ -1,12 +1,5 @@
 import type { Line, Opening, Variation } from './types';
 
-/**
- * Validate the shape of `openings.json` at runtime. The file is checked into
- * the repo and produced by `scripts/build-openings.ts`, so a malformed payload
- * would already break the build — but the bundled-fallback and `fetch()` paths
- * both come from outside the type system, so we re-validate at the boundary
- * instead of leaning on a type assertion.
- */
 // @FollowsBlueprint unknown-payload-parser
 export function parseOpenings(value: unknown): Opening[] {
   if (!Array.isArray(value)) throw new Error('openings.json: root is not an array');

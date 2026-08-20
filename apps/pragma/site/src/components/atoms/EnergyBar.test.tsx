@@ -1,15 +1,3 @@
-/**
- * UI test for EnergyBar — which gestures write a level and which write
- * nothing.
- *
- * The pure mapping is covered by `energy-bar.utils.test.ts`; what lives only
- * here is the gesture the bar has to refuse. A vertical swipe that starts on
- * the bar reaches it as a `pointerdown` and two `pointermove`s before the
- * browser rules it a page scroll and sends `pointercancel`, so a bar that
- * writes on the way down rewrites a song nobody was editing. Every case below
- * replays a real event sequence rather than calling a handler.
- */
-
 import { act, type JSX, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -29,19 +17,12 @@ const BAR_HEIGHT = 40;
 const SEGMENT_WIDTH = BAR_WIDTH / MAXIMUM;
 const POINTER_ID = 1;
 
-/** The horizontal centre of a segment, in the client coordinates a pointer carries. */
 function centreOf(level: number): number {
   return BAR_LEFT + (level - 1) * SEGMENT_WIDTH + SEGMENT_WIDTH / 2;
 }
 
 const UNMEASURABLE_ATTRIBUTE = 'data-unmeasurable';
 
-/**
- * jsdom lays every element out at zero and implements no pointer capture, and
- * the bar divides by its own measured width, so without these it would refuse
- * every gesture and the suite would pass while proving nothing. An element
- * marked unmeasurable keeps jsdom's own answer, which is what one case needs.
- */
 // @FollowsBlueprint test-jsdom-gap-stub
 beforeAll(() => {
   HTMLElement.prototype.getBoundingClientRect = function measured(this: HTMLElement) {
@@ -52,11 +33,6 @@ beforeAll(() => {
   HTMLElement.prototype.releasePointerCapture = () => undefined;
 });
 
-/**
- * jsdom implements no `PointerEvent` constructor. React reads `pointerId` off
- * whatever native event arrives under a pointer type name, so a `MouseEvent`
- * carrying one is the event the handler receives.
- */
 function dispatchPointer(bar: HTMLElement, type: string, clientX: number, clientY: number): void {
   const event = new MouseEvent(type, { bubbles: true, clientX, clientY });
   Object.defineProperty(event, 'pointerId', { value: POINTER_ID });
@@ -71,13 +47,6 @@ function dispatchKey(bar: HTMLElement, key: string): void {
   });
 }
 
-/**
- * The bar is controlled, and half of what these cases assert is how it behaves
- * against the value it just reported, so the harness has to feed that value
- * back the way the setlist row does. A fixed `value` prop would leave the bar
- * comparing every move against the level it started from and reporting each
- * one twice.
- */
 function ControlledBar({
   initialValue,
   onChange,

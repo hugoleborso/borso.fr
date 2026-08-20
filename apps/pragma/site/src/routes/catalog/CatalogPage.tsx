@@ -1,15 +1,4 @@
-/**
- * Catalog list page. Renders the editorial catalog from the design
- * bundle:
- *  - catalog crumb + serif H1 + dense subtitle,
- *  - SearchBar + FilterPillGroup (status filter with counts),
- *  - CatalogGrid of SongCards (lineup chips, status chip, chart icon).
- *
- * Data goes through TanStack Query — songs, members, instruments and
- * mastery defaults each have their own cache key, so navigating away
- * and back hits a warm cache and the page renders synchronously.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
@@ -66,10 +55,8 @@ export function CatalogPage(): JSX.Element {
 
   const songs = useMemo(() => songsQuery.data?.songs ?? [], [songsQuery.data]);
   const failedWriteSongId = useSongThatLostItsLastWrite();
-  // A rolled-back delete puts the row back, so the title is readable again —
-  // which is what lets the banner name the song the operator just tried to
-  // remove rather than saying "something failed".
-  const songThatLostItsWrite = songs.find((song) => song.id === failedWriteSongId)?.title ?? null;
+  const titleOfSongThatLostItsWrite =
+    songs.find((song) => song.id === failedWriteSongId)?.title ?? null;
   const members = useMemo(() => membersQuery.data?.members ?? [], [membersQuery.data]);
   const instruments = useMemo(
     () => instrumentsQuery.data?.instruments ?? [],
@@ -183,13 +170,13 @@ export function CatalogPage(): JSX.Element {
           {errorMessage}
         </p>
       )}
-      {songThatLostItsWrite !== null && (
+      {titleOfSongThatLostItsWrite !== null && (
         <p
           className="text-danger text-sm mb-4 border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
           role="alert"
         >
           <Icon name="warn" size={14} />
-          {t('catalog.lastWriteFailed', { title: songThatLostItsWrite })}
+          {t('catalog.lastWriteFailed', { title: titleOfSongThatLostItsWrite })}
         </p>
       )}
       {isLoading && <p className="text-ink-400 text-sm italic">{t('common.loading')}</p>}

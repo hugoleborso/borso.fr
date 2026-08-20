@@ -1,7 +1,3 @@
-/**
- * Cascade rearranges the room on a timer. The timer is started and stopped by
- * the control the reader clicks, so no effect watches the mode.
- */
 import { refreshSeedInPlace } from './composition-url';
 
 const CASCADE_INTERVAL_MS = 5500;

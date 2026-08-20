@@ -10,9 +10,7 @@ createRuleTester(coreFile, { jsx: false }).run('no-impure-calls-in-core-files', 
     'export function isRaceOver(edition: Edition, now: Date): boolean { return now > edition.endsAt; }',
     'export function parseIsoDate(raw: string): Date { return new Date(raw); }',
     'export function pickWinner(runners: Runner[], seed: number): Runner { return runners[seed]; }',
-    // A local binding that shadows an impure global is not the global.
     'export function render(document: DocumentModel): string { return document.title; }',
-    // A property named after an impure global is a property.
     'export function readStage(config: Config): string { return config.process; }',
   ],
   invalid: [
@@ -43,8 +41,6 @@ createRuleTester(coreFile, { jsx: false }).run('no-impure-calls-in-core-files', 
   ],
 });
 
-// Outside a pure file the rule stays silent, because impure code is where the
-// clock and the environment are supposed to be read.
 createRuleTester(serviceFile, { jsx: false }).run(
   'no-impure-calls-in-core-files (impure file)',
   rule,

@@ -1,13 +1,3 @@
-/**
- * Standings reads. The spectator screen and the admin screens all watch the
- * same key, which polls every two seconds while an edition slug is known.
- *
- * Writes that change the standings live in `punches.ts`; they reconcile the
- * cache from the mutation response and let the poll carry the rest, because a
- * `GET` fired straight after a write can be served by another connection that
- * still sees the state from before the commit.
- */
-
 import { useQuery } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 

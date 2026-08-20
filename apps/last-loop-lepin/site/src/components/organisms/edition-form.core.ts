@@ -1,14 +1,3 @@
-/**
- * The edition setup form's rules: the field vocabulary, its validation, and
- * the translation from form values to the payload the API takes.
- *
- * The Zod schema mirrors `createEditionInputSchema` in
- * `api/src/edition/edition.schema.ts`. It is restated rather than imported
- * because that file also declares the Drizzle table, which has no business in
- * a browser bundle, and because the form holds wall time strings from a
- * `datetime-local` input where the API takes offset carrying timestamps.
- */
-
 import { z } from 'zod';
 import type { CreateEditionVariables, ReplaceEditionVariables } from '../../lib/queries/editions';
 import type { RaceEditionDto } from '../../lib/race.types';
@@ -82,10 +71,6 @@ export function buildCreateEditionPayload(
   return { slug: values.slug, ...buildBasePayload(values), gpxXml };
 }
 
-/**
- * The update payload. A missing GPX means "keep the persisted track", which
- * is what an empty file picker stands for while editing.
- */
 export function buildReplaceEditionPayload(
   slug: string,
   values: EditionFormValues,
@@ -96,7 +81,6 @@ export function buildReplaceEditionPayload(
   return { ...base, gpxXml };
 }
 
-/** Field values the edit form starts from, for the edition being edited. */
 export function buildEditFormDefaults(edition: RaceEditionDto): EditionFormValues {
   return {
     slug: edition.slug,
@@ -107,7 +91,6 @@ export function buildEditFormDefaults(edition: RaceEditionDto): EditionFormValue
   };
 }
 
-/** Field values the create form starts from, suggested from what exists. */
 export function buildCreateFormDefaults(
   currentEdition: RaceEditionDto | null,
   now: Date,
@@ -129,19 +112,16 @@ const NEXT_TRANSITION_BY_STATUS = {
   finished: 'setup',
 } as const;
 
-/** The single status button that fits an edition, e.g. live goes to finished. */
 export function selectNextTransition(edition: RaceEditionDto): EditionStatusTransition {
   return NEXT_TRANSITION_BY_STATUS[edition.status];
 }
 
-/** The edition the setup tab lets the operator edit, if there is one. */
 export function selectEditableEdition(edition: RaceEditionDto | null): RaceEditionDto | null {
   if (edition === null) return null;
   if (edition.status !== 'setup') return null;
   return edition;
 }
 
-/** The edition the setup tab shows read only, if there is one. */
 export function selectStartedEdition(edition: RaceEditionDto | null): RaceEditionDto | null {
   if (edition === null) return null;
   if (edition.status === 'setup') return null;

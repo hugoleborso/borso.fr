@@ -1,4 +1,4 @@
-const PULSE_ANIMATION = 'pragma-pulse 2s infinite';
+const PULSE_ANIMATION = 'offline-banner-pulse 2s infinite';
 
 interface PulsingDotProps {
   readonly color: string;

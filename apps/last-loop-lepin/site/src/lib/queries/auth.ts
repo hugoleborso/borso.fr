@@ -1,9 +1,3 @@
-/**
- * Administrator sign in. The session lives in an HTTP only cookie the API
- * sets, so there is nothing to cache here and the mutation only reports
- * whether the PIN was accepted.
- */
-
 import { useMutation } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 

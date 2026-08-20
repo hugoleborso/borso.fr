@@ -1,19 +1,7 @@
-/**
- * Pure decisions the preview fixture makes: resolving seed instrument
- * names to the identifiers the writes returned, turning a lineup
- * written by name into one written by identifier, and reporting whether
- * the seed created the admin credentials or found them already set.
- */
-
 import type { Lineup } from '@domain/lineup.core';
 
 export type SeedLineupByMemberName = Readonly<Record<string, readonly string[]>>;
 
-/**
- * The fixture names members and instruments; the database wants ids. A name
- * neither map knows is dropped rather than written as a dangling id, which is
- * what keeps a typo in the fixture from seeding an orphan lineup entry.
- */
 // @FollowsBlueprint core-projection
 export function buildSeedLineup(
   lineupByMemberName: SeedLineupByMemberName,

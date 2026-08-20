@@ -1,12 +1,4 @@
-/**
- * Uploads feature queries / mutations. Presigned PUT for new chart
- * uploads, presigned GET for rendering existing charts.
- *
- * A presigned GET URL expires, so `staleTime` and `gcTime` both sit
- * under the five minute validity window the API signs for, which makes
- * TanStack Query refetch a fresh URL before the held one goes stale.
- * @Feature uploads
- */
+/** @Feature uploads */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ApiError, api } from '../api.client';
@@ -35,7 +27,6 @@ export function useSignChartUpload() {
   });
 }
 
-/** Short lived GET URL for a stored chart, or nothing while there is no chart to sign. */
 // @FollowsBlueprint query-module
 export function useSignedChartUrl(objectKey: string | null) {
   return useQuery({

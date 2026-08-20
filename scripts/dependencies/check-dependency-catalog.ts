@@ -1,17 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * Fails when two workspaces name a version of the same dependency.
- *
- * Usage:
- *   pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
- *
- * Nothing else in this repository reads a `package.json` version field, so a
- * second workspace taking `zod@^4` while the first stays on `^3` passes lint,
- * every gate and every test, and surfaces as a type error in whichever file
- * happens to sit across the seam. The catalog in `pnpm-workspace.yaml` is the
- * one place a version is written; this check is what stops a workspace writing
- * a second one.
- */
 
 import { globSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -47,12 +34,6 @@ function readManifest(relativePath: string): WorkspaceManifest {
   return { workspace: relativePath, declarations };
 }
 
-/**
- * The catalogs, read line by line rather than with a YAML parser.
- *
- * The file this reads is written by hand in one shape, and a parser would be a
- * dependency whose own version this very check would then have to police.
- */
 function readCatalogs(): Catalogs {
   const catalogs = new Map<string, Map<string, string>>();
   let current: Map<string, string> | null = null;

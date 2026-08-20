@@ -1,11 +1,3 @@
-/**
- * Loop-punching rules — pure. No `new Date()`; `now` is always a parameter.
- *
- * `validatePunchTiming` is the single place that decides whether a punch
- * is acceptable for a given runner at a given moment. The service layer
- * then writes the row only if the validation returned `ok: true`.
- */
-
 import { loopIndexAt } from '../edition/edition.core';
 import type { RaceEdition } from '../edition/edition.types';
 import type { LoopPunch } from './punch.types';
@@ -19,10 +11,6 @@ export type PunchValidation =
 export type PunchRejectReason =
   'race-not-started' | 'race-finished' | 'already-punched-this-loop' | 'runner-not-in-race';
 
-/**
- * Decide whether a punch at `now` should be accepted for `runnerSlug`.
- * Returns `{ ok: true, loopIndex }` (1-based) on success.
- */
 /**
  * @Blueprint core-decision
  * @BlueprintName Core Decision Function
@@ -55,49 +43,27 @@ export function validatePunchTiming(
   return { ok: true, loopIndex: targetLoop };
 }
 
-/**
- * Time spent on a single loop, in milliseconds.
- *
- * Backyard rule: every loop starts on the top of the hour. A runner who
- * clears their loop early waits at the corral until the next top, then
- * starts again with everyone. So the actually-meaningful loop time is
- *
- *   punch.finishedAt − (startsAt + (loopIndex − 1) × intervalMs)
- *
- * not the wall-clock gap between two consecutive punches (which counts
- * the corral rest period too).
- *
- * Returns `null` when the punch lands before its loop's top-of-hour
- * boundary (clock skew / pre-race punches recorded for testing).
- *
- * Shared between `lastLoopDurationMs` (here) and `fastestLap` (in
- * `ranking/fastest-lap.core.ts`) — the formula is defined exactly once.
- */
-export function loopDurationMs(edition: RaceEdition, punch: LoopPunch): number | null {
+export function hourlyTopOfLoopMs(edition: RaceEdition, loopIndex: number): number {
   const intervalMs = edition.intervalMinutes * MILLISECONDS_PER_MINUTE;
-  const loopStartMs = edition.startsAt.getTime() + (punch.loopIndex - 1) * intervalMs;
-  const elapsed = punch.finishedAt.getTime() - loopStartMs;
-  return elapsed >= 0 ? elapsed : null;
+  return edition.startsAt.getTime() + (loopIndex - 1) * intervalMs;
 }
 
-/**
- * Time the runner spent on their last completed loop, in milliseconds.
- * Returns `null` when the runner has no punch yet, or when the underlying
- * `loopDurationMs` for their last punch is `null`.
- */
+export function loopDurationMs(edition: RaceEdition, punch: LoopPunch): number | null {
+  const elapsedSinceOwnHourlyTop =
+    punch.finishedAt.getTime() - hourlyTopOfLoopMs(edition, punch.loopIndex);
+  return elapsedSinceOwnHourlyTop >= 0 ? elapsedSinceOwnHourlyTop : null;
+}
+
 export function lastLoopDurationMs(
   edition: RaceEdition,
   runnerSlug: string,
   validPunchesForRunner: readonly LoopPunch[],
 ): number | null {
-  // `reduce` carries the last-seen punch without ever indexing into the
-  // array — sidesteps `noUncheckedIndexedAccess` and the closure-capture
-  // narrowing limit on `forEach` with mutable locals.
-  const lastPunch = validPunchesForRunner
+  const punchesInLoopOrder = validPunchesForRunner
     .filter((punch) => punch.runnerSlug === runnerSlug)
-    .toSorted((left, right) => left.loopIndex - right.loopIndex)
-    .reduce<LoopPunch | null>((_, punch) => punch, null);
+    .toSorted((left, right) => left.loopIndex - right.loopIndex);
+  const deepestPunch = punchesInLoopOrder.at(-1);
 
-  if (lastPunch === null) return null;
-  return loopDurationMs(edition, lastPunch);
+  if (deepestPunch === undefined) return null;
+  return loopDurationMs(edition, deepestPunch);
 }

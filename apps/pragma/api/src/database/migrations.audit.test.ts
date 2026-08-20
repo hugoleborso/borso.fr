@@ -1,18 +1,3 @@
-/**
- * @vitest-environment node
- *
- * Migration audit. Reads every `.sql` file under `migrations/` and asserts
- * that no column outside the explicit audit whitelist carries
- * `DEFAULT now()`. The file is the artifact the `DsqlSchema` construct
- * actually applies in preview / prod, so checking the artifact (instead of
- * introspecting the Drizzle objects) also catches the case where someone
- * edits the SQL directly.
- *
- * It reads no database, but it runs in the `back-e2e` project rather than in
- * `core`, because pragma's `core` project names its files by suffix and this
- * one has none of them. `last-loop-lepin` lists its copy in `core` by path.
- */
-
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,12 +6,6 @@ import { describe, expect, it } from 'vitest';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS_DIR = resolve(HERE, 'migrations');
 
-/**
- * Every column below is a row-lifecycle timestamp the database is meant to
- * own, and none of them is a business date a user picks or a service computes.
- * A business column landing here would take a value from the migration runner's
- * clock at deploy time.
- */
 const AUDIT_COLUMNS_WITH_DEFAULT_NOW: ReadonlySet<string> = new Set([
   'app_config.rotated_at',
   'song.created_at',
@@ -42,11 +21,6 @@ interface NowDefaultOccurrence {
 const CREATE_TABLE_PATTERN =
   /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?"?(\w+)"?\s*\(([\s\S]*?)\);/gi;
 const COLUMN_LINE_PATTERN = /^\s*"?(\w+)"?\s+[\w()\s]+DEFAULT\s+now\(\)/i;
-/**
- * DSQL refuses `DEFAULT` on `ADD COLUMN`, so a migration written for it cannot
- * carry one — but the scan covers the form anyway, because a statement that
- * only fails at deploy time is exactly the one this test should name first.
- */
 const ADD_COLUMN_PATTERN =
   /ALTER\s+TABLE\s+"?(\w+)"?\s+ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?"?(\w+)"?[\w()\s]*DEFAULT\s+now\(\)/gi;
 

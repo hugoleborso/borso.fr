@@ -1,23 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * CDK entry point for `last-loop-lepin.borso.fr`.
- *
- * Required env:
- *   - CDK_DEFAULT_ACCOUNT (or AWS_ACCOUNT_ID)
- *   - STAGE = 'prod' | 'preview'        (default 'prod')
- *   - PR_NUMBER                         (required when STAGE=preview)
- *
- * Stack layout:
- *   - last-loop-lepin-cluster (always): owns the DSQL cluster.
- *   - last-loop-lepin-{prod | pr-<N>}: composes StaticSite + LambdaApi +
- *     DsqlSchema via PreviewableApp.
- *
- * The test-seed endpoint (`/api/__test/seed`) is mounted only when the
- * Lambda's `ALLOW_TEST_SEED` env var is set to `'1'`. The stack
- * sets that flag for stage !== 'prod' only; `stack.test.ts` asserts the
- * env var is absent from the prod template.
- */
-
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {

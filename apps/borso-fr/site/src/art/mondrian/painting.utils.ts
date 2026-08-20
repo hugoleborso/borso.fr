@@ -62,10 +62,6 @@ export function isSplittable(rect: Rect): boolean {
   return isSpanSplittable(rect.width) || isSpanSplittable(rect.height);
 }
 
-/**
- * Area, biased towards the rectangle with the longest side, so a wide band gets
- * broken up before a small square already boxed in by lines.
- */
 export function computeSplitWeight(rect: Rect): number {
   const longestSide = Math.max(rect.width, rect.height);
   return rect.width * rect.height * (1 + AREA_WEIGHT_LARGE_RECT_BOOST * longestSide);
@@ -112,11 +108,6 @@ const SPLIT_AT_LAST_THIRD = 0.667;
 const SPLIT_AT_FIRST_QUARTER = 0.25;
 const SPLIT_AT_LAST_QUARTER = 0.75;
 
-/**
- * The golden section and its neighbours. Each fraction owns an equal slice of
- * the unit interval, so a draw picks one by its index instead of walking a
- * chain of thresholds.
- */
 const SPLIT_FRACTIONS: readonly number[] = [
   SPLIT_AT_GOLDEN_MINOR,
   SPLIT_AT_MIDPOINT,
@@ -133,11 +124,6 @@ export function pickSplitFraction(nextRandom: () => number): number {
   return SPLIT_FRACTIONS[sliceIndex] ?? LAST_SPLIT_FRACTION;
 }
 
-/**
- * True cuts the rectangle down a vertical line. A rectangle too small along one
- * axis can only be cut along the other; when both are open, the wider the
- * rectangle, the likelier the cut is vertical.
- */
 export function shouldSplitVertically(rect: Rect, nextRandom: () => number): boolean {
   const canSplitVertically = isSpanSplittable(rect.width);
   const canSplitHorizontally = isSpanSplittable(rect.height);
@@ -148,11 +134,6 @@ export function shouldSplitVertically(rect: Rect, nextRandom: () => number): boo
   return nextRandom() < verticalProbability;
 }
 
-/**
- * Draws a split fraction, nudges it off the canonical value so the painting
- * does not read as a grid, then pulls it back inside the range that leaves both
- * halves at least `MIN_RECT_DIMENSION` across.
- */
 export function chooseJitteredSplitFraction(
   rectBeingSplit: Rect,
   isVertical: boolean,
@@ -166,11 +147,6 @@ export function chooseJitteredSplitFraction(
   return Math.max(lowerBound, Math.min(upperBound, jitteredFraction));
 }
 
-/**
- * The halves meet at an absolute coordinate rather than at two independently
- * scaled widths, so the second one starts exactly where the first one ends and
- * the pair still tiles the parent to the last bit.
- */
 export function splitRect(
   rectBeingSplit: Rect,
   isVertical: boolean,
@@ -219,15 +195,6 @@ export function splitRect(
   ];
 }
 
-/**
- * A composition is a seed and a rectangle count: the same pair paints the same
- * canvas forever, because that pair is what a shared URL carries.
- *
- * The loop ends on its own even when the count asked for is unreachable. Every
- * cut leaves both halves at least `MIN_RECT_DIMENSION` across, so the unit
- * canvas holds a bounded number of rectangles, and past that
- * `pickSplittableEntry` finds nothing left to cut.
- */
 export function generateLayout({ seed, complexity }: { seed: number; complexity: number }): Rect[] {
   const nextRandom = mulberry32(seed);
   const rects: Rect[] = [{ x: 0, y: 0, width: 1, height: 1, depth: 0, id: UNNUMBERED_RECT_ID }];
@@ -251,11 +218,6 @@ const NEUTRAL_AREA_SATURATION = 4;
 const NEUTRAL_BALANCE_PENALTY = 0.3;
 const FULL_AREA_SHARE = 1;
 
-/**
- * How likely a rectangle of this area is to be left the colour of the paper. A
- * large rectangle stays neutral more often than a small one, and raising the
- * balance turns more of them into colour.
- */
 export function selectNeutralProbability(rectArea: number, balance: number): number {
   return (
     NEUTRAL_PROBABILITY_BASE +
@@ -273,11 +235,6 @@ export interface PaletteSplit {
   nonNeutralFills: readonly PaletteFill[];
 }
 
-/**
- * Separates the one fill that matches the paper from the rest. The preset
- * palettes repeat a fill to weight it and only the first match counts as the
- * neutral, so a repeated paper colour stays in the draw as a colour.
- */
 export function splitPaletteFills(palette: Palette): PaletteSplit {
   const neutralHex = palette.bg.toLowerCase();
   const neutralIndex = palette.fills.findIndex((fill) => fill.hex.toLowerCase() === neutralHex);

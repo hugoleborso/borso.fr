@@ -15,9 +15,6 @@ export interface TranslationCatalogue {
 }
 
 /**
- * Walk a nested catalogue and return every leaf key as a sorted dotted path,
- * e.g. `selection.side.white`. The parity gate compares the two lists.
- *
  * @Blueprint i18n-key-walk
  * @BlueprintName Translation Key Walk
  * @BlueprintUsage Use to turn a nested catalogue into the flat key list any catalogue check compares.
@@ -43,9 +40,6 @@ export function isSupportedLanguage(candidate: unknown): candidate is SupportedL
   return SUPPORTED_LANGUAGES.some((supported) => supported === candidate);
 }
 
-/**
- * The language family of a BCP 47 tag, e.g. `fr` for `fr-CA`.
- */
 export function readLanguageFamily(languageTag: string): string {
   const lowercased = languageTag.toLowerCase();
   const separatorIndex = lowercased.indexOf(LANGUAGE_TAG_SEPARATOR);
@@ -53,10 +47,6 @@ export function readLanguageFamily(languageTag: string): string {
   return lowercased.slice(0, separatorIndex);
 }
 
-/**
- * The saved choice wins, then the first browser language we support, then
- * English. Both inputs are arguments, so the decision is pure and tested.
- */
 // @FollowsBlueprint utils-pure-module
 export function selectInitialLanguage(
   savedLanguage: string | null,

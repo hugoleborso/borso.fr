@@ -1,13 +1,4 @@
-/**
- * Members feature queries / mutations. Reads the members list, the
- * per-member instruments roster, and writes the matching mutations
- * (create / update / delete + assign instruments).
- *
- * Mutations are optimistic (round 17c) — the members list reflects
- * the change immediately, and `useAssignMemberInstruments` swaps the
- * member's instrument roster in place before the server confirms.
- * @Feature members
- */
+/** @Feature members */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';

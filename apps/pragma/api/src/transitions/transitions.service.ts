@@ -1,7 +1,3 @@
-/**
- * Service layer for transition comments.
- */
-
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteTransitionComment,

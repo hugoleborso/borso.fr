@@ -43,7 +43,6 @@ describe('readCatalogReference', () => {
     expect(readCatalogReference('^4.1.10')).toBeNull();
   });
 
-  /** The marker has to open the range; a version that merely contains it is one. */
   it('reads a range that mentions the marker later as no reference', () => {
     expect(readCatalogReference('npm:catalog:x')).toBeNull();
   });
@@ -82,7 +81,6 @@ describe('listCatalogProblems', () => {
     ]);
   });
 
-  /** Two agreeing ranges are still two ranges, and the second one can move. */
   it('reports both workspaces when neither reads the catalog', () => {
     const manifests = [
       buildManifest('apps/pragma', { vitest: '^4.1.10' }),
@@ -95,10 +93,6 @@ describe('listCatalogProblems', () => {
     ]);
   });
 
-  /**
-   * The local package and the published one share a name and nothing else, so
-   * the workspace holding the published range has nobody to disagree with.
-   */
   it('does not let a workspace protocol range make another workspace shared', () => {
     const manifests = [
       buildManifest('apps/pragma', { leaflet: 'workspace:*' }),
@@ -107,7 +101,6 @@ describe('listCatalogProblems', () => {
     expect(listCatalogProblems(manifests, buildCatalogs({ default: {} }))).toEqual([]);
   });
 
-  /** The catalog is for ranges, and a workspace protocol range is not one. */
   it('does not ask a workspace protocol range to read the catalog', () => {
     const manifests = [
       buildManifest('apps/pragma', { vitest: 'catalog:' }),
@@ -117,7 +110,6 @@ describe('listCatalogProblems', () => {
     expect(listCatalogProblems(manifests, catalogs)).toEqual([]);
   });
 
-  /** A workspace dependency is the same package, not a shared external one. */
   it('does not count a workspace protocol range towards sharing', () => {
     const manifests = [
       buildManifest('apps/pragma', { '@borso/infra': 'workspace:*' }),
@@ -167,7 +159,6 @@ describe('listCatalogProblems', () => {
     ]);
   });
 
-  /** A name read from one catalog does not keep the same name alive in another. */
   it('reports an entry whose name is read from a different catalog', () => {
     const manifests = [buildManifest('apps/pragma', { zod: 'catalog:zod3' })];
     const twoCatalogs = buildCatalogs({ zod3: { zod: '^3.24.0' }, zod4: { zod: '^4.4.3' } });

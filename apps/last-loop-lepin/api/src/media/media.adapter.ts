@@ -1,8 +1,4 @@
 /**
- * The media context's way out of the process, and the only file in it that
- * reaches S3. Per ADR-0012 an outbound call lives in an `.adapter.ts` and
- * nowhere else.
- *
  * @DependsOnExternal aws-s3
  */
 
@@ -24,10 +20,7 @@ function readEnv(name: string): string | undefined {
 }
 
 function getClient(): S3Client {
-  // Stryker disable next-line ConditionalExpression: equivalent mutant. Dropping
-  // the guard builds a second client per call, which no caller can observe —
-  // the signature a presigner produces depends on the region and the
-  // credentials, not on which client object produced it.
+  // Stryker disable next-line ConditionalExpression: equivalent mutant, since a second client signs identically from the same region and credentials
   if (cachedClient !== null) return cachedClient;
   const region = readEnv('AWS_REGION') ?? 'eu-west-3';
   cachedClient = new S3Client({ region });
@@ -56,11 +49,6 @@ export class MediaContentTypeError extends Error {
   override readonly name = 'MediaContentTypeError';
 }
 
-/**
- * Build a short-lived S3 PUT URL the admin can post the runner photo to.
- * The key is opaque (UUID), scoped under `editions/<slug>/runners/<slug>/`,
- * with the extension derived from the content type.
- */
 /**
  * @Blueprint external-service-adapter
  * @BlueprintName External Service Adapter

@@ -1,8 +1,3 @@
-/**
- * Service layer for songs. The MusicBrainz search it re-exports lives in
- * `musicbrainz.adapter.ts`, which is where ADR-0012 puts an outbound call.
- */
-
 import type { z } from 'zod';
 import type { ExternalSongHit } from './musicbrainz.core';
 import { searchExternal, type SearchExternalOptions } from './musicbrainz.adapter';
@@ -70,11 +65,6 @@ export async function removeSong(id: string): Promise<DeletionOutcome> {
   return await deleteSongWithCascade(id);
 }
 
-/**
- * The catalogue's external lookup. A one-line delegation on purpose: the
- * controller calls the service, the service calls the adapter, and the network
- * stays in the one file ADR-0012 allows it in.
- */
 export async function searchExternalSongs(
   query: string,
   options: SearchExternalOptions = {},

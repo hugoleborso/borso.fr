@@ -1,17 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * CDK entry point for `pragma.borso.fr`.
- *
- * Required env:
- *   - CDK_DEFAULT_ACCOUNT (or AWS_ACCOUNT_ID)
- *   - STAGE = 'prod' | 'preview'        (default 'prod')
- *   - PR_NUMBER                         (required when STAGE=preview)
- *
- * Stack layout:
- *   - pragma-cluster (always): owns the DSQL cluster.
- *   - pragma-{prod | pr-<N>}: composes StaticSite + LambdaApi +
- *     DsqlSchema via PreviewableApp, plus the S3 uploads bucket.
- */
 
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';

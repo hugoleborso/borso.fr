@@ -1,10 +1,3 @@
-/**
- * Back-e2e for the test-seed endpoint. Asserts the fixture lands a
- * coherent dataset, that re-seeding replaces rather than appends, and
- * that the route is mounted ONLY when `ALLOW_TEST_SEED='1'` — the
- * security guard that keeps it off prod.
- */
-
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';

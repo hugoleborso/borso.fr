@@ -1,9 +1,3 @@
-/**
- * jsdom carries no `showModal`, which is the honest shape of the test anyway:
- * these callbacks exist to call an imperative browser method at attach time,
- * so the method is the thing to observe.
- */
-
 import { describe, expect, it, vi } from 'vitest';
 import { openDialogOnAttach, openDismissibleDialogOnAttach } from './modal-dialog.adapter';
 

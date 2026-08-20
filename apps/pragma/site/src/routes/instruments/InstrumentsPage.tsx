@@ -1,17 +1,4 @@
-/**
- * Instruments admin page. List on the left, edit form on the right
- * when a row is selected.
- *
- * Reads go through `useInstrumentsList()` (TanStack Query); writes
- * through the matching create / update / delete mutation hooks. Each
- * write applies its change to the list cache optimistically and rolls
- * that change back if the request fails. The selected-instrument-for-edit
- * state stays in `useState` because it's UI state, not server state.
- *
- * Deleting an instrument asks first: it leaves every lineup that holds it and
- * there is no undo.
- * @Feature instruments
- */
+/** @Feature instruments */
 
 import { INSTRUMENT_FAMILIES, type InstrumentFamily } from '@domain/instrument.core';
 import { useForm } from '@tanstack/react-form';
@@ -43,12 +30,6 @@ interface SelectedInstrument {
   family: InstrumentFamily;
 }
 
-/**
- * The name button stretches over the whole row through an `::after` overlay, so
- * the family badge and the space beside it open the instrument like the name
- * does instead of being a dead strip a finger lands on. The delete button sits
- * above the overlay on its own layer.
- */
 const ROW_OPENING_BUTTON_CLASS =
   'flex-1 min-h-11 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0 ' +
   'after:absolute after:inset-0';

@@ -1,9 +1,3 @@
-/**
- * A venue lead is mostly optional fields with defaults, so the rules worth
- * pinning are the two that are not: a name that is really a name, and a status
- * from the pipeline the product defines.
- */
-
 import { describe, expect, it } from 'vitest';
 import { barCreateSchema, barIdParamSchema, barUpdateSchema } from './bars.schema';
 

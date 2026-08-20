@@ -1,32 +1,9 @@
-/**
- * Finds the places where this repository has two spellings for one idea.
- *
- * Every rule in `docs/standards/` answers a question somebody already decided.
- * Drift is the opposite shape: a question nobody decided, where the codebase
- * has quietly answered it two ways. `clock-store.ts` beside `clock.store.ts`.
- * `useNavBadges.ts` in one application and `online-status.hook.ts` in another.
- * A page called `Login.tsx` and sixteen called `*Page.tsx`. None of those breaks
- * a rule, because no rule exists; each one is a rule waiting to be written, and
- * the moment to write it is while there are two spellings rather than twenty.
- *
- * A lint rule cannot find these, because a lint rule needs the answer first.
- * This module derives the questions from the tree instead: it groups files by
- * the role their path gives them, and reports a group whose members disagree
- * about how to be named.
- *
- * Nothing here fails a build on its own. `convention-drift.ts` compares the
- * result against a committed baseline and fails only on an increase, because
- * twenty existing divergences are a backlog and the twenty-first is a decision
- * being taken by accident.
- */
-
 export type CaseStyle = 'kebab' | 'camel' | 'pascal' | 'other';
 
 const KEBAB_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const CAMEL_PATTERN = /^[a-z][a-z0-9]*([A-Z][a-z0-9]*)+$/;
 const PASCAL_PATTERN = /^[A-Z][a-z0-9]*([A-Z][a-z0-9]*)*$/;
 
-/** The stem is the name with every `.suffix` removed, e.g. `songs` in `songs.queries.ts`. */
 export function readNameStem(basename: string): string {
   const firstDot = basename.indexOf('.');
   return firstDot === -1 ? basename : basename.slice(0, firstDot);
@@ -34,16 +11,10 @@ export function readNameStem(basename: string): string {
 
 const NAME_SUFFIX_PATTERN = /\.([a-z0-9-]+)\.[a-z]+$/;
 
-/** The dotted suffix a file carries, e.g. `queries` in `songs.queries.ts`. */
 export function readNameSuffix(basename: string): string | null {
   return NAME_SUFFIX_PATTERN.exec(basename)?.[1] ?? null;
 }
 
-/**
- * A one-word lowercase name is kebab-case with one word, not a third style.
- * Reading `books` and `self-punch` as two conventions reported nineteen of
- * twenty-one controllers as divergent when every one of them agrees.
- */
 export function readCaseStyle(stem: string): CaseStyle {
   if (KEBAB_PATTERN.test(stem)) return 'kebab';
   if (CAMEL_PATTERN.test(stem)) return 'camel';
@@ -53,25 +24,14 @@ export function readCaseStyle(stem: string): CaseStyle {
 
 export interface FileFact {
   readonly path: string;
-  /** The layer the path gives the file, e.g. `controller`, `atom`, `query`. */
   readonly layer: string;
   readonly basename: string;
-  /** True when the module exports a function whose name starts with `use`. */
   readonly exportsHook: boolean;
 }
 
-/**
- * A layer with no name is a grab bag rather than a question, so the files in
- * it have nothing to agree about.
- */
 const UNGROUPABLE_LAYER = 'unknown';
 
-/**
- * A React component is `PascalCase.tsx` and a module is `kebab-case.ts`, and
- * both are correct, so the question is asked per extension. Without that,
- * `App.tsx` and `main.ts` read as a disagreement about entry points.
- */
-function readGroupKey(fact: FileFact): string | null {
+function readLayerAndExtensionKey(fact: FileFact): string | null {
   if (fact.layer === UNGROUPABLE_LAYER) return null;
   const extension = fact.basename.endsWith('.tsx') ? 'tsx' : 'ts';
   return `${fact.layer}.${extension}`;
@@ -84,23 +44,10 @@ export interface Variant {
 }
 
 export interface Divergence {
-  /** Stable key, so a baseline can be compared across runs. */
   readonly key: string;
   readonly question: string;
   readonly variants: readonly Variant[];
-  /**
-   * The answer the standards give, when the question has one.
-   *
-   * Left unset, the baseline counts everything outside the leading variant,
-   * which is right for a question where any one spelling winning is a fine
-   * outcome. It is wrong wherever a document already settled the question,
-   * because the majority is then the backlog rather than the convention, and
-   * the number moves the wrong way twice: a file renamed *to* the documented
-   * answer joins the minority and pushes the count up, and if the wrong
-   * spelling ever won outright the count would fall while the tree got worse.
-   * Both were observed here before this field existed.
-   */
-  readonly correctVariant?: string;
+  readonly documentedAnswer?: string;
 }
 
 const EXAMPLES_PER_VARIANT = 3;
@@ -133,16 +80,9 @@ function groupBy<Key>(
   return grouped;
 }
 
-/**
- * A layer whose files disagree about how a name is written.
- *
- * Grouped by layer rather than by directory, because the question a reader asks
- * is "how are query modules named here", not "how are the files in this one
- * folder named".
- */
 export function listCaseStyleDivergences(facts: readonly FileFact[]): readonly Divergence[] {
   const divergences: Divergence[] = [];
-  for (const [group, layerFacts] of groupBy(facts, readGroupKey)) {
+  for (const [group, layerFacts] of groupBy(facts, readLayerAndExtensionKey)) {
     const pathsByStyle = new Map<string, string[]>();
     for (const fact of layerFacts) {
       const style = readCaseStyle(readNameStem(fact.basename));
@@ -160,18 +100,6 @@ export function listCaseStyleDivergences(facts: readonly FileFact[]): readonly D
   return divergences.sort((first, second) => first.key.localeCompare(second.key));
 }
 
-/**
- * A file that exports a hook and does not say so in its name, beside one that
- * does. Two spellings for the same role is the drift; either alone is a choice.
- *
- * A file already carrying another dotted suffix is outside the question. A
- * query module is named `<name>.queries.ts` because that is the layer the
- * architecture map reads off the name, and it exposes its reads as hooks;
- * renaming it `<name>.hook.ts` would answer this question by breaking a rule
- * that is written down. The question is how a module whose role IS the hook
- * says so, and those are the ones carrying no suffix at all.
- */
-/** The spelling `CLAUDE.md`'s suffix list gives this question. */
 const HOOK_SUFFIX_SHAPE = '<name>.hook.ts';
 
 export function listHookNamingDivergences(facts: readonly FileFact[]): readonly Divergence[] {
@@ -197,16 +125,11 @@ export function listHookNamingDivergences(facts: readonly FileFact[]): readonly 
       key: 'role-marker:hook',
       question: 'How does a module that exports a hook say so in its name?',
       variants: buildVariants(pathsByShape),
-      correctVariant: HOOK_SUFFIX_SHAPE,
+      documentedAnswer: HOOK_SUFFIX_SHAPE,
     },
   ];
 }
 
-/**
- * Every dotted suffix in use, so a suffix invented once is visible beside the
- * ones the standard documents. Not a divergence on its own; the report lists it
- * and the baseline stops the count growing.
- */
 export function countSuffixes(facts: readonly FileFact[]): readonly Variant[] {
   const pathsBySuffix = new Map<string, string[]>();
   for (const fact of facts) {
@@ -229,19 +152,6 @@ function readApplication(path: string): string | null {
   return container === APPLICATIONS_CONTAINER ? (application ?? null) : null;
 }
 
-/**
- * Per application, how many files leave their layer unsaid.
- *
- * Every position on the architecture map is read out of the path and the
- * file-name suffix, so a file with no suffix the table knows sits at
- * `unknown` and the map is that much less able to answer a question about it.
- * The count is a budget that only goes down, which is a claim `CLAUDE.md` made
- * for months with nothing behind it.
- *
- * Asked per application rather than per repository, because the four are at
- * very different points and one number would hide a regression in the good one
- * behind an improvement in the bad one.
- */
 export function listLayerMarkerDivergences(facts: readonly FileFact[]): readonly Divergence[] {
   const divergences: Divergence[] = [];
   for (const [application, applicationFacts] of groupBy(facts, (fact) =>
@@ -259,7 +169,7 @@ export function listLayerMarkerDivergences(facts: readonly FileFact[]): readonly
       key: `layer-marker:${application}`,
       question: `Does a file in ${application} say which layer it is in?`,
       variants: buildVariants(pathsByShape),
-      correctVariant: LAYER_IN_THE_NAME,
+      documentedAnswer: LAYER_IN_THE_NAME,
     });
   }
   return divergences;
@@ -273,22 +183,20 @@ export function listDivergences(facts: readonly FileFact[]): readonly Divergence
   ].sort((first, second) => first.key.localeCompare(second.key));
 }
 
-/**
- * The number a baseline records for a divergence: how many files still have to
- * move. Zero means there is nothing left to fix.
- *
- * Against a documented answer that is every file not spelling it that way.
- * Against no documented answer it is every file outside the leading spelling,
- * because the majority is the only thing standing in for a decision nobody
- * took.
- */
-export function countDivergentFiles(divergence: Divergence): number {
-  if (divergence.correctVariant === undefined) {
-    return divergence.variants.slice(1).reduce((total, variant) => total + variant.count, 0);
-  }
-  return divergence.variants
-    .filter((variant) => variant.name !== divergence.correctVariant)
+function countFilesOutsideLeadingVariant(variants: readonly Variant[]): number {
+  return variants.slice(1).reduce((total, variant) => total + variant.count, 0);
+}
+
+function countFilesOutside(variants: readonly Variant[], answer: string): number {
+  return variants
+    .filter((variant) => variant.name !== answer)
     .reduce((total, variant) => total + variant.count, 0);
+}
+
+export function countDivergentFiles(divergence: Divergence): number {
+  return divergence.documentedAnswer === undefined
+    ? countFilesOutsideLeadingVariant(divergence.variants)
+    : countFilesOutside(divergence.variants, divergence.documentedAnswer);
 }
 
 export type BaselineCounts = Readonly<Record<string, number>>;
@@ -305,15 +213,6 @@ export interface RatchetFailure {
   readonly now: number;
 }
 
-/**
- * A ratchet rather than a threshold.
- *
- * The repository has divergences today and fixing them all at once is not worth
- * anyone's afternoon. What is worth stopping is the next one: a group that
- * agreed and now does not, or one that disagreed in two places and now
- * disagrees in three. A count that falls is always allowed, and lowering the
- * baseline is the whole point.
- */
 export function listRatchetFailures(
   baseline: BaselineCounts,
   current: BaselineCounts,
@@ -326,7 +225,6 @@ export function listRatchetFailures(
   return failures.sort((first, second) => first.key.localeCompare(second.key));
 }
 
-/** Keys the baseline holds that the tree no longer produces, so it can be trimmed. */
 export function listStaleBaselineKeys(
   baseline: BaselineCounts,
   current: BaselineCounts,

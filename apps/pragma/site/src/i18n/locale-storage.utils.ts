@@ -1,11 +1,3 @@
-/**
- * Pure helpers around the `pragma.locale` localStorage entry. Kept in
- * a `.utils.ts` so the read/write logic can be tested in isolation,
- * with the `Storage` dependency injected by the caller. The runtime
- * AppShell injects `window.localStorage`; the test injects an in-memory
- * stand-in.
- */
-
 import { SUPPORTED_LOCALES, type SupportedLocale } from './i18n.utils';
 
 export const LOCALE_STORAGE_KEY = 'pragma.locale';

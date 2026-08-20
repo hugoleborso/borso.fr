@@ -1,13 +1,3 @@
-/**
- * Icon atom — single source of truth for every stroke icon used in
- * the UI. Ports the prototype's `icons.jsx` set: stroke-width 1.6,
- * `currentColor` stroke, `none` fill, `round` line caps + joins.
- *
- * Adding a new icon: append an entry to `ICONS` keyed by name; the
- * value is the SVG body (children of `<svg>`). The atom takes care
- * of viewport, stroke, and sizing.
- */
-
 import type { SVGProps } from 'react';
 import { composeClassName } from './class-name.utils';
 

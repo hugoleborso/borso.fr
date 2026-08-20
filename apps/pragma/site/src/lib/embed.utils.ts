@@ -1,14 +1,4 @@
 /**
- * oEmbed iframe resolver for SongExternalLink URLs. Spec Q.O.D.
- * *Embeds* = iframes for Spotify, Deezer, YouTube (the spec's three
- * explicit providers), plus Vimeo, SoundCloud, Soundslice (close
- * cousins worth recognising). Unknown providers fall back to a plain
- * link.
- *
- * v1 ships hand-coded URL patterns rather than a live oEmbed call —
- * the known providers are stable, and an opaque oEmbed call would
- * block render. Pure utility, 100% coverage gated.
- *
  * @DependsOnExternal youtube
  * @DependsOnExternal spotify
  * @DependsOnExternal vimeo
@@ -34,7 +24,6 @@ const VIMEO_IFRAME_HEIGHT = 360;
 const GENERIC_IFRAME_WIDTH = 480;
 const GENERIC_IFRAME_HEIGHT = 320;
 
-// A Spotify embed path is `/<kind>/<id>`, so both segments have to be there.
 const SPOTIFY_KIND_AND_ID_SEGMENTS = 2;
 
 export type EmbedResult =
@@ -86,13 +75,13 @@ function youtubeEmbed(sourceUrl: URL): EmbedResult | null {
 }
 
 function spotifyEmbed(sourceUrl: URL): EmbedResult | null {
-  // Spotify URL shape: /track/<id>, /album/<id>, /playlist/<id>.
   const segments = pathSegments(sourceUrl);
   if (segments.length < SPOTIFY_KIND_AND_ID_SEGMENTS) return null;
+  const [mediaType, mediaId] = segments;
   return {
     kind: 'oembed',
     provider: 'spotify',
-    iframeSrc: `https://open.spotify.com/embed/${segments[0]}/${segments[1]}`,
+    iframeSrc: `https://open.spotify.com/embed/${mediaType}/${mediaId}`,
     width: SPOTIFY_IFRAME_WIDTH,
     height: SPOTIFY_IFRAME_HEIGHT,
   };
@@ -110,14 +99,12 @@ function deezerWidget(mediaType: string, mediaId: string): EmbedResult {
   };
 }
 
-// Deezer URL shape: /<lang>/<type>/<id> OR /<type>/<id>, so the media
-// type sits at index 0 or index 1 and nowhere deeper.
-const DEEZER_MEDIA_TYPE_MAX_INDEX = 1;
+const DEEZER_OPTIONAL_LANGUAGE_PREFIX_SEGMENTS = 1;
 
 function deezerEmbed(sourceUrl: URL): EmbedResult | null {
   const segments = pathSegments(sourceUrl);
   const mediaTypeIndex = segments.findIndex((segment) => DEEZER_MEDIA_TYPES.has(segment));
-  if (mediaTypeIndex > DEEZER_MEDIA_TYPE_MAX_INDEX) return null;
+  if (mediaTypeIndex > DEEZER_OPTIONAL_LANGUAGE_PREFIX_SEGMENTS) return null;
   const mediaType = segments[mediaTypeIndex];
   const mediaId = segments[mediaTypeIndex + 1];
   if (mediaType === undefined || mediaId === undefined) return null;
@@ -137,10 +124,10 @@ function vimeoEmbed(sourceUrl: URL): EmbedResult | null {
   };
 }
 
+const SOUNDCLOUD_WIDGET_ENDPOINT = 'https://w.soundcloud.com/player/?url=';
+
 function soundcloudEmbed(sourceUrl: URL): EmbedResult {
-  // SoundCloud's iframe uses its widget endpoint; the URL is opaque on
-  // purpose (the API resolves it).
-  const iframeSrc = `https://w.soundcloud.com/player/?url=${encodeURIComponent(sourceUrl.toString())}`;
+  const iframeSrc = `${SOUNDCLOUD_WIDGET_ENDPOINT}${encodeURIComponent(sourceUrl.toString())}`;
   return {
     kind: 'oembed',
     provider: 'soundcloud',
@@ -151,13 +138,12 @@ function soundcloudEmbed(sourceUrl: URL): EmbedResult {
 }
 
 function soundsliceEmbed(sourceUrl: URL): EmbedResult | null {
-  // Soundslice slice URL: /slices/<slug>/
-  const segments = pathSegments(sourceUrl);
-  if (segments[0] !== 'slices' || segments[1] === undefined) return null;
+  const [slicesSegment, slug] = pathSegments(sourceUrl);
+  if (slicesSegment !== 'slices' || slug === undefined) return null;
   return {
     kind: 'oembed',
     provider: 'soundslice',
-    iframeSrc: `https://www.soundslice.com/slices/${segments[1]}/embed/`,
+    iframeSrc: `https://www.soundslice.com/slices/${slug}/embed/`,
     width: GENERIC_IFRAME_WIDTH,
     height: GENERIC_IFRAME_HEIGHT,
   };

@@ -10,10 +10,6 @@ const SEED_RADIX = 16;
 const MAX_SEED = 0xffffffff;
 const SEED_HEX_PATTERN = /^[0-9a-fA-F]+$/;
 
-/**
- * Randomness is an argument, so the seed picker stays pure and stays under the
- * coverage and mutation gates. Callers pass `Math.random()`.
- */
 // @FollowsBlueprint utils-seeded-generator
 export function freshSeed(randomUnitInterval: number): number {
   return Math.floor(randomUnitInterval * (MAX_SEED + 1));
@@ -23,7 +19,6 @@ export function seedToHex(seed: number): string {
   return (seed >>> 0).toString(SEED_RADIX).padStart(SEED_HEX_LENGTH, '0').toUpperCase();
 }
 
-/** A seed is a 32-bit number, so its hexadecimal form is at most eight digits. */
 export function isSeedHex(candidate: string): boolean {
   return candidate.length <= SEED_HEX_LENGTH && SEED_HEX_PATTERN.test(candidate);
 }

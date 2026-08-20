@@ -12,7 +12,6 @@ createRuleTester(coreFile, { jsx: false }).run('no-adapter-import-in-pure-module
   valid: [
     "import { rankExternalHits } from './search-ranking.core';",
     "import { toEntryPatch } from '../setlists/setlists.utils';",
-    // The word appears in the name without being the suffix.
     "import { adapterRegistry } from './adapters-registry';",
   ],
   invalid: [
@@ -24,13 +23,10 @@ createRuleTester(coreFile, { jsx: false }).run('no-adapter-import-in-pure-module
       code: "import { presignPutObject } from '../uploads/uploads.adapter';",
       errors: [{ messageId: 'adapterInPureModule' }],
     },
-    // A type-only import still names the module, and the next edit drops the
-    // `type` keyword without anyone noticing the file stopped being pure.
     {
       code: "import type { ExternalFetcher } from './musicbrainz.adapter';",
       errors: [{ messageId: 'adapterInPureModule' }],
     },
-    // `infra/` emits ESM, so its specifiers carry the compiled extension.
     {
       code: "import { presign } from './uploads.adapter.js';",
       errors: [{ messageId: 'adapterInPureModule' }],
@@ -48,7 +44,6 @@ createRuleTester(utilsFile, { jsx: false }).run('no-adapter-import-in-pure-modul
   ],
 });
 
-// An adapter leaning on pure logic is the pattern, not a violation.
 createRuleTester(adapterFile, { jsx: false }).run(
   'no-adapter-import-in-pure-module (adapter)',
   rule,
@@ -61,7 +56,6 @@ createRuleTester(adapterFile, { jsx: false }).run(
   },
 );
 
-// Everything impure may reach an adapter; that is what an adapter is for.
 createRuleTester(serviceFile, { jsx: false }).run(
   'no-adapter-import-in-pure-module (service)',
   rule,
@@ -71,7 +65,6 @@ createRuleTester(serviceFile, { jsx: false }).run(
   },
 );
 
-// A pure module's test drives the adapter's stub, which is how it is written.
 createRuleTester(coreTestFile, { jsx: false }).run(
   'no-adapter-import-in-pure-module (test)',
   rule,

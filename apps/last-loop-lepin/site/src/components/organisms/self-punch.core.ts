@@ -1,13 +1,3 @@
-/**
- * State machine for the self punch dialog. Pure: no side effects, no React,
- * no browser globals. The shell in `SelfPunchModal.tsx` feeds events in and
- * renders the state that comes back.
- *
- * Nine states, enumerated and covered one by one. The reducer's default arm
- * asserts the event is `never`, so a missed event is a compile error rather
- * than a blank screen at runtime.
- */
-
 import { ApiError } from '../../lib/api-error';
 import type { RankedRunnerDto } from '../../lib/race.types';
 
@@ -51,16 +41,6 @@ function assertNever(value: never): never {
   throw new Error(`unhandled self-punch event: ${JSON.stringify(value)}`);
 }
 
-/**
- * Decide the dialog's next state after `event`. `_current` is the state that
- * was visible just before it; every transition replaces the state outright,
- * so the machine is deterministic on the event alone and the parameter is
- * there for symmetry with a reducer signature.
- *
- * The `open` event returns `confirm` for a runner still in the race and
- * `already-out` for one who has stopped, which skips the geolocation dance
- * entirely.
- */
 /**
  * @Blueprint core-client-state-machine
  * @BlueprintName Core Client State Machine
@@ -112,13 +92,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-/** The loop the runner is about to close, which is their next one. */
 export function selectTargetLoopIndex(runner: RankedRunnerDto): number {
   if (runner.status.kind !== 'in-race') return FIRST_LOOP_INDEX;
   return runner.status.lastLoop + FIRST_LOOP_INDEX;
 }
 
-/** The loop index the server confirmed, or zero when the body had none. */
 export function readValidatedLoopIndex(body: unknown): number {
   if (!isRecord(body)) return 0;
   const punch = body.punch;
@@ -128,11 +106,6 @@ export function readValidatedLoopIndex(body: unknown): number {
   return loopIndex;
 }
 
-/**
- * Turn a rejected punch into the event the state machine takes. An error the
- * server did not name becomes `runner-not-in-race`, which is the message that
- * tells the runner to talk to the organisers.
- */
 export function selectRejectionEvent(body: unknown): SelfPunchEvent {
   const errorField = isRecord(body) ? body.error : undefined;
   if (errorField === OUT_OF_ZONE_ERROR) return { type: 'server-out-of-zone' };
@@ -140,10 +113,6 @@ export function selectRejectionEvent(body: unknown): SelfPunchEvent {
   return { type: 'server-business-error', reason: reason ?? 'runner-not-in-race' };
 }
 
-/**
- * Turn a failed self punch into the event the state machine takes. Anything
- * that is not an API error is a lost connection, which the runner can retry.
- */
 export function selectFailureEvent(error: unknown): SelfPunchEvent {
   if (error instanceof ApiError) return selectRejectionEvent(error.body);
   return { type: 'network-error' };

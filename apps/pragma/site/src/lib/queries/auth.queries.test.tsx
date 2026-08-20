@@ -1,12 +1,3 @@
-/**
- * Regression test for the post-login redirect bug: the route guard
- * (`RequireSession`) reads `useSessionProbe()`, which caches forever.
- * The user reaches /login only after that probe cached
- * `{ authenticated: false }`, so a successful login MUST overwrite the
- * cache — otherwise the redirect lands back on the guard, reads the
- * stale `false`, and bounces to /login again.
- */
-
 import { afterEach, describe, expect, it } from 'vitest';
 import { authKeys, useLogin } from './auth.queries';
 import {

@@ -64,6 +64,7 @@ git.
 | `borso/conditions-live-in-pure-functions`              | [02](./02-purity-and-core-files.md)                        |
 | `borso/pure-functions-live-in-core-files`              | [02](./02-purity-and-core-files.md)                        |
 | `borso/no-impure-calls-in-core-files`                  | [02](./02-purity-and-core-files.md)                        |
+| `borso/no-comments`                                    | [00](./00-principles.md)                                   |
 | `borso/no-type-assertion-except-unknown`               | [03](./03-typing.md)                                       |
 | `borso/no-controller-imports-outside-service`          | [04](./04-backend-architecture.md)                         |
 | `borso/no-array-methods-in-controllers`                | [04](./04-backend-architecture.md)                         |
@@ -102,6 +103,82 @@ Six of the rules above came across from the Biome grit plugins, which are
 `no-circle-in-non-uniform-svg`. Two of the six read the file name now, where
 the grit versions had to infer the file's role from its import paths, so they
 misfire less.
+
+## Why the configuration is shaped the way it is
+
+The shape of `eslint.config.js` is the result of measurements, not taste. The
+numbers below are why a block is scoped, off, or written as an explicit list,
+and each is the kind of thing a reader would otherwise re-derive by turning a
+rule on and drowning.
+
+### Unicorn is an explicit list, never the recommended set
+
+Unicorn ships around a hundred rules in its recommended set, and most are style
+choices with no standard behind them. Enabling the set wholesale produced
+**2334 findings** here, the large majority of them renames that fight this
+repository's own conventions — `Props` to `Properties`, `utils` to `utilities`.
+
+So the enabled rules are listed one by one. Each either enforces a rule from
+`docs/standards/`, or it catches a defect class rather than a preference.
+**Adding a rule to that block means writing down which of the two it is.**
+
+### Rules that are off, and what turning them on would have cost
+
+- **`@typescript-eslint/require-array-sort-compare`** defaults to
+  `ignoreStringArrays: true`. Every finding the rule produced here was a
+  `string[]` where lexicographic order is the intended one, and adding
+  `localeCompare` to satisfy it **would have changed migration file ordering**,
+  because that collation gives `-` and `_` variable weight. The setting keeps
+  the defect that matters: a bare `.sort()` on `number[]`.
+- **`no-magic-numbers` is off in tests.** A test names its value in the `it`
+  title and in the expectation beside it, so hoisting `42` to a constant moves
+  the number away from the assertion that gives it meaning. There are around
+  **fifteen hundred** such values across the repository.
+- **`@typescript-eslint/require-await` is off in tests.** `await act(async () =>
+  …)` takes React's asynchronous path only when the callback returns a promise,
+  a `fetch` stub has to return one, and a Lambda handler fixture is async by its
+  signature.
+- **`no-param-reassign`** carries
+  `ignorePropertyModificationsForRegex: ['Element$', 'Node$']`. A DOM node handed
+  to a `querySelectorAll(...).forEach` callback has no caller to surprise, and
+  writing `element.style.transform` is the whole of a canvas animation.
+
+### Two file sets that need their own block
+
+- **`**/*.code.js`** is CloudFront Function source. `no-unused-vars` runs there
+  with `varsIgnorePattern: '^handler$'`, because `handler` looks unused —
+  nothing in this repository calls it. The CloudFront Functions runtime does, by
+  that exact name, and there is no import to make the reference visible. The
+  same files stay on **ES5 syntax on purpose**, for the same runtime.
+- **CDK entry points under `bin/`** are compiled by `tsconfig.cdk.json`, and the
+  type-aware project service only ever looks for the nearest `tsconfig.json`, so
+  it cannot see them. They are linted without type information rather than not
+  at all.
+
+### What the custom rules learned by being wrong first
+
+Three rules report far less than their first version did, and the gap is the
+point:
+
+- **`borso/conditions-live-in-pure-functions`** used to report every syntactic
+  branch, which produced roughly **nine hundred** findings, almost none of which
+  named a decision.
+- **`borso/pure-functions-live-in-core-files`** read the function's own body for
+  a handful of markers, and so called roughly **a third** of what it reported
+  pure when it was not.
+- **`borso/no-query-hooks-outside-organisms`** matches `use…` bindings imported
+  from `lib/queries/`, not a list of hook names: reading only the four known
+  names **missed every violation this repository actually had**.
+
+Two smaller determinations worth not re-deriving: `borso/no-components-outside-buckets`
+treats the `Page` suffix as the discriminator for a route's own page because
+**sixteen of the eighteen** router-rendered files carry it across all three
+applications with a `routes/` folder (the two that do not are reported); and the
+claim prefixes `borso/decisions` enforces are unicorn's
+`consistent-boolean-name` set plus one addition, `show`.
+
+`node:path` and `node:url` are deliberately absent from the impure module list:
+they compute strings from strings.
 
 ## Exceptions live next to the line, never in a list
 

@@ -1,17 +1,4 @@
-/**
- * Modal that reads + writes a transition comment for the ordered pair
- * (songA → songB). Used by `SetlistEditor` when the user clicks on a
- * flagged transition warning between two consecutive setlist entries.
- *
- * The textarea shows the stored comment until the operator types, and
- * the typed value from then on, so the loaded comment is derived during
- * render rather than copied into state by an effect.
- *
- * It is a native modal `<dialog>` like every other sheet in the app, so
- * Escape and the backdrop both dismiss it. As a plain fixed `div` it answered
- * to neither, and Cancel was the only way out.
- * @Feature transitions
- */
+/** @Feature transitions */
 
 import type { JSX } from 'react';
 import { useState } from 'react';

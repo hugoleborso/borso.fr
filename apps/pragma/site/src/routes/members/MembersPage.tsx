@@ -1,17 +1,4 @@
-/**
- * Members admin page. List on the left (with the member's color chip
- * applied per the design bundle), an edit form on the right, and the
- * mastery matrix underneath.
- *
- * Color values are entered as hex (`#rrggbb`); the contrast helper in
- * `member-color.utils.ts` picks the readable foreground for each chip
- * at render time.
- *
- * Deleting a member asks first. The button sits 12px from the name that opens
- * the edit form, the write takes their mastery scores with it, and nothing in
- * this app has an undo.
- * @Feature members
- */
+/** @Feature members */
 
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';

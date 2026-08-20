@@ -32,23 +32,9 @@ import { countRunnersInRace } from '../lib/runner-status.utils';
 const EMPTY_RANKED: readonly RankedRunnerDto[] = [];
 const EMPTY_FASTEST_LAP: readonly { readonly runnerSlug: string }[] = [];
 
-/**
- * The two by two spectator grid. It stacks below 901px, which is where the
- * standings chips stop fitting beside the track, and the two cards that swap
- * places on the way down carry an explicit order so the small screen reads
- * countdown, track, elevation, standings.
- */
 const SPECTATOR_GRID_CLASS =
   'grid grid-cols-[minmax(0,1fr)] gap-4 flex-initial min-h-0 min-[901px]:grid-cols-[minmax(280px,2fr)_minmax(0,1fr)] min-[901px]:grid-rows-[auto_1fr] min-[901px]:flex-1';
 
-/**
- * The public race screen: countdown, track, standings, elevation profile.
- *
- * The map markers and the elevation pastilles are placed from the wall clock,
- * so the screen subscribes to the shared clock once and hands the same instant
- * to both. Reading `new Date()` during render instead would only advance when
- * something else re-rendered the tree, which is the standings poll.
- */
 // @FollowsBlueprint route-list-page
 export function SpectatorPage() {
   const { t, i18n } = useTranslation();

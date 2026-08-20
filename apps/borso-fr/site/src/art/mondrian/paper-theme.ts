@@ -16,7 +16,6 @@ const CLASSIC_PAPER_THEME: PaperTheme = {
   ruleAlpha: '26,23,20',
 };
 
-/** The custom palette leaves the surrounding page on the classic paper. */
 const PAPER_THEMES: Readonly<Record<PaletteKey, PaperTheme>> = {
   custom: CLASSIC_PAPER_THEME,
   classic: CLASSIC_PAPER_THEME,

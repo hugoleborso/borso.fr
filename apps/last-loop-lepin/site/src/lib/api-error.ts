@@ -1,9 +1,3 @@
-/**
- * The error every failed API call throws. It lives apart from `api.ts` so a
- * pure decision function can import it without pulling in the Hono client,
- * which builds itself at module load time.
- */
-
 // @FollowsBlueprint named-domain-error
 export class ApiError extends Error {
   override readonly name = 'ApiError';

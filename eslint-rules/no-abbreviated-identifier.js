@@ -1,38 +1,5 @@
 import { readIdentifierSegments, readParameterIdentifiers } from './identifier-segments.js';
 
-/**
- * Someone writes a name once and reads it hundreds of times. `cfg` saves ten
- * characters and costs every later reader a guess, and it breaks search, since
- * nobody grepping for `configuration` finds `cfg`.
- *
- * The dictionary is seeded from the abbreviations this repository has actually
- * used, and it matches whole segments of an identifier, so `messages` and
- * `resource` and `previous` pass while `msgText` and `resBody` and `prevLap`
- * do not.
- *
- * The short name check is separate, because a name nobody abbreviated can
- * still be a single letter. The allowed list holds the established domain
- * terms the standard names, which are the names of the things themselves
- * rather than shortenings.
- *
- * What this deliberately allows:
- *
- * - A counter in a `for`, `for…of`, or `for…in` header, which the standard
- *   exempts.
- * - Every name somebody else chose, which is a member access such as
- *   `context.req`, an imported binding such as `import { cb } from 'x'`, and a
- *   destructured binding such as `const { req } = context`. Renaming those is
- *   not the author's to do.
- * - An object literal key and a type member, since those are often a wire
- *   format a third party defined.
- * - A name starting with an underscore, which marks a binding that exists only
- *   to be skipped.
- *
- * Both lists are extendable through the rule options, so an application can
- * add a term without editing the rule.
- *
- * See docs/standards/01-naming.md.
- */
 const ABBREVIATION_MESSAGE =
   '`{{name}}` abbreviates `{{segment}}`. Write the whole word, because the name is read far ' +
   'more often than it is written and nobody searching for the full word finds the short one. ' +
@@ -43,7 +10,6 @@ const TOO_SHORT_MESSAGE =
   'or `migrationDigest`, and keep a single letter for a `for` header counter. ' +
   'See docs/standards/01-naming.md.';
 
-/** Seeded from the abbreviations this repository has used. */
 const ABBREVIATIONS = [
   'cfg',
   'msg',
@@ -72,7 +38,6 @@ const ABBREVIATIONS = [
   'qty',
 ];
 
-/** Established domain terms, which are the names of the things themselves. */
 const ALLOWED_NAMES = [
   'id',
   'url',

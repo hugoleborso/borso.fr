@@ -1,25 +1,3 @@
-/**
- * `parsed`, `result`, `data`, `entries`, `payload` name the step that produced
- * a value rather than the value. They tell a reader where it came from, which
- * the line above already says, and nothing about what it holds, which is what
- * they came to find out.
- *
- * The test the rule mechanises: read the name with the right-hand side covered.
- * `const parsed = …` could introduce a Zod parse, a JSON parse, a date parse or
- * a chord parse and read the same above all four, so it names none of them.
- *
- * Two shapes are deliberately out of scope, matching the standard:
- *
- *   * A `for (const entry of …)` head. CLAUDE.md's *Clean code* section names
- *     `entry` among the acceptable generic locals, and a loop variable's
- *     meaning is one line away by construction.
- *   * A destructuring pattern. `const { data } = useQuery(…)` and
- *     `const { value } = form` take the name their library chose, and renaming
- *     at the binding hides the contract. Rename at the use site if it helps.
- *
- * See docs/standards/01-naming.md.
- */
-
 const STEP_NAMES = new Set([
   'parsed',
   'result',

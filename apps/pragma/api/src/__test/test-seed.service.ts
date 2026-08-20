@@ -1,19 +1,3 @@
-/**
- * Builds the preview fixture: instruments carrying a family, members
- * whose roster holds several instruments at once, songs with a default
- * lineup and the notes the band writes about them, and a concert
- * session whose setlist references those songs — including one gap
- * where nobody keeps a harmonic instrument, so the risky transition is
- * visible without editing anything.
- *
- * Setlist entries are seeded with `energy: null` on purpose, so the
- * editor exercises the baseEnergy display fallback while the energy
- * curve still varies through each song's own `baseEnergy`.
- *
- * Every write goes through the owning slice's service, so the fixture
- * cannot drift from the rules the product enforces.
- */
-
 import type { InstrumentFamily } from '@domain/instrument.core';
 import type { Lineup } from '@domain/lineup.core';
 import { bootstrapAuth } from '../auth/auth.service';

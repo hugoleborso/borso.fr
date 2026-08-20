@@ -14,10 +14,6 @@ interface FinishRacePromptProps {
   readonly totalRunners: number;
 }
 
-/**
- * Banner offering to close the race once every bib is out. Freezing the
- * standings is irreversible from this screen, so the operator confirms first.
- */
 // @FollowsBlueprint organism-mutation-panel
 export function FinishRacePrompt({ edition, totalRunners }: FinishRacePromptProps) {
   const { t } = useTranslation();

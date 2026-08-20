@@ -1,20 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * CDK entry point for the apex `borso.fr` static site.
- *
- * Required env:
- *   - CDK_DEFAULT_ACCOUNT (or AWS_ACCOUNT_ID)
- *   - STAGE = 'prod' | 'preview'        (default 'prod')
- *   - PR_NUMBER                         (required when STAGE=preview)
- *
- * Stage routing:
- *   - prod    → stack borso-fr-prod, alias borso.fr
- *   - preview → stack borso-fr-pr-<N>, hosted at borso-fr-pr-<N>.preview.borso.fr
- *
- * Builds the static assets via the workspace's `build` script before synth/
- * deploy (chained in package.json), so the construct's `assetsPath: './dist'`
- * is always populated.
- */
 
 import { requireAwsAccount, requireDeployStage, requirePrNumber, StaticSite } from '@borso/infra';
 import { App, Stack } from 'aws-cdk-lib';

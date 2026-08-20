@@ -1,10 +1,4 @@
-/**
- * The setlists index as a list: one row per setlist, naming the sessions
- * playing it, or saying that none does. The empty state belongs here
- * too, because a list with nothing in it is still this component's
- * answer rather than the route's.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';

@@ -1,13 +1,4 @@
-/**
- * Modal that names a new setlist before writing it. The name is the
- * only field: a setlist attached to a session gets the session from
- * whichever surface opened the dialog, and everything else about it is
- * built in the editor afterwards.
- *
- * The parent renders the dialog only while it should be open, so the
- * dialog opens itself the moment React attaches it.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';

@@ -1,12 +1,3 @@
-/**
- * The key parity gate between the two catalogues. Returns the keys missing on
- * each side so the sibling test can fail with the exact list rather than a
- * bare "catalogues differ".
- *
- * A `.core.ts` rather than a `.utils.ts` because it states a rule of the i18n
- * layer: the two catalogues carry the same leaf set, always.
- */
-
 import { type CatalogueTree, compareCatalogueKeys, flattenKeys } from './i18n.utils';
 
 export interface CatalogueParityDiff {
@@ -55,12 +46,6 @@ function collectIdenticalValueKeys(
   }
 }
 
-/**
- * Every key whose two catalogues carry the byte-identical string. Key parity
- * alone stays green when an English value is copied into `fr.json`, so the
- * sibling test asserts this list equals a named allowlist of the entries that
- * genuinely read the same in both languages.
- */
 export function listIdenticalValueKeys(
   english: CatalogueTree,
   french: CatalogueTree,

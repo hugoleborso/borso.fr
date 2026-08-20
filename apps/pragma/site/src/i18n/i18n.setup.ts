@@ -1,14 +1,4 @@
-/**
- * Runtime i18n setup. The pure-helper layer lives in `i18n.utils.ts`;
- * this module is the side-effect bridge to `i18next` + `react-i18next`.
- *
- * Locale resolution priority: localStorage (`pragma.locale`) > browser
- * `navigator.language` > fallback (FR). The localStorage entry is
- * written by the in-app `LanguageSwitcher` molecule so a manual switch
- * survives a refresh.
- *
- * @DependsOnExternal browser-local-storage
- */
+/** @DependsOnExternal browser-local-storage */
 
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -39,13 +29,6 @@ void i18next.use(initReactI18next).init({
   returnNull: false,
 });
 
-/**
- * The `lang` attribute is what a screen reader picks a voice from and what a
- * browser offers to translate against, so it has to follow the active language
- * rather than sit at whatever the entry HTML was authored in. i18next emits
- * `languageChanged` on every switch, which is a subscription this module owns
- * for the life of the page — no component needs an effect for it.
- */
 function applyDocumentLanguage(language: string): void {
   if (typeof document === 'undefined') return;
   document.documentElement.lang = language;

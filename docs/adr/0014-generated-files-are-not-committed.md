@@ -136,3 +136,19 @@ end conflicted for the same mechanical reason. It is now rewritten in path
 order on every record, so two branches sealing different files touch different
 regions and merge on their own; two branches sealing the same file still
 conflict, which is a real disagreement.
+
+## The one committed ledger is written in path order for the same reason
+
+`docs/standards/seals.jsonl` is an input, so it stays committed — and it is
+written **sorted by path**, never appended to.
+
+A JSONL file that grows at the end conflicts on every concurrent edit: two
+branches sealing two unrelated files both append at the same last line, and git
+has to ask. Rewriting the whole ledger in path order puts unrelated edits in
+different regions of the file, so git merges them without asking. What is left
+is the conflict that carries information — the same file sealed twice, on two
+branches, with different content hashes — which is exactly the case a person
+should look at.
+
+`writeSealLedgerInPathOrder` in `scripts/standards/seal.ts` is named after this
+property; appending would be faster and would reintroduce the conflicts.

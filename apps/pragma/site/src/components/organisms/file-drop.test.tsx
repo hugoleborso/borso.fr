@@ -1,16 +1,3 @@
-/**
- * UI-interaction test for the FileDrop molecule's Remove button.
- *
- * The other pure logic in this folder (validateChartFile, MIME projection)
- * is covered by `file-drop.utils.test.ts`. This file covers the one piece
- * that has no pure-helper form: clicking Remove must invoke `onRemoved`
- * AND, once the parent re-renders with an empty `currentObjectKey`, the
- * uploaded chip must vanish.
- *
- * No @testing-library/react dep — the test uses React's own `act` and
- * `createRoot` so no new tooling is added for a single component test.
- */
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';

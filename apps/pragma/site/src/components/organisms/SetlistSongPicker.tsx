@@ -1,23 +1,4 @@
-/**
- * The add-a-song sheet of the setlist editor.
- *
- * Adding a song used to mean unfolding a `<details>` holding the whole
- * catalog in alphabetical order and hunting for a title. Here the sheet
- * opens on a search field, every keystroke narrows the list, a tap adds
- * the song and leaves the sheet open so the next one is one tap away,
- * and a title the catalog does not carry can be created from the same
- * field instead of sending the operator to the catalog and back.
- *
- * The created song is a stub — title only — because the point is to get
- * the setlist written; the catalog page fills the rest in later.
- *
- * The create action sits directly under the search field, and the field
- * is wrapped in a form so the keyboard's own return key runs it. In the
- * sheet's footer it was 447 px below the last line of content, which on
- * a phone is behind the keyboard the title was just typed with, and
- * pressing return did nothing at all.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';

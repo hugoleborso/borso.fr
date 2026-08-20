@@ -1,9 +1,3 @@
-/**
- * The lineup override is the interesting one: it accepts three stored shapes
- * because a member could hold one instrument before they could hold two, and
- * the transform lifts all three into lists on read.
- */
-
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import {

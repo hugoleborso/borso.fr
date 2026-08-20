@@ -1,9 +1,4 @@
 /**
- * Drizzle client over Aurora DSQL via `postgres-js` + `@aws-sdk/dsql-signer`.
- * Mirrors the shape of `apps/last-loop-lepin/api/src/database/client.ts` —
- * one singleton per Lambda container, lazy DSQL token refresh via the
- * `password` callback.
- *
  * @DependsOnExternal aws-dsql
  */
 
@@ -19,12 +14,6 @@ const DSQL_DATABASE = 'postgres';
 type DrizzleClient = ReturnType<typeof drizzle<typeof schema>>;
 export type Database = DrizzleClient;
 
-/**
- * Either the long-lived database client or a transaction handle —
- * both expose the same Drizzle query API, so repositories that need
- * to operate inside or outside a transaction accept this widened
- * type instead of `Database`.
- */
 export type DatabaseExecutor = Parameters<Parameters<Database['transaction']>[0]>[0] | Database;
 
 interface DatabaseConfig {

@@ -1,12 +1,4 @@
-/**
- * The notes a song carries, as the sections worth drawing.
- *
- * A song has three note fields and most songs fill in none or one, so both the
- * detail page and the stage view ask the same question: which of them actually
- * say something, in the order the band reads them — how the song is built,
- * what to watch out for, then everything else.
- * @Feature songs
- */
+/** @Feature songs */
 
 export interface SongNoteInput {
   readonly structureNotes: string;

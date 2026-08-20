@@ -1,24 +1,3 @@
-/**
- * Derive a song's start / end tonality from a ChordPro source. The
- * rule is intentionally simple: scan the first line that carries a
- * recognisable chord token, and (separately) the last such line, and
- * return the chord's root + quality string.
- *
- * Recognised chord shape: `C`, `Cm`, `C#`, `Bb`, `F#m`, `Dmaj7`,
- * `G/B` (slash chord — only the root is reported), etc. The token
- * matched is the FIRST bracketed `[...]` on the line — ChordPro's
- * canonical chord-in-lyric syntax — or, failing that, the first
- * whitespace-separated token that looks like a chord on a line where
- * every token looks like a chord (the "chord line above lyrics"
- * convention).
- *
- * Output is the chord's root + quality, e.g. `C`, `F#m`, `Dmaj7`.
- * Ambiguous / missing → null. The UI shows null as an empty input and
- * lets the user override.
- *
- * Pure function over a string. No I/O, no `now`.
- */
-
 const CHORD_ROOT_REGEX = /^[A-G][#b]?/;
 const CHORD_QUALITY_REGEX = /^(?:maj7|min7|m7|maj|min|m|sus2|sus4|sus|dim|aug|7|6|9|11|13)/;
 const BRACKETED_CHORD_REGEX = /\[[^\]]*\]/g;

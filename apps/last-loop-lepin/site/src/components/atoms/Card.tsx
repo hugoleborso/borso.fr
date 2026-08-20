@@ -15,7 +15,6 @@ const CLASS_BY_PADDING: Readonly<Record<CardBodyPadding, string>> = {
 
 interface CardProps {
   readonly children: ReactNode;
-  /** Extra utilities for the card frame, e.g. the spectator grid placement. */
   readonly className?: string;
 }
 

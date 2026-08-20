@@ -103,14 +103,6 @@ describe('PreviewableApp (prod, full)', () => {
   });
 });
 
-/*
- * Constructing a PreviewableApp with a database esbuild-bundles the migration
- * runner, which is over a megabyte and takes tens of seconds on a loaded
- * machine. Every other describe in this file builds its stack here, at
- * collection time, where no per-test timeout applies; these two used to build
- * theirs inside the `it` and timed out at 30 s whenever the pre-push hook ran
- * its gates in parallel.
- */
 const sharedClusterStacks = bootstrap('S');
 new PreviewableApp(sharedClusterStacks.stageStack, 'App', {
   app: 'test-app',
@@ -141,9 +133,7 @@ const cloneTemplate = Template.fromStack(cloneStacks.stageStack);
 
 describe('PreviewableApp (preview with db)', () => {
   it('shares the cluster across stages via cross-stack reference, no SSM ceremony in stage stack', () => {
-    // Stage stack still has the schema custom resource…
     sharedClusterTemplate.resourceCountIs('AWS::CloudFormation::CustomResource', 1);
-    // …but no cluster (it lives in the cluster stack).
     sharedClusterTemplate.resourceCountIs('AWS::DSQL::Cluster', 0);
   });
 

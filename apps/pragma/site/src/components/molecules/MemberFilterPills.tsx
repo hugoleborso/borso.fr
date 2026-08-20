@@ -1,15 +1,4 @@
-/**
- * Sticky pill row on the setlist editor — one pill per band member
- * plus a leading "All members" pill. Tapping a member pill enters
- * single-member mode; tapping "All members" returns to the full
- * setlist.
- *
- * The row wraps rather than scrolling sideways: four members and the
- * "All members" pill need 455 px against a 343 px viewport, and a
- * sideways scroll with no fade and no scrollbar left the last member
- * off screen, so filtering by that person looked impossible.
- * @Feature members
- */
+/** @Feature members */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';

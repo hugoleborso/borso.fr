@@ -1,14 +1,4 @@
-/**
- * Inline ChordPro preview Card surfaced above the song edit form
- * when the active chart kind is `chordpro` and the text is non-empty.
- * Pulled out of SongEditForm so the parent stays under the file-line
- * cap.
- *
- * The preview is a check on what was typed, not the surface the chart is read
- * from on stage — so it keeps the same height budget as the editor it mirrors
- * rather than pushing Save and Delete a chart's length down the page.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';

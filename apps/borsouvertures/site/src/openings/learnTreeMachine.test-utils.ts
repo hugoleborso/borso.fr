@@ -34,14 +34,6 @@ interface DriverHandles {
   rngQueue: string[];
 }
 
-/**
- * A deterministic stand-in for the timer and the RNG.
- *
- * `opponentDelayMs` is deliberately left out of `options`, so the delay the
- * machine hands to `scheduleTimeout` is the production default and a test can
- * assert it. Every timer is fired by hand, so the value never makes a test
- * wait.
- */
 // @FollowsBlueprint test-machine-driver
 export function buildDriver(): DriverHandles {
   const pendingTimers: ScheduledCallback[] = [];

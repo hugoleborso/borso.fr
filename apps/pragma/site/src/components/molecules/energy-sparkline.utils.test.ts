@@ -44,16 +44,16 @@ describe('buildSparklinePath', () => {
 
   it('uses the energy midpoint when a value is null or undefined', () => {
     const geometry = buildSparklinePath([null, undefined], 80, 40);
-    const lows = geometry.points.map((point) => point[1]);
-    // Both fall back to value=5 — same y-coord for both points.
-    expect(lows[0]).toBe(lows[1]);
+    const yCoordinatesOfUnsetValues = geometry.points.map((point) => point[1]);
+    expect(yCoordinatesOfUnsetValues[0]).toBe(yCoordinatesOfUnsetValues[1]);
   });
 
-  it('respects the vertical padding (top/bottom inset of 6)', () => {
-    const geometry = buildSparklinePath([10], 100, 50);
+  it('draws the highest energy at the top vertical inset', () => {
+    const VERTICAL_INSET = 6;
+    const HIGHEST_ENERGY = 10;
+    const geometry = buildSparklinePath([HIGHEST_ENERGY], 100, 50);
     const firstPoint = geometry.points[0];
     if (firstPoint === undefined) throw new Error('expected one point');
-    // Max energy → y = height - 6 - (10/10) * (height - 12) = 50-6-38 = 6.
-    expect(firstPoint[1]).toBe(6);
+    expect(firstPoint[1]).toBe(VERTICAL_INSET);
   });
 });

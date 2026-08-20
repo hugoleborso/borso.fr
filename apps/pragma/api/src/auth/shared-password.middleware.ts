@@ -1,13 +1,3 @@
-/**
- * Hono middleware verifying the signed session cookie for every
- * authenticated route. Backed by the singleton `app_config` row's
- * `hmac_key`. See `docs/adr/0004-pragma-shared-password-auth.md`.
- *
- * Failure modes:
- *  - no cookie / malformed / bad signature / expired -> 401
- *  - app_config row missing -> 503 (server is not bootstrapped yet)
- */
-
 import type { MiddlewareHandler } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { getAppConfig } from './auth.service';

@@ -137,11 +137,6 @@ export async function insertManualDidNotFinish(didNotFinish: ManualDidNotFinish)
   await getDatabase().insert(manualDidNotFinishesTable).values(didNotFinish);
 }
 
-/**
- * Drop the manual_dnf row for a runner. Used when the orga retroactively
- * validates a missed loop (catch-up flow) — the runner walks back into
- * `in-race` once their DNF marker is gone and the catch-up punch lands.
- */
 export async function deleteManualDidNotFinish(
   editionSlug: string,
   runnerSlug: string,
@@ -156,11 +151,6 @@ export async function deleteManualDidNotFinish(
     );
 }
 
-/**
- * Drop every punch and every manual did-not-finish row of one edition.
- * Used by the test seeding endpoint, which rebuilds a fixture from a clean
- * slate so a previous fixture's rows cannot leak into the next standings.
- */
 export async function deleteAllEditionPunchesAndDidNotFinishes(editionSlug: string): Promise<void> {
   await getDatabase().delete(loopPunchesTable).where(eq(loopPunchesTable.editionSlug, editionSlug));
   await getDatabase()

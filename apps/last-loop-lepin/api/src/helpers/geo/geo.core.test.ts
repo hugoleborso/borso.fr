@@ -50,14 +50,10 @@ describe('smoothedElevationGainMeters', () => {
   });
 
   it('keeps the anchor on noise, so a slow drift still totals a climb', () => {
-    // Each step is 2 m, below the floor, but the drift from the anchor
-    // crosses it once. Re-anchoring on every noisy step would total 0.
     expect(smoothedElevationGainMeters([500, 502, 504, 506])).toBe(4);
   });
 
   it('needs a descent strictly past the floor to move the anchor', () => {
-    // -3 m sits exactly on the floor: the anchor stays at 500, so the climb
-    // back to 502 is 2 m and does not count.
     expect(smoothedElevationGainMeters([500, 497, 502])).toBe(0);
   });
 

@@ -1,9 +1,3 @@
-/**
- * Drizzle schema for the transition-comments bounded context. A
- * comment lives on the ordered pair (songA, songB); the spec calls
- * A→B and B→A distinct rows.
- */
-
 import { pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 

@@ -1,11 +1,3 @@
-/**
- * The race-day-2026 scenario — the test the spec calls out as the
- * motivation for `vi.setSystemTime()`. Rejoue une édition entière via
- * `vi.setSystemTime` + `app.request()`, sans HTTP réel.
- *
- * Requires the testcontainer Postgres booted by `test/setup-postgres.ts`.
- */
-
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { createApp } from '../../api/src/app';
@@ -44,9 +36,6 @@ describe('race day 2026 — end-to-end', () => {
   const app = createApp();
 
   beforeAll(() => {
-    // Only fake `Date` — leaving setTimeout/setInterval real so postgres-js's
-    // internal pool keeps working. Anything that drives time in the back-end
-    // reads `new Date()` directly (the `.core.ts` rule), so Date is enough.
     vi.useFakeTimers({ toFake: ['Date'] });
   });
 

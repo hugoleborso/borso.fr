@@ -55,13 +55,6 @@ interface DriverHandles {
 }
 
 /**
- * A deterministic stand-in for the timer and the RNG.
- *
- * `opponentDelayMs` is deliberately left out of `options`, so the delay the
- * machine hands to `scheduleTimeout` is the production default and a test can
- * assert it. Every timer is fired by hand, so the value never makes a test
- * wait.
- *
  * @Blueprint test-machine-driver
  * @BlueprintName Machine Test Driver
  * @BlueprintUsage Use to make a machine that owns timers and randomness fully deterministic, in a `.test-utils.ts` sibling the test glob does not pick up.

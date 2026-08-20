@@ -1,18 +1,3 @@
-/**
- * Ranking — pure. `now: Date` is always a parameter.
- *
- * Rules of the format ("backyard qui a une fin"):
- * - A runner is "in-race" iff they have a valid punch for every closed
- *   loop since the start, AND they are not manually marked DNF.
- * - The race ends when (a) `now >= edition.endsAt` (hard cut-off) or
- *   (b) at most one runner is still in-race.
- * - Tie-break: deepest reached loop wins. Within the same loop, earlier
- *   finishing time wins. Identical loop and identical millisecond finish
- *   time → both runners share `rank: 'ex-aequo'`.
- * - Order: in-race runners precede DNFs; within each tier the sort is
- *   loop-depth descending then finish-time ascending.
- */
-
 import { isRaceEndReached, loopIndexAt, totalHourlyTops } from '../edition/edition.core';
 import type { RaceEdition } from '../edition/edition.types';
 import { lastLoopDurationMs } from '../punch/punch.core';
@@ -78,6 +63,18 @@ function progressFor(
   };
 }
 
+function deepestLoopExpectedClosed(edition: RaceEdition, now: Date): number {
+  const loopsTheEditionCanHold = totalHourlyTops(edition);
+  const loopsClosedSoFar = Math.max(0, loopIndexAt(edition, now) - 1);
+  return Math.min(loopsTheEditionCanHold, loopsClosedSoFar);
+}
+
+interface RankAccumulator {
+  readonly ranked: readonly RankedRunner[];
+  readonly previous: RunnerProgress | null;
+  readonly currentRank: number;
+}
+
 function compareProgresses(left: RunnerProgress, right: RunnerProgress): number {
   const isLeftIsInRace = left.status.kind === 'in-race';
   const isRightIsInRace = right.status.kind === 'in-race';
@@ -98,13 +95,6 @@ function areTiedForRanking(left: RunnerProgress, right: RunnerProgress): boolean
   return leftMs === rightMs;
 }
 
-/**
- * Compute the ranked standings of every runner at moment `now`.
- *
- * In-race runners precede DNFs. Within each tier, the deeper loop ranks
- * higher; identical loop counts break by earliest finish time. Identical
- * loop AND identical finish ms → both runners receive `rank: 'ex-aequo'`.
- */
 // @FollowsBlueprint core-projection
 export function computeStandings(
   edition: RaceEdition,
@@ -118,15 +108,7 @@ export function computeStandings(
     manualDidNotFinishesBySlug.set(didNotFinish.runnerSlug, didNotFinish);
 
   const validPunches = punches.filter((punch) => punch.voidedAt === null);
-  // `loopIndexAt` keeps growing linearly past `endsAt` — for a 15-loop
-  // race viewed two days later it returns ~70, which would silently flip
-  // every finisher to `dnf reason='late'` (their `lastValidLoop` of 15 is
-  // less than the bogus expected 69). The race has a fixed number of
-  // loops, so the expectation has to cap there.
-  const expectedClosedLoop = Math.min(
-    totalHourlyTops(edition),
-    Math.max(0, loopIndexAt(edition, now) - 1),
-  );
+  const expectedClosedLoop = deepestLoopExpectedClosed(edition, now);
 
   const progresses = runners
     .map((runner) =>
@@ -138,16 +120,6 @@ export function computeStandings(
       ),
     )
     .toSorted(compareProgresses);
-
-  // `reduce` over progresses to build the ranked list while carrying the
-  // previous progress. Avoids array index access and the
-  // defensive-undefined branches that `noUncheckedIndexedAccess` otherwise
-  // forces on every for-loop iteration.
-  interface RankAccumulator {
-    readonly ranked: readonly RankedRunner[];
-    readonly previous: RunnerProgress | null;
-    readonly currentRank: number;
-  }
 
   const rankingPass = progresses.reduce<RankAccumulator>(
     (accumulator, progress) => {

@@ -1,16 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * Generates `docs/standards/rule-provenance.md`: which lint rules were written
- * because something went wrong, and which were written because something might.
- *
- * Usage:
- *   pnpm exec tsx scripts/standards/rule-provenance.ts
- *
- * `--check` only refuses a stale page. There is no threshold and there never
- * should be. A rule written from principle is not a defect, and a gate that
- * pushed the ratio one way would be an argument for writing dantotsus about
- * things that did not happen.
- */
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -25,10 +13,6 @@ const NON_DANTOTSU_FILES = new Set(['README.md', '_template.md']);
 const STANDARD_FILE_PATTERN = /^\d\d-[a-z0-9-]+\.md$/;
 const OFF_SEVERITIES: ReadonlySet<unknown> = new Set(['off', 0]);
 
-/**
- * Probe paths covering every layer a custom rule is scoped to. A rule enabled
- * on none of them is registered and running nowhere.
- */
 const PROBE_PATHS: readonly string[] = [
   'apps/pragma/api/src/probe/probe.controller.ts',
   'apps/pragma/api/src/probe/probe.service.ts',
@@ -90,12 +74,6 @@ function readCorpus(): Corpus {
   return { dantotsus, standards };
 }
 
-/**
- * The rule's bare name is searched for, not the `borso/` form. A dantotsu often
- * names the rule in prose without its plugin prefix, and missing those would
- * report a rule with real provenance as written from principle, which is the
- * error that matters here.
- */
 function listMentions(corpus: ReadonlyMap<string, string>, rule: string): readonly string[] {
   const bareName = rule.replace('borso/', '');
   const found: string[] = [];

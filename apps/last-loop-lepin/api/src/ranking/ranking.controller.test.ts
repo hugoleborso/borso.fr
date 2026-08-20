@@ -111,7 +111,6 @@ describe('ranking controller', () => {
   });
 
   it('surfaces fastestLap on the response body and matches the seeded record holder', async () => {
-    // Alice loop 1 = 55 min, Bob loop 1 = 58 min → Alice holds at 55 min.
     await truncateAllTables();
     await insertEdition(makeEdition({ status: 'live' }));
     await insertRunner(makeRunner('alice'));
@@ -141,8 +140,6 @@ describe('ranking controller', () => {
     const body = await response.text();
     const lines = body.split('\n');
     expect(lines[0]?.startsWith('bib,runner_slug,display_name,B1,B2,')).toBe(true);
-    // Alice (55:00) finished her loop earlier than Bob (58:00), so she
-    // ranks above him — the CSV row order mirrors the ranked order.
     expect(lines[1]?.startsWith('1,alice,')).toBe(true);
     expect(lines[1]?.includes('55:00')).toBe(true);
     expect(lines[2]?.startsWith('2,bob,')).toBe(true);

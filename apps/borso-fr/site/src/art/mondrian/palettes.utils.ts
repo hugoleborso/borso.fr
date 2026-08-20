@@ -103,10 +103,6 @@ export function buildCustomPalette(customColors: CustomColors): Palette {
   };
 }
 
-/**
- * Takes `unknown` because it guards a query-string value, which is a string or
- * nothing at all. A caller that checked for null first would be checking twice.
- */
 export function isPaletteKey(value: unknown): value is PaletteKey {
   return PALETTE_KEYS.has(value);
 }
@@ -117,7 +113,6 @@ export function selectPalette(paletteKey: PaletteKey, customColors: CustomColors
   return PALETTES[paletteKey];
 }
 
-/** The preset palettes repeat a fill to weight it, so the swatch row de-duplicates. */
 export function listDistinctFills(palette: Palette): readonly PaletteFill[] {
   return palette.fills.filter(
     (fill, index, allFills) => allFills.findIndex((other) => other.hex === fill.hex) === index,

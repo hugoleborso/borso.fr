@@ -1,18 +1,4 @@
-/**
- * The average mastery a song's default lineup holds, from the defaults alone.
- *
- * The name says `Default` because that is the whole difference from the back
- * end's `meanForSong` in `api/src/mastery/mastery.core.ts`, which averages the
- * *effective* score, meaning the per-song override where one exists and the
- * default otherwise. The two therefore disagree on any song that carries an
- * override. This one reads what the catalog list endpoint ships, which is
- * defaults only.
- *
- * One score per instrument held, so a member on drums and vocals counts twice.
- * Members sitting the song out are skipped. Null when the lineup is empty or
- * nothing is known about any of its pairs.
- * @Feature mastery
- */
+/** @Feature mastery */
 
 import { type Lineup, memberInstrumentPairs } from '@domain/lineup.core';
 

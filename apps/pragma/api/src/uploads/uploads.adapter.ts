@@ -1,11 +1,4 @@
 /**
- * The uploads context's way out of the process. Per ADR-0012 an outbound call
- * lives in an `.adapter.ts` and nowhere else, so the S3 SDK is imported here
- * and by nothing else in this application. Two operations:
- *  - `presignPutObject` — short-lived PUT URL pinned to a content type.
- *  - `presignGetObject` — short-lived GET URL the FE renders the
- *    uploaded chart from (no public bucket policy, no CloudFront).
- *
  * @DependsOnExternal aws-s3
  */
 
@@ -20,10 +13,7 @@ function readEnv(name: string): string | undefined {
 }
 
 function getClient(): S3Client {
-  // Stryker disable next-line ConditionalExpression: equivalent mutant. Dropping
-  // the guard builds a second client per call, which no caller can observe —
-  // the signature a presigner produces depends on the region and the
-  // credentials, not on which client object produced it.
+  // Stryker disable next-line ConditionalExpression: equivalent mutant, since a presigned signature depends on the region and the credentials rather than on which client object produced it
   if (cachedClient !== null) return cachedClient;
   const region = readEnv('AWS_REGION') ?? 'eu-west-3';
   cachedClient = new S3Client({ region });

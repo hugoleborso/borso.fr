@@ -1,10 +1,3 @@
-/**
- * Instruments admin endpoints. All routes are gated by the
- * shared-password session middleware applied at mount time in
- * `app.ts`. Hono routing only — orchestration lives in the service,
- * DB access in the repository.
- */
-
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';

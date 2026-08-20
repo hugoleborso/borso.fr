@@ -89,3 +89,29 @@ Three tells that you are looking at contention rather than a defect:
 - [`cdk-tests-leak-a-temp-assembly-per-synth.md`](../dantotsus/cdk-tests-leak-a-temp-assembly-per-synth.md)
 - [`lectured-without-reading-the-code.md`](../dantotsus/lectured-without-reading-the-code.md)
   — the general form: concluding from an observation you did not re-check.
+
+## Stryker's dry run has its own budget, and it is five minutes by default
+
+The same contention reaches mutation testing, where it surfaces with a
+different message: `Initial test run timed out!`, followed by
+`Something went wrong in the initial test run`. That is **not** a mutant and
+not a survivor — it is Stryker's *dry run*, the unmutated pass it uses to
+collect per-test coverage, hitting `dryRunTimeoutMinutes`, whose default is
+five.
+
+Measured on the push that removed every comment from the repository, with six
+mutation runs started at once on four cores: `last-loop-lepin`'s dry run took
+**3 minutes 46 seconds** and passed; `pragma`'s, which instruments 83 files
+against 576, exceeded five minutes and killed the run. Neither app's tests had
+changed in a way that could slow them down.
+
+`stryker.shared.js` now sets
+`dryRunTimeoutMinutes: DRY_RUN_TIMEOUT_MINUTES_UNDER_THE_PARALLEL_PUSH_WAVE`,
+at 20. The budget is for the loaded machine the gate actually runs on, in the
+same spirit as the `testTimeout` reasoning above.
+
+**Telling the two apart matters**, because the fixes are opposite: a survivor
+is a missing assertion and is yours to fix, while this is a budget and fixing
+it by weakening a test would be a real regression. Read the line before the
+stack trace — `Final mutation score N under breaking threshold 100` is a
+survivor, `Initial test run timed out!` is this.

@@ -1,9 +1,3 @@
-/**
- * Every punch body names an edition and a runner; the differences are the
- * bounds each one adds, and the coordinate ranges are the ones a phone can
- * plausibly report.
- */
-
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import {

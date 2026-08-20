@@ -1,20 +1,4 @@
-/**
- * Remembers, in `localStorage`, that this browser has signed in at
- * least once.
- *
- * The session cookie is `httpOnly`, so the front end cannot read it and
- * cannot know whether a request would be accepted. Without a hint, the
- * route guard has to ask the API on every first paint, which answers
- * 401 for every visitor who has not signed in yet. The marker is that
- * hint: no marker means "send the visitor to the sign-in screen and
- * make no request at all", and a marker means "ask, because the cookie
- * may still be valid or may have expired".
- *
- * It is a hint and never an authorisation. Every gated request is still
- * checked by the API against the signed cookie.
- *
- * @DependsOnExternal browser-local-storage
- */
+/** @DependsOnExternal browser-local-storage */
 
 const SESSION_MARKER_KEY = 'pragma.session-seen';
 const SESSION_MARKER_VALUE = '1';

@@ -1,22 +1,8 @@
-/**
- * The client-side half of the architecture page: drawing and interaction.
- *
- * There is no layout here. ELK places the nodes and routes the edges in the
- * generator, so this receives coordinates and bend points and only has to draw
- * them, which is why the page carries no layout engine. See ADR-0011.
- */
-
 import { CHIP_ROW_HEIGHT, NODE_LINE_HEIGHT } from './architecture-layout';
 
 export const GRAPH_RUNTIME_SCRIPT = String.raw`
 (() => {
   const ZOOM_MIN = 0.3;
-  // How far in a reader can go, expressed as the narrowest slice of the graph
-  // the canvas will show rather than as a multiple of the fitted view. A
-  // multiple is the wrong unit: the component level is three thousand units
-  // wide and fits at about a third of actual size, so 2.6x of that was barely
-  // life size and the labels stayed unreadable. A floor in graph units gives
-  // the same magnification on every level whatever its width.
   const MINIMUM_VIEW_WIDTH = 340;
   const ZOOM_STEP = 0.0016;
   const CORNER_RADIUS = 9;
@@ -35,14 +21,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     return element;
   };
 
-  /**
-   * A polyline through the points ELK routed, with the corners rounded.
-   *
-   * The points already avoid every box, so the drawing must not wander from
-   * them: the corner radius is clamped to a third of the shorter adjacent
-   * segment, which keeps a rounded corner inside the lane its two segments
-   * were routed through.
-   */
   const edgePath = (points) => {
     if (points.length < 2) return '';
     if (points.length === 2) {
@@ -80,9 +58,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     'try', 'type', 'typeof', 'undefined', 'var', 'void', 'while', 'yield',
   ]);
 
-  // This whole script is emitted from a template literal, so a backtick written
-  // here would close it two files upstream rather than land in the page.
-  const QUOTES = { template: String.fromCharCode(96) };
+  const BACKTICK = String.fromCharCode(96);
 
   const escapeText = (text) =>
     text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
@@ -90,17 +66,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
   const span = (className, text) =>
     className === '' ? escapeText(text) : '<span class="tok-' + className + '">' + escapeText(text) + '</span>';
 
-  /**
-   * Colour one snippet of TypeScript.
-   *
-   * A scanner rather than one pattern per token type: a URL inside a string
-   * contains a comment opener and an apostrophe inside a comment opens a
-   * string, so whichever of the two a regular expression matched first would
-   * swallow the rest of the file. Walking left to right, each construct ends
-   * where its own rules say it ends. The page cannot reach a highlighting
-   * library — its content policy allows no other origin — and the alternative
-   * is inlining one for a snippet of at most eighty lines.
-   */
   const highlight = (code) => {
     let out = '';
     let index = 0;
@@ -121,7 +86,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
         index = stop;
         continue;
       }
-      if (character === "'" || character === '"' || character === QUOTES.template) {
+      if (character === "'" || character === '"' || character === BACKTICK) {
         let cursor = index + 1;
         while (cursor < code.length) {
           if (code[cursor] === '\\') { cursor += 2; continue; }
@@ -160,13 +125,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     return out;
   };
 
-  /**
-   * Show one function's source.
-   *
-   * A block names a function, and the question a reader has next is what it
-   * does. The dialog is native, so Escape and the backdrop close it without
-   * any handling here.
-   */
   const openCode = (entry) => {
     const dialog = document.getElementById('code-modal');
     if (!dialog || !entry) return;
@@ -186,8 +144,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     dialog.querySelector('[data-code-location]').textContent = entry.location;
     const body = dialog.querySelector('[data-code-body]');
     const toggle = dialog.querySelector('[data-code-view]');
-    // On a diff page a changed file carries its earlier text, and reading the
-    // final source to find what moved is the work the page exists to remove.
     const showFinal = () => {
       body.innerHTML = highlight(entry.code);
       body.classList.remove('as-diff');
@@ -218,11 +174,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     dialog.showModal();
   };
 
-  /**
-   * Anything outside a graph that names a source: a level 4 row, a blueprint,
-   * a follower. The dialog is the same one the blocks open, so a reader who
-   * learned to click a block does not have to learn a second thing.
-   */
   const wirePageSources = () => {
     const holder = document.getElementById('page-sources');
     if (!holder) return;
@@ -244,15 +195,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
   };
 
 
-  /**
-   * A line diff, by longest common subsequence.
-   *
-   * The page cannot reach a diff library, and the inputs are two versions of
-   * one markdown document — a few hundred lines each — so the quadratic table
-   * is nothing. Equal runs are collapsed to a context window, because a rule
-   * that gained a paragraph should not be read as a document that changed
-   * everywhere.
-   */
   const CONTEXT_LINES = 3;
 
   const diffLines = (before, after) => {
@@ -289,7 +231,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     return out;
   };
 
-  /** Drop the long equal runs, keeping a few lines either side of each change. */
   const collapseDiff = (rows) => {
     const keep = new Array(rows.length).fill(false);
     rows.forEach((row, index) => {
@@ -312,13 +253,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     return out;
   };
 
-  /**
-   * Diff rows as DOM, gutter and all.
-   *
-   * The standards view and the code dialog ask the same question of different
-   * text, and the paint callback is where they differ: a rule is read as prose,
-   * a module is read with its syntax coloured.
-   */
   const buildDiffRows = (rows, paint) => {
     const table = document.createElement('div');
     table.className = 'diff-rows';
@@ -342,14 +276,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     return table;
   };
 
-  /**
-   * The standards view: a document, its commits, and the diff between two.
-   *
-   * The whole text at every commit is already in the page, so choosing a pair
-   * is a redraw. Clicking a commit moves the right-hand end of the range and
-   * pushes the old one left, which is what makes stepping through the history
-   * one click rather than two.
-   */
   const wireStandards = () => {
     const host = document.querySelector('[data-standards]');
     if (!host) return;
@@ -370,7 +296,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
         diffHost.innerHTML = '<p class="standard-empty">No commit history for this document.</p>';
         return;
       }
-      // Newest first in the data; a range reads oldest to newest.
       const older = versions[Math.max(fromIndex, toIndex)];
       const newer = versions[Math.min(fromIndex, toIndex)];
       rangeHost.textContent =
@@ -531,9 +456,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       group.appendChild(svgElement('rect', {
         x: box.x, y: box.y, width: 4, height: box.height, rx: 2, class: 'node-stripe',
       }));
-      // The name sits on the first row and every fact about the block on its
-      // own row under it, at the pitch the generator sized the box with, then
-      // the pills. The generator decided the wrapping, so the two agree.
       const lines = node.lines || [];
       const chips = node.chips || [];
       const bare = lines.length === 0 && chips.length === 0;
@@ -649,15 +571,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       applyView();
     };
 
-    /**
-     * A client point in the graph's own coordinates.
-     *
-     * The canvas is letterboxed inside the stage whenever their aspect ratios
-     * differ, so mapping a finger or a cursor by the element's bounding box
-     * would drift by the size of the letterbox. The screen transform knows
-     * about that, and about the current viewBox, so zooming stays anchored on
-     * the point the user actually touched.
-     */
     const toGraphPoint = (clientX, clientY) => {
       const matrix = svg.getScreenCTM();
       if (matrix === null) return null;
@@ -667,7 +580,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       return point.matrixTransform(matrix.inverse());
     };
 
-    /** Zoom by the given factor while holding the given client point still. */
     const zoomAround = (factor, clientX, clientY) => {
       const anchor = toGraphPoint(clientX, clientY);
       if (anchor === null) return;
@@ -697,12 +609,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       { passive: false },
     );
 
-    /**
-     * One pointer pans, two pinch. Pointer events cover mouse, pen and touch,
-     * so the same handler serves a trackpad drag and a thumb and forefinger;
-     * touch-action none on the canvas is what stops the browser taking the
-     * gesture for page scrolling first.
-     */
     const active = new Map();
     const origins = new Map();
     const captured = new Set();
@@ -722,27 +628,22 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       svg.classList.add('grabbing');
     });
 
+    const tryToCapturePointer = (pointerId) => {
+      try {
+        svg.setPointerCapture(pointerId);
+      } catch {}
+    };
+
     svg.addEventListener('pointermove', (event) => {
       const previous = active.get(event.pointerId);
       if (previous === undefined) return;
       active.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
-      // Capture keeps a drag alive when the finger leaves the canvas, and it
-      // retargets the click that ends the gesture to the canvas. Taking it on
-      // the first press is what stopped a tap on a block from reaching the
-      // block; taking it once the pointer has actually travelled leaves a tap
-      // alone and still holds a real drag. It throws for a pointer id the
-      // element never really received, so a failure must not take the gesture
-      // down with it.
       const origin = origins.get(event.pointerId);
       if (!captured.has(event.pointerId) && origin !== undefined &&
           Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > DRAG_SLOP) {
         captured.add(event.pointerId);
-        try {
-          svg.setPointerCapture(event.pointerId);
-        } catch {
-          /* the gesture still works without capture */
-        }
+        tryToCapturePointer(event.pointerId);
       }
 
       const pair = pointerPair();
@@ -779,15 +680,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     const stage = host.querySelector('.graph-stage');
     stage.replaceChildren(svg);
 
-    /**
-     * Give the stage the height the fitted graph actually needs.
-     *
-     * A fixed height letterboxes every graph whose shape does not match it, and
-     * the component level is four times wider than it is tall: in a phone-width
-     * column it fitted to a strip a tenth of the box, with the rest empty. The
-     * clamp keeps a very wide graph from becoming a hairline and a very tall
-     * one from running off the screen.
-     */
     const MINIMUM_STAGE_HEIGHT = 150;
     const sizeStage = () => {
       const available = stage.clientWidth;
@@ -802,12 +694,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     return { fit, zoomCentre };
   }
 
-  /**
-   * A host either carries one graph or a set of them keyed by id. The journey
-   * level is the second kind: the reader picks a feature and an action, and the
-   * scene is rebuilt for that selection. Controls are wired once, against
-   * whichever scene is current, so switching never stacks a second listener.
-   */
   function renderGraph(host) {
     const payload = host.querySelector('script[type="application/json"]');
     if (!payload) return;
@@ -857,14 +743,10 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       const feature = data.features.find((each) => each.id === featureId);
       if (!feature || !actionList) return;
       actionList.replaceChildren();
-      // A journey whose one action is the whole thing offers no overview, so it
-      // lists that action alone rather than the same graph under two names.
       const overview = feature.overview
         ? [
             {
               id: feature.id + ':__all__',
-              // With no action to contrast it against, the overview is the only
-              // entry, and "Everything in x" reads as a subset of something else.
               label: feature.actions.length === 0 ? feature.label : 'Everything in ' + feature.label,
               meta:
                 feature.actions.length === 0
@@ -878,8 +760,6 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
         ...feature.actions.map((action) => ({
           id: action.id,
           label: action.label,
-          // The shell's action is an address rather than a call, so it carries
-          // no method and joining unconditionally left a leading space.
           meta: [action.method, action.path].filter(Boolean).join(' '),
         })),
       ];
@@ -940,14 +820,6 @@ export const GRAPH_STYLES = String.raw`
   .legend-line { width: 20px; height: 0; border-top: 2px solid var(--muted); display: inline-block; }
   .legend-line.type { border-top-style: dashed; }
   .legend-line.http { border-top-color: var(--accent); border-top-width: 3px; }
-  /*
-     The stage has a height and the canvas fits inside it, so a level opens
-     showing the whole graph. Reading it then means zooming: scroll or pinch,
-     or the two buttons. touch-action none is what lets a pinch reach the
-     canvas rather than being taken by the page first.
-  */
-  /* The height is set per graph from its own aspect ratio; this is the value
-     before the script runs and the floor a very wide graph lands on. */
   .graph-stage { height: 300px; overflow: hidden; }
   .graph svg {
     display: block;
@@ -1008,9 +880,6 @@ export const GRAPH_STYLES = String.raw`
   .node-infrastructure .node-stripe { fill: var(--layer-data); }
   .node-external .node-body { stroke-dasharray: 4 3; }
 
-  /* The journey level colours a node by what it is in the flow, so the reader
-     can see the shape — screen, hook, wire, service, data — before reading a
-     single label. */
   .node-step-screen .node-stripe { fill: var(--accent); }
   .node-step-screen .node-body { fill: var(--accent-soft); }
   .node-step-gesture .node-stripe { fill: var(--signal); }
@@ -1085,10 +954,6 @@ export const GRAPH_STYLES = String.raw`
   }
   .journey-action[aria-pressed='true'] .journey-action-name { color: var(--accent); }
 
-  /* The diff page paints what a branch did: green for a block the target
-     branch did not have, amber for one whose contents moved, red for one it had
-     and this branch does not. Everything else keeps its layer colour, so the
-     change reads against an unchanged map rather than against nothing. */
   .node-added .node-body { stroke: var(--layer-service); stroke-width: 2.4; fill: var(--layer-service-bg); }
   .node-added .node-stripe { fill: var(--layer-service); }
   .node-changed .node-body { stroke: var(--signal); stroke-width: 2.4; fill: var(--signal-soft); }
@@ -1096,9 +961,6 @@ export const GRAPH_STYLES = String.raw`
   .node-removed .node-body { stroke: var(--layer-edge); stroke-width: 2.4; fill: var(--layer-edge-bg); stroke-dasharray: 5 3; }
   .node-removed .node-stripe { fill: var(--layer-edge); }
   .node-removed .node-label { text-decoration: line-through; }
-  /* Moved is its own colour because "this file is elsewhere now" and "this file
-     was rewritten" are different amounts of reading, and painting a pure rename
-     as new code sends a reviewer looking for something that does not exist. */
   .node-moved .node-body { stroke: var(--accent); stroke-width: 2.4; fill: var(--accent-soft); stroke-dasharray: 2 3; }
   .node-moved .node-stripe { fill: var(--accent); }
 
@@ -1220,8 +1082,6 @@ export const GRAPH_STYLES = String.raw`
     tab-size: 2;
   }
 
-  /* The token colours reuse the layer palette, so the modal follows the page
-     into dark mode without a second set of variables. */
   .tok-comment { color: var(--muted); font-style: italic; }
   .tok-string { color: var(--layer-service); }
   .tok-number { color: var(--layer-data); }
@@ -1351,8 +1211,6 @@ export const GRAPH_STYLES = String.raw`
     border: 1px solid var(--line);
     border-radius: 6px;
     padding: .25rem .5rem;
-    /* A route path is one unbroken token, and the longest here is wider than a
-       phone column, so it has to be allowed to break mid-string. */
     min-width: 0;
     max-width: 100%;
     overflow-wrap: anywhere;

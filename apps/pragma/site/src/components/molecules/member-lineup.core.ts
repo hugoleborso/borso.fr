@@ -1,12 +1,4 @@
-/**
- * Who a lineup puts on screen, and who it has to leave off.
- *
- * A setlist row gives the lineup whatever width the title and the key have
- * not taken, and a five-piece band overflows it. The chips are therefore a
- * bounded list plus a count, so the row's height never depends on how many
- * people play the song.
- * @Feature members
- */
+/** @Feature members */
 
 export interface LineupChipMember {
   readonly id: string;

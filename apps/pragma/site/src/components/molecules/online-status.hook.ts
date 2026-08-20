@@ -1,14 +1,4 @@
-/**
- * `useIsOnline()` mirrors `navigator.onLine` into the React tree
- * through `useSyncExternalStore`, so the read stays correct under
- * concurrent rendering and no effect copies the browser's value into
- * state.
- *
- * `subscribe` and `getSnapshot` are module-level constants, so React
- * receives the same identities on every render and never resubscribes.
- *
- * @DependsOnExternal browser-network-status
- */
+/** @DependsOnExternal browser-network-status */
 
 import { useSyncExternalStore } from 'react';
 

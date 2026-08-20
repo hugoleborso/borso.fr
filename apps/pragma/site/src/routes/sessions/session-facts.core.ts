@@ -1,11 +1,4 @@
-/**
- * The short facts that sit on one line beside a session's date. A
- * concert states its capacity, and states how many guests the band
- * expects only once somebody is bringing one; a rehearsal states
- * neither. The caller passes the words, because the rule is which facts
- * are worth the line, not how they read in a given language.
- * @Feature sessions
- */
+/** @Feature sessions */
 
 export interface SessionFactsInput {
   readonly isConcert: boolean;

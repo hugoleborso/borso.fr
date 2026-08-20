@@ -78,12 +78,8 @@ describe('punch.service', () => {
     expect(didNotFinish.reason).toBe('manual');
   });
 
-  // Geofence centre per makeEdition: { lat: 45.55, lng: 5.78 }. The intra-100m
-  // point shifts latitude by ~0.0005°, ~56 m at this latitude — well inside
-  // the 100 m radius. The out-of-zone point shifts by 0.01°, ~1.1 km — far
-  // outside.
-  const IN_ZONE = { lat: 45.5505, lng: 5.78 };
-  const OUT_OF_ZONE = { lat: 45.56, lng: 5.78 };
+  const FIFTY_SIX_METRES_NORTH_OF_TRACK_START = { lat: 45.5505, lng: 5.78 };
+  const ONE_KILOMETRE_NORTH_OF_TRACK_START = { lat: 45.56, lng: 5.78 };
 
   it('self-punch: persists a punch with source=self and the metadata fields', async () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
@@ -91,16 +87,16 @@ describe('punch.service', () => {
       {
         editionSlug: 'lepin-2026',
         runnerSlug: 'alice',
-        clientLat: IN_ZONE.lat,
-        clientLng: IN_ZONE.lng,
+        clientLat: FIFTY_SIX_METRES_NORTH_OF_TRACK_START.lat,
+        clientLng: FIFTY_SIX_METRES_NORTH_OF_TRACK_START.lng,
         clientAccuracyM: 12,
       },
       'Mozilla/5.0 Test',
       new Date(),
     );
     expect(punch.source).toBe('self');
-    expect(punch.clientLat).toBe(IN_ZONE.lat);
-    expect(punch.clientLng).toBe(IN_ZONE.lng);
+    expect(punch.clientLat).toBe(FIFTY_SIX_METRES_NORTH_OF_TRACK_START.lat);
+    expect(punch.clientLng).toBe(FIFTY_SIX_METRES_NORTH_OF_TRACK_START.lng);
     expect(punch.clientAccuracyM).toBe(12);
     expect(punch.distanceFromCenterM).not.toBeNull();
     expect(punch.distanceFromCenterM).toBeLessThan(100);
@@ -114,8 +110,8 @@ describe('punch.service', () => {
       {
         editionSlug: 'lepin-2026',
         runnerSlug: 'alice',
-        clientLat: OUT_OF_ZONE.lat,
-        clientLng: OUT_OF_ZONE.lng,
+        clientLat: ONE_KILOMETRE_NORTH_OF_TRACK_START.lat,
+        clientLng: ONE_KILOMETRE_NORTH_OF_TRACK_START.lng,
         clientAccuracyM: 8,
       },
       'ua',
@@ -150,8 +146,8 @@ describe('punch.service', () => {
         {
           editionSlug: 'lepin-2026',
           runnerSlug: 'alice',
-          clientLat: IN_ZONE.lat,
-          clientLng: IN_ZONE.lng,
+          clientLat: FIFTY_SIX_METRES_NORTH_OF_TRACK_START.lat,
+          clientLng: FIFTY_SIX_METRES_NORTH_OF_TRACK_START.lng,
           clientAccuracyM: null,
         },
         null,
@@ -168,8 +164,8 @@ describe('punch.service', () => {
         {
           editionSlug: 'lepin-2026',
           runnerSlug: 'alice',
-          clientLat: IN_ZONE.lat,
-          clientLng: IN_ZONE.lng,
+          clientLat: FIFTY_SIX_METRES_NORTH_OF_TRACK_START.lat,
+          clientLng: FIFTY_SIX_METRES_NORTH_OF_TRACK_START.lng,
           clientAccuracyM: null,
         },
         null,

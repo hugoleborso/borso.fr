@@ -1,14 +1,4 @@
-/**
- * Modal that asks the operator for the fields the back-end requires
- * before a session can be created — date is mandatory (Zod
- * `z.string().datetime()` on both branches of `sessionCreateSchema`),
- * concerts additionally need a non-empty venue. The dialog owns its
- * own form state via `useForm`; the parent supplies the kind, open
- * state, and the `onCreated` callback that fires once the mutation
- * resolves. The parent renders the dialog only while it should be
- * open, so the dialog opens itself the moment React attaches it.
- * @Feature sessions
- */
+/** @Feature sessions */
 
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useMemo } from 'react';

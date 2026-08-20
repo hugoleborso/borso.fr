@@ -4,15 +4,10 @@ import {
   selectBurgerLabelKey,
   selectMenuItemTransitionDelay,
 } from './home-menu.core';
-// This page is plain TypeScript with two translated strings, so it reads the
-// catalogue directly rather than through i18next. Carrying the i18next runtime
-// here measured 16.9 kB gzipped on the landing page, which is the entry point a
-// visitor is most likely to open on its own.
 import { home } from './i18n/fr.json';
 import { JUMP_DURATION_MILLISECONDS } from './warp/warp-jump.core';
 import { installWarpDrive } from './warp/warp-drive';
 
-// The landing page holds longer than the rest: it has a galaxy to accelerate.
 installWarpDrive(JUMP_DURATION_MILLISECONDS);
 
 const BODY_MENU_OPEN_CLASS = 'menu-open';
@@ -70,7 +65,6 @@ dateRequestClose.addEventListener('click', () => {
   dateRequestDialog.close();
 });
 
-/** A click on the backdrop reaches the dialog element itself, and closes it. */
 const CLOSE_ON_BACKDROP_CLICK: Readonly<Record<`${boolean}`, () => void>> = {
   true: () => {
     dateRequestDialog.close();

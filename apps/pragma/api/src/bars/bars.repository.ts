@@ -1,7 +1,3 @@
-/**
- * Repository for the bars (CRM) bounded context.
- */
-
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { getDatabase } from '../database/client';

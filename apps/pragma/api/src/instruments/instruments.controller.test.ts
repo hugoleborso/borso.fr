@@ -1,12 +1,3 @@
-/**
- * Back-e2e for the instruments CRUD endpoints. Covers:
- *  - auth gating: every verb returns 401 without a session cookie.
- *  - list returns the alphabetically sorted set.
- *  - create / update / delete round-trip against the real Postgres.
- *  - update with an empty body returns 400.
- *  - update / delete on a missing id returns 404.
- */
-
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';

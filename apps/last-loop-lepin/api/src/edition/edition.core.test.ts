@@ -187,8 +187,6 @@ describe('projectDidNotFinishCandidates', () => {
   });
 
   it('does not let a punch for another loop stand in for the one that just closed', () => {
-    // Alice punched loop 2 early — from the future, as far as the loop-1
-    // deadline is concerned. It must not clear her of loop 1.
     const now = new Date('2026-09-19T07:01:00+02:00');
     const punches: readonly LoopPunch[] = [buildPunch('alice', 2, '2026-09-19T06:40:00+02:00')];
     const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);

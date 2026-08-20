@@ -1,11 +1,4 @@
-/**
- * `/sessions/:sessionId/setlist` was the only address a setlist ever
- * had, back when a session carried exactly one. The band's phones have
- * the application installed, so that address is still on screens and in
- * bookmarks; it now forwards to the first setlist the session carries,
- * or to the session itself when it carries none.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';

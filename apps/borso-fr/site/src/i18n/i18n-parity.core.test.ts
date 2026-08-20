@@ -3,38 +3,36 @@ import english from './en.json';
 import french from './fr.json';
 import { diffCatalogues, isInParity, listIdenticalValueKeys } from './i18n-parity.core';
 
-/**
- * borso.fr is a French site with an English translation, so an English string
- * sitting in `fr.json` is a missed translation, not a design choice. The only
- * exceptions are the words below, which read the same in both languages. Adding
- * a key here is a claim a reviewer can check against the comment next to it.
- */
 // @FollowsBlueprint test-i18n-parity
-const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = [
-  'common.brand.domain', // the .fr TLD
-  'common.brand.name', // the brand, lowercase in both
-  'home.menu.art', // same word, same spelling
-  'mondrian.animation.cascade', // same word, same spelling
-  'mondrian.artwork-title.adjective.patient.masculine', // same word, same spelling
-  'mondrian.colour.citrine', // the gemstone, same spelling
-  'mondrian.colour.cobalt', // the metal, same spelling
-  'mondrian.colour.indigo', // the dye, same spelling
-  'mondrian.colour.onyx', // the gemstone, same spelling
-  'mondrian.credit.tail-cascade', // names the "Cascade" mode above
-  'mondrian.field.colour-balance-value', // "{{percentage}}%" — a percent sign
-  'mondrian.field.line-weight-value', // "{{weight}} px" — an SI-style unit symbol
-  'mondrian.palette.legend', // same word, same spelling
-  'mondrian.palette.nocturne', // same word, same spelling
-  'mondrian.section.animation', // same word, same spelling
-  'mondrian.section.composition', // same word, same spelling
-  'mondrian.section.palette', // same word, same spelling
-  'mondrian.stage.work-number', // "Composition · {{number}}" — same word
-  'mondrian.subtitle-de-stijl', // the De Stijl movement
-  'mondrian.title', // Piet Mondrian, the painter
-  'twelve-labours.edition.2026.march.beat-the-metro.note', // two Paris metro stations
-  'twelve-labours.proof-label.distance', // same word, same spelling
-  'twelve-labours.proof-label.strava', // the Strava product name
-];
+const IDENTICAL_VALUE_REASON_BY_KEY: Readonly<Record<string, string>> = {
+  'common.brand.domain': 'the .fr TLD',
+  'common.brand.name': 'the brand, lowercase in both',
+  'home.menu.art': 'same word, same spelling',
+  'mondrian.animation.cascade': 'same word, same spelling',
+  'mondrian.artwork-title.adjective.patient.masculine': 'same word, same spelling',
+  'mondrian.colour.citrine': 'the gemstone, same spelling',
+  'mondrian.colour.cobalt': 'the metal, same spelling',
+  'mondrian.colour.indigo': 'the dye, same spelling',
+  'mondrian.colour.onyx': 'the gemstone, same spelling',
+  'mondrian.credit.tail-cascade': 'names the "Cascade" mode above',
+  'mondrian.field.colour-balance-value': '"{{percentage}}%" — a percent sign',
+  'mondrian.field.line-weight-value': '"{{weight}} px" — an SI-style unit symbol',
+  'mondrian.palette.legend': 'same word, same spelling',
+  'mondrian.palette.nocturne': 'same word, same spelling',
+  'mondrian.section.animation': 'same word, same spelling',
+  'mondrian.section.composition': 'same word, same spelling',
+  'mondrian.section.palette': 'same word, same spelling',
+  'mondrian.stage.work-number': '"Composition · {{number}}" — same word',
+  'mondrian.subtitle-de-stijl': 'the De Stijl movement',
+  'mondrian.title': 'Piet Mondrian, the painter',
+  'twelve-labours.edition.2026.march.beat-the-metro.note': 'two Paris metro stations',
+  'twelve-labours.proof-label.distance': 'same word, same spelling',
+  'twelve-labours.proof-label.strava': 'the Strava product name',
+};
+
+const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = Object.keys(
+  IDENTICAL_VALUE_REASON_BY_KEY,
+);
 
 describe('diffCatalogues', () => {
   it('finds no difference between the shipped catalogues', () => {

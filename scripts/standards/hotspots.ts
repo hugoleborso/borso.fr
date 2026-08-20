@@ -1,21 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * Generates `docs/standards/hotspots.md` from the git history crossed with the
- * repository's own signals about each file.
- *
- * Usage:
- *   pnpm exec tsx scripts/standards/hotspots.ts [--commits <n>]
- *
- * There is no `--check`, no ratchet and no threshold, and that is not an
- * oversight. The input is the git history, so the page changes on every commit
- * whether or not any source moved. A freshness gate on it would fail every
- * commit for a reason nobody could act on, and a threshold on churn would be
- * met by splitting the file. The page instead records the commit it was read
- * at, so a reader can see how old it is and regenerate when that matters.
- *
- * The window is a commit count rather than a date so the report is reproducible
- * from a checkout without a clock.
- */
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -44,15 +27,6 @@ function listTrackedSourceFiles(): readonly string[] {
     .filter((path) => !path.endsWith('.d.ts'));
 }
 
-/**
- * Commits touching each path in the window.
- *
- * `--follow` is deliberately not used. It only accepts one path, and this
- * repository renames in bulk, so a per-file follow would cost one git process
- * per file. A file that moved reads as new here, which understates its churn
- * and is the safe direction to be wrong in: it hides a hotspot rather than
- * inventing one.
- */
 function countCommitsByPath(commitWindow: number): ReadonlyMap<string, number> {
   const log = execFileSync(
     'git',

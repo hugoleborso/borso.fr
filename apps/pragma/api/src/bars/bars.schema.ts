@@ -1,10 +1,3 @@
-/**
- * Drizzle schema for the bars (CRM) bounded context. Status mirrors the
- * spec BarStatus enum: `lead | contacted | booked | played | cold`.
- * Extension fields (city, capacity, contactName, contactEmail,
- * contactPhone) are not in spec.md but the v1 surface needs them.
- */
-
 import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 

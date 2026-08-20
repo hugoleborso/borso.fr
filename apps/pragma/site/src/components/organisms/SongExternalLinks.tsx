@@ -1,11 +1,4 @@
-/**
- * External-link section of the song detail page. For each
- * SongExternalLink the embed.utils resolver returns either an iframe
- * (Spotify / YouTube / Deezer / Vimeo / SoundCloud / Soundslice) or a
- * plain `<a>` fallback. Closes blocker A13 — links render as oEmbed
- * iframes, not bare anchor tags.
- * @Feature songs
- */
+/** @Feature songs */
 
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';

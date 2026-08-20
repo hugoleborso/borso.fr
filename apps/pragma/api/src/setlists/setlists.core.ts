@@ -1,9 +1,3 @@
-/**
- * Pure rules of the setlists context: where a setlist lands when it
- * joins a session, and how many songs each setlist holds once the rows
- * come back unordered from one query.
- */
-
 export interface SetlistSongCount {
   readonly setlistId: string;
   readonly songCount: number;
@@ -11,23 +5,12 @@ export interface SetlistSongCount {
 
 const FIRST_POSITION = 0;
 
-/**
- * The position the next setlist of a session takes. One past the
- * highest already taken, so the order the band wrote is preserved
- * rather than reset every time a setlist is attached.
- */
 // @FollowsBlueprint core-decision
 export function selectNextLinkPosition(highestTakenPosition: number | null): number {
   if (highestTakenPosition === null) return FIRST_POSITION;
   return highestTakenPosition + 1;
 }
 
-/**
- * Turns the flat entry rows of several setlists into one count per
- * setlist, in the order asked for. A setlist with no entry is present
- * with a count of zero, because a caller listing setlists needs a
- * number for every one of them, not only for those already filled.
- */
 // @FollowsBlueprint core-projection
 export function tallySongsPerSetlist(
   setlistIds: readonly string[],
@@ -50,12 +33,6 @@ export interface SetlistSummary {
   readonly sessionIds: string[];
 }
 
-/**
- * What a list of setlists needs to show: each setlist with how many
- * songs it holds and which sessions carry it. The three inputs come
- * from three queries rather than one join, so the assembly happens
- * here where it can be read and tested.
- */
 // @FollowsBlueprint core-projection
 export function buildSetlistSummaries(
   setlists: readonly { readonly id: string; readonly name: string }[],

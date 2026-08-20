@@ -1,12 +1,3 @@
-/**
- * Back-e2e tests for the shared-password auth endpoints. Exercise:
- *  - bootstrap (set-password) happy path + 409 if already bootstrapped
- *  - login: 401 on bad password, 200 + cookie on good password
- *  - rate-limit: 6th attempt within 15 min returns 429
- *  - rotate-password: invalidates existing cookies (HMAC key changes)
- *  - middleware: 401 without cookie, 200 with fresh cookie
- */
-
 import type { Hono } from 'hono';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
@@ -112,7 +103,7 @@ describe('shared-password auth controller (back-e2e)', () => {
     expect(withCookie.status).toBe(200);
   });
 
-  it('rejects rotate-password with 401 when no session cookie is presented', async () => {
+  it('rejects rotate-password with 401 when no session cookie is presented, leaving password_hash, hmac_key and the working password untouched', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrap(app, VALID_PASSWORD);
     const configBefore = await loadAppConfig();
@@ -125,14 +116,11 @@ describe('shared-password auth controller (back-e2e)', () => {
     });
     expect(rotateResponse.status).toBe(401);
 
-    // The row MUST stay untouched: anyone hitting the endpoint without
-    // a cookie should not be able to mutate password_hash or hmac_key.
     const configAfter = await loadAppConfig();
     expect(configAfter).not.toBeNull();
     expect(configAfter?.passwordHash).toBe(configBefore?.passwordHash);
     expect(configAfter?.hmacKey.equals(configBefore?.hmacKey ?? Buffer.alloc(0))).toBe(true);
 
-    // The original password still works.
     const stillValid = await login(app, VALID_PASSWORD, '203.0.113.50');
     expect(stillValid.status).toBe(200);
   });
@@ -161,19 +149,16 @@ describe('shared-password auth controller (back-e2e)', () => {
     });
     expect(rotateResponse.status).toBe(200);
 
-    // The row MUST have been mutated: both columns rewritten.
     const configAfter = await loadAppConfig();
     expect(configAfter).not.toBeNull();
     expect(configAfter?.passwordHash).not.toBe(configBefore?.passwordHash);
     expect(configAfter?.hmacKey.equals(configBefore?.hmacKey ?? Buffer.alloc(0))).toBe(false);
 
-    // Old cookie no longer matches the rotated HMAC key.
     const protectedAfter = await app.request(`${ANY_HOST}/protected/ping`, {
       headers: { cookie: `pragma_session=${initialCookie}` },
     });
     expect(protectedAfter.status).toBe(401);
 
-    // Old password is gone; new password works.
     const oldLogin = await login(app, VALID_PASSWORD, '203.0.113.99');
     expect(oldLogin.status).toBe(401);
     const newLogin = await login(app, 'new-correct-horse-battery', '203.0.113.100');

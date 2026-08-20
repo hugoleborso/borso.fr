@@ -18,7 +18,6 @@ createRuleTester(controllerFile).run('no-controller-imports-outside-service', ru
       code: "import { findSongById } from './songs.repository';",
       errors: [{ messageId: 'forbiddenImport' }],
     },
-    // A re-export reaches past the service just as an import does.
     {
       code: "export { findSongById } from './songs.repository';",
       errors: [{ messageId: 'forbiddenImport' }],
@@ -46,8 +45,6 @@ createRuleTester(controllerFile).run('no-controller-imports-outside-service', ru
   ],
 });
 
-// A service may import everything the controller may not, so the rule has to
-// stay silent outside `*.controller.ts`.
 createRuleTester(serviceFile).run('no-controller-imports-outside-service (service file)', rule, {
   valid: [
     "import { findSongById } from './songs.repository';",

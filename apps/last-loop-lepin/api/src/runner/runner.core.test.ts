@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LoopPunch } from '../punch/punch.types';
-import { slugifyDisplayName, totalElapsedMs, validateRunnerDraft } from './runner.core';
+import { slugifyDisplayName, elapsedSinceRaceStartMs, validateRunnerDraft } from './runner.core';
 import type { Runner } from './runner.types';
 
 function buildRunner(slug: string, bib: number): Runner {
@@ -82,7 +82,7 @@ describe('validateRunnerDraft', () => {
 });
 
 // @FollowsBlueprint test-pure-unit
-describe('totalElapsedMs', () => {
+describe('elapsedSinceRaceStartMs', () => {
   const start = new Date('2026-09-19T06:00:00+02:00');
 
   function buildPunch(
@@ -109,7 +109,7 @@ describe('totalElapsedMs', () => {
   }
 
   it('returns 0 when the runner has no punches', () => {
-    expect(totalElapsedMs('alice', start, [])).toBe(0);
+    expect(elapsedSinceRaceStartMs('alice', start, [])).toBe(0);
   });
 
   it('returns elapsed ms from start to the last valid punch', () => {
@@ -118,7 +118,7 @@ describe('totalElapsedMs', () => {
       buildPunch('alice', 2, '2026-09-19T07:55:00+02:00'),
     ];
     const expectedMs = new Date('2026-09-19T07:55:00+02:00').getTime() - start.getTime();
-    expect(totalElapsedMs('alice', start, punches)).toBe(expectedMs);
+    expect(elapsedSinceRaceStartMs('alice', start, punches)).toBe(expectedMs);
   });
 
   it('ignores voided punches', () => {
@@ -127,7 +127,7 @@ describe('totalElapsedMs', () => {
       buildPunch('alice', 2, '2026-09-19T07:55:00+02:00', '2026-09-19T08:00:00+02:00'),
     ];
     const expectedMs = new Date('2026-09-19T06:55:00+02:00').getTime() - start.getTime();
-    expect(totalElapsedMs('alice', start, punches)).toBe(expectedMs);
+    expect(elapsedSinceRaceStartMs('alice', start, punches)).toBe(expectedMs);
   });
 
   it('ignores other runners', () => {
@@ -136,6 +136,6 @@ describe('totalElapsedMs', () => {
       buildPunch('bob', 2, '2026-09-19T07:55:00+02:00'),
     ];
     const expectedMs = new Date('2026-09-19T06:55:00+02:00').getTime() - start.getTime();
-    expect(totalElapsedMs('alice', start, punches)).toBe(expectedMs);
+    expect(elapsedSinceRaceStartMs('alice', start, punches)).toBe(expectedMs);
   });
 });

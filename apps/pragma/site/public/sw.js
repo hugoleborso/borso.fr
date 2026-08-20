@@ -1,67 +1,48 @@
-/**
- * pragma service worker — caches the application shell + a bounded
- * pre-cache list pinned by `/api/offline-manifest` (the catalog, every
- * song detail, and the next-upcoming session + its setlist).
- *
- *  - On install, fetch `/api/offline-manifest` and pre-cache every URL
- *    it lists. Spec Q.O.D. *Offline cache scope* = next session only,
- *    so the cache is intentionally bounded to what the manifest names.
- *  - Stale-while-revalidate for any GET to a path the classifier
- *    accepts — that lets the active session's reads stay fresh while
- *    falling back to cache when offline.
- *  - Network-only for every mutation (POST/PUT/DELETE) — the spec is
- *    explicit that v1 has no offline writes.
- *
- * The cache name carries a version suffix so the activate handler can
- * clear stale caches when the SW is updated. The two-cache split
- * (shell vs data) means SW upgrades blow away stale data without
- * touching the shell.
- */
-
 const CACHE_VERSION = 'pragma-v3';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 const SHELL_ASSETS = ['/', '/index.html', '/manifest.webmanifest'];
 const OFFLINE_MANIFEST_URL = '/api/offline-manifest';
+const READ_METHOD = 'GET';
+
+function listManifestUrls(manifest) {
+  return [
+    manifest.catalogListUrl,
+    ...(Array.isArray(manifest.songDetailUrls) ? manifest.songDetailUrls : []),
+    manifest.nextSessionUrl,
+    manifest.nextSetlistUrl,
+  ].filter((url) => typeof url === 'string' && url.length > 0);
+}
+
+async function cacheUrlIfReachable(cache, url) {
+  try {
+    const response = await fetch(url, { credentials: 'include' });
+    if (response.ok) {
+      await cache.put(url, response.clone());
+    }
+  } catch {
+    return;
+  }
+}
+
+async function precacheManifestUrlsIfReachable() {
+  try {
+    const response = await fetch(OFFLINE_MANIFEST_URL, { credentials: 'include' });
+    if (!response.ok) return;
+    const manifest = await response.json();
+    const dataCache = await caches.open(DATA_CACHE);
+    await Promise.all(listManifestUrls(manifest).map((url) => cacheUrlIfReachable(dataCache, url)));
+  } catch {
+    return;
+  }
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
       const shellCache = await caches.open(SHELL_CACHE);
       await shellCache.addAll(SHELL_ASSETS);
-      // Best-effort: fetch the manifest + pin every URL it lists. If
-      // the manifest call fails (e.g. first-install offline), we still
-      // ship a working shell — the SWR handler will populate the data
-      // cache on subsequent online fetches.
-      try {
-        const response = await fetch(OFFLINE_MANIFEST_URL, { credentials: 'include' });
-        if (response.ok) {
-          const manifest = await response.json();
-          const urls = [
-            manifest.catalogListUrl,
-            ...(Array.isArray(manifest.songDetailUrls) ? manifest.songDetailUrls : []),
-            manifest.nextSessionUrl,
-            manifest.nextSetlistUrl,
-          ].filter((url) => typeof url === 'string' && url.length > 0);
-          const dataCache = await caches.open(DATA_CACHE);
-          await Promise.all(
-            urls.map(async (url) => {
-              try {
-                const cacheResponse = await fetch(url, { credentials: 'include' });
-                if (cacheResponse.ok) {
-                  await dataCache.put(url, cacheResponse.clone());
-                }
-              } catch {
-                // Per-URL fetch failures are silently skipped — the
-                // manifest is a best-effort precache, not a hard
-                // contract.
-              }
-            }),
-          );
-        }
-      } catch {
-        // Manifest unreachable; fall back to the SWR runtime path.
-      }
+      await precacheManifestUrlsIfReachable();
     })(),
   );
   self.skipWaiting();
@@ -95,78 +76,78 @@ function isReadableApiPath(pathname) {
   return false;
 }
 
+function isMutation(request) {
+  return request.method !== READ_METHOD;
+}
+
+function isShellRequest(request, url) {
+  return request.mode === 'navigate' || SHELL_ASSETS.includes(url.pathname);
+}
+
+function isFingerprintedAssetPath(pathname) {
+  return pathname.startsWith('/assets/') || pathname.startsWith('/icons/');
+}
+
+async function networkFirstFallingBackToCache(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(SHELL_CACHE);
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request);
+    if (cached !== undefined) return cached;
+    if (request.mode !== 'navigate') throw error;
+    const entryPoint = (await caches.match('/index.html')) ?? (await caches.match('/'));
+    if (entryPoint !== undefined) return entryPoint;
+    throw error;
+  }
+}
+
+function staleWhileRevalidate(request) {
+  return caches.open(DATA_CACHE).then(async (cache) => {
+    const cached = await cache.match(request);
+    const networkPromise = fetch(request)
+      .then((response) => {
+        if (response.ok) cache.put(request, response.clone());
+        return response;
+      })
+      .catch(() => cached);
+    return cached ?? networkPromise;
+  });
+}
+
+function cacheFirst(request) {
+  return caches.match(request).then(async (cached) => {
+    if (cached !== undefined) return cached;
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(SHELL_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  });
+}
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  if (request.method !== 'GET') {
-    // Mutations bypass the cache entirely — offline writes are not
-    // supported in v1 (see spec §1.4 "Edits made offline? Not
-    // supported in v1.").
+  if (isMutation(request)) return;
+
+  if (isShellRequest(request, url)) {
+    event.respondWith(networkFirstFallingBackToCache(request));
     return;
   }
 
-  // Application shell: network-first, falling back to the cache.
-  //
-  // Not cache-first. `index.html` names the hashed bundle of one build, so
-  // serving it from the cache pins the whole app to the build that installed
-  // the worker: a new deploy is never picked up, because this file is what
-  // decides, and it rarely changes. Network-first keeps the shell current and
-  // still answers offline. A navigation that is not itself cached falls back
-  // to the cached entry point, so a deep link opens offline too.
-  if (request.mode === 'navigate' || SHELL_ASSETS.includes(url.pathname)) {
-    event.respondWith(
-      (async () => {
-        try {
-          const response = await fetch(request);
-          if (response.ok) {
-            const cache = await caches.open(SHELL_CACHE);
-            await cache.put(request, response.clone());
-          }
-          return response;
-        } catch (error) {
-          const cached = await caches.match(request);
-          if (cached !== undefined) return cached;
-          if (request.mode !== 'navigate') throw error;
-          const entryPoint = (await caches.match('/index.html')) ?? (await caches.match('/'));
-          if (entryPoint !== undefined) return entryPoint;
-          throw error;
-        }
-      })(),
-    );
-    return;
-  }
-
-  // Cached read endpoints: stale-while-revalidate.
   if (url.pathname.startsWith('/api/') && isReadableApiPath(url.pathname)) {
-    event.respondWith(
-      caches.open(DATA_CACHE).then(async (cache) => {
-        const cached = await cache.match(request);
-        const networkPromise = fetch(request)
-          .then((response) => {
-            if (response.ok) cache.put(request, response.clone());
-            return response;
-          })
-          .catch(() => cached);
-        return cached ?? networkPromise;
-      }),
-    );
+    event.respondWith(staleWhileRevalidate(request));
     return;
   }
 
-  // Hashed bundle under /assets, and the icons a home screen reads:
-  // cache-first, since neither changes under a fixed URL.
-  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/')) {
-    event.respondWith(
-      caches.match(request).then(async (cached) => {
-        if (cached !== undefined) return cached;
-        const response = await fetch(request);
-        if (response.ok) {
-          const cache = await caches.open(SHELL_CACHE);
-          cache.put(request, response.clone());
-        }
-        return response;
-      }),
-    );
+  if (isFingerprintedAssetPath(url.pathname)) {
+    event.respondWith(cacheFirst(request));
   }
 });

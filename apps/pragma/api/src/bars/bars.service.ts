@@ -1,10 +1,3 @@
-/**
- * Service layer for bars. Holds the orchestration: list ordering,
- * input-to-persisted-shape translation (dates from ISO strings, etc.),
- * and the empty-update guard. The repository receives a clean
- * persisted shape; the controller never sees Drizzle.
- */
-
 import type { z } from 'zod';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {

@@ -88,9 +88,6 @@ describe('computeStandings', () => {
   });
 
   it('reads punches supplied out of loop order', () => {
-    // The punch table has no ordering guarantee, and `lastValidLoop` only
-    // advances on consecutive indices: read unsorted, loop 2 arriving
-    // first would leave Alice one loop short and misname her last finish.
     const now = new Date('2026-09-19T08:30:00+02:00');
     const punches = [
       punch('alice', 2, '2026-09-19T07:55:00+02:00'),
@@ -103,8 +100,6 @@ describe('computeStandings', () => {
   });
 
   it('keeps an in-race runner ahead of a deeper-running manual DNF', () => {
-    // Alice ran two loops and finished them earlier than Bob, but the orga
-    // pulled her out: the in-race tier wins before any loop count is read.
     const now = new Date('2026-09-19T08:30:00+02:00');
     const punches = [
       punch('alice', 1, '2026-09-19T06:40:00+02:00'),
@@ -128,9 +123,6 @@ describe('computeStandings', () => {
   });
 
   it('ranks the deeper loop first even when it was finished later', () => {
-    // Both are in-race — one closed loop is expected at 07:30. Loop depth
-    // has to be read before finishing time, or slow-but-deeper Alice would
-    // fall behind fast-but-shallower Bob.
     const now = new Date('2026-09-19T07:30:00+02:00');
     const punches = [
       punch('alice', 1, '2026-09-19T06:55:00+02:00'),
@@ -144,8 +136,6 @@ describe('computeStandings', () => {
   });
 
   it('does not tie an in-race runner with a DNF who matched them exactly', () => {
-    // Same loop count, same finishing millisecond, different tier: they
-    // are ranked 1 and 2, never ex-aequo.
     const now = new Date('2026-09-19T07:30:00+02:00');
     const punches = [
       punch('alice', 1, '2026-09-19T06:55:00.000+02:00'),
@@ -297,10 +287,6 @@ describe('computeStandings', () => {
   });
 
   it('attaches lastLoopDurationMs and lastFinishedAt for in-race runners', () => {
-    // Loop 2 starts at 07:00 (top of the hour, EDITION starts 06:00).
-    // Alice punches it at 07:55 → 55 min of actual running, not 60.
-    // The hour gap between punches 1 and 2 includes corral rest, which
-    // doesn't count toward the loop time.
     const now = new Date('2026-09-19T08:30:00+02:00');
     const punches = [
       punch('alice', 1, '2026-09-19T06:55:00+02:00'),
@@ -325,12 +311,6 @@ describe('computeStandings', () => {
   });
 
   it('keeps full-distance finishers in-race when standings are recomputed long after endsAt', () => {
-    // The race is 16 loops (06:00 → 22:00, 60-min interval). Two days
-    // after `endsAt`, `loopIndexAt` would naively report ~64; without
-    // capping the expected closed loop at `totalHourlyTops`, every
-    // finisher would flip to DNF "late" the day after the race. This is
-    // the regression that hid the four real finishers behind a wall of
-    // `dnf outAtLoop=15` on the archived 3L 2026 standings.
     const now = new Date('2026-09-21T22:30:00+02:00');
     const punches = Array.from({ length: 16 }, (_, index) =>
       punch('alice', index + 1, `2026-09-19T${String(6 + index).padStart(2, '0')}:55:00+02:00`),
@@ -383,9 +363,6 @@ describe('computeStandings', () => {
   });
 
   it('surfaces the fastest runner in fastestLap after a few loops, with the expected durationMs', () => {
-    // Alice loop 1 = 45 min, loop 2 = 50 min.
-    // Bob   loop 1 = 47 min, loop 2 = 42 min  → Bob holds 42 min.
-    // Carla loop 1 = 51 min.
     const now = new Date('2026-09-19T08:30:00+02:00');
     const punches = [
       punch('alice', 1, '2026-09-19T06:45:00+02:00'),
@@ -427,9 +404,6 @@ describe('mostRecentCorrectionAt', () => {
   });
 
   it('returns the latest instant across corrections and voids, whatever the punch order', () => {
-    // The spectator page shows "results amended at …", so the answer has
-    // to be the most recent amendment of any kind, not the last one the
-    // list happens to mention.
     const punches = [
       amendedPunch('alice', 1, { correctedAtIso: '2026-09-19T07:00:00+02:00' }),
       amendedPunch('bob', 1, { voidedAtIso: '2026-09-19T09:00:00+02:00' }),

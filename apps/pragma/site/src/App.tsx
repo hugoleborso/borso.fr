@@ -1,9 +1,3 @@
-/**
- * Router root. All gated routes live under `<RequireSession>`; the
- * single public route is /login. The shell mounts the header + nav and
- * an outlet for the active route.
- */
-
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/organisms/AppShell';
 import { RequireSession } from './components/organisms/RequireSession';
@@ -27,11 +21,6 @@ export function App(): JSX.Element {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireSession />}>
-          {/*
-            The stage view is a fullscreen takeover (black background,
-            edge-to-edge chord chart). It sits OUTSIDE the AppShell
-            so neither the sidebar nor the offline banner intrudes.
-          */}
           <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
           <Route element={<AppShell />}>
             <Route path="/" element={<Navigate to="/catalog" replace />} />

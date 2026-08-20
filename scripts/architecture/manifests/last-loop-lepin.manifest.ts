@@ -1,12 +1,3 @@
-/**
- * The hand-written half of last-loop-lepin's architecture model. Types and the
- * register of applications live in `../architecture-manifest.ts`.
- *
- * Only the S3 photo upload carries a `@DependsOnExternal` tag so far, so level 1
- * draws that one edge and nothing else. Tagging is what puts an external on the
- * map; see `docs/architecture/install.md`.
- */
-
 import type { ArchitectureManifest } from '../architecture-manifest';
 
 export const lastLoopLepinManifest: ArchitectureManifest = {

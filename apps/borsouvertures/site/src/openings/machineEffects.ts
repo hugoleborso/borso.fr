@@ -1,13 +1,4 @@
 /**
- * The impure edge that the two opening machines inject.
- *
- * Both machines take `pickRandom` and `scheduleTimeout` as options so a test
- * can drive them deterministically. The production implementations read the
- * random number generator and the event loop, so they cannot live in a
- * `.utils.ts` file, which is gated as pure.
- *
- * See docs/standards/02-purity-and-core-files.md.
- *
  * @Blueprint machine-impure-edge
  * @BlueprintName Isolated Impure Edge Module
  * @BlueprintUsage Use for the randomness, timers or clock a mostly pure module needs, so the rest of it stays coverable.

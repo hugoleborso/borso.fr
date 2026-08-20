@@ -25,6 +25,7 @@ The spec's *Open questions for the designer pass → resolutions* and Q.O.D. row
 - `-` **No per-user audit.** Destructive mutations (delete song, drop a setlist entry) cannot be attributed in the application log. Forensic reconstruction relies on "ask the band on Slack".
 - `-` **Rotation cost is band-wide.** Changing the password forces every device to re-authenticate the same evening. A leak via a stolen phone implies a rotation that pages all five members.
 - `~` Failed-login logs carry `ip_hash` rather than a user identifier — useful for rate-limit tuning, not for individual accountability.
+- `~` **`ip_hash` is a bare SHA-256 of the client IP, with no salt.** A per-process salt would be better, and the threat model does not pay for it: the IP set is a handful of NATs, and the column exists to group retries into a bucket, not as a privacy guarantee. Treat it as an opaque key and nothing more. The IP itself arrives from API Gateway in `x-forwarded-for`, whose **first** comma-separated entry is the real client; an empty or absent header collapses to `'unknown'` so the bucket still has a key rather than dropping the limit.
 - `~` If pragma later grows a billing surface or external integration, this ADR's chosen path is no longer defensible — supersede with an ADR introducing individual accounts.
 
 ## Alternatives considered

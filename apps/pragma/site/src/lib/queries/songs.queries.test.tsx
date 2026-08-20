@@ -1,11 +1,3 @@
-/**
- * Tests for the optimistic write path on the songs mutations. Each
- * test primes the list cache, dispatches a mutation with a deferred
- * fetch handler, and asserts:
- *   - apply: the cache reflects the optimistic change before resolve;
- *   - rollback: a 500 reply puts the cache back to its previous state.
- */
-
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { songKeys, useCreateSong, useDeleteSong, useUpdateSong } from './songs.queries';
 import {

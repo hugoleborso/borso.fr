@@ -1,20 +1,4 @@
-/**
- * Edition reads and writes.
- *
- * A write splits on one question: can the client name the row the server will
- * return? Creating and replacing an edition cannot, because the server parses
- * the GPX track and computes the sunrise and sunset from it, so those two wait
- * for the response. Deleting one and moving it between statuses can, because
- * the request itself says exactly what the row becomes, so those two write the
- * cache first and reconcile from the response rather than from a fresh read.
- *
- * The distinction matters beyond the spinner: DSQL's read after write is per
- * connection, so a `GET` issued straight after a write can be served by a
- * Lambda whose connection still sees the pre commit snapshot. See
- * docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md.
- */
-
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 import { isLastPendingMutation, replaceEntityBySlug } from './optimistic.utils';
 
@@ -24,6 +8,11 @@ export const editionKeys = {
   list: () => [...editionKeys.all, 'list'] as const,
   current: () => [...editionKeys.all, 'current'] as const,
 };
+
+function refetchEditionProjectionsTheClientCannotPredict(queryClient: QueryClient): void {
+  if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: editionKeys.all }))) return;
+  void queryClient.invalidateQueries({ queryKey: editionKeys.all });
+}
 
 export interface CreateEditionVariables {
   readonly slug: string;
@@ -146,8 +135,7 @@ export function useDeleteEdition() {
       }
     },
     onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: editionKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: editionKeys.all });
+      refetchEditionProjectionsTheClientCannotPredict(queryClient);
     },
   });
 }
@@ -187,12 +175,8 @@ export function useTransitionEditionStatus() {
         queryClient.setQueryData(editionKeys.list(), context.previousList);
       }
     },
-    // The current-edition key is a different projection of the same row and
-    // the client cannot name what it becomes, so it is refetched rather than
-    // predicted.
     onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: editionKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: editionKeys.all });
+      refetchEditionProjectionsTheClientCannotPredict(queryClient);
     },
   });
 }

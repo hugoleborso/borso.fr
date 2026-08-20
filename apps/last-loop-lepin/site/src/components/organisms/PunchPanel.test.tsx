@@ -86,12 +86,7 @@ describe('PunchPanel', () => {
     expect(screen.getByRole('button', { name: /Alice/ }).dataset.tone).toBe('punched');
   });
 
-  /**
-   * This is the behaviour that used to sit in a `useEffect` clearing the
-   * pending set whenever the loop index changed. The overlay now carries the
-   * loop it belongs to, so a new loop simply stops matching it.
-   */
-  it('stops showing a pending punch once the race ticks into the next loop', async () => {
+  it('stops showing a pending punch once the race ticks into the next loop, the overlay carrying the loop it belongs to and so no longer matching', async () => {
     const user = userEvent.setup();
     const { rerender } = render(
       <PunchPanel edition={EDITION} ranked={[ALICE]} now={new Date(RACE_START_MS)} />,

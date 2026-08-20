@@ -1,13 +1,3 @@
-/**
- * Ported from `biome-plugins/no-type-assertion-except-unknown.grit`.
- *
- * Allows `as unknown` (a single step, for JSON parsing escape hatches) and
- * `as const` (literal narrowing). Rejects everything else, including the
- * chained `as unknown as Foo`, which the grit version also rejected because
- * its outer assertion has a named type.
- *
- * See docs/standards/03-typing.md.
- */
 const MESSAGE =
   'Type assertions are restricted. Allowed: `as unknown` (single step, for JSON-parsing ' +
   'escape hatches) and `as const` (literal narrowing). For narrower typing after ' +

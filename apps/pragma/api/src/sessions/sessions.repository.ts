@@ -1,15 +1,3 @@
-/**
- * Repository for the sessions bounded context. Deleting a session
- * detaches the setlists it carried; the setlists themselves survive,
- * because one of them may be carried by another session too and every
- * one of them is reachable from the setlists index on its own.
- *
- * `friends_count_per_member` is stored as TEXT (Aurora DSQL doesn't
- * support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1).
- * `rowToSession` is the single parse-and-Zod-validate boundary; writes
- * JSON.stringify on the way in.
- */
-
 import { desc, eq } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';

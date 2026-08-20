@@ -1,21 +1,4 @@
-/**
- * EnergySparkline — smooth Catmull-Rom-ish curve drawn over a
- * sequence of 1..10 energy values. Used in the Setlist editor and
- * any session-card summary. The smoothing logic itself lives in
- * the sibling `*.utils.ts` so it's covered at 100%.
- *
- * The curve + gradient fill live in an SVG that stretches to the full
- * container width (`preserveAspectRatio="none"`) — stretching a smooth
- * path horizontally is exactly what a responsive sparkline wants, and
- * `vector-effect="non-scaling-stroke"` keeps the line a uniform width.
- * The point markers are NOT drawn in that SVG: a stretched viewBox
- * squashes `<circle>` into ovals on wide layouts. They're rendered as
- * CSS-positioned round dots over the SVG instead — `left` as a percentage
- * straight from the data and `top` in pixels (the vertical axis is 1:1,
- * height is fixed), so they stay perfectly round at any width with no
- * measuring.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import { buildSparklinePath } from './energy-sparkline.utils';
 

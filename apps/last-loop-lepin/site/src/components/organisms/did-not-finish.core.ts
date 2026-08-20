@@ -1,16 +1,6 @@
-/**
- * The three lists the out tab shows, and the loop each action targets.
- *
- * A runner the system projected as out on a missed top of hour is not locked
- * in yet, so a late punch can still bring them back; confirming writes the
- * manual record that stops the projection flipping. Reinstating credits the
- * loop they missed, which is the loop after the one they went out on.
- */
-
 import type { RankedRunnerDto } from '../../lib/race.types';
 import { selectRunnerOutReason } from '../../lib/runner-status.utils';
 
-/** The reason the projection assigns on its own, before an organiser confirms. */
 const AUTOMATIC_OUT_REASON = 'late';
 
 export interface DidNotFinishLists {
@@ -31,13 +21,11 @@ export function splitByDidNotFinish(ranked: readonly RankedRunnerDto[]): DidNotF
   };
 }
 
-/** The loop a runner is recorded as out on, when the organiser confirms it. */
 export function selectOutAtLoop(entry: RankedRunnerDto): number {
   if (entry.status.kind === 'dnf') return entry.status.outAtLoop;
   return entry.status.lastLoop;
 }
 
-/** The loop a reinstated runner is credited with, which is the one they missed. */
 export function selectMissedLoop(entry: RankedRunnerDto): number {
   return selectOutAtLoop(entry) + 1;
 }

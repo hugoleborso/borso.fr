@@ -1,7 +1,3 @@
-/**
- * The PIN bounds are all this slice validates before it hashes.
- */
-
 import { describe, expect, it } from 'vitest';
 import { loginInputSchema } from './auth.schema';
 

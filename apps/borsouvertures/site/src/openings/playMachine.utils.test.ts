@@ -154,7 +154,6 @@ describe('createPlayMachine', () => {
     const machine = createPlayMachine(buildDriver().options);
     machine.start({ ...BASE_CONFIG, autoOpponent: false });
     expect(machine.playMove('e2e4')).toBe('accepted');
-    // With autoOpponent off, the user is allowed to play Black's reply.
     expect(machine.playMove('e7e5')).toBe('accepted');
     expect(machine.getSnapshot().fen).toBe(fenAfter(['e4', 'e5']));
   });
@@ -173,8 +172,6 @@ describe('createPlayMachine', () => {
     machine.start(BASE_CONFIG);
     expect(machine.playMove('e2e5')).toBe('rejected-out-of-book');
     expect(machine.getSnapshot().playedMovesUci).toEqual([]);
-    // An illegal move never reached the board, so it is not a departure from
-    // the book and the modal stays shut.
     expect(machine.getSnapshot().outOfBookOpen).toBe(false);
   });
 
@@ -197,13 +194,12 @@ describe('createPlayMachine', () => {
 
   it('marks atLineEnd + successOpen when the user plays the last move in a line', () => {
     const machine = createPlayMachine(buildDriver().options);
-    // Drill to ply 4 with autoOpponent off so the user controls both sides.
     machine.start({ ...BASE_CONFIG, autoOpponent: false });
     machine.playMove('e2e4');
     machine.playMove('e7e5');
     machine.playMove('g1f3');
     machine.playMove('b8c6');
-    machine.playMove('f1c4'); // matches Classical line — atLineEnd
+    machine.playMove('f1c4');
     expect(machine.getSnapshot().atLineEnd).toBe(true);
     expect(machine.getSnapshot().successOpen).toBe(true);
     expect(machine.getSnapshot().uniqueLine?.id).toBe('classical');
@@ -214,10 +210,10 @@ describe('createPlayMachine', () => {
     const machine = createPlayMachine(driver.options);
     machine.start(BASE_CONFIG);
     machine.playMove('e2e4');
-    driver.fireNextTimer(); // e7e5
+    driver.fireNextTimer();
     machine.playMove('g1f3');
-    driver.fireNextTimer(); // b8c6
-    machine.playMove('f1c4'); // ends the Classical line
+    driver.fireNextTimer();
+    machine.playMove('f1c4');
     expect(machine.getSnapshot().atLineEnd).toBe(true);
     expect(driver.pendingTimers).toHaveLength(0);
   });
@@ -229,11 +225,11 @@ describe('createPlayMachine', () => {
     driver.rngQueue.push('f1c4');
     const machine = createPlayMachine(driver.options);
     machine.start({ ...BASE_CONFIG, side: 'black' });
-    driver.fireNextTimer(); // opponent plays e2e4
+    driver.fireNextTimer();
     machine.playMove('e7e5');
-    driver.fireNextTimer(); // opponent plays g1f3
+    driver.fireNextTimer();
     machine.playMove('b8c6');
-    driver.fireNextTimer(); // opponent plays f1c4 — Classical line ends
+    driver.fireNextTimer();
     expect(machine.getSnapshot().atLineEnd).toBe(true);
     expect(machine.getSnapshot().successOpen).toBe(true);
   });
@@ -246,7 +242,7 @@ describe('createPlayMachine', () => {
     machine.playMove('e2e4');
     expect(driver.pendingTimers).toHaveLength(1);
     machine.reset();
-    driver.fireNextTimer(); // belongs to the previous run → bail
+    driver.fireNextTimer();
     expect(machine.getSnapshot().playedMovesUci).toEqual([]);
   });
 
@@ -257,9 +253,9 @@ describe('createPlayMachine', () => {
     machine.playMove('e7e5');
     machine.playMove('g1f3');
     machine.playMove('b8c6');
-    machine.playMove('f1c4'); // successOpen
-    machine.revealBookMoves(); // manualReveal
-    machine.playMove('a7a6'); // out of book → outOfBookOpen
+    machine.playMove('f1c4');
+    machine.revealBookMoves();
+    machine.playMove('a7a6');
     expect(machine.getSnapshot().successOpen).toBe(true);
     expect(machine.getSnapshot().outOfBookOpen).toBe(true);
     expect(machine.getSnapshot().manualReveal).toBe(true);
@@ -279,7 +275,7 @@ describe('createPlayMachine', () => {
     expect(machine.getSnapshot().manualReveal).toBe(true);
     expect(machine.getSnapshot().outOfBookOpen).toBe(false);
     expect(notifications.read()).toBe(1);
-    machine.revealBookMoves(); // idempotent
+    machine.revealBookMoves();
     expect(machine.getSnapshot().manualReveal).toBe(true);
     expect(notifications.read()).toBe(1);
     machine.playMove('e2e4');
@@ -353,9 +349,9 @@ describe('createPlayMachine', () => {
     const machine = createPlayMachine(driver.options);
     machine.start(BASE_CONFIG);
     machine.playMove('e2e4');
-    driver.fireNextTimer(); // e7e5
+    driver.fireNextTimer();
     machine.playMove('g1f3');
-    driver.fireNextTimer(); // b8c6
+    driver.fireNextTimer();
     machine.undo();
     expect(machine.getSnapshot().playedMovesUci).toEqual(['e2e4', 'e7e5']);
     expect(machine.getSnapshot().fen).toBe(fenAfter(['e4', 'e5']));
@@ -368,9 +364,9 @@ describe('createPlayMachine', () => {
     machine.playMove('e7e5');
     machine.playMove('g1f3');
     machine.playMove('b8c6');
-    machine.playMove('f1c4'); // successOpen
-    machine.revealBookMoves(); // manualReveal
-    machine.playMove('a7a6'); // outOfBookOpen
+    machine.playMove('f1c4');
+    machine.revealBookMoves();
+    machine.playMove('a7a6');
     machine.undo();
     expect(machine.getSnapshot().successOpen).toBe(false);
     expect(machine.getSnapshot().outOfBookOpen).toBe(false);
@@ -398,13 +394,13 @@ describe('createPlayMachine', () => {
     const machine = createPlayMachine(buildDriver().options);
     machine.start(BASE_CONFIG);
     const notifications = countNotifications(machine);
-    machine.setAutoOpponent(true); // already on
+    machine.setAutoOpponent(true);
     expect(machine.getSnapshot().autoOpponent).toBe(true);
     expect(notifications.read()).toBe(0);
     machine.setAutoOpponent(false);
     expect(machine.getSnapshot().autoOpponent).toBe(false);
     expect(notifications.read()).toBe(1);
-    machine.setAutoOpponent(false); // idempotent
+    machine.setAutoOpponent(false);
     expect(notifications.read()).toBe(1);
     machine.setAutoOpponent(true);
     expect(machine.getSnapshot().autoOpponent).toBe(true);

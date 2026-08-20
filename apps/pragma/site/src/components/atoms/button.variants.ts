@@ -1,9 +1,6 @@
-/**
- * Variant table for the Button atom. Variants mirror the prototype's
- * `.btn`, `.btn.primary`, `.btn.accent`, `.btn.ghost`.
- */
-
 import { cva, type VariantProps } from 'class-variance-authority';
+
+const COARSE_POINTER_MIN_HEIGHT = 'min-h-11';
 
 /**
  * @Blueprint atom-variant
@@ -26,12 +23,10 @@ export const buttonVariants = cva(
           'bg-transparent border border-transparent text-ink-900 hover:bg-[rgba(26,22,18,0.05)]',
         danger: 'bg-danger border border-danger text-bg-elev hover:opacity-90',
       },
-      // Every size clears the 44px touch floor through `min-h-11`, so a
-      // coarse pointer can hit the control on a phone.
       size: {
-        sm: 'min-h-11 px-2 py-1 text-xs',
-        md: 'min-h-11 px-3 py-1.5 text-[13px]',
-        lg: 'min-h-11 px-4 py-2 text-sm',
+        sm: `${COARSE_POINTER_MIN_HEIGHT} px-2 py-1 text-xs`,
+        md: `${COARSE_POINTER_MIN_HEIGHT} px-3 py-1.5 text-[13px]`,
+        lg: `${COARSE_POINTER_MIN_HEIGHT} px-4 py-2 text-sm`,
       },
     },
     defaultVariants: { variant: 'default', size: 'md' },

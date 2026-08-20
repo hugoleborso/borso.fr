@@ -1,9 +1,3 @@
-/**
- * A session is a concert or a practice, and the discriminated union is the
- * rule: a concert needs a venue, a practice does not have one, and neither
- * accepts a field the other owns.
- */
-
 import { describe, expect, it } from 'vitest';
 import {
   concertCreateSchema,

@@ -1,9 +1,3 @@
-/**
- * Pure rules for the admin auth bounded context: which HTTP status a
- * denial maps to, whether a request's `Origin` header disqualifies it, and
- * which address an `x-forwarded-for` header names.
- */
-
 export type AuthDenialReason = 'rate-limited' | 'invalid-pin' | 'misconfigured';
 
 /**
@@ -29,12 +23,6 @@ const STATE_CHANGING_METHODS: ReadonlySet<string> = new Set(['POST', 'PUT', 'PAT
 
 const ALLOWED_ORIGIN_SEPARATOR = ',';
 
-/**
- * The `Origin` header values the API accepts on state-changing requests,
- * read from `ALLOWED_ORIGIN` (set by CDK per stage). `null` means no
- * allow-list is configured, which callers must tell apart from an
- * allow-list that is configured and empty.
- */
 export function parseAllowedOrigins(raw: string | undefined): readonly string[] | null {
   if (raw === undefined || raw.length === 0) return null;
   return raw
@@ -43,12 +31,6 @@ export function parseAllowedOrigins(raw: string | undefined): readonly string[] 
     .filter((origin) => origin.length > 0);
 }
 
-/**
- * SameSite=Lax on the session cookie covers CSRF via cross-site form
- * submits, but not a scripted request from a malicious origin while a
- * session is live. This check closes that gap on the state-changing
- * methods only, and stays off entirely when no allow-list is configured.
- */
 // @FollowsBlueprint core-decision
 export function isRequestOriginRejected(
   method: string,
@@ -65,12 +47,6 @@ const FORWARDED_FOR_SEPARATOR = ',';
 const SEPARATOR_ABSENT_INDEX = -1;
 const UNKNOWN_CLIENT_IP = 'unknown';
 
-/**
- * The client address an `x-forwarded-for` header names. Each proxy appends
- * its own hop to the right of the list, so the leftmost entry is the
- * caller. Answers `unknown` when the header is absent, which the rate
- * limiter then treats as one shared bucket rather than skipping the check.
- */
 export function readClientIp(headerValue: string | undefined): string {
   if (headerValue === undefined) return UNKNOWN_CLIENT_IP;
   const separatorIndex = headerValue.indexOf(FORWARDED_FOR_SEPARATOR);

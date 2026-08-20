@@ -1,13 +1,4 @@
-/**
- * Mastery feature queries / mutations. Defaults are the band-wide
- * baseline; overrides are per-song deltas the catalog page edits.
- *
- * Save/delete on a default cell are optimistic (round 17c) — the
- * scroll-wheel ±1 in the matrix must feel instant; the cached row is
- * upserted/removed before the server replies, and `onSettled`
- * invalidates to reconcile.
- * @Feature mastery
- */
+/** @Feature mastery */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';

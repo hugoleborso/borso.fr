@@ -1,10 +1,3 @@
-/**
- * Tests for the optimistic write path on the members mutations,
- * including `useAssignMemberInstruments` which swaps the per-member
- * instrument roster in place using the instruments cache as the
- * lookup source.
- */
-
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { instrumentKeys } from './instruments.queries';
 import {

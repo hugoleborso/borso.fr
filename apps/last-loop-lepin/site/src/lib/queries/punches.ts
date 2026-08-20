@@ -1,14 +1,3 @@
-/**
- * Punch reads and writes, for the organiser panels and for a runner punching
- * their own loop.
- *
- * Registering a punch does not invalidate the standings. The standings query
- * already polls every two seconds, and a `GET` fired immediately after the
- * write can be served by another Lambda on another database connection that
- * still sees the state from before the commit. The organiser panel shows the
- * pending punch from its own overlay until the poll catches up.
- */
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api';
 import { isLastPendingMutation } from './optimistic.utils';

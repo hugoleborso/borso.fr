@@ -1,9 +1,3 @@
-/**
- * The caller raises the error, so this returns the status rather than a
- * Response: `null` means accepted, a number is what the storage service
- * refused with and what the message will carry.
- */
-
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sendFileToPresignedUrl } from './object-upload.adapter';
 

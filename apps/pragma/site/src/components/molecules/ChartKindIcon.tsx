@@ -1,9 +1,4 @@
-/**
- * ChartKindIcon — the chart-format marker on a song card (the
- * prototype's top-right corner: text icon for ChordPro, pdf icon
- * for PDF, image icon for image, "no chart" pill when nothing).
- * @Feature songs
- */
+/** @Feature songs */
 
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../atoms/Icon';

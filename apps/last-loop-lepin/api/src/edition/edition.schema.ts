@@ -59,9 +59,6 @@ export const editionsTable = pgTable('editions', {
   sunriseAt: timestamp('sunrise_at', { withTimezone: true, mode: 'date' }).notNull(),
   sunsetAt: timestamp('sunset_at', { withTimezone: true, mode: 'date' }).notNull(),
   intervalMinutes: integer('interval_min').notNull().default(DEFAULT_INTERVAL_MINUTES),
-  // Aurora DSQL doesn't support `jsonb`. The GPX metadata is stored as
-  // JSON-encoded text and parsed via `gpxMetadataSchema` at the repository
-  // boundary, which doubles as runtime validation.
   gpx: text('gpx').notNull(),
   status: text('status').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
@@ -84,17 +81,10 @@ export const createEditionInputSchema = z.object({
   displayName: z.string().min(1).max(DISPLAY_NAME_MAX_LENGTH),
   startsAt: z.string().datetime({ offset: true }),
   endsAt: z.string().datetime({ offset: true }),
-  // 1–240 min covers the realistic range: 1 min is the smallest useful
-  // testing value (sub-minute loops would race the wall-clock validation
-  // window in punch.core); 240 min caps absurd inputs. Defaults to 60.
   intervalMinutes: z.number().int().min(MIN_INTERVAL_MINUTES).max(MAX_INTERVAL_MINUTES).optional(),
   gpxXml: z.string().min(1),
 });
 
-// Mutating an existing setup edition: same payload minus the slug
-// (it's the primary key, taken from the URL path, never the body).
-// `gpxXml` becomes optional — the orga may want to fix the schedule or
-// the displayName without re-uploading the trace.
 export const updateEditionInputSchema = createEditionInputSchema
   .omit({ slug: true })
   .extend({ gpxXml: z.string().min(1).optional() });

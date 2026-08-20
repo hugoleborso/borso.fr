@@ -1,11 +1,5 @@
 /**
  * @vitest-environment node
- *
- * Database client config — verifies the env-based branching of
- * `getDatabase()`. We can't easily exercise the DSQL signer codepath
- * here (it would require a real AWS account); the local DATABASE_URL
- * path is exercised end-to-end by every other back-e2e test and is the
- * one this audit pins.
  */
 
 import { describe, expect, it } from 'vitest';

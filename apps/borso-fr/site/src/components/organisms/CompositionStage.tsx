@@ -6,10 +6,6 @@ import type { Palette } from '../../art/mondrian/palettes.utils';
 import { seedToHex } from '../../art/mondrian/url-state.utils';
 import { MondrianFrame } from './MondrianFrame';
 
-/**
- * A short desktop window trades the stage's vertical padding for canvas, which
- * a width breakpoint alone cannot express.
- */
 const STAGE_CLASS_NAME =
   'relative flex min-h-[100dvh] flex-col items-center justify-start gap-3.5 px-4 pt-[72px] pb-8 atelier-roomy:gap-[clamp(16px,2vw,28px)] atelier-roomy:px-6 atelier-roomy:pt-20 atelier-roomy:pb-12 atelier-desk:px-[clamp(24px,4vw,56px)] atelier-desk:pt-[clamp(28px,4vw,56px)] atelier-desk:pb-[clamp(40px,5vw,80px)] [@media(max-height:700px)_and_(min-width:961px)]:pt-6 [@media(max-height:700px)_and_(min-width:961px)]:pb-6';
 

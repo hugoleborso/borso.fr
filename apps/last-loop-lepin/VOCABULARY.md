@@ -17,6 +17,12 @@ Lives in: `api/src/auth/`
 
 - `admin_sessions.id` is the primary key, `expires_at` is not null, and the
   session expires 12 hours after it was issued.
+- The cookie carrying that id is `httpOnly` and `SameSite=Lax`, never
+  `Strict`: `Strict` withholds the cookie on a top-level navigation into the
+  application, which logs the organiser out of every link they follow in from
+  a mail or a bookmark. The write surface `Lax` leaves open is closed instead
+  by `isRequestOriginRejected`, which refuses a state-changing method whose
+  `Origin` is not in the stage's `ALLOWED_ORIGIN` list.
 - The PIN is checked against a scrypt hash held in the single-row
   `admin_credentials` table. Login is denied with reason `misconfigured` when
   that row is absent.
@@ -172,6 +178,9 @@ Lives in: `api/src/edition/`
 - `nextHourlyTop` answers `startsAt` for any moment before the race, however
   far ahead the question is asked, and nothing once the next boundary would
   fall at or after `endsAt`.
+- `hourlyTopOfLoopMs(edition, loopIndex)` is the instant loop `loopIndex`
+  starts. It is written once in `punch.core.ts`, and both the loop duration and
+  the catch-up punch's finishing instant are derived from it.
 - `totalHourlyTops` is how many whole intervals fit between `startsAt` and
   `endsAt`, which is the number of loops the edition can hold.
 
@@ -196,8 +205,9 @@ How long a runner took over one loop.
 Lives in: `api/src/punch/`
 
 - `loopDurationMs` is
+  `punch.finishedAt − hourlyTopOfLoopMs(edition, punch.loopIndex)`, which is
   `punch.finishedAt − (startsAt + (loopIndex − 1) × intervalMs)`, so it is
-  measured from the loop's own hourly top.
+  measured from the loop's own hourly top and never from the previous punch.
 - It is `null` when the punch lands before that top, which the CSV renders as
   an empty cell.
 - `lastLoopDurationMs` and `fastestLap` both call it, so the formula is
@@ -234,7 +244,8 @@ Lives in: `api/src/punch/`
   the target loop (`already-punched-this-loop`).
 - One punch per runner and loop is held by that check rather than by the
   database. Aurora DSQL takes neither the partial unique index nor the foreign
-  keys, and the schema file records that beside the table.
+  keys, so `punch.schema.ts` declares neither, and the gaps themselves are
+  listed in `docs/knowledge/dsql-postgres-compat-gaps.md`.
 
 ## Rank
 
@@ -287,11 +298,15 @@ A punch a runner records from their own phone.
 
 Lives in: `api/src/punch/`
 
-- `POST /api/self-punches` carries no admin session on purpose. The file
-  header names the geofence as the barrier and the spec question that accepted
-  identity by self-selection.
+- `POST /api/self-punches` carries no admin session on purpose: any phone on
+  the public network may post, and identity is by self-selection in the
+  standings, accepted as a limit of the model. The router lives in its own
+  `self-punch.controller.ts` so the absent `requireAdminSession` is visible
+  from the file name, and its test pins that the endpoint answers without one.
 - The body may carry latitude, longitude and accuracy, each nullable, with
-  latitude bounded to ±90 and longitude to ±180.
+  latitude bounded to ±90 and longitude to ±180. They are telemetry, not a
+  gate: there is no geofence, and a self-punch with no coordinates at all is
+  accepted.
 - When both coordinates are present, the service records
   `distanceFromCenterM`, the great-circle distance from the track's start
   point. The row is written with `source` `self` and the request's user agent.
@@ -333,9 +348,11 @@ The two daylight markers stored on the edition and shown against the loops.
 
 Lives in: `api/src/helpers/sun/`
 
-- Computed from the track's start coordinates and the start date, using the
-  standard 90.833° zenith, which already folds in the solar disc and
-  refraction.
+- Computed from the track's start coordinates and the start date by
+  `computeSunriseSunset`, a port of the U.S. Naval Observatory's compact
+  algorithm, using the standard 90.833° zenith, which already folds in the
+  solar disc and refraction. Its golden-value test pins every coefficient of
+  that algorithm to the millisecond.
 - Recomputed whenever an edition in `setup` has its start moved or its GPX
   replaced.
 - A place and date with no sunrise or no sunset raises `SunCalculationError`,

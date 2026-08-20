@@ -1,35 +1,4 @@
-/**
- * ChordPro renderer. Pure-output wrapper around `parseChordPro` +
- * `transposeLines` + `groupChordProSections` — every layout decision is in
- * Tailwind utility classes on the rendered tokens.
- *
- * The viewer is used in two surfaces:
- *  - inline preview on `/catalog/:songId` (compact, no controls);
- *  - the stage view (`/catalog/:songId/scene`) — fullscreen, transpose
- *    controls, large font, swipe-between-songs when in setlist mode.
- *
- * The transposition state lives in the parent (the stage view page
- * owns the slider; the inline preview pins semitones to 0).
- *
- * Lines are grouped into the verse / chorus / bridge blocks a reader scans
- * for mid-song, so a marked block carries a heading instead of the empty
- * paragraph a bare `{start_of_chorus}` used to render as.
- *
- * Two things the phone forced, both of which the desktop never showed:
- *
- * `tone` picks the palette. The cream `ink` tones the viewer used to
- * hard-code sit at 1.6:1 on the stage view's black, which is the one screen
- * that is read while playing.
- *
- * Outside compact mode the viewer sets no font size at all, so the size it
- * renders at is the one it inherits — the stage view's A−/A+ zoom writes that
- * size on the `<dialog>` and a literal `text-[18px]` here used to swallow it.
- * Lines wrap rather than running off the right edge, because a chart you pan
- * sideways shows one line at a time and stops being a chart. A wrapped
- * continuation is indented so it reads as a continuation and not as a new line
- * of the song.
- * @Feature songs
- */
+/** @Feature songs */
 
 import { useMemo } from 'react';
 import {
@@ -165,7 +134,7 @@ export function ChordChartViewer({
                 <ChordProSectionHeading
                   kind={section.kind}
                   label={section.label}
-                  ordinal={section.ordinal}
+                  ordinalAmongKind={section.ordinalAmongKind}
                   tone={tone}
                 />
               </div>

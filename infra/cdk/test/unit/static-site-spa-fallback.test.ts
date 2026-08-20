@@ -16,10 +16,6 @@ describe('StaticSite (prod, spaFallback)', () => {
   });
 
   it('serves /index.html with status 200 on 404 so the SPA bundle handles routing', () => {
-    // Regression for SPA-routes-return-JPEG-on-direct-nav: without this
-    // rewrite, direct navigation to a client-side route (`/r/alice`) is
-    // served the catch-all JPEG, the React bundle never loads, and the
-    // in-app router never sees the URL.
     tpl.hasResourceProperties('AWS::CloudFront::Distribution', {
       DistributionConfig: Match.objectLike({
         CustomErrorResponses: Match.arrayWith([
@@ -31,8 +27,6 @@ describe('StaticSite (prod, spaFallback)', () => {
         ]),
       }),
     });
-    // Belt-and-braces: the JPEG mapping is gone here, so a future edit
-    // re-introducing it (and breaking direct nav) is caught.
     expect(JSON.stringify(tpl.toJSON())).not.toContain('/404.jpeg');
   });
 });

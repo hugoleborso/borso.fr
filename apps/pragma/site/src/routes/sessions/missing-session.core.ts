@@ -1,9 +1,4 @@
-/**
- * The sentence the session route shows in place of the session, chosen from
- * why the read came back empty. Counterpart of `missing-song.core.ts`; the
- * wording is the only thing that differs, and it belongs to this domain.
- * @Feature sessions
- */
+/** @Feature sessions */
 
 import type { ParseKeys } from 'i18next';
 import {

@@ -1,12 +1,3 @@
-/**
- * Pure helpers for `CourseMap.tsx` — track indexing, fraction-to-lat/lng
- * projection (linear and recorded-pace variants). No DOM, no Leaflet, no
- * React: every function is deterministic given its inputs.
- *
- * Why the split: the React component owns the imperative Leaflet
- * lifecycle, but the maths is testable in isolation at 100% coverage.
- */
-
 import { haversineDistanceMeters } from '../../lib/haversine.utils';
 import {
   buildRunnerAvatar,
@@ -14,6 +5,7 @@ import {
   MAP_AVATAR_PHOTO_CLASS,
 } from '../../lib/runner-avatar.utils';
 import type { LatLngDto, RankedRunnerDto } from '../../lib/race.types';
+import { selectRunnerAvatarView } from '../molecules/runner-avatar-view.utils';
 
 const ORIGIN: LatLngDto = { lat: 0, lng: 0 };
 
@@ -23,12 +15,6 @@ export interface Indexed {
   readonly total: number;
 }
 
-/**
- * Build the cumulative-distance index used by both projection algorithms.
- * `cumulative[i]` is the polyline length from `points[0]` to `points[i]` in
- * meters; `total` is the loop length (= `cumulative[last]`, or `0` for an
- * empty or single-point series).
- */
 /**
  * @Blueprint utils-geometry
  * @BlueprintName Geometry Utilities Module
@@ -56,18 +42,6 @@ function interpolateSegment(start: LatLngDto, end: LatLngDto, localFraction: num
   };
 }
 
-/**
- * Interpolate along `points` at `target`, where `keys[i]` is the value of
- * the projection variable at `points[i]`. `keys` must be non-decreasing and
- * start at `0`; both callers below satisfy that (cumulative metres from
- * `indexTrack`, and the Zod-validated recorded time fractions).
- *
- * Walks `points` in a single pass and pulls the matching key from a fresh
- * iterator, so each `point` arrives as `LatLngDto` and each key as `number`
- * without the defensive `??` branches `noUncheckedIndexedAccess` forces on
- * array indexing. A `keys` shorter than `points` ends the walk early and
- * yields the last point seen.
- */
 function interpolateAlong(
   points: readonly LatLngDto[],
   keys: readonly number[],
@@ -99,37 +73,18 @@ function interpolateAlong(
   return interpolateSegment(previousPoint, currentPoint, localFraction);
 }
 
-/**
- * Linear time → distance projection: maps `fraction` (`0..1` of the loop
- * duration) to the lat/lng at `fraction × total` meters along the polyline.
- * Used as the silent fallback when the GPX has no recorded per-point
- * timing.
- */
 export function projectFraction(track: Indexed, fraction: number): LatLngDto {
   const clamped = Math.max(0, Math.min(1, fraction));
   return interpolateAlong(track.points, track.cumulative, clamped * track.total);
 }
 
-/**
- * Recorded-pace time → distance projection: maps `fraction` (`0..1` of the
- * loop duration) to the lat/lng at the matching position on the polyline,
- * using the recorded `pointTimeFractions` as the time → index function.
- *
- * The avatar therefore moves at the recorded pace of the source GPX — slow
- * on the recorded uphills, fast on the recorded downhills — instead of the
- * naive linear-distance interpolation.
- *
- * Callers must pass a `pointTimeFractions` that has already been validated
- * by the read-side Zod refine (length parity with `track.points`, strict
- * monotonicity, starts at 0, ends at 1). The function does not re-validate.
- */
-export function projectFractionTimeAware(
+export function projectFractionAlongMonotonicTimeFractions(
   track: Indexed,
   fraction: number,
-  pointTimeFractions: readonly number[],
+  monotonicPointTimeFractions: readonly number[],
 ): LatLngDto {
   const clamped = Math.max(0, Math.min(1, fraction));
-  return interpolateAlong(track.points, pointTimeFractions, clamped);
+  return interpolateAlong(track.points, monotonicPointTimeFractions, clamped);
 }
 
 const MINUTES_TO_MS = 60_000;
@@ -141,12 +96,6 @@ const HTML_GT = />/g;
 const HTML_DQ = /"/g;
 const HTML_SQ = /'/g;
 
-/**
- * Escape a string for safe substitution into an HTML attribute or text
- * node. Conservative — quotes, ampersands, and angle brackets all get
- * entity-encoded. Used by `avatarHtmlWithPhoto` to compose the Leaflet
- * `divIcon` markup from runner-supplied display names + photo URLs.
- */
 export function escapeHtml(input: string): string {
   return input
     .replace(HTML_AMP, '&amp;')
@@ -164,53 +113,21 @@ interface AvatarHtmlInput {
 
 function initialsSpanHtml(
   input: AvatarHtmlInput,
-  fallbackInitials: string,
-  fallbackBg: string,
+  initials: string,
+  backgroundColor: string,
 ): string {
-  return `<span class="${MAP_AVATAR_CLASS}" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px;background:${escapeHtml(fallbackBg)}">${escapeHtml(fallbackInitials)}</span>`;
+  return `<span class="${MAP_AVATAR_CLASS}" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px;background:${escapeHtml(backgroundColor)}">${escapeHtml(initials)}</span>`;
 }
 
-/**
- * Build the HTML string Leaflet's `L.divIcon` ships into the DOM for a
- * runner marker. Mirrors the React `<RunnerAvatar>` component's logic in
- * pure-string form — Leaflet renders raw HTML, so we can't inject a React
- * tree, but the visible output must match. When `photoUrl` is set, we
- * render an `<img>` wrapped by a span; an inline `onerror` rewrites the
- * wrapper's innerHTML to the initials span on load failure (the cascade
- * from spec §"Edge cases — Photo dont l'URL retourne 404"). When
- * `photoUrl` is null, we render the initials span directly.
- *
- * Keep in sync with `RunnerAvatar.tsx` — every visual change there has to
- * mirror here.
- */
 export function avatarHtmlWithPhoto(input: AvatarHtmlInput): string {
   const avatar = buildRunnerAvatar({ displayName: input.displayName, photoUrl: input.photoUrl });
-  if (avatar.kind === 'initials') {
-    return initialsSpanHtml(input, avatar.initials, avatar.backgroundColor);
-  }
-  const fallbackHtml = initialsSpanHtml(
-    input,
-    avatar.fallback.initials,
-    avatar.fallback.backgroundColor,
-  );
-  // `onerror` rewrites the wrapper's innerHTML to the initials span. The
-  // wrapper itself sticks around (its size + class anchor the Leaflet icon
-  // bounding box), so the swap is a contained DOM mutation that survives
-  // re-paints of nearby markers. The JSON string is HTML-attribute-escaped
-  // (the raw `JSON.stringify` output starts with `"` which would close the
-  // attribute mid-flight and leak the rest of the markup into the DOM).
-  // The browser decodes `&quot;` back to `"` when reading the attribute,
-  // then JS evaluates the string literal as written.
-  const escapedFallbackJson = escapeHtml(JSON.stringify(fallbackHtml));
-  return `<span class="${MAP_AVATAR_CLASS}" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px"><img class="${MAP_AVATAR_PHOTO_CLASS}" src="${escapeHtml(avatar.url)}" alt="${escapeHtml(input.displayName)}" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px" onerror="this.parentNode.innerHTML=${escapedFallbackJson}"></span>`;
+  const view = selectRunnerAvatarView(avatar, false);
+  const initialsHtml = initialsSpanHtml(input, view.initials, view.backgroundColor);
+  if (view.kind === 'initials') return initialsHtml;
+  const escapedInitialsHtmlJson = escapeHtml(JSON.stringify(initialsHtml));
+  return `<span class="${MAP_AVATAR_CLASS}" data-runner-slug="${escapeHtml(input.slug)}" data-surface="map" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px"><img class="${MAP_AVATAR_PHOTO_CLASS}" src="${escapeHtml(view.photoUrl)}" alt="${escapeHtml(input.displayName)}" style="width:${MAP_AVATAR_PX}px;height:${MAP_AVATAR_PX}px" onerror="this.parentNode.innerHTML=${escapedInitialsHtmlJson}"></span>`;
 }
 
-/**
- * Narrowed view of `RaceEditionDto` carrying only the four fields needed
- * for the in-loop fraction computation. Decoupling the helper from
- * `RaceEditionDto` lets `course-map.utils.test.ts` build inputs without
- * synthesising the full edition shape, and keeps the function pure.
- */
 export interface RaceTimingInputs {
   readonly status: 'setup' | 'live' | 'finished';
   readonly startsAt: string;
@@ -218,22 +135,10 @@ export interface RaceTimingInputs {
 }
 
 export interface RunnerDistanceFraction {
-  /** `[0, 1)` — position inside the current top-of-hour loop. */
   readonly fraction: number;
-  /** `true` when the runner has already closed the current loop and waits at the corral. */
   readonly restingAtCorral: boolean;
 }
 
-/**
- * Where the runner sits on the loop relative to the current top-of-hour
- * window. Returns `null` when no avatar should be rendered (edition not
- * live, runner DNF, or empty track inputs upstream of the caller).
- *
- * Called by both `CourseMap.tsx` (to position the lat/lng marker) and
- * `ElevationProfile.tsx` (to position the pastille on the profile). The
- * helper returns only the fraction — the lat/lng / Y projection lives at
- * each call site, since they project onto different curves.
- */
 export function runnerDistanceFraction(
   edition: RaceTimingInputs,
   entry: RankedRunnerDto,

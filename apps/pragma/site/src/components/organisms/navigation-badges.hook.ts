@@ -1,13 +1,4 @@
-/**
- * Lightweight nav-badge hook. Reuses the catalog / sessions / bars
- * list queries so the cache is shared with the destination pages —
- * once the user navigates to /catalog, the catalog page hits a warm
- * cache (no second request).
- *
- * Failure is silent: a 404 / 500 / network error simply leaves that
- * entry's badge undefined, and `SidebarLink` skips rendering.
- * @Feature shell
- */
+/** @Feature shell */
 
 import { useMemo, useSyncExternalStore } from 'react';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';

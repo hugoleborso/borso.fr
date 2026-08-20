@@ -83,15 +83,6 @@ export interface LoginResult {
   readonly expiresAt: Date;
 }
 
-/**
- * Verifies the PIN against the DB-stored scrypt hash and, on success,
- * issues a new session row. The session id is a 32-byte random hex
- * string carried by the `lastloop_admin` cookie. Replaces the previous
- * stateless JWT flow — server-side logout becomes a single DELETE.
- *
- * Throws `AuthDeniedError('misconfigured')` if the operator hasn't seeded
- * the `admin_credentials` row yet.
- */
 // @FollowsBlueprint service-orchestration
 export async function login(input: LoginInput, now: Date): Promise<LoginResult> {
   const pinHash = await findAdminPinHash();
@@ -110,11 +101,6 @@ export async function login(input: LoginInput, now: Date): Promise<LoginResult> 
   return { sessionId, expiresAt };
 }
 
-/**
- * Returns the session row when the cookie still maps to a live,
- * unexpired session; `null` otherwise. The middleware uses the `null`
- * result to issue 401 + clear the cookie.
- */
 export async function verifySession(sessionId: string, now: Date): Promise<AdminSession | null> {
   return findValidSession(sessionId, now);
 }

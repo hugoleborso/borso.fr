@@ -1,7 +1,3 @@
-/**
- * Service layer for sessions.
- */
-
 import type { z } from 'zod';
 import { getSongs } from '../songs/songs.service';
 import { buildSessionInsertShape } from './sessions.core';

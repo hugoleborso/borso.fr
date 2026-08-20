@@ -29,8 +29,6 @@ import { createDeployRoles } from './deploy-roles.js';
 const PREVIEWS_DOMAIN = `*.preview.${HOSTED_ZONE_NAME}`;
 const PREVIEW_OBJECT_EXPIRATION_DAYS = 60;
 const ERROR_RESPONSE_TTL_MINUTES = 5;
-// Four escalating monthly cost alarms. AWS Budgets only accepts USD, so
-// these are dollar thresholds.
 const MONTHLY_BUDGET_FIRST_ALERT_USD = 2;
 const MONTHLY_BUDGET_SECOND_ALERT_USD = 5;
 const MONTHLY_BUDGET_THIRD_ALERT_USD = 20;
@@ -41,34 +39,16 @@ const MONTHLY_BUDGET_AMOUNTS_USD = [
   MONTHLY_BUDGET_THIRD_ALERT_USD,
   MONTHLY_BUDGET_FINAL_ALERT_USD,
 ];
+const BUDGET_ALERT_THRESHOLD_PERCENT = 80;
+const PREVIEWS_WILDCARD_RECORD_NAME = '*.preview';
 
 interface SharedStackProps extends StackProps {
   readonly borsoFrCert: ICertificate;
   readonly previewCert: ICertificate;
-  /** Address the three cost alarms notify. Read from the environment by `bin/shared.ts`. */
   readonly budgetEmail: string;
 }
 
 /**
- * Singleton account-level resources. Deployed once (and updated rarely) by
- * Hugo from a local checkout via `pnpm --filter @borso/shared-infra deploy`,
- * or from CI via the SharedInfraDeployRole + the `prod-shared` GitHub
- * environment.
- *
- * Owns:
- *   - GitHub OIDC provider (one per account)
- *   - Previews S3 bucket + CloudFront distribution + host-routing Function
- *   - Three deploy roles (prod / preview / shared-infra) — see deploy-roles.ts
- *   - Cost budgets ($2/$5/$20/$50), notifying `props.budgetEmail`
- *   - The SSM parameters listed in `SHARED_SSM_PARAMETERS`, which constructs
- *     read at synth time
- *
- * Does NOT own (anymore):
- *   - DSQL cluster — moved to per-app `DsqlCluster` (lives with the app's
- *     prod stack, shared across stages of the same app via SSM lookup).
- *   - IntegTestRole — there is no integ workflow in the monorepo; preview
- *     deploys cover what integ used to cover.
- *
  * @Blueprint shared-account-stack
  * @BlueprintName Shared Account Stack
  * @BlueprintUsage Use for a resource that exists once per AWS account and that other stacks need to find.
@@ -122,11 +102,6 @@ export class SharedStack extends Stack {
       httpVersion: HttpVersion.HTTP2_AND_3,
       priceClass: PriceClass.PRICE_CLASS_100,
       errorResponses: [
-        // S3 returns 404 for missing keys (now that we grant ListBucket
-        // below). Serve a fallback /404.jpeg from the bucket root, shared
-        // across every preview subdomain. Hugo uploads the file once
-        // post-deploy; if it isn't there, CloudFront falls back to its
-        // default error page after a short loop.
         {
           httpStatus: 404,
           responsePagePath: '/404.jpeg',
@@ -135,10 +110,6 @@ export class SharedStack extends Stack {
       ],
     });
 
-    // Grant the CloudFront OAC principal s3:ListBucket so S3 can return 404
-    // (instead of 403) for missing keys. Without this, broken preview links
-    // surface as "Access Denied" and the 404 errorResponses entry above
-    // never fires. Mirrors the per-app prod equivalent in StaticSite.
     previewsBucket.addToResourcePolicy(
       new PolicyStatement({
         actions: ['s3:ListBucket'],
@@ -150,26 +121,18 @@ export class SharedStack extends Stack {
       }),
     );
 
-    // Wildcard DNS into the previews distribution. Without this, every
-    // <app>-pr-<n>.preview.borso.fr resolves to NXDOMAIN even though the
-    // distribution and cert are provisioned.
     const previewsAliasTarget = RecordTarget.fromAlias(new CloudFrontTarget(previewsDistribution));
     new ARecord(this, 'PreviewsAliasA', {
       zone,
-      recordName: '*.preview',
+      recordName: PREVIEWS_WILDCARD_RECORD_NAME,
       target: previewsAliasTarget,
     });
     new AaaaRecord(this, 'PreviewsAliasAAAA', {
       zone,
-      recordName: '*.preview',
+      recordName: PREVIEWS_WILDCARD_RECORD_NAME,
       target: previewsAliasTarget,
     });
 
-    // Regional (eu-west-3) twin of the us-east-1 CloudFront cert. Needed
-    // for API Gateway HTTP API custom domains, which only accept certs
-    // from the same region as the API. Same wildcard, different region —
-    // API Gateway then serves preview-API hostnames like
-    // `<app>-pr-<n>-api.preview.borso.fr` under it.
     const previewsRegionalCert = new Certificate(this, 'PreviewsRegionalCert', {
       domainName: PREVIEWS_DOMAIN,
       validation: CertificateValidation.fromDns(zone),
@@ -180,34 +143,7 @@ export class SharedStack extends Stack {
       account: this.account,
     });
 
-    // === Budgets (mandatory) ===
-
-    // AWS Budgets only accepts USD as the currency unit. The amounts below
-    // are dollar thresholds — close enough to euro at the tiny absolute scale
-    // we operate at, and AWS rejects any other Unit value at deploy time.
-    for (const amount of MONTHLY_BUDGET_AMOUNTS_USD) {
-      new CfnBudget(this, `Budget${amount}`, {
-        budget: {
-          budgetName: `borso-monthly-${amount}usd`,
-          budgetType: 'COST',
-          timeUnit: 'MONTHLY',
-          budgetLimit: { amount, unit: 'USD' },
-        },
-        notificationsWithSubscribers: [
-          {
-            notification: {
-              notificationType: 'ACTUAL',
-              comparisonOperator: 'GREATER_THAN',
-              threshold: 80,
-              thresholdType: 'PERCENTAGE',
-            },
-            subscribers: [{ subscriptionType: 'EMAIL', address: props.budgetEmail }],
-          },
-        ],
-      });
-    }
-
-    // === SSM parameters (consumed by constructs at synth time) ===
+    this.createMonthlyBudgets(props.budgetEmail);
 
     new StringParameter(this, 'OidcArnParam', {
       parameterName: SHARED_SSM_PARAMETERS.oidcProviderArn,
@@ -257,5 +193,29 @@ export class SharedStack extends Stack {
       parameterName: SHARED_SSM_PARAMETERS.sharedDeployRoleArn,
       stringValue: deployRoles.shared.roleArn,
     });
+  }
+
+  private createMonthlyBudgets(budgetEmail: string): void {
+    for (const amount of MONTHLY_BUDGET_AMOUNTS_USD) {
+      new CfnBudget(this, `Budget${amount}`, {
+        budget: {
+          budgetName: `borso-monthly-${amount}usd`,
+          budgetType: 'COST',
+          timeUnit: 'MONTHLY',
+          budgetLimit: { amount, unit: 'USD' },
+        },
+        notificationsWithSubscribers: [
+          {
+            notification: {
+              notificationType: 'ACTUAL',
+              comparisonOperator: 'GREATER_THAN',
+              threshold: BUDGET_ALERT_THRESHOLD_PERCENT,
+              thresholdType: 'PERCENTAGE',
+            },
+            subscribers: [{ subscriptionType: 'EMAIL', address: budgetEmail }],
+          },
+        ],
+      });
+    }
   }
 }

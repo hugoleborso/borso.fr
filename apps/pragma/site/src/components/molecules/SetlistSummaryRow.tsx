@@ -1,11 +1,4 @@
-/**
- * One setlist in a list: its name, how many songs it holds, and the
- * sessions playing it. The row is a link to the setlist itself, and the
- * caller passes whatever action belongs next to it on that surface —
- * detaching it from a session, deleting it outright — as `action`, so
- * the same row serves the index and a session's own page.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';

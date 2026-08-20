@@ -1,9 +1,3 @@
-/**
- * An edition announced before its track has been uploaded shows a placeholder
- * where the distance would be, because a distance of zero metres reads as a
- * measurement rather than as a missing one.
- */
-
 import type { RaceEditionDto } from '../../lib/race.types';
 
 // @FollowsBlueprint core-label-key

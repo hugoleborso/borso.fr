@@ -1,14 +1,4 @@
-/**
- * The form a setlist row runs on.
- *
- * Split from `SetlistEntryDetailsFields` so that file exports a component and
- * nothing else, which is what keeps fast refresh working. The row owns the
- * instance because it drives the energy field from it too.
- *
- * The form is never submitted — see `SetlistEntryRow` — so there is no
- * `onSubmit` here either. It exists for field state and Zod validation.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';

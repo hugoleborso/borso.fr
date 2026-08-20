@@ -1,8 +1,3 @@
-/**
- * The look of one navigation entry, shared by the top bar's links and by the
- * organiser screen's tab buttons.
- */
-
 import type { NavigationItemState } from '../../routes/route.core';
 
 export const NAVIGATION_LIST_CLASS = 'flex flex-wrap gap-[2px]';

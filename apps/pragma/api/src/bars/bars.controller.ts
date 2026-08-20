@@ -1,8 +1,3 @@
-/**
- * Bars CRM endpoints. Hono routing + Zod parsing; orchestration lives
- * in the service, DB access in the repository.
- */
-
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';

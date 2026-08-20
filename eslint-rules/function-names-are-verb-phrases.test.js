@@ -10,19 +10,15 @@ createRuleTester('apps/pragma/site/src/components/organisms/CatalogGrid.tsx').ru
       'function digestMigrations(files) { return files; }',
       'const projectRunnerStanding = (runner, punches, now) => ({ runner, punches, now });',
       'function listSongs() { return []; }',
-      // A verb the pattern only matches with an upper case letter after it.
       'function download(fileUrl) { return fetchFile(fileUrl); }',
       'function documentTitle() { return title; }',
       'const handler = (event) => onSelect(event);',
       'function handle() { return null; }',
       'function processed() { return true; }',
-      // A React component and a hook.
       'function DoNotDisturbIcon() { return null; }',
       'const ManageMembersPanel = () => null;',
       'const useDoubleTap = () => null;',
-      // A binding from a library rather than a declaration of ours.
       'const { handleSubmit } = useForm();',
-      // An anonymous function, which has no name to judge.
       'songs.forEach(function () { return null; });',
     ],
     invalid: [

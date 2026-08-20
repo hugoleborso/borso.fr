@@ -7,7 +7,7 @@ import { haversineDistanceMeters } from '../helpers/geo/haversine.utils';
 // @FollowsBlueprint service-facade-reexport
 export { PunchConflictError } from './punch.repository';
 
-import { type PunchRejectReason, validatePunchTiming } from './punch.core';
+import { hourlyTopOfLoopMs, type PunchRejectReason, validatePunchTiming } from './punch.core';
 import {
   deleteAllEditionPunchesAndDidNotFinishes,
   deleteManualDidNotFinish,
@@ -22,8 +22,6 @@ import {
   PunchConflictError,
 } from './punch.repository';
 import type { LoopPunch, ManualDidNotFinish } from './punch.types';
-
-const MILLISECONDS_PER_MINUTE = 60_000;
 
 // @FollowsBlueprint named-domain-error
 export class PunchNotFoundError extends Error {
@@ -48,11 +46,6 @@ export interface RegisterPunchInput {
   readonly runnerSlug: string;
 }
 
-/**
- * The error a rejected punch attempt should throw. `already-punched-this-loop`
- * is the one reason the caller can be told *which* punch is in the way, so it
- * costs a repository read the other reasons do not need.
- */
 async function buildPunchRejectionError(
   edition: RaceEdition,
   input: RegisterPunchInput,
@@ -98,12 +91,6 @@ export async function registerPunch(input: RegisterPunchInput, now: Date): Promi
     userAgent: null,
   };
 
-  // No DB-level uniqueness on (edition_slug, runner_slug, loop_index)
-  // any more — Aurora DSQL rejects the partial unique index we used to
-  // rely on, and a non-partial unique would block the void-then-re-punch
-  // flow. The race window between `validatePunchTiming` and `insertPunch`
-  // stays narrow in practice (single tap-in per runner from one phone);
-  // if it ever matters, the next layer is a `SELECT ... FOR UPDATE`.
   await insertPunch(punch);
   return punch;
 }
@@ -157,11 +144,6 @@ export async function registerSelfPunch(
   return punch;
 }
 
-/**
- * Move an existing punch to a new finishing instant. `finishedAtIso` arrives
- * as the ISO string the request carried; the service owns the conversion so
- * the controller stays free of domain types.
- */
 export async function correctPunch(
   id: string,
   finishedAtIso: string,
@@ -210,31 +192,16 @@ export async function listManualDidNotFinishes(
 export interface CatchupPunchInput {
   readonly editionSlug: string;
   readonly runnerSlug: string;
-  /**
-   * 1-based loop index to validate retroactively. Typically `outAtLoop + 1`
-   * for a runner the system marked `dnf:late outAtLoop=K` — the orga gives
-   * them credit for loop K+1 with a conservative 1-h time.
-   */
   readonly loopIndex: number;
 }
 
-/**
- * Retroactively credit a missed loop to a DNFed runner, then drop any
- * manual_dnf row so they walk back into `in-race`. The punch's
- * `finishedAt` is parked at the END of the requested loop's hour
- * (top + intervalMs − 1 ms), which gives the runner a one-hour loop
- * time — the worst case allowed in a backyard, and the natural
- * "default" when the orga forgot to scan them mid-loop.
- *
- * Rejected when:
- *   - the runner already has an active punch for this loop (would
- *     duplicate the in-race row);
- *   - the requested loop hasn't started yet (`loopIndex` > current).
- */
+function lastInstantOfLoop(edition: RaceEdition, loopIndex: number): number {
+  const ONE_MILLISECOND = 1;
+  return hourlyTopOfLoopMs(edition, loopIndex + 1) - ONE_MILLISECOND;
+}
+
 export async function catchupPunch(input: CatchupPunchInput, now: Date): Promise<LoopPunch> {
   const edition = await getEdition(input.editionSlug);
-  const intervalMs = edition.intervalMinutes * MILLISECONDS_PER_MINUTE;
-  const startMs = edition.startsAt.getTime();
   const currentLoopFloor = loopIndexAt(edition, now);
   if (input.loopIndex > currentLoopFloor) {
     throw new PunchRejectedError('race-not-started');
@@ -251,7 +218,7 @@ export async function catchupPunch(input: CatchupPunchInput, now: Date): Promise
     editionSlug: input.editionSlug,
     runnerSlug: input.runnerSlug,
     loopIndex: input.loopIndex,
-    finishedAt: new Date(startMs + input.loopIndex * intervalMs - 1),
+    finishedAt: new Date(lastInstantOfLoop(edition, input.loopIndex)),
     correctedAt: now,
     voidedAt: null,
     source: 'admin',
@@ -266,11 +233,6 @@ export async function catchupPunch(input: CatchupPunchInput, now: Date): Promise
   return punch;
 }
 
-/**
- * Drop every punch and every manual did-not-finish row of one edition.
- * Exposed for the test seeding endpoint, which starts each fixture from an
- * empty punch history so a previous fixture cannot leak into the standings.
- */
 export async function clearEditionPunchHistory(editionSlug: string): Promise<void> {
   await deleteAllEditionPunchesAndDidNotFinishes(editionSlug);
 }

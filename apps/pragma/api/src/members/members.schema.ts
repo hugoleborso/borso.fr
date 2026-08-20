@@ -1,12 +1,3 @@
-/**
- * Drizzle schema for the members bounded context.
- *
- * `member` is the band-member directory. `member_instrument` is the
- * many-to-many link between members and instruments — a row says
- * "this member plays this instrument as one of their possible
- * stations".
- */
-
 import { pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 

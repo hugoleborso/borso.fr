@@ -75,12 +75,10 @@ describe('rankCoupledPairs', () => {
     expect(rankCoupledPairs(repeat(['Card.tsx', 'Card.test.tsx'], 5), OPTIONS)).toEqual([]);
   });
 
-  /** Two different files whose names differ by more than the suffix are a pair. */
   it('keeps a file paired with another file’s test', () => {
     expect(rankCoupledPairs(repeat(['a.core.ts', 'b.core.test.ts'], 3), OPTIONS)).toHaveLength(1);
   });
 
-  /** Three files in one commit make three pairs, and each file sits in two. */
   it('counts a file that belongs to more than one pair', () => {
     const ranked = rankCoupledPairs(repeat(['a.ts', 'b.ts', 'c.ts'], 3), OPTIONS);
     expect(ranked).toHaveLength(3);
@@ -97,7 +95,6 @@ describe('rankCoupledPairs', () => {
     expect(rankCoupledPairs(repeat(sweep, 9), narrow)).toEqual([]);
   });
 
-  /** The sweep still counts as a revision, which is what dilutes the degree. */
   it('counts a broad commit as a revision even though it couples nothing', () => {
     const commits = [...repeat(['a.ts', 'b.ts'], 3), ['a.ts', 'b.ts', 'c.ts', 'd.ts']];
     const narrow: CouplingOptions = { maximumCommitBreadth: 2, minimumSharedCommits: 2 };
@@ -116,7 +113,6 @@ describe('rankCoupledPairs', () => {
     expect(ranked.map((pair) => pair.left)).toEqual(['a.ts', 'c.ts']);
   });
 
-  /** Equal degree, and the pair seen more often is the more certain of the two. */
   it('breaks an equal degree by how many commits the pair shares', () => {
     const commits = [...repeat(['a.ts', 'b.ts'], 2), ...repeat(['y.ts', 'z.ts'], 5)];
     const ranked = rankCoupledPairs(commits, OPTIONS);
@@ -160,7 +156,6 @@ describe('buildReachability', () => {
     expect([...(buildReachability(cyclic).get('a.ts') ?? [])].sort()).toEqual(['a.ts', 'b.ts']);
   });
 
-  /** An import of something outside the graph is a leaf rather than a crash. */
   it('reaches an import the graph does not describe and stops there', () => {
     const reaching = [{ path: 'a.ts', imports: ['node_modules/x.ts'] }];
     expect([...(buildReachability(reaching).get('a.ts') ?? [])]).toEqual(['node_modules/x.ts']);
@@ -216,7 +211,6 @@ describe('partitionByConnection', () => {
     expect(partitionByConnection([pair], reachable).hidden).toEqual([pair]);
   });
 
-  /** A file the branch deleted is in the history and not in the graph. */
   it('leaves out a pair whose left file the graph does not describe', () => {
     const pair = buildPair({ left: 'deleted.ts', right: 'a.ts' });
     expect(partitionByConnection([pair], reachable).uncovered).toEqual([pair]);

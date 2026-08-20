@@ -1,47 +1,4 @@
-/**
- * One row of the setlist editor: the position, a drag handle, the song and
- * who plays what on it, the energy bar, and the row actions.
- *
- * A closed card is two lines: the position, the drag handle, the title and one
- * `⋯` button, then the energy bar under them. Everything else — the key, the
- * capo, the notes, the lineup and the removal — lives behind that button,
- * because a row of thumb-sized buttons is a line of its own on a phone and a
- * setlist is read a screen at a time. `⋯` sits beside the title rather than
- * under the bar for the same reason: the line it would occupy costs more than
- * the width it takes from the title.
- *
- * Everything sits in the same order in the markup and in both layouts, so tab
- * order is reading order.
- *
- * The title is the one thing allowed to wrap — on stage a half-read title is
- * worth nothing. The line under it holds the artist, the key, the mastery and
- * the band on one line whatever it carries: everything but the artist refuses
- * to shrink, and the artist truncates into whatever is left, keeping its full
- * text in a `title`. A wrapping meta line spent a whole line of the card on
- * four avatars.
- *
- * Each row owns a small `useForm` instance rather than reading per-row state
- * from a store above it. The form is never submitted: it exists for field
- * state and Zod validation, and every change calls `onUpdate` beside
- * `field.handleChange`, so the live-edit semantics (per-keystroke mutation)
- * are preserved without an effect.
- *
- * The list item itself is the dnd-kit sortable node, so the whole row
- * (the transition strip that precedes it, plus the card) is what reorders.
- * While the row is the one being dragged it dims into a placeholder so the
- * operator can read the gap opening between the other cards.
- *
- * Removing a row asks first, and it is drawn in the danger palette: the write
- * has no undo, and both it and Lineup are a tap away inside the same panel.
- *
- * The `Lineup` button opens the `<LineupEditor surface='setlist-entry'>`
- * modal; saving the modal calls `onUpdate(entryId, { lineupOverride })`.
- * When the entry carries a non-null override, a small `lineup.override`
- * badge sits above the title. In single-member filter mode, the parent
- * passes a `prominentMemberInstrument` chip that hoists what the filtered
- * member plays here above the title.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';

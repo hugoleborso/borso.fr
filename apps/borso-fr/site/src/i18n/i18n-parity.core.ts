@@ -5,14 +5,6 @@ export interface CatalogueParityDiff {
   readonly missingInFrench: readonly string[];
 }
 
-/**
- * The two catalogues carry the exact same leaf set. This returns the two
- * directions of the difference so the sibling test can fail with the precise
- * list rather than a boolean.
- *
- * Both lists come out sorted because `listTranslationKeys` sorts and a `Set`
- * iterates in insertion order, so sorting them again here would be dead code.
- */
 // @FollowsBlueprint i18n-parity-gate
 export function diffCatalogues(english: CatalogueTree, french: CatalogueTree): CatalogueParityDiff {
   const englishKeys = new Set(listTranslationKeys(english));
@@ -51,12 +43,6 @@ function collectIdenticalValueKeys(
   }
 }
 
-/**
- * Every key whose two catalogues carry the byte-identical string. Key parity
- * alone stays green when an English value is copied into `fr.json`, so the
- * sibling test asserts this list equals a named allowlist of the words that
- * genuinely read the same in both languages.
- */
 export function listIdenticalValueKeys(
   english: CatalogueTree,
   french: CatalogueTree,

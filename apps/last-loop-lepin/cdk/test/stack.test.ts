@@ -1,15 +1,5 @@
 /**
  * @vitest-environment node
- *
- * CDK synth audit. Two assertions matter most:
- *
- * 1. The Lambda's env vars include `ALLOW_TEST_SEED='1'` on
- *    preview stacks and DO NOT include it on the prod stack. The
- *    `/api/__test/seed` endpoint is mounted only when that flag is
- *    set — leaving it on in prod would expose seeding to the public.
- *
- * 2. The prod stack receives the custom domain alias; preview stacks
- *    fall back to the auto-generated `*.preview.borso.fr` host.
  */
 
 import path from 'node:path';
@@ -27,12 +17,6 @@ const FAKE_API_ENTRY = path.join(WORKSPACE_ROOT, 'api', 'src', 'main.ts');
 const FAKE_MIGRATIONS_DIR = path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations');
 const PREVIEW_PR_NUMBER = 1;
 
-/**
- * Synthesising this app takes seconds, and there are only two distinct results,
- * so the twelve call sites below share two of them. Without the cache the suite
- * builds the same two templates six times each, which is what put it over its
- * per-test budget whenever the pre-push hook ran its gates in parallel.
- */
 const templateByStage = new Map<string, Template>();
 
 // @FollowsBlueprint test-cdk-synth
@@ -116,7 +100,6 @@ describe('last-loop-lepin app stack', () => {
       expect(variables).not.toHaveProperty('JWT_SECRET');
     }
 
-    // And no AWS::SecretsManager::Secret resource is provisioned anymore.
     for (const stage of ['prod', 'preview'] as const) {
       synthAppStack(stage).resourceCountIs('AWS::SecretsManager::Secret', 0);
     }

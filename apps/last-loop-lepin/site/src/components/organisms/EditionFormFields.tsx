@@ -19,7 +19,6 @@ export interface EditionFieldBinding {
 }
 
 interface EditionFormFieldsProps {
-  /** Prefix for the field element identifiers, e.g. `create` or `setup`. */
   readonly idPrefix: string;
   readonly slug: EditionFieldBinding;
   readonly displayName: EditionFieldBinding;
@@ -32,15 +31,9 @@ interface EditionFormFieldsProps {
   readonly onGpxFileChange: (file: File | null) => void;
   readonly isGpxRequired: boolean;
   readonly gpxErrorKey: GpxErrorKey | null;
-  /** Extra note above the GPX picker, e.g. the track already on file. */
   readonly gpxNote?: ReactNode;
 }
 
-/**
- * The fields shared by the create form and the edit form. Both forms own
- * their own `useForm` instance and pass its bindings in, so their field state
- * never bleeds across.
- */
 // @FollowsBlueprint organism-presentational
 export function EditionFormFields({
   idPrefix,

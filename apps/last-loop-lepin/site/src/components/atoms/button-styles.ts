@@ -1,13 +1,3 @@
-/**
- * The button's variant tables, kept out of `Button.tsx` so that file exports
- * only components, and shared with `ButtonLink` so the two never drift.
- *
- * No table repeats a declaration another table sets. Two utilities writing the
- * same property resolve by their order in the built stylesheet rather than by
- * their order in the attribute, so a base class that a variant overrides would
- * be a coin toss.
- */
-
 export type ButtonVariant = 'default' | 'primary' | 'danger';
 export type ButtonSize = 'default' | 'small';
 export type ButtonJustify = 'center' | 'between';

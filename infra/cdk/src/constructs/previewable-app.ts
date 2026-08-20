@@ -24,76 +24,23 @@ export interface PreviewableAppProps {
   readonly app: string;
   readonly stage: Stage;
   readonly prNumber?: number;
-  /** Apex/subdomain (e.g. "borsouvertures.borso.fr"). Required for prod. */
   readonly domainName?: string;
-  /** Static frontend assets. */
   readonly frontend: { readonly distPath: string };
-  /** Optional Hono-style API. */
   readonly api?: {
     readonly entry: string;
-    /**
-     * Override the auto-derived API hostname. Defaults:
-     *   - prod: no custom domain (HTTP API id URL).
-     *   - preview / integ: `<app>-pr-<n>-api.preview.borso.fr` with cert +
-     *     Route 53 alias provisioned automatically (see `previewApiHostname`).
-     *
-     * If set explicitly, the caller is responsible for matching cert region
-     * (eu-west-3) and DNS.
-     */
     readonly customDomainHostname?: string;
     readonly memoryMb?: number;
     readonly timeoutSeconds?: number;
     readonly environment?: Readonly<Record<string, string>>;
   };
-  /**
-   * Optional DSQL schema.
-   *
-   * The cluster is owned by a separate `DsqlClusterStack` declared
-   * alongside this stack in `bin/app.ts` and passed in here. CDK's
-   * cross-stack reference machinery makes `cdk deploy --all` order the
-   * cluster stack before this stage stack automatically — no
-   * "first deploy must be prod" footgun. See
-   * `docs/dantotsus/dsql-first-deploy-must-be-prod.md`.
-   */
   readonly database?: {
     readonly migrationsPath: string;
     readonly cluster: IDsqlCluster;
-    /**
-     * Neon-branch-style clone: before applying migrations on the
-     * per-stage schema, copy structure + data from another schema in
-     * the same cluster. See `DsqlSchemaCloneFromConfig` for the
-     * column-nullify and table-blocklist knobs. Skipped automatically
-     * when the source schema doesn't exist yet (first deploy of an
-     * app) or matches the target (prod cloning itself).
-     */
     readonly cloneFromSchema?: DsqlSchemaCloneFromConfig;
   };
 }
 
 // @FollowsBlueprint reusable-cdk-construct
-/**
- * High-level construct composing `StaticSite` + optional `LambdaApi` +
- * optional `DsqlSchema`. The DSQL cluster lives in a dedicated
- * `DsqlClusterStack` (one per app) and is passed in via
- * `props.database.cluster`.
- *
- * API routing depends on stage:
- *
- * - **prod**: the dedicated CloudFront distribution (owned by `StaticSite`)
- *   gets an extra `/api/*` cache behavior pointing at the HTTP API
- *   `*.execute-api.<region>.amazonaws.com` hostname. The frontend calls
- *   `/api/*` same-origin — no CORS, no extra hostname to remember. The
- *   API Gateway keeps its raw id URL too; CloudFront just fronts it.
- * - **preview / integ**: the HTTP API gets a custom domain at
- *   `previewApiHostname(props)` (e.g. `last-loop-lepin-pr-12-api.preview.borso.fr`)
- *   backed by the shared regional cert `*.preview.borso.fr`. The frontend
- *   reads this URL via the build-time `VITE_API_BASE` env var — preview is
- *   cross-origin because the shared previews CloudFront distribution is
- *   host-routed per PR, with no surface to add per-PR cache behaviors.
- *
- * Cert ARN + hosted zone come from SSM, seeded by `SharedStack`.
- *
- */
 export class PreviewableApp extends Construct {
   public readonly site: StaticSite;
   public readonly api: LambdaApi | undefined;
@@ -121,10 +68,6 @@ export class PreviewableApp extends Construct {
     }
 
     if (props.api) {
-      // StaticSite (built below) is the authoritative gate on prod requiring
-      // `domainName`, but the API's CORS allow-list is computed first — so
-      // guard explicitly here. Same error shape as StaticSite's check, so
-      // the failure mode looks the same to the operator.
       if (isProductionStage(props.stage) && !props.domainName) {
         throw new Error('domainName is required for stage="prod".');
       }
@@ -166,10 +109,6 @@ export class PreviewableApp extends Construct {
       prNumber: props.prNumber,
       domainName: props.domainName,
       assetsPath: props.frontend.distPath,
-      // PreviewableApp is the SPA + API composition. Every consumer has
-      // client-side routes (`/r/<slug>`, `/admin`, …) that don't map to
-      // physical S3 keys, so direct nav / refresh on those paths must
-      // resolve to the React bundle, not the catch-all JPEG.
       spaFallback: true,
       ...(sameOriginApiDomainName === undefined
         ? {}
@@ -186,21 +125,10 @@ export class PreviewableApp extends Construct {
   }
 }
 
-/**
- * Hostname (no scheme, no path) of the HTTP API's default
- * `*.execute-api.<region>.amazonaws.com` endpoint. Used as the CloudFront
- * origin domain for same-origin `/api/*` routing in prod.
- */
 function apiHttpHostname(api: LambdaApi): string {
   return `${api.httpApi.apiId}.execute-api.${Stack.of(api).region}.amazonaws.com`;
 }
 
-/**
- * Resolve the API custom domain for non-prod stages. Returns `undefined`
- * for prod — the prod /api story (dedicated CloudFront with same-origin
- * `/api/*` routing) is a separate decision, callers wanting a prod API
- * custom domain wire `LambdaApi` directly.
- */
 function resolveApiCustomDomain(
   scope: Construct,
   context: { readonly app: string; readonly stage: Stage; readonly prNumber?: number },

@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { seedAdminCredentials, truncateAllTables } from '../../../test/database-utils';
+import {
+  seedAdminCredentials,
+  TEST_ADMIN_PIN,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import { findValidSession } from './auth.repository';
 import { AuthDeniedError, login, logout, verifySession } from './auth.service';
 
@@ -12,7 +16,7 @@ describe('auth.service', () => {
 
   it('returns a session id and persists the session row on the correct PIN', async () => {
     const now = new Date('2026-09-19T06:00:00+02:00');
-    const attempt = await login({ pin: 'lastloop', ipAddress: '10.0.0.1' }, now);
+    const attempt = await login({ pin: TEST_ADMIN_PIN, ipAddress: '10.0.0.1' }, now);
     expect(attempt.sessionId).toHaveLength(64);
     expect(attempt.expiresAt.getTime()).toBeGreaterThan(now.getTime());
     const persisted = await findValidSession(attempt.sessionId, now);
@@ -38,13 +42,13 @@ describe('auth.service', () => {
   it('throws AuthDeniedError("misconfigured") when admin_credentials is empty', async () => {
     await truncateAllTables();
     await expect(
-      login({ pin: 'lastloop', ipAddress: '10.0.0.4' }, new Date()),
+      login({ pin: TEST_ADMIN_PIN, ipAddress: '10.0.0.4' }, new Date()),
     ).rejects.toMatchObject({ reason: 'misconfigured' });
   });
 
   it('verifySession returns null for unknown ids and for expired sessions', async () => {
     const now = new Date('2026-09-19T06:00:00+02:00');
-    const attempt = await login({ pin: 'lastloop', ipAddress: '10.0.0.5' }, now);
+    const attempt = await login({ pin: TEST_ADMIN_PIN, ipAddress: '10.0.0.5' }, now);
     const live = await verifySession(attempt.sessionId, now);
     expect(live?.id).toBe(attempt.sessionId);
     const tooLate = new Date(attempt.expiresAt.getTime() + 1);
@@ -56,7 +60,7 @@ describe('auth.service', () => {
 
   it('logout deletes the session so subsequent verify returns null', async () => {
     const now = new Date('2026-09-19T06:00:00+02:00');
-    const attempt = await login({ pin: 'lastloop', ipAddress: '10.0.0.6' }, now);
+    const attempt = await login({ pin: TEST_ADMIN_PIN, ipAddress: '10.0.0.6' }, now);
     await logout(attempt.sessionId);
     const after = await verifySession(attempt.sessionId, now);
     expect(after).toBeNull();

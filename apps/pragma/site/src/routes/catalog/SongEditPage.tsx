@@ -1,25 +1,4 @@
-/**
- * Per-song edit + create page. URL `:songId === 'new'` triggers the
- * create flow; `/catalog/:songId/edit` loads the existing song and
- * edits it in place. The read-only `/catalog/:songId` route lives in
- * SongDetailPage.tsx.
- *
- * This file owns the data-fetch + navigation; the form itself lives
- * in `SongEditForm.tsx` so the per-file line budget stays under cap
- * as the form grew to cover the MusicBrainz enrichment fields.
- *
- * A `?title=` parameter prefills the title, which is how the catalog hands
- * over what the operator typed in the search box before finding nothing.
- *
- * An update and a delete are both fired without being awaited: the caches
- * already hold the result, so the operator reads the edited song, or the
- * catalog without the deleted one, straight away instead of watching a
- * spinner. Neither failure goes unreported — `useMutationState` carries it to
- * wherever they landed, the song page for an update and the catalog for a
- * delete. A create is awaited, because the route it navigates to needs the id
- * only the server can issue.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';

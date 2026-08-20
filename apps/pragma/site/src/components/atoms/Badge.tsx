@@ -1,8 +1,3 @@
-/**
- * Badge atom — small inline marker (the sidebar nav count, the energy
- * chip, the "M —" mastery chip).
- */
-
 import { forwardRef, type HTMLAttributes } from 'react';
 import { type BadgeVariantProps, badgeVariants } from './badge.variants';
 import { composeClassName } from './class-name.utils';

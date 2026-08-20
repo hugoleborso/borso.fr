@@ -19,11 +19,6 @@ function rectsForSeed(seed: number, palette = PALETTES.classic) {
   return colorize(layout, { seed, palette, balance: 0.5 });
 }
 
-/**
- * The whole product of the two tables, in the order a reader can check against
- * the catalogue. A feminine noun carrying a masculine adjective form reads as
- * an error here long before it reads as one on the page.
- */
 const EVERY_SUBJECT_IN_ORDER: readonly string[] = [
   'Une étude tranquille',
   'Une étude inquiète',

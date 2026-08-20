@@ -1,13 +1,3 @@
-/**
- * Pure helpers for the i18n layer:
- *  - `flattenKeys` walks a nested catalog and produces the sorted list
- *    of dotted leaf keys. The i18n parity test compares the flattened
- *    keys of `en.json` and `fr.json`; a difference fails CI.
- *  - `detectInitialLocale` picks `'fr'` or `'en'` based on the
- *    browser's `navigator.language` family. Default is `'fr'` per the
- *    spec (FR-first).
- */
-
 export type SupportedLocale = 'fr' | 'en';
 
 export const SUPPORTED_LOCALES: readonly SupportedLocale[] = ['fr', 'en'];

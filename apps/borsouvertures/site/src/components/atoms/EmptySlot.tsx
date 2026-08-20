@@ -1,8 +1,4 @@
 /**
- * The "render nothing" entry of a component lookup table. Every table that
- * chooses between showing something and showing nothing points its absent case
- * here, so the choice stays a table lookup rather than a branch.
- *
  * @Blueprint atom-null-render
  * @BlueprintName Null Rendering Atom
  * @BlueprintUsage Use for the absent branch of a component lookup table, so the table has a component to name instead of a hole.

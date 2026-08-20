@@ -1,8 +1,3 @@
-/**
- * The seeding endpoint takes one of three named fixtures and nothing else, so
- * a typo names no race rather than seeding an arbitrary one.
- */
-
 import { describe, expect, it } from 'vitest';
 import { seedFixtureSchema } from './test-seed.schema';
 

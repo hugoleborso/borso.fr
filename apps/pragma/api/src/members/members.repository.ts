@@ -1,10 +1,3 @@
-/**
- * Repository for the members bounded context. Includes the M2M
- * assignment to instruments — the `memberInstrumentTable` is owned by
- * this domain since the relation is "this member plays these
- * instruments".
- */
-
 import { eq, inArray, isNotNull } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';

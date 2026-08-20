@@ -1,10 +1,3 @@
-/**
- * Tests for the optimistic write path on the bars mutations. The
- * kanban status switch (`useUpdateBar({ status })`) is the most
- * visible: the card jumps to the new column instantly, the server
- * confirms in the background, and a 500 rolls the card back.
- */
-
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { barKeys, useCreateBar, useDeleteBar, useUpdateBar } from './bars.queries';
 import {

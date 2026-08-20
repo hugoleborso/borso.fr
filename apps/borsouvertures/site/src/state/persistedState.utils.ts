@@ -4,11 +4,6 @@ import { type BoardThemeId, isBoardThemeId } from '@/theme/boardThemes.utils';
 export type Mode = 'learn' | 'play';
 export type Side = 'white' | 'black';
 export type View = 'select' | 'session';
-/**
- * `null` defers to the device default (mobile → buttons, desktop → arrows);
- * `'arrows'` / `'buttons'` are explicit user choices that survive across
- * devices.
- */
 export type TreeVisualizationMode = 'arrows' | 'buttons' | null;
 
 export interface PlayScope {
@@ -17,11 +12,6 @@ export interface PlayScope {
   lineIds: string[];
 }
 
-/**
- * The slice of {@link AppState} that survives a reload. `openings` is
- * intentionally absent — the dataset is fetched (and cached by the service
- * worker) on every cold load, never from localStorage.
- */
 export interface PersistedState {
   mode: Mode;
   side: Side;
@@ -34,16 +24,6 @@ export interface PersistedState {
 }
 
 /**
- * Read a localStorage payload back into a typed {@link PersistedState}. Returns
- * `null` for any failure mode — JSON syntax error, shape drift, unknown enum
- * value. The caller falls back to the initial state, and owns the separate
- * "nothing was ever stored" case.
- *
- * Schema bumps drop the previous payload silently: a stored
- * `borsouvertures.v0` blob will never be read because the namespace key
- * changed, and any in-place migration logic would cost more than the data is
- * worth for a clan-only app.
- *
  * @Blueprint unknown-payload-parser
  * @BlueprintName Unknown Payload Parser
  * @BlueprintUsage Use for any boundary where a value arrives as `unknown`, such as storage, a fetch body, or a bundled JSON import.

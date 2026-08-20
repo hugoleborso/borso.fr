@@ -1,9 +1,3 @@
-/**
- * The runner profile's loop table. A loop's duration is the gap between the
- * previous closed loop and this one, with the race start standing in for the
- * loop before the first, and cancelled punches left out entirely.
- */
-
 import type { LoopPunchDto } from '../../lib/race.types';
 
 export interface ClosedLoop {
@@ -34,7 +28,6 @@ export function listClosedLoops(
   return loops;
 }
 
-/** How many punches of a runner are still valid, shown next to their name. */
 export function countValidPunches(punches: readonly LoopPunchDto[]): number {
   return punches.filter((punch) => punch.voidedAt === null).length;
 }

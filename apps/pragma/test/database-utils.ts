@@ -1,8 +1,3 @@
-/**
- * Helpers shared by back-e2e tests. Truncates every table before each
- * test so suites stay isolated against the shared Postgres.
- */
-
 import { sql } from 'drizzle-orm';
 import { type Database, getDatabase } from '../api/src/database/client';
 

@@ -1,27 +1,7 @@
-/**
- * Finds files that change together and are not connected in the module graph.
- *
- * Every other gate in this repository reads the code as it stands. The module
- * graph says what depends on what, and a lint rule can hold that shape. None of
- * them can see that two files nothing connects have been edited in the same
- * commit eleven times out of twelve, which is a dependency that exists in the
- * team's head and nowhere a tool can check.
- *
- * The interesting output is therefore not the coupling. It is the set
- * difference: coupled, and unreachable from each other in either direction.
- */
-
-/** A commit, as the set of tracked source paths it touched. */
 export type Commit = readonly string[];
 
 export interface CouplingOptions {
-  /**
-   * Commits touching more than this say nothing about coupling. A bulk rename
-   * or a formatting sweep couples every file it touches with every other, and
-   * this repository does those often enough to drown the signal.
-   */
   readonly maximumCommitBreadth: number;
-  /** Below this a pair is a coincidence rather than a habit. */
   readonly minimumSharedCommits: number;
 }
 
@@ -31,7 +11,6 @@ export interface CoupledPair {
   readonly shared: number;
   readonly leftRevisions: number;
   readonly rightRevisions: number;
-  /** Shared commits over commits touching either, so one busy file cannot inflate it. */
   readonly degree: number;
 }
 
@@ -47,7 +26,6 @@ function isTestSibling(left: string, right: string): boolean {
   return withoutTestSuffix(left) === withoutTestSuffix(right);
 }
 
-/** A pair being counted, before it is frozen into a `CoupledPair`. */
 interface PairTally {
   readonly left: string;
   readonly right: string;
@@ -79,13 +57,6 @@ function tallySharedCommits(
   return tallies;
 }
 
-/**
- * How often each file in a pair changed at all, counted onto the pair itself.
- *
- * Counting per file into a second map and reading it back would mean a lookup
- * that cannot miss and a fallback nothing can reach. Walking from the pair to
- * the commits keeps every branch here one the history can take.
- */
 function countRevisionsOntoPairs(
   commits: readonly Commit[],
   tallies: ReadonlyMap<string, PairTally>,
@@ -109,11 +80,6 @@ function countRevisionsOntoPairs(
   }
 }
 
-/**
- * Every pair that changes together often enough to mean something, strongest
- * first. A file and its own test are left out, because they co-change by design
- * and would otherwise fill the whole ranking.
- */
 export function rankCoupledPairs(
   commits: readonly Commit[],
   options: CouplingOptions,
@@ -146,13 +112,6 @@ export interface GraphFile {
   readonly imports: readonly string[];
 }
 
-/**
- * Which files each file can reach by following imports, at any depth.
- *
- * Depth is the point. A rule that reads one import statement cannot see that
- * a site module reaches an api module through two hops of a shared helper, and
- * a pair connected that way is not hidden coupling.
- */
 export function buildReachability(files: readonly GraphFile[]): ReadonlyMap<string, Set<string>> {
   const importsByPath = new Map(files.map((file) => [file.path, file.imports]));
   const reachable = new Map<string, Set<string>>();
@@ -185,12 +144,6 @@ export function isConnected(
 export interface PartitionedPairs {
   readonly hidden: readonly CoupledPair[];
   readonly connected: readonly CoupledPair[];
-  /**
-   * Pairs the graph cannot speak for, because one of the two files is not in
-   * it: a file the branch deleted or renamed, or one in a workspace the graph
-   * does not model. Calling those unconnected would be the report's loudest
-   * false positive, since the graph never had an edge to lose.
-   */
   readonly uncovered: readonly CoupledPair[];
 }
 

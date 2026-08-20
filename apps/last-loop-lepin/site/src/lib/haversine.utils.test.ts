@@ -9,6 +9,7 @@ const PARIS_LYON_TOLERANCE_RATIO = 0.005;
 const ANTIPODE_OF_PARIS = { lat: -48.8566, lng: 2.3522 + 180 };
 const EARTH_HALF_CIRCUMFERENCE_METERS = 20_015_086;
 const ANTIPODE_TOLERANCE_METERS = 50_000;
+const LATITUDE_DEGREES_WORTH_ABOUT_89_METERS = 0.0008;
 
 // @FollowsBlueprint test-pure-unit
 describe('haversineDistanceMeters', () => {
@@ -36,8 +37,7 @@ describe('haversineDistanceMeters', () => {
   });
 
   it('keeps points ≤100 m apart inside the 100 m geofence (frontier vector)', () => {
-    // ~0.0008 degrees of latitude at this latitude ≈ 89 m.
-    const nearby = { lat: PARIS.lat + 0.0008, lng: PARIS.lng };
+    const nearby = { lat: PARIS.lat + LATITUDE_DEGREES_WORTH_ABOUT_89_METERS, lng: PARIS.lng };
     const distance = haversineDistanceMeters(PARIS, nearby);
     expect(distance).toBeLessThan(100);
     expect(distance).toBeGreaterThan(50);

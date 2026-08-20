@@ -1,16 +1,4 @@
-/**
- * A setlist stands on its own: it is read by its `id`, `bySession`
- * lists the ones a session carries, and the same setlist can be carried
- * by several sessions at once. The entry-level hooks live next door in
- * `setlist-entries.queries.ts`.
- *
- * Every write here reconciles the lists from its own response rather
- * than refetching them. Aurora DSQL makes a row visible on the
- * connection that wrote it before the others, so a `GET` fired straight
- * after a write can be served by another Lambda and answer without it —
- * see docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
@@ -84,13 +72,6 @@ function updateListCache(queryClient: QueryClient, transform: SummaryTransform):
   );
 }
 
-/**
- * Applies a transform to every per-session list at once, for the writes
- * whose effect the client already knows — a rename, a delete — so no
- * refetch is needed to see them. Which sessions carry the setlist is
- * not always known to the surface doing the write, and reading it back
- * would race Aurora DSQL's per-connection read-after-write visibility.
- */
 function updateEverySessionCache(queryClient: QueryClient, transform: SummaryTransform): void {
   queryClient.setQueriesData<SetlistsCache>({ queryKey: setlistKeys.bySession() }, (cache) =>
     cache === undefined ? cache : transform(cache),
@@ -108,14 +89,6 @@ function updateSessionCache(
 }
 
 /**
- * Creates a setlist, and attaches it to a session when the caller named
- * one. The caller awaits `mutateAsync(...)` to read the server-issued
- * id before navigating to the setlist, so there is no optimistic record
- * to write: the response is what every list is reconciled from — the
- * setlist's own page included, so the page it navigates to already
- * holds the row and never has to ask a `GET` that Aurora DSQL can
- * answer with a 404 for a moment after the write.
- *
  * @Blueprint query-pessimistic-mutation
  * @BlueprintName Pessimistic Mutation
  * @BlueprintUsage Use for a write whose result the client cannot predict, such as an insert the caller reads an identifier back from.

@@ -1,8 +1,3 @@
-/**
- * Variant table for the Chip atom. Each status tone uses the
- * `--color-status-*` tokens declared in `tokens.css`.
- */
-
 import { cva, type VariantProps } from 'class-variance-authority';
 
 // @FollowsBlueprint atom-variant

@@ -35,10 +35,6 @@ interface EditionEditFormProps {
   readonly edition: RaceEditionDto;
 }
 
-/**
- * Edit form for an edition still in setup. The slug is the primary key, so it
- * is read only here; leaving the GPX picker empty keeps the persisted track.
- */
 // @FollowsBlueprint organism-form
 export function EditionEditForm({ edition }: EditionEditFormProps) {
   const { t } = useTranslation();

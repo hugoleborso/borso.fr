@@ -1,11 +1,3 @@
-/**
- * LanguageSwitcher — two pill-shaped buttons (FR / EN) sitting at the
- * bottom of the AppShell sidebar. Clicking a pill swaps i18next's
- * active language and persists the choice to localStorage under
- * `pragma.locale` so a refresh sticks. The active pill carries the
- * accent border + accent text; the inactive one is the muted ink-500.
- */
-
 import { useTranslation } from 'react-i18next';
 import { browserStorage } from '../../i18n/i18n.setup';
 import { SUPPORTED_LOCALES, type SupportedLocale } from '../../i18n/i18n.utils';

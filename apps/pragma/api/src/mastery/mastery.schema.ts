@@ -1,10 +1,3 @@
-/**
- * Drizzle schema for the mastery bounded context. Defaults are the
- * 5×7 (member, instrument) → score grid; overrides are sparse
- * (member, instrument, song) → score deviations. Effective mastery is
- * `override ?? default`.
- */
-
 import { integer, pgTable, primaryKey, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 

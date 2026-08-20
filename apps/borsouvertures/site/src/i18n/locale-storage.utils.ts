@@ -3,10 +3,6 @@ import { isSupportedLanguage, type SupportedLanguage } from './i18n.utils';
 export const LANGUAGE_STORAGE_KEY = 'borsouvertures.language';
 
 /**
- * The slice of the `Storage` interface this module needs. Injecting it keeps
- * the read and the write pure enough to test with an in-memory stand-in, and
- * lets the caller pass `undefined` when there is no `window`.
- *
  * @Blueprint injected-storage-slice
  * @BlueprintName Injected Storage Slice
  * @BlueprintUsage Use when a module reads or writes a browser storage API and its logic still has to be testable without a browser.

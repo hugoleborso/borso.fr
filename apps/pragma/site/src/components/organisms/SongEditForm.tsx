@@ -1,17 +1,4 @@
-/**
- * The full edit form rendered by SongEditPage — owns the TanStack
- * Form instance and every subscription against it.
- *
- * Delete sits below a rule, apart from Save, and asks first: the two used to
- * be 8px apart on the same row, and the write has no undo.
- *
- * The list of external links renders under the field that adds them. It used
- * to sit above the card, roughly a screen away, so on a phone adding a link
- * looked like it had done nothing. Split out of
- * SongEditPage so the route file stays focused on data-fetch +
- * navigation, while the form file stays under the per-file line cap.
- * @Feature songs
- */
+/** @Feature songs */
 
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';

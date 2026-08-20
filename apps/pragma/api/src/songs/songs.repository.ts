@@ -1,16 +1,3 @@
-/**
- * Repository for the songs (catalog) bounded context. Owns the
- * `song` table queries plus the manual cascade on delete
- * (mastery_override + setlist_entry rows, because DSQL does not
- * enforce FK at write time).
- *
- * The JSON blobs (`links`, `chart`, `default_lineup`, `isrcs`, `tags`)
- * are stored as TEXT (Aurora DSQL doesn't support jsonb — see
- * docs/knowledge/dsql-postgres-compat-gaps.md §1). `rowToSong` is the
- * single parse-and-Zod-validate boundary; writes JSON.stringify on the
- * way in.
- */
-
 import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { getDatabase } from '../database/client';
@@ -249,8 +236,6 @@ export async function updateSong(id: string, updates: SongPersistedShape): Promi
 
 export async function deleteSongWithCascade(id: string): Promise<DeletionOutcome> {
   const database = getDatabase();
-  // DSQL ignores FK constraints at write time; cascade the dependent
-  // tables ourselves before removing the song row.
   await database.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
   await database.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
   const deleted = await database

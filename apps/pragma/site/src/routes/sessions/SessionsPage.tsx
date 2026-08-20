@@ -1,11 +1,4 @@
-/**
- * Sessions list — concerts + practices in one chronological list.
- * Concerts carry a venue badge; practices carry a "prep" badge with the
- * linked concert. Create is gated by `CreateSessionDialog` (asks for
- * the date + the kind-specific fields); each row exposes a trash
- * affordance backed by `useDeleteSession` with optimistic removal.
- * @Feature sessions
- */
+/** @Feature sessions */
 
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';

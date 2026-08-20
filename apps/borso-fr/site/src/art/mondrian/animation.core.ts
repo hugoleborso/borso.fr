@@ -19,10 +19,6 @@ const TRANSFORM_BY_REDUCED_MOTION: Readonly<
   false: { still: 'none', drift: 'drift', breathe: 'breathe', cascade: 'none' },
 };
 
-/**
- * Cascade reseeds the composition rather than moving it, so it shares the
- * still transform, and a reader who asked for reduced motion gets none of them.
- */
 // @FollowsBlueprint core-lookup-table
 export function selectCanvasTransform(
   mode: AnimationMode,
@@ -62,10 +58,6 @@ const INKBLOOM_JITTER_SPREAD_MS = 80;
 const INKBLOOM_JITTER_STRIDE = 37;
 const NO_DELAY_MS = 0;
 
-/**
- * The stagger is derived from the rectangle's own identifier rather than a
- * random draw, so a composition blooms the same way every time it is rendered.
- */
 export function selectInkbloomDelayMs(
   rectangleIndex: number,
   rectangleCount: number,

@@ -1,22 +1,4 @@
-/**
- * Stage view — fullscreen chord-chart viewer for a single song.
- * Spec design-bundle §5: black background, large chord grid,
- * transposable, A−/A+ zoom, keyboard nav.
- *
- * The surface is a native modal `<dialog>`, so the browser owns the
- * top layer, the focus trap, and the Escape key. Escape fires `close`,
- * which navigates back to the song detail page, and no key listener is
- * attached by hand.
- *
- * Only the chart scrolls: the dialog is a flex column whose middle band
- * is the scroll container, so the title stays at the top and the
- * controls at the bottom whatever the chart's height. They used to ride
- * with the chart, and at a font size you can read at arm's length that
- * put every control — including the only way out, since a phone has no
- * Escape key — off screen for 93% of the scroll range. The bottom edge
- * is also where a thumb reaches while the other hand is on the neck.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX } from 'react';
 import { useState } from 'react';

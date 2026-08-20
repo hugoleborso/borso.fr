@@ -44,8 +44,6 @@ createRuleTester(databaseClientFile).run(
   'no-outbound-call-outside-adapter (database client)',
   rule,
   {
-    // The DSQL signer plus a Postgres driver is the database connection, not an
-    // integration, and the database is a container of its own on the map.
     valid: ['const token = await signer.getDbConnectAdminAuthToken();', 'await fetch(url);'],
     invalid: [],
   },

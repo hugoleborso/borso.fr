@@ -12,6 +12,10 @@ import { applyStandardTags, standardTagPairs } from '../internal/tags.js';
 
 const DSQL_CONNECT_ACTION = 'dsql:DbConnect';
 
+const CLUSTER_ARN_CLOUDFORMATION_TEMPLATE =
+  'arn:aws:dsql:${AWS::Region}:${AWS::AccountId}:cluster/${ClusterId}';
+const CLUSTER_ENDPOINT_CLOUDFORMATION_TEMPLATE = '${ClusterId}.dsql.${AWS::Region}.on.aws';
+
 function grantDsqlConnect(grantable: IGrantable, clusterArn: string): void {
   grantable.grantPrincipal.addToPrincipalPolicy(
     new PolicyStatement({
@@ -21,46 +25,19 @@ function grantDsqlConnect(grantable: IGrantable, clusterArn: string): void {
   );
 }
 
-/**
- * Per-app DSQL cluster reference. Implemented by the live {@link DsqlCluster}
- * construct (when this app's prod stack creates the cluster) and by
- * {@link lookupDsqlCluster} (when a preview / integ stack references the
- * existing prod-owned cluster via SSM).
- *
- */
 export interface IDsqlCluster {
   readonly clusterArn: string;
   readonly clusterEndpoint: string;
-  /** Grant `dsql:DbConnect` on this cluster to the given Lambda / role. */
   grantConnect(grantable: IGrantable): void;
 }
 
 export interface DsqlClusterProps {
   readonly app: string;
-  /**
-   * Always 'prod' in practice — the cluster lives in the prod stack and is
-   * looked up by preview/integ. Kept on the props for tag consistency and
-   * future-proofing if per-stage clusters ever come back.
-   */
   readonly stage: Stage;
-  /**
-   * Whether AWS deletion-protection is on. Defaults to true for prod.
-   * Override only if you really know what you're doing.
-   */
   readonly deletionProtection?: boolean;
 }
 
 // @FollowsBlueprint reusable-cdk-construct
-/**
- * Creates the per-app Aurora DSQL cluster, publishes its ARN + endpoint to
- * `/borso/<app>/dsql-cluster-{arn,endpoint}` in SSM, and exposes
- * {@link grantConnect} for app Lambdas.
- *
- * Clusters are per-app, not per-stage. The same cluster hosts the prod
- * schema (`prod`) and preview schemas (`pr_<n>`); see {@link DsqlSchema}
- * and {@link lookupDsqlCluster}.
- *
- */
 export class DsqlCluster extends Construct implements IDsqlCluster {
   public readonly clusterArn: string;
   public readonly clusterEndpoint: string;
@@ -78,14 +55,8 @@ export class DsqlCluster extends Construct implements IDsqlCluster {
         Tags: standardTagPairs(props),
       },
     });
-    // The `${...}` placeholders below are CloudFormation intrinsics that
-    // CloudFormation resolves at deploy time, so both strings are single
-    // quoted on purpose: a JavaScript template literal would substitute them
-    // here and ship a broken ARN.
-    this.clusterArn = Fn.sub('arn:aws:dsql:${AWS::Region}:${AWS::AccountId}:cluster/${ClusterId}', {
-      ClusterId: cluster.ref,
-    });
-    this.clusterEndpoint = Fn.sub('${ClusterId}.dsql.${AWS::Region}.on.aws', {
+    this.clusterArn = Fn.sub(CLUSTER_ARN_CLOUDFORMATION_TEMPLATE, { ClusterId: cluster.ref });
+    this.clusterEndpoint = Fn.sub(CLUSTER_ENDPOINT_CLOUDFORMATION_TEMPLATE, {
       ClusterId: cluster.ref,
     });
 
@@ -105,15 +76,6 @@ export class DsqlCluster extends Construct implements IDsqlCluster {
   }
 }
 
-/**
- * Look up the per-app cluster from SSM. Kept for advanced operators who
- * want SSM-decoupled access (e.g. cross-account workflows). The standard
- * path is to instantiate a {@link DsqlClusterStack} alongside your stage
- * stack and pass `clusterStack.cluster` directly into
- * `PreviewableApp.database.cluster` — that gives you a cross-stack
- * reference, deterministic deploy order via CDK, and no SSM ceremony.
- *
- */
 export function lookupDsqlCluster(scope: Construct, app: string): IDsqlCluster {
   validateAppSlug(app);
   const paths = dsqlClusterSsmPaths(app);

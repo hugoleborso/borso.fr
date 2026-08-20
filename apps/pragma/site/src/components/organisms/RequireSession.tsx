@@ -1,14 +1,4 @@
-/**
- * Auth guard. Renders `<Outlet />` once the gated probe succeeds and
- * redirects to /login otherwise. The probe is a cheap GET on the gated
- * `/api/instruments` endpoint via `useSessionProbe()` — the API does
- * not (yet) expose `/api/auth/me`.
- *
- * A browser that has never signed in carries no session marker, so the
- * probe stays disabled and the visitor reaches /login without a gated
- * request answering 401.
- * @Feature auth
- */
+/** @Feature auth */
 
 import type { JSX } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';

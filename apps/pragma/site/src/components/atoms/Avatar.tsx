@@ -1,17 +1,9 @@
-/**
- * Avatar atom — member initial in a coloured circle. The caller passes
- * the member colour, so the atom stays Tailwind-only and knows nothing
- * about the palette.
- */
-
 import { type CSSProperties, forwardRef, type HTMLAttributes } from 'react';
 import { type AvatarVariantProps, avatarVariants } from './avatar.variants';
 import { composeClassName } from './class-name.utils';
 
 export interface AvatarProps extends HTMLAttributes<HTMLSpanElement>, AvatarVariantProps {
-  /** Initials (one or two letters) drawn in the circle. */
   initials: string;
-  /** CSS color (hex, var(), etc.) — drives the background fill. */
   color: string;
 }
 

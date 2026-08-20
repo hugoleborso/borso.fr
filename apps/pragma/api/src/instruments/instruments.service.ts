@@ -1,11 +1,3 @@
-/**
- * Service layer for instruments. Today the orchestration is thin
- * (CRUD with name-collation sorting) — the service exists so the
- * controller never imports the repository or the DB client, and so
- * future business rules (e.g. "cannot delete an instrument used in
- * any setlist") have a single place to land.
- */
-
 import type { InstrumentFamily } from '@domain/instrument.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {

@@ -1,15 +1,6 @@
 import type { Mode, PlayScope } from '@/state/persistedState.utils';
 import { ALL_KEY, type Selection } from './selectors.utils';
 
-/**
- * Every rule about what the opening picker does when a card is tapped.
- *
- * In learn mode a tap replaces the selection, because a drill runs against one
- * variation. In play mode a tap toggles the card in and out of the play scope,
- * because a game can be played against several openings at once, and picking a
- * child implies its parents.
- */
-
 export const EMPTY_PLAY_SCOPE: PlayScope = { openingIds: [], variationIds: [], lineIds: [] };
 
 export const FULL_SELECTION: Selection = {

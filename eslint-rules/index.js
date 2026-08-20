@@ -7,6 +7,7 @@ import noAdapterImportInPureModule from './no-adapter-import-in-pure-module.js';
 import noApiAnchorInSite from './no-api-anchor-in-site.js';
 import noArrayMethodsInControllers from './no-array-methods-in-controllers.js';
 import noCircleInNonUniformSvg from './no-circle-in-non-uniform-svg.js';
+import noComments from './no-comments.js';
 import noComponentCssImports from './no-component-css-imports.js';
 import noComponentsOutsideBuckets from './no-components-outside-buckets.js';
 import noControllerImportsOutsideService from './no-controller-imports-outside-service.js';
@@ -34,18 +35,6 @@ import pureFunctionsLiveInCoreFiles from './pure-functions-live-in-core-files.js
 import testFileHasSiblingSource from './test-file-has-sibling-source.js';
 import verbPromisesMatchReturnType from './verb-promises-match-return-type.js';
 
-/**
- * The `borso` ESLint plugin holds every rule that encodes a decision from
- * `docs/standards/`, plus the rules that eradicate a defect recorded in
- * `docs/dantotsus/`.
- *
- * Each rule ships with a sibling `<rule-name>.test.js` RuleTester suite,
- * because a lint rule that misfires costs more than the rule saves.
- *
- * Registering a rule here does not turn it on. A rule runs only where
- * `eslint.config.js` lists it, and the standard each rule comes from is named
- * in the table in `docs/standards/12-linting-and-gates.md`.
- */
 export const borsoPlugin = {
   meta: { name: 'borso' },
   rules: {
@@ -58,6 +47,7 @@ export const borsoPlugin = {
     'no-api-anchor-in-site': noApiAnchorInSite,
     'no-array-methods-in-controllers': noArrayMethodsInControllers,
     'no-circle-in-non-uniform-svg': noCircleInNonUniformSvg,
+    'no-comments': noComments,
     'no-component-css-imports': noComponentCssImports,
     'no-components-outside-buckets': noComponentsOutsideBuckets,
     'no-controller-imports-outside-service': noControllerImportsOutsideService,

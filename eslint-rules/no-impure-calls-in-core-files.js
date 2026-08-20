@@ -7,17 +7,6 @@ import {
   readMemberCallName,
 } from './impurity.js';
 
-/**
- * A `.core.ts` or `.utils.ts` file holds pure functions only, so nothing in it
- * may read the clock, the random number generator, the environment, the DOM,
- * or the network.
- *
- * Time is the case that comes up most. Take `now: Date` as a parameter, which
- * makes "what happens one millisecond before the cutoff" a one line test and
- * removes the need for `vi.setSystemTime()`.
- *
- * See docs/standards/02-purity-and-core-files.md.
- */
 const CLOCK_MESSAGE =
   'A pure file may not read the clock. Take `now: Date` as a parameter, and let the caller ' +
   'pass `new Date()`. See docs/standards/02-purity-and-core-files.md.';
@@ -67,10 +56,6 @@ export default {
         if (!IMPURE_GLOBALS.has(node.name)) {
           return;
         }
-        // Only a free reference counts. A parameter named `document`, a local
-        // named `window`, and an imported `fetch` helper are all declarations,
-        // so the name resolves somewhere up the scope chain and the read is
-        // not a read of the global.
         if (isDeclaredInScopeChain(context.sourceCode.getScope(node), node.name)) {
           return;
         }

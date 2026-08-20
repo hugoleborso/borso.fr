@@ -1,10 +1,3 @@
-/**
- * Data access for the test-seed slice. Wiping the domain tables is the
- * one operation no other slice offers, because no product feature ever
- * deletes everything. `app_config` is deliberately left alone, so
- * re-seeding never rotates an existing password (ADR-0004).
- */
-
 import { barTable } from '../bars/bars.schema';
 import { getDatabase } from '../database/client';
 import { instrumentTable } from '../instruments/instruments.schema';

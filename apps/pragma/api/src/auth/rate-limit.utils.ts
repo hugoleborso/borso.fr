@@ -1,18 +1,3 @@
-/**
- * Per-`ip_hash` token-bucket rate limit. See ADR-0004 — five tries per
- * fifteen-minute sliding window. The bucket lives in memory inside the
- * Lambda container; cold starts wipe it. Accepted inconsistency: five
- * band members behind at most a couple of NATs.
- *
- * Implementation: a fixed window. Each `recordAttempt(ipHash, now)`
- * increments the counter; when `now` is past the window end, the
- * counter resets and the new window begins at `now`.
- *
- * Pure helpers — no I/O — exposed for unit testing. The bucket store
- * itself is also exposed so the middleware can swap it for a test
- * double; `createBucketStore()` is the production factory.
- */
-
 const SECONDS_PER_MINUTE = 60;
 const MILLISECONDS_PER_SECOND = 1_000;
 const RATE_LIMIT_WINDOW_MINUTES = 15;
@@ -47,12 +32,6 @@ export function createBucketStore(): BucketStore {
   };
 }
 
-/**
- * Returns the bucket reflecting the attempt — its `attempts` field
- * indicates the new count. Caller decides whether to allow or reject
- * the action; if rejecting, the bucket is still updated so repeated
- * failed checks count against the same window.
- */
 // @FollowsBlueprint utils-pure-module
 export function recordAttempt(existing: RateBucket | undefined, nowMillis: number): RateBucket {
   if (existing === undefined || nowMillis - existing.windowStartedAt >= RATE_LIMIT_WINDOW_MS) {

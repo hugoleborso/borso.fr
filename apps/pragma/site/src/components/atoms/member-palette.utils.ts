@@ -1,18 +1,3 @@
-/**
- * Member-palette helpers — resolve a member's color identifier to a
- * CSS value the atoms can consume. The site stores each member's
- * colour as a free-form hex string (Hugo picks any colour via the
- * Members admin), but the prototype's palette has five canonical
- * hues. This module exposes both:
- *
- *  - the five canonical palette tokens (`MEMBER_PALETTE`),
- *  - `paletteColorFromHex(hex)` which finds the closest canonical
- *    token for a given hex by minimum squared RGB distance,
- *  - `memberInitial(name)` which returns the single-letter initial
- *    drawn inside the Avatar (the prototype slices the name to one
- *    character).
- */
-
 export const MEMBER_PALETTE = {
   coral: 'var(--color-member-coral)',
   teal: 'var(--color-member-teal)',
@@ -46,7 +31,6 @@ const PALETTE_RGB: Record<MemberPaletteKey, RgbChannels> = {
   sage: { red: 0x6e, green: 0x8a, blue: 0x48 },
 };
 
-/** The three channel bytes of a `#rrggbb` string, or `null` when it is not one. */
 // @FollowsBlueprint utils-pure-module
 export function parseHexTriplet(hex: string): readonly [number, number, number] | null {
   const trimmed = hex.trim();
@@ -67,11 +51,6 @@ export function parseHexTriplet(hex: string): readonly [number, number, number] 
   return [red, green, blue] as const;
 }
 
-/**
- * Closest canonical-palette key for an arbitrary hex string. Falls
- * back to `coral` when the hex doesn't parse so the UI never renders
- * an avatar without a color.
- */
 const PALETTE_KEYS: readonly MemberPaletteKey[] = ['coral', 'teal', 'mustard', 'plum', 'sage'];
 
 export function paletteKeyFromHex(hex: string): MemberPaletteKey {
@@ -94,11 +73,6 @@ export function paletteKeyFromHex(hex: string): MemberPaletteKey {
   return bestKey;
 }
 
-/**
- * Color value (a CSS `var(...)`) the Avatar atom consumes. Uses the
- * canonical palette token, which means dark-mode tweaks ride along
- * automatically.
- */
 export function paletteColorFromHex(hex: string): string {
   return MEMBER_PALETTE[paletteKeyFromHex(hex)];
 }

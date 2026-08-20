@@ -1,13 +1,3 @@
-/**
- * Back-e2e for the mastery defaults + overrides endpoints.
- * Covers:
- *  - the upsert semantics on PUT (insert then update).
- *  - the override behaviour: `effective = override ?? default`.
- *    Tested at the API layer by asserting that the same (member,
- *    instrument, song) round-trip is reflected in the override list.
- *  - auth gating.
- */
-
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
@@ -91,7 +81,6 @@ describe('mastery controller (back-e2e)', () => {
     expect(after.defaults).toHaveLength(1);
     expect(after.defaults[0]?.score).toBe(7);
 
-    // Second PUT with a different score MUST update, not duplicate.
     await jsonRequest(app, '/api/mastery/defaults', {
       method: 'PUT',
       body: { memberId, instrumentId, score: 9 },

@@ -10,6 +10,19 @@ The apex landing site at `https://borso.fr`. Plain HTML / CSS / JS for now; swit
 - `bin/app.ts` — CDK entry point. Reads `STAGE` + `PR_NUMBER` env, builds a `StaticSite` from `@borso/infra`.
 - `dist/` — build output. Gitignored. The `build` script (`pnpm build`) produces it via `cp -R site dist`. Trivial today; swappable for Vite/Astro later.
 
+## Third-party attribution
+
+The galaxy background is the react-bits Galaxy component, copied into this repository rather than installed ([ADR-0003](../../docs/adr/0003-react-bits-galaxy-as-react-component.md)). Two files carry it, and this notice is the licence compliance surface for both:
+
+- `site/src/components/organisms/galaxy-shaders.ts` — the GLSL, byte for byte as upstream wrote it.
+- `site/src/components/organisms/Galaxy.tsx` — the harness, retyped as TSX.
+
+```
+SPDX-License-Identifier: MIT
+Source: https://github.com/DavidHDev/react-bits (components/Backgrounds/Galaxy/Galaxy.jsx)
+Copyright (c) 2024 David Haz
+```
+
 ## Local
 
 ```bash

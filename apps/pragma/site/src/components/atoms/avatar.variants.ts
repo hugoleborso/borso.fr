@@ -1,9 +1,3 @@
-/**
- * Variant table for the Avatar atom. `sm` to `lg` mirror the prototype's
- * `.mchip` / `.mchip.lg` / `.mchip.xl`; `xs` is the compact circle the
- * mastery matrix and the concert form draw beside a member's name.
- */
-
 import { cva, type VariantProps } from 'class-variance-authority';
 
 // @FollowsBlueprint atom-variant

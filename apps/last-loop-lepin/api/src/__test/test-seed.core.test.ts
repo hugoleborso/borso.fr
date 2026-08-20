@@ -58,9 +58,6 @@ describe('planSeedFixture', () => {
   });
 
   it('finishes each generated loop shortly before its own top of hour', () => {
-    // `listLoopPunches` places loop N a fraction of an hour *before* the
-    // Nth top; adding the offset instead would push every punch past its
-    // own boundary and turn the finished fixture into a wall of DNFs.
     const plan = planSeedFixture('race-finished', NOW);
     const startMs = plan.raceWindow.startsAt.getTime();
     const aliceHours = plan.punches

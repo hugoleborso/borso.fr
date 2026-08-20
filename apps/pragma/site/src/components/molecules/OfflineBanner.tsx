@@ -1,9 +1,3 @@
-/**
- * OfflineBanner — top-of-shell read-only notice with a pulsing dot.
- * The molecule is purely presentational; the AppShell organism reads
- * the browser's online status and decides when to show it.
- */
-
 import { useTranslation } from 'react-i18next';
 import { PulsingDot } from '../atoms/PulsingDot';
 

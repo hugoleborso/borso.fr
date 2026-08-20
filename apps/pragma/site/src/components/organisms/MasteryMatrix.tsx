@@ -1,32 +1,4 @@
-/**
- * Live mastery matrix. Members × instruments grid with three input
- * affordances per cell (spec use case 1bis):
- *
- *   - Tap a cell → focus and accept a numeric edit; emptying the box
- *     drops the override, which is the only one of the three gestures a
- *     finger can perform.
- *   - Scroll-wheel on a cell → ±1 (capped to [0, 10]).
- *   - Right-click on a cell → clear the override (fall back to default
- *     of "no score logged"; the row disappears from the API).
- *
- * Row averages and column averages are projected via
- * `mastery-matrix.utils.ts` and rendered alongside the grid; both
- * update live as scores change.
- *
- * The table layout is driven by `useReactTable` from
- * `@tanstack/react-table`: a leading "member" column, N instrument
- * columns built from the props, and a trailing "row average" column.
- * The footer row carries the per-instrument column averages.
- *
- * Mounted on /members per the spec (A07/A08).
- *
- * The matrix reads scores from `useMasteryDefaults()` directly and
- * writes through `useSaveMasteryDefault` / `useDeleteMasteryDefault`.
- * Those two hooks own the optimistic update: they patch the TanStack
- * Query cache in `onMutate`, roll it back in `onError`, and reconcile
- * in `onSettled`. This component only surfaces the error.
- * @Feature mastery
- */
+/** @Feature mastery */
 
 import {
   type ColumnDef,
@@ -81,48 +53,16 @@ interface MatrixRow {
   readonly member: MasteryMatrixMember;
 }
 
-/**
- * The matrix is wider than a phone, so the member's name has to stay put while
- * the instrument columns scroll under it — otherwise you scroll to reach the
- * last instrument and no longer know whose score you are typing. It carries
- * its own background because the cells travel underneath it.
- */
 const STICKY_ROW_HEADER_CLASS = 'sticky left-0 z-10 bg-bg-elev';
 
-/**
- * A sticky column has to leave the grid room to travel underneath it. Left
- * free, the name column takes the width of the longest first name — one
- * 61-character name grew it until it met the sticky average column and no
- * score box anywhere in the grid could be tapped at any scroll position. The
- * cell content is what a table's automatic layout measures, so the budget is
- * spent on an inner box that clips, not on the cell.
- */
 const STICKY_ROW_HEADER_BUDGET_CLASS = 'flex items-center max-w-[7rem] sm:max-w-[12rem]';
 
-/**
- * The per-member average is anchored to the right edge the way the name is
- * anchored to the left, so the column the operator reads the row for is on
- * screen at rest instead of past the fold, and the instrument columns visibly
- * travel underneath it — which is what says the grid scrolls sideways.
- */
 const STICKY_AVERAGE_CLASS = 'sticky right-0 z-10 bg-bg-elev border-l border-line';
 
-/**
- * The grid is wider than a phone by about 160 px. The scrollbar is drawn
- * rather than left to the platform's overlay one, which only appears once a
- * scroll is already under way, so the instrument column past the right edge
- * had nothing on screen saying it existed.
- */
 const MATRIX_SCROLLER_CLASS =
   'overflow-x-scroll [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-bg-sunk ' +
   '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-line-strong';
 
-/**
- * A styled `::-webkit-scrollbar` reserves no layout space here — the track
- * measures zero — and iOS Safari draws no persistent scrollbar at all, so on a
- * phone the drawn one is not a cue anybody sees. The sentence is, and it costs
- * one line above the grid.
- */
 const MATRIX_SCROLL_HINT_CLASS =
   'sm:hidden text-xs text-ink-400 m-0 mb-2 flex items-center gap-1.5';
 

@@ -1,10 +1,3 @@
-/**
- * Zod input schemas for the uploads bounded context. The presigned-PUT
- * endpoint enforces an allow-list of content types + a 10 MiB ceiling
- * on the client-declared content-length. The signed-GET endpoint
- * accepts an opaque object key the FE received from a previous sign.
- */
-
 import { z } from 'zod';
 import { ALLOWED_UPLOAD_CONTENT_TYPES, MAX_UPLOAD_BYTES } from './uploads.types';
 

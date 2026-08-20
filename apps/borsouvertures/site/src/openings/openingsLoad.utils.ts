@@ -9,10 +9,6 @@ export interface OpeningsLoad {
 
 export type OpeningsLoadOutcome = { ok: true; openings: Opening[] } | { ok: false; error: Error };
 
-/**
- * Flatten the tagged result of the loader into the shape the screens read, so
- * no component has to narrow a discriminated union to find the openings.
- */
 // @FollowsBlueprint utils-pure-module
 export function selectOpeningsLoad(outcome: OpeningsLoadOutcome): OpeningsLoad {
   if (outcome.ok) return { status: 'loaded', openings: outcome.openings };

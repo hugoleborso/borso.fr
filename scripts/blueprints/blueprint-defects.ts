@@ -1,15 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * Generates `docs/standards/blueprint-defects.md`, and with `--check` fails on
- * a dantotsu naming a blueprint that does not exist, or a stale page.
- *
- * Usage:
- *   pnpm exec tsx scripts/blueprints/blueprint-defects.ts [--check]
- *
- * The blueprint identifiers come from the same annotations
- * `blueprint-indexing.ts` reads, so a renamed blueprint breaks the link here
- * rather than leaving a dantotsu pointing at nothing.
- */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -54,11 +43,11 @@ function listSourceFiles(directory: string): string[] {
 function readAdoptions(): readonly BlueprintAdoption[] {
   const followerCounts = new Map<string, number>();
   const adoptions: BlueprintAdoption[] = [];
-  const allFiles = SCAN_DIRECTORIES.flatMap((name) =>
+  const allFilesIncludingTests = SCAN_DIRECTORIES.flatMap((name) =>
     listSourceFiles(path.join(REPOSITORY_ROOT, name)),
   );
 
-  for (const absolutePath of allFiles) {
+  for (const absolutePath of allFilesIncludingTests) {
     for (const match of fs
       .readFileSync(absolutePath, 'utf8')
       .matchAll(/@FollowsBlueprint\s+(\S+)/g)) {
@@ -67,11 +56,7 @@ function readAdoptions(): readonly BlueprintAdoption[] {
     }
   }
 
-  // Every annotation in every file, tests included. A blueprint that lives in
-  // a test file is still a blueprint — `test-lint-rule` has thirty followers —
-  // and reading only the first annotation loses the second, which
-  // `songs.queries.ts` carries.
-  for (const absolutePath of allFiles) {
+  for (const absolutePath of allFilesIncludingTests) {
     for (const annotation of readBlueprintAnnotations(fs.readFileSync(absolutePath, 'utf8'))) {
       adoptions.push({
         blueprintId: annotation.id,

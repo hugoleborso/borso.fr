@@ -64,9 +64,6 @@ describe('fastestLap', () => {
   });
 
   it('picks the runner with the smallest duration across multiple runners and loops', () => {
-    // Alice: loop 1 = 47 min, loop 2 = 44 min.
-    // Bob:   loop 1 = 42 min, loop 2 = 48 min  → Bob holds 42 min.
-    // Carla: loop 1 = 51 min.
     const punches = [
       buildPunch('alice', 1, '2026-09-19T06:47:00+02:00'),
       buildPunch('alice', 2, '2026-09-19T07:44:00+02:00'),
@@ -91,7 +88,6 @@ describe('fastestLap', () => {
   });
 
   it('dedupes by runnerSlug when one runner has multiple punches at the same minimum', () => {
-    // Alice's loop 1 and loop 2 both clock 42 min — surface her once.
     const punches = [
       buildPunch('alice', 1, '2026-09-19T06:42:00+02:00'),
       buildPunch('alice', 2, '2026-09-19T07:42:00+02:00'),
@@ -101,10 +97,7 @@ describe('fastestLap', () => {
     expect(fastest).toEqual([{ runnerSlug: 'alice', durationMs: 42 * 60_000 }]);
   });
 
-  it('keeps the record on a DNF holder (caller is responsible for filtering — we are not)', () => {
-    // The "DNF" runner here is simply absent from later loops; their
-    // earlier punch survives and remains the record. The projection
-    // never consults ManualDidNotFinish — it operates on punches only.
+  it('keeps the record on a runner who stopped punching, since it reads punches only', () => {
     const punches = [
       buildPunch('borso', 1, '2026-09-19T06:40:00+02:00'),
       buildPunch('hugo', 1, '2026-09-19T06:44:00+02:00'),
@@ -115,7 +108,6 @@ describe('fastestLap', () => {
   });
 
   it('returns [] when every punch yields a null duration (clock-skew degenerate)', () => {
-    // All punches precede the edition's startsAt → every duration is null.
     const punches = [
       buildPunch('alice', 1, '2026-09-19T05:30:00+02:00'),
       buildPunch('bob', 1, '2026-09-19T05:45:00+02:00'),

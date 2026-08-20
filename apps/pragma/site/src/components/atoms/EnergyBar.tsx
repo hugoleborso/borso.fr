@@ -1,34 +1,4 @@
-/**
- * EnergyBar atom — an energy value drawn as one tappable segment per level.
- *
- * A tap lands on the segment under the finger and a slide sweeps through the
- * levels, both through the same pure mapping, so the segment the eye aims at
- * is the level the caller receives. A range input over the same width offers a
- * thumb and no boundary instead, and rounds the position rather than reading
- * the segment it fell in — which gives the two end levels half the width of
- * the others and puts every boundary half a step from the tick beside it.
- *
- * Each segment carries its own level, which is what lets the bar be the whole
- * control: the value is the last numeral still filled, so the row needs no
- * separate readout beside it, and aiming at a level means aiming at the
- * numeral rather than at a position along a track.
- *
- * **A gesture that starts here is not the bar's until it proves it is.** The
- * bar writes nothing on `pointerdown`: `touch-action: pan-y` lets the page
- * take a vertical swipe that began on the bar, but that swipe still arrives as
- * a `pointerdown` and two `pointermove`s before the browser decides and sends
- * `pointercancel`, so a control that writes on the way down rewrites whichever
- * song the thumb was resting on, silently and with no undo. A slide writes
- * once it travels further sideways than down (`isDragIntent`), a tap writes on
- * `pointerup`, and a cancelled gesture writes nothing at all. Tracking the
- * gesture also means only the pointer this bar captured can move it, so a text
- * selection dragged across the card writes nothing either.
- *
- * The bar is one tab stop carrying the slider role rather than ten buttons,
- * which is what keeps a twenty-song setlist from growing two hundred tab
- * stops.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { JSX, KeyboardEvent, PointerEvent } from 'react';
 import { useRef } from 'react';
@@ -40,11 +10,6 @@ import {
   levelFromPointerRatio,
 } from './energy-bar.utils';
 
-/**
- * The focus ring is an outline rather than a box shadow because a shadow is
- * dropped in forced-colors mode, which leaves the one control on the card that
- * a keyboard can reach with no focus indicator at all.
- */
 const BAR_CLASS =
   'flex h-10 sm:h-9 items-center gap-1 cursor-pointer touch-pan-y select-none rounded-sm ' +
   'outline-hidden focus-visible:outline-solid focus-visible:outline-2 ' +

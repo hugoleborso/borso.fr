@@ -1,9 +1,3 @@
-/**
- * Back-e2e for the uploads endpoints. The presigner builds the URL
- * locally via SigV4 — no live S3 bucket needed — provided the
- * UPLOADS_BUCKET env var and AWS credentials are present.
- */
-
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';

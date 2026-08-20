@@ -1,13 +1,4 @@
-/**
- * Kanban view of the bars CRM: one column per `BarStatus`, cards dragged
- * between columns to change a bar's status.
- *
- * HTML5 drag suffices here — the design bundle's handle pattern applies to
- * the mobile setlist reorder, not to this desktop board. Touch input fires no
- * drag event at all, which is why `BarsPage` shows this board only from `lg`
- * up and renders the list below it.
- * @Feature bars
- */
+/** @Feature bars */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';

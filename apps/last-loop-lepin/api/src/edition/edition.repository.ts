@@ -17,9 +17,6 @@ interface EditionRow {
 
 // @FollowsBlueprint repository-row-mapper
 function rowToEdition(row: EditionRow): RaceEdition {
-  // gpx is stored as JSON-encoded text (Aurora DSQL doesn't support jsonb).
-  // The `as unknown` step is the JSON-parse escape hatch the repo allows;
-  // gpxMetadataSchema does the runtime validation.
   const gpxRaw: unknown = JSON.parse(row.gpx);
   const gpx = gpxMetadataSchema.parse(gpxRaw);
   if (!isEditionStatus(row.status)) {
@@ -54,11 +51,6 @@ export async function insertEdition(edition: RaceEdition): Promise<void> {
     });
 }
 
-/**
- * Write an edition, replacing every field when the slug already exists.
- * The test seeding endpoint rebuilds one fixture edition over and over, and
- * an upsert lets it do that without first asking whether the row is there.
- */
 /**
  * @Blueprint repository-idempotent-upsert
  * @BlueprintName Repository Idempotent Upsert
@@ -114,11 +106,6 @@ export async function updateEditionStatus(slug: string, status: EditionStatus): 
   await getDatabase().update(editionsTable).set({ status }).where(eq(editionsTable.slug, slug));
 }
 
-/**
- * Replace every mutable field of an existing edition. The caller is
- * responsible for gating this on `status === 'setup'` — once the race
- * is live, the schedule + GPX become history and shouldn't shift.
- */
 export async function updateEditionSetup(slug: string, edition: RaceEdition): Promise<void> {
   await getDatabase()
     .update(editionsTable)

@@ -1,19 +1,9 @@
-/**
- * App-routing audit. The single security-critical assertion:
- * `__test/` endpoints are mounted only when ALLOW_TEST_SEED='1'.
- *
- * The CDK template test (`cdk/test/stack.test.ts`) covers the deploy-time
- * side (prod stack never sets the env var); this test covers the runtime
- * side (even if the var leaked into prod, the controller code reads it
- * and decides).
- */
-
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from './app';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 
-describe('createApp — test-seed routing flag', () => {
+describe('createApp — the seeding route is reachable only where ALLOW_TEST_SEED is exactly "1"', () => {
   const originalFlag = process.env[TEST_SEED_FLAG];
 
   beforeAll(() => {
@@ -32,20 +22,20 @@ describe('createApp — test-seed routing flag', () => {
     delete process.env[TEST_SEED_FLAG];
   });
 
-  it('returns 404 on /api/__test/seed when the flag is absent', async () => {
+  it('leaves /api/__test/seed unmounted when ALLOW_TEST_SEED is absent, which is how the prod Lambda runs', async () => {
     const app = createApp();
     const response = await app.request('/api/__test/seed', { method: 'POST' });
     expect(response.status).toBe(404);
   });
 
-  it('returns 404 on /api/__test/seed when the flag is set to a non-"1" value', async () => {
+  it('leaves /api/__test/seed unmounted when ALLOW_TEST_SEED carries any value other than "1"', async () => {
     process.env[TEST_SEED_FLAG] = 'true';
     const app = createApp();
     const response = await app.request('/api/__test/seed', { method: 'POST' });
     expect(response.status).toBe(404);
   });
 
-  it('mounts /api/__test/seed (non-404) when the flag is "1"', async () => {
+  it('mounts /api/__test/seed only when ALLOW_TEST_SEED is exactly "1", which PreviewableApp sets on non-prod Lambdas alone', async () => {
     process.env[TEST_SEED_FLAG] = '1';
     const app = createApp();
     const response = await app.request('/api/__test/seed?fixture=basic-band', {
@@ -54,7 +44,7 @@ describe('createApp — test-seed routing flag', () => {
     expect(response.status).not.toBe(404);
   });
 
-  it('always serves /api/health', async () => {
+  it('serves /api/health whatever ALLOW_TEST_SEED holds', async () => {
     const app = createApp();
     const response = await app.request('/api/health');
     expect(response.status).toBe(200);
