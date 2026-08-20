@@ -44,7 +44,7 @@ import {
 } from './setlist-editor.utils';
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
-import type { SetlistEntryPatch } from '../../lib/queries/setlists.queries';
+import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 
 const DRAG_MODIFIERS = [restrictToVerticalAxis];
 const SONG_ID_FALLBACK_LENGTH = 8;

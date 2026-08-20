@@ -215,14 +215,14 @@
         "name": "Core Projection",
         "usage": "Use for a read model that turns rows and `now` into the exact payload the caller sends.",
         "path": "apps/pragma/api/src/sessions/offline-manifest.core.ts",
-        "followers": 15
+        "followers": 18
       },
       {
         "id": "core-decision",
         "name": "Core Decision Function",
         "usage": "Use for every business rule. Take the data and `now` as arguments, return a decision, touch nothing else.",
         "path": "apps/last-loop-lepin/api/src/punch/punch.core.ts",
-        "followers": 9
+        "followers": 10
       },
       {
         "id": "core-lookup-table",
@@ -319,17 +319,17 @@
     ],
     "api/repository": [
       {
-        "id": "repository-query",
-        "name": "Repository Query",
-        "usage": "Use for data access. Drizzle queries and transactions only, and the single file allowed to import the database client for its slice.",
-        "path": "apps/last-loop-lepin/api/src/punch/punch.repository.ts",
-        "followers": 6
-      },
-      {
         "id": "repository-projection",
         "name": "Repository Projection Constant",
         "usage": "Use for a repository whose queries all return the same row shape.",
         "path": "apps/pragma/api/src/instruments/instruments.repository.ts",
+        "followers": 7
+      },
+      {
+        "id": "repository-query",
+        "name": "Repository Query",
+        "usage": "Use for data access. Drizzle queries and transactions only, and the single file allowed to import the database client for its slice.",
+        "path": "apps/last-loop-lepin/api/src/punch/punch.repository.ts",
         "followers": 6
       },
       {
@@ -418,7 +418,7 @@
         "name": "Service Read Model",
         "usage": "Use for a query that assembles a view from several tables. Read everything, then let one pure function decide the shape.",
         "path": "apps/last-loop-lepin/api/src/ranking/ranking.service.ts",
-        "followers": 2
+        "followers": 3
       },
       {
         "id": "service-dto-mapping",
@@ -744,7 +744,7 @@
         "name": "Presentational Organism",
         "usage": "Use for a screen region that composes molecules and atoms but owns no state and fetches nothing.",
         "path": "apps/pragma/site/src/components/organisms/SongCard.tsx",
-        "followers": 33
+        "followers": 34
       },
       {
         "id": "core-view-projection",
@@ -772,7 +772,7 @@
         "name": "Organism Form",
         "usage": "Use for a screen region that collects fields and writes them through a mutation.",
         "path": "apps/last-loop-lepin/site/src/components/organisms/CreateEditionForm.tsx",
-        "followers": 5
+        "followers": 6
       },
       {
         "id": "core-form-schema",
@@ -1027,7 +1027,7 @@
         "name": "Pure Utility Module",
         "usage": "Use for deterministic helpers with no side effect, which the coverage gate holds at one hundred percent per file.",
         "path": "apps/pragma/site/src/lib/member-color.utils.ts",
-        "followers": 56
+        "followers": 57
       },
       {
         "id": "utils-formatter",

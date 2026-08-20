@@ -1,7 +1,13 @@
 /**
- * Pure cache transforms for the setlist entries query.
+ * Pure cache transforms for the two setlist queries, and the one filter
+ * that picks which setlists a session can still be offered.
  *
- * Each mutation in `setlists.ts` snapshots the current `{ entries }`
+ * The entry half is optimistic and the setlist half is not. An entry
+ * mutation snapshots the cache before the request and rolls back on
+ * failure; a setlist mutation writes what its own response returned, so
+ * it needs no snapshot and has nothing to roll back.
+ *
+ * Each mutation in `setlist-entries.queries.ts` snapshots the current `{ entries }`
  * cache, applies one of these helpers in `onMutate`, and rolls back to
  * the snapshot in `onError`. The shape is generic in the entry type so
  * the helpers don't pin themselves to the BE projection — the queries
@@ -111,4 +117,84 @@ export function toEntryPatch(input: EntryPatchInput): Partial<MinimalSetlistEntr
     ...rest,
     lineupOverride: lineupOverride === null ? null : normalizeLineup(lineupOverride),
   };
+}
+
+export interface MinimalSetlistSummary {
+  readonly id: string;
+  readonly name: string;
+  readonly songCount: number;
+  readonly sessionIds: readonly string[];
+}
+
+export interface SetlistsCache<TSetlist extends MinimalSetlistSummary = MinimalSetlistSummary> {
+  readonly setlists: readonly TSetlist[];
+}
+
+/**
+ * The lists a write reconciles from its own response rather than from a
+ * refetch: Aurora DSQL makes a row visible on the connection that wrote
+ * it before the others, so a `GET` fired straight after a `POST` can be
+ * served by another Lambda and answer without it. See
+ * docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md.
+ */
+export function appendSetlistToCache<TSetlist extends MinimalSetlistSummary>(
+  cache: SetlistsCache<TSetlist>,
+  setlist: TSetlist,
+): SetlistsCache<TSetlist> {
+  if (cache.setlists.some((existing) => existing.id === setlist.id)) return cache;
+  return { setlists: [...cache.setlists, setlist] };
+}
+
+export function removeSetlistFromCache<TSetlist extends MinimalSetlistSummary>(
+  cache: SetlistsCache<TSetlist>,
+  setlistId: string,
+): SetlistsCache<TSetlist> {
+  return { setlists: cache.setlists.filter((setlist) => setlist.id !== setlistId) };
+}
+
+export function renameSetlistInCache<TSetlist extends MinimalSetlistSummary>(
+  cache: SetlistsCache<TSetlist>,
+  setlistId: string,
+  name: string,
+): SetlistsCache<TSetlist> {
+  return {
+    setlists: cache.setlists.map((setlist) =>
+      setlist.id === setlistId ? { ...setlist, name } : setlist,
+    ),
+  };
+}
+
+/**
+ * Records that a session now carries a setlist, or no longer does, in
+ * the summary the index reads. The index shows every setlist with the
+ * sessions playing it, so a link made from a session's page has to
+ * reach that list too.
+ */
+export function applySessionLinkInCache<TSetlist extends MinimalSetlistSummary>(
+  cache: SetlistsCache<TSetlist>,
+  setlistId: string,
+  sessionId: string,
+  isLinked: boolean,
+): SetlistsCache<TSetlist> {
+  return {
+    setlists: cache.setlists.map((setlist) => {
+      if (setlist.id !== setlistId) return setlist;
+      const withoutSession = setlist.sessionIds.filter((id) => id !== sessionId);
+      return {
+        ...setlist,
+        sessionIds: isLinked ? [...withoutSession, sessionId] : withoutSession,
+      };
+    }),
+  };
+}
+
+/**
+ * The setlists a session does not carry yet, which are the ones its
+ * "attach an existing setlist" picker can offer.
+ */
+export function selectSetlistsNotOnSession<TSetlist extends MinimalSetlistSummary>(
+  setlists: readonly TSetlist[],
+  sessionId: string,
+): TSetlist[] {
+  return setlists.filter((setlist) => !setlist.sessionIds.includes(sessionId));
 }

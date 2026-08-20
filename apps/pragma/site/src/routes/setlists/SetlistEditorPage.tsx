@@ -1,106 +1,94 @@
 /**
- * Standalone route wrapper for `/sessions/:sessionId/setlist`. Resolves
- * the session's setlist (or creates one if missing) and renders the
- * editor. Spec lists this URL as a first-class surface ("Functional
- * surfaces required" in spec.md); without the wrapper, deep-link
- * navigation 404'd at the React Router layer despite the CloudFront
- * SPA fallback serving index.html.
- *
- * Falls back to a small CTA when no setlist exists yet; one click
- * creates the setlist for the session and the editor mounts.
- *
- * The header naming the session and linking back to it is not decoration:
- * reached as a deep link, this route used to carry no title and no link at
- * all, so the set on screen belonged to no readable session and the only way
- * out was the bottom bar.
+ * A setlist's own page at `/setlists/:setlistId`: its name, the
+ * sessions playing it, and the editor. The setlist is addressed by its
+ * own identifier rather than through a session, because it no longer
+ * belongs to one — the same set can be run in a rehearsal and played at
+ * the concert that rehearsal prepares.
  * @Feature setlists
  */
 
 import type { JSX } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { Button } from '../../components/atoms/Button';
 import { BackLink } from '../../components/molecules/BackLink';
+import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
-import { formatSessionDate } from '../../lib/formatters.utils';
-import { useSession } from '../../lib/queries/sessions.queries';
-import {
-  useCreateSetlist,
-  useIsCreatingSetlist,
-  useSetlistBySession,
-} from '../../lib/queries/setlists.queries';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
+import { SetlistHeaderActions } from '../../components/organisms/SetlistHeaderActions';
+import { formatSessionDate } from '../../lib/formatters.utils';
+import { useNavigateTo } from '../../lib/navigation.hook';
+import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
+import { useSessionsList } from '../../lib/queries/sessions.queries';
+import { useSetlist, useSetlistsList } from '../../lib/queries/setlists.queries';
+import { buildSetlistIndexRows, type IndexSession } from '../../lib/setlist-index.core';
+
+const NO_ROWS: readonly never[] = [];
 
 // @FollowsBlueprint route-detail-page
 export function SetlistEditorPage(): JSX.Element {
-  const { sessionId } = useParams<{ sessionId: string }>();
+  const { setlistId } = useParams<{ setlistId: string }>();
   const { t } = useTranslation();
-  if (sessionId === undefined) {
-    return <p className="px-4 sm:px-9 py-7 text-danger">{t('setlist.missingSessionId')}</p>;
+  if (setlistId === undefined) {
+    return <p className="px-4 sm:px-9 py-7 text-danger">{t('setlist.missingId')}</p>;
   }
-  return <ResolveSetlist sessionId={sessionId} />;
+  return <SetlistDetail setlistId={setlistId} />;
 }
 
-function ResolveSetlist({ sessionId }: { sessionId: string }): JSX.Element {
+function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
   const { t, i18n } = useTranslation();
-  const setlistQuery = useSetlistBySession(sessionId);
-  const createSetlist = useCreateSetlist();
-  const isCreating = useIsCreatingSetlist();
-  const sessionQuery = useSession(sessionId);
-  const session = sessionQuery.data?.session ?? null;
-  const sessionHeader = (
-    <>
-      <BackLink to={`/sessions/${sessionId}`} label={t('common.back')} />
-      <PageHeader
-        crumb={t('setlist.crumb')}
-        title={
-          session === null ? t('setlist.title') : formatSessionDate(session.date, i18n.language)
-        }
-        subtitle={session?.venue ?? undefined}
-      />
-    </>
-  );
+  const navigateTo = useNavigateTo();
+  const setlistQuery = useSetlist(setlistId);
+  const setlistsQuery = useSetlistsList();
+  const sessionsQuery = useSessionsList();
+  const setlist = setlistQuery.data?.setlist ?? null;
 
-  if (setlistQuery.isLoading || isCreating) {
+  const sessions = useMemo(() => {
+    const row = buildSetlistIndexRows<IndexSession>(
+      setlistsQuery.data?.setlists ?? NO_ROWS,
+      sessionsQuery.data?.sessions ?? NO_ROWS,
+    ).find((candidate) => candidate.id === setlistId);
+    return row?.sessions ?? NO_ROWS;
+  }, [setlistsQuery.data, sessionsQuery.data, setlistId]);
+
+  if (setlistQuery.isLoading) {
     return <p className="px-4 sm:px-9 py-7 italic text-ink-400 text-sm">{t('common.loading')}</p>;
   }
 
-  if (setlistQuery.error) {
-    return (
-      <p className="px-4 sm:px-9 py-7 text-danger text-sm" role="alert">
-        {setlistQuery.error.message}
-      </p>
-    );
-  }
-
-  const setlist = setlistQuery.data?.setlist ?? null;
-
   if (setlist === null) {
     return (
-      <section className="px-4 sm:px-9 py-7 max-w-[1280px] flex flex-col">
-        {sessionHeader}
-        <div className="bg-bg-elev border border-line rounded-md p-6 flex flex-col gap-3 items-start">
-          <p className="text-ink-700">{t('setlist.noSetlistYet')}</p>
-          <Button
-            variant="accent"
-            onClick={() => createSetlist.mutate({ sessionId })}
-            disabled={createSetlist.isPending}
-          >
-            {createSetlist.isPending ? t('common.loading') : t('setlist.createForSession')}
-          </Button>
-          {createSetlist.isError ? (
-            <p className="text-danger text-sm" role="alert">
-              {t('setlist.failure.create')}
-            </p>
-          ) : null}
-        </div>
-      </section>
+      <NotFoundNotice
+        message={t('setlist.notFound')}
+        backTo="/setlists"
+        backLabel={t('setlist.title')}
+      />
     );
   }
+
+  const displayedName = selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
 
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col">
-      {sessionHeader}
+      <BackLink to="/setlists" label={t('setlist.title')} />
+      <PageHeader
+        crumb={t('setlist.crumb')}
+        title={displayedName}
+        subtitle={
+          sessions.length === 0
+            ? t('setlist.noSession')
+            : `${t('setlist.playedIn')} ${sessions
+                .map((session) => session.venue ?? formatSessionDate(session.date, i18n.language))
+                .join(' · ')}`
+        }
+      />
+
+      <SetlistHeaderActions
+        setlistId={setlistId}
+        name={setlist.name}
+        displayedName={displayedName}
+        onDeleted={() => navigateTo('/setlists')}
+      />
+
       <SetlistEditor setlistId={setlist.id} />
     </section>
   );

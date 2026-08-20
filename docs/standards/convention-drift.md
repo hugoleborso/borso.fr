@@ -14,7 +14,7 @@ at twenty files.
 `convention-baseline.json` holds the current count per question and the
 gate fails only on an increase. Fixing one and running `--accept` lowers it.
 
-Read from 617 source file(s).
+Read from 628 source file(s).
 
 ## How is the name of a atom.ts file written?
 
@@ -40,7 +40,7 @@ Read from 617 source file(s).
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| kebab | 35 | `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts`, `apps/borso-fr/site/src/home-menu.core.ts` |
+| kebab | 37 | `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts`, `apps/borso-fr/site/src/home-menu.core.ts` |
 | camel | 5 | `apps/borsouvertures/site/src/openings/learnSession.core.ts`, `apps/borsouvertures/site/src/openings/openingFlow.core.ts`, `apps/borsouvertures/site/src/openings/playScope.core.ts` |
 
 ## How is the name of a entrypoint.tsx file written?
@@ -85,7 +85,7 @@ Read from 617 source file(s).
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| kebab | 40 | `apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts`, `apps/borso-fr/site/src/art/mondrian/painting.utils.ts`, `apps/borso-fr/site/src/art/mondrian/palettes.utils.ts` |
+| kebab | 41 | `apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts`, `apps/borso-fr/site/src/art/mondrian/painting.utils.ts`, `apps/borso-fr/site/src/art/mondrian/palettes.utils.ts` |
 | camel | 12 | `apps/borsouvertures/site/src/openings/bookArrows.utils.ts`, `apps/borsouvertures/site/src/openings/bookEngine.utils.ts`, `apps/borsouvertures/site/src/openings/bookTree.utils.ts` |
 
 ## Does a file in borso-fr say which layer it is in?
@@ -117,12 +117,12 @@ Read from 617 source file(s).
 
 ## How does a module that exports a hook say so in its name?
 
-`role-marker:hook` — 19 file(s) outside `<name>.hook.ts`, which is the answer the standards give.
+`role-marker:hook` — 9 file(s) outside `<name>.hook.ts`, which is the answer the standards give.
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| no marker in the name | 17 | `apps/borso-fr/site/src/art/mondrian/composition-url.ts`, `apps/borsouvertures/site/src/state/appState.ts`, `apps/last-loop-lepin/site/src/lib/queries/auth.ts` |
 | <name>.hook.ts | 10 | `apps/borso-fr/site/src/art/mondrian/use-animation.hook.ts`, `apps/borso-fr/site/src/art/mondrian/use-reduced-motion.hook.ts`, `apps/borsouvertures/site/src/lib/paginated-list.hook.ts` |
+| no marker in the name | 7 | `apps/borso-fr/site/src/art/mondrian/composition-url.ts`, `apps/borsouvertures/site/src/state/appState.ts`, `apps/last-loop-lepin/site/src/lib/queries/auth.ts` |
 | use<Name>.ts | 2 | `apps/last-loop-lepin/site/src/components/organisms/useGpxFile.ts`, `apps/last-loop-lepin/site/src/components/organisms/useRunnerPhotoUpload.ts` |
 
 ## Every suffix in use
@@ -132,16 +132,16 @@ than 3 files is either a convention nobody wrote down or an accident.
 
 | Suffix | Files |
 | --- | --- |
-| `.core.ts` | 88 |
-| `.utils.ts` | 86 |
+| `.core.ts` | 90 |
+| `.utils.ts` | 87 |
 | `.controller.ts` | 19 |
 | `.service.ts` | 18 |
 | `.schema.ts` | 16 |
 | `.config.ts` | 15 |
 | `.repository.ts` | 14 |
+| `.queries.ts` | 11 |
 | `.types.ts` | 11 |
 | `.hook.ts` | 10 |
-| `.queries.ts` | 10 |
 | `.adapter.ts` | 9 |
 | `.variants.ts` | 6 |
 | `.setup.ts` | 3 |

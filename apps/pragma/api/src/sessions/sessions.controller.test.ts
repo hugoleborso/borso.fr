@@ -2,8 +2,7 @@
  * Back-e2e for the sessions endpoints. Covers auth gating, CRUD on
  * concerts and practices, the kind discriminator (a payload that mixes
  * concert-only with practice-only keys is rejected at the controller
- * boundary), and the cascade that clears the setlist + entries on
- * session delete.
+ * boundary), and the detaching of the setlists on session delete.
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -24,7 +23,10 @@ const sessionSchema = z.object({
 const singleEnvelope = z.object({ session: sessionSchema });
 const listEnvelope = z.object({ sessions: z.array(sessionSchema) });
 const setlistEnvelope = z.object({
-  setlist: z.object({ id: z.string().uuid(), sessionId: z.string().uuid() }),
+  setlist: z.object({ id: z.string().uuid(), name: z.string() }),
+});
+const setlistListEnvelope = z.object({
+  setlists: z.array(z.object({ id: z.string().uuid() })),
 });
 const entriesEnvelope = z.object({ entries: z.array(z.unknown()) });
 
@@ -177,7 +179,7 @@ describe('sessions controller (back-e2e)', () => {
     );
   });
 
-  it('cascades the setlist + entries on session delete', async () => {
+  it('detaches the setlists on session delete, and keeps them', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const songCreate = await jsonRequest(app, '/api/songs', {
       method: 'POST',
@@ -203,7 +205,7 @@ describe('sessions controller (back-e2e)', () => {
 
     const setlistCreate = await jsonRequest(app, '/api/setlists', {
       method: 'POST',
-      body: { sessionId },
+      body: { name: 'Set 1', sessionId },
       cookieHeader,
     });
     const setlistId = (await readJson(setlistCreate, setlistEnvelope)).setlist.id;
@@ -216,31 +218,23 @@ describe('sessions controller (back-e2e)', () => {
 
     await jsonRequest(app, `/api/sessions/${sessionId}`, { method: 'DELETE', cookieHeader });
 
-    const afterDelete = await jsonRequest(app, `/api/setlists/by-session/${sessionId}`, {
-      cookieHeader,
-    });
-    expect(afterDelete.status).toBe(404);
-    // The orphaned entries query is best-effort: we re-create the
-    // setlist for the same session and expect zero entries inherited.
-    const newSessionResponse = await jsonRequest(app, '/api/sessions', {
-      method: 'POST',
-      body: {
-        kind: 'practice',
-        date: '2025-09-08T19:00:00Z',
-      },
-      cookieHeader,
-    });
-    const newSessionId = (await readJson(newSessionResponse, singleEnvelope)).session.id;
-    const newSetlistResponse = await jsonRequest(app, '/api/setlists', {
-      method: 'POST',
-      body: { sessionId: newSessionId },
-      cookieHeader,
-    });
-    const newSetlistId = (await readJson(newSetlistResponse, setlistEnvelope)).setlist.id;
-    const listedEntries = await readJson(
-      await jsonRequest(app, `/api/setlists/${newSetlistId}/entries`, { cookieHeader }),
+    const afterDelete = await readJson(
+      await jsonRequest(app, `/api/setlists/by-session/${sessionId}`, { cookieHeader }),
+      setlistListEnvelope,
+    );
+    expect(afterDelete.setlists).toEqual([]);
+
+    // The setlist itself outlives the session: another one may be
+    // playing it, and it is reachable from the index either way.
+    const stillListed = await readJson(
+      await jsonRequest(app, '/api/setlists', { cookieHeader }),
+      setlistListEnvelope,
+    );
+    expect(stillListed.setlists.map((setlist) => setlist.id)).toEqual([setlistId]);
+    const keptEntries = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
       entriesEnvelope,
     );
-    expect(listedEntries.entries).toHaveLength(0);
+    expect(keptEntries.entries).toHaveLength(1);
   });
 });

@@ -7,12 +7,14 @@
  * JSON.stringify on the way in.
  */
 
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, inArray, max } from 'drizzle-orm';
 import type { z } from 'zod';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
+import { selectNextLinkPosition } from './setlists.core';
 import {
   lineupOverrideSchema,
+  sessionSetlistTable,
   type SetlistEntryPersistedUpdate,
   setlistEntryTable,
   setlistTable,
@@ -20,10 +22,7 @@ import {
 
 export type LineupOverride = z.infer<typeof lineupOverrideSchema>;
 
-export interface SetlistRow {
-  id: string;
-  sessionId: string;
-}
+export type SetlistRow = typeof setlistTable.$inferSelect;
 
 export interface SetlistEntryRow {
   id: string;
@@ -48,17 +47,13 @@ export interface EntryInsertShape {
   notes: string;
 }
 
-interface SetlistEntryRawRow {
-  id: string;
-  setlistId: string;
-  songId: string;
-  position: number;
-  lineupOverride: string | null;
-  energy: number | null;
-  keyOverride: string | null;
-  capo: number | null;
-  notes: string;
-}
+type SetlistEntryRawRow = typeof setlistEntryTable.$inferSelect;
+
+// @FollowsBlueprint repository-projection
+const SETLIST_PROJECTION = {
+  id: setlistTable.id,
+  name: setlistTable.name,
+} as const;
 
 // @FollowsBlueprint repository-projection
 const ENTRY_PROJECTION = {
@@ -118,24 +113,146 @@ function encodeEntryUpdate(updates: SetlistEntryPersistedUpdate): EntryUpdateEnc
   };
 }
 
-export async function findSetlistBySession(sessionId: string): Promise<SetlistRow | null> {
+export async function listSetlists(): Promise<SetlistRow[]> {
+  const database = getDatabase();
+  return await database.select(SETLIST_PROJECTION).from(setlistTable).orderBy(asc(setlistTable.id));
+}
+
+export async function findSetlistById(setlistId: string): Promise<SetlistRow | null> {
   const database = getDatabase();
   const rows = await database
-    .select({ id: setlistTable.id, sessionId: setlistTable.sessionId })
+    .select(SETLIST_PROJECTION)
     .from(setlistTable)
-    .where(eq(setlistTable.sessionId, sessionId))
+    .where(eq(setlistTable.id, setlistId))
     .limit(1);
   return rows[0] ?? null;
 }
 
-export async function insertSetlist(sessionId: string): Promise<SetlistRow> {
+export async function listSetlistsOfSession(sessionId: string): Promise<SetlistRow[]> {
+  const database = getDatabase();
+  return await database
+    .select(SETLIST_PROJECTION)
+    .from(sessionSetlistTable)
+    .innerJoin(setlistTable, eq(setlistTable.id, sessionSetlistTable.setlistId))
+    .where(eq(sessionSetlistTable.sessionId, sessionId))
+    .orderBy(asc(sessionSetlistTable.position));
+}
+
+/**
+ * Writes the setlist and, when a session is named, the link that puts it
+ * at the end of that session's setlists — in one transaction, because
+ * Aurora DSQL enforces no foreign key, so a link written without its
+ * setlist, or a setlist that was meant to be attached and is not, would
+ * survive forever.
+ */
+export async function insertSetlist(name: string, sessionId: string | null): Promise<SetlistRow> {
+  const database = getDatabase();
+  return await database.transaction(async (transaction) => {
+    const [row] = await transaction
+      .insert(setlistTable)
+      .values({ name })
+      .returning(SETLIST_PROJECTION);
+    if (row === undefined) throw new Error('insert returned no row');
+    if (sessionId !== null) await attachAtEnd(transaction, sessionId, row.id);
+    return row;
+  });
+}
+
+export async function insertSessionLink(sessionId: string, setlistId: string): Promise<void> {
+  const database = getDatabase();
+  await database.transaction(async (transaction) => {
+    await attachAtEnd(transaction, sessionId, setlistId);
+  });
+}
+
+async function attachAtEnd(
+  executor: DatabaseExecutor,
+  sessionId: string,
+  setlistId: string,
+): Promise<void> {
+  const [row] = await executor
+    .select({ highest: max(sessionSetlistTable.position) })
+    .from(sessionSetlistTable)
+    .where(eq(sessionSetlistTable.sessionId, sessionId));
+  await executor
+    .insert(sessionSetlistTable)
+    .values({
+      sessionId,
+      setlistId,
+      position: selectNextLinkPosition(row?.highest ?? null),
+    })
+    .onConflictDoNothing();
+}
+
+export async function updateSetlistName(
+  setlistId: string,
+  name: string,
+): Promise<SetlistRow | null> {
   const database = getDatabase();
   const [row] = await database
-    .insert(setlistTable)
-    .values({ sessionId })
-    .returning({ id: setlistTable.id, sessionId: setlistTable.sessionId });
-  if (row === undefined) throw new Error('insert returned no row');
-  return row;
+    .update(setlistTable)
+    .set({ name })
+    .where(eq(setlistTable.id, setlistId))
+    .returning(SETLIST_PROJECTION);
+  return row ?? null;
+}
+
+export async function deleteSetlistWithEntries(setlistId: string): Promise<DeletionOutcome> {
+  const database = getDatabase();
+  return await database.transaction(async (transaction) => {
+    await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.setlistId, setlistId));
+    await transaction
+      .delete(sessionSetlistTable)
+      .where(eq(sessionSetlistTable.setlistId, setlistId));
+    const deleted = await transaction
+      .delete(setlistTable)
+      .where(eq(setlistTable.id, setlistId))
+      .returning({ id: setlistTable.id });
+    return selectDeletionOutcome(deleted.length);
+  });
+}
+
+export interface SetlistSessionLink {
+  setlistId: string;
+  sessionId: string;
+}
+
+export async function listAllSessionLinks(): Promise<SetlistSessionLink[]> {
+  const database = getDatabase();
+  return await database
+    .select({
+      setlistId: sessionSetlistTable.setlistId,
+      sessionId: sessionSetlistTable.sessionId,
+    })
+    .from(sessionSetlistTable);
+}
+
+export async function deleteSessionLink(
+  sessionId: string,
+  setlistId: string,
+): Promise<DeletionOutcome> {
+  const database = getDatabase();
+  const deleted = await database
+    .delete(sessionSetlistTable)
+    .where(
+      and(
+        eq(sessionSetlistTable.sessionId, sessionId),
+        eq(sessionSetlistTable.setlistId, setlistId),
+      ),
+    )
+    .returning({ setlistId: sessionSetlistTable.setlistId });
+  return selectDeletionOutcome(deleted.length);
+}
+
+export async function listEntryOwners(
+  setlistIds: readonly string[],
+): Promise<{ setlistId: string }[]> {
+  if (setlistIds.length === 0) return [];
+  const database = getDatabase();
+  return await database
+    .select({ setlistId: setlistEntryTable.setlistId })
+    .from(setlistEntryTable)
+    .where(inArray(setlistEntryTable.setlistId, [...setlistIds]));
 }
 
 export async function listEntries(setlistId: string): Promise<SetlistEntryRow[]> {
