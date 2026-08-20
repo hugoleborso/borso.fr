@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#70'
-fix-pr: TBD
+fix-pr: '#80'
 fix-commits: [e8746f9]
 eradication-level: 1
 time-to-detect: minutes
