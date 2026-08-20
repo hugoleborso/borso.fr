@@ -3364,7 +3364,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
-      "digest": "ae9a67672488",
+      "digest": "b79c582e378c",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -4316,7 +4316,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/setlists.queries.ts",
-      "digest": "ba76893cd755",
+      "digest": "39cf0a7ce7bb",
       "container": "site",
       "layer": "query",
       "context": "queries",

@@ -1,7 +1,6 @@
 /**
  * Setlist editor. Embedded inside the concert session detail page.
- * Renders the ordered entries; each row carries an inline display
- * (title, artist, tonality, mastery, lineup, energy slider).
+ * Renders the ordered entries; `SetlistEntryRow` owns what one of them shows.
  *
  * The energy curve and the member filter sit in `SetlistToolbar`, pinned to
  * the top of the page, so the curve stays in view while rows move under it.

@@ -5,11 +5,22 @@
  * Every entry-level mutation is optimistic: `onMutate` snapshots the
  * `{ entries }` cache, applies a pure transform from
  * `setlists.utils.ts`, returns the snapshot as `context.previous`;
- * `onError` rolls back. `onSettled` reconciles with the server, but
- * only once the entry-mutation family has drained (see
- * `optimistic.utils.ts`) — otherwise a refetch from an early tick
- * (energy-slider drag, rapid reorder) lands after a later optimistic
- * write and snaps it back.
+ * `onError` rolls back.
+ *
+ * **Only the append refetches.** It is the one write here whose result the
+ * client does not already hold — the server names the new entry's id. A patch,
+ * a delete and a reorder are each fully determined by the request, so the
+ * optimistic cache is already the answer and a `GET` can only be worse than
+ * it: an immediate read after the write can land on a different Lambda and
+ * DSQL connection and see a pre-commit snapshot, overwriting correct state
+ * with stale state (Aurora DSQL read-after-write visibility is per
+ * connection). Any later entries fetch reconciles once the write has
+ * propagated, and a genuine failure rolls back through `onError`. See
+ * docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md.
+ *
+ * The append's own refetch waits for the entry-mutation family to drain (see
+ * `optimistic.utils.ts`), because a refetch from an early tick otherwise lands
+ * after a later optimistic write and snaps it back.
  * @Feature setlists
  */
 
@@ -261,12 +272,6 @@ export function useUpdateSetlistEntry() {
         );
       }
     },
-    onSettled: (_data, _error, variables) => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: ENTRY_MUTATION_KEY }))) {
-        return;
-      }
-      void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });
-    },
   });
 }
 
@@ -298,12 +303,6 @@ export function useDeleteSetlistEntry() {
           context.previous,
         );
       }
-    },
-    onSettled: (_data, _error, variables) => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: ENTRY_MUTATION_KEY }))) {
-        return;
-      }
-      void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });
     },
   });
 }
@@ -341,14 +340,5 @@ export function useReorderSetlist() {
         );
       }
     },
-    // Deliberately no `onSettled` refetch. A reorder's optimistic cache
-    // already holds the complete, correct order (every entry id + its new
-    // position) and the PUT returns 200, so a refetch adds no data — it
-    // only risks reverting the UI: an immediate GET after the PUT can land
-    // on a different Lambda/DSQL connection and read a pre-commit snapshot
-    // (Aurora DSQL read-after-write visibility lags across connections),
-    // overwriting the correct optimistic order with the stale one. Any
-    // later entries refetch reconciles once the write has propagated;
-    // genuine failures roll back via `onError`.
   });
 }
