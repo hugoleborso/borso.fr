@@ -9,7 +9,7 @@
     {
       "id": "site",
       "name": "Static site",
-      "fileCount": 69
+      "fileCount": 73
     }
   ],
   "externals": [],
@@ -51,7 +51,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/12-travaux/main.tsx",
-      "digest": "9d5373f6d2ad",
+      "digest": "4935d9c5212e",
       "container": "site",
       "layer": "unknown",
       "context": "12-travaux",
@@ -60,7 +60,8 @@
       "imports": [
         "apps/borso-fr/site/src/12-travaux/App.tsx",
         "apps/borso-fr/site/src/i18n/i18n.ts",
-        "apps/borso-fr/site/src/styles/tokens.css"
+        "apps/borso-fr/site/src/styles/tokens.css",
+        "apps/borso-fr/site/src/warp/warp-drive.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -91,7 +92,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/art/mondrian/App.tsx",
-      "digest": "591186627fac",
+      "digest": "ac00eda18ee5",
       "container": "site",
       "layer": "unknown",
       "context": "art",
@@ -109,7 +110,7 @@
         "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
         "apps/borso-fr/site/src/art/mondrian/paper-theme.ts",
         "apps/borso-fr/site/src/art/mondrian/titles.utils.ts",
-        "apps/borso-fr/site/src/art/mondrian/use-reduced-motion.ts",
+        "apps/borso-fr/site/src/art/mondrian/use-reduced-motion.hook.ts",
         "apps/borso-fr/site/src/components/atoms/Announcer.tsx",
         "apps/borso-fr/site/src/components/organisms/CompositionStage.tsx",
         "apps/borso-fr/site/src/components/organisms/StudioRail.tsx"
@@ -201,7 +202,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/art/mondrian/main.tsx",
-      "digest": "fb1472df4ec5",
+      "digest": "58cc7044fa89",
       "container": "site",
       "layer": "unknown",
       "context": "art",
@@ -213,7 +214,8 @@
         "apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts",
         "apps/borso-fr/site/src/art/mondrian/paper-theme.ts",
         "apps/borso-fr/site/src/i18n/i18n.ts",
-        "apps/borso-fr/site/src/styles/tokens.css"
+        "apps/borso-fr/site/src/styles/tokens.css",
+        "apps/borso-fr/site/src/warp/warp-drive.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -372,10 +374,10 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/src/art/mondrian/use-animation.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/use-animation.hook.ts",
       "digest": "e206161a2a69",
       "container": "site",
-      "layer": "unknown",
+      "layer": "hook",
       "context": "art",
       "feature": null,
       "exports": [
@@ -390,10 +392,10 @@
       ]
     },
     {
-      "path": "apps/borso-fr/site/src/art/mondrian/use-reduced-motion.ts",
+      "path": "apps/borso-fr/site/src/art/mondrian/use-reduced-motion.hook.ts",
       "digest": "8f18e4c7b2f1",
       "container": "site",
-      "layer": "unknown",
+      "layer": "hook",
       "context": "art",
       "feature": null,
       "exports": [
@@ -868,7 +870,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/components/organisms/galaxy-clock.core.ts",
-      "digest": "339e1f843422",
+      "digest": "6acd570043fb",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -902,7 +904,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/components/organisms/Galaxy.tsx",
-      "digest": "513402e9c343",
+      "digest": "a39bfa797e4c",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -912,7 +914,8 @@
       ],
       "imports": [
         "apps/borso-fr/site/src/components/organisms/galaxy-clock.core.ts",
-        "apps/borso-fr/site/src/components/organisms/galaxy-shaders.ts"
+        "apps/borso-fr/site/src/components/organisms/galaxy-shaders.ts",
+        "apps/borso-fr/site/src/warp/warp-jump.store.ts"
       ],
       "blueprints": [
         "lint-exception"
@@ -963,7 +966,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/components/organisms/MondrianFrame.tsx",
-      "digest": "4041c683c37b",
+      "digest": "7336c9bc8fd5",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -975,7 +978,7 @@
         "apps/borso-fr/site/src/art/mondrian/animation.core.ts",
         "apps/borso-fr/site/src/art/mondrian/painting.utils.ts",
         "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts",
-        "apps/borso-fr/site/src/art/mondrian/use-animation.ts",
+        "apps/borso-fr/site/src/art/mondrian/use-animation.hook.ts",
         "apps/borso-fr/site/src/components/atoms/MondrianRect.tsx"
       ],
       "blueprints": [],
@@ -1088,7 +1091,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/home-page.ts",
-      "digest": "6ba40c5158fc",
+      "digest": "74a0a9f742cc",
       "container": "site",
       "layer": "unknown",
       "context": "root",
@@ -1096,7 +1099,9 @@
       "exports": [],
       "imports": [
         "apps/borso-fr/site/src/home-menu.core.ts",
-        "apps/borso-fr/site/src/i18n/fr.json"
+        "apps/borso-fr/site/src/i18n/fr.json",
+        "apps/borso-fr/site/src/warp/warp-drive.ts",
+        "apps/borso-fr/site/src/warp/warp-jump.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": []
@@ -1362,6 +1367,76 @@
       "followsBlueprints": []
     },
     {
+      "path": "apps/borso-fr/site/src/warp/warp-drive.ts",
+      "digest": "d14e832bdf23",
+      "container": "site",
+      "layer": "unknown",
+      "context": "warp",
+      "feature": null,
+      "exports": [
+        "installWarpDrive"
+      ],
+      "imports": [
+        "apps/borso-fr/site/src/warp/warp-jump.core.ts",
+        "apps/borso-fr/site/src/warp/warp-jump.store.ts",
+        "apps/borso-fr/site/src/warp/warp-navigation.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "browser-edge-module"
+      ]
+    },
+    {
+      "path": "apps/borso-fr/site/src/warp/warp-jump.core.ts",
+      "digest": "c748ef86d344",
+      "container": "site",
+      "layer": "core",
+      "context": "warp",
+      "feature": null,
+      "exports": [
+        "JUMP_DURATION_MILLISECONDS",
+        "PAGE_FADE_DURATION_MILLISECONDS",
+        "selectIntensityAt"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/src/warp/warp-jump.store.ts",
+      "digest": "9cfd820f4b59",
+      "container": "site",
+      "layer": "store",
+      "context": "warp",
+      "feature": null,
+      "exports": [
+        "beginJump",
+        "endJump",
+        "isJumping",
+        "readJumpIntensity"
+      ],
+      "imports": [
+        "apps/borso-fr/site/src/warp/warp-jump.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
+      "path": "apps/borso-fr/site/src/warp/warp-navigation.core.ts",
+      "digest": "2746b0344506",
+      "container": "site",
+      "layer": "core",
+      "context": "warp",
+      "feature": null,
+      "exports": [
+        "isModifiedClick",
+        "selectNavigationMode"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": []
+    },
+    {
       "path": "apps/borso-fr/vite.config.ts",
       "digest": "4633157bce0d",
       "container": "site",
@@ -1398,7 +1473,7 @@
     {
       "id": "browser-edge-module",
       "file": "apps/borso-fr/site/src/art/mondrian/cascade-timer.ts",
-      "followerCount": 3
+      "followerCount": 4
     },
     {
       "id": "cdk-app-entrypoint",

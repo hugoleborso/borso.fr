@@ -969,7 +969,7 @@
         "name": "Browser Edge Module",
         "usage": "Use for the one module that owns a browser system a React tree cannot hold, such as a timer, the history entry, or a canvas export.",
         "path": "apps/borso-fr/site/src/art/mondrian/cascade-timer.ts",
-        "followers": 3
+        "followers": 4
       },
       {
         "id": "data-module",
@@ -1130,7 +1130,7 @@
         "name": "Pure Unit Test",
         "usage": "Use for every `*.core.ts` and `*.utils.ts` file, which the per-file coverage gate holds at 100 percent.",
         "path": "apps/pragma/domain/transition.core.test.ts",
-        "followers": 191
+        "followers": 193
       }
     ],
     "test/infra/unknown": [

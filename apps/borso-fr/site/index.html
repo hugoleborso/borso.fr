@@ -42,7 +42,7 @@
 
     <button
       id="burger"
-      class="group fixed top-6 right-6 z-50 flex h-11 w-11 cursor-pointer appearance-none items-center justify-center rounded-full border-0 bg-transparent text-apex-fg transition-colors duration-[250ms] [-webkit-tap-highlight-color:transparent] hover:bg-apex-fg/8 motion-reduce:transition-none"
+      class="group fixed top-6 right-6 z-50 flex h-11 w-11 cursor-pointer appearance-none items-center justify-center rounded-full border-0 bg-transparent text-apex-fg transition-[background-color,color,opacity] duration-[250ms] [-webkit-tap-highlight-color:transparent] hover:bg-apex-fg/8 motion-reduce:transition-none [.jumping_&]:pointer-events-none [.jumping_&]:opacity-0"
       type="button"
       aria-label="Ouvrir le menu"
       aria-expanded="false"
@@ -104,7 +104,7 @@
 
     <nav
       id="menu"
-      class="group pointer-events-none fixed top-0 right-0 bottom-0 left-0 z-40 flex flex-col items-center justify-center bg-apex-bg/65 px-6 opacity-0 backdrop-blur-[12px] transition-opacity duration-[350ms] aria-[hidden=false]:pointer-events-auto aria-[hidden=false]:opacity-100 sm:left-auto sm:items-end sm:bg-transparent sm:pr-14 sm:opacity-100 sm:backdrop-blur-none"
+      class="group pointer-events-none fixed top-0 right-0 bottom-0 left-0 z-40 flex flex-col items-center justify-center bg-apex-bg/65 px-6 opacity-0 backdrop-blur-[12px] transition-opacity duration-[350ms] aria-[hidden=false]:pointer-events-auto aria-[hidden=false]:opacity-100 sm:left-auto sm:items-end sm:bg-transparent sm:pr-14 sm:opacity-100 sm:backdrop-blur-none [.jumping_&]:pointer-events-none [.jumping_&]:opacity-0"
       aria-hidden="true"
     >
       <ul
