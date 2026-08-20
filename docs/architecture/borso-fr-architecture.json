@@ -51,7 +51,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/12-travaux/main.tsx",
-      "digest": "9d5373f6d2ad",
+      "digest": "4935d9c5212e",
       "container": "site",
       "layer": "unknown",
       "context": "12-travaux",
@@ -60,7 +60,8 @@
       "imports": [
         "apps/borso-fr/site/src/12-travaux/App.tsx",
         "apps/borso-fr/site/src/i18n/i18n.ts",
-        "apps/borso-fr/site/src/styles/tokens.css"
+        "apps/borso-fr/site/src/styles/tokens.css",
+        "apps/borso-fr/site/src/warp/warp-drive.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -201,7 +202,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/art/mondrian/main.tsx",
-      "digest": "fb1472df4ec5",
+      "digest": "58cc7044fa89",
       "container": "site",
       "layer": "unknown",
       "context": "art",
@@ -213,7 +214,8 @@
         "apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts",
         "apps/borso-fr/site/src/art/mondrian/paper-theme.ts",
         "apps/borso-fr/site/src/i18n/i18n.ts",
-        "apps/borso-fr/site/src/styles/tokens.css"
+        "apps/borso-fr/site/src/styles/tokens.css",
+        "apps/borso-fr/site/src/warp/warp-drive.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -1089,7 +1091,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/home-page.ts",
-      "digest": "f521b6f162d8",
+      "digest": "74a0a9f742cc",
       "container": "site",
       "layer": "unknown",
       "context": "root",
@@ -1098,7 +1100,8 @@
       "imports": [
         "apps/borso-fr/site/src/home-menu.core.ts",
         "apps/borso-fr/site/src/i18n/fr.json",
-        "apps/borso-fr/site/src/warp/warp-drive.ts"
+        "apps/borso-fr/site/src/warp/warp-drive.ts",
+        "apps/borso-fr/site/src/warp/warp-jump.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": []
@@ -1365,7 +1368,7 @@
     },
     {
       "path": "apps/borso-fr/site/src/warp/warp-drive.ts",
-      "digest": "e62152531e67",
+      "digest": "d14e832bdf23",
       "container": "site",
       "layer": "unknown",
       "context": "warp",
@@ -1385,13 +1388,14 @@
     },
     {
       "path": "apps/borso-fr/site/src/warp/warp-jump.core.ts",
-      "digest": "301d52e9189c",
+      "digest": "c748ef86d344",
       "container": "site",
       "layer": "core",
       "context": "warp",
       "feature": null,
       "exports": [
         "JUMP_DURATION_MILLISECONDS",
+        "PAGE_FADE_DURATION_MILLISECONDS",
         "selectIntensityAt"
       ],
       "imports": [],

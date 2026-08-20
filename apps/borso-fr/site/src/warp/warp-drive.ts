@@ -1,12 +1,17 @@
 /**
- * The lightspeed jump the galaxy makes before the browser leaves the page.
+ * The transition every page of borso.fr plays before the browser leaves it.
  *
- * The click on an internal link is held, the galaxy's own travel rate and glow
- * are taken up until the stars are sweeping past, and the browser is sent to
- * the destination at the top of that acceleration. Nothing is drawn over the
- * page: the effect is the background that was already there, flying.
+ * The click on an internal link is held, the page performs its own departure,
+ * and the browser is sent on at the end of it. On the landing page that is the
+ * galaxy taking its own travel rate and glow up until the stars sweep past; on
+ * a page with no galaxy it is the page fading. Nothing is drawn over either:
+ * the effect is what was already there, leaving.
+ *
+ * How long the click is held is the caller's, because the two transitions are
+ * not the same length. The stylesheet reads it back off `--transition-hold`,
+ * so the fade and the navigation cannot drift apart.
  */
-import { JUMP_DURATION_MILLISECONDS } from './warp-jump.core';
+import { PAGE_FADE_DURATION_MILLISECONDS } from './warp-jump.core';
 import { beginJump, endJump, isJumping } from './warp-jump.store';
 import { isModifiedClick, selectNavigationMode } from './warp-navigation.core';
 
@@ -19,12 +24,14 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
  */
 const JUMPING_BODY_CLASS = 'jumping';
 
-function engageJump(destinationHref: string): void {
+const HOLD_CUSTOM_PROPERTY = '--transition-hold';
+
+function engageJump(destinationHref: string, holdMilliseconds: number): void {
   document.body.classList.add(JUMPING_BODY_CLASS);
   beginJump(performance.now());
   window.setTimeout(() => {
     window.location.assign(destinationHref);
-  }, JUMP_DURATION_MILLISECONDS);
+  }, holdMilliseconds);
 }
 
 /**
@@ -36,7 +43,7 @@ function settleGalaxy(): void {
   endJump();
 }
 
-function jumpBeforeNavigation(event: MouseEvent): void {
+function jumpBeforeNavigation(event: MouseEvent, holdMilliseconds: number): void {
   if (event.defaultPrevented) return;
   if (isJumping()) return;
 
@@ -57,11 +64,14 @@ function jumpBeforeNavigation(event: MouseEvent): void {
   if (mode === 'browser') return;
 
   event.preventDefault();
-  engageJump(link.href);
+  engageJump(link.href, holdMilliseconds);
 }
 
 // @FollowsBlueprint browser-edge-module
-export function installWarpDrive(): void {
-  document.addEventListener('click', jumpBeforeNavigation);
+export function installWarpDrive(holdMilliseconds = PAGE_FADE_DURATION_MILLISECONDS): void {
+  document.documentElement.style.setProperty(HOLD_CUSTOM_PROPERTY, `${holdMilliseconds}ms`);
+  document.addEventListener('click', (event) => {
+    jumpBeforeNavigation(event, holdMilliseconds);
+  });
   window.addEventListener('pageshow', settleGalaxy);
 }

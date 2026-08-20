@@ -18,29 +18,36 @@ describe('selectJumpIntensity', () => {
     expect(selectJumpIntensity(-50)).toEqual({ starSpeedMultiplier: 1, glowMultiplier: 1 });
   });
 
-  it('reaches full speed at the end of the jump', () => {
+  it('reaches its nominal top at the end of the jump', () => {
     expect(selectJumpIntensity(JUMP_DURATION_MILLISECONDS)).toEqual({
-      starSpeedMultiplier: 120,
-      glowMultiplier: 1.9,
+      starSpeedMultiplier: 200,
+      glowMultiplier: 2.1,
     });
   });
 
-  it('holds full speed past the end, for the frames between the last one and the navigation', () => {
-    expect(selectJumpIntensity(JUMP_DURATION_MILLISECONDS + 500)).toEqual({
-      starSpeedMultiplier: 120,
-      glowMultiplier: 1.9,
-    });
+  it('keeps building past the end, because the page is still on screen', () => {
+    const atTheEnd = selectJumpIntensity(JUMP_DURATION_MILLISECONDS);
+    const shortlyAfter = selectJumpIntensity(JUMP_DURATION_MILLISECONDS + 80);
+    expect(shortlyAfter.starSpeedMultiplier).toBeGreaterThan(atTheEnd.starSpeedMultiplier);
+    expect(shortlyAfter.glowMultiplier).toBeGreaterThan(atTheEnd.glowMultiplier);
+    expect(shortlyAfter.starSpeedMultiplier).toBeCloseTo(1 + 1.21 * 199, 5);
+  });
+
+  it('stops building where the field would start to flicker', () => {
+    const ceiling = { starSpeedMultiplier: 1 + 1.6 * 199, glowMultiplier: 1 + 1.6 * 1.1 };
+    expect(selectJumpIntensity(JUMP_DURATION_MILLISECONDS * 1.3)).toEqual(ceiling);
+    expect(selectJumpIntensity(JUMP_DURATION_MILLISECONDS * 20)).toEqual(ceiling);
   });
 
   it('is a quarter of the way up at half time, so the click gets an answer early', () => {
     const halfway = selectJumpIntensity(JUMP_DURATION_MILLISECONDS / 2);
-    expect(halfway.starSpeedMultiplier).toBeCloseTo(1 + 0.25 * 119, 5);
-    expect(halfway.glowMultiplier).toBeCloseTo(1 + 0.25 * 0.9, 5);
+    expect(halfway.starSpeedMultiplier).toBeCloseTo(1 + 0.25 * 199, 5);
+    expect(halfway.glowMultiplier).toBeCloseTo(1 + 0.25 * 1.1, 5);
   });
 
   it('still spends most of its speed at the end', () => {
     const nineTenths = selectJumpIntensity(JUMP_DURATION_MILLISECONDS * 0.9);
-    expect(nineTenths.starSpeedMultiplier).toBeCloseTo(1 + 0.81 * 119, 5);
+    expect(nineTenths.starSpeedMultiplier).toBeCloseTo(1 + 0.81 * 199, 5);
   });
 });
 
@@ -51,8 +58,8 @@ describe('selectIntensityAt', () => {
 
   it('reads the jump from when it started rather than from the clock', () => {
     expect(selectIntensityAt(1000, 1000 + JUMP_DURATION_MILLISECONDS)).toEqual({
-      starSpeedMultiplier: 120,
-      glowMultiplier: 1.9,
+      starSpeedMultiplier: 200,
+      glowMultiplier: 2.1,
     });
   });
 });

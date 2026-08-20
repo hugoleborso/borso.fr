@@ -9,9 +9,11 @@ import {
 // here measured 16.9 kB gzipped on the landing page, which is the entry point a
 // visitor is most likely to open on its own.
 import { home } from './i18n/fr.json';
+import { JUMP_DURATION_MILLISECONDS } from './warp/warp-jump.core';
 import { installWarpDrive } from './warp/warp-drive';
 
-installWarpDrive();
+// The landing page holds longer than the rest: it has a galaxy to accelerate.
+installWarpDrive(JUMP_DURATION_MILLISECONDS);
 
 const BODY_MENU_OPEN_CLASS = 'menu-open';
 const ANIMATE_IN_CLASS = 'animate-in';

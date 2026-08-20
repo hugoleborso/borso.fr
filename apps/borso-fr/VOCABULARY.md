@@ -78,6 +78,15 @@ Lives in: `site/src/art/mondrian/`
 - The PNG export re-draws the same rectangles into a 2000 px square SVG
   and rasterises that, rather than reading the DOM.
 
+## Departure
+
+What any page of the site does between the click on an internal link and the
+browser leaving. Every page has one: a Jump where there is a Galaxy, a Fade
+where there is not. `warp-drive.ts` installs it on all three built pages, and
+the caller passes the length the click is held for.
+
+Lives in: `site/src/warp/`
+
 ## Edition
 
 One year of the twelve labours, with its months.
@@ -103,6 +112,20 @@ Lives in: `vite.config.ts`
 - The burger menu links them. Its items live under `home.menu`, and their
   fan-out delay and Escape behaviour are decided in `home-menu.core.ts`.
 
+## Fade
+
+What a page with no Galaxy does while the browser leaves it: its own content
+goes to nothing and the paper it was printed on stays. The other half of the
+Departure, beside the Jump.
+
+Lives in: `site/src/warp/`
+
+- Held for 420 ms against the Jump's 800 ms. A fade has nothing to build up
+  to, so the whole of it is the wait.
+- Driven by the `jumping` class on `body` and the `--transition-hold` custom
+  property, both written by `warp-drive.ts`, so the length of the fade and the
+  length of the hold are one number.
+
 ## Galaxy
 
 The animated star field behind the landing page.
@@ -123,22 +146,23 @@ Lives in: `site/src/components/organisms/`
 ## Jump
 
 The lightspeed acceleration the Galaxy makes while the browser leaves the
-landing page for another page of the site. Never "warp animation" or
-"transition": the Galaxy is already travelling, and a jump is that travel
-taken up, not a second effect laid over it.
+landing page. Never "warp animation": the Galaxy is already travelling, and a
+jump is that travel taken up, not a second effect laid over it. Not a synonym
+for Departure either — a jump is the one kind of departure a page with a
+Galaxy can make.
 
 Lives in: `site/src/warp/`
 
-- `warp-navigation.core.ts` decides whether a click earns a jump. Only a
+- `warp-navigation.core.ts` decides whether a click earns a departure. Only a
   plain left click on a same-origin link that replaces this document does.
-- `warp-jump.core.ts` holds the curve and the two multipliers, and the
-  arithmetic tying the peak to the shader's cycle rate.
+- `warp-jump.core.ts` holds the curve and the two multipliers, the arithmetic
+  tying the peak to the shader's cycle rate, and both hold lengths.
 - `warp-jump.store.ts` holds the start time outside React, because the
   Galaxy's frame loop lives inside the effect that owns its WebGL context.
 - `warp-drive.ts` is the browser edge: the click listener, the navigation
   timer, and the reset for a page restored from the back-forward cache.
-- Only the landing page installs it. The other pages have no Galaxy, so
-  there is nothing there to accelerate.
+- The curve keeps climbing after the browser is asked to leave, because the
+  page is still on screen until the destination answers.
 
 ## Month
 
