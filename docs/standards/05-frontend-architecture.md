@@ -147,3 +147,12 @@ Write the mobile layout first, and then opt into the desktop layout with `lg:`.
   touched, because a synthetic click is not a tap.
 - `reviewer` checks that a prop set has not grown a family of booleans where one
   variant string belongs.
+- `reviewer` checks that a control taking a drag or a slide writes nothing on
+  `pointerdown`. A vertical swipe the page is entitled to still arrives at the
+  control as a `pointerdown` and a `pointermove` or two before the browser rules
+  it a scroll and sends `pointercancel`, so a control that commits on the way
+  down rewrites whatever the thumb was resting on while the user was only
+  scrolling past it. `touch-action` decides who gets the gesture; it does not
+  stop those events reaching the handler. The write belongs on `pointerup` for a
+  tap, and on the first `pointermove` that has travelled further along the
+  control's own axis than across it for a slide.

@@ -68,6 +68,16 @@
             "statusMessage": "Formatting with Prettier"
           }
         ]
+      },
+      {
+        "matcher": "mcp__github__pull_request_read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/posttool-empty-checks-means-conflict.sh",
+            "statusMessage": "Checking whether an empty checks list means a conflict"
+          }
+        ]
       }
     ]
   }
