@@ -6,7 +6,7 @@ import {
 } from '../../art/mondrian/animation.core';
 import type { ColoredRect } from '../../art/mondrian/painting.utils';
 import type { Palette } from '../../art/mondrian/palettes.utils';
-import { useAnimation } from '../../art/mondrian/use-animation';
+import { useAnimation } from '../../art/mondrian/use-animation.hook';
 import { MondrianRect } from '../atoms/MondrianRect';
 
 const FRAME_CLASS_NAME =

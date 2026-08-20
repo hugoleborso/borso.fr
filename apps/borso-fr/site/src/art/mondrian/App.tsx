@@ -21,7 +21,7 @@ import {
   selectPalette,
 } from './palettes.utils';
 import { buildTitle } from './titles.utils';
-import { useIsReducedMotion } from './use-reduced-motion';
+import { useIsReducedMotion } from './use-reduced-motion.hook';
 
 const RAIL_TOGGLE_CLASS_NAME =
   'fixed top-4 right-4 z-30 block min-h-11 cursor-pointer border border-atelier-ink bg-atelier-paper px-3.5 py-2.5 font-atelier-serif text-[14px] text-atelier-ink italic focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-atelier-ink atelier-desk:hidden';
