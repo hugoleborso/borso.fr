@@ -49,6 +49,8 @@ Send the `standards-reviewer` agent with a brief carrying exactly these fields:
 
 The agent runs standalone. Do not pass it your conversation, your intent, or your opinion of the code: it exists to read the diff without knowing what the implementer had convinced themselves of.
 
+**Exactly those three fields, and no file list.** The temptation, having just run `seal.ts verify` to find out whether there is a review to run, is to paste its output into the brief. Do not: the brief is written once and the tree keeps moving, so by the time the agent reads it a commit has landed and the list is short by a file. That happened twice on one branch, and both times the agent followed the brief over the gate and silently skipped a file — a file that then went to `main` unsealed while the gate said it was reviewed. The agent runs `seal.ts verify` itself; naming files can only make its answer worse. Say what changed if it helps the agent aim, and let the gate say which files that means.
+
 ## After it returns
 
 - `PASS` — re-run `seal.ts verify`; it should be clean. Commit `docs/standards/seals.jsonl` with the change it covers, in the same commit or the next one.
