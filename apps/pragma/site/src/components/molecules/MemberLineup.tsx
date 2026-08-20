@@ -1,12 +1,18 @@
 /**
- * MemberLineup — row of bare MemberChips (no name labels) shown on
- * a SongCard's footer. Maps a lineup record (the instruments each member
- * holds) to a set of chips, using the resolved member's name and colour, and
- * naming every instrument in the chip's tooltip. Caller injects the members
- * and instruments to keep this molecule free of data-fetching concerns.
+ * MemberLineup — the band on a song, as a row of bare MemberChips.
+ *
+ * The chips overlap and the row stops at four, with a count for the rest.
+ * A setlist row gives the lineup whatever width the title and the key leave,
+ * and a five-piece band spaced out was wide enough to wrap the line under the
+ * title — which cost the card a whole line for four avatars. Overlapping them
+ * is what keeps the meta line one line at 375 px. Each chip carries a ring in
+ * the card's own colour, so the overlap reads as separate people rather than
+ * as one smeared circle.
  * @Feature members
  */
 
+import { composeClassName } from '../atoms/class-name.utils';
+import { buildLineupChips } from './member-lineup.core';
 import { MemberChip } from './MemberChip';
 
 export interface LineupMember {
@@ -26,27 +32,38 @@ export interface MemberLineupProps {
   instruments: readonly LineupInstrument[];
 }
 
+const MAXIMUM_VISIBLE_MEMBERS = 4;
+const OVERLAP_CLASS = '-ml-1.5 first:ml-0 rounded-full ring-2 ring-bg-elev';
+
 // @FollowsBlueprint molecule-presentational
 export function MemberLineup({ lineup, members, instruments }: MemberLineupProps): JSX.Element {
+  const { visible, hiddenCount, hasHiddenMembers } = buildLineupChips(
+    lineup,
+    members,
+    instruments,
+    MAXIMUM_VISIBLE_MEMBERS,
+  );
   return (
-    <span className="inline-flex gap-1 flex-wrap">
-      {Object.entries(lineup).map(([memberId, instrumentIds]) => {
-        const member = members.find((candidate) => candidate.id === memberId);
-        if (!member) return null;
-        const names = instrumentIds.flatMap((instrumentId) => {
-          const instrument = instruments.find((candidate) => candidate.id === instrumentId);
-          return instrument === undefined ? [] : [instrument.name];
-        });
-        const title = names.length > 0 ? `${member.name} — ${names.join(' + ')}` : member.name;
-        return (
-          <MemberChip
-            key={memberId}
-            memberName={member.name}
-            memberColor={member.color}
-            title={title}
-          />
-        );
-      })}
+    <span className="inline-flex shrink-0 items-center">
+      {visible.map((chip) => (
+        <MemberChip
+          key={chip.memberId}
+          memberName={chip.memberName}
+          memberColor={chip.memberColor}
+          title={chip.title}
+          className={OVERLAP_CLASS}
+        />
+      ))}
+      {hasHiddenMembers ? (
+        <span
+          className={composeClassName(
+            OVERLAP_CLASS,
+            'inline-flex h-[22px] min-w-[22px] items-center justify-center bg-bg-sunk px-1 font-mono text-[10px] text-ink-500',
+          )}
+        >
+          +{hiddenCount}
+        </span>
+      ) : null}
     </span>
   );
 }

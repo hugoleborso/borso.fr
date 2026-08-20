@@ -28,21 +28,21 @@ describe('isEnergyStored', () => {
 describe('selectEnergyAppearance', () => {
   it('draws a stored energy in the accent palette', () => {
     expect(selectEnergyAppearance(true)).toEqual({
-      sliderClassName: 'accent-accent',
-      readoutClassName: 'text-ink-500',
+      filledClassName: 'bg-accent border-accent text-bg-elev',
+      emptyClassName: 'bg-bg-sunk border-line-strong text-ink-500',
     });
   });
 
-  it('mutes both the slider and the number while nothing is stored', () => {
+  it('mutes the filled segments while nothing is stored', () => {
     expect(selectEnergyAppearance(false)).toEqual({
-      sliderClassName: 'accent-line-strong opacity-60',
-      readoutClassName: 'text-ink-300',
+      filledClassName: 'bg-ink-500 border-ink-500 text-bg-elev',
+      emptyClassName: 'bg-bg-sunk border-line-strong text-ink-500',
     });
   });
 });
 
 describe('ENERGY_DEFAULT', () => {
-  it('is the midpoint the slider starts from', () => {
+  it('is the midpoint the bar starts from', () => {
     expect(ENERGY_DEFAULT).toBe(5);
   });
 });

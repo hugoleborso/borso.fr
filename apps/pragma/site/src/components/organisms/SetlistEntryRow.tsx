@@ -1,31 +1,38 @@
 /**
  * One row of the setlist editor: the position, a drag handle, the song and
- * who plays what on it, the energy slider, and the row actions.
+ * who plays what on it, the energy bar, and the row actions.
  *
- * The layout stacks under `sm` and spreads out above it, so a phone gets one
- * readable column and thumb-sized controls rather than a five-cell grid
- * squeezed into 375 px. The energy control and the key / capo / notes panel sit
- * below the title row rather than inside it, so they span the card instead of
- * the 189 px the position, the drag handle and the action stack leave. The
- * title wraps into that column rather than being cut off at one line: the
- * action stack is 132 px tall beside it, so a second line costs no height, and
- * on stage a half-read title is worth nothing.
+ * A closed card is two lines: the position, the drag handle, the title and one
+ * `⋯` button, then the energy bar under them. Everything else — the key, the
+ * capo, the notes, the lineup and the removal — lives behind that button,
+ * because a row of thumb-sized buttons is a line of its own on a phone and a
+ * setlist is read a screen at a time. `⋯` sits beside the title rather than
+ * under the bar for the same reason: the line it would occupy costs more than
+ * the width it takes from the title.
  *
- * Each row owns a small `useForm` instance — the parent
- * (`SetlistEditor`) doesn't centralise per-row state. The form is never
- * submitted: it exists for field state and Zod validation, and every change
- * reaches the parent through `onUpdate` from inside `field.handleChange`, so
- * the live-edit semantics (per-keystroke mutation) are preserved without an
- * effect. There is no `onSubmit` and no submit button anywhere in the row.
+ * Everything sits in the same order in the markup and in both layouts, so tab
+ * order is reading order.
+ *
+ * The title is the one thing allowed to wrap — on stage a half-read title is
+ * worth nothing. The line under it holds the artist, the key, the mastery and
+ * the band on one line whatever it carries: everything but the artist refuses
+ * to shrink, and the artist truncates into whatever is left, keeping its full
+ * text in a `title`. A wrapping meta line spent a whole line of the card on
+ * four avatars.
+ *
+ * Each row owns a small `useForm` instance rather than reading per-row state
+ * from a store above it. The form is never submitted: it exists for field
+ * state and Zod validation, and every change calls `onUpdate` beside
+ * `field.handleChange`, so the live-edit semantics (per-keystroke mutation)
+ * are preserved without an effect.
  *
  * The list item itself is the dnd-kit sortable node, so the whole row
  * (the transition strip that precedes it, plus the card) is what reorders.
  * While the row is the one being dragged it dims into a placeholder so the
  * operator can read the gap opening between the other cards.
  *
- * Removing a row asks first, and a rule separates it from Lineup and Edit: the
- * write has no undo, and a destructive target one pixel row away from an
- * ordinary one is a slip waiting to happen.
+ * Removing a row asks first, and it is drawn in the danger palette: the write
+ * has no undo, and both it and Lineup are a tap away inside the same panel.
  *
  * The `Lineup` button opens the `<LineupEditor surface='setlist-entry'>`
  * modal; saving the modal calls `onUpdate(entryId, { lineupOverride })`.
@@ -42,6 +49,7 @@ import type { JSX, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { composeClassName } from '../atoms/class-name.utils';
+import { EnergyBar } from '../atoms/EnergyBar';
 import { Icon } from '../atoms/Icon';
 import {
   LineupEditor,
@@ -65,21 +73,14 @@ import {
   selectEnergyAppearance,
 } from './setlist-entry-energy.core';
 import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
+import type { SetlistEntryPatch } from '../../lib/queries/setlists.queries';
 
-const ENERGY_STEP = 1;
 const POSITION_DIGITS = 2;
 const ICON_BUTTON_CLASS =
-  'w-11 h-11 sm:w-9 sm:h-9 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
-
-/**
- * Nine intervals over the width a phone leaves this row is about twelve pixels
- * per energy point, which is a drag nobody lands on the first try. The pair of
- * steppers is the exact way to move one point; the slider stays for the long
- * jumps.
- */
-const ENERGY_STEP_BUTTON_CLASS =
-  'w-11 h-11 sm:w-9 sm:h-9 shrink-0 inline-flex items-center justify-center rounded-md border border-line ' +
-  'text-ink-700 bg-bg-elev cursor-pointer hover:border-line-strong disabled:opacity-40 disabled:cursor-not-allowed';
+  'w-11 h-11 sm:w-9 sm:h-9 shrink-0 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
+const MENU_ITEM_CLASS =
+  'min-h-11 flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-line ' +
+  'bg-bg-elev px-3 text-sm text-ink-700 cursor-pointer hover:border-line-strong';
 
 export interface ProminentMemberInstrument {
   readonly memberName: string;
@@ -99,7 +100,6 @@ export interface SetlistEntryRowProps {
   readonly energy: number | null;
   readonly baseEnergy: number | null;
   readonly notes: string;
-  readonly currentSongId: string;
   readonly lineup: Readonly<Record<string, readonly string[]>>;
   readonly resolvedLineupForEdit: LineupRecord;
   readonly songDefaultLineup: LineupRecord;
@@ -108,7 +108,7 @@ export interface SetlistEntryRowProps {
   readonly instruments: readonly LineupEditorInstrument[];
   readonly prominentMemberInstrument: ProminentMemberInstrument | null;
   readonly transitionBefore: ReactNode;
-  readonly onUpdate: (entryId: string, patch: Record<string, unknown>) => void;
+  readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
   readonly onRemove: (entryId: string) => void;
 }
 
@@ -185,21 +185,23 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 [overflow-wrap:anywhere]">
               {props.title}
             </div>
-            <div className="flex items-center gap-2 text-xs text-ink-500 mt-0.5 flex-wrap">
-              <span>{props.artist}</span>
+            <div className="flex items-center gap-1.5 text-xs text-ink-500 mt-0.5 min-w-0">
+              <span className="truncate" title={props.artist}>
+                {props.artist}
+              </span>
               {props.tonalityLabel === null ? null : (
                 <>
-                  <span className="text-ink-300">·</span>
-                  <span className="font-mono text-xs uppercase tracking-wider">
+                  <span className="text-ink-300 shrink-0">·</span>
+                  <span className="font-mono text-xs uppercase tracking-wider shrink-0">
                     {props.tonalityLabel}
                   </span>
                 </>
               )}
               {props.meanMastery === null ? null : (
                 <>
-                  <span className="text-ink-300">·</span>
+                  <span className="text-ink-300 shrink-0">·</span>
                   <span
-                    className="font-mono inline-flex items-center gap-1 text-xs"
+                    className="font-mono inline-flex items-center gap-1 text-xs shrink-0"
                     style={{ color: selectMasteryColor(props.meanMastery) }}
                   >
                     <Icon name="star" size={11} />
@@ -207,7 +209,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                   </span>
                 </>
               )}
-              <span className="text-ink-300">·</span>
+              <span className="text-ink-300 shrink-0">·</span>
               <MemberLineup
                 lineup={props.lineup}
                 members={props.members}
@@ -215,107 +217,77 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               />
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-center gap-2 shrink-0 sm:self-start">
-            <button
-              type="button"
-              onClick={() => setLineupEditorOpen(true)}
-              aria-label={t('lineup.edit')}
-              title={t('lineup.edit')}
-              className={ICON_BUTTON_CLASS}
-            >
-              <Icon name="members" size={15} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setMoreOpen((current) => !current)}
-              aria-label={t('common.edit')}
-              aria-expanded={moreOpen}
-              className={ICON_BUTTON_CLASS}
-            >
-              <Icon name="more" size={15} />
-            </button>
-            <span className="w-6 h-px sm:w-px sm:h-6 bg-line shrink-0" />
-            <button
-              type="button"
-              onClick={() => setIsRemovalPending(true)}
-              aria-label={t('setlist.removeEntry')}
-              className={composeClassName(ICON_BUTTON_CLASS, 'hover:text-danger')}
-            >
-              <Icon name="trash" size={14} />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setMoreOpen((current) => !current)}
+            aria-label={t('common.actions')}
+            aria-expanded={moreOpen}
+            className={ICON_BUTTON_CLASS}
+          >
+            <Icon name="more" size={15} />
+          </button>
         </div>
-        <form.Field name="energy">
-          {(field) => {
-            const appearance = selectEnergyAppearance(
-              isEnergyStored({
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+          <form.Field name="energy">
+            {(field) => {
+              const isStored = isEnergyStored({
                 isEdited: field.state.meta.isDirty,
                 entryEnergy: props.energy,
                 songEnergy: props.baseEnergy,
-              }),
-            );
-            return (
-              <div className="flex items-center gap-2 max-w-full sm:max-w-[340px]">
-                <span className="text-xs font-mono uppercase tracking-wider text-ink-400 shrink-0">
-                  {t('setlist.energy')}
-                </span>
-                <input
-                  type="range"
-                  min={ENERGY_MIN}
-                  max={ENERGY_MAX}
-                  value={field.state.value}
-                  onChange={(event) => {
-                    const next = Number(event.target.value);
-                    field.handleChange(next);
-                    publishEnergy(next);
-                  }}
-                  onBlur={field.handleBlur}
-                  aria-label={t('setlist.energy')}
-                  className={composeClassName('flex-1 min-w-0 h-11', appearance.sliderClassName)}
-                />
-                <button
-                  type="button"
-                  className={ENERGY_STEP_BUTTON_CLASS}
-                  disabled={field.state.value <= ENERGY_MIN}
-                  aria-label={t('setlist.energyDown')}
-                  onClick={() => {
-                    const next = field.state.value - ENERGY_STEP;
-                    field.handleChange(next);
-                    publishEnergy(next);
-                  }}
-                >
-                  −
-                </button>
-                <span
-                  className={composeClassName(
-                    'font-mono text-xs min-w-[18px] shrink-0 text-center',
-                    appearance.readoutClassName,
-                  )}
-                >
-                  {field.state.value}
-                </span>
-                <button
-                  type="button"
-                  className={ENERGY_STEP_BUTTON_CLASS}
-                  disabled={field.state.value >= ENERGY_MAX}
-                  aria-label={t('setlist.energyUp')}
-                  onClick={() => {
-                    const next = field.state.value + ENERGY_STEP;
-                    field.handleChange(next);
-                    publishEnergy(next);
-                  }}
-                >
-                  +
-                </button>
-              </div>
-            );
-          }}
-        </form.Field>
+              });
+              const appearance = selectEnergyAppearance(isStored);
+              const changeEnergy = (next: number): void => {
+                field.handleChange(next);
+                publishEnergy(next);
+              };
+              return (
+                <>
+                  <span className="text-xs font-mono uppercase tracking-wider text-ink-400 shrink-0">
+                    {t('setlist.energy')}
+                  </span>
+                  <EnergyBar
+                    value={field.state.value}
+                    minimum={ENERGY_MIN}
+                    maximum={ENERGY_MAX}
+                    label={t('setlist.energy')}
+                    valueText={
+                      isStored ? undefined : t('setlist.energyUnset', { value: field.state.value })
+                    }
+                    filledClassName={appearance.filledClassName}
+                    emptyClassName={appearance.emptyClassName}
+                    className="w-full sm:flex-1 sm:max-w-[320px]"
+                    onChange={changeEnergy}
+                  />
+                </>
+              );
+            }}
+          </form.Field>
+        </div>
         {moreOpen ? (
-          <SetlistEntryDetailsFields
-            form={form}
-            onPatch={(patch) => props.onUpdate(props.entryId, patch)}
-          />
+          <div className="flex flex-col gap-2 border-t border-line pt-2">
+            <SetlistEntryDetailsFields
+              form={form}
+              onPatch={(patch) => props.onUpdate(props.entryId, patch)}
+            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setLineupEditorOpen(true)}
+                className={MENU_ITEM_CLASS}
+              >
+                <Icon name="members" size={15} />
+                {t('lineup.edit')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRemovalPending(true)}
+                className={composeClassName(MENU_ITEM_CLASS, 'text-danger hover:border-danger')}
+              >
+                <Icon name="trash" size={14} />
+                {t('setlist.removeEntry')}
+              </button>
+            </div>
+          </div>
         ) : null}
       </div>
       <LineupEditor
