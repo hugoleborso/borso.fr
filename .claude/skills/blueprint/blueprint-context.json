@@ -1130,7 +1130,7 @@
         "name": "Pure Unit Test",
         "usage": "Use for every `*.core.ts` and `*.utils.ts` file, which the per-file coverage gate holds at 100 percent.",
         "path": "apps/pragma/domain/transition.core.test.ts",
-        "followers": 195
+        "followers": 196
       }
     ],
     "test/infra/unknown": [

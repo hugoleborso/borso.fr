@@ -2,21 +2,19 @@
  * One row of the setlist editor: the position, a drag handle, the song and
  * who plays what on it, the energy bar, and the row actions.
  *
- * The card is a header and a footer: the position, the drag handle and the
- * title on top, then the energy label with its readout, the energy bar, and
- * the three row actions — stacked on a phone, one row above `sm`. The actions
- * stay a row in both layouts because a column of three thumb-sized buttons is
- * 157 px tall beside a title of about 61 px, and a card cannot be shorter than
- * the tallest thing in it.
+ * A closed card is two lines: the position, the drag handle, the title and one
+ * `⋯` button, then the energy bar under them. Everything else — the key, the
+ * capo, the notes, the lineup and the removal — lives behind that button,
+ * because a row of thumb-sized buttons is a line of its own on a phone and a
+ * setlist is read a screen at a time. `⋯` sits beside the title rather than
+ * under the bar for the same reason: the line it would occupy costs more than
+ * the width it takes from the title.
  *
- * Those three sit in the same order in the markup and in both layouts, so tab
- * order is reading order. A `flex-wrap` strip with `order-*` utilities fits
- * the label, the readout and the actions on one line and saves 20 px, at the
- * cost of sending focus from the drag handle down to the bar and back up to
- * the buttons, which is WCAG 2.4.3 for twenty pixels.
+ * Everything sits in the same order in the markup and in both layouts, so tab
+ * order is reading order.
  *
  * The title wraps rather than being cut off at one line — on stage a half-read
- * title is worth nothing — and the card's whole width is its to wrap into.
+ * title is worth nothing.
  *
  * Each row owns a small `useForm` instance — the parent
  * (`SetlistEditor`) doesn't centralise per-row state. The form is never
@@ -77,7 +75,10 @@ import type { SetlistEntryPatch } from '../../lib/queries/setlists.queries';
 
 const POSITION_DIGITS = 2;
 const ICON_BUTTON_CLASS =
-  'w-11 h-11 sm:w-9 sm:h-9 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
+  'w-11 h-11 sm:w-9 sm:h-9 shrink-0 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
+const MENU_ITEM_CLASS =
+  'min-h-11 flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-line ' +
+  'bg-bg-elev px-3 text-sm text-ink-700 cursor-pointer hover:border-line-strong';
 
 export interface ProminentMemberInstrument {
   readonly memberName: string;
@@ -213,6 +214,15 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               />
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setMoreOpen((current) => !current)}
+            aria-label={t('common.actions')}
+            aria-expanded={moreOpen}
+            className={ICON_BUTTON_CLASS}
+          >
+            <Icon name="more" size={15} />
+          </button>
         </div>
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
           <form.Field name="energy">
@@ -229,11 +239,8 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               };
               return (
                 <>
-                  <span className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-ink-400 shrink-0">
+                  <span className="text-xs font-mono uppercase tracking-wider text-ink-400 shrink-0">
                     {t('setlist.energy')}
-                    <span className={composeClassName('text-sm', appearance.readoutClassName)}>
-                      {field.state.value}
-                    </span>
                   </span>
                   <EnergyBar
                     value={field.state.value}
@@ -252,41 +259,32 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               );
             }}
           </form.Field>
-          <div className="flex items-center justify-end gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => setLineupEditorOpen(true)}
-              aria-label={t('lineup.edit')}
-              title={t('lineup.edit')}
-              className={ICON_BUTTON_CLASS}
-            >
-              <Icon name="members" size={15} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setMoreOpen((current) => !current)}
-              aria-label={t('common.edit')}
-              aria-expanded={moreOpen}
-              className={ICON_BUTTON_CLASS}
-            >
-              <Icon name="more" size={15} />
-            </button>
-            <span className="w-px h-6 bg-line shrink-0" />
-            <button
-              type="button"
-              onClick={() => setIsRemovalPending(true)}
-              aria-label={t('setlist.removeEntry')}
-              className={composeClassName(ICON_BUTTON_CLASS, 'hover:text-danger')}
-            >
-              <Icon name="trash" size={14} />
-            </button>
-          </div>
         </div>
         {moreOpen ? (
-          <SetlistEntryDetailsFields
-            form={form}
-            onPatch={(patch) => props.onUpdate(props.entryId, patch)}
-          />
+          <div className="flex flex-col gap-2 border-t border-line pt-2">
+            <SetlistEntryDetailsFields
+              form={form}
+              onPatch={(patch) => props.onUpdate(props.entryId, patch)}
+            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setLineupEditorOpen(true)}
+                className={MENU_ITEM_CLASS}
+              >
+                <Icon name="members" size={15} />
+                {t('lineup.edit')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRemovalPending(true)}
+                className={composeClassName(MENU_ITEM_CLASS, 'text-danger hover:border-danger')}
+              >
+                <Icon name="trash" size={14} />
+                {t('setlist.removeEntry')}
+              </button>
+            </div>
+          </div>
         ) : null}
       </div>
       <LineupEditor

@@ -7,6 +7,11 @@
  * a thumb and no boundary instead — about twelve pixels per point on a phone,
  * with every level's edge half a step from the tick beside it.
  *
+ * Each segment carries its own level, which is what lets the bar be the whole
+ * control: the value is the last numeral still filled, so the row needs no
+ * separate readout beside it, and aiming at a level means aiming at the
+ * numeral rather than at a position along a track.
+ *
  * **A gesture that starts here is not the bar's until it proves it is.** The
  * bar writes nothing on `pointerdown`: `touch-action: pan-y` lets the page
  * take a vertical swipe that began on the bar, but that swipe still arrives as
@@ -43,7 +48,9 @@ const BAR_CLASS =
   'flex h-10 sm:h-9 items-center gap-1 cursor-pointer touch-pan-y select-none rounded-sm ' +
   'outline-hidden focus-visible:outline-solid focus-visible:outline-2 ' +
   'focus-visible:outline-offset-2 focus-visible:outline-accent';
-const SEGMENT_CLASS = 'flex-1 h-5 rounded-sm border pointer-events-none transition-colors';
+const SEGMENT_CLASS =
+  'flex-1 h-6 rounded-sm border pointer-events-none transition-colors ' +
+  'inline-flex items-center justify-center font-mono text-[10px] leading-none';
 
 interface Gesture {
   readonly pointerId: number;
@@ -154,7 +161,9 @@ export function EnergyBar({
             SEGMENT_CLASS,
             level <= value ? filledClassName : emptyClassName,
           )}
-        />
+        >
+          {level}
+        </span>
       ))}
     </div>
   );

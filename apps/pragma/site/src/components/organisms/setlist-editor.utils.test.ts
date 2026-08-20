@@ -7,6 +7,7 @@ import {
   instrumentNamesFor,
   lineupOf,
   prominentMemberInstrumentFor,
+  restrictToVerticalAxis,
   selectUnwarnedMemberIds,
   tonalityLabelFor,
 } from './setlist-editor.utils';
@@ -283,5 +284,28 @@ describe('prominentMemberInstrumentFor', () => {
 
   it('returns null when the member holds nothing here', () => {
     expect(prominentMemberInstrumentFor([], 'm1', members, instruments)).toBe(null);
+  });
+});
+
+// @FollowsBlueprint test-pure-unit
+describe('restrictToVerticalAxis', () => {
+  it('drops the horizontal travel and keeps the vertical one', () => {
+    expect(restrictToVerticalAxis({ transform: { x: 120, y: -40, scaleX: 1, scaleY: 1 } })).toEqual(
+      {
+        x: 0,
+        y: -40,
+        scaleX: 1,
+        scaleY: 1,
+      },
+    );
+  });
+
+  it('leaves a drag that never went sideways alone', () => {
+    expect(restrictToVerticalAxis({ transform: { x: 0, y: 88, scaleX: 1, scaleY: 1 } })).toEqual({
+      x: 0,
+      y: 88,
+      scaleX: 1,
+      scaleY: 1,
+    });
   });
 });

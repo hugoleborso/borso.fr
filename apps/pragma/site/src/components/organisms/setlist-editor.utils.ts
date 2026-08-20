@@ -8,6 +8,17 @@
 import type { InstrumentFamily } from '@domain/instrument.core';
 import { type Lineup, resolveLineup } from '@domain/lineup.core';
 
+export interface DragTransform {
+  readonly x: number;
+  readonly y: number;
+  readonly scaleX: number;
+  readonly scaleY: number;
+}
+
+export interface DragModifierArgument {
+  readonly transform: DragTransform;
+}
+
 export interface SetlistEditorSong {
   readonly id: string;
   readonly title: string;
@@ -162,4 +173,17 @@ export function instrumentNamesFor(
     const instrument = instrumentsById[instrumentId];
     return instrument === undefined ? [] : [instrument.name];
   });
+}
+
+/**
+ * A dnd-kit modifier that drops the horizontal half of a drag.
+ *
+ * A setlist is one column, so sideways travel moves the card away from every
+ * drop target it could reach while the finger is still on it — on a phone that
+ * reads as the card escaping the list. Written here rather than taken from
+ * `@dnd-kit/modifiers`, because the whole of `restrictToVerticalAxis` is this
+ * one line and a dependency is a thing to keep.
+ */
+export function restrictToVerticalAxis({ transform }: DragModifierArgument): DragTransform {
+  return { ...transform, x: 0 };
 }

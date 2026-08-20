@@ -71,10 +71,12 @@ Lives in: `api/src/songs/` (`baseEnergy`) and `api/src/setlists/`
 - `baseEnergy` is the song's usual level; the entry's `energy` is what
   that song is worth in this particular setlist, and it is what the
   sparkline draws.
-- An entry with no energy anywhere draws its bar and readout in the
-  muted palette, and the bar fills to `ENERGY_DEFAULT`, which is 5
+- An entry with no energy anywhere draws its bar in the muted palette,
+  filled to `ENERGY_DEFAULT`, which is 5
   (`site/src/components/organisms/setlist-entry-energy.core.ts`). The bar
-  is ten segments, one per level, which a thumb taps or slides along
+  is ten segments, one per level, each carrying its own number, which a
+  thumb taps or slides along; the value is the last number still filled,
+  so the row shows it nowhere else
   (`site/src/components/atoms/EnergyBar.tsx`).
 
 ## Instrument

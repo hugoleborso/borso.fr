@@ -28,17 +28,15 @@ describe('isEnergyStored', () => {
 describe('selectEnergyAppearance', () => {
   it('draws a stored energy in the accent palette', () => {
     expect(selectEnergyAppearance(true)).toEqual({
-      filledClassName: 'bg-accent border-accent',
-      emptyClassName: 'bg-bg-sunk border-line-strong',
-      readoutClassName: 'text-ink-500',
+      filledClassName: 'bg-accent border-accent text-bg-elev',
+      emptyClassName: 'bg-bg-sunk border-line-strong text-ink-500',
     });
   });
 
-  it('mutes both the bar and the number while nothing is stored', () => {
+  it('mutes the filled segments while nothing is stored', () => {
     expect(selectEnergyAppearance(false)).toEqual({
-      filledClassName: 'bg-ink-500 border-ink-500',
-      emptyClassName: 'bg-bg-sunk border-line-strong',
-      readoutClassName: 'text-ink-300',
+      filledClassName: 'bg-ink-500 border-ink-500 text-bg-elev',
+      emptyClassName: 'bg-bg-sunk border-line-strong text-ink-500',
     });
   });
 });

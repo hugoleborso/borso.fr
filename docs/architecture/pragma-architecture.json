@@ -1997,7 +1997,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/EnergyBar.tsx",
-      "digest": "9d037ff50d62",
+      "digest": "ac3ffccdb892",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -3299,7 +3299,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
-      "digest": "e991363fd338",
+      "digest": "f3a7f4b0a7e7",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3312,6 +3312,7 @@
         "lineupOf",
         "listOrphanMemberIds",
         "prominentMemberInstrumentFor",
+        "restrictToVerticalAxis",
         "selectUnwarnedMemberIds",
         "tonalityLabelFor"
       ],
@@ -3326,7 +3327,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts",
-      "digest": "bddd4987420c",
+      "digest": "b105cd2449ce",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3400,7 +3401,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx",
-      "digest": "a4669bf3defc",
+      "digest": "a9966e0901df",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3424,7 +3425,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx",
-      "digest": "6f9f542ea4a8",
+      "digest": "79c8efea1ce9",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
