@@ -110,3 +110,55 @@ jobs:
           pnpm --filter "@borso-app/$APP" exec stryker run \
             --incremental \
             --incrementalFile reports/mutation/incremental.json
+
+  # The repository's own tooling, unscoped, for the same reason the applications
+  # get this job: pre-push mutates only the pure files a push touches, so a
+  # change to one generator can resurrect a mutant in another.
+  tooling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:coverage
+      - uses: actions/cache@v4
+        with:
+          path: reports/mutation/incremental.json
+          key: stryker-tooling-${{ github.sha }}
+          restore-keys: |
+            stryker-tooling-
+      - name: Mutation testing, every pure module under scripts/
+        run: |
+          pnpm exec stryker run \
+            --incremental \
+            --incrementalFile reports/mutation/incremental.json
+
+  # infra/cdk's five pure modules rewrite every migration before it reaches
+  # DSQL. Unscoped here for the same reason the applications are: pre-push
+  # mutates only what a push touches.
+  infra:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra run test:coverage
+      - uses: actions/cache@v4
+        with:
+          path: infra/cdk/reports/mutation/incremental.json
+          key: stryker-infra-cdk-${{ github.sha }}
+          restore-keys: |
+            stryker-infra-cdk-
+      - name: Mutation testing, every pure module under infra/cdk
+        run: |
+          pnpm --filter @borso/infra exec stryker run \
+            --incremental \
+            --incrementalFile reports/mutation/incremental.json

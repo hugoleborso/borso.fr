@@ -121,7 +121,7 @@ this kaizen PR.
 +  1. *Approve the pending prod deploy* in GitHub Actions (the deploy sits in the queue until approved; this is the reminder described above).
 +  2. *Propose `/after-task-dantotsus`* to capture lessons in a kaizen PR (per *Self-improvement loop* below).
 +  The asymmetry where one fires but the other relies on memory is the failure mode this rule exists to prevent. If either step is genuinely a no-op (no infra/app changes for the deploy step ; a trivial PR for the kaizen step), say so explicitly in the same response — silence is not equivalent to "no action needed".
- - **Migration cutovers (alias takeovers, bucket renames, CDK construct rewrites) are higher-risk prod deploys.** They additionally require the operator to walk the migration runbook for the affected resource. CloudFront alias takeovers are gated by `scripts/preflight-cloudfront-aliases.sh`; see [`docs/knowledge/cloudfront-cname-uniqueness.md`](./docs/knowledge/cloudfront-cname-uniqueness.md).
+ - **Migration cutovers (alias takeovers, bucket renames, CDK construct rewrites) are higher-risk prod deploys.** They additionally require the operator to walk the migration runbook for the affected resource. CloudFront alias takeovers are gated by `scripts/preflight-cloudfront-aliases.sh`; see [`docs/knowledge/cloudfront-cname-uniqueness.md`](../knowledge/cloudfront-cname-uniqueness.md).
 ```
 
 **Sibling defects swept:** the library-search-at-the-right-moment

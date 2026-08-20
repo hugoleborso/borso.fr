@@ -142,7 +142,7 @@ function's name, and choose `.core.ts` when the answer is yes.
 ## A core file lives beside the code it serves
 
 A `.core.ts` file sits next to the controller, service, and repository of its
-slice, and it does not move into a shared `domain/` directory.
+slice, and it does not move into a horizontal folder inside `api/src/`.
 
 ```
 # Do
@@ -153,7 +153,30 @@ api/src/domain/tonality.core.ts
 ```
 
 A horizontal folder forces you to open four directories to understand one
-feature. See [04. Back end architecture](./04-backend-architecture.md).
+feature. Inside `api/src/`, `domain/`, `controllers/`, `services/`,
+`repositories/` and `routes/` are all that shape, and all banned. Every rule
+there has an owning bounded context, so the folder is the context's name. A
+cross-cutting helper that belongs to no one context goes under
+`api/src/helpers/<topic>/`. See
+[04. Back end architecture](./04-backend-architecture.md).
+
+There is one `domain/` folder that is not a horizontal folder, and the
+difference is where it sits. `apps/<app>/domain/` lives beside `api/` and
+`site/` rather than inside either, and holds only the rules **both sides read**,
+reachable through `@domain/*`. It exists because a rule the song form and the
+songs route both apply has no owning side, and duplicating it is how the two
+copies drift.
+[ADR-0010](../adr/0010-pragma-domain-folder-for-cross-boundary-rules.md) records
+the decision and the conditions: a real caller on each side, or the rule belongs
+to whichever side actually uses it.
+
+```
+# Do, when and only when both sides read it
+apps/pragma/domain/tonality.core.ts
+
+# Don't
+apps/pragma/api/src/domain/tonality.core.ts
+```
 
 ## An adapter imports pure functions and holds none
 
@@ -204,27 +227,25 @@ at zero over a changed-only selection. See [10. Testing](./10-testing.md).
 
 ## Enforced by
 
-- `borso/pure-functions-live-in-core-files`, a custom ESLint rule, which fails
-  when a function with a branch and no impure call is declared outside a
-  `.core.ts` or `.utils.ts` file.
-- `borso/conditions-live-in-pure-functions`, a custom ESLint rule, which fails
-  on a condition outside a `.core.ts` or `.utils.ts` file that does not match
-  the exemption list above.
-- `borso/no-impure-calls-in-core-files`, a custom ESLint rule, which rejects
-  `Date.now`, a zero argument `new Date()`, `Math.random`, `fetch`,
-  `process.env`, `localStorage`, and the console methods inside a `.core.ts` or
-  `.utils.ts` file.
-- `borso/no-adapter-import-in-pure-module`, a custom ESLint rule, which fails
-  when a `.core.ts` or `.utils.ts` imports an `.adapter.ts`. The rule above
-  cannot catch it, because it looks for `fetch` and the clock rather than for
-  who was imported.
-- `vitest run --coverage`, with a full coverage threshold scoped to
-  `**/*.{core,utils,adapter,schema}.ts`, run in CI per changed application.
-- `stryker run`, which fails the push when any mutant survives. Scoped to
-  `apps/`: `infra/cdk`'s five `.utils.ts` files are coverage-gated and are not
-  mutated by any configuration. Measured 2026-08-15 by pointing Stryker at them
-  once: **90 mutants survive** at 100% coverage, which is the gap between "every
-  line ran" and "an assertion would have noticed", stated in a number. Turning
-  the gate on there is a decision about every future push touching `infra/`, and
-  about roughly forty equivalent regex-quantifier mutants that need a justified
-  disable comment each; it is not a configuration line.
+- `eslint:borso/pure-functions-live-in-core-files` fails when a function with a
+  branch and no impure call is declared outside a `.core.ts` or `.utils.ts`
+  file.
+- `eslint:borso/conditions-live-in-pure-functions` fails on a condition outside
+  a `.core.ts` or `.utils.ts` file that does not match the exemption list above.
+- `eslint:borso/no-adapter-import-in-pure-module` rejects an `.adapter.ts`
+  import from a `.core.ts` or `.utils.ts`, which is the one way a pure file
+  reaches the network while both pure gates still score full marks.
+- `eslint:borso/no-impure-calls-in-core-files` rejects `Date.now`, a zero
+  argument `new Date()`, `Math.random`, `fetch`, `process.env`, `localStorage`,
+  and the console methods inside a `.core.ts` or `.utils.ts` file.
+- `eslint:unicorn/consistent-function-scoping` moves a function that closes over
+  nothing out to module scope.
+- `gate:vitest-coverage` holds every pure file at full statement, branch,
+  function and line coverage.
+- `gate:stryker` fails when a mutant survives in a changed pure file.
+- `script:scripts/check-pure-modules-have-callers.sh` fails a pure module whose
+  only consumer is its own test, which otherwise scores full marks on both
+  gates while running nowhere.
+- `reviewer` checks the choice between `.core.ts` and `.utils.ts`, because the
+  question is whether the name is one the band or the race would recognise, and
+  no rule can ask that.

@@ -165,14 +165,24 @@ predates the suffix and has not been renamed.
 
 ## Enforced by
 
-- `borso/no-vendor-sdk-outside-adapter`, a custom ESLint rule, which rejects an
-  import of a reporting SDK from anywhere under `site/` other than
-  `observability/`.
-- `borso/no-direct-api-fetch-in-site`, a custom ESLint rule, which rejects a
-  `fetch` call whose URL literal starts with `/api/`.
-- `borso/no-api-anchor-in-site`, a custom ESLint rule, which rejects a JSX
-  attribute whose literal value starts with `/api/`.
-- `borso/no-server-state-in-use-state`, a custom ESLint rule, which rejects a
-  `useEffect` that calls `fetch` or an API client method and then sets state.
-- `@typescript-eslint/no-unsafe-assignment` and its siblings, which fail on any
-  response value that has lost its type.
+- `eslint:borso/no-vendor-sdk-outside-adapter` rejects an import of a reporting
+  SDK from anywhere under `site/` other than `observability/`.
+- `eslint:borso/no-direct-api-fetch-in-site` rejects a `fetch` call whose URL
+  literal starts with `/api/`.
+- `eslint:borso/no-api-anchor-in-site` rejects a JSX attribute whose literal
+  value starts with `/api/`.
+- `eslint:borso/no-server-state-in-use-state` rejects a `useEffect` that calls
+  `fetch` or an API client method and then sets state.
+- `eslint:borso/no-discarded-await-before-navigation` rejects a write whose
+  promise is dropped on the way to a route change, where the failure would land
+  on a screen nobody is looking at.
+- `eslint:@typescript-eslint/no-unsafe-assignment` fails on a response value that
+  has lost its type.
+- `eslint:no-restricted-imports` rejects a database package imported from a
+  site. The typed client is the only way across, and a bundler pulling `pg` into
+  a browser build fails at run time rather than at build time.
+- `reviewer` checks that a mutation whose full result the client already holds
+  reconciles from the response rather than refetching, because an immediate read
+  after a write can be served a pre-commit snapshot.
+- `reviewer` checks that a form goes through `useForm` rather than a chain of
+  `useState`, and that a grid goes through `useReactTable`.

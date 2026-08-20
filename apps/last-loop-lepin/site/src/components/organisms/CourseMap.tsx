@@ -25,11 +25,16 @@ const MAXIMUM_ZOOM = 20;
 const TRACK_COLOR = 'var(--color-accent)';
 const TRACK_WEIGHT = 4;
 const TRACK_OPACITY = 0.9;
-const FIT_BOUNDS_PADDING: L.PointTuple = [24, 24];
-const START_ICON_SIZE: L.PointTuple = [16, 16];
-const START_ICON_ANCHOR: L.PointTuple = [8, 8];
-const RUNNER_ICON_SIZE: L.PointTuple = [28, 28];
-const RUNNER_ICON_ANCHOR: L.PointTuple = [14, 14];
+const FIT_BOUNDS_PADDING_PX = 24;
+const START_ICON_SIZE_PX = 16;
+const START_ICON_ANCHOR_PX = 8;
+const RUNNER_ICON_SIZE_PX = 28;
+const RUNNER_ICON_ANCHOR_PX = 14;
+const FIT_BOUNDS_PADDING: L.PointTuple = [FIT_BOUNDS_PADDING_PX, FIT_BOUNDS_PADDING_PX];
+const START_ICON_SIZE: L.PointTuple = [START_ICON_SIZE_PX, START_ICON_SIZE_PX];
+const START_ICON_ANCHOR: L.PointTuple = [START_ICON_ANCHOR_PX, START_ICON_ANCHOR_PX];
+const RUNNER_ICON_SIZE: L.PointTuple = [RUNNER_ICON_SIZE_PX, RUNNER_ICON_SIZE_PX];
+const RUNNER_ICON_ANCHOR: L.PointTuple = [RUNNER_ICON_ANCHOR_PX, RUNNER_ICON_ANCHOR_PX];
 const START_DOT_CLASS =
   'block w-3.5 h-3.5 rounded-full bg-ink border-2 border-bg shadow-[0_0_0_1px_var(--color-ink)]';
 

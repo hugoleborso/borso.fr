@@ -29,7 +29,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 181
+      "fileCount": 179
     },
     {
       "id": "uploads-bucket",
@@ -207,7 +207,7 @@
     },
     {
       "path": "apps/pragma/api/src/__test/test-seed.service.ts",
-      "digest": "ea5553f01e6c",
+      "digest": "0045d53bccd7",
       "container": "api",
       "layer": "service",
       "context": "__test",
@@ -261,7 +261,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/auth.controller.ts",
-      "digest": "61b84e1f9538",
+      "digest": "5046c51ec17e",
       "container": "api",
       "layer": "controller",
       "context": "auth",
@@ -362,7 +362,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/rate-limit.utils.ts",
-      "digest": "f6ff8b876822",
+      "digest": "f4be83433030",
       "container": "api",
       "layer": "utils",
       "context": "auth",
@@ -382,7 +382,7 @@
     },
     {
       "path": "apps/pragma/api/src/auth/session-cookie.utils.ts",
-      "digest": "25bc9ae3f4dd",
+      "digest": "37cd022241e6",
       "container": "api",
       "layer": "utils",
       "context": "auth",
@@ -464,7 +464,7 @@
     },
     {
       "path": "apps/pragma/api/src/bars/bars.schema.ts",
-      "digest": "06031aa473c9",
+      "digest": "5bd61d42fe0c",
       "container": "api",
       "layer": "schema",
       "context": "bars",
@@ -600,7 +600,7 @@
     },
     {
       "path": "apps/pragma/api/src/instruments/instruments.schema.ts",
-      "digest": "175d252a50b5",
+      "digest": "6613d4fa6923",
       "container": "api",
       "layer": "schema",
       "context": "instruments",
@@ -877,7 +877,7 @@
     },
     {
       "path": "apps/pragma/api/src/members/members.schema.ts",
-      "digest": "cdac837029fd",
+      "digest": "ff9329771708",
       "container": "api",
       "layer": "schema",
       "context": "members",
@@ -1007,7 +1007,7 @@
     },
     {
       "path": "apps/pragma/api/src/sessions/sessions.schema.ts",
-      "digest": "20ef3fc67eb1",
+      "digest": "fa265fff6b4e",
       "container": "api",
       "layer": "schema",
       "context": "sessions",
@@ -1109,7 +1109,7 @@
     },
     {
       "path": "apps/pragma/api/src/setlists/setlists.schema.ts",
-      "digest": "bedc4acb3f3b",
+      "digest": "095516e9be3a",
       "container": "api",
       "layer": "schema",
       "context": "setlists",
@@ -1270,7 +1270,7 @@
     },
     {
       "path": "apps/pragma/api/src/songs/songs.schema.ts",
-      "digest": "601b2312f0b7",
+      "digest": "bae7e78d3d90",
       "container": "api",
       "layer": "schema",
       "context": "songs",
@@ -1373,7 +1373,7 @@
     },
     {
       "path": "apps/pragma/api/src/transitions/transitions.schema.ts",
-      "digest": "58d79bba945d",
+      "digest": "26d1339e1c64",
       "container": "api",
       "layer": "schema",
       "context": "transitions",
@@ -1471,7 +1471,7 @@
     },
     {
       "path": "apps/pragma/api/src/uploads/uploads.schema.ts",
-      "digest": "ea63602b4496",
+      "digest": "c670c5b201a1",
       "container": "api",
       "layer": "schema",
       "context": "uploads",
@@ -1490,7 +1490,7 @@
     },
     {
       "path": "apps/pragma/api/src/uploads/uploads.service.ts",
-      "digest": "dc8f8908339f",
+      "digest": "ee4718114fb5",
       "container": "api",
       "layer": "service",
       "context": "uploads",
@@ -1512,7 +1512,7 @@
     },
     {
       "path": "apps/pragma/api/src/uploads/uploads.types.ts",
-      "digest": "25dff36f606d",
+      "digest": "34770506f840",
       "container": "api",
       "layer": "types",
       "context": "uploads",
@@ -1559,7 +1559,7 @@
     },
     {
       "path": "apps/pragma/domain/bar-staleness.core.ts",
-      "digest": "d2bf96ae9a87",
+      "digest": "838afdb08c6e",
       "container": "domain",
       "layer": "core",
       "context": "domain",
@@ -1665,7 +1665,7 @@
     },
     {
       "path": "apps/pragma/site/src/App.tsx",
-      "digest": "db5581a3ccf0",
+      "digest": "c233584e87af",
       "container": "site",
       "layer": "entrypoint",
       "context": "root",
@@ -1676,7 +1676,7 @@
       "imports": [
         "apps/pragma/site/src/components/organisms/AppShell.tsx",
         "apps/pragma/site/src/components/organisms/RequireSession.tsx",
-        "apps/pragma/site/src/routes/Login.tsx",
+        "apps/pragma/site/src/routes/LoginPage.tsx",
         "apps/pragma/site/src/routes/bars/BarsPage.tsx",
         "apps/pragma/site/src/routes/catalog/CatalogPage.tsx",
         "apps/pragma/site/src/routes/catalog/SongDetailPage.tsx",
@@ -1974,45 +1974,6 @@
       ]
     },
     {
-      "path": "apps/pragma/site/src/components/atoms/energy-bar.utils.ts",
-      "digest": "73581faa3e64",
-      "container": "site",
-      "layer": "atom",
-      "context": "atoms",
-      "feature": "setlists",
-      "exports": [
-        "buildEnergyLevels",
-        "levelFromKey",
-        "levelFromPointerRatio"
-      ],
-      "imports": [],
-      "blueprints": [],
-      "followsBlueprints": [
-        "utils-pure-module",
-        "utils-pure-module",
-        "utils-pure-module"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/components/atoms/EnergyBar.tsx",
-      "digest": "4f321aad697f",
-      "container": "site",
-      "layer": "atom",
-      "context": "atoms",
-      "feature": "setlists",
-      "exports": [
-        "EnergyBar"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
-        "apps/pragma/site/src/components/atoms/energy-bar.utils.ts"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "atom-plain"
-      ]
-    },
-    {
       "path": "apps/pragma/site/src/components/atoms/ExternalLink.tsx",
       "digest": "65658ac7a2c9",
       "container": "site",
@@ -2099,7 +2060,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/member-palette.utils.ts",
-      "digest": "0c91a51eac8d",
+      "digest": "3efbc5abc132",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -2279,7 +2240,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/energy-sparkline.utils.ts",
-      "digest": "b9fca2e3f22e",
+      "digest": "b26ad76c019e",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2314,7 +2275,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/EnergySparkline.tsx",
-      "digest": "94bf4b76f93f",
+      "digest": "99ea3c4d13b4",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2332,7 +2293,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/file-drop.utils.ts",
-      "digest": "a8ab1cde187f",
+      "digest": "aae81f16bb98",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2620,6 +2581,27 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/molecules/PracticeReadView.tsx",
+      "digest": "f11122fb3065",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": "sessions",
+      "exports": [
+        "PracticeReadView"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/input.variants.ts",
+        "apps/pragma/site/src/lib/formatters.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/molecules/SearchBar.tsx",
       "digest": "322b552aa242",
       "container": "site",
@@ -2700,6 +2682,22 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/molecules/song-duration.utils.ts",
+      "digest": "52f6283f5158",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": "songs",
+      "exports": [
+        "formatDuration"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-formatter"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/molecules/SongEmbed.tsx",
       "digest": "860efae54b29",
       "container": "site",
@@ -2720,6 +2718,45 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/molecules/SongLinkAdder.tsx",
+      "digest": "ffbc8041bada",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": "songs",
+      "exports": [
+        "SongLinkAdder"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/SongMusicBrainzPanel.tsx",
+      "digest": "6edc2eb32ca8",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": "songs",
+      "exports": [
+        "SongMusicBrainzPanel"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Chip.tsx",
+        "apps/pragma/site/src/components/molecules/song-duration.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/molecules/SongNotes.tsx",
       "digest": "0dac0db3d8b1",
       "container": "site",
@@ -2732,6 +2769,24 @@
       "imports": [
         "apps/pragma/site/src/components/atoms/class-name.utils.ts",
         "apps/pragma/site/src/routes/catalog/song-notes.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "molecule-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/molecules/SongNotesFields.tsx",
+      "digest": "7a090dc86a6f",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": "songs",
+      "exports": [
+        "SongNotesFields"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -2808,6 +2863,29 @@
       "followsBlueprints": []
     },
     {
+      "path": "apps/pragma/site/src/components/organisms/BarForm.tsx",
+      "digest": "5d5dbf3bb174",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "bars",
+      "exports": [
+        "BarForm"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/input.variants.ts",
+        "apps/pragma/site/src/routes/bars/bar-form.core.ts"
+      ],
+      "blueprints": [
+        "route-form"
+      ],
+      "followsBlueprints": []
+    },
+    {
       "path": "apps/pragma/site/src/components/organisms/BarsKanban.tsx",
       "digest": "cea1acb6f259",
       "container": "site",
@@ -2829,7 +2907,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/BarsList.tsx",
-      "digest": "5d9ea3c203dd",
+      "digest": "3ded9280465b",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2911,8 +2989,54 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/organisms/ConcertEditForm.tsx",
+      "digest": "2f7af54ee91d",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "sessions",
+      "exports": [
+        "ConcertEditForm"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Avatar.tsx",
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/input.variants.ts",
+        "apps/pragma/site/src/components/atoms/member-palette.utils.ts",
+        "apps/pragma/site/src/lib/member-color.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-form"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/ConcertReadView.tsx",
+      "digest": "a077d5ed2f86",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "sessions",
+      "exports": [
+        "ConcertReadView"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/MemberChip.tsx",
+        "apps/pragma/site/src/routes/sessions/friends-count.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/organisms/create-session-dialog.utils.ts",
-      "digest": "4b9ab459cba1",
+      "digest": "cafe6ff4a8f1",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -2995,7 +3119,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/MasteryMatrix.tsx",
-      "digest": "a8e3f2477d7a",
+      "digest": "aa08ccbe9c46",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3018,6 +3142,28 @@
         "organism-table"
       ],
       "followsBlueprints": []
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/MemberEditForm.tsx",
+      "digest": "8d0d8cc1d9b0",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "members",
+      "exports": [
+        "MemberEditForm"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/lib/form-submit.utils.ts",
+        "apps/pragma/site/src/routes/members/members-page.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-form"
+      ]
     },
     {
       "path": "apps/pragma/site/src/components/organisms/navigation-active.core.ts",
@@ -3058,7 +3204,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/orphan-member-warn.adapter.ts",
-      "digest": "ceadfa9d7729",
+      "digest": "a3dcc5c53cb3",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3111,18 +3257,18 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
-      "digest": "9b071323abf3",
+      "digest": "e991363fd338",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
       "feature": "setlists",
       "exports": [
         "compactLineup",
-        "findOrphanMemberIds",
         "formatSetlistOrder",
         "instrumentFamilyMap",
         "instrumentNamesFor",
         "lineupOf",
+        "listOrphanMemberIds",
         "prominentMemberInstrumentFor",
         "selectUnwarnedMemberIds",
         "tonalityLabelFor"
@@ -3138,7 +3284,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts",
-      "digest": "48654fce77dc",
+      "digest": "42c904b17f6f",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3176,7 +3322,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
-      "digest": "a35166337a72",
+      "digest": "31c6727174c9",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3197,7 +3343,7 @@
         "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
         "apps/pragma/site/src/components/organisms/setlist-filter.core.ts",
         "apps/pragma/site/src/components/organisms/transition-view.core.ts",
-        "apps/pragma/site/src/lib/mastery-aggregate.utils.ts",
+        "apps/pragma/site/src/lib/mastery-aggregate.core.ts",
         "apps/pragma/site/src/lib/queries/instruments.queries.ts",
         "apps/pragma/site/src/lib/queries/mastery.queries.ts",
         "apps/pragma/site/src/lib/queries/members.queries.ts",
@@ -3212,7 +3358,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx",
-      "digest": "9696dbd58297",
+      "digest": "d1be3620f664",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3235,7 +3381,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx",
-      "digest": "7297dc36d60e",
+      "digest": "b1f3555f16f5",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3244,7 +3390,6 @@
         "SetlistEntryRow"
       ],
       "imports": [
-        "apps/pragma/site/src/components/atoms/EnergyBar.tsx",
         "apps/pragma/site/src/components/atoms/Icon.tsx",
         "apps/pragma/site/src/components/atoms/class-name.utils.ts",
         "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
@@ -3290,7 +3435,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistToolbar.tsx",
-      "digest": "b56a13cd71cd",
+      "digest": "19b272a20d71",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3349,6 +3494,67 @@
       "followsBlueprints": []
     },
     {
+      "path": "apps/pragma/site/src/components/organisms/SongChartFields.tsx",
+      "digest": "47d3ab3bf91c",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "songs",
+      "exports": [
+        "SongChartFields"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/organisms/FileDrop.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SongChordPreview.tsx",
+      "digest": "0b0c39d307ff",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "songs",
+      "exports": [
+        "SongChordPreview"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SongDeleteAction.tsx",
+      "digest": "c25169637f63",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "songs",
+      "exports": [
+        "SongDeleteAction"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/organisms/SongDetailSidebar.tsx",
       "digest": "a27daf080b6d",
       "container": "site",
@@ -3365,6 +3571,59 @@
         "apps/pragma/site/src/components/atoms/class-name.utils.ts",
         "apps/pragma/site/src/components/molecules/MemberChip.tsx",
         "apps/pragma/site/src/routes/catalog/song-lineup.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "organism-presentational"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SongEditForm.tsx",
+      "digest": "9a7e93478741",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "songs",
+      "exports": [
+        "SongEditForm"
+      ],
+      "imports": [
+        "apps/pragma/domain/tonality.core.ts",
+        "apps/pragma/site/src/components/atoms/Button.tsx",
+        "apps/pragma/site/src/components/atoms/Card.tsx",
+        "apps/pragma/site/src/components/atoms/Icon.tsx",
+        "apps/pragma/site/src/components/atoms/Input.tsx",
+        "apps/pragma/site/src/components/atoms/input.variants.ts",
+        "apps/pragma/site/src/components/molecules/BackLink.tsx",
+        "apps/pragma/site/src/components/molecules/PageHeader.tsx",
+        "apps/pragma/site/src/components/molecules/SongLinkAdder.tsx",
+        "apps/pragma/site/src/components/molecules/SongMusicBrainzPanel.tsx",
+        "apps/pragma/site/src/components/molecules/SongNotesFields.tsx",
+        "apps/pragma/site/src/components/organisms/SongChartFields.tsx",
+        "apps/pragma/site/src/components/organisms/SongChordPreview.tsx",
+        "apps/pragma/site/src/components/organisms/SongDeleteAction.tsx",
+        "apps/pragma/site/src/components/organisms/SongExternalLinks.tsx",
+        "apps/pragma/site/src/components/organisms/SongSearch.tsx",
+        "apps/pragma/site/src/routes/catalog/song-draft.core.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "route-form"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/organisms/SongExternalLinks.tsx",
+      "digest": "4f3a183a3491",
+      "container": "site",
+      "layer": "organism",
+      "context": "organisms",
+      "feature": "songs",
+      "exports": [
+        "SongExternalLinks"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/molecules/SongEmbed.tsx",
+        "apps/pragma/site/src/lib/embed.utils.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -3633,7 +3892,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/embed.utils.ts",
-      "digest": "d3a589b82a88",
+      "digest": "aa5203aa1cd7",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -3682,14 +3941,14 @@
       ]
     },
     {
-      "path": "apps/pragma/site/src/lib/mastery-aggregate.utils.ts",
-      "digest": "e90f53511941",
+      "path": "apps/pragma/site/src/lib/mastery-aggregate.core.ts",
+      "digest": "1b8da27bd444",
       "container": "site",
-      "layer": "utils",
+      "layer": "core",
       "context": "lib",
       "feature": "mastery",
       "exports": [
-        "meanMasteryForSong"
+        "meanDefaultMasteryForSong"
       ],
       "imports": [
         "apps/pragma/domain/lineup.core.ts"
@@ -3723,7 +3982,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/member-color.utils.ts",
-      "digest": "f86d8d265123",
+      "digest": "fa4e697ae6d9",
       "container": "site",
       "layer": "utils",
       "context": "lib",
@@ -4162,7 +4421,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/uploads.queries.ts",
-      "digest": "0881d41ddb72",
+      "digest": "fb9f093f07a0",
       "container": "site",
       "layer": "query",
       "context": "queries",
@@ -4273,29 +4532,6 @@
       ]
     },
     {
-      "path": "apps/pragma/site/src/routes/bars/BarForm.tsx",
-      "digest": "bfd27279466a",
-      "container": "site",
-      "layer": "route",
-      "context": "bars",
-      "feature": "bars",
-      "exports": [
-        "BarForm"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/atoms/Button.tsx",
-        "apps/pragma/site/src/components/atoms/Card.tsx",
-        "apps/pragma/site/src/components/atoms/Input.tsx",
-        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
-        "apps/pragma/site/src/components/atoms/input.variants.ts",
-        "apps/pragma/site/src/routes/bars/bar-form.core.ts"
-      ],
-      "blueprints": [
-        "route-form"
-      ],
-      "followsBlueprints": []
-    },
-    {
       "path": "apps/pragma/site/src/routes/bars/bars-page.core.ts",
       "digest": "fde3d656ad41",
       "container": "site",
@@ -4326,7 +4562,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/bars/BarsPage.tsx",
-      "digest": "fa4257e0a039",
+      "digest": "be1ab1c4a55c",
       "container": "site",
       "layer": "route",
       "context": "bars",
@@ -4341,12 +4577,12 @@
         "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
         "apps/pragma/site/src/components/molecules/PageHeader.tsx",
         "apps/pragma/site/src/components/molecules/media-query-matching.hook.ts",
+        "apps/pragma/site/src/components/organisms/BarForm.tsx",
         "apps/pragma/site/src/components/organisms/BarsKanban.tsx",
         "apps/pragma/site/src/components/organisms/BarsList.tsx",
         "apps/pragma/site/src/lib/api.client.ts",
         "apps/pragma/site/src/lib/counts.utils.ts",
         "apps/pragma/site/src/lib/queries/bars.queries.ts",
-        "apps/pragma/site/src/routes/bars/BarForm.tsx",
         "apps/pragma/site/src/routes/bars/bar-form.core.ts",
         "apps/pragma/site/src/routes/bars/bars-page.core.ts"
       ],
@@ -4383,7 +4619,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/CatalogPage.tsx",
-      "digest": "5b467d334846",
+      "digest": "c0e57b09fcfa",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4400,7 +4636,7 @@
         "apps/pragma/site/src/components/organisms/CatalogGrid.tsx",
         "apps/pragma/site/src/components/organisms/SongCard.tsx",
         "apps/pragma/site/src/lib/api.client.ts",
-        "apps/pragma/site/src/lib/mastery-aggregate.utils.ts",
+        "apps/pragma/site/src/lib/mastery-aggregate.core.ts",
         "apps/pragma/site/src/lib/queries/instruments.queries.ts",
         "apps/pragma/site/src/lib/queries/mastery.queries.ts",
         "apps/pragma/site/src/lib/queries/members.queries.ts",
@@ -4472,7 +4708,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/catalog/song-draft.core.ts",
-      "digest": "aa7cdb9d6fcb",
+      "digest": "f91ec3b2d59f",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4492,28 +4728,12 @@
         "songStatuses"
       ],
       "imports": [
-        "apps/pragma/site/src/routes/catalog/SongChartFields.tsx",
-        "apps/pragma/site/src/routes/catalog/SongExternalLinks.tsx"
+        "apps/pragma/site/src/components/organisms/SongChartFields.tsx",
+        "apps/pragma/site/src/components/organisms/SongExternalLinks.tsx"
       ],
       "blueprints": [],
       "followsBlueprints": [
         "core-form-schema"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/routes/catalog/song-duration.utils.ts",
-      "digest": "52f6283f5158",
-      "container": "site",
-      "layer": "route",
-      "context": "catalog",
-      "feature": "songs",
-      "exports": [
-        "formatDuration"
-      ],
-      "imports": [],
-      "blueprints": [],
-      "followsBlueprints": [
-        "utils-formatter"
       ]
     },
     {
@@ -4553,67 +4773,6 @@
       "blueprints": [],
       "followsBlueprints": [
         "core-view-projection"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/routes/catalog/SongChartFields.tsx",
-      "digest": "d6f3883ff4cf",
-      "container": "site",
-      "layer": "route",
-      "context": "catalog",
-      "feature": "songs",
-      "exports": [
-        "SongChartFields"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx",
-        "apps/pragma/site/src/components/atoms/Input.tsx",
-        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
-        "apps/pragma/site/src/components/organisms/FileDrop.tsx"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "organism-presentational"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/routes/catalog/SongChordPreview.tsx",
-      "digest": "fc6329ec22d7",
-      "container": "site",
-      "layer": "route",
-      "context": "catalog",
-      "feature": "songs",
-      "exports": [
-        "SongChordPreview"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/atoms/Card.tsx",
-        "apps/pragma/site/src/components/atoms/Icon.tsx",
-        "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "organism-presentational"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/routes/catalog/SongDeleteAction.tsx",
-      "digest": "1e0765afa473",
-      "container": "site",
-      "layer": "route",
-      "context": "catalog",
-      "feature": "songs",
-      "exports": [
-        "SongDeleteAction"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/atoms/Button.tsx",
-        "apps/pragma/site/src/components/atoms/Icon.tsx",
-        "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "organism-presentational"
       ]
     },
     {
@@ -4661,42 +4820,8 @@
       ]
     },
     {
-      "path": "apps/pragma/site/src/routes/catalog/SongEditForm.tsx",
-      "digest": "04ebd975b349",
-      "container": "site",
-      "layer": "route",
-      "context": "catalog",
-      "feature": "songs",
-      "exports": [
-        "SongEditForm"
-      ],
-      "imports": [
-        "apps/pragma/domain/tonality.core.ts",
-        "apps/pragma/site/src/components/atoms/Button.tsx",
-        "apps/pragma/site/src/components/atoms/Card.tsx",
-        "apps/pragma/site/src/components/atoms/Icon.tsx",
-        "apps/pragma/site/src/components/atoms/Input.tsx",
-        "apps/pragma/site/src/components/atoms/input.variants.ts",
-        "apps/pragma/site/src/components/molecules/BackLink.tsx",
-        "apps/pragma/site/src/components/molecules/PageHeader.tsx",
-        "apps/pragma/site/src/components/organisms/SongSearch.tsx",
-        "apps/pragma/site/src/routes/catalog/SongChartFields.tsx",
-        "apps/pragma/site/src/routes/catalog/SongChordPreview.tsx",
-        "apps/pragma/site/src/routes/catalog/SongDeleteAction.tsx",
-        "apps/pragma/site/src/routes/catalog/SongExternalLinks.tsx",
-        "apps/pragma/site/src/routes/catalog/SongLinkAdder.tsx",
-        "apps/pragma/site/src/routes/catalog/SongMusicBrainzPanel.tsx",
-        "apps/pragma/site/src/routes/catalog/SongNotesFields.tsx",
-        "apps/pragma/site/src/routes/catalog/song-draft.core.ts"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "route-form"
-      ]
-    },
-    {
       "path": "apps/pragma/site/src/routes/catalog/SongEditPage.tsx",
-      "digest": "14747a9a15c1",
+      "digest": "7b2d5ae0958b",
       "container": "site",
       "layer": "route",
       "context": "catalog",
@@ -4706,91 +4831,16 @@
       ],
       "imports": [
         "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx",
+        "apps/pragma/site/src/components/organisms/SongEditForm.tsx",
         "apps/pragma/site/src/lib/api.client.ts",
         "apps/pragma/site/src/lib/navigation.hook.ts",
         "apps/pragma/site/src/lib/queries/songs.queries.ts",
-        "apps/pragma/site/src/routes/catalog/SongEditForm.tsx",
         "apps/pragma/site/src/routes/catalog/missing-song.core.ts",
         "apps/pragma/site/src/routes/catalog/song-draft.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
         "route-detail-page"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/routes/catalog/SongExternalLinks.tsx",
-      "digest": "32de28dfde7f",
-      "container": "site",
-      "layer": "route",
-      "context": "catalog",
-      "feature": "songs",
-      "exports": [
-        "SongExternalLinks"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/molecules/SongEmbed.tsx",
-        "apps/pragma/site/src/lib/embed.utils.ts"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "organism-presentational"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/routes/catalog/SongLinkAdder.tsx",
-      "digest": "a9c4505ca730",
-      "container": "site",
-      "layer": "route",
-      "context": "catalog",
-      "feature": "songs",
-      "exports": [
-        "SongLinkAdder"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/atoms/Button.tsx",
-        "apps/pragma/site/src/components/atoms/Icon.tsx",
-        "apps/pragma/site/src/components/atoms/Input.tsx"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "organism-presentational"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/routes/catalog/SongMusicBrainzPanel.tsx",
-      "digest": "2bbcfb8b6884",
-      "container": "site",
-      "layer": "route",
-      "context": "catalog",
-      "feature": "songs",
-      "exports": [
-        "SongMusicBrainzPanel"
-      ],
-      "imports": [
-        "apps/pragma/site/src/routes/catalog/song-duration.utils.ts"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "organism-presentational"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/routes/catalog/SongNotesFields.tsx",
-      "digest": "f4e937f6b4e2",
-      "container": "site",
-      "layer": "route",
-      "context": "catalog",
-      "feature": "songs",
-      "exports": [
-        "SongNotesFields"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "molecule-presentational"
       ]
     },
     {
@@ -4902,14 +4952,14 @@
       ]
     },
     {
-      "path": "apps/pragma/site/src/routes/Login.tsx",
-      "digest": "dbb2f1ed9638",
+      "path": "apps/pragma/site/src/routes/LoginPage.tsx",
+      "digest": "696fd92ef2bf",
       "container": "site",
       "layer": "route",
       "context": "routes",
       "feature": "auth",
       "exports": [
-        "Login"
+        "LoginPage"
       ],
       "imports": [
         "apps/pragma/site/src/components/atoms/Button.tsx",
@@ -4920,28 +4970,6 @@
         "apps/pragma/site/src/lib/navigation.hook.ts",
         "apps/pragma/site/src/lib/queries/auth.queries.ts",
         "apps/pragma/site/src/routes/login.core.ts"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "route-form"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/routes/members/MemberEditForm.tsx",
-      "digest": "d39b933d99e3",
-      "container": "site",
-      "layer": "route",
-      "context": "members",
-      "feature": "members",
-      "exports": [
-        "MemberEditForm"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/atoms/Button.tsx",
-        "apps/pragma/site/src/components/atoms/Card.tsx",
-        "apps/pragma/site/src/components/atoms/Input.tsx",
-        "apps/pragma/site/src/lib/form-submit.utils.ts",
-        "apps/pragma/site/src/routes/members/members-page.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -4976,7 +5004,7 @@
     },
     {
       "path": "apps/pragma/site/src/routes/members/MembersPage.tsx",
-      "digest": "64f25ec329e4",
+      "digest": "f98693f2d6e4",
       "container": "site",
       "layer": "route",
       "context": "members",
@@ -4990,62 +5018,16 @@
         "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
         "apps/pragma/site/src/components/molecules/PageHeader.tsx",
         "apps/pragma/site/src/components/organisms/MasteryMatrix.tsx",
+        "apps/pragma/site/src/components/organisms/MemberEditForm.tsx",
         "apps/pragma/site/src/lib/api.client.ts",
         "apps/pragma/site/src/lib/member-color.utils.ts",
         "apps/pragma/site/src/lib/queries/instruments.queries.ts",
         "apps/pragma/site/src/lib/queries/members.queries.ts",
-        "apps/pragma/site/src/routes/members/MemberEditForm.tsx",
         "apps/pragma/site/src/routes/members/members-page.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
         "route-list-page"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/routes/sessions/ConcertEditForm.tsx",
-      "digest": "3d90a86c4813",
-      "container": "site",
-      "layer": "route",
-      "context": "sessions",
-      "feature": "sessions",
-      "exports": [
-        "ConcertEditForm"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/atoms/Avatar.tsx",
-        "apps/pragma/site/src/components/atoms/Button.tsx",
-        "apps/pragma/site/src/components/atoms/Card.tsx",
-        "apps/pragma/site/src/components/atoms/Input.tsx",
-        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
-        "apps/pragma/site/src/components/atoms/input.variants.ts",
-        "apps/pragma/site/src/components/atoms/member-palette.utils.ts",
-        "apps/pragma/site/src/lib/member-color.utils.ts"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "route-form"
-      ]
-    },
-    {
-      "path": "apps/pragma/site/src/routes/sessions/ConcertReadView.tsx",
-      "digest": "bc93236b3753",
-      "container": "site",
-      "layer": "route",
-      "context": "sessions",
-      "feature": "sessions",
-      "exports": [
-        "ConcertReadView"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/atoms/Card.tsx",
-        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
-        "apps/pragma/site/src/components/molecules/MemberChip.tsx",
-        "apps/pragma/site/src/routes/sessions/friends-count.core.ts"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "organism-presentational"
       ]
     },
     {
@@ -5083,29 +5065,8 @@
       "followsBlueprints": []
     },
     {
-      "path": "apps/pragma/site/src/routes/sessions/PracticeReadView.tsx",
-      "digest": "a0aef4d87503",
-      "container": "site",
-      "layer": "route",
-      "context": "sessions",
-      "feature": "sessions",
-      "exports": [
-        "PracticeReadView"
-      ],
-      "imports": [
-        "apps/pragma/site/src/components/atoms/Card.tsx",
-        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
-        "apps/pragma/site/src/components/atoms/input.variants.ts",
-        "apps/pragma/site/src/lib/formatters.utils.ts"
-      ],
-      "blueprints": [],
-      "followsBlueprints": [
-        "organism-presentational"
-      ]
-    },
-    {
       "path": "apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx",
-      "digest": "bdd6b270dbdf",
+      "digest": "6b3784149a60",
       "container": "site",
       "layer": "route",
       "context": "sessions",
@@ -5119,6 +5080,9 @@
         "apps/pragma/site/src/components/atoms/Icon.tsx",
         "apps/pragma/site/src/components/molecules/BackLink.tsx",
         "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx",
+        "apps/pragma/site/src/components/molecules/PracticeReadView.tsx",
+        "apps/pragma/site/src/components/organisms/ConcertEditForm.tsx",
+        "apps/pragma/site/src/components/organisms/ConcertReadView.tsx",
         "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
         "apps/pragma/site/src/lib/api.client.ts",
         "apps/pragma/site/src/lib/counts.utils.ts",
@@ -5127,9 +5091,6 @@
         "apps/pragma/site/src/lib/queries/sessions.queries.ts",
         "apps/pragma/site/src/lib/queries/setlists.queries.ts",
         "apps/pragma/site/src/lib/upcoming-concerts.core.ts",
-        "apps/pragma/site/src/routes/sessions/ConcertEditForm.tsx",
-        "apps/pragma/site/src/routes/sessions/ConcertReadView.tsx",
-        "apps/pragma/site/src/routes/sessions/PracticeReadView.tsx",
         "apps/pragma/site/src/routes/sessions/friends-count.core.ts",
         "apps/pragma/site/src/routes/sessions/missing-session.core.ts"
       ],
@@ -6404,7 +6365,7 @@
     {
       "id": "atom-plain",
       "file": "apps/pragma/site/src/components/atoms/Crumb.tsx",
-      "followerCount": 7
+      "followerCount": 6
     },
     {
       "id": "atom-variant",
@@ -6418,7 +6379,7 @@
     },
     {
       "id": "component-lookup-table",
-      "file": "apps/borsouvertures/site/lib/componentTable.types.ts",
+      "file": "apps/borsouvertures/site/src/lib/componentTable.types.ts",
       "followerCount": 1
     },
     {
@@ -6433,7 +6394,7 @@
     },
     {
       "id": "core-appearance",
-      "file": "apps/borso-fr/site/labours/labours-appearance.core.ts",
+      "file": "apps/borso-fr/site/src/labours/labours-appearance.core.ts",
       "followerCount": 3
     },
     {
@@ -6448,7 +6409,7 @@
     },
     {
       "id": "core-label-key",
-      "file": "apps/borso-fr/site/art/mondrian/mondrian-labels.core.ts",
+      "file": "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts",
       "followerCount": 1
     },
     {
@@ -6508,12 +6469,12 @@
     },
     {
       "id": "i18n-key-walk",
-      "file": "apps/borsouvertures/site/i18n/i18n.utils.ts",
+      "file": "apps/borsouvertures/site/src/i18n/i18n.utils.ts",
       "followerCount": 1
     },
     {
       "id": "i18n-parity-gate",
-      "file": "apps/borsouvertures/site/i18n/i18n-parity.core.ts",
+      "file": "apps/borsouvertures/site/src/i18n/i18n-parity.core.ts",
       "followerCount": 1
     },
     {
@@ -6523,12 +6484,12 @@
     },
     {
       "id": "i18n-typed-keys",
-      "file": "apps/borsouvertures/site/i18n/react-i18next.d.ts",
+      "file": "apps/borsouvertures/site/src/i18n/react-i18next.d.ts",
       "followerCount": 1
     },
     {
       "id": "injected-storage-slice",
-      "file": "apps/borsouvertures/site/i18n/locale-storage.utils.ts",
+      "file": "apps/borsouvertures/site/src/i18n/locale-storage.utils.ts",
       "followerCount": 1
     },
     {
@@ -6628,7 +6589,7 @@
     },
     {
       "id": "route-form",
-      "file": "apps/pragma/site/src/routes/bars/BarForm.tsx",
+      "file": "apps/pragma/site/src/components/organisms/BarForm.tsx",
       "followerCount": 4
     },
     {
@@ -6684,7 +6645,7 @@
     {
       "id": "utils-pure-module",
       "file": "apps/pragma/site/src/lib/member-color.utils.ts",
-      "followerCount": 28
+      "followerCount": 25
     },
     {
       "id": "workspace-test-config",

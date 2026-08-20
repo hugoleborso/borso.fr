@@ -11,8 +11,13 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ApiError, api } from '../api.client';
 
-const SIGNED_URL_STALE_MS = 4 * 60 * 1000;
-const SIGNED_URL_GC_MS = 5 * 60 * 1000;
+const SECONDS_PER_MINUTE = 60;
+const MILLISECONDS_PER_SECOND = 1_000;
+const MILLISECONDS_PER_MINUTE = SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+const SIGNED_URL_STALE_MINUTES = 4;
+const SIGNED_URL_GC_MINUTES = 5;
+const SIGNED_URL_STALE_MS = SIGNED_URL_STALE_MINUTES * MILLISECONDS_PER_MINUTE;
+const SIGNED_URL_GC_MS = SIGNED_URL_GC_MINUTES * MILLISECONDS_PER_MINUTE;
 
 export const uploadKeys = {
   all: ['uploads'] as const,

@@ -1,14 +1,12 @@
 # Architecture diagrams
 
-[`index.html`](./index.html) lists one generated map per application, each at
-five levels, from the same generator and the same rules:
+`index.html` lists one generated map per application, each at five levels, from
+the same generator and the same rules: `pragma-architecture.html`,
+`last-loop-lepin-architecture.html`, `borsouvertures-architecture.html` and
+`borso-fr-architecture.html`.
 
-- [`pragma-architecture.html`](./pragma-architecture.html)
-- [`last-loop-lepin-architecture.html`](./last-loop-lepin-architecture.html)
-- [`borsouvertures-architecture.html`](./borsouvertures-architecture.html)
-- [`borso-fr-architecture.html`](./borso-fr-architecture.html)
-
-Regenerate them with:
+**None of them is in this repository**, which is why they are named above and
+not linked. Build them with:
 
 ```bash
 pnpm exec tsx scripts/architecture/architecture-graph.ts            # every app
@@ -23,6 +21,11 @@ are rebuilt from that code wherever they are read: `pages.yml` regenerates
 before publishing to GitHub Pages, and `architecture.yml` regenerates them into
 a workflow artifact on every pull request. Nothing publishes bytes from a
 commit, so a stale page has nowhere to exist.
+
+So there are three places a built copy exists without running anything: the
+[published site](https://hugoleborso.github.io/borso.fr/), the
+`architecture-maps` artifact on any pull request's workflow run, and whatever
+the last local run left behind.
 
 **To put a new application on the map, read [`install.md`](./install.md)** —
 what a codebase must provide, what is optional, and what holds each convention
@@ -223,7 +226,7 @@ An untagged file is cross-cutting by default, which is why `atoms/`, the
 generic molecules, `lib/`, `i18n/` and `sw/` still read as themselves.
 
 The manifest is
-[`scripts/architecture/pragma.manifest.ts`](../../scripts/architecture/pragma.manifest.ts):
+[`scripts/architecture/pragma.manifest.ts`](../../scripts/architecture/manifests/pragma.manifest.ts):
 actors, containers and external systems, which no single source file owns.
 
 ## Blueprints in the diagram

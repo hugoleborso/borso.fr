@@ -24,6 +24,8 @@ export const signUploadInputSchema = z.object({
   songId: z.string().uuid().optional(),
 });
 
+const OBJECT_KEY_MAX = 512;
+
 export const signGetInputSchema = z.object({
-  objectKey: z.string().min(1).max(512),
+  objectKey: z.string().min(1).max(OBJECT_KEY_MAX),
 });

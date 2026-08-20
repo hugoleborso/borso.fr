@@ -16,6 +16,7 @@
  */
 
 const Y_TOP_MARGIN_FRACTION = 0.05;
+const VERTICAL_MIDPOINT_FRACTION = 0.5;
 
 export interface ProfileGeometry {
   /** SVG `points=` for a `<polygon>` closed at the bottom of the canvas. */
@@ -112,7 +113,7 @@ export function buildProfileGeometry(
   height: number,
 ): ProfileGeometry {
   const samples = zipSamples(pointElevations, cumulativeDistances);
-  const midLineY = height / 2;
+  const midLineY = height * VERTICAL_MIDPOINT_FRACTION;
   const stats = summarise(samples);
   if (stats === null) {
     return {

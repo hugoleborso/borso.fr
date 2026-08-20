@@ -102,16 +102,19 @@ export function rankRunners(runners: readonly Runner[], now: Date): Ranking {
 
 ## Enforced by
 
-- `@typescript-eslint/no-explicit-any`, set to error.
-- `borso/no-type-assertion-except-unknown`, a custom ESLint rule, which allows
-  `as const` and a single `as unknown` and rejects everything else.
-- Not `@typescript-eslint/explicit-module-boundary-types`, which this section
-  claimed for months and which is off: it is in neither `strictTypeChecked` nor
-  `stylisticTypeChecked`, and `eslint.config.js` never names it. It reports 212
-  sites (measured 2026-08-15). Until it is turned on, the return-type rule above
-  is reviewer judgement, and `no-unsafe-return` is the only part of it a machine
-  checks.
-- The type-aware `no-unsafe-argument`, `no-unsafe-assignment`,
-  `no-unsafe-call`, `no-unsafe-member-access`, and `no-unsafe-return` rules
-  from `typescript-eslint`, all set to error.
-- `tsc --noEmit`, run by the `typecheck` script in every workspace and in CI.
+- `eslint:@typescript-eslint/no-explicit-any` rejects `any` outright.
+- `eslint:borso/no-type-assertion-except-unknown` allows `as const` and a single
+  `as unknown` and rejects everything else.
+- `eslint:@typescript-eslint/no-unsafe-argument`,
+  `eslint:@typescript-eslint/no-unsafe-assignment`,
+  `eslint:@typescript-eslint/no-unsafe-call`,
+  `eslint:@typescript-eslint/no-unsafe-member-access` and
+  `eslint:@typescript-eslint/no-unsafe-return` fail on a value that has lost its
+  type. They are off inside test files, where a fixture is allowed to be a
+  literal.
+- `gate:typecheck` runs `tsc --noEmit` in every workspace.
+- `reviewer` checks that a derived type is derived, so a row type comes from
+  `$inferSelect`, a request body from `z.infer`, and a response from the Hono
+  client, rather than being written out by hand beside the thing it mirrors.
+- `reviewer` checks that untrusted input is parsed with Zod rather than
+  annotated into shape.

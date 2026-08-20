@@ -37,6 +37,16 @@
             "command": ".claude/hooks/pretool-github-pr-body.sh"
           }
         ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pretool-blueprint-context.sh",
+            "statusMessage": "Seeding the layer's blueprint"
+          }
+        ]
       }
     ],
     "PostToolUse": [

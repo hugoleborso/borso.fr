@@ -1,25 +1,29 @@
 /**
  * One row of the setlist editor: the position, a drag handle, the song and
- * who plays what on it, the energy slider, and the row actions.
+ * who plays what on it, the energy bar, and the row actions.
  *
  * The card is a header and a footer: the position, the drag handle and the
- * title on top, then one strip carrying the energy readout and the three row
- * actions, with the energy bar spanning the card under it. The actions are a
- * row in both layouts. Stacked into a column they were 157 px of buttons
- * beside a 61 px title, so two thirds of a phone's song card was the empty
- * space that column reserved; on a 375 px screen a card is now about 160 px
- * instead of 230 px, and nothing in it is blank.
+ * title on top, then the energy label with its readout, the energy bar, and
+ * the three row actions — stacked on a phone, one row above `sm`. The actions
+ * stay a row in both layouts because a column of three thumb-sized buttons is
+ * 157 px tall beside a title of about 61 px, and a card cannot be shorter than
+ * the tallest thing in it.
+ *
+ * Those three sit in the same order in the markup and in both layouts, so tab
+ * order is reading order. A `flex-wrap` strip with `order-*` utilities fits
+ * the label, the readout and the actions on one line and saves 20 px, at the
+ * cost of sending focus from the drag handle down to the bar and back up to
+ * the buttons, which is WCAG 2.4.3 for twenty pixels.
  *
  * The title wraps rather than being cut off at one line — on stage a half-read
- * title is worth nothing — and it spans the card because nothing sits to its
- * right any more.
+ * title is worth nothing — and the card's whole width is its to wrap into.
  *
  * Each row owns a small `useForm` instance — the parent
  * (`SetlistEditor`) doesn't centralise per-row state. The form is never
  * submitted: it exists for field state and Zod validation, and every change
  * reaches the parent through `onUpdate` from inside `field.handleChange`, so
  * the live-edit semantics (per-keystroke mutation) are preserved without an
- * effect. There is no `onSubmit` and no submit button anywhere in the row.
+ * effect.
  *
  * The list item itself is the dnd-kit sortable node, so the whole row
  * (the transition strip that precedes it, plus the card) is what reorders.
@@ -70,6 +74,7 @@ import {
 } from './setlist-entry-energy.core';
 import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
 
+const POSITION_DIGITS = 2;
 const ICON_BUTTON_CLASS =
   'w-11 h-11 sm:w-9 sm:h-9 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
 
@@ -143,7 +148,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
       <div className="flex flex-col gap-2 bg-bg-elev border border-line rounded-md px-2 sm:px-3 py-2.5 transition-colors hover:border-line-strong">
         <div className="flex items-start gap-2 sm:gap-3">
           <span className="font-mono text-xs text-ink-400 pt-3 w-6 text-right shrink-0">
-            {String(props.position).padStart(2, '0')}
+            {String(props.position).padStart(POSITION_DIGITS, '0')}
           </span>
           <button
             type="button"
@@ -208,48 +213,45 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:flex-nowrap sm:gap-3">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
           <form.Field name="energy">
             {(field) => {
-              const appearance = selectEnergyAppearance(
-                isEnergyStored({
-                  isEdited: field.state.meta.isDirty,
-                  entryEnergy: props.energy,
-                  songEnergy: props.baseEnergy,
-                }),
-              );
+              const isStored = isEnergyStored({
+                isEdited: field.state.meta.isDirty,
+                entryEnergy: props.energy,
+                songEnergy: props.baseEnergy,
+              });
+              const appearance = selectEnergyAppearance(isStored);
               const changeEnergy = (next: number): void => {
                 field.handleChange(next);
                 publishEnergy(next);
               };
               return (
                 <>
-                  <span className="order-1 text-xs font-mono uppercase tracking-wider text-ink-400 shrink-0">
+                  <span className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-ink-400 shrink-0">
                     {t('setlist.energy')}
-                  </span>
-                  <span
-                    className={composeClassName(
-                      'order-2 sm:order-4 font-mono text-sm min-w-[18px] shrink-0 text-center',
-                      appearance.readoutClassName,
-                    )}
-                  >
-                    {field.state.value}
+                    <span className={composeClassName('text-sm', appearance.readoutClassName)}>
+                      {field.state.value}
+                    </span>
                   </span>
                   <EnergyBar
                     value={field.state.value}
                     minimum={ENERGY_MIN}
                     maximum={ENERGY_MAX}
                     label={t('setlist.energy')}
+                    valueText={
+                      isStored ? undefined : t('setlist.energyUnset', { value: field.state.value })
+                    }
                     filledClassName={appearance.filledClassName}
                     emptyClassName={appearance.emptyClassName}
-                    className="order-4 sm:order-3 w-full sm:w-auto sm:flex-1 sm:max-w-[320px]"
+                    className="w-full sm:flex-1 sm:max-w-[320px]"
                     onChange={changeEnergy}
                   />
                 </>
               );
             }}
           </form.Field>
-          <div className="order-3 sm:order-5 ml-auto flex items-center gap-2 shrink-0">
+          <div className="flex items-center justify-end gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setLineupEditorOpen(true)}

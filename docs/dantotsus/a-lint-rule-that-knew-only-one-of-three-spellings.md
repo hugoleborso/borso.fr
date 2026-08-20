@@ -9,6 +9,7 @@ fix-commits: [f4e1247]
 eradication-level: 1
 time-to-detect: months
 tags: [eslint, gates, architecture, code-quality, process]
+blueprints: [test-lint-rule]
 ---
 
 # The lint rule knew one of the three ways to name a module

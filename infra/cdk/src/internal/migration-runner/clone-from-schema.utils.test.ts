@@ -5,7 +5,7 @@ import {
   formatColumnType,
   buildCreateTableLikeSql,
   buildReplaceBeforeCloneSql,
-  findUndecidedCredentialTables,
+  listUndecidedCredentialTables,
   isCloneableDataTable,
   isReplacedBeforeClone,
   selectCloneableDataTables,
@@ -13,7 +13,7 @@ import {
 } from './clone-from-schema.utils.js';
 
 // @FollowsBlueprint test-pure-unit
-describe('findUndecidedCredentialTables', () => {
+describe('listUndecidedCredentialTables', () => {
   const PRAGMA_MIGRATIONS = [
     'CREATE TABLE "app_config" (id integer PRIMARY KEY, password_hash text NOT NULL);',
     'CREATE TABLE IF NOT EXISTS "song" (slug text PRIMARY KEY);',
@@ -21,31 +21,31 @@ describe('findUndecidedCredentialTables', () => {
   const LLL_MIGRATIONS = ['CREATE TABLE admin_credentials (pin_hash text NOT NULL);'];
 
   it('names the credential table the migrations create and the config ignores', () => {
-    expect(findUndecidedCredentialTables({}, PRAGMA_MIGRATIONS)).toStrictEqual(['app_config']);
+    expect(listUndecidedCredentialTables({}, PRAGMA_MIGRATIONS)).toStrictEqual(['app_config']);
   });
 
   it('accepts a table that is blocklisted', () => {
     expect(
-      findUndecidedCredentialTables({ tableBlocklist: ['admin_credentials'] }, LLL_MIGRATIONS),
+      listUndecidedCredentialTables({ tableBlocklist: ['admin_credentials'] }, LLL_MIGRATIONS),
     ).toStrictEqual([]);
   });
 
   it('accepts a table that is replaced', () => {
     expect(
-      findUndecidedCredentialTables({ tablesToReplace: ['app_config'] }, PRAGMA_MIGRATIONS),
+      listUndecidedCredentialTables({ tablesToReplace: ['app_config'] }, PRAGMA_MIGRATIONS),
     ).toStrictEqual([]);
   });
 
   // The guard has to stay quiet about a credential table this app has never
   // heard of, or every app pays for every other app's schema.
   it('says nothing about a credential table the migrations never create', () => {
-    expect(findUndecidedCredentialTables({}, LLL_MIGRATIONS)).toStrictEqual(['admin_credentials']);
-    expect(findUndecidedCredentialTables({}, [])).toStrictEqual([]);
+    expect(listUndecidedCredentialTables({}, LLL_MIGRATIONS)).toStrictEqual(['admin_credentials']);
+    expect(listUndecidedCredentialTables({}, [])).toStrictEqual([]);
   });
 
   it('ignores non-credential entries in either list', () => {
     expect(
-      findUndecidedCredentialTables(
+      listUndecidedCredentialTables(
         { tableBlocklist: ['auth_attempt'], tablesToReplace: ['song'] },
         PRAGMA_MIGRATIONS,
       ),
@@ -54,7 +54,7 @@ describe('findUndecidedCredentialTables', () => {
 
   it('matches a CREATE TABLE written without quotes or with IF NOT EXISTS', () => {
     expect(
-      findUndecidedCredentialTables({}, ['create table if not exists app_config (id int);']),
+      listUndecidedCredentialTables({}, ['create table if not exists app_config (id int);']),
     ).toStrictEqual(['app_config']);
   });
 
@@ -62,7 +62,7 @@ describe('findUndecidedCredentialTables', () => {
   // an app inheriting a cloned schema is not asked to re-decide.
   it('does not fire on a migration that merely references the table', () => {
     expect(
-      findUndecidedCredentialTables({}, ['ALTER TABLE app_config ADD COLUMN hmac_key text;']),
+      listUndecidedCredentialTables({}, ['ALTER TABLE app_config ADD COLUMN hmac_key text;']),
     ).toStrictEqual([]);
   });
 });
@@ -124,6 +124,23 @@ describe('buildCreateTableLikeSql', () => {
       expect(() => buildCreateTableLikeSql(source, target, table)).toThrow(/Invalid/);
     },
   );
+
+  /**
+   * Three identifiers reach the same guard, so the rejection has to say which
+   * one was wrong — a CDK prop misconfigured on the source is a different fix
+   * from one misconfigured on the target.
+   */
+  it('names the argument it rejected', () => {
+    expect(() => buildCreateTableLikeSql('pr-27', 'pr_27', 'editions')).toThrow(
+      /Invalid schema name: "pr-27"/,
+    );
+    expect(() => buildCreateTableLikeSql('prod', 'pr-27', 'editions')).toThrow(
+      /Invalid schema name: "pr-27"/,
+    );
+    expect(() => buildCreateTableLikeSql('prod', 'pr_27', 'has space')).toThrow(
+      /Invalid table name: "has space"/,
+    );
+  });
 });
 
 describe('buildCloneInsertSql', () => {
@@ -186,30 +203,30 @@ describe('buildCloneInsertSql', () => {
   it('rejects invalid column identifiers', () => {
     expect(() =>
       buildCloneInsertSql('prod', 'pr_27', 'runners', ['valid', 'DROP TABLE'], []),
-    ).toThrow(/Invalid/);
+    ).toThrow(/Invalid column name: "DROP TABLE"/);
   });
 
   it('rejects invalid identifiers in the nullify list', () => {
     expect(() => buildCloneInsertSql('prod', 'pr_27', 'runners', ['photo_key'], ['"; --'])).toThrow(
-      /Invalid/,
+      /Invalid column name/,
     );
   });
 
   it('rejects an invalid table name', () => {
     expect(() => buildCloneInsertSql('prod', 'pr_27', 'runners; DROP', ['slug'], [])).toThrow(
-      /Invalid/,
+      /Invalid table name/,
     );
   });
 
   it('rejects an invalid source schema name', () => {
     expect(() => buildCloneInsertSql('prod"; --', 'pr_27', 'runners', ['slug'], [])).toThrow(
-      /Invalid/,
+      /Invalid schema name/,
     );
   });
 
   it('rejects an invalid target schema name', () => {
     expect(() => buildCloneInsertSql('prod', 'pr_27"; --', 'runners', ['slug'], [])).toThrow(
-      /Invalid/,
+      /Invalid schema name/,
     );
   });
 });
@@ -350,6 +367,17 @@ describe('formatColumnType', () => {
     expect(formatColumnType({ ...row, data_type: 'numeric', numeric_precision: 10 })).toStrictEqual(
       { name: 'family', type: 'numeric(10,0)' },
     );
+  });
+
+  /**
+   * DSQL reports no precision for an unconstrained `numeric`, and `numeric(,0)`
+   * is not a type, so the column has to fall back to the bare type name.
+   */
+  it('keeps a numeric the catalogue reports no precision for as a bare numeric', () => {
+    expect(formatColumnType({ ...row, data_type: 'numeric' })).toStrictEqual({
+      name: 'family',
+      type: 'numeric',
+    });
   });
 
   it('leaves a non-numeric type alone even when a precision is reported', () => {

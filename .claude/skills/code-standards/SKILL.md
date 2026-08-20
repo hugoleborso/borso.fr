@@ -18,7 +18,7 @@ description: >-
 
 # Code standards
 
-The standards are in [`docs/standards/`](../../docs/standards/README.md), and
+The standards are in [`docs/standards/`](../../../docs/standards/README.md), and
 they are the single source of truth. The present skill decides which of them
 apply to the change in front of you, so you read three documents instead of
 thirteen.
@@ -38,14 +38,14 @@ in the matching rows before writing code.
 
 | The change touches                                | Read                                                                                                                                                                            |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Anything at all                                   | [01. Naming](../../docs/standards/01-naming.md), [02. Purity and core files](../../docs/standards/02-purity-and-core-files.md), [03. Typing](../../docs/standards/03-typing.md) |
-| A file under `api/src/`                           | [04. Back end architecture](../../docs/standards/04-backend-architecture.md), [11. Database](../../docs/standards/11-database.md)                                               |
-| A file under `site/src/`                          | [05. Front end architecture](../../docs/standards/05-frontend-architecture.md), [07. State and effects](../../docs/standards/07-state-and-effects.md)                           |
-| A call between the front end and the API          | [06. Data fetching](../../docs/standards/06-data-fetching.md)                                                                                                                   |
-| A visible string, or a component that renders one | [09. Internationalisation](../../docs/standards/09-i18n.md)                                                                                                                     |
-| A class name or a style                           | [08. Styling](../../docs/standards/08-styling.md)                                                                                                                               |
-| A test, or a pure function                        | [10. Testing](../../docs/standards/10-testing.md)                                                                                                                               |
-| A lint rule, a hook, or a workflow                | [12. Lint and gates](../../docs/standards/12-linting-and-gates.md)                                                                                                              |
+| Anything at all                                   | [01. Naming](../../../docs/standards/01-naming.md), [02. Purity and core files](../../../docs/standards/02-purity-and-core-files.md), [03. Typing](../../../docs/standards/03-typing.md) |
+| A file under `api/src/`                           | [04. Back end architecture](../../../docs/standards/04-backend-architecture.md), [11. Database](../../../docs/standards/11-database.md)                                               |
+| A file under `site/src/`                          | [05. Front end architecture](../../../docs/standards/05-frontend-architecture.md), [07. State and effects](../../../docs/standards/07-state-and-effects.md)                           |
+| A call between the front end and the API          | [06. Data fetching](../../../docs/standards/06-data-fetching.md)                                                                                                                   |
+| A visible string, or a component that renders one | [09. Internationalisation](../../../docs/standards/09-i18n.md)                                                                                                                     |
+| A class name or a style                           | [08. Styling](../../../docs/standards/08-styling.md)                                                                                                                               |
+| A test, or a pure function                        | [10. Testing](../../../docs/standards/10-testing.md)                                                                                                                               |
+| A lint rule, a hook, or a workflow                | [12. Lint and gates](../../../docs/standards/12-linting-and-gates.md)                                                                                                              |
 
 ## Order of work when writing code
 

@@ -9,6 +9,7 @@ fix-commits: []
 eradication-level: 1
 time-to-detect: months
 tags: [cdk, vitest, disk, sandbox, gates, ci]
+blueprints: [test-cdk-synth]
 ---
 
 # Every CDK test run left a cloud assembly on disk, and the disk ran out

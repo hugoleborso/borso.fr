@@ -46,6 +46,36 @@ describe('makeIdempotent', () => {
       'INSERT INTO "runners" VALUES (1)',
     );
   });
+
+  /**
+   * The rewrites match the first occurrence in the statement, and drizzle puts
+   * a prose header above the DDL. A comment naming the same keywords used to
+   * take the rewrite and leave the statement it described un-idempotent.
+   */
+  it('rewrites the statement and not a comment that names the same keywords', () => {
+    const statement = [
+      '-- We CREATE TABLE here for the first time.',
+      'CREATE TABLE "widget" (id TEXT)',
+    ].join('\n');
+    expect(makeIdempotent(statement)).toBe(
+      [
+        '-- We CREATE TABLE here for the first time.',
+        'CREATE TABLE IF NOT EXISTS "widget" (id TEXT)',
+      ].join('\n'),
+    );
+  });
+
+  it('leaves a statement that is only a comment alone', () => {
+    expect(makeIdempotent('-- CREATE TABLE "widget" (id TEXT)')).toBe(
+      '-- CREATE TABLE "widget" (id TEXT)',
+    );
+  });
+
+  it('rewrites a statement carrying a trailing comment on the same line', () => {
+    expect(makeIdempotent('CREATE SCHEMA "pr_27" -- and CREATE SCHEMA again')).toBe(
+      'CREATE SCHEMA IF NOT EXISTS "pr_27" -- and CREATE SCHEMA again',
+    );
+  });
 });
 
 describe('stripUsingClause', () => {
@@ -89,6 +119,21 @@ describe('asyncifyIndex', () => {
   it('passes a non index statement through unchanged', () => {
     expect(asyncifyIndex('CREATE TABLE "runners" (id TEXT)')).toBe(
       'CREATE TABLE "runners" (id TEXT)',
+    );
+  });
+
+  /**
+   * `ASYNC` is a keyword of `CREATE INDEX` and of nothing else, so a statement
+   * that names an index without creating one keeps whatever it was written
+   * with. Only the guard says so: every rewrite below it matches on `INDEX`.
+   */
+  it('leaves a statement that names an index without creating one alone', () => {
+    expect(asyncifyIndex('DROP INDEX ASYNC "i"')).toBe('DROP INDEX ASYNC "i"');
+  });
+
+  it('collapses the whitespace between the keyword and the index name', () => {
+    expect(asyncifyIndex('CREATE INDEX  "i" ON "runners" (slug)')).toBe(
+      'CREATE INDEX ASYNC "i" ON "runners" (slug)',
     );
   });
 });
@@ -147,11 +192,39 @@ describe('the rewrites tolerate the whitespace SQL allows', () => {
     );
   });
 
+  it('reaches CREATE UNIQUE INDEX through a doubled space before INDEX', () => {
+    expect(makeIdempotent('CREATE UNIQUE  INDEX "i" ON "runners" (slug)')).toBe(
+      'CREATE UNIQUE INDEX IF NOT EXISTS "i" ON "runners" (slug)',
+    );
+  });
+
+  it('adds IF NOT EXISTS across a doubled space before CREATE SCHEMA', () => {
+    expect(makeIdempotent('CREATE  SCHEMA "pr_27"')).toBe('CREATE SCHEMA IF NOT EXISTS "pr_27"');
+  });
+
+  it('adds IF NOT EXISTS across a doubled space before ADD COLUMN', () => {
+    expect(makeIdempotent('ALTER TABLE "runners" ADD  COLUMN "bib" TEXT')).toBe(
+      'ALTER TABLE "runners" ADD COLUMN IF NOT EXISTS "bib" TEXT',
+    );
+  });
+
   it('recognises an existing IF NOT EXISTS written with irregular spacing', () => {
     const statement = 'CREATE TABLE IF  NOT EXISTS "runners" (id TEXT)';
     expect(makeIdempotent(statement)).toBe(statement);
     const spread = 'CREATE SCHEMA IF NOT\nEXISTS "pr_27"';
     expect(makeIdempotent(spread)).toBe(spread);
+  });
+
+  it('drops a USING clause whose own words are spread out', () => {
+    expect(stripUsingClause('CREATE INDEX "i" ON "runners" (slug) USING  btree ASC')).toBe(
+      'CREATE INDEX "i" ON "runners" (slug) ASC',
+    );
+    expect(stripUsingClause('CREATE INDEX "i" ON "runners" (slug) USING btree  ASC')).toBe(
+      'CREATE INDEX "i" ON "runners" (slug) ASC',
+    );
+    expect(stripUsingClause('CREATE INDEX "i" ON "runners" USING btree  ("slug")')).toBe(
+      'CREATE INDEX "i" ON "runners" ("slug")',
+    );
   });
 
   it('drops a USING clause written across a newline', () => {
@@ -177,5 +250,36 @@ describe('the rewrites tolerate the whitespace SQL allows', () => {
     expect(asyncifyIndex(doubled)).toBe('CREATE INDEX ASYNC "i" ON "runners" (slug)');
     const spread = 'CREATE INDEX IF  NOT  EXISTS  ASYNC "i" ON "runners" (slug)';
     expect(asyncifyIndex(spread)).toBe('CREATE INDEX ASYNC IF NOT EXISTS "i" ON "runners" (slug)');
+  });
+});
+
+/**
+ * The lookahead that spots an `IF NOT EXISTS` the statement already carries has
+ * to see through the whitespace SQL allows in three places at once: before
+ * `IF`, between `IF` and `NOT`, and between `NOT` and `EXISTS`. A rewrite that
+ * misses one appends a second `IF NOT EXISTS`, and the migration then dies on a
+ * syntax error rather than on the relation the clause was there to tolerate.
+ */
+describe('no rewrite re-adds an IF NOT EXISTS the statement already carries', () => {
+  const CREATE_KEYWORDS = [
+    'CREATE TABLE',
+    'CREATE UNIQUE INDEX',
+    'CREATE INDEX',
+    'CREATE SCHEMA',
+    'ALTER TABLE "runners" ADD COLUMN',
+  ];
+  const IDEMPOTENT_CLAUSES = [
+    ' IF NOT EXISTS',
+    '  IF NOT EXISTS',
+    ' IF  NOT EXISTS',
+    ' IF NOT  EXISTS',
+  ];
+
+  it.each(
+    CREATE_KEYWORDS.flatMap((keyword) =>
+      IDEMPOTENT_CLAUSES.map((clause) => `${keyword}${clause} "x" (id TEXT)`),
+    ),
+  )('leaves %s alone', (statement) => {
+    expect(makeIdempotent(statement)).toBe(statement);
   });
 });

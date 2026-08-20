@@ -24,6 +24,12 @@ import {
 import { applyStandardTags } from '../internal/tags.js';
 import type { DsqlSchema } from './dsql-schema.js';
 
+const DEFAULT_MEMORY_MIB = 512;
+const DEFAULT_TIMEOUT_SECONDS = 10;
+const DEFAULT_RESERVED_CONCURRENCY = 10;
+const CORS_PREFLIGHT_MAX_AGE_MINUTES = 10;
+const ERROR_ALARM_PERIOD_MINUTES = 5;
+
 export interface LambdaApiProps {
   readonly app: string;
   readonly stage: Stage;
@@ -104,9 +110,9 @@ export class LambdaApi extends Construct {
       entry: props.entry,
       runtime: Runtime.NODEJS_22_X,
       architecture: Architecture.ARM_64,
-      memorySize: props.memoryMb ?? 512,
-      timeout: Duration.seconds(props.timeoutSeconds ?? 10),
-      reservedConcurrentExecutions: props.reservedConcurrency ?? 10,
+      memorySize: props.memoryMb ?? DEFAULT_MEMORY_MIB,
+      timeout: Duration.seconds(props.timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS),
+      reservedConcurrentExecutions: props.reservedConcurrency ?? DEFAULT_RESERVED_CONCURRENCY,
       tracing: Tracing.ACTIVE,
       logGroup,
       environment: {
@@ -165,12 +171,12 @@ export class LambdaApi extends Construct {
             allowCredentials: true,
             allowHeaders: ['content-type', 'authorization'],
             allowMethods: corsMethods,
-            maxAge: Duration.minutes(10),
+            maxAge: Duration.minutes(CORS_PREFLIGHT_MAX_AGE_MINUTES),
           }
         : {
             allowOrigins: ['*'],
             allowMethods: corsMethods,
-            maxAge: Duration.minutes(10),
+            maxAge: Duration.minutes(CORS_PREFLIGHT_MAX_AGE_MINUTES),
           };
 
     this.httpApi = new HttpApi(this, 'HttpApi', {
@@ -216,7 +222,7 @@ export class LambdaApi extends Construct {
     });
 
     new Alarm(this, 'Errors', {
-      metric: this.handler.metricErrors({ period: Duration.minutes(5) }),
+      metric: this.handler.metricErrors({ period: Duration.minutes(ERROR_ALARM_PERIOD_MINUTES) }),
       threshold: 5,
       evaluationPeriods: 1,
       comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
