@@ -5,7 +5,7 @@ detected-at: local
 severity: medium
 related-pr: '#49'
 fix-pr: '#74'
-fix-commits: []
+fix-commits: [df47cd5]
 eradication-level: 2
 time-to-detect: 11 minutes
 tags: [ci, git, hooks, gates]
@@ -101,7 +101,7 @@ path that was already paying for the network.
 
 **Type:** code diff · DevX check (level 2 — DevX check)
 
-**Reference:** [PR #74](https://github.com/hugoleborso/borso.fr/pull/74)
+**Reference:** [PR #74](https://github.com/hugoleborso/borso.fr/pull/74) · commit [`df47cd5`](https://github.com/hugoleborso/borso.fr/commit/df47cd5)
 
 **The actual fix:**
 
