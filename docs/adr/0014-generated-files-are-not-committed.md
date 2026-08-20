@@ -76,11 +76,18 @@ no longer run on the commit at all.
 push to `main` and publishes them beside the architecture maps, so a report is
 still one link away, from a phone, without a checkout.
 
-**Each output is produced locally before anything reads it.** The SessionStart
-hook generates the two an agent reads first — the blueprint index and the
-pre-write hook's context lookup — synchronously, and the rest in the
-background. CI generates all of them immediately after `pnpm install`, before
-the first check that reads one.
+**Each output is produced locally before anything reads it.** `scripts/reports.sh
+[all|blueprints|standards|maps]` regenerates them, grouped because the map build
+is fourteen seconds and the blueprint index is one. The SessionStart hook runs
+the blueprint group synchronously and the rest in the background; CI runs all of
+it immediately after `pnpm install`, before the first check that reads one.
+
+**Every skill and agent that opens one runs that command itself.** A session
+hook is not enough: a subagent given its own worktree never runs it, and a
+blueprint added during a session is not in the index until it is rebuilt.
+`/implementation`, `/blueprint`, `/code-standards` and `/route` run
+`blueprints`; the standards reviewer runs `standards`; `/open-pr` runs `maps`.
+A new skill that reads a generated file carries the same line.
 
 ## Alternatives considered
 

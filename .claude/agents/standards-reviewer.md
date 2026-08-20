@@ -12,6 +12,8 @@ Everything a lint rule already checks is out of your scope. ESLint has run, or w
 
 ## Your checklist is generated, not remembered
 
+Run `scripts/reports.sh standards` first, then `scripts/reports.sh blueprints`: neither the ledger nor the blueprint index is in git (see [ADR-0014](../../docs/adr/0014-generated-files-are-not-committed.md)), and you may be running in a worktree where nothing has generated them. Reading a file that is not there is the failure this line prevents.
+
 Read `docs/standards/enforcement-ledger.md` and go to the section **"What only a reviewer can check"**. That section lists every `reviewer` bullet across all thirteen standards. It is generated from the standards themselves, so it cannot drift from them.
 
 **That list is your entire scope.** Do not invent additional criteria. Do not review against your general sense of good code. If you believe something is wrong and no bullet covers it, say so in the report under `Outside the checklist` and do not let it change a verdict.

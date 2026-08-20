@@ -250,37 +250,25 @@ fi
 # blueprint-index.md before writing a file, the pre-write hook reads
 # blueprint-context.json on every Write, and the standards reviewer reads
 # enforcement-ledger.md; all three read the working tree, so a fresh checkout
-# has to produce them before anything asks. Cheap enough to do unconditionally
-# and far cheaper than the failure, which is an agent silently reading nothing.
+# has to produce them before anything asks.
 #
-# Backgrounded as one batch: the heatmap walks every source file, and nothing
-# in the first turn of a session needs these within the first few seconds.
+# The blueprint group runs here and now, and the rest in the background. That
+# hook is best-effort by contract and exits 0 when its lookup is missing, so a
+# race would not break a write — it would silently write a file with no
+# blueprint in front of it, which is worse than a failure because nothing says
+# it happened. Four seconds at session start buys that away; the maps take
+# fourteen and nothing in the first turn reads them.
 #
-# Two of them are produced here and now, and the rest in the background. The
-# pre-write hook is best-effort by contract and exits 0 when its lookup is
-# missing, so a race would not break a write — it would silently write a file
-# with no blueprint in front of it, which is worse than a failure because
-# nothing says it happened. 2.3 s at session start buys that away. The
-# architecture maps take fourteen and nothing in the first turn reads them.
+# A session is not the only reader. A subagent given its own worktree never
+# runs this hook at all, which is why every skill that opens one of these files
+# runs `scripts/reports.sh` itself.
 log 'generating the lookups an agent reads before its first write'
-(
-  cd "$REPO_ROOT" || exit 0
-  pnpm exec tsx .claude/skills/blueprint/blueprint-context.ts >/dev/null 2>&1 || true
-  pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts >/dev/null 2>&1 || true
-)
+"$REPO_ROOT/scripts/reports.sh" blueprints >/dev/null 2>&1 || true
 
 log 'generating the reports and the maps in the background'
 (
-  cd "$REPO_ROOT" || exit 0
-  for generator in \
-    .claude/skills/blueprint/blueprint-heatmap.ts \
-    scripts/blueprints/blueprint-defects.ts \
-    scripts/standards/convention-drift.ts \
-    scripts/standards/rule-provenance.ts \
-    scripts/standards/enforcement-ledger.ts \
-    scripts/architecture/architecture-graph.ts; do
-    pnpm exec tsx "$generator" >/dev/null 2>&1 || true
-  done
+  "$REPO_ROOT/scripts/reports.sh" standards >/dev/null 2>&1 || true
+  "$REPO_ROOT/scripts/reports.sh" maps >/dev/null 2>&1 || true
 ) &
 
 if [ ${#missing_optional[@]} -gt 0 ]; then

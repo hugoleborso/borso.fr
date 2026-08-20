@@ -142,6 +142,8 @@ Committed, as inputs: `docs/standards/convention-baseline.json`, a count a perso
 
 **Each output still has an address**: `pages.yml` regenerates every one on each push to `main` and publishes it beside the architecture maps. A link from a document to a generated file resolves on a checkout and 404s on github.com; point at the published copy when the link has to survive.
 
+**Anything that reads one regenerates it first: `scripts/reports.sh [all|blueprints|standards|maps]`.** Grouped because the map build is fourteen seconds and the blueprint index is one. Every skill and agent that opens a generated file names the group it needs — `/implementation` and `/blueprint` and `/code-standards` run `blueprints`, the standards reviewer runs `standards`, `/open-pr` runs `maps` — because a subagent given its own worktree starts from a checkout the SessionStart hook never ran in, and because a blueprint added this session is not in the index until it is rebuilt. **When you write a new skill that reads one of these files, put the command in it.**
+
 **Each output is produced before anything reads it.** SessionStart generates the blueprint index and the pre-write hook's context lookup synchronously — that hook is best-effort and exits 0 without its lookup, so a race would silently write a file with no blueprint in front of it — and the rest in the background. CI generates all of them right after `pnpm install`, because `check-doc-links.ts` opens every link in every markdown file and a fresh checkout has none of them.
 
 ## The standards cannot claim enforcement they do not have

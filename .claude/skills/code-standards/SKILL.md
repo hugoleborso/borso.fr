@@ -11,9 +11,11 @@ description: >-
   atoms and molecules and organisms on the front end, TanStack Query with the
   Hono client, the ban on `useEffect`, Tailwind styling, i18next, Vitest
   coverage and mutation testing, Drizzle, and the ESLint rules and git hooks
-  that enforce all of it. Before writing a new file, also read
+  that enforce all of it. Before writing a new file, run
+  `scripts/reports.sh blueprints` and read
   `.claude/skills/blueprint/blueprint-index.md` for the canonical example of
-  the layer you are working in.
+  the layer you are working in — the index is generated and not committed, so
+  a fresh clone or a subagent worktree does not have it yet.
 ---
 
 # Code standards
