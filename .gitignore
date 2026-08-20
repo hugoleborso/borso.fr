@@ -58,6 +58,10 @@ reports
 # own output proves nothing.
 docs/architecture/*.html
 docs/architecture/*-architecture.json
+# The counts each diff run leaves for the index and the pull request comment to
+# read. They describe a branch, like the diff page beside them, so there is no
+# revision they would be true at.
+docs/architecture/*-diff.json
 .claude/skills/blueprint/blueprint-index.md
 .claude/skills/blueprint/blueprint-coverage.html
 .claude/skills/blueprint/blueprint-context.json

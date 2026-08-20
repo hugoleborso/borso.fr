@@ -15,6 +15,9 @@ name: architecture
 
 on:
   pull_request:
+    # `closed` is here for the teardown below, and it is the only reason the
+    # default set is spelled out: naming any type at all replaces the default.
+    types: [opened, synchronize, reopened, closed]
     paths:
       - 'apps/**'
       - 'scripts/architecture/**'
@@ -28,12 +31,18 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
+  # Minting an OIDC token is what lets the publish step assume
+  # PreviewDeployRole. That is the same role preview.yml uses, and its trust
+  # policy already names `pull_request`, so no permission had to be granted in
+  # AWS to add this.
+  id-token: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   architecture:
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -92,9 +101,44 @@ jobs:
           done
           cat /tmp/architecture-diff.md >> "$GITHUB_STEP_SUMMARY"
 
-      # The page is the browsable half, and this artifact is the only place a
-      # pull request's own pages exist — `main` publishes to Pages, and nothing
-      # is committed.
+      # The maps go to the previews CDN that already answers for
+      # `<app>-pr-<n>.preview.borso.fr`. Its routing function reads any
+      # `<name>-pr-<n>` host and serves `/<name>/pr-<n>/` from the previews
+      # bucket, so `architecture` is just another name to it: no bucket, no
+      # distribution, no certificate and no DNS record had to be added. Objects
+      # in that bucket expire after 60 days on their own, which is why nothing
+      # here tears them down.
+      #
+      # Both steps may fail without failing the report. AWS being unreachable
+      # is not a reason to lose the diff comment, and the artifact below still
+      # carries the same pages.
+      - name: Authenticate to AWS
+        id: aws
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Publish the maps
+        id: publish
+        if: steps.aws.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          bucket="$(aws ssm get-parameter --name /borso/shared/previews-bucket-name \
+            --query Parameter.Value --output text)"
+          distribution="$(aws ssm get-parameter --name /borso/shared/previews-distribution-id \
+            --query Parameter.Value --output text)"
+          prefix="architecture/pr-${{ github.event.pull_request.number }}"
+          aws s3 sync docs/architecture "s3://$bucket/$prefix/" --delete --only-show-errors
+          # A push writes the same keys, and the edge would go on serving the
+          # previous maps for its default TTL without this.
+          aws cloudfront create-invalidation --distribution-id "$distribution" \
+            --paths "/$prefix/*" --query 'Invalidation.Id' --output text
+
+      # The page is the browsable half, and this artifact is what a reader who
+      # wants the whole folder offline downloads.
       - name: Upload the browsable page
         uses: actions/upload-artifact@v4
         with:
@@ -107,7 +151,7 @@ jobs:
           retention-days: 30
 
       # One comment per pull request, rewritten in place, and only when the
-      # report changed. A new comment per push would bury the conversation, and
+      # counts changed. A new comment per push would bury the conversation, and
       # an identical rewrite still notifies everyone watching.
       - name: Comment the architecture diff
         uses: actions/github-script@v7
@@ -116,11 +160,51 @@ jobs:
             const fs = require('node:fs');
             const marker = '<!-- architecture-diff -->';
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const site = `https://architecture-pr-${context.issue.number}.preview.borso.fr`;
+            const isPublished = '${{ steps.publish.outcome }}' === 'success';
+            // The counts only. The full report — routes added, files moved,
+            // externals reached — is in the job summary and on the maps
+            // themselves, and repeating it here made a comment several screens
+            // long on a phone that nobody scrolled to the end of. What a
+            // reader wants from the conversation is which applications moved
+            // and how much, and a way in.
+            const summaries = fs
+              .readdirSync('docs/architecture')
+              .filter((name) => name.endsWith('-diff.json'))
+              .map((name) => ({
+                app: name.slice(0, -'-diff.json'.length),
+                counts: JSON.parse(fs.readFileSync(`docs/architecture/${name}`, 'utf8')).counts,
+              }))
+              .filter((entry) => entry.counts.some((count) => count.value > 0))
+              .sort((left, right) => left.app.localeCompare(right.app));
+            // A rename carries no sign: the map pairs it rather than reporting
+            // an addition beside a deletion, so it is not a change to the
+            // architecture. The diff page still lists every one.
+            const signs = [['added', '+'], ['edited', '~'], ['removed', '−']];
+            const deltasOf = (counts) =>
+              signs
+                .map(([label, sign]) => [sign, counts.find((c) => c.label === label)?.value ?? 0])
+                .filter(([, value]) => value > 0)
+                .map(([sign, value]) => `${sign}${value}`)
+                .join(' ');
+            const lines = summaries.map((entry) =>
+              isPublished
+                ? `- **[${entry.app}](${site}/${entry.app}-diff.html)** \`${deltasOf(entry.counts)}\``
+                : `- **${entry.app}** \`${deltasOf(entry.counts)}\``,
+            );
+            const opening = isPublished
+              ? `**[Architecture maps for this branch ↗](${site}/)**`
+              : `**[Architecture maps](${runUrl}#artifacts)** — the published copy could not be written this run, so this is the \`architecture-maps\` artifact.`;
+            const verdict =
+              lines.length === 0
+                ? ['', 'No application’s architecture moved on this branch.']
+                : ['', ...lines];
             const body = [
               marker,
-              fs.readFileSync('/tmp/architecture-diff.md', 'utf8').trim(),
+              opening,
+              ...verdict,
               '',
-              `[Browse the full maps](${runUrl}#artifacts) — download the \`architecture-maps\` artifact and open \`index.html\`.`,
+              `<sub>Files added, edited and removed per application. The full report is in the <a href="${runUrl}">job summary</a>.</sub>`,
             ].join('\n');
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
@@ -136,11 +220,53 @@ jobs:
             // no architecture produces the same body, and updating anyway emits
             // an issue_comment event that notifies every watcher and re-enters
             // any agent session subscribed to the pull request, for no news.
-            // The run link is excluded from the comparison, since it changes on
-            // every run by definition.
-            const withoutRunLink = (text) => text.replace(/\[Browse the full maps\].*$/s, '').trim();
-            if (withoutRunLink(existing.body ?? '') === withoutRunLink(body)) {
+            //
+            // The run identifier is the one part that changes on every run by
+            // definition, so it is blanked on both sides rather than the line
+            // carrying it: that line is now the fallback, and matching it by
+            // its wording would silently stop working the day the wording
+            // changes. The published link holds the pull request number, which
+            // does not move.
+            const withoutRunId = (text) => text.replace(/actions\/runs\/\d+/g, 'actions/runs/').trim();
+            if (withoutRunId(existing.body ?? '') === withoutRunId(body)) {
               core.info('Architecture report unchanged; leaving the existing comment alone.');
               return;
             }
             await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+
+  # The maps of a pull request that is over are dead weight at a live address.
+  # The bucket would expire them after sixty days on its own, which is a long
+  # time to serve a merged branch's architecture to anyone who kept the link.
+  teardown:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Delete the maps published for this pull request
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          # The prefix is the whole safety argument for a recursive delete, so
+          # it is built from a variable that must be set and must be a number.
+          # An empty PR number here would address the bucket root.
+          case "${PR_NUMBER:?the pull request number is required}" in
+            '' | *[!0-9]*) echo "::error::refusing to delete for PR_NUMBER='$PR_NUMBER'"; exit 1 ;;
+          esac
+          bucket="$(aws ssm get-parameter --name /borso/shared/previews-bucket-name \
+            --query Parameter.Value --output text)"
+          distribution="$(aws ssm get-parameter --name /borso/shared/previews-distribution-id \
+            --query Parameter.Value --output text)"
+          prefix="architecture/pr-$PR_NUMBER"
+          # Quiet when there is nothing there: a pull request whose publish step
+          # never ran, or a close replayed, is not a failure.
+          aws s3 rm "s3://$bucket/$prefix/" --recursive --only-show-errors
+          # Without this the edge goes on serving the deleted pages for its
+          # default TTL, which is the same stale map at the same address.
+          aws cloudfront create-invalidation --distribution-id "$distribution" \
+            --paths "/$prefix/*" --query 'Invalidation.Id' --output text

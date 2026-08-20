@@ -37,13 +37,16 @@ import {
   compactLineup,
   lineupOf,
   prominentMemberInstrumentFor,
+  restrictToVerticalAxis,
   type SetlistEditorEntry,
   type SetlistEditorSong,
   tonalityLabelFor,
 } from './setlist-editor.utils';
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
+import type { SetlistEntryPatch } from '../../lib/queries/setlists.queries';
 
+const DRAG_MODIFIERS = [restrictToVerticalAxis];
 const SONG_ID_FALLBACK_LENGTH = 8;
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
 const DRAG_TOUCH_DELAY_MS = 200;
@@ -73,7 +76,7 @@ export interface SetlistEntriesListProps {
   readonly instrumentsById: Readonly<Record<string, { name: string }>>;
   readonly knownMemberIds: ReadonlySet<string>;
   readonly onReorder: (orderedEntryIds: readonly string[]) => void;
-  readonly onUpdate: (entryId: string, patch: Record<string, unknown>) => void;
+  readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
   readonly onRemove: (entryId: string) => void;
   readonly onOpenTransition: (leftSongId: string, rightSongId: string) => void;
 }
@@ -125,6 +128,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
   return (
     <DndContext
       sensors={sensors}
+      modifiers={DRAG_MODIFIERS}
       collisionDetection={closestCenter}
       onDragStart={(event: DragStartEvent) => setActiveEntryId(String(event.active.id))}
       onDragEnd={commitDragReorder}
@@ -160,7 +164,6 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 energy={entry.energy}
                 baseEnergy={song?.baseEnergy ?? null}
                 notes={entry.notes}
-                currentSongId={entry.songId}
                 lineup={compactLineup(lineupRaw)}
                 resolvedLineupForEdit={lineupRaw}
                 songDefaultLineup={song?.defaultLineup ?? {}}
@@ -176,7 +179,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
           })}
         </ul>
       </SortableContext>
-      <DragOverlay dropAnimation={null}>
+      <DragOverlay dropAnimation={null} modifiers={DRAG_MODIFIERS}>
         {activeEntryId === null ? null : renderDragPreview(props, activeEntryId)}
       </DragOverlay>
     </DndContext>

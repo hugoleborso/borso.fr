@@ -24,6 +24,8 @@ import type {
   StatusByNode,
 } from './architecture-graph';
 import type { ArchitectureManifest } from './architecture-manifest';
+import type { DiffSummary } from './architecture-model-json';
+import { wrapInDocumentShell } from './document-shell.core';
 
 /**
  * What a branch did, counted, before a reviewer reads a single block.
@@ -973,7 +975,8 @@ export function renderArchitecturePage(input: RenderInput): string {
     if (moved === undefined || moved === 0) return '';
     return `<i class="delta">${moved > 0 ? '+' : '−'}${Math.abs(moved)}</i>`;
   };
-  return withDefinedCustomProperties(`<title>${escapeHtml(manifest.name)} architecture${isDiff ? ' diff' : ''}</title>
+  return wrapInDocumentShell(
+    withDefinedCustomProperties(`<title>${escapeHtml(manifest.name)} architecture${isDiff ? ' diff' : ''}</title>
 ${PAGE_STYLES}
 
 <header class="top"><div class="wrap">
@@ -1103,7 +1106,8 @@ ${PAGE_STYLES}
   });
 </script>
 <script>${GRAPH_RUNTIME_SCRIPT}</script>
-`);
+`),
+  );
 }
 
 /**
@@ -1113,62 +1117,124 @@ ${PAGE_STYLES}
  * a reader arriving at the folder with nowhere to start unless something lists
  * them.
  */
-export function renderArchitectureIndex(manifests: readonly ArchitectureManifest[]): string {
-  const cards = manifests
-    .map(
-      (manifest) => `
-      <a class="app-card" href="./${escapeHtml(manifest.application)}-architecture.html">
-        <h2>${escapeHtml(manifest.name)}</h2>
-        <p>${escapeHtml(manifest.description)}</p>
-        <ul class="app-facts">
-          ${manifest.containers
-            .map(
-              (container) =>
-                `<li><span class="app-icon">${container.icon}</span>${escapeHtml(container.name)}</li>`,
-            )
-            .join('')}
-        </ul>
-      </a>`,
-    )
+type DiffCounts = DiffSummary['counts'];
+
+/**
+ * Which counts reach the index, in reading order, and how each one is written.
+ *
+ * A renamed file is not a change to the architecture — the map pairs it rather
+ * than reporting an addition beside a deletion — so it carries no sign and is
+ * left out here; the diff page still lists every rename.
+ */
+const DELTA_LABELS = [
+  { label: 'added', sign: '+', tone: 'delta-added' },
+  { label: 'edited', sign: '~', tone: 'delta-edited' },
+  { label: 'removed', sign: '\u2212', tone: 'delta-removed' },
+] as const;
+
+function countFor(counts: DiffCounts, label: string): number {
+  return counts.find((count) => count.label === label)?.value ?? 0;
+}
+
+export function renderArchitectureIndex(
+  manifests: readonly ArchitectureManifest[],
+  /**
+   * What each application's diff run found, by application. An application
+   * absent from this map has no diff page, and one whose counts are all zero
+   * did not move on this branch; neither belongs in the top section, which
+   * exists to answer one question and should not answer it with a list of
+   * applications the reader has to check one by one.
+   */
+  diffSummaries: ReadonlyMap<string, DiffSummary> = new Map(),
+): string {
+  const moved = manifests
+    .map((manifest) => ({ manifest, counts: diffSummaries.get(manifest.application)?.counts }))
+    .filter(
+      (entry): entry is { manifest: ArchitectureManifest; counts: DiffCounts } =>
+        entry.counts !== undefined && entry.counts.some((count) => count.value > 0),
+    );
+
+  const movedChips = moved
+    .map(({ manifest, counts }) => {
+      const application = escapeHtml(manifest.application);
+      const deltas = DELTA_LABELS.filter((delta) => countFor(counts, delta.label) > 0)
+        .map(
+          (delta) =>
+            `<span class="${delta.tone}">${delta.sign}${String(countFor(counts, delta.label))}</span>`,
+        )
+        .join('');
+      return `<a class="chip chip-moved" href="./${application}-diff.html">
+        <span class="chip-name">${escapeHtml(manifest.name)}</span>
+        <span class="chip-deltas">${deltas}</span>
+      </a>`;
+    })
     .join('');
 
-  return `<title>Architecture maps</title>
+  const mapChips = manifests
+    .map((manifest) => {
+      const application = escapeHtml(manifest.application);
+      return `<a class="chip chip-map" href="./${application}-architecture.html">${escapeHtml(manifest.name)}</a>`;
+    })
+    .join('');
+
+  const movedSection =
+    moved.length === 0
+      ? ''
+      : `
+  <section>
+    <h2>What this branch moved</h2>
+    <div class="chip-grid">${movedChips}</div>
+  </section>`;
+
+  const nothingMoved =
+    diffSummaries.size > 0 && moved.length === 0
+      ? '<p class="lede">Nothing this branch changed reaches any application\u2019s architecture.</p>'
+      : '';
+
+  return wrapInDocumentShell(`<title>Architecture maps</title>
 ${PAGE_STYLES}
 <style>
-  .app-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
-  .app-card {
-    display: block;
+  main.wrap section + section { margin-top: 2rem; }
+  main.wrap h2 {
+    font: .7rem/1.6 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    margin: 0 0 .7rem;
+  }
+  .chip-grid { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: .5rem;
     background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 1rem 1.1rem;
+    border-radius: 999px;
     color: inherit;
     text-decoration: none;
     min-width: 0;
   }
-  .app-card:hover { border-color: var(--accent); }
-  .app-card h2 { margin: 0 0 .35rem; font-size: 1rem; }
-  .app-card p { margin: 0 0 .6rem; color: var(--muted); font-size: .82rem; line-height: 1.5; }
-  .app-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
-  .app-facts li {
-    font: .68rem/1.6 var(--font-mono);
-    background: var(--panel-sunk);
-    border: 1px solid var(--line);
-    border-radius: 5px;
-    padding: .1rem .4rem;
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-  .app-icon { margin-right: .3rem; }
+  .chip:hover { border-color: var(--accent); }
+  .chip-moved { padding: .5rem .95rem; font-size: .95rem; }
+  .chip-moved .chip-name { font-weight: 600; }
+  .chip-map { padding: .28rem .7rem; font-size: .8rem; color: var(--muted); }
+  .chip-deltas { display: inline-flex; gap: .4rem; font: .78rem/1 var(--font-mono); }
+  .delta-added { color: var(--layer-service); }
+  .delta-edited { color: var(--accent); }
+  .delta-removed { color: var(--layer-edge); }
 </style>
 
 <header class="top"><div class="wrap">
   <h1>Architecture maps</h1>
-  <p class="lede">One generated map per application, at five levels each, from the same generator and the same rules. Position comes from the path, edges come from real imports, and nothing on a map is authored by hand except the manifest each application carries.</p>
+  <p class="lede">One generated map per application, five levels each. Nothing on a map is authored by hand.</p>
+  ${nothingMoved}
 </div></header>
 
-<main class="wrap">
-  <div class="app-grid">${cards}</div>
+<main class="wrap">${movedSection}
+  <section>
+    <h2>Every map</h2>
+    <div class="chip-grid">${mapChips}</div>
+  </section>
 </main>
-`;
+`);
 }
