@@ -248,6 +248,18 @@ scripts/check-negative-claims-are-dated.sh
 # stale document rather than a stale link. The routing table in
 # `/code-standards` carried thirteen of them, one `../` short of the repository
 # root, which a rendered preview cannot show.
+#
+# The check treats an ignored path that is absent as a dead link, which is what
+# catches a generator that stopped producing one — so it can only run over a
+# tree where the generators have run. `ci.yml` regenerates them first and this
+# hook did not, so a checkout missing one output refused a commit that had
+# nothing to do with it, naming five links nobody had touched. `--missing-only`
+# is 15 ms when they are all there, which is every commit but the first after a
+# clone, a worktree, or a merge that deleted the last committed copies.
+# See docs/dantotsus/the-hook-checked-links-to-files-it-declined-to-build.md.
+echo "[pre-commit] regenerating any report the link check would read and not find"
+scripts/reports.sh all --missing-only
+
 echo "[pre-commit] checking every document link names a file that exists"
 pnpm exec tsx scripts/docs/check-doc-links.ts
 
