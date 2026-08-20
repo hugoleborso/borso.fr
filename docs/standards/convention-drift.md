@@ -14,7 +14,7 @@ at twenty files.
 `convention-baseline.json` holds the current count per question and the
 gate fails only on an increase. Fixing one and running `--accept` lowers it.
 
-Read from 613 source file(s).
+Read from 617 source file(s).
 
 ## How is the name of a atom.ts file written?
 
@@ -40,7 +40,7 @@ Read from 613 source file(s).
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| kebab | 33 | `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts`, `apps/borso-fr/site/src/home-menu.core.ts` |
+| kebab | 35 | `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts`, `apps/borso-fr/site/src/home-menu.core.ts` |
 | camel | 5 | `apps/borsouvertures/site/src/openings/learnSession.core.ts`, `apps/borsouvertures/site/src/openings/openingFlow.core.ts`, `apps/borsouvertures/site/src/openings/playScope.core.ts` |
 
 ## How is the name of a entrypoint.tsx file written?
@@ -90,12 +90,12 @@ Read from 613 source file(s).
 
 ## Does a file in borso-fr say which layer it is in?
 
-`layer-marker:borso-fr` — 15 file(s) outside `the suffix names the layer`, which is the answer the standards give.
+`layer-marker:borso-fr` — 14 file(s) outside `the suffix names the layer`, which is the answer the standards give.
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| the suffix names the layer | 53 | `apps/borso-fr/bin/app.ts`, `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts` |
-| nothing in the name says | 15 | `apps/borso-fr/site/src/12-travaux/App.tsx`, `apps/borso-fr/site/src/12-travaux/main.tsx`, `apps/borso-fr/site/src/art/mondrian/App.tsx` |
+| the suffix names the layer | 58 | `apps/borso-fr/bin/app.ts`, `apps/borso-fr/site/src/art/mondrian/animation.core.ts`, `apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts` |
+| nothing in the name says | 14 | `apps/borso-fr/site/src/12-travaux/App.tsx`, `apps/borso-fr/site/src/12-travaux/main.tsx`, `apps/borso-fr/site/src/art/mondrian/App.tsx` |
 
 ## Does a file in borsouvertures say which layer it is in?
 
@@ -117,13 +117,13 @@ Read from 613 source file(s).
 
 ## How does a module that exports a hook say so in its name?
 
-`role-marker:hook` — 21 file(s) outside `<name>.hook.ts`, which is the answer the standards give.
+`role-marker:hook` — 19 file(s) outside `<name>.hook.ts`, which is the answer the standards give.
 
 | Spelling | Files | For example |
 | --- | --- | --- |
 | no marker in the name | 17 | `apps/borso-fr/site/src/art/mondrian/composition-url.ts`, `apps/borsouvertures/site/src/state/appState.ts`, `apps/last-loop-lepin/site/src/lib/queries/auth.ts` |
-| <name>.hook.ts | 8 | `apps/borsouvertures/site/src/lib/paginated-list.hook.ts`, `apps/borsouvertures/site/src/lib/session-start.hook.ts`, `apps/borsouvertures/site/src/lib/viewport.hook.ts` |
-| use<Name>.ts | 4 | `apps/borso-fr/site/src/art/mondrian/use-animation.ts`, `apps/borso-fr/site/src/art/mondrian/use-reduced-motion.ts`, `apps/last-loop-lepin/site/src/components/organisms/useGpxFile.ts` |
+| <name>.hook.ts | 10 | `apps/borso-fr/site/src/art/mondrian/use-animation.hook.ts`, `apps/borso-fr/site/src/art/mondrian/use-reduced-motion.hook.ts`, `apps/borsouvertures/site/src/lib/paginated-list.hook.ts` |
+| use<Name>.ts | 2 | `apps/last-loop-lepin/site/src/components/organisms/useGpxFile.ts`, `apps/last-loop-lepin/site/src/components/organisms/useRunnerPhotoUpload.ts` |
 
 ## Every suffix in use
 
@@ -132,7 +132,7 @@ than 3 files is either a convention nobody wrote down or an accident.
 
 | Suffix | Files |
 | --- | --- |
-| `.core.ts` | 86 |
+| `.core.ts` | 88 |
 | `.utils.ts` | 86 |
 | `.controller.ts` | 19 |
 | `.service.ts` | 18 |
@@ -140,15 +140,15 @@ than 3 files is either a convention nobody wrote down or an accident.
 | `.config.ts` | 15 |
 | `.repository.ts` | 14 |
 | `.types.ts` | 11 |
+| `.hook.ts` | 10 |
 | `.queries.ts` | 10 |
 | `.adapter.ts` | 9 |
-| `.hook.ts` | 8 |
 | `.variants.ts` | 6 |
 | `.setup.ts` | 3 |
 | `.dev.ts` | 2 — rare |
 | `.middleware.ts` | 2 — rare |
+| `.store.ts` | 2 — rare |
 | `.client.ts` | 1 — rare |
 | `.environment.ts` | 1 — rare |
 | `.errors.ts` | 1 — rare |
-| `.store.ts` | 1 — rare |
 | `.theme.ts` | 1 — rare |

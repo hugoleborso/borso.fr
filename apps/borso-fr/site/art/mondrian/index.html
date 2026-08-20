@@ -14,9 +14,12 @@
     class="min-h-[100dvh] overflow-x-hidden bg-atelier-paper bg-[image:var(--glow-atelier)] font-atelier-serif-soft leading-[normal] text-atelier-ink antialiased [text-rendering:optimizeLegibility]"
   >
     <div
-      class="pointer-events-none fixed inset-0 z-[1] bg-[image:var(--grain-atelier)] opacity-50 mix-blend-multiply"
+      class="pointer-events-none fixed inset-0 z-[1] bg-[image:var(--grain-atelier)] opacity-50 mix-blend-multiply transition-opacity duration-[var(--transition-hold)] [.jumping_&]:opacity-0"
     ></div>
-    <div id="root" class="relative z-[2]"></div>
+    <div
+      id="root"
+      class="relative z-[2] transition-opacity duration-[var(--transition-hold)] [.jumping_&]:opacity-0"
+    ></div>
     <script type="module" src="/src/art/mondrian/main.tsx"></script>
   </body>
 </html>
