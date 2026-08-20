@@ -150,6 +150,11 @@ generated artefact is therefore named in prose and never linked.
   non-empty line match a known annotation or directive. That is why a
   `@Blueprint` block passes whole, a `/** @type {…} */` on a JavaScript module
   passes, and a block pairing a tag with a sentence does not.
+- `script:scripts/check-no-comments-in-styles-and-markup.sh` asks the same
+  question of the two file kinds ESLint does not lint here, `.css` and
+  `.html`. It keeps the `@third-party-dom` markers
+  `scripts/check-stylesheet-contents.sh` parses, and a conditional comment,
+  which is markup rather than prose.
 - `script:scripts/docs/check-doc-links.ts` fails a document that links a file
   which is not there, across every markdown file outside `docs/features/`. It
   skips a placeholder, a GitHub-relative target and anything inside a fenced

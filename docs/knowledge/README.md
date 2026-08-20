@@ -161,6 +161,7 @@ Two failure modes to watch for:
 
 ### Frontend / React
 
+- [`tailwind-v4-theme-and-preflight-traps.md`](./tailwind-v4-theme-and-preflight-traps.md) — `@theme` blocks collapse into `:root` so a media-nested second one wins unconditionally; a variable outside a namespace needs `bg-[image:var(--x)]` and `@theme static`; an inline `animation` shorthand pulls in no keyframes; and what preflight zeroes on `<dialog>`, buttons and file inputs.
 - [`tailwind-v4-fails-quietly-in-two-places.md`](./tailwind-v4-fails-quietly-in-two-places.md) — a `var()` in an `@theme` entry resolves against `:root`, and a variant bracket opening on a bare word compiles to nothing.
 - [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](./rolled-our-own-data-fetching-instead-of-tanstack-query.md) — the cost of writing custom `useStandingsPoll` / `useResource` hooks instead of TanStack Query: each new bug found in our hooks (the PR #23 polling storm) would've been a library author's problem already. Migration sketch when the data layer needs to grow.
 - [`svg-preserveaspectratio-distorts-non-uniform.md`](./svg-preserveaspectratio-distorts-non-uniform.md) — `preserveAspectRatio="none"` distorts circles into ellipses when the container aspect ≠ viewBox aspect. Default (`xMidYMid meet`) preserves and letterboxes. Now enforced in pragma by the `no-circle-in-non-uniform-svg.grit` Biome plugin (see [`../dantotsus/circle-went-oval-in-a-stretched-svg-again.md`](../dantotsus/circle-went-oval-in-a-stretched-svg-again.md)).
