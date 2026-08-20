@@ -115,3 +115,29 @@ is a missing assertion and is yours to fix, while this is a budget and fixing
 it by weakening a test would be a real regression. Read the line before the
 stack trace — `Final mutation score N under breaking threshold 100` is a
 survivor, `Initial test run timed out!` is this.
+
+## The third data point, and the fix that is not another number
+
+A push touching every application put six mutation runs in flight at once.
+Stryker's default is four workers per run, so that was **twenty-four mutation
+workers plus four test suites against four cores**. The victim was not a
+mutation run: it was a CDK synth test in another gate, which **measured 5.06
+seconds run alone and timed out past 60 seconds under the wave** — a factor of
+thirteen, on a test nothing had touched.
+
+That is the third time this shape has cost a push, and the section above
+already says a number that needs raising twice is not the fix. So the budget
+stayed at 60 seconds and the oversubscription went instead:
+
+- `.husky/pre-push` exports `BORSO_MUTATION_RUNS_IN_FLIGHT`, an upper bound on
+  the runs it is about to start (changed apps, plus tooling, plus infra).
+- `stryker.shared.js` derives `concurrency` from it —
+  `availableParallelism() / runs`, floored at one and capped at four.
+
+A single run, which is what a normal push starts, still takes the whole machine:
+four workers on four cores, unchanged. Six runs take one each. On a larger CI
+box the cap keeps the old behaviour at both ends.
+
+**The tell that you are here rather than looking at a real failure:** the test
+that fails is in a *different* gate from the expensive one, its own duration is
+close to the timeout rather than well past it, and it passes alone in seconds.
