@@ -30,10 +30,14 @@ Two failure modes to watch for:
 
 ### CloudFront
 
+- [`a-rebase-cannot-see-what-a-merge-decided.md`](./a-rebase-cannot-see-what-a-merge-decided.md) — a rebase replays the work and drops every reconciliation the merge commits carried. Measured: three shortcuts, 52 and 36 files wrong, `rerere` zero hits, `git cherry` blind to thirty duplicates.
 - [`cloudfront-function-throttle-persistence.md`](./cloudfront-function-throttle-persistence.md) — throttle state outlives a function code update; recovery 5–15 min.
 - [`cloudfront-resources-in-us-east-1.md`](./cloudfront-resources-in-us-east-1.md) — control plane is region-pinned regardless of the distribution's data-plane region.
 - [`cloudfront-get-function-binary-output.md`](./cloudfront-get-function-binary-output.md) — `aws cloudfront get-function` writes the source to a positional outfile, not stdout.
 - [`cloudfront-cname-uniqueness.md`](./cloudfront-cname-uniqueness.md) — aliases (CNAMEs) are single-distribution; release from the old distribution before redeploying the new one.
+- [`eslint-content-cache-replays-a-stale-type-aware-error.md`](./eslint-content-cache-replays-a-stale-type-aware-error.md) — `--cache-strategy content` keys on the linted file, and a type-aware rule depends on the whole graph, so an error you already fixed keeps being reported. `rm -f .eslintcache`.
+- [`how-a-mutation-survivor-hides.md`](./how-a-mutation-survivor-hides.md) — three cases where a test reads as sufficient and is not: a `Stryker disable` covering one line of a multi-line statement, `toContain` blind to a prepended digit, and a capture-boundary mutant that is genuinely equivalent.
+- [`knip-does-not-follow-a-stryker-vitest-config.md`](./knip-does-not-follow-a-stryker-vitest-config.md) — knip's Stryker plugin resolves package names and never follows `vitest.configFile`, so the config it points at reads as unreferenced.
 - [`preview-api-cross-origin.md`](./preview-api-cross-origin.md) — previews use a custom-domain API per PR (`<app>-pr-<n>-api.preview.borso.fr`) because the shared previews distribution can't host per-app `/api/*` routing.
 - [`cdk-route53-zone-token-pitfall.md`](./cdk-route53-zone-token-pitfall.md) — `ARecord(recordName: '<host>')` doubles the zone suffix when `zoneName` is a CFN token (resolves at deploy time, fails the literal-string suffix check). Trailing-dot the `recordName` to short-circuit.
 
@@ -46,6 +50,8 @@ Two failure modes to watch for:
 
 ### GitHub Actions
 
+- [`reading-third-party-sources-from-a-session.md`](./reading-third-party-sources-from-a-session.md) — arXiv `/abs/` parses and `/pdf/` does not, and a third-party GitHub repository is reachable only through the rendered page or `add_repo`.
+- [`the-shell-gates-are-only-ever-run-where-they-pass.md`](./the-shell-gates-are-only-ever-run-where-they-pass.md) — 26 gate scripts, no tests, and pre-commit and CI only ever run them on a tree where they pass. Why a harness is hard, and what to do until there is one.
 - [`workflow-dispatch-default-branch.md`](./workflow-dispatch-default-branch.md) — `workflow_dispatch` and `issue_comment` workflows only show in the UI once on the default branch.
 - [`a-conflicted-pull-request-gets-no-checks.md`](./a-conflicted-pull-request-gets-no-checks.md) — a `pull_request` workflow runs against `refs/pull/<n>/merge`, so a conflicting pull request gets **zero** runs rather than red ones. An empty checks list means `mergeable_state: dirty` far more often than it means a dropped event; merge the base branch in and push.
 - [`github-scheduled-workflows-fire-late.md`](./github-scheduled-workflows-fire-late.md) — measured: this repo's nightly cron fires 1h01m–2h45m after its declared time, every day observed. Never key a wait on the cron expression; read the last few `created_at` values instead. Includes the monitor-that-cannot-report-its-own-failure trap.
@@ -69,6 +75,7 @@ Two failure modes to watch for:
 
 ### Claude Code tooling
 
+- [`an-agent-added-by-main-is-not-dispatchable-yet.md`](./an-agent-added-by-main-is-not-dispatchable-yet.md) — the agent registry is read once at session start, so a `.claude/agents/*.md` that arrives mid-session (merged from `main`, or written by you) is on disk and still *agent type not found*.
 - [`two-agents-in-one-working-tree.md`](./two-agents-in-one-working-tree.md) — how a concurrent writer shows itself (`git diff` md5 moving over 60 s, findings that no longer reproduce), why staging explicit paths matters, and how to check a background run is really dead before launching a second one.
 - [`github-is-reachable-only-through-the-mcp-server.md`](./github-is-reachable-only-through-the-mcp-server.md) — `curl https://api.github.com` answers 403 and there is no `gh`; the MCP returns bodies HTML-escaped, which makes splicing a long PR description riskier than adding a comment.
 - [`askuserquestion-tool-requires-question-field.md`](./askuserquestion-tool-requires-question-field.md) — `AskUserQuestion` rejects calls that omit the `question` field per item; `header` alone is not enough.
@@ -102,6 +109,7 @@ Two failure modes to watch for:
 - [`stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md`](./stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md) — Stryker runs from a sandbox copy, so a Vitest `globalSetup` at `../../scripts/` resolves to a file that is genuinely absent; plus the pnpm `--` forwarding trap and the `.stryker-tmp` leftovers.
 ### Validation tooling
 
+- [`judging-an-animation-you-cannot-watch.md`](./judging-an-animation-you-cannot-watch.md) — stills have no speed in them, `getComputedStyle` lags under throttling; pin `currentTime` and capture through CDP instead.
 - [`run-repo-tools-from-the-directory-they-expect.md`](./run-repo-tools-from-the-directory-they-expect.md) — blueprint generators from the repo root, vitest from the app workspace, and what each unhelpful error actually means.
 - [`agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md) — `agent-browser set device` does not propagate `matchMedia('(pointer: coarse)')`; touch-affordance assertions land UNVERIFIABLE without a workaround, or go through `scripts/argent.sh`, which sends real touch.
 - [`agent-browser-cdp-click-no-op-on-react-onclick.md`](./agent-browser-cdp-click-no-op-on-react-onclick.md) — CDP `click @ref` doesn't reliably fire React `onClick`; fall back to `element.click()` via `agent-browser eval`.
@@ -136,6 +144,7 @@ Two failure modes to watch for:
 
 ### Frontend / React
 
+- [`tailwind-v4-fails-quietly-in-two-places.md`](./tailwind-v4-fails-quietly-in-two-places.md) — a `var()` in an `@theme` entry resolves against `:root`, and a variant bracket opening on a bare word compiles to nothing.
 - [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](./rolled-our-own-data-fetching-instead-of-tanstack-query.md) — the cost of writing custom `useStandingsPoll` / `useResource` hooks instead of TanStack Query: each new bug found in our hooks (the PR #23 polling storm) would've been a library author's problem already. Migration sketch when the data layer needs to grow.
 - [`svg-preserveaspectratio-distorts-non-uniform.md`](./svg-preserveaspectratio-distorts-non-uniform.md) — `preserveAspectRatio="none"` distorts circles into ellipses when the container aspect ≠ viewBox aspect. Default (`xMidYMid meet`) preserves and letterboxes. Now enforced in pragma by the `no-circle-in-non-uniform-svg.grit` Biome plugin (see [`../dantotsus/circle-went-oval-in-a-stretched-svg-again.md`](../dantotsus/circle-went-oval-in-a-stretched-svg-again.md)).
 - [`dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](./dnd-kit-pointersensor-loses-touch-to-page-scroll.md) — a single `PointerSensor` loses touch-drag to native page scroll on phones; split into `MouseSensor` (6px distance) + `TouchSensor` (200ms delay) + `KeyboardSensor`, and `touch-none` on the handle.

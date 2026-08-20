@@ -249,9 +249,19 @@ meanings each. None of that is visible from any one file.
   `infra/`, with `enforceConst` so the name is a `const`. Exempt: `0`, `1` and
   `-1` as identity values; the HTTP status codes `200`, `201`, `204`, `301`,
   `302`, `400`, `401`, `403`, `404`, `409`, `422`, `429`, `500`, `502` and
-  `503`, which are names in a published registry already; an array index, a
-  parameter or class field default, and an object property, whose key or
-  parameter name is the name the rule asks for. Off in a test file, where a
+  `503`, which are names in a published registry already; the time-unit factors
+  `1000`, `60`, `24`, `7` and `365`, because `SECONDS_PER_MINUTE = 60` renames
+  60 to something no reader learns anything from and requiring it produced 48
+  declarations of four facts across 21 files; an array index, a parameter or
+  class field default, and an object property, whose key or parameter name is
+  the name the rule asks for.
+
+  A literal is worth naming when the name answers a question. `31` asks *why
+  thirty-one*; `60` does not. The exemption is what lets
+  `const SESSION_TIME_TO_LIVE_MS = SESSION_LIFETIME_DAYS * 24 * 60 * 60 * 1000;`
+  be written the way this document has always shown it — the domain number is
+  named and the calendar is not. See
+  [the dantotsu](../dantotsus/the-rule-that-made-the-repository-name-the-calendar.md). Off in a test file, where a
   fixture literal belongs next to the assertion that gives it meaning.
 - `script:scripts/check-vocabulary-paths.sh` fails a `VOCABULARY.md` whose term
   points at a folder that is not there. That line is the only mechanically

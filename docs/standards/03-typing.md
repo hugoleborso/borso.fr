@@ -112,7 +112,14 @@ export function rankRunners(runners: readonly Runner[], now: Date): Ranking {
   `eslint:@typescript-eslint/no-unsafe-return` fail on a value that has lost its
   type. They are off inside test files, where a fixture is allowed to be a
   literal.
-- `gate:typecheck` runs `tsc --noEmit` in every workspace.
+- `gate:typecheck` runs `tsc --noEmit` in every workspace, and again over the
+  tooling that belongs to none. `scripts/`, `.claude/skills/` and
+  `eslint-rules/` are not workspaces, so `pnpm -r typecheck` never reached them
+  and the root `tsconfig.json` is what does: every generator and every gate this
+  repository runs on itself is checked by the same compiler as the applications.
+  `tsx` strips types without reading them, so before this a name that no longer
+  existed ran until the branch that reached it, and a return-type annotation
+  naming a type nobody imported was invisible.
 - `reviewer` checks that a derived type is derived, so a row type comes from
   `$inferSelect`, a request body from `z.infer`, and a response from the Hono
   client, rather than being written out by hand beside the thing it mirrors.

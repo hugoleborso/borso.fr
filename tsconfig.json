@@ -1,0 +1,32 @@
+{
+  // The repository's own tooling, which no workspace tsconfig reaches.
+  //
+  // `scripts/`, `.claude/skills/` and `eslint-rules/` hold every generator and
+  // every gate this repository runs on itself, and until this file existed not
+  // one line of it was type-checked: `pnpm -r run typecheck` iterates the six
+  // workspaces and none of them owns these paths. `tsx` strips types without
+  // reading them, so a broken annotation runs perfectly and a name that no
+  // longer exists is a ReferenceError waiting for the branch that reaches it.
+  //
+  // See docs/dantotsus/the-tooling-that-gates-everything-was-checked-by-nothing.md.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": ["scripts/**/*.ts", ".claude/skills/**/*.ts", "eslint-rules/**/*.js"],
+  "exclude": ["**/node_modules", "**/.stryker-tmp"]
+}

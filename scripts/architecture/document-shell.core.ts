@@ -38,8 +38,7 @@ function renderHead(title: string): string {
 
 // @FollowsBlueprint utils-pure-module
 export function wrapInDocumentShell(body: string): string {
-  const titleMatch = TITLE_TAG.exec(body);
-  const title = titleMatch === null ? DEFAULT_TITLE : titleMatch[1];
+  const title = TITLE_TAG.exec(body)?.[1] ?? DEFAULT_TITLE;
   return `${renderHead(title)}
 ${body.replace(TITLE_TAG, '').trim()}
 </body>
