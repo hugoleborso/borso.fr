@@ -12,7 +12,15 @@ import { isModifiedClick, selectNavigationMode } from './warp-navigation.core';
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
+/**
+ * Carried on `body` for the length of the jump. `site/index.html` reads it to
+ * fade the menu and its button out of the way, so the galaxy is what the
+ * reader is looking at while it flies.
+ */
+const JUMPING_BODY_CLASS = 'jumping';
+
 function engageJump(destinationHref: string): void {
+  document.body.classList.add(JUMPING_BODY_CLASS);
   beginJump(performance.now());
   window.setTimeout(() => {
     window.location.assign(destinationHref);
@@ -24,6 +32,7 @@ function engageJump(destinationHref: string): void {
  * galaxy still at full speed and nothing left to navigate to.
  */
 function settleGalaxy(): void {
+  document.body.classList.remove(JUMPING_BODY_CLASS);
   endJump();
 }
 
