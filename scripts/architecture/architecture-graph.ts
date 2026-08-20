@@ -15,7 +15,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { buildJourneys, type SourceEntry } from './architecture-journeys';
 import { type LevelLayout, layoutLevel } from './architecture-layout';
@@ -1954,7 +1954,15 @@ async function main(): Promise<void> {
   // The index is a page like any other, so it is generated and not committed.
   if (isCheck) return;
   const indexPath = join(outputDirectory, 'index.html');
-  writeFileSync(indexPath, renderArchitectureIndex(ARCHITECTURE_MANIFESTS));
+  // Read from the folder rather than from this run's arguments: the diff build
+  // runs the generator once per application, so any single invocation knows
+  // about one application's diff and the index has to describe all of them.
+  const applicationsWithDiff = new Set(
+    ARCHITECTURE_MANIFESTS.filter((manifest) =>
+      existsSync(join(outputDirectory, `${manifest.application}-diff.html`)),
+    ).map((manifest) => manifest.application),
+  );
+  writeFileSync(indexPath, renderArchitectureIndex(ARCHITECTURE_MANIFESTS, applicationsWithDiff));
   console.log(
     `Wrote ${relative(REPOSITORY_ROOT, outputDirectory)}/ for ${selected.length} app(s).`,
   );

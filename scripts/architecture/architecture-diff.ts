@@ -28,6 +28,7 @@ import {
   type FileEntry,
   type RouteEntry,
 } from './architecture-model-json';
+import { wrapInDocumentShell } from './document-shell.core';
 
 /**
  * The models this reads are written by `architecture-graph.ts` one job earlier,
@@ -144,7 +145,7 @@ function renderDiffPage(
           )
           .join('');
 
-  return `<title>${escapeHtml(application)} architecture diff</title>
+  return wrapInDocumentShell(`<title>${escapeHtml(application)} architecture diff</title>
 <style>
   :root {
     color-scheme: light dark;
@@ -205,7 +206,7 @@ function renderDiffPage(
   </ul>
   ${body}
 </div>
-`;
+`);
 }
 
 function main(): void {

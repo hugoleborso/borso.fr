@@ -24,6 +24,7 @@ import type {
   StatusByNode,
 } from './architecture-graph';
 import type { ArchitectureManifest } from './architecture-manifest';
+import { wrapInDocumentShell } from './document-shell.core';
 
 /**
  * What a branch did, counted, before a reviewer reads a single block.
@@ -973,7 +974,8 @@ export function renderArchitecturePage(input: RenderInput): string {
     if (moved === undefined || moved === 0) return '';
     return `<i class="delta">${moved > 0 ? '+' : '−'}${Math.abs(moved)}</i>`;
   };
-  return withDefinedCustomProperties(`<title>${escapeHtml(manifest.name)} architecture${isDiff ? ' diff' : ''}</title>
+  return wrapInDocumentShell(
+    withDefinedCustomProperties(`<title>${escapeHtml(manifest.name)} architecture${isDiff ? ' diff' : ''}</title>
 ${PAGE_STYLES}
 
 <header class="top"><div class="wrap">
@@ -1103,7 +1105,8 @@ ${PAGE_STYLES}
   });
 </script>
 <script>${GRAPH_RUNTIME_SCRIPT}</script>
-`);
+`),
+  );
 }
 
 /**
@@ -1113,26 +1116,43 @@ ${PAGE_STYLES}
  * a reader arriving at the folder with nowhere to start unless something lists
  * them.
  */
-export function renderArchitectureIndex(manifests: readonly ArchitectureManifest[]): string {
+export function renderArchitectureIndex(
+  manifests: readonly ArchitectureManifest[],
+  /**
+   * The applications this run also built a diff map for. Their card opens on
+   * what the branch moved rather than on the whole map, because a reader who
+   * followed a link from a pull request came for the change; the whole map is
+   * one tap further in.
+   */
+  applicationsWithDiff: ReadonlySet<string> = new Set(),
+): string {
   const cards = manifests
-    .map(
-      (manifest) => `
-      <a class="app-card" href="./${escapeHtml(manifest.application)}-architecture.html">
+    .map((manifest) => {
+      const application = escapeHtml(manifest.application);
+      const hasDiff = applicationsWithDiff.has(manifest.application);
+      const href = hasDiff ? `./${application}-diff.html` : `./${application}-architecture.html`;
+      const facts = manifest.containers
+        .map(
+          (container) =>
+            `<li><span class="app-icon">${container.icon}</span>${escapeHtml(container.name)}</li>`,
+        )
+        .join('');
+      return `
+      <a class="app-card" href="${href}">
         <h2>${escapeHtml(manifest.name)}</h2>
+        ${hasDiff ? '<p class="card-diff">what this branch moved</p>' : ''}
         <p>${escapeHtml(manifest.description)}</p>
-        <ul class="app-facts">
-          ${manifest.containers
-            .map(
-              (container) =>
-                `<li><span class="app-icon">${container.icon}</span>${escapeHtml(container.name)}</li>`,
-            )
-            .join('')}
-        </ul>
-      </a>`,
-    )
+        <ul class="app-facts">${facts}</ul>
+      </a>${
+        hasDiff
+          ? `
+      <p class="card-aside"><a href="./${application}-architecture.html">the whole ${escapeHtml(manifest.name)} map ↗</a></p>`
+          : ''
+      }`;
+    })
     .join('');
 
-  return `<title>Architecture maps</title>
+  return wrapInDocumentShell(`<title>Architecture maps</title>
 ${PAGE_STYLES}
 <style>
   .app-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
@@ -1147,6 +1167,15 @@ ${PAGE_STYLES}
     min-width: 0;
   }
   .app-card:hover { border-color: var(--accent); }
+  .card-diff {
+    font: .68rem/1.6 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--accent);
+    margin: 0 0 .35rem !important;
+  }
+  .card-aside { margin: .4rem 0 0; font-size: .78rem; }
+  .card-aside a { color: var(--muted); }
   .app-card h2 { margin: 0 0 .35rem; font-size: 1rem; }
   .app-card p { margin: 0 0 .6rem; color: var(--muted); font-size: .82rem; line-height: 1.5; }
   .app-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
@@ -1170,5 +1199,5 @@ ${PAGE_STYLES}
 <main class="wrap">
   <div class="app-grid">${cards}</div>
 </main>
-`;
+`);
 }
