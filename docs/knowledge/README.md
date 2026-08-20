@@ -69,6 +69,7 @@ Two failure modes to watch for:
 
 ### Claude Code tooling
 
+- [`an-agent-added-by-main-is-not-dispatchable-yet.md`](./an-agent-added-by-main-is-not-dispatchable-yet.md) — the agent registry is read once at session start, so a `.claude/agents/*.md` that arrives mid-session (merged from `main`, or written by you) is on disk and still *agent type not found*.
 - [`two-agents-in-one-working-tree.md`](./two-agents-in-one-working-tree.md) — how a concurrent writer shows itself (`git diff` md5 moving over 60 s, findings that no longer reproduce), why staging explicit paths matters, and how to check a background run is really dead before launching a second one.
 - [`github-is-reachable-only-through-the-mcp-server.md`](./github-is-reachable-only-through-the-mcp-server.md) — `curl https://api.github.com` answers 403 and there is no `gh`; the MCP returns bodies HTML-escaped, which makes splicing a long PR description riskier than adding a comment.
 - [`askuserquestion-tool-requires-question-field.md`](./askuserquestion-tool-requires-question-field.md) — `AskUserQuestion` rejects calls that omit the `question` field per item; `header` alone is not enough.
@@ -102,6 +103,7 @@ Two failure modes to watch for:
 - [`stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md`](./stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md) — Stryker runs from a sandbox copy, so a Vitest `globalSetup` at `../../scripts/` resolves to a file that is genuinely absent; plus the pnpm `--` forwarding trap and the `.stryker-tmp` leftovers.
 ### Validation tooling
 
+- [`judging-an-animation-you-cannot-watch.md`](./judging-an-animation-you-cannot-watch.md) — stills have no speed in them, `getComputedStyle` lags under throttling; pin `currentTime` and capture through CDP instead.
 - [`run-repo-tools-from-the-directory-they-expect.md`](./run-repo-tools-from-the-directory-they-expect.md) — blueprint generators from the repo root, vitest from the app workspace, and what each unhelpful error actually means.
 - [`agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md) — `agent-browser set device` does not propagate `matchMedia('(pointer: coarse)')`; touch-affordance assertions land UNVERIFIABLE without a workaround, or go through `scripts/argent.sh`, which sends real touch.
 - [`agent-browser-cdp-click-no-op-on-react-onclick.md`](./agent-browser-cdp-click-no-op-on-react-onclick.md) — CDP `click @ref` doesn't reliably fire React `onClick`; fall back to `element.click()` via `agent-browser eval`.
@@ -136,6 +138,7 @@ Two failure modes to watch for:
 
 ### Frontend / React
 
+- [`tailwind-v4-fails-quietly-in-two-places.md`](./tailwind-v4-fails-quietly-in-two-places.md) — a `var()` in an `@theme` entry resolves against `:root`, and a variant bracket opening on a bare word compiles to nothing.
 - [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](./rolled-our-own-data-fetching-instead-of-tanstack-query.md) — the cost of writing custom `useStandingsPoll` / `useResource` hooks instead of TanStack Query: each new bug found in our hooks (the PR #23 polling storm) would've been a library author's problem already. Migration sketch when the data layer needs to grow.
 - [`svg-preserveaspectratio-distorts-non-uniform.md`](./svg-preserveaspectratio-distorts-non-uniform.md) — `preserveAspectRatio="none"` distorts circles into ellipses when the container aspect ≠ viewBox aspect. Default (`xMidYMid meet`) preserves and letterboxes. Now enforced in pragma by the `no-circle-in-non-uniform-svg.grit` Biome plugin (see [`../dantotsus/circle-went-oval-in-a-stretched-svg-again.md`](../dantotsus/circle-went-oval-in-a-stretched-svg-again.md)).
 - [`dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](./dnd-kit-pointersensor-loses-touch-to-page-scroll.md) — a single `PointerSensor` loses touch-drag to native page scroll on phones; split into `MouseSensor` (6px distance) + `TouchSensor` (200ms delay) + `KeyboardSensor`, and `touch-none` on the handle.

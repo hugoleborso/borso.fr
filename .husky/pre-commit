@@ -75,19 +75,40 @@ if [ -n "$staged_lintable" ]; then
   set +e
   run_generator_check .claude/skills/blueprint/blueprint-indexing.ts
   run_generator_check .claude/skills/blueprint/blueprint-heatmap.ts
-  # The defect page and the seeding lookup are generated from the same
-  # annotations, so they go stale on the same edit: a dantotsu naming a
-  # blueprint that does not exist, and a hook seeding a pattern nobody carries
-  # any more, both read as fine until someone follows them.
-  run_generator_check scripts/blueprints/blueprint-defects.ts
+  # The seeding lookup is generated from the same annotations, so it goes stale
+  # on the same edit: a hook seeding a pattern nobody carries any more reads as
+  # fine until someone follows it.
   run_generator_check .claude/skills/blueprint/blueprint-context.ts
   # Two spellings for one idea. Gated on a baseline that only goes down, so the
   # existing backlog never blocks a commit and the next divergence does. A git
   # index read plus one pass over the tree, so it belongs on the commit.
   run_generator_check scripts/standards/convention-drift.ts
-  # Which rules were written because something went wrong. A report; the check
-  # refuses only a stale page, because a ratio between defect-born and
-  # principle-born rules is not a thing to gate on.
+  set -e
+fi
+
+# Two generators read the dantotsu corpus as well as the source tree, and the
+# source-file condition above cannot see a commit that adds only a dantotsu --
+# so neither could run the check its own content invalidates. CI caught both,
+# one per push. Each condition below is the union of that generator's real
+# inputs, which is the only thing that keeps a trigger honest.
+#
+# The defect page: the blueprint annotations under apps/ and infra/, plus every
+# dantotsu's front matter.
+if git diff --cached --name-only | grep -qE '^(apps/|infra/|docs/dantotsus/)'; then
+  echo "[pre-commit] checking the blueprint defect page"
+  set +e
+  run_generator_check scripts/blueprints/blueprint-defects.ts
+  set -e
+fi
+
+# Which rules were written because something went wrong. A report; the check
+# refuses only a stale page, because a ratio between defect-born and
+# principle-born rules is not a thing to gate on. It reads eslint-rules/index.js
+# for the rule list and both documentation corpora for the mentions.
+if git diff --cached --name-only |
+  grep -qE '^(eslint-rules/|docs/dantotsus/|docs/standards/)'; then
+  echo "[pre-commit] checking the rule provenance page"
+  set +e
   run_generator_check scripts/standards/rule-provenance.ts
   set -e
 fi
@@ -128,6 +149,13 @@ scripts/check-single-stylesheet.sh
 # invisible in the JSX it styles — had no gate at all.
 echo "[pre-commit] checking each stylesheet holds tokens only"
 scripts/check-stylesheet-contents.sh
+
+# And that no Tailwind arbitrary variant opens on a bare word, which Tailwind
+# reads as an attribute selector and compiles to nothing at all — no rule, no
+# error, no warning, and a class in the markup that looks right. A grep over
+# four site directories, so it costs nothing and belongs on the commit.
+echo "[pre-commit] checking Tailwind arbitrary variants compile to a rule"
+scripts/check-tailwind-arbitrary-variants.sh
 
 # Every directory under apps/ has a path-filters key and a commitlint scope.
 # Both failures are silent in the way that matters: no filter means the app
