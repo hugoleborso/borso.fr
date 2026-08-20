@@ -30,7 +30,7 @@ catalog:
   esbuild: '^0.24.0'
   hono: '^4.6.0'
   i18next: '^23.16.8'
-  jsdom: '^25.0.1'
+  jsdom: '^30.0.1'
   postgres: '^3.4.5'
   react: '^19.0.0'
   react-dom: '^19.0.0'
