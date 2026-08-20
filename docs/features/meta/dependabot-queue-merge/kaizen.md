@@ -14,3 +14,4 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 
 - [13:34] `main` a catalog-only bump in pnpm-workspace.yaml skips app-tests in ci.yml: .github/path-filters.yml keys on apps/** so react 19.0->19.2 and jsdom 25->30 merged green without any app suite running
 - [13:34] `main` dependabot opened two live PRs for the same jsdom bump (#56 and #65) and two for the same react bump (#43 and #66); the older pair was never auto-closed and #57 predates the catalog migration so it would conflict on package.json files that no longer carry versions
+- [14:33] `main` stryker counted five static mutants in media.core.ts as survivors although ignoreStatic is true: a module-level constant table is attributed to whichever test was running when the module first loaded, here two media.adapter region tests, so the media.core tests that assert those exact strings were never in the covering set
