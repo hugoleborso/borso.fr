@@ -93,9 +93,11 @@ function readTagWithinBlock(
   const lastIndex = Math.min(lines.length, centreIndex + ANNOTATION_SEARCH_RADIUS_LINES);
   let found = '';
   for (let index = firstIndex; index < lastIndex; index++) {
-    const match = pattern.exec(lines[index]);
-    if (match !== null) {
-      found = match[1].trim();
+    const line = lines[index];
+    if (line === undefined) continue;
+    const captured = pattern.exec(line)?.[1];
+    if (captured !== undefined) {
+      found = captured.trim();
     }
   }
   return found;
@@ -112,6 +114,7 @@ function extractBlueprints(absolutePath: string): Blueprint[] {
       continue;
     }
     const id = idMatch[1];
+    if (id === undefined) continue;
     const name = readTagWithinBlock(lines, index, BLUEPRINT_NAME_PATTERN);
     blueprints.push({
       id,

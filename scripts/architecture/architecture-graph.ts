@@ -19,7 +19,11 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join, relative, resolve } from 'node:path';
 import { buildJourneys, type SourceEntry } from './architecture-journeys';
 import { type LevelLayout, layoutLevel } from './architecture-layout';
-import { renderArchitectureIndex, renderArchitecturePage } from './architecture-page';
+import {
+  type DiffReport,
+  renderArchitectureIndex,
+  renderArchitecturePage,
+} from './architecture-page';
 import {
   type ArchitectureFile,
   type NodeMetrics,

@@ -117,5 +117,17 @@ and `lg:` for wider screens. See
   written outside `@layer`. The last one matters because unlayered CSS outranks
   every utility Tailwind emits, so a top-level `body { … }` silently beats the
   classes on the element it targets.
+- `script:scripts/check-tailwind-arbitrary-variants.sh` rejects an arbitrary
+  variant whose bracket opens on a bare word, e.g. `[body.jumping_&]:opacity-0`.
+  Tailwind reads that as an attribute selector, the attribute name is invalid,
+  and the utility is dropped without an error — no rule, no warning, and a class
+  in the markup that looks correct. It runs over `.html` as well as `.tsx`,
+  because half the class attributes in this repository are in an entry point no
+  linter opens.
 - `reviewer` checks that a set of more than two visual variants goes through
   `cva` rather than a conditional expression.
+- `reviewer` checks that a visual effect added to an existing screen is made out
+  of what that screen already renders, where it can be. An effect drawn over a
+  page that already draws something similar is two of that thing, one of them
+  fake; see
+  [`docs/dantotsus/two-starfields-one-of-them-fake.md`](../dantotsus/two-starfields-one-of-them-fake.md).

@@ -77,11 +77,24 @@ run_generator() {
   fi
 }
 
-# What runs here is what a commit can be WRONG about, not what a commit makes
-# stale. None of these files is committed any more, so no run can find one out
-# of date; each of the ones left refuses something a person did: an annotation
-# that names no blueprint, a dantotsu that names none, a question the tree had
-# already answered being answered a second way.
+# The repository's own tooling, when a commit touches it. `scripts/`,
+# `.claude/skills/` and `eslint-rules/` belong to no workspace, so
+# `pnpm -r typecheck` never reached them and `tsx` strips types without reading
+# them: a name that no longer exists runs fine until the branch that reaches it,
+# and a return-type annotation naming a type nobody imported is invisible.
+# Scoped to the paths so an application-only commit pays nothing.
+# See docs/dantotsus/the-tooling-that-gates-everything-was-checked-by-nothing.md.
+if git diff --cached --name-only |
+  grep -qE '^(scripts/|\.claude/skills/|eslint-rules/|tsconfig\.json$)'; then
+  echo "[pre-commit] type-checking the repository's own tooling"
+  pnpm run typecheck
+fi
+
+# What runs below is what a commit can be WRONG about, not what a commit makes
+# stale. None of these generated files is committed any more, so no run can
+# find one out of date; each check left refuses something a person did: an
+# annotation that names no blueprint, a dantotsu that names none, a question
+# the tree had already answered being answered a second way.
 #
 # `blueprint-heatmap.ts` and `rule-provenance.ts` used to run here and no
 # longer do. Neither ever refused anything but its own staleness, and the
@@ -91,9 +104,6 @@ if [ -n "$staged_lintable" ]; then
   echo "[pre-commit] checking blueprint annotations"
   set +e
   run_generator_check .claude/skills/blueprint/blueprint-indexing.ts
-  # A dantotsu naming a blueprint that does not exist reads as fine until
-  # someone follows the link.
-  run_generator_check scripts/blueprints/blueprint-defects.ts
   # The lookup the pre-write hook reads. Not a gate — it is regenerated so a
   # blueprint added this session seeds the next write in it.
   run_generator .claude/skills/blueprint/blueprint-context.ts
@@ -101,6 +111,23 @@ if [ -n "$staged_lintable" ]; then
   # existing backlog never blocks a commit and the next divergence does. A git
   # index read plus one pass over the tree, so it belongs on the commit.
   run_generator_check scripts/standards/convention-drift.ts
+  set -e
+fi
+
+# The defect page reads the dantotsu corpus as well as the source tree, and the
+# source-file condition above cannot see a commit that adds only a dantotsu, so
+# it could not run the check its own content invalidates. CI caught it, one per
+# push. The condition is the union of that generator's real inputs, which is
+# the only thing that keeps a trigger honest: the blueprint annotations under
+# apps/ and infra/, plus every dantotsu's front matter.
+#
+# `rule-provenance.ts` had the same trigger bug and is no longer here at all —
+# its check only ever refused its own staleness, and the page it writes is not
+# committed.
+if git diff --cached --name-only | grep -qE '^(apps/|infra/|docs/dantotsus/)'; then
+  echo "[pre-commit] checking the blueprint defect page"
+  set +e
+  run_generator_check scripts/blueprints/blueprint-defects.ts
   set -e
 fi
 
@@ -141,6 +168,13 @@ scripts/check-single-stylesheet.sh
 echo "[pre-commit] checking each stylesheet holds tokens only"
 scripts/check-stylesheet-contents.sh
 
+# And that no Tailwind arbitrary variant opens on a bare word, which Tailwind
+# reads as an attribute selector and compiles to nothing at all — no rule, no
+# error, no warning, and a class in the markup that looks right. A grep over
+# four site directories, so it costs nothing and belongs on the commit.
+echo "[pre-commit] checking Tailwind arbitrary variants compile to a rule"
+scripts/check-tailwind-arbitrary-variants.sh
+
 # Every directory under apps/ has a path-filters key and a commitlint scope.
 # Both failures are silent in the way that matters: no filter means the app
 # never gets a preview deploy and no workflow says so, and no scope means the
@@ -155,6 +189,13 @@ scripts/check-vocabulary-paths.sh
 
 # A NUL byte turns a source file into a binary as far as git is concerned, so
 # it stops merging textually and every diff over it reads `Binary files differ`.
+# A dated record of a past review is not editable. `docs/**/validation/` and
+# `docs/standards/reviews/` are true as of the day in their own file name, so a
+# repository-wide rename reaching into one destroys the record rather than
+# correcting it, and the reader cannot tell.
+echo "[pre-commit] checking no dated record was edited"
+scripts/check-dated-records-are-append-only.sh
+
 echo "[pre-commit] checking no file carries a NUL byte"
 scripts/check-no-null-bytes.sh
 

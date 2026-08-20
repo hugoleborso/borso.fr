@@ -53,6 +53,20 @@ const HTTP_STATUS_CODES = [
   200, 201, 204, 301, 302, 400, 401, 403, 404, 409, 422, 429, 500, 502, 503,
 ];
 
+// The factors that convert one time unit into the next. `SECONDS_PER_MINUTE = 60`
+// renames 60 to something no reader learns anything from, and the rule made the
+// repository say it anyway: this list exists because PR #55 turned
+// `no-magic-numbers` on and 45 of the 48 declarations of these four facts across
+// 21 files in four applications arrived with it, against 11 before. A name is
+// worth writing when it answers a question, and nobody asks how many seconds are
+// in a minute.
+//
+// The cost, stated because it is real: a bare `60` is now legal as a timeout or
+// a limit, where before it had to be named. Whether that trade is right is
+// visible in the number above — four facts, 48 copies — and in
+// docs/dantotsus/the-rule-that-made-the-repository-name-the-calendar.md.
+const TIME_UNIT_FACTORS = [1000, 60, 24, 7, 365];
+
 export default tseslint.config(
   {
     ignores: [
@@ -401,7 +415,7 @@ export default tseslint.config(
       'no-magic-numbers': [
         'error',
         {
-          ignore: [...IDENTITY_VALUES, ...HTTP_STATUS_CODES],
+          ignore: [...IDENTITY_VALUES, ...HTTP_STATUS_CODES, ...TIME_UNIT_FACTORS],
           ignoreArrayIndexes: true,
           ignoreDefaultValues: true,
           ignoreClassFieldInitialValues: true,

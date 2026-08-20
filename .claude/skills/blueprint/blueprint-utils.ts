@@ -39,15 +39,15 @@ export function inferProject(filePath: string): BlueprintProject {
 
 /** The application slug, e.g. `pragma`, or `infra` for the shared packages. */
 export function inferApplication(filePath: string): string {
-  const match = /^apps\/([^/]+)\//.exec(filePath);
-  if (match !== null) {
-    return match[1];
+  const application = /^apps\/([^/]+)\//.exec(filePath)?.[1];
+  if (application !== undefined) {
+    return application;
   }
   if (filePath.startsWith(TOOLING_PATH_PREFIX)) {
     return 'eslint-rules';
   }
-  const infraMatch = /^infra\/([^/]+)\//.exec(filePath);
-  return infraMatch === null ? 'unknown' : `infra-${infraMatch[1]}`;
+  const infraPackage = /^infra\/([^/]+)\//.exec(filePath)?.[1];
+  return infraPackage === undefined ? 'unknown' : `infra-${infraPackage}`;
 }
 
 export const LAYER_BY_FILE_SUFFIX: readonly (readonly [string, string])[] = [

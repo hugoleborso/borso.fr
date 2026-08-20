@@ -806,20 +806,20 @@ function readTables(imports: readonly ImportEdge[]): string[] {
 }
 
 function inferContext(filePath: string, container: string): string {
-  const apiMatch = /\/api\/src\/([^/]+)\//.exec(filePath);
-  if (container === 'api' && apiMatch !== null) {
-    return apiMatch[1];
+  const apiContext = /\/api\/src\/([^/]+)\//.exec(filePath)?.[1];
+  if (container === 'api' && apiContext !== undefined) {
+    return apiContext;
   }
   if (container === 'api') return 'root';
   if (container === 'domain') return 'domain';
   if (container === 'cdk') return 'cdk';
-  const routeMatch = /\/site\/src\/routes\/([^/]+)\//.exec(filePath);
-  if (routeMatch !== null) return routeMatch[1];
-  const componentMatch = /\/site\/src\/components\/([^/]+)\//.exec(filePath);
-  if (componentMatch !== null) return componentMatch[1];
+  const routeContext = /\/site\/src\/routes\/([^/]+)\//.exec(filePath)?.[1];
+  if (routeContext !== undefined) return routeContext;
+  const componentContext = /\/site\/src\/components\/([^/]+)\//.exec(filePath)?.[1];
+  if (componentContext !== undefined) return componentContext;
   if (filePath.includes('/site/src/lib/queries/')) return 'queries';
-  const siteMatch = /\/site\/src\/([^/]+)\//.exec(filePath);
-  if (siteMatch !== null) return siteMatch[1];
+  const siteContext = /\/site\/src\/([^/]+)\//.exec(filePath)?.[1];
+  if (siteContext !== undefined) return siteContext;
   return 'root';
 }
 
@@ -873,7 +873,7 @@ export function buildArchitectureFile(
     container,
     layer: inferLayer(relativePath),
     context: inferContext(relativePath, container),
-    feature: featureMatch === null ? null : featureMatch[1],
+    feature: featureMatch?.[1] ?? null,
     lineCount: text.split('\n').length,
     complexity: cognitiveComplexity(sourceFile),
     lintExceptions: (text.match(LINT_DISABLE_PATTERN) ?? []).length,
