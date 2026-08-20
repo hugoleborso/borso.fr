@@ -1,5 +1,5 @@
 /**
- * Setlist editor. Embedded inside the concert session detail page.
+ * Setlist editor. Mounted by the setlist's own page.
  * Renders the ordered entries; `SetlistEntryRow` owns what one of them shows.
  *
  * The energy curve and the member filter sit in `SetlistToolbar`, pinned to
@@ -45,7 +45,7 @@ import {
   useReorderSetlist,
   useSetlistEntries,
   useUpdateSetlistEntry,
-} from '../../lib/queries/setlists.queries';
+} from '../../lib/queries/setlist-entries.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { useTransitionCommentsList } from '../../lib/queries/transitions.queries';
 import { Button } from '../atoms/Button';

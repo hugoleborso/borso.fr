@@ -176,7 +176,6 @@
     "friendsCountPerMember": "Friends per member",
     "myFriendsCount": "My friends count",
     "setlist": "Setlist",
-    "buildSetlist": "Build setlist",
     "editConcertDetails": "Edit concert details",
     "saveConcertDetails": "Save",
     "selectMember": "Member",
@@ -187,15 +186,16 @@
       "submit": "Create"
     },
     "delete": {
-      "confirm": "Delete this session? Its setlist (if any) goes with it.",
+      "confirm": "Delete this session? The setlists it carries are detached, not deleted.",
       "button": "Delete",
       "aria": "Delete session"
-    }
+    },
+    "setlists": "Setlists",
+    "noSetlists": "No setlist on this session."
   },
   "setlist": {
     "title": "Setlists",
-    "indexSubtitle": "Every concert, newest first. Build a setlist for the ones that have none.",
-    "indexNoConcert": "No concert on the books yet — add one from",
+    "indexSubtitle": "Every setlist the band has written. One setlist can be played in several sessions.",
     "addSong": "Add song",
     "removeEntry": "Remove",
     "moveUp": "Move up",
@@ -208,9 +208,6 @@
     "energyUnset": "Not set, showing {{value}}",
     "openTransitionComment": "View / comment the transition",
     "transitionCommentTitle": "Transition comment",
-    "missingSessionId": "Missing session id.",
-    "noSetlistYet": "No setlist created for this session yet.",
-    "createForSession": "Create a setlist",
     "copyOrder": "Copy order",
     "orderCopied": "Copied!",
     "emptyList": "No song in this set yet.",
@@ -231,7 +228,45 @@
       "reorder": "The new order was not saved. Check the connection and try again.",
       "update": "The change was not saved. Check the connection and try again.",
       "create": "The setlist was not created. Check the connection and try again.",
-      "copyOrder": "The running order could not be copied to the clipboard."
+      "copyOrder": "The running order could not be copied to the clipboard.",
+      "rename": "The new name was not saved. Check the connection and try again.",
+      "delete": "The setlist was not deleted. Check the connection and try again.",
+      "attach": "The setlist was not attached to this session. Check the connection and try again.",
+      "detach": "The setlist was not detached. Check the connection and try again."
+    },
+    "indexEmpty": "No setlist yet — write the first one.",
+    "untitled": "Untitled setlist",
+    "songCount_one": "{{count}} song",
+    "songCount_other": "{{count}} songs",
+    "new": "New setlist",
+    "missingId": "Missing setlist identifier.",
+    "notFound": "This setlist no longer exists.",
+    "playedIn": "Played in",
+    "noSession": "Attached to no session",
+    "create": {
+      "title": "New setlist",
+      "nameLabel": "Name",
+      "namePlaceholder": "First half, encore, run-through…",
+      "submit": "Create",
+      "defaultName": "Set {{index}}"
+    },
+    "attach": {
+      "button": "Attach an existing setlist",
+      "title": "Attach a setlist",
+      "empty": "Every setlist is already attached to this session."
+    },
+    "detach": {
+      "button": "Detach",
+      "aria": "Detach this setlist from the session"
+    },
+    "rename": {
+      "label": "Rename",
+      "save": "Save"
+    },
+    "delete": {
+      "button": "Delete",
+      "aria": "Delete the setlist",
+      "confirm": "Delete “{{name}}”? Its songs go with it, in every session playing it."
     }
   },
   "scene": {

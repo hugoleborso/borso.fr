@@ -163,6 +163,13 @@ export function listCaseStyleDivergences(facts: readonly FileFact[]): readonly D
 /**
  * A file that exports a hook and does not say so in its name, beside one that
  * does. Two spellings for the same role is the drift; either alone is a choice.
+ *
+ * A file already carrying another dotted suffix is outside the question. A
+ * query module is named `<name>.queries.ts` because that is the layer the
+ * architecture map reads off the name, and it exposes its reads as hooks;
+ * renaming it `<name>.hook.ts` would answer this question by breaking a rule
+ * that is written down. The question is how a module whose role IS the hook
+ * says so, and those are the ones carrying no suffix at all.
  */
 /** The spelling `CLAUDE.md`'s suffix list gives this question. */
 const HOOK_SUFFIX_SHAPE = '<name>.hook.ts';
@@ -173,6 +180,7 @@ export function listHookNamingDivergences(facts: readonly FileFact[]): readonly 
     if (!fact.exportsHook) continue;
     const stem = readNameStem(fact.basename);
     const suffix = readNameSuffix(fact.basename);
+    if (suffix !== null && suffix !== 'hook') continue;
     const shape =
       suffix === 'hook'
         ? HOOK_SUFFIX_SHAPE

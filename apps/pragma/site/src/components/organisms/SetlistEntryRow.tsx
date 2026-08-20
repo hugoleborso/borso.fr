@@ -73,7 +73,7 @@ import {
   selectEnergyAppearance,
 } from './setlist-entry-energy.core';
 import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
-import type { SetlistEntryPatch } from '../../lib/queries/setlists.queries';
+import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 
 const POSITION_DIGITS = 2;
 const ICON_BUTTON_CLASS =

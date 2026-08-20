@@ -12,7 +12,7 @@ import { createApp } from '../app';
 import { listInstruments } from '../instruments/instruments.repository';
 import { listMembers } from '../members/members.repository';
 import { listSessions } from '../sessions/sessions.repository';
-import { findSetlistBySession, listEntries } from '../setlists/setlists.repository';
+import { listEntries, listSetlistsOfSession } from '../setlists/setlists.repository';
 import { listSongsNewestFirst } from '../songs/songs.repository';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
@@ -81,9 +81,10 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     const sessionId = sessions[0]?.id;
     expect(sessionId).toBeDefined();
     if (sessionId === undefined) return;
-    const setlist = await findSetlistBySession(sessionId);
-    expect(setlist).not.toBeNull();
-    if (setlist === null) return;
+    const setlists = await listSetlistsOfSession(sessionId);
+    expect(setlists.length).toBe(1);
+    const setlist = setlists[0];
+    if (setlist === undefined) return;
     const setlistEntries = await listEntries(setlist.id);
     expect(setlistEntries.length).toBe(6);
     expect(setlistEntries.every((entry) => entry.energy === null)).toBe(true);

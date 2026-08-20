@@ -209,22 +209,43 @@ Lives in: `api/src/sessions/`
 - The API validates the body as a discriminated union on `kind`, so a
   concert and a practice cannot borrow each other's columns.
 - Sessions are listed newest first by date.
-- Deleting a session deletes its setlist and that setlist's entries first
-  (`deleteSessionWithCascade`).
+- Deleting a session detaches the setlists it carried and keeps them
+  (`deleteSessionWithCascade`). Another session may be playing the same
+  one, and the setlists index holds it either way.
 
 Not to be confused with: a sign-in session, which is a browser cookie and
 has nothing to do with a date in the calendar.
 
 ## Setlist
 
-The ordered run of songs for one session.
+A named, ordered run of songs. It exists on its own, and any number of
+sessions can carry it: a rehearsal works through several, and the set
+prepared in a rehearsal is the same one played at the concert.
 
 Lives in: `api/src/setlists/`
 
-- `sessionId` is `NOT NULL` and carries a unique constraint, so a session
-  has at most one setlist.
-- Asking for a second one answers `already-exists` rather than creating it
-  (`createSetlistForSession`).
+- The row holds `id` and `name` only. `name` is `NOT NULL` and defaults
+  to the empty string, because a set is often written in a hurry and
+  named afterwards.
+- The physical table is `setlist_sheet`. The original `setlist` table
+  declared `session_id` `NOT NULL UNIQUE`, and Aurora DSQL accepts
+  neither `DROP COLUMN` nor `DROP CONSTRAINT`, so one setlist per
+  session could not be relaxed in place; `0003_setlists_across_sessions.sql`
+  moved the rows and left the old table unread.
+- `createSetlist` writes the setlist, and the link when the caller names
+  a session, in one transaction. Its only refusal is `session-not-found`.
+
+## Session setlist link
+
+Which sessions carry which setlist, and in what order within a session.
+
+Lives in: `api/src/setlists/`
+
+- `session_setlist` holds `session_id`, `setlist_id` and `position`, keyed
+  on the first two, so one pair is stored once however many times it is
+  attached.
+- A setlist joining a session lands one past the highest position already
+  taken, so the order the band wrote survives.
 
 ## Setlist entry
 

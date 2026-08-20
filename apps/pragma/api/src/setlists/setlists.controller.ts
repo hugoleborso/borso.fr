@@ -12,38 +12,97 @@ import {
   setlistEntryIdParamSchema,
   setlistEntryUpdateSchema,
   setlistIdParamSchema,
+  setlistLinkSchema,
+  setlistRenameSchema,
   setlistReorderSchema,
+  setlistSessionParamSchema,
 } from './setlists.schema';
 import {
   appendEntry,
-  createSetlistForSession,
+  createSetlist,
+  getAllSetlists,
   getEntries,
-  getSetlistBySession,
+  findSetlist,
+  getSetlistsOfSession,
+  linkSetlistToSession,
   patchEntry,
   removeEntryAndCompact,
+  removeSetlist,
+  renameSetlist,
   reorderEntries,
+  unlinkSetlistFromSession,
 } from './setlists.service';
 
 // @FollowsBlueprint controller-dispatch
 export function buildSetlistsRouter() {
   return new Hono()
     .use('*', requireSharedPasswordSession)
+    .get('/', async (context) => {
+      const setlists = await getAllSetlists();
+      return context.json({ setlists });
+    })
     .get(
       '/by-session/:sessionId',
       zValidator('param', setlistBySessionParamSchema),
       async (context) => {
         const { sessionId } = context.req.valid('param');
-        const setlist = await getSetlistBySession(sessionId);
+        const setlists = await getSetlistsOfSession(sessionId);
+        return context.json({ setlists });
+      },
+    )
+    .post('/', zValidator('json', setlistCreateSchema), async (context) => {
+      const input = context.req.valid('json');
+      const created = await createSetlist(input);
+      if (created.kind === 'session-not-found')
+        return context.json({ error: 'session-not-found' }, 404);
+      return context.json({ setlist: created.setlist }, 201);
+    })
+    .get('/:id', zValidator('param', setlistIdParamSchema), async (context) => {
+      const { id } = context.req.valid('param');
+      const setlist = await findSetlist(id);
+      if (setlist === null) return context.json({ error: 'not-found' }, 404);
+      return context.json({ setlist });
+    })
+    .put(
+      '/:id',
+      zValidator('param', setlistIdParamSchema),
+      zValidator('json', setlistRenameSchema),
+      async (context) => {
+        const { id } = context.req.valid('param');
+        const { name } = context.req.valid('json');
+        const setlist = await renameSetlist(id, name);
         if (setlist === null) return context.json({ error: 'not-found' }, 404);
         return context.json({ setlist });
       },
     )
-    .post('/', zValidator('json', setlistCreateSchema), async (context) => {
-      const { sessionId } = context.req.valid('json');
-      const updated = await createSetlistForSession(sessionId);
-      if (updated.kind === 'already-exists') return context.json({ error: 'already-exists' }, 409);
-      return context.json({ setlist: updated.setlist }, 201);
+    .delete('/:id', zValidator('param', setlistIdParamSchema), async (context) => {
+      const { id } = context.req.valid('param');
+      const outcome = await removeSetlist(id);
+      if (outcome === 'not-found') return context.json({ error: 'not-found' }, 404);
+      return context.json({ id, deleted: true });
     })
+    .post(
+      '/:id/sessions',
+      zValidator('param', setlistIdParamSchema),
+      zValidator('json', setlistLinkSchema),
+      async (context) => {
+        const { id } = context.req.valid('param');
+        const { sessionId } = context.req.valid('json');
+        const linked = await linkSetlistToSession(id, sessionId);
+        if (linked.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ setlistId: id, sessionId }, 201);
+      },
+    )
+    .delete(
+      '/:id/sessions/:sessionId',
+      zValidator('param', setlistSessionParamSchema),
+      async (context) => {
+        const { id, sessionId } = context.req.valid('param');
+        const outcome = await unlinkSetlistFromSession(id, sessionId);
+        if (outcome === 'not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ setlistId: id, sessionId, unlinked: true });
+      },
+    )
     .get('/:id/entries', zValidator('param', setlistIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
       const setlistEntries = await getEntries(id);

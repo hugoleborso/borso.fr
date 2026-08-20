@@ -12,6 +12,8 @@ const ALL_TABLES: readonly string[] = [
   'bar',
   'transition_comment',
   'setlist_entry',
+  'session_setlist',
+  'setlist_sheet',
   'setlist',
   'session',
   'mastery_override',

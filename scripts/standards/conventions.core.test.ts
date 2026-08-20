@@ -168,6 +168,14 @@ describe('listHookNamingDivergences', () => {
     ]);
   });
 
+  it('leaves a module whose suffix already names its layer out of the question', () => {
+    const divergence = listHookNamingDivergences([
+      buildFact('apps/a/x/online-status.hook.ts', { exportsHook: true }),
+      buildFact('apps/a/x/songs.queries.ts', { exportsHook: true }),
+    ])[0];
+    expect(divergence).toBeUndefined();
+  });
+
   it('finds nothing when no module exports a hook', () => {
     expect(listHookNamingDivergences([buildFact('apps/a/x/plain.ts')])).toEqual([]);
   });

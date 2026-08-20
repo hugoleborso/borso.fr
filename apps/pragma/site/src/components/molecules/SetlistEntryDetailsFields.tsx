@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { composeClassName } from '../atoms/class-name.utils';
 import { inputVariants } from '../atoms/input.variants';
-import type { SetlistEntryPatch } from '../../lib/queries/setlists.queries';
+import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import {
   CAPO_MAX,
   CAPO_MIN,
