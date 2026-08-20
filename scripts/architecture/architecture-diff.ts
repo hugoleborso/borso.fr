@@ -327,8 +327,6 @@ function main(): void {
     console.error(`Wrote ${htmlPath}`);
   }
 
-  console.log('## Architecture');
-  console.log('');
   console.log(summary);
   if (body === '') {
     console.log('');

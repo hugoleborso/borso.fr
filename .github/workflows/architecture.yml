@@ -82,7 +82,12 @@ jobs:
               --app "$app" \
               --app-root "../architecture-base/apps/$app" \
               --out /tmp/architecture-base
-            printf '## %s\n\n' "$app" >> /tmp/architecture-diff.md
+            # The marker, not the heading, is what the comment step turns into
+            # a link. The report under it carries headings of its own, and a
+            # regular expression over `## ` cannot tell an application's name
+            # from a section's.
+            printf '## %s\n\n<!--architecture-app:%s-->\n\n' "$app" "$app" \
+              >> /tmp/architecture-diff.md
             pnpm exec tsx scripts/architecture/architecture-diff.ts \
               "/tmp/architecture-base/$app-architecture.json" \
               "docs/architecture/$app-architecture.json" >> /tmp/architecture-diff.md
@@ -159,15 +164,18 @@ jobs:
             const site = `https://architecture-pr-${context.issue.number}.preview.borso.fr`;
             const isPublished = '${{ steps.publish.outcome }}' === 'success';
             const report = fs.readFileSync('/tmp/architecture-diff.md', 'utf8').trim();
-            // Each application's own heading carries the link to its map, so
-            // the map is one tap from the section that says what moved rather
-            // than from a line at the bottom of a long comment.
+            // Each application's own section carries the link to its map, so
+            // the map is one tap from the lines that say what moved rather
+            // than from a line at the bottom of a long comment. The marker the
+            // step above wrote is what names the application; an application
+            // the target branch does not have yet has no marker and no map.
+            const appMarker = /^<!--architecture-app:(\S+)-->$/gm;
             const withMapLinks = isPublished
               ? report.replace(
-                  /^## (\S+)$/gm,
-                  (line, app) => `${line}\n\n[Open the ${app} map ↗](${site}/${app}-diff.html)`,
+                  appMarker,
+                  (_marker, app) => `[Open the ${app} map ↗](${site}/${app}-diff.html)`,
                 )
-              : report;
+              : report.replace(appMarker, '').replace(/\n{3,}/g, '\n\n');
             // The link comes first because that is the whole point of it: on a
             // phone the report is several screens long, and a reader who wants
             // the map should not have to reach the end to find it.
