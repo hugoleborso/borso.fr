@@ -39,6 +39,34 @@ else
   range_label="the whole branch (new or unfetchable remote ref)"
 fi
 
+# One push legitimately adds work nobody here has to gate: the one that merges
+# origin/main in. Its range carries every commit main made since the branch
+# last pushed, and those were gated when they landed — unscoped, by
+# .github/workflows/full-suite.yml. Keying on <remote sha> alone re-gates all
+# of them: measured on this repository, merging main into a two-day branch
+# turned 46 commits into 491 changed files, four applications of tests and 78
+# mutated files, and the push timed out twice before anyone understood it was
+# working as designed.
+#
+# When origin/main is reachable from HEAD it has been merged in, and diffing
+# against its tip rather than the remote sha leaves exactly the branch's own
+# work: the same push drops from 491 files to 23. It cannot under-gate. A file
+# main changed and this branch took verbatim is identical to main's tip, so it
+# falls out of the range — which is right, main gated it. A file both sides
+# touched, or the branch alone touched, still differs and is still gated.
+#
+# The second test is what keeps this off an ordinary push: on a branch that has
+# not merged main, origin/main is not an ancestor of HEAD at all; on one that
+# merged it in an *earlier* push, main's tip is already an ancestor of the
+# remote sha and the remote sha is the tighter base.
+main_tip=$(git rev-parse --verify --quiet origin/main 2>/dev/null || true)
+if [ -n "$main_tip" ] &&
+  git merge-base --is-ancestor "$main_tip" HEAD 2>/dev/null &&
+  ! git merge-base --is-ancestor "$main_tip" "$push_base" 2>/dev/null; then
+  push_base="$main_tip"
+  range_label="this push, minus the commits it merged from origin/main"
+fi
+
 changed=$(git diff --name-only "$push_base" HEAD)
 echo "[pre-push] gating $(echo "$changed" | grep -c . ) changed file(s) — range: $range_label"
 
