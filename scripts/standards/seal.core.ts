@@ -153,12 +153,29 @@ const EXCLUDED_SUFFIXES = ['.test.ts', '.test.tsx', '.test-utils.ts', '.test-uti
 const REVIEWABLE_ROOTS = ['apps/', 'infra/'];
 
 /**
- * The files a seal is asked for. Application and infrastructure source only:
- * the standards are about that code, and asking for a seal on a generated page
- * or a lock file would train everyone to seal without reading.
+ * Prose a reviewer bullet already asks somebody to check against the code, and
+ * which no other gate reads. `01-naming.md` asks a reviewer whether each entry
+ * in a `VOCABULARY.md` is still true; nothing pointed the seal at the file, so
+ * a definition could go false against the branch that falsified it and every
+ * mechanical check stayed green. Hashing it here does not make the prose
+ * checkable — it makes the review of it recorded, which is the whole mechanism.
+ *
+ * One name rather than a list: a list of one cannot distinguish `some` from
+ * `every`, so the mutation gate reports an equivalent mutant it is right to
+ * report. A second name brings the list back, with the cases that tell them
+ * apart.
+ */
+const REVIEWABLE_FILENAME = 'VOCABULARY.md';
+
+/**
+ * The files a seal is asked for. Application and infrastructure source, plus
+ * the prose named above: the standards are about that code, and asking for a
+ * seal on a generated page or a lock file would train everyone to seal without
+ * reading.
  */
 export function isReviewablePath(path: string): boolean {
   if (!REVIEWABLE_ROOTS.some((root) => path.startsWith(root))) return false;
+  if (path.endsWith(`/${REVIEWABLE_FILENAME}`)) return true;
   if (!REVIEWABLE_EXTENSIONS.some((extension) => path.endsWith(extension))) return false;
   return !EXCLUDED_SUFFIXES.some((suffix) => path.endsWith(suffix));
 }

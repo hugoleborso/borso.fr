@@ -129,6 +129,13 @@ scripts/check-single-stylesheet.sh
 echo "[pre-commit] checking each stylesheet holds tokens only"
 scripts/check-stylesheet-contents.sh
 
+# And that no Tailwind arbitrary variant opens on a bare word, which Tailwind
+# reads as an attribute selector and compiles to nothing at all — no rule, no
+# error, no warning, and a class in the markup that looks right. A grep over
+# four site directories, so it costs nothing and belongs on the commit.
+echo "[pre-commit] checking Tailwind arbitrary variants compile to a rule"
+scripts/check-tailwind-arbitrary-variants.sh
+
 # Every directory under apps/ has a path-filters key and a commitlint scope.
 # Both failures are silent in the way that matters: no filter means the app
 # never gets a preview deploy and no workflow says so, and no scope means the

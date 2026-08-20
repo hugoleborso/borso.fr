@@ -253,5 +253,33 @@ case "$current_branch" in
     printf '   If this branch has an open PR, fetch and address any\n' >&2
     printf '   unresolved review threads BEFORE relying on this push.\n' >&2
     printf '   Use: mcp__github__pull_request_read method:get_review_comments\n\n' >&2
+
+    # A pull request that conflicts with its base creates NO workflow run at
+    # all — GitHub cannot build refs/pull/<n>/merge, so it dispatches nothing.
+    # Not a red run: an empty checks list, forever, with the reason readable
+    # only in `mergeable_state` on the API. That silence cost an hour on PR #63
+    # even though docs/knowledge/a-conflicted-pull-request-gets-no-checks.md
+    # had described it two days earlier, because nothing surfaced the entry at
+    # the moment of the push. This is that entry's own local check, run for you.
+    #
+    # Best-effort: a missing origin/main (shallow clone, fresh worktree) skips
+    # it rather than blocking a push over a diagnostic.
+    #
+    # The marker is matched as `^+<<<<<<<`, not `^<<<<<<<`: merge-tree prints
+    # its conflict hunks as a diff, so every marker carries a `+` prefix and an
+    # anchored match on the bare marker never fires. Checked against real
+    # output before shipping, because a gate that cannot fire is worse than no
+    # gate — it reads as a passing check.
+    if git rev-parse --verify --quiet origin/main >/dev/null; then
+      merge_base=$(git merge-base HEAD origin/main 2>/dev/null || true)
+      if [ -n "$merge_base" ] &&
+        git merge-tree "$merge_base" HEAD origin/main 2>/dev/null | grep -q '^+<<<<<<<'; then
+        printf '⚠️  [pre-push] this branch CONFLICTS with origin/main.\n' >&2
+        printf '   GitHub builds no merge ref for a conflicted pull request, so it\n' >&2
+        printf '   will create no workflow run at all — no CI, no preview, no red\n' >&2
+        printf '   check to tell you why. Merge origin/main in and push again.\n' >&2
+        printf '   See docs/knowledge/a-conflicted-pull-request-gets-no-checks.md\n\n' >&2
+      fi
+    fi
     ;;
 esac

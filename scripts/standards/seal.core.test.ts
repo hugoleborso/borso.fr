@@ -141,12 +141,15 @@ describe('isReviewablePath', () => {
     'apps/pragma/api/src/songs/songs.service.ts',
     'apps/borso-fr/site/src/components/atoms/Button.tsx',
     'infra/cdk/src/constructs/static-site.ts',
+    'apps/borso-fr/VOCABULARY.md',
   ])('asks for a seal on %s', (path) => {
     expect(isReviewablePath(path)).toBe(true);
   });
 
   it.each([
     ['docs/standards/01-naming.md', 'a document is not source'],
+    ['docs/VOCABULARY.md', 'the named prose counts under an application, not anywhere'],
+    ['apps/pragma/site/NOT-VOCABULARY.md', 'the filename is matched whole, not as a suffix'],
     ['scripts/standards/seal.ts', 'the harness is not what the standards govern'],
     ['apps/pragma/api/src/songs/songs.service.test.ts', 'a test is reviewed with its source'],
     ['apps/pragma/site/src/queries.test-utils.tsx', 'a test helper is reviewed with its suite'],

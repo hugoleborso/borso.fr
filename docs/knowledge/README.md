@@ -147,6 +147,8 @@ Two failure modes to watch for:
 
 ### borsouvertures / chess libraries
 
+- [`judging-an-animation-you-cannot-watch.md`](./judging-an-animation-you-cannot-watch.md) — stills have no speed in them, `getComputedStyle` lags under throttling; pin `currentTime` and capture through CDP instead.
+- [`tailwind-v4-fails-quietly-in-two-places.md`](./tailwind-v4-fails-quietly-in-two-places.md) — a `var()` in an `@theme` entry resolves against `:root`, and a variant bracket opening on a bare word compiles to nothing.
 - [`chessjs-v1-throws-on-illegal-move.md`](./chessjs-v1-throws-on-illegal-move.md) — `chess.js` v1 throws on illegal moves; v0 returned `null`. Wrap every `chess.move` in `try`/`catch`.
 - [`react-chessboard-l-arrows-v5.md`](./react-chessboard-l-arrows-v5.md) — v5 detects knight moves and draws native L-shaped arrows; consolidated `options` prop; React-19 peer requirement.
 - [`pwa-third-party-cdn-breaks-offline.md`](./pwa-third-party-cdn-breaks-offline.md) — third-party image CDNs break PWAs offline (and often online via hotlink-blocking 403s); bundle assets or use library-bundled SVGs.
