@@ -36,10 +36,10 @@ jobs:
     outputs:
       apps: ${{ steps.compute.outputs.apps }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: .github/path-filters.yml
@@ -48,8 +48,8 @@ jobs:
           # Specifying `base: HEAD~1` triggers a `git merge-base HEAD~1 main`
           # lookup that fails with `git exit 128` because `main` isn't set
           # up as a local tracking branch with fetch-depth=2.
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -86,15 +86,15 @@ jobs:
       # affordances like the test-fixture panel in admin).
       VITE_STAGE: prod
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @borso/infra build
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.PROD_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
