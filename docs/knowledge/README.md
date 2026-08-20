@@ -30,10 +30,14 @@ Two failure modes to watch for:
 
 ### CloudFront
 
+- [`a-rebase-cannot-see-what-a-merge-decided.md`](./a-rebase-cannot-see-what-a-merge-decided.md) — a rebase replays the work and drops every reconciliation the merge commits carried. Measured: three shortcuts, 52 and 36 files wrong, `rerere` zero hits, `git cherry` blind to thirty duplicates.
 - [`cloudfront-function-throttle-persistence.md`](./cloudfront-function-throttle-persistence.md) — throttle state outlives a function code update; recovery 5–15 min.
 - [`cloudfront-resources-in-us-east-1.md`](./cloudfront-resources-in-us-east-1.md) — control plane is region-pinned regardless of the distribution's data-plane region.
 - [`cloudfront-get-function-binary-output.md`](./cloudfront-get-function-binary-output.md) — `aws cloudfront get-function` writes the source to a positional outfile, not stdout.
 - [`cloudfront-cname-uniqueness.md`](./cloudfront-cname-uniqueness.md) — aliases (CNAMEs) are single-distribution; release from the old distribution before redeploying the new one.
+- [`eslint-content-cache-replays-a-stale-type-aware-error.md`](./eslint-content-cache-replays-a-stale-type-aware-error.md) — `--cache-strategy content` keys on the linted file, and a type-aware rule depends on the whole graph, so an error you already fixed keeps being reported. `rm -f .eslintcache`.
+- [`how-a-mutation-survivor-hides.md`](./how-a-mutation-survivor-hides.md) — three cases where a test reads as sufficient and is not: a `Stryker disable` covering one line of a multi-line statement, `toContain` blind to a prepended digit, and a capture-boundary mutant that is genuinely equivalent.
+- [`knip-does-not-follow-a-stryker-vitest-config.md`](./knip-does-not-follow-a-stryker-vitest-config.md) — knip's Stryker plugin resolves package names and never follows `vitest.configFile`, so the config it points at reads as unreferenced.
 - [`preview-api-cross-origin.md`](./preview-api-cross-origin.md) — previews use a custom-domain API per PR (`<app>-pr-<n>-api.preview.borso.fr`) because the shared previews distribution can't host per-app `/api/*` routing.
 - [`cdk-route53-zone-token-pitfall.md`](./cdk-route53-zone-token-pitfall.md) — `ARecord(recordName: '<host>')` doubles the zone suffix when `zoneName` is a CFN token (resolves at deploy time, fails the literal-string suffix check). Trailing-dot the `recordName` to short-circuit.
 
@@ -46,6 +50,8 @@ Two failure modes to watch for:
 
 ### GitHub Actions
 
+- [`reading-third-party-sources-from-a-session.md`](./reading-third-party-sources-from-a-session.md) — arXiv `/abs/` parses and `/pdf/` does not, and a third-party GitHub repository is reachable only through the rendered page or `add_repo`.
+- [`the-shell-gates-are-only-ever-run-where-they-pass.md`](./the-shell-gates-are-only-ever-run-where-they-pass.md) — 26 gate scripts, no tests, and pre-commit and CI only ever run them on a tree where they pass. Why a harness is hard, and what to do until there is one.
 - [`workflow-dispatch-default-branch.md`](./workflow-dispatch-default-branch.md) — `workflow_dispatch` and `issue_comment` workflows only show in the UI once on the default branch.
 - [`a-conflicted-pull-request-gets-no-checks.md`](./a-conflicted-pull-request-gets-no-checks.md) — a `pull_request` workflow runs against `refs/pull/<n>/merge`, so a conflicting pull request gets **zero** runs rather than red ones. An empty checks list means `mergeable_state: dirty` far more often than it means a dropped event; merge the base branch in and push.
 - [`github-scheduled-workflows-fire-late.md`](./github-scheduled-workflows-fire-late.md) — measured: this repo's nightly cron fires 1h01m–2h45m after its declared time, every day observed. Never key a wait on the cron expression; read the last few `created_at` values instead. Includes the monitor-that-cannot-report-its-own-failure trap.

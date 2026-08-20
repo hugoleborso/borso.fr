@@ -43,8 +43,8 @@ export const GATE_DEFINITIONS: readonly GateDefinition[] = [
   {
     name: 'typecheck',
     token: 'typecheck',
-    sites: [CONTINUOUS_INTEGRATION],
-    summary: '`tsc --noEmit` in every workspace',
+    sites: [COMMIT_HOOK, CONTINUOUS_INTEGRATION],
+    summary: '`tsc --noEmit` in every workspace, and over the tooling that belongs to none',
   },
   {
     name: 'vitest-coverage',

@@ -151,6 +151,18 @@ export function verifySeals(
 const REVIEWABLE_EXTENSIONS = ['.ts', '.tsx'];
 const EXCLUDED_SUFFIXES = ['.test.ts', '.test.tsx', '.test-utils.ts', '.test-utils.tsx', '.d.ts'];
 const REVIEWABLE_ROOTS = ['apps/', 'infra/'];
+/**
+ * A directory whose whole contents exist to run the suite.
+ *
+ * Matching the `.test-utils.ts` suffix alone missed every helper that lives in
+ * a `test/` folder under a name of its own: `database-utils.ts`,
+ * `setup-postgres.ts`, `fixtures.ts`, `helpers/template.ts`. Ten such files
+ * across four workspaces were asked for a seal, which is the same mistake as
+ * asking for one on a lock file — a reviewer reading a fixture against the
+ * standards learns nothing, and being asked to is how sealing without reading
+ * starts.
+ */
+const EXCLUDED_DIRECTORY_SEGMENT = '/test/';
 
 /**
  * Prose a reviewer bullet already asks somebody to check against the code, and
@@ -177,5 +189,6 @@ export function isReviewablePath(path: string): boolean {
   if (!REVIEWABLE_ROOTS.some((root) => path.startsWith(root))) return false;
   if (path.endsWith(`/${REVIEWABLE_FILENAME}`)) return true;
   if (!REVIEWABLE_EXTENSIONS.some((extension) => path.endsWith(extension))) return false;
+  if (path.includes(EXCLUDED_DIRECTORY_SEGMENT)) return false;
   return !EXCLUDED_SUFFIXES.some((suffix) => path.endsWith(suffix));
 }

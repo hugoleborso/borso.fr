@@ -29,11 +29,16 @@ cd "$(dirname "$0")/.."
 #   - a live counterpart elsewhere: the logic runs in production from a second,
 #     untested copy. That is a consolidation decision, not a deletion, and it
 #     is open with the operator rather than settled here.
+#
+# One shape rather than one line per application: `i18n-parity.core.ts` is
+# byte-identical in every application and test-only by design in every one, so a
+# roster of exact paths made adding an application mean editing a gate that had
+# nothing to say about it. The list below is for the cases that are genuinely
+# per-application.
+ALLOWED_TEST_ONLY_PATTERN='^apps/[^/]+/site/src/i18n/i18n-parity\.core\.ts$'
+ALLOWED_TEST_ONLY_PATTERN_REASON="test-only by design: asserts en/fr catalogue parity"
+
 declare -A ALLOWED_TEST_ONLY=(
-  [apps/borso-fr/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
-  [apps/borsouvertures/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
-  [apps/last-loop-lepin/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
-  [apps/pragma/site/src/i18n/i18n-parity.core.ts]="test-only by design: asserts en/fr catalogue parity"
   [apps/last-loop-lepin/api/src/runner/runner.core.ts]="deliberately dormant: validateRunnerDraft waits on the relay-format decision, see PR #46"
   [apps/pragma/site/src/sw/manifest.utils.ts]="live counterpart: site/public/sw.js reimplements this in plain JS; consolidating needs a SW bundling decision"
   [apps/pragma/site/src/sw/sw-cache.utils.ts]="live counterpart: site/public/sw.js reimplements this in plain JS; consolidating needs a SW bundling decision"
@@ -60,6 +65,9 @@ while read -r module; do
   )
   if [ -z "$callers" ]; then
     if [ -n "${ALLOWED_TEST_ONLY[$module]+set}" ]; then
+      continue
+    fi
+    if grep -qE "$ALLOWED_TEST_ONLY_PATTERN" <<<"$module"; then
       continue
     fi
     echo "  $module has no caller outside its own test." >&2

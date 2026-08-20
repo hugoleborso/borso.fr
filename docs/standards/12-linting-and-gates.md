@@ -236,7 +236,14 @@ review.
   CI, both with `--max-warnings 0`.
 - `gate:prettier` runs over the staged files on commit and over the repository
   in CI.
-- `gate:typecheck` runs `tsc --noEmit` in every workspace.
+- `gate:typecheck` runs `tsc --noEmit` in every workspace, and again over the
+  tooling that belongs to none. `scripts/`, `.claude/skills/` and
+  `eslint-rules/` are not workspaces, so `pnpm -r typecheck` never reached them
+  and the root `tsconfig.json` is what does: every generator and every gate this
+  repository runs on itself is checked by the same compiler as the applications.
+  `tsx` strips types without reading them, so before this a name that no longer
+  existed ran until the branch that reached it, and a return-type annotation
+  naming a type nobody imported was invisible.
 - `gate:eslint-rule-suites` runs the `RuleTester` suite every custom rule ships
   with, because a rule that misfires costs more than the rule saves.
 - `gate:knip` fails on an unused file, export or dependency.
@@ -253,6 +260,15 @@ review.
   in its workflow, and the gated file suffixes in `eslint-rules/impurity.js` and
   in every `vitest.config.ts`. Neither half is wrong on its own, which is why a
   reviewer reads past both.
+- `script:scripts/check-dated-records-are-append-only.sh` fails a change that
+  edits or deletes a file under `docs/**/validation/` or
+  `docs/standards/reviews/`. Those are dated records of what a validator saw and
+  what a reviewer cleared, and the date is in the file name, so a
+  repository-wide rename reaching into one destroys the record rather than
+  correcting it — which is how a `sed` across the tree silently rewrote a
+  finding from months earlier. Adding a report is the point; changing one is
+  not. It reads the index on commit and a branch range in CI, because a runner
+  has nothing staged.
 - `script:scripts/check-no-racy-pipelines.sh` fails a `set -o pipefail` script
   that pipes a directory walk into `head` or `grep -q`. The consumer closes the
   pipe first and the producer's write error fails the script, and whether that
