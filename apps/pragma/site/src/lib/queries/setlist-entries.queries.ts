@@ -234,14 +234,5 @@ export function useReorderSetlist() {
         );
       }
     },
-    // Deliberately no `onSettled` refetch. A reorder's optimistic cache
-    // already holds the complete, correct order (every entry id + its new
-    // position) and the PUT returns 200, so a refetch adds no data — it
-    // only risks reverting the UI: an immediate GET after the PUT can land
-    // on a different Lambda/DSQL connection and read a pre-commit snapshot
-    // (Aurora DSQL read-after-write visibility lags across connections),
-    // overwriting the correct optimistic order with the stale one. Any
-    // later entries refetch reconciles once the write has propagated;
-    // genuine failures roll back via `onError`.
   });
 }

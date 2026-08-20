@@ -4500,7 +4500,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/setlist-entries.queries.ts",
-      "digest": "6848323d75df",
+      "digest": "29d65c0f5e25",
       "container": "site",
       "layer": "query",
       "context": "queries",
