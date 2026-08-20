@@ -15,6 +15,9 @@ name: architecture
 
 on:
   pull_request:
+    # `closed` is here for the teardown below, and it is the only reason the
+    # default set is spelled out: naming any type at all replaces the default.
+    types: [opened, synchronize, reopened, closed]
     paths:
       - 'apps/**'
       - 'scripts/architecture/**'
@@ -39,6 +42,7 @@ env:
 
 jobs:
   architecture:
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -210,3 +214,40 @@ jobs:
               return;
             }
             await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+
+  # The maps of a pull request that is over are dead weight at a live address.
+  # The bucket would expire them after sixty days on its own, which is a long
+  # time to serve a merged branch's architecture to anyone who kept the link.
+  teardown:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Delete the maps published for this pull request
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          # The prefix is the whole safety argument for a recursive delete, so
+          # it is built from a variable that must be set and must be a number.
+          # An empty PR number here would address the bucket root.
+          case "${PR_NUMBER:?the pull request number is required}" in
+            '' | *[!0-9]*) echo "::error::refusing to delete for PR_NUMBER='$PR_NUMBER'"; exit 1 ;;
+          esac
+          bucket="$(aws ssm get-parameter --name /borso/shared/previews-bucket-name \
+            --query Parameter.Value --output text)"
+          distribution="$(aws ssm get-parameter --name /borso/shared/previews-distribution-id \
+            --query Parameter.Value --output text)"
+          prefix="architecture/pr-$PR_NUMBER"
+          # Quiet when there is nothing there: a pull request whose publish step
+          # never ran, or a close replayed, is not a failure.
+          aws s3 rm "s3://$bucket/$prefix/" --recursive --only-show-errors
+          # Without this the edge goes on serving the deleted pages for its
+          # default TTL, which is the same stale map at the same address.
+          aws cloudfront create-invalidation --distribution-id "$distribution" \
+            --paths "/$prefix/*" --query 'Invalidation.Id' --output text

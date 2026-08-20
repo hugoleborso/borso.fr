@@ -301,10 +301,14 @@ set the workflow fails on its deploy step and nothing else changes.
 On a pull request the maps go to the previews CDN, at
 `https://architecture-pr-<n>.preview.borso.fr`, and the comment links them. That
 host needed nothing built: the routing function in front of the previews bucket
-reads any `<name>-pr-<n>` host and serves `/<name>/pr-<n>/`, the certificate is
-the wildcard the previews already use, and the bucket expires its objects after
-sixty days, so nothing tears the maps down either. The workflow assumes
+reads any `<name>-pr-<n>` host and serves `/<name>/pr-<n>/`, and the certificate
+is the wildcard the previews already use. The workflow assumes
 `PreviewDeployRole`, whose trust policy already names `pull_request`.
+
+Closing the pull request deletes them. The bucket would expire its objects after
+sixty days on its own, which is a long time to go on serving a merged branch's
+architecture to anyone who kept the link, so the `closed` run removes the prefix
+and invalidates it at the edge.
 
 The same pages still upload as a workflow artifact. That is what a reader who
 wants the whole folder offline downloads, and it is the fallback whenever AWS is
