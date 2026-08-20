@@ -41,6 +41,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @borso/infra build
       - run: pnpm -r typecheck
+      # The repository's own tooling, which `-r` cannot reach: `scripts/`,
+      # `.claude/skills/` and `eslint-rules/` belong to no workspace, so they
+      # were type-checked by nothing until this ran. `tsx` strips types without
+      # reading them, so a name that no longer exists runs until the branch that
+      # reaches it. Rung-1 eradication of
+      # docs/dantotsus/the-tooling-that-gates-everything-was-checked-by-nothing.md.
+      - run: pnpm run typecheck
       # Repo-wide ESLint at root scope. The flat config in eslint.config.js
       # covers every workspace plus the files that belong to none, e.g.
       # scripts/ and eslint-rules/, so one run replaces the per-workspace

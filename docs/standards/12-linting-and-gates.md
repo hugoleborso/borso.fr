@@ -236,7 +236,14 @@ review.
   CI, both with `--max-warnings 0`.
 - `gate:prettier` runs over the staged files on commit and over the repository
   in CI.
-- `gate:typecheck` runs `tsc --noEmit` in every workspace.
+- `gate:typecheck` runs `tsc --noEmit` in every workspace, and again over the
+  tooling that belongs to none. `scripts/`, `.claude/skills/` and
+  `eslint-rules/` are not workspaces, so `pnpm -r typecheck` never reached them
+  and the root `tsconfig.json` is what does: every generator and every gate this
+  repository runs on itself is checked by the same compiler as the applications.
+  `tsx` strips types without reading them, so before this a name that no longer
+  existed ran until the branch that reached it, and a return-type annotation
+  naming a type nobody imported was invisible.
 - `gate:eslint-rule-suites` runs the `RuleTester` suite every custom rule ships
   with, because a rule that misfires costs more than the rule saves.
 - `gate:knip` fails on an unused file, export or dependency.

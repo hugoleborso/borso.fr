@@ -70,6 +70,19 @@ run_generator_check() {
   fi
 }
 
+# The repository's own tooling, when a commit touches it. `scripts/`,
+# `.claude/skills/` and `eslint-rules/` belong to no workspace, so
+# `pnpm -r typecheck` never reached them and `tsx` strips types without reading
+# them: a name that no longer exists runs fine until the branch that reaches it,
+# and a return-type annotation naming a type nobody imported is invisible.
+# Scoped to the paths so an application-only commit pays nothing.
+# See docs/dantotsus/the-tooling-that-gates-everything-was-checked-by-nothing.md.
+if git diff --cached --name-only |
+  grep -qE '^(scripts/|\.claude/skills/|eslint-rules/|tsconfig\.json$)'; then
+  echo "[pre-commit] type-checking the repository's own tooling"
+  pnpm run typecheck
+fi
+
 if [ -n "$staged_lintable" ]; then
   echo "[pre-commit] checking blueprint annotations"
   set +e
