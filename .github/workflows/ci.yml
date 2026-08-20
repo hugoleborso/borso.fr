@@ -323,3 +323,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec commitlint --from origin/${{ github.base_ref }} --to HEAD --verbose
+      # A dated validation report or standards review is true as of the day in
+      # its own file name, so a repository-wide rename reaching into one
+      # destroys the record rather than correcting it. This job rather than
+      # `build`, because it is the one with the whole history and the base ref:
+      # the check reads a range, and `build` checks out at depth 1, where a
+      # `--cached` read would be a gate that always passes.
+      - run: ./scripts/check-dated-records-are-append-only.sh "origin/${{ github.base_ref }}"

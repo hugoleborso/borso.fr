@@ -31,6 +31,10 @@
           {
             "type": "command",
             "command": ".claude/hooks/pretool-no-swallowed-push.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/pretool-no-discarding-reset.sh"
           }
         ]
       },

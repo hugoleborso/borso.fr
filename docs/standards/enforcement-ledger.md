@@ -147,8 +147,6 @@ every application the standard covers.
 | `borso/no-circle-in-non-uniform-svg` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, pragma/site |
 | `scripts/check-single-stylesheet.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-stylesheet-contents.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
-| `scripts/check-tailwind-arbitrary-variants.sh` | script | yes | .husky/pre-commit |
-| (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 | (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |
 
 ## 09. Internationalisation
@@ -202,6 +200,7 @@ every application the standard covers.
 | `commitlint` | gate | yes | .husky/commit-msg |
 | `@eslint-community/eslint-comments/require-description` | ESLint rule | yes | borso-fr/site, borsouvertures/site, last-loop-lepin/site, last-loop-lepin/api, pragma/site, pragma/api, infra, tooling |
 | `scripts/check-coupled-lists.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
+| `scripts/check-dated-records-are-append-only.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-no-racy-pipelines.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-frontend-env-vars.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
 | `scripts/check-migration-sql-dsql-compat.sh` | script | yes | .husky/pre-commit, .github/workflows/ci.yml |
@@ -221,7 +220,7 @@ every application the standard covers.
 
 ## What only a reviewer can check
 
-24 claim(s) below hand the check to a person, because no tool can make it.
+23 claim(s) below hand the check to a person, because no tool can make it.
 They are the checklist the standards review agent works from, so the agent
 reviews what lint cannot rather than repeating what lint already did.
 
@@ -270,7 +269,6 @@ reviews what lint cannot rather than repeating what lint already did.
 ### 08. Styling
 
 - `reviewer` checks that a set of more than two visual variants goes through `cva` rather than a conditional expression.
-- `reviewer` checks that a visual effect added to an existing screen is made out of what that screen already renders, where it can be. An effect drawn over a page that already draws something similar is two of that thing, one of them fake; see [`docs/dantotsus/two-starfields-one-of-them-fake.md`](../dantotsus/two-starfields-one-of-them-fake.md).
 
 ### 09. Internationalisation
 
@@ -291,5 +289,5 @@ reviews what lint cannot rather than repeating what lint already did.
 ## Totals
 
 - 83 claim(s) enforced by a tool
-- 24 claim(s) left to a reviewer
+- 23 claim(s) left to a reviewer
 - 0 problem(s)
