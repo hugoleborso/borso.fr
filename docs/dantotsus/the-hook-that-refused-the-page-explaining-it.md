@@ -5,7 +5,7 @@ detected-at: local
 severity: low
 related-pr: '#40'
 fix-pr: '#74'
-fix-commits: []
+fix-commits: [df47cd5]
 eradication-level: 2
 time-to-detect: 12 days
 tags: [hooks, agent-harness, meta]
@@ -103,7 +103,7 @@ different program, and the shape that actually occurs here is prose.
 
 **Type:** code diff · DevX check (level 2 — DevX check)
 
-**Reference:** [PR #74](https://github.com/hugoleborso/borso.fr/pull/74)
+**Reference:** [PR #74](https://github.com/hugoleborso/borso.fr/pull/74) · commit [`df47cd5`](https://github.com/hugoleborso/borso.fr/commit/df47cd5)
 
 **The actual fix:**
 
