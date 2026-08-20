@@ -125,6 +125,17 @@ about — the four push shapes, with the base each one selects:
 The last row is the deliberate degradation: a shallow clone or a fresh worktree
 keeps today's behaviour rather than failing.
 
+**Sibling defect swept:** the same shape, one hook over, and this pull request
+tripped it. `scripts/blueprints/blueprint-defects.ts` reads the blueprint
+annotations *and* every dantotsu's front matter, but `.husky/pre-commit` only
+ran it when a `.ts`/`.tsx` file was staged — so a commit that adds only a
+dantotsu could never run the check its own content invalidates. Four commits on
+this branch skipped it and CI caught the stale page on the fifth. The condition
+is now the union of the generator's two inputs, `apps/`, `infra/` and
+`docs/dantotsus/`, and was proven by staging a dantotsu-only change against a
+stale page: the old condition selects nothing, the new one runs the generator,
+and the generator exits 1.
+
 ## See also
 
 - [`../knowledge/gate-timings-before-and-after.md`](../knowledge/gate-timings-before-and-after.md)

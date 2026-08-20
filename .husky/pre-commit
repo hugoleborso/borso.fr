@@ -75,11 +75,9 @@ if [ -n "$staged_lintable" ]; then
   set +e
   run_generator_check .claude/skills/blueprint/blueprint-indexing.ts
   run_generator_check .claude/skills/blueprint/blueprint-heatmap.ts
-  # The defect page and the seeding lookup are generated from the same
-  # annotations, so they go stale on the same edit: a dantotsu naming a
-  # blueprint that does not exist, and a hook seeding a pattern nobody carries
-  # any more, both read as fine until someone follows them.
-  run_generator_check scripts/blueprints/blueprint-defects.ts
+  # The seeding lookup is generated from the same annotations, so it goes stale
+  # on the same edit: a hook seeding a pattern nobody carries any more reads as
+  # fine until someone follows it.
   run_generator_check .claude/skills/blueprint/blueprint-context.ts
   # Two spellings for one idea. Gated on a baseline that only goes down, so the
   # existing backlog never blocks a commit and the next divergence does. A git
@@ -89,6 +87,18 @@ if [ -n "$staged_lintable" ]; then
   # refuses only a stale page, because a ratio between defect-born and
   # principle-born rules is not a thing to gate on.
   run_generator_check scripts/standards/rule-provenance.ts
+  set -e
+fi
+
+# The defect page reads the blueprint annotations AND every dantotsu's front
+# matter, so a commit that adds only a dantotsu moves it. Under the source-file
+# condition above that commit could never run its own check, and CI caught it
+# instead: a gate armed everywhere except at the moment its subject changes.
+# The condition here is the union of the generator's two inputs.
+if git diff --cached --name-only | grep -qE '^(apps/|infra/|docs/dantotsus/)'; then
+  echo "[pre-commit] checking the blueprint defect page"
+  set +e
+  run_generator_check scripts/blueprints/blueprint-defects.ts
   set -e
 fi
 
