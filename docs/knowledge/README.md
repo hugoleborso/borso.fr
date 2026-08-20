@@ -87,6 +87,7 @@ Two failure modes to watch for:
 - [`a-generated-label-should-name-the-thing.md`](./a-generated-label-should-name-the-thing.md) — a generated UI label that reuses an internal id names the mechanism; keep the id, add a label.
 - [`driving-previews-with-agent-browser-and-argent.md`](./driving-previews-with-agent-browser-and-argent.md) — which of the two tools answers which question, and the traps in each.
 - [`dynamic-workflow-feature-pipeline.md`](./dynamic-workflow-feature-pipeline.md) — the operator runbook for the `plan → ship` Dynamic Workflow.
+- [`claude-code-built-in-output-styles.md`](./claude-code-built-in-output-styles.md) — the `outputStyle` setting, why it belongs in the committed settings file rather than the local one a hosted session never sees, and how to read the built-in names out of the installed binary when the published page is a release behind.
 ### Local dev / Postgres
 
 - [`local-postgres-without-docker.md`](./local-postgres-without-docker.md) — `scripts/local-postgres.sh` boots a sandbox-private Postgres for any borso app when Docker is unavailable (claude.ai/code sandbox); per-app stable port, Drizzle-friendly, `pnpm run test` wires `DATABASE_URL` automatically.

@@ -272,6 +272,13 @@ scripts/check-non-module-scripts.sh
 echo "[pre-commit] checking no script races a walk against an early-stopping pipe"
 scripts/check-no-racy-pipelines.sh
 
+# Every PreToolUse hook answers the same question — invocation or mention? —
+# and three have answered it wrongly, each after the last was fixed, because
+# nothing carried the lesson across files and nothing ran them. Rung-2
+# eradication of docs/dantotsus/the-hook-that-refused-the-page-explaining-it.md.
+echo "[pre-commit] checking the hooks decide what they promise"
+scripts/check-hook-decisions.sh
+
 # Two lists that have to say the same thing. Both halves read correctly alone
 # and only the pair is wrong, which is why review never caught either of the two
 # that shipped in PR #49. Rung-2 eradication of

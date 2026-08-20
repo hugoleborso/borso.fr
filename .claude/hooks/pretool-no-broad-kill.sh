@@ -28,7 +28,17 @@ if [[ -z "$COMMAND" ]]; then exit 0; fi
 # because a commit message or a documentation entry naming the command is
 # text being written rather than a process being killed: the commit that
 # armed this hook was refused by it for saying the word in prose.
-COMMAND_TO_RUN="$(printf '%s' "$COMMAND" | python3 "$(dirname "$0")/strip-heredocs.py")"
+#
+# Quoted bodies go the same way, and were the half this hook missed. A word
+# inside a string literal cannot be the command word of the shell that quotes
+# it, so an `echo` label, a log line or a search pattern naming the command is
+# a mention however loudly it says the word. On 2026-08-20 this hook refused
+# two calls in one session on that shape alone, including the one that was
+# opening the entry explaining the rule. `strip-quoted-strings.py` was written
+# for the swallowed-push hook and applies here unchanged.
+COMMAND_TO_RUN="$(printf '%s' "$COMMAND" |
+  python3 "$(dirname "$0")/strip-heredocs.py" |
+  python3 "$(dirname "$0")/strip-quoted-strings.py")"
 
 block() {
   echo "[no-broad-kill] $1" >&2

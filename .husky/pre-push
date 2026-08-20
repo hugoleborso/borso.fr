@@ -32,11 +32,21 @@ while read -r _local_ref local_sha _remote_ref remote_sha; do
   esac
 done
 
+# Both bases below are read off the local `origin/main`, and nothing in an
+# ordinary session updates that ref. A hosted container clones once and never
+# fetches again, so it can be tens of commits behind by the time anything is
+# pushed — measured here on 2026-08-20, twenty-five commits, which turned a
+# one-line change to .claude/settings.json into 520 gated files and six full
+# mutation suites. The same push gated 1 file once main was fetched. This hook
+# is about to open a connection to the same remote either way, so the refresh
+# costs one round-trip and buys back the scoping this file exists for.
+git fetch --quiet origin main 2>/dev/null || true
+
 if [ -n "$push_base" ] && git cat-file -e "$push_base" 2>/dev/null; then
   range_label="this push"
 else
   push_base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
-  range_label="the whole branch (new or unfetchable remote ref)"
+  range_label="the whole branch since main (no remote ref for this branch yet)"
 fi
 
 # One push legitimately adds work nobody here has to gate: the one that merges
