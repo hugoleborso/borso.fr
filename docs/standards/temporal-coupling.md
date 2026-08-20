@@ -19,9 +19,9 @@ This is a report, not a gate. The input is the history, so it changes on
 every commit whether or not any source moved, and a freshness check on it
 would fail every commit for a reason nobody could act on.
 
-Read at `be783f1`, from the last 400 commit(s).
+Read at `07851e3`, from the last 400 commit(s).
 
-8 pair(s) are left out because the module graph does not
+5 pair(s) are left out because the module graph does not
 describe one of the two files: deleted, renamed, or in a workspace the graph
 does not model. Nothing can be said about a connection that never existed.
 
@@ -33,8 +33,14 @@ together.
 
 | File | Changes with | Degree | Shared | Their commits |
 | --- | --- | --- | --- | --- |
-| `apps/last-loop-lepin/vitest.config.ts` | `apps/pragma/vitest.config.ts` | 33% | 4 | 8 / 8 |
+| `apps/pragma/site/src/components/atoms/EnergyBar.tsx` | `apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts` | 57% | 4 | 4 / 7 |
+| `apps/last-loop-lepin/vitest.config.ts` | `apps/pragma/vitest.config.ts` | 31% | 4 | 8 / 9 |
 
 ## Coupled, and connected
 
-No pair with an import path between them changes together often.
+Expected, and here for contrast: this is what coupling looks like when the
+graph already admits to it.
+
+| File | Changes with | Degree | Shared | Their commits |
+| --- | --- | --- | --- | --- |
+| `apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx` | `apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts` | 25% | 4 | 13 / 7 |

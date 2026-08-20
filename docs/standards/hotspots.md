@@ -19,7 +19,7 @@ The input is the history, so the page changes on every commit whether or
 not any source moved; a staleness gate would fail every commit for a reason
 nobody could act on. It records the commit it was read at instead.
 
-Read at `be783f1`, from the last 400 commit(s) over 610 tracked source file(s).
+Read at `07851e3`, from the last 400 commit(s) over 628 tracked source file(s).
 
 ## The files
 
@@ -29,29 +29,29 @@ Read at `be783f1`, from the last 400 commit(s) over 610 tracked source file(s).
 | `apps/borsouvertures/scripts/build-openings.ts` | 8 | unknown | follows no recorded pattern; the path does not say what the file is | 16 |
 | `infra/cdk/src/internal/migration-runner/index.ts` | 11 | unknown | the path does not say what the file is | 11 |
 | `infra/cdk/src/internal/oidc.ts` | 5 | unknown | follows no recorded pattern; the path does not say what the file is | 10 |
+| `apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx` | 8 | organism | follows no recorded pattern | 8 |
 | `infra/shared/lib/deploy-roles.ts` | 8 | stack | follows no recorded pattern | 8 |
+| `apps/pragma/site/src/App.tsx` | 7 | entrypoint | follows no recorded pattern | 7 |
 | `infra/cdk/src/internal/env.ts` | 7 | unknown | the path does not say what the file is | 7 |
 | `apps/last-loop-lepin/api/src/auth/auth.middleware.ts` | 6 | middleware | follows no recorded pattern | 6 |
+| `apps/pragma/api/src/__test/test-seed.service.ts` | 6 | service | follows no recorded pattern | 6 |
+| `apps/pragma/vitest.mutation.config.ts` | 6 | config | follows no recorded pattern | 6 |
+| `infra/cdk/src/internal/shared-ssm.ts` | 3 | unknown | follows no recorded pattern; the path does not say what the file is | 6 |
 | `apps/borsouvertures/vite.config.ts` | 5 | config | follows no recorded pattern | 5 |
 | `apps/last-loop-lepin/api/src/auth/auth.schema.ts` | 5 | schema | follows no recorded pattern | 5 |
 | `apps/last-loop-lepin/site/src/observability/sentry.ts` | 5 | unknown | the path does not say what the file is | 5 |
-| `apps/pragma/site/src/App.tsx` | 5 | entrypoint | follows no recorded pattern | 5 |
-| `apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx` | 5 | organism | follows no recorded pattern | 5 |
-| `apps/pragma/vitest.mutation.config.ts` | 5 | config | follows no recorded pattern | 5 |
+| `apps/last-loop-lepin/site/src/routes/NotFoundPage.tsx` | 5 | route | follows no recorded pattern | 5 |
+| `apps/last-loop-lepin/vitest.mutation.config.ts` | 5 | config | follows no recorded pattern | 5 |
+| `apps/pragma/api/src/auth/auth.service.ts` | 5 | service | follows no recorded pattern | 5 |
+| `apps/pragma/api/src/instruments/instruments.schema.ts` | 5 | schema | follows no recorded pattern | 5 |
 | `infra/cdk/src/internal/cf-host-routing-function.ts` | 5 | unknown | the path does not say what the file is | 5 |
 | `infra/cdk/src/internal/cf-static-site-index-rewrite.ts` | 5 | unknown | the path does not say what the file is | 5 |
 | `infra/cdk/src/internal/tags.ts` | 5 | unknown | the path does not say what the file is | 5 |
+| `apps/borso-fr/site/src/home-page.ts` | 2 | unknown | follows no recorded pattern; the path does not say what the file is | 4 |
 | `apps/borso-fr/vite.config.ts` | 4 | config | follows no recorded pattern | 4 |
 | `apps/borsouvertures/site/src/config/openingsCacheVersion.ts` | 2 | unknown | follows no recorded pattern; the path does not say what the file is | 4 |
-| `apps/borsouvertures/site/src/openings/loadOpenings.ts` | 2 | unknown | follows no recorded pattern; the path does not say what the file is | 4 |
-| `apps/last-loop-lepin/api/src/database/client.ts` | 4 | database | follows no recorded pattern | 4 |
-| `apps/last-loop-lepin/api/src/helpers/geo/haversine.utils.ts` | 4 | utils | follows no recorded pattern | 4 |
-| `apps/last-loop-lepin/api/src/ranking/ranking.types.ts` | 4 | types | follows no recorded pattern | 4 |
-| `apps/last-loop-lepin/site/src/clock-store.ts` | 4 | unknown | the path does not say what the file is | 4 |
-| `apps/last-loop-lepin/site/src/routes/NotFoundPage.tsx` | 4 | route | follows no recorded pattern | 4 |
-| `apps/last-loop-lepin/vite.config.ts` | 4 | config | follows no recorded pattern | 4 |
 
-62 more file(s) score above zero and are not shown.
+66 more file(s) score above zero and are not shown.
 
 ## The next blueprint worth writing
 
@@ -61,13 +61,13 @@ one.
 
 | Layer | Files following nothing | Their commits |
 | --- | --- | --- |
-| unknown | 10 | 32 |
-| config | 9 | 31 |
-| atom | 9 | 18 |
-| schema | 4 | 13 |
+| config | 9 | 35 |
+| unknown | 10 | 34 |
+| atom | 9 | 26 |
+| organism | 7 | 18 |
+| schema | 4 | 16 |
 | types | 4 | 13 |
-| organism | 4 | 11 |
-| route | 3 | 8 |
-| service | 2 | 8 |
+| route | 4 | 11 |
+| service | 2 | 11 |
+| entrypoint | 2 | 8 |
 | stack | 1 | 8 |
-| entrypoint | 2 | 6 |
