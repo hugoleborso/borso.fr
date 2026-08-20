@@ -126,11 +126,13 @@ export function useSetlistEntries(setlistId: string, isEnabled = true) {
 }
 
 /**
- * `onMutate` intentionally absent: the caller awaits `mutateAsync(...)`
- * to read the server-issued `setlist.id` before navigating to the
- * editor, so a temp-id optimistic record would block on the entries
- * fetch (404) until the real id arrives. The latency is bounded by the
- * single round-trip; optimistic doesn't improve perceived UX here.
+ * `onMutate` is absent, and that is a decision rather than an omission: a
+ * predicted setlist has no id, and the editor reads its entries by the
+ * setlist's id, so an optimistic row would send the screen fetching the
+ * entries of a setlist the server has never heard of. All three callers
+ * `mutate` without awaiting and let the screen follow
+ * `setlistKeys.bySessionId`, which `onSuccess` fills from the response — one
+ * round trip, and nothing to roll back.
  *
  * A session already carrying a setlist answers 409, and that is a
  * success for the caller: the thing it asked to exist exists. The row is

@@ -4316,7 +4316,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/setlists.queries.ts",
-      "digest": "39cf0a7ce7bb",
+      "digest": "53d58bd90fb2",
       "container": "site",
       "layer": "query",
       "context": "queries",
