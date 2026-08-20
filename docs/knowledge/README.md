@@ -88,10 +88,13 @@ Two failure modes to watch for:
 - [`driving-previews-with-agent-browser-and-argent.md`](./driving-previews-with-agent-browser-and-argent.md) — which of the two tools answers which question, and the traps in each.
 - [`dynamic-workflow-feature-pipeline.md`](./dynamic-workflow-feature-pipeline.md) — the operator runbook for the `plan → ship` Dynamic Workflow.
 - [`claude-code-built-in-output-styles.md`](./claude-code-built-in-output-styles.md) — the `outputStyle` setting, why it belongs in the committed settings file rather than the local one a hosted session never sees, and how to read the built-in names out of the installed binary when the published page is a release behind.
+- [`sleep-is-compressed-in-the-hosted-sandbox.md`](./sleep-is-compressed-in-the-hosted-sandbox.md) — `sleep` returns early whatever duration you ask for, so eight polls of a CI job read as a 40-minute hang when four minutes had passed; `python3 -c "import time; time.sleep(n)"` waits for real, and `date -u` is the check before you diagnose any remote hang.
+- [`what-a-hosted-session-cannot-do-on-github.md`](./what-a-hosted-session-cannot-do-on-github.md) — measured capabilities of a claude.ai/code session: it can merge pull requests and push to a `dependabot/*` branch, it cannot dispatch a workflow by any of three routes, and two API fields (`merged`, and the size of `get_diff`) will mislead you.
 ### Local dev / Postgres
 
 - [`local-postgres-without-docker.md`](./local-postgres-without-docker.md) — `scripts/local-postgres.sh` boots a sandbox-private Postgres for any borso app when Docker is unavailable (claude.ai/code sandbox); per-app stable port, Drizzle-friendly, `pnpm run test` wires `DATABASE_URL` automatically.
 - [`dsql-clone-from-prod.md`](./dsql-clone-from-prod.md) — cloning a production schema into a preview, and what the clone does not carry.
+- [`the-committed-template-snapshot-is-not-the-deployed-stack.md`](./the-committed-template-snapshot-is-not-the-deployed-stack.md) — the `borso-shared` snapshot is synthesized with stubbed certificates, so comparing it to the live template invents deletions that never happen; what the comparison *does* catch is a stack several merges behind its dispatch-only deploy.
 ### Aurora DSQL
 
 - [`dsql-postgres-compat-gaps.md`](./dsql-postgres-compat-gaps.md) — catalogue of DSQL's divergences from Postgres (no jsonb, no FKs, no multi-DDL tx, no partial indexes, no advisory locks, no `USING <method>` on CREATE INDEX, retries need `IF NOT EXISTS`, only `admin` user, IAM is per-cluster).

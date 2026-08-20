@@ -265,7 +265,11 @@ jobs:
           # every matrix that waits on this output.
           all_apps=$(find apps -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
             | sort | jq -R . | jq -sc .)
-          if jq -e 'index("infra")' <<<"$CHANGES" >/dev/null; then
+          # `infra` and `deps` are the two fan-out keys: constructs are the
+          # contract every app builds on, and the catalog decides what every
+          # app resolves. Either one changing means every app is tested, and
+          # neither names an app, so neither can be matched below.
+          if jq -e 'index("infra") or index("deps")' <<<"$CHANGES" >/dev/null; then
             echo "apps=$all_apps" >> "$GITHUB_OUTPUT"
             exit 0
           fi

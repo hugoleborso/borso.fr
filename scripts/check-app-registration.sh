@@ -41,7 +41,10 @@ done
 # sends a reader looking for a directory that is not there.
 while IFS= read -r declared; do
   [ -z "$declared" ] && continue
-  [ "$declared" = "infra" ] && continue
+  # The fan-out keys name no application by design: `infra` is the constructs
+  # every app builds on, `deps` the manifests that decide what every app
+  # resolves. Both mean "all of them" to the workflows that read this file.
+  case "$declared" in infra | deps) continue ;; esac
   if [ ! -d "apps/$declared" ]; then
     echo "[check-app-registration] $PATH_FILTERS declares '$declared' and apps/$declared does not exist." >&2
     missing=$((missing + 1))
