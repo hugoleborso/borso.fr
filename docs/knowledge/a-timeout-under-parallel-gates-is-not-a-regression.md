@@ -141,3 +141,29 @@ box the cap keeps the old behaviour at both ends.
 **The tell that you are here rather than looking at a real failure:** the test
 that fails is in a *different* gate from the expensive one, its own duration is
 close to the timeout rather than well past it, and it passes alone in seconds.
+
+## A memoised fixture bills the whole synth to whichever test runs first
+
+Sharing the concurrency above cut the CDK stack test from 68.5 s to 60.5 s,
+against a 60 s budget. Still red, and raising the budget would have been the
+third raise. The remaining cost was not contention alone but where it landed.
+
+Both full-stack apps memoise their synthesised templates in a
+`templateByStage` map, so the file synthesises each stage once. The **first
+test to ask** therefore pays for two synths and four esbuild bundles, and the
+eight after it are nearly free. Alone that is 5 s and invisible. Under the
+wave it is the whole file's cost charged to one `it`, against one test's
+timeout.
+
+The fix is to stop billing a warm-up to an assertion. Both files now do the
+synths in `beforeAll`, with an explicit generous timeout of their own, so each
+`it` is timed for what it actually asserts:
+
+    beforeAll(() => {
+      synthAppStack('prod');
+      synthAppStack('preview');
+    }, SYNTH_WARMUP_TIMEOUT_MILLISECONDS);
+
+**The tell:** one test in a file is far slower than its siblings and its
+duration matches the file's total, while the assertions inside it are trivial.
+Look for a lazily-memoised fixture before looking at the test.

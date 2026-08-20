@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { DsqlClusterStack } from '@borso/infra';
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { buildPragmaAppStack } from '../lib/stack.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -16,6 +16,8 @@ const FAKE_ASSETS_DIR = path.join(WORKSPACE_ROOT, 'site');
 const FAKE_API_ENTRY = path.join(WORKSPACE_ROOT, 'api', 'src', 'main.ts');
 const FAKE_MIGRATIONS_DIR = path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations');
 const PREVIEW_PR_NUMBER = 1;
+
+const SYNTH_WARMUP_TIMEOUT_MILLISECONDS = 300_000;
 
 const templateByStage = new Map<string, Template>();
 
@@ -73,6 +75,11 @@ function readSchemaCloneConfig(template: Template): unknown {
 }
 
 describe('pragma preview schema cloning', () => {
+  beforeAll(() => {
+    synthAppStack('prod');
+    synthAppStack('preview');
+  }, SYNTH_WARMUP_TIMEOUT_MILLISECONDS);
+
   it('never clones on prod, where source and target would be the same schema', () => {
     expect(readSchemaCloneConfig(synthAppStack('prod'))).toBeUndefined();
   });
