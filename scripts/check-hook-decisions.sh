@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# The PreToolUse hooks decide, and until now nothing checked what they decided.
+#
+# Every one of them answers the same question — is this an invocation or a
+# mention? — and every one of them has answered it wrongly at least once. The
+# pull-request-body hook refused the commit that armed it, for quoting the
+# markup it forbids. The broad-kill hook refused three calls on 2026-08-20 for
+# naming the command in an `echo` label, in a log line, and in the path of the
+# entry that explains the rule. Both were fixed by dropping the text that is
+# being written before matching, and the second bug shipped anyway because
+# nothing carried the first one's lesson from one file to the next.
+#
+# So the decisions are a table now. Each row is a command and the verdict the
+# hook owes it, and the two halves of every hook's contract are exercised: a
+# command it must refuse, and the mention of that command it must let through.
+#
+# See docs/dantotsus/the-hook-that-refused-the-page-explaining-it.md.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+HOOK_DIR=.claude/hooks
+
+failed=0
+checked=0
+
+# One case per line: <hook script>|<allow|block>|<tool input JSON field>|<value>
+#
+# `command` cases go to the Bash hooks, `body` cases to the pull-request-body
+# hook, because the two read different fields of the tool input.
+run_case() {
+  hook="$1"
+  expected="$2"
+  field="$3"
+  value="$4"
+
+  payload="$(jq -n --arg field "$field" --arg value "$value" \
+    '{tool_input: {($field): $value}}')"
+
+  set +e
+  message="$(printf '%s' "$payload" | "$HOOK_DIR/$hook" 2>&1 >/dev/null)"
+  status=$?
+  set -e
+
+  case "$expected" in
+    block) [ "$status" -eq 2 ] && verdict=ok || verdict=wrong ;;
+    allow) [ "$status" -eq 0 ] && verdict=ok || verdict=wrong ;;
+    *)
+      echo "[check-hook-decisions] unknown expectation '$expected'" >&2
+      exit 1
+      ;;
+  esac
+
+  checked=$((checked + 1))
+  if [ "$verdict" = wrong ]; then
+    echo "[check-hook-decisions] $hook should $expected, exited $status:" >&2
+    echo "    $value" >&2
+    [ -n "$message" ] && printf '    %s\n' "$message" | head -3 >&2
+    failed=1
+  fi
+}
+
+# --- pretool-no-broad-kill.sh ---------------------------------------------
+#
+# Refuses a pattern-based kill. Must not refuse a command that merely names one.
+
+run_case pretool-no-broad-kill.sh block command \
+  'pkill -f "stryker run"'
+run_case pretool-no-broad-kill.sh block command \
+  'killall node'
+run_case pretool-no-broad-kill.sh block command \
+  'pnpm dev & sleep 2; pkill -f vite'
+run_case pretool-no-broad-kill.sh block command \
+  'pgrep -f vitest | xargs kill -9'
+
+run_case pretool-no-broad-kill.sh allow command \
+  'cat docs/dantotsus/broad-pkill-killed-another-agents-measurement.md'
+run_case pretool-no-broad-kill.sh allow command \
+  'scripts/kaizen.sh "the no-broad-kill hook refused a call for quoting pkill"'
+run_case pretool-no-broad-kill.sh allow command \
+  'echo "=== pkill fixtures ==="; ls scripts/'
+run_case pretool-no-broad-kill.sh allow command \
+  'for p in $(pgrep -f stryker); do kill "$p"; done'
+run_case pretool-no-broad-kill.sh allow command \
+  'git commit -F - <<MSG
+docs: explain why pkill is refused
+
+killall has the same blast radius.
+MSG'
+
+# --- pretool-github-pr-body.sh --------------------------------------------
+#
+# Refuses body markup the GitHub MCP server strips on the way in. Must not
+# refuse a body that quotes that markup in a code span while explaining it.
+
+run_case pretool-github-pr-body.sh block body \
+  'Before and after:
+
+![screenshot](https://example.com/shot.png)'
+run_case pretool-github-pr-body.sh block body \
+  '<details><summary>Evidence</summary>
+
+the numbers
+</details>'
+
+run_case pretool-github-pr-body.sh allow body \
+  'The server removes `<details>` and wraps `![alt](….png)` in backticks.'
+run_case pretool-github-pr-body.sh allow body \
+  '### Evidence
+
+See the PR'"'"'s Files changed tab, which renders committed screenshots inline.'
+
+if [ "$failed" -ne 0 ]; then
+  echo "[check-hook-decisions] a hook decided against its own contract. A hook that refuses a mention is a hook the next agent works around." >&2
+  exit 1
+fi
+
+echo "[check-hook-decisions] $checked hook decision(s) match the contract"

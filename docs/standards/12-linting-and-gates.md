@@ -274,6 +274,16 @@ review.
   pipe first and the producer's write error fails the script, and whether that
   happens is timing — the instance it was written for passed five consecutive
   local runs and failed on the first CI run of the same commit.
+- `script:scripts/check-hook-decisions.sh` fails a `PreToolUse` hook that decides
+  against its own contract, feeding each one a command it must refuse and a
+  mention of that command it must let through. Every one of these hooks answers
+  the same question — invocation or mention? — and three have answered it
+  wrongly, each after the last was fixed, because the hooks were part of the
+  untested shell surface described in
+  [`the-shell-gates-are-only-ever-run-where-they-pass`](../knowledge/the-shell-gates-are-only-ever-run-where-they-pass.md).
+  They are the half of that surface a table can reach: a hook reads a command
+  off stdin and answers with an exit code, so its inputs are strings rather
+  than a repository.
 - `script:scripts/check-frontend-env-vars.sh` fails a site reading a `VITE_*`
   variable no workflow sets, which Vite substitutes as `undefined` at build
   time while nothing else complains.
