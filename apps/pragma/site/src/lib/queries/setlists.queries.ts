@@ -216,16 +216,22 @@ export function useAppendSetlistEntry() {
   });
 }
 
+/**
+ * What one setlist row may change about itself, derived from the endpoint that
+ * stores it. The components that carry a patch from a field up to the mutation
+ * pass this rather than a bag of unknowns, so a key the API does not accept is
+ * a type error where the field is written rather than a 400 in the browser.
+ */
+export type SetlistEntryPatch = Parameters<
+  (typeof api.api.setlists)[':id']['entries'][':entryId']['$put']
+>[0]['json'];
+
 // @FollowsBlueprint query-optimistic-mutation
 export function useUpdateSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ENTRY_MUTATION_KEY,
-    mutationFn: async (
-      variables: { setlistId: string; entryId: string } & Parameters<
-        (typeof api.api.setlists)[':id']['entries'][':entryId']['$put']
-      >[0]['json'],
-    ) => {
+    mutationFn: async (variables: { setlistId: string; entryId: string } & SetlistEntryPatch) => {
       const { setlistId, entryId, ...rest } = variables;
       const response = await api.api.setlists[':id'].entries[':entryId'].$put({
         param: { id: setlistId, entryId },

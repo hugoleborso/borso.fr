@@ -2685,7 +2685,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/SetlistEntryDetailsFields.tsx",
-      "digest": "858a8cad48e9",
+      "digest": "68510c1b3aa5",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2697,7 +2697,8 @@
         "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx",
         "apps/pragma/site/src/components/atoms/class-name.utils.ts",
         "apps/pragma/site/src/components/atoms/input.variants.ts",
-        "apps/pragma/site/src/components/molecules/setlist-entry-form.hook.ts"
+        "apps/pragma/site/src/components/molecules/setlist-entry-form.hook.ts",
+        "apps/pragma/site/src/lib/queries/setlists.queries.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -3363,7 +3364,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEditor.tsx",
-      "digest": "31c6727174c9",
+      "digest": "ae9a67672488",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3399,7 +3400,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx",
-      "digest": "d1be3620f664",
+      "digest": "a4669bf3defc",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3415,14 +3416,15 @@
         "apps/pragma/site/src/components/organisms/TransitionStrip.tsx",
         "apps/pragma/site/src/components/organisms/orphan-member-warn.adapter.ts",
         "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
-        "apps/pragma/site/src/components/organisms/transition-view.core.ts"
+        "apps/pragma/site/src/components/organisms/transition-view.core.ts",
+        "apps/pragma/site/src/lib/queries/setlists.queries.ts"
       ],
       "blueprints": [],
       "followsBlueprints": []
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx",
-      "digest": "f3814c35a86d",
+      "digest": "6f9f542ea4a8",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3442,7 +3444,8 @@
         "apps/pragma/site/src/components/molecules/lineup-editor.core.ts",
         "apps/pragma/site/src/components/molecules/setlist-entry-form.hook.ts",
         "apps/pragma/site/src/components/organisms/mastery-color.core.ts",
-        "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts"
+        "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts",
+        "apps/pragma/site/src/lib/queries/setlists.queries.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -4313,7 +4316,7 @@
     },
     {
       "path": "apps/pragma/site/src/lib/queries/setlists.queries.ts",
-      "digest": "354335d629de",
+      "digest": "ba76893cd755",
       "container": "site",
       "layer": "query",
       "context": "queries",

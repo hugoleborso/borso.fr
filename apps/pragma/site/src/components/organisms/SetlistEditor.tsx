@@ -40,6 +40,7 @@ import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
 import {
+  type SetlistEntryPatch,
   useAppendSetlistEntry,
   useDeleteSetlistEntry,
   useReorderSetlist,
@@ -204,7 +205,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     );
   };
 
-  const updateSetlistEntry = (entryId: string, patch: Record<string, unknown>): void => {
+  const updateSetlistEntry = (entryId: string, patch: SetlistEntryPatch): void => {
     updateEntry.mutate(
       { setlistId, entryId, ...patch },
       { onError: failWith('setlist.failure.update') },

@@ -73,6 +73,7 @@ import {
   selectEnergyAppearance,
 } from './setlist-entry-energy.core';
 import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
+import type { SetlistEntryPatch } from '../../lib/queries/setlists.queries';
 
 const POSITION_DIGITS = 2;
 const ICON_BUTTON_CLASS =
@@ -105,7 +106,7 @@ export interface SetlistEntryRowProps {
   readonly instruments: readonly LineupEditorInstrument[];
   readonly prominentMemberInstrument: ProminentMemberInstrument | null;
   readonly transitionBefore: ReactNode;
-  readonly onUpdate: (entryId: string, patch: Record<string, unknown>) => void;
+  readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
   readonly onRemove: (entryId: string) => void;
 }
 

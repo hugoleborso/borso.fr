@@ -43,6 +43,7 @@ import {
 } from './setlist-editor.utils';
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
+import type { SetlistEntryPatch } from '../../lib/queries/setlists.queries';
 
 const SONG_ID_FALLBACK_LENGTH = 8;
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
@@ -73,7 +74,7 @@ export interface SetlistEntriesListProps {
   readonly instrumentsById: Readonly<Record<string, { name: string }>>;
   readonly knownMemberIds: ReadonlySet<string>;
   readonly onReorder: (orderedEntryIds: readonly string[]) => void;
-  readonly onUpdate: (entryId: string, patch: Record<string, unknown>) => void;
+  readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
   readonly onRemove: (entryId: string) => void;
   readonly onOpenTransition: (leftSongId: string, rightSongId: string) => void;
 }
