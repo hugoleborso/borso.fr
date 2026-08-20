@@ -22,9 +22,10 @@ before publishing to GitHub Pages, and `architecture.yml` regenerates them into
 a workflow artifact on every pull request. Nothing publishes bytes from a
 commit, so a stale page has nowhere to exist.
 
-So there are three places a built copy exists without running anything: the
-[published site](https://hugoleborso.github.io/borso.fr/), the
-`architecture-maps` artifact on any pull request's workflow run, and whatever
+So there are four places a built copy exists without running anything: the
+[published site](https://hugoleborso.github.io/borso.fr/) for `main`, the
+pull request's own copy at `architecture-pr-<n>.preview.borso.fr`, the
+`architecture-maps` artifact on that pull request's workflow run, and whatever
 the last local run left behind.
 
 **To put a new application on the map, read [`install.md`](./install.md)** —
@@ -241,11 +242,22 @@ of its own now that the standards have theirs.
 ## On a pull request
 
 [`.github/workflows/architecture.yml`](../../.github/workflows/architecture.yml)
-builds the model twice, for the merge base and for the head, and posts one
-comment saying what moved: routes added or removed, routes reaching a table or
-an external system they did not reach before, routes that lost their last
-caller, files that changed layer, and new external systems. The comment is
-rewritten in place on each push rather than added to.
+builds the model twice, for the merge base and for the head, and reports what
+moved: routes added or removed, routes reaching a table or an external system
+they did not reach before, routes that lost their last caller, files that
+changed layer, and new external systems.
+
+That report goes to the job summary. The pull request comment carries the
+counts only — one line per application that moved, each linking its map — and a
+link to the maps for the branch. It used to carry the whole report, which ran
+to several screens on a phone and ended with the link, so the reader who wanted
+the map had the furthest to scroll. The comment is rewritten in place on each
+push rather than added to, and only when the counts change.
+
+Each diff run leaves its counts in `docs/architecture/<app>-diff.json`, which
+is how the index and the comment learn what every application found: the
+workflow runs the generator once per application, so no single invocation knows
+what the others did and the output folder is where the runs meet.
 
 The target branch does not need to carry the generator. The script runs at the
 head revision against a worktree of the base through `--app-root`, so a branch
@@ -297,8 +309,33 @@ artifact. It needs one repository setting no workflow can make or read: Settings
 → Pages → Build and deployment → Source set to **GitHub Actions**. Until that is
 set the workflow fails on its deploy step and nothing else changes.
 
-On a pull request the page is uploaded as a workflow artifact, which is the
-only place that branch's pages exist.
+On a pull request the maps go to the previews CDN, at
+`https://architecture-pr-<n>.preview.borso.fr`, and the comment links them. The
+index opens on what the branch moved — one chip per application that changed,
+carrying its added, edited and removed file counts — and lists every map under
+it. An application that did not move is not in the first list at all, because a
+page answering *what moved* should not answer it with a roster the reader has
+to check one by one. That
+host needed nothing built: the routing function in front of the previews bucket
+reads any `<name>-pr-<n>` host and serves `/<name>/pr-<n>/`, and the certificate
+is the wildcard the previews already use. The workflow assumes
+`PreviewDeployRole`, whose trust policy already names `pull_request`.
+
+Closing the pull request deletes them. The bucket would expire its objects after
+sixty days on its own, which is a long time to go on serving a merged branch's
+architecture to anyone who kept the link, so the `closed` run removes the prefix
+and invalidates it at the edge.
+
+The same pages still upload as a workflow artifact. That is what a reader who
+wants the whole folder offline downloads, and it is the fallback whenever AWS is
+unreachable: both publish steps may fail without failing the report, and the
+comment then links the artifact and says the published copy is missing.
+
+Each page is a document rather than a fragment — doctype, `charset`, `viewport`
+— which is what makes it readable on a phone and what stops it depending on the
+host to declare its encoding. GitHub Pages sends `charset=utf-8`; `aws s3 sync`
+sets a bare `text/html`, and the same bytes rendered as mojibake there until the
+generator declared it.
 
 To reproduce a comparison locally:
 
