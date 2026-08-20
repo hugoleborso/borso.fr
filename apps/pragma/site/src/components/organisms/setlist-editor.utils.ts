@@ -180,9 +180,7 @@ export function instrumentNamesFor(
  *
  * A setlist is one column, so sideways travel moves the card away from every
  * drop target it could reach while the finger is still on it — on a phone that
- * reads as the card escaping the list. Written here rather than taken from
- * `@dnd-kit/modifiers`, because the whole of `restrictToVerticalAxis` is this
- * one line and a dependency is a thing to keep.
+ * reads as the card escaping the list.
  */
 export function restrictToVerticalAxis({ transform }: DragModifierArgument): DragTransform {
   return { ...transform, x: 0 };

@@ -14,7 +14,7 @@ at twenty files.
 `convention-baseline.json` holds the current count per question and the
 gate fails only on an increase. Fixing one and running `--accept` lowers it.
 
-Read from 612 source file(s).
+Read from 613 source file(s).
 
 ## How is the name of a atom.ts file written?
 
@@ -58,7 +58,7 @@ Read from 612 source file(s).
 
 | Spelling | Files | For example |
 | --- | --- | --- |
-| kebab | 11 | `apps/last-loop-lepin/site/src/components/molecules/correction-banner.utils.ts`, `apps/last-loop-lepin/site/src/components/molecules/countdown.utils.ts`, `apps/last-loop-lepin/site/src/components/molecules/leaderboard-chip.utils.ts` |
+| kebab | 12 | `apps/last-loop-lepin/site/src/components/molecules/correction-banner.utils.ts`, `apps/last-loop-lepin/site/src/components/molecules/countdown.utils.ts`, `apps/last-loop-lepin/site/src/components/molecules/leaderboard-chip.utils.ts` |
 | camel | 1 | `apps/borsouvertures/site/src/components/molecules/openingPanel.types.ts` |
 
 ## How is the name of a organism.ts file written?
@@ -132,8 +132,8 @@ than 3 files is either a convention nobody wrote down or an accident.
 
 | Suffix | Files |
 | --- | --- |
+| `.core.ts` | 86 |
 | `.utils.ts` | 86 |
-| `.core.ts` | 85 |
 | `.controller.ts` | 19 |
 | `.service.ts` | 18 |
 | `.schema.ts` | 16 |

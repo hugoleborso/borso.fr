@@ -16,7 +16,8 @@ it).
 
 | Assertion | How | Result |
 |---|---|---|
-| A song card is shorter at 375 px | `getBoundingClientRect().height` on every card, on the pre-change code in a worktree and on the branch | 231 px → **137 px**, or 161 px when the member avatars wrap |
+| A song card is shorter at 375 px | `getBoundingClientRect().height` on every card, on the pre-change code in a worktree and on the branch | 231 px → **137 px**, every card |
+| Only the title wraps | the meta line's height on every card, at 320, 375 and 402 px | 22 px — one line — everywhere, and no horizontal overflow at any of the three |
 | No blank space inside the card | screenshot, 375 px | see `02-phone-375-after.png` |
 | Every level is labelled inside its segment | screenshot, 375 px | the segments read 1 to 10 |
 | One `⋯` carries the row's actions | reading the row's buttons from the DOM with the panel open | `Drag to reorder`, `Actions`, `Lineup`, `Remove` |
@@ -36,7 +37,8 @@ fix. Both wrote a song's energy silently, with no undo.
 
 - `01-phone-375-before.png` — the reported defect: a 231 px card whose right
   half is an empty column under three stacked buttons.
-- `02-phone-375-after.png` — 137 px, with the numbered ten-segment bar.
+- `02-phone-375-after.png` — 137 px, with the numbered ten-segment bar and the
+  overlapping lineup.
 - `03-desktop-1280-after.png` — the same cards at 1280 px.
 - `04-phone-375-actions-open.png` — what `⋯` opens: key, capo, notes, then
   Lineup and Remove.

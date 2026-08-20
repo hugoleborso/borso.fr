@@ -2,10 +2,9 @@
  * How a setlist row draws its energy control before anyone has set an energy.
  *
  * The bar always fills up to some level, so the row cannot show "no energy" by
- * leaving it blank: a filled bar beside a number reading an em dash is two
- * controls saying opposite things. Both read the value the control would
- * write, and an unset row says so by drawing its filled segments in the muted
- * palette rather than the accent one.
+ * leaving it blank. It fills to the value the control would write, and an
+ * unset row says so by drawing its filled segments in the muted palette rather
+ * than the accent one.
  * @Feature setlists
  */
 

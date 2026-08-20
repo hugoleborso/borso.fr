@@ -3,9 +3,10 @@
  *
  * A tap lands on the segment under the finger and a slide sweeps through the
  * levels, both through the same pure mapping, so the segment the eye aims at
- * is the level the caller receives. A range input over the same width offers
- * a thumb and no boundary instead — about twelve pixels per point on a phone,
- * with every level's edge half a step from the tick beside it.
+ * is the level the caller receives. A range input over the same width offers a
+ * thumb and no boundary instead, and rounds the position rather than reading
+ * the segment it fell in — which gives the two end levels half the width of
+ * the others and puts every boundary half a step from the tick beside it.
  *
  * Each segment carries its own level, which is what lets the bar be the whole
  * control: the value is the last numeral still filled, so the row needs no

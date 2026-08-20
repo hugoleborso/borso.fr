@@ -13,8 +13,12 @@
  * Everything sits in the same order in the markup and in both layouts, so tab
  * order is reading order.
  *
- * The title wraps rather than being cut off at one line — on stage a half-read
- * title is worth nothing.
+ * The title is the one thing allowed to wrap — on stage a half-read title is
+ * worth nothing. The line under it holds the artist, the key, the mastery and
+ * the band on one line whatever it carries: everything but the artist refuses
+ * to shrink, and the artist truncates into whatever is left, keeping its full
+ * text in a `title`. A wrapping meta line spent a whole line of the card on
+ * four avatars.
  *
  * Each row owns a small `useForm` instance — the parent
  * (`SetlistEditor`) doesn't centralise per-row state. The form is never
@@ -28,9 +32,8 @@
  * While the row is the one being dragged it dims into a placeholder so the
  * operator can read the gap opening between the other cards.
  *
- * Removing a row asks first, and a rule separates it from Lineup and Edit: the
- * write has no undo, and a destructive target one pixel row away from an
- * ordinary one is a slip waiting to happen.
+ * Removing a row asks first, and it is drawn in the danger palette: the write
+ * has no undo, and both it and Lineup are a tap away inside the same panel.
  *
  * The `Lineup` button opens the `<LineupEditor surface='setlist-entry'>`
  * modal; saving the modal calls `onUpdate(entryId, { lineupOverride })`.
@@ -184,21 +187,23 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 [overflow-wrap:anywhere]">
               {props.title}
             </div>
-            <div className="flex items-center gap-2 text-xs text-ink-500 mt-0.5 flex-wrap">
-              <span>{props.artist}</span>
+            <div className="flex items-center gap-1.5 text-xs text-ink-500 mt-0.5 min-w-0">
+              <span className="truncate" title={props.artist}>
+                {props.artist}
+              </span>
               {props.tonalityLabel === null ? null : (
                 <>
-                  <span className="text-ink-300">·</span>
-                  <span className="font-mono text-xs uppercase tracking-wider">
+                  <span className="text-ink-300 shrink-0">·</span>
+                  <span className="font-mono text-xs uppercase tracking-wider shrink-0">
                     {props.tonalityLabel}
                   </span>
                 </>
               )}
               {props.meanMastery === null ? null : (
                 <>
-                  <span className="text-ink-300">·</span>
+                  <span className="text-ink-300 shrink-0">·</span>
                   <span
-                    className="font-mono inline-flex items-center gap-1 text-xs"
+                    className="font-mono inline-flex items-center gap-1 text-xs shrink-0"
                     style={{ color: selectMasteryColor(props.meanMastery) }}
                   >
                     <Icon name="star" size={11} />
@@ -206,7 +211,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                   </span>
                 </>
               )}
-              <span className="text-ink-300">·</span>
+              <span className="text-ink-300 shrink-0">·</span>
               <MemberLineup
                 lineup={props.lineup}
                 members={props.members}

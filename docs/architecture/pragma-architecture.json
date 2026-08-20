@@ -29,7 +29,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 181
+      "fileCount": 182
     },
     {
       "id": "uploads-bucket",
@@ -1997,7 +1997,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/atoms/EnergyBar.tsx",
-      "digest": "ac3ffccdb892",
+      "digest": "6c4094f1cdcb",
       "container": "site",
       "layer": "atom",
       "context": "atoms",
@@ -2493,6 +2493,22 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/molecules/member-lineup.core.ts",
+      "digest": "cda0bb3eb714",
+      "container": "site",
+      "layer": "molecule",
+      "context": "molecules",
+      "feature": "members",
+      "exports": [
+        "buildLineupChips"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "core-projection"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/molecules/MemberChip.tsx",
       "digest": "04f66df1fbb8",
       "container": "site",
@@ -2533,7 +2549,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/molecules/MemberLineup.tsx",
-      "digest": "422a25e7291e",
+      "digest": "ed6b3dbae56e",
       "container": "site",
       "layer": "molecule",
       "context": "molecules",
@@ -2542,7 +2558,9 @@
         "MemberLineup"
       ],
       "imports": [
-        "apps/pragma/site/src/components/molecules/MemberChip.tsx"
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/molecules/MemberChip.tsx",
+        "apps/pragma/site/src/components/molecules/member-lineup.core.ts"
       ],
       "blueprints": [],
       "followsBlueprints": [
@@ -3299,7 +3317,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts",
-      "digest": "f3a7f4b0a7e7",
+      "digest": "5d2bd390ddc7",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3327,7 +3345,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts",
-      "digest": "b105cd2449ce",
+      "digest": "d7a9966313d1",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3425,7 +3443,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx",
-      "digest": "79c8efea1ce9",
+      "digest": "a68a67036091",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -6471,7 +6489,7 @@
     {
       "id": "core-projection",
       "file": "apps/pragma/api/src/sessions/offline-manifest.core.ts",
-      "followerCount": 11
+      "followerCount": 12
     },
     {
       "id": "core-view-intent",
