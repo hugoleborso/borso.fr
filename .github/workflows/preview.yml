@@ -48,8 +48,8 @@ jobs:
     outputs:
       apps: ${{ steps.compute.outputs.apps }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: .github/path-filters.yml
@@ -101,7 +101,7 @@ jobs:
       # Stage value also drives Sentry environment tagging.
       VITE_STAGE: preview
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Digest of everything this app's preview is built from. Tree hashes
       # are exact: `HEAD:apps/<app>` changes if and only if some byte under
       # that directory changed. The list is the deploy's input surface —
@@ -124,7 +124,7 @@ jobs:
           digest=$(printf '%s\n%s\n' "$trees" "$files" | sha256sum | cut -d' ' -f1)
           echo "[fingerprint] ${APP} @ ${digest}"
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
@@ -135,7 +135,7 @@ jobs:
       # inputs are live. Any error here yields an empty digest, which means
       # deploy — the check can only ever remove work, never skip wrongly.
       - id: deployed
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const environment = `preview-${{ matrix.app }}-pr-${{ github.event.pull_request.number }}`;
@@ -199,9 +199,9 @@ jobs:
               ;;
           esac
       - if: steps.plan.outputs.skip != 'true'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
       - if: steps.plan.outputs.skip != 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -215,7 +215,7 @@ jobs:
       # what the next run reads to decide whether it has anything to do.
       - id: deployment
         if: steps.plan.outputs.skip != 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const { data } = await github.rest.repos.createDeployment({
@@ -331,7 +331,7 @@ jobs:
             note="Updated from <code>${HEAD_SHA::7}</code>"
           fi
           echo "note=$note · <a href=\"$RUN_URL\">build log</a>" >> "$GITHUB_OUTPUT"
-      - uses: marocchino/sticky-pull-request-comment@v2
+      - uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: preview-${{ matrix.app }}
           message: |
@@ -344,7 +344,7 @@ jobs:
       # the deploy step succeeded or failed so the PR panel never gets
       # stuck in "in_progress".
       - if: always() && steps.deployment.outputs.id
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const state = '${{ job.status }}' === 'success' ? 'success' : 'failure';
@@ -367,15 +367,15 @@ jobs:
       AWS_REGION: ${{ vars.AWS_REGION }}
       CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @borso/infra build
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
@@ -421,7 +421,7 @@ jobs:
       # active status mean GitHub already hides it once the env is unused;
       # we set state=inactive explicitly so the PR timeline reads cleanly.
       - if: always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           APPS_JSON: ${{ steps.apps.outputs.list }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
