@@ -45,3 +45,7 @@ reports
 # The model beside each page is committed: it is small, it diffs as prose, and
 # every byte of it comes from the working tree, so a gate on it means something.
 docs/architecture/*.html
+# The counts each diff run leaves for the index and the pull request comment to
+# read. They describe a branch, like the diff page beside them, so there is no
+# revision they would be true at.
+docs/architecture/*-diff.json

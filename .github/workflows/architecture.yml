@@ -86,12 +86,7 @@ jobs:
               --app "$app" \
               --app-root "../architecture-base/apps/$app" \
               --out /tmp/architecture-base
-            # The marker, not the heading, is what the comment step turns into
-            # a link. The report under it carries headings of its own, and a
-            # regular expression over `## ` cannot tell an application's name
-            # from a section's.
-            printf '## %s\n\n<!--architecture-app:%s-->\n\n' "$app" "$app" \
-              >> /tmp/architecture-diff.md
+            printf '## %s\n\n' "$app" >> /tmp/architecture-diff.md
             pnpm exec tsx scripts/architecture/architecture-diff.ts \
               "/tmp/architecture-base/$app-architecture.json" \
               "docs/architecture/$app-architecture.json" >> /tmp/architecture-diff.md
@@ -156,7 +151,7 @@ jobs:
           retention-days: 30
 
       # One comment per pull request, rewritten in place, and only when the
-      # report changed. A new comment per push would bury the conversation, and
+      # counts changed. A new comment per push would bury the conversation, and
       # an identical rewrite still notifies everyone watching.
       - name: Comment the architecture diff
         uses: actions/github-script@v7
@@ -167,26 +162,50 @@ jobs:
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const site = `https://architecture-pr-${context.issue.number}.preview.borso.fr`;
             const isPublished = '${{ steps.publish.outcome }}' === 'success';
-            const report = fs.readFileSync('/tmp/architecture-diff.md', 'utf8').trim();
-            // Each application's own section carries the link to its map, so
-            // the map is one tap from the lines that say what moved rather
-            // than from a line at the bottom of a long comment. The marker the
-            // step above wrote is what names the application; an application
-            // the target branch does not have yet has no marker and no map.
-            const appMarker = /^<!--architecture-app:(\S+)-->$/gm;
-            const withMapLinks = isPublished
-              ? report.replace(
-                  appMarker,
-                  (_marker, app) => `[Open the ${app} map ↗](${site}/${app}-diff.html)`,
-                )
-              : report.replace(appMarker, '').replace(/\n{3,}/g, '\n\n');
-            // The link comes first because that is the whole point of it: on a
-            // phone the report is several screens long, and a reader who wants
-            // the map should not have to reach the end to find it.
+            // The counts only. The full report — routes added, files moved,
+            // externals reached — is in the job summary and on the maps
+            // themselves, and repeating it here made a comment several screens
+            // long on a phone that nobody scrolled to the end of. What a
+            // reader wants from the conversation is which applications moved
+            // and how much, and a way in.
+            const summaries = fs
+              .readdirSync('docs/architecture')
+              .filter((name) => name.endsWith('-diff.json'))
+              .map((name) => ({
+                app: name.slice(0, -'-diff.json'.length),
+                counts: JSON.parse(fs.readFileSync(`docs/architecture/${name}`, 'utf8')).counts,
+              }))
+              .filter((entry) => entry.counts.some((count) => count.value > 0))
+              .sort((left, right) => left.app.localeCompare(right.app));
+            // A rename carries no sign: the map pairs it rather than reporting
+            // an addition beside a deletion, so it is not a change to the
+            // architecture. The diff page still lists every one.
+            const signs = [['added', '+'], ['edited', '~'], ['removed', '−']];
+            const deltasOf = (counts) =>
+              signs
+                .map(([label, sign]) => [sign, counts.find((c) => c.label === label)?.value ?? 0])
+                .filter(([, value]) => value > 0)
+                .map(([sign, value]) => `${sign}${value}`)
+                .join(' ');
+            const lines = summaries.map((entry) =>
+              isPublished
+                ? `- **[${entry.app}](${site}/${entry.app}-diff.html)** \`${deltasOf(entry.counts)}\``
+                : `- **${entry.app}** \`${deltasOf(entry.counts)}\``,
+            );
             const opening = isPublished
-              ? `**[Open the maps for this branch ↗](${site}/)** — no download, opens on a phone. Each map colours what this branch added, changed, moved or removed.`
-              : `[Browse the full maps](${runUrl}#artifacts) — download the \`architecture-maps\` artifact and open \`index.html\`. The published copy could not be written this run.`;
-            const body = [marker, opening, '', withMapLinks].join('\n');
+              ? `**[Architecture maps for this branch ↗](${site}/)**`
+              : `**[Architecture maps](${runUrl}#artifacts)** — the published copy could not be written this run, so this is the \`architecture-maps\` artifact.`;
+            const verdict =
+              lines.length === 0
+                ? ['', 'No application’s architecture moved on this branch.']
+                : ['', ...lines];
+            const body = [
+              marker,
+              opening,
+              ...verdict,
+              '',
+              `<sub>Files added, edited and removed per application. The full report is in the <a href="${runUrl}">job summary</a>.</sub>`,
+            ].join('\n');
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
             const comments = await github.paginate(github.rest.issues.listComments, {

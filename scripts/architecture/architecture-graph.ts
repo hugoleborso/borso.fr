@@ -37,7 +37,12 @@ import {
   ROUTE_ICON,
   SIZE_ICON,
 } from './architecture-icons';
-import { type ArchitectureModel, architectureModelSchema } from './architecture-model-json';
+import {
+  type ArchitectureModel,
+  architectureModelSchema,
+  diffSummarySchema,
+  type DiffSummary,
+} from './architecture-model-json';
 import {
   ARCHITECTURE_MANIFESTS,
   type ArchitectureManifest,
@@ -1543,6 +1548,24 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
     diffLayouts.set(level.id, await layoutLevel(level));
   }
 
+  const report = buildDiffReport({
+    base,
+    baseModel,
+    headModel,
+    code,
+    renames,
+    diffRef: options.diffRef,
+  });
+
+  // The counts, beside the page, because the index is written by a different
+  // invocation than the one that built this diff: the workflow runs the
+  // generator once per application, so nothing in a single run knows what the
+  // others found. A file in the output folder is what they share.
+  writeFileSync(
+    join(options.outputDirectory, `${options.manifest.application}-diff.json`),
+    `${JSON.stringify({ counts: report.counts }, null, 2)}\n`,
+  );
+
   writeFileSync(
     join(options.outputDirectory, `${options.manifest.application}-diff.html`),
     renderArchitecturePage({
@@ -1562,14 +1585,7 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
       coverage: options.coverage,
       unmarkedCount: options.unmarkedCount,
       statuses,
-      report: buildDiffReport({
-        base,
-        baseModel,
-        headModel,
-        code,
-        renames,
-        diffRef: options.diffRef,
-      }),
+      report,
     }),
   );
 }
@@ -1883,6 +1899,26 @@ async function buildApplication(options: BuildOptions): Promise<void> {
   );
 }
 
+/**
+ * What each application's diff run found, read back out of the output folder.
+ *
+ * The workflow runs this generator once per application to build the diff
+ * maps, so no single invocation knows what the others found and the index has
+ * to describe all of them. Each diff run leaves its counts in
+ * `<app>-diff.json`; this reads whichever ones are there.
+ */
+function readDiffSummaries(outputDirectory: string): ReadonlyMap<string, DiffSummary> {
+  const summaries = new Map<string, DiffSummary>();
+  for (const manifest of ARCHITECTURE_MANIFESTS) {
+    const summaryPath = join(outputDirectory, `${manifest.application}-diff.json`);
+    if (!existsSync(summaryPath)) continue;
+    const parsed: unknown = JSON.parse(readFileSync(summaryPath, 'utf8'));
+    const summary = diffSummarySchema.safeParse(parsed);
+    if (summary.success) summaries.set(manifest.application, summary.data);
+  }
+  return summaries;
+}
+
 async function main(): Promise<void> {
   // `--list` prints the applications a caller can loop over, so a workflow does
   // not carry a second copy of the register that would drift from this one.
@@ -1953,16 +1989,12 @@ async function main(): Promise<void> {
 
   // The index is a page like any other, so it is generated and not committed.
   if (isCheck) return;
+
   const indexPath = join(outputDirectory, 'index.html');
-  // Read from the folder rather than from this run's arguments: the diff build
-  // runs the generator once per application, so any single invocation knows
-  // about one application's diff and the index has to describe all of them.
-  const applicationsWithDiff = new Set(
-    ARCHITECTURE_MANIFESTS.filter((manifest) =>
-      existsSync(join(outputDirectory, `${manifest.application}-diff.html`)),
-    ).map((manifest) => manifest.application),
+  writeFileSync(
+    indexPath,
+    renderArchitectureIndex(ARCHITECTURE_MANIFESTS, readDiffSummaries(outputDirectory)),
   );
-  writeFileSync(indexPath, renderArchitectureIndex(ARCHITECTURE_MANIFESTS, applicationsWithDiff));
   console.log(
     `Wrote ${relative(REPOSITORY_ROOT, outputDirectory)}/ for ${selected.length} app(s).`,
   );
