@@ -70,6 +70,13 @@ run_generator_check() {
   fi
 }
 
+run_generator() {
+  if ! pnpm exec tsx "$1"; then
+    generator_failures="${generator_failures}  pnpm exec tsx $1
+"
+  fi
+}
+
 # The repository's own tooling, when a commit touches it. `scripts/`,
 # `.claude/skills/` and `eslint-rules/` belong to no workspace, so
 # `pnpm -r typecheck` never reached them and `tsx` strips types without reading
@@ -83,15 +90,23 @@ if git diff --cached --name-only |
   pnpm run typecheck
 fi
 
+# What runs below is what a commit can be WRONG about, not what a commit makes
+# stale. None of these generated files is committed any more, so no run can
+# find one out of date; each check left refuses something a person did: an
+# annotation that names no blueprint, a dantotsu that names none, a question
+# the tree had already answered being answered a second way.
+#
+# `blueprint-heatmap.ts` and `rule-provenance.ts` used to run here and no
+# longer do. Neither ever refused anything but its own staleness, and the
+# heatmap reads every source file in the repository to do it. They are
+# regenerated at SessionStart and published by `pages.yml`.
 if [ -n "$staged_lintable" ]; then
   echo "[pre-commit] checking blueprint annotations"
   set +e
   run_generator_check .claude/skills/blueprint/blueprint-indexing.ts
-  run_generator_check .claude/skills/blueprint/blueprint-heatmap.ts
-  # The seeding lookup is generated from the same annotations, so it goes stale
-  # on the same edit: a hook seeding a pattern nobody carries any more reads as
-  # fine until someone follows it.
-  run_generator_check .claude/skills/blueprint/blueprint-context.ts
+  # The lookup the pre-write hook reads. Not a gate — it is regenerated so a
+  # blueprint added this session seeds the next write in it.
+  run_generator .claude/skills/blueprint/blueprint-context.ts
   # Two spellings for one idea. Gated on a baseline that only goes down, so the
   # existing backlog never blocks a commit and the next divergence does. A git
   # index read plus one pass over the tree, so it belongs on the commit.
@@ -99,30 +114,20 @@ if [ -n "$staged_lintable" ]; then
   set -e
 fi
 
-# Two generators read the dantotsu corpus as well as the source tree, and the
-# source-file condition above cannot see a commit that adds only a dantotsu --
-# so neither could run the check its own content invalidates. CI caught both,
-# one per push. Each condition below is the union of that generator's real
-# inputs, which is the only thing that keeps a trigger honest.
+# The defect page reads the dantotsu corpus as well as the source tree, and the
+# source-file condition above cannot see a commit that adds only a dantotsu, so
+# it could not run the check its own content invalidates. CI caught it, one per
+# push. The condition is the union of that generator's real inputs, which is
+# the only thing that keeps a trigger honest: the blueprint annotations under
+# apps/ and infra/, plus every dantotsu's front matter.
 #
-# The defect page: the blueprint annotations under apps/ and infra/, plus every
-# dantotsu's front matter.
+# `rule-provenance.ts` had the same trigger bug and is no longer here at all —
+# its check only ever refused its own staleness, and the page it writes is not
+# committed.
 if git diff --cached --name-only | grep -qE '^(apps/|infra/|docs/dantotsus/)'; then
   echo "[pre-commit] checking the blueprint defect page"
   set +e
   run_generator_check scripts/blueprints/blueprint-defects.ts
-  set -e
-fi
-
-# Which rules were written because something went wrong. A report; the check
-# refuses only a stale page, because a ratio between defect-born and
-# principle-born rules is not a thing to gate on. It reads eslint-rules/index.js
-# for the rule list and both documentation corpora for the mentions.
-if git diff --cached --name-only |
-  grep -qE '^(eslint-rules/|docs/dantotsus/|docs/standards/)'; then
-  echo "[pre-commit] checking the rule provenance page"
-  set +e
-  run_generator_check scripts/standards/rule-provenance.ts
   set -e
 fi
 

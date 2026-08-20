@@ -81,6 +81,10 @@ non-empty diff, plus every application when `scripts/architecture/` or
 map at once:
 
 ```bash
+# The head model, which is generated and not committed, so a fresh clone has
+# none and the diff below would compare against nothing.
+scripts/reports.sh maps
+
 base="$(git merge-base origin/main HEAD)"
 git worktree add --detach ../architecture-base "$base"
 

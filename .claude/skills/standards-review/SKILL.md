@@ -61,4 +61,6 @@ Never seal to get a green gate. A file with an open finding stays unsealed; that
 
 `docs/standards/enforcement-ledger.md`, section **"What only a reviewer can check"**. It is generated from the `reviewer` bullets in the standards, so adding a reviewer bullet to a standard adds it to the agent's scope on the next generation, and nothing has to be remembered or copied.
 
+It is generated and **not committed**, so run `scripts/reports.sh standards` before reading it or hashing it. A seal records the hash of the ledger at review time; hashing an absent file is how a seal would silently record nothing.
+
 To widen what the agent checks, write the bullet in the standard. Not here.

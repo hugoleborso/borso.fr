@@ -246,6 +246,31 @@ else
   log "KAIZEN.md carries ${kaizen_entries:-0} entries logged earlier in this task"
 fi
 
+# 10. The generated files, none of which is committed. Agents read
+# blueprint-index.md before writing a file, the pre-write hook reads
+# blueprint-context.json on every Write, and the standards reviewer reads
+# enforcement-ledger.md; all three read the working tree, so a fresh checkout
+# has to produce them before anything asks.
+#
+# The blueprint group runs here and now, and the rest in the background. That
+# hook is best-effort by contract and exits 0 when its lookup is missing, so a
+# race would not break a write — it would silently write a file with no
+# blueprint in front of it, which is worse than a failure because nothing says
+# it happened. Four seconds at session start buys that away; the maps take
+# fourteen and nothing in the first turn reads them.
+#
+# A session is not the only reader. A subagent given its own worktree never
+# runs this hook at all, which is why every skill that opens one of these files
+# runs `scripts/reports.sh` itself.
+log 'generating the lookups an agent reads before its first write'
+"$REPO_ROOT/scripts/reports.sh" blueprints >/dev/null 2>&1 || true
+
+log 'generating the reports and the maps in the background'
+(
+  "$REPO_ROOT/scripts/reports.sh" standards >/dev/null 2>&1 || true
+  "$REPO_ROOT/scripts/reports.sh" maps >/dev/null 2>&1 || true
+) &
+
 if [ ${#missing_optional[@]} -gt 0 ]; then
   printf '[install-repo-deps] WARN: optional tools missing: %s\n' "${missing_optional[*]}"
   printf '[install-repo-deps] WARN: re-run ./scripts/install-repo-deps.sh once the network settles.\n'

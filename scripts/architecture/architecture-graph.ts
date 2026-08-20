@@ -98,10 +98,25 @@ function readHeadRevision(root: string): string {
 }
 
 /** The standard documents in a directory, or none when it is not there. */
-function listStandardFileNames(directory: string): string[] {
+/**
+ * The authored standards, which is not every markdown file in the folder.
+ *
+ * Six of the documents beside them are generated reports that no commit
+ * carries, and the Standards tab is built from each file's history: asking git
+ * for a revision of an untracked path prints `fatal: … exists on disk, but not
+ * in <sha>` once per revision per application, and renders a rule whose whole
+ * history is empty. Tracked is the test because it is exactly the property the
+ * tab needs.
+ */
+function listStandardFileNames(directory: string, root: string): string[] {
   try {
+    const tracked = new Set(
+      execFileSync('git', ['ls-files', 'docs/standards'], { cwd: root, encoding: 'utf8' })
+        .split('\n')
+        .map((path) => path.slice('docs/standards/'.length)),
+    );
     return readdirSync(directory)
-      .filter((name) => name.endsWith('.md') && name !== 'README.md')
+      .filter((name) => name.endsWith('.md') && name !== 'README.md' && tracked.has(name))
       .sort();
   } catch {
     return [];
@@ -210,7 +225,7 @@ function readVersions(repositoryRelativePath: string, root: string): StandardVer
  */
 function listStandards(root: string): StandardEntry[] {
   const directory = 'docs/standards';
-  const names = listStandardFileNames(join(root, directory));
+  const names = listStandardFileNames(join(root, directory), root);
   return names.map((name) => {
     const path = `${directory}/${name}`;
     const text = readSourceOrEmpty(path, root);
@@ -1872,23 +1887,16 @@ async function buildApplication(options: BuildOptions): Promise<void> {
 
   if (isCheck) {
     /**
-     * The model, and only the model. Every one of its bytes comes from the
-     * working tree, so it is compared to the byte and a mismatch always means
-     * the code moved without the map being regenerated.
-     *
-     * The page is not compared because it is not committed: it carries each
-     * standard's `git log`, a file cannot contain the commit that adds it, and
-     * a byte gate over it therefore failed the commit *after* every standards
-     * edit. `pages.yml` regenerates it before publishing.
+     * Neither the page nor the model is committed, so there is nothing to
+     * compare them against and `--check` writes them like any other run. What
+     * it still refuses is a `@DependsOnExternal` naming a system the manifest
+     * does not declare, and a declared external no file reaches — which is
+     * checked while the model is built, above.
      */
-    if (readSourceOrEmpty(relative(REPOSITORY_ROOT, modelPath)) !== model) {
-      console.error(
-        `  ${relative(REPOSITORY_ROOT, modelPath)} is out of date. Run \`pnpm exec tsx scripts/architecture/architecture-graph.ts\`.`,
-      );
-      process.exit(1);
-    }
+    writeFileSync(pagePath, page);
+    writeFileSync(modelPath, model);
     console.log(
-      `${manifest.application}: ${files.length} files across ${levels.length} levels and ${slices.length} slices. Up to date.`,
+      `${manifest.application}: ${files.length} files across ${levels.length} levels and ${slices.length} slices.`,
     );
     return;
   }

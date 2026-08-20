@@ -1,5 +1,10 @@
-# Publishes the architecture maps to GitHub Pages, so a link opens the map
-# instead of a download of a workflow artifact.
+# Publishes the architecture maps and every generated report to GitHub Pages,
+# so a link opens them instead of a download of a workflow artifact.
+#
+# None of these files is in git, so this is the address they have. A report
+# nobody can reach is a report nobody reads, and the alternative — committing
+# them — is what made the two most-changed files in this repository generated
+# ones that conflicted on every merge.
 #
 # This needs one repository setting the workflow cannot make or read: Settings →
 # Pages → Build and deployment → Source must be "GitHub Actions". Until that is
@@ -42,7 +47,12 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
+      # Whole history: `hotspots.ts` and `temporal-coupling.ts` read the git log,
+      # and against a shallow clone they render a report of the last commit and
+      # call it the repository's churn.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -54,6 +64,36 @@ jobs:
       # stale page cannot exist to be published.
       - name: Build the maps
         run: pnpm exec tsx scripts/architecture/architecture-graph.ts
+
+      # The reports land beside the maps, under `reports/`, because the maps
+      # already own `docs/architecture/` and `upload-pages-artifact` takes one
+      # path. The blueprint heatmap is HTML and opens as a page; the rest are
+      # markdown, which Pages serves as plain text — enough to read on a phone,
+      # which is more than a file that exists nowhere.
+      - name: Build the reports
+        run: |
+          set -euo pipefail
+          for generator in \
+            .claude/skills/blueprint/blueprint-indexing.ts \
+            .claude/skills/blueprint/blueprint-heatmap.ts \
+            scripts/blueprints/blueprint-defects.ts \
+            scripts/standards/convention-drift.ts \
+            scripts/standards/rule-provenance.ts \
+            scripts/standards/hotspots.ts \
+            scripts/standards/temporal-coupling.ts \
+            scripts/standards/enforcement-ledger.ts; do
+            pnpm exec tsx "$generator"
+          done
+          mkdir -p docs/architecture/reports
+          cp .claude/skills/blueprint/blueprint-index.md \
+             .claude/skills/blueprint/blueprint-coverage.html \
+             docs/standards/blueprint-defects.md \
+             docs/standards/convention-drift.md \
+             docs/standards/rule-provenance.md \
+             docs/standards/hotspots.md \
+             docs/standards/temporal-coupling.md \
+             docs/standards/enforcement-ledger.md \
+             docs/architecture/reports/
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

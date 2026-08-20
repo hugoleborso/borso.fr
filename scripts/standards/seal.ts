@@ -15,7 +15,7 @@
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import {
   isReviewablePath,
@@ -23,6 +23,7 @@ import {
   serialiseSealEntry,
   verifySeals,
   type ReviewableFile,
+  type SealEntry,
 } from './seal.core';
 
 const REPOSITORY_ROOT = process.cwd();
@@ -77,11 +78,9 @@ function recordSeal(): void {
   const note = readOption('note', '');
   const sealedAt = new Date().toISOString();
 
-  if (!existsSync(SEAL_LEDGER_PATH)) {
-    mkdirSync(dirname(SEAL_LEDGER_PATH), { recursive: true });
-    appendFileSync(SEAL_LEDGER_PATH, SEAL_LEDGER_HEADER);
-  }
+  mkdirSync(dirname(SEAL_LEDGER_PATH), { recursive: true });
 
+  const recorded = [...readSealEntries()];
   for (const path of filePaths) {
     if (!existsSync(path)) {
       console.error(`seal record: ${path} is not on disk.`);
@@ -89,12 +88,33 @@ function recordSeal(): void {
       return;
     }
     const contentHash = hashContent(readFileSync(path, 'utf8'));
-    appendFileSync(
-      SEAL_LEDGER_PATH,
-      `${serialiseSealEntry({ contentHash, path, ledgerHash, reviewer, sealedAt, note })}\n`,
-    );
+    recorded.push({ contentHash, path, ledgerHash, reviewer, sealedAt, note });
     console.log(`sealed ${path} (${contentHash.slice(0, 12)})`);
   }
+
+  writeSealLedgerFile(recorded);
+}
+
+/**
+ * Rewrites the whole ledger in path order rather than appending to its end.
+ *
+ * Two branches that seal different files append at the same last line, which
+ * git reports as a conflict on every merge even though the two edits cannot
+ * disagree. In path order they land in different regions and merge on their
+ * own, and the one case left — the same file sealed on both branches — is a
+ * real disagreement that deserves a person.
+ *
+ * Entries are kept, never replaced: `verify` re-hashes a file and looks for an
+ * entry carrying that hash, so a revert to a previously sealed content is
+ * still sealed.
+ */
+function writeSealLedgerFile(entries: readonly SealEntry[]): void {
+  const ordered = [...entries].sort(
+    (left, right) =>
+      left.path.localeCompare(right.path) || left.sealedAt.localeCompare(right.sealedAt),
+  );
+  const lines = ordered.map((entry) => `${serialiseSealEntry(entry)}\n`).join('');
+  writeFileSync(SEAL_LEDGER_PATH, `${SEAL_LEDGER_HEADER}${lines}`);
 }
 
 function listChangedFiles(base: string): readonly string[] {

@@ -32,20 +32,42 @@ node_modules/.cache
 .stryker-tmp
 reports
 
-# Every architecture page, of both kinds, for the same reason: it is generated,
-# and whoever reads it builds it first.
+# Generated files, none of which git is the source of.
 #
-# `<app>-diff.html` describes a branch rather than the repository, so there is
-# no revision it would be true at. `<app>-architecture.html` and `index.html`
-# describe the repository, but `pages.yml` regenerates before publishing and
-# `architecture.yml` regenerates before diffing a pull request, so no consumer
-# ever opened the committed bytes — they cost 9.3 MB rewritten in full on every
-# change, and bought a byte gate whose only subject was its own output.
+# The rule: a file is committed when it is an INPUT — something a person wrote
+# or accepted, that no command can recompute — and ignored when it is an
+# OUTPUT, derived from the tree by a generator every reader runs first.
 #
-# The model beside each page is committed: it is small, it diffs as prose, and
-# every byte of it comes from the working tree, so a gate on it means something.
+# An output in git is a file two branches rewrite in full on every change, so
+# it conflicts on every merge and the conflict carries no information: the
+# resolution is always "run the generator again". Over the last two hundred
+# commits the two most-changed files in this repository were both outputs, and
+# resolving them by hand is a step nobody can do correctly by reading it.
+#
+# What stays, because each is an input: `convention-baseline.json`, a count a
+# person accepted with `--accept`; `seals.jsonl`, an attestation nothing can
+# recompute because it records that a review happened; and the CloudFormation
+# template snapshots, whose diff IS the review artefact.
+#
+# Where the outputs went instead: `pages.yml` regenerates and publishes every
+# one of them on each push to `main`, so each still has an address, and the
+# SessionStart hook regenerates them locally so agents and the blueprint hook
+# read them from the tree. `--check` now means "validate without writing"
+# rather than "compare against the committed copy", because there is no
+# committed copy to compare against and a byte gate whose only subject is its
+# own output proves nothing.
 docs/architecture/*.html
+docs/architecture/*-architecture.json
 # The counts each diff run leaves for the index and the pull request comment to
 # read. They describe a branch, like the diff page beside them, so there is no
 # revision they would be true at.
 docs/architecture/*-diff.json
+.claude/skills/blueprint/blueprint-index.md
+.claude/skills/blueprint/blueprint-coverage.html
+.claude/skills/blueprint/blueprint-context.json
+docs/standards/blueprint-defects.md
+docs/standards/enforcement-ledger.md
+docs/standards/convention-drift.md
+docs/standards/rule-provenance.md
+docs/standards/hotspots.md
+docs/standards/temporal-coupling.md

@@ -8,6 +8,8 @@ A blueprint is a canonical example that already lives in this repository, marked
 
 Blueprints and [`docs/standards/`](../../../docs/standards/README.md) are two halves. The standard states the rule; the blueprint is the working example. When they disagree, the standard wins and the blueprint is stale.
 
+**Run `scripts/reports.sh blueprints` before reading anything below.** The index, the heatmap and the defects page are generated and not committed ([ADR-0014](../../../docs/adr/0014-generated-files-are-not-committed.md)); a fresh clone and a subagent worktree both start without them, and a blueprint added this session is not in them until they are rebuilt. It takes about four seconds.
+
 **Before writing a new file in `apps/`, read [`blueprint-index.md`](./blueprint-index.md) and open the blueprint for that layer.** Copy its shape.
 
 Routes on `$ARGUMENTS`:

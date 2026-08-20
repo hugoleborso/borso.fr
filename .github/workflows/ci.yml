@@ -85,6 +85,28 @@ jobs:
       # substitutes its own build of the formatter when a command names it
       # through `pnpm exec`, so that shape must not exist here for anyone to
       # copy. Guarded by scripts/check-coupled-lists.sh.
+      # The generated files, first, because a dozen checks below read them and a
+      # fresh checkout has none: `check-doc-links.ts` walks every markdown file
+      # in the tree and opens each link's target, and both halves of that break
+      # without this step. Running them here also means the `--check` runs
+      # further down validate a tree that is already current.
+      - name: Generate the files no commit carries
+        run: |
+          set -euo pipefail
+          for generator in \
+            .claude/skills/blueprint/blueprint-indexing.ts \
+            .claude/skills/blueprint/blueprint-context.ts \
+            .claude/skills/blueprint/blueprint-heatmap.ts \
+            scripts/blueprints/blueprint-defects.ts \
+            scripts/standards/convention-drift.ts \
+            scripts/standards/rule-provenance.ts \
+            scripts/standards/hotspots.ts \
+            scripts/standards/temporal-coupling.ts \
+            scripts/standards/enforcement-ledger.ts \
+            scripts/architecture/architecture-graph.ts; do
+            pnpm exec tsx "$generator"
+          done
+
       - run: pnpm run format:check
       # The custom ESLint rules under eslint-rules/ each ship a RuleTester
       # suite, and the generators under scripts/ carry the same 100% per-file
@@ -168,18 +190,18 @@ jobs:
           fi
       # Blueprint annotations, mirroring the pre-commit hook so a push made
       # with hooks skipped still gets caught. Fails on a blueprint missing one
-      # of its four tags, a duplicated identifier, a follower naming a
-      # blueprint that does not exist, and a generated file left stale.
+      # of its four tags, a duplicated identifier, and a follower naming a
+      # blueprint that does not exist.
+      #
+      # Staleness is no longer among them, here or anywhere: none of these
+      # files is committed, so `--check` regenerates and reports rather than
+      # comparing bytes against a copy in git. What is gated is what a person
+      # can get wrong.
       - run: pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --check
-      - run: pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts --check
-      # The defect page and the seeding lookup come off the same annotations,
-      # so they go stale on the same edit. A dantotsu naming a blueprint that
-      # does not exist, and a hook seeding a pattern nobody carries any more,
-      # both read as fine until someone follows them.
+      # A dantotsu naming a blueprint that does not exist reads as fine until
+      # someone follows the link.
       - run: pnpm exec tsx scripts/blueprints/blueprint-defects.ts --check
-      - run: pnpm exec tsx .claude/skills/blueprint/blueprint-context.ts --check
       - run: pnpm exec tsx scripts/standards/convention-drift.ts --check
-      - run: pnpm exec tsx scripts/standards/rule-provenance.ts --check
       # Every `## Enforced by` bullet in docs/standards/ resolves against the
       # live ESLint configuration and the checked-in hooks. Fails on a rule
       # cited and enabled nowhere, a script no hook invokes, a gate whose

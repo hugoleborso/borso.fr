@@ -175,14 +175,7 @@ function main(): void {
       process.exitCode = 1;
       return;
     }
-    const onDisk = existsSync(REPORT_PATH) ? readFileSync(REPORT_PATH, 'utf8') : '';
-    if (onDisk !== rendered) {
-      console.error(
-        '  docs/standards/convention-drift.md is out of date. Run `pnpm exec tsx scripts/standards/convention-drift.ts`.',
-      );
-      process.exitCode = 1;
-      return;
-    }
+    writeFileSync(REPORT_PATH, rendered);
     for (const key of stale) console.log(`  ${key} is gone; run --accept to trim the baseline.`);
     console.log('No question gained a new answer.');
     return;
