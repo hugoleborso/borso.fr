@@ -22,8 +22,8 @@ it).
 | Every level is labelled inside its segment | screenshot, 375 px | the segments read 1 to 10 |
 | One `⋯` carries the row's actions | reading the row's buttons from the DOM with the panel open | `Drag to reorder`, `Actions`, `Lineup`, `Remove` |
 | A card only moves vertically while dragged | CDP mouse drag 220 px right and 100 px down from the drag handle, reading the computed transform mid-drag | `matrix(1, 0, 0, 1, 0, 100)` — the horizontal half is dropped, and the card's left edge stays at 16 px |
-| The energy bar takes a real tap | CDP `touchStart` / `touchEnd` on the eighth segment of a row reading 3 | the readout reads 8 |
-| A sideways touch drag sets each level it crosses | CDP touch drag from segment 8 to segment 2 | the readout reads 2 |
+| The energy bar takes a real tap | CDP `touchStart` / `touchEnd` on the eighth segment of a row reading 3 | `aria-valuenow` reads 8 |
+| A sideways touch drag sets each level it crosses | CDP touch drag from segment 8 to segment 2 | `aria-valuenow` reads 2 |
 | **A vertical swipe that starts on the bar scrolls and writes nothing** | CDP `touchStart` on the bar, three upward `touchMove`s, `touchEnd` | `scrollTop` 0 → 95, `aria-valuenow` stays 3 |
 | **A text selection dragged across the bar writes nothing** | CDP mouse press on the song title, eight moves across the bar, release | `aria-valuenow` unchanged, selection reads the title |
 | A drag writes one value per level crossed, not per pointer event | counting `PUT /api/setlists/…/entries/…` in the dev-server log across the full bar | 10 writes for 10 levels |

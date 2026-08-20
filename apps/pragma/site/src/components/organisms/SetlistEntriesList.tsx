@@ -164,7 +164,6 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 energy={entry.energy}
                 baseEnergy={song?.baseEnergy ?? null}
                 notes={entry.notes}
-                currentSongId={entry.songId}
                 lineup={compactLineup(lineupRaw)}
                 resolvedLineupForEdit={lineupRaw}
                 songDefaultLineup={song?.defaultLineup ?? {}}

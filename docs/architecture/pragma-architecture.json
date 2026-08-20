@@ -3419,7 +3419,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx",
-      "digest": "a9966e0901df",
+      "digest": "79597fa27d2a",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3443,7 +3443,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx",
-      "digest": "a68a67036091",
+      "digest": "43b076a25da9",
       "container": "site",
       "layer": "organism",
       "context": "organisms",

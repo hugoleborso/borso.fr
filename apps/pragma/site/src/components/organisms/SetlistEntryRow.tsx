@@ -20,12 +20,11 @@
  * text in a `title`. A wrapping meta line spent a whole line of the card on
  * four avatars.
  *
- * Each row owns a small `useForm` instance — the parent
- * (`SetlistEditor`) doesn't centralise per-row state. The form is never
- * submitted: it exists for field state and Zod validation, and every change
- * reaches the parent through `onUpdate` from inside `field.handleChange`, so
- * the live-edit semantics (per-keystroke mutation) are preserved without an
- * effect.
+ * Each row owns a small `useForm` instance rather than reading per-row state
+ * from a store above it. The form is never submitted: it exists for field
+ * state and Zod validation, and every change calls `onUpdate` beside
+ * `field.handleChange`, so the live-edit semantics (per-keystroke mutation)
+ * are preserved without an effect.
  *
  * The list item itself is the dnd-kit sortable node, so the whole row
  * (the transition strip that precedes it, plus the card) is what reorders.
@@ -101,7 +100,6 @@ export interface SetlistEntryRowProps {
   readonly energy: number | null;
   readonly baseEnergy: number | null;
   readonly notes: string;
-  readonly currentSongId: string;
   readonly lineup: Readonly<Record<string, readonly string[]>>;
   readonly resolvedLineupForEdit: LineupRecord;
   readonly songDefaultLineup: LineupRecord;
