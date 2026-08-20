@@ -83,22 +83,33 @@ if [ -n "$staged_lintable" ]; then
   # existing backlog never blocks a commit and the next divergence does. A git
   # index read plus one pass over the tree, so it belongs on the commit.
   run_generator_check scripts/standards/convention-drift.ts
-  # Which rules were written because something went wrong. A report; the check
-  # refuses only a stale page, because a ratio between defect-born and
-  # principle-born rules is not a thing to gate on.
-  run_generator_check scripts/standards/rule-provenance.ts
   set -e
 fi
 
-# The defect page reads the blueprint annotations AND every dantotsu's front
-# matter, so a commit that adds only a dantotsu moves it. Under the source-file
-# condition above that commit could never run its own check, and CI caught it
-# instead: a gate armed everywhere except at the moment its subject changes.
-# The condition here is the union of the generator's two inputs.
+# Two generators read the dantotsu corpus as well as the source tree, and the
+# source-file condition above cannot see a commit that adds only a dantotsu --
+# so neither could run the check its own content invalidates. CI caught both,
+# one per push. Each condition below is the union of that generator's real
+# inputs, which is the only thing that keeps a trigger honest.
+#
+# The defect page: the blueprint annotations under apps/ and infra/, plus every
+# dantotsu's front matter.
 if git diff --cached --name-only | grep -qE '^(apps/|infra/|docs/dantotsus/)'; then
   echo "[pre-commit] checking the blueprint defect page"
   set +e
   run_generator_check scripts/blueprints/blueprint-defects.ts
+  set -e
+fi
+
+# Which rules were written because something went wrong. A report; the check
+# refuses only a stale page, because a ratio between defect-born and
+# principle-born rules is not a thing to gate on. It reads eslint-rules/index.js
+# for the rule list and both documentation corpora for the mentions.
+if git diff --cached --name-only |
+  grep -qE '^(eslint-rules/|docs/dantotsus/|docs/standards/)'; then
+  echo "[pre-commit] checking the rule provenance page"
+  set +e
+  run_generator_check scripts/standards/rule-provenance.ts
   set -e
 fi
 

@@ -125,16 +125,25 @@ about — the four push shapes, with the base each one selects:
 The last row is the deliberate degradation: a shallow clone or a fresh worktree
 keeps today's behaviour rather than failing.
 
-**Sibling defect swept:** the same shape, one hook over, and this pull request
-tripped it. `scripts/blueprints/blueprint-defects.ts` reads the blueprint
-annotations *and* every dantotsu's front matter, but `.husky/pre-commit` only
-ran it when a `.ts`/`.tsx` file was staged — so a commit that adds only a
-dantotsu could never run the check its own content invalidates. Four commits on
-this branch skipped it and CI caught the stale page on the fifth. The condition
-is now the union of the generator's two inputs, `apps/`, `infra/` and
-`docs/dantotsus/`, and was proven by staging a dantotsu-only change against a
-stale page: the old condition selects nothing, the new one runs the generator,
-and the generator exits 1.
+**Sibling defects swept — two of them, and this pull request tripped both.**
+`scripts/blueprints/blueprint-defects.ts` and `scripts/standards/rule-provenance.ts`
+each read the dantotsu corpus as well as the source tree; both sat inside a
+`.husky/pre-commit` block gated on *"a `.ts`/`.tsx` file is staged"*. A commit
+that adds only a dantotsu therefore could not run either check, and both pages
+carry a `Read from N dantotsu(s)` line that such a commit moves. CI caught them
+one per push, which is the shape of a gate that cannot fire on its own subject.
+
+Each now has a condition equal to the union of that generator's real inputs —
+`apps/`, `infra/`, `docs/dantotsus/` for the defect page; `eslint-rules/`,
+`docs/dantotsus/`, `docs/standards/` for the provenance page. Proven by staging
+a dantotsu-only change against a stale page: the old condition selects nothing,
+each new one matches, and each generator exits 1. Before pushing the fix, every
+generator `--check` that CI runs was executed locally, which is what turned a
+second one-at-a-time round into a single sweep.
+
+**The generalisable rule:** a gate's trigger has to be the union of what it
+reads, not a proxy for it. *"A source file changed"* was a proxy, and it was
+wrong for exactly the two generators whose inputs reach outside the source tree.
 
 ## See also
 
