@@ -20,7 +20,7 @@ first rung of the eradication ladder. The number is an input to the decision
 about the *next* rule, and nothing else. Do not delete a rule because this
 page puts it in the lower half.
 
-35 rule(s), read against 97 dantotsu(s).
+35 rule(s), read against 99 dantotsu(s).
 
 - 11 came from a defect that actually happened.
 - 24 were written from principle.
