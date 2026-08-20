@@ -8,6 +8,15 @@
 #     change, every app's preview / prod gets redeployed because the
 #     constructs are the contract.
 #
+# The `deps` key matches the files that decide every workspace's dependency
+# versions. It exists because a bump can change what all four applications
+# resolve without touching one byte under `apps/`: the catalog in
+# `pnpm-workspace.yaml` holds the version and each package.json says
+# `catalog:`. React 19.0 -> 19.2.8 and jsdom 25 -> 30 both merged with a green
+# tick and no application suite run at all, because no app filter matched. Like
+# `infra`, this key fans out to every app rather than naming one.
+# See docs/dantotsus/a-dependency-bump-that-no-app-filter-could-see.md.
+#
 # `infra/shared/**` is intentionally NOT a filter — its deploy flow is
 # manual/local-only (see docs/flows.md). It does not redeploy app stacks.
 #
@@ -21,3 +30,9 @@ borsouvertures: 'apps/borsouvertures/**'
 last-loop-lepin: 'apps/last-loop-lepin/**'
 pragma: 'apps/pragma/**'
 infra: 'infra/cdk/**'
+deps:
+  - 'pnpm-workspace.yaml'
+  - 'pnpm-lock.yaml'
+  - 'package.json'
+  - 'apps/*/package.json'
+  - 'infra/*/package.json'
