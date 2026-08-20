@@ -1,34 +1,63 @@
 /**
  * EnergyBar atom — an energy value drawn as one tappable segment per level.
  *
- * A tap lands on the segment under the thumb and a drag sweeps through the
+ * A tap lands on the segment under the finger and a slide sweeps through the
  * levels, both through the same pure mapping, so the segment the eye aims at
- * is the level the caller receives. That is the whole point of the shape: the
- * range input it replaces gave a phone about twelve pixels per point and no
- * boundary to aim at, and needed a pair of stepper buttons beside it to be
- * usable at all.
+ * is the level the caller receives. A range input over the same width offers
+ * a thumb and no boundary instead — about twelve pixels per point on a phone,
+ * with every level's edge half a step from the tick beside it.
+ *
+ * **A gesture that starts here is not the bar's until it proves it is.** The
+ * bar writes nothing on `pointerdown`: `touch-action: pan-y` lets the page
+ * take a vertical swipe that began on the bar, but that swipe still arrives as
+ * a `pointerdown` and two `pointermove`s before the browser decides and sends
+ * `pointercancel`, so a control that writes on the way down rewrites whichever
+ * song the thumb was resting on, silently and with no undo. A slide writes
+ * once it travels further sideways than down (`isDragIntent`), a tap writes on
+ * `pointerup`, and a cancelled gesture writes nothing at all. Tracking the
+ * gesture also means only the pointer this bar captured can move it, so a text
+ * selection dragged across the card writes nothing either.
  *
  * The bar is one tab stop carrying the slider role rather than ten buttons,
  * which is what keeps a twenty-song setlist from growing two hundred tab
- * stops. `touch-pan-y` leaves the vertical swipe to the page, so dragging the
- * bar sideways sets the energy while scrolling over it still scrolls.
+ * stops.
  * @Feature setlists
  */
 
 import type { JSX, KeyboardEvent, PointerEvent } from 'react';
+import { useRef } from 'react';
 import { composeClassName } from './class-name.utils';
-import { buildEnergyLevels, levelFromKey, levelFromPointerRatio } from './energy-bar.utils';
+import {
+  buildEnergyLevels,
+  isDragIntent,
+  levelFromKey,
+  levelFromPointerRatio,
+} from './energy-bar.utils';
 
+/**
+ * The focus ring is an outline rather than a box shadow because a shadow is
+ * dropped in forced-colors mode, which leaves the one control on the card that
+ * a keyboard can reach with no focus indicator at all.
+ */
 const BAR_CLASS =
   'flex h-10 sm:h-9 items-center gap-1 cursor-pointer touch-pan-y select-none rounded-sm ' +
-  'outline-none focus-visible:ring-2 focus-visible:ring-accent';
-const SEGMENT_CLASS = 'flex-1 h-5 rounded-sm pointer-events-none transition-colors';
+  'outline-hidden focus-visible:outline-solid focus-visible:outline-2 ' +
+  'focus-visible:outline-offset-2 focus-visible:outline-accent';
+const SEGMENT_CLASS = 'flex-1 h-5 rounded-sm border pointer-events-none transition-colors';
+
+interface Gesture {
+  readonly pointerId: number;
+  readonly startX: number;
+  readonly startY: number;
+  isSliding: boolean;
+}
 
 export interface EnergyBarProps {
   readonly value: number;
   readonly minimum: number;
   readonly maximum: number;
   readonly label: string;
+  readonly valueText?: string;
   readonly filledClassName: string;
   readonly emptyClassName: string;
   readonly className?: string;
@@ -41,30 +70,58 @@ export function EnergyBar({
   minimum,
   maximum,
   label,
+  valueText,
   filledClassName,
   emptyClassName,
   className,
   onChange,
 }: EnergyBarProps): JSX.Element {
-  function changeFromPointer(event: PointerEvent<HTMLDivElement>): void {
+  const gesture = useRef<Gesture | null>(null);
+
+  function publishLevelUnderPointer(
+    event: PointerEvent<HTMLDivElement>,
+    canPublishUnchanged: boolean,
+  ): void {
     const bounds = event.currentTarget.getBoundingClientRect();
     const next = levelFromPointerRatio(
       (event.clientX - bounds.left) / bounds.width,
       minimum,
       maximum,
     );
-    if (next === value) return;
+    if (next === null) return;
+    if (next === value && !canPublishUnchanged) return;
     onChange(next);
   }
 
-  function startDrag(event: PointerEvent<HTMLDivElement>): void {
-    changeFromPointer(event);
+  function openGesture(event: PointerEvent<HTMLDivElement>): void {
+    gesture.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      isSliding: false,
+    };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
 
-  function continueDrag(event: PointerEvent<HTMLDivElement>): void {
-    if (event.buttons === 0) return;
-    changeFromPointer(event);
+  function continueGesture(event: PointerEvent<HTMLDivElement>): void {
+    const active = gesture.current;
+    if (active?.pointerId !== event.pointerId) return;
+    if (!active.isSliding) {
+      if (!isDragIntent(event.clientX - active.startX, event.clientY - active.startY)) return;
+      active.isSliding = true;
+    }
+    publishLevelUnderPointer(event, false);
+  }
+
+  function closeGesture(event: PointerEvent<HTMLDivElement>): void {
+    const active = gesture.current;
+    gesture.current = null;
+    if (active?.pointerId !== event.pointerId || active.isSliding) return;
+    publishLevelUnderPointer(event, true);
+  }
+
+  function abandonGesture(): void {
+    gesture.current = null;
   }
 
   function changeFromKey(event: KeyboardEvent<HTMLDivElement>): void {
@@ -82,9 +139,12 @@ export function EnergyBar({
       aria-valuemin={minimum}
       aria-valuemax={maximum}
       aria-valuenow={value}
+      aria-valuetext={valueText}
       className={composeClassName(BAR_CLASS, className)}
-      onPointerDown={startDrag}
-      onPointerMove={continueDrag}
+      onPointerDown={openGesture}
+      onPointerMove={continueGesture}
+      onPointerUp={closeGesture}
+      onPointerCancel={abandonGesture}
       onKeyDown={changeFromKey}
     >
       {buildEnergyLevels(minimum, maximum).map((level) => (

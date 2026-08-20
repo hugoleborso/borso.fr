@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildEnergyLevels, levelFromKey, levelFromPointerRatio } from './energy-bar.utils';
+import {
+  buildEnergyLevels,
+  isDragIntent,
+  levelFromKey,
+  levelFromPointerRatio,
+} from './energy-bar.utils';
 
 const MINIMUM = 1;
 const MAXIMUM = 10;
@@ -45,8 +50,43 @@ describe('levelFromPointerRatio', () => {
     expect(levelFromPointerRatio(1.8, MINIMUM, MAXIMUM)).toBe(10);
   });
 
-  it('falls back to the minimum when the bar has no measured width', () => {
-    expect(levelFromPointerRatio(Number.NaN, MINIMUM, MAXIMUM)).toBe(1);
+  it('picks nothing when the bar has no measured width', () => {
+    expect(levelFromPointerRatio(Number.NaN, MINIMUM, MAXIMUM)).toBeNull();
+  });
+
+  it('picks nothing when a zero width sends the ratio to infinity', () => {
+    expect(levelFromPointerRatio(Number.POSITIVE_INFINITY, MINIMUM, MAXIMUM)).toBeNull();
+  });
+});
+
+// @FollowsBlueprint test-pure-unit
+describe('isDragIntent', () => {
+  it('reads a sideways slide as a slide', () => {
+    expect(isDragIntent(12, 0)).toBe(true);
+  });
+
+  it('reads a sideways slide the other way as a slide', () => {
+    expect(isDragIntent(-12, 3)).toBe(true);
+  });
+
+  it('reads the threshold itself as a slide', () => {
+    expect(isDragIntent(8, 0)).toBe(true);
+  });
+
+  it('reads a finger that has barely moved as no slide', () => {
+    expect(isDragIntent(7, 0)).toBe(false);
+  });
+
+  it('leaves a downward swipe to the page', () => {
+    expect(isDragIntent(10, 40)).toBe(false);
+  });
+
+  it('leaves an upward swipe to the page', () => {
+    expect(isDragIntent(10, -40)).toBe(false);
+  });
+
+  it('leaves a diagonal travelling as far down as across to the page', () => {
+    expect(isDragIntent(20, 20)).toBe(false);
   });
 });
 

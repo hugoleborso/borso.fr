@@ -9,10 +9,12 @@
  * watched while dragging rows around, and scrolling it off screen is what made
  * it useless on a phone. Its caption goes with the pills, for the same reason —
  * a single sparkline over the set needs no label to be read as the energy
- * curve. The curve shrinks under `sm` rather than disappearing, but only to
- * 56 px: at 36 px a set that swings from 2 to 9 drew as a nearly flat line
- * with the point markers touching each other, which is the one thing the curve
- * exists to show.
+ * curve. The curve shrinks under `sm` rather than disappearing, and 56 px is
+ * the floor: `buildSparklinePath` spends 12 px of the height on padding and
+ * spreads all ten levels over what is left, so the compact height is the whole
+ * dynamic range of the set. 56 px gives that range 44 px, against four marker
+ * diameters at 36 px, where a set swinging from 2 to 9 draws as a flat line of
+ * nearly touching dots.
  *
  * The two rows are returned as a fragment rather than wrapped: a sticky
  * element only travels inside its own parent, so a wrapper around both would

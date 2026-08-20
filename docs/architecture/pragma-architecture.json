@@ -29,7 +29,7 @@
     {
       "id": "site",
       "name": "Single page application",
-      "fileCount": 179
+      "fileCount": 181
     },
     {
       "id": "uploads-bucket",
@@ -1974,6 +1974,47 @@
       ]
     },
     {
+      "path": "apps/pragma/site/src/components/atoms/energy-bar.utils.ts",
+      "digest": "decb6ec23655",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": "setlists",
+      "exports": [
+        "buildEnergyLevels",
+        "isDragIntent",
+        "levelFromKey",
+        "levelFromPointerRatio"
+      ],
+      "imports": [],
+      "blueprints": [],
+      "followsBlueprints": [
+        "utils-pure-module",
+        "utils-pure-module",
+        "utils-pure-module",
+        "utils-pure-module"
+      ]
+    },
+    {
+      "path": "apps/pragma/site/src/components/atoms/EnergyBar.tsx",
+      "digest": "9d037ff50d62",
+      "container": "site",
+      "layer": "atom",
+      "context": "atoms",
+      "feature": "setlists",
+      "exports": [
+        "EnergyBar"
+      ],
+      "imports": [
+        "apps/pragma/site/src/components/atoms/class-name.utils.ts",
+        "apps/pragma/site/src/components/atoms/energy-bar.utils.ts"
+      ],
+      "blueprints": [],
+      "followsBlueprints": [
+        "atom-plain"
+      ]
+    },
+    {
       "path": "apps/pragma/site/src/components/atoms/ExternalLink.tsx",
       "digest": "65658ac7a2c9",
       "container": "site",
@@ -3284,7 +3325,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts",
-      "digest": "42c904b17f6f",
+      "digest": "bddd4987420c",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3381,7 +3422,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx",
-      "digest": "b1f3555f16f5",
+      "digest": "f3814c35a86d",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -3390,6 +3431,7 @@
         "SetlistEntryRow"
       ],
       "imports": [
+        "apps/pragma/site/src/components/atoms/EnergyBar.tsx",
         "apps/pragma/site/src/components/atoms/Icon.tsx",
         "apps/pragma/site/src/components/atoms/class-name.utils.ts",
         "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx",
@@ -3435,7 +3477,7 @@
     },
     {
       "path": "apps/pragma/site/src/components/organisms/SetlistToolbar.tsx",
-      "digest": "19b272a20d71",
+      "digest": "2ae2565d8950",
       "container": "site",
       "layer": "organism",
       "context": "organisms",
@@ -6365,7 +6407,7 @@
     {
       "id": "atom-plain",
       "file": "apps/pragma/site/src/components/atoms/Crumb.tsx",
-      "followerCount": 6
+      "followerCount": 7
     },
     {
       "id": "atom-variant",
@@ -6645,7 +6687,7 @@
     {
       "id": "utils-pure-module",
       "file": "apps/pragma/site/src/lib/member-color.utils.ts",
-      "followerCount": 25
+      "followerCount": 29
     },
     {
       "id": "workspace-test-config",
