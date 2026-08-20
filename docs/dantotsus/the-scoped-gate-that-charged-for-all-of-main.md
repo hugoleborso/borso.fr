@@ -4,8 +4,8 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#63'
-fix-pr: '#63'
-fix-commits: []
+fix-pr: '#71'
+fix-commits: [cb69f25]
 eradication-level: 2
 time-to-detect: 40 minutes
 tags: [git, tooling, ci, husky, testing]
@@ -85,8 +85,8 @@ None during the pull request. The push was waited out twice.
 
 **Type:** DevX check (level 2 — the gate now excludes what `main` already carries)
 
-**Reference:** [PR #63](https://github.com/hugoleborso/borso.fr/pull/63) ·
-kaizen PR for this entry
+**Reference:** [PR #71](https://github.com/hugoleborso/borso.fr/pull/71), the kaizen
+sweep of [PR #63](https://github.com/hugoleborso/borso.fr/pull/63)
 
 **The actual fix:**
 

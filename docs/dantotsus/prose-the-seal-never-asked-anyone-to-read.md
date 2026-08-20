@@ -4,8 +4,8 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#63'
-fix-pr: '#63'
-fix-commits: [fb4f52a, 305f138]
+fix-pr: '#71'
+fix-commits: [957846c]
 eradication-level: 2
 time-to-detect: 3 hours
 tags: [standards, documentation, tooling, ci]
@@ -98,8 +98,8 @@ it stale. Nothing in its brief sent it there.
 
 **Type:** DevX check (level 2 — the seal predicate now asks for this file)
 
-**Reference:** [PR #63](https://github.com/hugoleborso/borso.fr/pull/63) ·
-kaizen PR for this entry
+**Reference:** [PR #71](https://github.com/hugoleborso/borso.fr/pull/71), the kaizen
+sweep of [PR #63](https://github.com/hugoleborso/borso.fr/pull/63)
 
 **The actual fix:**
 

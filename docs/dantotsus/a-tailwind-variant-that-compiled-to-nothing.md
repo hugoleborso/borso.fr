@@ -4,8 +4,8 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#63'
-fix-pr: '#63'
-fix-commits: [8fd9ecd]
+fix-pr: '#71'
+fix-commits: [957846c]
 eradication-level: 2
 time-to-detect: 25 minutes
 tags: [tailwind, frontend, css, tooling]
@@ -95,8 +95,8 @@ is the entire difference.
 
 **Type:** DevX check (level 2 — pre-commit gate)
 
-**Reference:** [PR #63](https://github.com/hugoleborso/borso.fr/pull/63) ·
-kaizen PR for this entry
+**Reference:** [PR #71](https://github.com/hugoleborso/borso.fr/pull/71), the kaizen
+sweep of [PR #63](https://github.com/hugoleborso/borso.fr/pull/63)
 
 **The actual fix:**
 

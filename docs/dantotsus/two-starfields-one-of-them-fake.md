@@ -4,8 +4,8 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#63'
-fix-pr: '#63'
-fix-commits: [efd65da]
+fix-pr: '#71'
+fix-commits: [957846c]
 eradication-level: 4
 time-to-detect: 40 minutes
 tags: [frontend, animation, webgl, conception, tailwind]
@@ -100,8 +100,8 @@ interesting residue of the pivot:
 **Type:** detection (level 4 — a reviewer bullet, which the ledger collects and
 the standards-review agent enforces)
 
-**Reference:** [PR #63](https://github.com/hugoleborso/borso.fr/pull/63) ·
-kaizen PR for this entry
+**Reference:** [PR #71](https://github.com/hugoleborso/borso.fr/pull/71), the kaizen
+sweep of [PR #63](https://github.com/hugoleborso/borso.fr/pull/63)
 
 **The actual fix:**
 

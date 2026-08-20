@@ -4,8 +4,8 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#63'
-fix-pr: '#63'
-fix-commits: [9b2ff2b]
+fix-pr: '#71'
+fix-commits: [957846c]
 eradication-level: 2
 time-to-detect: 1 hour
 tags: [ci, github-actions, git, knowledge-corpus, tooling]
@@ -85,8 +85,8 @@ reason, and PR #62 stopping there is why PR #63 paid again.
 
 **Type:** DevX check (level 2 — pre-push warning)
 
-**Reference:** [PR #63](https://github.com/hugoleborso/borso.fr/pull/63) ·
-kaizen PR for this entry
+**Reference:** [PR #71](https://github.com/hugoleborso/borso.fr/pull/71), the kaizen
+sweep of [PR #63](https://github.com/hugoleborso/borso.fr/pull/63)
 
 **The actual fix:**
 
