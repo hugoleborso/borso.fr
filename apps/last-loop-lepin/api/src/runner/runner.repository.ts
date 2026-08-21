@@ -21,7 +21,6 @@ export async function findRunner(editionSlug: string, runnerSlug: string): Promi
   return rows[0] ?? null;
 }
 
-// @FollowsBlueprint repository-query
 export async function deleteAllEditionRunners(
   executor: DatabaseExecutor,
   editionSlug: string,
@@ -29,6 +28,7 @@ export async function deleteAllEditionRunners(
   await executor.delete(runnersTable).where(eq(runnersTable.editionSlug, editionSlug));
 }
 
+// @FollowsBlueprint repository-query
 export async function listRunnersForEdition(editionSlug: string): Promise<readonly Runner[]> {
   return getDatabase().select().from(runnersTable).where(eq(runnersTable.editionSlug, editionSlug));
 }

@@ -61,8 +61,14 @@ export class PunchConflictError extends Error {
   }
 }
 
-export async function insertPunch(punch: LoopPunch): Promise<void> {
-  await getDatabase().insert(loopPunchesTable).values({
+export async function runInOneTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await getDatabase().transaction(work);
+}
+
+export async function insertPunch(executor: DatabaseExecutor, punch: LoopPunch): Promise<void> {
+  await executor.insert(loopPunchesTable).values({
     id: punch.id,
     editionSlug: punch.editionSlug,
     runnerSlug: punch.runnerSlug,
@@ -138,10 +144,11 @@ export async function insertManualDidNotFinish(didNotFinish: ManualDidNotFinish)
 }
 
 export async function deleteManualDidNotFinish(
+  executor: DatabaseExecutor,
   editionSlug: string,
   runnerSlug: string,
 ): Promise<void> {
-  await getDatabase()
+  await executor
     .delete(manualDidNotFinishesTable)
     .where(
       and(
@@ -159,12 +166,6 @@ export async function deleteAllEditionPunchesAndDidNotFinishes(
   await executor
     .delete(manualDidNotFinishesTable)
     .where(eq(manualDidNotFinishesTable.editionSlug, editionSlug));
-}
-
-export async function deleteAllEditionPunchesAndDidNotFinishesOutsideATransaction(
-  editionSlug: string,
-): Promise<void> {
-  await deleteAllEditionPunchesAndDidNotFinishes(getDatabase(), editionSlug);
 }
 
 export async function listManualDidNotFinishesForEdition(

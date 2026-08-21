@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { truncateAllTables } from '../../../test/database-utils';
+import { getDatabase } from '../database/client';
 import { makeEdition, makePunch, makeRunner } from '../../../test/fixtures';
 import { createApp } from '../app';
 import { insertEdition } from '../edition/edition.repository';
@@ -61,8 +62,8 @@ describe('ranking controller', () => {
     await insertEdition(makeEdition({ status: 'live' }));
     await insertRunner(makeRunner('alice'));
     await insertRunner(makeRunner('bob'));
-    await insertPunch(makePunch('alice', 1, '2026-09-19T06:55:00.000+02:00'));
-    await insertPunch(makePunch('bob', 1, '2026-09-19T06:55:00.000+02:00'));
+    await insertPunch(getDatabase(), makePunch('alice', 1, '2026-09-19T06:55:00.000+02:00'));
+    await insertPunch(getDatabase(), makePunch('bob', 1, '2026-09-19T06:55:00.000+02:00'));
 
     vi.setSystemTime(new Date('2026-09-19T22:30:00+02:00'));
     const response = await app.request('/api/standings/lepin-2026');
@@ -76,8 +77,8 @@ describe('ranking controller', () => {
     await insertEdition(makeEdition({ status: 'live' }));
     await insertRunner(makeRunner('alice'));
     await insertRunner(makeRunner('bob'));
-    await insertPunch(makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
-    await insertPunch(makePunch('alice', 2, '2026-09-19T07:55:00+02:00'));
+    await insertPunch(getDatabase(), makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
+    await insertPunch(getDatabase(), makePunch('alice', 2, '2026-09-19T07:55:00+02:00'));
 
     vi.setSystemTime(new Date('2026-09-19T08:30:00+02:00'));
     const response = await app.request('/api/standings/lepin-2026');
@@ -115,8 +116,8 @@ describe('ranking controller', () => {
     await insertEdition(makeEdition({ status: 'live' }));
     await insertRunner(makeRunner('alice'));
     await insertRunner(makeRunner('bob'));
-    await insertPunch(makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
-    await insertPunch(makePunch('bob', 1, '2026-09-19T06:58:00+02:00'));
+    await insertPunch(getDatabase(), makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
+    await insertPunch(getDatabase(), makePunch('bob', 1, '2026-09-19T06:58:00+02:00'));
 
     vi.setSystemTime(new Date('2026-09-19T07:30:00+02:00'));
     const response = await app.request('/api/standings/lepin-2026');
@@ -129,8 +130,8 @@ describe('ranking controller', () => {
     await insertEdition(makeEdition({ status: 'finished' }));
     await insertRunner(makeRunner('alice', { bib: 1 }));
     await insertRunner(makeRunner('bob', { bib: 2 }));
-    await insertPunch(makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
-    await insertPunch(makePunch('bob', 1, '2026-09-19T06:58:00+02:00'));
+    await insertPunch(getDatabase(), makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
+    await insertPunch(getDatabase(), makePunch('bob', 1, '2026-09-19T06:58:00+02:00'));
 
     vi.setSystemTime(new Date('2026-09-21T12:00:00+02:00'));
     const response = await app.request('/api/standings/lepin-2026/laps.csv');

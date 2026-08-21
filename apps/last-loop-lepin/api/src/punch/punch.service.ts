@@ -11,7 +11,6 @@ export { PunchConflictError } from './punch.repository';
 import { hourlyTopOfLoopMs, type PunchRejectReason, validatePunchTiming } from './punch.core';
 import {
   deleteAllEditionPunchesAndDidNotFinishes,
-  deleteAllEditionPunchesAndDidNotFinishesOutsideATransaction,
   deleteManualDidNotFinish,
   findActivePunchForLoop,
   findPunchById,
@@ -21,6 +20,7 @@ import {
   listPunchesForEdition,
   markPunchCorrected,
   markPunchVoided,
+  runInOneTransaction,
   PunchConflictError,
 } from './punch.repository';
 import type { LoopPunch, ManualDidNotFinish } from './punch.types';
@@ -93,7 +93,7 @@ export async function registerPunch(input: RegisterPunchInput, now: Date): Promi
     userAgent: null,
   };
 
-  await insertPunch(punch);
+  await runInOneTransaction((executor) => insertPunch(executor, punch));
   return punch;
 }
 
@@ -142,7 +142,7 @@ export async function registerSelfPunch(
     distanceFromCenterM: distanceFromCenter,
     userAgent,
   };
-  await insertPunch(punch);
+  await runInOneTransaction((executor) => insertPunch(executor, punch));
   return punch;
 }
 
@@ -230,13 +230,17 @@ export async function catchupPunch(input: CatchupPunchInput, now: Date): Promise
     distanceFromCenterM: null,
     userAgent: null,
   };
-  await insertPunch(punch);
-  await deleteManualDidNotFinish(input.editionSlug, input.runnerSlug);
+  await runInOneTransaction(async (executor) => {
+    await insertPunch(executor, punch);
+    await deleteManualDidNotFinish(executor, input.editionSlug, input.runnerSlug);
+  });
   return punch;
 }
 
 export async function clearEditionPunchHistory(editionSlug: string): Promise<void> {
-  await deleteAllEditionPunchesAndDidNotFinishesOutsideATransaction(editionSlug);
+  await runInOneTransaction((executor) =>
+    deleteAllEditionPunchesAndDidNotFinishes(executor, editionSlug),
+  );
 }
 
 export async function clearEditionPunchHistoryWithin(
@@ -247,7 +251,7 @@ export async function clearEditionPunchHistoryWithin(
 }
 
 export async function seedPunch(punch: LoopPunch): Promise<void> {
-  await insertPunch(punch);
+  await runInOneTransaction((executor) => insertPunch(executor, punch));
 }
 
 export async function seedManualDidNotFinish(didNotFinish: ManualDidNotFinish): Promise<void> {
