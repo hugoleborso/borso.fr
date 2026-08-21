@@ -144,32 +144,36 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     dialog.querySelector('[data-code-location]').textContent = entry.location;
     const body = dialog.querySelector('[data-code-body]');
     const toggle = dialog.querySelector('[data-code-view]');
-    const showFinal = () => {
+    const hasBefore = Boolean(entry.baseCode) || Boolean(entry.isNew);
+    const rowsOfWholeFile = () =>
+      diffLines(entry.isNew ? [] : entry.baseCode.split('\n'), entry.code.split('\n'));
+    const showListing = () => {
       body.innerHTML = highlight(entry.code);
       body.classList.remove('as-diff');
     };
-    const hasBefore = Boolean(entry.baseCode) || Boolean(entry.isNew);
-    const showDiff = () => {
-      const before = entry.isNew ? [] : entry.baseCode.split('\n');
-      body.replaceChildren(
-        buildDiffRows(collapseDiff(diffLines(before, entry.code.split('\n'))), highlight),
-      );
+    const showWholeFile = () => {
+      body.replaceChildren(buildDiffRows(rowsOfWholeFile(), highlight));
       body.classList.add('as-diff');
     };
+    const showWhatChanged = () => {
+      body.replaceChildren(buildDiffRows(collapseDiff(rowsOfWholeFile()), highlight));
+      body.classList.add('as-diff');
+    };
+    let isCollapsed = hasBefore;
     if (toggle) {
       toggle.hidden = !hasBefore;
       toggle.textContent = 'show whole file';
       if (hasBefore) {
         toggle.onclick = () => {
-          const wasDiff = body.classList.contains('as-diff');
-          toggle.textContent = wasDiff ? 'show what changed' : 'show whole file';
-          if (wasDiff) showFinal();
-          else showDiff();
+          isCollapsed = !isCollapsed;
+          toggle.textContent = isCollapsed ? 'show whole file' : 'show what changed';
+          if (isCollapsed) showWhatChanged();
+          else showWholeFile();
         };
       }
     }
-    if (hasBefore) showDiff();
-    else showFinal();
+    if (hasBefore) showWhatChanged();
+    else showListing();
     dialog.showModal();
   };
 
