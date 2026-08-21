@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
 
 // @FollowsBlueprint query-module
@@ -8,23 +9,15 @@ export const punchKeys = {
     [...punchKeys.all, editionSlug, runnerSlug] as const,
 };
 
-export interface RegisterPunchVariables {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-}
+export type RegisterPunchVariables = Parameters<typeof api.api.admin.punches.$post>[0]['json'];
 
-export interface CatchupPunchVariables {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-  readonly loopIndex: number;
-}
+export type CatchupPunchVariables = Parameters<
+  typeof api.api.admin.punches.catchup.$post
+>[0]['json'];
 
-export interface RecordDidNotFinishVariables {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-  readonly outAtLoop: number;
-  readonly reason: 'late' | 'manual';
-}
+export type RecordDidNotFinishVariables = Parameters<typeof api.api.admin.dnfs.$post>[0]['json'];
+
+export type SelfPunchVariables = Parameters<(typeof api.api)['self-punches']['$post']>[0]['json'];
 
 export interface VoidPunchVariables {
   readonly punchId: string;
@@ -32,21 +25,9 @@ export interface VoidPunchVariables {
   readonly runnerSlug: string;
 }
 
-interface CachedPunch {
-  readonly id: string;
-}
-
-interface CachedPunchList {
-  readonly punches: readonly CachedPunch[];
-}
-
-export interface SelfPunchVariables {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-  readonly clientLat: number | null;
-  readonly clientLng: number | null;
-  readonly clientAccuracyM: number | null;
-}
+type CachedPunchList = InferResponseType<
+  (typeof api.api.editions)[':editionSlug']['runners'][':runnerSlug']['punches']['$get']
+>;
 
 export function useRunnerPunches(editionSlug: string, runnerSlug: string, isEnabled = true) {
   return useQuery({

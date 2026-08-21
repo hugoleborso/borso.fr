@@ -1,4 +1,5 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
 import { replaceEntityBySlug } from './optimistic.utils';
 
@@ -13,39 +14,17 @@ function refetchTheCurrentEditionProjection(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: editionKeys.current() });
 }
 
-export interface CreateEditionVariables {
-  readonly slug: string;
-  readonly displayName: string;
-  readonly startsAt: string;
-  readonly endsAt: string;
-  readonly intervalMinutes: number;
-  readonly gpxXml: string;
-}
+export type CreateEditionVariables = Parameters<typeof api.api.admin.editions.$post>[0]['json'];
 
-export interface ReplaceEditionVariables {
-  readonly slug: string;
-  readonly displayName: string;
-  readonly startsAt: string;
-  readonly endsAt: string;
-  readonly intervalMinutes: number;
-  readonly gpxXml?: string;
-}
+export type ReplaceEditionVariables = { readonly slug: string } & Parameters<
+  (typeof api.api.admin.editions)[':slug']['$put']
+>[0]['json'];
 
-export type EditionStatusName = 'setup' | 'live' | 'finished';
+export type TransitionEditionStatusVariables = { readonly slug: string } & Parameters<
+  (typeof api.api.admin.editions)[':slug']['status']['$put']
+>[0]['json'];
 
-export interface TransitionEditionStatusVariables {
-  readonly slug: string;
-  readonly status: EditionStatusName;
-}
-
-interface CachedEdition {
-  readonly slug: string;
-  readonly status: EditionStatusName;
-}
-
-interface CachedEditionList {
-  readonly editions: readonly CachedEdition[];
-}
+type CachedEditionList = InferResponseType<typeof api.api.editions.$get>;
 
 export function useCurrentEdition() {
   return useQuery({
@@ -134,7 +113,7 @@ export function useDeleteEdition() {
       }
     },
     onSettled: () => {
-      // eslint-disable-next-line borso/no-refetch-of-optimistically-written-query -- this refetches `current()`, which is not a key this mutation wrote. It is a projection over every edition (live, else earliest setup by startsAt, else latest finished by endsAt — getCurrentEdition in edition.service.ts), and the cached list rows carry a slug and a status only, so the client holds neither the dates that ordering needs nor the other editions' rows. A transition or a delete can hand current to a different edition entirely.
+      // eslint-disable-next-line borso/no-refetch-of-optimistically-written-query -- this refetches `current()`, which is not a key this mutation wrote. It is a projection over every edition (live, else earliest setup by startsAt, else latest finished by endsAt — getCurrentEdition in edition.service.ts), and the write that just ran touched one edition, so the client cannot tell which edition the projection now names. A transition or a delete can hand current to a different edition entirely.
       refetchTheCurrentEditionProjection(queryClient);
     },
   });
@@ -176,7 +155,7 @@ export function useTransitionEditionStatus() {
       }
     },
     onSettled: () => {
-      // eslint-disable-next-line borso/no-refetch-of-optimistically-written-query -- this refetches `current()`, which is not a key this mutation wrote. It is a projection over every edition (live, else earliest setup by startsAt, else latest finished by endsAt — getCurrentEdition in edition.service.ts), and the cached list rows carry a slug and a status only, so the client holds neither the dates that ordering needs nor the other editions' rows. A transition or a delete can hand current to a different edition entirely.
+      // eslint-disable-next-line borso/no-refetch-of-optimistically-written-query -- this refetches `current()`, which is not a key this mutation wrote. It is a projection over every edition (live, else earliest setup by startsAt, else latest finished by endsAt — getCurrentEdition in edition.service.ts), and the write that just ran touched one edition, so the client cannot tell which edition the projection now names. A transition or a delete can hand current to a different edition entirely.
       refetchTheCurrentEditionProjection(queryClient);
     },
   });
