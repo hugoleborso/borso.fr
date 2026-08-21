@@ -6,13 +6,22 @@ import { fileURLToPath } from 'node:url';
 import {
   ANNOTATION_SEARCH_RADIUS_LINES,
   type BlueprintProject,
+  hasDeclarationOf,
   extractFollowsBlueprint,
   inferApplication,
   inferLayer,
   inferProject,
   listAnnotationProblems,
   resolveAnnotationSubject,
+  UNRESOLVED_SUBJECT,
 } from './blueprint-utils.js';
+import {
+  buildSubjectBaseline,
+  describeDetachedClaim,
+  listDetachedClaims,
+  parseSubjectBaseline,
+  type MarkerClaim,
+} from '../../../scripts/blueprints/subjects.core.js';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const REPOSITORY_ROOT = path.resolve(scriptDirectory, '../../..');
@@ -264,41 +273,36 @@ ${orphanedSection}
 `;
 }
 
-type SubjectBaseline = Record<string, readonly string[]>;
-
-function buildSubjectBaseline(followers: readonly FollowerReference[]): SubjectBaseline {
-  const byBlueprintId = new Map<string, string[]>();
-  for (const follower of followers) {
-    const subjects = byBlueprintId.get(follower.blueprintId) ?? [];
-    subjects.push(follower.subject);
-    byBlueprintId.set(follower.blueprintId, subjects);
-  }
-  const baseline: Record<string, readonly string[]> = {};
-  for (const blueprintId of [...byBlueprintId.keys()].sort()) {
-    baseline[blueprintId] = (byBlueprintId.get(blueprintId) ?? []).toSorted();
-  }
-  return baseline;
+function toMarkerClaims(followers: readonly FollowerReference[]): MarkerClaim[] {
+  return followers
+    .filter((follower) => follower.subject !== UNRESOLVED_SUBJECT)
+    .map((follower) => ({
+      filePath: follower.filePath,
+      blueprintId: follower.blueprintId,
+      subject: follower.subject,
+    }));
 }
 
-function serialiseSubjectBaseline(baseline: SubjectBaseline): string {
-  return `${JSON.stringify(baseline, null, 2)}\n`;
+function writeSubjectBaseline(followers: readonly FollowerReference[]): void {
+  const baseline = buildSubjectBaseline(toMarkerClaims(followers));
+  fs.writeFileSync(SUBJECT_BASELINE_FILE, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8');
 }
 
 function listSubjectDrift(followers: readonly FollowerReference[]): string[] {
   if (!fs.existsSync(SUBJECT_BASELINE_FILE)) {
     return [
-      `docs/standards/blueprint-subjects.json is missing. Run \`pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept\`.`,
+      'docs/standards/blueprint-subjects.json is missing. Run `pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept`.',
     ];
   }
-  const recorded: unknown = JSON.parse(fs.readFileSync(SUBJECT_BASELINE_FILE, 'utf8'));
-  if (JSON.stringify(recorded) === JSON.stringify(buildSubjectBaseline(followers))) return [];
-  return [
-    'a `@FollowsBlueprint` marker names a different symbol than the baseline records. ' +
-      'A marker is bound to its subject by position, so inserting a declaration under one moves ' +
-      'the claim without changing any count. Read the diff of ' +
-      'docs/standards/blueprint-subjects.json, and if the move is intended accept it in the same ' +
-      'commit: `pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept`.',
-  ];
+  const recorded = parseSubjectBaseline(fs.readFileSync(SUBJECT_BASELINE_FILE, 'utf8'));
+  if (recorded === undefined) {
+    return [
+      'docs/standards/blueprint-subjects.json does not read as a mapping of file to subject. Run `pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept`.',
+    ];
+  }
+  return listDetachedClaims(recorded, toMarkerClaims(followers), (filePath, subject) =>
+    hasDeclarationOf(fs.readFileSync(path.join(REPOSITORY_ROOT, filePath), 'utf8'), subject),
+  ).map(describeDetachedClaim);
 }
 
 function main(): void {
@@ -314,13 +318,9 @@ function main(): void {
   const problems = listAnnotationProblems(blueprints, followers);
 
   if (isAccepting) {
-    fs.writeFileSync(
-      SUBJECT_BASELINE_FILE,
-      serialiseSubjectBaseline(buildSubjectBaseline(followers)),
-      'utf8',
-    );
+    writeSubjectBaseline(followers);
     process.stdout.write('Accepted the blueprint marker subjects on disk.\n');
-  } else {
+  } else if (isCheckOnly) {
     problems.push(...listSubjectDrift(followers));
   }
 

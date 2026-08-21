@@ -239,7 +239,7 @@ const DECLARATION_PATTERNS = [
 
 const CONTINUATION_PATTERN = /^\s*(?:\/\/|\/\*|\*|$)/;
 
-const UNRESOLVED_SUBJECT = 'unresolved';
+export const UNRESOLVED_SUBJECT = 'unresolved';
 
 /**
  * @Blueprint generator-annotation-subject
@@ -260,4 +260,10 @@ export function resolveAnnotationSubject(fileContent: string, lineNumber: number
     return UNRESOLVED_SUBJECT;
   }
   return UNRESOLVED_SUBJECT;
+}
+
+export function hasDeclarationOf(fileContent: string, symbolName: string): boolean {
+  return fileContent
+    .split('\n')
+    .some((line) => DECLARATION_PATTERNS.some((pattern) => pattern.exec(line)?.[1] === symbolName));
 }

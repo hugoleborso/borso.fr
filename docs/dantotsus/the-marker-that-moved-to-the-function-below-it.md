@@ -78,15 +78,35 @@ The marker moved back onto `listRunnersForEdition` in commit
 
 **Reference:** [PR #85](https://github.com/hugoleborso/borso.fr/pull/85) · commit [`3583040`](https://github.com/hugoleborso/borso.fr/commit/3583040)
 
-**The actual fix:** `blueprint-indexing.ts` now records the symbol each marker
-resolves to, and `--check` fails when a marker's subject changes without the
-baseline being accepted in the same commit. This is the mechanism
-`convention-drift.ts` already uses for the layer-marker budget, so the shape is
-one a reader of this repository has seen.
+**The actual fix:** `blueprint-indexing.ts` records the symbol each marker
+resolves to, per file, in `docs/standards/blueprint-subjects.json`, and
+`--check` reports a recorded symbol that lost its marker **while the file still
+declares it**. That last clause is the whole rule: a detached claim leaves the
+old symbol standing and unclaimed, whereas a rename or a deletion takes the
+symbol with it, and only the first is a defect. `listDetachedClaims` in
+[`scripts/blueprints/subjects.core.ts`](../../scripts/blueprints/subjects.core.ts)
+is the comparison, tested at the coverage the repository gates `*.core.ts` at.
 
-A move now shows up the way a rename does: as a line in a committed file that
-someone has to accept on purpose. It does not stop a marker being moved — it
-stops a marker being moved *silently*, which is the whole of this defect.
+A move now shows up as a named failure — file, blueprint id, and the symbol the
+marker left behind. It does not stop a marker being moved; it stops a marker
+being moved *silently*, which is the whole of this defect.
+
+**The first shape of this gate was wrong, and PR #85's own CI caught it.** It
+compared the whole baseline by value, so *any* change failed — and the first
+thing it failed was an unrelated merge of `main` that added three new markers
+and moved none, with a message accusing its author of moving one. Two lessons,
+both now in the code above: a baseline gate has to compare the thing it claims
+to be about rather than the file it happens to store, and its failure message
+has to name the artefact, because "read the diff of a generated JSON file" is
+not something an operator can act on when Prettier reformats that file on every
+commit.
+
+Only `--accept` writes the baseline. A plain run must not, because SessionStart
+runs the generators: a marker displaced during a session would be rebaselined as
+correct before pre-commit ever compared it. The cost of that choice is that
+markers added since the last `--accept` are not yet protected — visible decay,
+which is the right side to fail on for a gate whose alternative failure is
+silent disarmament.
 
 **What this does not fix:** a marker written on the wrong function from the
 start. The baseline records the first resolution it sees, so an initially wrong
