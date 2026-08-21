@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 import { replaceEntityBySlug } from './optimistic.utils';
 
@@ -8,6 +8,10 @@ export const editionKeys = {
   list: () => [...editionKeys.all, 'list'] as const,
   current: () => [...editionKeys.all, 'current'] as const,
 };
+
+function refetchTheCurrentEditionProjection(queryClient: QueryClient): void {
+  void queryClient.invalidateQueries({ queryKey: editionKeys.current() });
+}
 
 export interface CreateEditionVariables {
   readonly slug: string;
@@ -129,6 +133,10 @@ export function useDeleteEdition() {
         queryClient.setQueryData(editionKeys.list(), context.previousList);
       }
     },
+    onSettled: () => {
+      // eslint-disable-next-line borso/no-refetch-of-optimistically-written-query -- this refetches `current()`, which is not a key this mutation wrote. It is a projection over every edition (live, else earliest setup by startsAt, else latest finished by endsAt — getCurrentEdition in edition.service.ts), and the cached list rows carry a slug and a status only, so the client holds neither the dates that ordering needs nor the other editions' rows. A transition or a delete can hand current to a different edition entirely.
+      refetchTheCurrentEditionProjection(queryClient);
+    },
   });
 }
 
@@ -166,6 +174,10 @@ export function useTransitionEditionStatus() {
       if (context?.previousList !== undefined) {
         queryClient.setQueryData(editionKeys.list(), context.previousList);
       }
+    },
+    onSettled: () => {
+      // eslint-disable-next-line borso/no-refetch-of-optimistically-written-query -- this refetches `current()`, which is not a key this mutation wrote. It is a projection over every edition (live, else earliest setup by startsAt, else latest finished by endsAt — getCurrentEdition in edition.service.ts), and the cached list rows carry a slug and a status only, so the client holds neither the dates that ordering needs nor the other editions' rows. A transition or a delete can hand current to a different edition entirely.
+      refetchTheCurrentEditionProjection(queryClient);
     },
   });
 }

@@ -1,6 +1,5 @@
 /** @Feature instruments */
 
-import type { InstrumentFamily } from '@domain/instrument.core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
@@ -13,6 +12,10 @@ export const instrumentKeys = {
 
 type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;
 type InstrumentRow = InstrumentsListResponse['instruments'][number];
+type InstrumentCreateVariables = Parameters<typeof api.api.instruments.$post>[0]['json'];
+type InstrumentUpdateVariables = { id: string } & Parameters<
+  (typeof api.api.instruments)[':id']['$put']
+>[0]['json'];
 
 async function listInstruments() {
   const response = await api.api.instruments.$get();
@@ -32,7 +35,7 @@ export function useCreateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: instrumentKeys.all,
-    mutationFn: async (variables: { name: string; family: InstrumentFamily }) => {
+    mutationFn: async (variables: InstrumentCreateVariables) => {
       const response = await api.api.instruments.$post({ json: variables });
       if (!isResponseSuccessful(response))
         throw new ApiError(response.status, `create ${response.status}`, null);
@@ -71,7 +74,7 @@ export function useUpdateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: instrumentKeys.all,
-    mutationFn: async (variables: { id: string; name?: string; family?: InstrumentFamily }) => {
+    mutationFn: async (variables: InstrumentUpdateVariables) => {
       const { id, ...rest } = variables;
       const response = await api.api.instruments[':id'].$put({
         param: { id },

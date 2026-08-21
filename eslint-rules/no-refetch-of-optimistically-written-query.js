@@ -44,11 +44,15 @@ function declaredFunctionName(node) {
   return null;
 }
 
-function containsRefetch(node, refetchingHelperNames) {
-  let found = isRefetchingCall(node) || refetchingHelperNames.has(calledName(node));
-  forEachDescendant(node, (descendant) => {
-    found ||= isRefetchingCall(descendant) || refetchingHelperNames.has(calledName(descendant));
-  });
+function listRefetchingCalls(node, refetchingHelperNames) {
+  const found = [];
+  const collect = (candidate) => {
+    if (isRefetchingCall(candidate) || refetchingHelperNames.has(calledName(candidate))) {
+      found.push(candidate);
+    }
+  };
+  collect(node);
+  forEachDescendant(node, collect);
   return found;
 }
 
@@ -76,7 +80,7 @@ function hasOptimisticWrite(options) {
  * @Blueprint lint-rule-transitive-call
  * @BlueprintName Transitive Call Detection
  * @BlueprintUsage Use when a rule bans an operation that a helper in the same file can perform on the banned site's behalf.
- * @BlueprintDescription Names every same-file function whose body performs the banned operation, and only then walks the banned sites, treating a call to one of those names exactly like the operation itself. Deciding at `Program:exit` is what lets a helper declared below its caller count, and it is what stops the rule being defeated by the move a reader makes when a linter complains, which is to extract the call and give the helper a name asserting a scoping its body does not have.
+ * @BlueprintDescription Names every same-file function whose body performs the banned operation, and only then walks the banned sites, treating a call to one of those names exactly like the operation itself. Deciding at `Program:exit` is what lets a helper declared below its caller count, and it is what stops the rule being defeated by the move a reader makes when a linter complains, which is to extract the call and give the helper a name asserting a scoping its body does not have. It reports the offending call rather than the construct that contains it, so the `eslint-disable-next-line` an exception needs lands on the line the reason is about.
  */
 // @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
@@ -97,7 +101,8 @@ export default {
     return {
       ':function'(node) {
         const name = declaredFunctionName(node.parent) ?? declaredFunctionName(node);
-        if (name !== null && containsRefetch(node, new Set())) refetchingHelperNames.add(name);
+        if (name === null) return;
+        if (listRefetchingCalls(node, new Set()).length > 0) refetchingHelperNames.add(name);
       },
       CallExpression(node) {
         const options = mutationOptionsOf(node);
@@ -106,8 +111,9 @@ export default {
       },
       'Program:exit'() {
         for (const options of optimisticMutationOptions) {
-          if (!containsRefetch(options, refetchingHelperNames)) continue;
-          context.report({ node: options, messageId: 'refetchAfterOptimisticWrite' });
+          for (const call of listRefetchingCalls(options, refetchingHelperNames)) {
+            context.report({ node: call, messageId: 'refetchAfterOptimisticWrite' });
+          }
         }
       },
     };

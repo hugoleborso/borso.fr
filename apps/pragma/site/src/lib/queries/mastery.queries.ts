@@ -12,6 +12,7 @@ export const masteryKeys = {
 };
 
 type MasteryDefaultsResponse = InferResponseType<typeof api.api.mastery.defaults.$get>;
+type MasteryDefaultVariables = Parameters<typeof api.api.mastery.defaults.$put>[0]['json'];
 
 export function useMasteryDefaults() {
   return useQuery({
@@ -29,7 +30,7 @@ export function useSaveMasteryDefault() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: masteryKeys.all,
-    mutationFn: async (variables: { memberId: string; instrumentId: string; score: number }) => {
+    mutationFn: async (variables: MasteryDefaultVariables) => {
       const response = await api.api.mastery.defaults.$put({ json: variables });
       if (!response.ok) throw new ApiError(response.status, `save ${response.status}`, null);
       return response.json();
